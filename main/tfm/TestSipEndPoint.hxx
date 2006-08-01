@@ -20,6 +20,12 @@
 class TestProxy;
 class TestSipEndPoint;
 class TestUser;
+// vk
+enum messageType {
+     textPlain    = 0 ,
+     messageCpim  = 1
+};
+// end - vk
 
 namespace resip
 {
@@ -278,10 +284,17 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
       Request* message(const TestSipEndPoint* endPoint, const resip::Data& text);
       Request* message(const TestUser& endPoint, const resip::Data& text);
+      // vk
+      Request* message(const resip::NameAddr& target, const resip::Data& text, const messageType contentType = textPlain);
+      // end - vk
 
       //create message that do not require exsistance of other endpoint
       Request* message(const resip::Uri& target, const resip::Data& text);
       Request* message(const resip::Uri& target, const boost::shared_ptr<resip::Contents>& contents);
+
+      // vk
+      Request* options(const resip::Uri& target);
+      // end - vk
       
       class Retransmit : public ExpectAction
       {
@@ -337,6 +350,87 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             TestSipEndPoint& mEndpoint;
       };
       MessageExpectAction* send300(std::set<resip::NameAddr> alternates);
+
+      // vk
+      class Send301 : public MessageExpectAction
+      {
+         public:
+            explicit Send301(TestSipEndPoint& endpoint, std::set<resip::NameAddr> alternates);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            std::set<resip::NameAddr> mAlternates;
+            TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* send301(std::set<resip::NameAddr> alternates);
+
+      class Send400 : public MessageExpectAction
+      {
+         public:
+            explicit Send400(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send400();
+
+      class Send407 : public MessageExpectAction
+      {
+         public:
+            explicit Send407(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send407();
+
+      class Send408 : public MessageExpectAction
+      {
+         public:
+            explicit Send408(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send408();
+
+      class Send410 : public MessageExpectAction
+      {
+         public:
+            explicit Send410(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send410();
+
+      class Send482 : public MessageExpectAction
+      {
+         public:
+            explicit Send482(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send482();
+
+
+      class Send483 : public MessageExpectAction
+      {
+         public:
+            explicit Send483(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send483();
+
+      // end - vk
 
       class Send302 : public MessageExpectAction
       {
@@ -520,6 +614,11 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send202, 202);
       MessageExpectAction* send202();
+
+      // vk
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send200, 200);
+      MessageExpectAction* send200();
+      // end - vk
 
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send100, 100);
       MessageExpectAction* send100();
@@ -833,6 +932,7 @@ enum {SIP_100 = 100,
       SIP_183 = 183,
       SIP_200 = 200,
       SIP_202 = 202,
+      SIP_301 = 301, // vk
       SIP_302 = 302,
       SIP_400 = 400,
       SIP_402 = 402,
