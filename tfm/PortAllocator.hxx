@@ -51,6 +51,13 @@ class PortAllocator
          return getPort();
       }
 
+//vk
+      static void setStartPort(int whatWeReceived)
+      {
+         getPort() = whatWeReceived ;
+      }
+//end - vk
+
    private:
 
       static int& getPort ()
