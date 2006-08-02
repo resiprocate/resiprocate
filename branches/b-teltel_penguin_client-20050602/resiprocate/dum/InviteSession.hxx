@@ -35,7 +35,8 @@ class DUM_API InviteSession : public DialogUsage
       virtual void provideAnswer(const SdpContents& answer)
 ;
       /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
-      virtual void end();
+      virtual void end();   // sync.
+      void endAsync();  // !polo! async.
 
       /** Rejects an offer at the SIP level. So this can send a 488 to a
           reINVITE or UPDATE */
