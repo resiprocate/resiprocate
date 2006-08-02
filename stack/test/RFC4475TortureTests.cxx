@@ -51,6 +51,25 @@ l: 0
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case badaspec:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -95,6 +114,25 @@ l: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case badbranch:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -151,6 +189,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case baddate:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -194,6 +251,25 @@ l: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case baddn:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -249,6 +325,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case badinv01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -292,6 +387,25 @@ l: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case badvers:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -347,6 +461,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case bcast:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -393,6 +526,25 @@ Content-Length: 0
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case bext01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -436,6 +588,25 @@ Contact: <sip:user@host105.example.com>
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case bigcode:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -491,6 +662,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case clerr:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -536,6 +726,25 @@ l: 0
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case cparam01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -580,6 +789,25 @@ l: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case cparam02:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -646,6 +874,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case dblreq:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -701,6 +948,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case esc01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -748,6 +1014,25 @@ l: 0
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case esc02:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -793,6 +1078,25 @@ L:0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case escnull:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -848,6 +1152,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case escruri:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -897,6 +1220,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case insuf:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -941,6 +1283,25 @@ Content-Length: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case intmeth:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -992,6 +1353,25 @@ m=audio 49217 RTP/AVP 0
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case inv2543:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1040,6 +1420,25 @@ Content-Length: 40
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case invut:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -1129,6 +1528,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case longreq:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1183,6 +1601,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case ltgtruri:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1226,6 +1663,25 @@ l: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case lwsdisp:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -1281,6 +1737,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case lwsruri:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1335,6 +1810,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case lwsstart:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1383,6 +1877,25 @@ There's no way to know how many octets are supposed to be here.
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case mcl01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1426,6 +1939,25 @@ l: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case mismatch01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -1478,6 +2010,25 @@ a=rtpmap:31 LPC
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case mismatch02:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -1549,6 +2100,25 @@ hÎÿ®<½+ÿuÝÕdŽY=ÖG(òb ÷éAtž3
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case mpart01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1610,6 +2180,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case multi01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1664,6 +2253,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case ncl:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1708,6 +2316,25 @@ Contact: <sip:user@host105.example.com>
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case noreason:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1751,6 +2378,25 @@ Content-Length: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case novelsc:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -1806,6 +2452,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case quotbal:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1850,6 +2515,25 @@ Content-Length:0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case regaut01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -1896,6 +2580,25 @@ l: 0
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case regbadct:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -1940,6 +2643,25 @@ L:0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case regescrt:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -1988,6 +2710,25 @@ Content-Length: 0
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case scalar02:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -2032,6 +2773,25 @@ Content-Length: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case scalarlg:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -2088,6 +2848,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case sdp01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -2134,6 +2913,25 @@ l: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case semiuri:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -2185,6 +2983,25 @@ testing=123
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case test:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -2234,6 +3051,25 @@ l: 0
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case transports:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -2279,6 +3115,25 @@ Content-Length: 0
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case trws:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -2322,6 +3177,25 @@ Content-Length: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case unkscm:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -2367,6 +3241,25 @@ l: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case unksm2:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -2420,6 +3313,25 @@ a=rtpmap:31 LPC
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case unreason:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
@@ -2493,6 +3405,25 @@ a=rtpmap:31 LPC
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
 
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case wsinv:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
 
 
 }
@@ -2536,6 +3467,25 @@ Content-Length: 0
 
    std::auto_ptr<resip::SipMessage> message(msg);
    msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   std::cerr << "In case zeromf:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
 
 
 
