@@ -41,23 +41,19 @@ AbstractFifo::getNext(int ms)
    const UInt64 end(begin + (unsigned int)(ms)); // !kh! the parameter ms should've been unsigned :(
 
    Lock lock(mMutex); (void)lock;
-
+   
    // Wait until there are messages available
    while (mFifo.empty())
    {
-      const UInt64 now(Timer::getTimeMs());
-      if(end >= now)
+      const Int64 interval = end - Timer::getTimeMs();
+      if(interval <= 0)
       {
-          return 0;
+         return 0;
       }
-
-      unsigned int timeout((unsigned int)(now - end));
-      
-      // bail if total wait time exceeds limit
-      bool signaled = mCondition.wait(mMutex, timeout);
+      bool signaled = mCondition.wait(mMutex, (unsigned int)interval);
       if (!signaled)
       {
-        return 0;
+         return 0;
       }
    }
 
