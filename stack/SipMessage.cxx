@@ -257,6 +257,42 @@ SipMessage::parseAllHeaders()
       }
    }
 
+   for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
+        i != mUnknownHeaders.end(); i++)
+   {
+      ParserContainerBase* scs=0;
+      if(!(scs=i->second->getParserContainer()))
+      {
+         scs=new ParserContainer<StringCategory>(i->second,Headers::RESIP_DO_NOT_USE);
+         i->second->setParserContainer(scs);
+      }
+      
+      scs->parseAll();
+   }
+   
+   assert(mStartLine);
+   ParserContainerBase* slc = 0;
+
+   if(!(slc=mStartLine->getParserContainer()))
+   {
+      if(mRequest)
+      {
+         slc=new ParserContainer<RequestLine>(mStartLine,Headers::NONE);
+      }
+      else if(mResponse)
+      {
+         slc=new ParserContainer<StatusLine>(mStartLine,Headers::NONE);
+      }
+      else
+      {
+         assert(0);
+      }
+      mStartLine->setParserContainer(slc);
+   }
+
+   slc->parseAll();
+   
+   getContents();
 }
 
 const Data& 
