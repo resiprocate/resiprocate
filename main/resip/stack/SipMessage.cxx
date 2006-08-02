@@ -239,6 +239,25 @@ SipMessage::make(const Data& data,  bool isExternal)
    return msg;
 }
 
+void
+SipMessage::parseAllHeaders()
+{
+   for (int i = 0; i < Headers::MAX_HEADERS; i++)
+   {
+      ParserContainerBase* pc=0;
+      if(mHeaders[i])
+      {
+         if(!(pc=mHeaders[i]->getParserContainer()))
+         {
+            pc = HeaderBase::getInstance((Headers::Type)i)->makeContainer(mHeaders[i]);
+            mHeaders[i]->setParserContainer(pc);
+         }
+      
+         pc->parseAll();
+      }
+   }
+
+}
 
 const Data& 
 SipMessage::getTransactionId() const
