@@ -12,6 +12,7 @@
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/dum/InternalEndInviteSessionMessage.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Timer.hxx"
@@ -302,7 +303,13 @@ InviteSession::provideAnswer(const SdpContents& answer)
 }
 
 void
-InviteSession::end()
+InviteSession::endAsync() // !polo! async.
+{
+   mDum.post(new InternalEndInviteSessionMessage(getSessionHandle()));
+}
+
+void
+InviteSession::end()  // sync.
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
 

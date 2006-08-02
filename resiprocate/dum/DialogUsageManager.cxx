@@ -40,6 +40,8 @@
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UserAuthInfo.hxx"
+#include "resiprocate/dum/InternalRejectIncomingMessage.hxx"
+#include "resiprocate/dum/InternalEndInviteSessionMessage.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -948,12 +950,33 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
       if (keepAliveMsg)
       {
-          InfoLog(<< "Keep Alive Message" );
-        if (mKeepAliveManager.get())
+         InfoLog(<< "Keep Alive Message" );
+         if (mKeepAliveManager.get())
          {
             mKeepAliveManager->process(*keepAliveMsg);
          }
       }
+      // ----------------------------------------------------
+      // !polo! internal messages for thread synchronization.
+      InternalRejectIncomingMessage* rejectIncomingMsg = dynamic_cast<InternalRejectIncomingMessage*>(msg.get());
+      if (rejectIncomingMsg)  // Posted in ServerInviteSession::reject().
+      {
+         InfoLog(<< "Reject Incoming Internal Message");
+         if (rejectIncomingMsg->mIncomingSession.isValid())
+         {
+            rejectIncomingMsg->mIncomingSession->reject(rejectIncomingMsg->mStatusCode, rejectIncomingMsg->mWarning.get());
+         }
+      }
+      InternalEndInviteSessionMessage* endSessionMsg = dynamic_cast<InternalEndInviteSessionMessage*>(msg.get());
+      if (endSessionMsg)   // Posted in InviteSession::end().
+      {
+         InfoLog(<< "End invite session Internal Message");
+         if (endSessionMsg->mInviteSession.isValid())
+         {
+            endSessionMsg->mInviteSession->end();
+         }
+      }
+      // ----------------------------------------------------
    }
    catch(BaseException& e)
    {
@@ -1032,10 +1055,19 @@ DialogUsageManager::hasEvents() const
 
 // return false if there is nothing to do at the moment
 bool 
-DialogUsageManager::process()
+DialogUsageManager::process(bool block)   // !polo! blocking process() so dum can be put to thread.
 {
    bool hasNext = false;
-   std::auto_ptr<Message> msg(mFifo.getNext(hasNext));
+   std::auto_ptr<Message> msg;
+   if(block)
+   {
+      msg.reset(mFifo.getNext());
+      hasNext = (mFifo.size() != 0);
+   }
+   else
+   {
+      msg.reset(mFifo.getNext(hasNext));
+   }
    if (msg.get())
    {
       internalProcess(msg);
