@@ -135,6 +135,15 @@ class ParserContainer : public ParserContainerBase
          return false;
       }
 
+      virtual void parseAll()
+      {
+         for (typename std::vector<ParserCategory*>::const_iterator i = mParsers.begin();
+              i != mParsers.end(); ++i)
+         {
+            (*i)->checkParsed();
+         }
+      }
+
       const_iterator begin() const { return const_iterator(mParsers.begin()); }
       const_iterator end() const { return const_iterator(mParsers.end()); }
 
