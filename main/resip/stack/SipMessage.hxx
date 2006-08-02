@@ -54,6 +54,7 @@ class SipMessage : public TransactionMessage
       virtual ~SipMessage();
 
       static SipMessage* make(const Data& buffer, bool isExternal = false);
+      void parseAllHeaders();
 
       class Exception : public BaseException
       {

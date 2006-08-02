@@ -10,6 +10,7 @@
 namespace resip
 {
 class SipMessage;
+class HeaderFieldValueList;
 
 //#define PARTIAL_TEMPLATE_SPECIALIZATION
 #ifdef PARTIAL_TEMPLATE_SPECIALIZATION
@@ -63,6 +64,15 @@ class HeaderBase
       virtual ~HeaderBase() {}
       virtual Headers::Type getTypeNum() const = 0;
       virtual void merge(SipMessage&, const SipMessage&)=0;
+      
+      static HeaderBase* getInstance(Headers::Type typenum)
+      {
+         return theHeaderInstances[typenum+1];
+      }
+      
+      virtual ParserContainerBase* makeContainer(HeaderFieldValueList* hfvs) const=0;
+   protected:
+      static HeaderBase* theHeaderInstances[Headers::MAX_HEADERS+1];
 };
 
 #define defineHeader(_enum, _name, _type, _rfc)                 \
@@ -74,6 +84,7 @@ class H_##_enum : public HeaderBase                             \
       typedef _type Type;                                       \
       UnusedChecking(_enum);                                    \
       static Type& knownReturn(ParserContainerBase* container); \
+      virtual ParserContainerBase* makeContainer(HeaderFieldValueList* hfvs) const;       \
       virtual Headers::Type getTypeNum() const;                 \
       virtual void merge(SipMessage&, const SipMessage&);       \
       H_##_enum();                                              \
@@ -89,6 +100,7 @@ class H_##_enum##s : public HeaderBase                          \
       typedef ParserContainer<_type> Type;                      \
       MultiUnusedChecking(_enum);                               \
       static Type& knownReturn(ParserContainerBase* container); \
+      virtual ParserContainerBase* makeContainer(HeaderFieldValueList* hfvs) const;       \
       virtual Headers::Type getTypeNum() const;                 \
       virtual void merge(SipMessage&, const SipMessage&);       \
       H_##_enum##s();                                           \
