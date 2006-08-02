@@ -20,7 +20,7 @@ endif
 
 
 TESTPROGRAMS += \
-SipTortureTests.cxx \
+RFC4475TortureTests.cxx \
 limpc.cxx \
 test503Generator.cxx \
 testAppTimer.cxx \
