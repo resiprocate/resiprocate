@@ -194,7 +194,7 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
-      bool process();
+      bool process(bool block = false);
 
       // hasEvents
       bool hasEvents() const;
