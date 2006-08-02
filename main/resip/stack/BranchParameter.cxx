@@ -28,6 +28,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
      mClientData(),
      mInteropMagicCookie(0)
 {
+   pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
    if (strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
    {
