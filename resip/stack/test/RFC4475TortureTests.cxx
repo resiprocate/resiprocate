@@ -38,6 +38,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -82,6 +83,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -136,6 +138,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -179,6 +182,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -232,6 +236,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -275,6 +280,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -328,6 +334,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -373,6 +380,7 @@ Content-Length: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -416,6 +424,7 @@ Contact: <sip:user@host105.example.com>
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -469,6 +478,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -513,6 +523,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -557,6 +568,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -621,6 +633,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -675,6 +688,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -721,6 +735,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -766,6 +781,7 @@ L:0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -819,6 +835,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -867,6 +884,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -911,6 +929,7 @@ Content-Length: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -960,6 +979,7 @@ m=audio 49217 RTP/AVP 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1008,6 +1028,7 @@ Content-Length: 40
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1095,6 +1116,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1148,6 +1170,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1191,6 +1214,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1244,6 +1268,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1297,6 +1322,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1344,6 +1370,7 @@ There's no way to know how many octets are supposed to be here.
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1387,6 +1414,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1438,6 +1466,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1507,6 +1536,7 @@ hÎÿ®<½+ÿuÝÕdŽY=ÖG(òb ÷éAtž3
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1567,6 +1597,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1620,6 +1651,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1663,6 +1695,7 @@ Contact: <sip:user@host105.example.com>
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1706,6 +1739,7 @@ Content-Length: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1759,6 +1793,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1803,6 +1838,7 @@ Content-Length:0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1847,6 +1883,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1891,6 +1928,7 @@ L:0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1937,6 +1975,7 @@ Content-Length: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -1981,6 +2020,7 @@ Content-Length: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2035,6 +2075,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2081,6 +2122,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2130,6 +2172,7 @@ testing=123
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2178,6 +2221,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2222,6 +2266,7 @@ Content-Length: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2265,6 +2310,7 @@ Content-Length: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2309,6 +2355,7 @@ l: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2361,6 +2408,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2432,6 +2480,7 @@ a=rtpmap:31 LPC
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
@@ -2475,6 +2524,7 @@ Content-Length: 0
       result = fread(&mBuf,1,1024,fid);
       txt += resip::Data(mBuf,result);
    }
+   fclose(fid);
    resip::SipMessage* msg = resip::SipMessage::make(txt);
    tassert_reset();
    tassert(msg);
