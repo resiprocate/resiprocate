@@ -21,6 +21,7 @@ using namespace resip;
 Data Headers::HeaderNames[MAX_HEADERS+1];
 bool Headers::CommaTokenizing[] = {false};
 bool Headers::CommaEncoding[] = {false};
+HeaderBase* HeaderBase::theHeaderInstances[] = {0};
 
 bool 
 Headers::isCommaTokenizing(Type type)
@@ -57,12 +58,19 @@ H_##_enum::H_##_enum()                                                          
    Headers::CommaTokenizing[Headers::_enum+1] = bool(Type::commaHandling & ParserCategory::CommasAllowedOutputMulti);   \
    Headers::CommaEncoding[Headers::_enum+1] = bool(Type::commaHandling & 2);                                            \
    Headers::HeaderNames[Headers::_enum+1] = _name;                                                                      \
+   HeaderBase::theHeaderInstances[Headers::_enum+1] = this;                                                                             \
 }                                                                                                                       \
                                                                                                                         \
 _type&                                                                                                                  \
 H_##_enum::knownReturn(ParserContainerBase* container)                                                                  \
 {                                                                                                                       \
    return dynamic_cast<ParserContainer<_type>*>(container)->front();                                                    \
+}                                                                                                                       \
+                                                                                                                        \
+ParserContainerBase*                                                                                                    \
+H_##_enum::makeContainer(HeaderFieldValueList* hfvs) const                                                              \
+{                                                                                                                       \
+   return new ParserContainer<_type>(hfvs,Headers::_enum);                                                              \
 }                                                                                                                       \
                                                                                                                         \
 H_##_enum resip::h_##_enum
@@ -84,6 +92,7 @@ H_##_enum##s::H_##_enum##s()                                                    
    Headers::CommaTokenizing[Headers::_enum+1] = bool(Type::value_type::commaHandling & ParserCategory::CommasAllowedOutputMulti);       \
    Headers::CommaEncoding[Headers::_enum+1] = bool(Type::value_type::commaHandling & 2);                                                \
    Headers::HeaderNames[Headers::_enum+1] = _name;                                                                                      \
+   HeaderBase::theHeaderInstances[Headers::_enum+1] = this;                                                                             \
 }                                                                                                                                       \
                                                                                                                                         \
 ParserContainer<_type>&                                                                                                                 \
@@ -91,6 +100,12 @@ H_##_enum##s::knownReturn(ParserContainerBase* container)                       
 {                                                                                                                                       \
    return *dynamic_cast<ParserContainer<_type>*>(container);                                                                            \
 }                                                                                                                                       \
+                                                                                                                                        \
+ParserContainerBase*                                                                                                    \
+H_##_enum##s::makeContainer(HeaderFieldValueList* hfvs) const                                                           \
+{                                                                                                                       \
+   return new ParserContainer<_type>(hfvs,Headers::_enum);                                                              \
+}                                                                                                                       \
                                                                                                                                         \
 H_##_enum##s resip::h_##_enum##s
 
@@ -277,9 +292,15 @@ H_RESIP_DO_NOT_USEs::knownReturn(ParserContainerBase* container)
                                                                                                                                         
 H_RESIP_DO_NOT_USEs resip::h_RESIP_DO_NOT_USEs;
 
-void H_RESIP_DO_NOT_USEs::merge(SipMessage& target, const SipMessage& embedded)                                                   \
-{                                                                                                                       \
-}                                                                                                                       \
+void H_RESIP_DO_NOT_USEs::merge(SipMessage& target, const SipMessage& embedded)
+{
+}
+
+ParserContainerBase*
+H_RESIP_DO_NOT_USEs::makeContainer(HeaderFieldValueList* hfvs) const
+{
+   return new ParserContainer<StringCategory>(hfvs,Headers::RESIP_DO_NOT_USE);
+}
 
 RequestLineType resip::h_RequestLine;
 StatusLineType resip::h_StatusLine;
