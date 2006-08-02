@@ -5,6 +5,7 @@
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/dum/InternalRejectIncomingMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
@@ -318,7 +319,13 @@ ServerInviteSession::end()
 }
 
 void 
-ServerInviteSession::reject(int code, WarningCategory *warning)
+ServerInviteSession::rejectAsync(int code, WarningCategory* warning)
+{
+   mDum.post(new InternalRejectIncomingMessage(getHandle(), code, warning));
+}
+
+void 
+ServerInviteSession::reject(int code, const WarningCategory *warning)
 {
    InfoLog (<< toData(mState) << ": reject(" << code << ")");
 
