@@ -30,6 +30,7 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
 {
    pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
+   pb.skipWhitespace();
    if (strncasecmp(pb.position(), Symbols::MagicCookie, 7) == 0)
    {
       mHasMagicCookie = true;
