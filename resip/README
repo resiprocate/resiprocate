@@ -84,3 +84,5 @@ CXXFLAGS += -Wall -fPIC -Wno-deprecated -march=i686 \
             -I/usr/kerberos/include -I$(RESIP_DIR)/lib.debug.Linux.i686 
 LDFLAGS += -L$(RESIP_DIR)/lib.debug.Linux.i686 
 LDLIBS += -lresiprocate -lssl -lcrypto -lares -lpthread
+
+
