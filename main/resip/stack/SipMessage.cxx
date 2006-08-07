@@ -34,6 +34,7 @@ SipMessage::SipMessage(const Transport* fromWire)
      mRFC2543TransactionId(),
      mRequest(false),
      mResponse(false),
+     mInvalid(false),
      mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0),
      mTlsDomain(Data::Empty)
@@ -82,6 +83,8 @@ SipMessage::operator=(const SipMessage& rhs)
       mRFC2543TransactionId = rhs.mRFC2543TransactionId;
       mRequest = rhs.mRequest;
       mResponse = rhs.mResponse;
+      mInvalid = rhs.mInvalid;
+      mReason = rhs.mReason;
       mForceTarget = 0;
       mTlsDomain = rhs.mTlsDomain;
       
@@ -787,7 +790,55 @@ SipMessage::setStartLine(const char* st, int len)
 void 
 SipMessage::setBody(const char* start, int len)
 {
-   mContentsHfv = new HeaderFieldValue(start, len);
+#ifndef LENIENT_CONTENT_LENGTH
+   if(exists(h_ContentLength))
+   {
+      int contentLength=header(h_ContentLength).value();
+      
+      if(contentLength<0)
+      {
+         InfoLog(<<"Content-Length is negative! (" << contentLength << ")");
+         if(mInvalid)
+         {
+            mReason+=",";
+         }
+
+         mInvalid=true; 
+         mReason+="Bad Content-Length (negative)";
+         header(h_ContentLength).value()=0;
+         contentLength=0;
+      }
+      else if(len > contentLength)
+      {
+         InfoLog(<< (len-contentLength) << " extra bytes after body.");
+      }
+      else if(len < contentLength)
+      {
+         InfoLog(<< "Content Length is "<< (contentLength-len) << " bytes larger than body!"
+                  << " (We are supposed to 400 this) ");
+
+         if(mInvalid)
+         {
+            mReason+=",";
+         }
+
+         mInvalid=true; 
+         mReason+="Bad Content-Length (larger than datagram)";
+         header(h_ContentLength).value()=len;
+         contentLength=len;
+                  
+      }
+      
+      mContentsHfv = new HeaderFieldValue(start,contentLength);
+   }
+   else
+   {
+      InfoLog(<< "Message has a body, but no Content-Length header.");
+      mContentsHfv = new HeaderFieldValue(start,len);
+   }
+#else
+   mContentsHfv = new HeaderFieldValue(start,len);
+#endif
 }
 
 void
