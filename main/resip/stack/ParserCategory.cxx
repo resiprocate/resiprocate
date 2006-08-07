@@ -194,27 +194,23 @@ ParserCategory::parseParameters(ParseBuffer& pb)
       if (  (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0]) )
       {
          // extract the key
-
-         // !bwc! skip empty parameters (ie, params consisting of whitespace,
-         // or the empty string)
-         while (  (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0]) )
-         {
-            pb.skipChar();
-            pb.skipWhitespace();
-         }
-         
-         const char* keyStart = pb.position();
+         pb.skipChar();
+         const char* keyStart = pb.skipWhitespace();
          const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
-         ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
-         if (type == ParameterTypes::UNKNOWN)
+
+         if((int)(keyEnd-keyStart) != 0)
          {
-            mUnknownParameters.push_back(new UnknownParameter(keyStart, 
-                                                              int((keyEnd - keyStart)), pb, " \t\r\n;?>"));
-         }
-         else
-         {
-            // invoke the particular factory
-            mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n;?>"));
+            ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
+            if (type == ParameterTypes::UNKNOWN)
+            {
+               mUnknownParameters.push_back(new UnknownParameter(keyStart, 
+                                                                 int((keyEnd - keyStart)), pb, " \t\r\n;?>"));
+            }
+            else
+            {
+               // invoke the particular factory
+               mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n;?>"));
+            }
          }
       }
       else
