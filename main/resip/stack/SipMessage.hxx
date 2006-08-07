@@ -92,7 +92,10 @@ class SipMessage : public TransactionMessage
 
       bool isRequest() const;
       bool isResponse() const;
-
+      bool isInvalid() const{return mInvalid;}
+      
+      const resip::Data& getReason() const{return mReason;}
+      
       const RequestLine& 
       header(const RequestLineType& l) const;
 
@@ -331,6 +334,9 @@ class SipMessage : public TransactionMessage
       mutable bool mRequest;
       mutable bool mResponse;
 
+      bool mInvalid;
+      resip::Data mReason;
+      
       Data mEncoded; // to be retransmitted
       UInt64 mCreatedTime;
 
