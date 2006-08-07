@@ -3494,6 +3494,8 @@ Content-Length: 0
 
 int main()
 {
+
+resip::Log::initialize("cout", "DEBUG", "RFC4475TortureTests");
 try
 {
    badaspec();
