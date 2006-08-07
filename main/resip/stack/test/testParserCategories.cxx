@@ -9,6 +9,7 @@
 #include "resip/stack/ParserCategories.hxx"
 #include "resip/stack/ExtensionHeader.hxx"
 #include "resip/stack/UnknownParameterType.hxx"
+#include "resip/stack/ApiCheckList.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/ParseBuffer.hxx"

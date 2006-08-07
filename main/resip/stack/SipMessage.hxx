@@ -180,7 +180,7 @@ class SipMessage : public TransactionMessage
       defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
       defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
-      defineHeader(MaxForwards, "Max-Forwards", UInt8Category, "RFC 3261");
+      defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
       defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");
       defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
 

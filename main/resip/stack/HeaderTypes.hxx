@@ -42,7 +42,7 @@ class Headers
       {
          UNKNOWN = -1,
          defineMultiHeader(Via, "Via", Via, "RFC 3261"), // rjs says must be first
-         defineHeader(MaxForwards, "Max-Forwards", UInt8Category, "RFC 3261"),
+         defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261"),
          defineMultiHeader(Route, "Route", NameAddr, "RFC 3261"),
          defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC 3261"),
          defineMultiHeader(Path, "Path", NameAddr, "RFC 3327"),

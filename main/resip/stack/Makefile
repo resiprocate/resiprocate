@@ -18,7 +18,6 @@ SRC = \
 	ExpiresCategory.cxx \
 	GenericUri.cxx \
 	IntegerCategory.cxx \
-	UInt8Category.cxx \
 	UInt32Category.cxx \
 	Mime.cxx \
 	NameAddr.cxx \
@@ -62,10 +61,8 @@ SRC = \
 	Headers.cxx \
 	Helper.cxx \
 	IntegerParameter.cxx \
-	UInt8Parameter.cxx \
 	UInt32Parameter.cxx \
 	InternalTransport.cxx \
-	LazyParser.cxx \
 	LazyParser.cxx \
 	Message.cxx \
 	MessageWaitingContents.cxx \
