@@ -1281,13 +1281,13 @@ defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
 defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
 defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
+defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
+defineHeader(MaxForwards, "Max-Forwards", UInt8Category, "RFC 3261");
+defineHeader(MinExpires, "Min-Expires", Uint32Category, "RFC 3261");
+defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
+defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
