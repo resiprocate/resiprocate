@@ -194,8 +194,16 @@ ParserCategory::parseParameters(ParseBuffer& pb)
       if (  (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0]) )
       {
          // extract the key
-         pb.skipChar();
-         const char* keyStart = pb.skipWhitespace();
+
+         // !bwc! skip empty parameters (ie, params consisting of whitespace,
+         // or the empty string)
+         while (  (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0]) )
+         {
+            pb.skipChar();
+            pb.skipWhitespace();
+         }
+         
+         const char* keyStart = pb.position();
          const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
          ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
          if (type == ParameterTypes::UNKNOWN)
