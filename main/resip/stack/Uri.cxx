@@ -393,8 +393,8 @@ Uri::operator==(const Uri& other) const
             case ParameterTypes::ttl:
             {
                if (!(otherParam &&
-                     (dynamic_cast<IntegerParameter*>(*it)->value() ==
-                      dynamic_cast<IntegerParameter*>(otherParam)->value())))
+                     (dynamic_cast<UInt32Parameter*>(*it)->value() ==
+                      dynamic_cast<UInt32Parameter*>(otherParam)->value())))
                {
                   return false;
                }
@@ -469,8 +469,8 @@ Uri::operator==(const Uri& other) const
             case ParameterTypes::ttl:
             {
                if (!(param &&
-                     (dynamic_cast<IntegerParameter*>(*it)->value() == 
-                      dynamic_cast<IntegerParameter*>(param)->value())))
+                     (dynamic_cast<UInt32Parameter*>(*it)->value() == 
+                      dynamic_cast<UInt32Parameter*>(param)->value())))
                {
                   return false;
                }
