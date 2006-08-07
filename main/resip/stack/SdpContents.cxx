@@ -660,9 +660,9 @@ SdpContents::Session::Time::parse(ParseBuffer& pb)
    pb.skipChar('t');
    pb.skipChar(Symbols::EQUALS[0]);
 
-   mStart = pb.integer();
+   mStart = pb.uInt32();
    pb.skipChar(Symbols::SPACE[0]);
-   mStop = pb.integer();
+   mStop = pb.uInt32();
 
    skipEol(pb);
 
