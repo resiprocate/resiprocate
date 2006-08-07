@@ -58,7 +58,7 @@ ServerRegistration::accept(SipMessage& ok)
       continue;
     }
     contact.uri() = i->uri;
-    contact.param(p_expires) = int(i->expires - now);
+    contact.param(p_expires) = UInt32(i->expires - now);
     ok.header(h_Contacts).push_back(contact);
     if(i->useQ)
     {
@@ -124,18 +124,11 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     database->lockRecord(mAor);
 
-    unsigned int globalExpires = 0;
+    UInt32 globalExpires = 0;
 
     if (msg.exists(h_Expires))
     {
-      if((unsigned int)(msg.header(h_Expires).value()) > 4294967295u)
-      {
-         globalExpires = 4294967295u;
-      }
-      else
-      {
-         globalExpires = (unsigned int)(msg.header(h_Expires).value());
-      }
+      globalExpires = msg.header(h_Expires).value();
     }
     else
     {
@@ -153,7 +146,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
     ParserContainer<NameAddr>::iterator i;
-    unsigned int expires;
+    UInt32 expires;
     time_t now;
     time(&now);
 
@@ -161,14 +154,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
     {
       if (i->exists(p_expires))
       {
-         if((unsigned int)(i->param(p_expires)) > 4294967295u)
-         {
-            expires = 4294967295u;
-         }
-         else
-         {
-            expires = (unsigned int)(i->param(p_expires));
-         }
+         expires = i->param(p_expires);
       }
       else
       {

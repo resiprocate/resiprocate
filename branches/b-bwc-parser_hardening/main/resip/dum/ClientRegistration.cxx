@@ -338,7 +338,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
          // make timers to re-register
-         int expiry = INT_MAX;
+         UInt32 expiry = INT_MAX;
          if (msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
@@ -347,7 +347,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             //small size, n^2, don't care
             if (mDialogSet.getUserProfile()->getRinstanceEnabled())
             {
-               int fallbackExpiry = INT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
+               UInt32 fallbackExpiry = INT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
                for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
                {
                   for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); it != msg.header(h_Contacts).end(); it++)
@@ -474,7 +474,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             {
                int maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
                if (msg.exists(h_MinExpires) && 
-                   (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
+                   (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < (UInt32)maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {
                   mLastRequest->header(h_Expires).value() = msg.header(h_MinExpires).value();
                   mLastRequest->header(h_CSeq).sequence()++;
