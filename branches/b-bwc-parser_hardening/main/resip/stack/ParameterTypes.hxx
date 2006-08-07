@@ -6,7 +6,6 @@
 #include "resip/stack/QuotedDataParameter.hxx"
 #include "resip/stack/QopParameter.hxx"
 #include "resip/stack/IntegerParameter.hxx"
-#include "resip/stack/UInt8Parameter.hxx"
 #include "resip/stack/UInt32Parameter.hxx"
 #include "resip/stack/QValueParameter.hxx"
 #include "resip/stack/ExistsParameter.hxx"
@@ -102,7 +101,7 @@ defineParam(stale, "stale", DataParameter, "RFC ????");
 defineParam(tag, "tag", DataParameter, "RFC ????");
 defineParam(toTag, "to-tag", DataParameter, "RFC ????");
 defineParam(transport, "transport", DataParameter, "RFC ????");
-defineParam(ttl, "ttl", UInt8Parameter, "RFC ????");
+defineParam(ttl, "ttl", UInt32Parameter, "RFC ????");
 defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(user, "user", DataParameter, "RFC ????");
 defineParam(username, "username", QuotedDataParameter, "RFC 3261");

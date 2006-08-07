@@ -229,7 +229,7 @@ typedef ParserContainer<IntegerCategory> IntegerCategories;
 
 // !dlb! not clear this needs to be exposed
 defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", UInt8Category, "RFC 3261");
+defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
 defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");
 defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3262");
 
