@@ -591,6 +591,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          {
             source = determineSourceInterface(msg, target);
             transport = findTransportBySource(source);
+            
+            // !bwc! determineSourceInterface doesn't give us a port
+            if(transport)
+            {
+               source.setPort(transport->port());
+            }
          }
                   
          target.transport=transport;
