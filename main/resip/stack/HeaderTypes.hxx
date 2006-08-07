@@ -42,7 +42,7 @@ class Headers
       {
          UNKNOWN = -1,
          defineMultiHeader(Via, "Via", Via, "RFC 3261"), // rjs says must be first
-         defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261"),
+         defineHeader(MaxForwards, "Max-Forwards", UInt8Category, "RFC 3261"),
          defineMultiHeader(Route, "Route", NameAddr, "RFC 3261"),
          defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC 3261"),
          defineMultiHeader(Path, "Path", NameAddr, "RFC 3327"),
@@ -79,13 +79,13 @@ class Headers
          defineHeader(Date, "Date", DateCategory, "RFC 3261"),
          defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261"),
          defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC 3261"),
-         defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261"),
+         defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261"),
          defineHeader(MIMEVersion, "MIME-Version", Token, "RFC 3261"),
          defineHeader(Organization, "Organization", StringCategory, "RFC 3261"),
          defineHeader(Priority, "Priority", Token, "RFC 3261"),
          defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC 3261"),
          defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC 3261"),
-         defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261"),
+         defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261"),
          defineHeader(Server, "Server", StringCategory, "RFC 3261"),
          defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903"),
          defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903"),
@@ -105,7 +105,7 @@ class Headers
          defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC 3329"),
          defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC 3329"),
          defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC 3329"),
-         defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3262"),
+         defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3262"),
          defineHeader(RAck, "RAck", RAckCategory, "RFC 3262"),
 
          defineMultiHeader(Reason, "Reason", Token, "RFC 3326"),
@@ -121,7 +121,7 @@ class Headers
          defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455"),
          defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455"),
 
-         defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261"),
+         defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261"),
          defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03"),
          
          defineMultiHeader(RESIP_DO_NOT_USE, "ShouldNotSeeThis", StringCategory, "N/A"),
@@ -134,11 +134,13 @@ class Headers
       static bool isCommaTokenizing(Type type);
       static bool isCommaEncoding(Type type);
       static const Data& getHeaderName(int);
+      static bool isMulti(Type type);
 
       // treat as private
       static bool CommaTokenizing[MAX_HEADERS+1];
       static bool CommaEncoding[MAX_HEADERS+1];
       static Data HeaderNames[MAX_HEADERS+1];
+      static bool Multi[MAX_HEADERS+1];
 };
  
 }

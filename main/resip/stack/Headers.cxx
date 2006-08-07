@@ -219,14 +219,14 @@ defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 typedef ParserContainer<IntegerCategory> IntegerCategories;
 
 // !dlb! not clear this needs to be exposed
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3262");
+defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
+defineHeader(MaxForwards, "Max-Forwards", UInt8Category, "RFC 3261");
+defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");
+defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3262");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 // !rwm!  WHO CARES!!!! Comments are evil
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
+defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
 defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
