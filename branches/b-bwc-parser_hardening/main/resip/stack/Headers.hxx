@@ -221,15 +221,10 @@ defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
 defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
 
 //====================
-// UInt8Category:
-//====================
-typedef ParserContainer<UInt8Category> UInt8Categories;
-defineHeader(MaxForwards, "Max-Forwards", UInt8Category, "RFC 3261");
-
-//====================
 // UInt32Category:
 //====================
 typedef ParserContainer<UInt32Category> UInt32Categories;
+defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
 // !dlb! not clear this needs to be exposed
 defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
 defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");

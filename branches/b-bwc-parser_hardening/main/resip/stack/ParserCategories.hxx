@@ -10,7 +10,6 @@
 #include "resip/stack/ExpiresCategory.hxx"
 #include "resip/stack/GenericUri.hxx"
 #include "resip/stack/IntegerCategory.hxx"
-#include "resip/stack/UInt8Category.hxx"
 #include "resip/stack/UInt32Category.hxx"
 #include "resip/stack/Mime.hxx"
 #include "resip/stack/NameAddr.hxx"

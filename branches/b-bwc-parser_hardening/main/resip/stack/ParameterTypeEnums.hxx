@@ -93,7 +93,7 @@ class ParameterTypes
          defineParam(tag, "tag", DataParameter, "RFC ????"),
          defineParam(toTag, "to-tag", DataParameter, "RFC ????"),
          defineParam(transport, "transport", DataParameter, "RFC ????"),
-         defineParam(ttl, "ttl", UInt8Parameter, "RFC ????"),
+         defineParam(ttl, "ttl", UInt32Parameter, "RFC ????"),
          defineParam(uri, "uri", QuotedDataParameter, "RFC ????"),
          defineParam(user, "user", DataParameter, "RFC ????"),
          defineParam(username, "username", DataParameter, "RFC ????"),
