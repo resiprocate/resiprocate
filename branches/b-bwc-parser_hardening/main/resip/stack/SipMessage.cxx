@@ -1060,6 +1060,17 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
       }
       if (len)
       {
+         if(mHeaders[header]->size()==1 && !(Headers::isMulti(header)))
+         {
+            if(mInvalid)
+            {
+               mReason+=",";
+            }
+            mInvalid=true;
+            mReason+="Multiple values in single-value header ";
+            mReason += Headers::getHeaderName(header);
+            return;
+         }
          mHeaders[header]->push_back(new HeaderFieldValue(start, len));
       }
    }
