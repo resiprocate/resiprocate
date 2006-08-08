@@ -255,8 +255,11 @@ SequenceSet::handle(shared_ptr<Event> event)
          str << endl;
       }
       ErrLog (<< "Sequence timed out: " << errorMessage);
-      throw TestEndPoint::AssertException(errorMessage, __FILE__, __LINE__);
       globalFailure(errorMessage);
+      //.dcm. globalFailure will caused all future events to be discarded; in
+      //any case, throwing was making globalFailure dead code, casuing tiemouts
+      //to show up as errors.
+//      throw TestEndPoint::AssertException(errorMessage, __FILE__, __LINE__);
       return;
    }
          
