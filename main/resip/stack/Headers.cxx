@@ -225,7 +225,6 @@ defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 //====================
 // Integer:
 //====================
-typedef ParserContainer<IntegerCategory> IntegerCategories;
 
 // !dlb! not clear this needs to be exposed
 defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");

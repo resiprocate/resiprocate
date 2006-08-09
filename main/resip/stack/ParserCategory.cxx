@@ -431,7 +431,7 @@ defineParam(actor, "actor", QuotedDataParameter, "callee-caps"); // principal|ms
 defineParam(text, "text", ExistsParameter, "callee-caps");
 defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"); //list
 defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
-defineParam(FlowId, "+sip.flowId", IntegerParameter, "outbound");
+defineParam(FlowId, "+sip.flowId", UInt32Parameter, "outbound");
 defineParam(gruu, "gruu", QuotedDataParameter, "gruu");
 
 defineParam(accessType, "access-type", DataParameter, "RFC 2046");
