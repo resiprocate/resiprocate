@@ -698,7 +698,7 @@ main(int arc, char** argv)
    }
 
    {
-      TR _tr("Test poorly formed IntegerParameter by construction");
+      TR _tr("Test poorly formed UInt32Parameter by construction");
 
       char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;duration=";
       
