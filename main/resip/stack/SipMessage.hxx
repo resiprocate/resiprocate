@@ -55,6 +55,8 @@ class SipMessage : public TransactionMessage
 
       static SipMessage* make(const Data& buffer, bool isExternal = false);
       void parseAllHeaders();
+      
+      static bool checkContentLength;
 
       class Exception : public BaseException
       {
