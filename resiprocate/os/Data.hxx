@@ -200,12 +200,12 @@ class RESIP_API Data
 
       static bool isHex(char c);      
       // Trade off between in-object and heap allocation
-      // Larger LocalAlloc makes for larger objects that have Data members but
+      // Larger LocalAllocSize makes for larger objects that have Data members but
       // bulk allocation/deallocation of Data  members.
 
 #ifndef COMPACT_DATA
-      enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE};
-      char mPreBuffer[LocalAlloc+1];
+      enum {LocalAllocSize = RESIP_DATA_LOCAL_SIZE};
+      char mPreBuffer[LocalAllocSize+1];
 #endif
 
       size_type mSize;

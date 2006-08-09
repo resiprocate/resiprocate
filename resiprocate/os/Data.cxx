@@ -180,7 +180,7 @@ Data::Data()
    : mSize(0),
 #ifndef COMPACT_DATA
      mBuf(mPreBuffer),
-     mCapacity(LocalAlloc),
+     mCapacity(LocalAllocSize),
      mMine(Borrow)
 #else
      mBuf(0),
@@ -198,13 +198,13 @@ Data::Data()
 Data::Data(int capacity, bool) 
    : mSize(0),
 #ifndef COMPACT_DATA
-     mBuf(capacity > LocalAlloc 
+     mBuf(capacity > LocalAllocSize 
           ? new char[capacity + 1]
           : mPreBuffer),
-     mCapacity(capacity > LocalAlloc
+     mCapacity(capacity > LocalAllocSize
                ? capacity
-               : LocalAlloc),
-     mMine(capacity > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(capacity > LocalAllocSize ? Take : Borrow)
 #else
      mBuf( new char[capacity + 1]),
      mCapacity(capacity),
@@ -218,13 +218,13 @@ Data::Data(int capacity, bool)
 Data::Data(const char* str, int length) 
    : mSize(length),
 #ifndef COMPACT_DATA
-     mBuf(mSize > LocalAlloc 
+     mBuf(mSize > LocalAllocSize 
           ? new char[mSize + 1]
           : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
+     mCapacity(mSize > LocalAllocSize
                ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(mSize > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[mSize + 1]),
      mCapacity(mSize),
@@ -243,13 +243,13 @@ Data::Data(const char* str, int length)
 Data::Data(const unsigned char* str, int length) 
    : mSize(length),
 #ifndef COMPACT_DATA
-     mBuf(mSize > LocalAlloc 
+     mBuf(mSize > LocalAllocSize 
           ? new char[mSize + 1]
           : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
+     mCapacity(mSize > LocalAllocSize
                ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(mSize > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[mSize + 1]),
      mCapacity(mSize),
@@ -310,13 +310,13 @@ Data::Data(ShareEnum se, const Data& staticData)
 Data::Data(const char* str) 
    : mSize(str ? strlen(str) : 0),
 #ifndef COMPACT_DATA
-     mBuf(mSize > LocalAlloc
+     mBuf(mSize > LocalAllocSize
           ? new char[mSize + 1]
           : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
+     mCapacity(mSize > LocalAllocSize
                ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(mSize > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[mSize + 1]),
      mCapacity(mSize),
@@ -336,13 +336,13 @@ Data::Data(const char* str)
 Data::Data(const string& str)
    : mSize(str.size()),
 #ifndef COMPACT_DATA
-     mBuf(mSize > LocalAlloc
+     mBuf(mSize > LocalAllocSize
           ? new char[mSize + 1]
           : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
+     mCapacity(mSize > LocalAllocSize
                ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(mSize > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[mSize + 1]),
      mCapacity(mSize),
@@ -362,13 +362,13 @@ Data::Data(const string& str)
 Data::Data(const Data& data) 
    : mSize(data.mSize),
 #ifndef COMPACT_DATA
-     mBuf(mSize > LocalAlloc
+     mBuf(mSize > LocalAllocSize
           ? new char[mSize + 1]
           : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
+     mCapacity(mSize > LocalAllocSize
                ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(mSize > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[mSize + 1]),
      mCapacity(mSize),
@@ -391,13 +391,13 @@ static const int IntMaxSize = 12;
 Data::Data(int val)
    : mSize(0),
 #ifndef COMPACT_DATA
-     mBuf(IntMaxSize > LocalAlloc 
+     mBuf(IntMaxSize > LocalAllocSize 
           ? new char[IntMaxSize + 1]
           : mPreBuffer),
-     mCapacity(IntMaxSize > LocalAlloc
+     mCapacity(IntMaxSize > LocalAllocSize
                ? IntMaxSize
-               : LocalAlloc),
-     mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(IntMaxSize > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[IntMaxSize + 1]),
      mCapacity(IntMaxSize),
@@ -453,13 +453,13 @@ static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*IntMaxSize;
 Data::Data(unsigned long value)
    : mSize(0),
 #ifndef COMPACT_DATA
-     mBuf(MaxLongSize > LocalAlloc 
+     mBuf(MaxLongSize > LocalAllocSize 
           ? new char[MaxLongSize + 1]
           : mPreBuffer),
-     mCapacity(MaxLongSize > LocalAlloc
+     mCapacity(MaxLongSize > LocalAllocSize
                ? MaxLongSize
-               : LocalAlloc),
-     mMine(MaxLongSize > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(MaxLongSize > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[MaxLongSize + 1]),
      mCapacity(MaxLongSize),
@@ -499,13 +499,13 @@ static const int DoubleMaxSize = MaxLongSize + DoubleMaxPrecision;
 Data::Data(double value, int precision)
    : mSize(0),
 #ifndef COMPACT_DATA
-     mBuf(DoubleMaxSize + precision > LocalAlloc 
+     mBuf(DoubleMaxSize + precision > LocalAllocSize 
           ? new char[DoubleMaxSize + precision + 1]
           : mPreBuffer),
-     mCapacity(DoubleMaxSize + precision > LocalAlloc
+     mCapacity(DoubleMaxSize + precision > LocalAllocSize
                ? DoubleMaxSize + precision
-               : LocalAlloc),
-     mMine(DoubleMaxSize + precision > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(DoubleMaxSize + precision > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[DoubleMaxSize + 1]),
      mCapacity(DoubleMaxSize),
@@ -588,13 +588,13 @@ Data::Data(double value, int precision)
 Data::Data(unsigned int value)
    : mSize(0),
 #ifndef COMPACT_DATA
-   mBuf(IntMaxSize > LocalAlloc 
+   mBuf(IntMaxSize > LocalAllocSize 
           ? new char[IntMaxSize + 1]
           : mPreBuffer),
-     mCapacity(IntMaxSize > LocalAlloc
+     mCapacity(IntMaxSize > LocalAllocSize
                ? IntMaxSize
-               : LocalAlloc),
-     mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(IntMaxSize > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[IntMaxSize + 1]),
      mCapacity(IntMaxSize),
@@ -633,13 +633,13 @@ static const int CharMaxSize = 1;
 Data::Data(char c)
    : mSize(1),
 #ifndef COMPACT_DATA
-     mBuf(CharMaxSize > LocalAlloc 
+     mBuf(CharMaxSize > LocalAllocSize 
           ? new char[CharMaxSize + 1]
           : mPreBuffer),
-     mCapacity(CharMaxSize > LocalAlloc
+     mCapacity(CharMaxSize > LocalAllocSize
                ? CharMaxSize
-               : LocalAlloc),
-     mMine(CharMaxSize > LocalAlloc ? Take : Borrow)
+               : LocalAllocSize),
+     mMine(CharMaxSize > LocalAllocSize ? Take : Borrow)
 #else
      mBuf(new char[CharMaxSize + 1]),
      mCapacity(CharMaxSize),
@@ -1076,7 +1076,7 @@ Data::c_str() const
    if (mMine == Share)
    {
 #ifndef COMPACT_DATA
-      if (mSize <= LocalAlloc)
+      if (mSize <= LocalAllocSize)
       {
          memcpy(const_cast<Data*>(this)->mPreBuffer, mBuf, mSize);
          const_cast<Data*>(this)->mBuf = (char*)mPreBuffer;
