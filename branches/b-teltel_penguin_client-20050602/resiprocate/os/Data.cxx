@@ -308,7 +308,7 @@ Data::Data(ShareEnum se, const Data& staticData)
 //=============================================================================
 
 Data::Data(const char* str) 
-   : mSize(str ? strlen(str) : 0),
+   : mSize((str ? strlen(str) : 0)),
 #ifndef COMPACT_DATA
      mBuf(mSize > LocalAllocSize
           ? new char[mSize + 1]

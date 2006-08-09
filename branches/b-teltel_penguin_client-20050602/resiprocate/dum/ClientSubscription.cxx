@@ -175,6 +175,28 @@ ClientSubscription::processRequest(const SipMessage& msg)
 }
 
 void
+ClientSubscription::sendNewSubscription()
+{
+   bool reuseAppDialogSet = true;
+   NameAddr remoteTarget(mDialog.mRemoteTarget);
+   if (mDialog.mRemoteTarget.uri().host().empty())
+   {
+      remoteTarget = mLastRequest.header(h_To);
+   }
+   remoteTarget.remove(p_tag);
+   if (reuseAppDialogSet)
+   {
+      SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType(), getAppDialogSet()->reuse());
+      mDum.send(sub);
+   }
+   else
+   {
+      SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType());
+      mDum.send(sub);
+   }
+}
+
+void
 ClientSubscription::processResponse(const SipMessage& msg)
 {
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
@@ -189,15 +211,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
          << mDialog.mRemoteTarget);
       if ( !(msg.exists(h_Expires) && msg.header(h_Expires).value() == 0))
       {
-         NameAddr remoteTarget(mDialog.mRemoteTarget);
-         if (mDialog.mRemoteTarget.uri().host().empty())
-         {
-            remoteTarget = mLastRequest.header(h_To);
-         }
-         remoteTarget.remove(p_tag);
-   
-         SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType());
-         mDum.send(sub);
+         sendNewSubscription();
       }
       handler->onTerminated(getHandle(), msg);
       delete this;
@@ -238,18 +252,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
       else if (retry == 0)
       {
          DebugLog(<< "Application requested immediate retry on Retry-After");
-
-         if (mDialog.mRemoteTarget.uri().host().empty())
-         {
-            SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
-            mDum.send(sub);
-         }
-         else
-         {
-            SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-            mDum.send(sub);
-         }
-
+         sendNewSubscription();
          handler->onTerminated(getHandle(), msg);
          delete this;
          return;
@@ -275,6 +278,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
       }
       else
       {
+#if 1         
          InfoLog(<< "Received " << msg.header(h_StatusLine).statusCode() << " to SUBSCRIBE "
             << mLastRequest.header(h_To) << " : resubscribe in 20 seconds");
 
@@ -282,9 +286,13 @@ ClientSubscription::processResponse(const SipMessage& msg)
             20, 
             getBaseHandle(),
             ++mTimerSeq);
-
-         //handler->onTerminated(getHandle(), msg);
-         //delete this;
+#else      
+         InfoLog(<< "Received " << msg.header(h_StatusLine).statusCode() << " to SUBSCRIBE "
+            << mLastRequest.header(h_To) << " : simply terminate dialog and send New SUBSUSCRIBE to recover it");
+         sendNewSubscription();
+         handler->onTerminated(getHandle(), msg);
+         delete this;
+#endif         
          return;
       }
    }

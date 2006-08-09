@@ -45,6 +45,7 @@ class DUM_API ClientSubscription: public BaseSubscription
 
       void processRequest(const SipMessage& msg);
       void processResponse(const SipMessage& msg);
+      void sendNewSubscription();
 
       // disabled
       ClientSubscription(const ClientSubscription&);
