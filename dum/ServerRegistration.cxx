@@ -120,7 +120,20 @@ ServerRegistration::dispatch(const SipMessage& msg)
        return;
     }
 
-    mAor = msg.header(h_To).uri();
+    mAor = msg.header(h_To).uri().getAorAsUri();
+
+   if(mAor.scheme()!="sip" && mAor.scheme()!="sips")
+   {
+       DebugLog( << "Bad scheme in Aor" );
+       
+       SharedPtr<SipMessage> failure(new SipMessage);
+       mDum.makeResponse(*failure, msg, 400);
+       failure->header(h_StatusLine).reason() = "Bad scheme in To: " + mAor.scheme();
+       mDum.send(failure);
+       delete(this);
+       return;
+   }
+   
 
     database->lockRecord(mAor);
 
