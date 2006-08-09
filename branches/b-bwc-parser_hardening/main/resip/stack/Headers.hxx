@@ -212,9 +212,8 @@ defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
 defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
 //====================
-// IntegerCategory:
+// ExpiresCategory:
 //====================
-typedef ParserContainer<IntegerCategory> IntegerCategories;
 
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
