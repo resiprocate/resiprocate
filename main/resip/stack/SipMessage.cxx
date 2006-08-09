@@ -25,6 +25,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+bool SipMessage::checkContentLength=true;
+
 SipMessage::SipMessage(const Transport* fromWire)
    : mIsExternal(fromWire != 0),
      mTransport(fromWire),
@@ -790,55 +792,45 @@ SipMessage::setStartLine(const char* st, int len)
 void 
 SipMessage::setBody(const char* start, int len)
 {
-#ifndef LENIENT_CONTENT_LENGTH
-   if(exists(h_ContentLength))
+   if(checkContentLength)
    {
-      int contentLength=header(h_ContentLength).value();
-      
-      if(contentLength<0)
+      if(exists(h_ContentLength))
       {
-         InfoLog(<<"Content-Length is negative! (" << contentLength << ")");
-         if(mInvalid)
+         UInt32 contentLength=header(h_ContentLength).value();
+         
+         if(len > contentLength)
          {
-            mReason+=",";
+            InfoLog(<< (len-contentLength) << " extra bytes after body. Ignoring these bytes.");
          }
-
-         mInvalid=true; 
-         mReason+="Bad Content-Length (negative)";
-         header(h_ContentLength).value()=0;
-         contentLength=0;
-      }
-      else if(len > contentLength)
-      {
-         InfoLog(<< (len-contentLength) << " extra bytes after body.");
-      }
-      else if(len < contentLength)
-      {
-         InfoLog(<< "Content Length is "<< (contentLength-len) << " bytes larger than body!"
-                  << " (We are supposed to 400 this) ");
-
-         if(mInvalid)
+         else if(len < contentLength)
          {
-            mReason+=",";
-         }
+            InfoLog(<< "Content Length is "<< (contentLength-len) << " bytes larger than body!"
+                     << " (We are supposed to 400 this) ");
 
-         mInvalid=true; 
-         mReason+="Bad Content-Length (larger than datagram)";
-         header(h_ContentLength).value()=len;
-         contentLength=len;
-                  
+            if(mInvalid)
+            {
+               mReason+=",";
+            }
+
+            mInvalid=true; 
+            mReason+="Bad Content-Length (larger than datagram)";
+            header(h_ContentLength).value()=len;
+            contentLength=len;
+                     
+         }
+         
+         mContentsHfv = new HeaderFieldValue(start,contentLength);
       }
-      
-      mContentsHfv = new HeaderFieldValue(start,contentLength);
+      else
+      {
+         InfoLog(<< "Message has a body, but no Content-Length header.");
+         mContentsHfv = new HeaderFieldValue(start,len);
+      }
    }
    else
    {
-      InfoLog(<< "Message has a body, but no Content-Length header.");
       mContentsHfv = new HeaderFieldValue(start,len);
    }
-#else
-   mContentsHfv = new HeaderFieldValue(start,len);
-#endif
 }
 
 void

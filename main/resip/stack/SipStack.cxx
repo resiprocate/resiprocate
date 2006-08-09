@@ -373,6 +373,7 @@ SipStack::checkAsyncProcessHandler()
    }
 }
 
+
 void
 SipStack::post(const ApplicationMessage& message)
 {
@@ -403,6 +404,30 @@ SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
    //than current timeTillNextProcess?
    checkAsyncProcessHandler();
 }
+
+void 
+SipStack::post(std::auto_ptr<ApplicationMessage> message, 
+               unsigned int secondsLater,
+               TransactionUser* tu)
+{
+   postMS(message, secondsLater*1000, tu);
+}
+
+
+void 
+SipStack::postMS( std::auto_ptr<ApplicationMessage> message, 
+                  unsigned int ms,
+                  TransactionUser* tu)
+{
+   assert(!mShuttingDown);
+   if (tu) message->setTransactionUser(tu);
+   Lock lock(mAppTimerMutex);
+   mAppTimers.add(Timer(ms, message.release()));
+   //.dcm. timer update rather than process cycle...optimize by checking if sooner
+   //than current timeTillNextProcess?
+   checkAsyncProcessHandler();
+}
+
 
 bool
 SipStack::hasMessage() const
