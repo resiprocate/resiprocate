@@ -1003,12 +1003,12 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
 {
    if (header != Headers::UNKNOWN)
    {
-      if (mHeaders[header] == 0)
-      {
-         mHeaders[header] = new HeaderFieldValueList;
-      }
       if (len)
       {
+         if (mHeaders[header] == 0)
+         {
+            mHeaders[header] = new HeaderFieldValueList;
+         }
          mHeaders[header]->push_back(new HeaderFieldValue(start, len));
       }
    }
