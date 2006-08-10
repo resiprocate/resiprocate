@@ -16,7 +16,7 @@ int main()
    
    if(sip->exists(resip::h_From))
    {
-      std::cout << sip->header(resip::h_From) << std::endl;
+      sip->header(resip::h_From);
    }
 
 
