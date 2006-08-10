@@ -20,6 +20,7 @@ endif
 
 
 TESTPROGRAMS += \
+testEmptyHfv.cxx \
 RFC4475TortureTests.cxx \
 limpc.cxx \
 test503Generator.cxx \
