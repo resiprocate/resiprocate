@@ -7,7 +7,7 @@
 #include "resip/stack/Contents.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/stack/GenericContents.hxx"
+#include "resip/stack/OctetContents.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
@@ -155,7 +155,7 @@ Contents::createContents(const Mime& contentType,
    }
    else
    {
-      c = new GenericContents(hfv, contentType);
+      c = new OctetContents(hfv, contentType);
    }
    c->mIsMine = true;
    return c;
