@@ -652,13 +652,8 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
          if (i->exists(p_realm) && 
              i->exists(p_nonce) &&
              i->exists(p_response) &&
-             i->param(p_realm) == realm &&
-             i->exists(p_algorithm))
+             i->param(p_realm) == realm)
          {
-            if(i->param(p_algorithm)!="Digest")
-            {
-               continue;
-            }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
@@ -792,13 +787,8 @@ Helper::authenticateRequest(const SipMessage& request,
          if (i->exists(p_realm) && 
              i->exists(p_nonce) &&
              i->exists(p_response) &&
-             i->param(p_realm) == realm &&
-             i->exists(p_algorithm))
+             i->param(p_realm) == realm)
          {
-            if(i->param(p_algorithm)!="Digest")
-            {
-               continue;
-            }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
@@ -920,18 +910,11 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
       const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
       for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
       {
-         
          if (i->exists(p_realm) && 
              i->exists(p_nonce) &&
              i->exists(p_response) &&
-             i->param(p_realm) == realm &&
-             i->exists(p_algorithm))
+             i->param(p_realm) == realm)
          {
-            if(i->param(p_algorithm)!="Digest")
-            {
-               continue;
-            }
-            
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
