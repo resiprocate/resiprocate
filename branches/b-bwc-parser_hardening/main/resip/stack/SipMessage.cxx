@@ -252,6 +252,7 @@ SipMessage::parseAllHeaders()
       ParserContainerBase* pc=0;
       if(mHeaders[i])
       {
+         ensureHeaders((Headers::Type)i,!Headers::isMulti((Headers::Type)i));
          if(!(pc=mHeaders[i]->getParserContainer()))
          {
             pc = HeaderBase::getInstance((Headers::Type)i)->makeContainer(mHeaders[i]);
