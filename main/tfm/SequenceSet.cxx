@@ -53,6 +53,7 @@ SequenceSet::clear()
       {
          delete *i;
       }
+      mSequences.clear();      
    }
 }
      
