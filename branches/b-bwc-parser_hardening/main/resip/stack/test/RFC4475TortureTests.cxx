@@ -5,6 +5,9 @@
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/ExtensionHeader.hxx"
+#include "resip/stack/ExtensionParameter.hxx"
+#include "resip/stack/ParserCategories.hxx"
+#include "resip/stack/ParameterTypes.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Logger.hxx"
 #include "tassert.h"
@@ -12,23 +15,94 @@
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 void
-badaspec()
+wsinv()
 {
 /*
+   This short, relatively human-readable message contains:
 
-OPTIONS sip:user@example.org SIP/2.0
-Via: SIP/2.0/UDP host4.example.com:5060;branch=z9hG4bKkdju43234
-Max-Forwards: 70
-From: "Bell, Alexander" <sip:a.g.bell@example.com>;tag=433423
-To: "Watson, Thomas" < sip:t.watson@example.org >
-Call-ID: badaspec.sdf0234n2nds0a099u23h3hnnw009cdkne3
-Accept: application/sdp
-CSeq: 3923239 OPTIONS
-l: 0
+   o  line folding all over.
 
+   o  escaped characters within quotes.
+
+   o  an empty subject.
+
+   o  LWS between colons, semicolons, header field values, and other
+      fields.
+
+   o  both comma separated and separately listed header field values.
+
+   o  a mix of short and long form for the same header field name.
+
+   o  unknown Request-URI parameter.
+
+   o  unknown header fields.
+
+   o  an unknown header field with a value that would be syntactically
+      invalid if it were defined in terms of generic-param.
+
+   o  unusual header field ordering.
+
+   o  unusual header field name character case.
+
+   o  unknown parameters of a known header field.
+
+   o  a uri parameter with no value.
+
+   o  a header parameter with no value.
+
+   o  integer fields (Max-Forwards and CSeq) with leading zeros.
+
+   All elements should treat this as a well-formed request.
+
+   The UnknownHeaderWithUnusualValue header field deserves special
+   attention.  If this header field were defined in terms of comma-
+   separated values with semicolon-separated parameters (as would many
+   of the existing defined header fields), this would be invalid.
+   However, since the receiving element does not know the definition of
+   the syntax for this field, it must parse it as a header value.
+   Proxies would forward this header field unchanged.  Endpoints would
+   ignore the header field.
+
+INVITE sip:vivekg@chair-dnrc.example.com;unknownparam SIP/2.0
+TO :
+ sip:vivekg@chair-dnrc.example.com ;   tag    = 1918181833n
+from   : "J Rosenberg \\\""       <sip:jdrosen@example.com>
+  ;
+  tag = 98asjd8
+MaX-fOrWaRdS: 0068
+Call-ID: wsinv.ndaksdj@192.0.2.1
+Content-Length   : 150
+cseq: 0009
+  INVITE
+Via  : SIP  /   2.0
+ /UDP
+    192.0.2.2;branch=390skdjuw
+s :
+NewFangledHeader:   newfangled value
+ continued newfangled value
+UnknownHeaderWithUnusualValue: ;;,,;;,;
+Content-Type: application/sdp
+Route:
+ <sip:services.example.com;lr;unknownwith=value;unknown-no-value>
+v:  SIP  / 2.0  / TCP     spindle.example.com   ;
+  branch  =   z9hG4bK9ikj8  ,
+ SIP  /    2.0   / UDP  192.168.255.111   ; branch=
+ z9hG4bK30239
+m:"Quoted string \"\"" <sip:jdrosen@example.com> ; newparam =
+      newvalue ;
+  secondparam ; q = 0.33
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.3
+s=-
+c=IN IP4 192.0.2.4
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
 
 */
-   FILE* fid= fopen("badaspec.dat","r");
+   FILE* fid= fopen("wsinv.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -63,6 +137,232 @@ l: 0
       resip::oDataStream str(copyEncoded);
       copy.encode(str);
    }
+   
+   // Request Line
+   tassert(msg->header(resip::h_RequestLine).method()==resip::INVITE);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="vivekg");
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="chair-dnrc.example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   resip::ExtensionParameter p_unknownparam("unknownparam");
+   tassert(msg->header(resip::h_RequestLine).uri().exists(p_unknownparam));
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+   
+   //To
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName().empty());
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="vivekg");
+   tassert(msg->header(resip::h_To).uri().host()=="chair-dnrc.example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).exists(resip::p_tag));
+   // !bwc! Why is it impossible to get the value of this parameter?
+   // tassert(msg->header(h_To).uri().param(resip::p_tag)=="1918181833n");
+
+   //From
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="J Rosenberg \\\\\\\"");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="jdrosen");
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   // !bwc! Why is it impossible to get the value of this parameter?
+   // tassert(msg->header(h_From).uri().param(resip::p_tag)=="98asjd8");
+   
+   //Max-Forwards
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==68);
+   
+   //Call-ID
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="wsinv.ndaksdj@192.0.2.1");
+   
+   //Content-Length
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==150);
+   
+   //CSeq
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::INVITE);
+   tassert(msg->header(resip::h_CSeq).sequence()==9);
+   
+   //Vias
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==3);
+   resip::ParserContainer<resip::Via>::iterator i=msg->header(resip::h_Vias).begin();
+   
+   tassert(i->protocolName()=="SIP");
+   tassert(i->protocolVersion()=="2.0");
+   tassert(i->transport()=="UDP");
+   tassert(i->sentHost()=="192.0.2.2");
+   tassert(i->sentPort()==0);
+   
+   tassert(i->exists(resip::p_branch));
+   tassert(!(i->param(resip::p_branch).hasMagicCookie()));
+   tassert(i->param(resip::p_branch).getTransactionId()=="390skdjuw");
+   tassert(i->param(resip::p_branch).clientData().empty());
+   
+   tassert(!(i->exists(resip::p_ttl)));
+   tassert(!(i->exists(resip::p_maddr)));
+   tassert(!(i->exists(resip::p_received)));
+
+   i++;
+   
+   tassert(i->protocolName()=="SIP");
+   tassert(i->protocolVersion()=="2.0");
+   tassert(i->transport()=="TCP");
+   tassert(i->sentHost()=="spindle.example.com");
+   tassert(i->sentPort()==0);
+   
+   tassert(i->exists(resip::p_branch));
+   tassert(i->param(resip::p_branch).hasMagicCookie());
+   tassert(i->param(resip::p_branch).getTransactionId()=="9ikj8");
+   tassert(i->param(resip::p_branch).clientData().empty());
+   
+   tassert(!(i->exists(resip::p_ttl)));
+   tassert(!(i->exists(resip::p_maddr)));
+   tassert(!(i->exists(resip::p_received)));
+   
+   i++;
+   
+   tassert(i->protocolName()=="SIP");
+   tassert(i->protocolVersion()=="2.0");
+   tassert(i->transport()=="UDP");
+   tassert(i->sentHost()=="192.168.255.111");
+   tassert(i->sentPort()==0);
+   
+   tassert(i->exists(resip::p_branch));
+   tassert(i->param(resip::p_branch).hasMagicCookie());
+   tassert(i->param(resip::p_branch).getTransactionId()=="30239");
+   tassert(i->param(resip::p_branch).clientData().empty());
+   
+   tassert(!(i->exists(resip::p_ttl)));
+   tassert(!(i->exists(resip::p_maddr)));
+   tassert(!(i->exists(resip::p_received)));
+   
+   
+   //Subject
+   tassert(msg->exists(resip::h_Subject));
+   tassert(msg->header(resip::h_Subject).value()=="");
+   
+
+   // Unknown headers
+   resip::ExtensionHeader h_NewFangledHeader("NewFangledHeader");
+   
+   tassert(msg->exists(h_NewFangledHeader));
+   tassert(msg->header(h_NewFangledHeader).size()==1);
+   tassert(msg->header(h_NewFangledHeader).begin()->value()=="newfangled value\r\n continued newfangled value");
+   
+   resip::ExtensionHeader h_UnknownHeaderWithUnusualValue("UnknownHeaderWithUnusualValue");
+   
+   tassert(msg->exists(h_UnknownHeaderWithUnusualValue));
+   tassert(msg->header(h_UnknownHeaderWithUnusualValue).size()==1);
+   tassert(msg->header(h_UnknownHeaderWithUnusualValue).begin()->value()==";;,,;;,;");
+   
+   //Content-Type
+   tassert(msg->exists(resip::h_ContentType));
+   tassert(msg->header(resip::h_ContentType).type()=="application");
+   tassert(msg->header(resip::h_ContentType).subType()=="sdp");
+   
+   //Contact
+   tassert(msg->exists(resip::h_Contacts));
+   tassert(msg->header(resip::h_Contacts).size()==1);
+   tassert(msg->header(resip::h_Contacts).begin()->displayName()=="Quoted string \\\"\\\"");
+   tassert(!(msg->header(resip::h_Contacts).begin()->isAllContacts()));
+   tassert(msg->header(resip::h_Contacts).begin()->uri().scheme()=="sip");
+   tassert(msg->header(resip::h_Contacts).begin()->uri().scheme()=="sip");
+   tassert(msg->header(resip::h_Contacts).begin()->uri().user()=="jdrosen");
+   tassert(msg->header(resip::h_Contacts).begin()->uri().host()=="example.com");
+   tassert(msg->header(resip::h_Contacts).begin()->uri().port()==0);
+   tassert(msg->header(resip::h_Contacts).begin()->uri().password().empty());
+   tassert(!(msg->header(resip::h_Contacts).begin()->uri().hasEmbedded()));
+
+   resip::ExtensionParameter p_newparam("newparam");
+   tassert(msg->header(resip::h_Contacts).begin()->exists(p_newparam));
+   tassert(msg->header(resip::h_Contacts).begin()->param(p_newparam)=="newvalue");
+   
+   tassert(msg->header(resip::h_Contacts).begin()->exists(resip::p_q));
+   tassert(msg->header(resip::h_Contacts).begin()->param(resip::p_q)==330);
+   
+   
+   
+   
+
+   std::cerr << "In case wsinv:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+badaspec()
+{
+/*
+
+OPTIONS sip:user@example.org SIP/2.0
+Via: SIP/2.0/UDP host4.example.com:5060;branch=z9hG4bKkdju43234
+Max-Forwards: 70
+From: "Bell, Alexander" <sip:a.g.bell@example.com>;tag=433423
+To: "Watson, Thomas" < sip:t.watson@example.org >
+Call-ID: badaspec.sdf0234n2nds0a099u23h3hnnw009cdkne3
+Accept: application/sdp
+CSeq: 3923239 OPTIONS
+l: 0
+
+
+*/
+   FILE* fid= fopen("badaspec.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+   
+   
 
    std::cerr << "In case badaspec:" << std::endl;
    std::cerr << "Original text:" << std::endl << txt << std::endl;
@@ -3339,97 +3639,6 @@ a=rtpmap:31 LPC
 
 
 void
-wsinv()
-{
-/*
-
-INVITE sip:vivekg@chair-dnrc.example.com;unknownparam SIP/2.0
-TO :
- sip:vivekg@chair-dnrc.example.com ;   tag    = 1918181833n
-from   : "J Rosenberg \\\""       <sip:jdrosen@example.com>
-  ;
-  tag = 98asjd8
-MaX-fOrWaRdS: 0068
-Call-ID: wsinv.ndaksdj@192.0.2.1
-Content-Length   : 150
-cseq: 0009
-  INVITE
-Via  : SIP  /   2.0
- /UDP
-    192.0.2.2;branch=390skdjuw
-s :
-NewFangledHeader:   newfangled value
- continued newfangled value
-UnknownHeaderWithUnusualValue: ;;,,;;,;
-Content-Type: application/sdp
-Route:
- <sip:services.example.com;lr;unknownwith=value;unknown-no-value>
-v:  SIP  / 2.0  / TCP     spindle.example.com   ;
-  branch  =   z9hG4bK9ikj8  ,
- SIP  /    2.0   / UDP  192.168.255.111   ; branch=
- z9hG4bK30239
-m:"Quoted string \"\"" <sip:jdrosen@example.com> ; newparam =
-      newvalue ;
-  secondparam ; q = 0.33
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.3
-s=-
-c=IN IP4 192.0.2.4
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("wsinv.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case wsinv:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
 zeromf()
 {
 /*
@@ -3498,12 +3707,25 @@ int main()
 resip::Log::initialize("cout", "DEBUG", "RFC4475TortureTests");
 try
 {
+   wsinv();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case wsinv : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
    badaspec();
 }
 catch(resip::BaseException& e)
 {
    std::cerr << "Exception caught in test case badaspec : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
+   std::cerr << "This message wasn't valid." << std::endl;
 }
 
 
@@ -4020,17 +4242,6 @@ try
 catch(resip::BaseException& e)
 {
    std::cerr << "Exception caught in test case unreason : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   wsinv();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case wsinv : " << e << std::endl;
    std::cerr << "This message was/wasn't valid." << std::endl;
 }
 
