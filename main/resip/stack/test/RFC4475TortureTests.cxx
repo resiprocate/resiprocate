@@ -162,8 +162,7 @@ a=rtpmap:31 LPC
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
    tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
    tassert(msg->header(resip::h_To).exists(resip::p_tag));
-   // !bwc! Why is it impossible to get the value of this parameter?
-   // tassert(msg->header(h_To).uri().param(resip::p_tag)=="1918181833n");
+   tassert(msg->header(resip::h_To).param(resip::p_tag)=="1918181833n");
 
    //From
    tassert(msg->exists(resip::h_From));
@@ -177,8 +176,7 @@ a=rtpmap:31 LPC
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
    tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
    tassert(msg->header(resip::h_From).exists(resip::p_tag));
-   // !bwc! Why is it impossible to get the value of this parameter?
-   // tassert(msg->header(h_From).uri().param(resip::p_tag)=="98asjd8");
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="98asjd8");
    
    //Max-Forwards
    tassert(msg->exists(resip::h_MaxForwards));
@@ -300,6 +298,242 @@ a=rtpmap:31 LPC
    
 
    std::cerr << "In case wsinv:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+intmeth()
+{
+/*
+   This message exercises a wider range of characters in several key
+   syntactic elements than implementations usually see.  In particular,
+   note the following:
+
+   o  The Method contains non-alpha characters from token.  Note that %
+      is not an escape character for this field.  A method of IN%56ITE
+      is an unknown method.  It is not the same as a method of INVITE.
+
+   o  The Request-URI contains unusual, but legal, characters.
+
+   o  A branch parameter contains all non-alphanum characters from
+      token.
+
+   o  The To header field value's quoted string contains quoted-pair
+      expansions, including a quoted NULL character.
+
+   o  The name part of name-addr in the From header field value contains
+      multiple tokens (instead of a quoted string) with all non-alphanum
+      characters from the token production rule.  That value also has an
+      unknown header parameter whose name contains the non-alphanum
+      token characters and whose value is a non-ascii range UTF-8
+      encoded string.  The tag parameter on this value contains the
+      non-alphanum token characters.
+
+   o  The Call-ID header field value contains the non-alphanum
+      characters from word.  Notice that in this production:
+
+      *  % is not an escape character.  It is only an escape character
+         in productions matching the rule "escaped".
+
+      *  " does not start a quoted string.  None of ',` or " imply that
+         there will be a matching symbol later in the string.
+
+      *  The characters []{}()<> do not have any grouping semantics.
+         They are not required to appear in balanced pairs.
+
+   o  There is an unknown header field (matching extension-header) with
+      non-alphanum token characters in its name and a UTF8-NONASCII
+      value.
+
+   If this unusual URI has been defined at a proxy, the proxy will
+   forward this request normally.  Otherwise, a proxy will generate a
+   404.  Endpoints will generate a 501 listing the methods they
+   understand in an Allow header field.
+
+
+!interesting-Method0123456789_*+`.%indeed'~ sip:1_unusual.URI~(to-be!sure)&isn't+it$/crazy?,/;;*:&it+has=1,weird!*pas$wo~d_too.(doesn't-it)@example.com SIP/2.0
+Via: SIP/2.0/TCP host1.example.com;branch=z9hG4bK-.!%66*_+`'~
+To: "BEL:\ NUL:\  DEL:\" <sip:1_unusual.URI~(to-be!sure)&isn't+it$/crazy?,/;;*@example.com>
+From: token1~` token2'+_ token3*%!.- <sip:mundane@example.com>;fromParam''~+*_!.-%="работающий";tag=_token~1'+`*%!-.
+Call-ID: intmeth.word%ZK-!.*_+'@word`~)(><:\/"][?}{
+CSeq: 139122385 !interesting-Method0123456789_*+`.%indeed'~
+Max-Forwards: 255
+extensionHeader-!.%*+_`'~:﻿大停電
+Content-Length: 0
+
+
+*/
+   FILE* fid= fopen("intmeth.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   // Request Line
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="!interesting-Method0123456789_*+`.%indeed'~");
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="1_unusual.URI~(to-be!sure)&isn't+it$/crazy?,/;;*");
+   tassert(msg->header(resip::h_RequestLine).uri().password()=="&it+has=1,weird!*pas$wo~d_too.(doesn't-it)");
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+   
+   //To
+   tassert(msg->exists(resip::h_To));
+   resip::Data dispName;
+   dispName+="BEL:\\";
+   dispName+=(char)0x07;
+   dispName+=" NUL:\\";
+   dispName+=(char)0x00;
+   dispName+=" DEL:\\";
+   dispName+=(char)0x7F;   
+   tassert(msg->header(resip::h_To).displayName()==dispName);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="1_unusual.URI~(to-be!sure)&isn't+it$/crazy?,/;;*");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(!(msg->header(resip::h_To).exists(resip::p_tag)));
+
+   //From
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="token1~` token2'+_ token3*%!.-");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="mundane");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="_token~1'+`*%!-.");
+   
+   resip::ExtensionParameter p_oddball("fromParam''~+*_!.-%");
+   tassert(msg->header(resip::h_From).exists(p_oddball));
+   resip::Data binaryParamVal;
+   binaryParamVal+=(char)0xD1;
+   binaryParamVal+=(char)0x80;
+   binaryParamVal+=(char)0xD0;
+   binaryParamVal+=(char)0xB0;
+   binaryParamVal+=(char)0xD0;
+   binaryParamVal+=(char)0xB1;
+   binaryParamVal+=(char)0xD0;
+   binaryParamVal+=(char)0xBE;
+   binaryParamVal+=(char)0xD1;
+   binaryParamVal+=(char)0x82;
+   binaryParamVal+=(char)0xD0;
+   binaryParamVal+=(char)0xB0;
+   binaryParamVal+=(char)0xD1;
+   binaryParamVal+=(char)0x8E;
+   binaryParamVal+=(char)0xD1;
+   binaryParamVal+=(char)0x89;
+   binaryParamVal+=(char)0xD0;
+   binaryParamVal+=(char)0xB8;
+   binaryParamVal+=(char)0xD0;
+   binaryParamVal+=(char)0xB9;
+   tassert(msg->header(resip::h_From).param(p_oddball)==binaryParamVal);
+   
+   
+   //Max-Forwards
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==255);
+   
+   //Call-ID
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="intmeth.word%ZK-!.*_+'@word`~)(><:\\/\"][?}{");
+   
+   //Content-Length
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==0);
+   
+   //CSeq
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="!interesting-Method0123456789_*+`.%indeed'~");
+   tassert(msg->header(resip::h_CSeq).sequence()==139122385);
+   
+   //Vias
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator i=msg->header(resip::h_Vias).begin();
+   
+   tassert(i->protocolName()=="SIP");
+   tassert(i->protocolVersion()=="2.0");
+   tassert(i->transport()=="TCP");
+   tassert(i->sentHost()=="host1.example.com");
+   tassert(i->sentPort()==0);
+   
+   tassert(i->exists(resip::p_branch));
+   tassert(i->param(resip::p_branch).hasMagicCookie());
+   tassert(i->param(resip::p_branch).getTransactionId()=="-.!%66*_+`'~");
+   tassert(i->param(resip::p_branch).clientData().empty());
+   
+   tassert(!(i->exists(resip::p_ttl)));
+   tassert(!(i->exists(resip::p_maddr)));
+   tassert(!(i->exists(resip::p_received)));
+
+   
+   // Unknown headers
+   resip::ExtensionHeader h_extensionHeader("extensionHeader-!.%*+_`'~");
+   
+   tassert(msg->exists(h_extensionHeader));
+   tassert(msg->header(h_extensionHeader).size()==1);
+   resip::Data binaryHfv;
+   binaryHfv+=(char)0xEF;
+   binaryHfv+=(char)0xBB;
+   binaryHfv+=(char)0xBF;
+   binaryHfv+=(char)0xE5;
+   binaryHfv+=(char)0xA4;
+   binaryHfv+=(char)0xA7;
+   binaryHfv+=(char)0xE5;
+   binaryHfv+=(char)0x81;
+   binaryHfv+=(char)0x9C;
+   binaryHfv+=(char)0xE9;
+   binaryHfv+=(char)0x9B;
+   binaryHfv+=(char)0xBB;
+   tassert(msg->header(h_extensionHeader).begin()->value()==binaryHfv);
+   
+   
+   std::cerr << "In case intmeth:" << std::endl;
    std::cerr << "Original text:" << std::endl << txt << std::endl;
    std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
    std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
@@ -1534,70 +1768,6 @@ a=rtpmap:31 LPC
    }
 
    std::cerr << "In case insuf:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-intmeth()
-{
-/*
-
-!interesting-Method0123456789_*+`.%indeed'~ sip:1_unusual.URI~(to-be!sure)&isn't+it$/crazy?,/;;*:&it+has=1,weird!*pas$wo~d_too.(doesn't-it)@example.com SIP/2.0
-Via: SIP/2.0/TCP host1.example.com;branch=z9hG4bK-.!%66*_+`'~
-To: "BEL:\ NUL:\  DEL:\" <sip:1_unusual.URI~(to-be!sure)&isn't+it$/crazy?,/;;*@example.com>
-From: token1~` token2'+_ token3*%!.- <sip:mundane@example.com>;fromParam''~+*_!.-%="работающий";tag=_token~1'+`*%!-.
-Call-ID: intmeth.word%ZK-!.*_+'@word`~)(><:\/"][?}{
-CSeq: 139122385 !interesting-Method0123456789_*+`.%indeed'~
-Max-Forwards: 255
-extensionHeader-!.%*+_`'~:﻿大停電
-Content-Length: 0
-
-
-*/
-   FILE* fid= fopen("intmeth.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case intmeth:" << std::endl;
    std::cerr << "Original text:" << std::endl << txt << std::endl;
    std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
    std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
@@ -3720,6 +3890,19 @@ catch(resip::BaseException& e)
 
 try
 {
+   intmeth();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case intmeth : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
    badaspec();
 }
 catch(resip::BaseException& e)
@@ -3912,17 +4095,6 @@ try
 catch(resip::BaseException& e)
 {
    std::cerr << "Exception caught in test case insuf : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   intmeth();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case intmeth : " << e << std::endl;
    std::cerr << "This message was/wasn't valid." << std::endl;
 }
 
