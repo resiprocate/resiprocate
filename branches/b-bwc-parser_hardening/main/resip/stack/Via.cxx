@@ -174,11 +174,13 @@ Via::parse(ParseBuffer& pb)
    }
    else
    {
-      pb.skipToOneOf(";:");
+      // !bwc! If we hit whitespace, we have the host.
+      pb.skipToOneOf(";: \t\r\n");
       pb.data(mSentHost, startMark);
    }
 
    pb.skipToOneOf(";:");
+   
    if (!pb.eof() && *pb.position() == ':')
    {
       startMark = pb.skipChar(':');
