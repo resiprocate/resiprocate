@@ -40,6 +40,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
      mLocalNameAddr(),
      mRemoteNameAddr(),
      mCallId(msg.header(h_CallID)),
+     mDefaultSubExpiration(0),
      mAppDialog(0),
      mDestroying(false),
      mReUseDialogSet(false)
@@ -610,6 +611,7 @@ Dialog::dispatch(const SipMessage& msg)
                break;
             }
             // fall through, out of dialog refer was sent.
+
          case SUBSCRIBE:
          {
             int code = response.header(h_StatusLine).statusCode();
@@ -620,6 +622,19 @@ Dialog::dispatch(const SipMessage& msg)
             }
             else if (code < 300)
             {
+               /*
+                  we're capturing the  value from the expires header off
+                  the 2xx because the ClientSubscription is only created
+                  after receiving the NOTIFY that comes (usually) after
+                  this 2xx.  We really should be creating the
+                  ClientSubscription at either the 2xx or the NOTIFY
+                  whichever arrives first. .mjf.
+                  Note: we're capturing a duration here (not the
+                  absolute time because all the inputs to
+                  ClientSubscription desling with the expiration are expecting
+                  duration type values from the headers. .mjf.
+                */
+               mDefaultSubExpiration = response.header(h_Expires).value();
                return;
             }
             else
@@ -971,7 +986,7 @@ Dialog::makeClientInviteSession(const SipMessage& response)
 ClientSubscription*
 Dialog::makeClientSubscription(const SipMessage& request)
 {
-   return new ClientSubscription(mDum, *this, request);
+   return new ClientSubscription(mDum, *this, request, mDefaultSubExpiration);
 }
 
 
