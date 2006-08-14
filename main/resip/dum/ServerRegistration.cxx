@@ -1,6 +1,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/ServerRegistration.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
@@ -111,6 +112,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     if (!handler || !database)
     {
+      // !bwc! This is a server error; why are we sending a 4xx?
        DebugLog( << "No handler or DB - sending 405" );
        
        SharedPtr<SipMessage> failure(new SipMessage);
@@ -122,13 +124,15 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     mAor = msg.header(h_To).uri().getAorAsUri();
 
-   if(mAor.scheme()!="sip" && mAor.scheme()!="sips")
+   // Checks to see whether this scheme is valid, and supported.
+   if( !( (mAor.scheme()=="sip" || mAor.scheme()=="sips") 
+            && mDum.getMasterProfile()->isSchemeSupported(mAor.scheme()) ) )
    {
        DebugLog( << "Bad scheme in Aor" );
        
        SharedPtr<SipMessage> failure(new SipMessage);
        mDum.makeResponse(*failure, msg, 400);
-       failure->header(h_StatusLine).reason() = "Bad scheme in To: " + mAor.scheme();
+       failure->header(h_StatusLine).reason() = "Bad/unsupported scheme in To: " + mAor.scheme();
        mDum.send(failure);
        delete(this);
        return;
