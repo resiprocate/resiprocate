@@ -14,7 +14,8 @@ class DialogUsageManager;
 class ClientSubscription: public BaseSubscription
 {
    public:      
-      ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
+      ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
+                         const SipMessage& request, UInt64 defaultSubExpiration);
 
       typedef Handle<ClientSubscription> ClientSubscriptionHandle;
       ClientSubscriptionHandle getHandle();
@@ -62,6 +63,8 @@ class ClientSubscription: public BaseSubscription
       //SipMessage mLastNotify;      
       bool mEnded;
       UInt64 mExpires;
+      // this is the expires value from the 2xx coming from the SUB message
+      UInt64 mDefaultExpires;
 
       bool mRefreshing;
       bool mHaveQueuedRefresh;
