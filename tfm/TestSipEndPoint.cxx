@@ -1269,6 +1269,14 @@ TestSipEndPoint::message(const NameAddr& target, const Data& text, const message
 }
 // end - vk
 
+TestSipEndPoint::Request*
+TestSipEndPoint::message(const Uri& target, const Data& text)
+{
+   PlainContents* plain = new PlainContents;
+   plain->text() = text;
+   boost::shared_ptr<resip::Contents> body(plain);
+   return new Request(this, target, resip::MESSAGE, body);
+}
 
 TestSipEndPoint::Request*
 TestSipEndPoint::message(const resip::Uri& target, const boost::shared_ptr<resip::Contents>& contents)
