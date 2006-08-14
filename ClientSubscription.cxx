@@ -18,11 +18,13 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 
-ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
+ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
+                                       const SipMessage& request, UInt64 defaultSubExpiration)
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
      mEnded(false),
      mExpires(0),
+     mDefaultExpires(defaultSubExpiration),
      mRefreshing(false),
      mHaveQueuedRefresh(false),
      mQueuedRefreshInterval(-1),
@@ -121,10 +123,19 @@ ClientSubscription::processResponse(const SipMessage& msg)
    assert(handler);
 
    mRefreshing = false;
-   // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
-   // to ignore this case
+
    if (msg.header(h_StatusLine).statusCode() >= 200 && msg.header(h_StatusLine).statusCode() <300)
    {
+      if (msg.exists(h_Expires))
+      {
+         // grab the expires from the 2xx in case there is not one on the NOTIFY .mjf.
+         int expires = msg.header(h_Expires).value();
+         int lastExpires = mLastRequest->header(h_Expires).value();
+         if (expires < lastExpires)
+         {
+            mLastRequest->header(h_Expires).value() = expires;
+         }
+      }
       sendQueuedRefreshRequest();
    }
    else if (msg.header(h_StatusLine).statusCode() == 481 &&
@@ -243,6 +254,16 @@ ClientSubscription::processNextNotify()
       else if (mLastRequest->exists(h_Expires))
       {
          expires = mLastRequest->header(h_Expires).value();
+      }
+      else if (mDefaultExpires)
+      {
+         /* if we haven't gotten an expires value from:
+            1. the subscription state from this notify
+            2. the last request
+            then use the default expires (meaning it came from the 2xx in response
+            to the initial SUBSCRIBE). .mjf.
+          */
+         expires = mDefaultExpires;
       }
       else
       {
