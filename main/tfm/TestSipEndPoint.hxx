@@ -177,9 +177,9 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
                    boost::shared_ptr<resip::SdpContents> sdp = 
                    boost::shared_ptr<resip::SdpContents>());
             virtual resip::Data toString() const;
+            virtual boost::shared_ptr<resip::SipMessage> go();
             
          private:
-            virtual boost::shared_ptr<resip::SipMessage> go();
             boost::shared_ptr<resip::SdpContents> mSdp;
       };
       friend class Invite;
