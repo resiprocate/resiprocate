@@ -60,6 +60,27 @@ main(int argc, char** argv)
       Pidf pc(&hfv, type);
       assert(pc.getNumTuples() == 1);
    }
+
+   //Test namespace support
+   {
+
+      Data txt ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
+                  "<pr:presence xmlns:pr=\"urn:ietf:params:xml:ns:pidf\">" CRLF
+                  "    <pr:tuple>" CRLF
+                  "       <pr:status>" CRLF
+                  "           <pr:basic>open</pr:basic>" CRLF
+                  "           <pr:contact priority=\"0\">sip:jason_AT_example.com@london.gloo.net</pr:contact>" CRLF
+                  "           <pr:note>test</pr:note>" CRLF
+                  "        </pr:status>" CRLF
+                  "    </pr:tuple>" CRLF
+                  "</pr:presence>");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "pidf+xml");
+      Pidf pc(&hfv, type);
+      pc.checkParsed();
+      assert(pc.getNumTuples() == 1);
+   }
    {
       // http://www.imppwg.org/ml-archive/IMPP-WG/200204/msg00094.html
 
