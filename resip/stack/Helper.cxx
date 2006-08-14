@@ -654,6 +654,10 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
+            if(i->scheme()!="Digest")
+            {
+               continue;
+            }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
@@ -789,6 +793,10 @@ Helper::authenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
+            if(i->scheme()!="Digest")
+            {
+               continue;
+            }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
@@ -915,6 +923,10 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
+            if(i->scheme()!="Digest")
+            {
+               continue;
+            }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
