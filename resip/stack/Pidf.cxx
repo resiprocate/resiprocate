@@ -146,18 +146,38 @@ Pidf::encodeParsed(std::ostream& str) const
       str << "  </tuple>" << Symbols::CRLF;
    }
    str << "</presence>" << Symbols::CRLF;
-   
+
    return str;
 }
 
-void 
+void
 Pidf::parse(ParseBuffer& pb)
 {
    DebugLog(<< "Pidf::parse(" << Data(pb.start(), int(pb.end()-pb.start())) << ") ");
 
+	std::string pidf_namespace;
+
    XMLCursor xml(pb);
 
-   if (xml.getTag() == "presence")
+	XMLCursor::AttributeMap attr = xml.getAttributes();
+	XMLCursor::AttributeMap::const_iterator it =
+			std::find_if(attr.begin(), attr.end(), XMLCursor::AttributeValueEqual("urn:ietf:params:xml:ns:pidf"));
+
+	if ( it != attr.end() ) {
+
+		std::string key(it->first.data(), it->first.size());
+
+		size_t pos = key.find(':');
+
+		if ( pos != string::npos) {
+			pidf_namespace.assign(key, pos+1, key.size()-pos-1);
+			pidf_namespace.append(1, ':');
+		}
+	}
+
+	const std::string presence = pidf_namespace + "presence";
+
+	if (xml.getTag() == presence.c_str())
    {
       XMLCursor::AttributeMap::const_iterator i = xml.getAttributes().find("entity");
       if (i != xml.getAttributes().end())
@@ -168,12 +188,13 @@ Pidf::parse(ParseBuffer& pb)
       {
          DebugLog(<< "no entity!");
       }
-      
+
       if (xml.firstChild())
       {
          do
          {
-            if (xml.getTag() == "tuple")
+				const std::string tuple = pidf_namespace + "tuple";
+				if (xml.getTag() == tuple.c_str())
             {
                Tuple t;
                t.attributes = xml.getAttributes();
@@ -183,20 +204,25 @@ Pidf::parse(ParseBuffer& pb)
                   t.id = i->second;
                   t.attributes.erase("id");
                }
-               
+
                // look for status, contacts, notes -- take last of each for now
                if (xml.firstChild())
                {
                   do
                   {
-                     if (xml.getTag() == "status")
+							const std::string status = pidf_namespace + "status";
+							const std::string contact = pidf_namespace + "contact";
+							const std::string note = pidf_namespace + "note";
+							const std::string timestamp = pidf_namespace + "timestamp";
+                     if (xml.getTag() == status.c_str())
                      {
                         // look for basic
                         if (xml.firstChild())
                         {
                            do
                            {
-                              if (xml.getTag() == "basic")
+										std::string basic = pidf_namespace + "basic";
+                              if (xml.getTag() == basic.c_str())
                               {
                                  if (xml.firstChild())
                                  {
@@ -208,7 +234,7 @@ Pidf::parse(ParseBuffer& pb)
                            xml.parent();
                         }
                      }
-                     else if (xml.getTag() == "contact")
+							else if (xml.getTag() == contact.c_str())
                      {
                         XMLCursor::AttributeMap::const_iterator i = xml.getAttributes().find("priority");
                         if (i != xml.getAttributes().end())
@@ -221,7 +247,7 @@ Pidf::parse(ParseBuffer& pb)
                            xml.parent();
                         }
                      }
-                     else if (xml.getTag() == "note")
+							else if (xml.getTag() == note.c_str())
                      {
                         if (xml.firstChild())
                         {
@@ -229,7 +255,7 @@ Pidf::parse(ParseBuffer& pb)
                            xml.parent();
                         }
                      }
-                     else if (xml.getTag() == "timestamp")
+							else if (xml.getTag() == timestamp.c_str())
                      {
                         if (xml.firstChild())
                         {
