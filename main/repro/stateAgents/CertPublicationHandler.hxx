@@ -26,21 +26,21 @@ class CertPublicationHandler : public resip::ServerPublicationHandler
                              const resip::SipMessage& pub, 
                              const resip::Contents* contents,
                              const resip::SecurityAttributes* attrs, 
-                             int expires);
+                             UInt32 expires);
       virtual void onExpired(resip::ServerPublicationHandle h, const resip::Data& etag);
       virtual void onRefresh(resip::ServerPublicationHandle, 
                              const resip::Data& etag, 
                              const resip::SipMessage& pub, 
                              const resip::Contents* contents,
                              const resip::SecurityAttributes* attrs,
-                             int expires);
+                             UInt32 expires);
       virtual void onUpdate(resip::ServerPublicationHandle h, 
                             const resip::Data& etag, 
                             const resip::SipMessage& pub, 
                             const resip::Contents* contents,
                             const resip::SecurityAttributes* attrs,
-                            int expires);
-      virtual void onRemoved(resip::ServerPublicationHandle h, const resip::Data& etag, const resip::SipMessage& pub, int expires);
+                            UInt32 expires);
+      virtual void onRemoved(resip::ServerPublicationHandle h, const resip::Data& etag, const resip::SipMessage& pub, UInt32 expires);
       
    private:
       void add(resip::ServerPublicationHandle h, const resip::Contents* contents);
