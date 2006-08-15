@@ -653,7 +653,7 @@ class Data
         @param c Pointer to the buffer to hash
         @param size Number of bytes to be hashed
       */
-      static size_t rawHash(const char* c, size_t size);
+      static size_t rawHash(const unsigned char* c, size_t size);
 
       /**
         Creates a 32-bit hash based on the contents of this Data.
@@ -667,7 +667,7 @@ class Data
         @param c Pointer to the buffer to hash
         @param size Number of bytes to be hashed
       */
-      static size_t rawCaseInsensitiveHash(const char* c, size_t size);
+      static size_t rawCaseInsensitiveHash(const unsigned char* c, size_t size);
 
       /**
         Creates a 32-bit hash based on the contents of this Data, after
