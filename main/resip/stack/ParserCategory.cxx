@@ -499,6 +499,8 @@ defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-me
 
 defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
 
+defineParam(addTransport, "addTransport", ExistsParameter, "");
+
 Data
 ParserCategory::commutativeParameterHash() const
 {
