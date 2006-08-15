@@ -117,6 +117,8 @@ class ParameterTypes
          defineParam(qopOptions, "", IGNORE, "RFC 3261"),
          defineParam(qopFactory, "", IGNORE, "RFC 3261"),
 
+         defineParam(addTransport, "addTransport", ExistsParameter, ""),
+
          MAX_PARAMETER
       };
 
