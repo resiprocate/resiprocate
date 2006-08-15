@@ -17,9 +17,11 @@ all: \
 	testDigestAuthentication.obj testDigestAuthentication.exe \
 	testDigestAuthentication2.obj testDigestAuthentication2.exe \
 	testDns.obj testDns.exe \
+        testDnsStub.obj testDnsStub.exe \
 #	testDtlsTransport.obj testDtlsTransport.exe \
 	testEmbedded.obj testEmbedded.exe \
 	testEmptyHeader.obj testEmptyHeader.exe \
+        testEmptyHfv.obj testEmptyHfv.exe \
 	testExternalLogger.obj testExternalLogger.exe \
 	testFlowId.obj testFlowId.exe \
 	testIM.obj testIM.exe \
@@ -52,6 +54,7 @@ all: \
 	testUdp.obj testUdp.exe \
 	testUri.obj testUri.exe \
 	testXMLCursor.obj testXMLCursor.exe \
+	RFC4475TortureTests.obj RFC4475TortureTests.exe \
 	run
 
 
@@ -68,11 +71,13 @@ run:
 	testApplicationSip.exe
 	testConnectionBase.exe
         testDns.exe
+        testDnsStub.exe
 	testCorruption.exe
 	testDigestAuthentication.exe
 #	testDigestAuthentication2.exe
 	testEmbedded.exe
 	testEmptyHeader.exe
+        testEmptyHfv.exe
 	testExternalLogger.exe
 #	testFlowId.exe
 	testIM.exe
@@ -99,6 +104,7 @@ run:
 #	testUdp.exe
 	testUri.exe
 	testXmlCursor.exe
+	RFC4475TortureTests.exe
 
 clean:
 	@del *.exe

@@ -34,10 +34,10 @@ ServerSubscriptionHandler::hasDefaultExpires() const
    return false;
 }
 
-int 
+UInt32 
 ServerSubscriptionHandler::getDefaultExpires() const
 {
-   return -1;
+   return 0;
 }
 
 void 
