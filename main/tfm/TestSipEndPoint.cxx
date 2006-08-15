@@ -1047,14 +1047,6 @@ TestSipEndPoint::rawSend(const Uri& target, const resip::Data& rawText)
    return new RawSend(this, target, rawText);
 }
 
-TestSipEndPoint::RawSend* 
-TestSipEndPoint::rawSend(const resip::Uri& target, 
-                           const boost::shared_ptr<resip::SipMessage> msg1,
-                           const boost::shared_ptr<resip::SipMessage> msg2)
-{
-   return new RawSend(this, target, resip::Data::from(msg1)+resip::Data::from(msg2));
-}
-
 TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, const Uri& to, const Token& eventPackage)
    : mEndPoint(*from),
      mTo(to),
