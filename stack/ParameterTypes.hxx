@@ -118,6 +118,8 @@ defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-conf
 
 defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
 
+defineParam(addTransport, "addTransport", ExistsParameter, "");
+
 // SPECIAL-CASE
 class Qop_Options_Param : public ParamBase
 {
