@@ -21,7 +21,7 @@ class DefaultServerReferHandler : public ServerSubscriptionHandler
       //static DefaultServerReferHandler* Instance();
 
       virtual bool hasDefaultExpires() const;
-      virtual int getDefaultExpires() const;
+      virtual UInt32 getDefaultExpires() const;
    protected:
 };
 

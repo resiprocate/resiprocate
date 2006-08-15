@@ -40,7 +40,7 @@ DefaultServerReferHandler::hasDefaultExpires() const
    return true;
 }
 
-int 
+UInt32 
 DefaultServerReferHandler::getDefaultExpires() const
 {
    return 60;

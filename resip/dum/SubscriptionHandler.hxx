@@ -65,7 +65,7 @@ class ServerSubscriptionHandler
       virtual void onExpired(ServerSubscriptionHandle, SipMessage& notify);
 
       virtual bool hasDefaultExpires() const;
-      virtual int getDefaultExpires() const;
+      virtual UInt32 getDefaultExpires() const;
 
       const Mimes& getSupportedMimeTypes() const;
 };

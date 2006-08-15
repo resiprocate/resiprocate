@@ -645,7 +645,7 @@ DialogUsageManager::makePublication(const NameAddr& targetDocument,
                                     const SharedPtr<UserProfile>& userProfile,
                                     const Contents& body,
                                     const Data& eventType,
-                                    unsigned expiresSeconds,
+                                    UInt32 expiresSeconds,
                                     AppDialogSet* appDs)
 {
    return makeNewSession(new PublicationCreator(*this, targetDocument, userProfile, body, eventType, expiresSeconds), appDs);
@@ -655,7 +655,7 @@ SharedPtr<SipMessage>
 DialogUsageManager::makePublication(const NameAddr& targetDocument,
                                     const Contents& body,
                                     const Data& eventType,
-                                    unsigned expiresSeconds,
+                                    UInt32 expiresSeconds,
                                     AppDialogSet* appDs)
 {
    return makeNewSession(new PublicationCreator(*this, targetDocument, getMasterUserProfile(), body, eventType, expiresSeconds), appDs);
