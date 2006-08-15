@@ -50,6 +50,10 @@ class ThreadIf
       // joins to the thread running thread()
       void join();
 
+      // guarantees resources consumed by thread are released when thread terminates
+      // after this join can no-longer be used
+      void detach();
+
       // request the thread running thread() to return, by setting  mShutdown
       virtual void shutdown();
 
