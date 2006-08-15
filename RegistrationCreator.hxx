@@ -17,7 +17,7 @@ class NameAddr;
 class RegistrationCreator : public BaseCreator 
 {
    public:
-      RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile> userProfile, int RegistrationTime);
+      RegistrationCreator(DialogUsageManager& dum, const NameAddr& target, SharedPtr<UserProfile> userProfile, UInt32 RegistrationTime);
 };
  
 }

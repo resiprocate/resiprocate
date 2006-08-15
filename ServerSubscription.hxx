@@ -53,7 +53,7 @@ class ServerSubscription : public BaseSubscription
       void makeNotifyExpires();
       void makeNotify();    
       
-      int getTimeLeft();
+      UInt32 getTimeLeft();
 
       bool shouldDestroyAfterSendingFailure(const SipMessage& msg);      
 
@@ -62,7 +62,7 @@ class ServerSubscription : public BaseSubscription
 //      const Contents* mCurrentEventDocument;
       SipMessage mLastSubscribe;
 
-      int mExpires;
+      UInt32 mExpires;
 
       // disabled
       ServerSubscription(const ServerSubscription&);

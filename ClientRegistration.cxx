@@ -92,7 +92,7 @@ ClientRegistration::tryModification(ClientRegistration::State state)
 }
 
 void
-ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
+ClientRegistration::addBinding(const NameAddr& contact, UInt32 registrationTime)
 {
    SharedPtr<SipMessage> next = tryModification(Adding);
    mMyContacts.push_back(contact);
@@ -221,7 +221,7 @@ void ClientRegistration::stopRegistering()
 }
 
 void
-ClientRegistration::requestRefresh(int expires)
+ClientRegistration::requestRefresh(UInt32 expires)
 {
     // Set flag so that handlers get called for success/failure
     mUserRefresh = true;
@@ -229,7 +229,7 @@ ClientRegistration::requestRefresh(int expires)
 }
 
 void
-ClientRegistration::internalRequestRefresh(int expires)
+ClientRegistration::internalRequestRefresh(UInt32 expires)
 {
    InfoLog (<< "requesting refresh of " << *this);
    
@@ -256,13 +256,13 @@ ClientRegistration::allContacts()
    return mAllContacts;
 }
 
-int
+UInt32
 ClientRegistration::whenExpires() const
 {
 // !cj! - TODO - I'm supisious these time are getting confused on what units they are in 
    UInt64 now = Timer::getTimeMs() / 1000;
    UInt64 ret = mExpires - now;
-   return (int)ret;
+   return (UInt32)ret;
 }
 
 void
@@ -338,7 +338,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
          // make timers to re-register
-         int expiry = INT_MAX;
+         UInt32 expiry = UINT_MAX;
          if (msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
@@ -347,7 +347,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
             //small size, n^2, don't care
             if (mDialogSet.getUserProfile()->getRinstanceEnabled())
             {
-               int fallbackExpiry = INT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
+               UInt32 fallbackExpiry = UINT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
                for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
                {
                   for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); it != msg.header(h_Contacts).end(); it++)
@@ -362,11 +362,11 @@ ClientRegistration::dispatch(const SipMessage& msg)
                            if (it->uri().exists(p_rinstance) && 
                                it->uri().param(p_rinstance) == itMy->uri().param(p_rinstance))
                            {
-                              expiry = resipMin(it->param(p_expires), expiry);
+                              expiry = resipMin((UInt32)it->param(p_expires), expiry);
                            }
                            else
                            {
-                              fallbackExpiry = resipMin(it->param(p_expires), fallbackExpiry);
+                              fallbackExpiry = resipMin((UInt32)it->param(p_expires), fallbackExpiry);
                            }
                         }
                      }
@@ -375,7 +375,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                         DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
                      }
                   }
-                  if(expiry == INT_MAX)  // if we didn't find a contact with our rinstance, then use the fallbackExpiry
+                  if(expiry == UINT_MAX)  // if we didn't find a contact with our rinstance, then use the fallbackExpiry
                   {
                      expiry = fallbackExpiry;
                   }
@@ -392,7 +392,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                   {
                      try
                      {
-                        expiry = resipMin(it->param(p_expires), expiry);
+                        expiry = resipMin((UInt32)it->param(p_expires), expiry);
                      }
                      catch(ParseBuffer::Exception& e)
                      {
@@ -403,14 +403,14 @@ ClientRegistration::dispatch(const SipMessage& msg)
             }            
          }
 
-         if (expiry == INT_MAX)
+         if (expiry == UINT_MAX)
          {
             if (msg.exists(h_Expires))
             {
                expiry = msg.header(h_Expires).value();
             }
          }
-         if (expiry != INT_MAX)
+         if (expiry != UINT_MAX)
          {
             int exp = Helper::aBitSmallerThan(expiry);
             mExpires = exp + Timer::getTimeMs() / 1000;
