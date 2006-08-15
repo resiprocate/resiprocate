@@ -315,8 +315,8 @@ class InviteSession : public DialogUsage
       unsigned long mCurrentRetransmit200;
 
       // Session Timer settings
-      int  mSessionInterval;
-      int  mMinSE;
+      UInt32 mSessionInterval;
+      UInt32 mMinSE;
       bool mSessionRefresher;
       unsigned int  mSessionTimerSeq;
       bool mSessionRefreshReInvite;      

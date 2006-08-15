@@ -19,7 +19,7 @@ using namespace resip;
 
 
 ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
-                                       const SipMessage& request, UInt64 defaultSubExpiration)
+                                       const SipMessage& request, UInt32 defaultSubExpiration)
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
      mEnded(false),
@@ -129,8 +129,8 @@ ClientSubscription::processResponse(const SipMessage& msg)
       if (msg.exists(h_Expires))
       {
          // grab the expires from the 2xx in case there is not one on the NOTIFY .mjf.
-         int expires = msg.header(h_Expires).value();
-         int lastExpires = mLastRequest->header(h_Expires).value();
+         UInt32 expires = msg.header(h_Expires).value();
+         UInt32 lastExpires = mLastRequest->header(h_Expires).value();
          if (expires < lastExpires)
          {
             mLastRequest->header(h_Expires).value() = expires;
@@ -245,7 +245,7 @@ ClientSubscription::processNextNotify()
    unsigned long refreshInterval = 0;
    if (!qn->outOfOrder())
    {
-      int expires = 0;
+      UInt32 expires = 0;
       //default to 3600 seconds so non-compliant endpoints don't result in leaked usages
       if (qn->notify().exists(h_SubscriptionState) && qn->notify().header(h_SubscriptionState).exists(p_expires))
       {
@@ -410,7 +410,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 }
 
 void
-ClientSubscription::requestRefresh(int expires)
+ClientSubscription::requestRefresh(UInt32 expires)
 {
    if (!mEnded)
    {

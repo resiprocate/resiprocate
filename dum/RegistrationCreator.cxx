@@ -11,12 +11,12 @@ using namespace resip;
 RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, 
                                          const NameAddr& target, 
                                          SharedPtr<UserProfile> userProfile, 
-                                         int RegistrationTime)
+                                         UInt32 registrationTime)
    : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, target, REGISTER);
    mLastRequest->header(h_RequestLine).uri().user() = Data::Empty;
-   mLastRequest->header(h_Expires).value() = RegistrationTime;
+   mLastRequest->header(h_Expires).value() = registrationTime;
 
    if (userProfile->getRinstanceEnabled())
    {
