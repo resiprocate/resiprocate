@@ -202,12 +202,12 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                                             const SharedPtr<UserProfile>& userProfile, 
                                             const Contents& body, 
                                             const Data& eventType, 
-                                            unsigned expiresSeconds, 
+                                            UInt32 expiresSeconds, 
                                             AppDialogSet* = 0);
       SharedPtr<SipMessage> makePublication(const NameAddr& target, 
                                             const Contents& body, 
                                             const Data& eventType, 
-                                            unsigned expiresSeconds, 
+                                            UInt32 expiresSeconds, 
                                             AppDialogSet* = 0);
 
       SharedPtr<SipMessage> makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, AppDialogSet* = 0);
