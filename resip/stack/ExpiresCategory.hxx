@@ -25,11 +25,11 @@ class ExpiresCategory : public ParserCategory
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual ParserCategory* clone() const;
 
-      int& value();
-      int value() const;
+      UInt32& value();
+      UInt32 value() const;
 
    private:
-      mutable int mValue;
+      mutable UInt32 mValue;
 };
  
 }

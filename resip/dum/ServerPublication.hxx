@@ -45,7 +45,7 @@ class ServerPublication : public BaseUsage
       const Data mDocumentKey;
       Helper::ContentsSecAttrs mLastBody;
       unsigned int mTimerSeq;
-      int mExpires;
+      UInt32 mExpires;
 };
 
 }
