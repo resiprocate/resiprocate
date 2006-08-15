@@ -583,14 +583,14 @@ DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<Use
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType,
-                                     int subscriptionTime, AppDialogSet* appDs)
+                                     UInt32 subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime), appDs);
 }
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType,
-                                     int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
+                                     UInt32 subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime, refreshInterval), appDs);
 }
@@ -603,14 +603,14 @@ DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventTy
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
-                                     int subscriptionTime, AppDialogSet* appDs)
+                                     UInt32 subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime), appDs);
 }
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
-                                     int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
+                                     UInt32 subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime, refreshInterval), appDs);
 }
@@ -623,7 +623,7 @@ DialogUsageManager::makeRegistration(const NameAddr& target, const SharedPtr<Use
 }
 
 SharedPtr<SipMessage>
-DialogUsageManager::makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, int registrationTime, AppDialogSet* appDs)
+DialogUsageManager::makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, UInt32 registrationTime, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, userProfile, registrationTime), appDs);
 }
@@ -635,7 +635,7 @@ DialogUsageManager::makeRegistration(const NameAddr& target, AppDialogSet* appDs
 }
 
 SharedPtr<SipMessage>
-DialogUsageManager::makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* appDs)
+DialogUsageManager::makeRegistration(const NameAddr& target, UInt32 registrationTime, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, getMasterUserProfile(), registrationTime), appDs);
 }
