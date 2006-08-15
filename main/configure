@@ -36,6 +36,7 @@ USE_GOOGLE_MALLOC := no
 USE_GOOGLE_CPUPERF := no
 USE_IPV6 := no
 RESIP_FIXED_POINT := no
+PEDANTIC_STACK := no
 INSTALL_PREFIX := /usr/local" > build/Makefile.conf
     exit
   fi
@@ -194,6 +195,13 @@ $uname = `uname`;
     default	=> "no",
     validate	=> [@yesno],
     flag	=> 'resip-fixed-point',
+  },
+  {
+    name	=> "PEDANTIC_STACK",
+    description => "Force stack to fully parse every message it receives?",
+    default	=> "no",
+    validate	=> [@yesno],
+    flag	=> 'pedantic-stack',
   },
   {
     name        => "INSTALL_PREFIX",
