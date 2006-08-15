@@ -159,7 +159,7 @@ TransactionState::process(TransactionController& controller)
          if(sip->isRequest() && sip->header(h_RequestLine).method()!=ACK)
          {
             SipMessage* error = Helper::makeResponse(*sip,400);
-            error->header(StatusLine).reason()+=Data::from(e);
+            error->header(h_StatusLine).reason()+=Data::from(e);
             Tuple target(sip->getSource());
             delete sip;
             controller.mTransportSelector.transmit(error,target);
