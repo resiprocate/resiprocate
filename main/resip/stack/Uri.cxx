@@ -26,8 +26,8 @@ using namespace resip;
 bool Uri::mEncodingReady = false;
 // class static variables listing the default characters not to encode
 // in user and password strings respectively
-Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\()&=+$,;?/");
-Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\()&=+$");
+Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
+Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
 Uri::EncodingTable Uri::mUriEncodingUserTable;
 Uri::EncodingTable Uri::mUriEncodingPasswordTable;
 
