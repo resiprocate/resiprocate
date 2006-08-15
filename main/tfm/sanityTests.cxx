@@ -5569,54 +5569,6 @@ class TestHolder : public Fixture
          ExecuteSequences();
       }
 
-      void testTCPMultiMsg()
-      {
-         InfoLog(<< "*!testTCPMultiMsg!*");
-         Uri server("127.0.0.1:5060");
-
-         Seq(jasonTcp->registerUser(60, jasonTcp->getDefaultContacts()),
-             jasonTcp->expect(REGISTER/407, from(proxy), WaitForResponse, jasonTcp->digestRespond()),
-             jasonTcp->expect(REGISTER/200, from(proxy), WaitForResponse, jasonTcp->noAction()),
-             WaitForEndOfTest);
-
-         boost::shared_ptr<SipMessage> reg;
-         reg = jozsef->registerUser(60, jozsef->getDefaultContacts())->go();
-         boost::shared_ptr<SipMessage> inv;
-         boost::shared_ptr<SipMessage> ring;
-         inv = jozsef->invite(*jasonTcp)->go();
-         
-         resip::Data doubleMsg;
-         {
-            resip::oDataStream s(doubleMsg);
-            reg->encode(s);
-            inv->encode(s);
-         }
-         
-         Seq
-         (
-            jozsef->rawSend(server,doubleMsg),
-            
-            And
-            (
-               Sub
-               (
-                   jozsef->expect(REGISTER/407, from(proxy), WaitForResponse, jozsef->digestRespond()),
-                   jozsef->expect(REGISTER/200, from(proxy), WaitForResponse, jozsef->noAction())
-               ),
-               Sub
-               (
-                  jasonTcp->expect(INVITE, from(jozsef), WaitForCommand, ring <= jasonTcp->ring()),
-                  jozsef->expect(INVITE/180, from(jasonTcp),WaitForResponse, chain(jasonTcp->rawSend(server,ring,ring),jasonTcp->answer())),
-                  jozsef->expect(INVITE/180, from(jasonTcp),WaitForResponse, jozsef->noAction()),
-                  jozsef->expect(INVITE/180, from(jasonTcp),WaitForResponse, jozsef->noAction()),
-                  jozsef->expect(INVITE/200, from(jasonTcp),WaitForResponse, jozsef->ack()),
-                  jasonTcp->expect(ACK, from(proxy),WaitForCommand,jasonTcp->noAction())
-               )
-            ),
-            WaitForEndOfTest
-         );
-      }
-
       void testTCPPreparseError()
       {
          InfoLog(<< "*!testTCPPreparseError!*");
@@ -5850,8 +5802,6 @@ class MyTestCase
 
 	 // Tests of the routing pattern matching logic.
          TEST(testRoutingBasic);
-
-         TEST(testTCPMultiMsg);
 
          // TCP send errors 
          TEST(testTCPPreparseError);
