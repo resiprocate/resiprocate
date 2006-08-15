@@ -35,7 +35,6 @@ TestUser* Fixture::david = 0;
 TestUser* Fixture::enlai = 0;
 TestUser* Fixture::cullen = 0;
 TestUser* Fixture::jozsef = 0;
-TestUser* Fixture::jasonTcp = 0;
 
 Data Fixture::publicInterface;
 Data Fixture::privateInterface;
@@ -82,7 +81,6 @@ Fixture::initialize(int argc, char** argv)
    enlai = makeReproUser(*proxy, "enlai", "localhost", security);
    cullen = makeReproUser(*proxy, "cullen", "localhost", security);
    jozsef = makeReproUser(*proxy, "jozsef", "localhost", security, TCP);
-   jasonTcp = makeReproUser(*proxy, "jason", "localhost", security, TCP);
 #endif
 }
 

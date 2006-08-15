@@ -177,9 +177,9 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
                    boost::shared_ptr<resip::SdpContents> sdp = 
                    boost::shared_ptr<resip::SdpContents>());
             virtual resip::Data toString() const;
-            virtual boost::shared_ptr<resip::SipMessage> go();
             
          private:
+            virtual boost::shared_ptr<resip::SipMessage> go();
             boost::shared_ptr<resip::SdpContents> mSdp;
       };
       friend class Invite;
@@ -228,9 +228,6 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       RawSend* rawSend(const TestSipEndPoint* endPoint, const resip::Data& rawText);
       RawSend* rawSend(const TestUser& endPoint, const resip::Data& rawText);
       RawSend* rawSend(const resip::Uri& target, const resip::Data& rawText);
-      RawSend* rawSend(const resip::Uri& target, 
-                        const boost::shared_ptr<resip::SipMessage> msg1,
-                        const boost::shared_ptr<resip::SipMessage> msg2);
 
       class Subscribe : public Action
       {
