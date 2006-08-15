@@ -675,7 +675,18 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                   {
                      contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                   }
-               }               
+               } 
+               else
+               {
+                  if (contact.uri().exists(p_addTransport))
+                  {
+                     if (target.transport->transport() != UDP)
+                     {
+                        contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+                     }
+                     contact.uri().remove(p_addTransport);
+                  }
+               }
             }
          }
 
