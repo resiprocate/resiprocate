@@ -22,6 +22,8 @@ void SequenceClass::CPUSequenceSetup()
       // get rid of the old SequenceSet
       if (SequenceClass::CPUSequenceSet)
       {
+         //.dcm. -- should rationalize clear and release
+         SequenceClass::CPUSequenceSet->clear();
          SequenceClass::CPUSequenceSet->release();
       }      
       SequenceSet* sset = new SequenceSet();
