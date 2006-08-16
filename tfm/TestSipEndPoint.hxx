@@ -128,7 +128,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       MessageConditionerFn;
 
       typedef boost::function<resip::Data 
-      ( boost::shared_ptr<resip::SipMessage> msg) > 
+      ( const resip::Data& ) > 
       RawConditionerFn;
 
       class IdentityMessageConditioner
@@ -141,7 +141,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       class IdentityRawConditioner
       {
          public:
-            resip::Data operator()(boost::shared_ptr<resip::SipMessage> msg);
+            resip::Data operator()( const resip::Data& );
       };
       static IdentityRawConditioner raw_identity;
 
@@ -155,6 +155,17 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
          private:
             MessageConditionerFn mFn1;
             MessageConditionerFn mFn2;
+      };
+
+      class ChainRawConditions
+      {
+         public:
+            ChainRawConditions(RawConditionerFn fn1, RawConditionerFn fn2);
+            resip::Data operator()( const resip::Data& );
+
+         private:
+            RawConditionerFn mFn1;
+            RawConditionerFn mFn2;
       };
 
       class SaveMessage
@@ -172,6 +183,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             MessageAction(TestSipEndPoint& from, const resip::Uri& to);
             virtual void operator()();
             void setConditioner(MessageConditionerFn conditioner);
+            void setRawConditioner(RawConditionerFn conditioner);
             virtual boost::shared_ptr<resip::SipMessage> go() = 0;
 
          protected:
@@ -179,6 +191,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             resip::Uri mTo;
             boost::shared_ptr<resip::SipMessage> mMsg;
             MessageConditionerFn mConditioner;
+            RawConditionerFn mRawConditioner;
       };
 
       class Invite : public MessageAction
@@ -224,10 +237,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             RawSend(TestSipEndPoint* from, 
                     const resip::Uri& to, 
                     const resip::Data& rawText);
-            RawSend(TestSipEndPoint* from, 
-                    const resip::Uri& to, 
-                    boost::shared_ptr<resip::SipMessage>& msg);
-            void setConditioner(RawConditionerFn conditioner);
+            void setRawConditioner(RawConditionerFn conditioner);
             virtual void operator()();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
@@ -239,19 +249,13 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             TestSipEndPoint& mEndPoint;
             resip::NameAddr mTo;
             resip::Data mRawText;
-            boost::shared_ptr<resip::SipMessage>* mMsg;
-            RawConditionerFn mConditioner;
-            bool rawAlreadySpecified;
+            RawConditionerFn mRawConditioner;
             
       };
       friend class RawSend;
       RawSend* rawSend(const TestSipEndPoint* endPoint, const resip::Data& rawText);
       RawSend* rawSend(const TestUser& endPoint, const resip::Data& rawText);
       RawSend* rawSend(const resip::Uri& target, const resip::Data& rawText);
-
-      RawSend* rawSend(const TestSipEndPoint* endPoint, boost::shared_ptr<resip::SipMessage>& msg);
-      RawSend* rawSend(const TestUser& endPoint, boost::shared_ptr<resip::SipMessage>& msg);
-      RawSend* rawSend(const resip::Uri& target, boost::shared_ptr<resip::SipMessage>& msg);
 
       class Subscribe : public Action
       {
@@ -357,11 +361,13 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage>) = 0;
             void setConditioner(MessageConditionerFn conditioner);
+            void setRawConditioner(RawConditionerFn conditioner);
 
          protected:
             TestSipEndPoint& mEndPoint;
             boost::shared_ptr<resip::SipMessage> mMsg;
             MessageConditionerFn mConditioner;
+            RawConditionerFn mRawConditioner;
       };
 
       class Send300 : public MessageExpectAction
@@ -888,7 +894,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       // !bwc! If rawData is specified, do all target resolution steps
       // based on sipMessage, but put the bits in rawData on the wire.
       virtual void send(boost::shared_ptr<resip::SipMessage>& sipMessage,
-                        const resip::Data rawData=resip::Data::Empty);
+                        RawConditionerFn rawCondition=raw_identity);
       
       // !dlb! need to shove the interface through MessageAction
       void storeSentSubscribe(const boost::shared_ptr<resip::SipMessage>& subscribe);
@@ -1005,8 +1011,12 @@ TestSipEndPoint::MessageAction*
 condition(TestSipEndPoint::MessageConditionerFn fn, 
           TestSipEndPoint::MessageAction* action);
 
+TestSipEndPoint::MessageAction*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, 
+          TestSipEndPoint::MessageAction* action);
+
 TestSipEndPoint::RawSend*
-condition(TestSipEndPoint::RawConditionerFn fn, 
+rawcondition(TestSipEndPoint::RawConditionerFn fn, 
           TestSipEndPoint::RawSend* action);
 
 TestSipEndPoint::MessageAction*
@@ -1019,6 +1029,10 @@ operator<=(boost::shared_ptr<resip::SipMessage>& msgPtr,
 
 TestSipEndPoint::MessageExpectAction*
 condition(TestSipEndPoint::MessageConditionerFn fn, 
+          TestSipEndPoint::MessageExpectAction* action);
+
+TestSipEndPoint::MessageExpectAction*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, 
           TestSipEndPoint::MessageExpectAction* action);
 
 TestSipEndPoint::MessageExpectAction*
@@ -1050,6 +1064,22 @@ compose(TestSipEndPoint::MessageConditionerFn fn4,
         TestSipEndPoint::MessageConditionerFn fn3,
         TestSipEndPoint::MessageConditionerFn fn2,
         TestSipEndPoint::MessageConditionerFn fn1);
+
+// syntactic sugar for composing conditions
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1);
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn3,
+        TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1);
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn4,
+        TestSipEndPoint::RawConditionerFn fn3,
+        TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1);
 
 #endif // TestSipEndPoint_hxx
 
