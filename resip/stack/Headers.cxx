@@ -21,6 +21,7 @@ using namespace resip;
 Data Headers::HeaderNames[MAX_HEADERS+1];
 bool Headers::CommaTokenizing[] = {false};
 bool Headers::CommaEncoding[] = {false};
+bool Headers::Multi[]={false};
 HeaderBase* HeaderBase::theHeaderInstances[] = {0};
 
 bool 
@@ -41,6 +42,12 @@ Headers::getHeaderName(int type)
    return HeaderNames[type+1];
 }
 
+bool
+Headers::isMulti(Type type)
+{
+   return Multi[type+1];
+}
+
 #define defineHeader(_enum, _name, _type, _reference)                                                                   \
 Headers::Type                                                                                                           \
 H_##_enum::getTypeNum() const {return Headers::_enum;}                                                                  \
@@ -58,6 +65,7 @@ H_##_enum::H_##_enum()                                                          
    Headers::CommaTokenizing[Headers::_enum+1] = bool(Type::commaHandling & ParserCategory::CommasAllowedOutputMulti);   \
    Headers::CommaEncoding[Headers::_enum+1] = bool(Type::commaHandling & 2);                                            \
    Headers::HeaderNames[Headers::_enum+1] = _name;                                                                      \
+   Headers::Multi[Headers::_enum+1] = false;                                                                             \
    HeaderBase::theHeaderInstances[Headers::_enum+1] = this;                                                                             \
 }                                                                                                                       \
                                                                                                                         \
@@ -92,6 +100,7 @@ H_##_enum##s::H_##_enum##s()                                                    
    Headers::CommaTokenizing[Headers::_enum+1] = bool(Type::value_type::commaHandling & ParserCategory::CommasAllowedOutputMulti);       \
    Headers::CommaEncoding[Headers::_enum+1] = bool(Type::value_type::commaHandling & 2);                                                \
    Headers::HeaderNames[Headers::_enum+1] = _name;                                                                                      \
+   Headers::Multi[Headers::_enum+1] = true;                                                                             \
    HeaderBase::theHeaderInstances[Headers::_enum+1] = this;                                                                             \
 }                                                                                                                                       \
                                                                                                                                         \
@@ -216,17 +225,16 @@ defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 //====================
 // Integer:
 //====================
-typedef ParserContainer<IntegerCategory> IntegerCategories;
 
 // !dlb! not clear this needs to be exposed
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3262");
+defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
+defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
+defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");
+defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3262");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
 // !rwm!  WHO CARES!!!! Comments are evil
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
+defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
 defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");

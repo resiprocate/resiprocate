@@ -440,6 +440,11 @@ class SipStack
       */
       volatile bool& statisticsManagerEnabled();
       const bool statisticsManagerEnabled() const;
+      
+      void setContentLengthChecking(bool check)
+      {
+         SipMessage::checkContentLength=check;
+      }
 
    private:
       /// Notify an async process handler - if one has been registered

@@ -1,90 +1,41 @@
-#if defined(HAVE_CONFIG_H)
-#include "resip/stack/config.hxx"
+#if !defined(RESIP_UINT32_CATEGORY_HXX)
+#define RESIP_UINT32_CATEGORY_HXX
+
+#include <iosfwd>
+#include "rutil/Data.hxx"
+#include "resip/stack/ParserCategory.hxx"
+
+namespace resip
+{
+
+//====================
+// UInt32:
+//====================
+class UInt32Category : public ParserCategory
+{
+   public:
+      enum {commaHandling = NoCommaTokenizing};
+
+      UInt32Category();
+      UInt32Category(HeaderFieldValue* hfv, Headers::Type type);
+      UInt32Category(const UInt32Category&);
+      UInt32Category& operator=(const UInt32Category&);
+
+      virtual void parse(ParseBuffer& pb);
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual ParserCategory* clone() const;
+
+      UInt32& value() const;
+      Data& comment() const;
+
+   private:
+      mutable UInt32 mValue;
+      mutable Data mComment;
+};
+ 
+}
+
 #endif
-
-#include "resip/stack/ExpiresCategory.hxx"
-#include "rutil/Logger.hxx"
-#include "rutil/ParseBuffer.hxx"
-#include "rutil/WinLeakCheck.hxx"
-
-using namespace resip;
-using namespace std;
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
-//====================
-// Expires:
-//====================
-ExpiresCategory:: ExpiresCategory()
-   : ParserCategory(), 
-     mValue(0) 
-{}
-
-ExpiresCategory::ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), mValue(0)
-{}
-
-ExpiresCategory::ExpiresCategory(const ExpiresCategory& rhs)
-   : ParserCategory(rhs),
-     mValue(rhs.mValue)
-{}
-
-ExpiresCategory&
-ExpiresCategory::operator=(const ExpiresCategory& rhs)
-{
-   if (this != &rhs)
-   {
-      ParserCategory::operator=(rhs);
-      mValue = rhs.mValue;
-   }
-   return *this;
-}
-
-ParserCategory* ExpiresCategory::clone() const
-{
-   return new ExpiresCategory(*this);
-}
-
-
-UInt32& 
-ExpiresCategory::value() 
-{
-   checkParsed(); 
-   return mValue;
-}
-
-UInt32
-ExpiresCategory::value() const 
-{
-   checkParsed(); 
-   return mValue;
-}
-
-void
-ExpiresCategory::parse(ParseBuffer& pb)
-{
-   pb.skipWhitespace();
-   const char *p = pb.position();
-   if (!pb.eof() && isdigit(*p))
-   {
-     mValue = pb.uInt32();
-   }
-   else
-   {
-      mValue = 3600;
-   }
-   pb.skipToChar(Symbols::SEMI_COLON[0]);
-   parseParameters(pb);
-}
-
-std::ostream& 
-ExpiresCategory::encodeParsed(std::ostream& str) const
-{
-   str << mValue;
-   encodeParameters(str);
-   return str;
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

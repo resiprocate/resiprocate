@@ -128,6 +128,7 @@ ParseBuffer::skipChars(const Data& cs)
 ParseBuffer::Pointer 
 ParseBuffer::skipNonWhitespace()
 {
+   assertNotEof();
    while (mPosition < mEnd)
    {
       switch (*mPosition)
@@ -730,18 +731,23 @@ ParseBuffer::integer()
    }
    
    int num = 0;
+   int last=0;
    while (!eof() && isdigit(*mPosition))
    {
+      last=num;
       num = num*10 + (*mPosition-'0');
+      if(signum*last > signum*num)
+      {
+         fail(__FILE__, __LINE__,"Overflow detected.");
+      }
       skipChar();
    }
    
    return signum*num;
 }
 
-//!dcm! -- merge these, ask about length checks
-unsigned long
-ParseBuffer::unsignedInteger()
+UInt8
+ParseBuffer::uInt8()
 {
    if (this->eof())
    {
@@ -760,10 +766,54 @@ ParseBuffer::unsignedInteger()
       fail(__FILE__, __LINE__,msg);
    }
    
-   unsigned long num = 0;
+   UInt8 num = 0;
+   UInt8 last = 0;
    while (!eof() && isdigit(*mPosition))
    {
+      last = num;
       num = num*10 + (*mPosition-'0');
+      if(last>num)
+      {
+         fail(__FILE__, __LINE__,"Overflow detected.");
+      }
+      skipChar();
+   }
+   
+   return num;
+}
+
+
+//!dcm! -- merge these, ask about length checks
+UInt32
+ParseBuffer::uInt32()
+{
+   if (this->eof())
+   {
+
+      fail(__FILE__, __LINE__,"Expected a digit, got eof ");
+   }
+
+   const char* p = mPosition;
+   assert(p);
+   char c = *p;
+
+   if (!isdigit(c))
+   {
+      Data msg("Expected a digit, got: ");
+      msg += Data(mPosition, (mEnd - mPosition));
+      fail(__FILE__, __LINE__,msg);
+   }
+   
+   UInt32 num = 0;
+   UInt32 last = 0;
+   while (!eof() && isdigit(*mPosition))
+   {
+      last = num;
+      num = num*10 + (*mPosition-'0');
+      if(last>num)
+      {
+         fail(__FILE__, __LINE__,"Overflow detected.");
+      }
       skipChar();
    }
    
@@ -771,7 +821,7 @@ ParseBuffer::unsignedInteger()
 }
 
 UInt64
-ParseBuffer::unsignedLongLong()
+ParseBuffer::uInt64()
 {
    if (this->eof())
    {
@@ -791,11 +841,17 @@ ParseBuffer::unsignedLongLong()
    }
    
    UInt64 num = 0;
+   UInt64 last = 0;
    while (!eof() && isdigit(*mPosition))
    {
+      last = num;
       num = num*10 + (*mPosition-'0');
+      if(last>num)
+      {
+         fail(__FILE__, __LINE__,"Overflow detected.");
+      }
       skipChar();
-   }   
+   }
    return num;
 }
 

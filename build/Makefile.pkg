@@ -148,6 +148,10 @@ ifeq ($(RESIP_FIXED_POINT),yes)
 DEFINES += RESIP_FIXED_POINT
 endif
 
+ifeq ($(PEDANTIC_STACK),yes)
+DEFINES += PEDANTIC_STACK
+endif
+
 TFMLIBS_INCLUDEDIRS := $(ROOT)/tfm/contrib/Netxx-0.3.2/include $(ROOT)/tfm/contrib $(ROOT)/tfm/contrib/cppunit/include
 TFMLIBS_LIBDIRS := $(ROOT)/tfm/contrib/Netxx-0.3.2/src $(ROOT)/tfm/contrib/cppunit/src/cppunit/.libs
 TFMLIBS_LIBNAME :=  Netxx boost_regex cppunit
