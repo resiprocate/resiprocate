@@ -151,15 +151,9 @@ class TestHolder : public Fixture
       }
       
       static resip::Data
-      doubleSend(boost::shared_ptr<SipMessage> msg)
+      doubleSend(const resip::Data& msg)
       {
-         resip::Data result;
-         {
-            resip::oDataStream s(result);
-            msg->encode(s);
-            msg->encode(s);
-            s.flush();
-         }
+         resip::Data result=msg+msg;
          return result;
       }
 
@@ -5609,8 +5603,7 @@ class TestHolder : public Fixture
                ),
                Sub
                (
-                  jasonTcp->expect(INVITE, from(jozsef), WaitForCommand, ring <= jasonTcp->ring()),
-                  jozsef->expect(INVITE/180, from(jasonTcp),WaitForResponse, chain(condition(doubleSend,jasonTcp->rawSend(server,ring)),jasonTcp->answer())),
+                  jasonTcp->expect(INVITE, from(jozsef), WaitForCommand, chain(rawcondition(doubleSend,jasonTcp->ring()),jasonTcp->answer())),
                   jozsef->expect(INVITE/180, from(jasonTcp),WaitForResponse, jozsef->noAction()),
                   jozsef->expect(INVITE/180, from(jasonTcp),WaitForResponse, jozsef->noAction()),
                   jozsef->expect(INVITE/200, from(jasonTcp),WaitForResponse, jozsef->ack()),
