@@ -6,6 +6,7 @@
 #include "resip/stack/QuotedDataParameter.hxx"
 #include "resip/stack/QopParameter.hxx"
 #include "resip/stack/IntegerParameter.hxx"
+#include "resip/stack/UInt32Parameter.hxx"
 #include "resip/stack/QValueParameter.hxx"
 #include "resip/stack/ExistsParameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
@@ -50,7 +51,7 @@ defineParam(actor, "actor", QuotedDataParameter, "callee-caps"); // principal|ms
 defineParam(text, "text", ExistsParameter, "callee-caps");
 defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"); //list
 defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
-defineParam(FlowId, "+sip.flowId", IntegerParameter, "outbound");
+defineParam(FlowId, "+sip.flowId", UInt32Parameter, "outbound");
 defineParam(gruu, "gruu", QuotedDataParameter, "gruu");
 
 defineParam(accessType, "access-type", DataParameter, "RFC 2046");
@@ -65,9 +66,9 @@ defineParam(dQop, "d-qop", DataParameter, "RFC ????");
 defineParam(dVer, "d-ver", QuotedDataParameter, "RFC ????");
 defineParam(directory, "directory", DataParameter, "RFC 2046");
 defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
-defineParam(duration, "duration", IntegerParameter, "RFC ????");
-defineParam(expiration, "expiration", IntegerParameter, "RFC 2046");
-defineParam(expires, "expires", IntegerParameter, "RFC ????");
+defineParam(duration, "duration", UInt32Parameter, "RFC ????");
+defineParam(expiration, "expiration", UInt32Parameter, "RFC 2046");
+defineParam(expires, "expires", UInt32Parameter, "RFC ????");
 defineParam(filename, "filename", DataParameter, "RFC ????");
 defineParam(fromTag, "from-tag", DataParameter, "RFC ????");
 defineParam(handling, "handling", DataParameter, "RFC ????");
@@ -89,7 +90,7 @@ defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
 defineParam(reason, "reason", DataParameter, "RFC ????");
 defineParam(received, "received", DataParameter, "RFC ????");
 defineParam(response, "response", QuotedDataParameter, "RFC ????");
-defineParam(retryAfter, "retry-after", IntegerParameter, "RFC ????");
+defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC ????");
 defineParam(rinstance, "rinstance", DataParameter, "");
 defineParam(rport, "rport", RportParameter, "RFC ????");
 defineParam(server, "server", DataParameter, "RFC 2046");
@@ -100,7 +101,7 @@ defineParam(stale, "stale", DataParameter, "RFC ????");
 defineParam(tag, "tag", DataParameter, "RFC ????");
 defineParam(toTag, "to-tag", DataParameter, "RFC ????");
 defineParam(transport, "transport", DataParameter, "RFC ????");
-defineParam(ttl, "ttl", IntegerParameter, "RFC ????");
+defineParam(ttl, "ttl", UInt32Parameter, "RFC ????");
 defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(user, "user", DataParameter, "RFC ????");
 defineParam(username, "username", QuotedDataParameter, "RFC 3261");
@@ -111,7 +112,7 @@ defineParam(profileType, "profile-type", DataParameter, "draft-ietf-sipping-conf
 defineParam(vendor, "vendor", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(model, "model", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(version, "version", DataParameter, "draft-ietf-sipping-config-framework");
-defineParam(effectiveBy, "effective-by", IntegerParameter, "draft-ietf-sipping-config-framework");
+defineParam(effectiveBy, "effective-by", UInt32Parameter, "draft-ietf-sipping-config-framework");
 defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework");

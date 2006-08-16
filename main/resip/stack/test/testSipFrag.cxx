@@ -37,12 +37,12 @@ main(int argc, char* argv[])
         "Max-Forwards: 70\r\n"
         "Contact: <sip:alice@pc33.atlanta.com>\r\n"
         "Content-Type: message/sipfrag\r\n"
-        "Content-Length: 57\r\n"
-        "\r\n"
+        "Content-Length: 59\r\n"
+        "\r\n" 
         "Content-Type: text/plain\r\n"
         "Content-Length: 11\r\n"
-        "\r\n"
-        "Hi There!");
+        "\r\n" 
+        "Hi There!\r\n");
 
      try
      {

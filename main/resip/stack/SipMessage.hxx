@@ -55,6 +55,8 @@ class SipMessage : public TransactionMessage
 
       static SipMessage* make(const Data& buffer, bool isExternal = false);
       void parseAllHeaders();
+      
+      static bool checkContentLength;
 
       class Exception : public BaseException
       {
@@ -92,7 +94,10 @@ class SipMessage : public TransactionMessage
 
       bool isRequest() const;
       bool isResponse() const;
-
+      bool isInvalid() const{return mInvalid;}
+      
+      const resip::Data& getReason() const{return mReason;}
+      
       const RequestLine& 
       header(const RequestLineType& l) const;
 
@@ -176,13 +181,13 @@ class SipMessage : public TransactionMessage
       defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
       defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
-      defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-      defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-      defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-      defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
+      defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
+      defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
+      defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");
+      defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
-      defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
+      defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 
       defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
       defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
@@ -331,6 +336,9 @@ class SipMessage : public TransactionMessage
       mutable bool mRequest;
       mutable bool mResponse;
 
+      bool mInvalid;
+      resip::Data mReason;
+      
       Data mEncoded; // to be retransmitted
       UInt64 mCreatedTime;
 
