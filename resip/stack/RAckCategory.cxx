@@ -130,10 +130,10 @@ RAckCategory::parse(ParseBuffer& pb)
 {
    const char* anchorPtr;
    pb.skipWhitespace();
-   mRSequence = pb.unsignedInteger();
+   mRSequence = pb.uInt32();
 
    pb.skipWhitespace();
-   mCSequence = pb.unsignedInteger();
+   mCSequence = pb.uInt32();
 
    anchorPtr = pb.skipWhitespace();
    pb.skipNonWhitespace();

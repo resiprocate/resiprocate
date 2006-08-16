@@ -2,87 +2,60 @@
 #include "resip/stack/config.hxx"
 #endif
 
-#include "resip/stack/ExpiresCategory.hxx"
-#include "rutil/Logger.hxx"
+#include "resip/stack/UInt32Parameter.hxx"
+#include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
-//====================
-// Expires:
-//====================
-ExpiresCategory:: ExpiresCategory()
-   : ParserCategory(), 
-     mValue(0) 
-{}
-
-ExpiresCategory::ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), mValue(0)
-{}
-
-ExpiresCategory::ExpiresCategory(const ExpiresCategory& rhs)
-   : ParserCategory(rhs),
-     mValue(rhs.mValue)
-{}
-
-ExpiresCategory&
-ExpiresCategory::operator=(const ExpiresCategory& rhs)
-{
-   if (this != &rhs)
-   {
-      ParserCategory::operator=(rhs);
-      mValue = rhs.mValue;
-   }
-   return *this;
-}
-
-ParserCategory* ExpiresCategory::clone() const
-{
-   return new ExpiresCategory(*this);
-}
-
-
-UInt32& 
-ExpiresCategory::value() 
-{
-   checkParsed(); 
-   return mValue;
-}
-
-UInt32
-ExpiresCategory::value() const 
-{
-   checkParsed(); 
-   return mValue;
-}
-
-void
-ExpiresCategory::parse(ParseBuffer& pb)
+UInt32Parameter::UInt32Parameter(ParameterTypes::Type type,
+                                   ParseBuffer& pb, 
+                                   const char* terminators)
+   : Parameter(type),
+     mValue(0)
 {
    pb.skipWhitespace();
-   const char *p = pb.position();
-   if (!pb.eof() && isdigit(*p))
+   pb.skipChar(Symbols::EQUALS[0]);
+   pb.skipWhitespace();
+   pb.assertNotEof();
+   
+   // hack to allow expires to have an 2543 style quoted Date
+   if (type == ParameterTypes::expires)
    {
-     mValue = pb.uInt32();
+      try
+      {
+         mValue = pb.uInt32();
+      }
+      catch (ParseBuffer::Exception&)
+      {
+         mValue = 3600;
+         pb.skipToOneOf(ParseBuffer::ParamTerm);
+      }
+      
    }
    else
    {
-      mValue = 3600;
+      mValue = pb.uInt32();
    }
-   pb.skipToChar(Symbols::SEMI_COLON[0]);
-   parseParameters(pb);
 }
 
-std::ostream& 
-ExpiresCategory::encodeParsed(std::ostream& str) const
+UInt32Parameter::UInt32Parameter(ParameterTypes::Type type, UInt32 value)
+   : Parameter(type),
+     mValue(value)
+{}
+      
+Parameter* 
+UInt32Parameter::clone() const
 {
-   str << mValue;
-   encodeParameters(str);
-   return str;
+   return new UInt32Parameter(*this);
+}
+
+ostream&
+UInt32Parameter::encode(ostream& stream) const
+{
+   return stream << getName() << Symbols::EQUALS << mValue;
 }
 
 

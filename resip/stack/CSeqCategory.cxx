@@ -137,7 +137,7 @@ void
 CSeqCategory::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
-   mSequence = pb.unsignedInteger();
+   mSequence = pb.uInt32();
 
    const char* anchorPtr = pb.skipWhitespace();
    pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you
