@@ -25,6 +25,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+bool SipMessage::checkContentLength=true;
+
 SipMessage::SipMessage(const Transport* fromWire)
    : mIsExternal(fromWire != 0),
      mTransport(fromWire),
@@ -34,6 +36,7 @@ SipMessage::SipMessage(const Transport* fromWire)
      mRFC2543TransactionId(),
      mRequest(false),
      mResponse(false),
+     mInvalid(false),
      mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0),
      mTlsDomain(Data::Empty)
@@ -82,6 +85,8 @@ SipMessage::operator=(const SipMessage& rhs)
       mRFC2543TransactionId = rhs.mRFC2543TransactionId;
       mRequest = rhs.mRequest;
       mResponse = rhs.mResponse;
+      mInvalid = rhs.mInvalid;
+      mReason = rhs.mReason;
       mForceTarget = 0;
       mTlsDomain = rhs.mTlsDomain;
       
@@ -247,6 +252,7 @@ SipMessage::parseAllHeaders()
       ParserContainerBase* pc=0;
       if(mHeaders[i])
       {
+         ensureHeaders((Headers::Type)i,!Headers::isMulti((Headers::Type)i));
          if(!(pc=mHeaders[i]->getParserContainer()))
          {
             pc = HeaderBase::getInstance((Headers::Type)i)->makeContainer(mHeaders[i]);
@@ -787,7 +793,45 @@ SipMessage::setStartLine(const char* st, int len)
 void 
 SipMessage::setBody(const char* start, int len)
 {
-   mContentsHfv = new HeaderFieldValue(start, len);
+   if(checkContentLength)
+   {
+      if(exists(h_ContentLength))
+      {
+         UInt32 contentLength=header(h_ContentLength).value();
+         
+         if(len > contentLength)
+         {
+            InfoLog(<< (len-contentLength) << " extra bytes after body. Ignoring these bytes.");
+         }
+         else if(len < contentLength)
+         {
+            InfoLog(<< "Content Length is "<< (contentLength-len) << " bytes larger than body!"
+                     << " (We are supposed to 400 this) ");
+
+            if(mInvalid)
+            {
+               mReason+=",";
+            }
+
+            mInvalid=true; 
+            mReason+="Bad Content-Length (larger than datagram)";
+            header(h_ContentLength).value()=len;
+            contentLength=len;
+                     
+         }
+         
+         mContentsHfv = new HeaderFieldValue(start,contentLength);
+      }
+      else
+      {
+         InfoLog(<< "Message has a body, but no Content-Length header.");
+         mContentsHfv = new HeaderFieldValue(start,len);
+      }
+   }
+   else
+   {
+      mContentsHfv = new HeaderFieldValue(start,len);
+   }
 }
 
 void
@@ -1009,6 +1053,17 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
       }
       if (len)
       {
+         if(mHeaders[header]->size()==1 && !(Headers::isMulti(header)))
+         {
+            if(mInvalid)
+            {
+               mReason+=",";
+            }
+            mInvalid=true;
+            mReason+="Multiple values in single-value header ";
+            mReason += Headers::getHeaderName(header);
+            return;
+         }
          mHeaders[header]->push_back(new HeaderFieldValue(start, len));
       }
    }
@@ -1281,13 +1336,13 @@ defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
 defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
 defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
+defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
+defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
+defineHeader(MinExpires, "Min-Expires", Uint32Category, "RFC 3261");
+defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
+defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");

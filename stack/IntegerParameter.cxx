@@ -33,6 +33,11 @@ IntegerParameter::IntegerParameter(ParameterTypes::Type type,
          mValue = 3600;
          pb.skipToOneOf(ParseBuffer::ParamTerm);
       }
+      
+      if(mValue < 0)
+      {
+         mValue = 3600;
+      }
    }
    else
    {

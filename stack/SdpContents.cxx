@@ -296,10 +296,10 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
    pb.data(mUser, anchor);
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mSessionId = pb.unsignedLongLong();
+   mSessionId = pb.uInt64();
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mVersion = pb.unsignedLongLong();
+   mVersion = pb.uInt64();
 
    pb.skipChar(Symbols::SPACE[0]);
    pb.skipChar('I');
@@ -660,9 +660,9 @@ SdpContents::Session::Time::parse(ParseBuffer& pb)
    pb.skipChar('t');
    pb.skipChar(Symbols::EQUALS[0]);
 
-   mStart = pb.integer();
+   mStart = pb.uInt32();
    pb.skipChar(Symbols::SPACE[0]);
-   mStop = pb.integer();
+   mStop = pb.uInt32();
 
    skipEol(pb);
 

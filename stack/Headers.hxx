@@ -212,21 +212,25 @@ defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
 defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
 //====================
-// IntegerCategory:
+// ExpiresCategory:
 //====================
-typedef ParserContainer<IntegerCategory> IntegerCategories;
 
-// !dlb! not clear this needs to be exposed
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
-
-// !dlb! this one is not quite right -- can have (comment) after field value
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
 defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
+
+//====================
+// UInt32Category:
+//====================
+typedef ParserContainer<UInt32Category> UInt32Categories;
+defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
+// !dlb! not clear this needs to be exposed
+defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
+defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");
+defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
+
+// !dlb! this one is not quite right -- can have (comment) after field value
+defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 
 //====================
 // CallId:

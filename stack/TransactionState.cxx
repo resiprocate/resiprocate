@@ -117,21 +117,62 @@ TransactionState::process(TransactionController& controller)
    {
       controller.mStatsManager.received(sip);
    }
-
-   // !jf! this is a first cut at elementary back pressure. hope it works :)
-   if (sip && sip->isExternal() && sip->isRequest() && 
-       sip->header(h_RequestLine).getMethod() != ACK && 
-       controller.isTUOverloaded())
+   
+   // !bwc! Check for error conditions we can respond to.
+   if(sip && sip->isRequest() 
+         && sip->header(h_RequestLine).getMethod() != ACK)
    {
-      SipMessage* tryLater = Helper::makeResponse(*sip, 503);
-      tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
-      tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
-      Tuple target(sip->getSource());
-      delete sip;
-      controller.mTransportSelector.transmit(tryLater, target);
-      delete tryLater;
-      return;
+      if(sip->isExternal() && controller.isTUOverloaded())
+      {
+         SipMessage* tryLater = Helper::makeResponse(*sip, 503);
+         tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
+         tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
+         Tuple target(sip->getSource());
+         delete sip;
+         controller.mTransportSelector.transmit(tryLater, target);
+         delete tryLater;
+         return;
+      }
+      
+      if(sip->isInvalid())
+      {
+         SipMessage* error = Helper::makeResponse(*sip,400);
+         error->header(h_StatusLine).reason()+="(" + error->getReason() + ")";
+         Tuple target(sip->getSource());
+         delete sip;
+         controller.mTransportSelector.transmit(error,target);
+         delete error;
+         return;
+      }
+      
    }
+
+#ifdef PEDANTIC_STACK
+   if(sip)
+   {
+      try
+      {
+         sip->parseAllHeaders();
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         if(sip->isRequest() && sip->header(h_RequestLine).method()!=ACK)
+         {
+            SipMessage* error = Helper::makeResponse(*sip,400);
+            error->header(h_StatusLine).reason()+=Data::from(e);
+            Tuple target(sip->getSource());
+            delete sip;
+            controller.mTransportSelector.transmit(error,target);
+            delete error;
+            return;
+         }
+         
+         InfoLog(<< "Exception caught by pedantic stack: " << e);
+      }
+   }
+#endif      
+      
+
 
    if (sip && sip->isExternal() && sip->header(h_Vias).empty())
    {

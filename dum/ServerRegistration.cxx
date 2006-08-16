@@ -59,7 +59,7 @@ ServerRegistration::accept(SipMessage& ok)
       continue;
     }
     contact.uri() = i->uri;
-    contact.param(p_expires) = int(i->expires - now);
+    contact.param(p_expires) = UInt32(i->expires - now);
     ok.header(h_Contacts).push_back(contact);
     if(i->useQ)
     {
@@ -145,7 +145,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     if (msg.exists(h_Expires))
     {
-       globalExpires = (unsigned int)(msg.header(h_Expires).value());
+      globalExpires = msg.header(h_Expires).value();
     }
     else
     {
