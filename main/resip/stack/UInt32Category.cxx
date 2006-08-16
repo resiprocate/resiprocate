@@ -2,7 +2,7 @@
 #include "resip/stack/config.hxx"
 #endif
 
-#include "resip/stack/ExpiresCategory.hxx"
+#include "resip/stack/UInt32Category.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -13,76 +13,90 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
 //====================
-// Expires:
+// UInt32:
 //====================
-ExpiresCategory:: ExpiresCategory()
+UInt32Category::UInt32Category()
    : ParserCategory(), 
-     mValue(0) 
+     mValue(0), 
+     mComment() 
 {}
 
-ExpiresCategory::ExpiresCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), mValue(0)
+UInt32Category::UInt32Category(HeaderFieldValue* hfv, Headers::Type type)
+   : ParserCategory(hfv, type), 
+     mValue(0), 
+     mComment() 
 {}
 
-ExpiresCategory::ExpiresCategory(const ExpiresCategory& rhs)
+UInt32Category::UInt32Category(const UInt32Category& rhs)
    : ParserCategory(rhs),
-     mValue(rhs.mValue)
+     mValue(rhs.mValue),
+     mComment(rhs.mComment)
 {}
 
-ExpiresCategory&
-ExpiresCategory::operator=(const ExpiresCategory& rhs)
+UInt32Category&
+UInt32Category::operator=(const UInt32Category& rhs)
 {
    if (this != &rhs)
    {
       ParserCategory::operator=(rhs);
       mValue = rhs.mValue;
+      mComment = rhs.mComment;
    }
    return *this;
 }
 
-ParserCategory* ExpiresCategory::clone() const
+ParserCategory* UInt32Category::clone() const
 {
-   return new ExpiresCategory(*this);
+   return new UInt32Category(*this);
 }
 
-
-UInt32& 
-ExpiresCategory::value() 
+UInt32& UInt32Category::value() const 
 {
    checkParsed(); 
    return mValue;
 }
 
-UInt32
-ExpiresCategory::value() const 
+Data& 
+UInt32Category::comment() const 
 {
    checkParsed(); 
-   return mValue;
+   return mComment;
 }
 
 void
-ExpiresCategory::parse(ParseBuffer& pb)
+UInt32Category::parse(ParseBuffer& pb)
 {
-   pb.skipWhitespace();
-   const char *p = pb.position();
-   if (!pb.eof() && isdigit(*p))
+   const char* start = pb.skipWhitespace();
+   mValue = pb.uInt32();
+   pb.skipToChar('(');
+   if (!pb.eof())
    {
-     mValue = pb.uInt32();
+      start = pb.skipChar();
+      pb.skipToEndQuote(')');
+      pb.data(mComment, start);
+      pb.skipChar();
    }
    else
    {
-      mValue = 3600;
+      pb.reset(start);
+      start = pb.skipNonWhitespace();
    }
-   pb.skipToChar(Symbols::SEMI_COLON[0]);
+   
    parseParameters(pb);
 }
 
 std::ostream& 
-ExpiresCategory::encodeParsed(std::ostream& str) const
+UInt32Category::encodeParsed(std::ostream& str) const
 {
-   str << mValue;
-   encodeParameters(str);
-   return str;
+  str << mValue;
+
+  if (!mComment.empty())
+  {
+     str << "(" << mComment << ")";
+  }
+  
+  encodeParameters(str);
+  return str;
 }
 
 

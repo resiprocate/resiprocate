@@ -9,6 +9,7 @@
 #include "resip/stack/ParserCategories.hxx"
 #include "resip/stack/ExtensionHeader.hxx"
 #include "resip/stack/UnknownParameterType.hxx"
+#include "resip/stack/ApiCheckList.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -697,7 +698,7 @@ main(int arc, char** argv)
    }
 
    {
-      TR _tr("Test poorly formed IntegerParameter by construction");
+      TR _tr("Test poorly formed UInt32Parameter by construction");
 
       char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;duration=";
       
