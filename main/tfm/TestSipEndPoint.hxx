@@ -127,6 +127,10 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       ( boost::shared_ptr<resip::SipMessage> msg) > 
       MessageConditionerFn;
 
+      typedef boost::function<resip::Data 
+      ( boost::shared_ptr<resip::SipMessage> msg) > 
+      RawConditionerFn;
+
       class IdentityMessageConditioner
       {
          public:
@@ -134,6 +138,14 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       static IdentityMessageConditioner identity;
 
+      class IdentityRawConditioner
+      {
+         public:
+            resip::Data operator()(boost::shared_ptr<resip::SipMessage> msg);
+      };
+      static IdentityRawConditioner raw_identity;
+
+      
       class ChainConditions
       {
          public:
@@ -212,6 +224,10 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             RawSend(TestSipEndPoint* from, 
                     const resip::Uri& to, 
                     const resip::Data& rawText);
+            RawSend(TestSipEndPoint* from, 
+                    const resip::Uri& to, 
+                    boost::shared_ptr<resip::SipMessage>& msg);
+            void setConditioner(RawConditionerFn conditioner);
             virtual void operator()();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
@@ -223,11 +239,19 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             TestSipEndPoint& mEndPoint;
             resip::NameAddr mTo;
             resip::Data mRawText;
+            boost::shared_ptr<resip::SipMessage>* mMsg;
+            RawConditionerFn mConditioner;
+            bool rawAlreadySpecified;
+            
       };
       friend class RawSend;
       RawSend* rawSend(const TestSipEndPoint* endPoint, const resip::Data& rawText);
       RawSend* rawSend(const TestUser& endPoint, const resip::Data& rawText);
       RawSend* rawSend(const resip::Uri& target, const resip::Data& rawText);
+
+      RawSend* rawSend(const TestSipEndPoint* endPoint, boost::shared_ptr<resip::SipMessage>& msg);
+      RawSend* rawSend(const TestUser& endPoint, boost::shared_ptr<resip::SipMessage>& msg);
+      RawSend* rawSend(const resip::Uri& target, boost::shared_ptr<resip::SipMessage>& msg);
 
       class Subscribe : public Action
       {
@@ -497,7 +521,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             Send423Or200ToPublish(TestSipEndPoint& endPoint, int minExpres);
             virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
             TestSipEndPoint& mEndPoint;
-            int mMinExpires;
+            UInt32 mMinExpires;
       };
       MessageExpectAction* send423Or200ToPublish(int minExpires);
 
@@ -538,8 +562,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             boost::shared_ptr<resip::Contents> mContents;
             resip::Data mEventPackage;
             resip::Data mSubscriptionState;
-            int mExpires;
-            int mMinExpires;
+            UInt32 mExpires;
+            UInt32 mMinExpires;
             bool mFirstNotify;
       };
       MessageExpectAction* notify(boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState, int expires, int minExpires, bool firstNotify=false);
@@ -861,7 +885,10 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       const resip::Uri& getUri() const;
       resip::Data getAddressOfRecordString() const;
       
-      virtual void send(boost::shared_ptr<resip::SipMessage>& sipMessage);
+      // !bwc! If rawData is specified, do all target resolution steps
+      // based on sipMessage, but put the bits in rawData on the wire.
+      virtual void send(boost::shared_ptr<resip::SipMessage>& sipMessage,
+                        const resip::Data rawData=resip::Data::Empty);
       
       // !dlb! need to shove the interface through MessageAction
       void storeSentSubscribe(const boost::shared_ptr<resip::SipMessage>& subscribe);
@@ -977,6 +1004,10 @@ TestSipEndPoint::HasMessageBodyMatch* hasMessageBodyMatch();
 TestSipEndPoint::MessageAction*
 condition(TestSipEndPoint::MessageConditionerFn fn, 
           TestSipEndPoint::MessageAction* action);
+
+TestSipEndPoint::RawSend*
+condition(TestSipEndPoint::RawConditionerFn fn, 
+          TestSipEndPoint::RawSend* action);
 
 TestSipEndPoint::MessageAction*
 save(boost::shared_ptr<resip::SipMessage>& msgPtr, 

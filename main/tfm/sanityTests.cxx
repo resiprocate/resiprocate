@@ -57,7 +57,7 @@ void sleepSeconds(unsigned int seconds)
 class TestHolder : public Fixture
 {
    public:
-            static boost::shared_ptr<SipMessage>
+      static boost::shared_ptr<SipMessage>
       bogusAuth(boost::shared_ptr<SipMessage> msg)
       {
          if(msg->exists(h_ProxyAuthorizations))
@@ -148,6 +148,19 @@ class TestHolder : public Fixture
          msg->header(h_Contacts).front().uri().user() = contactUser;
 
          return msg;
+      }
+      
+      static resip::Data
+      doubleSend(boost::shared_ptr<SipMessage> msg)
+      {
+         resip::Data result;
+         {
+            resip::oDataStream s(result);
+            msg->encode(s);
+            msg->encode(s);
+            s.flush();
+         }
+         return result;
       }
 
 ///***************************************** tests start here ********************************//
@@ -5569,6 +5582,47 @@ class TestHolder : public Fixture
          ExecuteSequences();
       }
 
+      void testTCPMultiMsg()
+      {
+         InfoLog(<< "*!testTCPMultiMsg!*");
+         Uri server("sip:127.0.0.1:5060");
+
+         Seq(jasonTcp->registerUser(60, jasonTcp->getDefaultContacts()),
+             jasonTcp->expect(REGISTER/407, from(proxy), WaitForResponse, jasonTcp->digestRespond()),
+             jasonTcp->expect(REGISTER/200, from(proxy), WaitForResponse, jasonTcp->noAction()),
+             WaitForEndOfTest);
+      
+         ExecuteSequences();
+         
+         boost::shared_ptr<SipMessage> ring;
+         
+         Seq
+         (
+            jozsef->invite(*jasonTcp),
+            optional(jozsef->expect(INVITE/100, from(proxy),WaitFor100,jozsef->noAction())),
+            jozsef->expect(INVITE/407, from(proxy),WaitForResponse, chain(jozsef->ack(),jozsef->digestRespond())),
+            And
+            (
+               Sub
+               (
+                  optional(jozsef->expect(INVITE/100, from(proxy),WaitFor100,jozsef->noAction()))
+               ),
+               Sub
+               (
+                  jasonTcp->expect(INVITE, from(jozsef), WaitForCommand, ring <= jasonTcp->ring()),
+                  jozsef->expect(INVITE/180, from(jasonTcp),WaitForResponse, chain(condition(doubleSend,jasonTcp->rawSend(server,ring)),jasonTcp->answer())),
+                  jozsef->expect(INVITE/180, from(jasonTcp),WaitForResponse, jozsef->noAction()),
+                  jozsef->expect(INVITE/180, from(jasonTcp),WaitForResponse, jozsef->noAction()),
+                  jozsef->expect(INVITE/200, from(jasonTcp),WaitForResponse, jozsef->ack()),
+                  jasonTcp->expect(ACK, from(proxy),WaitForCommand,jasonTcp->noAction())
+               )
+            ),
+            WaitForEndOfTest
+         );
+         
+         ExecuteSequences();
+      }
+
       void testTCPPreparseError()
       {
          InfoLog(<< "*!testTCPPreparseError!*");
@@ -5802,7 +5856,7 @@ class MyTestCase
 
 	 // Tests of the routing pattern matching logic.
          TEST(testRoutingBasic);
-
+         TEST(testTCPMultiMsg);
          // TCP send errors 
          TEST(testTCPPreparseError);
          TEST(testTCPParseBufferError);
