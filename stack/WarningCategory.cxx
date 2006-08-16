@@ -46,7 +46,12 @@ void
 WarningCategory::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
-   mCode = pb.integer();
+   mCode = pb.uInt32();
+
+   if(mCode >= 1000 || mCode < 100)
+   {
+      pb.fail(__FILE__,__LINE__,"Warning code does not have exactly three digits.");
+   }
 
    const char* anchor = pb.skipWhitespace();
    pb.skipNonWhitespace();
