@@ -46,6 +46,7 @@ class Fixture : public CppUnit::TestFixture
       static TestUser* enlai;
       static TestUser* cullen;
       static TestUser* jozsef;
+      static TestUser* jasonTcp;
       
       //static TestUser jason;
       static resip::Data publicInterface;
