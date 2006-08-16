@@ -40,7 +40,8 @@ class DUM_API InviteSession : public DialogUsage
 
       /** Rejects an offer at the SIP level. So this can send a 488 to a
           reINVITE or UPDATE */
-      virtual void reject(int statusCode, WarningCategory *warning = 0);
+      virtual void reject(int statusCode, WarningCategory *warning = 0);   // sync.
+      void rejectAsync(int statusCode, WarningCategory *warning = 0);   // async.
 
       /// will resend the current sdp in an UPDATE or reINVITE
       virtual void targetRefresh(const NameAddr& localUri);

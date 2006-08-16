@@ -42,6 +42,7 @@
 #include "resiprocate/dum/UserAuthInfo.hxx"
 #include "resiprocate/dum/InternalRejectIncomingMessage.hxx"
 #include "resiprocate/dum/InternalEndInviteSessionMessage.hxx"
+#include "resiprocate/dum/InternalRejectMessage.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -965,6 +966,15 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          if (rejectIncomingMsg->mIncomingSession.isValid())
          {
             rejectIncomingMsg->mIncomingSession->reject(rejectIncomingMsg->mStatusCode, rejectIncomingMsg->mWarning.get());
+         }
+      }
+      InternalRejectMessage *rejectMsg = dynamic_cast<InternalRejectMessage*>(msg.get());
+      if (rejectMsg)  // Posted in ServerInviteSession::reject().
+      {
+         InfoLog(<< "Reject reINVITE/UPDATE Internal Message");
+         if (rejectMsg->mSession.isValid() && rejectMsg->mSession->isConnected())
+         {
+            rejectMsg->mSession->reject(rejectMsg->mStatusCode, rejectMsg->mWarning.get());
          }
       }
       InternalEndInviteSessionMessage* endSessionMsg = dynamic_cast<InternalEndInviteSessionMessage*>(msg.get());
