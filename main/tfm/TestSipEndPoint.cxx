@@ -175,7 +175,7 @@ TestSipEndPoint::setTransport(Transport* transport)
 }
 
 void 
-TestSipEndPoint::send(shared_ptr<SipMessage>& msg, const Data rawData)
+TestSipEndPoint::send(shared_ptr<SipMessage>& msg, RawConditionerFn func)
 {
    const Tuple* useTuple = 0;
 
@@ -279,23 +279,15 @@ TestSipEndPoint::send(shared_ptr<SipMessage>& msg, const Data rawData)
       msg->header(h_Vias).front().sentPort() = mTransport->port();
    }
    
-   resip::Data toWrite;
+   resip::Data& encoded = msg->getEncoded();
+   encoded = "";
+   DataStream encodeStream(encoded);
+   msg->encode(encodeStream);
+   encodeStream.flush();
+   
+   DebugLog (<< "encoded=" << encoded.c_str());
 
-   if(rawData.empty())
-   {
-      resip::Data& encoded = msg->getEncoded();
-      encoded = "";
-      DataStream encodeStream(encoded);
-      msg->encode(encodeStream);
-      encodeStream.flush();
-      
-      DebugLog (<< "encoded=" << encoded.c_str());
-      toWrite=encoded;
-   }
-   else
-   {
-      toWrite=rawData;
-   }
+   resip::Data toWrite = func(encoded);
    
    if (useTuple)
    {
@@ -830,14 +822,9 @@ TestSipEndPoint::IdentityMessageConditioner::operator()(boost::shared_ptr<resip:
 }
 
 resip::Data 
-TestSipEndPoint::IdentityRawConditioner::operator()(boost::shared_ptr<resip::SipMessage> msg)
+TestSipEndPoint::IdentityRawConditioner::operator()(const resip::Data& input)
 {
-   resip::Data result;
-   {
-      resip::oDataStream s(result);
-      msg->encode(s);
-   }
-   return result;
+   return input;
 }
 
 TestSipEndPoint::ChainConditions::ChainConditions(MessageConditionerFn fn1, 
@@ -852,6 +839,19 @@ TestSipEndPoint::ChainConditions::operator()(boost::shared_ptr<resip::SipMessage
 {
    msg = mFn2(msg);
    return mFn1(msg);
+}
+
+TestSipEndPoint::ChainRawConditions::ChainRawConditions(RawConditionerFn fn1, 
+                                                  RawConditionerFn fn2)
+   : mFn1(fn1),
+     mFn2(fn2)
+{
+}
+
+resip::Data
+TestSipEndPoint::ChainRawConditions::operator()(const resip::Data& input)
+{
+   return mFn1(mFn2(input));
 }
 
 TestSipEndPoint::SaveMessage::SaveMessage(boost::shared_ptr<resip::SipMessage>& msgPtr)
@@ -872,7 +872,8 @@ TestSipEndPoint::MessageAction::MessageAction(TestSipEndPoint& from,
    : mEndPoint(from),
      mTo(to),
      mMsg(),
-     mConditioner(TestSipEndPoint::identity)
+     mConditioner(TestSipEndPoint::identity),
+     mRawConditioner(TestSipEndPoint::raw_identity)     
 {
 }
 
@@ -880,6 +881,12 @@ void
 TestSipEndPoint::MessageAction::setConditioner(MessageConditionerFn conditioner)
 {
    mConditioner = ChainConditions(conditioner, mConditioner);
+}
+
+void 
+TestSipEndPoint::MessageAction::setRawConditioner(RawConditionerFn conditioner)
+{
+   mRawConditioner = ChainRawConditions(conditioner, mRawConditioner);
 }
 
 void
@@ -890,7 +897,7 @@ TestSipEndPoint::MessageAction::operator()()
    {
       boost::shared_ptr<SipMessage> conditioned(mConditioner(mMsg));
       DebugLog(<< "sending: " << conditioned->brief());
-      mEndPoint.send(conditioned);
+      mEndPoint.send(conditioned,mRawConditioner);
    }
 }
 
@@ -1012,20 +1019,7 @@ TestSipEndPoint::RawSend::RawSend(TestSipEndPoint* from,
    : mEndPoint(*from),
      mTo(to),
      mRawText(rawText),
-     mMsg(0),
-     mConditioner(TestSipEndPoint::raw_identity),
-     rawAlreadySpecified(true)
-{}
-
-TestSipEndPoint::RawSend::RawSend(TestSipEndPoint* from, 
-                                  const resip::Uri& to, 
-                                  boost::shared_ptr<resip::SipMessage>& msg)
-   : mEndPoint(*from),
-     mTo(to),
-     mRawText(),
-     mMsg(&msg),
-     mConditioner(TestSipEndPoint::raw_identity),
-     rawAlreadySpecified(false)
+     mRawConditioner(TestSipEndPoint::raw_identity)
 {}
 
 void
@@ -1043,22 +1037,15 @@ TestSipEndPoint::RawSend::operator()(boost::shared_ptr<Event> event)
 void 
 TestSipEndPoint::RawSend::go()
 {
-   if(rawAlreadySpecified)
-   {
-      Tuple target(mTo.uri().host(), mTo.uri().port(), TCP);
-      mEndPoint.mTransport->send(target, mRawText, 0);
-   }
-   else
-   {
-      mRawText=mConditioner(*mMsg);
-      mEndPoint.send(*mMsg,mRawText);
-   }
+   Tuple target(mTo.uri().host(), mTo.uri().port(), TCP);
+   mRawText=mRawConditioner(mRawText);
+   mEndPoint.mTransport->send(target, mRawText, 0);
 }
 
 void
-TestSipEndPoint::RawSend::setConditioner(RawConditionerFn conditioner)
+TestSipEndPoint::RawSend::setRawConditioner(RawConditionerFn conditioner)
 {
-   mConditioner = conditioner;
+   mRawConditioner = ChainRawConditions(conditioner, mRawConditioner);
 }
 
 resip::Data
@@ -1068,17 +1055,10 @@ TestSipEndPoint::RawSend::toString() const
    resip::Data buffer;
    {   
       DataStream strm(buffer);
-      if(rawAlreadySpecified)
-      {
-         strm << mEndPoint.getName() << ".rawSend(\"" << 
-            ((mRawText.size() <= truncate)
-             ? mRawText
-             : resip::Data(mRawText.data(), truncate-2)) << "..\")";
-      }
-      else
-      {
-         // !bwc! TODO
-      }
+      strm << mEndPoint.getName() << ".rawSend(\"" << 
+         ((mRawText.size() <= truncate)
+          ? mRawText
+          : resip::Data(mRawText.data(), truncate-2)) << "..\")";
    }
    return buffer;
 }
@@ -1102,27 +1082,6 @@ TestSipEndPoint::RawSend*
 TestSipEndPoint::rawSend(const Uri& target, const resip::Data& rawText)
 {
    return new RawSend(this, target, rawText);
-}
-
-TestSipEndPoint::RawSend* 
-TestSipEndPoint::rawSend(const TestUser& endPoint,
-                         boost::shared_ptr<resip::SipMessage>& msg)
-{
-   return new RawSend(this, endPoint.getAddressOfRecord(), msg);
-}
-
-
-TestSipEndPoint::RawSend* 
-TestSipEndPoint::rawSend(const TestSipEndPoint* endPoint,
-                         boost::shared_ptr<resip::SipMessage>& msg)
-{
-   return new RawSend(this, endPoint->mAor, msg);
-}
-
-TestSipEndPoint::RawSend* 
-TestSipEndPoint::rawSend(const Uri& target, boost::shared_ptr<resip::SipMessage>& msg)
-{
-   return new RawSend(this, target, msg);
 }
 
 TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, const Uri& to, const Token& eventPackage)
@@ -1431,7 +1390,8 @@ TestSipEndPoint::closeTransport()
 TestSipEndPoint::MessageExpectAction::MessageExpectAction(TestSipEndPoint& from)
    : mEndPoint(from),
      mMsg(),
-     mConditioner(TestSipEndPoint::identity)          
+     mConditioner(TestSipEndPoint::identity),
+     mRawConditioner(TestSipEndPoint::raw_identity)
 {
 }
 
@@ -1453,7 +1413,7 @@ TestSipEndPoint::MessageExpectAction::operator()(boost::shared_ptr<Event> event)
    if (mMsg != 0)
    {
       DebugLog(<< "sending: " << mMsg->brief());
-      mEndPoint.send(mMsg);
+      mEndPoint.send(mMsg,mRawConditioner);
    }
 }
 
@@ -1461,6 +1421,12 @@ void
 TestSipEndPoint::MessageExpectAction::setConditioner(MessageConditionerFn conditioner)
 {
    mConditioner = ChainConditions(conditioner, mConditioner);
+}
+
+void 
+TestSipEndPoint::MessageExpectAction::setRawConditioner(RawConditionerFn conditioner)
+{
+   mRawConditioner = ChainRawConditions(conditioner, mRawConditioner);
 }
 
 TestSipEndPoint::RawReply::RawReply(TestSipEndPoint& from,
@@ -3221,10 +3187,17 @@ condition(TestSipEndPoint::MessageConditionerFn fn, TestSipEndPoint::MessageActi
    return action;
 }
 
-TestSipEndPoint::RawSend*
-condition(TestSipEndPoint::RawConditionerFn fn, TestSipEndPoint::RawSend* raw)
+TestSipEndPoint::MessageAction*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, TestSipEndPoint::MessageAction* action)
 {
-   raw->setConditioner(fn);
+   action->setRawConditioner(fn);
+   return action;
+}
+
+TestSipEndPoint::RawSend*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, TestSipEndPoint::RawSend* raw)
+{
+   raw->setRawConditioner(fn);
    return raw;
 }
 
@@ -3246,6 +3219,13 @@ TestSipEndPoint::MessageExpectAction*
 condition(TestSipEndPoint::MessageConditionerFn fn, TestSipEndPoint::MessageExpectAction* action)
 {
    action->setConditioner(fn);
+   return action;
+}
+
+TestSipEndPoint::MessageExpectAction*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, TestSipEndPoint::MessageExpectAction* action)
+{
+   action->setRawConditioner(fn);
    return action;
 }
 
@@ -3363,6 +3343,31 @@ compose(TestSipEndPoint::MessageConditionerFn fn4,
         TestSipEndPoint::MessageConditionerFn fn1)
 {
    return compose(fn4, compose(fn3, compose(fn2, fn1)));
+}
+
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1)
+{
+   return TestSipEndPoint::ChainRawConditions(fn2, fn1);
+}
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn3,
+        TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1)
+{
+   return rawcompose(fn3, rawcompose(fn2, fn1));
+}
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn4,
+        TestSipEndPoint::RawConditionerFn fn3,
+        TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1)
+{
+   return rawcompose(fn4, rawcompose(fn3, rawcompose(fn2, fn1)));
 }
 
 
