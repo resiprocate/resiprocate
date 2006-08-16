@@ -13,6 +13,7 @@
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/dum/InternalEndInviteSessionMessage.hxx"
+#include "resiprocate/dum/InternalRejectMessage.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Timer.hxx"
@@ -365,6 +366,12 @@ InviteSession::end()  // sync.
          assert(0);
          break;
    }
+}
+
+void 
+InviteSession::rejectAsync(int code, WarningCategory* warning)
+{
+   mDum.post(new InternalRejectMessage(getSessionHandle(), code, warning));
 }
 
 void
