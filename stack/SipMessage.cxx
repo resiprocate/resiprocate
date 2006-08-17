@@ -791,7 +791,7 @@ SipMessage::setStartLine(const char* st, int len)
 }
 
 void 
-SipMessage::setBody(const char* start, int len)
+SipMessage::setBody(const char* start, UInt32 len)
 {
    if(checkContentLength)
    {
