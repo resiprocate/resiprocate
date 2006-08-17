@@ -1,0 +1,3 @@
+base referer
+rect $class_test_decorator.html 7,99 111,123
+rect $class_test.html 36,8 81,32

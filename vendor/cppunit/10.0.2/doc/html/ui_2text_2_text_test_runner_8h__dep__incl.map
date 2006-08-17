@@ -1,0 +1,4 @@
+base referer
+rect $_text_test_runner_8h.html 187,7 312,31
+rect $cppunit_2ui_2text_2_test_runner_8h.html 200,55 299,79
+rect $_text_test_runner_8cpp.html 180,103 319,127

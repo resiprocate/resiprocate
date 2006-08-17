@@ -1,0 +1,4 @@
+base referer
+rect $_test_plug_in_default_impl_8h.html 151,7 314,31
+rect $_plug_in_manager_8cpp.html 164,55 300,79
+rect $_test_plug_in_default_impl_8cpp.html 363,7 539,31

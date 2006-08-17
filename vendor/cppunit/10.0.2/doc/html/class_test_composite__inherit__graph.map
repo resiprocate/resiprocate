@@ -1,0 +1,4 @@
+base referer
+rect $class_test_suite.html 60,157 137,181
+rect $class_test.html 76,8 121,32
+rect $class_test_runner_1_1_wrapping_suite.html 7,232 191,256

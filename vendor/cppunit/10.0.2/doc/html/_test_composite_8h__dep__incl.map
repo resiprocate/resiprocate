@@ -1,0 +1,15 @@
+base referer
+rect $_test_suite_8h.html 201,201 289,225
+rect $_test_composite_8cpp.html 177,249 313,273
+rect $_helper_macros_8h.html 399,31 513,55
+rect $cppunit_2_test_runner_8h.html 407,79 505,103
+rect $_text_test_runner_8cpp.html 772,103 911,127
+rect $_test_plug_in_interface_8h.html 383,177 529,201
+rect $_test_factory_registry_8cpp.html 373,225 539,249
+rect $_test_plug_in_default_impl_8cpp.html 368,273 544,297
+rect $_test_suite_8cpp.html 405,321 507,345
+rect $_test_suite_builder_context_8cpp.html 361,369 551,393
+rect $ui_2text_2_text_test_runner_8h.html 599,31 724,55
+rect $_test_runner_8cpp.html 604,79 719,103
+rect $_text_test_runner_8h.html 779,7 904,31
+rect $cppunit_2ui_2text_2_test_runner_8h.html 792,55 891,79

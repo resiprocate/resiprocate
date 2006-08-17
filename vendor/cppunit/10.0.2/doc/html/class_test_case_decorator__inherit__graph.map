@@ -1,0 +1,6 @@
+base referer
+rect $class_exception_test_case_decorator.html 7,307 337,331
+rect $class_test_case.html 133,158 211,182
+rect $class_test_leaf.html 84,83 156,107
+rect $class_test.html 97,8 143,32
+rect $class_test_fixture.html 180,83 268,107

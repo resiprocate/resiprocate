@@ -1,0 +1,3 @@
+base referer
+rect $class_test_suite_builder_context_base.html 7,7 202,31
+rect $class_test_suite_builder_context.html 250,7 476,31
