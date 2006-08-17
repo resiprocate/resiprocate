@@ -1,9 +1,0 @@
-base referer
-rect $class_outputter.html 7,267 84,291
-rect $class_test_result_collector.html 108,267 244,291
-rect $class_test_success_listener.html 104,176 248,200
-rect $class_test_listener.html 113,99 207,123
-rect $class_synchronized_object.html 231,99 372,123
-rect $class_synchronized_object_1_1_synchronization_object.html 161,8 441,32
-rect $class_xml_document.html 268,267 375,291
-rect $class_xml_element.html 273,176 369,200

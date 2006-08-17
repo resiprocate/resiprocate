@@ -1,6 +1,0 @@
-base referer
-rect $class_test_suite.html 23,163 100,187
-rect $class_test_composite.html 7,85 116,109
-rect $class_test.html 39,8 84,32
-rect $class_test_fixture_factory.html 124,163 255,187
-rect $class_test_namer.html 279,163 364,187

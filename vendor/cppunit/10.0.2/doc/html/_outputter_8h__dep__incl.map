@@ -1,9 +1,0 @@
-base referer
-rect $_compiler_outputter_8h.html 143,31 284,55
-rect $_text_outputter_8h.html 157,103 269,127
-rect $_xml_outputter_8h.html 157,175 269,199
-rect $_compiler_outputter_8cpp.html 332,7 487,31
-rect $_text_outputter_8cpp.html 347,55 472,79
-rect $_text_test_result_8cpp.html 343,103 476,127
-rect $_text_test_runner_8cpp.html 340,151 479,175
-rect $_xml_outputter_8cpp.html 347,199 472,223

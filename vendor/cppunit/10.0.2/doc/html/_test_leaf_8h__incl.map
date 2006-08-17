@@ -1,5 +1,0 @@
-base referer
-rect $_test_8h.html 141,79 245,103
-rect $_portability_8h.html 296,55 432,79
-rect $_cpp_unit_api_8h.html 495,55 681,79
-rect $_select_dll_loader_8h.html 483,103 693,127

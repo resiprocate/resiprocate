@@ -1,4 +1,0 @@
-base referer
-rect $class_test_factory.html 7,31 97,55
-rect $class_test_factory_registry.html 191,7 329,31
-rect $class_test_suite_factory.html 147,55 373,79

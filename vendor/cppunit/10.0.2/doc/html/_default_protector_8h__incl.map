@@ -1,6 +1,0 @@
-base referer
-rect $_protector_8h.html 185,79 319,103
-rect $_source_line_8h.html 367,79 513,103
-rect $_portability_8h.html 563,55 699,79
-rect $_cpp_unit_api_8h.html 761,55 948,79
-rect $_select_dll_loader_8h.html 749,103 960,127
