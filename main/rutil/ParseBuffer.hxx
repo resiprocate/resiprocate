@@ -113,8 +113,10 @@ class ParseBuffer
       UInt32 uInt32();
       UInt64 uInt64();
 
+#ifndef WIN32
       __attribute__ ((deprecated)) UInt64 unsignedLongLong(){return uInt64();} 
-       __attribute__ ((deprecated)) unsigned long unsignedInteger(){return uInt32();}
+      __attribute__ ((deprecated)) unsigned long unsignedInteger(){return uInt32();}
+#endif
 
 #ifndef RESIP_FIXED_POINT		
       float floatVal();
