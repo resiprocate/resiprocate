@@ -1,7 +1,0 @@
-base referer
-rect $_exception_8h.html 167,152 305,176
-rect $_test_8h.html 375,8 479,32
-rect $_test_failure_8h.html 355,56 499,80
-rect $_portability_8h.html 549,104 685,128
-rect $_message_8h.html 360,152 493,176
-rect $_source_line_8h.html 353,104 500,128

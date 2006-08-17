@@ -1,5 +1,0 @@
-base referer
-rect $class_test_result.html 7,157 89,181
-rect $class_test_success_listener.html 103,83 247,107
-rect $class_text_test_result.html 60,232 169,256
-rect $class_test_result_collector.html 113,157 249,181

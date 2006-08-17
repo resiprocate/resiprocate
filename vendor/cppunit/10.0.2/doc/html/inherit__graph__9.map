@@ -1,4 +1,0 @@
-base referer
-rect $class_functor.html 7,31 73,55
-rect $class_protector_chain_1_1_protect_functor.html 121,7 327,31
-rect $class_test_case_method_functor.html 141,55 307,79

@@ -1,5 +1,0 @@
-base referer
-rect $_test_assert_8h.html 168,57 310,81
-rect $_portability_8h.html 547,33 683,57
-rect $_exception_8h.html 359,57 498,81
-rect $_asserter_8h.html 364,105 492,129

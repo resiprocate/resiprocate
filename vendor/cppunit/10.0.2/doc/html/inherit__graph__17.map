@@ -1,4 +1,0 @@
-base referer
-rect $class_protector.html 8,31 83,55
-rect $class_default_protector.html 134,7 251,31
-rect $class_protector_chain.html 138,55 247,79
