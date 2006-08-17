@@ -1,0 +1,7 @@
+base referer
+rect $_test_factory_registry_8h.html 158,79 307,103
+rect $_auto_register_suite_8h.html 375,7 516,31
+rect $_plug_in_manager_8cpp.html 378,55 514,79
+rect $_test_factory_registry_8cpp.html 363,103 528,127
+rect $_test_plug_in_default_impl_8cpp.html 358,151 534,175
+rect $_helper_macros_8h.html 584,7 699,31

@@ -1,0 +1,16 @@
+base referer
+rect $_brief_test_progress_listener_8h.html 160,127 344,151
+rect $_test_success_listener_8h.html 175,199 329,223
+rect $_text_test_progress_listener_8h.html 161,247 343,271
+rect $_test_result_8cpp.html 197,295 307,319
+rect $_brief_test_progress_listener_8cpp.html 395,103 592,127
+rect $_test_result_collector_8h.html 420,151 567,175
+rect $_test_success_listener_8cpp.html 409,199 577,223
+rect $_text_test_result_8h.html 663,7 783,31
+rect $_compiler_outputter_8cpp.html 645,55 800,79
+rect $_test_result_collector_8cpp.html 643,103 803,127
+rect $_text_outputter_8cpp.html 660,151 785,175
+rect $_xml_outputter_8cpp.html 660,199 785,223
+rect $_text_test_result_8cpp.html 855,7 988,31
+rect $_text_test_runner_8cpp.html 852,151 991,175
+rect $_text_test_progress_listener_8cpp.html 396,297 591,321

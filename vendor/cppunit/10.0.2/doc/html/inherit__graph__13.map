@@ -1,0 +1,5 @@
+base referer
+rect $class_outputter.html 7,55 84,79
+rect $class_compiler_outputter.html 132,7 263,31
+rect $class_text_outputter.html 147,55 248,79
+rect $class_xml_outputter.html 147,103 248,127

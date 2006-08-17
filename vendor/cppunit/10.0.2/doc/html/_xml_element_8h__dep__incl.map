@@ -1,0 +1,4 @@
+base referer
+rect $_xml_document_8cpp.html 163,7 293,31
+rect $_xml_element_8cpp.html 168,55 288,79
+rect $_xml_outputter_8cpp.html 165,103 291,127

@@ -1,0 +1,3 @@
+base referer
+rect $class_message.html 8,7 83,31
+rect $class_additional_message.html 132,7 268,31
