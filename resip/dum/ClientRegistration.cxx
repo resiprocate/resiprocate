@@ -472,7 +472,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             if (code == 423) // interval too short
             {
-               int maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
+               UInt32 maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
                if (msg.exists(h_MinExpires) && 
                    (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {

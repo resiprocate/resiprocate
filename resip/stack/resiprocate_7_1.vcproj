@@ -534,6 +534,12 @@
 				RelativePath=".\UdpTransport.cxx">
 			</File>
 			<File
+				RelativePath=".\UInt32Category.cxx">
+			</File>
+			<File
+				RelativePath=".\UInt32Parameter.cxx">
+			</File>
+			<File
 				RelativePath=".\UnknownParameter.cxx">
 			</File>
 			<File
@@ -923,6 +929,12 @@
 			</File>
 			<File
 				RelativePath=".\UdpTransport.hxx">
+			</File>
+			<File
+				RelativePath=".\UInt32Category.hxx">
+			</File>
+			<File
+				RelativePath=".\UInt32Parameter.hxx">
 			</File>
 			<File
 				RelativePath=".\UnknownHeaderType.hxx">
