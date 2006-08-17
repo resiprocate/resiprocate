@@ -232,7 +232,7 @@ class SipMessage : public TransactionMessage
       // transport interface
       void setStartLine(const char* start, int len); 
 
-      void setBody(const char* start, int len); 
+      void setBody(const char* start, UInt32 len); 
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
