@@ -169,8 +169,8 @@ class ParserCategory : public LazyParser
       void removeParameterByEnum(ParameterTypes::Type type);
       void setParameter(const Parameter* parameter);
 
-      int numKnownParams(){return mParameters.size();}
-      int numUnknownParams(){return mUnknownParameters.size();}
+      int numKnownParams(){return (int)mParameters.size();}
+      int numUnknownParams(){return (int)mUnknownParameters.size();}
 
    protected:
       ParserCategory();
