@@ -620,7 +620,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentPort())
             {
-               msg->header(h_Vias).front().sentPort() = source.getPort();
+               msg->header(h_Vias).front().sentPort() = transport->port();
             }
          }
          
