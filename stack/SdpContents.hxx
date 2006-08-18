@@ -456,6 +456,7 @@ class SdpContents : public Contents
             const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
             std::list<Bandwidth>& bandwidths() {return mBandwidths;}
             const std::list<Time>& getTimes() const {return mTimes;}
+            std::list<Time>& getTimes() {return mTimes;}
             const Timezones& getTimezones() const {return mTimezones;}
             const Encryption& getEncryption() const {return mEncryption;}
             const Encryption& encryption() const {return mEncryption;}
