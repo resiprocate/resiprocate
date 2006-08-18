@@ -140,6 +140,7 @@ a=rtpmap:31 LPC
    
    // Request Line
    tassert(msg->header(resip::h_RequestLine).method()==resip::INVITE);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="INVITE");
    tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
    tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
@@ -210,6 +211,7 @@ a=rtpmap:31 LPC
    //CSeq
    tassert(msg->exists(resip::h_CSeq));
    tassert(msg->header(resip::h_CSeq).method()==resip::INVITE);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="INVITE");
    tassert(msg->header(resip::h_CSeq).sequence()==9);
    tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
    tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
@@ -435,6 +437,7 @@ Content-Length: 0
    }
 
    // Request Line
+   tassert(msg->header(resip::h_RequestLine).method()==resip::UNKNOWN);
    tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="!interesting-Method0123456789_*+`.%indeed'~");
    tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
    tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
@@ -535,6 +538,7 @@ Content-Length: 0
    
    //CSeq
    tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::UNKNOWN);
    tassert(msg->header(resip::h_CSeq).unknownMethodName()=="!interesting-Method0123456789_*+`.%indeed'~");
    tassert(msg->header(resip::h_CSeq).sequence()==139122385);
    tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
@@ -682,10 +686,18 @@ a=rtpmap:31 LPC
 
    // Request Line
    tassert(msg->header(resip::h_RequestLine).method()==resip::INVITE);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="INVITE");
    tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
    tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   // !bwc! Is it appropriate to use a one-size-fits-all approach to unescaping
+   // parsed components? ('@' is not legal in a userpart, but the internal
+   // representation contains it)
+   // What is the best approach: all (unescape everything that is printable),
+   // none (leave escaping exactly as found), or context sensitive (escape
+   // everything that is legal for a given field)?
    tassert(msg->header(resip::h_RequestLine).uri().user()=="sips%3Auser%40example.com");
+   tassert_reset();
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
    tassert(msg->header(resip::h_RequestLine).uri().host()=="example.net");
    tassert(msg->header(resip::h_RequestLine).uri().port()==0);
@@ -699,7 +711,7 @@ a=rtpmap:31 LPC
    tassert(msg->header(resip::h_To).displayName().empty());
    tassert(!(msg->header(resip::h_To).isAllContacts()));
    tassert(msg->header(resip::h_To).uri().scheme()=="sip");
-   tassert(msg->header(resip::h_To).uri().user()=="%75se%72");
+   tassert(msg->header(resip::h_To).uri().user()=="user");
    tassert(msg->header(resip::h_To).uri().password().empty());
    tassert(msg->header(resip::h_To).uri().host()=="example.com");
    tassert(msg->header(resip::h_To).uri().port()==0);
@@ -714,7 +726,10 @@ a=rtpmap:31 LPC
    tassert(msg->header(resip::h_From).displayName().empty());
    tassert(!(msg->header(resip::h_From).isAllContacts()));
    tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   // !bwc! ' ' is not legal in a userpart, but the internal
+   // representation contains it. Is this appropriate?
    tassert(msg->header(resip::h_From).uri().user()=="I%20have%20spaces");
+   tassert_reset();
    tassert(msg->header(resip::h_From).uri().password().empty());
    tassert(msg->header(resip::h_From).uri().host()=="example.net");
    tassert(msg->header(resip::h_From).uri().port()==0);
@@ -747,6 +762,7 @@ a=rtpmap:31 LPC
    //CSeq
    tassert(msg->exists(resip::h_CSeq));
    tassert(msg->header(resip::h_CSeq).method()==resip::INVITE);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="INVITE");
    tassert(msg->header(resip::h_CSeq).sequence()==234234);
    tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
    tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
@@ -766,7 +782,7 @@ a=rtpmap:31 LPC
    tassert(i->numUnknownParams()==0);
 
    tassert(i->exists(resip::p_branch));
-   tassert(!(i->param(resip::p_branch).hasMagicCookie()));
+   tassert(i->param(resip::p_branch).hasMagicCookie());
    tassert(i->param(resip::p_branch).getTransactionId()=="kdjuw");
    tassert(i->param(resip::p_branch).clientData().empty());
    
@@ -785,7 +801,7 @@ a=rtpmap:31 LPC
    tassert(msg->header(resip::h_Contacts).begin()->displayName().empty());
    tassert(!(msg->header(resip::h_Contacts).begin()->isAllContacts()));
    tassert(msg->header(resip::h_Contacts).begin()->uri().scheme()=="sip");
-   tassert(msg->header(resip::h_Contacts).begin()->uri().user()=="cal%6Cer");
+   tassert(msg->header(resip::h_Contacts).begin()->uri().user()=="caller");
    tassert(msg->header(resip::h_Contacts).begin()->uri().password().empty());
    tassert(msg->header(resip::h_Contacts).begin()->uri().host()=="host5.example.net");
    tassert(msg->header(resip::h_Contacts).begin()->uri().port()==0);
@@ -811,6 +827,1838 @@ a=rtpmap:31 LPC
    tassert_reset();
 
    std::cerr << "In case esc01:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+escnull()
+{
+/*
+   This register request contains several URIs with nulls in the
+   userpart.  The message is well formed - parsers must accept this
+   message.  Implementations must take special care when unescaping the
+   Address-of-Record (AOR) in this request so as to not prematurely
+   shorten the username.  This request registers two distinct contact
+   URIs.
+
+REGISTER sip:example.com SIP/2.0
+To: sip:null-%00-null@example.com
+From: sip:null-%00-null@example.com;tag=839923423
+Max-Forwards: 70
+Call-ID: escnull.39203ndfvkjdasfkq3w4otrq0adsfdfnavd
+CSeq: 14398234 REGISTER
+Via: SIP/2.0/UDP host5.example.com;branch=z9hG4bKkdjuw
+Contact: <sip:%00@host5.example.com>
+Contact: <sip:%00%00@host5.example.com>
+L:0
+
+
+*/
+   FILE* fid= fopen("escnull.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   // Request Line
+   //REGISTER sip:example.com SIP/2.0
+   tassert(msg->header(resip::h_RequestLine).method()==resip::REGISTER);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="REGISTER");
+   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="");
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+   
+   //To: sip:null-%00-null@example.com
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName().empty());
+   tassert(msg->header(resip::h_To).numKnownParams()==0);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="null-%00-null");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.com");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //From: sip:null-%00-null@example.com;tag=839923423
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="839923423");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="null-%00-null");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+   
+   //Max-Forwards: 70
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==70);
+   tassert(msg->header(resip::h_MaxForwards).numKnownParams()==0);
+   tassert(msg->header(resip::h_MaxForwards).numUnknownParams()==0);
+   
+   
+   //Call-ID: escnull.39203ndfvkjdasfkq3w4otrq0adsfdfnavd
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="escnull.39203ndfvkjdasfkq3w4otrq0adsfdfnavd");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+   
+   //CSeq: 14398234 REGISTER
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::REGISTER);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="REGISTER");
+   tassert(msg->header(resip::h_CSeq).sequence()==14398234);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+   
+   //Via: SIP/2.0/UDP host5.example.com;branch=z9hG4bKkdjuw
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator i=msg->header(resip::h_Vias).begin();
+   
+   tassert(i->numKnownParams()==1);
+   tassert(i->numUnknownParams()==0);
+   tassert(i->protocolName()=="SIP");
+   tassert(i->protocolVersion()=="2.0");
+   tassert(i->transport()=="UDP");
+   tassert(i->sentHost()=="host5.example.com");
+   tassert(i->sentPort()==0);
+   
+   tassert(i->exists(resip::p_branch));
+   tassert(i->param(resip::p_branch).hasMagicCookie());
+   tassert(i->param(resip::p_branch).getTransactionId()=="kdjuw");
+   tassert(i->param(resip::p_branch).clientData().empty());
+      
+   //Contact: <sip:%00@host5.example.com>
+   //Contact: <sip:%00%00@host5.example.com>
+   tassert(msg->exists(resip::h_Contacts));
+   tassert(msg->header(resip::h_Contacts).size()==2);
+   resip::ParserContainer<resip::NameAddr>::iterator j=msg->header(resip::h_Contacts).begin();
+   
+   tassert(j->displayName()=="");
+   tassert(j->numKnownParams()==0);
+   tassert(j->numUnknownParams()==0);
+   tassert(!(j->isAllContacts()));
+   tassert(j->uri().numKnownParams()==0);
+   tassert(j->uri().numUnknownParams()==0);
+   tassert(j->uri().scheme()=="sip");
+   tassert(j->uri().user()=="%00");
+   tassert(j->uri().password().empty());
+   tassert(j->uri().host()=="host5.example.com");
+   tassert(j->uri().port()==0);
+   tassert(!(j->uri().hasEmbedded()));
+
+   j++;
+   
+   tassert(j->displayName()=="");
+   tassert(j->numKnownParams()==0);
+   tassert(j->numUnknownParams()==0);
+   tassert(!(j->isAllContacts()));
+   tassert(j->uri().numKnownParams()==0);
+   tassert(j->uri().numUnknownParams()==0);
+   tassert(j->uri().scheme()=="sip");
+   tassert(j->uri().user()=="%00%00");
+   tassert(j->uri().password().empty());
+   tassert(j->uri().host()=="host5.example.com");
+   tassert(j->uri().port()==0);
+   tassert(!(j->uri().hasEmbedded()));
+
+   //L:0
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==0);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+   
+   
+
+
+   std::cerr << "In case escnull:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+esc02()
+{
+/*
+   In most of the places % can appear in a SIP message, it is not an
+   escape character.  This can surprise the unwary implementor.  The
+   following well-formed request has these properties:
+
+   o  The request method is unknown.  It is NOT equivalent to REGISTER.
+
+   o  The display name portion of the To and From header fields is
+      "%Z%45".  Note that this is not the same as %ZE.
+
+   o  This message has two Contact header field values, not three.
+      <sip:alias2@host2.example.com> is a C%6Fntact header field value.
+
+   A parser should accept this message as well formed.  A proxy would
+   forward or reject the message depending on what the Request-URI meant
+   to it.  An endpoint would reject this message with a 501.
+
+
+RE%47IST%45R sip:registrar.example.com SIP/2.0
+To: "%Z%45" <sip:resource@example.com>
+From: "%Z%45" <sip:resource@example.com>;tag=f232jadfj23
+Call-ID: esc02.asdfnqwo34rq23i34jrjasdcnl23nrlknsdf
+Via: SIP/2.0/TCP host.example.com;branch=z9hG4bK209%fzsnel234
+CSeq: 29344 RE%47IST%45R
+Max-Forwards: 70
+Contact: <sip:alias1@host1.example.com>
+C%6Fntact: <sip:alias2@host2.example.com>
+Contact: <sip:alias3@host3.example.com>
+l: 0
+
+
+*/
+   FILE* fid= fopen("esc02.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   //RE%47IST%45R sip:registrar.example.com SIP/2.0
+   tassert(msg->header(resip::h_RequestLine).method()==resip::UNKNOWN);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="RE%47IST%45R");
+   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="");
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="registrar.example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+
+   //To: "%Z%45" <sip:resource@example.com>
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="%Z%45");
+   tassert(msg->header(resip::h_To).numKnownParams()==0);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="resource");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.com");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //From: "%Z%45" <sip:resource@example.com>;tag=f232jadfj23
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="%Z%45");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="f232jadfj23");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="resource");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //Call-ID: esc02.asdfnqwo34rq23i34jrjasdcnl23nrlknsdf
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="esc02.asdfnqwo34rq23i34jrjasdcnl23nrlknsdf");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //Via: SIP/2.0/TCP host.example.com;branch=z9hG4bK209%fzsnel234
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator i=msg->header(resip::h_Vias).begin();
+   
+   tassert(i->numKnownParams()==1);
+   tassert(i->numUnknownParams()==0);
+   tassert(i->protocolName()=="SIP");
+   tassert(i->protocolVersion()=="2.0");
+   tassert(i->transport()=="TCP");
+   tassert(i->sentHost()=="host.example.com");
+   tassert(i->sentPort()==0);
+   
+   tassert(i->exists(resip::p_branch));
+   tassert(i->param(resip::p_branch).hasMagicCookie());
+   tassert(i->param(resip::p_branch).getTransactionId()=="209%fzsnel234");
+   tassert(i->param(resip::p_branch).clientData().empty());
+   
+   //CSeq: 29344 RE%47IST%45R
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::UNKNOWN);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="RE%47IST%45R");
+   tassert(msg->header(resip::h_CSeq).sequence()==29344);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   //Max-Forwards: 70
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==70);
+   tassert(msg->header(resip::h_MaxForwards).numKnownParams()==0);
+   tassert(msg->header(resip::h_MaxForwards).numUnknownParams()==0);
+
+   //Contact: <sip:alias1@host1.example.com>
+   //Contact: <sip:alias3@host3.example.com>
+   tassert(msg->exists(resip::h_Contacts));
+   tassert(msg->header(resip::h_Contacts).size()==2);
+   resip::ParserContainer<resip::NameAddr>::iterator j=msg->header(resip::h_Contacts).begin();
+   
+   tassert(j->displayName()=="");
+   tassert(j->numKnownParams()==0);
+   tassert(j->numUnknownParams()==0);
+   tassert(!(j->isAllContacts()));
+   tassert(j->uri().numKnownParams()==0);
+   tassert(j->uri().numUnknownParams()==0);
+   tassert(j->uri().scheme()=="sip");
+   tassert(j->uri().user()=="alias1");
+   tassert(j->uri().password().empty());
+   tassert(j->uri().host()=="host1.example.com");
+   tassert(j->uri().port()==0);
+   tassert(!(j->uri().hasEmbedded()));
+
+   j++;
+   
+   tassert(j->displayName()=="");
+   tassert(j->numKnownParams()==0);
+   tassert(j->numUnknownParams()==0);
+   tassert(!(j->isAllContacts()));
+   tassert(j->uri().numKnownParams()==0);
+   tassert(j->uri().numUnknownParams()==0);
+   tassert(j->uri().scheme()=="sip");
+   tassert(j->uri().user()=="alias3");
+   tassert(j->uri().password().empty());
+   tassert(j->uri().host()=="host3.example.com");
+   tassert(j->uri().port()==0);
+   tassert(!(j->uri().hasEmbedded()));
+
+   //C%6Fntact: <sip:alias2@host2.example.com>
+   resip::ExtensionHeader p_fakeContact("C%6Fntact");
+   tassert(msg->exists(p_fakeContact));
+   tassert(msg->header(p_fakeContact).size()==1);
+   tassert(msg->header(p_fakeContact).begin()->value()=="<sip:alias2@host2.example.com>");
+   
+   //l: 0
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==0);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+
+
+   std::cerr << "In case esc02:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+lwsdisp()
+{
+/*
+   This OPTIONS request is not valid per the grammar in RFC 3261 since
+   there is no LWS between the token in the display name and < in the
+   From header field value.  This has been identified as a specification
+   bug that will be removed when RFC 3261 is revised.  Elements should
+   accept this request as well formed.
+
+OPTIONS sip:user@example.com SIP/2.0
+To: sip:user@example.com
+From: caller<sip:caller@example.com>;tag=323
+Max-Forwards: 70
+Call-ID: lwsdisp.1234abcd@funky.example.com
+CSeq: 60 OPTIONS
+Via: SIP/2.0/UDP funky.example.com;branch=z9hG4bKkdjuw
+l: 0
+
+
+*/
+   FILE* fid= fopen("lwsdisp.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   //Request-Line
+   //OPTIONS sip:user@example.com SIP/2.0
+   tassert(msg->header(resip::h_RequestLine).method()==resip::OPTIONS);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="OPTIONS");
+   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="user");
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+
+   //To: sip:user@example.com
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="");
+   tassert(msg->header(resip::h_To).numKnownParams()==0);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="user");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.com");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //From: caller<sip:caller@example.com>;tag=323
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="caller");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="323");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="caller");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //Max-Forwards: 70
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==70);
+   tassert(msg->header(resip::h_MaxForwards).numKnownParams()==0);
+   tassert(msg->header(resip::h_MaxForwards).numUnknownParams()==0);
+
+   //Call-ID: lwsdisp.1234abcd@funky.example.com
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="lwsdisp.1234abcd@funky.example.com");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //CSeq: 60 OPTIONS
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::OPTIONS);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="OPTIONS");
+   tassert(msg->header(resip::h_CSeq).sequence()==60);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   //Via: SIP/2.0/UDP funky.example.com;branch=z9hG4bKkdjuw
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator i=msg->header(resip::h_Vias).begin();
+   
+   tassert(i->numKnownParams()==1);
+   tassert(i->numUnknownParams()==0);
+   tassert(i->protocolName()=="SIP");
+   tassert(i->protocolVersion()=="2.0");
+   tassert(i->transport()=="UDP");
+   tassert(i->sentHost()=="funky.example.com");
+   tassert(i->sentPort()==0);
+   
+   tassert(i->exists(resip::p_branch));
+   tassert(i->param(resip::p_branch).hasMagicCookie());
+   tassert(i->param(resip::p_branch).getTransactionId()=="kdjuw");
+   tassert(i->param(resip::p_branch).clientData().empty());
+
+   //l: 0
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==0);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+
+   std::cerr << "In case lwsdisp:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+longreq()
+{
+/*
+   This well-formed request contains header fields with many values and
+   values that are very long.  Features include the following:
+
+   o  The To header field has a long display name, and long uri
+      parameter names and values.
+
+   o  The From header field has long header parameter names and values,
+      in particular, a very long tag.
+
+   o  The Call-ID is one long token.
+
+INVITE sip:user@example.com SIP/2.0
+To: "I have a user name of extremeextremeextremeextremeextremeextremeextremeextremeextremeextreme proportion"<sip:user@example.com:6000;unknownparam1=verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongvalue;longparamnamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamename=shortvalue;verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongParameterNameWithNoValue>
+F: sip:amazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallername@example.net;tag=12982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982424;unknownheaderparamnamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamename=unknowheaderparamvaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevalue;unknownValuelessparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamname
+Call-ID: longreq.onereallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylongcallid
+CSeq: 3882340 INVITE
+Unknown-LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong-Name: unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-value; unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-parameter-name = unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-parameter-value
+Via: SIP/2.0/TCP sip33.example.com
+v: SIP/2.0/TCP sip32.example.com
+V: SIP/2.0/TCP sip31.example.com
+Via: SIP/2.0/TCP sip30.example.com
+ViA: SIP/2.0/TCP sip29.example.com
+VIa: SIP/2.0/TCP sip28.example.com
+VIA: SIP/2.0/TCP sip27.example.com
+via: SIP/2.0/TCP sip26.example.com
+viA: SIP/2.0/TCP sip25.example.com
+vIa: SIP/2.0/TCP sip24.example.com
+vIA: SIP/2.0/TCP sip23.example.com
+V :  SIP/2.0/TCP sip22.example.com
+v :  SIP/2.0/TCP sip21.example.com
+V  : SIP/2.0/TCP sip20.example.com
+v  : SIP/2.0/TCP sip19.example.com
+Via : SIP/2.0/TCP sip18.example.com
+Via  : SIP/2.0/TCP sip17.example.com
+Via: SIP/2.0/TCP sip16.example.com
+Via: SIP/2.0/TCP sip15.example.com
+Via: SIP/2.0/TCP sip14.example.com
+Via: SIP/2.0/TCP sip13.example.com
+Via: SIP/2.0/TCP sip12.example.com
+Via: SIP/2.0/TCP sip11.example.com
+Via: SIP/2.0/TCP sip10.example.com
+Via: SIP/2.0/TCP sip9.example.com
+Via: SIP/2.0/TCP sip8.example.com
+Via: SIP/2.0/TCP sip7.example.com
+Via: SIP/2.0/TCP sip6.example.com
+Via: SIP/2.0/TCP sip5.example.com
+Via: SIP/2.0/TCP sip4.example.com
+Via: SIP/2.0/TCP sip3.example.com
+Via: SIP/2.0/TCP sip2.example.com
+Via: SIP/2.0/TCP sip1.example.com
+Via: SIP/2.0/TCP host.example.com;received=192.0.2.5;branch=verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongbranchvalue
+Max-Forwards: 70
+Contact: <sip:amazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallername@host5.example.net>
+Content-Type: application/sdp
+l: 150
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.1
+s=-
+c=IN IP4 192.0.2.1
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("longreq.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   //Request Line
+   //INVITE sip:user@example.com SIP/2.0
+   tassert(msg->header(resip::h_RequestLine).method()==resip::INVITE);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="INVITE");
+   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="user");
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+
+   //To: "I have a user name of extremeextremeextremeextremeextremeextremeextremeextremeextremeextreme proportion"<sip:user@example.com:6000;unknownparam1=verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongvalue;longparamnamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamename=shortvalue;verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongParameterNameWithNoValue>
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="I have a user name of extremeextremeextremeextremeextremeextremeextremeextremeextremeextreme proportion");
+   tassert(msg->header(resip::h_To).numKnownParams()==0);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="user");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.com");
+   tassert(msg->header(resip::h_To).uri().port()==6000);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==3);
+
+   resip::ExtensionParameter p_unknownparam1("unknownparam1");
+   tassert(msg->header(resip::h_To).uri().exists(p_unknownparam1));
+   tassert(msg->header(resip::h_To).uri().param(p_unknownparam1)=="verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongvalue");
+
+   resip::ExtensionParameter p_long("longparamnamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamename");
+   tassert(msg->header(resip::h_To).uri().exists(p_long));
+   tassert(msg->header(resip::h_To).uri().param(p_long)=="shortvalue");
+
+   resip::ExtensionParameter p_verylong("verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongParameterNameWithNoValue");
+   tassert(msg->header(resip::h_To).uri().exists(p_verylong));
+   tassert(msg->header(resip::h_To).uri().param(p_verylong)=="");
+
+   //F: sip:amazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallername@example.net;tag=12982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982424;unknownheaderparamnamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamename=unknowheaderparamvaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevalue;unknownValuelessparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamname
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==2);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="12982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982424");
+   
+   resip::ExtensionParameter p_unknownheaderparameternameXalot("unknownheaderparamnamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamename");
+   tassert(msg->header(resip::h_From).exists(p_unknownheaderparameternameXalot));
+   tassert(msg->header(resip::h_From).param(p_unknownheaderparameternameXalot)=="unknowheaderparamvaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevalue");
+
+   resip::ExtensionParameter p_unknownvalueless("unknownValuelessparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamname");
+   tassert(msg->header(resip::h_From).exists(p_unknownvalueless));
+   tassert(msg->header(resip::h_From).param(p_unknownvalueless)=="");
+
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="amazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallername");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.net");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //Call-ID: longreq.onereallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylongcallid
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="longreq.onereallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylongcallid");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //CSeq: 3882340 INVITE
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::INVITE);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="INVITE");
+   tassert(msg->header(resip::h_CSeq).sequence()==3882340);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   //Unknown headers
+   //Unknown-LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong-Name: unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-value; unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-parameter-name = unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-parameter-value
+   resip::ExtensionHeader h_UnknownLong("Unknown-LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong-Name");
+   
+   tassert(msg->exists(h_UnknownLong));
+   tassert(msg->header(h_UnknownLong).size()==1);
+   tassert(msg->header(h_UnknownLong).begin()->value()=="unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-value; unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-parameter-name = unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-parameter-value");
+   tassert(msg->header(h_UnknownLong).begin()->numKnownParams()==0);
+   tassert(msg->header(h_UnknownLong).begin()->numUnknownParams()==0);
+   
+   //Vias
+
+   //Via: SIP/2.0/TCP sip33.example.com
+   //v: SIP/2.0/TCP sip32.example.com
+   //V: SIP/2.0/TCP sip31.example.com
+   //Via: SIP/2.0/TCP sip30.example.com
+   //ViA: SIP/2.0/TCP sip29.example.com
+   //VIa: SIP/2.0/TCP sip28.example.com
+   //VIA: SIP/2.0/TCP sip27.example.com
+   //via: SIP/2.0/TCP sip26.example.com
+   //viA: SIP/2.0/TCP sip25.example.com
+   //vIa: SIP/2.0/TCP sip24.example.com
+   //vIA: SIP/2.0/TCP sip23.example.com
+   //V :  SIP/2.0/TCP sip22.example.com
+   //v :  SIP/2.0/TCP sip21.example.com
+   //V  : SIP/2.0/TCP sip20.example.com
+   //v  : SIP/2.0/TCP sip19.example.com
+   //Via : SIP/2.0/TCP sip18.example.com
+   //Via  : SIP/2.0/TCP sip17.example.com
+   //Via: SIP/2.0/TCP sip16.example.com
+   //Via: SIP/2.0/TCP sip15.example.com
+   //Via: SIP/2.0/TCP sip14.example.com
+   //Via: SIP/2.0/TCP sip13.example.com
+   //Via: SIP/2.0/TCP sip12.example.com
+   //Via: SIP/2.0/TCP sip11.example.com
+   //Via: SIP/2.0/TCP sip10.example.com
+   //Via: SIP/2.0/TCP sip9.example.com
+   //Via: SIP/2.0/TCP sip8.example.com
+   //Via: SIP/2.0/TCP sip7.example.com
+   //Via: SIP/2.0/TCP sip6.example.com
+   //Via: SIP/2.0/TCP sip5.example.com
+   //Via: SIP/2.0/TCP sip4.example.com
+   //Via: SIP/2.0/TCP sip3.example.com
+   //Via: SIP/2.0/TCP sip2.example.com
+   //Via: SIP/2.0/TCP sip1.example.com
+   //Via: SIP/2.0/TCP host.example.com;received=192.0.2.5;branch=verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongbranchvalue
+
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==34);
+   
+   int i=33;
+   resip::Vias::iterator iter;
+   for(iter=msg->header(resip::h_Vias).begin();
+         iter!=msg->header(resip::h_Vias).end(); iter++)
+   {
+      if(i==0)
+      {
+         break;
+      }
+      tassert(iter->numKnownParams()==0);
+      tassert(iter->numUnknownParams()==0);
+      tassert(iter->protocolName()=="SIP");
+      tassert(iter->protocolVersion()=="2.0");
+      tassert(iter->transport()=="TCP");
+      tassert(iter->sentHost()==resip::Data("sip")+resip::Data(i)+resip::Data(".example.com"));
+      tassert(iter->sentPort()==0);
+      i--;
+   }
+   
+   tassert(iter->numKnownParams()==2);
+   tassert(iter->numUnknownParams()==0);
+   tassert(iter->protocolName()=="SIP");
+   tassert(iter->protocolVersion()=="2.0");
+   tassert(iter->transport()=="TCP");
+   tassert(iter->sentHost()=="host.example.com");
+   tassert(iter->sentPort()==0);
+   
+   tassert(iter->exists(resip::p_branch));
+   tassert(!(iter->param(resip::p_branch).hasMagicCookie()));
+   tassert(iter->param(resip::p_branch).getTransactionId()=="verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongbranchvalue");
+   tassert(iter->param(resip::p_branch).clientData().empty());
+
+   tassert(iter->exists(resip::p_received));
+   tassert(iter->param(resip::p_received)=="192.0.2.5");
+
+   //Max-Forwards: 70
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==70);
+   tassert(msg->header(resip::h_MaxForwards).numKnownParams()==0);
+   tassert(msg->header(resip::h_MaxForwards).numUnknownParams()==0);
+
+   //Contact: <sip:amazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallername@host5.example.net>
+   tassert(msg->exists(resip::h_Contacts));
+   tassert(msg->header(resip::h_Contacts).size()==1);
+   resip::ParserContainer<resip::NameAddr>::iterator j=msg->header(resip::h_Contacts).begin();
+   
+   tassert(j->displayName()=="");
+   tassert(j->numKnownParams()==0);
+   tassert(j->numUnknownParams()==0);
+   tassert(!(j->isAllContacts()));
+   tassert(j->uri().numKnownParams()==0);
+   tassert(j->uri().numUnknownParams()==0);
+   tassert(j->uri().scheme()=="sip");
+   tassert(j->uri().user()=="amazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallername");
+   tassert(j->uri().password().empty());
+   tassert(j->uri().host()=="host5.example.net");
+   tassert(j->uri().port()==0);
+   tassert(!(j->uri().hasEmbedded()));
+
+   //Content-Type: application/sdp
+   tassert(msg->exists(resip::h_ContentType));
+   tassert(msg->header(resip::h_ContentType).type()=="application");
+   tassert(msg->header(resip::h_ContentType).subType()=="sdp");
+   tassert(msg->header(resip::h_ContentType).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentType).numUnknownParams()==0);
+   
+   //l: 150
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==150);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+
+   std::cerr << "In case longreq:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+dblreq()
+{
+/*
+   This message contains a single SIP REGISTER request, which ostensibly
+   arrived over UDP in a single datagram.  The packet contains extra
+   octets after the body (which in this case has zero length).  The
+   extra octets happen to look like a SIP INVITE request, but (per
+   section 18.3 of [RFC3261]) they are just spurious noise that must be
+   ignored.
+
+   A SIP element receiving this datagram would handle the REGISTER
+   request normally and ignore the extra bits that look like an INVITE
+   request.  If the element is a proxy choosing to forward the REGISTER,
+   the INVITE octets would not appear in the forwarded request.
+
+
+
+REGISTER sip:example.com SIP/2.0
+To: sip:j.user@example.com
+From: sip:j.user@example.com;tag=43251j3j324
+Max-Forwards: 8
+I: dblreq.0ha0isndaksdj99sdfafnl3lk233412
+Contact: sip:j.user@host.example.com
+CSeq: 8 REGISTER
+Via: SIP/2.0/UDP 192.0.2.125;branch=z9hG4bKkdjuw23492
+Content-Length: 0
+
+
+INVITE sip:joe@example.com SIP/2.0
+t: sip:joe@example.com
+From: sip:caller@example.net;tag=141334
+Max-Forwards: 8
+Call-ID: dblreq.0ha0isnda977644900765@192.0.2.15
+CSeq: 8 INVITE
+Via: SIP/2.0/UDP 192.0.2.15;branch=z9hG4bKkdjuw380234
+Content-Type: application/sdp
+Content-Length: 150
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.15
+s=-
+c=IN IP4 192.0.2.15
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m =video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+
+*/
+   FILE* fid= fopen("dblreq.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+   
+   //Request Line
+   //REGISTER sip:example.com SIP/2.0
+   tassert(msg->header(resip::h_RequestLine).method()==resip::REGISTER);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="REGISTER");
+   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="");
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+
+   //To: sip:j.user@example.com
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="");
+   tassert(msg->header(resip::h_To).numKnownParams()==0);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="j.user");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.com");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //From: sip:j.user@example.com;tag=43251j3j324
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="43251j3j324");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="j.user");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //Max-Forwards: 8
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==8);
+   tassert(msg->header(resip::h_MaxForwards).numKnownParams()==0);
+   tassert(msg->header(resip::h_MaxForwards).numUnknownParams()==0);
+
+   //I: dblreq.0ha0isndaksdj99sdfafnl3lk233412
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="dblreq.0ha0isndaksdj99sdfafnl3lk233412");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //Contact: sip:j.user@host.example.com
+   tassert(msg->exists(resip::h_Contacts));
+   tassert(msg->header(resip::h_Contacts).size()==1);
+   resip::ParserContainer<resip::NameAddr>::iterator j=msg->header(resip::h_Contacts).begin();
+   
+   tassert(j->displayName()=="");
+   tassert(j->numKnownParams()==0);
+   tassert(j->numUnknownParams()==0);
+   tassert(!(j->isAllContacts()));
+   tassert(j->uri().numKnownParams()==0);
+   tassert(j->uri().numUnknownParams()==0);
+   tassert(j->uri().scheme()=="sip");
+   tassert(j->uri().user()=="j.user");
+   tassert(j->uri().password().empty());
+   tassert(j->uri().host()=="host.example.com");
+   tassert(j->uri().port()==0);
+   tassert(!(j->uri().hasEmbedded()));
+
+   //CSeq: 8 REGISTER
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::REGISTER);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="REGISTER");
+   tassert(msg->header(resip::h_CSeq).sequence()==8);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   //Via: SIP/2.0/UDP 192.0.2.125;branch=z9hG4bKkdjuw23492
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator i=msg->header(resip::h_Vias).begin();
+   
+   tassert(i->numKnownParams()==1);
+   tassert(i->numUnknownParams()==0);
+   tassert(i->protocolName()=="SIP");
+   tassert(i->protocolVersion()=="2.0");
+   tassert(i->transport()=="UDP");
+   tassert(i->sentHost()=="192.0.2.125");
+   tassert(i->sentPort()==0);
+   
+   tassert(i->exists(resip::p_branch));
+   tassert(i->param(resip::p_branch).hasMagicCookie());
+   tassert(i->param(resip::p_branch).getTransactionId()=="kdjuw23492");
+   tassert(i->param(resip::p_branch).clientData().empty());
+
+   //Content-Length: 0
+   tassert(msg->exists(resip::h_ContentLength));
+   // !bwc! We configured SipMessage to take the Content-Length seriously
+   tassert(msg->header(resip::h_ContentLength).value()==0);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+
+
+
+   std::cerr << "In case dblreq:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+semiuri()
+{
+/*
+   This request has a semicolon-separated parameter contained in the
+   "user" part of the Request-URI (whose value contains an escaped @
+   symbol).  Receiving elements will accept this as a well-formed
+   message.  The Request-URI will parse so that the user part is
+   "user;par=u@example.net".
+
+OPTIONS sip:user;par=u%40example.net@example.com SIP/2.0
+To: sip:j_user@example.com
+From: sip:caller@example.org;tag=33242
+Max-Forwards: 3
+Call-ID: semiuri.0ha0isndaksdj
+CSeq: 8 OPTIONS
+Accept: application/sdp, application/pkcs7-mime,
+        multipart/mixed, multipart/signed,
+        message/sip, message/sipfrag
+Via: SIP/2.0/UDP 192.0.2.1;branch=z9hG4bKkdjuw
+l: 0
+
+
+*/
+   FILE* fid= fopen("semiuri.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   //Request Line
+   //OPTIONS sip:user;par=u%40example.net@example.com SIP/2.0
+   tassert(msg->header(resip::h_RequestLine).method()==resip::OPTIONS);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="OPTIONS");
+   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   // !bwc! Need to determine how escaped stuff should be represented internally
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="user;par=u%40example.net");
+   tassert_reset();
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+
+   //To: sip:j_user@example.com
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="");
+   tassert(msg->header(resip::h_To).numKnownParams()==0);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="j_user");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.com");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //From: sip:caller@example.org;tag=33242
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="33242");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="caller");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.org");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //Max-Forwards: 3
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==3);
+   tassert(msg->header(resip::h_MaxForwards).numKnownParams()==0);
+   tassert(msg->header(resip::h_MaxForwards).numUnknownParams()==0);
+
+   //Call-ID: semiuri.0ha0isndaksdj
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="semiuri.0ha0isndaksdj");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //CSeq: 8 OPTIONS
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::OPTIONS);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="OPTIONS");
+   tassert(msg->header(resip::h_CSeq).sequence()==8);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   //Accept: application/sdp, application/pkcs7-mime,
+   //        multipart/mixed, multipart/signed,
+   //        message/sip, message/sipfrag
+   tassert(msg->exists(resip::h_Accepts));
+   tassert(msg->header(resip::h_Accepts).size()==6);
+   
+   resip::Mimes::iterator a=msg->header(resip::h_Accepts).begin();
+   
+   tassert(a->type()=="application");
+   tassert(a->subType()=="sdp");
+   tassert(a->numKnownParams()==0);
+   tassert(a->numUnknownParams()==0);
+   a++;
+
+   tassert(a->type()=="application");
+   tassert(a->subType()=="pkcs7-mime");
+   tassert(a->numKnownParams()==0);
+   tassert(a->numUnknownParams()==0);
+   a++;
+
+   tassert(a->type()=="multipart");
+   tassert(a->subType()=="mixed");
+   tassert(a->numKnownParams()==0);
+   tassert(a->numUnknownParams()==0);
+   a++;
+
+   tassert(a->type()=="multipart");
+   tassert(a->subType()=="signed");
+   tassert(a->numKnownParams()==0);
+   tassert(a->numUnknownParams()==0);
+   a++;
+
+   tassert(a->type()=="message");
+   tassert(a->subType()=="sip");
+   tassert(a->numKnownParams()==0);
+   tassert(a->numUnknownParams()==0);
+   a++;
+
+   tassert(a->type()=="message");
+   tassert(a->subType()=="sipfrag");
+   tassert(a->numKnownParams()==0);
+   tassert(a->numUnknownParams()==0);
+
+   //Via: SIP/2.0/UDP 192.0.2.1;branch=z9hG4bKkdjuw
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator i=msg->header(resip::h_Vias).begin();
+   
+   tassert(i->numKnownParams()==1);
+   tassert(i->numUnknownParams()==0);
+   tassert(i->protocolName()=="SIP");
+   tassert(i->protocolVersion()=="2.0");
+   tassert(i->transport()=="UDP");
+   tassert(i->sentHost()=="192.0.2.1");
+   tassert(i->sentPort()==0);
+   
+   tassert(i->exists(resip::p_branch));
+   tassert(i->param(resip::p_branch).hasMagicCookie());
+   tassert(i->param(resip::p_branch).getTransactionId()=="kdjuw");
+   tassert(i->param(resip::p_branch).clientData().empty());
+
+   //l: 0
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==0);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+
+
+
+   std::cerr << "In case semiuri:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+transports()
+{
+/*
+   This request contains Via header field values with all known
+   transport types and exercises the transport extension mechanism.
+   Parsers must accept this message as well formed.  Elements receiving
+   this message would process it exactly as if the 2nd and subsequent
+   header field values specified UDP (or other transport).
+
+OPTIONS sip:user@example.com SIP/2.0
+To: sip:user@example.com
+From: <sip:caller@example.com>;tag=323
+Max-Forwards: 70
+Call-ID:  transports.kijh4akdnaqjkwendsasfdj
+Accept: application/sdp
+CSeq: 60 OPTIONS
+Via: SIP/2.0/UDP t1.example.com;branch=z9hG4bKkdjuw
+Via: SIP/2.0/SCTP t2.example.com;branch=z9hG4bKklasjdhf
+Via: SIP/2.0/TLS t3.example.com;branch=z9hG4bK2980unddj
+Via: SIP/2.0/UNKNOWN t4.example.com;branch=z9hG4bKasd0f3en
+Via: SIP/2.0/TCP t5.example.com;branch=z9hG4bK0a9idfnee
+l: 0
+
+
+*/
+   FILE* fid= fopen("transports.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   //Request Line
+   //OPTIONS sip:user@example.com SIP/2.0
+   tassert(msg->header(resip::h_RequestLine).method()==resip::OPTIONS);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="OPTIONS");
+   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="user");
+   tassert_reset();
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+
+   //To: sip:user@example.com
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="");
+   tassert(msg->header(resip::h_To).numKnownParams()==0);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="user");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.com");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //From: <sip:caller@example.com>;tag=323
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="323");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="caller");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //Max-Forwards: 70
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==70);
+   tassert(msg->header(resip::h_MaxForwards).numKnownParams()==0);
+   tassert(msg->header(resip::h_MaxForwards).numUnknownParams()==0);
+
+   //Call-ID:  transports.kijh4akdnaqjkwendsasfdj
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="transports.kijh4akdnaqjkwendsasfdj");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //Accept: application/sdp
+   tassert(msg->exists(resip::h_Accepts));
+   tassert(msg->header(resip::h_Accepts).size()==1);
+   
+   resip::Mimes::iterator a=msg->header(resip::h_Accepts).begin();
+   
+   tassert(a->type()=="application");
+   tassert(a->subType()=="sdp");
+   tassert(a->numKnownParams()==0);
+   tassert(a->numUnknownParams()==0);
+
+   //CSeq: 60 OPTIONS
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::OPTIONS);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="OPTIONS");
+   tassert(msg->header(resip::h_CSeq).sequence()==60);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   //Vias
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==5);
+   resip::ParserContainer<resip::Via>::iterator v=msg->header(resip::h_Vias).begin();
+
+   //Via: SIP/2.0/UDP t1.example.com;branch=z9hG4bKkdjuw
+   tassert(v->numKnownParams()==1);
+   tassert(v->numUnknownParams()==0);
+   tassert(v->protocolName()=="SIP");
+   tassert(v->protocolVersion()=="2.0");
+   tassert(v->transport()=="UDP");
+   tassert(v->sentHost()=="t1.example.com");
+   tassert(v->sentPort()==0);
+   
+   tassert(v->exists(resip::p_branch));
+   tassert(v->param(resip::p_branch).hasMagicCookie());
+   tassert(v->param(resip::p_branch).getTransactionId()=="kdjuw");
+   tassert(v->param(resip::p_branch).clientData().empty());
+   
+   v++;
+   //Via: SIP/2.0/SCTP t2.example.com;branch=z9hG4bKklasjdhf
+   tassert(v->numKnownParams()==1);
+   tassert(v->numUnknownParams()==0);
+   tassert(v->protocolName()=="SIP");
+   tassert(v->protocolVersion()=="2.0");
+   tassert(v->transport()=="SCTP");
+   tassert(v->sentHost()=="t2.example.com");
+   tassert(v->sentPort()==0);
+   
+   tassert(v->exists(resip::p_branch));
+   tassert(v->param(resip::p_branch).hasMagicCookie());
+   tassert(v->param(resip::p_branch).getTransactionId()=="klasjdhf");
+   tassert(v->param(resip::p_branch).clientData().empty());
+   
+   v++;
+   //Via: SIP/2.0/TLS t3.example.com;branch=z9hG4bK2980unddj
+   tassert(v->numKnownParams()==1);
+   tassert(v->numUnknownParams()==0);
+   tassert(v->protocolName()=="SIP");
+   tassert(v->protocolVersion()=="2.0");
+   tassert(v->transport()=="TLS");
+   tassert(v->sentHost()=="t3.example.com");
+   tassert(v->sentPort()==0);
+   
+   tassert(v->exists(resip::p_branch));
+   tassert(v->param(resip::p_branch).hasMagicCookie());
+   tassert(v->param(resip::p_branch).getTransactionId()=="2980unddj");
+   tassert(v->param(resip::p_branch).clientData().empty());
+   
+   v++;
+   //Via: SIP/2.0/UNKNOWN t4.example.com;branch=z9hG4bKasd0f3en
+   tassert(v->numKnownParams()==1);
+   tassert(v->numUnknownParams()==0);
+   tassert(v->protocolName()=="SIP");
+   tassert(v->protocolVersion()=="2.0");
+   tassert(v->transport()=="UNKNOWN");
+   tassert(v->sentHost()=="t4.example.com");
+   tassert(v->sentPort()==0);
+   
+   tassert(v->exists(resip::p_branch));
+   tassert(v->param(resip::p_branch).hasMagicCookie());
+   tassert(v->param(resip::p_branch).getTransactionId()=="asd0f3en");
+   tassert(v->param(resip::p_branch).clientData().empty());
+   
+   v++;
+   //Via: SIP/2.0/TCP t5.example.com;branch=z9hG4bK0a9idfnee
+   tassert(v->numKnownParams()==1);
+   tassert(v->numUnknownParams()==0);
+   tassert(v->protocolName()=="SIP");
+   tassert(v->protocolVersion()=="2.0");
+   tassert(v->transport()=="TCP");
+   tassert(v->sentHost()=="t5.example.com");
+   tassert(v->sentPort()==0);
+   
+   tassert(v->exists(resip::p_branch));
+   tassert(v->param(resip::p_branch).hasMagicCookie());
+   tassert(v->param(resip::p_branch).getTransactionId()=="0a9idfnee");
+   tassert(v->param(resip::p_branch).clientData().empty());
+   
+   //l: 0
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==0);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+
+   std::cerr << "In case transports:" << std::endl;
+   std::cerr << "Original text:" << std::endl << txt << std::endl;
+   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
+   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+
+
+
+
+}
+
+
+void
+mpart01()
+{
+/*
+   This MESSAGE request contains two body parts.  The second part is
+   binary encoded and contains null (0x00) characters.  Receivers must
+   take care to frame the received message properly.
+
+   Parsers must accept this message as well formed, even if the
+   application above the parser does not support multipart/signed.
+
+   Additional examples of multipart/mime messages, in particular S/MIME
+   messages, are available in the security call flow examples document
+   [SIP-SEC].
+
+MESSAGE sip:kumiko@example.org SIP/2.0
+Via: SIP/2.0/UDP 127.0.0.1:5070;branch=z9hG4bK-d87543-4dade06d0bdb11ee-1--d87543-;rport
+Max-Forwards: 70
+Route: <sip:127.0.0.1:5080>
+Identity: r5mwreLuyDRYBi/0TiPwEsY3rEVsk/G2WxhgTV1PF7hHuLIK0YWVKZhKv9Mj8UeXqkMVbnVq37CD+813gvYjcBUaZngQmXc9WNZSDNGCzA+fWl9MEUHWIZo1CeJebdY/XlgKeTa0Olvq0rt70Q5jiSfbqMJmQFteeivUhkMWYUA=
+Contact: <sip:fluffy@127.0.0.1:5070>
+To: <sip:kumiko@example.org>
+From: <sip:fluffy@example.com>;tag=2fb0dcc9
+Call-ID: 3d9485ad0c49859b@Zmx1ZmZ5LW1hYy0xNi5sb2NhbA..
+CSeq: 1 MESSAGE
+Content-Transfer-Encoding: binary
+Content-Type: multipart/mixed;boundary=7a9cbec02ceef655
+Date: Sat, 15 Oct 2005 04:44:56 GMT
+User-Agent: SIPimp.org/0.2.5 (curses)
+Content-Length: 553
+
+--7a9cbec02ceef655
+Content-Type: text/plain
+Content-Transfer-Encoding: binary
+
+Hello
+--7a9cbec02ceef655
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: binary
+
+0ÇR	*ÜHÜ˜
+†ÇC0Ç?1	0+0	*ÜHÜ˜
+1Ç 0Ç0|0p10	UUS10U
+California10USan Jose10U
+sipit1)0'U Sipit Test Certificate Authorityï q30+0
+	*ÜHÜ˜
+ ÅÄéÙf˘HR-“Âóéùï™ÈÚ˛†fYqbíË⁄*®ÿ5
+hŒˇÆ<Ω+ˇu›’déY=÷G(Úb ˜ÈAtû3
+öÌ´€ì—B.{râ“ú¿…Æ.˚«¿œ˘/;~O¿'·Tm‰∂™:ª>fÃÀ]÷∆KÉÉú∏Êˇ-îOÂ{eºô–
+--7a9cbec02ceef655--
+
+*/
+   FILE* fid= fopen("mpart01.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   //Request Line
+   //MESSAGE sip:kumiko@example.org SIP/2.0
+   tassert(msg->header(resip::h_RequestLine).method()==resip::MESSAGE);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="MESSAGE");
+   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="kumiko");
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="example.org");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+
+   //Vias
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator v=msg->header(resip::h_Vias).begin();
+
+   //Via: SIP/2.0/UDP 127.0.0.1:5070;branch=z9hG4bK-d87543-4dade06d0bdb11ee-1--d87543-;rport
+   tassert(v->numKnownParams()==2);
+   tassert(v->numUnknownParams()==0);
+   tassert(v->protocolName()=="SIP");
+   tassert(v->protocolVersion()=="2.0");
+   tassert(v->transport()=="UDP");
+   tassert(v->sentHost()=="127.0.0.1");
+   tassert(v->sentPort()==5070);
+   
+   tassert(v->exists(resip::p_branch));
+   tassert(v->param(resip::p_branch).hasMagicCookie());
+   // !bwc! This branch parameter has resip-specific tokens in it. The "d87543"
+   // is a resip cookie, and the "1" is a transport sequence.
+   tassert(v->param(resip::p_branch).getTransactionId()=="4dade06d0bdb11ee");
+   tassert(v->param(resip::p_branch).clientData().empty());
+   
+   tassert(v->exists(resip::p_rport));
+   tassert(!(v->param(resip::p_rport).hasValue()));
+   tassert(v->param(resip::p_rport).port()==0);
+
+   //Max-Forwards: 70
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==70);
+   tassert(msg->header(resip::h_MaxForwards).numKnownParams()==0);
+   tassert(msg->header(resip::h_MaxForwards).numUnknownParams()==0);
+
+   //Route: <sip:127.0.0.1:5080>
+   tassert(msg->exists(resip::h_Routes));
+   tassert(msg->header(resip::h_Routes).size()==1);
+   resip::ParserContainer<resip::NameAddr>::iterator r=msg->header(resip::h_Routes).begin();
+   
+   tassert(r->numKnownParams()==0);
+   tassert(r->numUnknownParams()==0);
+   tassert(r->displayName()=="");
+   tassert(r->uri().scheme()=="sip");
+   tassert(r->uri().user()=="");
+   tassert(r->uri().password()=="");
+   tassert(r->uri().host()=="127.0.0.1");
+   tassert(r->uri().port()==5080);
+   tassert(!(r->uri().hasEmbedded()));
+   tassert(r->uri().numKnownParams()==0);
+   tassert(r->uri().numUnknownParams()==0);
+   
+
+   //Identity: r5mwreLuyDRYBi/0TiPwEsY3rEVsk/G2WxhgTV1PF7hHuLIK0YWVKZhKv9Mj8UeXqkMVbnVq37CD+813gvYjcBUaZngQmXc9WNZSDNGCzA+fWl9MEUHWIZo1CeJebdY/XlgKeTa0Olvq0rt70Q5jiSfbqMJmQFteeivUhkMWYUA=
+   tassert(msg->exists(resip::h_Identity));
+   tassert(msg->header(resip::h_Identity).value()=="r5mwreLuyDRYBi/0TiPwEsY3rEVsk/G2WxhgTV1PF7hHuLIK0YWVKZhKv9Mj8UeXqkMVbnVq37CD+813gvYjcBUaZngQmXc9WNZSDNGCzA+fWl9MEUHWIZo1CeJebdY/XlgKeTa0Olvq0rt70Q5jiSfbqMJmQFteeivUhkMWYUA=");
+   tassert(msg->header(resip::h_Identity).numKnownParams()==0);
+   tassert(msg->header(resip::h_Identity).numUnknownParams()==0);
+   
+   //Contact: <sip:fluffy@127.0.0.1:5070>
+   tassert(msg->exists(resip::h_Contacts));
+   tassert(msg->header(resip::h_Contacts).size()==1);
+   resip::ParserContainer<resip::NameAddr>::iterator m=msg->header(resip::h_Contacts).begin();
+   
+   tassert(m->displayName()=="");
+   tassert(m->numKnownParams()==0);
+   tassert(m->numUnknownParams()==0);
+   tassert(!(m->isAllContacts()));
+   tassert(m->uri().numKnownParams()==0);
+   tassert(m->uri().numUnknownParams()==0);
+   tassert(m->uri().scheme()=="sip");
+   tassert(m->uri().user()=="fluffy");
+   tassert(m->uri().password().empty());
+   tassert(m->uri().host()=="127.0.0.1");
+   tassert(m->uri().port()==5070);
+   tassert(!(m->uri().hasEmbedded()));
+
+   //To: <sip:kumiko@example.org>
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="");
+   tassert(msg->header(resip::h_To).numKnownParams()==0);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="kumiko");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.org");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //From: <sip:fluffy@example.com>;tag=2fb0dcc9
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="2fb0dcc9");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="fluffy");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //Call-ID: 3d9485ad0c49859b@Zmx1ZmZ5LW1hYy0xNi5sb2NhbA..
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="3d9485ad0c49859b@Zmx1ZmZ5LW1hYy0xNi5sb2NhbA..");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //CSeq: 1 MESSAGE
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::MESSAGE);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="MESSAGE");
+   tassert(msg->header(resip::h_CSeq).sequence()==1);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   // !bwc! There appears to be some controversy over how this particular
+   // header should be implemented...
+   //Content-Transfer-Encoding: binary
+   tassert(msg->exists(resip::h_ContentTransferEncoding));
+   tassert(msg->header(resip::h_ContentTransferEncoding).value()=="binary");
+   tassert(msg->header(resip::h_ContentTransferEncoding).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentTransferEncoding).numUnknownParams()==0);
+   
+   //Content-Type: multipart/mixed;boundary=7a9cbec02ceef655
+   tassert(msg->exists(resip::h_ContentType));
+   tassert(msg->header(resip::h_ContentType).type()=="multipart");
+   tassert(msg->header(resip::h_ContentType).subType()=="mixed");
+   tassert(msg->header(resip::h_ContentType).numKnownParams()==1);
+   tassert(msg->header(resip::h_ContentType).numUnknownParams()==0);
+   
+   tassert(msg->header(resip::h_ContentType).exists(resip::p_boundary));
+   tassert(msg->header(resip::h_ContentType).param(resip::p_boundary)=="7a9cbec02ceef655");
+
+   //Date: Sat, 15 Oct 2005 04:44:56 GMT
+   tassert(msg->exists(resip::h_Date));
+   tassert(msg->header(resip::h_Date).dayOfWeek()==resip::Sat);
+   tassert(msg->header(resip::h_Date).dayOfMonth()==15);
+   tassert(msg->header(resip::h_Date).month()==resip::Oct);
+   tassert(msg->header(resip::h_Date).year()==2005);
+   tassert(msg->header(resip::h_Date).hour()==4);
+   tassert(msg->header(resip::h_Date).minute()==44);
+   tassert(msg->header(resip::h_Date).second()==56);
+   tassert(msg->header(resip::h_Date).numKnownParams()==0);
+   tassert(msg->header(resip::h_Date).numUnknownParams()==0);
+   
+   //User-Agent: SIPimp.org/0.2.5 (curses)
+   tassert(msg->exists(resip::h_UserAgent));
+   tassert(msg->header(resip::h_UserAgent).value()=="SIPimp.org/0.2.5 (curses)");
+   tassert(msg->header(resip::h_UserAgent).numKnownParams()==0);
+   tassert(msg->header(resip::h_UserAgent).numUnknownParams()==0);
+   
+   //Content-Length: 553
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==553);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+
+
+   std::cerr << "In case mpart01:" << std::endl;
    std::cerr << "Original text:" << std::endl << txt << std::endl;
    std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
    std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
@@ -1626,221 +3474,6 @@ l: 0
 
 
 void
-dblreq()
-{
-/*
-
-REGISTER sip:example.com SIP/2.0
-To: sip:j.user@example.com
-From: sip:j.user@example.com;tag=43251j3j324
-Max-Forwards: 8
-I: dblreq.0ha0isndaksdj99sdfafnl3lk233412
-Contact: sip:j.user@host.example.com
-CSeq: 8 REGISTER
-Via: SIP/2.0/UDP 192.0.2.125;branch=z9hG4bKkdjuw23492
-Content-Length: 0
-
-
-INVITE sip:joe@example.com SIP/2.0
-t: sip:joe@example.com
-From: sip:caller@example.net;tag=141334
-Max-Forwards: 8
-Call-ID: dblreq.0ha0isnda977644900765@192.0.2.15
-CSeq: 8 INVITE
-Via: SIP/2.0/UDP 192.0.2.15;branch=z9hG4bKkdjuw380234
-Content-Type: application/sdp
-Content-Length: 150
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.15
-s=-
-c=IN IP4 192.0.2.15
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m =video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-
-*/
-   FILE* fid= fopen("dblreq.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case dblreq:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-esc02()
-{
-/*
-
-RE%47IST%45R sip:registrar.example.com SIP/2.0
-To: "%Z%45" <sip:resource@example.com>
-From: "%Z%45" <sip:resource@example.com>;tag=f232jadfj23
-Call-ID: esc02.asdfnqwo34rq23i34jrjasdcnl23nrlknsdf
-Via: SIP/2.0/TCP host.example.com;branch=z9hG4bK209%fzsnel234
-CSeq: 29344 RE%47IST%45R
-Max-Forwards: 70
-Contact: <sip:alias1@host1.example.com>
-C%6Fntact: <sip:alias2@host2.example.com>
-Contact: <sip:alias3@host3.example.com>
-l: 0
-
-
-*/
-   FILE* fid= fopen("esc02.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case esc02:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-escnull()
-{
-/*
-
-REGISTER sip:example.com SIP/2.0
-To: sip:null-%00-null@example.com
-From: sip:null-%00-null@example.com;tag=839923423
-Max-Forwards: 70
-Call-ID: escnull.39203ndfvkjdasfkq3w4otrq0adsfdfnavd
-CSeq: 14398234 REGISTER
-Via: SIP/2.0/UDP host5.example.com;branch=z9hG4bKkdjuw
-Contact: <sip:%00@host5.example.com>
-Contact: <sip:%00%00@host5.example.com>
-L:0
-
-
-*/
-   FILE* fid= fopen("escnull.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case escnull:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
 escruri()
 {
 /*
@@ -2119,113 +3752,6 @@ Content-Length: 40
 
 
 void
-longreq()
-{
-/*
-
-INVITE sip:user@example.com SIP/2.0
-To: "I have a user name of extremeextremeextremeextremeextremeextremeextremeextremeextremeextreme proportion"<sip:user@example.com:6000;unknownparam1=verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongvalue;longparamnamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamename=shortvalue;verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongParameterNameWithNoValue>
-F: sip:amazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallername@example.net;tag=12982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982982424;unknownheaderparamnamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamenamename=unknowheaderparamvaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevaluevalue;unknownValuelessparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamnameparamname
-Call-ID: longreq.onereallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylongcallid
-CSeq: 3882340 INVITE
-Unknown-LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong-Name: unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-value; unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-parameter-name = unknown-longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong-parameter-value
-Via: SIP/2.0/TCP sip33.example.com
-v: SIP/2.0/TCP sip32.example.com
-V: SIP/2.0/TCP sip31.example.com
-Via: SIP/2.0/TCP sip30.example.com
-ViA: SIP/2.0/TCP sip29.example.com
-VIa: SIP/2.0/TCP sip28.example.com
-VIA: SIP/2.0/TCP sip27.example.com
-via: SIP/2.0/TCP sip26.example.com
-viA: SIP/2.0/TCP sip25.example.com
-vIa: SIP/2.0/TCP sip24.example.com
-vIA: SIP/2.0/TCP sip23.example.com
-V :  SIP/2.0/TCP sip22.example.com
-v :  SIP/2.0/TCP sip21.example.com
-V  : SIP/2.0/TCP sip20.example.com
-v  : SIP/2.0/TCP sip19.example.com
-Via : SIP/2.0/TCP sip18.example.com
-Via  : SIP/2.0/TCP sip17.example.com
-Via: SIP/2.0/TCP sip16.example.com
-Via: SIP/2.0/TCP sip15.example.com
-Via: SIP/2.0/TCP sip14.example.com
-Via: SIP/2.0/TCP sip13.example.com
-Via: SIP/2.0/TCP sip12.example.com
-Via: SIP/2.0/TCP sip11.example.com
-Via: SIP/2.0/TCP sip10.example.com
-Via: SIP/2.0/TCP sip9.example.com
-Via: SIP/2.0/TCP sip8.example.com
-Via: SIP/2.0/TCP sip7.example.com
-Via: SIP/2.0/TCP sip6.example.com
-Via: SIP/2.0/TCP sip5.example.com
-Via: SIP/2.0/TCP sip4.example.com
-Via: SIP/2.0/TCP sip3.example.com
-Via: SIP/2.0/TCP sip2.example.com
-Via: SIP/2.0/TCP sip1.example.com
-Via: SIP/2.0/TCP host.example.com;received=192.0.2.5;branch=verylonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglongbranchvalue
-Max-Forwards: 70
-Contact: <sip:amazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallernameamazinglylongcallername@host5.example.net>
-Content-Type: application/sdp
-l: 150
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.1
-s=-
-c=IN IP4 192.0.2.1
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("longreq.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case longreq:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
 ltgtruri()
 {
 /*
@@ -2288,69 +3814,6 @@ a=rtpmap:31 LPC
    }
 
    std::cerr << "In case ltgtruri:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-lwsdisp()
-{
-/*
-
-OPTIONS sip:user@example.com SIP/2.0
-To: sip:user@example.com
-From: caller<sip:caller@example.com>;tag=323
-Max-Forwards: 70
-Call-ID: lwsdisp.1234abcd@funky.example.com
-CSeq: 60 OPTIONS
-Via: SIP/2.0/UDP funky.example.com;branch=z9hG4bKkdjuw
-l: 0
-
-
-*/
-   FILE* fid= fopen("lwsdisp.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case lwsdisp:" << std::endl;
    std::cerr << "Original text:" << std::endl << txt << std::endl;
    std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
    std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
@@ -2698,95 +4161,6 @@ a=rtpmap:31 LPC
    }
 
    std::cerr << "In case mismatch02:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-mpart01()
-{
-/*
-
-MESSAGE sip:kumiko@example.org SIP/2.0
-Via: SIP/2.0/UDP 127.0.0.1:5070;branch=z9hG4bK-d87543-4dade06d0bdb11ee-1--d87543-;rport
-Max-Forwards: 70
-Route: <sip:127.0.0.1:5080>
-Identity: r5mwreLuyDRYBi/0TiPwEsY3rEVsk/G2WxhgTV1PF7hHuLIK0YWVKZhKv9Mj8UeXqkMVbnVq37CD+813gvYjcBUaZngQmXc9WNZSDNGCzA+fWl9MEUHWIZo1CeJebdY/XlgKeTa0Olvq0rt70Q5jiSfbqMJmQFteeivUhkMWYUA=
-Contact: <sip:fluffy@127.0.0.1:5070>
-To: <sip:kumiko@example.org>
-From: <sip:fluffy@example.com>;tag=2fb0dcc9
-Call-ID: 3d9485ad0c49859b@Zmx1ZmZ5LW1hYy0xNi5sb2NhbA..
-CSeq: 1 MESSAGE
-Content-Transfer-Encoding: binary
-Content-Type: multipart/mixed;boundary=7a9cbec02ceef655
-Date: Sat, 15 Oct 2005 04:44:56 GMT
-User-Agent: SIPimp.org/0.2.5 (curses)
-Content-Length: 553
-
---7a9cbec02ceef655
-Content-Type: text/plain
-Content-Transfer-Encoding: binary
-
-Hello
---7a9cbec02ceef655
-Content-Type: application/octet-stream
-Content-Transfer-Encoding: binary
-
-0ÇR	*ÜHÜ˜
-†ÇC0Ç?1	0+0	*ÜHÜ˜
-1Ç 0Ç0|0p10	UUS10U
-California10USan Jose10U
-sipit1)0'U Sipit Test Certificate Authorityï q30+0
-	*ÜHÜ˜
- ÅÄéÙf˘HR-“Âóéùï™ÈÚ˛†fYqbíË⁄*®ÿ5
-hŒˇÆ<Ω+ˇu›’déY=÷G(Úb ˜ÈAtû3
-öÌ´€ì—B.{râ“ú¿…Æ.˚«¿œ˘/;~O¿'·Tm‰∂™:ª>fÃÀ]÷∆KÉÉú∏Êˇ-îOÂ{eºô–
---7a9cbec02ceef655--
-
-*/
-   FILE* fid= fopen("mpart01.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case mpart01:" << std::endl;
    std::cerr << "Original text:" << std::endl << txt << std::endl;
    std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
    std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
@@ -3546,72 +4920,6 @@ a=rtpmap:31 LPC
 
 
 void
-semiuri()
-{
-/*
-
-OPTIONS sip:user;par=u%40example.net@example.com SIP/2.0
-To: sip:j_user@example.com
-From: sip:caller@example.org;tag=33242
-Max-Forwards: 3
-Call-ID: semiuri.0ha0isndaksdj
-CSeq: 8 OPTIONS
-Accept: application/sdp, application/pkcs7-mime,
-        multipart/mixed, multipart/signed,
-        message/sip, message/sipfrag
-Via: SIP/2.0/UDP 192.0.2.1;branch=z9hG4bKkdjuw
-l: 0
-
-
-*/
-   FILE* fid= fopen("semiuri.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case semiuri:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
 test()
 {
 /*
@@ -3670,74 +4978,6 @@ testing=123
    }
 
    std::cerr << "In case test:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-transports()
-{
-/*
-
-OPTIONS sip:user@example.com SIP/2.0
-To: sip:user@example.com
-From: <sip:caller@example.com>;tag=323
-Max-Forwards: 70
-Call-ID:  transports.kijh4akdnaqjkwendsasfdj
-Accept: application/sdp
-CSeq: 60 OPTIONS
-Via: SIP/2.0/UDP t1.example.com;branch=z9hG4bKkdjuw
-Via: SIP/2.0/SCTP t2.example.com;branch=z9hG4bKklasjdhf
-Via: SIP/2.0/TLS t3.example.com;branch=z9hG4bK2980unddj
-Via: SIP/2.0/UNKNOWN t4.example.com;branch=z9hG4bKasd0f3en
-Via: SIP/2.0/TCP t5.example.com;branch=z9hG4bK0a9idfnee
-l: 0
-
-
-*/
-   FILE* fid= fopen("transports.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case transports:" << std::endl;
    std::cerr << "Original text:" << std::endl << txt << std::endl;
    std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
    std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
@@ -4077,6 +5317,8 @@ Content-Length: 0
 int main()
 {
 
+resip::SipMessage::checkContentLength=true;
+
 resip::Log::initialize("cout", "DEBUG", "RFC4475TortureTests");
 try
 {
@@ -4113,6 +5355,110 @@ catch(resip::BaseException& e)
    tassert(0);
    tassert_reset();
    std::cerr << "Exception caught in test case esc01 : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
+   escnull();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case escnull : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
+   esc02();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case esc02 : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
+   lwsdisp();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case lwsdisp : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
+   longreq();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case longreq : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
+   dblreq();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case dblreq : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
+   semiuri();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case semiuri : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
+   transports();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case transports : " << e << std::endl;
+   std::cerr << "This message was valid." << std::endl;
+}
+
+
+try
+{
+   mpart01();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   std::cerr << "Exception caught in test case mpart01 : " << e << std::endl;
    std::cerr << "This message was valid." << std::endl;
 }
 
@@ -4251,39 +5597,6 @@ catch(resip::BaseException& e)
 
 try
 {
-   dblreq();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case dblreq : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   esc02();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case esc02 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   escnull();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case escnull : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
    escruri();
 }
 catch(resip::BaseException& e)
@@ -4328,33 +5641,11 @@ catch(resip::BaseException& e)
 
 try
 {
-   longreq();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case longreq : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
    ltgtruri();
 }
 catch(resip::BaseException& e)
 {
    std::cerr << "Exception caught in test case ltgtruri : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   lwsdisp();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case lwsdisp : " << e << std::endl;
    std::cerr << "This message was/wasn't valid." << std::endl;
 }
 
@@ -4410,17 +5701,6 @@ try
 catch(resip::BaseException& e)
 {
    std::cerr << "Exception caught in test case mismatch02 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   mpart01();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case mpart01 : " << e << std::endl;
    std::cerr << "This message was/wasn't valid." << std::endl;
 }
 
@@ -4548,33 +5828,11 @@ catch(resip::BaseException& e)
 
 try
 {
-   semiuri();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case semiuri : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
    test();
 }
 catch(resip::BaseException& e)
 {
    std::cerr << "Exception caught in test case test : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   transports();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case transports : " << e << std::endl;
    std::cerr << "This message was/wasn't valid." << std::endl;
 }
 
