@@ -150,6 +150,40 @@ class TestHolder : public Fixture
          return msg;
       }
       
+      static boost::shared_ptr<SipMessage>
+      inviteCSeq(boost::shared_ptr<SipMessage> msg)
+      {
+         msg->header(resip::h_CSeq).method()=resip::INVITE;
+         msg->header(resip::h_CSeq).unknownMethodName()="INVITE";         
+         return msg;
+      }
+
+      static boost::shared_ptr<SipMessage>
+      cancelCSeq(boost::shared_ptr<SipMessage> msg)
+      {
+         msg->header(resip::h_CSeq).method()=resip::CANCEL;
+         msg->header(resip::h_CSeq).unknownMethodName()="CANCEL";         
+         return msg;
+      }
+
+      static boost::shared_ptr<SipMessage>
+      ackCSeq(boost::shared_ptr<SipMessage> msg)
+      {
+         msg->header(resip::h_CSeq).method()=resip::ACK;
+         msg->header(resip::h_CSeq).unknownMethodName()="ACK";         
+         return msg;
+      }
+      
+      static boost::shared_ptr<SipMessage>
+      unknownCSeq(boost::shared_ptr<SipMessage> msg)
+      {
+         msg->header(resip::h_CSeq).method()=resip::UNKNOWN;
+         msg->header(resip::h_CSeq).unknownMethodName()="blargagsaqq";         
+         return msg;
+      }
+      
+      
+
       static resip::Data
       doubleSend(const resip::Data& msg)
       {
@@ -2316,6 +2350,80 @@ class TestHolder : public Fixture
       
       ExecuteSequences();
    }
+
+   void testInviteCancelCSeq()
+   {
+      WarningLog(<<"*!testInviteCancelCSeq!*");
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+      
+      Seq(condition(cancelCSeq,jason->invite(*derek)),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/400, from(proxy), WaitForResponse, jason->ack()),
+          WaitForEndOfTest);
+      ExecuteSequences();  
+   }
+
+   void testInviteUnknownCSeq()
+   {
+      WarningLog(<<"*!testInviteUnknownCSeq!*");
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+      
+      Seq(condition(unknownCSeq,jason->invite(*derek)),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/400, from(proxy), WaitForResponse, jason->ack()),
+          WaitForEndOfTest);
+      ExecuteSequences();  
+   }
+
+   void testCancelInviteCSeq()
+   {
+      WarningLog(<<"*!testCancelInviteCSeq!*");
+      
+      Seq(jason->registerUser(60, jason->getDefaultContacts()),
+          jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+          jason->expect(REGISTER/200, from(proxy), WaitForRegistration, jason->noAction()),
+          1000);
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
+          1000);
+      ExecuteSequences();
+
+      Seq
+      (
+         derek->invite(*jason),
+         optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+         derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
+
+         And
+         (
+            Sub
+            (
+               optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))
+            ),
+            Sub
+            (
+               jason->expect(INVITE, contact(derek), WaitForCommand, jason->ring()),
+               derek->expect(INVITE/180, from(jason), WaitFor180, condition(inviteCSeq,derek->cancel())),
+               derek->expect(CANCEL/400, from(proxy), WaitForResponse, jason->answer()),
+               derek->expect(INVITE/200,from(proxy), WaitForResponse, derek->ack())
+            )
+         ),
+         WaitForEndOfTest
+      );    
+
+      ExecuteSequences();  
+   }
+
+
 //*******************Forking INVITES, parallel******************//
 
 
@@ -5568,7 +5676,7 @@ class TestHolder : public Fixture
              optional(derek->expect(INVITE/100, from(proxy), WaitForResponse, derek->noAction())),
              jason->expect(INVITE, from(proxy), WaitForResponse, jason->ring183()),
              derek->expect(INVITE/183, from(proxy), WaitForResponse, chain(derek->pause(5000), jason->answer())),
-             derek->expect(INVITE/200, from(proxy), WaitForResponse, derek->ack()),
+             derek->expect(INVITE/200, from(proxy), 6000, derek->ack()),
              jason->expect(ACK, from(proxy), WaitForResponse, jason->bye(*derek)),
              derek->expect(BYE, from(proxy), WaitForResponse, derek->ok()),
              jason->expect(BYE/200, from(proxy), WaitForResponse, derek->noAction()),
@@ -5789,6 +5897,9 @@ class MyTestCase
          TEST(testInviteServerDead);
          TEST(testInviteLoop); 
          TEST(testInviteForgedUserInFrom);
+         TEST(testInviteCancelCSeq);
+         TEST(testInviteUnknownCSeq);
+         TEST(testCancelInviteCSeq);
          //TEST(testInviteForgedHostInFrom); 
 
          TEST(testInviteForkOneAnswers);
