@@ -134,14 +134,19 @@ SUFFIXES += .gperf .cxx
 GPERFOPTS = -D --enum -E -L C++ -t -k '*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
 
+code: .firstrun
+
+.firstrun:
+	touch .firstrun MethodHash.cxx *Hash.cxx
+
 # rule for case sensitive sorts of hash
 MethodHash.cxx: MethodHash.gperf
-	gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< >  $@
+	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< >  $@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
 %.cxx: %.gperf
-	gperf $(GPERFOPTS) -Z `echo $* | sed -e 's/.*\///'` $< | \
+	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo $* | sed -e 's/.*\///'` $< | \
 	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
 	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' | \
 	sed -e 's/\*str ==/tolower(*str) ==/' | \
