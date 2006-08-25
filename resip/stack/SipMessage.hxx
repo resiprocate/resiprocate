@@ -96,6 +96,8 @@ class SipMessage : public TransactionMessage
       bool isResponse() const;
       bool isInvalid() const{return mInvalid;}
       
+      resip::MethodTypes method() const;
+      
       const resip::Data& getReason() const{return mReason;}
       
       const RequestLine& 
