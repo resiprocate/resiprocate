@@ -1,0 +1,112 @@
+# This makefile can be called by VS.NET 2003 nmake, after all of the resiprocate libraries (SSL-Debug) have already been compiled via the GUI 
+
+CFLAGS=/Od /I "../../" /I "../../../" /I "../../../contrib/OpenSSL/include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "USE_ARES" /D "USE_IPV6" /D "USE_SSL" /D "_MBCS" /Gm /EHsc /RTC1 /MDd /GS /GR /W3 /c /Wp64 /Zi /TP
+RESIPLIBS=..\..\..\rutil\SSL-Debug\rutil.lib ..\SSL-Debug\resiprocate.lib
+LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /PDB:"test.pdb" /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib Iphlpapi.lib Dnsapi.lib crypt32.lib "..\..\..\contrib\openssl\lib\vc\libeay32.lib" "..\..\..\contrib\openssl\lib\vc\ssleay32.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
+
+all: \
+	testSupport.obj \
+	sipTortureTests.obj sipTortureTests.exe \
+	limpc.obj limpc.exe \
+	test503Generator.obj test503Generator.exe \
+	testAppTimer.obj testAppTimer.exe \
+	testApplicationSip.obj testApplicationSip.exe \
+	testClient.obj testClient.exe \
+ 	testConnectionBase.obj testConnectionBase.exe \
+ 	testCorruption.obj testCorruption.exe \
+	testDigestAuthentication.obj testDigestAuthentication.exe \
+	testDigestAuthentication2.obj testDigestAuthentication2.exe \
+	testDns.obj testDns.exe \
+        testDnsStub.obj testDnsStub.exe \
+#	testDtlsTransport.obj testDtlsTransport.exe \
+	testEmbedded.obj testEmbedded.exe \
+	testEmptyHeader.obj testEmptyHeader.exe \
+        testEmptyHfv.obj testEmptyHfv.exe \
+	testExternalLogger.obj testExternalLogger.exe \
+	testFlowId.obj testFlowId.exe \
+	testIM.obj testIM.exe \
+	testLockStep.obj testLockStep.exe \
+	testMessageWaiting.obj testMessageWaiting.exe \
+	testMultipartMixedContents.obj testMultipartMixedContents.exe \
+	testMultipartRelated.obj testMultipartRelated.exe \
+	testParserCategories.obj testParserCategories.exe \
+	testPidf.obj testPidf.exe \
+	testPksc7.obj testPksc7.exe \
+	testPlainContents.obj testPlainContents.exe \
+	testRSP-2.obj testRSP-2.exe \
+	testResponses.obj testResponses.exe \
+	testRlmi.obj testRlmi.exe \
+	testSdp.obj testSdp.exe \
+        testSecurity.obj testSecurity.exe \
+	testSelect.obj testSelect.exe \
+	testServer.obj testServer.exe \
+	testSipFrag.obj testSipFrag.exe \
+	testSipMessage.obj testSipMessage.exe \
+	testSipMessageMemory.obj testSipMessageMemory.exe \
+	testSipStack1.obj testSipStack1.exe \
+	testStack.obj testStack.exe \
+	testTcp.obj testTcp.exe \
+	testTime.obj testTime.exe \
+	testTimer.obj testTimer.exe \
+#	testTransactionFSM.obj testTransactionFSM.exe \
+	testTuple.obj testTuple.exe \
+#	testTypedef.obj testTypedef.exe \
+	testUdp.obj testUdp.exe \
+	testUri.obj testUri.exe \
+	testXMLCursor.obj testXMLCursor.exe \
+	RFC4475TortureTests.obj RFC4475TortureTests.exe \
+	run
+
+
+.cxx.obj:
+	cl $(CFLAGS) $<
+
+.obj.exe:
+	link /out:$@ $< TestSupport.obj $(LFLAGS)	
+
+run: 
+#	sipTortureTests.exe
+#	test503Generator.exe
+	testAppTimer.exe
+	testApplicationSip.exe
+	testConnectionBase.exe
+        testDns.exe
+        testDnsStub.exe
+	testCorruption.exe
+	testDigestAuthentication.exe
+#	testDigestAuthentication2.exe
+	testEmbedded.exe
+	testEmptyHeader.exe
+        testEmptyHfv.exe
+	testExternalLogger.exe
+#	testFlowId.exe
+	testIM.exe
+#	testLockStep.exe
+	testMessageWaiting.exe
+	testMultipartMixedContents.exe
+	testMultipartRelated.exe
+	testParserCategories.exe
+	testPidf.exe
+	testPksc7.exe
+	testPlainContents.exe
+#	testResponses.exe
+	testRlmi.exe
+	testSdp.exe
+        testSecurity.exe
+	testSipFrag.exe
+	testSipMessage.exe
+	testSipMessageMemory.exe
+	testStack.exe
+	testTcp.exe
+	testTime.exe
+	testTimer.exe	
+	testTuple.exe
+#	testUdp.exe
+	testUri.exe
+	testXmlCursor.exe
+	RFC4475TortureTests.exe
+
+clean:
+	@del *.exe
+        @del *.obj
+	@del *.ilk
