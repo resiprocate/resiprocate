@@ -1,0 +1,10 @@
+#/bin/sh
+
+for nm in  ` cat hosts.txt ` ; do
+        ./makeCert $nm
+        ./makeCert h1.$nm
+        ./makeCert h2.$nm
+done
+
+tar cvfz allCerts.tgz domain*pem *.p12
+
