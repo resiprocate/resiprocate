@@ -1400,7 +1400,7 @@ Helper::fromAor(const Data& aor, const Data& scheme)
 }
 
 bool
-Helper::validateMessage(const SipMessage& message)
+Helper::validateMessage(const SipMessage& message,resip::Data* reason)
 {
    if (!message.exists(h_To) || 
        !message.exists(h_From) || 
@@ -1411,10 +1411,22 @@ Helper::validateMessage(const SipMessage& message)
    {
       InfoLog(<< "Missing mandatory header fields (To, From, CSeq, Call-Id or Via)");
       DebugLog(<< message);
+      if(reason) *reason="Missing mandatory header field";
       return false;
    }
    else
    {
+      try
+      {
+         message.header(h_CSeq).checkParsed();
+      }
+      catch(ParseBuffer::Exception& e)
+      {
+         InfoLog(<<"Malformed CSeq header");
+         if(reason) *reason="Malformed CSeq header";
+         return false;
+      }
+      
       if (message.isRequest())
       {
          try
@@ -1423,10 +1435,19 @@ Helper::validateMessage(const SipMessage& message)
          }
          catch(ParseBuffer::Exception& e)
          {
-            InfoLog(<< "Illegal request lineL " << e);
+            InfoLog(<< "Illegal request line " << e);
+            if(reason) *reason="Malformed Request Line";
             return false;            
          }
+         
+         if(message.header(h_RequestLine).method()!=message.header(h_CSeq).method())
+         {
+            InfoLog(<< "Method mismatch btw Request Line and CSeq");
+            if(reason) *reason="Method mismatch btw Request Line and CSeq";
+            return false;
+         }
       }
+      
       return true;
    }
 }

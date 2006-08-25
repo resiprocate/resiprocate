@@ -523,6 +523,32 @@ SipMessage::isResponse() const
    return mResponse;
 }
 
+resip::MethodTypes
+SipMessage::method() const
+{
+   resip::MethodTypes res=UNKNOWN;
+   try
+   {
+      if(isRequest())
+      {
+         res=header(h_RequestLine).getMethod();
+      }
+      else if(isResponse())
+      {
+         res=header(h_CSeq).method();
+      }
+      else
+      {
+         assert(0);
+      }
+   }
+   catch(resip::ParseBuffer::Exception& e)
+   {
+   }
+   
+   return res;
+}
+
 std::ostream&
 SipMessage::encodeBrief(std::ostream& str) const
 {

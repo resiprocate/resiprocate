@@ -460,6 +460,28 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       MessageExpectAction* send483();
 
+      class Send500WithRetryAfter : public MessageExpectAction
+      {
+         public:
+            explicit Send500WithRetryAfter(TestSipEndPoint& endpoint, int retryAfter);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            int mRetryAfter;
+            TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* send500WithRetryAfter(int retryAfter);
+
+      class Send503WithRetryAfter : public MessageExpectAction
+      {
+         public:
+            explicit Send503WithRetryAfter(TestSipEndPoint& endpoint, int retryAfter);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            int mRetryAfter;
+            TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* send503WithRetryAfter(int retryAfter);
+
       // end - vk
 
       class Send302 : public MessageExpectAction
@@ -662,8 +684,21 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send513, 513);
       MessageExpectAction* send513();
 
+      // vk
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send501, 501);
+      MessageExpectAction* send501();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send502, 502);
+      MessageExpectAction* send502();
+      // end- vk
+
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send504, 504);
       MessageExpectAction* send504();
+
+      // vk
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send506, 506);
+      MessageExpectAction* send506();
+      // end - vk
 
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send600, 600);
       MessageExpectAction* send600();

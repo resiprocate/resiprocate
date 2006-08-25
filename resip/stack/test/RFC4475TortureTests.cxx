@@ -327,10 +327,10 @@ a=rtpmap:31 LPC
    
    
 
-   std::cerr << "In case wsinv:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case wsinv:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -587,10 +587,10 @@ Content-Length: 0
    tassert(msg->header(h_extensionHeader).begin()->numUnknownParams()==0);
    
    
-   std::cerr << "In case intmeth:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case intmeth:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -826,10 +826,10 @@ a=rtpmap:31 LPC
 
    tassert_reset();
 
-   std::cerr << "In case esc01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case esc01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -1027,10 +1027,10 @@ L:0
    
 
 
-   std::cerr << "In case escnull:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case escnull:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -1241,10 +1241,10 @@ l: 0
    tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
 
 
-   std::cerr << "In case esc02:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case esc02:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -1401,10 +1401,10 @@ l: 0
    tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
    tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
 
-   std::cerr << "In case lwsdisp:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case lwsdisp:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -1723,10 +1723,10 @@ a=rtpmap:31 LPC
    tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
    tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
 
-   std::cerr << "In case longreq:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case longreq:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -1933,10 +1933,10 @@ a=rtpmap:31 LPC
 
 
 
-   std::cerr << "In case dblreq:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case dblreq:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -2143,10 +2143,10 @@ l: 0
 
 
 
-   std::cerr << "In case semiuri:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case semiuri:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -2381,10 +2381,10 @@ l: 0
    tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
    tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
 
-   std::cerr << "In case transports:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case transports:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -2658,10 +2658,10 @@ h���<�+�u��d�Y=�G(�b ��At�3
    tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
 
 
-   std::cerr << "In case mpart01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case mpart01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -2670,23 +2670,541 @@ h���<�+�u��d�Y=�G(�b ��At�3
 
 
 void
-badaspec()
+unreason()
+{
+/*
+   This 200 response contains a reason phrase other than "OK".  The
+   reason phrase is intended for human consumption and may contain any
+   string produced by
+
+       Reason-Phrase   =  *(reserved / unreserved / escaped
+                          / UTF8-NONASCII / UTF8-CONT / SP / HTAB)
+
+   This particular response contains unreserved and non-ascii UTF-8
+   characters.  This response is well formed.  A parser must accept this
+   message.
+
+
+SIP/2.0 200 = 2**3 * 5**2 но сто девяносто девять - простое
+Via: SIP/2.0/UDP 192.0.2.198;branch=z9hG4bK1324923
+Call-ID: unreason.1234ksdfak3j2erwedfsASdf
+CSeq: 35 INVITE
+From: sip:user@example.com;tag=11141343
+To: sip:user@example.edu;tag=2229
+Content-Length: 154
+Content-Type: application/sdp
+Contact: <sip:user@host198.example.com>
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.198
+s=-
+c=IN IP4 192.0.2.198
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("unreason.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+   
+   //Status Line
+   //SIP/2.0 200 = 2**3 * 5**2 но сто девяносто девять - простое
+   tassert(msg->header(resip::h_StatusLine).responseCode()==200);
+   tassert(msg->header(resip::h_StatusLine).getSipVersion()=="SIP/2.0");
+   
+   resip::Data binaryReason("= 2**3 * 5**2 ");
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xBD;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xBE;
+   binaryReason+=(char)0x20;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x81;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x82;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xBE;
+   binaryReason+=(char)0x20;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xB4;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xB5;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xB2;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x8F;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xBD;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xBE;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x81;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x82;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xBE;
+   binaryReason+=(char)0x20;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xB4;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xB5;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xB2;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x8F;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x82;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x8C;
+   binaryReason+=(char)0x20;
+   binaryReason+=(char)0x2D;
+   binaryReason+=(char)0x20;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xBF;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x80;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xBE;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x81;
+   binaryReason+=(char)0xD1;
+   binaryReason+=(char)0x82;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xBE;
+   binaryReason+=(char)0xD0;
+   binaryReason+=(char)0xB5;   
+   tassert(msg->header(resip::h_StatusLine).reason()==binaryReason);
+   tassert(msg->header(resip::h_StatusLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_StatusLine).numUnknownParams()==0);
+   
+   //Vias
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator v=msg->header(resip::h_Vias).begin();
+
+   //Via: SIP/2.0/UDP 192.0.2.198;branch=z9hG4bK1324923
+   tassert(v->numKnownParams()==1);
+   tassert(v->numUnknownParams()==0);
+   tassert(v->protocolName()=="SIP");
+   tassert(v->protocolVersion()=="2.0");
+   tassert(v->transport()=="UDP");
+   tassert(v->sentHost()=="192.0.2.198");
+   tassert(v->sentPort()==0);
+   
+   tassert(v->exists(resip::p_branch));
+   tassert(v->param(resip::p_branch).hasMagicCookie());
+   tassert(v->param(resip::p_branch).getTransactionId()=="1324923");
+   tassert(v->param(resip::p_branch).clientData().empty());
+   
+   //Call-ID: unreason.1234ksdfak3j2erwedfsASdf
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="unreason.1234ksdfak3j2erwedfsASdf");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //CSeq: 35 INVITE
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::INVITE);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="INVITE");
+   tassert(msg->header(resip::h_CSeq).sequence()==35);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   //From: sip:user@example.com;tag=11141343
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="11141343");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="user");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //To: sip:user@example.edu;tag=2229
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="");
+   tassert(msg->header(resip::h_To).numKnownParams()==1);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(msg->header(resip::h_To).exists(resip::p_tag));
+   tassert(msg->header(resip::h_To).param(resip::p_tag)=="2229");
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="user");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.edu");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //Content-Length: 154
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==154);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+
+   //Content-Type: application/sdp
+   tassert(msg->exists(resip::h_ContentType));
+   tassert(msg->header(resip::h_ContentType).type()=="application");
+   tassert(msg->header(resip::h_ContentType).subType()=="sdp");
+   tassert(msg->header(resip::h_ContentType).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentType).numUnknownParams()==0);
+
+   //Contact: <sip:user@host198.example.com>
+   tassert(msg->exists(resip::h_Contacts));
+   tassert(msg->header(resip::h_Contacts).size()==1);
+   resip::ParserContainer<resip::NameAddr>::iterator m=msg->header(resip::h_Contacts).begin();
+   
+   tassert(m->displayName()=="");
+   tassert(m->numKnownParams()==0);
+   tassert(m->numUnknownParams()==0);
+   tassert(!(m->isAllContacts()));
+   tassert(m->uri().numKnownParams()==0);
+   tassert(m->uri().numUnknownParams()==0);
+   tassert(m->uri().scheme()=="sip");
+   tassert(m->uri().user()=="user");
+   tassert(m->uri().password().empty());
+   tassert(m->uri().host()=="host198.example.com");
+   tassert(m->uri().port()==0);
+   tassert(!(m->uri().hasEmbedded()));
+
+
+   InfoLog(<< "In case unreason:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+noreason()
 {
 /*
 
-OPTIONS sip:user@example.org SIP/2.0
-Via: SIP/2.0/UDP host4.example.com:5060;branch=z9hG4bKkdju43234
-Max-Forwards: 70
-From: "Bell, Alexander" <sip:a.g.bell@example.com>;tag=433423
-To: "Watson, Thomas" < sip:t.watson@example.org >
-Call-ID: badaspec.sdf0234n2nds0a099u23h3hnnw009cdkne3
-Accept: application/sdp
-CSeq: 3923239 OPTIONS
-l: 0
+   This well-formed response contains no reason phrase.  A parser must
+   accept this message.  The space character after the reason code is
+   required.  If it were not present, this message could be rejected as
+   invalid (a liberal receiver would accept it anyway).
+
+SIP/2.0 100 
+Via: SIP/2.0/UDP 192.0.2.105;branch=z9hG4bK2398ndaoe
+Call-ID: noreason.asndj203insdf99223ndf
+CSeq: 35 INVITE
+From: <sip:user@example.com>;tag=39ansfi3
+To: <sip:user@example.edu>;tag=902jndnke3
+Content-Length: 0
+Contact: <sip:user@host105.example.com>
 
 
 */
-   FILE* fid= fopen("badaspec.dat","r");
+   FILE* fid= fopen("noreason.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   tassert(msg);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   //Status Line
+   //SIP/2.0 100 
+   tassert(msg->header(resip::h_StatusLine).responseCode()==100);
+   tassert(msg->header(resip::h_StatusLine).getSipVersion()=="SIP/2.0");
+   tassert(msg->header(resip::h_StatusLine).reason()=="");
+   tassert(msg->header(resip::h_StatusLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_StatusLine).numUnknownParams()==0);
+
+   //Vias
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator v=msg->header(resip::h_Vias).begin();
+
+   //Via: SIP/2.0/UDP 192.0.2.105;branch=z9hG4bK2398ndaoe
+   tassert(v->numKnownParams()==1);
+   tassert(v->numUnknownParams()==0);
+   tassert(v->protocolName()=="SIP");
+   tassert(v->protocolVersion()=="2.0");
+   tassert(v->transport()=="UDP");
+   tassert(v->sentHost()=="192.0.2.105");
+   tassert(v->sentPort()==0);
+   
+   tassert(v->exists(resip::p_branch));
+   tassert(v->param(resip::p_branch).hasMagicCookie());
+   tassert(v->param(resip::p_branch).getTransactionId()=="2398ndaoe");
+   tassert(v->param(resip::p_branch).clientData().empty());
+
+   //Call-ID: noreason.asndj203insdf99223ndf
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="noreason.asndj203insdf99223ndf");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //CSeq: 35 INVITE
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::INVITE);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="INVITE");
+   tassert(msg->header(resip::h_CSeq).sequence()==35);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   //From: <sip:user@example.com>;tag=39ansfi3
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="39ansfi3");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="user");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.com");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //To: <sip:user@example.edu>;tag=902jndnke3
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="");
+   tassert(msg->header(resip::h_To).numKnownParams()==1);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(msg->header(resip::h_To).exists(resip::p_tag));
+   tassert(msg->header(resip::h_To).param(resip::p_tag)=="902jndnke3");
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="user");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.edu");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //Content-Length: 0
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==0);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
+
+   //Contact: <sip:user@host105.example.com>
+   tassert(msg->exists(resip::h_Contacts));
+   tassert(msg->header(resip::h_Contacts).size()==1);
+   resip::ParserContainer<resip::NameAddr>::iterator m=msg->header(resip::h_Contacts).begin();
+   
+   tassert(m->displayName()=="");
+   tassert(m->numKnownParams()==0);
+   tassert(m->numUnknownParams()==0);
+   tassert(!(m->isAllContacts()));
+   tassert(m->uri().numKnownParams()==0);
+   tassert(m->uri().numUnknownParams()==0);
+   tassert(m->uri().scheme()=="sip");
+   tassert(m->uri().user()=="user");
+   tassert(m->uri().password().empty());
+   tassert(m->uri().host()=="host105.example.com");
+   tassert(m->uri().port()==0);
+   tassert(!(m->uri().hasEmbedded()));
+
+
+   InfoLog(<< "In case noreason:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+badinv01()
+{
+/*
+
+   The Via header field of this request contains additional semicolons
+   and commas without parameters or values.  The Contact header field
+   contains additional semicolons without parameters.  This message is
+   syntactically invalid.
+
+   An element receiving this request should respond with a 400 Bad
+   Request error.
+
+INVITE sip:user@example.com SIP/2.0
+To: sip:j.user@example.com
+From: sip:caller@example.net;tag=134161461246
+Max-Forwards: 7
+Call-ID: badinv01.0ha0isndaksdjasdf3234nas
+CSeq: 8 INVITE
+Via: SIP/2.0/UDP 192.0.2.15;;,;,,
+Contact: "Joe" <sip:joe@example.org>;;;;
+Content-Length: 152
+Content-Type: application/sdp
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.15
+s=-
+c=IN IP4 192.0.2.15
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("badinv01.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case badinv01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+clerr()
+{
+/*
+
+   This is a request message with a Content Length that is larger than
+   the actual length of the body.
+
+   When sent over UDP (as this message ostensibly was), the receiving
+   element should respond with a 400 Bad Request error.  If this message
+   arrived over a stream-based transport, such as TCP, there's not much
+   the receiving party could do but wait for more data on the stream and
+   close the connection if none is forthcoming within a reasonable
+   period of time.
+
+INVITE sip:user@example.com SIP/2.0
+Max-Forwards: 80
+To: sip:j.user@example.com
+From: sip:caller@example.net;tag=93942939o2
+Contact: <sip:caller@hungry.example.net>
+Call-ID: clerr.0ha0isndaksdjweiafasdk3
+CSeq: 8 INVITE
+Via: SIP/2.0/UDP host5.example.com;branch=z9hG4bK-39234-23523
+Content-Type: application/sdp
+Content-Length: 9999
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.155
+s=-
+c=IN IP4 192.0.2.155
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("clerr.dat","r");
    tassert(fid);
    resip::Data txt;
    char mBuf[1024];
@@ -2720,13 +3238,1304 @@ l: 0
       resip::oDataStream str(copyEncoded);
       copy.encode(str);
    }
+
+   InfoLog(<< "In case clerr:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+ncl()
+{
+/*
+
+   This request has a negative value for Content-Length.
+
+   An element receiving this message should respond with an error.  This
+   request appeared over UDP, so the remainder of the datagram can
+   simply be discarded.  If a request like this arrives over TCP, the
+   framing error is not recoverable, and the connection should be
+   closed.  The same behavior is appropriate for messages that arrive
+   without a numeric value in the Content-Length header field, such as
+   the following:
+
+      Content-Length: five
+
+   Implementors should take extra precautions if the technique they
+   choose for converting this ascii field into an integral form can
+   return a negative value.  In particular, the result must not be used
+   as a counter or array index.
+
+
+INVITE sip:user@example.com SIP/2.0
+Max-Forwards: 254
+To: sip:j.user@example.com
+From: sip:caller@example.net;tag=32394234
+Call-ID: ncl.0ha0isndaksdj2193423r542w35
+CSeq: 0 INVITE
+Via: SIP/2.0/UDP 192.0.2.53;branch=z9hG4bKkdjuw
+Contact: <sip:caller@example53.example.net>
+Content-Type: application/sdp
+Content-Length: -999
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.53
+s=-
+c=IN IP4 192.0.2.53
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("ncl.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case ncl:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+scalar02()
+{
+/*
+
+   This request contains several scalar header field values outside
+   their legal range.
+
+      o  The CSeq sequence number is >2**32-1.
+
+      o  The Max-Forwards value is >255.
+
+      o  The Expires value is >2**32-1.
+
+      o  The Contact expires parameter value is >2**32-1.
+
+   An element receiving this request should respond with a 400 Bad
+   Request due to the CSeq error.  If only the Max-Forwards field were
+   in error, the element could choose to process the request as if the
+   field were absent.  If only the expiry values were in error, the
+   element could treat them as if they contained the default values for
+   expiration (3600 in this case).
+
+   Other scalar request fields that may contain aberrant values include,
+   but are not limited to, the Contact q value, the Timestamp value, and
+   the Via ttl parameter.
+
+
+REGISTER sip:example.com SIP/2.0
+Via: SIP/2.0/TCP host129.example.com;branch=z9hG4bK342sdfoi3
+To: <sip:user@example.com>
+From: <sip:user@example.com>;tag=239232jh3
+CSeq: 36893488147419103232 REGISTER
+Call-ID: scalar02.23o0pd9vanlq3wnrlnewofjas9ui32
+Max-Forwards: 300
+Expires: 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+Contact: <sip:user@host129.example.com>
+  ;expires=280297596632815
+Content-Length: 0
+
+
+*/
+   FILE* fid= fopen("scalar02.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case scalar02:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+scalarlg()
+{
+/*
+
+   This response contains several scalar header field values outside
+   their legal range.
+
+   o  The CSeq sequence number is >2**32-1.
+
+   o  The Retry-After field is unreasonably large (note that RFC 3261
+      does not define a legal range for this field).
+
+   o  The Warning field has a warning-value with more than 3 digits.
+
+   An element receiving this response will simply discard it.
+
+SIP/2.0 503 Service Unavailable
+Via: SIP/2.0/TCP host129.example.com;branch=z9hG4bKzzxdiwo34sw;received=192.0.2.129
+To: <sip:user@example.com>
+From: <sip:other@example.net>;tag=2easdjfejw
+CSeq: 9292394834772304023312 OPTIONS
+Call-ID: scalarlg.noase0of0234hn2qofoaf0232aewf2394r
+Retry-After: 949302838503028349304023988
+Warning: 1812 overture "In Progress"
+Content-Length: 0
+
+
+*/
+   FILE* fid= fopen("scalarlg.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case scalarlg:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+quotbal()
+{
+/*
+
+   This is a request with an unterminated quote in the display name of
+   the To field.  An element receiving this request should return a 400
+   Bad Request error.
+
+   An element could attempt to infer a terminating quote and accept the
+   message.  Such an element needs to take care that it makes a
+   reasonable inference when it encounters
+
+      To: "Mr J. User <sip:j.user@example.com> <sip:realj@example.net>
+
+INVITE sip:user@example.com SIP/2.0
+To: "Mr. J. User <sip:j.user@example.com>
+From: sip:caller@example.net;tag=93334
+Max-Forwards: 10
+Call-ID: quotbal.aksdj
+Contact: <sip:caller@host59.example.net>
+CSeq: 8 INVITE
+Via: SIP/2.0/UDP 192.0.2.59:5050;branch=z9hG4bKkdjuw39234
+Content-Type: application/sdp
+Content-Length: 152
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.15
+s=-
+c=IN IP4 192.0.2.15
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("quotbal.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case quotbal:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+ltgtruri()
+{
+/*
+
+   This INVITE request is invalid because the Request-URI has been
+   enclosed within in "<>".
+
+   It is reasonable always to reject a request with this error with a
+   400 Bad Request.  Elements attempting to be liberal with what they
+   accept may choose to ignore the brackets.  If the element forwards
+   the request, it must not include the brackets in the messages it
+   sends.
+
+INVITE <sip:user@example.com> SIP/2.0
+To: sip:user@example.com
+From: sip:caller@example.net;tag=39291
+Max-Forwards: 23
+Call-ID: ltgtruri.1@192.0.2.5
+CSeq: 1 INVITE
+Via: SIP/2.0/UDP 192.0.2.5
+Contact: <sip:caller@host5.example.net>
+Content-Type: application/sdp
+Content-Length: 159
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.5
+s=-
+c=IN IP4 192.0.2.5
+t=3149328700 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("ltgtruri.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case ltgtruri:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+lwsruri()
+{
+/*
+   This INVITE has illegal LWS within the Request-URI.
+
+   An element receiving this request should respond with a 400 Bad
+   Request.
+
+   An element could attempt to ignore the embedded LWS for those schemes
+   (like SIP) where doing so would not introduce ambiguity.
+
+INVITE sip:user@example.com; lr SIP/2.0
+To: sip:user@example.com;tag=3xfe-9921883-z9f
+From: sip:caller@example.net;tag=231413434
+Max-Forwards: 5
+Call-ID: lwsruri.asdfasdoeoi2323-asdfwrn23-asd834rk423
+CSeq: 2130706432 INVITE
+Via: SIP/2.0/UDP 192.0.2.1:5060;branch=z9hG4bKkdjuw2395
+Contact: <sip:caller@host1.example.net>
+Content-Type: application/sdp
+Content-Length: 159
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.1
+s=-
+c=IN IP4 192.0.2.1
+t=3149328700 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("lwsruri.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case lwsruri:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+lwsstart()
+{
+/*
+
+   This INVITE has illegal multiple SP characters between elements of
+   the start line.
+
+   It is acceptable to reject this request as malformed.  An element
+   that is liberal in what it accepts may ignore these extra SP
+   characters when processing the request.  If the element forwards the
+   request, it must not include these extra SP characters in the
+   messages it sends.
+
+INVITE  sip:user@example.com  SIP/2.0
+Max-Forwards: 8
+To: sip:user@example.com
+From: sip:caller@example.net;tag=8814
+Call-ID: lwsstart.dfknq234oi243099adsdfnawe3@example.com
+CSeq: 1893884 INVITE
+Via: SIP/2.0/UDP host1.example.com;branch=z9hG4bKkdjuw3923
+Contact: <sip:caller@host1.example.net>
+Content-Type: application/sdp
+Content-Length: 150
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.1
+s=-
+c=IN IP4 192.0.2.1
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("lwsstart.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case lwsstart:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+trws()
+{
+/*
+
+   This OPTIONS request contains SP characters between the SIP-Version
+   field and the CRLF terminating the Request-Line.
+
+   It is acceptable to reject this request as malformed.  An element
+   that is liberal in what it accepts may ignore these extra SP
+   characters when processing the request.  If the element forwards the
+   request, it must not include these extra SP characters in the
+   messages it sends.
+
+OPTIONS sip:remote-target@example.com SIP/2.0  
+Via: SIP/2.0/TCP host1.examle.com;branch=z9hG4bK299342093
+To: <sip:remote-target@example.com>
+From: <sip:local-resource@example.com>;tag=329429089
+Call-ID: trws.oicu34958239neffasdhr2345r
+Accept: application/sdp
+CSeq: 238923 OPTIONS
+Max-Forwards: 70
+Content-Length: 0
+
+
+*/
+   FILE* fid= fopen("trws.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case trws:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+escruri()
+{
+/*
+
+   This INVITE is malformed, as the SIP Request-URI contains escaped
+   headers.
+
+   It is acceptable for an element to reject this request with a 400 Bad
+   Request.  An element could choose to be liberal in what it accepts
+   and ignore the escaped headers.  If the element is a proxy, the
+   escaped headers must not appear in the Request-URI of the forwarded
+   request (and most certainly must not be translated into the actual
+   header of the forwarded request).
+
+INVITE sip:user@example.com?Route=%3Csip:example.com%3E SIP/2.0
+To: sip:user@example.com
+From: sip:caller@example.net;tag=341518
+Max-Forwards: 7
+Contact: <sip:caller@host39923.example.net>
+Call-ID: escruri.23940-asdfhj-aje3br-234q098w-fawerh2q-h4n5
+CSeq: 149209342 INVITE
+Via: SIP/2.0/UDP host-of-the-hour.example.com;branch=z9hG4bKkdjuw
+Content-Type: application/sdp
+Content-Length: 150
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.1
+s=-
+c=IN IP4 192.0.2.1
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("escruri.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case escruri:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+baddate()
+{
+/*
+
+   This INVITE is invalid, as it contains a non-GMT time zone in the SIP
+   Date header field.
+
+   It is acceptable to reject this request as malformed (though an
+   element shouldn't do that unless the contents of the Date header
+   field were actually important to its processing).  An element wishing
+   to be liberal in what it accepts could ignore this value altogether
+   if it wasn't going to use the Date header field anyway.  Otherwise,
+   it could attempt to interpret this date and adjust it to GMT.
+
+   RFC 3261 explicitly defines the only acceptable time zone designation
+   as "GMT".  "UT", while synonymous with GMT per [RFC2822], is not
+   valid.  "UTC" and "UCT" are also invalid.
+
+INVITE sip:user@example.com SIP/2.0
+To: sip:user@example.com
+From: sip:caller@example.net;tag=2234923
+Max-Forwards: 70
+Call-ID: baddate.239423mnsadf3j23lj42--sedfnm234
+CSeq: 1392934 INVITE
+Via: SIP/2.0/UDP host.example.com;branch=z9hG4bKkdjuw
+Date: Fri, 01 Jan 2010 16:00:00 EST
+Contact: <sip:caller@host5.example.net>
+Content-Type: application/sdp
+Content-Length: 150
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.5
+s=-
+c=IN IP4 192.0.2.5
+t=0 0
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("baddate.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case baddate:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+regbadct()
+{
+/*
+
+   This REGISTER request is malformed.  The SIP URI contained in the
+   Contact Header field has an escaped header, so the field must be in
+   name-addr form (which implies that the URI must be enclosed in <>).
+
+   It is reasonable for an element receiving this request to respond
+   with a 400 Bad Request.  An element choosing to be liberal in what it
+   accepts could infer the angle brackets since there is no ambiguity in
+   this example.  In general, that won't be possible.
+
+REGISTER sip:example.com SIP/2.0
+To: sip:user@example.com
+From: sip:user@example.com;tag=998332
+Max-Forwards: 70
+Call-ID: regbadct.k345asrl3fdbv@10.0.0.1
+CSeq: 1 REGISTER
+Via: SIP/2.0/UDP 135.180.130.133:5060;branch=z9hG4bKkdjuw
+Contact: sip:user@example.com?Route=%3Csip:sip.example.com%3E
+l: 0
+
+
+*/
+   FILE* fid= fopen("regbadct.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case regbadct:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+badaspec()
+{
+/*
+
+   This request is malformed, since the addr-spec in the To header field
+   contains spaces.  Parsers receiving this request must not break.  It
+   is reasonable to reject this request with a 400 Bad Request response.
+   Elements attempting to be liberal may ignore the spaces.
+
+OPTIONS sip:user@example.org SIP/2.0
+Via: SIP/2.0/UDP host4.example.com:5060;branch=z9hG4bKkdju43234
+Max-Forwards: 70
+From: "Bell, Alexander" <sip:a.g.bell@example.com>;tag=433423
+To: "Watson, Thomas" < sip:t.watson@example.org >
+Call-ID: badaspec.sdf0234n2nds0a099u23h3hnnw009cdkne3
+Accept: application/sdp
+CSeq: 3923239 OPTIONS
+l: 0
+
+
+*/
+   FILE* fid= fopen("badaspec.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
    
    
 
-   std::cerr << "In case badaspec:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case badaspec:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+baddn()
+{
+/*
+
+   This OPTIONS request is malformed, since the display names in the To
+   and From header fields contain non-token characters but are unquoted.
+
+   It is reasonable always to reject this kind of error with a 400 Bad
+   Request response.
+
+   An element may attempt to be liberal in what it receives and infer
+   the missing quotes.  If this element were a proxy, it must not
+   propagate the error into the request it forwards.  As a consequence,
+   if the fields are covered by a signature, there's not much point in
+   trying to be liberal - the message should simply be rejected.
+
+OPTIONS sip:t.watson@example.org SIP/2.0
+Via:     SIP/2.0/UDP c.example.com:5060;branch=z9hG4bKkdjuw
+Max-Forwards:      70
+From:    Bell, Alexander <sip:a.g.bell@example.com>;tag=43
+To:      Watson, Thomas <sip:t.watson@example.org>
+Call-ID: baddn.31415@c.example.com
+Accept: application/sdp
+CSeq:    3923239 OPTIONS
+l: 0
+
+*/
+   FILE* fid= fopen("baddn.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case baddn:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+badvers()
+{
+/*
+
+   To an element implementing [RFC3261], this request is malformed due
+   to its high version number.
+
+   The element should respond to the request with a 505 Version Not
+   Supported error.
+
+OPTIONS sip:t.watson@example.org SIP/7.0
+Via:     SIP/7.0/UDP c.example.com;branch=z9hG4bKkdjuw
+Max-Forwards:     70
+From:    A. Bell <sip:a.g.bell@example.com>;tag=qweoiqpe
+To:      T. Watson <sip:t.watson@example.org>
+Call-ID: badvers.31417@c.example.com
+CSeq:    1 OPTIONS
+l: 0
+
+
+*/
+   FILE* fid= fopen("badvers.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case badvers:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+mismatch01()
+{
+/*
+
+   This request has mismatching values for the method in the start line
+   and the CSeq header field.  Any element receiving this request will
+   respond with a 400 Bad Request.
+
+OPTIONS sip:user@example.com SIP/2.0
+To: sip:j.user@example.com
+From: sip:caller@example.net;tag=34525
+Max-Forwards: 6
+Call-ID: mismatch01.dj0234sxdfl3
+CSeq: 8 INVITE
+Via: SIP/2.0/UDP host.example.com;branch=z9hG4bKkdjuw
+l: 0
+
+
+*/
+   FILE* fid= fopen("mismatch01.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case mismatch01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+mismatch02()
+{
+/*
+
+   This message has an unknown method in the start line, and a CSeq
+   method tag that does not match.
+
+   Any element receiving this response should respond with a 501 Not
+   Implemented.  A 400 Bad Request is also acceptable, but choosing a
+   501 (particularly at proxies) has better future-proof
+   characteristics.
+
+NEWMETHOD sip:user@example.com SIP/2.0
+To: sip:j.user@example.com
+From: sip:caller@example.net;tag=34525
+Max-Forwards: 6
+Call-ID: mismatch02.dj0234sxdfl3
+CSeq: 8 INVITE
+Contact: <sip:caller@host.example.net>
+Via: SIP/2.0/UDP host.example.net;branch=z9hG4bKkdjuw
+Content-Type: application/sdp
+l: 138
+
+v=0
+o=mhandley 29739 7272939 IN IP4 192.0.2.1
+c=IN IP4 192.0.2.1
+m=audio 49217 RTP/AVP 0 12
+m=video 3227 RTP/AVP 31
+a=rtpmap:31 LPC
+
+*/
+   FILE* fid= fopen("mismatch02.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case mismatch02:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
+
+
+
+
+}
+
+
+void
+bigcode()
+{
+/*
+
+   This response has a response code larger than 699.  An element
+   receiving this response should simply drop it.
+
+SIP/2.0 4294967301 better not break the receiver
+Via: SIP/2.0/UDP 192.0.2.105;branch=z9hG4bK2398ndaoe
+Call-ID: bigcode.asdof3uj203asdnf3429uasdhfas3ehjasdfas9i
+CSeq: 353494 INVITE
+From: <sip:user@example.com>;tag=39ansfi3
+To: <sip:user@example.edu>;tag=902jndnke3
+Content-Length: 0
+Contact: <sip:user@host105.example.com>
+
+
+*/
+   FILE* fid= fopen("bigcode.dat","r");
+   tassert(fid);
+   resip::Data txt;
+   char mBuf[1024];
+   int result;
+   while(!feof(fid))
+   {
+      result = fread(&mBuf,1,1024,fid);
+      txt += resip::Data(mBuf,result);
+   }
+   fclose(fid);
+   resip::SipMessage* msg = resip::SipMessage::make(txt);
+   tassert_reset();
+   if(!msg)
+   {
+      return;
+   }
+
+   std::auto_ptr<resip::SipMessage> message(msg);
+   msg->parseAllHeaders();
+
+   resip::SipMessage copy(*msg);
+
+   resip::Data encoded;
+   {
+      resip::oDataStream str(encoded);
+      msg->encode(str);
+   }
+   resip::Data copyEncoded;
+   {
+      resip::oDataStream str(copyEncoded);
+      copy.encode(str);
+   }
+
+   InfoLog(<< "In case bigcode:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -2738,6 +4547,15 @@ void
 badbranch()
 {
 /*
+
+   This request indicates support for RFC 3261-style transaction
+   identifiers by providing the z9hG4bK prefix to the branch parameter,
+   but it provides no identifier.  A parser must not break when
+   receiving this message.  An element receiving this request could
+   reject the request with a 400 Response (preferably statelessly, as
+   other requests from the source are likely also to have a malformed
+   branch parameter), or it could fall back to the RFC 2543-style
+   transaction identifier.
 
 OPTIONS sip:user@example.com SIP/2.0
 To: sip:user@example.com
@@ -2787,283 +4605,115 @@ l: 0
       copy.encode(str);
    }
 
-   std::cerr << "In case badbranch:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   //Request Line
+   //OPTIONS sip:user@example.com SIP/2.0
+   tassert(msg->header(resip::h_RequestLine).method()==resip::OPTIONS);
+   tassert(msg->header(resip::h_RequestLine).unknownMethodName()=="OPTIONS");
+   tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_RequestLine).uri().user()=="user");
+   tassert(msg->header(resip::h_RequestLine).uri().password().empty());
+   tassert(msg->header(resip::h_RequestLine).uri().host()=="example.com");
+   tassert(msg->header(resip::h_RequestLine).uri().port()==0);
+   tassert(!(msg->header(resip::h_RequestLine).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_RequestLine).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).uri().numUnknownParams()==0);
+   tassert(msg->header(resip::h_RequestLine).getSipVersion()=="SIP/2.0");
+
+   //To: sip:user@example.com
+   tassert(msg->exists(resip::h_To));
+   tassert(msg->header(resip::h_To).displayName()=="");
+   tassert(msg->header(resip::h_To).numKnownParams()==0);
+   tassert(msg->header(resip::h_To).numUnknownParams()==0);
+   tassert(!(msg->header(resip::h_To).isAllContacts()));
+   tassert(msg->header(resip::h_To).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_To).uri().user()=="user");
+   tassert(msg->header(resip::h_To).uri().password().empty());
+   tassert(msg->header(resip::h_To).uri().host()=="example.com");
+   tassert(msg->header(resip::h_To).uri().port()==0);
+   tassert(!(msg->header(resip::h_To).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_To).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_To).uri().numUnknownParams()==0);
+
+   //From: sip:caller@example.org;tag=33242
+   tassert(msg->exists(resip::h_From));
+   tassert(msg->header(resip::h_From).displayName()=="");
+   tassert(msg->header(resip::h_From).numKnownParams()==1);
+   tassert(msg->header(resip::h_From).numUnknownParams()==0);
+   tassert(msg->header(resip::h_From).exists(resip::p_tag));
+   tassert(msg->header(resip::h_From).param(resip::p_tag)=="33242");
+   tassert(!(msg->header(resip::h_From).isAllContacts()));
+   tassert(msg->header(resip::h_From).uri().scheme()=="sip");
+   tassert(msg->header(resip::h_From).uri().user()=="caller");
+   tassert(msg->header(resip::h_From).uri().password().empty());
+   tassert(msg->header(resip::h_From).uri().host()=="example.org");
+   tassert(msg->header(resip::h_From).uri().port()==0);
+   tassert(!(msg->header(resip::h_From).uri().hasEmbedded()));
+   tassert(msg->header(resip::h_From).uri().numKnownParams()==0);
+   tassert(msg->header(resip::h_From).uri().numUnknownParams()==0);
+
+   //Max-Forwards: 3
+   tassert(msg->exists(resip::h_MaxForwards));
+   tassert(msg->header(resip::h_MaxForwards).value()==3);
+   tassert(msg->header(resip::h_MaxForwards).numKnownParams()==0);
+   tassert(msg->header(resip::h_MaxForwards).numUnknownParams()==0);
+
+   //Vias
+   tassert(msg->exists(resip::h_Vias));
+   tassert(msg->header(resip::h_Vias).size()==1);
+   resip::ParserContainer<resip::Via>::iterator v=msg->header(resip::h_Vias).begin();
+
+   //Via: SIP/2.0/UDP 192.0.2.1;branch=z9hG4bK
+   tassert(v->numKnownParams()==1);
+   tassert(v->numUnknownParams()==0);
+   tassert(v->protocolName()=="SIP");
+   tassert(v->protocolVersion()=="2.0");
+   tassert(v->transport()=="UDP");
+   tassert(v->sentHost()=="192.0.2.1");
+   tassert(v->sentPort()==0);
+   
+   tassert(v->exists(resip::p_branch));
+   tassert(v->param(resip::p_branch).hasMagicCookie());
+   tassert(v->param(resip::p_branch).getTransactionId()=="");
+   tassert(v->param(resip::p_branch).clientData().empty());
+
+   //Accept: application/sdp
+   tassert(msg->exists(resip::h_Accepts));
+   tassert(msg->header(resip::h_Accepts).size()==1);
+   
+   resip::Mimes::iterator a=msg->header(resip::h_Accepts).begin();
+   
+   tassert(a->type()=="application");
+   tassert(a->subType()=="sdp");
+   tassert(a->numKnownParams()==0);
+   tassert(a->numUnknownParams()==0);
+
+   //Call-ID: badbranch.sadonfo23i420jv0as0derf3j3n
+   tassert(msg->exists(resip::h_CallID));
+   tassert(msg->header(resip::h_CallID).value()=="badbranch.sadonfo23i420jv0as0derf3j3n");
+   tassert(msg->header(resip::h_CallID).numKnownParams()==0);
+   tassert(msg->header(resip::h_CallID).numUnknownParams()==0);
+
+   //CSeq: 8 OPTIONS
+   tassert(msg->exists(resip::h_CSeq));
+   tassert(msg->header(resip::h_CSeq).method()==resip::OPTIONS);
+   tassert(msg->header(resip::h_CSeq).unknownMethodName()=="OPTIONS");
+   tassert(msg->header(resip::h_CSeq).sequence()==8);
+   tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
+   tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
+
+   //l: 0
+   tassert(msg->exists(resip::h_ContentLength));
+   tassert(msg->header(resip::h_ContentLength).value()==0);
+   tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
+   tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
 
 
-
-
-}
-
-
-void
-baddate()
-{
-/*
-
-INVITE sip:user@example.com SIP/2.0
-To: sip:user@example.com
-From: sip:caller@example.net;tag=2234923
-Max-Forwards: 70
-Call-ID: baddate.239423mnsadf3j23lj42--sedfnm234
-CSeq: 1392934 INVITE
-Via: SIP/2.0/UDP host.example.com;branch=z9hG4bKkdjuw
-Date: Fri, 01 Jan 2010 16:00:00 EST
-Contact: <sip:caller@host5.example.net>
-Content-Type: application/sdp
-Content-Length: 150
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.5
-s=-
-c=IN IP4 192.0.2.5
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("baddate.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case baddate:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-baddn()
-{
-/*
-
-OPTIONS sip:t.watson@example.org SIP/2.0
-Via:     SIP/2.0/UDP c.example.com:5060;branch=z9hG4bKkdjuw
-Max-Forwards:      70
-From:    Bell, Alexander <sip:a.g.bell@example.com>;tag=43
-To:      Watson, Thomas <sip:t.watson@example.org>
-Call-ID: baddn.31415@c.example.com
-Accept: application/sdp
-CSeq:    3923239 OPTIONS
-l: 0
-
-*/
-   FILE* fid= fopen("baddn.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case baddn:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-badinv01()
-{
-/*
-
-INVITE sip:user@example.com SIP/2.0
-To: sip:j.user@example.com
-From: sip:caller@example.net;tag=134161461246
-Max-Forwards: 7
-Call-ID: badinv01.0ha0isndaksdjasdf3234nas
-CSeq: 8 INVITE
-Via: SIP/2.0/UDP 192.0.2.15;;,;,,
-Contact: "Joe" <sip:joe@example.org>;;;;
-Content-Length: 152
-Content-Type: application/sdp
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.15
-s=-
-c=IN IP4 192.0.2.15
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("badinv01.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case badinv01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-badvers()
-{
-/*
-
-OPTIONS sip:t.watson@example.org SIP/7.0
-Via:     SIP/7.0/UDP c.example.com;branch=z9hG4bKkdjuw
-Max-Forwards:     70
-From:    A. Bell <sip:a.g.bell@example.com>;tag=qweoiqpe
-To:      T. Watson <sip:t.watson@example.org>
-Call-ID: badvers.31417@c.example.com
-CSeq:    1 OPTIONS
-l: 0
-
-
-*/
-   FILE* fid= fopen("badvers.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case badvers:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case badbranch:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -3133,10 +4783,10 @@ a=rtpmap:31 LPC
       copy.encode(str);
    }
 
-   std::cerr << "In case bcast:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case bcast:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -3198,146 +4848,10 @@ Content-Length: 0
       copy.encode(str);
    }
 
-   std::cerr << "In case bext01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-bigcode()
-{
-/*
-
-SIP/2.0 4294967301 better not break the receiver
-Via: SIP/2.0/UDP 192.0.2.105;branch=z9hG4bK2398ndaoe
-Call-ID: bigcode.asdof3uj203asdnf3429uasdhfas3ehjasdfas9i
-CSeq: 353494 INVITE
-From: <sip:user@example.com>;tag=39ansfi3
-To: <sip:user@example.edu>;tag=902jndnke3
-Content-Length: 0
-Contact: <sip:user@host105.example.com>
-
-
-*/
-   FILE* fid= fopen("bigcode.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case bigcode:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-clerr()
-{
-/*
-
-INVITE sip:user@example.com SIP/2.0
-Max-Forwards: 80
-To: sip:j.user@example.com
-From: sip:caller@example.net;tag=93942939o2
-Contact: <sip:caller@hungry.example.net>
-Call-ID: clerr.0ha0isndaksdjweiafasdk3
-CSeq: 8 INVITE
-Via: SIP/2.0/UDP host5.example.com;branch=z9hG4bK-39234-23523
-Content-Type: application/sdp
-Content-Length: 9999
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.155
-s=-
-c=IN IP4 192.0.2.155
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("clerr.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case clerr:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case bext01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -3398,10 +4912,10 @@ l: 0
       copy.encode(str);
    }
 
-   std::cerr << "In case cparam01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case cparam01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -3462,83 +4976,10 @@ l: 0
       copy.encode(str);
    }
 
-   std::cerr << "In case cparam02:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-escruri()
-{
-/*
-
-INVITE sip:user@example.com?Route=%3Csip:example.com%3E SIP/2.0
-To: sip:user@example.com
-From: sip:caller@example.net;tag=341518
-Max-Forwards: 7
-Contact: <sip:caller@host39923.example.net>
-Call-ID: escruri.23940-asdfhj-aje3br-234q098w-fawerh2q-h4n5
-CSeq: 149209342 INVITE
-Via: SIP/2.0/UDP host-of-the-hour.example.com;branch=z9hG4bKkdjuw
-Content-Type: application/sdp
-Content-Length: 150
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.1
-s=-
-c=IN IP4 192.0.2.1
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("escruri.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case escruri:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case cparam02:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -3603,10 +5044,10 @@ a=rtpmap:31 LPC
       copy.encode(str);
    }
 
-   std::cerr << "In case insuf:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case insuf:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -3672,10 +5113,10 @@ m=audio 49217 RTP/AVP 0
       copy.encode(str);
    }
 
-   std::cerr << "In case inv2543:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case inv2543:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -3740,229 +5181,10 @@ Content-Length: 40
       copy.encode(str);
    }
 
-   std::cerr << "In case invut:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-ltgtruri()
-{
-/*
-
-INVITE <sip:user@example.com> SIP/2.0
-To: sip:user@example.com
-From: sip:caller@example.net;tag=39291
-Max-Forwards: 23
-Call-ID: ltgtruri.1@192.0.2.5
-CSeq: 1 INVITE
-Via: SIP/2.0/UDP 192.0.2.5
-Contact: <sip:caller@host5.example.net>
-Content-Type: application/sdp
-Content-Length: 159
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.5
-s=-
-c=IN IP4 192.0.2.5
-t=3149328700 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("ltgtruri.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case ltgtruri:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-lwsruri()
-{
-/*
-
-INVITE sip:user@example.com; lr SIP/2.0
-To: sip:user@example.com;tag=3xfe-9921883-z9f
-From: sip:caller@example.net;tag=231413434
-Max-Forwards: 5
-Call-ID: lwsruri.asdfasdoeoi2323-asdfwrn23-asd834rk423
-CSeq: 2130706432 INVITE
-Via: SIP/2.0/UDP 192.0.2.1:5060;branch=z9hG4bKkdjuw2395
-Contact: <sip:caller@host1.example.net>
-Content-Type: application/sdp
-Content-Length: 159
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.1
-s=-
-c=IN IP4 192.0.2.1
-t=3149328700 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("lwsruri.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case lwsruri:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-lwsstart()
-{
-/*
-
-INVITE  sip:user@example.com  SIP/2.0
-Max-Forwards: 8
-To: sip:user@example.com
-From: sip:caller@example.net;tag=8814
-Call-ID: lwsstart.dfknq234oi243099adsdfnawe3@example.com
-CSeq: 1893884 INVITE
-Via: SIP/2.0/UDP host1.example.com;branch=z9hG4bKkdjuw3923
-Contact: <sip:caller@host1.example.net>
-Content-Type: application/sdp
-Content-Length: 150
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.1
-s=-
-c=IN IP4 192.0.2.1
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("lwsstart.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case lwsstart:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case invut:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -4026,144 +5248,10 @@ There's no way to know how many octets are supposed to be here.
       copy.encode(str);
    }
 
-   std::cerr << "In case mcl01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-mismatch01()
-{
-/*
-
-OPTIONS sip:user@example.com SIP/2.0
-To: sip:j.user@example.com
-From: sip:caller@example.net;tag=34525
-Max-Forwards: 6
-Call-ID: mismatch01.dj0234sxdfl3
-CSeq: 8 INVITE
-Via: SIP/2.0/UDP host.example.com;branch=z9hG4bKkdjuw
-l: 0
-
-
-*/
-   FILE* fid= fopen("mismatch01.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case mismatch01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-mismatch02()
-{
-/*
-
-NEWMETHOD sip:user@example.com SIP/2.0
-To: sip:j.user@example.com
-From: sip:caller@example.net;tag=34525
-Max-Forwards: 6
-Call-ID: mismatch02.dj0234sxdfl3
-CSeq: 8 INVITE
-Contact: <sip:caller@host.example.net>
-Via: SIP/2.0/UDP host.example.net;branch=z9hG4bKkdjuw
-Content-Type: application/sdp
-l: 138
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.1
-c=IN IP4 192.0.2.1
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("mismatch02.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case mismatch02:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case mcl01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -4240,146 +5328,10 @@ a=rtpmap:31 LPC
       copy.encode(str);
    }
 
-   std::cerr << "In case multi01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-ncl()
-{
-/*
-
-INVITE sip:user@example.com SIP/2.0
-Max-Forwards: 254
-To: sip:j.user@example.com
-From: sip:caller@example.net;tag=32394234
-Call-ID: ncl.0ha0isndaksdj2193423r542w35
-CSeq: 0 INVITE
-Via: SIP/2.0/UDP 192.0.2.53;branch=z9hG4bKkdjuw
-Contact: <sip:caller@example53.example.net>
-Content-Type: application/sdp
-Content-Length: -999
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.53
-s=-
-c=IN IP4 192.0.2.53
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("ncl.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case ncl:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-noreason()
-{
-/*
-
-SIP/2.0 100 
-Via: SIP/2.0/UDP 192.0.2.105;branch=z9hG4bK2398ndaoe
-Call-ID: noreason.asndj203insdf99223ndf
-CSeq: 35 INVITE
-From: <sip:user@example.com>;tag=39ansfi3
-To: <sip:user@example.edu>;tag=902jndnke3
-Content-Length: 0
-Contact: <sip:user@host105.example.com>
-
-
-*/
-   FILE* fid= fopen("noreason.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case noreason:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case multi01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -4439,83 +5391,10 @@ Content-Length: 0
       copy.encode(str);
    }
 
-   std::cerr << "In case novelsc:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-quotbal()
-{
-/*
-
-INVITE sip:user@example.com SIP/2.0
-To: "Mr. J. User <sip:j.user@example.com>
-From: sip:caller@example.net;tag=93334
-Max-Forwards: 10
-Call-ID: quotbal.aksdj
-Contact: <sip:caller@host59.example.net>
-CSeq: 8 INVITE
-Via: SIP/2.0/UDP 192.0.2.59:5050;branch=z9hG4bKkdjuw39234
-Content-Type: application/sdp
-Content-Length: 152
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.15
-s=-
-c=IN IP4 192.0.2.15
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("quotbal.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case quotbal:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case novelsc:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -4576,74 +5455,10 @@ Content-Length:0
       copy.encode(str);
    }
 
-   std::cerr << "In case regaut01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-regbadct()
-{
-/*
-
-REGISTER sip:example.com SIP/2.0
-To: sip:user@example.com
-From: sip:user@example.com;tag=998332
-Max-Forwards: 70
-Call-ID: regbadct.k345asrl3fdbv@10.0.0.1
-CSeq: 1 REGISTER
-Via: SIP/2.0/UDP 135.180.130.133:5060;branch=z9hG4bKkdjuw
-Contact: sip:user@example.com?Route=%3Csip:sip.example.com%3E
-l: 0
-
-
-*/
-   FILE* fid= fopen("regbadct.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case regbadct:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case regaut01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -4704,140 +5519,10 @@ L:0
       copy.encode(str);
    }
 
-   std::cerr << "In case regescrt:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-scalar02()
-{
-/*
-
-REGISTER sip:example.com SIP/2.0
-Via: SIP/2.0/TCP host129.example.com;branch=z9hG4bK342sdfoi3
-To: <sip:user@example.com>
-From: <sip:user@example.com>;tag=239232jh3
-CSeq: 36893488147419103232 REGISTER
-Call-ID: scalar02.23o0pd9vanlq3wnrlnewofjas9ui32
-Max-Forwards: 300
-Expires: 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-Contact: <sip:user@host129.example.com>
-  ;expires=280297596632815
-Content-Length: 0
-
-
-*/
-   FILE* fid= fopen("scalar02.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case scalar02:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-scalarlg()
-{
-/*
-
-SIP/2.0 503 Service Unavailable
-Via: SIP/2.0/TCP host129.example.com;branch=z9hG4bKzzxdiwo34sw;received=192.0.2.129
-To: <sip:user@example.com>
-From: <sip:other@example.net>;tag=2easdjfejw
-CSeq: 9292394834772304023312 OPTIONS
-Call-ID: scalarlg.noase0of0234hn2qofoaf0232aewf2394r
-Retry-After: 949302838503028349304023988
-Warning: 1812 overture "In Progress"
-Content-Length: 0
-
-
-*/
-   FILE* fid= fopen("scalarlg.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case scalarlg:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case regescrt:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -4908,143 +5593,10 @@ a=rtpmap:31 LPC
       copy.encode(str);
    }
 
-   std::cerr << "In case sdp01:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-test()
-{
-/*
-
-INVITE sip:alan@jasomi.com
-TO : alan@jasomi.com
-From: ralph@example.com
-MaX-fOrWaRdS: 0068
-Call-ID: test.0ha0isndaksdj@192.0.2.1
-Xyzzy-2: this is the number ten : 10
-Xyzzy-3: INVITE
-Xyzzy: 10000000000
-Meaning: foo bar spam
-Foobar roobar
-Content-Length: 18
-Content-Type: application/sdp
-
-v=0
-testing=123
-
-*/
-   FILE* fid= fopen("test.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case test:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-trws()
-{
-/*
-
-OPTIONS sip:remote-target@example.com SIP/2.0  
-Via: SIP/2.0/TCP host1.examle.com;branch=z9hG4bK299342093
-To: <sip:remote-target@example.com>
-From: <sip:local-resource@example.com>;tag=329429089
-Call-ID: trws.oicu34958239neffasdhr2345r
-Accept: application/sdp
-CSeq: 238923 OPTIONS
-Max-Forwards: 70
-Content-Length: 0
-
-
-*/
-   FILE* fid= fopen("trws.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case trws:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case sdp01:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -5104,10 +5656,10 @@ Content-Length: 0
       copy.encode(str);
    }
 
-   std::cerr << "In case unkscm:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case unkscm:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -5168,82 +5720,10 @@ l: 0
       copy.encode(str);
    }
 
-   std::cerr << "In case unksm2:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
-
-
-
-
-}
-
-
-void
-unreason()
-{
-/*
-
-SIP/2.0 200 = 2**3 * 5**2 но сто девяносто девять - простое
-Via: SIP/2.0/UDP 192.0.2.198;branch=z9hG4bK1324923
-Call-ID: unreason.1234ksdfak3j2erwedfsASdf
-CSeq: 35 INVITE
-From: sip:user@example.com;tag=11141343
-To: sip:user@example.edu;tag=2229
-Content-Length: 154
-Content-Type: application/sdp
-Contact: <sip:user@host198.example.com>
-
-v=0
-o=mhandley 29739 7272939 IN IP4 192.0.2.198
-s=-
-c=IN IP4 192.0.2.198
-t=0 0
-m=audio 49217 RTP/AVP 0 12
-m=video 3227 RTP/AVP 31
-a=rtpmap:31 LPC
-
-*/
-   FILE* fid= fopen("unreason.dat","r");
-   tassert(fid);
-   resip::Data txt;
-   char mBuf[1024];
-   int result;
-   while(!feof(fid))
-   {
-      result = fread(&mBuf,1,1024,fid);
-      txt += resip::Data(mBuf,result);
-   }
-   fclose(fid);
-   resip::SipMessage* msg = resip::SipMessage::make(txt);
-   tassert_reset();
-   tassert(msg);
-   tassert_reset();
-   if(!msg)
-   {
-      return;
-   }
-
-   std::auto_ptr<resip::SipMessage> message(msg);
-   msg->parseAllHeaders();
-
-   resip::SipMessage copy(*msg);
-
-   resip::Data encoded;
-   {
-      resip::oDataStream str(encoded);
-      msg->encode(str);
-   }
-   resip::Data copyEncoded;
-   {
-      resip::oDataStream str(copyEncoded);
-      copy.encode(str);
-   }
-
-   std::cerr << "In case unreason:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case unksm2:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -5303,10 +5783,10 @@ Content-Length: 0
       copy.encode(str);
    }
 
-   std::cerr << "In case zeromf:" << std::endl;
-   std::cerr << "Original text:" << std::endl << txt << std::endl;
-   std::cerr << "Encoded form:" << std::endl << encoded << std::endl;
-   std::cerr << "Encoded form of copy:" << std::endl << copyEncoded << std::endl;
+   InfoLog(<< "In case zeromf:" );
+   InfoLog(<< "Original text:" << std::endl << txt );
+   InfoLog(<< "Encoded form:" << std::endl << encoded );
+   InfoLog(<< "Encoded form of copy:" << std::endl << copyEncoded );
 
 
 
@@ -5328,8 +5808,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case wsinv : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case wsinv : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5341,8 +5821,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case intmeth : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case intmeth : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5354,8 +5834,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case esc01 : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case esc01 : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5367,8 +5847,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case escnull : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case escnull : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5380,8 +5860,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case esc02 : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case esc02 : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5393,8 +5873,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case lwsdisp : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case lwsdisp : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5406,8 +5886,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case longreq : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case longreq : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5419,8 +5899,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case dblreq : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case dblreq : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5432,8 +5912,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case semiuri : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case semiuri : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5445,8 +5925,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case transports : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
+   InfoLog(<< "Exception caught in test case transports : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5458,415 +5938,8 @@ catch(resip::BaseException& e)
 {
    tassert(0);
    tassert_reset();
-   std::cerr << "Exception caught in test case mpart01 : " << e << std::endl;
-   std::cerr << "This message was valid." << std::endl;
-}
-
-
-try
-{
-   badaspec();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case badaspec : " << e << std::endl;
-   std::cerr << "This message wasn't valid." << std::endl;
-}
-
-
-try
-{
-   badbranch();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case badbranch : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   baddate();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case baddate : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   baddn();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case baddn : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   badinv01();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case badinv01 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   badvers();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case badvers : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   bcast();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case bcast : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   bext01();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case bext01 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   bigcode();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case bigcode : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   clerr();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case clerr : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   cparam01();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case cparam01 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   cparam02();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case cparam02 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   escruri();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case escruri : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   insuf();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case insuf : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   inv2543();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case inv2543 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   invut();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case invut : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   ltgtruri();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case ltgtruri : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   lwsruri();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case lwsruri : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   lwsstart();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case lwsstart : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   mcl01();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case mcl01 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   mismatch01();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case mismatch01 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   mismatch02();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case mismatch02 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   multi01();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case multi01 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   ncl();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case ncl : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   noreason();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case noreason : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   novelsc();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case novelsc : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   quotbal();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case quotbal : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   regaut01();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case regaut01 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   regbadct();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case regbadct : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   regescrt();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case regescrt : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   scalar02();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case scalar02 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   scalarlg();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case scalarlg : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   sdp01();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case sdp01 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   test();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case test : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   trws();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case trws : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   unkscm();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case unkscm : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
-}
-
-
-try
-{
-   unksm2();
-}
-catch(resip::BaseException& e)
-{
-   std::cerr << "Exception caught in test case unksm2 : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
+   InfoLog(<< "Exception caught in test case mpart01 : " << e );
+   InfoLog(<< "This message was valid." );
 }
 
 
@@ -5876,8 +5949,410 @@ try
 }
 catch(resip::BaseException& e)
 {
-   std::cerr << "Exception caught in test case unreason : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
+   tassert(0);
+   tassert_reset();
+   InfoLog(<< "Exception caught in test case unreason : " << e );
+   InfoLog(<< "This message was valid." );
+}
+
+
+try
+{
+   noreason();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   InfoLog(<< "Exception caught in test case noreason : " << e );
+   InfoLog(<< "This message was valid." );
+}
+
+
+try
+{
+   badinv01();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case badinv01 : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   clerr();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case clerr : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   scalar02();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case scalar02 : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   scalarlg();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case scalarlg : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   quotbal();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case quotbal : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   ltgtruri();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case ltgtruri : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   lwsruri();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case lwsruri : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   lwsstart();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case lwsstart : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   trws();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case trws : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   escruri();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case escruri : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   baddate();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case baddate : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   regbadct();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case regbadct : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   badaspec();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case badaspec : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   baddn();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case baddn : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   badvers();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case badvers : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   mismatch01();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case mismatch01 : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   mismatch02();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case mismatch02 : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   bigcode();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case bigcode : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   badbranch();
+}
+catch(resip::BaseException& e)
+{
+   tassert(0);
+   tassert_reset();
+   InfoLog(<< "Exception caught in test case badbranch : " << e );
+   InfoLog(<< "This message was (syntactically) valid." );
+}
+
+
+try
+{
+   bcast();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case bcast : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   bext01();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case bext01 : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   cparam01();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case cparam01 : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   cparam02();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case cparam02 : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   insuf();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case insuf : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   inv2543();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case inv2543 : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   invut();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case invut : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   mcl01();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case mcl01 : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   multi01();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case multi01 : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   ncl();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case ncl : " << e );
+   InfoLog(<< "This message wasn't valid." );
+}
+
+
+try
+{
+   novelsc();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case novelsc : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   regaut01();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case regaut01 : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   regescrt();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case regescrt : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   sdp01();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case sdp01 : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   unkscm();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case unkscm : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
+}
+
+
+try
+{
+   unksm2();
+}
+catch(resip::BaseException& e)
+{
+   InfoLog(<< "Exception caught in test case unksm2 : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
 }
 
 
@@ -5887,8 +6362,8 @@ try
 }
 catch(resip::BaseException& e)
 {
-   std::cerr << "Exception caught in test case zeromf : " << e << std::endl;
-   std::cerr << "This message was/wasn't valid." << std::endl;
+   InfoLog(<< "Exception caught in test case zeromf : " << e );
+   InfoLog(<< "This message was/wasn't valid." );
 }
 
 
