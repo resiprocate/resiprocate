@@ -1624,6 +1624,58 @@ TestSipEndPoint::send483()
    return new Send483(*this);
 }
 
+
+// 500
+
+TestSipEndPoint::Send500WithRetryAfter::Send500WithRetryAfter(TestSipEndPoint & endPoint, int retryAfter)
+   : MessageExpectAction(endPoint),
+     mRetryAfter(retryAfter),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send500WithRetryAfter::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 500);
+   response->header(h_RetryAfter).value() = mRetryAfter;
+   // response->header(h_RetryAfter).comment() = "Service Unavailable";
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send500WithRetryAfter(int retryAfter)
+{
+   return new Send500WithRetryAfter(*this, retryAfter);
+}
+
+
+// 503
+
+TestSipEndPoint::Send503WithRetryAfter::Send503WithRetryAfter(TestSipEndPoint & endPoint, int retryAfter)
+   : MessageExpectAction(endPoint),
+     mRetryAfter(retryAfter),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send503WithRetryAfter::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 503);
+   response->header(h_RetryAfter).value() = mRetryAfter;
+   // response->header(h_RetryAfter).comment() = "Service Unavailable";
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send503WithRetryAfter(int retryAfter)
+{
+   return new Send503WithRetryAfter(*this, retryAfter);
+}
+
 // end - vk
 
 TestSipEndPoint::Send302::Send302(TestSipEndPoint & endPoint)
@@ -2137,11 +2189,33 @@ TestSipEndPoint::send513()
    return new Send513(*this);
 }
 
+// vk
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send501()
+{
+   return new Send501(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send502()
+{
+   return new Send502(*this);
+}
+// end- vk
+
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::send504()
 {
    return new Send504(*this);
 }
+
+// vk
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send506()
+{
+   return new Send506(*this);
+}
+// end- vk
 
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::send600()
