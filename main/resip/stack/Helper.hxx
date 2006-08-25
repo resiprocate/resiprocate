@@ -430,7 +430,10 @@ class Helper
       static Uri fromAor(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 
       // Do basic checks to validate a received message off the wire
-      static bool validateMessage(const SipMessage& message);
+      // If the basic check fails, and reason is non-null, reason will be set
+      // to the reason the check failed. This function does not take ownership
+      // of reason.
+      static bool validateMessage(const SipMessage& message,resip::Data* reason=0);
 
       // GRUU support -- reversibly and opaquely combine instance id and aor
       static Data gruuUserPart(const Data& instanceId,
