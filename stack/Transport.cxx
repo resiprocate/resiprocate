@@ -264,40 +264,45 @@ Transport::stampReceived(SipMessage* message)
 bool
 Transport::basicCheck(const SipMessage& msg)
 {
+   resip::Data reason;
    if (msg.isExternal())
    {
       try
       {
-         try
+         if (!Helper::validateMessage(msg,&reason))
          {
-            if (!Helper::validateMessage(msg))
+            InfoLog(<<"Message Failed basicCheck :" << msg.brief());
+            if (msg.isRequest())
             {
-               InfoLog(<<"Message Failed basicCheck :" << msg.brief());
-               if (msg.isRequest())
-               {
-                  // this is VERY low-level b/c we don't have a transaction...
-                  // here we make a response to warn the offending party.
-                  makeFailedResponse(msg);
-               }
-               return false;
-            }
-            else if (mShuttingDown && msg.isRequest())
-            {
-               InfoLog (<< "Server has been shutdown, reject message with 503");
                // this is VERY low-level b/c we don't have a transaction...
                // here we make a response to warn the offending party.
-               makeFailedResponse(msg, 503, "Server has been shutdown");
+               if(msg.method()!=ACK)
+               {
+                  makeFailedResponse(msg,400,reason.c_str());
+               }
             }
+            return false;
          }
-         catch (ParseBuffer::Exception& e)
+         else if (mShuttingDown && msg.isRequest())
          {
-            InfoLog (<< "Parse exception in basic check: " << e);
-            makeFailedResponse(msg);
+            InfoLog (<< "Server has been shutdown, reject message with 503");
+            // this is VERY low-level b/c we don't have a transaction...
+            // here we make a response to warn the offending party.
+            makeFailedResponse(msg, 503, "Server has been shutdown");
          }
+      }
+      catch (ParseBuffer::Exception& e)
+      {
+         ErrLog (<< "Cannot make failure response to badly constructed message: " << e);
+         return false;
+         // !bwc! We don't even know that this is a request!
+         // plus, nothing above should be throwing (validateMessage
+         // should catch all exceptions it gets)
+         //makeFailedResponse(msg,400,reason.c_str());
       }
       catch (BaseException& e)
       {
-         InfoLog (<< "Cannot make failure response to badly constructed message: " << e);
+         ErrLog (<< "Cannot make failure response to badly constructed message: " << e);
          return false;
       }
    }
