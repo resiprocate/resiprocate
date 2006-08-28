@@ -13,6 +13,10 @@
 #include "rutil/Coders.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#ifdef WIN32
+#include "Winsock2.h"
+#endif
+
 using namespace resip;
 using namespace std;
 

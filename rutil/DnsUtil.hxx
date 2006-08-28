@@ -1,16 +1,14 @@
 #if !defined(RESIP_DNSUTIL_HXX)
 #define RESIP_DNSUTIL_HXX
 
+#include "rutil/Socket.hxx"
 #include <list>
 #include "BaseException.hxx"
 #include "Data.hxx"
 
-#if defined(WIN32)
-#include <Ws2tcpip.h>
-#else
-#include <netinet/in.h>
-#endif
 
+struct in_addr;
+struct in6_addr;
 namespace resip
 {
 

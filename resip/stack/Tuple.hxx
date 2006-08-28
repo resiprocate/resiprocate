@@ -1,8 +1,8 @@
 #if !defined(RESIP_TUPLE_HXX)
 #define RESIP_TUPLE_HXX
 
-#include "rutil/compat.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/compat.hxx"
 
 #include "rutil/HashMap.hxx"
 #include "rutil/TransportType.hxx"
