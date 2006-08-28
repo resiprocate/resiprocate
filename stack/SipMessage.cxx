@@ -603,10 +603,17 @@ SipMessage::encodeBrief(std::ostream& str) const
       str << header(h_CSeq).unknownMethodName();
    }
 
-   if (exists(h_Contacts) && !header(h_Contacts).empty())
+   try
    {
-      str << contact;
-      str << header(h_Contacts).front().uri().getAor();
+      if (exists(h_Contacts) && !header(h_Contacts).empty())
+      {
+         str << contact;
+         str << header(h_Contacts).front().uri().getAor();
+      }
+   }
+   catch(resip::ParseBuffer::Exception& e)
+   {
+      str << " MALFORMED CONTACT ";
    }
    
    str << slash;
