@@ -542,7 +542,7 @@ SipMessage::method() const
          assert(0);
       }
    }
-   catch(resip::ParseBuffer::Exception& e)
+   catch(resip::ParseBuffer::Exception&)
    {
    }
    
@@ -611,7 +611,7 @@ SipMessage::encodeBrief(std::ostream& str) const
          str << header(h_Contacts).front().uri().getAor();
       }
    }
-   catch(resip::ParseBuffer::Exception& e)
+   catch(resip::ParseBuffer::Exception&)
    {
       str << " MALFORMED CONTACT ";
    }

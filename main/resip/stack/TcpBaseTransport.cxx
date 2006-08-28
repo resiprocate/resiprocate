@@ -3,10 +3,9 @@
 #endif
 
 #include <memory>
-#include "rutil/compat.hxx"
+#include "rutil/Socket.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
-#include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 

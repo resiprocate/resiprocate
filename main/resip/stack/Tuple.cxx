@@ -2,6 +2,7 @@
 #include "resip/stack/config.hxx"
 #endif
 
+#include "resip/stack/Tuple.hxx"
 #include "rutil/compat.hxx"
 
 #include <iostream>
@@ -23,7 +24,7 @@
 #include "rutil/HashMap.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Transport.hxx"
-#include "resip/stack/Tuple.hxx"
+
 
 using namespace resip;
 
