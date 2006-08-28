@@ -13,8 +13,6 @@
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/Socket.hxx"
-#include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
