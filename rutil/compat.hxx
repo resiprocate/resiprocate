@@ -26,13 +26,10 @@
 #ifdef WIN32
 // !cj! TODO would be nice to remove this 
 #  pragma warning(disable : 4996)
-#  include <errno.h>
-#  include <winsock2.h>
-#  include <io.h>
+#define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
-#  include <winbase.h>
+#undef WIN32_LEAN_AND_MEAN
 #  include <errno.h>
-#  include <winsock2.h>
 #  include <io.h>
 #ifdef UNDER_CE
 #include "wince/WceCompat.hxx"
