@@ -1420,7 +1420,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
       {
          message.header(h_CSeq).checkParsed();
       }
-      catch(ParseBuffer::Exception& e)
+      catch(ParseBuffer::Exception&)
       {
          InfoLog(<<"Malformed CSeq header");
          if(reason) *reason="Malformed CSeq header";

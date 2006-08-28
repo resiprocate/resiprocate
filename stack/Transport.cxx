@@ -8,10 +8,9 @@
 #include <sys/sockio.h>
 #endif
 
-#include "rutil/compat.hxx"
+#include "rutil/Socket.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/Socket.hxx"
 #include "rutil/ParseBuffer.hxx"
 
 #include "resip/stack/ConnectionTerminated.hxx"
