@@ -42,7 +42,8 @@ Uri::Uri(const Data& data)
 {
    // must copy because parse creates overlays
    Uri tmp;
-   ParseBuffer pb(data, parseContext);
+   Data copyData = data;
+   ParseBuffer pb(copyData, parseContext);
    tmp.parse(pb);
    *this = tmp;
 }
