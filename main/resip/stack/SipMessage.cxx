@@ -830,6 +830,23 @@ SipMessage::setBody(const char* start, UInt32 len)
    {
       if(exists(h_ContentLength))
       {
+         try
+         {
+            header(h_ContentLength).checkParsed();
+         }
+         catch(resip::ParseBuffer::Exception& e)
+         {
+            if(mInvalid)
+            {
+               mReason+=",";
+            }
+
+            mInvalid=true; 
+            mReason+="Malformed Content-Length";
+            InfoLog(<< "Malformed Content-Length. Ignoring.");
+            header(h_ContentLength).value()=len;
+         }
+         
          UInt32 contentLength=header(h_ContentLength).value();
          
          if(len > contentLength)
