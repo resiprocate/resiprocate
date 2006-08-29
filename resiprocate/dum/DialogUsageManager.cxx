@@ -1392,8 +1392,10 @@ DialogUsageManager::processRequest(const SipMessage& request)
 
                DebugLog ( << "*********** Calling AppDialogSetFactory *************"  );
                AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
+               assert(dset);
                appDs->mDialogSet = dset;
                dset->setUserProfile(appDs->selectUASUserProfile(request));
+               assert(appDs);
                dset->mAppDialogSet = appDs;
 
                DebugLog ( << "************* Adding DialogSet ***************" );

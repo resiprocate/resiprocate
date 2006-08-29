@@ -177,16 +177,17 @@ ClientSubscription::processRequest(const SipMessage& msg)
 void
 ClientSubscription::sendNewSubscription()
 {
-   bool reuseAppDialogSet = true;
+   //bool reuseAppDialogSet = true;
    NameAddr remoteTarget(mDialog.mRemoteTarget);
    if (mDialog.mRemoteTarget.uri().host().empty())
    {
       remoteTarget = mLastRequest.header(h_To);
    }
    remoteTarget.remove(p_tag);
-   if (reuseAppDialogSet)
+   AppDialogSetHandle appDialogSetHandle = getAppDialogSet();
+   if (appDialogSetHandle.isValid())
    {
-      SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType(), getAppDialogSet()->reuse());
+      SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType(), appDialogSetHandle->reuse());
       mDum.send(sub);
    }
    else
@@ -314,15 +315,15 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          else
          {
             InfoLog(<< "ClientSubscription: application retry new request");
-  
-            if (mDialog.mRemoteTarget.uri().host().empty())
+            AppDialogSetHandle appDialogSetHandle = getAppDialogSet();
+            if (mDialog.mRemoteTarget.uri().host().empty() || !appDialogSetHandle.isValid())
             {
                SipMessage& sub = mDum.makeSubscription(mLastRequest.header(h_To), getEventType());
                mDum.send(sub);
             }
             else
             {
-               SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
+               SipMessage& sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), appDialogSetHandle->reuse());
                mDum.send(sub);
             }
             

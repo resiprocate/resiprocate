@@ -33,7 +33,14 @@ NonDialogUsage::~NonDialogUsage()
 AppDialogSetHandle 
 NonDialogUsage::getAppDialogSet()
 {
-   return mDialogSet.mAppDialogSet->getHandle();
+   if (mDialogSet.mAppDialogSet)
+   {
+      return mDialogSet.mAppDialogSet->getHandle();
+   }
+   else
+   {
+      return AppDialogSetHandle();
+   }
 }
 
 /* ====================================================================
