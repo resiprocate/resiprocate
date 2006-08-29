@@ -91,6 +91,14 @@ class TransactionState : public DnsHandler
       
       static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine, const Data& tid);
       
+      /**
+         Attempts to responds to a malformed non-ACK request.
+         @param badReq MUST be a non-ACK request. This function will assert
+            if otherwise.
+         @return true iff a response was successfully sent.
+      **/
+      static bool handleBadRequest(const resip::SipMessage& badReq,TransactionController& controller);
+      
       TransactionController& mController;
       
       Machine mMachine;
