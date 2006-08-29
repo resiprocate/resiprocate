@@ -35,13 +35,27 @@ DialogUsage::~DialogUsage()
 AppDialogSetHandle 
 DialogUsage::getAppDialogSet()
 {
-   return mDialog.mDialogSet.mAppDialogSet->getHandle();
+   if (mDialog.mDialogSet.mAppDialogSet)
+   {
+      return mDialog.mDialogSet.mAppDialogSet->getHandle();
+   }
+   else
+   {
+      return AppDialogSetHandle();
+   }
 }
 
 AppDialogHandle 
 DialogUsage::getAppDialog()
 {
-   return mDialog.mAppDialog->getHandle();
+   if (mDialog.mAppDialog)
+   {
+      return mDialog.mAppDialog->getHandle();
+   }
+   else
+   {
+      return AppDialogHandle();
+   }
 }
 
 /* ====================================================================
