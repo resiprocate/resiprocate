@@ -21,7 +21,7 @@ ParseBuffer::ParseBuffer(const char* buff, unsigned int len,
      mErrorContext(errorContext)
 {}
 
-ParseBuffer::ParseBuffer(const Data& data,
+ParseBuffer::ParseBuffer(Data& data,
             const Data& errorContext)
    : mBuff(data.data()),
      mPosition(mBuff),

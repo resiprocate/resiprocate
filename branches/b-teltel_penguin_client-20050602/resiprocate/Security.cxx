@@ -381,7 +381,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
       {
          X509_STORE_add_cert(mRootTlsCerts,cert);
          X509_STORE_add_cert(mRootSslCerts,cert);
-	 X509_free(cert);
+         X509_free(cert);
       }
       break;
       default:

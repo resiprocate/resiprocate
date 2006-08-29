@@ -235,9 +235,8 @@ Data::Data(const char* str, int length)
    {
       assert(str);
       memcpy(mBuf, str, mSize); 
-      mBuf[mSize]=0;
    }
-
+   mBuf[mSize]=0;
 }
 
 Data::Data(const unsigned char* str, int length) 
@@ -260,8 +259,8 @@ Data::Data(const unsigned char* str, int length)
    {
       assert(str);
       memcpy(mBuf, str, mSize); 
-      mBuf[mSize]=0;
    }
+   mBuf[mSize]=0;
 }
 
 // share memory KNOWN to be in a surrounding scope
@@ -327,10 +326,7 @@ Data::Data(const char* str)
    {
       memcpy(mBuf, str, mSize+1);
    }
-   else
-   {
-      mBuf[mSize] = 0;
-   }
+   mBuf[mSize] = 0;
 }
 
 Data::Data(const string& str)
@@ -353,10 +349,7 @@ Data::Data(const string& str)
    {
       memcpy(mBuf, str.c_str(), mSize + 1);
    }
-   else
-   {
-      mBuf[mSize] = 0;
-   }
+   mBuf[mSize] = 0;
 }
 
 Data::Data(const Data& data) 
@@ -379,10 +372,7 @@ Data::Data(const Data& data)
    {
       memcpy(mBuf, data.mBuf, mSize+1);
    }
-   else
-   {
-      mBuf[mSize] = 0;
-   }
+   mBuf[mSize] = 0;
 }
 
 // -2147483646
