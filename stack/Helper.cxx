@@ -316,13 +316,20 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_Warnings).push_back(warn);
    }
 
-   // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
-   // No totag for failure responses or 100s   
-   if (!response.header(h_To).exists(p_tag) && responseCode > 100)   
-   {   
-      response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);   
+   try
+   {
+      // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
+      // No totag for failure responses or 100s   
+      if (!response.header(h_To).exists(p_tag) && responseCode > 100)   
+      {   
+         response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);   
+      }
    } 
-    
+   catch(resip::ParseBuffer::Exception& e)
+   {
+      // !bwc! Can't add to-tag since To is malformed. Oh well, we tried.
+   }
+   
    response.setRFC2543TransactionId(request.getRFC2543TransactionId());
    //response.header(h_ContentLength).value() = 0;
    
@@ -331,6 +338,9 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_RecordRoutes) = request.header(h_RecordRoutes);
    }
 
+   // !bwc! If CSeq is malformed, basicCheck would have already attempted to
+   // parse it, meaning we won't throw here (we never try to parse the same
+   // thing twice, see LazyParser::checkParsed())
    if (responseCode/100 == 2 &&
          !response.exists(h_Contacts) &&
          !(response.header(h_CSeq).method()==CANCEL) )
@@ -370,7 +380,10 @@ Helper::makeResponse(const SipMessage& request,
                      const Data& hostname, 
                      const Data& warning)
 {
-   SipMessage* response = new SipMessage;
+   // !bwc! Exception safety. Catch/rethrow is dicey because we can't rethrow
+   // resip::BaseException, since it is abstract.
+   std::auto_ptr<SipMessage> response(new SipMessage);
+
    makeResponse(*response, request, responseCode, reason, hostname, warning);
 
    // in general, this should not create a Contact header since only requests
@@ -378,7 +391,7 @@ Helper::makeResponse(const SipMessage& request,
    // a contact(s). 
    response->header(h_Contacts).clear();
    response->header(h_Contacts).push_back(myContact);
-   return response;
+   return response.release();
 }
 
 
@@ -389,9 +402,12 @@ Helper::makeResponse(const SipMessage& request,
                      const Data& hostname, 
                      const Data& warning)
 {
-   SipMessage* response = new SipMessage;
+   // !bwc! Exception safety. Catch/rethrow is dicey because we can't rethrow
+   // resip::BaseException, since it is abstract.
+   std::auto_ptr<SipMessage> response(new SipMessage);
+   
    makeResponse(*response, request, responseCode, reason, hostname, warning);
-   return response;
+   return response.release();
 }
 
 void   
