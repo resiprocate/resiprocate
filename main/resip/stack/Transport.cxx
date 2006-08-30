@@ -271,37 +271,26 @@ Transport::basicCheck(const SipMessage& msg)
          if (!Helper::validateMessage(msg,&reason))
          {
             InfoLog(<<"Message Failed basicCheck :" << msg.brief());
-            if (msg.isRequest())
+            if (msg.isRequest() && msg.method()!=ACK )
             {
                // this is VERY low-level b/c we don't have a transaction...
                // here we make a response to warn the offending party.
-               if(msg.method()!=ACK)
-               {
-                  makeFailedResponse(msg,400,reason.c_str());
-               }
+               makeFailedResponse(msg,400,reason.c_str());
             }
             return false;
          }
-         else if (mShuttingDown && msg.isRequest())
+         else if (mShuttingDown && msg.isRequest() && msg.method() != ACK)
          {
             InfoLog (<< "Server has been shutdown, reject message with 503");
             // this is VERY low-level b/c we don't have a transaction...
             // here we make a response to warn the offending party.
             makeFailedResponse(msg, 503, "Server has been shutdown");
+            return false;
          }
-      }
-      catch (ParseBuffer::Exception& e)
-      {
-         ErrLog (<< "Cannot make failure response to badly constructed message: " << e);
-         return false;
-         // !bwc! We don't even know that this is a request!
-         // plus, nothing above should be throwing (validateMessage
-         // should catch all exceptions it gets)
-         //makeFailedResponse(msg,400,reason.c_str());
       }
       catch (BaseException& e)
       {
-         ErrLog (<< "Cannot make failure response to badly constructed message: " << e);
+         InfoLog (<< "Cannot make failure response to badly constructed message: " << e);
          return false;
       }
    }
