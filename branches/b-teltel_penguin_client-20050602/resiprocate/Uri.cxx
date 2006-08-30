@@ -42,8 +42,8 @@ Uri::Uri(const Data& data)
 {
    // must copy because parse creates overlays
    Uri tmp;
-   Data copyData = data;
-   ParseBuffer pb(copyData, parseContext);
+   // !nash! performance hack to pass Data& instead make a copy
+   ParseBuffer pb(const_cast<Data&>(data), parseContext);
    tmp.parse(pb);
    *this = tmp;
 }
