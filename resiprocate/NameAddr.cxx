@@ -47,8 +47,8 @@ NameAddr::NameAddr(const Data& unparsed)
 {
    // must copy because parse creates overlays
    NameAddr tmp;
-   Data copyUnparsed = unparsed;
-   ParseBuffer pb(copyUnparsed, parseContext);
+   // !nash! performance hack to pass Data& instead make a copy
+   ParseBuffer pb(const_cast<Data&>(unparsed), parseContext);
    tmp.parse(pb);
    *this = tmp;
 }
