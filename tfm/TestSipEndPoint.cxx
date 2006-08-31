@@ -1943,7 +1943,14 @@ TestSipEndPoint::Respond::go(boost::shared_ptr<resip::SipMessage> msg)
    {
       boost::shared_ptr<resip::SipMessage> invite;
       invite = mEndPoint.getReceivedInvite(msg->header(resip::h_CallId));
-      return mEndPoint.makeResponse(*invite, mCode);
+      if (invite == shared_ptr<SipMessage>())
+      {
+        return mEndPoint.makeResponse(*msg, mCode);
+      }
+      else
+      {
+        return mEndPoint.makeResponse(*invite, mCode);
+      }
    }
 }
 
