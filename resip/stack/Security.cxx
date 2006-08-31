@@ -161,7 +161,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    if (NULL != pErrCert)
       X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
 
-   sprintf(cBuf2," depth=%d %s\n",iDepth,cBuf1);
+   sprintf(cBuf2,", depth=%d %s\n",iDepth,cBuf1);
    if(!iInCode)
       ErrLog(<< "Error when verifying server's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
  
