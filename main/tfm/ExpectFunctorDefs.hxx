@@ -36,7 +36,10 @@
                {                                                                        \
                    boost::shared_ptr<resip::SipMessage> invite;                         \
                    invite = mEndPoint.getReceivedInvite(msg->header(resip::h_CallId));  \
-                   return mEndPoint.makeResponse(*invite, _code_);                      \
+                   if (invite == NULL) \
+                     return mEndPoint.makeResponse(*msg, _code_);                          \
+                   else \
+                     return mEndPoint.makeResponse(*invite, _code_);                      \
                }                                                                        \
             }                                                                           \
                                                                                         \
