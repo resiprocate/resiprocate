@@ -843,7 +843,7 @@ SipMessage::setBody(const char* start, UInt32 len)
 
             mInvalid=true; 
             mReason+="Malformed Content-Length";
-            InfoLog(<< "Malformed Content-Length. Ignoring.");
+            InfoLog(<< "Malformed Content-Length. Ignoring. " << e);
             header(h_ContentLength).value()=len;
          }
          
