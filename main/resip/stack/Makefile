@@ -97,6 +97,7 @@ SRC = \
 	SipMessage.cxx \
 	SipStack.cxx \
 	StackThread.cxx \
+    InterruptableStackThread.cxx \
 	StatisticsManager.cxx \
 	StatisticsMessage.cxx \
 	Symbols.cxx \
