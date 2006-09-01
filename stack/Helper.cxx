@@ -325,7 +325,7 @@ Helper::makeResponse(SipMessage& response,
          response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);   
       }
    } 
-   catch(resip::ParseBuffer::Exception& e)
+   catch(resip::ParseBuffer::Exception&)
    {
       // !bwc! Can't add to-tag since To is malformed. Oh well, we tried.
    }
