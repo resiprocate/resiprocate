@@ -98,7 +98,7 @@ TransactionState::handleBadRequest(const resip::SipMessage& badReq, TransactionC
    catch(resip::BaseException& e)
    {
       ErrLog(<< "Exception thrown in TransactionState::handleBadRequest."
-                  " This shouldn't happen.");
+                  " This shouldn't happen. " << e);
       return false;
    }
 }
@@ -252,7 +252,7 @@ TransactionState::process(TransactionController& controller)
          // just ignore the error and pretend we never looked at To (since we
          // technically shouldn't be in the first place).
          InfoLog(<<"Someone sent us an ACK inside the INVITE transaction"
-                     " with a malformed To header. Assuming ACK/failure.");
+                     " with a malformed To header. Assuming ACK/failure. " << e);
       }
    }
 
@@ -1156,7 +1156,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                         mToTag = sip->header(h_To).param(p_tag);
                      }
                   }
-                  catch(resip::ParseBuffer::Exception& e)
+                  catch(resip::ParseBuffer::Exception&)
                   {
                      // !bwc! We are only storing this To tag in order to help 
                      // distinguish ACK/failure from ACK/200 with the same tid
