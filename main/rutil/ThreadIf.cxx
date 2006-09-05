@@ -169,7 +169,7 @@ ThreadIf::detach()
 #else
    CloseHandle(mThread);
    mThread = 0;
-#endif;
+#endif
    mId = 0;
 }
 
