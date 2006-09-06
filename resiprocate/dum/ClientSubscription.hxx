@@ -25,7 +25,8 @@ class DUM_API ClientSubscription: public BaseSubscription
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       
       void requestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call end() instead)
-      virtual void end();
+      virtual void end();        // Sync.
+      virtual void endAsync();   // !polo! async.
       virtual std::ostream& dump(std::ostream& strm) const;
 
    protected:

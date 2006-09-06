@@ -8,7 +8,8 @@
 #include "resiprocate/dum/DumTimeout.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/dum/PublicationHandler.hxx"
-
+#include "resiprocate/dum/InternalEndPublicationMessage.hxx"
+#include "resiprocate/dum/InternalUpatePublishMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -44,10 +45,17 @@ ClientPublication::~ClientPublication()
 void
 ClientPublication::end()
 {
-   InfoLog (<< "End client publication to " << mPublish.header(h_RequestLine).uri());
+   InfoLog (<< "End client publication (Sync) to " << mPublish.header(h_RequestLine).uri());
    mPublish.header(h_CSeq).sequence()++;
    mPublish.header(h_Expires).value() = 0;
    send(mPublish);
+}
+
+void
+ClientPublication::endAsync()  // !polo! async.
+{
+   InfoLog (<< "End client publication (Async) to " << mPublish.header(h_RequestLine).uri());
+   mDum.post(new InternalEndPublicationMessage(getHandle()));
 }
 
 void 
@@ -218,9 +226,9 @@ ClientPublication::refresh(unsigned int expiration)
 }
 
 void
-ClientPublication::update(const Contents* body)
+ClientPublication::update(const Contents* body) // Sync.
 {
-   InfoLog (<< "Updating presence document: " << mPublish.header(h_To).uri());
+   InfoLog (<< "Updating presence document (Sync): " << mPublish.header(h_To).uri());
 
    if (mDocument != body)
    {
@@ -238,6 +246,13 @@ ClientPublication::update(const Contents* body)
    mPublish.header(h_CSeq).sequence()++;
    mPublish.setContents(mDocument);
    send(mPublish);
+}
+
+void
+ClientPublication::updateAsync(const Contents* body)  // !polo! async.
+{
+   InfoLog (<< "Updating presence document (Async): " << mPublish.header(h_To).uri());
+   mDum.post(new InternalUpatePublishMessage(getHandle(), body));
 }
 
 void 
