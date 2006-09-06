@@ -1045,27 +1045,30 @@ DialogUsageManager::process(bool block, resip::RWMutex* mutex)   // !polo! block
 {
    bool hasNext = false;
    std::auto_ptr<Message> msg;
-   if(block)
+   do 
    {
-      msg.reset(mFifo.getNext());
-      hasNext = (mFifo.size() != 0);
-   }
-   else
-   {
-      msg.reset(mFifo.getNext(hasNext));
-   }
-   if (msg.get())
-   {
-      if (mutex)
+      if(block)
       {
-         resip::Lock lock(*mutex); (void)lock;
-         internalProcess(msg);
+         msg.reset(mFifo.getNext());
+         hasNext = (mFifo.size() != 0);
       }
       else
       {
-         internalProcess(msg);
+         msg.reset(mFifo.getNext((bool&)hasNext));
       }
-   }
+      if (msg.get())
+      {
+         if (mutex)
+         {
+            resip::Lock lock(*mutex); (void)lock;
+            internalProcess(msg);
+         }
+         else
+         {
+            internalProcess(msg);
+         }
+      }
+   } while (block && hasNext);
    return hasNext;
 }
 
