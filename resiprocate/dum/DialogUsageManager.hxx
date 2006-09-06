@@ -52,6 +52,8 @@ class DumShutdownHandler;
 class KeepAliveManager;
 class HttpGetMessage;
 
+class RWMutex;
+
 class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
 {
    public:
@@ -194,7 +196,7 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
-      bool process(bool block = false);
+      bool process(bool block = false, resip::RWMutex* mutex = NULL);
 
       // hasEvents
       bool hasEvents() const;

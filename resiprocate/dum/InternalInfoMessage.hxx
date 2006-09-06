@@ -1,39 +1,43 @@
 // ==========================================================================================================
-// InternalRejectMessage.hxx                                                             2006 @ TelTel
+// InternalInfoMessage.hxx                                                               2006 @ TelTel
 // ==========================================================================================================
-// Rejects active invite session asynchronizely for thread synchronization (onTerminated() does not get called
-// in same call stack).
-// NOTE: rejects reINVITE/UPDATE at usual cases.
+// INFO method with its contents
 // ==========================================================================================================
-#ifndef RESIP_InternalRejectMessage_hxx
-#define RESIP_InternalRejectMessage_hxx
-
-#include <memory>
+#ifndef RESIP_InternalInfoMessage_hxx
+#define RESIP_InternalInfoMessage_hxx
 
 #include "resiprocate/dum/InternalDumAsyncMessageBase.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/InviteSession.hxx"
 
 namespace resip
 {
-   class WarningCategory;
-   class DUM_API InternalRejectMessage : public InternalDumAsyncMessageBase
+
+   class DUM_API InternalInfoMessage : public InternalDumAsyncMessageBase
    {
    public:
-      RESIP_HeapCount(InternalRejectIncomingMessage);
-      InternalRejectMessage(InviteSessionHandle& h, int statusCode, WarningCategory* warning = 0);
+      RESIP_HeapCount(InternalInfoMessage);
+      InternalInfoMessage(InviteSessionHandle& h, std::auto_ptr<Contents> contents) : mInviteSession(h), mContents(contents) {/*Empty*/}
 
-      virtual Message* clone() const { assert(false); return NULL; }
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
-      virtual void execute();
+      virtual Message* clone() const {assert(false); return NULL;}
+      virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm); }
+      virtual std::ostream& encodeBrief(std::ostream& strm) const { return strm << "InternalInfoMessage"; }
 
-      InviteSessionHandle            mSession;   // should be connected.
-      int                            mStatusCode;
-      std::auto_ptr<WarningCategory> mWarning;
+      virtual void execute()
+      {
+         if (mInviteSession.isValid() && mContents.get())
+         {
+            mInviteSession->info(*mContents);
+         }
+      }
+
+      InviteSessionHandle     mInviteSession;   // valid (don't care if connected or not).
+      std::auto_ptr<Contents> mContents;
    };
+
 }
 
-#endif // RESIP_InternalRejectMessage_hxx
+#endif // RESIP_InternalEndInviteSessionMessage_hxx
 
 /* ====================================================================
 * The Vovida Software License, Version 1.0 
@@ -84,3 +88,4 @@ namespace resip
 * <http://www.vovida.org/>.
 *
 */
+

@@ -1,39 +1,31 @@
 // ==========================================================================================================
-// InternalRejectMessage.hxx                                                             2006 @ TelTel
+// InternalDumAsyncMessageBase.hxx                                                       2006 @ TelTel
 // ==========================================================================================================
-// Rejects active invite session asynchronizely for thread synchronization (onTerminated() does not get called
-// in same call stack).
-// NOTE: rejects reINVITE/UPDATE at usual cases.
+// Base class for DUM asynchronized internal messages.
 // ==========================================================================================================
-#ifndef RESIP_InternalRejectMessage_hxx
-#define RESIP_InternalRejectMessage_hxx
+#ifndef RESIP_InternalDumAsyncMessageBase_hxx
+#define RESIP_InternalDumAsyncMessageBase_hxx
 
-#include <memory>
+#include <cassert>
+#include <iosfwd>
 
-#include "resiprocate/dum/InternalDumAsyncMessageBase.hxx"
-#include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/Message.hxx"
+#include "resiprocate/dum/Win32ExportDum.hxx"
 
 namespace resip
 {
-   class WarningCategory;
-   class DUM_API InternalRejectMessage : public InternalDumAsyncMessageBase
+
+   class DUM_API InternalDumAsyncMessageBase : public Message
    {
    public:
-      RESIP_HeapCount(InternalRejectIncomingMessage);
-      InternalRejectMessage(InviteSessionHandle& h, int statusCode, WarningCategory* warning = 0);
+      InternalDumAsyncMessageBase() {/*Empty*/}
 
-      virtual Message* clone() const { assert(false); return NULL; }
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
-      virtual void execute();
-
-      InviteSessionHandle            mSession;   // should be connected.
-      int                            mStatusCode;
-      std::auto_ptr<WarningCategory> mWarning;
+      virtual void execute() = 0;
    };
+
 }
 
-#endif // RESIP_InternalRejectMessage_hxx
+#endif // RESIP_InternalDumAsyncMessageBase_hxx
 
 /* ====================================================================
 * The Vovida Software License, Version 1.0 
@@ -84,3 +76,4 @@ namespace resip
 * <http://www.vovida.org/>.
 *
 */
+

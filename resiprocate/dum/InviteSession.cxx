@@ -14,6 +14,7 @@
 #include "resiprocate/dum/UsageUseException.hxx"
 #include "resiprocate/dum/InternalEndInviteSessionMessage.hxx"
 #include "resiprocate/dum/InternalRejectMessage.hxx"
+#include "resiprocate/dum/InternalInfoMessage.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Timer.hxx"
@@ -483,7 +484,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
 }
 
 void
-InviteSession::info(const Contents& contents)
+InviteSession::info(const Contents& contents)   // Sync.
 {
    if (mNitState == NitComplete)
    {
@@ -508,6 +509,12 @@ InviteSession::info(const Contents& contents)
       throw UsageUseException("Cannot start a non-invite transaction until the previous one has completed",
                               __FILE__, __LINE__);
    }
+}
+
+void
+InviteSession::infoAsync(std::auto_ptr<Contents> contents)  // !polo! Async.
+{
+   mDum.post(new InternalInfoMessage(getSessionHandle(), contents));
 }
 
 void

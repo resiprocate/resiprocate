@@ -33,7 +33,10 @@ class DUM_API ClientPagerMessage : public NonDialogUsage
 
       virtual void page(std::auto_ptr<Contents> contents, 
          std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders = std::auto_ptr< std::map<resip::Data, resip::Data> >());
+      virtual void pageAsync(std::auto_ptr<Contents> contents, 
+         std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders = std::auto_ptr< std::map<resip::Data, resip::Data> >());
       virtual void end();
+      virtual void endAsync();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 

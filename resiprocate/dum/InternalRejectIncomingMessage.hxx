@@ -7,18 +7,15 @@
 #ifndef RESIP_InternalRejectIncomingMessage_hxx
 #define RESIP_InternalRejectIncomingMessage_hxx
 
-#include <iosfwd>
 #include <memory>
-#include <cassert>
 
-#include "resiprocate/Message.hxx"
-#include "resiprocate/dum/Win32ExportDum.hxx"
+#include "resiprocate/dum/InternalDumAsyncMessageBase.hxx"
 #include "resiprocate/dum/Handles.hxx"
 
 namespace resip
 {
    class WarningCategory;
-   class DUM_API InternalRejectIncomingMessage : public Message
+   class DUM_API InternalRejectIncomingMessage : public InternalDumAsyncMessageBase
    {
    public:
       RESIP_HeapCount(InternalRejectIncomingMessage);
@@ -27,6 +24,8 @@ namespace resip
       virtual Message* clone() const { assert(false); return NULL; }
       virtual std::ostream& encode(std::ostream& strm) const;
       virtual std::ostream& encodeBrief(std::ostream& strm) const;
+
+      virtual void execute();
 
       ServerInviteSessionHandle      mIncomingSession;   // valid (don't care if connected or not).
       int                            mStatusCode;
