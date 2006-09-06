@@ -18,10 +18,12 @@ class DUM_API ClientPublication : public NonDialogUsage
 
       //0 means the last value of Expires will be used.
       void refresh(unsigned int expiration=0);
-      void update(const Contents* body);
+      void update(const Contents* body);        // Sync.
+      void updateAsync(const Contents* body);   // !polo! async.
       const Contents* getContents() const { return mDocument; }
 
-      virtual void end();
+      virtual void end();        // Sync.
+      virtual void endAsync();   // !polo! async.
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 

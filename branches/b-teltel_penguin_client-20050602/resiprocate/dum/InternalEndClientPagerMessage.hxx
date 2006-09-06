@@ -1,39 +1,42 @@
 // ==========================================================================================================
-// InternalRejectMessage.hxx                                                             2006 @ TelTel
+// InternalEndClientPagerMessage.hxx                                                     2006 @ TelTel
 // ==========================================================================================================
-// Rejects active invite session asynchronizely for thread synchronization (onTerminated() does not get called
-// in same call stack).
-// NOTE: rejects reINVITE/UPDATE at usual cases.
+// Post to asynchronisely ends ClientPagerMessage (i.e. delete object).
 // ==========================================================================================================
-#ifndef RESIP_InternalRejectMessage_hxx
-#define RESIP_InternalRejectMessage_hxx
-
-#include <memory>
+#ifndef RESIP_InternalEndClientPagerMessage_hxx
+#define RESIP_InternalEndClientPagerMessage_hxx
 
 #include "resiprocate/dum/InternalDumAsyncMessageBase.hxx"
 #include "resiprocate/dum/Handles.hxx"
+#include "resiprocate/dum/ClientPagerMessage.hxx"
 
 namespace resip
 {
-   class WarningCategory;
-   class DUM_API InternalRejectMessage : public InternalDumAsyncMessageBase
+
+   class DUM_API InternalEndClientPagerMessage : public InternalDumAsyncMessageBase
    {
    public:
-      RESIP_HeapCount(InternalRejectIncomingMessage);
-      InternalRejectMessage(InviteSessionHandle& h, int statusCode, WarningCategory* warning = 0);
+      RESIP_HeapCount(InternalEndClientPagerMessage);
+      InternalEndClientPagerMessage(ClientPagerMessageHandle& h) : mClientPager(h) {/*Empty*/}
 
-      virtual Message* clone() const { assert(false); return NULL; }
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
-      virtual void execute();
+      virtual Message* clone() const {assert(false); return NULL;}
+      virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm); }
+      virtual std::ostream& encodeBrief(std::ostream& strm) const { return strm << "InternalEndClientPagerMessage"; }
 
-      InviteSessionHandle            mSession;   // should be connected.
-      int                            mStatusCode;
-      std::auto_ptr<WarningCategory> mWarning;
+      virtual void execute()
+      {
+         if(mClientPager.isValid())
+         {
+            delete this;
+         }
+      }
+
+      ClientPagerMessageHandle  mClientPager;   // valid (don't care if connected or not).
    };
+
 }
 
-#endif // RESIP_InternalRejectMessage_hxx
+#endif // RESIP_InternalEndClientPagerMessage_hxx
 
 /* ====================================================================
 * The Vovida Software License, Version 1.0 
@@ -84,3 +87,4 @@ namespace resip
 * <http://www.vovida.org/>.
 *
 */
+

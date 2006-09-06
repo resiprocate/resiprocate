@@ -8,6 +8,7 @@
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/dum/InternalEndSubscriptionMessage.hxx"
 
 #include "resiprocate/dum/AppDialogSet.hxx"
 
@@ -358,7 +359,7 @@ ClientSubscription::requestRefresh(int expires)
 void
 ClientSubscription::end()
 {
-   InfoLog (<< "End subscription: " << mLastRequest.header(h_RequestLine).uri());
+   InfoLog (<< "End subscription Sync: " << mLastRequest.header(h_RequestLine).uri());
 
    if (!mEnded)
    {
@@ -366,6 +367,16 @@ ClientSubscription::end()
       mLastRequest.header(h_Expires).value() = 0;
       mEnded = true;
       send(mLastRequest);
+   }
+}
+
+void
+ClientSubscription::endAsync() // !polo! async.
+{
+   InfoLog (<< "End subscription Async: " << mLastRequest.header(h_RequestLine).uri());
+   if (!mEnded)
+   {
+      mDum.post(new InternalEndSubscriptionMessage(getHandle()));
    }
 }
 

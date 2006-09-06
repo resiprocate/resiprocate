@@ -7,18 +7,14 @@
 #ifndef RESIP_InternalEndInviteSessionMessage_hxx
 #define RESIP_InternalEndInviteSessionMessage_hxx
 
-#include <cassert>
-#include <iosfwd>
-
-#include "resiprocate/Message.hxx"
-#include "resiprocate/dum/Win32ExportDum.hxx"
+#include "resiprocate/dum/InternalDumAsyncMessageBase.hxx"
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/InviteSession.hxx"
 
 namespace resip
 {
 
-   class DUM_API InternalEndInviteSessionMessage : public Message
+   class DUM_API InternalEndInviteSessionMessage : public InternalDumAsyncMessageBase
    {
    public:
       RESIP_HeapCount(InternalEndInviteSessionMessage);
@@ -27,6 +23,14 @@ namespace resip
       virtual Message* clone() const {assert(false); return NULL;}
       virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm); }
       virtual std::ostream& encodeBrief(std::ostream& strm) const { return strm << "InternalEndInviteSessionMessage"; }
+
+      virtual void execute()
+      {
+         if (mInviteSession.isValid())
+         {
+            mInviteSession->end();
+         }
+      }
 
       InviteSessionHandle  mInviteSession;   // valid (don't care if connected or not).
    };

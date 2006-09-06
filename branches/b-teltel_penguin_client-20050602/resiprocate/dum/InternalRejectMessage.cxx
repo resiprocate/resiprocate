@@ -23,14 +23,25 @@ InternalRejectMessage::InternalRejectMessage(InviteSessionHandle& h,
    }
 }
 
-std::ostream& InternalRejectMessage::encode(std::ostream& strm) const
+std::ostream&
+InternalRejectMessage::encode(std::ostream& strm) const
 {
    return encodeBrief(strm);
 }
 
-std::ostream& InternalRejectMessage::encodeBrief(std::ostream& strm) const
+std::ostream&
+InternalRejectMessage::encodeBrief(std::ostream& strm) const
 {
    return strm << "InternalRejectMessage";
+}
+
+void
+InternalRejectMessage::execute()
+{
+   if (mSession.isValid() && mSession->isConnected())
+   {
+      mSession->reject(mStatusCode, mWarning.get());
+   }
 }
 
 /* ====================================================================
