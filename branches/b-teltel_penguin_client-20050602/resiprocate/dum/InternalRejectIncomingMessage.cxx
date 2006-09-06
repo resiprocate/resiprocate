@@ -22,14 +22,25 @@ InternalRejectIncomingMessage::InternalRejectIncomingMessage(ServerInviteSession
    }
 }
 
-std::ostream& InternalRejectIncomingMessage::encode(std::ostream& strm) const
+std::ostream&
+InternalRejectIncomingMessage::encode(std::ostream& strm) const
 {
    return encodeBrief(strm);
 }
 
-std::ostream& InternalRejectIncomingMessage::encodeBrief(std::ostream& strm) const
+std::ostream&
+InternalRejectIncomingMessage::encodeBrief(std::ostream& strm) const
 {
    return strm << "InternalRejectIncomingMessage";
+}
+
+void
+InternalRejectIncomingMessage::execute()
+{
+   if (mIncomingSession.isValid())
+   {
+      mIncomingSession->reject(mStatusCode, mWarning.get());
+   }
 }
 
 /* ====================================================================

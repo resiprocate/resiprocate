@@ -40,13 +40,12 @@
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UserAuthInfo.hxx"
-#include "resiprocate/dum/InternalRejectIncomingMessage.hxx"
-#include "resiprocate/dum/InternalEndInviteSessionMessage.hxx"
-#include "resiprocate/dum/InternalRejectMessage.hxx"
+#include "resiprocate/dum/InternalDumAsyncMessageBase.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
+#include "resiprocate/os/RWMutex.hxx"
 #include "resiprocate/external/HttpProvider.hxx"
 #include "resiprocate/external/HttpGetMessage.hxx"
 
@@ -957,36 +956,13 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
             mKeepAliveManager->process(*keepAliveMsg);
          }
       }
-      // ----------------------------------------------------
+
       // !polo! internal messages for thread synchronization.
-      InternalRejectIncomingMessage* rejectIncomingMsg = dynamic_cast<InternalRejectIncomingMessage*>(msg.get());
-      if (rejectIncomingMsg)  // Posted in ServerInviteSession::reject().
+      InternalDumAsyncMessageBase* asyncMsgBase = dynamic_cast<InternalDumAsyncMessageBase*>(msg.get());
+      if (asyncMsgBase)
       {
-         InfoLog(<< "Reject Incoming Internal Message");
-         if (rejectIncomingMsg->mIncomingSession.isValid())
-         {
-            rejectIncomingMsg->mIncomingSession->reject(rejectIncomingMsg->mStatusCode, rejectIncomingMsg->mWarning.get());
-         }
+         asyncMsgBase->execute();
       }
-      InternalRejectMessage *rejectMsg = dynamic_cast<InternalRejectMessage*>(msg.get());
-      if (rejectMsg)  // Posted in ServerInviteSession::reject().
-      {
-         InfoLog(<< "Reject reINVITE/UPDATE Internal Message");
-         if (rejectMsg->mSession.isValid() && rejectMsg->mSession->isConnected())
-         {
-            rejectMsg->mSession->reject(rejectMsg->mStatusCode, rejectMsg->mWarning.get());
-         }
-      }
-      InternalEndInviteSessionMessage* endSessionMsg = dynamic_cast<InternalEndInviteSessionMessage*>(msg.get());
-      if (endSessionMsg)   // Posted in InviteSession::end().
-      {
-         InfoLog(<< "End invite session Internal Message");
-         if (endSessionMsg->mInviteSession.isValid())
-         {
-            endSessionMsg->mInviteSession->end();
-         }
-      }
-      // ----------------------------------------------------
    }
    catch(BaseException& e)
    {
@@ -1065,7 +1041,7 @@ DialogUsageManager::hasEvents() const
 
 // return false if there is nothing to do at the moment
 bool 
-DialogUsageManager::process(bool block)   // !polo! blocking process() so dum can be put to thread.
+DialogUsageManager::process(bool block, resip::RWMutex* mutex)   // !polo! blocking process() so dum can be put to thread.
 {
    bool hasNext = false;
    std::auto_ptr<Message> msg;
@@ -1080,7 +1056,15 @@ DialogUsageManager::process(bool block)   // !polo! blocking process() so dum ca
    }
    if (msg.get())
    {
-      internalProcess(msg);
+      if (mutex)
+      {
+         resip::Lock lock(*mutex); (void)lock;
+         internalProcess(msg);
+      }
+      else
+      {
+         internalProcess(msg);
+      }
    }
    return hasNext;
 }

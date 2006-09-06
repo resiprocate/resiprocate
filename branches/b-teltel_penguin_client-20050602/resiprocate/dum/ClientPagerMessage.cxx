@@ -6,6 +6,8 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/dum/InternalSendPagerMessage.hxx"
+#include "resiprocate/dum/InternalEndClientPagerMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/ExtensionHeader.hxx"
@@ -104,7 +106,7 @@ ClientPagerMessage::getMessageRequest()
 
 void
 ClientPagerMessage::page(std::auto_ptr<Contents> contents,
-                         std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders)
+                         std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders)   // syunc.
 {
    assert(contents.get() != 0);
 
@@ -114,6 +116,14 @@ ClientPagerMessage::page(std::auto_ptr<Contents> contents,
    {
       this->pageFirstMsgQueued();
    }
+}
+
+void
+ClientPagerMessage::pageAsync(std::auto_ptr<Contents> contents, 
+                              std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders) // !polo! async.
+{
+   InfoLog(<< "Send pager message (async)");
+   mDum.post(new InternalSendPagerMessage(getHandle(), contents, extraHeaders));
 }
 
 void
@@ -177,9 +187,16 @@ ClientPagerMessage::dispatch(const DumTimeout& timer)
 }
 
 void
-ClientPagerMessage::end()
+ClientPagerMessage::end()  // sync.
 {
    delete this;
+}
+
+void
+ClientPagerMessage::endAsync() // !polo! async.
+{
+   InfoLog(<< "End client pager (async)");
+   mDum.post(new InternalEndClientPagerMessage(getHandle()));
 }
 
 size_t

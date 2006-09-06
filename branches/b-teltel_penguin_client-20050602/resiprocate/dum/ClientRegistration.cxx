@@ -8,6 +8,7 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/dum/InternalRemoveRegistrationBindingsMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
 
@@ -155,7 +156,7 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 void
 ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 {
-   InfoLog (<< "Removing binding");
+   InfoLog (<< "Removing binding (sync)");
 
    if (mState == Removing)
    {
@@ -180,6 +181,12 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    {
       mDum.send(next);
    }
+}
+
+void ClientRegistration::removeMyBindingsAsync(bool stopRegisteringWhenDone)  // !polo! async.
+{
+   InfoLog (<< "Removing binding (async)");
+   mDum.post(new InternalRemoveRegistrationBindingsMessage(getHandle(), stopRegisteringWhenDone));
 }
 
 void ClientRegistration::stopRegistering()
