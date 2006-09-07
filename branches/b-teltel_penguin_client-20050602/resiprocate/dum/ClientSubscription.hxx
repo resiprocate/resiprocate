@@ -13,21 +13,34 @@ class DialogUsageManager;
 
 class DUM_API ClientSubscription: public BaseSubscription
 {
-   public:      
+   public:
+      friend class InternalClientSubscriptionMessage_AcceptUpdate;
+      friend class InternalClientSubscriptionMessage_RejectUpdate;
+      friend class InternalClientSubscriptionMessage_Refresh;
+      friend class InternalClientSubscriptionMessage_End;
+
       ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
 
       typedef Handle<ClientSubscription> ClientSubscriptionHandle;
       ClientSubscriptionHandle getHandle();
       
       //.dcm. no adornment for ease of use, can add if there is a use case
+
+   public:  // Aysnc.
+      void acceptUpdateAsync(int statusCode = 200);
+      void rejectUpdateAsync(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       
+      void requestRefreshAsync(int expires = -1);  // default to using original expires value (0 is not allowed - call end() instead)
+      virtual void endAsync();
+
+      virtual std::ostream& dump(std::ostream& strm) const;
+   
+   protected: // Sync.
       void acceptUpdate(int statusCode = 200);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       
       void requestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call end() instead)
-      virtual void end();        // Sync.
-      virtual void endAsync();   // !polo! async.
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual void end();
 
    protected:
       virtual ~ClientSubscription();

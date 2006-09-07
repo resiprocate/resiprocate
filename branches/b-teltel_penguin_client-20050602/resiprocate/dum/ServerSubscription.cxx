@@ -3,6 +3,7 @@
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/dum/InternalServerSubscriptionMessage.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Logger.hxx"
 
@@ -49,6 +50,55 @@ ServerSubscription::~ServerSubscription()
    
    mDum.mServerSubscriptions.erase(key);
    mDialog.mServerSubscriptions.remove(this);
+}
+
+void 
+ServerSubscription::endAsync()
+{
+   InfoLog(<< "End server subscription Async");
+   mDum.post(new InternalServerSubscriptionMessage_End(getHandle()));
+}
+
+void 
+ServerSubscription::sendAsync(const SipMessage& msg)
+{
+   InfoLog(<< "Send server subscription msg Async");
+   mDum.post(new InternalServerSubscriptionMessage_Send(getHandle(), msg));
+}
+
+void 
+ServerSubscription::sendAsync(bool accept, int statusCode)
+{
+   InfoLog(<< "Send server subscription msg Async " << statusCode);
+   mDum.post(new InternalServerSubscriptionMessage_Send(getHandle(), accept, statusCode));
+}
+
+void 
+ServerSubscription::sendAsync(std::auto_ptr<Contents> updateContents)
+{
+   InfoLog(<< "Send update content server subscription msg Async");
+   mDum.post(new InternalServerSubscriptionMessage_Send(getHandle(), updateContents));
+}
+
+void 
+ServerSubscription::dispatchAsync(const SipMessage& msg)
+{
+   InfoLog(<< "Dispatch server subscription msg Async");
+   mDum.post(new InternalServerSubscriptionMessage_DispatchSipMsg(getHandle(), msg));
+}
+
+void 
+ServerSubscription::dispatchAsync(const DumTimeout& timer)
+{
+   InfoLog(<< "Dispatch server subscription msg timer Async: " << timer);
+   mDum.post(new InternalServerSubscriptionMessage_DispatchTimeoutMsg(getHandle(), timer));
+}
+
+void 
+ServerSubscription::endAsync(TerminateReason reason, std::auto_ptr<Contents> document)
+{
+   InfoLog(<< "End server subscription Async: " << reason);
+   mDum.post(new InternalServerSubscriptionMessage_EndReason(getHandle(), reason, document));
 }
 
 int

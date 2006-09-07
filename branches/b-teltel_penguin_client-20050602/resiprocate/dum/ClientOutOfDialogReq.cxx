@@ -4,6 +4,7 @@
 #include "resiprocate/dum/OutOfDialogHandler.hxx"
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
+#include "resiprocate/dum/InternalClientOutOfDialogReqMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
@@ -24,9 +25,27 @@ ClientOutOfDialogReq::ClientOutOfDialogReq(DialogUsageManager& dum,
 {
 }
 
+void
+ClientOutOfDialogReq::endAsync()
+{
+   mDum.post(new InternalClientOutOfDialogReqMessage_End(getHandle()));
+}
+
 ClientOutOfDialogReq::~ClientOutOfDialogReq()
 {
    mDialogSet.mClientOutOfDialogRequests.remove(this);
+}
+
+void
+ClientOutOfDialogReq::dispatchAsync(const SipMessage& msg)
+{
+   mDum.post(new InternalClientOutOfDialogReqMessage_SipMsg(getHandle(), msg));
+}
+
+void
+ClientOutOfDialogReq::dispatchAsync(const DumTimeout& timer)
+{
+   mDum.post(new InternalClientOutOfDialogReqMessage_TimeoutMsg(getHandle(), timer));
 }
 
 void

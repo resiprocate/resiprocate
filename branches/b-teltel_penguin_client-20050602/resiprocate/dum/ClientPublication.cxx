@@ -8,8 +8,7 @@
 #include "resiprocate/dum/DumTimeout.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/dum/PublicationHandler.hxx"
-#include "resiprocate/dum/InternalEndPublicationMessage.hxx"
-#include "resiprocate/dum/InternalUpatePublishMessage.hxx"
+#include "resiprocate/dum/InternalClientPublicationMessage.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -43,19 +42,46 @@ ClientPublication::~ClientPublication()
 }
 
 void
+ClientPublication::refreshAsync(unsigned int expiration)
+{
+   mDum.post(new InternalClientPublicationMessage_Refresh(getHandle(), expiration));
+}
+
+void
+ClientPublication::updateAsync(std::auto_ptr<Contents> body)
+{
+   InfoLog (<< "Updating presence document (Async): " << mPublish.header(h_To).uri());
+   mDum.post(new InternalClientPublicationMessage_Update(getHandle(), body));
+}
+
+void
+ClientPublication::endAsync()
+{
+   InfoLog (<< "End client publication (Async) to " << mPublish.header(h_RequestLine).uri());
+   mDum.post(new InternalClientPublicationMessage_End(getHandle()));
+}
+
+void
+ClientPublication::dispatchAsync(const SipMessage& msg)
+{
+   InfoLog (<< "Dispatch client publication msg (async)");
+   mDum.post(new InternalClientPublicationMessage_SipMsg(getHandle(), msg));
+}
+
+void
+ClientPublication::dispatchAsync(const DumTimeout& timer)
+{
+   InfoLog (<< "Dispatch client publication timeout msg (async)");
+   mDum.post(new InternalClientPublicationMessage_TimeoutMsg(getHandle(), timer));
+}
+
+void
 ClientPublication::end()
 {
    InfoLog (<< "End client publication (Sync) to " << mPublish.header(h_RequestLine).uri());
    mPublish.header(h_CSeq).sequence()++;
    mPublish.header(h_Expires).value() = 0;
    send(mPublish);
-}
-
-void
-ClientPublication::endAsync()  // !polo! async.
-{
-   InfoLog (<< "End client publication (Async) to " << mPublish.header(h_RequestLine).uri());
-   mDum.post(new InternalEndPublicationMessage(getHandle()));
 }
 
 void 
@@ -246,13 +272,6 @@ ClientPublication::update(const Contents* body) // Sync.
    mPublish.header(h_CSeq).sequence()++;
    mPublish.setContents(mDocument);
    send(mPublish);
-}
-
-void
-ClientPublication::updateAsync(const Contents* body)  // !polo! async.
-{
-   InfoLog (<< "Updating presence document (Async): " << mPublish.header(h_To).uri());
-   mDum.post(new InternalUpatePublishMessage(getHandle(), body));
 }
 
 void 

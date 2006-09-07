@@ -8,7 +8,7 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/dum/InternalRemoveRegistrationBindingsMessage.hxx"
+#include "resiprocate/dum/InternalClientRegistrationMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Inserter.hxx"
 
@@ -45,6 +45,76 @@ ClientRegistration::~ClientRegistration()
 {
    DebugLog ( << "ClientRegistration::~ClientRegistration" );
    mDialogSet.mClientRegistration = 0;
+}
+
+void
+ClientRegistration::addBindingAsync(const NameAddr& contact)
+{
+   InfoLog (<< "Add registration binding (async): " << contact);
+   mDum.post(new InternalClientRegistrationMessage_AddBinding(getHandle(), contact));
+}
+
+void
+ClientRegistration::addBindingAsync(const NameAddr& contact, int registrationTime)
+{
+   InfoLog (<< "Add registration binding (async): " << contact << ": " << registrationTime);
+   mDum.post(new InternalClientRegistrationMessage_AddBindingWithExpire(getHandle(), contact, registrationTime));
+}
+
+void
+ClientRegistration::removeBindingAsync(const NameAddr& contact)
+{
+   InfoLog (<< "Removing registration binding (async): " << contact);
+   mDum.post(new InternalClientRegistrationMessage_RemoveBinding(getHandle(), contact));
+}
+
+void
+ClientRegistration::removeAllAsync(bool stopRegisteringWhenDone)
+{
+   InfoLog (<< "Removing all bindings (async)");
+   mDum.post(new InternalClientRegistrationMessage_RemoveAll(getHandle(), stopRegisteringWhenDone));
+}
+
+void
+ClientRegistration::removeMyBindingsAsync(bool stopRegisteringWhenDone)
+{
+   InfoLog (<< "Removing binding (async)");
+   mDum.post(new InternalClientRegistrationMessage_RemoveMyBindings(getHandle(), stopRegisteringWhenDone));
+}
+
+void
+ClientRegistration::requestRefreshAsync(int expires)
+{
+   InfoLog (<< "Request refresh (async): " << expires);
+   mDum.post(new InternalClientRegistrationMessage_Refresh(getHandle(), expires));
+}
+
+void
+ClientRegistration::stopRegisteringAsync() 
+{
+   InfoLog (<< "Stop registering (async)");
+   mDum.post(new InternalClientRegistrationMessage_StopRegistering(getHandle()));
+}
+
+void
+ClientRegistration::endAsync()
+{
+   InfoLog (<< "End registration (async)");
+   mDum.post(new InternalClientRegistrationMessage_End(getHandle()));
+}
+
+void
+ClientRegistration::dispatchAsync(const SipMessage& msg)
+{
+   InfoLog (<< "Dispatch registration msg (async)");
+   mDum.post(new InternalClientRegistrationMessage_DispatchSipMsg(getHandle(), msg));
+}
+
+void
+ClientRegistration::dispatchAsync(const DumTimeout& timer)
+{
+   InfoLog (<< "Dispatch registration timer msg (async)");
+   mDum.post(new InternalClientRegistrationMessage_DispatchTimeoutMsg(getHandle(), timer));
 }
 
 void
@@ -183,12 +253,6 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    }
 }
 
-void ClientRegistration::removeMyBindingsAsync(bool stopRegisteringWhenDone)  // !polo! async.
-{
-   InfoLog (<< "Removing binding (async)");
-   mDum.post(new InternalRemoveRegistrationBindingsMessage(getHandle(), stopRegisteringWhenDone));
-}
-
 void ClientRegistration::stopRegistering()
 {
    //timers aren't a concern, as DUM checks for Handle validity before firing.
@@ -211,13 +275,13 @@ ClientRegistration::requestRefresh(int expires)
 }
 
 const NameAddrs&
-ClientRegistration::myContacts()
+ClientRegistration::myContacts() const
 {
    return mMyContacts;
 }
 
 const NameAddrs&
-ClientRegistration::allContacts()
+ClientRegistration::allContacts() const
 {
    return mAllContacts;
 }

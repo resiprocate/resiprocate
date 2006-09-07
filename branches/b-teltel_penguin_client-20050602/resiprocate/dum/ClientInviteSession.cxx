@@ -8,6 +8,7 @@
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
+#include "resiprocate/dum/InternalClientInviteSessionMessage.hxx"
 #include "resiprocate/SipFrag.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/compat.hxx"
@@ -41,8 +42,32 @@ ClientInviteSession::getHandle()
    return ClientInviteSessionHandle(mDum, getBaseHandle().getId());
 }
 
+void
+ClientInviteSession::provideOfferAsync(std::auto_ptr<SdpContents> offer)
+{
+   mDum.post(new InternalClientInviteSessionMessage_ProvideOffer(getHandle(), offer));
+}
+
+void
+ClientInviteSession::provideAnswerAsync(std::auto_ptr<SdpContents> answer)
+{
+   mDum.post(new InternalClientInviteSessionMessage_ProvideAnswer(getHandle(), answer));
+}
+
+void
+ClientInviteSession::endAsync()
+{
+   mDum.post(new InternalClientInviteSessionMessage_End(getHandle()));
+}
+
+void
+ClientInviteSession::rejectAsync(int statusCode, WarningCategory *warning)
+{
+   mDum.post(new InternalClientInviteSessionMessage_Reject(getHandle(), statusCode, warning));
+}
+
 const SdpContents&
-ClientInviteSession::getEarlyMedia() const
+ClientInviteSession::getEarlyMedia () const
 {
    return *mEarlyMedia;
 }
@@ -297,15 +322,15 @@ ClientInviteSession::sendSipFrag(const SipMessage& msg)
          int code = msg.header(h_StatusLine).statusCode();
          if (code > 100)
          {
-            SipFrag contents;
+            SipFrag* contents = new SipFrag;
             if (code < 200)
             {
-               mServerSub->send(mServerSub->update(&contents));
+               mServerSub->sendAsync(std::auto_ptr<Contents>(contents));
             }
             else
             {
-               contents.message().header(h_StatusLine) = msg.header(h_StatusLine);
-               mServerSub->end(NoResource, &contents);
+               contents->message().header(h_StatusLine) = msg.header(h_StatusLine);
+               mServerSub->endAsync(NoResource, std::auto_ptr<Contents>(contents));
             }
          }
       }

@@ -3,8 +3,12 @@
 #include "resiprocate/dum/PublicationHandler.hxx"
 #include "resiprocate/dum/ServerSubscription.hxx"
 #include "resiprocate/dum/SubscriptionHandler.hxx"
+#include "resiprocate/dum/InternalServerPublicationMessage.hxx"
+#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/SecurityAttributes.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
 
@@ -45,6 +49,42 @@ const Data&
 ServerPublication::getPublisher() const
 {
    return mLastRequest.header(h_From).uri().getAor();
+}
+
+// Async
+void
+ServerPublication::endAsync()
+{
+   InfoLog(<< "End server publication Sync");
+   mDum.post(new InternalServerPublicationMessage_End(getHandle()));
+}
+
+void
+ServerPublication::dispatchAsync(const SipMessage& msg)
+{
+   InfoLog(<< "Dispatch server publication message Sync");
+   mDum.post(new InternalServerPublicationMessage_DispatchSipMsg(getHandle(), msg));
+}
+
+void
+ServerPublication::dispatchAsync(const DumTimeout& timer)
+{
+   InfoLog(<< "Dispatch server publication message timer Sync: " << timer);
+   mDum.post(new InternalServerPublicationMessage_DispatchTimeoutMsg(getHandle(), timer));
+}
+
+void
+ServerPublication::sendAsync(const SipMessage& response)
+{
+   InfoLog(<< "Send server publication message Sync");
+   mDum.post(new InternalServerPublicationMessage_Send(getHandle(), response));
+}
+
+void
+ServerPublication::sendAsync(bool accept, int statusCode)
+{
+   InfoLog(<< "Send server publication message Sync(2)");
+   mDum.post(new InternalServerPublicationMessage_Send(getHandle(), accept, statusCode));
 }
 
 void

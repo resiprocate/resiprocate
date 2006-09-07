@@ -5,6 +5,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
+#include "resiprocate/dum/InternalServerOutOfDialogReqMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
@@ -29,6 +30,30 @@ ServerOutOfDialogReq::ServerOutOfDialogReq(DialogUsageManager& dum,
 ServerOutOfDialogReq::~ServerOutOfDialogReq()
 {
    mDialogSet.mServerOutOfDialogRequest = 0;
+}
+
+void
+ServerOutOfDialogReq::endAsync()
+{
+   mDum.post(new InternalServerOutOfDialogReqMessage_End(getHandle()));
+}
+
+void
+ServerOutOfDialogReq::dispatchAsync(const SipMessage& msg)
+{
+   mDum.post(new InternalServerOutOfDialogReqMessage_SipMsg(getHandle(), msg));
+}
+
+void
+ServerOutOfDialogReq::dispatchAsync(const DumTimeout& timer)
+{
+   mDum.post(new InternalServerOutOfDialogReqMessage_TimeoutMsg(getHandle(), timer));
+}
+
+void
+ServerOutOfDialogReq::sendAsync(const SipMessage& msg)
+{
+   mDum.post(new InternalServerOutOfDialogReqMessage_Send(getHandle(), msg));
 }
 
 void
