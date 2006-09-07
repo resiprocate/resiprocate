@@ -8,7 +8,7 @@
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/SubscriptionCreator.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/dum/InternalEndSubscriptionMessage.hxx"
+#include "resiprocate/dum/InternalClientSubscriptionMessage.hxx"
 
 #include "resiprocate/dum/AppDialogSet.hxx"
 
@@ -35,6 +35,34 @@ ClientSubscriptionHandle
 ClientSubscription::getHandle()
 {
    return ClientSubscriptionHandle(mDum, getBaseHandle().getId());
+}
+
+void
+ClientSubscription::acceptUpdateAsync(int statusCode)
+{
+   InfoLog (<< "Accept subscription update Async: " << "(" << statusCode << ")");
+   mDum.post(new InternalClientSubscriptionMessage_AcceptUpdate(getHandle(), statusCode));
+}
+
+void
+ClientSubscription::rejectUpdateAsync(int statusCode, const Data& reasonPhrase)
+{
+   InfoLog (<< "Reject subscription update Async: " << reasonPhrase << "(" << statusCode << ")");
+   mDum.post(new InternalClientSubscriptionMessage_RejectUpdate(getHandle(), statusCode, reasonPhrase));
+}
+
+void
+ClientSubscription::requestRefreshAsync(int expires)
+{
+   InfoLog (<< "Request to refresh subscription Async: " << mLastRequest.header(h_RequestLine).uri() << "(" << expires << ")");
+   mDum.post(new InternalClientSubscriptionMessage_Refresh(getHandle(), expires));
+}
+
+void
+ClientSubscription::endAsync()
+{
+   InfoLog (<< "End subscription Async: " << mLastRequest.header(h_RequestLine).uri());
+   mDum.post(new InternalClientSubscriptionMessage_End(getHandle()));
 }
 
 void
@@ -367,16 +395,6 @@ ClientSubscription::end()
       mLastRequest.header(h_Expires).value() = 0;
       mEnded = true;
       send(mLastRequest);
-   }
-}
-
-void
-ClientSubscription::endAsync() // !polo! async.
-{
-   InfoLog (<< "End subscription Async: " << mLastRequest.header(h_RequestLine).uri());
-   if (!mEnded)
-   {
-      mDum.post(new InternalEndSubscriptionMessage(getHandle()));
    }
 }
 

@@ -10,24 +10,37 @@ namespace resip
 class DUM_API ClientPublication : public NonDialogUsage
 {
    public:
+      friend class InternalClientPublicationMessage_Refresh;
+      friend class InternalClientPublicationMessage_Update;
+      friend class InternalClientPublicationMessage_End;
+      friend class InternalClientPublicationMessage_SipMsg;
+      friend class InternalClientPublicationMessage_TimeoutMsg;
+
       ClientPublication(DialogUsageManager& dum, DialogSet& dialogSet, SipMessage& pub);
 
       typedef Handle<ClientPublication> ClientPublicationHandle;
       ClientPublicationHandle getHandle();
       const Data& getEventType() { return mEventType; }
 
+      // !polo! aysnc.
+      void refreshAsync(unsigned int expiration=0);
+      void updateAsync(std::auto_ptr<Contents> body);
+      virtual void endAsync();
+      virtual void dispatchAsync(const SipMessage& msg);
+      virtual void dispatchAsync(const DumTimeout& timer);
+      // --------
+
+      const Contents* getContents() const { return mDocument; }      
+      virtual std::ostream& dump(std::ostream& strm) const;
+
+   protected:
       //0 means the last value of Expires will be used.
       void refresh(unsigned int expiration=0);
-      void update(const Contents* body);        // Sync.
-      void updateAsync(const Contents* body);   // !polo! async.
-      const Contents* getContents() const { return mDocument; }
+      void update(const Contents* body);
 
-      virtual void end();        // Sync.
-      virtual void endAsync();   // !polo! async.
+      virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-
-      virtual std::ostream& dump(std::ostream& strm) const;
 
    protected:
       virtual ~ClientPublication();

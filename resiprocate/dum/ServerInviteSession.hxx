@@ -13,9 +13,26 @@ namespace resip
 class DUM_API ServerInviteSession: public InviteSession
 {
    public:
+      friend class InternalServerInviteSessionMessage_Redirect;
+      friend class InternalServerInviteSessionMessage_Provisional;
+      friend class InternalServerInviteSessionMessage_ProvideOffer;
+      friend class InternalServerInviteSessionMessage_ProvideAnswer;
+      friend class InternalServerInviteSessionMessage_End;
+      friend class InternalServerInviteSessionMessage_Reject;
+      friend class InternalServerInviteSessionMessage_Accept;
+
       typedef Handle<ServerInviteSession> ServerInviteSessionHandle;
       ServerInviteSessionHandle getHandle();
 
+      void         redirectAsync(const NameAddrs& contacts, int code=302);
+      void         provisionalAsync(int code=180);
+      virtual void provideOfferAsync(std::auto_ptr<SdpContents> offer);
+      virtual void provideAnswerAsync(std::auto_ptr<SdpContents> answer);
+      virtual void endAsync();
+      virtual void rejectAsync(int statusCode, WarningCategory *warning = 0);
+      void         acceptAsync(int statusCode=200);
+
+   protected:  // !polo! all public methods changed to aysnc.
       // send a 3xx
       void redirect(const NameAddrs& contacts, int code=302);
 
@@ -36,7 +53,6 @@ class DUM_API ServerInviteSession: public InviteSession
       /** Rejects an offer at the SIP level. So this can send a 488 to a
           reINVITE or UPDATE */
       virtual void reject(int statusCode, const WarningCategory *warning = 0);  // sync.
-      void rejectAsync(int statusCode, WarningCategory *warning = 0);   // async.
 
       /** accept a re-invite, etc.  Always 200? this is only applicable to the
           UAS */

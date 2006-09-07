@@ -5,6 +5,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/PagerMessageHandler.hxx"
+#include "resiprocate/dum/InternalServerPagerMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 using namespace resip;
@@ -28,6 +29,42 @@ ServerPagerMessage::ServerPagerMessage(DialogUsageManager& dum,
 ServerPagerMessage::~ServerPagerMessage()
 {
    mDialogSet.mServerPagerMessage = 0;
+}
+
+
+void
+ServerPagerMessage::endAsync()
+{
+   InfoLog(<< "End server pager message Async");
+   mDum.post(new InternalServerPagerMessage_End(getHandle()));
+}
+
+void
+ServerPagerMessage::sendAsync(const SipMessage& msg)
+{
+   InfoLog(<< "Send server pager message Async");
+   mDum.post(new InternalServerPagerMessage_Send(getHandle(), msg));
+}
+
+void
+ServerPagerMessage::sendAsync(bool accept, int statusCode)
+{
+   InfoLog(<< "Send server pager message Async(2)");
+   mDum.post(new InternalServerPagerMessage_Send(getHandle(), accept, statusCode));
+}
+
+void
+ServerPagerMessage::dispatchAsync(const SipMessage& msg)
+{
+   InfoLog(<< "Disptach server pager message Async");
+   mDum.post(new InternalServerPagerMessage_DispatchSipMsg(getHandle(), msg));
+}
+
+void
+ServerPagerMessage::dispatchAsync(const DumTimeout& timer)
+{
+   InfoLog(<< "Disptach server pager message timer Async: " << timer);
+   mDum.post(new InternalServerPagerMessage_DispatchTimeoutMsg(getHandle(), timer));
 }
 
 void

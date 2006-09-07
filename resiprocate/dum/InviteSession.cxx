@@ -12,9 +12,7 @@
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/dum/InternalEndInviteSessionMessage.hxx"
-#include "resiprocate/dum/InternalRejectMessage.hxx"
-#include "resiprocate/dum/InternalInfoMessage.hxx"
+#include "resiprocate/dum/InternalInviteSessionMessage.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Timer.hxx"
@@ -227,6 +225,66 @@ InviteSession::dump(std::ostream& strm) const
 }
 
 void
+InviteSession::provideOfferAsync(std::auto_ptr<SdpContents> offer)
+{
+   mDum.post(new InternalInviteSessionMessage_ProvideOffer(getSessionHandle(), offer));
+}
+
+void
+InviteSession::provideAnswerAsync(std::auto_ptr<SdpContents> answer)
+{
+   mDum.post(new InternalInviteSessionMessage_ProvideAnswer(getSessionHandle(), answer));
+}
+
+void
+InviteSession::endAsync()
+{
+   mDum.post(new InternalInviteSessionMessage_End(getSessionHandle()));
+}
+
+void
+InviteSession::rejectAsync(int statusCode, WarningCategory *warning)
+{
+   mDum.post(new InternalInviteSessionMessage_Reject(getSessionHandle(), statusCode, warning));
+}
+
+void
+InviteSession::targetRefreshAsync(const NameAddr& localUri)
+{
+   mDum.post(new InternalInviteSessionMessage_TargetRefresh(getSessionHandle(), localUri));
+}
+
+void
+InviteSession::referAsync(const NameAddr& referTo)
+{
+   mDum.post(new InternalInviteSessionMessage_Refer(getSessionHandle(), referTo));
+}
+
+void
+InviteSession::referAsync(const NameAddr& referTo, InviteSessionHandle sessionToReplace)
+{
+   mDum.post(new InternalInviteSessionMessage_Refer(getSessionHandle(), referTo, sessionToReplace));
+}
+
+void
+InviteSession::infoAsync(std::auto_ptr<Contents> contents)
+{
+   mDum.post(new InternalInviteSessionMessage_Info(getSessionHandle(), contents));
+}
+
+void
+InviteSession::acceptInfoAsync(int statusCode)
+{
+   mDum.post(new InternalInviteSessionMessage_AcceptInfo(getSessionHandle(), statusCode));
+}
+
+void
+InviteSession::rejectInfoAsync(int statusCode)
+{
+   mDum.post(new InternalInviteSessionMessage_RejectInfo(getSessionHandle(), statusCode));
+}
+
+void
 InviteSession::provideOffer(const SdpContents& offer)
 {
    switch (mState)
@@ -305,12 +363,6 @@ InviteSession::provideAnswer(const SdpContents& answer)
 }
 
 void
-InviteSession::endAsync() // !polo! async.
-{
-   mDum.post(new InternalEndInviteSessionMessage(getSessionHandle()));
-}
-
-void
 InviteSession::end()  // sync.
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
@@ -367,12 +419,6 @@ InviteSession::end()  // sync.
          assert(0);
          break;
    }
-}
-
-void 
-InviteSession::rejectAsync(int code, WarningCategory* warning)
-{
-   mDum.post(new InternalRejectMessage(getSessionHandle(), code, warning));
 }
 
 void
@@ -509,12 +555,6 @@ InviteSession::info(const Contents& contents)   // Sync.
       throw UsageUseException("Cannot start a non-invite transaction until the previous one has completed",
                               __FILE__, __LINE__);
    }
-}
-
-void
-InviteSession::infoAsync(std::auto_ptr<Contents> contents)  // !polo! Async.
-{
-   mDum.post(new InternalInfoMessage(getSessionHandle(), contents));
 }
 
 void

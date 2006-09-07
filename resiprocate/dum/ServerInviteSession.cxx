@@ -5,7 +5,7 @@
 #include "resiprocate/dum/ServerInviteSession.hxx"
 #include "resiprocate/dum/MasterProfile.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/dum/InternalRejectIncomingMessage.hxx"
+#include "resiprocate/dum/InternalServerInviteSessionMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
@@ -27,6 +27,48 @@ ServerInviteSessionHandle
 ServerInviteSession::getHandle()
 {
    return ServerInviteSessionHandle(mDum, getBaseHandle().getId());
+}
+
+void 
+ServerInviteSession::redirectAsync(const NameAddrs& contacts, int code)
+{
+   mDum.post(new InternalServerInviteSessionMessage_Redirect(getHandle(), contacts, code));
+}
+
+void 
+ServerInviteSession::provisionalAsync(int code)
+{
+   mDum.post(new InternalServerInviteSessionMessage_Provisional(getHandle(), code));
+}
+
+void 
+ServerInviteSession::provideOfferAsync(std::auto_ptr<SdpContents> offer)
+{
+   mDum.post(new InternalServerInviteSessionMessage_ProvideOffer(getHandle(), offer));
+}
+
+void 
+ServerInviteSession::provideAnswerAsync(std::auto_ptr<SdpContents> answer)
+{
+   mDum.post(new InternalServerInviteSessionMessage_ProvideAnswer(getHandle(), answer));
+}
+
+void 
+ServerInviteSession::endAsync()
+{
+   mDum.post(new InternalServerInviteSessionMessage_End(getHandle()));
+}
+
+void 
+ServerInviteSession::rejectAsync(int statusCode, WarningCategory *warning)
+{
+   mDum.post(new InternalServerInviteSessionMessage_Reject(getHandle(), statusCode, warning));
+}
+
+void 
+ServerInviteSession::acceptAsync(int statusCode)
+{
+   mDum.post(new InternalServerInviteSessionMessage_Accept(getHandle(), statusCode));
 }
 
 void 
@@ -316,12 +358,6 @@ ServerInviteSession::end()
          InviteSession::end();
          break;
    }
-}
-
-void 
-ServerInviteSession::rejectAsync(int code, WarningCategory* warning)
-{
-   mDum.post(new InternalRejectIncomingMessage(getHandle(), code, warning));
 }
 
 void 

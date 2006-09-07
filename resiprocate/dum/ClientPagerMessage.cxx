@@ -6,8 +6,7 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/UsageUseException.hxx"
-#include "resiprocate/dum/InternalSendPagerMessage.hxx"
-#include "resiprocate/dum/InternalEndClientPagerMessage.hxx"
+#include "resiprocate/dum/InternalClientPagerMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/ExtensionHeader.hxx"
@@ -98,6 +97,35 @@ ClientPagerMessage::~ClientPagerMessage()
    mDialogSet.mClientPagerMessage = 0;
 }
 
+void
+ClientPagerMessage::pageAsync(std::auto_ptr<Contents> contents, 
+                              std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders) // !polo! async.
+{
+   InfoLog(<< "Send pager message (async)");
+   mDum.post(new InternalClientPagerMessage_Page(getHandle(), contents, extraHeaders));
+}
+
+void
+ClientPagerMessage::endAsync()
+{
+   InfoLog(<< "End client pager (async)");
+   mDum.post(new InternalClientPagerMessage_End(getHandle()));
+}
+
+void
+ClientPagerMessage::dispatchAsync(const SipMessage& msg)
+{
+   InfoLog(<< "Dispatch client pager message (async)");
+   mDum.post(new InternalClientPagerMessage_DispatchSipMsg(getHandle(), msg));
+}
+
+void
+ClientPagerMessage::dispatchAsync(const DumTimeout& timer)
+{
+   InfoLog(<< "Dispatch client pager message timer (async): " << timer);
+   mDum.post(new InternalClientPagerMessage_DispatchTimeoutMsg(getHandle(), timer));
+}
+
 SipMessage&
 ClientPagerMessage::getMessageRequest()
 {
@@ -116,14 +144,6 @@ ClientPagerMessage::page(std::auto_ptr<Contents> contents,
    {
       this->pageFirstMsgQueued();
    }
-}
-
-void
-ClientPagerMessage::pageAsync(std::auto_ptr<Contents> contents, 
-                              std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders) // !polo! async.
-{
-   InfoLog(<< "Send pager message (async)");
-   mDum.post(new InternalSendPagerMessage(getHandle(), contents, extraHeaders));
 }
 
 void
@@ -190,13 +210,6 @@ void
 ClientPagerMessage::end()  // sync.
 {
    delete this;
-}
-
-void
-ClientPagerMessage::endAsync() // !polo! async.
-{
-   InfoLog(<< "End client pager (async)");
-   mDum.post(new InternalEndClientPagerMessage(getHandle()));
 }
 
 size_t

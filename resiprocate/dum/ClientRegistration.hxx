@@ -17,29 +17,52 @@ class BaseCreator;
 class DUM_API ClientRegistration: public NonDialogUsage
 {
    public:
+      friend class InternalClientRegistrationMessage_AddBinding;
+      friend class InternalClientRegistrationMessage_AddBindingWithExpire;
+      friend class InternalClientRegistrationMessage_RemoveBinding;
+      friend class InternalClientRegistrationMessage_RemoveAll;
+      friend class InternalClientRegistrationMessage_RemoveMyBindings;
+      friend class InternalClientRegistrationMessage_Refresh;
+      friend class InternalClientRegistrationMessage_StopRegistering;
+      friend class InternalClientRegistrationMessage_End;
+      friend class InternalClientRegistrationMessage_DispatchSipMsg;
+      friend class InternalClientRegistrationMessage_DispatchTimeoutMsg;
+
       ClientRegistration(DialogUsageManager& dum, DialogSet& dialog, SipMessage& req);
       ClientRegistrationHandle getHandle();
 
+      // Asynchronized methods.
+      void addBindingAsync(const NameAddr& contact);
+      void addBindingAsync(const NameAddr& contact, int registrationTime);
+      void removeBindingAsync(const NameAddr& contact);
+      void removeAllAsync(bool stopRegisteringWhenDone=false);
+      void removeMyBindingsAsync(bool stopRegisteringWhenDone=false);
+      void requestRefreshAsync(int expires = -1);
+      void stopRegisteringAsync(); 
+      virtual void endAsync();
+      virtual void dispatchAsync(const SipMessage& msg);
+      virtual void dispatchAsync(const DumTimeout& timer);
+      
+      const NameAddrs& myContacts() const;
+      const NameAddrs& allContacts() const;
+      int whenExpires() const; // relative in seconds
+
+      virtual std::ostream& dump(std::ostream& strm) const;
+   
+   protected:  // Sync.
       void addBinding(const NameAddr& contact);
       void addBinding(const NameAddr& contact, int registrationTime);
       void removeBinding(const NameAddr& contact);
       void removeAll(bool stopRegisteringWhenDone=false);
       void removeMyBindings(bool stopRegisteringWhenDone=false);        // sync.
-      void removeMyBindingsAsync(bool stopRegisteringWhenDone=false);   // !polo! async.
       void requestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
       
       //kills the usgage, call removeMyBindings to deregister
       void stopRegistering(); 
       
-      const NameAddrs& myContacts();
-      const NameAddrs& allContacts();
-      int whenExpires() const; // relative in seconds
-      
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-   
-      virtual std::ostream& dump(std::ostream& strm) const;
 
    protected:
       virtual ~ClientRegistration();
