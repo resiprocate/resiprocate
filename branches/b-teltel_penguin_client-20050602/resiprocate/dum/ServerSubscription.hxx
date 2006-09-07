@@ -13,8 +13,24 @@ class DialogUsageManager;
 class DUM_API ServerSubscription : public BaseSubscription 
 {
    public:
+      friend class InternalServerSubscriptionMessage_End;
+      friend class InternalServerSubscriptionMessage_Send;
+      friend class InternalServerSubscriptionMessage_DispatchSipMsg;
+      friend class InternalServerSubscriptionMessage_DispatchTimeoutMsg;
+      friend class InternalServerSubscriptionMessage_EndReason;
+
       typedef Handle<ServerSubscription> ServerSubscriptionHandle;
       ServerSubscriptionHandle getHandle();
+
+   public:  // async
+      virtual void endAsync();
+      virtual void sendAsync(const SipMessage& msg);
+      virtual void sendAsync(bool accept, int statusCode);
+      virtual void sendAsync(std::auto_ptr<Contents> updateContents);
+      virtual void dispatchAsync(const SipMessage& msg);
+      virtual void dispatchAsync(const DumTimeout& timer);
+      void endAsync(TerminateReason reason, std::auto_ptr<Contents> document = std::auto_ptr<Contents>());
+      // ---------
 
       const Data& getSubscriber() const { return mSubscriber; }
      
@@ -30,16 +46,17 @@ class DUM_API ServerSubscription : public BaseSubscription
       void setSubscriptionState(SubscriptionState state);
 
       SipMessage& update(const Contents* document);
-      void end(TerminateReason reason, const Contents* document = 0);
-
+//      void setTerminationState(TerminateReason reason);
+//      void setCurrentEventDocument(const Contents* document);
+   
+   protected:  // sync.
       virtual void end();
       virtual void send(SipMessage& msg);
 
-//      void setTerminationState(TerminateReason reason);
-//      void setCurrentEventDocument(const Contents* document);
-
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
+
+      void end(TerminateReason reason, const Contents* document = 0);
 
    protected:
       virtual ~ServerSubscription();

@@ -12,8 +12,23 @@ namespace resip
 class DUM_API ServerRegistration: public NonDialogUsage 
 {
    public:
+      friend class InternalServerRegistrationMessage_Accept;
+      friend class InternalServerRegistrationMessage_Reject;
+      friend class InternalServerRegistrationMessage_End;
+      friend class InternalServerRegistrationMessage_DispatchSipMsg;
+      friend class InternalServerRegistrationMessage_DispatchTimeoutMsg;
+
       ServerRegistrationHandle getHandle();
-      
+   
+   public:  // sync
+      void acceptAsync(const SipMessage& ok);
+      void acceptAsync(int statusCode = 200);
+      void rejectAsync(int statusCode);
+      virtual void endAsync();
+      virtual void dispatchAsync(const SipMessage& msg);
+      virtual void dispatchAsync(const DumTimeout& timer);
+
+   protected:  // sync
       /// accept a SIP registration with a specific response
       void accept(SipMessage& ok);
 

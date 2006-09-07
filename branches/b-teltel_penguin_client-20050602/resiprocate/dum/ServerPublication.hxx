@@ -12,6 +12,11 @@ namespace resip
 class DUM_API ServerPublication : public BaseUsage 
 {
    public:
+      friend class InternalServerPublicationMessage_End;
+      friend class InternalServerPublicationMessage_DispatchSipMsg;
+      friend class InternalServerPublicationMessage_DispatchTimeoutMsg;
+      friend class InternalServerPublicationMessage_Send;
+
       typedef Handle<ServerPublication> ServerPublicationHandle;
       ServerPublicationHandle getHandle();
 
@@ -20,16 +25,25 @@ class DUM_API ServerPublication : public BaseUsage
       
       SipMessage& accept(int statusCode = 200);
       SipMessage& reject(int responseCode);
+      
+      const Data& getPublisher() const; // aor of From
 
+      // Async
+      virtual void endAsync();
+      virtual void dispatchAsync(const SipMessage& msg);
+      virtual void dispatchAsync(const DumTimeout& timer);
+      void sendAsync(const SipMessage& response);
+      void sendAsync(bool accept, int statusCode);
+      // -------
+      
+protected:  // Sync
       virtual void end();
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      void send(SipMessage& response);      
+      void send(SipMessage& response);
 
-      const Data& getPublisher() const; // aor of From
-      
    protected:
       virtual ~ServerPublication();
       void updateMatchingSubscriptions();

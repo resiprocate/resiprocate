@@ -11,12 +11,25 @@ namespace resip
 class DUM_API ServerPagerMessage : public NonDialogUsage
 {
    public:
+      friend class InternalServerPagerMessage_End;
+      friend class InternalServerPagerMessage_Send;
+      friend class InternalServerPagerMessage_DispatchSipMsg;
+      friend class InternalServerPagerMessage_DispatchTimeoutMsg;
+
       typedef Handle<ServerPagerMessage> ServerPagerMessageHandle;
       ServerPagerMessageHandle getHandle();
 
       SipMessage& accept(int statusCode = 200);
       SipMessage& reject(int statusCode);
 
+   public:  // Async.
+      virtual void endAsync();
+      virtual void sendAsync(const SipMessage& msg);
+      virtual void sendAsync(bool accept, int statusCode);
+      virtual void dispatchAsync(const SipMessage& msg);
+      virtual void dispatchAsync(const DumTimeout& timer);
+
+   protected:  // Sync.
       virtual void end();
       virtual void send(SipMessage& msg);
       virtual void dispatch(const SipMessage& msg);

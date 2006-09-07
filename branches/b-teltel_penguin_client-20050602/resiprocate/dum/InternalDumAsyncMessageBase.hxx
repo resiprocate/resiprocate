@@ -20,6 +20,9 @@ namespace resip
    public:
       InternalDumAsyncMessageBase() {/*Empty*/}
 
+      virtual Message* clone()                         const { assert(false); return NULL; }
+      virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm);   }
+
       virtual void execute() = 0;
    };
 

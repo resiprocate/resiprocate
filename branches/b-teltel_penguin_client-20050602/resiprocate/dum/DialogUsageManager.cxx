@@ -436,7 +436,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    serverSub->setSubscriptionState(Active);
    SipMessage& notify = serverSub->update(&contents);
 //   mInviteSessionHandler->onReadyToSend(InviteSessionHandle::NotValid(), notify);
-   serverSub->send(notify);
+   serverSub->sendAsync(notify);
 
    //19.1.5
    NameAddr target = refer.header(h_ReferTo);

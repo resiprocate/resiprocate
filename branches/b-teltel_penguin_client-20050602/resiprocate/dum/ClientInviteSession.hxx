@@ -1,6 +1,8 @@
 #if !defined(RESIP_CLIENTINVITESESSION_HXX)
 #define RESIP_CLIENTINVITESESSION_HXX
 
+#include <memory>
+
 #include "resiprocate/dum/InviteSession.hxx"
 #include "resiprocate/dum/Handles.hxx"
 #include "resiprocate/dum/Win32ExportDum.hxx"
@@ -13,6 +15,11 @@ class SdpContents;
 class DUM_API ClientInviteSession : public InviteSession
 {
    public:
+      friend class InternalClientInviteSessionMessage_ProvideOffer;
+      friend class InternalClientInviteSessionMessage_ProvideAnswer;
+      friend class InternalClientInviteSessionMessage_End;
+      friend class InternalClientInviteSessionMessage_Reject;
+
       ClientInviteSession(DialogUsageManager& dum,
                           Dialog& dialog,
                           const SipMessage& request,
@@ -21,13 +28,19 @@ class DUM_API ClientInviteSession : public InviteSession
 
       ClientInviteSessionHandle getHandle();
 
-   public:
-      virtual void provideOffer (const SdpContents& offer);
-      virtual void provideAnswer (const SdpContents& answer);
-      virtual void end ();
-      virtual void reject (int statusCode, WarningCategory *warning = 0);
-
+   public:  // !polo! async interfaces.
+      virtual void provideOfferAsync(std::auto_ptr<SdpContents> offer);
+      virtual void provideAnswerAsync(std::auto_ptr<SdpContents> answer);
+      virtual void endAsync();
+      virtual void rejectAsync(int statusCode, WarningCategory *warning = 0);
+      
       const SdpContents& getEarlyMedia() const;
+
+   protected:
+      virtual void provideOffer(const SdpContents& offer);
+      virtual void provideAnswer(const SdpContents& answer);
+      virtual void end();
+      virtual void reject(int statusCode, WarningCategory *warning = 0);
       
    private:
       virtual void dispatch(const SipMessage& msg);

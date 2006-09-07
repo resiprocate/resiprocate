@@ -44,8 +44,8 @@ ServerSubscriptionHandler::getDefaultExpires() const
 void 
 ServerSubscriptionHandler::onRefresh(ServerSubscriptionHandle handle, const SipMessage& sub)
 {
-   handle->send(handle->accept(200));
-   handle->send(handle->neutralNotify());
+   handle->sendAsync(true, 200);
+   handle->sendAsync(handle->neutralNotify());
 }
 
 void 

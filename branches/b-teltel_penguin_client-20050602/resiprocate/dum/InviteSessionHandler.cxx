@@ -20,7 +20,7 @@ void
 InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle)
 {
    InfoLog(<< "InviteSessionHandler::onAckNotReceived");
-   handle->end();
+   handle->endAsync();
 }
 
 void 
@@ -33,7 +33,7 @@ void
 InviteSessionHandler::onSessionExpired(InviteSessionHandle handle)
 {
    InfoLog(<< "InviteSessionHandler::onSessionExpired");
-   handle->end();
+   handle->endAsync();
 }
 
 

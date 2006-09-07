@@ -10,20 +10,31 @@ namespace resip
 class DUM_API ServerOutOfDialogReq : public NonDialogUsage
 {
    public:
+      friend class InternalServerOutOfDialogReqMessage_End;
+      friend class InternalServerOutOfDialogReqMessage_SipMsg;
+      friend class InternalServerOutOfDialogReqMessage_TimeoutMsg;
+      friend class InternalServerOutOfDialogReqMessage_Send;
+
       typedef Handle<ServerOutOfDialogReq> ServerOutOfDialogReqHandle;
       ServerOutOfDialogReqHandle getHandle();
+
+      virtual void endAsync();
+      virtual void dispatchAsync(const SipMessage& msg);
+      virtual void dispatchAsync(const DumTimeout& timer);
+	   virtual void sendAsync(const SipMessage& msg);
 
       SipMessage& accept(int statusCode = 200);
       SipMessage& reject(int statusCode);
 
+	   // Return Options response based on current MasterProfile settings - application
+	   //  may need to add SDP Contents before sending
+      virtual SipMessage& answerOptions();
+
+protected:
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-
-	  // Return Options response based on current MasterProfile settings - application may need to add SDP Contents before
-	  // sending
-      virtual SipMessage& answerOptions();
-	  virtual void send(SipMessage& msg);
+	   virtual void send(SipMessage& msg);
 
    protected:
       virtual ~ServerOutOfDialogReq();
