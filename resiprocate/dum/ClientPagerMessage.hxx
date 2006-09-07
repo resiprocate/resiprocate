@@ -17,30 +17,37 @@ class SipMessage;
 class DUM_API ClientPagerMessage : public NonDialogUsage
 {
   public:
+      friend class InternalClientPagerMessage_Page;
+      friend class InternalClientPagerMessage_End;
+      friend class InternalClientPagerMessage_DispatchSipMsg;
+      friend class InternalClientPagerMessage_DispatchTimeoutMsg;
+
       ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet);
       ClientPagerMessageHandle getHandle();
+
+      virtual void pageAsync(std::auto_ptr<Contents> contents, 
+         std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders = std::auto_ptr< std::map<resip::Data, resip::Data> >());
+      virtual void endAsync();
+      virtual void dispatchAsync(const SipMessage& msg);
+      virtual void dispatchAsync(const DumTimeout& timer);
 
       //allow the user to adorn the MESSAGE message if desired
       //!kh!
       //I don't know how this would interact with the queuing mechanism.
       //Will come back to re-visit this in the future.
       SipMessage& getMessageRequest();
+      size_t      msgQueued () const;
 
+   protected:
       //!kh!
       //queues the message if there is one sent but not yet received a response
       //for it.
       //asserts if contents->get() is NULL.
-
       virtual void page(std::auto_ptr<Contents> contents, 
          std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders = std::auto_ptr< std::map<resip::Data, resip::Data> >());
-      virtual void pageAsync(std::auto_ptr<Contents> contents, 
-         std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders = std::auto_ptr< std::map<resip::Data, resip::Data> >());
       virtual void end();
-      virtual void endAsync();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
-
-      size_t       msgQueued () const;
 
    protected:
       virtual ~ClientPagerMessage();

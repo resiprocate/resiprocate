@@ -4,6 +4,7 @@
 #include "resiprocate/dum/Dialog.hxx"
 #include "resiprocate/dum/RegistrationHandler.hxx"
 #include "resiprocate/dum/RegistrationPersistenceManager.hxx"
+#include "resiprocate/dum/InternalServerRegistrationMessage.hxx"
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -24,6 +25,48 @@ ServerRegistration::ServerRegistration(DialogUsageManager& dum,  DialogSet& dial
 ServerRegistration::~ServerRegistration()
 {
    mDialogSet.mServerRegistration = 0;
+}
+
+void 
+ServerRegistration::acceptAsync(const SipMessage& ok)
+{
+   InfoLog(<< "Accept server registration request Async");
+   mDum.post(new InternalServerRegistrationMessage_Accept(getHandle(), ok));
+}
+
+void 
+ServerRegistration::acceptAsync(int statusCode)
+{
+   InfoLog(<< "Accept server registration request Async: " << statusCode);
+   mDum.post(new InternalServerRegistrationMessage_Accept(getHandle(), statusCode));
+}
+
+void 
+ServerRegistration::rejectAsync(int statusCode)
+{
+   InfoLog(<< "Reject server registration request Async");
+   mDum.post(new InternalServerRegistrationMessage_Reject(getHandle(), statusCode));
+}
+
+void 
+ServerRegistration::endAsync()
+{
+   InfoLog(<< "End server registration Async");
+   mDum.post(new InternalServerRegistrationMessage_End(getHandle()));
+}
+
+void 
+ServerRegistration::dispatchAsync(const SipMessage& msg)
+{
+   InfoLog(<< "Dispatch server registration msg Async");
+   mDum.post(new InternalServerRegistrationMessage_DispatchSipMsg(getHandle(), msg));
+}
+
+void 
+ServerRegistration::dispatchAsync(const DumTimeout& timer)
+{
+   InfoLog(<< "Dispatch server registration msg timer Async: " << timer);
+   mDum.post(new InternalServerRegistrationMessage_DispatchTimeoutMsg(getHandle(), timer));
 }
 
 void 

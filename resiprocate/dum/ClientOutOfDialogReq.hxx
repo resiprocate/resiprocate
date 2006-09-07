@@ -13,11 +13,21 @@ class SipMessage;
 class DUM_API ClientOutOfDialogReq : public NonDialogUsage
 {
   public:
+      friend class InternalClientOutOfDialogReqMessage_End;
+      friend class InternalClientOutOfDialogReqMessage_SipMsg;
+      friend class InternalClientOutOfDialogReqMessage_TimeoutMsg;
+
       ClientOutOfDialogReq(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& req);
       ClientOutOfDialogReqHandle getHandle();
 
       bool matches(const SipMessage& msg) const;
 
+      // !polo! Async public methods.
+      virtual void endAsync();
+      virtual void dispatchAsync(const SipMessage& msg);
+      virtual void dispatchAsync(const DumTimeout& timer);      
+
+protected:  // All synchronized public methods became protected.
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
