@@ -201,6 +201,7 @@ InviteSession::isConnected() const
       case ReceivedUpdate:
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
+      case ReceivedReinviteSentOffer:
       case Answered:
       case WaitingToOffer:
       case WaitingToRequestOffer:
