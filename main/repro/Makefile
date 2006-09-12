@@ -9,7 +9,7 @@ USE_MYSQL = false
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-CXXFLAGS += -I../
+CXXFLAGS += -I..
 PACKAGES += DUM RESIP RUTIL OPENSSL ARES DB4CXX PTHREAD POPT
 
 ifeq ($(USE_MYSQL),yes)

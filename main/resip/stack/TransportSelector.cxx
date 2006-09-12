@@ -34,6 +34,10 @@
 #include "rutil/WinCompat.hxx"
 #endif
 
+#ifdef __MINGW32__
+#define gai_strerror strerror
+#endif
+
 #include <sys/types.h>
 
 using namespace resip;

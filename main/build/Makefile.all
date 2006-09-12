@@ -169,6 +169,13 @@ ifeq ("$(OSTYPE)","darwin")
 override OSTYPE := Darwin
 endif
 
+ifeq ("$(OSTYPE)","MINGW32_NT-5.1")
+override OSTYPE := MinGW
+endif
+
+ifeq ("$(OSTYPE)","msys")
+override OSTYPE := MinGW
+endif
 
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),armcross)
 ARCH = arm
