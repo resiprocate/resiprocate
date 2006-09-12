@@ -440,36 +440,72 @@ main(int argc, char* argv[])
                
       auto_ptr<SipMessage> message(TestSupport::makeMessage(msg.c_str()));
       
-      Contents* body = message->getContents();
-
-      tassert(body != 0);
-      MultipartMixedContents* mmixed = dynamic_cast<MultipartMixedContents*>(body);
-      tassert(mmixed != 0);
-
-
-      cout << "!! ";
-      mmixed->encode(cout);
-
-      MultipartMixedContents::Parts& parts=mmixed->parts();
-
-
-      tassert(parts.size()==2);
-
-      SipFrag* frag=dynamic_cast<SipFrag*>(parts.front());
-      tassert(frag);
-      if(frag)
+      SipMessage copy(*message);
       {
-         frag->encode(cout);
-      }
-      
-      Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
-      tassert(pidf);
-      if(pidf)
-      {
-         pidf->encode(cout);
+         Contents* body = message->getContents();
+
+         tassert(body != 0);
+         MultipartMixedContents* mmixed = dynamic_cast<MultipartMixedContents*>(body);
+         tassert(mmixed != 0);
+
+
+         cout << "!! ";
+         mmixed->encode(cout);
+
+         MultipartMixedContents::Parts& parts=mmixed->parts();
+
+
+         tassert(parts.size()==2);
+
+         SipFrag* frag=dynamic_cast<SipFrag*>(parts.front());
+         tassert(frag);
+         if(frag)
+         {
+            frag->encode(cout);
+         }
+         
+         Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
+         tassert(pidf);
+         if(pidf)
+         {
+            pidf->encode(cout);
+         }
+
+         message->encode(cout);
       }
 
-      message->encode(cout);
+      {
+         Contents* body = copy.getContents();
+
+         tassert(body != 0);
+         MultipartMixedContents* mmixed = dynamic_cast<MultipartMixedContents*>(body);
+         tassert(mmixed != 0);
+
+
+         cout << "!! ";
+         mmixed->encode(cout);
+
+         MultipartMixedContents::Parts& parts=mmixed->parts();
+
+
+         tassert(parts.size()==2);
+
+         SipFrag* frag=dynamic_cast<SipFrag*>(parts.front());
+         tassert(frag);
+         if(frag)
+         {
+            frag->encode(cout);
+         }
+         
+         Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
+         tassert(pidf);
+         if(pidf)
+         {
+            pidf->encode(cout);
+         }
+
+         copy.encode(cout);
+      }
 
       tassert_verify(5);
       
