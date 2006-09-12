@@ -8,7 +8,7 @@ PACKAGES += 	REPRO DUM RESIP RUTIL TFMLIBS OPENSSL ARES DB4CXX PTHREAD POPT
 TESTPROGRAMS = 	sanityTests.cxx 
 TARGET_LIBRARY = libtfm
 
-CXXFLAGS += -I../ -Icontrib -I/usr/local/include/boost-1_33 -I/usr/local/include/boost-1_33_1
+CXXFLAGS += -I.. -Icontrib -I/usr/local/include/boost-1_33 -I/usr/local/include/boost-1_33_1
 
 SRC = ActionBase.cxx \
 	AsciiGraphic.cxx \
