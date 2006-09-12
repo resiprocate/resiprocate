@@ -68,7 +68,7 @@ StatelessHandler::process()
             // this is here so that we will reuse the tcp connection
             via.param(p_rport).port() = sip->getSource().getPort();
             mController.mTuSelector.add(sip, TimeLimitFifo<Message>::InternalElement);            
-            }
+         }
          else if (sip->isRequest())
          {
             if (sip->getDestination().transport)
