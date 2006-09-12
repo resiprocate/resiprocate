@@ -440,7 +440,7 @@ main(int argc, char* argv[])
                
       auto_ptr<SipMessage> message(TestSupport::makeMessage(msg.c_str()));
       
-      SipMessage copy(*message);
+      SipMessage* copy=0;
       {
          Contents* body = message->getContents();
 
@@ -454,6 +454,7 @@ main(int argc, char* argv[])
 
          MultipartMixedContents::Parts& parts=mmixed->parts();
 
+         copy = new SipMessage(*message);
 
          tassert(parts.size()==2);
 
@@ -475,7 +476,7 @@ main(int argc, char* argv[])
       }
 
       {
-         Contents* body = copy.getContents();
+         Contents* body = copy->getContents();
 
          tassert(body != 0);
          MultipartMixedContents* mmixed = dynamic_cast<MultipartMixedContents*>(body);
@@ -504,8 +505,10 @@ main(int argc, char* argv[])
             pidf->encode(cout);
          }
 
-         copy.encode(cout);
+         copy->encode(cout);
       }
+
+      delete copy;
 
       tassert_verify(5);
       
