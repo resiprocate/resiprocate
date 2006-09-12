@@ -9,6 +9,8 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/SipFrag.hxx"
+#include "resip/stack/MultipartMixedContents.hxx"
+#include "resip/stack/Pidf.hxx"
 #include "TestSupport.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/test/tassert.h"
@@ -23,7 +25,7 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-  tassert_init(4);
+  tassert_init(5);
 
   Log::initialize(Log::Cout, Log::Info, argv[0]);
 
@@ -390,6 +392,88 @@ main(int argc, char* argv[])
 
       }
       tassert_verify(4);
+   }
+
+   {
+      Data contents(
+               "--ncpq7w94hfb\r\n"
+               "Content-ID: <foo@example.com>\r\n"
+               "Content-Type: message/sipfrag\r\n"
+               "Content-Transfer-Encoding: binary\r\n"
+               "\r\n"
+               "SIP/2.0 200 OK\r\n"
+               "Via: SIP/2.0/UDP pc3.atlanta.com;branch=z9hG4bKmc0q\r\n"
+               "To: Joe <sip:joe@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=87125645\r\n"
+               "Call-ID: nbc9w84wbcalkj\r\n"
+               "CSeq: -87235\r\n"
+               "--ncpq7w94hfb\r\n"
+               "Content-Transfer-Encoding: binary\r\n"
+               "Content-ID: <bUZBsM@pres.example.com>\r\n"
+               "Content-Type: application/pidf+xml;charset=\"UTF-8\"\r\n"
+               "\r\n"
+               "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
+               "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"\r\n"
+               "    entity=\"sip:bob@example.com\">\r\n"
+               "  <tuple id=\"sg89ae\">\r\n"
+               "    <status>\r\n"
+               "      <basic>open</basic>\r\n"
+               "    </status>\r\n"
+               "    <contact priority=\"1.0\">sip:bob@example.com</contact>\r\n"
+               "  </tuple>\r\n"
+               "</presence>\r\n"
+               "\r\n"
+               "--ncpq7w94hfb--\r\n");
+
+      Data msg;
+      msg += Data()+"INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Content-Type: multipart/mixed;type=\"message/sipfrag\";\r\n"
+               "    start=\"<foo@example.com>\";boundary=\"ncpq7w94hfb\"\r\n"
+               "Content-Length: " + contents.size() + "\r\n"
+               "\r\n" + contents;
+               
+      auto_ptr<SipMessage> message(TestSupport::makeMessage(msg.c_str()));
+      
+      Contents* body = message->getContents();
+
+      tassert(body != 0);
+      MultipartMixedContents* mmixed = dynamic_cast<MultipartMixedContents*>(body);
+      tassert(mmixed != 0);
+
+
+      cout << "!! ";
+      mmixed->encode(cout);
+
+      MultipartMixedContents::Parts& parts=mmixed->parts();
+
+
+      tassert(parts.size()==2);
+
+      SipFrag* frag=dynamic_cast<SipFrag*>(parts.front());
+      tassert(frag);
+      if(frag)
+      {
+         frag->encode(cout);
+      }
+      
+      Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
+      tassert(pidf);
+      if(pidf)
+      {
+         pidf->encode(cout);
+      }
+
+      message->encode(cout);
+
+      tassert_verify(5);
+      
+
    }
 
    tassert_report();
