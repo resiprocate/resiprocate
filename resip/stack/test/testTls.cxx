@@ -11,8 +11,13 @@
 #endif
 
 #include <sys/types.h>
+#include <unistd.h> // for sleep
 #include <iostream>
 #include <memory>
+
+#ifdef __MINGW32__
+#define sleep(x) Sleep((x)*1000)
+#endif
 
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"

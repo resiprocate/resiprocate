@@ -399,11 +399,13 @@ main(int argc, char** argv)
       assert(pb.integer() == -17);
    }
 
+#ifndef WIN32
    {
       char buf[] = "2890844526";
       ParseBuffer pb(buf, strlen(buf));   
       assert(pb.unsignedInteger() == 2890844526UL);
    }
+#endif
 
 #ifndef RESIP_FIXED_POINT
    {
