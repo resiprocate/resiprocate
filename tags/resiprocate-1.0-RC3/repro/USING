@@ -1,0 +1,105 @@
+USING REPRO
+This guide describes briefly how to get started using repro.  For help 
+compiling or installing repro, please see the INSTALL file.
+
+1) Run repro
+Run the executable from the command line.  A number of command line options 
+are available.  For a summary of options run repro with the help option:
+
+%repro --help
+
+Usage: repro [OPTION...]
+  -l, --log-type=syslog|cerr|cout              where to send logging messages
+                                               (default: "cout")
+  -v, --log-level=DEBUG|INFO|WARNING|ALERT     specify the default log level
+                                               (default: "INFO")
+  -t, --tls-domain=example.com                 act as a TLS server for
+                                               specified domain
+  -x, --mysqlServer=localhost                  enable MySQL and provide name
+                                               of server (default: null)
+  --udp=5060                                   add UDP transport on specified
+                                               port (default: 5060)
+  --tcp=5060                                   add TCP transport on specified
+                                               port (default: 5060)
+  --tls=5061                                   add TLS transport on specified
+                                               port (default: 5061)
+  --dtls=5061                                  add DTLS transport on specified
+                                               port (default: 0)
+  --enable-v6                                  disable IPV6
+  --disable-v4                                 disable IPV4
+  --disable-auth                               disable DIGEST challenges
+  --disable-web-auth                           disable HTTP challenges
+  --disable-reg                                disable registrar
+  --enable-cert-server                         run a cert server
+  -d, --domains=example.com,foo.com            specify domains that this proxy
+                                               is authorative
+  -c, --cert-path=STRING                       path for certificates (default:
+                                               ~/.sipCerts) (default:
+                                               "/Users/rohan/.sipCerts")
+  --reqChainName=STRING                        name of request chain (default:
+                                               default)
+  --http=5080                                  run HTTP server on specified
+                                               port (default: 5080)
+
+Help options:
+  -?, --help                                   Show this help message
+  --usage                                      Display brief usage message
+%
+
+Running the proxy server with the default options is fine.  If you are 
+troubleshooting, we recommend that you enable DEBUG level logging:
+
+% ./repro -v DEBUG
+
+
+2) Access the WebAdmin pages
+Now access the HTTP WebAdmin. The WebAdmin run on port 5080 by default, or a 
+specific port if you specified it on the command line with the "--http" 
+command-line option.
+
+Login for the first time with the initial username: admin and the password 
+"admin".
+
+3) Add domains
+You must add at least one "domain" before you can use the proxy server. The 
+domains are names that the proxy recognizes after the at-sign (@) in the 
+SIP URI. The list of domains is used by the proxy and the registrar to decide 
+if repro is responsible for SIP requests it receives.  The WebAdmin also uses 
+the list of domains to make sure users you add are in one of the domains.
+
+For example, if you want the proxy to answer requests for atlanta.com, you 
+need to add atlanta.com to the list of domains.  You still need to make sure 
+that you configure DNS so that SIP requests for that domain resolve to repro.
+
+If you don't have a fully qualified domain name, you can use your IP address 
+as a "domain".
+
+4) Add users
+Next add users. The mandatory fields are the username and the domain.  The 
+password is the SIP Digest password.
+
+You can view the existing users from the Show Users page.
+
+5) Make a test call
+After adding a user you should try to register. You can check the status of 
+the registration from the Registrations page on the WebAdmin.
+
+6) About Routes and ACLs
+Routes are used by repro to send certain requests to a particular location. 
+The static routes use (POSIX-standard) regular expression to match and 
+rewrite SIP URIs.  The screenshot shows an example of sending all requests 
+that consist of only digits in the userpart of the SIP URI to a gateway.  
+Note that to match characters that have a special meaning in regular expression
+(like a "."), you need to escape these. You can also use variable substitution 
+in the rewrite expression. The string inside the first set of parentheses () 
+is referenced in the rewrite string as $1, the second is $2, etc.
+
+Since it is easy to make mistakes entering regular expressions, you can test 
+your static routes in the Show Routes page. Type in a SIP URI, click Test Route.
+You should see the rewritten URL below.
+
+Access Control Lists (ACLs) are not used by the proxy in this release, but will 
+be used to allow unauthenticated access to relay requests and access routes in 
+a future release.
+
+
