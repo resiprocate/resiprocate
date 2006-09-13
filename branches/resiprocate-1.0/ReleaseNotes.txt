@@ -26,7 +26,6 @@ New features in rutil:
 
 Bug fixes in rutil:
 - fixed initialization of OpenSSL
-- fixed initialization of array that determines whether headers should be comma encoded
 - use SO_REUSEADDR for windows sockets
 - fix to remove race condition in AbstractFifo::getNext(int ms)
 - many openSSL memory leak fixes
@@ -61,6 +60,7 @@ peer names
 - added a mechanism to register for a callback just before a SipMessage is sent on the wire
 
 Bug fixes in stack:
+- fixed initialization of array that determines whether headers should be comma encoded
 - fixed many transactionstate memory leaks
 - fix to SdpContents for duplicate fmtp attributes
 - fix submitted by Justin Matthews for potential invalid pointer access
