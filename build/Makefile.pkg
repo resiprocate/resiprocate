@@ -24,12 +24,30 @@ ifeq ($(OSTYPE),Solaris)
 PTHREAD_LDFLAGS := --thread
 endif
 
+# This is a bit dodgy: MinGW doesn't provide pthreads. Applications
+# are expected to use Windows threading constructs. So, to get
+# things to work, we need to completely undefine any PTHREAD
+# constructs under MinGW.
+ifeq ($(OSTYPE),MinGW)
+PTHREAD_LIBNAME :=
+PTHREAD_LDFLAGS :=
+endif
+
 ifeq ($(USE_SSL),yes)
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
 OPENSSL_INCLUDEDIRS := 
 OPENSSL_LIBDIRS :=
 OPENSSL_DEFINES += USE_SSL
+
+ifeq ($(OSTYPE),MinGW)
+    MINGW_OPENSSL_DIR    := /c/openssl
+    OPENSSL_LIBNAME      := eay32
+    OPENSSL_INCLUDEDIRS  := $(MINGW_OPENSSL_DIR)/include
+    OPENSSL_LIBDIRS      := $(MINGW_OPENSSL_DIR)/lib/MinGW
+    OPENSSL_LDLIBS_LAST  := $(MINGW_OPENSSL_DIR)/lib/MinGW/ssleay32.a
+endif
+
 endif
 
 ifeq ($(USE_DTLS),yes)
@@ -89,9 +107,34 @@ DB42_LIBNAME := db-4.2
 DB4CXX_LIBNAME := db_cxx-4.2
 endif
 
+ifeq ($(OSTYPE),MinGW)
+MINGW_BDB_DIR       := $(ROOT)/contrib/db/build_win32
+DB42_INCLUDEDIRS    := $(MINGW_BDB_DIR)
+DB42_LIBDIRS        := $(MINGW_BDB_DIR)
+DB42_LIBNAME        := db-4.2
+DB42_DEPENDS        := $(MINGW_BDB_DIR)/lib$(DB42_LIBNAME).a
+DB4CXX_INCLUDEDIRS  := $(DB42_INCLUDEDIRS)
+DB4CXX_LIBDIRS      := $(DB42_LIBDIRS)
+DB4CXX_LIBNAME      := $(DB42_LIBNAME)
+DB4CXX_DEPENDS      := $(DB42_DEPENDS)
+$(MINGW_BDB_DIR)/%.a:
+	$(MAKE) -C $(MINGW_BDB_DIR) -f Makefile.MinGW $*.a
+endif
+
 ifndef DB42_LIBNAME
 DB42_LIBNAME := db-4.2
 DB4CXX_LIBNAME := db_cxx-4.2
+endif
+
+ifeq ($(OSTYPE),MinGW)
+    MINGW_PCRE_DIR    := $(ROOT)/contrib/pcre
+    PCRE_INCLUDEDIRS  := $(MINGW_PCRE_DIR)
+    PCRE_LIBDIRS      := $(MINGW_PCRE_DIR)
+    PCRE_LIBNAME      := pcreposix pcre
+    PCRE_DEPENDS      := $(MINGW_PCRE_DIR)/libpcreposix.a \
+                         $(MINGW_PCRE_DIR)/libpcre.a
+$(MINGW_PCRE_DIR)/%.a:
+	$(MAKE) -C $(MINGW_PCRE_DIR) -f Makefile.MinGW $*.a
 endif
 
 ifeq ($(USE_CURL),yes)
@@ -140,8 +183,13 @@ DEFINES += USE_IPV6
 endif
 
 ifeq ($(USE_POPT),yes)
-POPT_DEFINES := HAVE_POPT_H
-POPT_LIBNAME := popt
+  POPT_DEFINES := HAVE_POPT_H
+  POPT_LIBNAME := popt
+  ifeq ($(OSTYPE),MinGW)
+    MINGW_POPT_DIR    := $(ROOT)/contrib/popt/win32
+    POPT_INCLUDEDIRS  := $(MINGW_POPT_DIR)/include
+    POPT_LIBDIRS      := $(MINGW_POPT_DIR)/lib
+  endif
 endif
 
 ifeq ($(RESIP_FIXED_POINT),yes)
@@ -168,9 +216,3 @@ SIPX_INCLUDEDIRS := $(SIPXBASE)/bbridge/include $(SIPXBASE)/sipXmediaAdapterLib/
 SIPX_LIBDIRS := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs $(SIPXBASE)/sipXmediaLib/src/.libs $(SIPXBASE)/sipXtackLib/src/.libs $(SIPXBASE)/sipXportLib/src/.libs
 SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack sipXport
 SIPX_DEFINES := __pingtel_on_posix__
-
-
-
-
-
-
