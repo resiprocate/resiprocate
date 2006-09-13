@@ -670,8 +670,9 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            if(i->scheme()!="Digest")
+            if(strcasecmp(i->scheme().c_str(), "Digest") != 0)
             {
+               DebugLog(<< "Scheme must be Digest");
                continue;
             }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
@@ -809,8 +810,9 @@ Helper::authenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            if(i->scheme()!="Digest")
+            if(strcasecmp(i->scheme().c_str(), "Digest") != 0)
             {
+               DebugLog(<< "Scheme must be Digest");
                continue;
             }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
@@ -939,8 +941,9 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            if(i->scheme()!="Digest")
+            if(strcasecmp(i->scheme().c_str(), "Digest") != 0)
             {
+               DebugLog(<< "Scheme must be Digest");
                continue;
             }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
