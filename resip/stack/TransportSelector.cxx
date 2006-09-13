@@ -663,6 +663,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          assert(0);
       }
 
+      // !bwc! At this point, source, target.transport, and target should be
+      // _fully_ specified.
+
       if (target.transport)
       {
          // There is a contact header and it contains exactly one entry
