@@ -12,6 +12,10 @@ include $(BUILD)/Makefile.pre
 CXXFLAGS += -I..
 PACKAGES += DUM RESIP RUTIL OPENSSL ARES DB4CXX PTHREAD POPT
 
+ifeq ($(OSTYPE),MinGW)
+PACKAGES += PCRE
+endif
+
 ifeq ($(USE_MYSQL),yes)
 PACKAGES += MYSQL
 SRC += MySqlDb.cxx

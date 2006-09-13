@@ -137,10 +137,16 @@ endif
 
 ############################ MinGW ##################################
 ifeq ($(OSTYPE),MinGW)
-    INCDIRS  += /c/openssl/include
-    INCDIRS  += $(ROOT)/contrib/pcre
-    CXXFLAGS += -D_WIN32_WINNT=0x0501
-    CFLAGS   += -D_WIN32_WINNT=0x0501
+    CXXFLAGS    += -D_WIN32_WINNT=0x0501
+    CFLAGS      += -D_WIN32_WINNT=0x0501
+    LDFLAGS     += -mconsole
+    LDLIBS_LAST += -lws2_32 -lIphlpapi
+
+#    We probably want to add these and remove the -lIphlpapi flag
+#    from above at some point. See rutil/WinCompat.cxx for details.
+
+#    CXXFLAGS    += -DNO_IPHLPAPI
+#    CFLAGS      += -DNO_IPHLPAPI
 endif
 
 
