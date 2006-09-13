@@ -34,7 +34,7 @@ SipFrag::SipFrag(HeaderFieldValue* hfv, const Mime& contentsType)
 }
 
 SipFrag::SipFrag(const SipFrag& rhs)
-   : Contents(rhs),
+   : Contents(rhs,HeaderFieldValue::CopyPadding),
      mMessage(rhs.mMessage ? new SipMessage(*rhs.mMessage) : 0)
 {
 }
@@ -189,25 +189,33 @@ SipFrag::parse(ParseBuffer& pb)
    MsgHeaderScanner msgHeaderScanner;
    msgHeaderScanner.prepareForFrag(mMessage, hasStartLine(buffer, size));
    enum { sentinelLength = 4 };  // Two carriage return / line feed pairs.
-   char saveTermCharArray[sentinelLength];
+   //char saveTermCharArray[sentinelLength];
+   static char* sentinel="\r\n\r\n";
    char *termCharArray = buffer + size;
-   saveTermCharArray[0] = termCharArray[0];
+   memcpy(scratchpad,termCharArray,4);
+   
+   /*saveTermCharArray[0] = termCharArray[0];
    saveTermCharArray[1] = termCharArray[1];
    saveTermCharArray[2] = termCharArray[2];
-   saveTermCharArray[3] = termCharArray[3];
-   termCharArray[0] = '\r';
+   saveTermCharArray[3] = termCharArray[3];*/
+   
+   memcpy(termCharArray,sentinel,4);
+   /*termCharArray[0] = '\r';
    termCharArray[1] = '\n';
    termCharArray[2] = '\r';
-   termCharArray[3] = '\n';
+   termCharArray[3] = '\n';*/
    char *scanTermCharPtr;
    MsgHeaderScanner::ScanChunkResult scanChunkResult =
        msgHeaderScanner.scanChunk(buffer,
                                   size + sentinelLength,
                                   &scanTermCharPtr);
-   termCharArray[0] = saveTermCharArray[0];
+   
+   memcpy(termCharArray,scratchpad,4);
+   /*termCharArray[0] = saveTermCharArray[0];
    termCharArray[1] = saveTermCharArray[1];
    termCharArray[2] = saveTermCharArray[2];
-   termCharArray[3] = saveTermCharArray[3];
+   termCharArray[3] = saveTermCharArray[3];*/
+   
    // !dlb! not at all clear what to do here
    // see: "// tests end of message problem (MsgHeaderScanner?)"
    //      in test/testSipFrag.cxx

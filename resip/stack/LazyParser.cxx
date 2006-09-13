@@ -39,6 +39,19 @@ LazyParser::LazyParser(const LazyParser& rhs)
    }
 }
 
+LazyParser::LazyParser(const LazyParser& rhs,HeaderFieldValue::CopyPaddingEnum e)
+   :  mHeaderField(0),
+      mIsMine(true),
+      mIsParsed(rhs.mIsParsed)
+{
+   if (!mIsParsed && rhs.mHeaderField)
+   {
+      mHeaderField = new HeaderFieldValue(*rhs.mHeaderField,e);
+   }
+
+}
+
+
 LazyParser::~LazyParser()
 {
    clear();
