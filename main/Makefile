@@ -3,6 +3,7 @@
 
 BUILD 	=	build
 -include $(BUILD)/Makefile.conf
+-include $(BUILD)/Makefile.all
 
 stack: repro dum tests
 
@@ -58,8 +59,13 @@ configure_netxx: tfm/contrib/Netxx-0.3.2/Makefile
 tfm/contrib/Netxx-0.3.2/Makefile:
 	cd tfm/contrib/Netxx-0.3.2 && perl configure.pl --contrib --disable-examples ${NETXX_USE_SHARED_LIBS}
 
+ifeq ($(OSTYPE),MinGW)
+netxx:
+	$(MAKE) -C tfm/contrib/Netxx-0.3.2 -f Makefile.MinGW
+else
 netxx: configure_netxx
 	cd tfm/contrib/Netxx-0.3.2 && $(MAKE)
+endif
 
 configure_cppunit: tfm/contrib/cppunit/Makefile
 
@@ -203,6 +209,7 @@ cleanpkg:
 	rm -f repro-*.tar.gz repro-*.tar.gz.md5 repro-*.rpm
 	rm -rf rpm repro-$(REPRO_VERSION)
 
-.PHONY : resiprocate tests contrib ares dtls
-.PHONY : install install-ares install-rutil install-resip install-repro install-dum
-.PHONY : SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
+.PHONY: resiprocate tests contrib ares dtls
+.PHONY: install install-ares install-rutil install-resip install-repro install-dum
+.PHONY: SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
+.PHONY: repro dum tests tfm tfmcontrib contrib rutil check presSvr
