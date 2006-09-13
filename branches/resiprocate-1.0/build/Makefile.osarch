@@ -135,6 +135,15 @@ ifeq ($(OSTYPE),Darwin)
 endif
 
 
+############################ MinGW ##################################
+ifeq ($(OSTYPE),MinGW)
+    INCDIRS  += /c/openssl/include
+    INCDIRS  += $(ROOT)/contrib/pcre
+    CXXFLAGS += -D_WIN32_WINNT=0x0501
+    CFLAGS   += -D_WIN32_WINNT=0x0501
+endif
+
+
 ############################ cygwin ##################################
 
 ifeq ($(OSTYPE),cygwin)

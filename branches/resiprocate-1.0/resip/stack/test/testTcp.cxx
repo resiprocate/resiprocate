@@ -10,12 +10,14 @@
 #endif
 #endif
 
+#include <signal.h>
 #include <iostream>
 
 #include "resip/stack/TcpTransport.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/ExtensionHeader.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
@@ -29,6 +31,14 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
+#ifndef _WIN32
+   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
+   {
+      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
+      exit(-1);
+   }
+#endif
+
 #ifdef WIN32
    initNetwork();
 #endif
@@ -161,9 +171,112 @@ main(int argc, char* argv[])
       }
    }
 
+   while (outstanding>0)
+   {
+      FdSet fdset; 
+      if (receiver) receiver->buildFdSet(fdset);
+      sender->buildFdSet(fdset);
+
+      fdset.selectMilliSeconds(seltime); 
+      
+      if (receiver) receiver->process(fdset);
+      sender->process(fdset);
+
+      while (rxFifo.messageAvailable())
+      {
+         Message* msg = rxFifo.getNext();
+         SipMessage* received = dynamic_cast<SipMessage*>(msg);
+         if (received)
+         {
+            //DebugLog (<< "got: " << received->brief());
+            outstanding--;
+         
+            assert (received->header(h_RequestLine).uri().host() == "localhost");
+            assert (received->header(h_To).uri().host() == "localhost");
+            assert (received->header(h_From).uri().host() == "localhost");
+            assert (!received->header(h_Vias).begin()->sentHost().empty());
+            assert (received->header(h_Contacts).begin()->uri().host() == "localhost");
+            assert (!received->header(h_CallId).value().empty());
+         }
+         delete msg;
+      }
+   }
+
    UInt64 elapsed = Timer::getTimeMs() - startTime;
    cout << runs << " calls peformed in " << elapsed << " ms, a rate of " 
         << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
+
+   SipMessage::checkContentLength=false;
+   list<SipMessage*> garbage;
+   {
+      UInt64 startTime = Timer::getTimeMs();
+      for (int i=0; i<runs; i++)
+      {
+         SipMessage* m = Helper::makeInvite( target, from, from);      
+         m->header(h_Vias).front().transport() = Tuple::toData(sender->transport());
+         m->header(h_Vias).front().sentHost() = "localhost";
+         m->header(h_Vias).front().sentPort() = sender->port();
+          
+         garbage.push_back(m);
+      }
+
+      UInt64 elapsed = Timer::getTimeMs() - startTime;
+      cout << runs << " calls performed in " << elapsed << " ms, a rate of " 
+           << runs / ((float) elapsed / 1000.0) << " calls per second.]" << endl;
+      
+      InfoLog (<< "Messages created");
+   }
+
+   while (!garbage.empty())
+   {
+      Data badContentLength1("-1");
+      Data badContentLength2("999999999999999999999999999999");
+            
+      int oscillator=0;
+      // !bwc! Send one at a time for maximum potential damage.
+      Data encoded;
+      {
+         DataStream strm(encoded);
+         SipMessage* next = garbage.front();
+         garbage.pop_front();
+         // !bwc! encodeSipFrag doesn't encode Content-Length if there is no
+         // body; allowing us to add a bad one without conflicting.
+         next->encodeSipFrag(strm);
+         outstanding++;
+         delete next;
+      }
+      
+      encoded.replace("\r\n\r\n","\r\nContent-Length: "+( (oscillator=1-oscillator) ? badContentLength1 : badContentLength2)+"\r\n\r\n");
+      
+      sender->send(dest, encoded, Data(tid++));
+
+      FdSet fdset; 
+      if (receiver) receiver->buildFdSet(fdset);
+      sender->buildFdSet(fdset);
+
+      fdset.selectMilliSeconds(seltime); 
+      
+      try
+      {
+         if (receiver) receiver->process(fdset);
+      }
+      catch(std::exception& e)
+      {
+         // !bwc! Do nothing substantive, since the stack thread doesn't
+      }
+      sender->process(fdset);
+      
+      Message* msg;
+      while (rxFifo.messageAvailable())
+      {
+         msg = rxFifo.getNext();
+         SipMessage* received = dynamic_cast<SipMessage*>(msg);
+         // !bwc! These are all unrecoverable garbage, we should not get
+         // any sip traffic on this fifo.
+         assert(!received);
+         delete msg;
+      }
+   }
 
    return 0;
 }

@@ -802,7 +802,14 @@ Uri::parse(ParseBuffer& pb)
       start = pb.skipChar();
       pb.skipToChar(']');
       pb.data(mHost, start);
-      DnsUtil::canonicalizeIpV6Address(mHost);
+      if(DnsUtil::isIpV6Address(mHost))
+      {
+         DnsUtil::canonicalizeIpV6Address(mHost);
+      }
+      else
+      {
+         // !bwc! Should the parse fail here, or do we just shrug it off?
+      }
       pb.skipChar();
    }
    else
