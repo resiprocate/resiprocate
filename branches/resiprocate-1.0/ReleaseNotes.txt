@@ -27,7 +27,7 @@ peer names
 - implemented RESIP_FIXED_POINT compilation flag
 
 - Framework for better control of forking in repro.
-- Improved Processor architecture in repro (with respect to asynchronous work), with helper classes for easily setting up thread-banks for async tasks.
+- Many improvements to Processor architecture in repro (with respect to asynchronous work), with helper classes for easily setting up thread-banks for async tasks.
 - Support for Q-Value based forking in repro.
 - Implemented Timer C in repro.
 - Lots and lots of testcases in tfm.
@@ -38,6 +38,25 @@ peer names
 
 - STUN client support (in UdpTransport class)
 - Added capability for adding a MessageDecorator through a dum profile
+
+- s/mime encryption for SDP and IM
+- lots of new documentation
+- synchronous A-record lookup in DnsUtil
+
+- tfm, a functor-driven test-framework, and lots of test-cases for repro.
+- implemented command pattern/target based feature handling in dum
+- added Identity strength accessor to SecurityAttributes
+- directory reorganization
+- runtime detection of ares/resip USE_IPV6 mismatch
+- added Data::replace
+- added recursive redirect support to repro
+- enum support
+- interactive configure script
+- support for Allowed-Events header in DUM
+- support for ACL in repro
+- support for privacy as per rfc3325
+- support for service-route (IMS)
+
 
 
 Fixes:
@@ -109,6 +128,8 @@ can handle up to 2^32-1 as in RFC
 storage
 
 - Fixed a few assert/memory leak bugs in TransactionState caused by method mismatches between Request Line and CSeq.
+- Fixed numerous memory leaks in TransactionState that couold be caused by certain malformed headers.
+- TransactionState no longer 503s ACK when overloaded
 - Major fixes to connection management in the stack (including memory corruption bugs)
 - Fixed issue where we were sending TLS over the wrong IP version when we had TLS transports on both versions open.
 - Fixed many integral-value overflow bugs.
@@ -119,6 +140,7 @@ storage
 - Fixed an assert bug in repro's WebAdmin that would allow an unprivileged user to cause an assert.
 - Fixed handling of stray CANCELs
 - repro no longer will forward 503s
+- fixed a stl::vector<>::front call to empty container in repro
 
 
 - made codec comparison case insensitive (findFirstMatchingCodec function)
@@ -128,3 +150,34 @@ storage
 - Corrected the Codec constructor for telephone-event and frf-dialed-event constants. A payload type of 8000 was used. (Not wrong but usually 101 is used. 8000 rather is the bandwidth)
 - Added two more codec constants. (G723 and GSM)
 - removed the bogus sleep stuff from stunSendTest
+
+- fixed initialization of AppDialogSet::mIsReUsed
+- repro no longer challenges ACK or BYE
+- ServerAuthManager no longer challenges ACK
+- fixed parse bug in Phone::parse
+- fixed a memory leak in DnsStub
+- fixed a bad free in Security
+- fixes to Data::find
+- InviteSession now handles re-invites with late offer
+- various OS X build fixes
+- fixes to conversion methods in Data
+- fixed numerous memory leaks in repro
+- fixed static initialization bug in Log.cxx where we were exhausting pthread_keys
+- fixed SipFrag memory corruption issue
+- fixed uninitialized SharedPtr in DialogSet
+- fixed nonce generation
+- fixed a memory leak in Security
+- fixed initialization of OpenSSL
+- fixed initialization of array that determines whether headers should be comma encoded
+- fixed array overflow bug in SecurityAttributes
+- fixed a per-key/cert leak in Security
+- fixed a memory leak caused by malformed Content-Length over a stream-based transport (TCP or TLS)
+
+- fixed clean and distclean build system targets
+- rpm build for repro
+- major assert sweep of repro
+- added a mechanism to register for a callback just before a SipMessage is sent on the wire
+- fixed bug where DUM was ignoring Expires in SUBSCRIBE/2xx
+
+- support for short version of event (o)
+- build system now handles absence of gperf gracefully
