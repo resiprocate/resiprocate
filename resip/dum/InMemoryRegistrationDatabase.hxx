@@ -21,7 +21,13 @@ namespace resip
 class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
 {
    public:
-      InMemoryRegistrationDatabase();
+
+      /**
+       * @param checkExpiry if set, then the methods aorIsRegistered() and
+       *                    getContacts() will check that contacts are
+       *                    not expired before returning an answer.
+       */
+      InMemoryRegistrationDatabase(bool checkExpiry = false);
       virtual ~InMemoryRegistrationDatabase();
       
       virtual void addAor(const Uri& aor, ContactRecordList contacts = ContactRecordList());
@@ -53,6 +59,17 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       std::set<Uri> mLockedRecords;
       Mutex mLockedRecordsMutex;
       Condition mRecordUnlocked;
+
+      bool mCheckExpiry;
+
+   protected:
+      /**
+       * Find aor in mDatabase
+       * Before returning the iterator pointing to aor,
+       * delete all expired contacts
+       */
+      database_map_t::iterator findNotExpired(const Uri& aor);
+
 };
 
 }

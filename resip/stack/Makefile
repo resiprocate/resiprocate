@@ -5,7 +5,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RESIP RUTIL ARES PTHREAD OPENSSL
 
-CXXFLAGS += -I../../
+CXXFLAGS += -I../..
 CODE_SUBDIRS = 
 TARGET_LIBRARY = libresip
 TESTPROGRAMS =
@@ -97,6 +97,7 @@ SRC = \
 	SipMessage.cxx \
 	SipStack.cxx \
 	StackThread.cxx \
+    InterruptableStackThread.cxx \
 	StatisticsManager.cxx \
 	StatisticsMessage.cxx \
 	Symbols.cxx \

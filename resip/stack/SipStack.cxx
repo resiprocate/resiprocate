@@ -34,7 +34,7 @@
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
 #endif
 

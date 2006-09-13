@@ -542,7 +542,7 @@ SipMessage::method() const
          assert(0);
       }
    }
-   catch(resip::ParseBuffer::Exception& e)
+   catch(resip::ParseBuffer::Exception&)
    {
    }
    
@@ -603,10 +603,17 @@ SipMessage::encodeBrief(std::ostream& str) const
       str << header(h_CSeq).unknownMethodName();
    }
 
-   if (exists(h_Contacts) && !header(h_Contacts).empty())
+   try
    {
-      str << contact;
-      str << header(h_Contacts).front().uri().getAor();
+      if (exists(h_Contacts) && !header(h_Contacts).empty())
+      {
+         str << contact;
+         str << header(h_Contacts).front().uri().getAor();
+      }
+   }
+   catch(resip::ParseBuffer::Exception&)
+   {
+      str << " MALFORMED CONTACT ";
    }
    
    str << slash;
@@ -823,6 +830,23 @@ SipMessage::setBody(const char* start, UInt32 len)
    {
       if(exists(h_ContentLength))
       {
+         try
+         {
+            header(h_ContentLength).checkParsed();
+         }
+         catch(resip::ParseBuffer::Exception& e)
+         {
+            if(mInvalid)
+            {
+               mReason+=",";
+            }
+
+            mInvalid=true; 
+            mReason+="Malformed Content-Length";
+            InfoLog(<< "Malformed Content-Length. Ignoring. " << e);
+            header(h_ContentLength).value()=len;
+         }
+         
          UInt32 contentLength=header(h_ContentLength).value();
          
          if(len > contentLength)

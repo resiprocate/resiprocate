@@ -3,6 +3,7 @@
 
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Inserter.hxx"
 
 using namespace resip;
 using namespace std;
@@ -14,6 +15,10 @@ main(int argc, char* argv[])
 {
    Log::Level l = Log::Debug;
    Log::initialize(Log::Cout, l, argv[0]);
+   
+   {
+      cerr << "Network Interfaces: " << endl << Inserter(DnsUtil::getInterfaces()) << endl << endl;
+   }
    
    {
       Data addr("1:1");

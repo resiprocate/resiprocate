@@ -1,4 +1,5 @@
 
+#include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -9,12 +10,6 @@
 #include "resip/stack/SipMessage.hxx"
 
 #include "repro/AclStore.hxx"
-
-#if defined(WIN32)
-#include <Ws2tcpip.h>
-#else
-#include <netinet/in.h>
-#endif
 
 using namespace resip;
 using namespace repro;
