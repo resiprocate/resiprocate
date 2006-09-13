@@ -4,7 +4,12 @@ BUILD = ../build
 include $(BUILD)/Makefile.pre
 
 CODE_SUBDIRS = predicates repro
+
 PACKAGES += 	REPRO DUM RESIP RUTIL TFMLIBS OPENSSL ARES DB4CXX PTHREAD POPT 
+ifeq ($(OSTYPE),MinGW)
+PACKAGES += PCRE
+endif
+
 TESTPROGRAMS = 	sanityTests.cxx 
 TARGET_LIBRARY = libtfm
 

@@ -208,6 +208,13 @@ ifeq ($(OSTYPE),NetBSD)
 TFMLIBS_INCLUDEDIRS += /usr/pkg/include/boost-1_31
 endif
 
+ifeq ($(OSTYPE),MinGW)
+  MINGW_BOOST_DIR     := /c/Boost
+  TFMLIBS_INCLUDEDIRS += $(MINGW_BOOST_DIR)/include/boost-1_33_1
+  TFMLIBS_LIBNAME     := $(patsubst boost_regex, , $(TFMLIBS_LIBNAME))
+  TFMLIBS_LDLIBS_LAST := $(MINGW_BOOST_DIR)/lib/libboost_regex-mgw-s.lib
+endif
+
 ifndef SIPXBASE
 SIPXBASE := $(ROOT)/sipX
 endif
