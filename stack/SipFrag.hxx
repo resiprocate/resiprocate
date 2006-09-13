@@ -39,6 +39,7 @@ class SipFrag : public Contents
    private:
       bool hasStartLine(char* buffer, int size);      
       SipMessage* mMessage;
+      char scratchpad[4];
 };
 
 static bool invokeSipFragInit = SipFrag::init();

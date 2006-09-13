@@ -59,6 +59,21 @@ Contents::Contents(const Contents& rhs)
    *this = rhs;
 }
 
+Contents::Contents(const Contents& rhs,HeaderFieldValue::CopyPaddingEnum e) 
+    : LazyParser(rhs,e),
+      mType(rhs.mType),
+      mDisposition(0),
+      mTransferEncoding(0),
+      mLanguages(0),
+      mId(0),
+      mDescription(0),
+      mLength(0),
+      mVersion(1),
+      mMinorVersion(0)
+{
+   *this = rhs;
+}
+
 Contents::~Contents()
 {
    clear();
@@ -148,6 +163,14 @@ Contents::createContents(const Mime& contentType,
    assert(!contents.mMine);
    HeaderFieldValue *hfv = new HeaderFieldValue(contents.data(), contents.size());
 
+   if(contentType.subType()=="sipfrag"||contentType.subType()=="external-body")
+   {
+      // !bwc! The parser for sipfrag requires padding at the end of the hfv.
+      HeaderFieldValue* temp = hfv;
+      hfv = new HeaderFieldValue(*temp,HeaderFieldValue::CopyPadding);
+      delete temp;
+   }
+   
    Contents* c;
    if (ContentsFactoryBase::getFactoryMap().find(contentType) != ContentsFactoryBase::getFactoryMap().end())
    {
