@@ -59,5 +59,8 @@ SRC = \
 	stun/Stun.cxx \
 	stun/Udp.cxx
 
+ifeq ($(OSTYPE),MinGW)
+    SRC += WinCompat.cxx
+endif
 
 include $(BUILD)/Makefile.post
