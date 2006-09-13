@@ -13,7 +13,7 @@ New features in build system:
 - added support for stdext::hash_map for Visual Studio .NET 2003 builds
 - build system now handles absence of gperf gracefully
 
-Bug fixes to build system:
+Bug fixes in build system:
 - changes so that build with openSSL 0.98 works
 - VS.NET project files - changed all C-Runtime libraries to use
 Multithreaded DLL - consistent with sipX projects
@@ -188,7 +188,7 @@ New features in repro:
 Bug fixes in repro:
 - Fixed an assert bug in repro's WebAdmin that would allow an unprivileged user to cause an assert.
 - repro no longer will forward 503s
-- fixed a stl::vector<>::front call to empty container
+- fixed a stl::vector<>::front call to a (potentially) empty container
 - repro no longer challenges ACK or BYE
 - fixed numerous memory leaks in repro
 - major assert sweep of repro
