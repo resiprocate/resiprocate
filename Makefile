@@ -209,6 +209,10 @@ cleanpkg:
 	rm -f repro-*.tar.gz repro-*.tar.gz.md5 repro-*.rpm
 	rm -rf rpm repro-$(REPRO_VERSION)
 
+# If the make configuration isn't there, create a default one.
+$(BUILD)/Makefile.conf:
+	./configure -y
+
 .PHONY: resiprocate tests contrib ares dtls
 .PHONY: install install-ares install-rutil install-resip install-repro install-dum
 .PHONY: SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
