@@ -227,7 +227,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
-      bool process();
+      bool process();  // non-blocking
+      bool process(int timeoutMs);   // Specify -1 for infinte timeout
 
       InviteSessionHandle findInviteSession(DialogId id);
       //if the handle is inValid, int represents the errorcode

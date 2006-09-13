@@ -5,7 +5,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += ARES PTHREAD OPENSSL
 
-CXXFLAGS += -I../
+CXXFLAGS += -I..
 CODE_SUBDIRS = dns stun
 TARGET_LIBRARY = librutil
 TESTPROGRAMS =

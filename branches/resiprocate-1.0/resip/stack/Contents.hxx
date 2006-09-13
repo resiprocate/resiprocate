@@ -47,6 +47,7 @@ class Contents : public LazyParser
       Contents(HeaderFieldValue* headerFieldValue, const Mime& contentsType);
       Contents(const Mime& contentsType);
       Contents(const Contents& rhs);
+      Contents(const Contents& rhs,HeaderFieldValue::CopyPaddingEnum e);
       virtual ~Contents();
       Contents& operator=(const Contents& rhs);
 

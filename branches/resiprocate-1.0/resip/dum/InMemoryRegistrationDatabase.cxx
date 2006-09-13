@@ -1,3 +1,5 @@
+#include <ctime>
+
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Logger.hxx"
@@ -6,7 +8,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-InMemoryRegistrationDatabase::InMemoryRegistrationDatabase()
+InMemoryRegistrationDatabase::InMemoryRegistrationDatabase(bool checkExpiry) :
+   mCheckExpiry(checkExpiry)
 {
 }
 
@@ -71,10 +74,8 @@ InMemoryRegistrationDatabase::getAors(InMemoryRegistrationDatabase::UriList& con
 bool 
 InMemoryRegistrationDatabase::aorIsRegistered(const Uri& aor)
 {
-  database_map_t::iterator i;
-
   Lock g(mDatabaseMutex);
-  i = mDatabase.find(aor);
+  database_map_t::iterator i = findNotExpired(aor);
   if (i == mDatabase.end() || i->second == 0)
   {
     return false;
@@ -247,14 +248,49 @@ InMemoryRegistrationDatabase::getContacts(const Uri& aor)
 void
 InMemoryRegistrationDatabase::getContacts(const Uri& aor,RegistrationPersistenceManager::ContactRecordList& container)
 {
-  database_map_t::iterator i;
-  i = mDatabase.find(aor);
+  database_map_t::iterator i = findNotExpired(aor);
   if (i == mDatabase.end() || i->second == 0)
   {
       return;
   }
   container= *(i->second);
 
+}
+
+class RemoveIfExpired
+{
+protected:
+    time_t now;
+public:
+    RemoveIfExpired()
+    {
+       time(&now);
+    }
+    bool operator () (RegistrationPersistenceManager::ContactRecord rec)
+    {
+        if(rec.expires < now) 
+        {
+		DebugLog(<< "ContactRecord expired: " << rec.uri);
+		return true;
+	}
+        return false;
+    }
+};
+
+InMemoryRegistrationDatabase::database_map_t::iterator
+InMemoryRegistrationDatabase::findNotExpired(const Uri& aor) {
+   database_map_t::iterator i;
+   i = mDatabase.find(aor);
+   if (i == mDatabase.end() || i->second == 0) 
+   {
+      return i;
+   }
+   if(mCheckExpiry)
+   {
+      ContactRecordList *contacts = i->second;
+      contacts->remove_if(RemoveIfExpired());
+   }
+   return i;
 }
 
 /* ====================================================================

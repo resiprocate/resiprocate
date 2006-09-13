@@ -70,6 +70,39 @@ TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine, c
    return cancel;
 }
 
+bool
+TransactionState::handleBadRequest(const resip::SipMessage& badReq, TransactionController& controller)
+{
+   assert(badReq.isRequest() && badReq.method() != ACK);
+   try
+   {
+      SipMessage* error = Helper::makeResponse(badReq,400);
+      error->header(h_StatusLine).reason()+="(" + error->getReason() + ")";
+      Tuple target(badReq.getSource());
+
+      if(badReq.isExternal())
+      {
+         controller.mTransportSelector.transmit(error,target);
+         delete error;
+         return true;
+      }
+      else
+      {
+         // !bwc! Should we put together a TransactionState here so we can
+         // send a 400 to the TU?
+         // TODO if we send the error to the TU, don't delete the error
+         delete error;
+         return false;
+      }
+   }
+   catch(resip::BaseException& e)
+   {
+      ErrLog(<< "Exception thrown in TransactionState::handleBadRequest."
+                  " This shouldn't happen. " << e);
+      return false;
+   }
+}
+
 TransactionState::~TransactionState()
 {
    assert(mState != Bogus);
@@ -111,76 +144,7 @@ TransactionState::process(TransactionController& controller)
       }
    }
    
-   SipMessage* sip = dynamic_cast<SipMessage*>(message);
-
-   if(controller.mStack.statisticsManagerEnabled() && sip && sip->isExternal())
-   {
-      controller.mStatsManager.received(sip);
-   }
-   
-   // !bwc! Check for error conditions we can respond to.
-   if(sip && sip->isRequest() 
-         && sip->method() != ACK)
-   {
-      if(sip->isExternal() && controller.isTUOverloaded())
-      {
-         SipMessage* tryLater = Helper::makeResponse(*sip, 503);
-         tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
-         tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
-         Tuple target(sip->getSource());
-         delete sip;
-         controller.mTransportSelector.transmit(tryLater, target);
-         delete tryLater;
-         return;
-      }
-      
-      if(sip->isInvalid())
-      {
-         SipMessage* error = Helper::makeResponse(*sip,400);
-         error->header(h_StatusLine).reason()+="(" + error->getReason() + ")";
-         Tuple target(sip->getSource());
-         delete sip;
-         controller.mTransportSelector.transmit(error,target);
-         delete error;
-         return;
-      }
-      
-   }
-
-#ifdef PEDANTIC_STACK
-   if(sip)
-   {
-      try
-      {
-         sip->parseAllHeaders();
-      }
-      catch(resip::ParseBuffer::Exception& e)
-      {
-         if(sip->isRequest() && sip->header(h_RequestLine).method()!=ACK)
-         {
-            SipMessage* error = Helper::makeResponse(*sip,400);
-            error->header(h_StatusLine).reason()+=Data::from(e);
-            Tuple target(sip->getSource());
-            delete sip;
-            controller.mTransportSelector.transmit(error,target);
-            delete error;
-            return;
-         }
-         
-         InfoLog(<< "Exception caught by pedantic stack: " << e);
-      }
-   }
-#endif      
-      
-
-
-   if (sip && sip->isExternal() && sip->header(h_Vias).empty())
-   {
-      InfoLog(<< "TransactionState::process dropping message with no Via: " << sip->brief());
-      delete sip;
-      return;
-   }
-
+   // !bwc! We can't do anything without a tid here. Check this first.
    Data tid;   
    try
    {
@@ -188,16 +152,68 @@ TransactionState::process(TransactionController& controller)
    }
    catch(SipMessage::Exception&)
    {
-      DebugLog( << "TransactionState::process dropping message with invalid tid " << sip->brief());
-      delete sip;
+      DebugLog( << "TransactionState::process dropping message with invalid tid " << message->brief());
+      delete message;
       return;
    }
    
-   // This ensures that CANCEL requests form unique transactions
-   if (sip && sip->method() == CANCEL) 
+   SipMessage* sip = dynamic_cast<SipMessage*>(message);
+   
+   if(sip)
    {
-      tid += "cancel";
+      // !bwc! Should this come after checking for error conditions?
+      if(controller.mStack.statisticsManagerEnabled() && sip->isExternal())
+      {
+         controller.mStatsManager.received(sip);
+      }
+      
+      // !bwc! Check for error conditions we can respond to.
+      if(sip->isRequest() && sip->method() != ACK)
+      {
+         if(sip->isExternal() && controller.isTUOverloaded())
+         {
+            SipMessage* tryLater = Helper::makeResponse(*sip, 503);
+            tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
+            tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
+            Tuple target(sip->getSource());
+            delete sip;
+            controller.mTransportSelector.transmit(tryLater, target);
+            delete tryLater;
+            return;
+         }
+         
+         if(sip->isInvalid())
+         {
+            handleBadRequest(*sip,controller);
+            delete sip;
+            return;
+         }
+         
+      }
+
+#ifdef PEDANTIC_STACK
+      try
+      {
+         sip->parseAllHeaders();
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         if(sip->isRequest() && sip->method()!=ACK)
+         {
+            handleBadRequest(*sip,controller);
+         }
+         
+         InfoLog(<< "Exception caught by pedantic stack: " << e);
+      }
+#endif      
+      
+      // This ensures that CANCEL requests form unique transactions
+      if (sip->method() == CANCEL) 
+      {
+         tid += "cancel";
+      }
    }
+   
    
    TransactionState* state = 0;
    if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
@@ -209,13 +225,34 @@ TransactionState::process(TransactionController& controller)
    // will match. 
    if (state && sip && sip->isRequest() && sip->method() == ACK)
    {
-      if (sip->header(h_To).exists(p_tag) && sip->header(h_To).param(p_tag) != state->mToTag)
+      try
       {
-         // Must have received an ACK to a 200;
-         tid += "ack";
-         if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
-         else state = controller.mServerTransactionMap.find(tid);
-         // will be sent statelessly, if from TU
+         if (sip->header(h_To).exists(p_tag) && sip->header(h_To).param(p_tag) != state->mToTag)
+         {
+            // Must have received an ACK to a 200;
+            // !bwc! Please note; this is an incorrect ACK/200. ACK/200 is
+            // supposed to have a new new tid, although many clients get
+            // this wrong. It is also possible that a client has set the To tag
+            // incorrectly in an ACK/failure, but this is much less likely. 
+            // I am conflicted as to whether this code should remain; parsing
+            // To takes effort, and doing this in order to clean up after
+            // broken UACs irritates me...
+            InfoLog(<<"Someone sent us an ACK/200 with the same tid as the "
+                        "original INVITE. This is bad behavior, and should be "
+                        "corrected in the client.");
+            tid += "ack";
+            if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
+            else state = controller.mServerTransactionMap.find(tid);
+            // will be sent statelessly, if from TU
+         }
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         // !bwc! Since we were trying to clean up after broken UACs above, we
+         // just ignore the error and pretend we never looked at To (since we
+         // technically shouldn't be in the first place).
+         InfoLog(<<"Someone sent us an ACK inside the INVITE transaction"
+                     " with a malformed To header. Assuming ACK/failure. " << e);
       }
    }
 
@@ -266,7 +303,9 @@ TransactionState::process(TransactionController& controller)
             if (!tu)
             {
                //InfoLog (<< "Didn't find a TU for " << sip->brief());
-
+               // !bwc! We really should do something other than a 500 here.
+               // If none of the TUs liked the request because of the Request-
+               // Uri scheme, we should be returning a 416, for example.
                InfoLog( << "No TU found for message: " << sip->brief());               
                SipMessage* noMatch = Helper::makeResponse(*sip, 500);
                Tuple target(sip->getSource());
@@ -1110,10 +1149,22 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                   delete mMsgToRetransmit; 
                   mMsgToRetransmit = sip; 
                   mState = Completed;
-                  if (sip->header(h_To).exists(p_tag))
+                  try
                   {
-                     mToTag = sip->header(h_To).param(p_tag);
+                     if (sip->header(h_To).exists(p_tag))
+                     {
+                        mToTag = sip->header(h_To).param(p_tag);
+                     }
                   }
+                  catch(resip::ParseBuffer::Exception&)
+                  {
+                     // !bwc! We are only storing this To tag in order to help 
+                     // distinguish ACK/failure from ACK/200 with the same tid
+                     // as the original invite (a common bug in UACs). Since
+                     // we technically shouldn't be doing this, we ignore the
+                     // malformed To header.
+                  }
+                  
                   mController.mTimers.add(Timer::TimerH, mId, Timer::TH );
                   if (!mIsReliable)
                   {

@@ -34,7 +34,7 @@ TransactionController::TransactionController(SipStack& stack) :
 {
 }
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( default : 4355 )
 #endif
 

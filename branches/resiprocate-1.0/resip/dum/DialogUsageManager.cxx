@@ -1243,6 +1243,24 @@ DialogUsageManager::process()
    return mFifo.messageAvailable();
 }
 
+bool 
+DialogUsageManager::process(int timeoutMs)
+{
+   if(timeoutMs == -1)
+   {
+      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+   }
+   else
+   {
+      std::auto_ptr<Message> msg(mFifo.getNext(timeoutMs));
+      if (msg.get())
+      {
+         internalProcess(msg);
+      }
+   }
+   return mFifo.messageAvailable();
+}
+
 bool
 DialogUsageManager::validateRequestURI(const SipMessage& request)
 {
