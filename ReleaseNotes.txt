@@ -23,9 +23,10 @@ Multithreaded DLL - consistent with sipX projects
 New features in rutil:
 - synchronous A-record lookup in DnsUtil
 - added Data::replace
-- fixed a memory leak in DnsStub
 
 Bug fixes in rutil:
+- fixed initialization of OpenSSL
+- fixed initialization of array that determines whether headers should be comma encoded
 - use SO_REUSEADDR for windows sockets
 - fix to remove race condition in AbstractFifo::getNext(int ms)
 - many openSSL memory leak fixes
@@ -34,8 +35,7 @@ Bug fixes in rutil:
 - fixes to Data::find
 - fixes to conversion methods in Data
 - fixed static initialization bug in Log.cxx where we were exhausting pthread_keys
-- fixed initialization of OpenSSL
-- fixed initialization of array that determines whether headers should be comma encoded
+- fixed a memory leak in DnsStub
 
 
 New features in stack:
@@ -60,7 +60,7 @@ peer names
 - support for service-route (IMS)
 - added a mechanism to register for a callback just before a SipMessage is sent on the wire
 
-Bug fixes in stack and rutil:
+Bug fixes in stack:
 - fixed many transactionstate memory leaks
 - fix to SdpContents for duplicate fmtp attributes
 - fix submitted by Justin Matthews for potential invalid pointer access
@@ -88,6 +88,7 @@ can handle up to 2^32-1 as in RFC
 - Fixed issue where we were sending TLS over the wrong IP version when we had TLS transports on both versions open.
 - Fixed many integral-value overflow bugs.
 - Fixed a few other parser bugs (for q-value, senthost in Via, branch parameter in Via)
+- implemented auto_ptr version of SipStack::send() and SipStack::sendTo()
 - implemented auto_ptr based SipStack::post() and postMs()
 - Fixed handling of stray CANCELs
 - made codec comparison case insensitive (findFirstMatchingCodec function)
@@ -187,10 +188,11 @@ New features in repro:
 Bug fixes in repro:
 - Fixed an assert bug in repro's WebAdmin that would allow an unprivileged user to cause an assert.
 - repro no longer will forward 503s
-- fixed a stl::vector<>::front call to empty container in repro
+- fixed a stl::vector<>::front call to empty container
 - repro no longer challenges ACK or BYE
 - fixed numerous memory leaks in repro
 - major assert sweep of repro
 
 
-Added tfm: a functor-driven test-framework, and lots of test-cases for repro.
+tfm: 
+- a functor-driven test-framework, and lots of test-cases for repro.
