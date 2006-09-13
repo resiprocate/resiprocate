@@ -15,7 +15,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined (__GNUC__)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
 

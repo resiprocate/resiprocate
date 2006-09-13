@@ -1,6 +1,9 @@
 #include <Winsock2.h>
 #include <Iphlpapi.h>
+
+#ifndef __MINGW32__
 #include <atlbase.h>
+#endif
 
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinCompat.hxx"
@@ -449,14 +452,19 @@ WinCompat::getInterfaces(const Data& matching)
       else 
       {
          IP_ADAPTER_ADDRESSES *AI;
+#ifndef __MINGW32__
          USES_CONVERSION;
+#endif
          int i;
          for (i = 0, AI = pAdapterAddresses; AI != NULL; AI = AI->Next, i++) 
          {
             if (AI->FirstUnicastAddress != NULL) 
             {
-               //Data name(AI->AdapterName); 
+#ifdef __MINGW32__
+               Data name(AI->AdapterName); 
+#else
                Data name(W2A(AI->FriendlyName));
+#endif
                if(matching == Data::Empty || name == matching)
                {
                   results.push_back(std::make_pair(name, DnsUtil::inet_ntop(*AI->FirstUnicastAddress->Address.lpSockaddr)));
