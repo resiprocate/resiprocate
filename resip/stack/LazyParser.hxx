@@ -2,11 +2,11 @@
 #define RESIP_LAZYPARSER_HXX 
 
 #include <iosfwd>
+#include "resip/stack/HeaderFieldValue.hxx"
 
 namespace resip
 {
 
-class HeaderFieldValue;
 class ParseBuffer;
 class Data;
 
@@ -15,6 +15,7 @@ class LazyParser
    public:
       LazyParser(HeaderFieldValue* headerFieldValue);
       LazyParser(const LazyParser& rhs);
+      LazyParser(const LazyParser& rhs,HeaderFieldValue::CopyPaddingEnum e);
       LazyParser& operator=(const LazyParser& rhs);
       virtual ~LazyParser();
 

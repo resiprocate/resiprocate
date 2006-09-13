@@ -1,9 +1,6 @@
 #if !defined(RESIP_SOCKET_HXX)
 #define RESIP_SOCKET_HXX  
 
-#include "compat.hxx"
-#include "rutil/TransportType.hxx"
-
 #include <cassert>
 #include <errno.h>
 #include <algorithm>
@@ -15,6 +12,8 @@
 #include <WS2TCPIP.H>
 #endif
 
+#include "compat.hxx"
+#include "rutil/TransportType.hxx"
 
 #ifdef WIN32
 

@@ -34,6 +34,10 @@
 #include "rutil/WinCompat.hxx"
 #endif
 
+#ifdef __MINGW32__
+#define gai_strerror strerror
+#endif
+
 #include <sys/types.h>
 
 using namespace resip;
@@ -584,6 +588,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                         source.ipVersion()==temp.ipVersion() &&
                         source.getType()==temp.getType());
                source=temp;
+
+               /* determineSourceInterface will return an arbitrary port here,
+                  so use the port specified in target.transport->port().
+               */
+               source.setPort(transport->port());
             }
          }
          // !bwc! Here we use source to find transport.
@@ -620,7 +629,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentPort())
             {
-               msg->header(h_Vias).front().sentPort() = transport->port();
+               msg->header(h_Vias).front().sentPort() = source.getPort();
             }
          }
          
@@ -641,18 +650,21 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             Tuple temp = source;
             source = determineSourceInterface(msg,target);
             /* determineSourceInterface will return an arbitrary port here,
-               so use the port specified in target.transport->getTuple().
+               so use the port specified in target.transport->port().
             */
             assert(source.ipVersion()==temp.ipVersion() &&
                      source.getType()==temp.getType());
 
-            source.setPort(target.transport->getTuple().getPort());
+            source.setPort(target.transport->port());
          }
       }
       else
       {
          assert(0);
       }
+
+      // !bwc! At this point, source, target.transport, and target should be
+      // _fully_ specified.
 
       if (target.transport)
       {
