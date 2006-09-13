@@ -670,7 +670,8 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            if(strcasecmp(i->scheme().c_str(), "Digest") != 0)
+            static Data digest("digest");
+            if(!isEqualNoCase(i->scheme(),digest))
             {
                DebugLog(<< "Scheme must be Digest");
                continue;
@@ -810,7 +811,8 @@ Helper::authenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            if(strcasecmp(i->scheme().c_str(), "Digest") != 0)
+            static Data digest("digest");
+            if(!isEqualNoCase(i->scheme(),digest))
             {
                DebugLog(<< "Scheme must be Digest");
                continue;
@@ -941,7 +943,8 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
-            if(strcasecmp(i->scheme().c_str(), "Digest") != 0)
+            static Data digest("digest");
+            if(!isEqualNoCase(i->scheme(),digest))
             {
                DebugLog(<< "Scheme must be Digest");
                continue;
