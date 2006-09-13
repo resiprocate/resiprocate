@@ -32,6 +32,8 @@
 // This is used as a "barrier" at which you want all the above timeouts
 // to happen.  You'll want one at the end of your test, for example.
 
+#ifndef __MINGW32__
+
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -585,6 +587,16 @@ main(int argc, char *argv[])
 
     return errorCount;
 }
+#else
+#include <iostream>
+int
+main(int argc, char *argv[])
+{
+  std::cout << argv[0] << ": Sorry. This test driver hasn't been ported "
+                          "to Windows yet." << std::endl;
+  return -1;
+}
+#endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
