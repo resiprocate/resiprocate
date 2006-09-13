@@ -170,8 +170,27 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          }
          else
          {         
-            // The message header is complete.
-            size_t contentLength = mMessage->header(h_ContentLength).value();
+            size_t contentLength = 0;
+            
+            try
+            {
+               // The message header is complete.
+               contentLength=mMessage->header(h_ContentLength).value();
+            }
+            catch(resip::ParseBuffer::Exception& e)
+            {
+               WarningLog(<<"Malformed Content-Length in connection-based transport"
+                           ". Not much we can do to fix this.");
+               // !bwc! Bad Content-Length. We are hosed.
+               delete mMessage;
+               mMessage = 0;
+               mBuffer = 0;
+               // !bwc! mMessage just took ownership of mBuffer, so we don't
+               // delete it here. We do zero it though, for completeness.
+               //.jacob. Shouldn't the state also be set here?
+               delete this;
+               return;
+            }
             
             if (numUnprocessedChars < contentLength)
             {
@@ -234,7 +253,26 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
       }
       case PartialBody:
       {
-         size_t contentLength = mMessage->header(h_ContentLength).value();
+         size_t contentLength = 0;
+
+         try
+         {
+             contentLength = mMessage->header(h_ContentLength).value();
+         }
+         catch(resip::ParseBuffer::Exception& e)
+         {
+            WarningLog(<<"Malformed Content-Length in connection-based transport"
+                        ". Not much we can do to fix this.");
+            // !bwc! Bad Content-Length. We are hosed.
+            delete [] mBuffer;
+            mBuffer = 0;
+            delete mMessage;
+            mMessage = 0;
+            //.jacob. Shouldn't the state also be set here?
+            delete this;
+            return;
+         }
+
          mBufferPos += bytesRead;
          if (mBufferPos == contentLength)
          {
