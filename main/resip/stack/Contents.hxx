@@ -2,6 +2,7 @@
 #define RESIP_Contents_hxx
 
 #include <iosfwd>
+#include <vector>
 
 #include "resip/stack/LazyParser.hxx"
 #include "resip/stack/Mime.hxx"
@@ -92,7 +93,50 @@ class Contents : public LazyParser
       void addBuffer(char* buf);
 
    protected:
-      void clear();
+      // !bwc! Calls freeMem(), then reverts members to a default state
+      // (including setting pointers to 0)
+      inline void clear()
+      {
+         freeMem();
+         init();
+      }
+      
+      inline void init()
+      {
+         mBufferList.clear();
+         mDisposition = 0;
+         mTransferEncoding = 0;
+         mLanguages = 0;
+         mId = 0;
+         mDescription = 0;
+         mLength = 0;
+         mVersion = 1;
+         mMinorVersion = 0;
+      }
+
+      void init(const Contents& orig);
+
+      // !bwc! Just frees up heap-allocated stuff, doesn't set pointers to 0
+      // This exists because it is pointless (and inefficient) to revert 
+      // members to a default state while deleting (they're just going to go
+      // out of scope anyway) The d'tor is the only thing that uses this by
+      // itself. Everything else should use clear()
+      inline void freeMem()
+      {
+         delete mDisposition;
+         delete mTransferEncoding;
+         delete mLanguages;
+         delete mId;
+         delete mDescription;
+         delete mLength;
+
+         for (std::vector<char*>::iterator i = mBufferList.begin();
+              i != mBufferList.end(); i++)
+         {
+            delete [] *i;
+         }
+
+      }
       virtual const Data& errorContext() const;
 
       mutable Mime mType;
