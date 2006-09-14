@@ -1449,6 +1449,17 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
          return false;
       }
       
+      try
+      {
+         message.header(h_Vias).front().checkParsed();
+      }
+      catch(ParseBuffer::Exception& e)
+      {
+         InfoLog(<<"Malformed topmost Via header");
+         if(reason) *reason="Malformed topmost Via header";
+         return false;
+      }
+      
       if (message.isRequest())
       {
          try
@@ -1467,6 +1478,19 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
             InfoLog(<< "Method mismatch btw Request Line and CSeq");
             if(reason) *reason="Method mismatch btw Request Line and CSeq";
             return false;
+         }
+      }
+      else
+      {
+         try
+         {
+            message.header(h_StatusLine).checkParsed();
+         }
+         catch(ParseBuffer::Exception& e)
+         {
+            InfoLog(<< "Malformed status line " << e);
+            if(reason) *reason="Malformed status line";
+            return false;            
          }
       }
       
