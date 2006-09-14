@@ -21,86 +21,32 @@ H_ContentDescription resip::h_ContentDescription;
 Contents::Contents(HeaderFieldValue* headerFieldValue,
                    const Mime& contentType) 
    : LazyParser(headerFieldValue),
-     mType(contentType),
-     mDisposition(0),
-     mTransferEncoding(0),
-     mLanguages(0),
-     mId(0),
-     mDescription(0),
-     mLength(0),
-     mVersion(1),
-     mMinorVersion(0)
-{}
+      mType(contentType)
+{
+   init();
+}
 
 Contents::Contents(const Mime& contentType) 
-   : mType(contentType),
-     mDisposition(0),
-     mTransferEncoding(0),
-     mLanguages(0),
-     mId(0),
-     mDescription(0),
-     mLength(0),
-     mVersion(1),
-     mMinorVersion(0)
-{}
+   : mType(contentType)
+{
+   init();
+}
 
 Contents::Contents(const Contents& rhs) 
-    : LazyParser(rhs),
-      mType(rhs.mType),
-      mDisposition(0),
-      mTransferEncoding(0),
-      mLanguages(0),
-      mId(0),
-      mDescription(0),
-      mLength(0),
-      mVersion(1),
-      mMinorVersion(0)
+    : LazyParser(rhs)
 {
-   *this = rhs;
+   init(rhs);
 }
 
 Contents::Contents(const Contents& rhs,HeaderFieldValue::CopyPaddingEnum e) 
-    : LazyParser(rhs,e),
-      mType(rhs.mType),
-      mDisposition(0),
-      mTransferEncoding(0),
-      mLanguages(0),
-      mId(0),
-      mDescription(0),
-      mLength(0),
-      mVersion(1),
-      mMinorVersion(0)
+    : LazyParser(rhs,e)
 {
-   *this = rhs;
+   init(rhs);
 }
 
 Contents::~Contents()
 {
-   clear();
-}
-
-void
-Contents::clear()
-{
-   delete mDisposition;
-   delete mTransferEncoding;
-   delete mLanguages;
-   delete mId;
-   delete mDescription;
-   delete mLength;
-
-   for (vector<char*>::iterator i = mBufferList.begin();
-        i != mBufferList.end(); i++)
-   {
-      delete [] *i;
-   }
-
-   mDisposition = 0;
-   mTransferEncoding = 0;
-   mLanguages = 0;
-   mId = 0;
-   mDescription = 0;
-   mLength = 0;
+   freeMem();
 }
 
 const Data&
@@ -115,39 +61,76 @@ Contents::operator=(const Contents& rhs)
 {
    if (this != &rhs)
    {
-      LazyParser::operator=(rhs); 
-      mType = rhs.mType;
-      if (rhs.mDisposition)
-      {
-          if (mDisposition) delete mDisposition;
-          mDisposition = new H_ContentDisposition::Type(*rhs.mDisposition);
-      }
-      if (rhs.mTransferEncoding)
-      {
-          if (mTransferEncoding) delete mTransferEncoding;
-          mTransferEncoding = new H_ContentTransferEncoding::Type(*rhs.mTransferEncoding);
-      }
-      if (rhs.mLanguages)
-      {
-          if (mLanguages) delete mLanguages;
-          mLanguages = new H_ContentLanguages::Type(*rhs.mLanguages);
-      }
-      if (rhs.mId)
-      {
-          if (mId) delete mId;
-          mId = new Token(*rhs.mId);
-      }
-      if (rhs.mDescription)
-      {
-          if (mDescription) delete mDescription;
-          mDescription = new StringCategory(*rhs.mDescription);
-      }
-
-      mVersion = rhs.mVersion;
-      mMinorVersion = rhs.mMinorVersion;
+      freeMem();
+      LazyParser::operator=(rhs);
+      init(rhs);
    }
 
    return *this;
+}
+
+void
+Contents::init(const Contents& orig)
+{
+   mBufferList.clear();
+   mType = orig.mType;
+   if (orig.mDisposition)
+   {
+       mDisposition = new H_ContentDisposition::Type(*orig.mDisposition);
+   }
+   else
+   {
+      mDisposition = 0;
+   }
+   
+   if (orig.mTransferEncoding)
+   {
+       mTransferEncoding = new H_ContentTransferEncoding::Type(*orig.mTransferEncoding);
+   }
+   else
+   {
+      mTransferEncoding = 0;
+   }
+   
+   if (orig.mLanguages)
+   {
+       mLanguages = new H_ContentLanguages::Type(*orig.mLanguages);
+   }
+   else
+   {
+      mLanguages = 0;
+   }
+   
+   if (orig.mId)
+   {
+       mId = new Token(*orig.mId);
+   }
+   else
+   {
+      mId = 0;
+   }
+   
+   if (orig.mDescription)
+   {
+       mDescription = new StringCategory(*orig.mDescription);
+   }
+   else
+   {
+      mDescription = 0;
+   }
+   
+   if(orig.mLength)
+   {
+      mLength = new StringCategory(*orig.mLength);
+   }
+   else
+   {
+      mLength = 0;
+   }
+
+   mVersion = orig.mVersion;
+   mMinorVersion = orig.mMinorVersion;
+
 }
 
 Contents*
