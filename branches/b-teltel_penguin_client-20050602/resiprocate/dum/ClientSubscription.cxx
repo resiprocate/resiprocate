@@ -206,13 +206,14 @@ ClientSubscription::processRequest(const SipMessage& msg)
 void
 ClientSubscription::sendNewSubscription()
 {
-   //bool reuseAppDialogSet = true;
+   //bool reuseAppDialogSet = false;
    NameAddr remoteTarget(mDialog.mRemoteTarget);
    if (mDialog.mRemoteTarget.uri().host().empty())
    {
       remoteTarget = mLastRequest.header(h_To);
    }
    remoteTarget.remove(p_tag);
+#if 0   
    AppDialogSetHandle appDialogSetHandle = getAppDialogSet();
    if (appDialogSetHandle.isValid())
    {
@@ -220,6 +221,7 @@ ClientSubscription::sendNewSubscription()
       mDum.send(sub);
    }
    else
+#endif   
    {
       SipMessage& sub = mDum.makeSubscription(remoteTarget, getEventType());
       mDum.send(sub);
