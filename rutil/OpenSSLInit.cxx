@@ -33,7 +33,7 @@ OpenSSLInit::init()
 
 OpenSSLInit::OpenSSLInit()
 {
-	cerr << "OpenSSLInit::init() invoked" << endl;
+	//cerr << "OpenSSLInit::init() invoked" << endl;
 
 	//#if defined(THREADS)
 	int locks = CRYPTO_num_locks();
