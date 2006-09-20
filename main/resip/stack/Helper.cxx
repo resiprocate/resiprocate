@@ -1455,7 +1455,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
       }
       catch(ParseBuffer::Exception& e)
       {
-         InfoLog(<<"Malformed topmost Via header");
+         InfoLog(<<"Malformed topmost Via header: " << e);
          if(reason) *reason="Malformed topmost Via header";
          return false;
       }
