@@ -181,7 +181,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //OnReadyToSend callback.  Probably will change it's own callback/handler soon
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
                                                        const SdpContents* initialOffer, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, const SharedPtr<UserProfile>& userProfile, 
+                                                       const SdpContents* initialOffer, AppDialogSet* appDs = 0);
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
+                                                       const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, const SharedPtr<UserProfile>& userProfile, ServerSubscriptionHandle, 
                                                        const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative, AppDialogSet* = 0);
       
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = 0);
