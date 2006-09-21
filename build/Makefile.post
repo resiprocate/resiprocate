@@ -311,8 +311,8 @@ install: all
 	install -d $(DESTDIR)$(INSTALL_PREFIX)/lib
 	install $(OBJ)/$(TARGET_LIBRARY).$(LIBSUFFIX) $(INSTALL_LIBDIR)/$(TARGET_LIBRARY).$(LIBSUFFIX)
 	install -d $(INSTALL_INCDIR)
-	install *.h* $(INSTALL_INCDIR)
-	@ for subdir in $(CODE_SUBDIRS) ;  do ( install -d $(INSTALL_INCDIR)/$$subdir ; install $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
+	install -m 644 *.h* $(INSTALL_INCDIR)
+	@ for subdir in $(CODE_SUBDIRS) ;  do ( install -d $(INSTALL_INCDIR)/$$subdir ; install -m 644 $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
 endif
 endif
 
