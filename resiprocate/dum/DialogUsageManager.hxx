@@ -193,6 +193,7 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
       
       void end(DialogSetId invSessionId);
       void send(SipMessage& request); 
+      void cancelInvite(const DialogSetId& invSessionId);
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
