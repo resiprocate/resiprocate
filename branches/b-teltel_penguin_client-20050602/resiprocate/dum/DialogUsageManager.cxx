@@ -41,6 +41,7 @@
 #include "resiprocate/dum/SubscriptionHandler.hxx"
 #include "resiprocate/dum/UserAuthInfo.hxx"
 #include "resiprocate/dum/InternalDumAsyncMessageBase.hxx"
+#include "resiprocate/dum/InternalDumCancelOutgoingMessage.hxx"
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
@@ -680,6 +681,13 @@ DialogUsageManager::end(DialogSetId setid)
    {
       ds->end();
    }
+}
+
+void
+DialogUsageManager::cancelInvite(const DialogSetId& invSessionId)
+{
+   InfoLog(<< "Post cancel outgoing message (async)");
+   post(new InternalDumCancelOutgoingMessage(invSessionId, *this));
 }
 
 void
