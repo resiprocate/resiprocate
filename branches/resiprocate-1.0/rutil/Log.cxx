@@ -396,7 +396,7 @@ Log::setServiceLevel(int service, Level l)
 {
    Lock lock(_mutex);
    Log::mServiceToLevel[service] = l;
-#if defined(WIN32) || defined(TARGET_OS_MAC)
+#ifndef LOG_ENABLE_THREAD_SETTING
    assert(0);
 #else
    set<pthread_t>& threads = Log::mServiceToThreads[service];
