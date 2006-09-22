@@ -39,7 +39,7 @@ StackThread::thread()
       }
       catch (BaseException& e)
       {
-         InfoLog (<< "Unhandled exception: " << e);
+         ErrLog (<< "Unhandled exception: " << e);
       }
    }
    WarningLog (<< "Shutting down stack thread");
