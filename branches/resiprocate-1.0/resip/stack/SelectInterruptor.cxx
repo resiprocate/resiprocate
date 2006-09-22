@@ -1,108 +1,95 @@
-#if defined(HAVE_CONFIG_H)
-#include "resip/stack/config.hxx" 
-#endif
+#include "resip/stack/SelectInterruptor.hxx"
 
-#include <iostream>
-
-#if defined (HAVE_POPT_H) 
-#include <popt.h>
-#else
-#ifndef WIN32
-#warning "will not work very well without libpopt"
-#endif
-#endif
-
-#include "rutil/SelectInterruptor.hxx"
+#include <cassert>
 #include "rutil/Logger.hxx"
-#include "rutil/DataStream.hxx"
-#include "rutil/ThreadIf.hxx"
+
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 using namespace resip;
-using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-class FakeApp : public ThreadIf
+SelectInterruptor::SelectInterruptor()
 {
-   public: 
-      FakeApp(SelectInterruptor& s);
-      ~FakeApp() {};
-      
-      void thread();
-   private:
-      SelectInterruptor& mSi;
-};
-
-FakeApp::FakeApp(SelectInterruptor& s) : mSi(s)
-{}
-
-void FakeApp::thread()
-{
-    static unsigned wakeups[6] = { 3, 1, 0, 2, 5, 1 };
-
-    for (unsigned long n = 0; n < sizeof(wakeups)/sizeof(long); n++)
-    {
-       InfoLog( << "Wakeup in: " << wakeups[n] << ", " << n+1 << " of " 
-                << sizeof(wakeups)/sizeof(long));
 #ifdef WIN32
-	   Sleep(wakeups[n]*1000);
+   mSocket = ::socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+   sockaddr_in loopback;
+   memset(&loopback, 0, sizeof(loopback));
+   loopback.sin_family = AF_INET;
+   loopback.sin_port = 0;
+   loopback.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+   makeSocketNonBlocking(mSocket); //win32 woes    
+   ::bind( mSocket, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback));
+   memset(&mWakeupAddr, 0, sizeof(mWakeupAddr));   
+   int len = sizeof(mWakeupAddr);
+   int error = getsockname(mSocket, (sockaddr *)&mWakeupAddr, &len);
+   assert(error == 0);
+   error= connect(mSocket, &mWakeupAddr, sizeof(mWakeupAddr)); 
+   assert(error == 0);
 #else
-	   sleep(wakeups[n]);
+   pipe(mPipe);
 #endif
-       InfoLog(<< "Waking up select");
-       mSi.interrupt();
-    }
-    shutdown();
 }
 
-
-int
-main(int argc, char* argv[])
+SelectInterruptor::~SelectInterruptor()
 {
 #ifdef WIN32
-	initNetwork();
+   closesocket(mSocket);
+#else
+   close(mPipe[0]);
+   close(mPipe[1]);
 #endif
+}   
 
-   Log::initialize(Log::Cout, Log::Debug, argv[0]);
-   
-   SelectInterruptor si;
-   FakeApp app(si);
-
-   InfoLog(<< "Starting FakeApp");
-   app.run();
-
-   int numWakeups = 0;
-   while(!app.isShutdown())
-   {
-      FdSet fdset;
-      si.buildFdSet(fdset);
-      
-      int ret = fdset.selectMilliSeconds(10000);
-      
-      if (ret > 0)
-      {
-         InfoLog(<< "Select detected: " << ret << " ready descriptors");
-         si.process(fdset);
-         numWakeups++;
-      }
-      else
-      {
-         InfoLog(<< "Select detected no ready descriptors, test failed");
-         break;
-      }
-   }
-
-   if (numWakeups == 6)
-   {
-      InfoLog(<< "Finished, test passed");
-   }
-   app.shutdown();
-   app.join();
+void 
+SelectInterruptor::handleProcessNotification()
+{
+   interrupt();   
 }
-         
-   
-            
 
+void 
+SelectInterruptor::buildFdSet(FdSet& fdset)
+{
+#ifdef WIN32
+	fdset.setRead(mSocket);
+#else
+   fdset.setRead(mPipe[0]);
+#endif
+}
+
+void 
+SelectInterruptor::process(FdSet& fdset)
+{      
+#ifdef WIN32
+   if ( fdset.readyToRead(mSocket))
+   {
+      char rdBuf[16];
+      recv(mSocket, rdBuf, sizeof(rdBuf), 0);
+   }
+#else
+   if ( fdset.readyToRead(mPipe[0]))
+   {
+      char rdBuf[16];
+      read(mPipe[0], rdBuf, sizeof(rdBuf));
+   }
+#endif
+}
+
+void 
+SelectInterruptor::interrupt()
+{
+   static char wakeUp[] = "w";
+#ifdef WIN32
+   int count = send(mSocket, wakeUp, sizeof(wakeUp), 0);
+   assert(count == sizeof(wakeUp));
+#else
+   size_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
+   assert(res == sizeof(wakeUp));   
+#endif
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
