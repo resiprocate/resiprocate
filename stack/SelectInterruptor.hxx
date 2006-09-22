@@ -1,70 +1,64 @@
-#include "resip/stack/InterruptableStackThread.hxx"
-#include "resip/stack/SipStack.hxx"
-#include "resip/stack/SipMessage.hxx"
-#include "resip/stack/SelectInterruptor.hxx"
-#include "rutil/Logger.hxx"
+#ifndef RESIP_SelectInterruptor_HXX
+#define RESIP_SelectInterruptor_HXX
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#include "resip/stack/AsyncProcessHandler.hxx"
+#include "rutil/Socket.hxx"
 
-using namespace resip;
+#if 0
+#if defined(WIN32)
+#include <Ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#endif
+#endif
 
-InterruptableStackThread::InterruptableStackThread(SipStack& stack, SelectInterruptor& si)
-   : mStack(stack),
-     mSelectInterruptor(si)
-{}
-
-InterruptableStackThread::~InterruptableStackThread()
+namespace resip
 {
-   //InfoLog (<< "InterruptableStackThread::~InterruptableStackThread()");
+
+/**
+    Used to 'artificially' interrupt a select call
+*/
+class SelectInterruptor : public AsyncProcessHandler
+{
+   public:
+      SelectInterruptor();
+      virtual ~SelectInterruptor();
+      
+      /** 
+          Called by the stack when messages are posted to it.
+          Calls interrupt.  
+      */
+      virtual void handleProcessNotification(); 
+      
+      /** 
+          cause the 'artificial' fd to signal 
+      */
+      void interrupt();      
+
+      /** 
+          Used to add the 'artificial' fd to the fdset that
+          will be responsible for interrupting a subsequent select
+          call.  
+      */
+      void buildFdSet(FdSet& fdset);
+
+      /** 
+          cleanup signalled fd
+      */
+      void process(FdSet& fdset);
+   private:
+#ifndef WIN32
+      int mPipe[2];
+#else
+      Socket mSocket;
+      sockaddr mWakeupAddr;
+#endif
+         
+};
+
 }
 
-void
-InterruptableStackThread::thread()
-{
-   while (!isShutdown())
-   {
-      try
-      {
-         FdSet fdset;
-         mStack.process(fdset); // .dcm. reqd to get send requests queued at transports
-         mSelectInterruptor.buildFdSet(fdset);
-         mStack.buildFdSet(fdset);
-         int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(), 
-                                                     getTimeTillNextProcessMS()));
-         if (ret >= 0)
-         {
-            // .dlb. use return value to peak at the message to see if it is a
-            // shutdown, and call shutdown if it is
-            // .dcm. how will this interact w/ TuSelector?
-            mSelectInterruptor.process(fdset);
-            mStack.process(fdset);
-         }
-      }
-      catch (BaseException& e)
-      {
-         InfoLog (<< "Unhandled exception: " << e);
-      }
-   }
-   WarningLog (<< "Shutting down stack thread");
-}
-
-void
-InterruptableStackThread::shutdown()
-{
-   ThreadIf::shutdown();
-   mSelectInterruptor.interrupt();
-}
-
-void
-InterruptableStackThread::buildFdSet(FdSet& fdset)
-{}
-
-unsigned int
-InterruptableStackThread::getTimeTillNextProcessMS() const
-{
-   //.dcm. --- eventually make infinite
-   return 10000;   
-}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
