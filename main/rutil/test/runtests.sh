@@ -20,7 +20,6 @@ for i in \
 	testLogger \
 	testMD5Stream \
 	testRandomHex \
-	testSelectInterruptor \
 	testSHA1Stream \
 	testThreadIf;
 do

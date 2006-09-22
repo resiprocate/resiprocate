@@ -39,6 +39,7 @@ all: \
 	testSdp.obj testSdp.exe \
         testSecurity.obj testSecurity.exe \
 	testSelect.obj testSelect.exe \
+	testSelectInterruptor.obj testSelectInterruptor.exe \
 	testServer.obj testServer.exe \
 	testSipFrag.obj testSipFrag.exe \
 	testSipMessage.obj testSipMessage.exe \
@@ -93,6 +94,7 @@ run:
 	testRlmi.exe
 	testSdp.exe
         testSecurity.exe
+	testSelectInterruptor.exe
 	testSipFrag.exe
 	testSipMessage.exe
 	testSipMessageMemory.exe

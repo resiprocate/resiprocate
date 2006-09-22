@@ -32,7 +32,6 @@ SRC = \
 	RWMutex.cxx \
 	Random.cxx \
 	RecursiveMutex.cxx \
-	SelectInterruptor.cxx \
 	SHA1Stream.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
