@@ -1,61 +1,64 @@
-#include "resip/stack/StackThread.hxx"
-#include "resip/stack/SipStack.hxx"
-#include "resip/stack/SipMessage.hxx"
-#include "rutil/Logger.hxx"
+#ifndef RESIP_SelectInterruptor_HXX
+#define RESIP_SelectInterruptor_HXX
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#include "resip/stack/AsyncProcessHandler.hxx"
+#include "rutil/Socket.hxx"
 
-using namespace resip;
+#if 0
+#if defined(WIN32)
+#include <Ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#endif
+#endif
 
-StackThread::StackThread(SipStack& stack)
-   : mStack(stack)
-{}
-
-StackThread::~StackThread()
+namespace resip
 {
-   //InfoLog (<< "StackThread::~StackThread()");
+
+/**
+    Used to 'artificially' interrupt a select call
+*/
+class SelectInterruptor : public AsyncProcessHandler
+{
+   public:
+      SelectInterruptor();
+      virtual ~SelectInterruptor();
+      
+      /** 
+          Called by the stack when messages are posted to it.
+          Calls interrupt.  
+      */
+      virtual void handleProcessNotification(); 
+      
+      /** 
+          cause the 'artificial' fd to signal 
+      */
+      void interrupt();      
+
+      /** 
+          Used to add the 'artificial' fd to the fdset that
+          will be responsible for interrupting a subsequent select
+          call.  
+      */
+      void buildFdSet(FdSet& fdset);
+
+      /** 
+          cleanup signalled fd
+      */
+      void process(FdSet& fdset);
+   private:
+#ifndef WIN32
+      int mPipe[2];
+#else
+      Socket mSocket;
+      sockaddr mWakeupAddr;
+#endif
+         
+};
+
 }
 
-void
-StackThread::thread()
-{
-   while (!isShutdown())
-   {
-      try
-      {
-         resip::FdSet fdset;
-         buildFdSet(fdset);
-         mStack.buildFdSet(fdset);
-		 int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(),
-                                                     getTimeTillNextProcessMS()));
-         if (ret >= 0)
-         {
-            // .dlb. use return value to peak at the message to see if it is a
-            // shutdown, and call shutdown if it is
-            beforeProcess();
-            mStack.process(fdset);
-            afterProcess();
-         }
-      }
-      catch (BaseException& e)
-      {
-         ErrLog (<< "Unhandled exception: " << e);
-      }
-   }
-   WarningLog (<< "Shutting down stack thread");
-}
-
-void
-StackThread::buildFdSet(FdSet& fdset)
-{}
-
-unsigned int
-StackThread::getTimeTillNextProcessMS() const
-{
-//   !dcm! moved the 25 ms min logic here
-//   return INT_MAX;
-   return 25;   
-}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

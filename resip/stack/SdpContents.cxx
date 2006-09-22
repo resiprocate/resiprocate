@@ -29,7 +29,7 @@ const char* NetworkType[] = {"???", "IP4", "IP6"};
 static const Data rtpmap("rtpmap");
 static const Data fmtp("fmtp");
 
-// RF C2327 6. page 9
+// RFC2327 6. page 9
 // "parsers should be tolerant and accept records terminated with a single
 // newline character"
 void skipEol(ParseBuffer& pb)

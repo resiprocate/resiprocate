@@ -290,9 +290,6 @@
 				RelativePath=".\RWMutex.cxx">
 			</File>
 			<File
-				RelativePath=".\SelectInterruptor.cxx">
-			</File>
-			<File
 				RelativePath=".\SHA1Stream.cxx">
 			</File>
 			<File
@@ -476,9 +473,6 @@
 			</File>
 			<File
 				RelativePath=".\RWMutex.hxx">
-			</File>
-			<File
-				RelativePath=".\SelectInterruptor.hxx">
 			</File>
 			<File
 				RelativePath=".\SHA1Stream.hxx">

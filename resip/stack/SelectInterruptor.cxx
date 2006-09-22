@@ -1,60 +1,94 @@
-#include "resip/stack/StackThread.hxx"
-#include "resip/stack/SipStack.hxx"
-#include "resip/stack/SipMessage.hxx"
+#include "resip/stack/SelectInterruptor.hxx"
+
+#include <cassert>
 #include "rutil/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 using namespace resip;
 
-StackThread::StackThread(SipStack& stack)
-   : mStack(stack)
-{}
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-StackThread::~StackThread()
+SelectInterruptor::SelectInterruptor()
 {
-   //InfoLog (<< "StackThread::~StackThread()");
+#ifdef WIN32
+   mSocket = ::socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+   sockaddr_in loopback;
+   memset(&loopback, 0, sizeof(loopback));
+   loopback.sin_family = AF_INET;
+   loopback.sin_port = 0;
+   loopback.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+   makeSocketNonBlocking(mSocket); //win32 woes    
+   ::bind( mSocket, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback));
+   memset(&mWakeupAddr, 0, sizeof(mWakeupAddr));   
+   int len = sizeof(mWakeupAddr);
+   int error = getsockname(mSocket, (sockaddr *)&mWakeupAddr, &len);
+   assert(error == 0);
+   error= connect(mSocket, &mWakeupAddr, sizeof(mWakeupAddr)); 
+   assert(error == 0);
+#else
+   pipe(mPipe);
+#endif
 }
 
-void
-StackThread::thread()
+SelectInterruptor::~SelectInterruptor()
 {
-   while (!isShutdown())
+#ifdef WIN32
+   closesocket(mSocket);
+#else
+   close(mPipe[0]);
+   close(mPipe[1]);
+#endif
+}   
+
+void 
+SelectInterruptor::handleProcessNotification()
+{
+   interrupt();   
+}
+
+void 
+SelectInterruptor::buildFdSet(FdSet& fdset)
+{
+#ifdef WIN32
+	fdset.setRead(mSocket);
+#else
+   fdset.setRead(mPipe[0]);
+#endif
+}
+
+void 
+SelectInterruptor::process(FdSet& fdset)
+{      
+#ifdef WIN32
+   if ( fdset.readyToRead(mSocket))
    {
-      try
-      {
-         resip::FdSet fdset;
-         buildFdSet(fdset);
-         mStack.buildFdSet(fdset);
-		 int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(),
-                                                     getTimeTillNextProcessMS()));
-         if (ret >= 0)
-         {
-            // .dlb. use return value to peak at the message to see if it is a
-            // shutdown, and call shutdown if it is
-            beforeProcess();
-            mStack.process(fdset);
-            afterProcess();
-         }
-      }
-      catch (BaseException& e)
-      {
-         ErrLog (<< "Unhandled exception: " << e);
-      }
+      char rdBuf[16];
+      recv(mSocket, rdBuf, sizeof(rdBuf), 0);
    }
-   WarningLog (<< "Shutting down stack thread");
+#else
+   if ( fdset.readyToRead(mPipe[0]))
+   {
+      char rdBuf[16];
+      read(mPipe[0], rdBuf, sizeof(rdBuf));
+   }
+#endif
 }
 
-void
-StackThread::buildFdSet(FdSet& fdset)
-{}
-
-unsigned int
-StackThread::getTimeTillNextProcessMS() const
+void 
+SelectInterruptor::interrupt()
 {
-//   !dcm! moved the 25 ms min logic here
-//   return INT_MAX;
-   return 25;   
+   static char wakeUp[] = "w";
+#ifdef WIN32
+   int count = send(mSocket, wakeUp, sizeof(wakeUp), 0);
+   assert(count == sizeof(wakeUp));
+#else
+   size_t res = write(mPipe[1], wakeUp, sizeof(wakeUp));
+   assert(res == sizeof(wakeUp));   
+#endif
 }
 
 /* ====================================================================

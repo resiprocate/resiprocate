@@ -1,61 +1,108 @@
-#include "resip/stack/StackThread.hxx"
-#include "resip/stack/SipStack.hxx"
-#include "resip/stack/SipMessage.hxx"
-#include "rutil/Logger.hxx"
+#if defined(HAVE_CONFIG_H)
+#include "resip/stack/config.hxx" 
+#endif
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#include <iostream>
+
+#if defined (HAVE_POPT_H) 
+#include <popt.h>
+#else
+#ifndef WIN32
+#warning "will not work very well without libpopt"
+#endif
+#endif
+
+#include "resip/stack/SelectInterruptor.hxx"
+#include "rutil/Logger.hxx"
+#include "rutil/DataStream.hxx"
+#include "rutil/ThreadIf.hxx"
 
 using namespace resip;
+using namespace std;
 
-StackThread::StackThread(SipStack& stack)
-   : mStack(stack)
+#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+
+class FakeApp : public ThreadIf
+{
+   public: 
+      FakeApp(SelectInterruptor& s);
+      ~FakeApp() {};
+      
+      void thread();
+   private:
+      SelectInterruptor& mSi;
+};
+
+FakeApp::FakeApp(SelectInterruptor& s) : mSi(s)
 {}
 
-StackThread::~StackThread()
+void FakeApp::thread()
 {
-   //InfoLog (<< "StackThread::~StackThread()");
+    static unsigned wakeups[6] = { 3, 1, 0, 2, 5, 1 };
+
+    for (unsigned long n = 0; n < sizeof(wakeups)/sizeof(long); n++)
+    {
+       InfoLog( << "Wakeup in: " << wakeups[n] << ", " << n+1 << " of " 
+                << sizeof(wakeups)/sizeof(long));
+#ifdef WIN32
+	   Sleep(wakeups[n]*1000);
+#else
+	   sleep(wakeups[n]);
+#endif
+       InfoLog(<< "Waking up select");
+       mSi.interrupt();
+    }
+    shutdown();
 }
 
-void
-StackThread::thread()
+
+int
+main(int argc, char* argv[])
 {
-   while (!isShutdown())
+#ifdef WIN32
+	initNetwork();
+#endif
+
+   Log::initialize(Log::Cout, Log::Debug, argv[0]);
+   
+   SelectInterruptor si;
+   FakeApp app(si);
+
+   InfoLog(<< "Starting FakeApp");
+   app.run();
+
+   int numWakeups = 0;
+   while(!app.isShutdown())
    {
-      try
+      FdSet fdset;
+      si.buildFdSet(fdset);
+      
+      int ret = fdset.selectMilliSeconds(10000);
+      
+      if (ret > 0)
       {
-         resip::FdSet fdset;
-         buildFdSet(fdset);
-         mStack.buildFdSet(fdset);
-		 int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(),
-                                                     getTimeTillNextProcessMS()));
-         if (ret >= 0)
-         {
-            // .dlb. use return value to peak at the message to see if it is a
-            // shutdown, and call shutdown if it is
-            beforeProcess();
-            mStack.process(fdset);
-            afterProcess();
-         }
+         InfoLog(<< "Select detected: " << ret << " ready descriptors");
+         si.process(fdset);
+         numWakeups++;
       }
-      catch (BaseException& e)
+      else
       {
-         ErrLog (<< "Unhandled exception: " << e);
+         InfoLog(<< "Select detected no ready descriptors, test failed");
+         break;
       }
    }
-   WarningLog (<< "Shutting down stack thread");
-}
 
-void
-StackThread::buildFdSet(FdSet& fdset)
-{}
-
-unsigned int
-StackThread::getTimeTillNextProcessMS() const
-{
-//   !dcm! moved the 25 ms min logic here
-//   return INT_MAX;
-   return 25;   
+   if (numWakeups == 6)
+   {
+      InfoLog(<< "Finished, test passed");
+   }
+   app.shutdown();
+   app.join();
 }
+         
+   
+            
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

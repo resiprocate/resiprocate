@@ -131,7 +131,8 @@ distclean: cleancontrib cleanpkg
 # past.  (As far as I know, installing ares is needed only when
 # resiprocateLib is used as part of sipX, and the sipX Makefiles
 # invoke the install-ares target directly.)
-install: install-rutil install-resip install-dum install-repro
+# !bwc! We need ares if we are installing shared libraries.
+install: install-ares install-rutil install-resip install-dum
 
 install-ares:
 	cd contrib/ares; $(MAKE) install
