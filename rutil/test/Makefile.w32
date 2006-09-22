@@ -18,7 +18,6 @@ all: \
 	testLogger.obj testLogger.exe \
 	testMD5Stream.obj testMD5Stream.exe \
 	testRandomHex.obj testRandomHex.exe \
-	testSelectInterruptor.obj testSelectInterruptor.exe \
 	testSHA1Stream.obj testSHA1Stream.exe \
 	testSharedPtr.obj testSharedPtr.exe \
 	testThreadIf.obj testThreadIf.exe \
@@ -45,7 +44,6 @@ run:
 #	testLogger.exe    - Win32 log threading is not implemented
 	testMD5Stream.exe
 	testRandomHex.exe
-	testSelectInterruptor.exe
 	testSHA1Stream.exe
 	testSharedPtr.exe
 	testThreadIf.exe
