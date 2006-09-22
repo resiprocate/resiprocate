@@ -37,6 +37,7 @@ drivers="
 	testPlainContents 
 	testRlmi 
 	testSdp 
+	testSelectInterruptor 
 	testSipFrag 
 	testSipMessage 
 	testSipMessageMemory 
