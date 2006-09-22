@@ -514,6 +514,28 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
+                                               const SharedPtr<UserProfile>& userProfile, 
+                                               const SdpContents* initialOffer,
+                                               AppDialogSet* appDs)
+{
+   ServerSubscriptionHandle empty;
+   return makeInviteSessionFromRefer(refer, userProfile, empty, initialOffer, None, 0, appDs);
+}
+
+SharedPtr<SipMessage>
+DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
+                                               ServerSubscriptionHandle serverSub,
+                                               const SdpContents* initialOffer,
+                                               EncryptionLevel level,
+                                               const SdpContents* alternative,
+                                               AppDialogSet* appDs)
+{
+   return makeInviteSessionFromRefer(refer, serverSub.isValid() ? serverSub->mDialog.mDialogSet.getUserProfile() : getMasterUserProfile(), serverSub, initialOffer, level, alternative, appDs);
+}
+
+SharedPtr<SipMessage>
+DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
+                                               const SharedPtr<UserProfile>& userProfile, 
                                                ServerSubscriptionHandle serverSub,
                                                const SdpContents* initialOffer,
                                                EncryptionLevel level,
@@ -542,7 +564,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    // !jf! this code assumes you have a UserProfile
    SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this,
                                                                        target,
-                                                                       serverSub.isValid() ? serverSub->mDialog.mDialogSet.getUserProfile() : getMasterUserProfile(),
+                                                                       userProfile,
                                                                        initialOffer, level, alternative, serverSub), appDs);
    DumHelper::setOutgoingEncryptionLevel(*inv, level);
 

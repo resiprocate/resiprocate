@@ -441,6 +441,9 @@
 				RelativePath=".\SecurityAttributes.cxx">
 			</File>
 			<File
+				RelativePath=".\SelectInterruptor.cxx">
+			</File>
+			<File
 				RelativePath=".\SERNonceHelper.cxx">
 			</File>
 			<File
@@ -824,6 +827,9 @@
 			</File>
 			<File
 				RelativePath=".\SecurityTypes.hxx">
+			</File>
+			<File
+				RelativePath=".\SelectInterruptor.hxx">
 			</File>
 			<File
 				RelativePath=".\SendData.hxx">
