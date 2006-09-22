@@ -1,7 +1,7 @@
 #include "resip/stack/InterruptableStackThread.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "rutil/SelectInterruptor.hxx"
+#include "resip/stack/SelectInterruptor.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
