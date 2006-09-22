@@ -19,6 +19,8 @@ Bug fixes in build system:
 Multithreaded DLL - consistent with sipX projects
 - various OS X build fixes
 - fixed clean and distclean build system targets
+- header files are no longer installed with mode 755 (is 644 now)
+- ares is now installed (using shared libraries required its presence)
 
 New features in rutil:
 - synchronous A-record lookup in DnsUtil
@@ -35,7 +37,8 @@ Bug fixes in rutil:
 - fixes to conversion methods in Data
 - fixed static initialization bug in Log.cxx where we were exhausting pthread_keys
 - fixed a memory leak in DnsStub
-
+- removed a dependency on resip/stack (moved SelectInterruptor to resip/stack)
+- OpenSSLInit no longer writes stuff to std::cerr (bypassing the logging system)
 
 New features in stack:
 - allow StatisticsManager to be disabled at runtime
@@ -127,6 +130,7 @@ subjectAltName list
   - if no subjectAltName, then commonName is used
 - implemented command pattern/target based feature handling in dum
 - support for Allowed-Events header in DUM
+- added new signature for makeInviteSessionFromRefer - that allows specifying the User Profile to use. (this is required when creating an Invite Session from a refer with no-subscription)
 
 
 Bug fixes in DUM:
