@@ -51,6 +51,7 @@ testResponses.cxx \
 testRlmi.cxx \
 testSdp.cxx \
 testSelect.cxx \
+testSelectInterruptor.cxx \
 testServer.cxx \
 testSipFrag.cxx \
 testSipMessage.cxx \
