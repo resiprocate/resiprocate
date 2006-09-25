@@ -2,7 +2,11 @@
 #include "resip/stack/config.hxx"
 #endif
 
-#if !defined(WIN32)
+#ifdef WIN32
+#include <winsock2.h> 
+#include <ws2tcpip.h> 
+#include <wspiapi.h>   // Required for freeaddrinfo implementation in Windows 2000, NT, Me/95/98
+#else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -382,6 +386,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    assert(msg->exists(h_Vias));
    assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
+
    if (msg->isRequest() && !via.sentHost().empty())
       // hint provided in sent-by of via by application
    {
