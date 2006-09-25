@@ -193,7 +193,7 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:FALSE"
+            "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
@@ -404,7 +404,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Repro SIP Proxy"
         "ProductCode" = "8:{1D66F08D-5168-4EC9-B809-CC792E780CA9}"
-        "PackageCode" = "8:{327D29D4-B668-4491-B27F-9564DBF5D6E2}"
+        "PackageCode" = "8:{FB3E028B-C8D1-4BB7-877B-DB02256660BB}"
         "UpgradeCode" = "8:{7BD08495-64E4-4565-A1DC-93954D304A2E}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
