@@ -76,7 +76,7 @@ void ares_search(ares_channel channel, const char *name, int dnsclass,
       return;
     }
   squery->channel = channel;
-  squery->name = strdup(name);
+  squery->name = _strdup(name);
   if (!squery->name)
     {
       free(squery);
@@ -209,7 +209,7 @@ static int single_domain(ares_channel channel, const char *name, char **s)
    */
   if (name[len - 1] == '.')
     {
-      *s = strdup(name);
+      *s = _strdup(name);
       return (*s) ? ARES_SUCCESS : ARES_ENOMEM;
     }
 
@@ -258,7 +258,7 @@ static int single_domain(ares_channel channel, const char *name, char **s)
   if (channel->flags & ARES_FLAG_NOSEARCH || channel->ndomains == 0)
     {
       /* No domain search to do; just try the name as-is. */
-      *s = strdup(name);
+      *s = _strdup(name);
       return (*s) ? ARES_SUCCESS : ARES_ENOMEM;
     }
 

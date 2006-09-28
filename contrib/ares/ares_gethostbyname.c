@@ -90,7 +90,7 @@ void ares_gethostbyname(ares_channel channel, const char *name, int family,
       return;
     }
   hquery->channel = channel;
-  hquery->name = strdup(name);
+  hquery->name = _strdup(name);
   if (!hquery->name)
     {
       free(hquery);
@@ -199,7 +199,7 @@ static int fake_hostent(const char *name, ares_host_callback callback,
     }
 
   /* Duplicate the name, to avoid a constness violation. */
-  hostent.h_name = strdup(name);
+  hostent.h_name = _strdup(name);
   if (!hostent.h_name)
     {
       callback(arg, ARES_ENOMEM, NULL);
