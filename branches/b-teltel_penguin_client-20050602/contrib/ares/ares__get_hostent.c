@@ -94,7 +94,8 @@ int ares__get_hostent(FILE *fp, struct hostent **host)
 	break;
       hostent->h_aliases = NULL;
       hostent->h_addr_list = NULL;
-      hostent->h_name = strdup(canonical);
+      hostent->h_name = _strdup(canonical);
+
       if (!hostent->h_name)
 	break;
       hostent->h_addr_list = malloc(2 * sizeof(char *));

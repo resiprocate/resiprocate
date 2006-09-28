@@ -138,7 +138,7 @@ int ares__read_line(FILE *fp, char **buf, int *bufsize);
 void ares__kill_socket(int s);
 
 #ifdef _WIN32
-#define strcasecmp(a,b) stricmp(a,b)
-#define strncasecmp(a,b,n) strnicmp(a,b,n)
+#define strcasecmp(a,b) _stricmp(a,b)
+#define strncasecmp(a,b,n) _strnicmp(a,b,n)
 #endif
 
