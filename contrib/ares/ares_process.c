@@ -72,7 +72,7 @@ void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
   ares_local_process_requests();
 }
 
-/* If any TCP sockets select true for writing, write out queued data
+/* If any TCP sockets select true for writing, _write out queued data
  * we have for them.
  */
 static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
@@ -167,7 +167,7 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
 	{
 	  /* Can't allocate iovecs; just send the first request. */
 	  sendreq = server->qhead;
-	  count = write(server->tcp_socket, sendreq->data, sendreq->len);
+	  count = _write(server->tcp_socket, sendreq->data, sendreq->len);
 	  if (count < 0)
 	    {
 	      handle_error(channel, i, now);
@@ -191,7 +191,7 @@ static void write_tcp_data(ares_channel channel, fd_set *write_fds, time_t now)
     }
 }
 
-/* If any TCP socket selects true for reading, read some data,
+/* If any TCP socket selects true for reading, _read some data,
  * allocate a buffer if we finish reading the length word, and process
  * a packet if we finish reading one.
  */
@@ -209,10 +209,10 @@ static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
 
       if (server->tcp_lenbuf_pos != 2)
 	{
-	  /* We haven't yet read a length word, so read that (or
-	   * what's left to read of it).
+	  /* We haven't yet _read a length word, so _read that (or
+	   * what's left to _read of it).
 	   */
-	  count = read(server->tcp_socket,
+	  count = _read(server->tcp_socket,
 		       server->tcp_lenbuf + server->tcp_lenbuf_pos,
 		       2 - server->tcp_lenbuf_pos);
 	  if (count <= 0)
@@ -238,7 +238,7 @@ static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
       else
 	{
 	  /* Read data into the allocated buffer. */
-	  count = read(server->tcp_socket,
+	  count = _read(server->tcp_socket,
 		       server->tcp_buffer + server->tcp_buffer_pos,
 		       server->tcp_length - server->tcp_buffer_pos);
 	  if (count <= 0)
@@ -251,7 +251,7 @@ static void read_tcp_data(ares_channel channel, fd_set *read_fds, time_t now)
 	  if (server->tcp_buffer_pos == server->tcp_length)
 	    {
 	      /* We finished reading this answer; process it and
-               * prepare to read another length word.
+               * prepare to _read another length word.
 	       */
 	      process_answer(channel, server->tcp_buffer, server->tcp_length,
 			     i, 1, now);
