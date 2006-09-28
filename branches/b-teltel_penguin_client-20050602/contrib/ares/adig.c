@@ -42,8 +42,8 @@
 #include "ares_compat.h"
 
 #if defined(_WIN32) || defined(__QNX__)
-#define strcasecmp(a,b) stricmp(a,b)
-#define strncasecmp(a,b,c) strnicmp(a,b,c)
+#define strcasecmp(a,b) _stricmp(a,b)
+#define strncasecmp(a,b,c) _strnicmp(a,b,c)
 #endif
 
 

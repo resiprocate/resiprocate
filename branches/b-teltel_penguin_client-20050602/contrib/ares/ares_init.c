@@ -239,7 +239,7 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
       for (i = 0; i < options->ndomains; i++)
 	{
 	  channel->ndomains = i;
-	  channel->domains[i] = strdup(options->domains[i]);
+	  channel->domains[i] = _strdup(options->domains[i]);
 	  if (!channel->domains[i])
 	    return ARES_ENOMEM;
 	}
@@ -249,7 +249,7 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
   /* Set lookups, if given. */
   if ((optmask & ARES_OPT_LOOKUPS) && !channel->lookups)
     {
-      channel->lookups = strdup(options->lookups);
+      channel->lookups = _strdup(options->lookups);
       if (!channel->lookups)
 	return ARES_ENOMEM;
     }
@@ -483,7 +483,7 @@ static int init_by_defaults(ares_channel channel)
 	  if (!channel->domains)
 	    return ARES_ENOMEM;
 	  channel->ndomains = 0;
-	  channel->domains[0] = strdup(strchr(hostname, '.') + 1);
+	  channel->domains[0] = _strdup(strchr(hostname, '.') + 1);
 	  if (!channel->domains[0])
 	    return ARES_ENOMEM;
 	  channel->ndomains = 1;
@@ -498,7 +498,7 @@ static int init_by_defaults(ares_channel channel)
 
   if (!channel->lookups)
     {
-      channel->lookups = strdup("bf");
+      channel->lookups = _strdup("bf");
       if (!channel->lookups)
 	return ARES_ENOMEM;
     }
@@ -539,7 +539,7 @@ static int config_lookup(ares_channel channel, const char *str)
 	p++;
     }
   *l = 0;
-  channel->lookups = strdup(lookups);
+  channel->lookups = _strdup(lookups);
   return (channel->lookups) ? ARES_SUCCESS : ARES_ENOMEM;
 }
 

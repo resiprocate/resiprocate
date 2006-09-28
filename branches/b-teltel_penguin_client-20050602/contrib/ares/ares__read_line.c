@@ -20,7 +20,7 @@
 #include "ares.h"
 #include "ares_private.h"
 
-/* This is an internal function.  Its contract is to read a line from
+/* This is an internal function.  Its contract is to _read a line from
  * a file into a dynamically allocated buffer, zeroing the trailing
  * newline if there is one.  The calling routine may call
  * ares__read_line multiple times with the same buf and bufsize
