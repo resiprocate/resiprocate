@@ -35,6 +35,7 @@ USE_CURL := no
 USE_GOOGLE_MALLOC := no
 USE_GOOGLE_CPUPERF := no
 USE_IPV6 := no
+DB_HEADERS := /usr/include/db4
 RESIP_FIXED_POINT := no
 PEDANTIC_STACK := no
 INSTALL_PREFIX := /usr/local" > build/Makefile.conf
@@ -188,6 +189,12 @@ $uname = `uname`;
     default     => "no",
     validate    => [@yesno],
     flag        => 'ipv6',
+  },
+  {
+    name        => "DB_HEADERS",
+    description => "Where is db_cxx.h?",
+    default     => "/usr/include/db4",
+    option      => "db4-headers",
   },
   {
     name	=> "RESIP_FIXED_POINT",
