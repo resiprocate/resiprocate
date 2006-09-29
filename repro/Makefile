@@ -9,7 +9,10 @@ USE_MYSQL = false
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-CXXFLAGS += -I..
+CXXFLAGS += -I.. 
+ifneq ($(DB_HEADERS),/usr/include)
+CXXFLAGS += -I$(DB_HEADERS)
+endif
 PACKAGES += DUM RESIP RUTIL OPENSSL ARES DB4CXX PTHREAD POPT
 
 ifeq ($(OSTYPE),MinGW)
