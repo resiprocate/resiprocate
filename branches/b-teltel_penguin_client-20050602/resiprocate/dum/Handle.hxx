@@ -91,6 +91,11 @@ class Handle
       {
          return mId == other.mId;
       }
+
+      bool operator<(const Handle<T>& other) const
+      {
+         return mId < other.mId;
+      }
       
 
    protected:
