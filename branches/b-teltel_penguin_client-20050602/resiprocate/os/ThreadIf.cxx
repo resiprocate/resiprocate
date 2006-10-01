@@ -86,7 +86,7 @@ ThreadIf::run()
    // Example of using _beginthreadex() mixed with WaitForSingleObject() and CloseHandle():
    //   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__beginthread.2c_._beginthreadex.asp
    
-   assert(mThread == 0);
+   assert(mThread == 0);   // for debugging: force coder to call join() when reusing ThreadIf.
    mThread =
 #ifdef _WIN32_WCE
        // there is no _beginthreadex() for WINCE
