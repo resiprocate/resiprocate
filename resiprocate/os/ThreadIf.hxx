@@ -60,6 +60,7 @@ class RESIP_API ThreadIf
 
       // returns true if the thread has been asked to shutdown or not running
       bool isShutdown() const;
+      bool isRunning() const;
 
 #ifdef WIN32
 #ifdef _WIN32_WCE
@@ -84,7 +85,9 @@ class RESIP_API ThreadIf
       Id mId;
 
       bool mShutdown;
+      bool mRunning;
       mutable Mutex mShutdownMutex;
+      mutable Mutex mRunningMutex;
       mutable Condition mShutdownCondition;
 
    private:

@@ -58,7 +58,7 @@ threadWrapper( void* threadParm )
 }
 }
 
-ThreadIf::ThreadIf() : mId(0), mShutdown(false), mShutdownMutex()
+ThreadIf::ThreadIf() : mId(0), mShutdown(false), mRunning(false), mShutdownMutex()
 {
 }
 
@@ -107,6 +107,11 @@ ThreadIf::run()
       // TODO - ADD LOGING HERE
    }
 #endif
+   {
+      resip::Lock lock(mRunningMutex); (void)lock;
+      mRunning  = true;
+   }
+   mShutdown = false;
 }
 
 void
@@ -161,7 +166,12 @@ ThreadIf::join()
    
 #endif
 
-   mId = 0;
+   mId       = 0;
+   mShutdown = false;
+   {
+      resip::Lock lock(mRunningMutex); (void)lock;
+      mRunning  = false;
+   }
 }
 #if !defined(WIN32)
 ThreadIf::Id
@@ -198,6 +208,12 @@ ThreadIf::isShutdown() const
    return ( mShutdown );
 }
 
+bool
+ThreadIf::isRunning() const
+{
+   resip::Lock lock(mRunningMutex); (void)lock;
+   return mRunning;
+}
 
 // End of File
 
