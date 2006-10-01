@@ -58,7 +58,13 @@ threadWrapper( void* threadParm )
 }
 }
 
-ThreadIf::ThreadIf() : mId(0), mShutdown(false), mRunning(false), mShutdownMutex()
+ThreadIf::ThreadIf() 
+: mId(0)
+ ,mShutdown(false)
+ ,mShutdownMutex()
+#if defined(WIN32)
+ ,mThread(0)
+#endif
 {
 }
 
@@ -73,7 +79,6 @@ void
 ThreadIf::run()
 {
    assert(mId == 0);
-
 #if defined(WIN32)
    // !kh!
    // Why _beginthreadex() instead of CreateThread():
@@ -81,6 +86,7 @@ ThreadIf::run()
    // Example of using _beginthreadex() mixed with WaitForSingleObject() and CloseHandle():
    //   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__beginthread.2c_._beginthreadex.asp
    
+   assert(mThread == 0);
    mThread =
 #ifdef _WIN32_WCE
        // there is no _beginthreadex() for WINCE
@@ -107,10 +113,6 @@ ThreadIf::run()
       // TODO - ADD LOGING HERE
    }
 #endif
-   {
-      resip::Lock lock(mRunningMutex); (void)lock;
-      mRunning  = true;
-   }
    mShutdown = false;
 }
 
@@ -151,6 +153,7 @@ ThreadIf::join()
 
    //  !kh!
    CloseHandle(mThread);
+   mThread = 0;
 #else
    void* stat;
    if (mId != pthread_self())
@@ -168,10 +171,6 @@ ThreadIf::join()
 
    mId       = 0;
    mShutdown = false;
-   {
-      resip::Lock lock(mRunningMutex); (void)lock;
-      mRunning  = false;
-   }
 }
 #if !defined(WIN32)
 ThreadIf::Id
@@ -211,8 +210,14 @@ ThreadIf::isShutdown() const
 bool
 ThreadIf::isRunning() const
 {
-   resip::Lock lock(mRunningMutex); (void)lock;
-   return mRunning;
+#if defined(WIN32)
+   DWORD exitCode;
+   return (mThread && GetExitCodeThread(mThread,&exitCode) != 0 && exitCode == STILL_ACTIVE);
+#else
+   int policy;
+   sched_param param;
+   return (mId != 0 && pthread_getschedparam(mId, &policy, &param) == 0);
+#endif
 }
 
 // End of File
