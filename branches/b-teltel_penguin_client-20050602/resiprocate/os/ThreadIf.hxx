@@ -85,9 +85,7 @@ class RESIP_API ThreadIf
       Id mId;
 
       bool mShutdown;
-      bool mRunning;
       mutable Mutex mShutdownMutex;
-      mutable Mutex mRunningMutex;
       mutable Condition mShutdownCondition;
 
    private:
