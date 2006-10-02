@@ -170,7 +170,6 @@ ThreadIf::join()
 #endif
 
    mId       = 0;
-   mShutdown = false;
 }
 #if !defined(WIN32)
 ThreadIf::Id
