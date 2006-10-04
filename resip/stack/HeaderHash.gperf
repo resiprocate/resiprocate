@@ -68,6 +68,8 @@ sip-etag, Headers::SIPETag
 sip-if-match, Headers::SIPIfMatch
 supported, Headers::Supported
 timestamp, Headers::Timestamp
+answer-mode, Headers::AnswerMode
+priv-answer-mode, Headers::PrivAnswerMode
 unsupported, Headers::Unsupported
 user-agent, Headers::UserAgent
 warning, Headers::Warning
