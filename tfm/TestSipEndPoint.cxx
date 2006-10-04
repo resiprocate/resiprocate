@@ -1803,8 +1803,7 @@ TestSipEndPoint::Send401::go(boost::shared_ptr<resip::SipMessage> msg)
 
    Auth auth;
    auth.scheme() = "Digest";
-   Data timestamp((unsigned int)(Timer::getTimeMs()/1000));
-   auth.param(p_nonce) = Helper::makeNonce(*msg, timestamp);
+   auth.param(p_nonce) = Random::getCryptoRandomHex(8);
    auth.param(p_algorithm) = "MD5";
    auth.param(p_realm) = "localhost";
    auth.param(p_qopOptions) = "auth";
