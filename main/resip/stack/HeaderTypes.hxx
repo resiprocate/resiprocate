@@ -123,6 +123,8 @@ class Headers
 
          defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261"),
          defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03"),
+         defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01"),
+         defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01"),
          
          defineMultiHeader(RESIP_DO_NOT_USE, "ShouldNotSeeThis", StringCategory, "N/A"),
          MAX_HEADERS,
