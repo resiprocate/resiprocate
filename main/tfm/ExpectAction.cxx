@@ -3,6 +3,8 @@
 void 
 ExpectAction::operator()() 
 {
+   //!dcm!  you hit this assert chacnes are you are using a base class that
+   //doesn't have operator() defined and that is expecting an event
    assert(0); 
 }
 

@@ -6226,7 +6226,9 @@ class MyTestCase
          TEST(testTCPPreparseError);
          TEST(testTCPParseBufferError);
 #else
-         TEST(testInviteAllBusyContacts);
+         TEST(testRegisterBasic);
+//         TEST(testMultiple1);
+//         TEST(testInviteAllBusyContacts);
 #endif         
          return suiteOfTests;
       }
@@ -6244,7 +6246,7 @@ int main(int argc, char** argv)
       TestHolder::createStatic();
       Fixture::initialize(argc, argv);
       
-      CppUnit::TextUi::TestRunner runner;
+      CppUnit::TextTestRunner runner;
 
       runner.addTest( MyTestCase::suite() );
       runner.run();
