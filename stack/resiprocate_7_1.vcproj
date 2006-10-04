@@ -973,6 +973,19 @@
 				RelativePath=".\XMLCursor.hxx">
 			</File>
 		</Filter>
+		<Filter
+			Name="GPerfFiles"
+			Filter="">
+			<File
+				RelativePath=".\HeaderHash.gperf">
+			</File>
+			<File
+				RelativePath=".\MethodHash.gperf">
+			</File>
+			<File
+				RelativePath=".\ParameterHash.gperf">
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

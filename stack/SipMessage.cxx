@@ -1353,6 +1353,8 @@ defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
 defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
 defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03");
+defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
+defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
 defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
 defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
@@ -1530,6 +1532,8 @@ SipMessage::mergeUri(const Uri& source)
       h_ProxyRequires.merge(*this, source.embedded());
       h_Requires.merge(*this, source.embedded());
       h_Unsupporteds.merge(*this, source.embedded());
+      h_AnswerMode.merge(*this, source.embedded());
+      h_PrivAnswerMode.merge(*this, source.embedded());
 
       h_RSeq.merge(*this, source.embedded());
       h_RAck.merge(*this, source.embedded());

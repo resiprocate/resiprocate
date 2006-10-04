@@ -237,6 +237,10 @@ InviteSession::isAccepted() const
    {
       case UAS_Start:
       case UAS_Offer:
+      case UAS_OfferReliable:
+      case UAS_NoOffer:
+      case UAS_NoOfferReliable:
+      case UAS_ProvidedOffer:
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyOffer:
       case UAS_EarlyProvidedOffer:
@@ -576,7 +580,7 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
-         refer->header(h_Supporteds).push_back(Token("norefersub"));
+         refer->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
       }
 
       send(refer);
@@ -622,7 +626,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
-         refer->header(h_Supporteds).push_back(Token("norefersub"));
+         refer->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
       }
 
       send(refer);
@@ -2421,7 +2425,7 @@ InviteSession::acceptReferNoSub(int statusCode)
    SharedPtr<SipMessage> response(new SipMessage);
    mDialog.makeResponse(*response, mLastReferNoSubRequest, statusCode);
    response->header(h_ReferSub).value() = "false";
-   //response->header(h_Supporteds).push_back(Token("norefersub"));
+   //response->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
    
    send(response);
 } 
