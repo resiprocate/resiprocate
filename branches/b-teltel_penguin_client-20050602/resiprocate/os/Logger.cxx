@@ -72,8 +72,14 @@ bool
 genericLogCheckLevel(resip::Log::Level level)
 {
    const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting();
-   return ((setting && level <= setting->level) ||
-	   (!setting && resip::GenericLogImpl::isLogging(level)));
+   if (setting)
+   {
+      return level <= setting->level;
+   }
+   else
+   {
+      return resip::GenericLogImpl::isLogging(level);
+   }
 }
 
 /* ====================================================================
