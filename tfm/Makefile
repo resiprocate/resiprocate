@@ -46,7 +46,6 @@ SRC = ActionBase.cxx \
 	TransportDriver.cxx \
 	\
 	predicates/ExpectUtils.cxx \
-	predicates/NotifyContents.cxx \
 	predicates/SubscribeExpired.cxx \
 	predicates/SubscribeExpires.cxx \
 	\
