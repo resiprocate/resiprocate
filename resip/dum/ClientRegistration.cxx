@@ -320,19 +320,18 @@ ClientRegistration::dispatch(const SipMessage& msg)
             if (msg.exists(h_ServiceRoutes))
             {
                InfoLog(<< "Updating service route: " << Inserter(msg.header(h_ServiceRoutes)));
-			   getUserProfile()->setServiceRoute(msg.header(h_ServiceRoutes));
+               getUserProfile()->setServiceRoute(msg.header(h_ServiceRoutes));
             }
             else
             {
-               InfoLog(<< "Clearing service route (" << Inserter(getUserProfile()->getServiceRoute()) << ")");
+               DebugLog(<< "Clearing service route (" << Inserter(getUserProfile()->getServiceRoute()) << ")");
                getUserProfile()->setServiceRoute(NameAddrs());
             }
          }
          catch(BaseException &e)
          {
             InfoLog(<< "Error Parsing Service Route:" << e);
-         }
-         
+         }    
 
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
