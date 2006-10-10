@@ -50,6 +50,13 @@ endif
 
 endif
 
+ifeq ($(USE_SIGCOMP),yes)
+    OPENSIGCOMP_LIBNAME     := opensigcomp
+    OPENSIGCOMP_LIBDIRS     := $(SIGCOMP_BASEDIR)/lib
+    OPENSIGCOMP_INCLUDEDIRS := $(SIGCOMP_BASEDIR)/include
+    OPENSIGCOMP_DEFINES     := USE_SIGCOMP
+endif
+
 ifeq ($(USE_DTLS),yes)
 OPENSSL_DEFINES += USE_DTLS
 endif
