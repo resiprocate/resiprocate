@@ -23,6 +23,8 @@
 #include "resiprocate/dum/DialogUsageManager.hxx"
 #include "resiprocate/dum/DumException.hxx"
 #include "resiprocate/dum/DumShutdownHandler.hxx"
+#include "resiprocate/dum/ExternalMessageHandler.hxx"
+#include "resiprocate/dum/ExternalMessageBase.hxx"
 #include "resiprocate/dum/InviteSessionCreator.hxx"
 #include "resiprocate/dum/InviteSessionHandler.hxx"
 #include "resiprocate/dum/KeepAliveManager.hxx"
@@ -360,6 +362,17 @@ DialogUsageManager::setServerPagerMessageHandler(ServerPagerMessageHandler* hand
 {
    mServerPagerMessageHandler = handler;
 }
+
+void
+DialogUsageManager::addExternalMessageHandler(ExternalMessageHandler* handler)
+{
+   std::vector<ExternalMessageHandler*>::iterator found = std::find(mExternalMessageHandlers.begin(), mExternalMessageHandlers.end(), handler);
+   if (found == mExternalMessageHandlers.end())
+   {
+      mExternalMessageHandlers.push_back(handler);
+   }
+}
+
 
 DialogSet*
 DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
@@ -971,11 +984,32 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       {
          asyncMsgBase->execute();
       }
+
+      ExternalMessageBase* externalMessage = NULL;
+      if (mExternalMessageHandlers.size() && (externalMessage = dynamic_cast<ExternalMessageBase*>(msg.get())))
+      {
+         processExternalMessage(externalMessage);
+      }
    }
    catch(BaseException& e)
    {
       //unparseable, bad 403 w/ 2543 trans it from FWD, etc
 	  ErrLog(<<"Illegal message rejected: " << e.getMessage());
+   }
+}
+
+void
+DialogUsageManager::processExternalMessage(ExternalMessageBase* externalMessage)
+{
+   bool handled = false;
+   for(std::vector<ExternalMessageHandler*>::iterator i = mExternalMessageHandlers.begin(); 
+      i != mExternalMessageHandlers.end(); ++i)
+   {
+      (*i)->onMessage(externalMessage, handled);
+      if (handled)
+      {
+         break;
+      }
    }
 }
 
