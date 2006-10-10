@@ -20,7 +20,11 @@ resip::setSocketKeepalive(Socket fd)
 {
    int optVal = 1;
 
+#if defined(WIN32)
+   if (::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &optVal, sizeof(optVal)))
+#else
    if (::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optVal, sizeof(optVal)))
+#endif
    {
       int e = getErrno();
       InfoLog(<< "Couldn't set sockoptions KEEPALIVE: " << strerror(e));
