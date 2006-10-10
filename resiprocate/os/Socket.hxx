@@ -86,6 +86,7 @@ inline int getErrno() { return errno; }
 typedef SOCKET Socket;
 #endif
 
+RESIP_API bool setSocketKeepalive(Socket fd);
 RESIP_API bool makeSocketNonBlocking(Socket fd);
 RESIP_API bool makeSocketBlocking(Socket fd);
 RESIP_API int closeSocket( Socket fd );
