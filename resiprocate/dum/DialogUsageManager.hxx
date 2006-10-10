@@ -42,6 +42,7 @@ class ServerPagerMessageHandler;
 class OutOfDialogHandler;
 class RedirectHandler;
 class DialogSetHandler;
+class ExternalMessageHandler;
 
 class Dialog;
 class InviteSessionCreator;
@@ -51,6 +52,7 @@ class DumShutdownHandler;
 
 class KeepAliveManager;
 class HttpGetMessage;
+class ExternalMessageBase;
 
 class RWMutex;
 
@@ -139,6 +141,8 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
 
       void setClientPagerMessageHandler(ClientPagerMessageHandler*);
       void setServerPagerMessageHandler(ServerPagerMessageHandler*);
+
+      void addExternalMessageHandler(ExternalMessageHandler*);
 
       /// Sets a manager to handle storage of registration state
       void setRegistrationPersistenceManager(RegistrationPersistenceManager*);
@@ -306,6 +310,7 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
 
       bool queueForIdentityCheck(SipMessage* msg);
       void processIdentityCheckResponse(const HttpGetMessage& msg);
+      void processExternalMessage(ExternalMessageBase* externalMessage);
 
       // For delayed delete of a Usage
       void destroy(const BaseUsage* usage);
@@ -345,6 +350,7 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
 
       ClientPagerMessageHandler* mClientPagerMessageHandler;
       ServerPagerMessageHandler* mServerPagerMessageHandler;
+      std::vector<ExternalMessageHandler*> mExternalMessageHandlers;
 
       std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 
