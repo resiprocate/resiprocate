@@ -35,6 +35,7 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, 
        throw Exception("Failed setsockopt", __FILE__,__LINE__);
    }
 #endif
+   setSocketKeepalive(mFd);
 
    bind();
    makeSocketNonBlocking(mFd);
