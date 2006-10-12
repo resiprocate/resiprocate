@@ -68,9 +68,10 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              IpVersion version,
                              const Data& interfaceObj,
                              Security& security,
-                             const Data& sipDomain)
+                             const Data& sipDomain,
+                             Compression& compression)
                              : UdpTransport( fifo, portNum, version, 
-                                 StunDisabled, interfaceObj ),
+                                 StunDisabled, interfaceObj, compression ),
                                mTimer( mHandshakePending ),
                                mSecurity( &security ),
                                mDomain(sipDomain)
@@ -266,6 +267,8 @@ DtlsTransport::_read( FdSet& fdset )
 
    if ( SSL_in_init( ssl ) )
       mTimer.add( ssl, DtlsReceiveTimeout ) ;
+
+   // XXX Hook SigComp decompression here
 
    SipMessage* message = new SipMessage(this);
    
