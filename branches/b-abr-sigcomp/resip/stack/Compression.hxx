@@ -1,39 +1,42 @@
-#if !defined(RESIP_TLSTRANSPORT_HXX)
-#define RESIP_TLSTRANSPORT_HXX
+#if !defined(RESIP_COMPRESSION_HXX)
+#define RESIP_COMPRESSION_HXX
 
-#include "resip/stack/TcpBaseTransport.hxx"
-#include "resip/stack/SecurityTypes.hxx"
-#include "rutil/HeapInstanceCounter.hxx"
-#include "resip/stack/Compression.hxx"
+namespace osc
+{
+    class StateHandler;
+}
 
 namespace resip
 {
 
-class Connection;
-class Message;
-class Security;
-
-class TlsTransport : public TcpBaseTransport
+class Compression
 {
    public:
-      RESIP_HeapCount(TlsTransport);
-      TlsTransport(Fifo<TransactionMessage>& fifo, 
-                   int portNum, 
-                   IpVersion version,
-                   const Data& interfaceObj,
-                   Security& security,
-                   const Data& sipDomain, 
-                   SecurityTypes::SSLType sslType,
-                   Compression &compression
-                   );
-      virtual  ~TlsTransport();
+     typedef enum
+     {
+       NONE,
+       DEFLATE
+     } Algorithm;
 
-      TransportType transport() const { return TLS; }
-   protected:
-      Connection* createConnection(Tuple& who, Socket fd, bool server=false);
+     Compression(Algorithm algorithm         = DEFLATE,
+                 int stateMemorySize         = 8192,
+                 int cyclesPerBit            = 64,
+                 int decompressionMemorySize = 8192);
 
-      Security* mSecurity;
-      SecurityTypes::SSLType mSslType;
+     ~Compression();
+
+     bool isEnabled() { return (mAlgorithm != NONE); }
+     Algorithm getAlgorithm() const { return mAlgorithm; }
+     osc::StateHandler &getStateHandler(){ return *mStateHandler; }
+
+     /// Represents a compression configuration object with
+     /// compression disabled
+     static Compression Disabled;
+
+   private:
+     Algorithm          mAlgorithm;
+     osc::StateHandler *mStateHandler;
+
 };
 
 }
@@ -41,22 +44,22 @@ class TlsTransport : public TcpBaseTransport
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -66,7 +69,7 @@ class TlsTransport : public TcpBaseTransport
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -80,9 +83,9 @@ class TlsTransport : public TcpBaseTransport
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

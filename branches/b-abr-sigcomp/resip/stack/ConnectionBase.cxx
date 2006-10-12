@@ -21,6 +21,7 @@ ConnectionBase::ConnectionBase()
    : mSendPos(0),
      mWho(),
      mFailureReason(TransportFailure::None),
+     mCompression(Compression::Disabled),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
@@ -31,10 +32,11 @@ ConnectionBase::ConnectionBase()
    DebugLog (<< "ConnectionBase::ConnectionBase, no params: " << this);
 }
 
-ConnectionBase::ConnectionBase(const Tuple& who)
+ConnectionBase::ConnectionBase(const Tuple& who, Compression &compression)
    : mSendPos(0),
      mWho(who),
      mFailureReason(TransportFailure::None),
+     mCompression(compression),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),

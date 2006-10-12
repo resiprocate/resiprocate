@@ -11,7 +11,9 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TcpConnection::TcpConnection(const Tuple& who, Socket fd) : Connection(who, fd)
+TcpConnection::TcpConnection(const Tuple& who, Socket fd,
+                             Compression &compression) 
+  : Connection(who, fd, compression)
 {
    DebugLog (<< "Creating TCP connection " << who << " on " << fd);
 }
