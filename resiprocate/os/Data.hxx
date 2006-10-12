@@ -15,10 +15,6 @@ static const char* const resipDataHeaderVersion =
 #include "resiprocate/config.hxx"
 #endif
 
-#if !defined(RESIP_DATA_LOCAL_SIZE)
-#define RESIP_DATA_LOCAL_SIZE 128
-#endif
-
 class TestData;
 namespace resip
 {
@@ -184,19 +180,11 @@ class Data
       void own() const;
       void resize(size_type newSize, bool copy);
 
-      // Trade off between in-object and heap allocation
-      // Larger LocalAlloc makes for larger objects that have Data members but
-      // bulk allocation/deallocation of Data  members.
-
-      enum {LocalAlloc = RESIP_DATA_LOCAL_SIZE};
-      char mPreBuffer[LocalAlloc+1];
-
+      // the size of the object skeleton is now 16 bytes
       size_type mSize;
       char* mBuf;
       size_type mCapacity;
       ShareEnum mMine;
-      // The invariant for a Data with !mMine is mSize == mCapacity
-
 
       friend bool operator==(const char* s, const Data& d);
       friend bool operator!=(const char* s, const Data& d);
