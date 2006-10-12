@@ -4,6 +4,7 @@
 #include "resip/stack/InternalTransport.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
+#include "resip/stack/Compression.hxx"
 
 namespace resip
 {
@@ -20,11 +21,13 @@ class UdpTransport : public InternalTransport
                    IpVersion version,
                    StunSetting stun,
                    const Data& interfaceObj,
-                   AfterSocketCreationFuncPtr socketFunc = 0);
+                   AfterSocketCreationFuncPtr socketFunc = 0,
+                   Compression &compression = Compression::Disabled);
       virtual  ~UdpTransport();
 
       void process(FdSet& fdset);
       bool isReliable() const { return false; }
+      bool isDatagram() const { return true; }
       TransportType transport() const { return UDP; }
       virtual void buildFdSet( FdSet& fdset);
 

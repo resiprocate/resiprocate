@@ -14,6 +14,7 @@ class TransactionMessage;
 class ApplicationMessage;
 class StatisticsManager;
 class SipStack;
+class Compression;
 
 class TransactionController
 {

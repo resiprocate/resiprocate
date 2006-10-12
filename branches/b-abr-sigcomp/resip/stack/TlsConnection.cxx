@@ -24,8 +24,9 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, 
-                              bool server, Data domain,  SecurityTypes::SSLType sslType ) :
-   Connection(tuple, fd),
+                              bool server, Data domain,  SecurityTypes::SSLType sslType ,
+                              Compression &compression) :
+   Connection(tuple, fd, compression),
    mServer(server),
    mSecurity(security),
    mSslType( sslType ),

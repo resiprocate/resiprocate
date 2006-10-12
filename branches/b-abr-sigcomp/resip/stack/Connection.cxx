@@ -20,8 +20,9 @@ Connection::Connection()
 {
 }
 
-Connection::Connection(const Tuple& who, Socket socket)
-   : ConnectionBase(who),
+Connection::Connection(const Tuple& who, Socket socket,
+                       Compression &compression)
+   : ConnectionBase(who,compression),
      mSocket(socket)
 {
    getConnectionManager().addConnection(this);
@@ -116,6 +117,13 @@ Connection::read(Fifo<TransactionMessage>& fifo)
                                  static_cast<size_t>(Connection::ChunkSize));
          
    assert(bytesToRead > 0);
+
+   // XXX Hook SigComp decompression here
+   // 1. Tri-state enum in class: unknown, compressed, uncompressed;
+   //    set upon first batch of bytes received.
+   // 2. If compressed, parse in the same way as datagrams get parsed.
+   //    don't use "preparseNewBytes".
+
    int bytesRead = read(writePair.first, bytesToRead);
    if (bytesRead <= 0)
    {

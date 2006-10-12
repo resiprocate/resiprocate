@@ -18,6 +18,7 @@
 
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/Security.hxx"
+#include "resip/stack/Compression.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionState.hxx"
 #include "resip/stack/TransportFailure.hxx"
@@ -48,12 +49,14 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub) :
+// XXX Need to add parameter for SigComp configuration or stack here
+TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression) :
    mDns(dnsStub),
    mStateMacFifo(fifo),
    mSecurity(security),
    mSocket( INVALID_SOCKET ),
-   mSocket6( INVALID_SOCKET )
+   mSocket6( INVALID_SOCKET ),
+   mCompression(compression)
 {
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
@@ -636,6 +639,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                msg->header(h_Vias).front().sentPort() = source.getPort();
             }
+
+            /// XXX Add comp=sigcomp to via here
+            /// XXX Add sigcomp-id="<urn>" to via here
          }
          
       }
@@ -704,6 +710,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                      contact.uri().remove(p_addTransport);
                   }
                }
+
+               /// XXX Add comp=sigcomp to contact here
+               /// XXX If no +sip.instance, add sigcomp-id="<urn>" to contact
+
             }
          }
 
@@ -769,6 +779,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                    << " tlsDomain=" << msg->getTlsDomain()
                    << " via " << source
                    << encoded.escaped());
+
+         // XXX If message needs to be compressed, compress it here
+
          target.transport->send(target, encoded, msg->getTransactionId());
       }
       else
