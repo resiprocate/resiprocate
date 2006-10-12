@@ -25,8 +25,10 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                                      int portNum, 
                                      IpVersion version,
                                      const Data& interfaceObj,
-                                     AfterSocketCreationFuncPtr socketFunc) :
-   Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, socketFunc),
+                                     AfterSocketCreationFuncPtr socketFunc,
+                                     Compression &compression) :
+   Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, 
+             socketFunc, compression),
    mFd(-1)
 {
 }

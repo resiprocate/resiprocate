@@ -21,12 +21,13 @@ namespace resip
 {
 
 class TransactionMessage;
+class Compression;
 
 class ConnectionBase
 {
       friend std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
    public:
-      ConnectionBase(const Tuple& who);
+      ConnectionBase(const Tuple& who, Compression &compression);
       ConnectionId getId() const;
 
       Transport* transport();
@@ -64,6 +65,7 @@ class ConnectionBase
    protected:
       Tuple mWho;
       TransportFailure::FailureReason mFailureReason;      
+      Compression &mCompression;
    private:
       SipMessage* mMessage;
       char* mBuffer;

@@ -27,6 +27,7 @@ class TransactionMessage;
 class SipMessage;
 class TransactionController;
 class Security;
+class Compression;
 
 /**
   TransportSelector has two distinct roles.  The first is transmit on the best
@@ -42,7 +43,8 @@ on Transport add.
 class TransportSelector 
 {
    public:
-      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub);
+      // XXX Need either a stack or configuration object here.
+      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
       virtual ~TransportSelector();
       /**
 	    @retval true	Some transport in the transport list has data to send
@@ -136,6 +138,9 @@ class TransportSelector
       // An AF_UNSPEC addr_in for rapid unconnect
       GenericIPAddress mUnspecified;
       GenericIPAddress mUnspecified6;
+
+      /// SigComp configuration object
+      Compression &mCompression;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only

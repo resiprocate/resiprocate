@@ -26,8 +26,9 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            IpVersion version,
                            StunSetting stun,
                            const Data& pinterface,
-                           AfterSocketCreationFuncPtr socketFunc) 
-   : InternalTransport(fifo, portNum, version, pinterface, socketFunc)
+                           AfterSocketCreationFuncPtr socketFunc,
+                           Compression &compression) 
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression)
 {
    InfoLog (<< "Creating UDP transport host=" << pinterface 
             << " port=" << portNum
@@ -209,7 +210,8 @@ UdpTransport::process(FdSet& fdset)
          buffer = 0;
          return;
       }
-      
+
+      // XXX Hook SigComp decode here      
 
       buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
 

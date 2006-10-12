@@ -11,6 +11,7 @@
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/SendData.hxx"
+#include "resip/stack/Compression.hxx"
 
 namespace resip
 {
@@ -28,7 +29,8 @@ class InternalTransport : public Transport
                         int portNum, 
                         IpVersion version,
                         const Data& interfaceObj,
-                        AfterSocketCreationFuncPtr socketFunc = 0);
+                        AfterSocketCreationFuncPtr socketFunc = 0,
+                        Compression &compression = Compression::Disabled);
 
       virtual ~InternalTransport();
 

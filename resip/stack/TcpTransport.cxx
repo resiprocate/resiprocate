@@ -17,8 +17,9 @@ using namespace std;
 using namespace resip;
 
 TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum, 
-                           IpVersion version, const Data& pinterface )
-   : TcpBaseTransport(fifo, portNum, version, pinterface )
+                           IpVersion version, const Data& pinterface, 
+                           Compression &compression )
+   : TcpBaseTransport(fifo, portNum, version, pinterface, compression )
 {
    mTuple.setType(transport());
 
@@ -38,7 +39,7 @@ TcpTransport::createConnection(Tuple& who, Socket fd, bool server)
    who.transport = this;
    assert(  who.transport );
    
-   Connection* conn = new TcpConnection(who, fd);
+   Connection* conn = new TcpConnection(who, fd, mCompression);
    assert( conn->transport() );
    return conn;
 }
