@@ -11,7 +11,7 @@ static const char* const resipDataHeaderVersion =
 #include "resiprocate/os/HeapInstanceCounter.hxx"
 
 #include "HashMap.hxx"
-#if defined(HAVE_CONFIG_HXX)
+#if defined(HAVE_CONFIG_H)
 #include "resiprocate/config.hxx"
 #endif
 
