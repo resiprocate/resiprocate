@@ -495,6 +495,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                
                   mLastRequest->header(h_CSeq).sequence()++;
                   send(mLastRequest);
+                  mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
                   return;
                }
                else
@@ -523,6 +524,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          }
          
          mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
+         mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
 
          // Retry if Profile setting is set
          if (mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&
