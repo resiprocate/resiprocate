@@ -109,23 +109,20 @@ DnsUtil::getLocalHostName()
    buffer[0] = '\0';
    if (int e = gethostname(buffer,sizeof(buffer)) == -1)
    {
-      if ( e != 0 )
+      int err = getErrno();
+      switch (err)
       {
-         int err = getErrno();
-         switch (err)
-         {
 // !RjS! This makes no sense for non-windows. The
 //       current hack (see the #define in .hxx) needs
 //       to be reworked.
-            case WSANOTINITIALISED:
-               CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
-               break;
-            default:
-               CritLog( << "could not find local hostname:" << strerror(err) );
-               break;
-         }
-         throw Exception("could not find local hostname",__FILE__,__LINE__);
+         case WSANOTINITIALISED:
+            CritLog( << "could not find local hostname because network not initialized:" << strerror(err) );
+            break;
+         default:
+            CritLog( << "could not find local hostname:" << strerror(err) );
+            break;
       }
+      throw Exception("could not find local hostname",__FILE__,__LINE__);
    }
 
    struct hostent* he;
