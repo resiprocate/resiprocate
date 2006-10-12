@@ -801,7 +801,8 @@ class TestData
              char * q = new  char[16];
                                 // assumption that this will return
                                 // the same block of mem from heap
-             assert( p == q );
+             //assert( p == q );
+	     // Note that this assumption is wrong!
              delete q;
 
              // This test assumes that p and q will be unique since the 

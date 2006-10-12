@@ -15,6 +15,8 @@ using namespace std;
 const Data Data::Empty("", 0);
 const Data::size_type Data::npos = UINT_MAX;
 
+static char emptyBuffer[] = "";
+
 bool
 Data::init()
 {
@@ -24,41 +26,29 @@ Data::init()
 
 Data::Data() 
    : mSize(0),
-     mBuf(mPreBuffer),
-     mCapacity(LocalAlloc),
+     mBuf(emptyBuffer),
+     mCapacity(0),
      mMine(Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
-   mBuf[mSize] = 0;
 }
 
 // pre-allocate capacity
 Data::Data(int capacity, bool) 
    : mSize(0),
-     mBuf(capacity > LocalAlloc 
-          ? new char[capacity + 1]
-          : mPreBuffer),
-     mCapacity(capacity > LocalAlloc
-               ? capacity
-               : LocalAlloc),
-     mMine(capacity > LocalAlloc ? Take : Borrow)
+     mBuf(new char[capacity + 1]),
+     mCapacity(capacity),
+     mMine(Take)
 {
    assert( capacity >= 0 );
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[mSize] = 0;
 }
 
 Data::Data(const char* str, int length) 
    : mSize(length),
-     mBuf(mSize > LocalAlloc 
-          ? new char[mSize + 1]
-          : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(Take)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
       assert(str);
@@ -69,15 +59,10 @@ Data::Data(const char* str, int length)
 
 Data::Data(const unsigned char* str, int length) 
    : mSize(length),
-     mBuf(mSize > LocalAlloc 
-          ? new char[mSize + 1]
-          : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+     mBuf(new char[mSize + 1]),
+     mCapacity(mSize),
+     mMine(Take)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize > 0)
    {
       assert(str);
@@ -96,7 +81,6 @@ Data::Data(const char* str, int length, bool)
      mMine(Share)
 {
    assert(str);
-   //memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const char* buffer, int length)
@@ -106,7 +90,6 @@ Data::Data(ShareEnum se, const char* buffer, int length)
      mMine(se)
 {
    assert(buffer);
-   //memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const char* buffer)
@@ -116,7 +99,6 @@ Data::Data(ShareEnum se, const char* buffer)
      mMine(se)
 {
    assert(buffer);
-   //memset(mPreBuffer, 0, LocalAlloc+1);
 }
 
 Data::Data(ShareEnum se, const Data& staticData)
@@ -125,7 +107,6 @@ Data::Data(ShareEnum se, const Data& staticData)
      mCapacity(mSize),
      mMine(Share)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    // !dlb! maybe:
    // if you are trying to use Take, but make sure that you unset the mMine on
    // the staticData
@@ -135,55 +116,42 @@ Data::Data(ShareEnum se, const Data& staticData)
 
 Data::Data(const char* str) 
    : mSize(str ? strlen(str) : 0),
-     mBuf(mSize > LocalAlloc
+     mBuf(mSize > 0
           ? new char[mSize + 1]
-          : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+          : emptyBuffer),
+     mCapacity(mSize),
+     mMine(mSize > 0 ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (str)
    {
       memcpy(mBuf, str, mSize+1);
-   }
-   else
-   {
-      mBuf[mSize] = 0;
    }
 }
 
 Data::Data(const string& str)
    : mSize(str.size()),
-     mBuf(mSize > LocalAlloc
+     mBuf(mSize > 0
           ? new char[mSize + 1]
-          : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+          : emptyBuffer),
+     mCapacity(mSize),
+     mMine(mSize > 0 ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    memcpy(mBuf, str.c_str(), mSize + 1);
 }
 
 Data::Data(const Data& data) 
    : mSize(data.mSize),
-     mBuf(mSize > LocalAlloc
+     mBuf(mSize > 0
           ? new char[mSize + 1]
-          : mPreBuffer),
-     mCapacity(mSize > LocalAlloc
-               ? mSize
-               : LocalAlloc),
-     mMine(mSize > LocalAlloc ? Take : Borrow)
+          : emptyBuffer),
+     mCapacity(mSize),
+     mMine(mSize > 0 ? Take : Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (mSize)
    {
       memcpy(mBuf, data.mBuf, mSize);
+      mBuf[mSize] = 0;
    }
-   mBuf[mSize] = 0;
 }
 
 // -2147483646
@@ -191,16 +159,10 @@ static const int IntMaxSize = 12;
 
 Data::Data(int val)
    : mSize(0),
-     mBuf(IntMaxSize > LocalAlloc 
-          ? new char[IntMaxSize + 1]
-          : mPreBuffer),
-     mCapacity(IntMaxSize > LocalAlloc
-               ? IntMaxSize
-               : LocalAlloc),
-     mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
+     mBuf(new char[IntMaxSize + 1]),
+     mCapacity(IntMaxSize),
+     mMine(Take)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
-
    if (val == 0)
    {
       mBuf[0] = '0';
@@ -249,15 +211,10 @@ Data::Data(int val)
 static const int MaxLongSize = (sizeof(unsigned long)/sizeof(int))*IntMaxSize;
 Data::Data(unsigned long value)
    : mSize(0),
-     mBuf(MaxLongSize > LocalAlloc 
-          ? new char[MaxLongSize + 1]
-          : mPreBuffer),
-     mCapacity(MaxLongSize > LocalAlloc
-               ? MaxLongSize
-               : LocalAlloc),
-     mMine(MaxLongSize > LocalAlloc ? Take : Borrow)
+     mBuf(new char[MaxLongSize + 1]),
+     mCapacity(MaxLongSize),
+     mMine(Take)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (value == 0)
    {
       mBuf[0] = '0';
@@ -290,15 +247,10 @@ static const int DoubleMaxPrecision = 10;
 static const int DoubleMaxSize = MaxLongSize + DoubleMaxPrecision;
 Data::Data(double value, int precision)
    : mSize(0),
-     mBuf(DoubleMaxSize + precision > LocalAlloc 
-          ? new char[DoubleMaxSize + precision + 1]
-          : mPreBuffer),
-     mCapacity(DoubleMaxSize + precision > LocalAlloc
-               ? DoubleMaxSize + precision
-               : LocalAlloc),
-     mMine(DoubleMaxSize + precision > LocalAlloc ? Take : Borrow)
+     mBuf(new char[DoubleMaxSize + precision + 1]),
+     mCapacity(DoubleMaxSize + precision),
+     mMine(Take)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    assert(precision >= 0);
    assert(precision < DoubleMaxPrecision);
 
@@ -374,15 +326,10 @@ Data::Data(double value, int precision)
 
 Data::Data(unsigned int value)
    : mSize(0),
-     mBuf(IntMaxSize > LocalAlloc 
-          ? new char[IntMaxSize + 1]
-          : mPreBuffer),
-     mCapacity(IntMaxSize > LocalAlloc
-               ? IntMaxSize
-               : LocalAlloc),
-     mMine(IntMaxSize > LocalAlloc ? Take : Borrow)
+     mBuf(new char[IntMaxSize + 1]),
+     mCapacity(IntMaxSize),
+     mMine(Take)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    if (value == 0)
    {
       mBuf[0] = '0';
@@ -414,15 +361,10 @@ Data::Data(unsigned int value)
 static const int CharMaxSize = 1;
 Data::Data(char c)
    : mSize(1),
-     mBuf(CharMaxSize > LocalAlloc 
-          ? new char[CharMaxSize + 1]
-          : mPreBuffer),
-     mCapacity(CharMaxSize > LocalAlloc
-               ? CharMaxSize
-               : LocalAlloc),
-     mMine(CharMaxSize > LocalAlloc ? Take : Borrow)
+     mBuf(new char[CharMaxSize + 1]),
+     mCapacity(CharMaxSize),
+     mMine(Take)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
    mBuf[0] = c;
    mBuf[1] = 0;
 }
@@ -433,8 +375,6 @@ Data::Data(bool value)
      mCapacity(0),
      mMine(Borrow)
 {
-   //memset(mPreBuffer, 0, LocalAlloc+1);
-
    static char truec[] = "true";
    static char falsec[] = "false";
 
@@ -573,8 +513,6 @@ Data::operator>=(const char* rhs) const
 Data& 
 Data::operator=(const Data& data)
 {
-   assert(mBuf);
-   
    if (&data != this)
    {
       if (mMine == Share)
@@ -594,8 +532,8 @@ Data::operator=(const Data& data)
       if (mSize > 0)
       {
          memmove(mBuf, data.mBuf, mSize);
+	 mBuf[mSize] = 0;
       }
-      mBuf[mSize] = 0;
    }
    return *this;
 }
