@@ -56,7 +56,7 @@ TcpConnection::read( char* buf, int count )
             break;
       }
 
-      InfoLog (<< "Failed read on " << mSocket << " " << strerror(e));
+      InfoLog (<< "Failed read on " << mSocket << ": " << strerror(e));
       Transport::error(e);
       
       return -1;
