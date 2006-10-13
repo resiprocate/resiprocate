@@ -58,7 +58,7 @@ class ParameterTypes
          defineParam(directory, "directory", DataParameter, "RFC 2046"),
          defineParam(domain, "domain", QuotedDataParameter, "RFC ????"),
          defineParam(duration, "duration", UInt32Parameter, "RFC ????"),
-         defineParam(expiration, "expiration", UInt32Parameter, "RFC 2046"),
+         defineParam(expiration, "expiration", QuotedDataParameter, "RFC 2046"),
          defineParam(expires, "expires", UInt32Parameter, "RFC ????"),
          defineParam(filename, "filename", DataParameter, "RFC ????"),
          defineParam(fromTag, "from-tag", DataParameter, "RFC ????"),
