@@ -256,7 +256,7 @@ Transport::stampReceived(SipMessage* message)
       }
    }
    DebugLog (<< "incoming from: " << message->getSource());
-   StackLog (<< endl << *message);
+   StackLog (<< endl << endl << *message);
 }
 
 
