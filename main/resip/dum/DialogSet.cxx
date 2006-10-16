@@ -422,12 +422,12 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else
       {
-         DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+         DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << endl << msg);
       }
    }
    else
    {
-      StackLog (<< "No matching dialog for " << endl << msg);
+      StackLog (<< "No matching dialog for " << endl << endl << msg);
    }
    
    if (msg.isRequest())
@@ -711,7 +711,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
       }
 
-      DebugLog ( << "Creating a new Dialog from msg: " << msg);
+	  DebugLog ( << "mState == " << mState << " Creating a new Dialog from msg: " << std::endl << std::endl <<msg);
       try
       {
          // !jf! This could throw due to bad header in msg, should we catch and rethrow
@@ -749,7 +749,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
 
       assert(mState != WaitingToEnd);
-      DebugLog ( << "### Calling CreateAppDialog ### " << msg);
+	  DebugLog ( << "### Calling CreateAppDialog ###: " << std::endl << std::endl <<msg);
       AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
       dialog->mAppDialog = appDialog;
       appDialog->mDialog = dialog;
