@@ -797,7 +797,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       }
    }
 
-   DebugLog (<< "SEND: " << *msg);
+   DebugLog (<< "SEND: " << std::endl << std::endl << *msg);
 
    OutgoingEvent* event = new OutgoingEvent(msg);
    outgoingProcess(auto_ptr<Message>(event));
@@ -1633,12 +1633,12 @@ DialogUsageManager::processResponse(const SipMessage& response)
 
       if (ds)
       {
-         DebugLog ( << "DialogUsageManager::processResponse: " << response.brief());
+         DebugLog ( << "DialogUsageManager::processResponse: " << std::endl << std::endl << response.brief());
          ds->dispatch(response);
       }
       else
       {
-         InfoLog (<< "Throwing away stray response: " << response.brief());
+		 InfoLog (<< "Throwing away stray response: " << std::endl << std::endl << response.brief());
       }
    }
 }
