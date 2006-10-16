@@ -39,7 +39,7 @@ MessageFilterRule::MessageFilterRule(SchemeList    schemeList,
 bool
 MessageFilterRule::matches(const SipMessage &msg) const
 {
-   DebugLog(<< "Matching rule for " << msg);
+   DebugLog(<< "Matching rule for: " << std::endl << std::endl << msg);
    const Data scheme = msg.header(h_RequestLine).uri().scheme();
 
    if (!schemeIsInList(scheme))
