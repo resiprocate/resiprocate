@@ -919,7 +919,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       request.header(h_Privacys).push_back(Token(Symbols::id));
    }
 
-   DebugLog ( << "Dialog::makeRequest: " << request );
+   DebugLog ( << "Dialog::makeRequest: " << std::endl << std::endl << request );
 }
 
 
@@ -967,7 +967,7 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
       response.header(h_To).param(p_tag) = mId.getLocalTag();
    }
 
-   DebugLog ( << "Dialog::makeResponse: " << response);
+   DebugLog ( << "Dialog::makeResponse: " << std::endl << std::endl << response);
 }
 
 
