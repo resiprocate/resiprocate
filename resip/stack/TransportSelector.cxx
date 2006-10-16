@@ -768,7 +768,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          DebugLog (<< "Transmitting to " << target
                    << " tlsDomain=" << msg->getTlsDomain()
                    << " via " << source
-                   << encoded.escaped());
+				   << std::endl << std::endl << encoded.escaped());
          target.transport->send(target, encoded, msg->getTransactionId());
       }
       else
