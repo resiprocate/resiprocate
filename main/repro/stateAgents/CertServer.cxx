@@ -21,7 +21,7 @@ CertServer::CertServer(DialogUsageManager& dum) :
    MasterProfile& profile = *mDum.getMasterProfile();
    profile.addSupportedMethod(PUBLISH);
    profile.addSupportedMethod(SUBSCRIBE);
-   profile.validateAcceptEnabled() = true;
+   //profile.validateAcceptEnabled() = true;  // !slg! this causes Accept validation for registration requests as well, which is not really desired
    profile.validateContentEnabled() = true;
    profile.addSupportedMimeType(PUBLISH, Pkcs8Contents::getStaticType());
    profile.addSupportedMimeType(SUBSCRIBE, Pkcs8Contents::getStaticType());
