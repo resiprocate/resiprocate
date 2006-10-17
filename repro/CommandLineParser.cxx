@@ -43,7 +43,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    int noRegistrar = false;
    int noIdentityHeaders = false;
-   int certServer = true;
+   int certServer = false;
 
    char* reqChainName = "default";
    char* mySqlServer = 0;
