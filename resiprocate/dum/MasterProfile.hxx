@@ -28,7 +28,7 @@ class DUM_API MasterProfile : public UserProfile
       virtual void clearSupportedSchemes(void);
 
       // Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE
-      virtual void addSupportedMethod(const MethodTypes& method);   
+      virtual bool addSupportedMethod(const MethodTypes& method);   
       virtual bool isMethodSupported(MethodTypes method) const;
       virtual Tokens getAllowedMethods() const;
       virtual void clearSupportedMethods(void);
@@ -40,8 +40,8 @@ class DUM_API MasterProfile : public UserProfile
       virtual void clearSupportedOptionTags(void);
 
       // Default is application/sdp for INVITE, OPTIONS, PRACK and UPDATE Methods
-      virtual void addSupportedMimeType(const MethodTypes& method, const Mime& mimeType);
-      virtual void removeSupportedMimeType(const MethodTypes& method, const Mime& mimeType);
+      virtual bool addSupportedMimeType(const MethodTypes& method, const Mime& mimeType);
+      virtual bool removeSupportedMimeType(const MethodTypes& method, const Mime& mimeType);
       virtual bool isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType);
       virtual Mimes getSupportedMimeTypes(const MethodTypes& method);
       virtual void clearSupportedMimeTypes(const MethodTypes& method);
