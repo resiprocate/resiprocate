@@ -107,7 +107,14 @@ MasterProfile::clearSupportedOptionTags()
 void 
 MasterProfile::addSupportedMimeType(const MethodTypes& method, const Mime& mimeType)
 {
-   mSupportedMimeTypes[method].push_back(mimeType);
+   std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method);
+   if (found != mSupportedMimeTypes.end())
+   {
+      if (!found->second.find(mimeType))
+      {
+         found->second.push_back(mimeType);
+      }
+   }
 }
 
 void 
@@ -122,6 +129,7 @@ MasterProfile::removeSupportedMimeType(const MethodTypes& method, const Mime& mi
          if(*it == mimeType)
          {
             mimes.erase(it);
+            break;
          }
       }
    }
