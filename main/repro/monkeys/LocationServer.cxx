@@ -4,6 +4,7 @@
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/ExtensionParameter.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/QValueTarget.hxx"
@@ -42,6 +43,8 @@ LocationServer::process(RequestContext& context)
 	    RegistrationPersistenceManager::ContactRecord contact = *i;
         if (contact.expires>=time(NULL))
         {
+            static ExtensionParameter p_cid("cid");
+            contact.uri.param(p_cid)=resip::Data(contact.cid);
            InfoLog (<< *this << " adding target " << contact.uri);
            if(contact.useQ)
            {
