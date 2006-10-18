@@ -44,11 +44,15 @@ MasterProfile::clearSupportedSchemes()
    mSupportedSchemes.clear();
 }
 
-void 
+bool 
 MasterProfile::addSupportedMethod(const MethodTypes& method)
 {
-   mSupportedMethodTypes.insert(method);
-   mSupportedMethods.push_back(Token(getMethodName(method)));
+   if (mSupportedMethodTypes.insert(method).second)
+   {
+      mSupportedMethods.push_back(Token(getMethodName(method)));
+      return true;
+   }
+   return false;
 }
 
 bool 
@@ -104,7 +108,7 @@ MasterProfile::clearSupportedOptionTags()
    mSupportedOptionTags.clear();
 }
 
-void 
+bool 
 MasterProfile::addSupportedMimeType(const MethodTypes& method, const Mime& mimeType)
 {
    std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method);
@@ -113,11 +117,18 @@ MasterProfile::addSupportedMimeType(const MethodTypes& method, const Mime& mimeT
       if (!found->second.find(mimeType))
       {
          found->second.push_back(mimeType);
+         return true;
       }
    }
+   else
+   {
+      mSupportedMimeTypes[method].push_back(mimeType);
+      return true;
+   }
+   return false;
 }
 
-void 
+bool 
 MasterProfile::removeSupportedMimeType(const MethodTypes& method, const Mime& mimeType)
 {
    std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method);
@@ -129,10 +140,15 @@ MasterProfile::removeSupportedMimeType(const MethodTypes& method, const Mime& mi
          if(*it == mimeType)
          {
             mimes.erase(it);
-            break;
+            if (!mimes.size())
+            {
+               mSupportedMimeTypes.erase(method);
+            }
+            return true;
          }
       }
    }
+   return false;
 }
 
 bool 
