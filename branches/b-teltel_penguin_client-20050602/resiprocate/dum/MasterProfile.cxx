@@ -110,6 +110,19 @@ MasterProfile::addSupportedMimeType(const MethodTypes& method, const Mime& mimeT
    mSupportedMimeTypes[method].push_back(mimeType);
 }
 
+void 
+MasterProfile::removeSupportedMimeType(const MethodTypes& method, const Mime& mimeType)
+{
+   Mimes& mimes = mSupportedMimeTypes[method];
+   for(Mimes::iterator it = mimes.begin(); it != mimes.end(); ++it)
+   {
+      if(*it == mimeType)
+      {
+         mimes.erase(it);
+      }
+   }
+}
+
 bool 
 MasterProfile::isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType)
 {

@@ -40,7 +40,8 @@ class DUM_API MasterProfile : public UserProfile
       virtual void clearSupportedOptionTags(void);
 
       // Default is application/sdp for INVITE, OPTIONS, PRACK and UPDATE Methods
-      virtual void addSupportedMimeType(const MethodTypes& method, const Mime& mimeType);      
+      virtual void addSupportedMimeType(const MethodTypes& method, const Mime& mimeType);
+      virtual void removeSupportedMimeType(const MethodTypes& method, const Mime& mimeType);
       virtual bool isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType);
       virtual Mimes getSupportedMimeTypes(const MethodTypes& method);
       virtual void clearSupportedMimeTypes(const MethodTypes& method);
