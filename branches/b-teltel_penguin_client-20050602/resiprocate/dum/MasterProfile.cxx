@@ -130,19 +130,33 @@ MasterProfile::removeSupportedMimeType(const MethodTypes& method, const Mime& mi
 bool 
 MasterProfile::isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType)
 {
-   return mSupportedMimeTypes[method].find(mimeType);
+   std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method);
+   if (found != mSupportedMimeTypes.end())
+   {
+      return found->second.find(mimeType);
+   }
+   return false;
 }
 
 Mimes 
 MasterProfile::getSupportedMimeTypes(const MethodTypes& method)
 {
-   return mSupportedMimeTypes[method];
+   std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method);
+   if (found != mSupportedMimeTypes.end())
+   {
+      return found->second;
+   }
+   return Mimes();
 }
 
 void 
 MasterProfile::clearSupportedMimeTypes(const MethodTypes& method)
 {
-   mSupportedMimeTypes[method].clear();
+   std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method);
+   if (found != mSupportedMimeTypes.end())
+   {
+      found->second.clear();
+   }
 }
 
 void 
