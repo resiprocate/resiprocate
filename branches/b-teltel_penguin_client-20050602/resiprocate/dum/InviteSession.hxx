@@ -106,6 +106,9 @@ class DUM_API InviteSession : public DialogUsage
       
       virtual void acceptInfo(int statusCode = 200);
       virtual void rejectInfo(int statusCode = 488);
+      // !polo! - deprecates acceptInfo() and rejectInfo().
+      virtual void acceptInfoInternal(std::auto_ptr<SipMessage> responseMsg);
+      virtual void rejectInfoInternal(std::auto_ptr<SipMessage> responseMsg);
 
       typedef enum
       {
@@ -264,7 +267,7 @@ class DUM_API InviteSession : public DialogUsage
 
       SipMessage mLastSessionModification; // UPDATE or reINVITE
       SipMessage mInvite200; // 200 OK for reINVITE for retransmissions
-      SipMessage mLastNitResponse; //?dcm? -- ptr, delete when not needed?
+      std::auto_ptr<SipMessage> mLastNitResponse; //?dcm? -- ptr, delete when not needed?
       
       //unsigned long mCurrentRetransmit200;
       //unsigned long mCurrentRetransmit200CSeq; // to match corresponding DumTimeout::WaitForAck.

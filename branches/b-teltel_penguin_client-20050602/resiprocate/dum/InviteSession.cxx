@@ -275,13 +275,34 @@ InviteSession::infoAsync(std::auto_ptr<Contents> contents)
 void
 InviteSession::acceptInfoAsync(int statusCode)
 {
-   mDum.post(new InternalInviteSessionMessage_AcceptInfo(getSessionHandle(), statusCode));
+   assert(mLastNitResponse.get());
+   mDum.post(new InternalInviteSessionMessage_AcceptInfo(getSessionHandle(), mLastNitResponse, statusCode));
 }
 
 void
 InviteSession::rejectInfoAsync(int statusCode)
 {
-   mDum.post(new InternalInviteSessionMessage_RejectInfo(getSessionHandle(), statusCode));
+   assert(mLastNitResponse.get());
+   mDum.post(new InternalInviteSessionMessage_RejectInfo(getSessionHandle(), mLastNitResponse, statusCode));
+}
+
+void
+InviteSession::acceptInfoInternal(std::auto_ptr<SipMessage> responseMsg)
+{
+   if (responseMsg->header(h_StatusLine).statusCode() / 100  != 2)
+   {
+      throw UsageUseException("Must accept with a 2xx", __FILE__, __LINE__);
+   }
+}
+
+void
+InviteSession::rejectInfoInternal(std::auto_ptr<SipMessage> responseMsg)
+{
+   if (responseMsg->header(h_StatusLine).statusCode() < 400)
+   {
+      throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
+   }
+   send(*responseMsg);
 }
 
 void
@@ -1204,7 +1225,11 @@ InviteSession::dispatchInfo(const SipMessage& msg)
    if (msg.isRequest())
    {
       InfoLog (<< "Received " << msg.brief());
-      mDialog.makeResponse(mLastNitResponse, msg, 200);
+      if (!mLastNitResponse.get())
+      {
+         mLastNitResponse.reset(new SipMessage);
+      }
+      mDialog.makeResponse(*mLastNitResponse, msg, 200);
       handler->onInfo(getSessionHandle(), msg);
    }
    else
@@ -1223,6 +1248,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
    }
 }
 
+// !polo! - deprecated? use acceptInfoAsync/acceptInfoInternal instead.
 void
 InviteSession::acceptInfo(int statusCode)
 {
@@ -1230,11 +1256,15 @@ InviteSession::acceptInfo(int statusCode)
    {
       throw UsageUseException("Must accept with a 2xx", __FILE__, __LINE__);
    }
-
-   mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
-   send(mLastNitResponse);   
+   if (!mLastNitResponse.get())
+   {
+      throw UsageUseException("InviteSession::acceptInfo() is deprecated, use acceptInfoAsync/acceptInfoInternal instead.", __FILE__, __LINE__);
+   }
+   mLastNitResponse->header(h_StatusLine).statusCode() = statusCode;   
+   send(*mLastNitResponse);   
 } 
 
+// !polo! - deprecated? use rejectInfoAsync/rejectInfoInternal instead.
 void
 InviteSession::rejectInfo(int statusCode)
 {
@@ -1242,8 +1272,12 @@ InviteSession::rejectInfo(int statusCode)
    {
       throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
    }
-   mLastNitResponse.header(h_StatusLine).statusCode() = statusCode;   
-   send(mLastNitResponse);
+   if (!mLastNitResponse.get())
+   {
+      throw UsageUseException("InviteSession::rejectInfo() is deprecated, use rejectInfoAsync/rejectInfoInternal instead.", __FILE__, __LINE__);
+   }
+   mLastNitResponse->header(h_StatusLine).statusCode() = statusCode;   
+   send(*mLastNitResponse);
 }
 
 void
