@@ -200,44 +200,54 @@ namespace resip
    {
    public:
       RESIP_HeapCount(InternalInviteSessionMessage_AcceptInfo);
-      InternalInviteSessionMessage_AcceptInfo(InviteSessionHandle& h, int statusCode=200)
-         : mInviteSessionHandle(h), mStatusCode(statusCode) {/*Empty*/}
+      InternalInviteSessionMessage_AcceptInfo(InviteSessionHandle&      h,
+                                              std::auto_ptr<SipMessage> responseMsg,
+                                              int                       statusCode = 200)
+         : mInviteSessionHandle(h), mResponseMsg(responseMsg), mStatusCode(statusCode)
+      {
+      }
 
       virtual std::ostream& encodeBrief(std::ostream& strm) const { return strm << "InternalInviteSessionMessage_AcceptInfo"; }
 
    private: // methods.
       virtual void execute()
       {
-         if (mInviteSessionHandle.isValid())
+         if (mInviteSessionHandle.isValid() && mResponseMsg.get())
          {
-            mInviteSessionHandle->acceptInfo(mStatusCode);
+            mResponseMsg->header(h_StatusLine).statusCode() = mStatusCode;
+            mInviteSessionHandle->acceptInfoInternal(mResponseMsg);
          }
       }
    private: // members.
-      InviteSessionHandle  mInviteSessionHandle;
-      int                  mStatusCode;
+      InviteSessionHandle        mInviteSessionHandle;
+      std::auto_ptr<SipMessage>  mResponseMsg;
+      int                        mStatusCode;
    };
    // ---------------------------------------------------------------------------
    class InternalInviteSessionMessage_RejectInfo : public InternalDumAsyncMessageBase
    {
    public:
       RESIP_HeapCount(InternalInviteSessionMessage_RejectInfo);
-      InternalInviteSessionMessage_RejectInfo(InviteSessionHandle& h, int statusCode=488)
-         : mInviteSessionHandle(h), mStatusCode(statusCode) {/*Empty*/}
+      InternalInviteSessionMessage_RejectInfo(InviteSessionHandle&      h,
+                                              std::auto_ptr<SipMessage> responseMsg,
+                                              int                       statusCode = 488)
+         : mInviteSessionHandle(h), mResponseMsg(responseMsg), mStatusCode(statusCode) {/*Empty*/}
 
       virtual std::ostream& encodeBrief(std::ostream& strm) const { return strm << "InternalInviteSessionMessage_RejectInfo"; }
 
    private: // methods.
       virtual void execute()
       {
-         if (mInviteSessionHandle.isValid())
+         if (mInviteSessionHandle.isValid() && mResponseMsg.get())
          {
-            mInviteSessionHandle->rejectInfo(mStatusCode);
+            mResponseMsg->header(h_StatusLine).statusCode() = mStatusCode;
+            mInviteSessionHandle->rejectInfoInternal(mResponseMsg);
          }
       }
    private: // members.
-      InviteSessionHandle  mInviteSessionHandle;
-      int                  mStatusCode;
+      InviteSessionHandle        mInviteSessionHandle;
+      std::auto_ptr<SipMessage>  mResponseMsg;
+      int                        mStatusCode;
    };
    // ---------------------------------------------------------------------------
 } // resip
