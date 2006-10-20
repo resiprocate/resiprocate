@@ -187,8 +187,7 @@ TransactionState::process(TransactionController& controller)
             handleBadRequest(*sip,controller);
             delete sip;
             return;
-         }
-         
+         }         
       }
 
 #ifdef PEDANTIC_STACK
@@ -213,8 +212,7 @@ TransactionState::process(TransactionController& controller)
          tid += "cancel";
       }
    }
-   
-   
+      
    TransactionState* state = 0;
    if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
    else state = controller.mServerTransactionMap.find(tid);
@@ -343,13 +341,13 @@ TransactionState::process(TransactionController& controller)
                state->mResponseTarget = sip->getSource(); // UACs source address
                // since we don't want to reply to the source port unless rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
-               state->mState = Proceeding;
                state->mIsReliable = state->mResponseTarget.transport->isReliable();
                state->add(tid);
                
                if (Timer::T100 == 0)
                {
                   state->sendToWire(state->mMsgToRetransmit); // will get deleted when this is deleted
+                  state->mState = Proceeding;
                }
                else
                {
@@ -376,6 +374,7 @@ TransactionState::process(TransactionController& controller)
                {
                   assert(matchingInvite);
                   state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite, tid);
+                  state->startServerNonInviteTimerTrying(*sip,tid);
                }
             }
             else if (sip->method() != ACK)
@@ -386,9 +385,9 @@ TransactionState::process(TransactionController& controller)
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                state->add(tid);
                state->mIsReliable = state->mResponseTarget.transport->isReliable();
+               state->startServerNonInviteTimerTrying(*sip,tid);
             }
             
-
             // Incoming ACK just gets passed to the TU
             //StackLog(<< "Adding incoming message to TU fifo " << tid);
             TransactionState::sendToTU(tu, controller, sip);
@@ -493,6 +492,19 @@ TransactionState::process(TransactionController& controller)
    }
 }
 
+void
+TransactionState::startServerNonInviteTimerTrying(SipMessage& sip, Data& tid)
+{
+   unsigned int duration = 3500;
+   if(Timer::T1 != 500) // optimzed for T1 == 500
+   {
+      // Iteratively calculate how much time before TimerE reaches T2 (RFC4320) - could be improved
+      duration = Timer::T1;
+      while(duration*2<Timer::T2) duration = duration * 2;
+   }
+   mMsgToRetransmit = make100(&sip);  // Store for use when timer expires
+   mController.mTimers.add(Timer::TimerTrying, tid, duration );  // Start trying timer so that we can send 100 to NITs as recommened in RFC4320
+}
 
 void
 TransactionState::processStateless(TransactionMessage* message)
@@ -691,7 +703,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
          case INVITE:
             delete mMsgToRetransmit; 
             mMsgToRetransmit = sip;
-            mController.mTimers.add(Timer::TimerB, mId, Timer::TB );
+            mController.mTimers.add(Timer::TimerB, mId, Timer::TB);
             sendToWire(msg); // don't delete msg
             break;
             
@@ -893,7 +905,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
 {
    StackLog (<< "TransactionState::processServerNonInvite: " << msg->brief());
 
-   if (isRequest(msg) && !isInvite(msg) && isFromWire(msg)) // from the wire
+   if (isRequest(msg) && !isInvite(msg) && isFromWire(msg)) // retransmission from the wire
    {
       if (mState == Trying)
       {
@@ -978,12 +990,31 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
    {
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
       assert(timer);
-      if (mState == Completed && timer->getType() == Timer::TimerJ)
+      switch (timer->getType())
       {
-         terminateServerTransaction(mId);
-         delete this;
+         case Timer::TimerJ:
+            if (mState == Completed)
+            {
+               terminateServerTransaction(mId);
+               delete this;
+            }
+            delete msg;
+            break;
+
+         case Timer::TimerTrying:
+            if (mState == Trying)
+            {
+               // Timer E has reached T2 - send a 100 as recommended by RFC4320 NIT-Problem-Actions
+               sendToWire(mMsgToRetransmit);
+               mState = Proceeding;
+            }
+            delete msg;
+            break;
+
+         default:
+            delete msg;
+            break;
       }
-      delete msg;
    }
    else if (isTransportError(msg))
    {
@@ -1008,6 +1039,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
       switch (sip->method())
       {
          case INVITE:
+            // note: handling of initial INVITE message is done in TransactionState:process
             if (mState == Proceeding || mState == Completed)
             {
                /*
@@ -1019,7 +1051,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                //StackLog (<< "Received invite from wire - forwarding to TU state=" << mState);
                if (!mMsgToRetransmit)
                {
-                  mMsgToRetransmit = make100(sip); // for when TimerTrying fires
+                  mMsgToRetransmit = make100(sip);
                }
                delete msg;
                sendToWire(mMsgToRetransmit);
@@ -1684,18 +1716,35 @@ TransactionState::sendToTU(TransactionMessage* msg) const
    SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
    if (sipMsg && sipMsg->isResponse())
    {
-      // whitelisting rules.
+      // whitelisting/blacklisting rules.
       switch (sipMsg->header(h_StatusLine).statusCode())
       {
-         case 408:
-         case 500:
          case 503:
-         case 504:
-         case 600:
             // blacklist last target.
+            // !slg! TODO:  Need to blacklist only for Retry-After interval
             if (mDnsResult != 0 && mDnsResult->available() == DnsResult::Available)
             {
                mDnsResult->next();
+            }
+            break;
+         case 408:
+         case 500:
+         case 504:
+         case 600:
+            if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only blacklist if internally generated and we haven't received any responses yet
+            {
+               // blacklist last target.
+               if (mDnsResult != 0 && mDnsResult->available() == DnsResult::Available)
+               {
+                  mDnsResult->next();
+               }
+            }
+            else
+            {
+               if (mDnsResult != 0)
+               {
+                  mDnsResult->success();
+               }
             }
             break;
          default:
