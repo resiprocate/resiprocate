@@ -88,7 +88,9 @@ class TransactionState : public DnsHandler
       void terminateClientTransaction(const Data& tid); 
       void terminateServerTransaction(const Data& tid); 
       const Data& tid(SipMessage* sip) const;
-      
+
+      void startServerNonInviteTimerTrying(SipMessage& sip, Data& tid);
+
       static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine, const Data& tid);
       
       /**

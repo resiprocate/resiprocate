@@ -73,7 +73,7 @@ ConnectionManager::findConnection(const Tuple& addr)
    }
 
    
-   DebugLog(<<"Could not find connection " << addr.connectionId);
+   DebugLog(<<"Could not find a connection for " << addr);
    return 0;
 }
 
@@ -83,10 +83,23 @@ ConnectionManager::findConnection(const Tuple& addr) const
    if (addr.connectionId != 0)
    {
       IdMap::const_iterator i = mIdMap.find(addr.connectionId);
-      if (i != mIdMap.end() && i->second->who()==addr)
+      if (i != mIdMap.end())
       {
-         DebugLog(<<"Found connection id " << addr.connectionId);
-         return i->second;
+         if(i->second->who()==addr)
+         {
+            DebugLog(<<"Found connection id " << addr.connectionId);
+            return i->second;
+         }
+         else
+         {
+            DebugLog(<<"connection id " << addr.connectionId 
+                     << " exists, but does not match the destination. Cid -> "
+                     << i->second->who() << ", tuple -> " << addr);
+         }
+      }
+      else
+      {
+         DebugLog(<<"connection id " << addr.connectionId << " does not exist.");
       }
    }
    
@@ -98,7 +111,7 @@ ConnectionManager::findConnection(const Tuple& addr) const
    }
 
    
-   DebugLog(<<"Could not find connection " << addr.connectionId);
+   DebugLog(<<"Could not find a connection for " << addr);
    return 0;
 }
 
