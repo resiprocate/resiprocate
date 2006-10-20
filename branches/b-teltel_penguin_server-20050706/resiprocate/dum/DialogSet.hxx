@@ -105,6 +105,7 @@ class DialogSet
       DialogSetId mId;
       DialogUsageManager& mDum;
       AppDialogSet* mAppDialogSet;
+      bool mAppDialogSetNeedsRelease;
       State mState;
       ClientRegistration* mClientRegistration;
       ServerRegistration* mServerRegistration;
