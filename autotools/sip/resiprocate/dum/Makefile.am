@@ -30,7 +30,6 @@ libresipdum_la_SOURCES = \
 	DumProcessHandler.cxx \
 	DumThread.cxx \
 	DumTimeout.cxx \
-	Handle.cxx \
 	Handled.cxx \
 	HandleException.cxx \
 	HandleManager.cxx \
