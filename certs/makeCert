@@ -13,9 +13,10 @@ else
   exit 0
 fi
 
+DOMAIN=`echo $1 | perl -ne '{print "$1\n" if (/\.(.*)$/)}'   ` 
 ADDR=$1
 
-echo "making cert for ${ADDR}"
+echo "making cert for $DOMAIN ${ADDR}"
 
 rm -f ${ADDR}_*.pem
 rm -f ${ADDR}.p12
@@ -23,7 +24,7 @@ rm -f ${ADDR}.p12
 case ${ADDR} in
 *:*) ALTNAME="URI:${ADDR}" ;;
 *@*) ALTNAME="URI:sip:${ADDR},URI:im:${ADDR},URI:pres:${ADDR}" ;;
-*)   ALTNAME="DNS:${ADDR}" ;;
+*)   ALTNAME="DNS:${DOMAIN},URI:sip:${ADDR}" ;;
 esac
  
 #ALTNAME="URI:sip:pekka.nrc.sipit.net,URI:sip:nrc.sipit.net"
@@ -34,7 +35,7 @@ rm -f demoCA/newcerts/*
 
 export ALTNAME
 
-openssl genrsa  -out ${ADDR}_key.pem 1024 
+openssl genrsa  -out ${ADDR}_key.pem 2048
 openssl req -new  -config openssl.cnf -reqexts cj_req \
         -sha1 -key ${ADDR}_key.pem \
         -out ${ADDR}.csr -days ${DAYS} <<EOF
