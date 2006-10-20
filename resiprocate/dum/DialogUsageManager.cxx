@@ -366,14 +366,17 @@ DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
       throw DumException("Cannot create new sessions when DUM is shutting down.", __FILE__, __LINE__);
    }
 
+   bool appDsNeedsRelease = false;
    if (appDs == 0)
    {
       appDs = new AppDialogSet(*this);
+      appDsNeedsRelease = true;
    }
    DialogSet* ds = new DialogSet(creator, *this);
 
    appDs->mDialogSet = ds;
    ds->mAppDialogSet = appDs;
+   ds->mAppDialogSetNeedsRelease = appDsNeedsRelease;
 
    DebugLog ( << "************* Adding DialogSet ***************" );
    DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
@@ -1357,6 +1360,7 @@ DialogUsageManager::processRequest(const SipMessage& request)
                appDs->mDialogSet = dset;
                dset->setUserProfile(appDs->selectUASUserProfile(request));
                dset->mAppDialogSet = appDs;
+	       dset->mAppDialogSetNeedsRelease = true;
 
                DebugLog ( << "************* Adding DialogSet ***************" );
                DebugLog ( << "Before: " << Inserter(mDialogSetMap) );

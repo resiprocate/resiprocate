@@ -36,6 +36,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
    mId(creator->getLastRequest()),
    mDum(dum),
    mAppDialogSet(0),
+   mAppDialogSetNeedsRelease(false),
    mState(Initial),
    mClientRegistration(0),
    mServerRegistration(0),
@@ -59,6 +60,7 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    mId(request),
    mDum(dum),
    mAppDialogSet(0),
+   mAppDialogSetNeedsRelease(false),
    mState(Established),
    mClientRegistration(0),
    mServerRegistration(0),
@@ -120,7 +122,7 @@ DialogSet::~DialogSet()
    //!dcm! -- very delicate code, change the order things go horribly wrong
 
    mDum.removeDialogSet(this->getId());
-   if (mAppDialogSet) 
+   if (mAppDialogSet && mAppDialogSetNeedsRelease) 
    {
       mAppDialogSet->destroy();
    }
