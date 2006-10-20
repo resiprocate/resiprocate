@@ -225,23 +225,20 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 {
    DebugLog (<< "process(ApplicationMessage) " << *app);
 
-
    if (mCurrentEvent != mOriginalRequest)
    {
       delete mCurrentEvent;
    }
    mCurrentEvent = app.release();
 
-
    Ack200DoneMessage* ackDone = dynamic_cast<Ack200DoneMessage*>(mCurrentEvent);
    if (ackDone)
-     {
-       delete this;
-       return;
-     }
+   {
+      delete this;
+      return;
+   }
 
    TimerCMessage* tc = dynamic_cast<TimerCMessage*>(mCurrentEvent);
-
    if(tc)
    {
       if(tc->mSerial == mTCSerial)
@@ -252,94 +249,86 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
       return;
    }
 
-
-
    ChainTraverser* ct=dynamic_cast<ChainTraverser*>(mCurrentEvent);
-   
    if(ct)
    {
       Processor::ChainType type = ct->chainType();
       Processor::processor_action_t ret=Processor::Continue;
-      
+
       switch(type)
       {
-         case Processor::REQUEST_CHAIN:
-            ret = mRequestProcessorChain.process(*this);
-            
-            if(ret != Processor::WaitingForEvent && !mHaveSentFinalResponse)
+      case Processor::REQUEST_CHAIN:
+         ret = mRequestProcessorChain.process(*this);
+
+         if(ret != Processor::WaitingForEvent && !mHaveSentFinalResponse)
+         {
+            if (!mResponseContext.hasTargets())
             {
-               if (!mResponseContext.hasTargets())
-               {
-                  // make 480, send, dispose of memory
-                  resip::SipMessage response;
-                  InfoLog (<< *this << ": no targets for " 
-                           << mOriginalRequest->header(h_RequestLine).uri() 
-                           << " send 480");
-                  Helper::makeResponse(response, *mOriginalRequest, 480); 
-                  sendResponse(response);
-               }
-               else
-               {
-                  InfoLog (<< *this << " there are " 
+               // make 480, send, dispose of memory
+               resip::SipMessage response;
+               InfoLog (<< *this << ": no targets for " 
+                  << mOriginalRequest->header(h_RequestLine).uri() 
+                  << " send 480");
+               Helper::makeResponse(response, *mOriginalRequest, 480); 
+               sendResponse(response);
+            }
+            else
+            {
+               InfoLog (<< *this << " there are " 
                   << mResponseContext.mCandidateTransactionMap.size() 
                   << " candidates -> continue");
-                  
-                  ret = mTargetProcessorChain.process(*this);
 
-                  if(ret != Processor::WaitingForEvent &&
-                     !mHaveSentFinalResponse && 
-                     !mResponseContext.hasActiveTransactions())
+               ret = mTargetProcessorChain.process(*this);
+
+               if(ret != Processor::WaitingForEvent &&
+                  !mHaveSentFinalResponse && 
+                  !mResponseContext.hasActiveTransactions())
+               {
+                  if(mResponseContext.hasCandidateTransactions())
                   {
-                     if(mResponseContext.hasCandidateTransactions())
-                     {
-                        resip::SipMessage response;
-                        // Someone forgot to start any of the targets they just added.
-                        // Send a 500 response
-                        ErrLog( << "In RequestContext, request and target processor"
-                                << " chains have run, and we have some Candidate Targets,"
-                                << " but no active Targets. (Bad baboon?)"
-                                << "Sending a 500 response for this request:" 
-                                << mOriginalRequest->header(h_RequestLine).uri() );
-                        Helper::makeResponse(response, *mOriginalRequest, 500); 
-                        sendResponse(response);
-                     }
-                     else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
-                     {
-                        ErrLog(<< "In RequestContext, request and target processor "
+                     resip::SipMessage response;
+                     // Someone forgot to start any of the targets they just added.
+                     // Send a 500 response
+                     ErrLog( << "In RequestContext, request and target processor"
+                        << " chains have run, and we have some Candidate Targets,"
+                        << " but no active Targets. (Bad baboon?)"
+                        << "Sending a 500 response for this request:" 
+                        << mOriginalRequest->header(h_RequestLine).uri() );
+                     Helper::makeResponse(response, *mOriginalRequest, 500); 
+                     sendResponse(response);
+                  }
+                  else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
+                  {
+                     ErrLog(<< "In RequestContext, request and target processor "
                         << "chains have run, and all Targets are now Terminated."
                         << " However, we have not sent a final response, and our "
                         << "best final response is not a 408.(What happened here?)");
 
-                        // Send best response
-                        mResponseContext.forwardBestResponse();
-                     }
+                     // Send best response
+                     mResponseContext.forwardBestResponse();
                   }
-
                }
             }
-            
+         }
+         break;
 
-            break;
-         
-         case Processor::RESPONSE_CHAIN:
-            ret = mResponseProcessorChain.process(*this);
-            
-            mTargetProcessorChain.process(*this);
-            break;
-            
-         case Processor::TARGET_CHAIN:
-            ret = mTargetProcessorChain.process(*this);
-            break;
-      
-         default:
-            ErrLog(<<"RequestContext " << getTransactionId() << " got a "
-                     << "ProcessorMessage addressed to a non existent chain "
-                     << type);
+      case Processor::RESPONSE_CHAIN:
+         ret = mResponseProcessorChain.process(*this);
+
+         mTargetProcessorChain.process(*this);
+         break;
+
+      case Processor::TARGET_CHAIN:
+         ret = mTargetProcessorChain.process(*this);
+         break;
+
+      default:
+         ErrLog(<<"RequestContext " << getTransactionId() << " got a "
+            << "ProcessorMessage addressed to a non existent chain "
+            << type);
       }
    }
 }
-
-
 
 resip::SipMessage& 
 RequestContext::getOriginalRequest()

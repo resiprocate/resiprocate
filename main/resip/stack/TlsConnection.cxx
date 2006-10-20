@@ -635,7 +635,7 @@ TlsConnection::computePeerName()
          int l = uri->length;
          unsigned char* dat = uri->data;
          Data name(dat,l);
-         InfoLog(<< "subjectAltName of TLS seesion cert contains <" << name << ">" );
+         InfoLog(<< "subjectAltName of TLS session cert contains <" << name << ">" );
          
          mPeerNames.push_back(name);
       }

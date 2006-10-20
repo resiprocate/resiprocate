@@ -1408,7 +1408,15 @@ Helper::getPortForReply(SipMessage& request)
       port = request.header(h_Vias).front().sentPort();
       if (port <= 0 || port > 65535) 
       {
-         port = Symbols::DefaultSipPort;
+         if(request.header(h_Vias).front().transport() == Symbols::TLS ||
+            request.header(h_Vias).front().transport() == Symbols::DTLS)
+         {
+            port = Symbols::DefaultSipsPort;
+         }
+         else
+         {
+            port = Symbols::DefaultSipPort;
+         }
       }
    }
    assert(port != -1);

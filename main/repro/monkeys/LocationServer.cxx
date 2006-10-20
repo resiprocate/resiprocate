@@ -25,71 +25,72 @@ LocationServer::process(RequestContext& context)
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
    const resip::Uri& inputUri
-    = context.getOriginalRequest().header(h_RequestLine).uri();
+      = context.getOriginalRequest().header(h_RequestLine).uri();
 
-  //!RjS! This doesn't look exception safe - need guards
-  mStore.lockRecord(inputUri);
-  
-  if (true) // TODO fix mStore.aorExists(inputUri))
-  {  
-	 RegistrationPersistenceManager::ContactRecordList contacts = mStore.getContacts(inputUri);
+   //!RjS! This doesn't look exception safe - need guards
+   mStore.lockRecord(inputUri);
 
-     mStore.unlockRecord(inputUri);
+   if (true) // TODO fix mStore.aorExists(inputUri))
+   {  
+      RegistrationPersistenceManager::ContactRecordList contacts = mStore.getContacts(inputUri);
+
+      mStore.unlockRecord(inputUri);
 
       std::list<Target*> batch;
-     for ( RegistrationPersistenceManager::ContactRecordList::iterator i  = contacts.begin()
-             ; i != contacts.end()    ; ++i)
-     {
-	    RegistrationPersistenceManager::ContactRecord contact = *i;
-        if (contact.expires>=time(NULL))
-        {
-            static ExtensionParameter p_cid("cid");
-            contact.uri.param(p_cid)=resip::Data(contact.cid);
-           InfoLog (<< *this << " adding target " << contact.uri);
-           if(contact.useQ)
-           {
+      for ( RegistrationPersistenceManager::ContactRecordList::iterator i  = contacts.begin()
+         ; i != contacts.end()    ; ++i)
+      {
+         RegistrationPersistenceManager::ContactRecord contact = *i;
+         if (contact.expires>=time(NULL))
+         {
+            if(contact.cid != 0)
+            {
+               static ExtensionParameter p_cid("cid");
+               contact.uri.param(p_cid)=resip::Data(contact.cid);
+            }
+            InfoLog (<< *this << " adding target " << contact.uri);
+            if(contact.useQ)
+            {
                batch.push_back(new QValueTarget(contact.uri,contact.q));
-           }
-           else
-           {
+            }
+            else
+            {
                batch.push_back(new QValueTarget(contact.uri,1.0));   
-           }
-        }
-        else
-        {
+            }
+         }
+         else
+         {
             // remove expired contact 
             mStore.removeContact(inputUri, contact.uri);
-        }
-     }
+         }
+      }
 
-      
-     if(!batch.empty())
-     {
+      if(!batch.empty())
+      {
          batch.sort(Target::targetPtrCompare);
-        context.getResponseContext().addTargetBatch(batch);
+         context.getResponseContext().addTargetBatch(batch);
          //ResponseContext should be consuming the vector
-        assert(batch.empty());
-     }
-          
+         assert(batch.empty());
+      }          
    }
    else
    {
       mStore.unlockRecord(inputUri);
-	  
-	  // make 404, send, dispose of memory 
-	  resip::SipMessage response;
-	  Helper::makeResponse(response, context.getOriginalRequest(), 404); 
-	  context.sendResponse(response);
-	  return Processor::SkipThisChain;
+
+      // make 404, send, dispose of memory 
+      resip::SipMessage response;
+      Helper::makeResponse(response, context.getOriginalRequest(), 404); 
+      context.sendResponse(response);
+      return Processor::SkipThisChain;
    }
-   
+
    return Processor::Continue;
 }
 
 void
 LocationServer::dump(std::ostream &os) const
 {
-  os << "LocationServer monkey" << std::endl;
+   os << "LocationServer monkey" << std::endl;
 }
 
 
