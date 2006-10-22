@@ -1,6 +1,7 @@
 #ifndef DtlsSocket_hxx
 #define DtlsSocket_hxx
 
+#include <memory>
 
 namespace dtls
 {
@@ -11,7 +12,7 @@ class DtlsSocketContext
 {
    public:
       //memory is only valid for duration of callback; must be copied if queueing
-      //is requried 
+      //is required 
       virtual void write(const char* data, unsigned int len)=0;
       void handshakeCompleted()=0;
 };
@@ -29,19 +30,6 @@ class DtlsSocket
       DtlsFactory* mFactory;
 };
 
-   
-
-
-
-#endif
-
-
-
-
-
-
-
 
 }
-
 #endif
