@@ -2,6 +2,7 @@
 #define DtlsFactory_hxx
 
 #include <memory>
+
 #include <openssl/e_os2.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
@@ -10,11 +11,11 @@
 
 #include "DtlsTimer.hxx"
 
-class DtlsSocket;
-class DtlsSocketContext;
-
 namespace dtls
 {
+
+class DtlsSocket;
+class DtlsSocketContext;
 
 //Not threadsafe. Timers must fire in the same thread as dtls processing.
 class DtlsFactory
