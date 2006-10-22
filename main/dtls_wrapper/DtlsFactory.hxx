@@ -33,8 +33,9 @@ class DtlsFactory
        
       //context accessor
 private:
-      SSL_CTX* mContext;
-      std::auto_ptr<DtlsTimerContext> mTimerContext;
+     friend class DtlsSocket;
+     SSL_CTX* mContext;
+     std::auto_ptr<DtlsTimerContext> mTimerContext;
 };
 
 }
