@@ -5,8 +5,6 @@
 namespace dtls
 {
 
-class ClientContext;
-
 //Not threadsafe. Timers must fire in the same thread as dtls processing.
 class DtlsFactory
 {
