@@ -3,7 +3,8 @@
 
 using namespace dtls;
 
-DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType type) 
+DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType type) : 
+   mSocketType(type)
 {
    ssl=SSL_new(factory->mContext);
 
@@ -18,6 +19,14 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, e
       assert(0);
   }
 }
+
+void 
+DtlsSocket::startClient()
+{
+   assert(mSocketType == Client);
+//start handshake   
+}
+
 
 bool
 DtlsSocket::checkFingerprint(const char* fingerprint, unsigned int len){

@@ -32,6 +32,8 @@ class DtlsSocket
      bool checkFingerprint(const char* fingerprint, unsigned int len);      
       //guts of one connection go here
 
+     void startClient();      
+
    private:
      friend class DtlsFactory;
      enum SocketType { Client, Server};
@@ -43,6 +45,9 @@ class DtlsSocket
      SSL *ssl;
      BIO *mInBio;
      BIO *mOutBio;
+      
+     SocketType mSocketType;
+      
 };
 
 
