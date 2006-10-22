@@ -14,7 +14,7 @@ class DtlsSocketContext
      //memory is only valid for duration of callback; must be copied if queueing
      //is required 
      virtual void write(const char* data, unsigned int len)=0;
-     void handshakeCompleted()=0;
+     virtual void handshakeCompleted()=0;
 };
 
 class DtlsSocket
@@ -30,7 +30,11 @@ class DtlsSocket
      
      DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType);
      DtlsFactory* mFactory;
+
+     // OpenSSL context data
      SSL *ssl;
+     BIO *mInBio;
+     BIO *mOutBio;
 };
 
 

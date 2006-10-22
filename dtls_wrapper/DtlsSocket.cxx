@@ -1,3 +1,4 @@
+#include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
 
 using namespace dtls;
