@@ -64,7 +64,7 @@ DTLS_WRAPPER_LIBDIRS := $(ROOT)/dtls_wrapper
 DTLS_WRAPPER_LIBNAME := dtls_wrapper
 OPENSSL_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/openssl/include
 OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl
-OPENSSL_LIBNAME = ssl crypto dl
+OPENSSL_LIBNAME = ssl crypto
 endif
 
 ifeq ($(USE_MYSQL),yes)
