@@ -22,8 +22,7 @@ class DtlsTimer
 class DtlsTimerContext
 {
    public:
-      void addTimer(DtlsTimer* timer)=0;      
-      
+      void addTimer(DtlsTimer* timer)=0;            
 };
    
 

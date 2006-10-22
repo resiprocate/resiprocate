@@ -12,7 +12,7 @@ class DtlsSocketContext
    public:
       //memory is only valid for duration of callback; must be copied if queueing
       //is requried 
-      void write(const char* data, unsigned int len);
+      virtual void write(const char* data, unsigned int len);
 };
 
 class DtlsSocket
