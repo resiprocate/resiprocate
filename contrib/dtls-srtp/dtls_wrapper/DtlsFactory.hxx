@@ -1,6 +1,17 @@
 #ifndef DtlsFactory_hxx
 #define DtlsFactory_hxx
 
+#include <memory>
+#include <openssl/e_os2.h>
+#include <openssl/rand.h>
+#include <openssl/err.h>
+#include <openssl/crypto.h>
+#include <openssl/ssl.h>
+
+#include "DtlsTimer.hxx"
+
+class DtlsSocket;
+class DtlsSocketContext;
 
 namespace dtls
 {
@@ -9,16 +20,22 @@ namespace dtls
 class DtlsFactory
 {
    public:
-      DtlsFactory(std::auto_ptr<DtlsTimerContext> tc);
-      DtlsSocket* createClient(DtlsSocketContext* context);
-      DtlsSocket* createServer(DtlsSocketContext* context);
+     DtlsFactory(std::auto_ptr<DtlsTimerContext> tc);
 
-      DtlsTimerContext& getTimerContext;
+     // Note: this orphans any DtlsSockets you were stupid enough
+     // not to free
+     ~DtlsFactory();
+     
+     DtlsSocket* createClient(DtlsSocketContext* context);
+     DtlsSocket* createServer(DtlsSocketContext* context);
+
+     DtlsTimerContext& getTimerContext() {return *mTimerContext;}
+       
       //context accessor
 private:
-      SLL_Context* mContext;
+      SSL_CTX* mContext;
       std::auto_ptr<DtlsTimerContext> mTimerContext;
 };
 
-
+}
 #endif

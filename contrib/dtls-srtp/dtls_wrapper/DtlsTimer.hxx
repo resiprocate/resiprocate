@@ -7,8 +7,8 @@ namespace dtls
 class DtlsTimer
 {
    public:
-      Timer(unsigned int seq); 
-      ~Timer() {}
+      DtlsTimer(unsigned int seq); 
+      virtual ~DtlsTimer();
       
       virtual void expired() = 0;
       unsigned int getSeq() { return mSeq; }
@@ -22,7 +22,7 @@ class DtlsTimer
 class DtlsTimerContext
 {
    public:
-      void addTimer(DtlsTimer* timer)=0;            
+     virtual void addTimer(DtlsTimer* timer, unsigned int waitMs)=0;      
 };
    
 
