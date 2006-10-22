@@ -62,6 +62,11 @@ ifeq ($(USE_DTLS),yes)
 DTLS_WRAPPER_INCLUDEDIRS := $(ROOT)/dtls_wrapper
 DTLS_WRAPPER_LIBDIRS := $(ROOT)/dtls_wrapper/obj.$(TARGET_NAME)
 DTLS_WRAPPER_LIBNAME := dtls_wrapper
+
+DTLS_WRAPPER_DEPENDS := $(ROOT)/dtls_wrapper/obj.$(TARGET_NAME)/libdtls_wrapper.$(LIBSUFFIX)
+$(DTLS_WRAPPER_DEPENDS): 
+	cd $(ROOT)/dtls_wrapper; $(MAKE)
+
 OPENSSL_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/openssl/include
 OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl
 OPENSSL_LIBNAME = ssl crypto
