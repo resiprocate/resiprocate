@@ -59,9 +59,9 @@ endif
 #OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
 
 ifeq ($(USE_DTLS),yes)
-DTLS_SHIM_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/dtls_shim
-DTLS_SHIM_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/dtls_shim
-DTLS_SHIM_LIBNAME := dtls_shim
+DTLS_WRAPPER_INCLUDEDIRS := $(ROOT)/../dtls_wrapper
+DTLS_WRAPPER_LIBDIRS := $(ROOT)/../dtls_wrapper
+DTLS_WRAPPER_LIBNAME := dtls_wrapper
 OPENSSL_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/openssl/include
 OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl
 OPENSSL_LIBNAME = ssl crypto dl
@@ -223,3 +223,5 @@ SIPX_INCLUDEDIRS := $(SIPXBASE)/bbridge/include $(SIPXBASE)/sipXmediaAdapterLib/
 SIPX_LIBDIRS := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs $(SIPXBASE)/sipXmediaLib/src/.libs $(SIPXBASE)/sipXtackLib/src/.libs $(SIPXBASE)/sipXportLib/src/.libs
 SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack sipXport
 SIPX_DEFINES := __pingtel_on_posix__
+
+BOOSTSER_LIBNAME = boost_serialization boost_wserialization
