@@ -1,4 +1,4 @@
-#include "../DtlsFactory.hxx"
+#include "DtlsFactory.hxx"
 
 class TestTimerContext: public DtlsTimerContext{
      void addTimer(DtlsTimer *timer, unsigned int){

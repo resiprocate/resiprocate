@@ -22,7 +22,8 @@ class DtlsTimer
 class DtlsTimerContext
 {
    public:
-     virtual void addTimer(DtlsTimer* timer, unsigned int waitMs)=0;      
+      virtual ~DtlsTimerContext() {}
+      virtual void addTimer(DtlsTimer* timer, unsigned int waitMs)=0;      
 };
    
 
