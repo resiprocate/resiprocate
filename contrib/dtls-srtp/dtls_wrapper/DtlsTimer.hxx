@@ -12,6 +12,7 @@ class DtlsTimer
       
       virtual void expired() = 0;
       unsigned int getSeq() { return mSeq; }
+      void invalidate() { mValid = false; }
    private:
       unsigned int mSeq;
       bool mValid;            
