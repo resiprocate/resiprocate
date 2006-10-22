@@ -3,7 +3,7 @@
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += OPENSSL
+PACKAGES += OPENSSL DTLS_WRAPPER
 
 CODE_SUBDIRS = 
 

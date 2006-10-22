@@ -59,8 +59,8 @@ endif
 #OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
 
 ifeq ($(USE_DTLS),yes)
-DTLS_WRAPPER_INCLUDEDIRS := $(ROOT)/../dtls_wrapper
-DTLS_WRAPPER_LIBDIRS := $(ROOT)/../dtls_wrapper
+DTLS_WRAPPER_INCLUDEDIRS := $(ROOT)/dtls_wrapper
+DTLS_WRAPPER_LIBDIRS := $(ROOT)/dtls_wrapper
 DTLS_WRAPPER_LIBNAME := dtls_wrapper
 OPENSSL_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/openssl/include
 OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl

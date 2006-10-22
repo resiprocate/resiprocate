@@ -22,6 +22,7 @@ class DtlsSocketContext
       virtual ~DtlsSocketContext(){}      
      virtual void write(const char* data, unsigned int len)=0;
      virtual void handshakeCompleted()=0;
+     virtual void handshakeFailed()=0;
 };
 
 class DtlsSocket
