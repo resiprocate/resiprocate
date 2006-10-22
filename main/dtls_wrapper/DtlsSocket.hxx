@@ -3,6 +3,12 @@
 
 #include <memory>
 
+#include <openssl/e_os2.h>
+#include <openssl/rand.h>
+#include <openssl/err.h>
+#include <openssl/crypto.h>
+#include <openssl/ssl.h>
+
 namespace dtls
 {
 
@@ -13,6 +19,7 @@ class DtlsSocketContext
    public:
      //memory is only valid for duration of callback; must be copied if queueing
      //is required 
+      virtual ~DtlsSocketContext(){}      
      virtual void write(const char* data, unsigned int len)=0;
      virtual void handshakeCompleted()=0;
 };
