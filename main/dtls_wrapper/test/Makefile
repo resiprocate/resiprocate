@@ -3,9 +3,11 @@
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += OPENSSL DTLS_WRAPPER
+PACKAGES += DTLS_WRAPPER RUTIL OPENSSL PTHREAD
 
 CODE_SUBDIRS = 
+
+SRC = CreateCert.cxx
 
 TESTPROGRAMS = testDtlsWrapper.cxx
 
