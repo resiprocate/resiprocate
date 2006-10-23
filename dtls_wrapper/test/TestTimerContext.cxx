@@ -14,7 +14,9 @@ TestTimerContext::TestTimerContext()
      
 void
 TestTimerContext::addTimer(DtlsTimer *timer, unsigned int lifetime){
-  
+  if(mTimer)
+    delete mTimer;
+
   mTimer=timer;
   UInt64 timeMs=Timer::getTimeMs();
   mExpiryTime=timeMs+lifetime;
@@ -45,8 +47,8 @@ TestTimerContext::updateTimer(){
     if(mExpiryTime<timeMs){
       DtlsTimer *tmpTimer=mTimer;
       mTimer=0;
-      
-      tmpTimer->expired();
+
+      fire(tmpTimer);
     }
   }
 }
