@@ -63,7 +63,7 @@ class RESIP_API ParserCategory : public LazyParser
       class Exception : public BaseException
       {
          public:
-            Exception(const Data& msg, const Data& file, const int line)
+            Exception(const char* msg, const char* file, const int line)
                : BaseException(msg, file, line) {}
 
             const char* name() const { return "ParserCategory::Exception"; }

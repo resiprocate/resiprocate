@@ -23,8 +23,8 @@ class RESIP_API DeprecatedDialog
       class Exception : public BaseException 
       {
          public:
-            Exception( const resip::Data& msg,
-                       const resip::Data& file,
+            Exception( const char* msg,
+                       const char* file,
                        const int line): BaseException(msg,file,line){}
             const char* name() const { return "Dialog::Exception"; }
       };

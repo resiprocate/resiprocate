@@ -62,8 +62,8 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
       class Exception : public BaseException
       {
          public:
-            Exception(const Data& msg,
-                      const Data& file,
+            Exception(const char* msg,
+                      const char* file,
                       int line)
                : BaseException(msg, file, line)
             {}

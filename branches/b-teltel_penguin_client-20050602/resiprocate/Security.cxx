@@ -292,7 +292,10 @@ Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
    }
    else
    {
-      str.write(buffer.data(), buffer.size());
+      if (buffer.size())
+      {
+         str.write(buffer.data(), buffer.size());
+      }
       if (!str)
       {
          ErrLog (<< "Failed writing to " << filename << " " << buffer.size() << " bytes");
@@ -319,7 +322,7 @@ BaseSecurity::addCertDER (PEMType type,
    assert( !certDER.empty() );
 
    X509* cert = 0;
-   unsigned char* in = (unsigned char*)certDER.data();
+   unsigned char* in = (unsigned char*)certDER.c_str();
    if (d2i_X509(&cert,&in,certDER.size()) == 0)
    {
       ErrLog(<< "Could not read DER certificate from " << certDER );
@@ -855,7 +858,7 @@ BaseSecurity::removePrivateKey(PEMType type, const Data& key)
 }
 
 
-Security::Exception::Exception(const Data& msg, const Data& file, const int line)
+Security::Exception::Exception(const char* msg, const char* file, const int line)
 :  BaseException(msg,file,line)
 {
 }
@@ -1270,11 +1273,11 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
    ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, 
-                                     (unsigned char *) domain.data(), domain.size(), 
+                                     (unsigned char *) domain.c_str(), domain.size(), 
                                      -1, 0);
    assert(ret);
    ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_UTF8, 
-                                     (unsigned char *) aor.data(), aor.size(), 
+                                     (unsigned char *) aor.c_str(), aor.size(), 
                                      -1, 0);
    assert(ret);
    
@@ -1353,7 +1356,7 @@ BaseSecurity::sign(const Data& senderAor, Contents* contents)
    DebugLog( << "sign the data <" << bodyData << ">" );
    Security::dumpAsn("resip-sign-out-data",bodyData);
 
-   const char* p = bodyData.data();
+   const char* p = bodyData.c_str();
    int s = bodyData.size();
    BIO* in=BIO_new_mem_buf( (void*)p,s);
    assert(in);
@@ -1448,7 +1451,7 @@ BaseSecurity::encrypt(Contents* bodyIn, const Data& recipCertName )
 
    InfoLog( << "body data to encrypt is <" << bodyData.escaped() << ">" );
 
-   const char* p = bodyData.data();
+   const char* p = bodyData.c_str();
    int s = bodyData.size();
 
    BIO* in = BIO_new_mem_buf( (void*)p,s);
@@ -1576,7 +1579,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
    DebugLog( << "hash of string is 0x" << hashRes.hex() );
 
 #if 1
-   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.data(), hashRes.size(),
+   int r = RSA_sign(NID_sha1, (unsigned char *)hashRes.c_str(), hashRes.size(),
                     result, (unsigned int*)( &resultSize ),
             rsa);
    assert( r == 1 );
@@ -1653,15 +1656,15 @@ BaseSecurity::checkIdentity( const Data& signerDomain, const Data& in, const Dat
    RSA* rsa = EVP_PKEY_get1_RSA(pKey);
 
 #if 1
-   int ret = RSA_verify(NID_sha1, (unsigned char *)hashRes.data(),
-                        hashRes.size(), (unsigned char*)sig.data(), sig.size(),
+   int ret = RSA_verify(NID_sha1, (unsigned char *)hashRes.c_str(),
+                        hashRes.size(), (unsigned char*)sig.c_str(), sig.size(),
                         rsa);
 #else
    unsigned char result[4096];
    int resultSize = sizeof(result);
    assert( resultSize >= RSA_size(rsa) );
 
-   resultSize = RSA_public_decrypt(sig.size(),(unsigned char*)sig.data(),
+   resultSize = RSA_public_decrypt(sig.size(),(unsigned char*)sig.c_str(),
                                    result, rsa, RSA_PKCS1_PADDING );
    assert( resultSize != -1 );
    //assert( resultSize == SHA_DIGEST_LENGTH );
@@ -1692,7 +1695,7 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
    {
       if ( !certDer.empty() )
       {
-         unsigned char* in = (unsigned char*)certDer.data();
+         unsigned char* in = (unsigned char*)certDer.c_str();
          if (d2i_X509(&cert,&in,certDer.size()) == 0)
          {
             DebugLog(<< "Could not read DER certificate from " << certDer );
@@ -1997,7 +2000,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    Security::dumpAsn( "resip-asn-uncode-signed-text", textData );
    Security::dumpAsn( "resip-asn-uncode-signed-sig", sigData );
 
-   BIO* in = BIO_new_mem_buf( (void*)sigData.data(),sigData.size());
+   BIO* in = BIO_new_mem_buf( (void*)sigData.c_str(),sigData.size());
    assert(in);
    InfoLog( << "ceated in BIO");
 
@@ -2008,7 +2011,7 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
    InfoLog( << "verify <"    << textData.escaped() << ">" );
    InfoLog( << "signature <" << sigData.escaped() << ">" );
 
-   BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.data(),textData.size());
+   BIO* pkcs7Bio = BIO_new_mem_buf( (void*) textData.c_str(),textData.size());
    assert(pkcs7Bio);
    InfoLog( << "ceated pkcs BIO");
 
@@ -2395,7 +2398,7 @@ BaseSecurity::dumpAsn( char* name, Data data)
       }
       else
       {
-         strm.write( data.data() , data.size() );
+         strm.write( data.c_str() , data.size() );
       }
       strm.flush();
    }
