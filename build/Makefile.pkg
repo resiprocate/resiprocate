@@ -72,7 +72,7 @@ OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl
 OPENSSL_LIBNAME = ssl crypto
 endif
 
-SRTP_INCLUDEDIRS := $(ROOT)/../contrib/ $(ROOT)/../contrib/srtp/crypto/include/
+SRTP_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp $(ROOT)/../contrib/dtls-srtp/srtp/crypto/include/
 
 ifeq ($(USE_MYSQL),yes)
 MYSQL_LIBNAME :=  mysqlclient z m
