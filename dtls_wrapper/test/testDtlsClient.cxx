@@ -83,7 +83,7 @@ int main(int argc,char **argv)
         
         cin.getline(inbuf, 1024);
 
-        cout << "Read from stdin " << buf << endl;
+        cout << "Read from stdin " << inbuf << endl;
       }
       if (fdset.readyToRead(fd))
       {
