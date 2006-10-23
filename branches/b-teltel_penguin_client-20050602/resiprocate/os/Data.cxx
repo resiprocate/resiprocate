@@ -1036,7 +1036,7 @@ Data::append(const char* str, size_type len)
    }
    else
    {
-      if (mMine != Take)
+      if (mMine == Share)
       {
          resize(mSize + len, true);
       }
@@ -1143,7 +1143,7 @@ Data::end() const
 void
 Data::own() const
 {
-   if (mMine != Take)
+   if (mMine == Share)
    {
       const_cast<Data*>(this)->resize(mSize, true);
    }
