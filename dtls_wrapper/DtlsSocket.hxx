@@ -13,25 +13,36 @@ namespace dtls
 {
 
 class DtlsFactory;
+class DtlsSocket;
 
 class DtlsSocketContext
 {
    public:
      //memory is only valid for duration of callback; must be copied if queueing
      //is required 
-      virtual ~DtlsSocketContext(){}      
+     virtual ~DtlsSocketContext(){}      
      virtual void write(const unsigned char* data, unsigned int len)=0;
      virtual void handshakeCompleted()=0;
-     virtual void handshakeFailed()=0;
+     virtual void handshakeFailed(const char *err)=0;
+
+   protected:
+     DtlsSocket *mSocket;
+     
+   private:
+     friend class DtlsSocket;
+     
+     void setDtlsSocket(DtlsSocket *sock) {mSocket=sock;}
 };
 
 class DtlsSocket
 {
    public:
-     bool handlePacketMaybe(const char* bytes, unsigned int len);
-     bool checkFingerprint(const char* fingerprint, unsigned int len);      
-
-     void startClient();      
+     bool handlePacketMaybe(const unsigned char* bytes, unsigned int len);
+     bool checkFingerprint(const char* fingerprint, unsigned int len);
+     bool DtlsSocket::getRemoteFingerprint(char *fingerprint);
+     void DtlsSocket::getMyCertFingerprint(char *fingerprint);
+     void startClient();
+     SRTP_PROTECTION_PROFILE *DtlsSocket::getSrtpProfile();
 
    private:
      friend class DtlsFactory;
@@ -39,7 +50,8 @@ class DtlsSocket
      
      DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType);
      void doHandshakeIteration();
-
+     static void DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint);
+     
      // Internals
      std::auto_ptr<DtlsSocketContext> mSocketContext;
      DtlsFactory* mFactory;
@@ -50,7 +62,6 @@ class DtlsSocket
      BIO *mOutBio;
       
      SocketType mSocketType;
-      
 };
 
 
