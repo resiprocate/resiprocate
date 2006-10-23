@@ -52,9 +52,9 @@ DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len) {
   
   if((data[0]==0)   || (data[0]==1))
     return stun;
-  if((data[0]>=128) || (data[0]<=191))
+  if((data[0]>=128) && (data[0]<=191))
     return rtp;
-  if((data[0]>=20)  || (data[0]<=64))
+  if((data[0]>=20)  && (data[0]<=64))
     return dtls;
 
   return unknown;

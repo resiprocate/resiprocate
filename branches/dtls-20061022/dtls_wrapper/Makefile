@@ -11,7 +11,8 @@ TESTPROGRAMS =
 
 SRC = DtlsTimer.cxx \
 	DtlsSocket.cxx \
-	DtlsFactory.cxx
+	DtlsFactory.cxx \
+	bf_dwrap.c
 
 include $(BUILD)/Makefile.post
 
