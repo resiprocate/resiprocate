@@ -181,6 +181,8 @@ DtlsSocket::getSrtpSessionKeys()
    assert(mHandshakeCompleted);
    SrtpSessionKeys keys;
 
+   memset(&keys, 0x00, sizeof(keys));
+   
    SSL_get_srtp_key_info(ssl, 
                          &keys.clientMasterKey,
                          &keys.clientMasterKeyLen,
@@ -228,14 +230,104 @@ DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint) {
   }
 }
 
+//srtp_t is a pointer(yes, a pointer) to an srtp session from libsrtp. Lifetime
+//is managed by the client.
+//TODO: assert(0) into exception, as elsewhere
+void
+DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy)
+{
+   assert(mHandshakeCompleted);
+   
+   /* we assume that the defau1lt profile is in effect, for now */
+   srtp_profile_t profile = srtp_profile_aes128_cm_sha1_80;
+   int key_len = srtp_profile_get_master_key_length(profile);
+   int salt_len = srtp_profile_get_master_salt_length(profile);
+
+   /* get keys from srtp_key and initialize the inbound and outbound sessions */
+   uint8_t client_master_key_and_salt[SRTP_MAX_KEY_LEN];
+   uint8_t server_master_key_and_salt[SRTP_MAX_KEY_LEN];
+   srtp_policy_t client_policy;
+   srtp_policy_t server_policy;
+
+   SrtpSessionKeys srtp_key = getSrtpSessionKeys();   
+   /* set client_write key */  //Dragos--direct assignment then memcpy? Look
+                               //into this...
+   client_policy.key = client_master_key_and_salt;
+   if (srtp_key.clientMasterKeyLen != key_len)
+   {
+     cout << "error: unexpected client key length" << endl;
+     assert(0);
+   }
+   if (srtp_key.clientMasterSaltLen != salt_len)
+   {
+      cout << "error: unexpected client salt length" << endl;
+      assert(0);      
+   }
+
+   memcpy(client_master_key_and_salt, srtp_key.clientMasterKey, key_len);
+   memcpy(client_master_key_and_salt + key_len, srtp_key.clientMasterSalt, salt_len);
+   
+   cout << "client master key and salt: " << 
+      octet_string_hex_string(client_master_key_and_salt, key_len + salt_len) << endl;
+
+   /* initialize client SRTP policy from profile  */
+   err_status_t err = crypto_policy_set_from_profile_for_rtp(&client_policy.rtp, profile);
+   if (err) assert(0);
+   
+   err = crypto_policy_set_from_profile_for_rtcp(&client_policy.rtcp, profile);
+   if (err) assert(0);
+   client_policy.ssrc.type  = ssrc_any_inbound;
+   client_policy.next = NULL;
+
+   /* set server_write key */
+   //Dragos--direct assignment then memcpy? Look into this...
+   server_policy.key = server_master_key_and_salt;
+
+   if (srtp_key.serverMasterKeyLen != key_len)
+   {
+     cout << "error: unexpected server key length" << endl;
+     assert(0);
+   }
+   if (srtp_key.serverMasterSaltLen != salt_len)
+   {
+      cout << "error: unexpected salt length" << endl;
+      assert(0);      
+   }
+
+   memcpy(server_master_key_and_salt, srtp_key.serverMasterKey, key_len);
+   memcpy(server_master_key_and_salt + key_len, srtp_key.serverMasterSalt, salt_len);
+   cout << "server master key and salt: " << 
+     octet_string_hex_string(server_master_key_and_salt, key_len + salt_len) << endl;
+
+   /* initialize server SRTP policy from profile  */
+   err = crypto_policy_set_from_profile_for_rtp(&server_policy.rtp, profile);
+   if (err) assert(0);
+   
+   err = crypto_policy_set_from_profile_for_rtcp(&server_policy.rtcp, profile);
+   if (err) assert(0);
+   server_policy.ssrc.type  = ssrc_any_inbound;
+   server_policy.next = NULL;
+
+   if (mSocketType == Client) 
+   {
+      outboundPolicy = client_policy;
+      inboundPolicy = server_policy;
+   }
+   else
+   {
+      outboundPolicy = server_policy;
+      inboundPolicy = client_policy;
+   }
+   /* zeroize the input keys (but not the srtp session keys that are in use) */
+//not done...not much of a security whole imho...the lifetime of these seems odd though
+//    memset(client_master_key_and_salt, 0x00, SRTP_MAX_KEY_LEN);
+//    memset(server_master_key_and_salt, 0x00, SRTP_MAX_KEY_LEN);
+//    memset(&srtp_key, 0x00, sizeof(srtp_key));
+}
+
 // Wrapper for currently nonexistent OpenSSL fxn
 int
 DtlsSocket::getReadTimeout()
   {
     return 500;
   }
-
-    
-
-
-     
