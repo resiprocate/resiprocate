@@ -244,8 +244,8 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
    int salt_len = srtp_profile_get_master_salt_length(profile);
 
    /* get keys from srtp_key and initialize the inbound and outbound sessions */
-   uint8_t client_master_key_and_salt[SRTP_MAX_KEY_LEN];
-   uint8_t server_master_key_and_salt[SRTP_MAX_KEY_LEN];
+   uint8_t *client_master_key_and_salt=new uint8_t[SRTP_MAX_KEY_LEN];
+   uint8_t *server_master_key_and_salt=new uint8_t[SRTP_MAX_KEY_LEN];
    srtp_policy_t client_policy;
    srtp_policy_t server_policy;
 
