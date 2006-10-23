@@ -7,6 +7,11 @@ using namespace std;
 using namespace dtls;
 using namespace resip;
 
+TestTimerContext::TestTimerContext()
+  {
+    mTimer=0;
+  }
+     
 void
 TestTimerContext::addTimer(DtlsTimer *timer, unsigned int lifetime){
   

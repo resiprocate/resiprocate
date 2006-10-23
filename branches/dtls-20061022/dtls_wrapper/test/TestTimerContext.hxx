@@ -8,6 +8,7 @@ namespace dtls {
      
 class TestTimerContext: public DtlsTimerContext{
   public:
+     TestTimerContext();
      void addTimer(DtlsTimer *timer, unsigned int seq);
      UInt64 getRemainingTime();
      void updateTimer();
