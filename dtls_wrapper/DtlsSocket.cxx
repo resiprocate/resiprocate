@@ -1,7 +1,7 @@
 #include <iostream>
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
-
+#include "bf_dwrap.h"
 using namespace std;
 using namespace dtls;
 
@@ -30,8 +30,12 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
       assert(0);
   }
 
-  mInBio=BIO_new(BIO_s_mem());
-  mOutBio=BIO_new(BIO_s_mem());
+  mInBio=BIO_new(BIO_f_dwrap());
+  BIO_push(mInBio,BIO_new(BIO_s_mem()));
+    
+  mOutBio=BIO_new(BIO_f_dwrap());
+  BIO_push(mOutBio,BIO_new(BIO_s_mem()));
+    
   SSL_set_bio(ssl,mInBio,mOutBio);
 }
 
@@ -64,17 +68,26 @@ DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len){
 }
 
 void
+DtlsSocket::forceRetransmit(){
+  BIO_reset(mInBio);
+  BIO_reset(mOutBio);
+  BIO_ctrl(mInBio,BIO_CTRL_DGRAM_SET_RECV_TIMEOUT,0,0);
+    
+  doHandshakeIteration();
+}
+
+void
 DtlsSocket::doHandshakeIteration() {
   int r;
   char errbuf[1024];
+  int sslerr;
   
   r=SSL_do_handshake(ssl);
   errbuf[0]=0;
   ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
-
   
   // Now handle handshake errors */
-  switch(SSL_get_error(ssl,r)){
+  switch(sslerr=SSL_get_error(ssl,r)){
     case SSL_ERROR_NONE:
        mHandshakeCompleted = true;       
        mSocketContext->handshakeCompleted();
@@ -89,6 +102,8 @@ DtlsSocket::doHandshakeIteration() {
       // TODO: reset the timers 
       break;
     default:
+      cerr << "SSL error " << sslerr << endl;
+      
       mSocketContext->handshakeFailed(errbuf);
       // Note: need to fall through to propagate alerts, if any
       break;
