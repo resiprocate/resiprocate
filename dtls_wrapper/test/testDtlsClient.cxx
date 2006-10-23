@@ -30,8 +30,9 @@ int main(int argc,char **argv)
   assert(argc==3);
   
   createCert(resip::Data("sip:client@example.com"),365,1024,clientCert,clientKey);
-  
-  DtlsFactory *clientFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(new TestTimerContext()),clientCert,clientKey);
+
+  TestTimerContext *ourTimer=new TestTimerContext();
+  DtlsFactory *clientFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),clientCert,clientKey);
 
   cout << "Created the factory\n";
 
@@ -77,9 +78,16 @@ int main(int argc,char **argv)
     
     fdset.setRead(fd);
     fdset.setRead(0);
+
+    UInt64 towait=ourTimer->getRemainingTime();
+
+    cerr << "Invoking select for time " << towait << endl;
     
-    if (fdset.selectMilliSeconds(1000000) >= 0)
-    {
+    int toread=fdset.selectMilliSeconds(towait);
+
+    ourTimer->updateTimer();
+
+    if(toread >=0){
       if (fdset.readyToRead(0)){
         char inbuf[1024];
         
@@ -108,6 +116,8 @@ int main(int argc,char **argv)
 
             cout << "Read RTP data of length " << buf2l << endl;
             cout << buf2 << endl;
+            break;
+          default:
             break;
         }
       }
