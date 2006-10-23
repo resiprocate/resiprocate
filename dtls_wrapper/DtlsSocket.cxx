@@ -24,6 +24,7 @@ class DtlsSocketTimer : public DtlsTimer
 DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
    mSocketContext(socketContext),
    mFactory(factory),
+   mReadTimer(0),
    mSocketType(type), 
    mHandshakeCompleted(false)
  {
@@ -143,7 +144,12 @@ DtlsSocket::doHandshakeIteration() {
   // If mOutBio is now nonzero-length, then we need to write the
   // data to the network. TODO: warning, MTU issues! 
   if(outBioLen)
-    mSocketContext->write(outBioData,outBioLen);
+  {
+     //cerr << "Writing data: ";
+     //cerr.write((char*)outBioData, outBioLen);
+     //cerr << " length " << outBioLen << endl;
+     mSocketContext->write(outBioData,outBioLen);
+  }
 }
 
 bool
