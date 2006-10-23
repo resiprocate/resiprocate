@@ -60,3 +60,20 @@ DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len) {
 
   return unknown;
 }
+
+void
+DtlsFactory::setCipherSuites(const char *str){
+  int r;
+  
+  r=SSL_CTX_set_cipher_list(mContext,str);
+  assert(r==1);
+}
+
+void
+DtlsFactory::setSrtpProfiles(const char *str){
+  int r;
+  
+  r=SSL_CTX_set_tlsext_use_srtp(mContext, DefaultSrtpProfile);
+  
+  assert(r==0);
+}

@@ -29,13 +29,15 @@ class DtlsFactory
      // Note: this orphans any DtlsSockets you were stupid enough
      // not to free
      ~DtlsFactory();
+
      
      DtlsSocket* createClient(std::auto_ptr<DtlsSocketContext> context);
      DtlsSocket* createServer(std::auto_ptr<DtlsSocketContext> context);
      void getMyCertFingerprint(char *fingerprint);
      DtlsTimerContext& getTimerContext() {return *mTimerContext;}
-
-      static const char* DefaultSrtpProfile; 
+     void setSrtpProfiles(const char *policyStr);
+     void setCipherSuites(const char *cipherSuites);
+     static const char* DefaultSrtpProfile; 
 
      static PacketType demuxPacket(const unsigned char *buf, unsigned int len);
      
