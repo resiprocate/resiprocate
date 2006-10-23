@@ -74,9 +74,17 @@ int main(int argc,char **argv)
     int r;
     
     fdset.setRead(fd);
-
+    fdset.setRead(0);
+    
     if (fdset.selectMilliSeconds(1000000) >= 0)
     {
+      if (fdset.readyToRead(0)){
+        char inbuf[1024];
+        
+        cin.getline(inbuf, 1024);
+
+        cout << "Read from stdin " << buf << endl;
+      }
       if (fdset.readyToRead(fd))
       {
         srclen=sizeof(src);
