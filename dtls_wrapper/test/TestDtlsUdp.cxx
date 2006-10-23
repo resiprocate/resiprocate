@@ -77,7 +77,7 @@ TestDtlsUdpSocketContext::handshakeCompleted(){
 
 void
 TestDtlsUdpSocketContext::handshakeFailed(const char *err){
-  cout <<  ": Bummer, handshake failure "<<err<<endl;
+  cout <<  "Bummer, handshake failure "<<err<<endl;
 }
 
 
