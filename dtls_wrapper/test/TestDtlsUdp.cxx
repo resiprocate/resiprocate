@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <memory.h>
 
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
@@ -17,6 +18,7 @@
 extern "C" 
 {
 #include <srtp/include/srtp.h>
+#include <srtp/include/srtp_priv.h>
 }
 
 
@@ -91,13 +93,13 @@ void
 TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int len){
   srtp_hdr_t *hdr;
   unsigned char *ptr;
-  int l;
+  int l=0;
 
   cerr << "Sending RTP packet of length " << len << endl;
   
-  ptr=malloc(sizeof(srtp_hdr_t)+len+SRTP_MAX_TRAILER_LEN+4);
+  ptr=(unsigned char *)malloc(sizeof(srtp_hdr_t)+len+SRTP_MAX_TRAILER_LEN+4);
   assert(ptr!=0);
-  hdr=ptr;
+  hdr=(srtp_hdr_t *)ptr;
   ptr+=sizeof(srtp_hdr_t);
   l+=sizeof(srtp_hdr_t);
   
@@ -117,6 +119,19 @@ TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int le
   write((unsigned char *)hdr,l);
 }
      
+void
+TestDtlsUdpSocketContext::recvRtpData(unsigned char *in, unsigned int inlen, unsigned char *out, unsigned int *outlen,unsigned int maxoutlen){
+  srtp_hdr_t *hdr;
+
+  hdr=(srtp_hdr_t *)in;
+
+  in+=sizeof(srtp_hdr_t);
+  inlen-=sizeof(srtp_hdr_t);
+
+  assert(inlen<maxoutlen);
+  memcpy(out,in,inlen);
+  *outlen=inlen;
+}
 
 
 

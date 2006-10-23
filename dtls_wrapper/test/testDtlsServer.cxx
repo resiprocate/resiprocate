@@ -83,8 +83,26 @@ int main(int argc,char **argv)
           
           cout << "Made the DTLS socket\n";
         }
-        
-        dtlsSocket->handlePacketMaybe(buffer,r);
+
+        switch(DtlsFactory::demuxPacket(buffer,r)){
+          case DtlsFactory::dtls:
+            dtlsSocket->handlePacketMaybe(buffer,r);
+            break;
+          case DtlsFactory::rtp:
+            unsigned char buf2[4096];
+            unsigned int buf2l;
+
+            sockContext->recvRtpData(buffer,r,buf2,&buf2l,sizeof(buf2));
+
+            cout << "Read RTP data of length " << buf2l << endl;
+            cout << buf2 << endl;
+            
+
+            // Now echo it back
+            sockContext->sendRtpData((const unsigned char *)buf2,buf2l);
+
+            break;
+        }
       }
     }
   }
