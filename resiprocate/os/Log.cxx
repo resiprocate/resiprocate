@@ -202,8 +202,8 @@ Log::tags(Log::Level level,
         << subsystem << Log::delim
         << pfile << ":" << line;
 #else   
-   char buffer[256];
-   Data tstamp(Data::Borrow, buffer, sizeof(buffer));
+   char buffer[256] = { 0 };
+   Data tstamp(Data::Borrow, buffer, sizeof(buffer) - 1);
 #if defined( WIN32 )
    const char* file = pfile + strlen(pfile);
    while (file != pfile &&
@@ -259,8 +259,8 @@ Log::tags(Log::Level level,
    sprintf(obuffer, "%d", line);
    out += obuffer;
 #else   
-   char buffer[256];
-   Data tstamp(Data::Borrow, buffer, sizeof(buffer));
+   char buffer[256] = {0};
+   Data tstamp(Data::Borrow, buffer, sizeof(buffer) - 1);
 #if defined( WIN32 )
    const char* file = pfile + strlen(pfile);
    while (file != pfile &&
@@ -316,16 +316,17 @@ Log::tags(Log::Level level,
 Data
 Log::timestamp()
 {
-   char buffer[256];
-   Data result(Data::Borrow, buffer, sizeof(buffer));
+   char buffer[256] = { 0 };
+   Data result(Data::Borrow, buffer, sizeof(buffer) - 1);
    return timestamp(result);
 }
 
 Data&
 Log::timestamp(Data& res) 
 {
+   res.reserve(255);
    char* datebuf = const_cast<char*>(res.data());
-   const unsigned int datebufSize = 256;
+   const unsigned int datebufSize = 255;
    res.clear();
    
 #ifdef WIN32 
@@ -372,8 +373,9 @@ Log::timestamp(Data& res)
                                         thereby leaving its last character at
                                         the end, instead of a null terminator */
 
+   res = datebuf;
    // ugh, resize the Data
-   res.at(strlen(datebuf)-1);
+   //res.at(strlen(datebuf)-1);
    return res;
 }
 
@@ -491,9 +493,11 @@ Log::Guard::Guard(resip::Log::Level level,
    mSubsystem(subsystem),
    mFile(file),
    mLine(line),
-   mData(Data::Borrow, mBuffer, sizeof(mBuffer)),
+   mData(Data::Borrow, mBuffer, sizeof(mBuffer) - 1),
    mStream(mData.clear())
 {
+   mBuffer[0] = 0;
+   mData.clear();
    Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
    mStream << resip::Log::delim;
    mStream.flush();
