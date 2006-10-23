@@ -68,10 +68,12 @@ class DtlsSocket
       enum SocketType { Client, Server};
       DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType);
       void doHandshakeIteration();
+      int getReadTimeout();
       
       // Internals
       std::auto_ptr<DtlsSocketContext> mSocketContext;
       DtlsFactory* mFactory;
+      DtlsTimer *mReadTimer;
       
       // OpenSSL context data
       SSL *ssl;
