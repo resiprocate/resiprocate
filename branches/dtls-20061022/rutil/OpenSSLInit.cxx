@@ -55,7 +55,7 @@ OpenSSLInit::OpenSSLInit()
 #endif
 	//#endif
 
-#if 1
+#if 0
 	CRYPTO_malloc_debug_init();
 	CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
 	CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);

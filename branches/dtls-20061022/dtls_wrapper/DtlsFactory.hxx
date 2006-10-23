@@ -21,15 +21,15 @@ class DtlsSocketContext;
 class DtlsFactory
 {
    public:
-     DtlsFactory(std::auto_ptr<DtlsTimerContext> tc);
+     DtlsFactory(std::auto_ptr<DtlsTimerContext> tc, X509 *cert, EVP_PKEY *privkey);
 
      // Note: this orphans any DtlsSockets you were stupid enough
      // not to free
      ~DtlsFactory();
      
-     DtlsSocket* createClient(DtlsSocketContext* context);
-     DtlsSocket* createServer(DtlsSocketContext* context);
-
+     DtlsSocket* createClient(std::auto_ptr<DtlsSocketContext> context);
+     DtlsSocket* createServer(std::auto_ptr<DtlsSocketContext> context);
+     void getMyCertFingerprint(char *fingerprint);
      DtlsTimerContext& getTimerContext() {return *mTimerContext;}
        
       //context accessor
@@ -37,6 +37,7 @@ private:
      friend class DtlsSocket;
      SSL_CTX* mContext;
      std::auto_ptr<DtlsTimerContext> mTimerContext;
+     X509 *mCert;
 };
 
 }
