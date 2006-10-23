@@ -4,6 +4,7 @@
 #include "DtlsSocket.hxx"
 #include "rutil/Data.hxx"
 #include "CreateCert.hxx"
+#include "TestTimerContext.hxx"
 #include <openssl/srtp.h>
 
 using namespace std;
@@ -63,14 +64,6 @@ class TestDtlsSocketContext : public DtlsSocketContext
       }
 };
 
-
-class TestTimerContext: public DtlsTimerContext{
-     void addTimer(DtlsTimer *timer, unsigned int){
-       delete timer;
-     }
-};
-
-     
 int main(int argc,char **argv)
 {
   SSL_library_init();
