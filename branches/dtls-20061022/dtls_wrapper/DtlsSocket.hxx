@@ -69,6 +69,7 @@ class DtlsSocket
       SRTP_PROTECTION_PROFILE* getSrtpProfile();      
       void createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);      
       
+      bool handshakeCompleted() { return mHandshakeCompleted; }
    private:
       friend class DtlsFactory;
       enum SocketType { Client, Server};
