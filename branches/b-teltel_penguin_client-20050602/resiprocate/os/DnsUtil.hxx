@@ -19,8 +19,8 @@ class RESIP_API DnsUtil
       class Exception : public BaseException
       {
          public:
-            Exception(const Data& msg,
-                      const Data& file,
+            Exception(const char* msg,
+                      const char* file,
                       const int line)
                : BaseException(msg, file, line) {}            
          protected:

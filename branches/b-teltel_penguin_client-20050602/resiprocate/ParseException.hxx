@@ -10,7 +10,7 @@ namespace resip
 class RESIP_API ParseException : public BaseException
 {
    public:
-      ParseException(const Data& msg, const Data& file, const int line)
+      ParseException(const char* msg, const char* file, const int line)
          : BaseException(msg, file, line) {}
       const char* name() const { return "ParseException"; }
 };

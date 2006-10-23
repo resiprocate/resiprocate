@@ -10,7 +10,7 @@ namespace resip
 class DUM_API UsageUseException : public BaseException
 {
    public:
-      UsageUseException(const Data& msg, const Data& file, const int line)
+      UsageUseException(const char* msg, const char* file, const int line)
          : BaseException(msg, file, line) {}
       const char* name() const { return "UsageUseException"; }
 };

@@ -8,7 +8,7 @@
 
 using namespace resip;
 
-NonDialogUsage::Exception::Exception(const Data& msg,const Data& file,int line)
+NonDialogUsage::Exception::Exception(const char* msg,const char* file,int line)
    : BaseException(msg, file, line)
 {
 }

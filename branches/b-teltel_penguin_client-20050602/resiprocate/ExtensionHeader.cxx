@@ -42,7 +42,7 @@ ExtensionHeader::getName() const
    return mName;
 }
 
-ExtensionHeader::Exception::Exception(const Data& msg, const Data& file, const int line)
+ExtensionHeader::Exception::Exception(const char* msg, const char* file, const int line)
    : BaseException(msg, file, line) 
 {}
 
