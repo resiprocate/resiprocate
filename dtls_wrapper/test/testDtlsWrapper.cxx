@@ -28,6 +28,8 @@ class TestDtlsSocketContext : public DtlsSocketContext
       {
         cout << mName << ": DTLS Wrapper called write...len = " << len << endl;
 
+        // Discard data and force retransmit
+//        mSocket->forceRetransmit();
         mOtherSocket->handlePacketMaybe(data, len);
       }
       
@@ -91,7 +93,5 @@ int main(int argc,char **argv)
   serverContext->mOtherSocket=clientSocket;  
   
   clientSocket->startClient();
-  
-  
 }
      

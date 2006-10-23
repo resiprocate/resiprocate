@@ -51,6 +51,7 @@ class DtlsSocket
 {
    public:
       bool handlePacketMaybe(const unsigned char* bytes, unsigned int len);
+      void forceRetransmit();
       bool checkFingerprint(const char* fingerprint, unsigned int len);
       bool DtlsSocket::getRemoteFingerprint(char *fingerprint);
       void DtlsSocket::getMyCertFingerprint(char *fingerprint);
