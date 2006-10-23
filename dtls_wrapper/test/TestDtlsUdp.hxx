@@ -25,13 +25,13 @@ class TestDtlsUdpSocketContext: public DtlsSocketContext {
   private:
      int mFd;
      struct sockaddr_in mPeerAddr;
-     uint32_t ssrc;
+     uint32_t ssrc;   // TODO: initialize with something
      srtp_policy_t srtpPolicyIn;
      srtp_policy_t srtpPolicyOut;     
      srtp_t srtpIn;
      srtp_t srtpOut;
-     bool useSrtp;
-     uint16_t mRtpSeq;
+     bool useSrtp; 
+     uint16_t mRtpSeq; // TODO: initialize with something
 };
 
 }

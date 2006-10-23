@@ -34,6 +34,7 @@ TestDtlsUdpSocketContext::TestDtlsUdpSocketContext(int fd,sockaddr_in *peerAddr)
 void
 TestDtlsUdpSocketContext::write(const unsigned char* data, unsigned int len){
   int s = sendto(mFd, data, len, 0, (const sockaddr *)&mPeerAddr, sizeof(struct sockaddr_in));
+
    if ( s == SOCKET_ERROR )
    {
       int e = errno;
@@ -64,6 +65,9 @@ TestDtlsUdpSocketContext::write(const unsigned char* data, unsigned int len){
       clog << "no data sent in send" << endl;
       assert(0);
    }
+
+   cerr << "Wrote " << len << " bytes" << endl;
+   
 }
 
 void
