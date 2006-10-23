@@ -3,7 +3,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
+#include <ctype.h>
 #include <iostream>
 
 #include "DtlsFactory.hxx"
@@ -24,6 +24,8 @@ int main(int argc,char **argv)
 {
   X509 *serverCert;
   EVP_PKEY *serverKey;
+
+  srtp_init();
   
   assert(argc==2);
   
@@ -96,7 +98,10 @@ int main(int argc,char **argv)
 
             cout << "Read RTP data of length " << buf2l << endl;
             cout << buf2 << endl;
-            
+
+            for(int i=0;i<buf2l;i++){
+              buf2[i]=toupper(buf2[i]);
+            }
 
             // Now echo it back
             sockContext->sendRtpData((const unsigned char *)buf2,buf2l);
