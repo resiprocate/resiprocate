@@ -1,17 +1,27 @@
+#include <iostream>
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
 
+using namespace std;
 using namespace dtls;
 
 DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
   mSocketContext(socketContext),mFactory(factory),mSocketType(type) {
+
+  mSocketContext->setDtlsSocket(this);
+    
+  assert(factory->mContext);
   ssl=SSL_new(factory->mContext);
+  assert(ssl!=0);
+
+
   switch(type){
     case Client:
       SSL_set_connect_state(ssl);
       break;
     case Server:
       SSL_set_accept_state(ssl);
+//      SSL_set_verify(ssl,SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,0);
       break;
     default:
       assert(0);
@@ -20,6 +30,7 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
   mInBio=BIO_new(BIO_s_mem());
   mOutBio=BIO_new(BIO_s_mem());
   SSL_set_bio(ssl,mInBio,mOutBio);
+
 }
 
 void 
@@ -32,7 +43,7 @@ DtlsSocket::startClient()
 
 
 bool
-DtlsSocket::handlePacketMaybe(const char* bytes, unsigned int len){
+DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len){
   // TODO: put in demux logic here
   int r;
   bool retval=false;
@@ -51,20 +62,14 @@ DtlsSocket::handlePacketMaybe(const char* bytes, unsigned int len){
 void
 DtlsSocket::doHandshakeIteration() {
   int r;
+  char errbuf[1024];
   
   r=SSL_do_handshake(ssl);
+  errbuf[0]=0;
+  ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
 
-  // If mOutBio is now nonzero-length, then we need to write the
-  // data to the network. TODO: warning, MTU issues! Do this
-  // first because we may have to propagate an alert or somesuch
-  unsigned char *outBioData;
-  int outBioLen;
   
-  outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
-  if(outBioLen)
-    mSocketContext->write(outBioData,outBioLen);
-
-  // Figure out what the result of the handshake was
+  // Now handle handshake errors */
   switch(SSL_get_error(ssl,r)){
     case SSL_ERROR_NONE:
       mSocketContext->handshakeCompleted();
@@ -80,15 +85,77 @@ DtlsSocket::doHandshakeIteration() {
       // TODO: reset the timers 
       break;
     default:
-      // TODO: Throw some kind of handshake failure
-      mSocketContext->handshakeFailed();
+      mSocketContext->handshakeFailed(errbuf);
+      // Note: need to fall through to propagate alerts, if any
       break;
   }
+
+  // If mOutBio is now nonzero-length, then we need to write the
+  // data to the network. TODO: warning, MTU issues! 
+  unsigned char *outBioData;
+  int outBioLen;
+  
+  outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
+  if(outBioLen)
+    mSocketContext->write(outBioData,outBioLen);
 }
 
+bool
+DtlsSocket::getRemoteFingerprint(char *fprint){
+  X509 *x;
+  
+  x=SSL_get_peer_certificate(ssl);
+  if(!x) // No certificate
+    return false;
+
+  computeFingerprint(x,fprint);
+
+  return true;
+}
 
 bool
 DtlsSocket::checkFingerprint(const char* fingerprint, unsigned int len){
-  return false;
+  char fprint[100];
+
+  if(getRemoteFingerprint(fprint)==false)
+    return false;
+  
+  if(strncasecmp(fprint,fingerprint,len)){
+    cerr << "Fingerprint mismatch, got " << fprint << "expecting " << fingerprint << endl;
+    return false;
+  }
+  
+  return true;
 }
 
+void
+DtlsSocket::getMyCertFingerprint(char *fingerprint){
+  mFactory->getMyCertFingerprint(fingerprint);
+}
+     
+// Fingerprint is assumed to be long enough
+void
+DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint) {
+  unsigned char md[EVP_MAX_MD_SIZE];
+  int r;
+  unsigned int i,n;
+  
+  r=X509_digest(cert,EVP_sha1(),md,&n);
+  assert(r==1);
+
+  for(i=0;i<n;i++){
+    sprintf(fingerprint,"%02X",md[i]);
+    fingerprint+=2;
+    
+    if(i<(n-1))
+      *fingerprint++=':';
+    else
+      *fingerprint++=0;
+  }
+}
+
+SRTP_PROTECTION_PROFILE *
+DtlsSocket::getSrtpProfile()
+  {
+    return SSL_get_selected_srtp_profile(ssl);
+  }
