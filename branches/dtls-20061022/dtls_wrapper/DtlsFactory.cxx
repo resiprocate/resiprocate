@@ -47,7 +47,7 @@ DtlsFactory::getMyCertFingerprint(char *fingerprint){
   DtlsSocket::computeFingerprint(mCert,fingerprint);
 }
 
-PacketType
+DtlsFactory::PacketType
 DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len) {
   assert(len>=1);
   

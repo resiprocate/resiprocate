@@ -84,6 +84,8 @@ int main(int argc,char **argv)
         cin.getline(inbuf, 1024);
 
         cout << "Read from stdin " << inbuf << endl;
+
+        sockContext->sendRtpData((const unsigned char *)inbuf,strlen(inbuf));
       }
       if (fdset.readyToRead(fd))
       {
@@ -91,7 +93,21 @@ int main(int argc,char **argv)
         r=recvfrom(fd, buffer, sizeof(buffer), 0, (sockaddr *)&src,&srclen);
         assert(r>=0);
 
-        dtlsSocket->handlePacketMaybe(buffer,r);
+        switch(DtlsFactory::demuxPacket(buffer,r)){
+          case DtlsFactory::dtls:
+            dtlsSocket->handlePacketMaybe(buffer,r);
+            break;
+          case DtlsFactory::rtp:
+            unsigned char buf2[4096];
+            unsigned int buf2l;
+
+            // Read data 
+            sockContext->recvRtpData(buffer,r,buf2,&buf2l,sizeof(buf2));
+
+            cout << "Read RTP data of length " << buf2l << endl;
+            cout << buf2 << endl;
+            break;
+        }
       }
     }
   }

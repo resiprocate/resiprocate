@@ -65,9 +65,9 @@ DtlsSocket::startClient()
 
 bool
 DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len){
-  PacketType pType=DtlsFactory::demuxPacket(bytes,len);
+  DtlsFactory::PacketType pType=DtlsFactory::demuxPacket(bytes,len);
 
-  if(pType!=dtls)
+  if(pType!=DtlsFactory::dtls)
     return false;
   
   int r;

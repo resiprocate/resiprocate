@@ -20,11 +20,12 @@ class TestDtlsUdpSocketContext: public DtlsSocketContext {
      virtual void handshakeCompleted();
      virtual void handshakeFailed(const char *err);
      void sendRtpData(const unsigned char *data, unsigned int len);
-
+     void recvRtpData(unsigned char *in, unsigned int inlen, unsigned char *out, unsigned int *outlen,unsigned int maxoutlen);
+     
   private:
      int mFd;
      struct sockaddr_in mPeerAddr;
-     ssrc_t ssrc;
+     uint32_t ssrc;
 };
 
 }
