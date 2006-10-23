@@ -17,12 +17,13 @@ namespace dtls
 class DtlsSocket;
 class DtlsSocketContext;
 
-typedef enum PacketType_ { rtp, dtls, stun, unknown} PacketType;
 
 //Not threadsafe. Timers must fire in the same thread as dtls processing.
 class DtlsFactory
 {
    public:
+     enum PacketType { rtp, dtls, stun, unknown};
+     
      DtlsFactory(std::auto_ptr<DtlsTimerContext> tc, X509 *cert, EVP_PKEY *privkey);
 
      // Note: this orphans any DtlsSockets you were stupid enough
