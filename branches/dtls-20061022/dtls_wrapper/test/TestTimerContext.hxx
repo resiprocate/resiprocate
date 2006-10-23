@@ -10,6 +10,7 @@ class TestTimerContext: public DtlsTimerContext{
   public:
      void addTimer(DtlsTimer *timer, unsigned int seq);
      UInt64 getRemainingTime();
+     void updateTimer();
      
      DtlsTimer *mTimer;
      UInt64 mExpiryTime;
