@@ -7,9 +7,9 @@ PACKAGES += DTLS_WRAPPER RUTIL OPENSSL PTHREAD
 
 CODE_SUBDIRS = 
 
-SRC = CreateCert.cxx  TestDtlsUdp.cxx
+SRC = CreateCert.cxx  TestDtlsUdp.cxx TestTimerContext.cxx
 
-TESTPROGRAMS = testDtlsWrapper.cxx testDtlsClient.cxx testDtlsServer.cxx
+TESTPROGRAMS = testDtlsWrapper.cxx testDtlsClient.cxx testDtlsServer.cxx 
 
 include $(BUILD)/Makefile.post
 
