@@ -6,8 +6,8 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
-BaseException::BaseException( const Data& msg,
-                        const Data& file,
+BaseException::BaseException( const char* msg,
+                        const char* file,
                         const int line) : 
         message( msg ),
         fileName( file ),

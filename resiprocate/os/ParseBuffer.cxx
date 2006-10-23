@@ -967,11 +967,12 @@ ParseBuffer::fail(const char* file, unsigned int line, const Data& detail) const
        << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition);
     ds.flush();
 
-   throw Exception(errmsg, mErrorContext, file, line);
+   throw Exception(errmsg.c_str(), mErrorContext.c_str(), file, line);
 }
 
-ParseBuffer::Exception::Exception(const Data& msg, const Data& context, const Data& file, const int line)
+ParseBuffer::Exception::Exception(const char* msg, const char* context, const char* file, const int line)
    : resip::BaseException(msg, file, line) 
+   , mContext(context)
 {}
 
 ParseBuffer::Exception::~Exception() throw() 
@@ -1006,7 +1007,7 @@ ParseBuffer::Pointer::operator*() const
    }
    else
    {
-      throw ParseBuffer::Exception(msg, mPb.getContext(), __FILE__, __LINE__);
+      throw ParseBuffer::Exception(msg.c_str(), mPb.getContext().c_str(), __FILE__, __LINE__);
    }
 }
 

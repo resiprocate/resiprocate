@@ -25,7 +25,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-Transport::Exception::Exception(const Data& msg, const Data& file, const int line) :
+Transport::Exception::Exception(const char* msg, const char* file, const int line) :
    BaseException(msg,file,line)
 {
 }

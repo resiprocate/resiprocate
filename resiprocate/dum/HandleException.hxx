@@ -10,7 +10,7 @@ namespace resip
 class DUM_API HandleException : public BaseException
 {
    public:
-      HandleException(const Data& msg, const Data& file, int line);
+      HandleException(const char* msg, const char* file, int line);
       virtual const char* name() const;
 };
 

@@ -20,7 +20,7 @@ class RESIP_API Transport
       class RESIP_API Exception : public BaseException
       {
          public:
-            Exception(const Data& msg, const Data& file, const int line);
+            Exception(const char* msg, const char* file, const int line);
             const char* name() const { return "TransportException"; }
       };
       

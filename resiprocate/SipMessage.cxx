@@ -1047,7 +1047,9 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
       // assert(false);
       InfoLog( << "Missing Header [" << Headers::getHeaderName(type) << "]");      
       DebugLog (<< *this);
-      throw Exception("Missing header " + Headers::getHeaderName(type), __FILE__, __LINE__);
+      Data eMsg("Missing header ");
+      eMsg += Headers::getHeaderName(type);
+      throw Exception(eMsg.c_str(), __FILE__, __LINE__);
    }
    // !dlb! not thrilled about checking this every access
    else if (single)
