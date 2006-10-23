@@ -11,7 +11,6 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
    mSocketType(type), 
    mHandshakeCompleted(false)
  {
-
   mSocketContext->setDtlsSocket(this);
     
   assert(factory->mContext);
@@ -46,9 +45,12 @@ DtlsSocket::startClient()
 
 bool
 DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len){
-  // TODO: put in demux logic here
+  PacketType pType=DtlsFactory::demuxPacket(bytes,len);
+
+  if(pType!=dtls)
+    return false;
+  
   int r;
-  bool retval=false;
   BIO_reset(mInBio);
   BIO_reset(mOutBio);
   
@@ -58,7 +60,7 @@ DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len){
   // Note: we must catch any below exceptions--if there are any
   doHandshakeIteration();
 
-  return retval;
+  return true;
 }
 
 void
