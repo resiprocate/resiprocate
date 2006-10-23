@@ -5,6 +5,22 @@
 using namespace std;
 using namespace dtls;
 
+// Our local timers
+class DtlsSocketTimer : public DtlsTimer
+{
+  public:
+     DtlsSocketTimer(unsigned int seq,DtlsSocket *socket): DtlsTimer(seq),mSocket(socket){}
+     ~DtlsSocketTimer(){}
+     
+     void expired(){
+       mSocket->forceRetransmit();
+     }
+     
+  private:
+     DtlsSocket *mSocket;
+};
+
+
 DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
    mSocketContext(socketContext),
    mFactory(factory),
@@ -85,12 +101,19 @@ DtlsSocket::doHandshakeIteration() {
   r=SSL_do_handshake(ssl);
   errbuf[0]=0;
   ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
-  
+
+  // See what was written
+  int outBioLen;
+  unsigned char *outBioData;  
+  outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
+
+ 
   // Now handle handshake errors */
   switch(sslerr=SSL_get_error(ssl,r)){
     case SSL_ERROR_NONE:
        mHandshakeCompleted = true;       
        mSocketContext->handshakeCompleted();
+       if(mReadTimer) mReadTimer->invalidate();
        break;
     case SSL_ERROR_WANT_READ:
       // There are two cases here:
@@ -99,7 +122,15 @@ DtlsSocket::doHandshakeIteration() {
       // (2) We did get a full flight and then handled it, but then
       //     wrote some more message and now we need to flush them
       //     to the network and now reset the timers
-      // TODO: reset the timers 
+      //
+      // If data was written then this means we got a complete
+      // something or a retransmit so we need to reset the timer
+      if(outBioLen){
+        if(mReadTimer) mReadTimer->invalidate();
+        mReadTimer=new DtlsSocketTimer(0,this);
+        mFactory->mTimerContext->addTimer(mReadTimer,getReadTimeout());
+      }
+
       break;
     default:
       cerr << "SSL error " << sslerr << endl;
@@ -111,10 +142,6 @@ DtlsSocket::doHandshakeIteration() {
 
   // If mOutBio is now nonzero-length, then we need to write the
   // data to the network. TODO: warning, MTU issues! 
-  unsigned char *outBioData;
-  int outBioLen;
-  
-  outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
   if(outBioLen)
     mSocketContext->write(outBioData,outBioLen);
 }
@@ -201,3 +228,14 @@ DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint) {
   }
 }
 
+// Wrapper for currently nonexistent OpenSSL fxn
+int
+DtlsSocket::getReadTimeout()
+  {
+    return 500;
+  }
+
+    
+
+
+     
