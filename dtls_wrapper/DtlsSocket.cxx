@@ -6,7 +6,11 @@ using namespace std;
 using namespace dtls;
 
 DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
-  mSocketContext(socketContext),mFactory(factory),mSocketType(type) {
+   mSocketContext(socketContext),
+   mFactory(factory),
+   mSocketType(type), 
+   mHandshakeCompleted(false)
+ {
 
   mSocketContext->setDtlsSocket(this);
     
@@ -30,7 +34,6 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
   mInBio=BIO_new(BIO_s_mem());
   mOutBio=BIO_new(BIO_s_mem());
   SSL_set_bio(ssl,mInBio,mOutBio);
-
 }
 
 void 
@@ -40,7 +43,6 @@ DtlsSocket::startClient()
 
    doHandshakeIteration();
 }
-
 
 bool
 DtlsSocket::handlePacketMaybe(const unsigned char* bytes, unsigned int len){
@@ -72,9 +74,9 @@ DtlsSocket::doHandshakeIteration() {
   // Now handle handshake errors */
   switch(SSL_get_error(ssl,r)){
     case SSL_ERROR_NONE:
-      mSocketContext->handshakeCompleted();
-      break;
-
+       mHandshakeCompleted = true;       
+       mSocketContext->handshakeCompleted();
+       break;
     case SSL_ERROR_WANT_READ:
       // There are two cases here:
       // (1) We didn't get enough data. In this case we leave the
@@ -128,6 +130,34 @@ DtlsSocket::checkFingerprint(const char* fingerprint, unsigned int len){
   return true;
 }
 
+SrtpSessionKeys
+DtlsSocket::getSrtpSessionKeys()
+{
+   //TODO: probably an exception candidate
+   assert(mHandshakeCompleted);
+   SrtpSessionKeys keys;
+
+   SSL_get_srtp_key_info(ssl, 
+                         &keys.clientMasterKey,
+                         &keys.clientMasterKeyLen,
+                         &keys.serverMasterKey,
+                         &keys.serverMasterKeyLen,
+                         &keys.clientMasterSalt,
+                         &keys.clientMasterSaltLen,
+                         &keys.serverMasterSalt,
+                         &keys.serverMasterSaltLen);
+   return keys;
+   
+}
+
+SRTP_PROTECTION_PROFILE*
+DtlsSocket::getSrtpProfile()
+{
+   //TODO: probably an exception candidate
+   assert(mHandshakeCompleted);
+   return SSL_get_selected_srtp_profile(ssl);
+}
+   
 void
 DtlsSocket::getMyCertFingerprint(char *fingerprint){
   mFactory->getMyCertFingerprint(fingerprint);
@@ -154,8 +184,3 @@ DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint) {
   }
 }
 
-SRTP_PROTECTION_PROFILE *
-DtlsSocket::getSrtpProfile()
-  {
-    return SSL_get_selected_srtp_profile(ssl);
-  }
