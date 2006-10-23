@@ -4,6 +4,11 @@
 #include <memory>
 #include "DtlsSocket.hxx"
 
+extern "C" 
+{
+#include <srtp/include/srtp.h>
+}
+
 namespace dtls
 {
 
@@ -14,10 +19,12 @@ class TestDtlsUdpSocketContext: public DtlsSocketContext {
      virtual void write(const unsigned char* data, unsigned int len);
      virtual void handshakeCompleted();
      virtual void handshakeFailed(const char *err);
+     void sendRtpData(const unsigned char *data, unsigned int len);
 
   private:
      int mFd;
      struct sockaddr_in mPeerAddr;
+     ssrc_t ssrc;
 };
 
 }

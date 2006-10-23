@@ -14,6 +14,12 @@
 #include "TestDtlsUdp.hxx"
 #include <openssl/srtp.h>
 
+extern "C" 
+{
+#include <srtp/include/srtp.h>
+}
+
+
 using namespace std;
 using namespace dtls;
 using namespace resip;
@@ -80,11 +86,35 @@ TestDtlsUdpSocketContext::handshakeFailed(const char *err){
   cout <<  "Bummer, handshake failure "<<err<<endl;
 }
 
+
 void
-TestDtlsUdpSocketContext::sendDataAsRTP(const unsigned char *data, unsigned int len){
+TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int len){
+  srtp_hdr_t *hdr;
+  unsigned char *ptr;
+  int l;
 
+  cerr << "Sending RTP packet of length " << len << endl;
+  
+  ptr=malloc(sizeof(srtp_hdr_t)+len+SRTP_MAX_TRAILER_LEN+4);
+  assert(ptr!=0);
+  hdr=ptr;
+  ptr+=sizeof(srtp_hdr_t);
+  l+=sizeof(srtp_hdr_t);
+  
+  hdr->version = 2;              /* RTP version two     */
+  hdr->p    = 0;                 /* no padding needed   */
+  hdr->x    = 0;                 /* no header extension */
+  hdr->cc   = 0;                 /* no CSRCs            */
+  hdr->m    = 0;                 /* marker bit          */
+  hdr->pt   = 0xf;               /* payload type        */
+  hdr->seq  = htons(0x1234);     /* sequence number     */
+  hdr->ts   = htonl(0xdecafbad); /* timestamp           */
+  hdr->ssrc = htonl(ssrc);       /* synch. source       */
 
+  memcpy(ptr,data,len);
+  l+=len;
 
+  write((unsigned char *)hdr,l);
 }
      
 
