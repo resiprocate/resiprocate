@@ -9,6 +9,11 @@
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 
+extern "C" 
+{
+#include <srtp/include/srtp.h>
+}
+
 namespace dtls
 {
 
@@ -62,6 +67,7 @@ class DtlsSocket
      
       //may return 0 if profile selection failed
       SRTP_PROTECTION_PROFILE* getSrtpProfile();      
+      void createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);      
       
    private:
       friend class DtlsFactory;

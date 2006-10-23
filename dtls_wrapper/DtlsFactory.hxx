@@ -33,8 +33,12 @@ class DtlsFactory
      DtlsSocket* createServer(std::auto_ptr<DtlsSocketContext> context);
      void getMyCertFingerprint(char *fingerprint);
      DtlsTimerContext& getTimerContext() {return *mTimerContext;}
+
+      static const char* DefaultSrtpProfile; 
+
      static PacketType demuxPacket(const unsigned char *buf, unsigned int len);
      
+
       //context accessor
 private:
      friend class DtlsSocket;

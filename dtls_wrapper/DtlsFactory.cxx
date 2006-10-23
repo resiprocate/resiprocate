@@ -5,6 +5,7 @@ extern "C" {
 }
 
 using namespace dtls;
+const char* DtlsFactory::DefaultSrtpProfile = "SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32";
 
 DtlsFactory::DtlsFactory(std::auto_ptr<DtlsTimerContext> tc,X509 *cert, EVP_PKEY *privkey):
   mTimerContext(tc),mCert(cert)
@@ -21,7 +22,7 @@ DtlsFactory::DtlsFactory(std::auto_ptr<DtlsTimerContext> tc,X509 *cert, EVP_PKEY
     assert(r==1);
 
     // Set SRTP profiles: TODO, make configurable
-    r=SSL_CTX_set_tlsext_use_srtp(mContext, "SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32");
+    r=SSL_CTX_set_tlsext_use_srtp(mContext, DefaultSrtpProfile);
     assert(r==0);
   }
 
