@@ -23,7 +23,7 @@ class RESIP_API ParseBuffer
       class Exception : public resip::BaseException
       {
          public:
-            Exception(const Data& msg, const Data& context, const Data& file, const int line);
+            Exception(const char* msg, const char* context, const char* file, const int line);
             ~Exception() throw();
             const char* name() const;
             const Data& getContext() const;

@@ -10,7 +10,7 @@ namespace resip
 class DUM_API DumException : public BaseException
 {
    public:
-      DumException(const Data& msg, const Data& file, const int line)
+      DumException(const char* msg, const char* file, const int line)
          : BaseException(msg, file, line) {}
       const char* name() const { return "DumException"; }
 };

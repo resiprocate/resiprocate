@@ -21,7 +21,7 @@ class DUM_API NonDialogUsage : public BaseUsage
       class Exception : public BaseException
       {
          public:
-            Exception(const Data& msg,const Data& file,int line);
+            Exception(const char* msg,const char* file,int line);
             virtual const char* name() const;
       };
 

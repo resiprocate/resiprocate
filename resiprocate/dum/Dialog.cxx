@@ -25,24 +25,24 @@ using namespace resip;
 using namespace std;
 
 Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
-   : mDum(dum),
-     mDialogSet(ds),
-     mId("INVALID", "INVALID", "INVALID"),
-     mClientSubscriptions(),
-     mServerSubscriptions(),
-     mInviteSession(0),
-     mType(Fake),
-     mRouteSet(),
-     mLocalContact(),
-     mLocalCSeq(0),
-     mRemoteCSeq(0),
-     mAckId(0),
-     mRemoteTarget(),
-     mLocalNameAddr(),
-     mRemoteNameAddr(),
-     mCallId(msg.header(h_CallID)),
-     mAppDialog(0),
-     mDestroying(false)
+: mDum(dum),
+mDialogSet(ds),
+mId("INVALID", "INVALID", "INVALID"),
+mClientSubscriptions(),
+mServerSubscriptions(),
+mInviteSession(0),
+mType(Fake),
+mRouteSet(),
+mLocalContact(),
+mLocalCSeq(0),
+mRemoteCSeq(0),
+mAckId(0),
+mRemoteTarget(),
+mLocalNameAddr(),
+mRemoteNameAddr(),
+mCallId(msg.header(h_CallID)),
+mAppDialog(0),
+mDestroying(false)
 {
    assert(msg.isExternal());
 
@@ -58,19 +58,19 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
       switch (request.header(h_CSeq).method())
       {
-         case INVITE:
-            mType = Invitation;
-            break;
+      case INVITE:
+         mType = Invitation;
+         break;
 
-         case SUBSCRIBE:
-         case REFER:
-         case NOTIFY:
-            //!dcm! -- event header check
-            mType = Subscription;
-            break;
+      case SUBSCRIBE:
+      case REFER:
+      case NOTIFY:
+         //!dcm! -- event header check
+         mType = Subscription;
+         break;
 
-         default:
-            mType = Fake;
+      default:
+         mType = Fake;
       }
       if (request.exists(h_RecordRoutes))
       {
@@ -79,40 +79,40 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
       switch (request.header(h_CSeq).method())
       {
-         case INVITE:
-         case SUBSCRIBE:
-         case REFER:
-         case NOTIFY:
-            DebugLog ( << "UAS dialog ID creation, DS: " << ds.getId());
-            mId = DialogId(ds.getId(), request.header(h_From).param(p_tag));
-            mRemoteNameAddr = request.header(h_From);
-            mLocalNameAddr = request.header(h_To);
-            mLocalNameAddr.param(p_tag) = mId.getLocalTag();
-            if (request.exists(h_Contacts) && request.header(h_Contacts).size() == 1)
+      case INVITE:
+      case SUBSCRIBE:
+      case REFER:
+      case NOTIFY:
+         DebugLog ( << "UAS dialog ID creation, DS: " << ds.getId());
+         mId = DialogId(ds.getId(), request.header(h_From).param(p_tag));
+         mRemoteNameAddr = request.header(h_From);
+         mLocalNameAddr = request.header(h_To);
+         mLocalNameAddr.param(p_tag) = mId.getLocalTag();
+         if (request.exists(h_Contacts) && request.header(h_Contacts).size() == 1)
+         {
+            const NameAddr& contact = request.header(h_Contacts).front();
+            if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
+               isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
             {
-               const NameAddr& contact = request.header(h_Contacts).front();
-               if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
-                   isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
-               {
-                  mLocalContact = NameAddr(request.header(h_RequestLine).uri()); // update later when send a request
-                  mRemoteTarget = contact;
-               }
-               else
-               {
-                  InfoLog(<< "Got an INVITE or SUBSCRIBE with invalid scheme");
-                  InfoLog(<< request);
-                  throw Exception("Invalid scheme in request", __FILE__, __LINE__);
-               }
+               mLocalContact = NameAddr(request.header(h_RequestLine).uri()); // update later when send a request
+               mRemoteTarget = contact;
             }
             else
             {
-               InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
-               InfoLog (<< request);
-               throw Exception("Too many (or no contact) contacts in request", __FILE__, __LINE__);
+               InfoLog(<< "Got an INVITE or SUBSCRIBE with invalid scheme");
+               InfoLog(<< request);
+               throw Exception("Invalid scheme in request", __FILE__, __LINE__);
             }
-            break;
-         default:
-            break;
+         }
+         else
+         {
+            InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
+            InfoLog (<< request);
+            throw Exception("Too many (or no contact) contacts in request", __FILE__, __LINE__);
+         }
+         break;
+      default:
+         break;
       }
 
       mRemoteCSeq = request.header(h_CSeq).sequence();
@@ -133,17 +133,17 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
       switch (msg.header(h_CSeq).method())
       {
-         case INVITE:
-            mType = Invitation;
-            break;
+      case INVITE:
+         mType = Invitation;
+         break;
 
-         case SUBSCRIBE:
-         case REFER:
-            mType = Subscription;
-            break;
+      case SUBSCRIBE:
+      case REFER:
+         mType = Subscription;
+         break;
 
-         default:
-            mType = Fake;
+      default:
+         mType = Fake;
       }
 
       if (response.exists(h_RecordRoutes))
@@ -153,43 +153,43 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
       switch (response.header(h_CSeq).method())
       {
-         case INVITE:
-         case SUBSCRIBE:
-         case REFER:
-            if (response.header(h_StatusLine).statusCode() > 100 &&
-                response.header(h_StatusLine).statusCode() < 300)
-            {
+      case INVITE:
+      case SUBSCRIBE:
+      case REFER:
+         if (response.header(h_StatusLine).statusCode() > 100 &&
+            response.header(h_StatusLine).statusCode() < 300)
+         {
 
-               if  (response.exists(h_Contacts) && response.header(h_Contacts).size() == 1)
+            if  (response.exists(h_Contacts) && response.header(h_Contacts).size() == 1)
+            {
+               const NameAddr& contact = response.header(h_Contacts).front();
+               if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
+                  isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                {
-                  const NameAddr& contact = response.header(h_Contacts).front();
-                  if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
-                      isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
-                  {
-                     BaseCreator* creator = mDialogSet.getCreator();
-                     assert(creator);// !jf! throw or something here
-                     assert(creator->getLastRequest().exists(h_Contacts));
-                     assert(!creator->getLastRequest().header(h_Contacts).empty());
-                     mLocalContact = creator->getLastRequest().header(h_Contacts).front();
-                     mRemoteTarget = contact;
-                  }
-                  else
-                  {
-                     InfoLog (<< "Got an INVITE or SUBSCRIBE with invalid scheme");
-                     DebugLog (<< response);
-                     throw Exception("Bad scheme in contact in response", __FILE__, __LINE__);
-                  }
+                  BaseCreator* creator = mDialogSet.getCreator();
+                  assert(creator);// !jf! throw or something here
+                  assert(creator->getLastRequest().exists(h_Contacts));
+                  assert(!creator->getLastRequest().header(h_Contacts).empty());
+                  mLocalContact = creator->getLastRequest().header(h_Contacts).front();
+                  mRemoteTarget = contact;
                }
                else
                {
-                  InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
+                  InfoLog (<< "Got an INVITE or SUBSCRIBE with invalid scheme");
                   DebugLog (<< response);
-                  throw Exception("Too many contacts (or no contact) in response", __FILE__, __LINE__);
+                  throw Exception("Bad scheme in contact in response", __FILE__, __LINE__);
                }
-               break;
-               default:
-                  break;
             }
+            else
+            {
+               InfoLog (<< "Got an INVITE or SUBSCRIBE that doesn't have exactly one contact");
+               DebugLog (<< response);
+               throw Exception("Too many contacts (or no contact) in response", __FILE__, __LINE__);
+            }
+            break;
+      default:
+         break;
+         }
       }
 
       mLocalCSeq = response.header(h_CSeq).sequence();
@@ -260,23 +260,23 @@ Dialog::handleTargetRefresh(const SipMessage& msg)
 {
    switch(msg.header(h_CSeq).method())
    {
-      case INVITE:
-      case UPDATE:
-         if (msg.isRequest() || (msg.isResponse() && msg.header(h_StatusLine).statusCode()/100 == 2))
+   case INVITE:
+   case UPDATE:
+      if (msg.isRequest() || (msg.isResponse() && msg.header(h_StatusLine).statusCode()/100 == 2))
+      {
+         //?dcm? modify local target; 12.2.2 of 3261 implies that the remote
+         //target is immediately modified.  Should we wait until a 2xx class
+         //reponse is sent to a re-invite(easy when all send requests go
+         //through Dialog)
+         if (msg.exists(h_Contacts))
          {
-            //?dcm? modify local target; 12.2.2 of 3261 implies that the remote
-            //target is immediately modified.  Should we wait until a 2xx class
-            //reponse is sent to a re-invite(easy when all send requests go
-            //through Dialog)
-            if (msg.exists(h_Contacts))
-            {
-               //.dcm. replace or check then replace
-               mRemoteTarget = msg.header(h_Contacts).front();
-            }
+            //.dcm. replace or check then replace
+            mRemoteTarget = msg.header(h_Contacts).front();
          }
-         break;
-      default:
-         return;
+      }
+      break;
+   default:
+      return;
    }
 }
 
@@ -297,61 +297,61 @@ Dialog::dispatch(const SipMessage& msg)
       const SipMessage& request = msg;
       switch (request.header(h_CSeq).method())
       {
-         case INVITE:  // new INVITE
-            if (mInviteSession == 0)
-            {
-               DebugLog ( << "Dialog::dispatch  --  Created new server invite session" << msg.brief());
-               mInviteSession = makeServerInviteSession(request);
-            }
+      case INVITE:  // new INVITE
+         if (mInviteSession == 0)
+         {
+            DebugLog ( << "Dialog::dispatch  --  Created new server invite session" << msg.brief());
+            mInviteSession = makeServerInviteSession(request);
+         }
+         mInviteSession->dispatch(request);
+         break;
+         //refactor, send bad request for BYE, INFO, CANCEL?
+      case BYE:
+         if (mInviteSession == 0)
+         {
+            InfoLog ( << "Spurious BYE" );
+            return;
+         }
+         else
+         {
             mInviteSession->dispatch(request);
-            break;
-            //refactor, send bad request for BYE, INFO, CANCEL?
-         case BYE:
-            if (mInviteSession == 0)
-            {
-               InfoLog ( << "Spurious BYE" );
-               return;
-            }
-            else
-            {
-               mInviteSession->dispatch(request);
-            }
-            break;
-         case UPDATE:
-            if (mInviteSession == 0)
-            {
-               InfoLog ( << "Spurious UPDATE" );
-               return;
-            }
-            else
-            {
-               mInviteSession->dispatch(request);
-            }
-            break;
-         case INFO:
-            if (mInviteSession == 0)
-            {
-               InfoLog ( << "Spurious INFO" );
-               return;
-            }
-            else
-            {
-               mInviteSession->dispatch(request);
-            }
-            break;
-         case ACK:
-         case CANCEL:
-            if (mInviteSession == 0)
-            {
-               InfoLog (<< "Drop stray ACK or CANCEL in dialog on the floor");
-               DebugLog (<< request);
-            }
-            else
-            {
-               mInviteSession->dispatch(request);
-            }
-            break;
-         case SUBSCRIBE:
+         }
+         break;
+      case UPDATE:
+         if (mInviteSession == 0)
+         {
+            InfoLog ( << "Spurious UPDATE" );
+            return;
+         }
+         else
+         {
+            mInviteSession->dispatch(request);
+         }
+         break;
+      case INFO:
+         if (mInviteSession == 0)
+         {
+            InfoLog ( << "Spurious INFO" );
+            return;
+         }
+         else
+         {
+            mInviteSession->dispatch(request);
+         }
+         break;
+      case ACK:
+      case CANCEL:
+         if (mInviteSession == 0)
+         {
+            InfoLog (<< "Drop stray ACK or CANCEL in dialog on the floor");
+            DebugLog (<< request);
+         }
+         else
+         {
+            mInviteSession->dispatch(request);
+         }
+         break;
+      case SUBSCRIBE:
          {
             ServerSubscription* server = findMatchingServerSub(request);
             if (server)
@@ -377,7 +377,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
          }
          break;
-         case REFER:
+      case REFER:
          {
             if (mInviteSession == 0)
             {
@@ -415,7 +415,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
          }
          break;
-         case NOTIFY:
+      case NOTIFY:
          {
             ClientSubscription* client = findMatchingClientSub(request);
             if (client)
@@ -426,7 +426,7 @@ Dialog::dispatch(const SipMessage& msg)
             {
                BaseCreator* creator = mDialogSet.getCreator();
                if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
-                               creator->getLastRequest().header(h_RequestLine).method() == REFER))  // !slg! OOD Refer?  Click-to-Call?
+                  creator->getLastRequest().header(h_RequestLine).method() == REFER))  // !slg! OOD Refer?  Click-to-Call?
                {
                   DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
                   ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
@@ -435,36 +435,36 @@ Dialog::dispatch(const SipMessage& msg)
                }
                else
                {
-		           if (mInviteSession != 0 && (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer"))
-                   {
-	                  DebugLog (<< "Making subscription from NOTIFY: " << msg);
-                      ClientSubscription* sub = makeClientSubscription(msg);
-                      mClientSubscriptions.push_back(sub);
-			          ClientSubscriptionHandle client = sub->getHandle();				      
-                      sub->dispatch(request);
-                      mInviteSession->mSentRefer = false;
-                      if (client.isValid())
-                      {
-                         mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);
-                      }
-                      else
-                      {
-                         mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), msg);
-                      }
-				   }
-				   else
-				   {
-                      SipMessage response;
-                      makeResponse(response, msg, 406);
-                      send(response);
-				   }
-			   }
+                  if (mInviteSession != 0 && (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer"))
+                  {
+                     DebugLog (<< "Making subscription from NOTIFY: " << msg);
+                     ClientSubscription* sub = makeClientSubscription(msg);
+                     mClientSubscriptions.push_back(sub);
+                     ClientSubscriptionHandle client = sub->getHandle();				      
+                     sub->dispatch(request);
+                     mInviteSession->mSentRefer = false;
+                     if (client.isValid())
+                     {
+                        mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);
+                     }
+                     else
+                     {
+                        mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), msg);
+                     }
+                  }
+                  else
+                  {
+                     SipMessage response;
+                     makeResponse(response, msg, 406);
+                     send(response);
+                  }
+               }
             }
          }
          break;
-        default:
-           assert(0);
-           return;
+      default:
+         assert(0);
+         return;
       }
    }
    else if (msg.isResponse())
@@ -508,52 +508,52 @@ Dialog::dispatch(const SipMessage& msg)
       // answer !dcm! what is he on?
       switch (response.header(h_CSeq).method())
       {
-         case INVITE:
-            // store the CSeq for ACK
-            mAckId = msg.header(h_CSeq).sequence();
-            if (mInviteSession == 0)
-            {
-               // #if!jf! don't think creator needs a dispatch
-               //BaseCreator* creator = mDum.findCreator(mId);
-               //assert (creator); // stray responses have been rejected already
-               //creator->dispatch(response);
-               // #endif!jf!
-               DebugLog ( << "Dialog::dispatch  --  Created new client invite session" << msg.brief());
+      case INVITE:
+         // store the CSeq for ACK
+         mAckId = msg.header(h_CSeq).sequence();
+         if (mInviteSession == 0)
+         {
+            // #if!jf! don't think creator needs a dispatch
+            //BaseCreator* creator = mDum.findCreator(mId);
+            //assert (creator); // stray responses have been rejected already
+            //creator->dispatch(response);
+            // #endif!jf!
+            DebugLog ( << "Dialog::dispatch  --  Created new client invite session" << msg.brief());
 
-               mInviteSession = makeClientInviteSession(response);
-               mInviteSession->dispatch(response);
-            }
-            else
-            {
-               mInviteSession->dispatch(response);
-            }
-            break;
-         case BYE:
-         case ACK:
-         case CANCEL:
-         case INFO:
-         case UPDATE:
-            if (mInviteSession)
-            {
-               mInviteSession->dispatch(response);
-            }
-            // else drop on the floor
-            break;       
+            mInviteSession = makeClientInviteSession(response);
+            mInviteSession->dispatch(response);
+         }
+         else
+         {
+            mInviteSession->dispatch(response);
+         }
+         break;
+      case BYE:
+      case ACK:
+      case CANCEL:
+      case INFO:
+      case UPDATE:
+         if (mInviteSession)
+         {
+            mInviteSession->dispatch(response);
+         }
+         // else drop on the floor
+         break;       
 
-		 case REFER:
-            if(mInviteSession)
+      case REFER:
+         if(mInviteSession)
+         {
+            mInviteSession->mSentRefer = false;
+
+            if (code >= 300)
             {
-               mInviteSession->mSentRefer = false;
-
-               if (code >= 300)
-               {
-                  mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), msg);
-               }
-               // else no need for action - first Notify will cause onReferAccepted to be called
+               mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), msg);
             }
-            break;
+            // else no need for action - first Notify will cause onReferAccepted to be called
+         }
+         break;
 
-         case SUBSCRIBE:
+      case SUBSCRIBE:
          {
             int code = response.header(h_StatusLine).statusCode();
             if (code < 300)
@@ -592,7 +592,7 @@ Dialog::dispatch(const SipMessage& msg)
             }
          }
          break;
-         case NOTIFY:
+      case NOTIFY:
          {
             //2xx responses are treated as retransmission quenchers(handled by
             //the stack). Failures are dispatched to all ServerSubsscriptions,
@@ -604,7 +604,7 @@ Dialog::dispatch(const SipMessage& msg)
                //!dcm! -- ick, write guard
                mDestroying = true;
                for (list<ServerSubscription*>::iterator it = mServerSubscriptions.begin();
-                    it != mServerSubscriptions.end(); )
+                  it != mServerSubscriptions.end(); )
                {
                   ServerSubscription* s = *it;
                   it++;
@@ -613,27 +613,27 @@ Dialog::dispatch(const SipMessage& msg)
                mDestroying = false;
                possiblyDie();
             }
-//             ServerSubscription* server = findMatchingServerSub(response);
-//             if (server)
-//             {
-//                server->dispatch(response);
-//             }
+            //             ServerSubscription* server = findMatchingServerSub(response);
+            //             if (server)
+            //             {
+            //                server->dispatch(response);
+            //             }
          }
          break;
-         default:
-            assert(0);
-            return;
+      default:
+         assert(0);
+         return;
       }
 
 #if 0     // merged from head back to teltel-branch
       if (msg.header(h_StatusLine).statusCode() >= 400
-          && Helper::determineFailureMessageEffect(msg) == Helper::DialogTermination)
+         && Helper::determineFailureMessageEffect(msg) == Helper::DialogTermination)
       {
          //kill all usages
          mDestroying = true;
 
          for (list<ServerSubscription*>::iterator it = mServerSubscriptions.begin();
-              it != mServerSubscriptions.end(); )
+            it != mServerSubscriptions.end(); )
          {
             ServerSubscription* s = *it;
             it++;
@@ -641,7 +641,7 @@ Dialog::dispatch(const SipMessage& msg)
          }
 
          for (list<ClientSubscription*>::iterator it = mClientSubscriptions.begin();
-              it != mClientSubscriptions.end(); )
+            it != mClientSubscriptions.end(); )
          {
             ClientSubscription* s = *it;
             it++;
@@ -663,7 +663,7 @@ ServerSubscription*
 Dialog::findMatchingServerSub(const SipMessage& msg)
 {
    for (std::list<ServerSubscription*>::iterator i=mServerSubscriptions.begin();
-        i != mServerSubscriptions.end(); ++i)
+      i != mServerSubscriptions.end(); ++i)
    {
       if ((*i)->matches(msg))
       {
@@ -677,7 +677,7 @@ ClientSubscription*
 Dialog::findMatchingClientSub(const SipMessage& msg)
 {
    for (std::list<ClientSubscription*>::iterator i=mClientSubscriptions.begin();
-        i != mClientSubscriptions.end(); ++i)
+      i != mClientSubscriptions.end(); ++i)
    {
       if ((*i)->matches(msg))
       {
@@ -706,7 +706,7 @@ Dialog::findClientSubscriptions(const Data& event)
    std::vector<ClientSubscriptionHandle> handles;
 
    for (std::list<ClientSubscription*>::const_iterator i = mClientSubscriptions.begin();
-        i != mClientSubscriptions.end(); ++i)
+      i != mClientSubscriptions.end(); ++i)
    {
       if ( (*i)->getEventType() == event)
       {
@@ -722,7 +722,7 @@ Dialog::findServerSubscriptions(const Data& event)
    std::vector<ServerSubscriptionHandle> handles;
 
    for (std::list<ServerSubscription*>::const_iterator i = mServerSubscriptions.begin();
-        i != mServerSubscriptions.end(); ++i)
+      i != mServerSubscriptions.end(); ++i)
    {
       if ( (*i)->getEventType() == event)
       {
@@ -738,7 +738,7 @@ Dialog::getClientSubscriptions()
    std::vector<ClientSubscriptionHandle> handles;
 
    for (std::list<ClientSubscription*>::const_iterator i = mClientSubscriptions.begin();
-        i != mClientSubscriptions.end(); ++i)
+      i != mClientSubscriptions.end(); ++i)
    {
       handles.push_back((*i)->getHandle());
    }
@@ -752,7 +752,7 @@ Dialog::getServerSubscriptions()
    std::vector<ServerSubscriptionHandle> handles;
 
    for (std::list<ServerSubscription*>::const_iterator i = mServerSubscriptions.begin();
-        i != mServerSubscriptions.end(); ++i)
+      i != mServerSubscriptions.end(); ++i)
    {
       handles.push_back((*i)->getHandle());
    }
@@ -787,9 +787,9 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 
    request.header(h_RequestLine) = rLine;
    request.header(h_To) = mRemoteNameAddr;
-//   request.header(h_To).param(p_tag) = mId.getRemoteTag();
+   //   request.header(h_To).param(p_tag) = mId.getRemoteTag();
    request.header(h_From) = mLocalNameAddr;
-//   request.header(h_From).param(p_tag) = mId.getLocalTag();
+   //   request.header(h_From).param(p_tag) = mId.getLocalTag();
 
    request.header(h_CallId) = mCallId;
 
@@ -877,25 +877,25 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
    {
       assert(request.isRequest());
       assert(request.header(h_RequestLine).getMethod() == INVITE ||
-             request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
-             request.header(h_RequestLine).getMethod() == BYE ||
-             request.header(h_RequestLine).getMethod() == CANCEL ||
-             request.header(h_RequestLine).getMethod() == REFER ||
-             request.header(h_RequestLine).getMethod() == MESSAGE ||
-             request.header(h_RequestLine).getMethod() == NOTIFY ||
-             request.header(h_RequestLine).getMethod() == INFO ||
-             request.header(h_RequestLine).getMethod() == OPTIONS ||
-             request.header(h_RequestLine).getMethod() == UPDATE
-             );
+         request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
+         request.header(h_RequestLine).getMethod() == BYE ||
+         request.header(h_RequestLine).getMethod() == CANCEL ||
+         request.header(h_RequestLine).getMethod() == REFER ||
+         request.header(h_RequestLine).getMethod() == MESSAGE ||
+         request.header(h_RequestLine).getMethod() == NOTIFY ||
+         request.header(h_RequestLine).getMethod() == INFO ||
+         request.header(h_RequestLine).getMethod() == OPTIONS ||
+         request.header(h_RequestLine).getMethod() == UPDATE
+         );
 
-//      assert (request.header(h_RequestLine).getMethod() == CANCEL ||  // Contact header is not required for Requests that do not form a dialog
-//		      request.header(h_RequestLine).getMethod() == BYE ||
-//		      request.header(h_Contacts).size() == 1);
+      //      assert (request.header(h_RequestLine).getMethod() == CANCEL ||  // Contact header is not required for Requests that do not form a dialog
+      //		      request.header(h_RequestLine).getMethod() == BYE ||
+      //		      request.header(h_Contacts).size() == 1);
       Helper::makeResponse(response, request, code, mLocalContact);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
 
       if((request.header(h_RequestLine).getMethod() == INVITE ||
-          request.header(h_RequestLine).getMethod() == UPDATE)
+         request.header(h_RequestLine).getMethod() == UPDATE)
          && code >= 200 && code < 300)
       {
          // Check if we should add our capabilites to the invite success response
@@ -921,7 +921,7 @@ Dialog::makeClientInviteSession(const SipMessage& response)
    assert(creator); // !jf! this maybe can assert by evil UAS
    //return mDum.createAppClientInviteSession(*this, *creator);
    return new ClientInviteSession(mDum, *this, creator->getLastRequest(),
-                                  creator->getInitialOffer(), creator->getServerSubscription());
+      creator->getInitialOffer(), creator->getServerSubscription());
 }
 
 
@@ -945,8 +945,8 @@ Dialog::makeServerSubscription(const SipMessage& request)
    return new ServerSubscription(mDum, *this, request);
 }
 
-Dialog::Exception::Exception(const Data& msg, const Data& file, int line)
-   : BaseException(msg, file, line)
+Dialog::Exception::Exception(const char* msg, const char* file, int line)
+: BaseException(msg, file, line)
 {
 }
 
@@ -976,8 +976,8 @@ void Dialog::possiblyDie()
    if (!mDestroying)
    {
       if (mClientSubscriptions.empty() &&
-          mServerSubscriptions.empty() &&
-          !mInviteSession)
+         mServerSubscriptions.empty() &&
+         !mInviteSession)
       {
          mDestroying = true;
          mDum.destroy(this);
@@ -1000,52 +1000,52 @@ resip::operator<<(ostream& strm, const Dialog& dialog)
 
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0
- *
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * 3. The names "VOCAL", "Vovida Open Communication Application Library",
- *    and "Vovida Open Communication Application Library (VOCAL)" must
- *    not be used to endorse or promote products derived from this
- *    software without prior written permission. For written
- *    permission, please contact vocal@vovida.org.
- *
- * 4. Products derived from this software may not be called "VOCAL", nor
- *    may "VOCAL" appear in their name, without prior written
- *    permission of Vovida Networks, Inc.
- *
- * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
- * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
- * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
- * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- * DAMAGE.
- *
- * ====================================================================
- *
- * This software consists of voluntary contributions made by Vovida
- * Networks, Inc. and many individuals on behalf of Vovida Networks,
- * Inc.  For more information on Vovida Networks, Inc., please see
- * <http://www.vovida.org/>.
- *
- */
+* The Vovida Software License, Version 1.0
+*
+* Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions
+* are met:
+*
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in
+*    the documentation and/or other materials provided with the
+*    distribution.
+*
+* 3. The names "VOCAL", "Vovida Open Communication Application Library",
+*    and "Vovida Open Communication Application Library (VOCAL)" must
+*    not be used to endorse or promote products derived from this
+*    software without prior written permission. For written
+*    permission, please contact vocal@vovida.org.
+*
+* 4. Products derived from this software may not be called "VOCAL", nor
+*    may "VOCAL" appear in their name, without prior written
+*    permission of Vovida Networks, Inc.
+*
+* THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+* NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+* NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+* IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+* EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+* PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+* USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+* DAMAGE.
+*
+* ====================================================================
+*
+* This software consists of voluntary contributions made by Vovida
+* Networks, Inc. and many individuals on behalf of Vovida Networks,
+* Inc.  For more information on Vovida Networks, Inc., please see
+* <http://www.vovida.org/>.
+*
+*/
 

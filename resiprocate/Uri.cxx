@@ -975,7 +975,7 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
       else
       {
          DebugLog(<< "Uri::parseEmbeddedHeaders(" << headerName << ", " << Data(decodedContents, len) << ")");
-         mEmbeddedHeaders->addHeader(Headers::getType(headerName.data(), headerName.size()),
+         mEmbeddedHeaders->addHeader(Headers::getType(headerName.c_str(), headerName.size()),
                                      headerName.data(), headerName.size(),
                                      decodedContents, len);
       }

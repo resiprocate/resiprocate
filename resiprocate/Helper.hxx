@@ -20,7 +20,7 @@ class Security;
 class RESIP_API UnsupportedAuthenticationScheme : public BaseException
 {
    public:
-      UnsupportedAuthenticationScheme(const Data& msg, const Data& file, const int line)
+      UnsupportedAuthenticationScheme(const char* msg, const char* file, const int line)
          : BaseException(msg, file, line) {}
       
       const char* name() const { return "UnsupportedAuthenticationScheme"; }
