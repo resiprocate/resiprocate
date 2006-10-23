@@ -30,8 +30,9 @@ int main(int argc,char **argv)
   assert(argc==2);
   
   createCert(resip::Data("sip:server@example.com"),365,1024,serverCert,serverKey);
-  
-  DtlsFactory *serverFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(new TestTimerContext()),serverCert,serverKey);
+
+  TestTimerContext *ourTimer=new TestTimerContext();
+  DtlsFactory *serverFactory=new DtlsFactory(std::auto_ptr<DtlsTimerContext>(ourTimer),serverCert,serverKey);
 
   cout << "Created the factory\n";
 
@@ -67,8 +68,16 @@ int main(int argc,char **argv)
     
     fdset.setRead(fd);
 
-    if (fdset.selectMilliSeconds(1000000) >= 0)
-    {
+
+    UInt64 towait=ourTimer->getRemainingTime();
+
+    // cerr << "Invoking select for time " << towait << endl;
+    
+    int toread=fdset.selectMilliSeconds(towait);
+
+    ourTimer->updateTimer();
+    
+    if (toread >= 0) {
       if (fdset.readyToRead(fd))
       {
         srclen=sizeof(src);
@@ -106,6 +115,8 @@ int main(int argc,char **argv)
             // Now echo it back
             sockContext->sendRtpData((const unsigned char *)buf2,buf2l);
 
+            break;
+          default:
             break;
         }
       }
