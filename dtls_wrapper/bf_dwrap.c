@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <openssl/bio.h>
 #include <assert.h>
+#include <memory.h>
 
 #define BIO_TYPE_DWRAP       (50 | 0x0400 | 0x0200)
 
