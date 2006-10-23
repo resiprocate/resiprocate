@@ -80,7 +80,13 @@ TestDtlsUdpSocketContext::handshakeFailed(const char *err){
   cout <<  "Bummer, handshake failure "<<err<<endl;
 }
 
+void
+TestDtlsUdpSocketContext::sendDataAsRTP(const unsigned char *data, unsigned int len){
 
+
+
+}
+     
 
 
 
