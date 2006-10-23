@@ -26,6 +26,12 @@ class TestDtlsUdpSocketContext: public DtlsSocketContext {
      int mFd;
      struct sockaddr_in mPeerAddr;
      uint32_t ssrc;
+     srtp_policy_t srtpPolicyIn;
+     srtp_policy_t srtpPolicyOut;     
+     srtp_t srtpIn;
+     srtp_t srtpOut;
+     bool useSrtp;
+     uint16_t mRtpSeq;
 };
 
 }

@@ -70,7 +70,8 @@ void
 TestDtlsUdpSocketContext::handshakeCompleted(){
   char fprint[100];
   SRTP_PROTECTION_PROFILE *srtp_profile;
-        
+  int r;
+  
   cout << "Hey, amazing, it worked\n";
 
   if(mSocket->getRemoteFingerprint(fprint)){
@@ -81,6 +82,17 @@ TestDtlsUdpSocketContext::handshakeCompleted(){
   if(srtp_profile){
     cout <<"SRTP Extension negotiated profile="<<srtp_profile->name << endl;
   }
+
+  mSocket->createSrtpSessionPolicies(srtpPolicyIn,srtpPolicyOut);
+
+  r=srtp_create(&srtpIn,&srtpPolicyIn);
+  assert(r==0);
+  r=srtp_create(&srtpOut,&srtpPolicyOut);
+  assert(r==0);
+
+  useSrtp=true;
+  
+  cout << "Made SRTP policies\n";
 }
 
 void
@@ -109,25 +121,35 @@ TestDtlsUdpSocketContext::sendRtpData(const unsigned char *data, unsigned int le
   hdr->cc   = 0;                 /* no CSRCs            */
   hdr->m    = 0;                 /* marker bit          */
   hdr->pt   = 0xf;               /* payload type        */
-  hdr->seq  = htons(0x1234);     /* sequence number     */
+  hdr->seq  = mRtpSeq++;         /* sequence number     */
   hdr->ts   = htonl(0xdecafbad); /* timestamp           */
   hdr->ssrc = htonl(ssrc);       /* synch. source       */
 
   memcpy(ptr,data,len);
   l+=len;
 
+  if(useSrtp){
+    int r=srtp_protect(srtpOut,(unsigned char *)hdr,&l);
+    assert(r==0);
+  }
   write((unsigned char *)hdr,l);
 }
      
 void
 TestDtlsUdpSocketContext::recvRtpData(unsigned char *in, unsigned int inlen, unsigned char *out, unsigned int *outlen,unsigned int maxoutlen){
   srtp_hdr_t *hdr;
-
+  int len_int=(int)inlen;
   hdr=(srtp_hdr_t *)in;
-
+  
+  if(useSrtp){
+    int r=srtp_unprotect(srtpIn,hdr,&len_int);
+    assert(r==0);
+    inlen=(unsigned int)len_int;
+  }
+  
   in+=sizeof(srtp_hdr_t);
   inlen-=sizeof(srtp_hdr_t);
-
+  
   assert(inlen<maxoutlen);
   memcpy(out,in,inlen);
   *outlen=inlen;

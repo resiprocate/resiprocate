@@ -24,6 +24,8 @@ int main(int argc,char **argv)
 {
   X509 *clientCert;
   EVP_PKEY *clientKey;
+
+  srtp_init();
   
   assert(argc==3);
   
