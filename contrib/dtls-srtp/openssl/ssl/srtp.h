@@ -118,6 +118,11 @@
 #ifndef HEADER_D1_SRTP_H
 #define HEADER_D1_SRTP_H
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+     
 #define SRTP_AES128_CM_SHA1_80 0x0001
 #define SRTP_AES128_CM_SHA1_32 0x0002
 #define SRTP_AES128_F8_SHA1_80 0x0003
@@ -141,6 +146,10 @@ int ssl_add_clienthello_use_srtp_ext(SSL *s, unsigned char *p, int *len, int max
 int ssl_parse_clienthello_use_srtp_ext(SSL *s, unsigned char *d, int len,int *al);
 int ssl_add_serverhello_use_srtp_ext(SSL *s, unsigned char *p, int *len, int maxlen);
 int ssl_parse_serverhello_use_srtp_ext(SSL *s, unsigned char *d, int len,int *al);
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif
 
