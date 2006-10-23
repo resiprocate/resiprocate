@@ -11,7 +11,7 @@ using namespace std;
 using namespace dtls;
 using namespace resip;
 
-int createCert (const resip::Data& pAor, int expireDays, int keyLen, X509* outCert, EVP_PKEY* outKey )
+int createCert (const resip::Data& pAor, int expireDays, int keyLen, X509&* outCert, EVP_PKEY&* outKey )
 {
    int ret;
    
