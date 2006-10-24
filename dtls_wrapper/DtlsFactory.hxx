@@ -3,20 +3,18 @@
 
 #include <memory>
 
-#include <openssl/e_os2.h>
-#include <openssl/rand.h>
-#include <openssl/err.h>
-#include <openssl/crypto.h>
-#include <openssl/ssl.h>
-
 #include "DtlsTimer.hxx"
+
+typedef struct x509_st X509;
+typedef struct ssl_ctx_st SSL_CTX;
+typedef struct evp_pkey_st EVP_PKEY;
 
 namespace dtls
 {
 
 class DtlsSocket;
 class DtlsSocketContext;
-
+class DtlsTimerContext;
 
 //Not threadsafe. Timers must fire in the same thread as dtls processing.
 class DtlsFactory

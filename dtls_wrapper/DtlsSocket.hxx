@@ -3,16 +3,18 @@
 
 #include <memory>
 
+extern "C" 
+{
+#include <srtp/include/srtp.h>
+}
+
 #include <openssl/e_os2.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 
-extern "C" 
-{
-#include <srtp/include/srtp.h>
-}
+
 
 namespace dtls
 {
@@ -56,13 +58,14 @@ class SrtpSessionKeys
 class DtlsSocket
 {
    public:
+	  enum SocketType { Client, Server};
       bool handlePacketMaybe(const unsigned char* bytes, unsigned int len);
       void forceRetransmit();
       bool checkFingerprint(const char* fingerprint, unsigned int len);
       bool DtlsSocket::getRemoteFingerprint(char *fingerprint);
       void DtlsSocket::getMyCertFingerprint(char *fingerprint);
       void startClient();
-
+	  SocketType getSocketType() {return mSocketType;} 
       SrtpSessionKeys getSrtpSessionKeys();
       static void DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint);
      
@@ -73,7 +76,7 @@ class DtlsSocket
       bool handshakeCompleted() { return mHandshakeCompleted; }
    private:
       friend class DtlsFactory;
-      enum SocketType { Client, Server};
+     
       DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType);
       void doHandshakeIteration();
       int getReadTimeout();

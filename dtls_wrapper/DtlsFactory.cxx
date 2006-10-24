@@ -1,5 +1,14 @@
+#include <cassert>
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
+#include "rutil/OpenSSLInit.hxx"
+
+#include <openssl/e_os2.h>
+#include <openssl/rand.h>
+#include <openssl/err.h>
+#include <openssl/crypto.h>
+#include <openssl/ssl.h>
+
 extern "C" {
 #include <openssl/srtp.h>
 }
