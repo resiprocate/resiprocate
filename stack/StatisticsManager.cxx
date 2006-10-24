@@ -37,7 +37,7 @@ StatisticsManager::poll()
    activeClientTransactions = mStack.mTransactionController.getNumClientTransactions();
    activeServerTransactions = mStack.mTransactionController.getNumServerTransactions();   
 
-   static StatisticsMessage::AtomicPayload appStats;
+   StatisticsMessage::AtomicPayload appStats;
    appStats.loadIn(*this);
 
    // let the app do what it wants with it
