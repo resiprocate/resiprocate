@@ -58,8 +58,9 @@ static int dwrap_free(BIO *a){
 }
 
 static int dwrap_read(BIO *b, char *out, int outl){
-  if(!b || !out) return 0;
   int ret;
+	if(!b || !out) return 0;
+  
   
   BIO_clear_retry_flags(b);
   
