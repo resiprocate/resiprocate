@@ -19,6 +19,7 @@ namespace dtls
 
 class DtlsFactory;
 class DtlsSocket;
+class DtlsTimer;
 
 class DtlsSocketContext
 {
