@@ -1,4 +1,7 @@
 #include <iostream>
+#include <cassert>
+#include <string.h>
+
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
 #include "bf_dwrap.h"
@@ -172,7 +175,8 @@ DtlsSocket::checkFingerprint(const char* fingerprint, unsigned int len){
   if(getRemoteFingerprint(fprint)==false)
     return false;
   
-  if(strncasecmp(fprint,fingerprint,len)){
+  // used to be strncasecmp
+  if(strncmp(fprint,fingerprint,len)){
     cerr << "Fingerprint mismatch, got " << fprint << "expecting " << fingerprint << endl;
     return false;
   }
