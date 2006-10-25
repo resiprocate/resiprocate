@@ -44,6 +44,7 @@ class StatisticsManager : public StatisticsMessage::Payload
 
       void poll(); // force an update
 
+      static StatisticsMessage::AtomicPayload sAppStats;
       SipStack& mStack;
       UInt64 mInterval;
       UInt64 mNextPoll;
