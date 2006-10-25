@@ -52,7 +52,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-static const Data PEM(".pem");
+static const char* PEM = ".pem";
 
 static const Data 
 pemTypePrefixes(  Security::PEMType pType )
@@ -119,7 +119,7 @@ static Data
 getAor(const Data& filename, const  Security::PEMType &pemType )
 {
    const Data& prefix = pemTypePrefixes( pemType );
-   return filename.substr(prefix.size(), filename.size() - prefix.size() - PEM.size());
+   return filename.substr(prefix.size(), filename.size() - prefix.size() - ::strlen(PEM));
 }
 
 static int 
@@ -169,7 +169,7 @@ Security::preload()
    for (; it != dir.end(); ++it)
    {
       Data name = *it;
-           
+      Data pemData(Data::Share, PEM, ::strlen(PEM));
       if (name.postfix(PEM))
       {
          Data fileName = mPath + name;
@@ -280,7 +280,7 @@ Security::onReadPEM(const Data& name, PEMType type, Data& buffer) const
 
 
 void
-Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
+Security::onWritePEM(const Data& name, PEMType type, const char* buffer) const
 {
    Data filename = mPath + pemTypePrefixes(type) + name + PEM;
    InfoLog (<< "Writing PEM file " << filename << " for " << name);
@@ -292,13 +292,18 @@ Security::onWritePEM(const Data& name, PEMType type, const Data& buffer) const
    }
    else
    {
-      if (buffer.size())
+      size_t size = 0;
+      if (buffer)
       {
-         str.write(buffer.data(), buffer.size());
+         size = ::strlen(buffer);
+         if (size)
+         {
+            str.write(buffer, size);
+         }
       }
       if (!str)
       {
-         ErrLog (<< "Failed writing to " << filename << " " << buffer.size() << " bytes");
+         ErrLog (<< "Failed writing to " << filename << " " << size << " bytes");
          throw BaseSecurity::Exception("Failed writing PEM file", __FILE__,__LINE__);
       }
    }
@@ -409,9 +414,10 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
          size_t len = BIO_get_mem_data(out,&p);
          assert(p);
          assert(len);
-         Data  buf(Data::Borrow, p, len);
+         //Data  buf(Data::Borrow, p, len);
+         //this->onWritePEM(key, type, buf);
          
-         this->onWritePEM(key, type, buf);
+         this->onWritePEM(key, type, p);
       }
       catch(...)
       {
@@ -579,8 +585,9 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
          size_t len = BIO_get_mem_data(bio,&p);
          assert(p);
          assert(len);
-         Data  pem(Data::Borrow, p, len);
-         onWritePEM(name, type, pem );
+         //Data  pem(Data::Borrow, p, len);
+         //onWritePEM(name, type, pem );
+         onWritePEM(name, type, p);
       }
       catch(...)
       {
@@ -736,9 +743,10 @@ BaseSecurity::hasPrivateKey( PEMType type,
 }
 
 
-Data
+void
 BaseSecurity::getPrivateKeyPEM( PEMType type,
-                                const Data& key) const
+                                const Data& key,
+                                char*& pkPEM) const
 {
    assert( !key.empty() );
 
@@ -778,19 +786,22 @@ BaseSecurity::getPrivateKeyPEM( PEMType type,
    // get content in BIO buffer to our buffer.
    // hand our buffer to a Data object.
    BIO_flush(out);
-   char* buf = 0;
-   int len = BIO_get_mem_data(out, &buf);
-   Data retVal(Data::Borrow, buf, len);
+   //char* buf = 0;
+   //int len = BIO_get_mem_data(out, &buf);
+   //Data retVal(Data::Borrow, buf, len);
+   
+   int len = BIO_get_mem_data(out, &pkPEM);
 
    BIO_free(out);
-
-   return retVal;
+   // !nash! is buf need to be freed?
+   //return retVal;
 }
 
 
-Data
+void
 BaseSecurity::getPrivateKeyDER( PEMType type,
-                                const Data& key) const
+                                const Data& key,
+                                char*& pkDER) const
 {
    assert( !key.empty() );
 
@@ -829,13 +840,14 @@ BaseSecurity::getPrivateKeyDER( PEMType type,
    // get content in BIO buffer to our buffer.
    // hand our buffer to a Data object.
    BIO_flush(out);
-   char* buf = 0;
-   int len = BIO_get_mem_data(out, &buf);
-   Data retVal(Data::Borrow, buf, len);
+   //char* buf = 0;
+   //int len = BIO_get_mem_data(out, &buf);
+   //Data retVal(Data::Borrow, buf, len);
+   int len = BIO_get_mem_data(out, &pkDER);
 
    BIO_free(out);
    
-   return retVal;
+   //return retVal;
 }
 
 
@@ -1082,10 +1094,10 @@ BaseSecurity::removeDomainPrivateKey(const Data& domainName)
 }
 
 
-Data
-BaseSecurity::getDomainPrivateKeyPEM(const Data& domainName) const
+void
+BaseSecurity::getDomainPrivateKeyPEM(const Data& domainName, char*& pkPEM) const
 {
-   return   getPrivateKeyPEM(DomainPrivateKey, domainName);
+   getPrivateKeyPEM(DomainPrivateKey, domainName, pkPEM);
 }
 
 
@@ -1212,17 +1224,19 @@ BaseSecurity::removeUserPrivateKey(const Data& aor)
 }
 
 
-Data
-BaseSecurity::getUserPrivateKeyPEM(const Data& aor) const
+void
+BaseSecurity::getUserPrivateKeyPEM(const Data& aor, char*& pkPEM) const
 {
-   return   getPrivateKeyPEM(UserPrivateKey, aor);
+   pkPEM = NULL;
+   getPrivateKeyPEM(UserPrivateKey, aor, pkPEM);
 }
 
 
-Data
-BaseSecurity::getUserPrivateKeyDER(const Data& aor) const
+void
+BaseSecurity::getUserPrivateKeyDER(const Data& aor, char*& pkDER) const
 {
-   return   getPrivateKeyDER(UserPrivateKey, aor);
+   pkDER = NULL;
+   getPrivateKeyDER(UserPrivateKey, aor, pkDER);
 }
 
 
