@@ -1395,7 +1395,7 @@ Helper::processStrictRoute(SipMessage& request)
 }
 
 int
-Helper::getPortForReply(SipMessage& request)
+Helper::getPortForReply(SipMessage& request, bool returnDefault)
 {
    assert(request.isRequest());
    int port = -1;
@@ -1408,7 +1408,11 @@ Helper::getPortForReply(SipMessage& request)
       port = request.header(h_Vias).front().sentPort();
       if (port <= 0 || port > 65535) 
       {
-         if(request.header(h_Vias).front().transport() == Symbols::TLS ||
+         if(!returnDefault)
+         {
+            port=0;
+         }
+         else if(request.header(h_Vias).front().transport() == Symbols::TLS ||
             request.header(h_Vias).front().transport() == Symbols::DTLS)
          {
             port = Symbols::DefaultSipsPort;
