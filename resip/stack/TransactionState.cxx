@@ -1691,8 +1691,9 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
          mController.mTransportSelector.transmit(sip, target);
       }
    }
-   else if (sip->getDestination().transport)
+   else if (sip->getDestination().connectionId || sip->getDestination().transport)
    {
+      DebugLog(<< "Sending to tuple: " << sip->getDestination());
       mTarget = sip->getDestination();
       processReliability(mTarget.getType());
       mController.mTransportSelector.transmit(sip, mTarget); // dns not used
