@@ -339,8 +339,25 @@ TransactionState::process(TransactionController& controller)
                TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid, tu);
                state->mMsgToRetransmit = state->make100(sip);
                state->mResponseTarget = sip->getSource(); // UACs source address
-               // since we don't want to reply to the source port unless rport present 
-               state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
+
+               // !bwc! If port is already specified in mResponseTarget, we
+               // will only override it if a port is specified in the Via.
+               // If mResponseTarget does _not_ have a port specified, and
+               // neither does the Via, we go with the default.
+               if(state->mResponseTarget.getPort()==0)
+               {
+                  state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
+               }
+               else
+               {
+                  // !bwc! Do not use the default port if no port is in the Via
+                  unsigned short port=Helper::getPortForReply(*sip,false);
+                  if(port!=0)
+                  {
+                     state->mResponseTarget.setPort(port);
+                  }
+               }
+
                state->mIsReliable = state->mResponseTarget.transport->isReliable();
                state->add(tid);
                
