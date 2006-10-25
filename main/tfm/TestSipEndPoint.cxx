@@ -2301,6 +2301,109 @@ TestSipEndPoint::ack(const boost::shared_ptr<resip::SdpContents>& sdp)
    return new Ack(*this, sdp);
 }
 
+TestSipEndPoint::AckNewTid::AckNewTid(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mSdp(sdp)
+{
+}
+
+shared_ptr<SipMessage>
+TestSipEndPoint::AckNewTid::go(shared_ptr<SipMessage> response)
+{
+   assert(response->isResponse());
+   int code = response->header(h_StatusLine).responseCode();
+   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
+   assert (invite->header(h_RequestLine).getMethod() == INVITE);
+
+   shared_ptr<SipMessage> ack;
+
+   if (code == 200)
+   {
+      DebugLog(<< "Constructing ack against 200 using dialog.");
+      DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
+      assert (dialog);
+      DebugLog(<< *dialog);
+      // !dlb! should use contact from 200?
+      ack.reset(dialog->makeAck(*invite));
+      if( mSdp.get() )
+         ack->setContents(mSdp.get());
+   }
+   else
+   {
+      DebugLog(<<"Constructing failure ack.");
+      ack.reset(Helper::makeFailureAck(*invite, *response));
+   }
+   
+   ack->header(h_Vias).front().param(p_branch).reset();
+   
+   return ack;
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::ackNewTid()
+{
+   return new AckNewTid(*this);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::ackNewTid(const boost::shared_ptr<resip::SdpContents>& sdp)
+{
+   return new AckNewTid(*this, sdp);
+}
+
+TestSipEndPoint::AckOldTid::AckOldTid(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mSdp(sdp)
+{
+}
+
+shared_ptr<SipMessage>
+TestSipEndPoint::AckOldTid::go(shared_ptr<SipMessage> response)
+{
+   assert(response->isResponse());
+   int code = response->header(h_StatusLine).responseCode();
+   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
+   assert (invite->header(h_RequestLine).getMethod() == INVITE);
+
+   shared_ptr<SipMessage> ack;
+
+   if (code == 200)
+   {
+      DebugLog(<< "Constructing ack against 200 using dialog.");
+      DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
+      assert (dialog);
+      DebugLog(<< *dialog);
+      // !dlb! should use contact from 200?
+      ack.reset(dialog->makeAck(*invite));
+      if( mSdp.get() )
+         ack->setContents(mSdp.get());
+   }
+   else
+   {
+      DebugLog(<<"Constructing failure ack.");
+      ack.reset(Helper::makeFailureAck(*invite, *response));
+   }
+   
+   resip::Data oldTid(invite->header(h_Vias).front().param(p_branch).getTransactionId());
+
+   ack->header(h_Vias).front().param(p_branch).reset(oldTid);
+   return ack;
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::ackOldTid()
+{
+   return new AckOldTid(*this);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::ackOldTid(const boost::shared_ptr<resip::SdpContents>& sdp)
+{
+   return new AckOldTid(*this, sdp);
+}
+
 #if 0
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::ackReferred()

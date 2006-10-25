@@ -220,8 +220,8 @@ class TestHolder : public Fixture
          
          Seq(jason->registerUser(70, contacts),
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
-             jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contacts, 70)),
-             500);
+             jason->expect(REGISTER/200, from(proxy), 1000, new CheckContacts(contacts, 70)),
+             WaitForEndOfTest);
 
          ExecuteSequences();
       }
@@ -1931,11 +1931,20 @@ class TestHolder : public Fixture
          derek->invite(*jason),
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
          derek->expect(INVITE/407,from(proxy),WaitForResponse,chain(ack <= derek->ack(), derek->retransmit(ack),derek->retransmit(ack),derek->retransmit(ack),derek->digestRespond() )),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ring(),jason->answer())),
-         derek->expect(INVITE/180,contact(jason),WaitForResponse,derek->noAction()),
-         derek->expect(INVITE/200,contact(jason),WaitForResponse,derek->ack()),
-         jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
+         And
+         (
+            Sub
+            (
+               optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction()))
+            ),
+            Sub
+            (
+               jason->expect(INVITE,contact(derek),WaitForCommand,chain(jason->ring(),jason->answer())),
+               derek->expect(INVITE/180,contact(jason),WaitForResponse,derek->noAction()),
+               derek->expect(INVITE/200,contact(jason),WaitForResponse,derek->ack()),
+               jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction())
+            )
+         ),
          WaitForEndOfTest
       );
       
@@ -2095,18 +2104,17 @@ class TestHolder : public Fixture
          derek->invite(*jason),
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
          derek->expect(INVITE/407,from(proxy),WaitForResponse,chain(derek->ack(),derek->digestRespond())),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,from(proxy),WaitForCommand,error <= jason->send603()),
-         
          And
          (
             Sub //Server side
             (
+               jason->expect(INVITE,from(proxy),WaitForCommand,error <= jason->send603()),
                jason->expect(ACK,from(proxy),WaitForResponse,jason->retransmit(error)),
                jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
             ),
             Sub //Client side
             (
+               optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
                derek->expect(INVITE/603,contact(jason),WaitForResponse,derek->ack())
             )
          ),
@@ -2233,18 +2241,24 @@ class TestHolder : public Fixture
          derek->invite(*jason),
          optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
          derek->expect(INVITE/407,from(proxy),WaitForResponse,chain(derek->ack(),derek->digestRespond())),
-         optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction())),
-         jason->expect(INVITE,contact(derek),600,jason->noAction()),
-         jason->expect(INVITE,contact(derek),1100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),2100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),4100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),4100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),4100,jason->noAction()),
-         jason->expect(INVITE,contact(derek),4100,jason->noAction()),
-         optional(jason->expect(INVITE,contact(derek),4100,jason->noAction())),
-         optional(jason->expect(INVITE,contact(derek),4100,jason->noAction())),
-         optional(jason->expect(INVITE,contact(derek),4100,jason->noAction())),
-         derek->expect(INVITE/408,from(proxy),5000,derek->ack()),
+         And
+         (
+            Sub
+            (
+               optional(derek->expect(INVITE/100,from(proxy),WaitFor100,derek->noAction()))
+            ),
+            Sub
+            (
+               jason->expect(INVITE,contact(derek),600,jason->noAction()), // <- original
+               jason->expect(INVITE,contact(derek),600,jason->noAction()), // <- first retransmission
+               jason->expect(INVITE,contact(derek),1100,jason->noAction()),
+               jason->expect(INVITE,contact(derek),2100,jason->noAction()),
+               jason->expect(INVITE,contact(derek),4100,jason->noAction()),
+               jason->expect(INVITE,contact(derek),8100,jason->noAction()),
+               optional(jason->expect(INVITE,contact(derek),16100,jason->noAction())), // <- might get sent, depending on timing
+               derek->expect(INVITE/408,from(proxy),21000,derek->ack())
+            )
+         ),
          WaitForEndOfTest
       );
       
@@ -2414,7 +2428,8 @@ class TestHolder : public Fixture
                jason->expect(INVITE, contact(derek), WaitForCommand, jason->ring()),
                derek->expect(INVITE/180, from(jason), WaitFor180, condition(inviteCSeq,derek->cancel())),
                derek->expect(INVITE/400, from(proxy), WaitForResponse, jason->answer()),
-               derek->expect(INVITE/200,from(proxy), WaitForResponse, derek->ack())
+               derek->expect(INVITE/200,from(proxy), WaitForResponse, derek->ack()),
+               jason->expect(ACK, from(derek), WaitForCommand, jason->noAction())
             )
          ),
          WaitForEndOfTest
@@ -2422,6 +2437,72 @@ class TestHolder : public Fixture
 
       ExecuteSequences();  
    }
+
+   void testInviteBadAckTid1()
+   {
+      WarningLog(<<"*!testInviteBadAckTid1!*");
+      
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
+          1000);
+   
+      ExecuteSequences();
+
+      Seq(jason->invite(*derek),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
+          And(Sub(optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction()))),
+              Sub(derek->expect(INVITE, contact(jason), WaitForCommand, chain(derek->ring(), derek->answer())),
+                  jason->expect(INVITE/180, from(derek), WaitFor100, jason->noAction()),
+                  jason->expect(INVITE/200, contact(derek), WaitForResponse, jason->ackOldTid()),
+                  derek->expect(ACK, from(jason), WaitForResponse, jason->noAction()))),
+          WaitForEndOfTest);
+      ExecuteSequences();  
+   }
+
+   void testInviteBadAckTid2()
+   {
+      WarningLog(<<"*!testInviteBadAckTid2!*");
+      
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
+          1000);
+   
+      ExecuteSequences();
+
+      Seq(jason->invite(*derek),
+          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+          jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), jason->digestRespond())),
+          And
+          (
+            Sub(optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction()))),
+            Sub
+            (
+               derek->expect(INVITE, contact(jason), WaitForCommand, derek->ring()),
+               And
+               (
+                  Sub
+                  (
+                     jason->expect(INVITE/180, from(derek), WaitFor100, derek->send486()),
+                     jason->expect(INVITE/486, contact(derek), WaitForResponse, jason->ackNewTid()),
+                     jason->expect(INVITE/486, contact(derek), 1000, jason->ackNewTid()),
+                     jason->expect(INVITE/486, contact(derek), 2000, jason->ackNewTid()),
+                     jason->expect(INVITE/486, contact(derek), 4000, jason->ackNewTid()),
+                     jason->expect(INVITE/486, contact(derek), 4000, jason->ack())
+                  ),
+                  Sub
+                  (
+                     derek->expect(ACK, from(proxy), WaitForResponse, jason->noAction())
+                  )
+               )
+            )
+         ),
+          WaitForEndOfTest);
+      ExecuteSequences();  
+   }
+
 
 
 //*******************Forking INVITES, parallel******************//
@@ -2827,19 +2908,37 @@ class TestHolder : public Fixture
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->ring()),
                david->expect(INVITE/180,contact(jason),WaitForResponse,david->noAction()),
-               jason->expect(CANCEL,from(proxy),3000,chain(jason->ok(), jason->send487())),
-               jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
+               And
+               (
+                  Sub
+                  (
+                     jason->expect(CANCEL,from(proxy),3000,chain(jason->ok(), jason->send487()))
+                  ),
+                  Sub
+                  (
+                     jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
+                  )
+               )
             ),
             Sub
             (
                derek->expect(INVITE,contact(david),WaitForCommand,derek->ring()),
                david->expect(INVITE/180,contact(derek),WaitForResponse,david->noAction()),
-               derek->expect(CANCEL,from(proxy),3000,chain(derek->ok(), derek->send487())),
-               derek->expect(ACK,from(proxy),WaitForResponse,derek->noAction())
+               And
+               (
+                  Sub
+                  (
+                     derek->expect(CANCEL,from(proxy),3000,chain(derek->ok(), derek->send487()))
+                  ),
+                  Sub
+                  (
+                     derek->expect(ACK,from(proxy),WaitForResponse,derek->noAction())
+                  )
+               )
             ),
             Sub
             (
-               enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->pause(1000),enlai->answer())),
+               enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->pause(300),enlai->answer())),
                david->expect(INVITE/180,contact(enlai),WaitForResponse,david->noAction()),
                david->expect(INVITE/200,contact(enlai),WaitForResponse,david->ack()),
                enlai->expect(ACK,contact(david),WaitForCommand,enlai->noAction())
@@ -3051,7 +3150,7 @@ class TestHolder : public Fixture
             (
                enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->pause(1000),enlai->answer())),
                david->expect(INVITE/180,contact(enlai),WaitForResponse,david->noAction()),
-               david->expect(INVITE/200,contact(enlai),WaitForResponse,david->ack()),
+               david->expect(INVITE/200,contact(enlai),WaitForResponse+1000,david->ack()),
                enlai->expect(ACK,contact(david),WaitForCommand,enlai->noAction())
             )
          ),
@@ -3847,7 +3946,7 @@ class TestHolder : public Fixture
                derek->expect(INVITE/180,from(jason2),WaitForResponse,jason2->ok()),
                derek->expect(INVITE/200,from(jason2),WaitForResponse,derek->ack()),
                jason2->expect(ACK,from(proxy),WaitForCommand,chain(derek->pause(2000),derek->bye())),
-               jason2->expect(BYE,contact(derek),WaitForCommand,jason2->ok()),
+               jason2->expect(BYE,contact(derek),WaitForCommand+2000,jason2->ok()),
                derek->expect(BYE/200,contact(jason2),WaitForResponse,derek->noAction())                  
             )
          ),
@@ -3916,7 +4015,7 @@ class TestHolder : public Fixture
                derek->expect(INVITE/180,from(jason2),WaitForResponse,jason2->ok()),
                derek->expect(INVITE/200,from(jason2),WaitForResponse,derek->ack()),
                jason2->expect(ACK,from(proxy),WaitForCommand,chain(jason2->pause(2000),jason2->bye())),
-               derek->expect(BYE,contact(jason2),WaitForCommand,derek->ok()),
+               derek->expect(BYE,contact(jason2),WaitForCommand+2000,derek->ok()),
                jason2->expect(BYE/200,contact(derek),WaitForResponse,jason2->noAction())
             )
          ),
@@ -6161,6 +6260,8 @@ class MyTestCase
          TEST(testInviteCancelCSeq);
          TEST(testInviteUnknownCSeq);
          TEST(testCancelInviteCSeq);
+         TEST(testInviteBadAckTid1);
+         TEST(testInviteBadAckTid2);
          //TEST(testInviteForgedHostInFrom); 
 
          TEST(testInviteForkOneAnswers);
