@@ -727,6 +727,30 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       MessageExpectAction* ack();
       MessageExpectAction* ack(const boost::shared_ptr<resip::SdpContents>& sdp);
 
+      class AckNewTid : public MessageExpectAction
+      {
+         public:
+            explicit AckNewTid(TestSipEndPoint& endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
+      MessageExpectAction* ackNewTid();
+      MessageExpectAction* ackNewTid(const boost::shared_ptr<resip::SdpContents>& sdp);
+
+      class AckOldTid : public MessageExpectAction
+      {
+         public:
+            explicit AckOldTid(TestSipEndPoint& endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
+      MessageExpectAction* ackOldTid();
+      MessageExpectAction* ackOldTid(const boost::shared_ptr<resip::SdpContents>& sdp);
+
       EXPECT_FUNCTOR(TestSipEndPoint, AckReferred);
       MessageExpectAction* ackReferred();
 
