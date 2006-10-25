@@ -1714,9 +1714,9 @@ void
 TransactionState::sendToTU(TransactionMessage* msg) const
 {
    SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
-   if (sipMsg && sipMsg->isResponse())
+   if (sipMsg && sipMsg->isResponse() && mDnsResult)
    {
-      // whitelisting/blacklisting rules.
+      // whitelisting rules.
       switch (sipMsg->header(h_StatusLine).statusCode())
       {
          case 503:
@@ -1728,30 +1728,37 @@ TransactionState::sendToTU(TransactionMessage* msg) const
             }
             break;
          case 408:
-         case 500:
-         case 504:
-         case 600:
             if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only blacklist if internally generated and we haven't received any responses yet
             {
                // blacklist last target.
-               if (mDnsResult != 0 && mDnsResult->available() == DnsResult::Available)
+               if (mDnsResult->available() == DnsResult::Available)
                {
                   mDnsResult->next();
                }
             }
             else
             {
-               if (mDnsResult != 0)
-               {
-                  mDnsResult->success();
-               }
+               mDnsResult->success();
             }
             break;
-         default:
-            if (mDnsResult != 0)
+         case 500:
+         case 504:
+         case 600:
+            // !bwc! Only blacklist if Retry-After is present.
+            // (Although, this is somewhat silly right now, since the value
+            // of Retry-After is completely ignored.)
+            if(sipMsg->exists(h_RetryAfter) && 
+               mDnsResult->available() == DnsResult::Available)
+            {
+               mDnsResult->next();
+            }
+            else
             {
                mDnsResult->success();
             }
+            break;
+         default:
+            mDnsResult->success();
             break;
       }
    }
