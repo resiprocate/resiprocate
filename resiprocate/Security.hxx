@@ -62,7 +62,7 @@ class RESIP_API BaseSecurity
       // name refers to the domainname or username which could be converted to a
       // filename by convention
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const =0;
-      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const =0;
+      virtual void onWritePEM(const Data& name, PEMType type, const char* buffer) const =0;
       virtual void onRemovePEM(const Data& name, PEMType type) const =0;
 
       struct CertificateInfo
@@ -89,7 +89,7 @@ class RESIP_API BaseSecurity
       void addDomainPrivateKeyPEM(const Data& domainName, const Data& privateKeyPEM);
       bool hasDomainPrivateKey(const Data& domainName) const;
       void removeDomainPrivateKey(const Data& domainName);
-      Data getDomainPrivateKeyPEM(const Data& domainName) const;
+      void getDomainPrivateKeyPEM(const Data& domainName, char*& pkPEM) const;
 
       void addUserCertPEM(const Data& aor, const Data& certPEM);
       void addUserCertDER(const Data& aor, const Data& certDER);
@@ -106,8 +106,10 @@ class RESIP_API BaseSecurity
       void addUserPrivateKeyDER(const Data& aor, const Data& certDER);
       bool hasUserPrivateKey(const Data& aor) const;
       void removeUserPrivateKey(const Data& aor);
-      Data getUserPrivateKeyPEM(const Data& aor) const;
-      Data getUserPrivateKeyDER(const Data& aor) const;
+      // need to explicit delete pkPEM if not null
+      void getUserPrivateKeyPEM(const Data& aor, char*& pkPEM) const;
+      // need to explicit delete pkDER if not null
+      void getUserPrivateKeyDER(const Data& aor, char*& pkDER) const;
 
       void generateUserCert(const Data& aor, int expireDays=365, int keyLen=1024);
 
@@ -176,8 +178,8 @@ class RESIP_API BaseSecurity
       void addPrivateKeyDER (PEMType type, const Data& name, const Data& privateKeyDER, bool write) const;
       bool hasPrivateKey    (PEMType type, const Data& name) const;
       void removePrivateKey (PEMType type, const Data& name);
-      Data getPrivateKeyPEM (PEMType type, const Data& name) const;
-      Data getPrivateKeyDER (PEMType type, const Data& name) const;
+      void getPrivateKeyPEM (PEMType type, const Data& name, char*& pkPEM) const;
+      void getPrivateKeyDER (PEMType type, const Data& name, char*& pkDER) const;
       void addPrivateKeyPKEY(PEMType type, const Data& name, EVP_PKEY* pKey, bool write) const;
       
 };
@@ -194,7 +196,7 @@ class RESIP_API Security : public BaseSecurity
       virtual void preload();
 
       virtual void onReadPEM(const Data& name, PEMType type, Data& buffer) const;
-      virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
+      virtual void onWritePEM(const Data& name, PEMType type, const char* buffer) const;
       virtual void onRemovePEM(const Data& name, PEMType type) const;
 
       bool requireServerAuthentication() { return mServerAuthentication; }
