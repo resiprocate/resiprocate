@@ -13,6 +13,8 @@ using std::vector;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
+StatisticsMessage::AtomicPayload StatisticsManager::sAppStats;
+
 StatisticsManager::StatisticsManager(SipStack& stack, unsigned long intervalSecs) 
    : StatisticsMessage::Payload(),
      mStack(stack),
@@ -37,11 +39,10 @@ StatisticsManager::poll()
    activeClientTransactions = mStack.mTransactionController.getNumClientTransactions();
    activeServerTransactions = mStack.mTransactionController.getNumServerTransactions();   
 
-   static StatisticsMessage::AtomicPayload appStats;
-   appStats.loadIn(*this);
+   sAppStats.loadIn(*this);
 
    // let the app do what it wants with it
-   mStack.post(StatisticsMessage(appStats));
+   mStack.post(StatisticsMessage(sAppStats));
 }
 
 void 
