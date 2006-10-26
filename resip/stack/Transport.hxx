@@ -47,7 +47,7 @@ class Transport
 
       virtual bool isFinished() const=0;
       
-      virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
+      virtual void send( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId);
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
 
@@ -136,7 +136,7 @@ class Transport
       //not a great name, just adds the message to the fifo in the synchronous(default) case,
       //actually transmits in the asyncronous case.  Don't make a SendData because asynchronous
       //transports would require another copy.
-      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid) = 0;
+      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data &sigcompId) = 0;
 
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
    private:

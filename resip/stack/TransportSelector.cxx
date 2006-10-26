@@ -35,6 +35,11 @@
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
+#ifdef USE_SIGCOMP
+#include <osc/Stack.h>
+#include <osc/SigcompMessage.h>
+#endif
+
 #ifdef WIN32
 #include "rutil/WinCompat.hxx"
 #endif
@@ -49,14 +54,14 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-// XXX Need to add parameter for SigComp configuration or stack here
 TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression) :
    mDns(dnsStub),
    mStateMacFifo(fifo),
    mSecurity(security),
    mSocket( INVALID_SOCKET ),
    mSocket6( INVALID_SOCKET ),
-   mCompression(compression)
+   mCompression(compression),
+   mSigcompStack (0)
 {
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
@@ -64,6 +69,21 @@ TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* s
 #ifdef USE_IPV6
    memset(&mUnspecified6.v6Address, 0, sizeof(sockaddr_in6));
    mUnspecified6.v6Address.sin6_family = AF_UNSPEC;
+#endif
+
+#ifdef USE_SIGCOMP
+   if (mCompression.isEnabled())
+   {
+      DebugLog (<< "Compression enabled for Transport Selector");
+      mSigcompStack = new osc::Stack(mCompression.getStateHandler());
+      mCompression.addCompressorsToStack(mSigcompStack);
+   }
+   else
+   {
+      DebugLog (<< "Compression disabled for Transport Selector");
+   }
+#else
+   DebugLog (<< "No compression library available");
 #endif
 }
 
@@ -86,6 +106,9 @@ TransportSelector::~TransportSelector()
 #ifdef USE_IPV6
    deleteMap(mV6TlsTransports);
    deleteMap(mV6DtlsTransports);
+#endif
+#ifdef USE_SIGCOMP
+   delete mSigcompStack;
 #endif
 }
 
@@ -571,6 +594,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          the transport in the first place, this is not an issue.
       */
 
+      Data remoteSigcompId;
+
       if (msg->isRequest())
       {
          Transport* transport=0;
@@ -640,8 +665,53 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                msg->header(h_Vias).front().sentPort() = source.getPort();
             }
 
-            /// XXX Add comp=sigcomp to via here
-            /// XXX Add sigcomp-id="<urn>" to via here
+            if (mCompression.isEnabled())
+            {
+               // Indicate support for SigComp, if appropriate.
+               if (!topVia.exists(p_comp))
+               {
+                  topVia.param(p_comp) = "sigcomp";
+               }
+               if (!topVia.exists(p_sigcompId))
+               {
+                  topVia.param(p_sigcompId) = mCompression.getSigcompId();
+               }
+
+               // Figure out remote identifier (from Route header
+               // field, if present; otherwise, from Request-URI).
+               // XXX rohc-sip-sigcomp-03 says to use +sip.instance,
+               // but this is impossible to actually do if you're
+               // not actually the registrar, and really hard even
+               // if you are.
+               Uri& destination(*reinterpret_cast<Uri*>(0));
+
+               if(msg->exists(h_Routes) && 
+                  !msg->header(h_Routes).empty())
+               {
+                  destination = msg->header(h_Routes).front().uri();
+               }
+               else
+               {
+                  destination = msg->header(h_RequestLine).uri();
+               }
+
+               if (destination.exists(p_comp) &&
+                   destination.param(p_comp) == "sigcomp")
+               {
+                  if (destination.exists(p_sigcompId))
+                  {
+                      remoteSigcompId = destination.param(p_sigcompId);
+                  }
+                  else
+                  {
+                      remoteSigcompId = destination.host();
+                  }
+               }
+               // Squirrel the compartment away in the branch so that
+               // we can figure out (pre-transaction-matching) what
+               // compartment incoming requests are associated with.
+               topVia.param(p_branch).setSigcompCompartment(remoteSigcompId);
+            }
          }
          
       }
@@ -667,6 +737,29 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                      source.getType()==temp.getType());
 
             source.setPort(target.transport->port());
+         }
+         if (mCompression.isEnabled())
+         {
+            // Figure out remote identifier (from Via header field).
+            Via& topVia(msg->header(h_Vias).front());
+
+            if(topVia.exists(p_comp) &&
+               topVia.param(p_comp) == "sigcomp")
+            {
+               if (topVia.exists(p_sigcompId))
+               {
+                   remoteSigcompId = topVia.param(p_sigcompId);
+               }
+               else
+               {
+                   // XXX rohc-sigcomp-sip-03 says "sent-by",
+                   // but this should probably be "received" if present,
+                   // and "sent-by" otherwise.
+                   // XXX Also, the spec is ambiguous about whether
+                   // to include the port in this identifier.
+                   remoteSigcompId = topVia.sentHost();
+               }
+            }
          }
       }
       else
@@ -698,6 +791,23 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                   {
                      contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                   }
+
+                  // Add comp=sigcomp to contact URI
+                  // Also, If no +sip.instance on contact HEADER,
+                  // add sigcomp-id="<urn>" to contact URI.
+                  if (mCompression.isEnabled())
+                  {
+                     if (!contact.uri().exists(p_comp))
+                     {
+                        contact.uri().param(p_comp) = "sigcomp";
+                     }
+                     if (!contact.exists(p_Instance) &&
+                         !contact.uri().exists(p_sigcompId))
+                     {
+                        contact.uri().param(p_sigcompId) 
+                          = mCompression.getSigcompId();
+                     }
+                  }
                } 
                else
                {
@@ -710,9 +820,6 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                      contact.uri().remove(p_addTransport);
                   }
                }
-
-               /// XXX Add comp=sigcomp to contact here
-               /// XXX If no +sip.instance, add sigcomp-id="<urn>" to contact
 
             }
          }
@@ -737,6 +844,21 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                if (target.transport->transport() != UDP && !rr.uri().exists(p_transport))
                {
                   rr.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+               }
+               // Add comp=sigcomp and sigcomp-id="<urn>" to Record-Route
+               // XXX This isn't quite right -- should be set only
+               // on routes facing the client. Doing this correctly
+               // requires double-record-routing
+               if (mCompression.isEnabled())
+               {
+                  if (!rr.uri().exists(p_comp))
+                  {
+                     rr.uri().param(p_comp) = "sigcomp";
+                  }
+                  if (!rr.uri().exists(p_sigcompId))
+                  {
+                     rr.uri().param(p_sigcompId) = mCompression.getSigcompId();
+                  }
                }
             }
          }
@@ -773,6 +895,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          DataStream encodeStream(encoded);
          msg->encode(encodeStream);
          encodeStream.flush();
+         msg->getCompartmentId() = remoteSigcompId;
          
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
@@ -780,9 +903,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                    << " via " << source
                    << encoded.escaped());
 
-         // XXX If message needs to be compressed, compress it here
-
-         target.transport->send(target, encoded, msg->getTransactionId());
+         target.transport->send(target, encoded, msg->getTransactionId(),
+                                remoteSigcompId);
       }
       else
       {
@@ -830,7 +952,7 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& target)
    if(!msg->getEncoded().empty())
    {
       //DebugLog(<<"!ah! retransmit to " << target);
-      target.transport->send(target, msg->getEncoded(), msg->getTransactionId());
+      target.transport->send(target, msg->getEncoded(), msg->getTransactionId(),                             msg->getCompartmentId());
    }
 }
 

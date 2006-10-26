@@ -49,7 +49,7 @@ class InternalTransport : public Transport
       virtual unsigned int getFifoSize() const;      
    protected:
       friend class SipStack;
-      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid);
+      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId);
 
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Fifo<SendData> mTxFifo; // owned by the transport

@@ -6,6 +6,8 @@
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/Compression.hxx"
 
+namespace osc { class Stack; }
+
 namespace resip
 {
 
@@ -36,6 +38,9 @@ class UdpTransport : public InternalTransport
 	  // STUN client functionality
 	  bool stunSendTest(const Tuple& dest);
 	  bool stunResult(Tuple& mappedAddress); 
+   protected:
+
+      osc::Stack *mSigcompStack;
 
    private:
       MsgHeaderScanner mMsgHeaderScanner;

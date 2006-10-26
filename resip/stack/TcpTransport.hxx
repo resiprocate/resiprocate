@@ -16,7 +16,7 @@ class TcpTransport : public TcpBaseTransport
                    int portNum, 
                    IpVersion version,
                    const Data& interfaceObj,
-                   Compression &compression);
+                   Compression &compression = Compression::Disabled);
       virtual  ~TcpTransport();
       
       TransportType transport() const { return TCP; }
