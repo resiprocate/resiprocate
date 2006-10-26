@@ -255,6 +255,63 @@ Random::getCryptoRandomBase64(unsigned int numBytes)
    return Random::getCryptoRandom(numBytes).base64encode();
 }
 
+/*
+   [From RFC 4122]
+
+   The version 4 UUID is meant for generating UUIDs from truly-random or
+   pseudo-random numbers.
+
+   The algorithm is as follows:
+
+   o  Set the two most significant bits (bits 6 and 7) of the
+      clock_seq_hi_and_reserved to zero and one, respectively.
+
+   o  Set the four most significant bits (bits 12 through 15) of the
+      time_hi_and_version field to the 4-bit version number from
+      Section 4.1.3. (0 1 0 0)
+
+   o  Set all the other bits to randomly (or pseudo-randomly) chosen
+      values.
+
+      UUID                   = time-low "-" time-mid "-"
+                               time-high-and-version "-"
+                               clock-seq-and-reserved
+                               clock-seq-low "-" node
+      time-low               = 4hexOctet
+      time-mid               = 2hexOctet
+      time-high-and-version  = 2hexOctet
+      clock-seq-and-reserved = hexOctet
+      clock-seq-low          = hexOctet
+      node                   = 6hexOctet
+      hexOctet               = hexDigit hexDigit
+*/
+Data 
+Random::getVersion4UuidUrn()
+{
+  Data urn ("urn:uuid:");
+  urn += getCryptoRandomHex(4); // time-low
+  urn += "-";
+  urn += getCryptoRandomHex(2); // time-mid
+  urn += "-";
+
+  Data time_hi_and_version = Random::getCryptoRandom(2);
+  time_hi_and_version[0] &= 0x0f;
+  time_hi_and_version[0] |= 0x40;
+  urn += time_hi_and_version.hex();
+
+  urn += "-";
+
+  Data clock_seq_hi_and_reserved = Random::getCryptoRandom(1);
+  clock_seq_hi_and_reserved[0] &= 0x3f;
+  clock_seq_hi_and_reserved[0] |= 0x40;
+  urn += clock_seq_hi_and_reserved.hex();
+
+  urn += getCryptoRandomHex(1); // clock-seq-low
+  urn += "-";
+  urn += getCryptoRandomHex(6); // node
+  return urn;
+}
+
 #ifdef WIN32
 Random::Initializer::Initializer()  : mThreadStorage(::TlsAlloc())
 { 
