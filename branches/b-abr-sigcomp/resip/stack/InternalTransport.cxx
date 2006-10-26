@@ -136,9 +136,9 @@ InternalTransport::hasDataToSend() const
 }
 
 void 
-InternalTransport::transmit(const Tuple& dest, const Data& pdata, const Data& tid)
+InternalTransport::transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId)
 {
-   SendData* data = new SendData(dest, pdata, tid);
+   SendData* data = new SendData(dest, pdata, tid, sigcompId);
    mTxFifo.add(data);
 }
 

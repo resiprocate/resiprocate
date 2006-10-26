@@ -1,5 +1,12 @@
+#include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 #include "resip/stack/Compression.hxx"
+
+#ifdef USE_SIGCOMP
 #include <osc/StateHandler.h>
+#include <osc/Stack.h>
+#include <osc/DeflateCompressor.h>
+#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -8,8 +15,9 @@ resip::Compression resip::Compression::Disabled(resip::Compression::NONE);
 resip::Compression::Compression(resip::Compression::Algorithm algorithm,
                                 int stateMemorySize,
                                 int cyclesPerBit,
-                                int decompressionMemorySize)
-  : mAlgorithm(algorithm), mStateHandler(0)
+                                int decompressionMemorySize,
+                                Data sigcompId)
+  : mAlgorithm(algorithm), mStateHandler(0), mSigcompId(sigcompId)
 {
 #ifdef USE_SIGCOMP
   if (algorithm != NONE)
@@ -17,13 +25,54 @@ resip::Compression::Compression(resip::Compression::Algorithm algorithm,
     mStateHandler = new osc::StateHandler(stateMemorySize,
                                           cyclesPerBit,
                                           decompressionMemorySize);
+    mStateHandler->useSipDictionary();
+
+    if (sigcompId == Data::Empty)
+    {
+      sigcompId = "<";
+      sigcompId += Random::getVersion4UuidUrn();
+      sigcompId += ">";
+    }
   }
+  DebugLog (<< "Set SigcompId to " << sigcompId);
+#else
+  algorithm = NONE;
+  DebugLog (<< "COMPRESSION SUPPORT NOT COMPILED IN");
 #endif
+  DebugLog (<< "Compression configuration object created; algorithm = "
+            << static_cast<int>(mAlgorithm) );
 }
 
 resip::Compression::~Compression()
 {
+#ifdef USE_SIGCOMP
   delete mStateHandler;
+#endif
+}
+
+void
+resip::Compression::addCompressorsToStack(osc::Stack *stack)
+{
+#ifdef USE_SIGCOMP
+  switch(getAlgorithm())
+  {
+    case DEFLATE:
+      DebugLog (<< "Adding Deflate Compressor");
+      stack->addCompressor(new osc::DeflateCompressor(getStateHandler()));
+      break;
+
+    default:
+      WarningLog (<< "Invalid compressor specified! Using deflate Compressor");
+      stack->addCompressor(new osc::DeflateCompressor(getStateHandler()));
+
+    case NONE:
+      DebugLog (<< "Compression disabled: not adding any compressors");
+      break;
+
+  }
+#else
+   DebugLog (<< "Compression not compiled in: not adding any compressors");
+#endif
 }
 
 /* ====================================================================

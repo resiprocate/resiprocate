@@ -42,6 +42,11 @@ class BranchParameter : public Parameter
       Data& clientData();
       const Data& clientData() const;
 
+      // access sigcomp id -- we do pre- and post-processing on this,
+      // so we need "normal" setters and getters
+      void setSigcompCompartment(const Data &);
+      Data getSigcompCompartment() const;
+
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators)
       {
          return new BranchParameter(type, pb, terminators);
@@ -65,6 +70,10 @@ class BranchParameter : public Parameter
       Data mClientData;
       //magic cookie for interop; if case is different some proxies will treat this as a different tid
       const Data* mInteropMagicCookie; 
+
+      // If we're compressing, this will hold the compartment ID
+      // for the host that the request was sent to.
+      Data mSigcompCompartment;
                                 
 };
  

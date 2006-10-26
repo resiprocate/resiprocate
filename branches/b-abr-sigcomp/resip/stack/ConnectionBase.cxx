@@ -9,6 +9,13 @@
 #include "resip/stack/TlsConnection.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#ifdef USE_SIGCOMP
+#include <osc/Stack.h>
+#include <osc/TcpStream.h>
+#include <osc/SigcompMessage.h>
+#include <osc/StateChanges.h>
+#endif
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -22,6 +29,12 @@ ConnectionBase::ConnectionBase()
      mWho(),
      mFailureReason(TransportFailure::None),
      mCompression(Compression::Disabled),
+#ifdef USE_SIGCOMP
+     mSigcompStack(0),
+     mSigcompFramer(0),
+#endif
+     mSendingTransmissionFormat(Unknown),
+     mReceivingTransmissionFormat(Unknown),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
@@ -37,6 +50,12 @@ ConnectionBase::ConnectionBase(const Tuple& who, Compression &compression)
      mWho(who),
      mFailureReason(TransportFailure::None),
      mCompression(compression),
+#ifdef USE_SIGCOMP
+     mSigcompStack(0),
+     mSigcompFramer(0),
+#endif
+     mSendingTransmissionFormat(Unknown),
+     mReceivingTransmissionFormat(Unknown),
      mMessage(0),
      mBuffer(0),
      mBufferPos(0),
@@ -45,6 +64,21 @@ ConnectionBase::ConnectionBase(const Tuple& who, Compression &compression)
      mConnState(NewMessage)
 {
    DebugLog (<< "ConnectionBase::ConnectionBase, who: " << mWho << " " << this);
+#ifdef USE_SIGCOMP
+   if (mCompression.isEnabled())
+   {
+      DebugLog (<< "Compression enabled for connection: " << this);
+      mSigcompStack = new osc::Stack(mCompression.getStateHandler());
+      mCompression.addCompressorsToStack(mSigcompStack);
+   }
+   else
+   {
+      DebugLog (<< "Compression disabled for connection: " << this);
+   }
+#else
+   DebugLog (<< "No compression library available: " << this);
+#endif
+
 }
 
 ConnectionBase::~ConnectionBase()
@@ -65,6 +99,9 @@ ConnectionBase::~ConnectionBase()
    DebugLog (<< "ConnectionBase::~ConnectionBase " << this);
    delete [] mBuffer;
    delete mMessage;
+#ifdef USE_SIGCOMP
+   delete mSigcompStack;
+#endif
 }
 
 ConnectionId
@@ -302,6 +339,124 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          assert(0);
    }
 }
+
+#ifdef USE_SIGCOMP
+void
+ConnectionBase::decompressNewBytes(int bytesRead,
+                                   Fifo<TransactionMessage>& fifo)
+{
+  mConnState = SigComp;
+
+  if (!mSigcompFramer)
+  {
+    mSigcompFramer = new osc::TcpStream();
+  }
+
+  mSigcompFramer->addData(mBuffer, bytesRead);
+  size_t bytesUncompressed;
+  osc::StateChanges *sc = 0;
+  char *uncompressed = new char[65536];
+  while ((bytesUncompressed = mSigcompStack->uncompressMessage(
+                *mSigcompFramer, uncompressed, 65536, sc)) > 0)
+  {
+    mMessage = new SipMessage(mWho.transport);
+
+    mMessage->setSource(mWho);
+    mMessage->setTlsDomain(mWho.transport->tlsDomain());
+
+    char *sipBuffer = new char[bytesUncompressed];
+    memmove(sipBuffer, uncompressed, bytesUncompressed);
+    mMessage->addBuffer(sipBuffer);
+    mMsgHeaderScanner.prepareForMessage(mMessage);
+    char *unprocessedCharPtr;
+    if (mMsgHeaderScanner.scanChunk(sipBuffer,
+                                    bytesUncompressed,
+                                    &unprocessedCharPtr) !=
+        MsgHeaderScanner::scrEnd)
+    {
+       StackLog(<<"Scanner rejecting compressed message as unparsable");
+       StackLog(<< Data(sipBuffer, bytesUncompressed));
+       delete mMessage;
+       mMessage=0;
+    }
+  
+    unsigned int used = unprocessedCharPtr - sipBuffer;
+    if (mMessage && (used < bytesUncompressed))
+    {
+      mMessage->setBody(sipBuffer+used, bytesUncompressed-used);
+    }
+
+    if (mMessage && !transport()->basicCheck(*mMessage))
+    {
+      delete mMessage;
+      mMessage = 0;
+    }
+
+    if (mMessage)
+    {
+      Transport::stampReceived(mMessage);
+      // If the message made it this far, we should let it store
+      // SigComp state: extract the compartment ID.
+      const Via &via = mMessage->header(h_Vias).front();
+      if (mMessage->isRequest())
+      {
+        // For requests, the compartment ID is read out of the
+        // top via header field; if not present, we use the
+        // TCP connection for identification purposes.
+        if (via.exists(p_sigcompId))
+        {
+          Data compId = via.param(p_sigcompId);
+          mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+        }
+        else
+        {
+          mSigcompStack->provideCompartmentId(sc, this, sizeof(this));
+        }
+      }
+      else
+      {
+        // For responses, the compartment ID is supposed to be
+        // the same as the compartment ID of the request. We
+        // *could* dig down into the transaction layer to try to
+        // figure this out, but that's a royal pain, and a rather
+        // severe layer violation. In practice, we're going to ferret
+        // the ID out of the the Via header field, which is where we
+        // squirreled it away when we sent this request in the first place.
+        Data compId = via.param(p_branch).getSigcompCompartment();
+        mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+      }
+      fifo.add(mMessage);
+      mMessage = 0;
+      sc = 0;
+    }
+    else
+    {
+      delete sc;
+      sc = 0;
+    }
+  }
+  delete uncompressed;
+
+  // If there was a decompression failure, let the other side know.
+  osc::SigcompMessage *nack = mSigcompStack->getNack();
+  if (nack)
+  {
+    if (mSendingTransmissionFormat == Compressed)
+    {
+      mOutstandingSends.push_back(new SendData(
+                   who(),
+                   Data(nack->getStreamMessage(), nack->getStreamLength()),
+                   Data::Empty,
+                   Data::Empty,
+                   true));
+    }
+    else
+    {
+      delete nack;
+    }
+  }
+}
+#endif
             
 std::pair<char*, size_t> 
 ConnectionBase::getWriteBuffer()

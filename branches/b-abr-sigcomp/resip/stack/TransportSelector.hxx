@@ -18,6 +18,11 @@
 #include "resip/stack/SecurityTypes.hxx"
 class TestTransportSelector;
 
+namespace osc
+{
+  class Stack;
+}
+
 namespace resip
 {
 
@@ -43,7 +48,6 @@ on Transport add.
 class TransportSelector 
 {
    public:
-      // XXX Need either a stack or configuration object here.
       TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
       virtual ~TransportSelector();
       /**
@@ -141,6 +145,7 @@ class TransportSelector
 
       /// SigComp configuration object
       Compression &mCompression;
+      osc::Stack  *mSigcompStack;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only
