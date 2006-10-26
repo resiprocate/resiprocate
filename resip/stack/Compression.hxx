@@ -4,6 +4,7 @@
 namespace osc
 {
     class StateHandler;
+    class Stack;
 }
 
 namespace resip
@@ -21,13 +22,18 @@ class Compression
      Compression(Algorithm algorithm         = DEFLATE,
                  int stateMemorySize         = 8192,
                  int cyclesPerBit            = 64,
-                 int decompressionMemorySize = 8192);
+                 int decompressionMemorySize = 8192,
+                 Data sigcompId              = Data::Empty);
 
      ~Compression();
 
      bool isEnabled() { return (mAlgorithm != NONE); }
      Algorithm getAlgorithm() const { return mAlgorithm; }
      osc::StateHandler &getStateHandler(){ return *mStateHandler; }
+
+     void addCompressorsToStack(osc::Stack *);
+
+     const Data &getSigcompId() {return mSigcompId;}
 
      /// Represents a compression configuration object with
      /// compression disabled
@@ -37,6 +43,10 @@ class Compression
      Algorithm          mAlgorithm;
      osc::StateHandler *mStateHandler;
 
+     // This is the unique compartment identifier for this
+     // client or server (or cluster of servers with shared state).
+     // See draft-ietf-rohc-sigcomp-sip
+     Data mSigcompId;
 };
 
 }

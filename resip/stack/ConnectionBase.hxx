@@ -17,6 +17,12 @@
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "resip/stack/SendData.hxx"
 
+namespace osc
+{
+   class Stack;
+   class TcpStream;
+}
+
 namespace resip
 {
 
@@ -27,7 +33,8 @@ class ConnectionBase
 {
       friend std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
    public:
-      ConnectionBase(const Tuple& who, Compression &compression);
+      ConnectionBase(const Tuple& who,
+                     Compression &compression = Compression::Disabled);
       ConnectionId getId() const;
 
       Transport* transport();
@@ -43,11 +50,20 @@ class ConnectionBase
          NewMessage = 0,
          ReadingHeaders,
          PartialBody,
+         SigComp, // This indicates that incoming bytes are compressed.
          MAX
       };
-	
+
+      typedef enum
+      {
+         Unknown,
+         Uncompressed,
+         Compressed
+      } TransmissionFormat;
+
       ConnState getCurrentState() const { return mConnState; }
       void preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
+      void decompressNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
       std::pair<char*, size_t> getWriteBuffer();
       char* getWriteBufferForExtraBytes(int extraBytes);
       
@@ -66,6 +82,11 @@ class ConnectionBase
       Tuple mWho;
       TransportFailure::FailureReason mFailureReason;      
       Compression &mCompression;
+      osc::Stack *mSigcompStack;
+      osc::TcpStream *mSigcompFramer;
+      TransmissionFormat mSendingTransmissionFormat;
+      TransmissionFormat mReceivingTransmissionFormat;
+
    private:
       SipMessage* mMessage;
       char* mBuffer;

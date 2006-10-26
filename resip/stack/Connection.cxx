@@ -11,6 +11,11 @@
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#ifdef USE_SIGCOMP
+#include <osc/Stack.h>
+#include <osc/SigcompMessage.h>
+#endif
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
@@ -58,8 +63,50 @@ void
 Connection::performWrite()
 {
    assert(!mOutstandingSends.empty());
+
+   const Data& sigcompId = mOutstandingSends.front()->sigcompId;
+
+   if(mSendingTransmissionFormat == Unknown)
+   {
+      if (sigcompId.size() > 0 && mCompression.isEnabled())
+      {
+         mSendingTransmissionFormat = Compressed;
+      }
+      else
+      {
+         mSendingTransmissionFormat = Uncompressed;
+      }
+   }
+
+
+#ifdef USE_SIGCOMP
+   // Perform compression here, if appropriate
+   if (mSendingTransmissionFormat == Compressed
+       && !(mOutstandingSends.front()->isAlreadyCompressed))
+   {
+      const Data& uncompressed = mOutstandingSends.front()->data;
+      osc::SigcompMessage *sm = 
+        mSigcompStack->compressMessage(uncompressed.data(), uncompressed.size(),
+                                       sigcompId.data(), sigcompId.size(),
+                                       true);
+
+      SendData *oldSd = mOutstandingSends.front();
+      SendData *newSd = new SendData(oldSd->destination,
+                                     Data(sm->getStreamMessage(),
+                                          sm->getStreamLength()),
+                                     oldSd->transactionId,
+                                     oldSd->sigcompId,
+                                     true);
+      mOutstandingSends.front() = newSd;
+      delete oldSd;
+      delete sm;
+   }
+#endif
+
    const Data& data = mOutstandingSends.front()->data;
+
 //   DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
+
    int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
 
    if (nBytes < 0)
@@ -118,19 +165,43 @@ Connection::read(Fifo<TransactionMessage>& fifo)
          
    assert(bytesToRead > 0);
 
-   // XXX Hook SigComp decompression here
-   // 1. Tri-state enum in class: unknown, compressed, uncompressed;
-   //    set upon first batch of bytes received.
-   // 2. If compressed, parse in the same way as datagrams get parsed.
-   //    don't use "preparseNewBytes".
-
    int bytesRead = read(writePair.first, bytesToRead);
    if (bytesRead <= 0)
    {
       return bytesRead;
    }  
    getConnectionManager().touch(this);
-   preparseNewBytes(bytesRead, fifo); //.dcm. may delete this   
+
+#ifdef USE_SIGCOMP
+   // If this is the first data we read, determine whether the
+   // connection is compressed.
+   if(mReceivingTransmissionFormat == Unknown)
+   {
+     if ((writePair.first[0] & 0xf8 == 0xf8) && mCompression.isEnabled())
+     {
+       mReceivingTransmissionFormat = Compressed;
+     }
+     else
+     {
+       mReceivingTransmissionFormat = Uncompressed;
+     }
+   }
+
+   // SigComp compressed messages are handed very differently
+   // than non-compressed messages: they are guaranteed to
+   // be framed within SigComp, and each frame contains
+   // *exactly* one SIP message. Processing looks a lot like
+   // it does for Datagram-oriented transports.
+
+   if (mReceivingTransmissionFormat == Compressed)
+   {
+     decompressNewBytes(bytesRead, fifo);
+   }
+   else
+#endif
+   {
+     preparseNewBytes(bytesRead, fifo); //.dcm. may delete this   
+   }
    return bytesRead;
 }
 

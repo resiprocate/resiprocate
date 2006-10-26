@@ -121,7 +121,7 @@ main(int argc, char* argv[])
             next->encode(strm);
             outstanding++;
          }
-         sender->send(dest, encoded, Data(tid++));
+         sender->send(dest, encoded, Data(tid++), Data::Empty);
       }
 
       FdSet fdset; 

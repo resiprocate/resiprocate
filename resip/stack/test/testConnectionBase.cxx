@@ -42,12 +42,13 @@ class FakeTransport :  public Transport
       virtual void buildFdSet( FdSet& fdset) { assert(0); }
 
       virtual bool isReliable() const { assert(0); return true; }
+      virtual bool isDatagram() const { assert(0); return true; }
       virtual bool shareStackProcessAndSelect() const { assert(0); return true;}
       virtual void startOwnProcessing() { assert(0); }
       virtual bool hasDataToSend() const { assert(0); return false; }
       virtual unsigned int getFifoSize() const { assert(0); return 0; }
 
-      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid) { assert(0); }
+      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data &sigcompCompartment) { assert(0); }
 };
 
 class TestConnection : public ConnectionBase
