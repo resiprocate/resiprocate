@@ -47,7 +47,7 @@ class Transport
 
       virtual bool isFinished() const=0;
       
-      virtual void send( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId);
+      virtual void send( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
 

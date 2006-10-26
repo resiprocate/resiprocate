@@ -69,10 +69,8 @@ endif
 
 configure_cppunit: tfm/contrib/cppunit/Makefile
 
-tfm/contrib/cppunit/Makefile.in: tfm/contrib/cppunit/Makefile.in.clean
-	cp  $< $@
         
-tfm/contrib/cppunit/Makefile: tfm/contrib/cppunit/Makefile.in
+tfm/contrib/cppunit/Makefile:
 	cd tfm/contrib/cppunit && ./configure ${CPPUNIT_USE_SHARED_LIBS}
 
 cppunit: configure_cppunit
