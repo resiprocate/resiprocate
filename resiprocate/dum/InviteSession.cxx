@@ -293,6 +293,7 @@ InviteSession::acceptInfoInternal(std::auto_ptr<SipMessage> responseMsg)
    {
       throw UsageUseException("Must accept with a 2xx", __FILE__, __LINE__);
    }
+   send(*responseMsg);
 }
 
 void
