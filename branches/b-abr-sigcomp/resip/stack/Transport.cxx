@@ -207,11 +207,11 @@ Transport::fail(const Data& tid, TransportFailure::FailureReason reason)
 
 /// @todo unify w/ tramsit
 void 
-Transport::send( const Tuple& dest, const Data& d, const Data& tid)
+Transport::send( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {
    assert(dest.getPort() != -1);
    DebugLog (<< "Adding message to tx buffer to: " << dest); // << " " << d.escaped());
-   transmit(dest, d, tid); 
+   transmit(dest, d, tid, sigcompId); 
 }
 
 void
@@ -237,7 +237,32 @@ Transport::makeFailedResponse(const SipMessage& msg,
   assert(!encoded.empty());
 
   InfoLog(<<"Sending response directly to " << dest << " : " << errMsg->brief() );
-  transmit(dest, encoded, Data::Empty);
+
+  // Calculate compartment ID for outbound message
+  Data remoteSigcompId;
+  if (mCompression.isEnabled())
+  {
+    Via &topVia(errMsg->header(h_Vias).front());
+
+    if(topVia.exists(p_comp) && topVia.param(p_comp) == "sigcomp")
+    {
+      if (topVia.exists(p_sigcompId))
+      {
+        remoteSigcompId = topVia.param(p_sigcompId);
+      }
+      else
+      {
+        // XXX rohc-sigcomp-sip-03 says "sent-by",
+        // but this should probably be "received" if present,
+        // and "sent-by" otherwise.
+        // XXX Also, the spec is ambiguous about whether
+        // to include the port in this identifier.
+        remoteSigcompId = topVia.sentHost();
+      }
+    }
+  }
+
+  transmit(dest, encoded, Data::Empty, remoteSigcompId);
 }
 
 

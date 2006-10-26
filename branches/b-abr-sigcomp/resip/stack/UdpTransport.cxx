@@ -16,6 +16,12 @@
 #include "rutil/compat.hxx"
 #include "rutil/stun/Stun.hxx"
 
+#ifdef USE_SIGCOMP
+#include <osc/Stack.h>
+#include <osc/StateChanges.h>
+#include <osc/SigcompMessage.h>
+#endif
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 using namespace std;
@@ -28,7 +34,8 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            const Data& pinterface,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression) 
-   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression)
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression),
+     mSigcompStack(0)
 {
    InfoLog (<< "Creating UDP transport host=" << pinterface 
             << " port=" << portNum
@@ -37,11 +44,28 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
    bind();
+#ifdef USE_SIGCOMP
+   if (mCompression.isEnabled())
+   {
+      DebugLog (<< "Compression enabled for transport: " << *this);
+      mSigcompStack = new osc::Stack(mCompression.getStateHandler());
+      mCompression.addCompressorsToStack(mSigcompStack);
+   }
+   else
+   {
+      DebugLog (<< "Compression disabled for transport: " << *this);
+   }
+#else
+   DebugLog (<< "No compression library available: " << *this);
+#endif
 }
 
 UdpTransport::~UdpTransport()
 {
    DebugLog (<< "Shutting down " << mTuple);
+#ifdef USE_SIGCOMP
+   delete mSigcompStack;
+#endif
 }
 
 void 
@@ -61,10 +85,38 @@ UdpTransport::process(FdSet& fdset)
       assert( sendData->destination.getPort() != 0 );
       
       const sockaddr& addr = sendData->destination.getSockaddr();
-      int count = sendto(mFd, 
+      int expected;
+      int count;
+
+#ifdef USE_SIGCOMP
+      // If message needs to be compressed, compress it here.
+      if (mSigcompStack &&
+          sendData->sigcompId.size() > 0 &&
+          !sendData->isAlreadyCompressed )
+      {
+          osc::SigcompMessage *sm = mSigcompStack->compressMessage
+            (sendData->data.data(), sendData->data.size(),
+             sendData->sigcompId.data(), sendData->sigcompId.size(),
+             isReliable());
+
+          expected = sm->getDatagramLength();
+
+          count = sendto(mFd, 
+                         sm->getDatagramMessage(),
+                         sm->getDatagramLength(),
+                         0, // flags
+                         &addr, sendData->destination.length());
+          delete sm;
+      }
+      else
+#endif
+      {
+          expected = sendData->data.size();
+          count = sendto(mFd, 
                          sendData->data.data(), sendData->data.size(),  
                          0, // flags
                          &addr, sendData->destination.length());
+      }
       
       if ( count == SOCKET_ERROR )
       {
@@ -75,7 +127,7 @@ UdpTransport::process(FdSet& fdset)
       }
       else
       {
-         if (count != int(sendData->data.size()) )
+         if (count != expected)
          {
             ErrLog (<< "UDPTransport - send buffer full" );
             fail(sendData->transactionId);
@@ -211,7 +263,45 @@ UdpTransport::process(FdSet& fdset)
          return;
       }
 
-      // XXX Hook SigComp decode here      
+#ifdef USE_SIGCOMP
+      osc::StateChanges *sc = 0;
+#endif
+
+      // Attempt to decode SigComp message, if appropriate.
+      if (buffer[0] & 0xf8 == 0xf8)
+      {
+        if (!mCompression.isEnabled())
+        {
+          InfoLog(<< "Discarding unexpected SigComp Message");
+          delete[] buffer;
+          buffer = 0;
+          return;
+        }
+#ifdef USE_SIGCOMP
+        char* newBuffer = MsgHeaderScanner::allocateBuffer(MaxBufferSize); 
+        size_t uncompressedLength =
+          mSigcompStack->uncompressMessage(buffer, len, 
+                                           newBuffer, MaxBufferSize, sc);
+
+        osc::SigcompMessage *nack = mSigcompStack->getNack();
+
+        if (nack)
+        {
+          mTxFifo.add(new SendData(tuple, 
+                                   Data(nack->getDatagramMessage(),
+                                        nack->getDatagramLength()),
+                                   Data::Empty,
+                                   Data::Empty,
+                                   true)
+                     );
+          delete nack;
+        }
+
+        delete[] buffer;
+        buffer = newBuffer;
+        len = uncompressedLength;
+#endif
+      }
 
       buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
 
@@ -275,6 +365,42 @@ UdpTransport::process(FdSet& fdset)
       }
 
       stampReceived(message);
+
+#ifdef USE_SIGCOMP
+      if (mCompression.isEnabled() && sc)
+      {
+        const Via &via = message->header(h_Vias).front();
+        if (message->isRequest())
+        {
+          // For requests, the compartment ID is read out of the
+          // top via header field; if not present, we use the
+          // TCP connection for identification purposes.
+          if (via.exists(p_sigcompId))
+          {
+            Data compId = via.param(p_sigcompId);
+            mSigcompStack->provideCompartmentId(
+                             sc, compId.data(), compId.size());
+          }
+          else
+          {
+            mSigcompStack->provideCompartmentId(sc, this, sizeof(this));
+          }
+        }
+        else
+        {
+          // For responses, the compartment ID is supposed to be
+          // the same as the compartment ID of the request. We
+          // *could* dig down into the transaction layer to try to
+          // figure this out, but that's a royal pain, and a rather
+          // severe layer violation. In practice, we're going to ferret
+          // the ID out of the the Via header field, which is where we
+          // squirreled it away when we sent this request in the first place.
+          Data compId = via.param(p_branch).getSigcompCompartment();
+          mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+        }
+  
+      }
+#endif
 
       mStateMachineFifo.add(message);
    }
