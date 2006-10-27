@@ -46,7 +46,8 @@ SipStack::SipStack(Security* pSecurity,
                    const DnsStub::NameserverList& additional,
                    AsyncProcessHandler* handler, 
                    bool stateless,
-                   AfterSocketCreationFuncPtr socketFunc
+                   AfterSocketCreationFuncPtr socketFunc,
+                   Compression *compression
    ) : 
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
@@ -54,6 +55,7 @@ SipStack::SipStack(Security* pSecurity,
    mSecurity(0),
 #endif
    mDnsStub(new DnsStub(additional, socketFunc)),
+   mCompression(compression ? compression : new Compression(Compression::NONE)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
@@ -82,6 +84,7 @@ SipStack::~SipStack()
 #ifdef USE_SSL
    delete mSecurity;
 #endif
+   delete mCompression;
    delete mDnsStub;
 }
 
@@ -119,10 +122,10 @@ SipStack::addTransport( TransportType protocol,
       switch (protocol)
       {
          case UDP:
-            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc);
+            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression);
             break;
          case TCP:
-            transport = new TcpTransport(stateMacFifo, port, version, ipInterface);
+            transport = new TcpTransport(stateMacFifo, port, version, ipInterface, *mCompression);
             break;
          case TLS:
 #if defined( USE_SSL )
@@ -132,7 +135,8 @@ SipStack::addTransport( TransportType protocol,
                                          ipInterface,
                                          *mSecurity,
                                          sipDomainname,
-                                         sslType);
+                                         sslType, 
+                                         *mCompression);
 #else
             CritLog (<< "TLS not supported in this stack. You don't have openssl");
             assert(0);
@@ -145,7 +149,8 @@ SipStack::addTransport( TransportType protocol,
                                           version, // !jf! stun
                                           ipInterface,
                                           *mSecurity,
-                                          sipDomainname);
+                                          sipDomainname,
+                                          *mCompression);
 #else
             CritLog (<< "DTLS not supported in this stack.");
             assert(0);

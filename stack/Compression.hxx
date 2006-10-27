@@ -1,49 +1,57 @@
-#if defined(HAVE_CONFIG_H)
-#include "resip/stack/config.hxx"
+#if !defined(RESIP_COMPRESSION_HXX)
+#define RESIP_COMPRESSION_HXX
+
+namespace osc
+{
+    class StateHandler;
+    class Stack;
+}
+
+namespace resip
+{
+
+class Compression
+{
+   public:
+     typedef enum
+     {
+       NONE,
+       DEFLATE
+     } Algorithm;
+
+     Compression(Algorithm algorithm         = DEFLATE,
+                 int stateMemorySize         = 8192,
+                 int cyclesPerBit            = 64,
+                 int decompressionMemorySize = 8192,
+                 Data sigcompId              = Data::Empty);
+
+     ~Compression();
+
+     bool isEnabled() { return (mAlgorithm != NONE); }
+     Algorithm getAlgorithm() const { return mAlgorithm; }
+     osc::StateHandler &getStateHandler(){ return *mStateHandler; }
+
+     void addCompressorsToStack(osc::Stack *);
+
+     const Data &getSigcompId() {return mSigcompId;}
+
+     /// Represents a compression configuration object with
+     /// compression disabled
+     static Compression Disabled;
+
+   private:
+     Algorithm          mAlgorithm;
+     osc::StateHandler *mStateHandler;
+
+     // This is the unique compartment identifier for this
+     // client or server (or cluster of servers with shared state).
+     // See draft-ietf-rohc-sigcomp-sip
+     Data mSigcompId;
+};
+
+}
+
 #endif
-
-#include <memory>
-#include "rutil/compat.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
-#include "rutil/Logger.hxx"
-#include "resip/stack/TcpTransport.hxx"
-#include "resip/stack/TcpConnection.hxx"
-#include "rutil/WinLeakCheck.hxx"
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
-
-using namespace std;
-using namespace resip;
-
-TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum, 
-                           IpVersion version, const Data& pinterface, 
-                           Compression &compression )
-   : TcpBaseTransport(fifo, portNum, version, pinterface, compression )
-{
-   mTuple.setType(transport());
-
-   InfoLog (<< "Creating TCP transport host=" << pinterface 
-            << " port=" << portNum
-            << " ipv4=" << bool(version==V4) );
-}
-
-TcpTransport::~TcpTransport()
-{
-}
-
-Connection* 
-TcpTransport::createConnection(Tuple& who, Socket fd, bool server)
-{
-   assert(this);
-   who.transport = this;
-   assert(  who.transport );
-   
-   Connection* conn = new TcpConnection(who, fd, mCompression);
-   assert( conn->transport() );
-   return conn;
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
