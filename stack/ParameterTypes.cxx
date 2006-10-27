@@ -110,6 +110,8 @@ defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-conf
 
 defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
 
+defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
+
 defineParam(addTransport, "addTransport", ExistsParameter, "");
 
 // SPECIAL-CASE

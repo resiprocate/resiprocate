@@ -27,6 +27,7 @@ class Tuple;
 class Uri;
 class TransactionUser;
 class AsyncProcessHandler;
+class Compression;
 
 class SipStack
 {
@@ -44,12 +45,21 @@ class SipStack
           @param handler    AsyncProcessHandler that will be invoked when Messages 
                             are posted to the stack.  For example:  SelectInterruptor.
                             Default is 0.
+
+          @param stateless  This parameter does not appear to be used.
+
+          @param socketFunc [PLEASE FILL THIS IN]
+
+          @param compression Compression configuration object required for
+                             SigComp. If set to 0, then SigComp compression
+                             will be disabled.
       */
       SipStack(Security* security=0, 
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
                AsyncProcessHandler* handler = 0, 
                bool stateless=false,
-               AfterSocketCreationFuncPtr socketFunc = 0);      
+               AfterSocketCreationFuncPtr socketFunc = 0,
+               Compression *compression = 0);      
 
       virtual ~SipStack();
 
@@ -446,6 +456,8 @@ class SipStack
          SipMessage::checkContentLength=check;
       }
 
+      Compression &getCompression() { return *mCompression; }
+
    private:
       /// Notify an async process handler - if one has been registered
       void checkAsyncProcessHandler();
@@ -455,7 +467,10 @@ class SipStack
 
       DnsStub* mDnsStub;
 
-      /// if this object exists, it get's notified when ApplicationMessage's get posted
+      /// If this object exists, it manages compression parameters
+      Compression* mCompression;
+
+      /// if this object exists, it gets notified when ApplicationMessage's get posted
       AsyncProcessHandler* mAsyncProcessHandler;
 
       /// Disallow copy, by not implementing
