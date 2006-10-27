@@ -25,7 +25,8 @@ class TlsConnection : public Connection
 
       TlsConnection( const Tuple& who, Socket fd, 
                      Security* security, bool server, Data domain, 
-                     SecurityTypes::SSLType sslType );
+                     SecurityTypes::SSLType sslType ,
+                     Compression &compression);
       
       virtual ~TlsConnection();
 

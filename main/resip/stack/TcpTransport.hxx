@@ -2,6 +2,7 @@
 #define RESIP_TCPTRANSPORT_HXX
 
 #include "resip/stack/TcpBaseTransport.hxx"
+#include "resip/stack/Compression.hxx"
 
 namespace resip
 {
@@ -14,7 +15,8 @@ class TcpTransport : public TcpBaseTransport
       TcpTransport(Fifo<TransactionMessage>& fifo, 
                    int portNum, 
                    IpVersion version,
-                   const Data& interfaceObj);
+                   const Data& interfaceObj,
+                   Compression &compression = Compression::Disabled);
       virtual  ~TcpTransport();
       
       TransportType transport() const { return TCP; }
