@@ -259,9 +259,15 @@ class SipMessage : public TransactionMessage
 
       void addBuffer(char* buf);
 
-      // returns the encoded buffer which was encoded by resolve()
-      // should only be called by the TransportSelector
+      // returns the encoded buffer which was encoded by
+      // TransportSelector::transmit()
+      // !!! should only be called by the TransportSelector !!!
       Data& getEncoded();
+
+      // returns the compartment ID which was computed by
+      // TransportSelector::transmit()
+      // !!! should only be called by the TransportSelector !!!
+      Data& getCompartmentId();
 
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
 
@@ -344,6 +350,7 @@ class SipMessage : public TransactionMessage
       resip::Data mReason;
       
       Data mEncoded; // to be retransmitted
+      Data mCompartmentId; // for retransmissions
       UInt64 mCreatedTime;
 
       // used when next element is a strict router OR 

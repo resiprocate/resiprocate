@@ -3,7 +3,7 @@
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIP RUTIL ARES PTHREAD OPENSSL
+PACKAGES += RESIP RUTIL ARES PTHREAD OPENSSL OPENSIGCOMP
 
 CXXFLAGS += -I../..
 CODE_SUBDIRS = 
@@ -93,6 +93,7 @@ SRC = \
 	SdpContents.cxx \
 	Security.cxx \
 	SecurityAttributes.cxx \
+	Compression.cxx \
 	SelectInterruptor.cxx \
 	SipFrag.cxx \
 	SipMessage.cxx \

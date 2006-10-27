@@ -228,6 +228,9 @@
 				RelativePath=".\CallId.cxx">
 			</File>
 			<File
+				RelativePath=".\Compression.cxx">
+			</File>
+			<File
 				RelativePath=".\Connection.cxx">
 			</File>
 			<File
@@ -599,6 +602,9 @@
 			</File>
 			<File
 				RelativePath=".\CancelableTimerQueue.hxx">
+			</File>
+			<File
+				RelativePath=".\Compression.hxx">
 			</File>
 			<File
 				RelativePath=".\Connection.hxx">

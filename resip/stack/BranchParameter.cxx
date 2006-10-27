@@ -26,7 +26,8 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
      mTransactionId(Random::getRandomHex(8)),
      mTransportSeq(1),
      mClientData(),
-     mInteropMagicCookie(0)
+     mInteropMagicCookie(0),
+     mSigcompCompartment(Data::Empty)
 {
    pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
@@ -54,16 +55,37 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
       mIsMyBranch = true;
       start += 8;
 
-      // s = start, e = end, S = anchorStart, E = anchorEnd
-      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-sip2cookie
-      //                          s                                     e
+      // s = start, e = end, S = anchorStart, E = anchorEnd, ^ = pb.position
+      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-scid-sip2cookie
+      //                          s                                          e
+      //                                                                     ^
 
       pb.skipBackN(8);
+
+      // Parse out SigComp Compartment Id
       const char* anchorEnd = pb.position();
       pb.skipBackToChar(Symbols::DASH[0]);
       const char* anchorStart = pb.position();
-      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-sip2cookie
-      //                          s                S         E          e
+      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-scid-sip2cookie
+      //                          s                           S   E          e
+      //                                                      ^ 
+      if ((anchorEnd - anchorStart) > 1)
+      {
+         pb.reset(anchorEnd);
+         Data encoded;
+         pb.data(encoded, anchorStart);
+         mSigcompCompartment = encoded.base64decode();
+         pb.reset(anchorStart);
+      }
+      pb.skipBackChar(Symbols::DASH[0]);
+
+      // Parse out Client Data
+      anchorEnd = pb.position();
+      pb.skipBackToChar(Symbols::DASH[0]);
+      anchorStart = pb.position();
+      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-scid-sip2cookie
+      //                          s                S         E               e
+      //                                           ^
 
       if ((anchorEnd - anchorStart) > 1)
       {
@@ -77,8 +99,8 @@ BranchParameter::BranchParameter(ParameterTypes::Type type,
       pb.skipBackChar(Symbols::DASH[0]);
       pb.skipBackToChar(Symbols::DASH[0]);
       pb.skipBackChar(Symbols::DASH[0]);
-      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-sip2cookie
-      //                          s                S         E          e
+      // rfc3261cookie-sip2cookie-tid-transportseq-clientdata-scid-sip2cookie
+      //                          s  ^             S         E               e
 
       pb.data(mTransactionId, start);
       pb.skipChar();
@@ -97,7 +119,8 @@ BranchParameter::BranchParameter(ParameterTypes::Type type)
      mIsMyBranch(true),
      mTransactionId(Random::getRandomHex(8)),
      mTransportSeq(1),
-     mInteropMagicCookie(0)
+     mInteropMagicCookie(0),
+     mSigcompCompartment(Data::Empty)
 {
 }
 
@@ -107,7 +130,8 @@ BranchParameter::BranchParameter(const BranchParameter& other)
      mIsMyBranch(other.mIsMyBranch),
      mTransactionId(other.mTransactionId),
      mTransportSeq(other.mTransportSeq),
-     mClientData(other.mClientData)
+     mClientData(other.mClientData),
+     mSigcompCompartment(other.mSigcompCompartment)
 {
    if (other.mInteropMagicCookie)
    {
@@ -134,6 +158,7 @@ BranchParameter::operator=(const BranchParameter& other)
       mTransactionId = other.mTransactionId;
       mTransportSeq = other.mTransportSeq;
       mClientData = other.mClientData;
+      mSigcompCompartment = other.mSigcompCompartment;
       if (other.mInteropMagicCookie)
       {
          delete mInteropMagicCookie;         
@@ -155,7 +180,8 @@ BranchParameter::operator==(const BranchParameter& other)
        mHasMagicCookie != other.mHasMagicCookie ||
        mTransportSeq != other.mTransportSeq ||
        mTransactionId != other.mTransactionId ||
-       mClientData != other.mClientData)
+       mClientData != other.mClientData ||
+       mSigcompCompartment != other.mSigcompCompartment)
    {
       return false;
    }
@@ -193,6 +219,32 @@ BranchParameter::clientData() const
     return mClientData;
 }
 
+/**
+  @todo The encoding here could be more efficient.
+*/
+void
+BranchParameter::setSigcompCompartment(const Data &id)
+{
+  if (id.size() == 0)
+  {
+    mSigcompCompartment = Data::Empty;
+  }
+
+  // These will often (but not always) be UUID URNs in angle brackets;
+  // e.g.: <urn:uuid:fa33c72d-121f-47e8-42e2-1eb6e24aba64>
+
+  // Ideally, we would detect this, strip out everything that isn't
+  // hex, and convert the hex to raw data.
+
+  mSigcompCompartment = id;
+}
+
+Data
+BranchParameter::getSigcompCompartment() const
+{
+  return mSigcompCompartment;
+}
+
 void
 BranchParameter::reset(const Data& transactionId)
 {
@@ -200,6 +252,8 @@ BranchParameter::reset(const Data& transactionId)
    mIsMyBranch = true;
    delete mInteropMagicCookie;
    mInteropMagicCookie = 0;   
+
+   mSigcompCompartment = Data::Empty;
 
    mTransportSeq = 1;
    if (!transactionId.empty())
@@ -241,6 +295,8 @@ BranchParameter::encode(ostream& stream) const
              << mTransportSeq
              << Symbols::DASH[0]
              << mClientData.base64encode(true/*safe URL*/)
+             << Symbols::DASH[0]
+             << mSigcompCompartment.base64encode(true)
              << Symbols::resipCookie;
    }
    else

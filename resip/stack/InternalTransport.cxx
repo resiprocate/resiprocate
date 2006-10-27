@@ -25,8 +25,10 @@ InternalTransport::InternalTransport(Fifo<TransactionMessage>& rxFifo,
                                      int portNum, 
                                      IpVersion version,
                                      const Data& interfaceObj,
-                                     AfterSocketCreationFuncPtr socketFunc) :
-   Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, socketFunc),
+                                     AfterSocketCreationFuncPtr socketFunc,
+                                     Compression &compression) :
+   Transport(rxFifo, portNum, version, interfaceObj, Data::Empty, 
+             socketFunc, compression),
    mFd(-1)
 {
 }
@@ -134,9 +136,9 @@ InternalTransport::hasDataToSend() const
 }
 
 void 
-InternalTransport::transmit(const Tuple& dest, const Data& pdata, const Data& tid)
+InternalTransport::transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId)
 {
-   SendData* data = new SendData(dest, pdata, tid);
+   SendData* data = new SendData(dest, pdata, tid, sigcompId);
    mTxFifo.add(data);
 }
 

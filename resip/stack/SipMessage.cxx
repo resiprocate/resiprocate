@@ -1150,6 +1150,12 @@ SipMessage::getEncoded()
    return mEncoded;
 }
 
+Data&
+SipMessage::getCompartmentId() 
+{
+   return mCompartmentId;
+}
+
 RequestLine& 
 SipMessage::header(const RequestLineType& l)
 {

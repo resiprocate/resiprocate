@@ -3,6 +3,7 @@
 
 #include "resip/stack/InternalTransport.hxx"
 #include "resip/stack/ConnectionManager.hxx"
+#include "resip/stack/Compression.hxx"
 
 namespace resip
 {
@@ -14,12 +15,13 @@ class TcpBaseTransport : public InternalTransport
    public:
       enum  {MaxFileDescriptors = 100000};
 
-     TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interfaceName );
+     TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interfaceName, Compression &compression);
       virtual  ~TcpBaseTransport();
       
       virtual void process(FdSet& fdset);
       virtual void buildFdSet( FdSet& fdset);
       virtual bool isReliable() const { return true; }
+      virtual bool isDatagram() const { return false; }
       virtual int maxFileDescriptors() const { return MaxFileDescriptors; }
 
       ConnectionManager& getConnectionManager() {return mConnectionManager;}
