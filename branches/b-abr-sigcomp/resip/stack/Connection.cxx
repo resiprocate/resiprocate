@@ -89,6 +89,9 @@ Connection::performWrite()
         mSigcompStack->compressMessage(uncompressed.data(), uncompressed.size(),
                                        sigcompId.data(), sigcompId.size(),
                                        true);
+      DebugLog (<< "Compressed message from "
+                << uncompressed.size() << " bytes to " 
+                << sm->getStreamLength() << " bytes");
 
       SendData *oldSd = mOutstandingSends.front();
       SendData *newSd = new SendData(oldSd->destination,
@@ -177,7 +180,7 @@ Connection::read(Fifo<TransactionMessage>& fifo)
    // connection is compressed.
    if(mReceivingTransmissionFormat == Unknown)
    {
-     if ((writePair.first[0] & 0xf8 == 0xf8) && mCompression.isEnabled())
+     if (((writePair.first[0] & 0xf8) == 0xf8) && mCompression.isEnabled())
      {
        mReceivingTransmissionFormat = Compressed;
      }

@@ -99,6 +99,10 @@ UdpTransport::process(FdSet& fdset)
              sendData->sigcompId.data(), sendData->sigcompId.size(),
              isReliable());
 
+          DebugLog (<< "Compressed message from "
+                    << sendData->data.size() << " bytes to " 
+                    << sm->getDatagramLength() << " bytes");
+
           expected = sm->getDatagramLength();
 
           count = sendto(mFd, 
@@ -268,7 +272,7 @@ UdpTransport::process(FdSet& fdset)
 #endif
 
       // Attempt to decode SigComp message, if appropriate.
-      if (buffer[0] & 0xf8 == 0xf8)
+      if ((buffer[0] & 0xf8) == 0xf8)
       {
         if (!mCompression.isEnabled())
         {
@@ -282,6 +286,11 @@ UdpTransport::process(FdSet& fdset)
         size_t uncompressedLength =
           mSigcompStack->uncompressMessage(buffer, len, 
                                            newBuffer, MaxBufferSize, sc);
+
+       DebugLog (<< "Uncompressed message from "
+                 << len << " bytes to " 
+                 << uncompressedLength << " bytes");
+
 
         osc::SigcompMessage *nack = mSigcompStack->getNack();
 

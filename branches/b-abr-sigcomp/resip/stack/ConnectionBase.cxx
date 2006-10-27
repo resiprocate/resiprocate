@@ -359,6 +359,7 @@ ConnectionBase::decompressNewBytes(int bytesRead,
   while ((bytesUncompressed = mSigcompStack->uncompressMessage(
                 *mSigcompFramer, uncompressed, 65536, sc)) > 0)
   {
+    DebugLog (<< "Uncompressed Connection-oriented message");
     mMessage = new SipMessage(mWho.transport);
 
     mMessage->setSource(mWho);
