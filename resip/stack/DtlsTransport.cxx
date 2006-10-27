@@ -280,7 +280,7 @@ DtlsTransport::_read( FdSet& fdset )
    osc::StateChanges *sc = 0;
 #endif
 
-   if (pt[0] & 0xf8 == 0xf8)
+   if ((pt[0] & 0xf8) == 0xf8)
    {
       if(!mCompression.isEnabled())
       {
@@ -294,6 +294,10 @@ DtlsTransport::_read( FdSet& fdset )
         mSigcompStack->uncompressMessage(pt, len,
                                          newPt, UdpTransport::MaxBufferSize,
                                          sc);
+
+      DebugLog (<< "Unompressed message from "
+                << len << " bytes to " 
+                << uncompressedLength << " bytes");
 
       osc::SigcompMessage *nack = mSigcompStack->getNack();
 
@@ -469,6 +473,10 @@ void DtlsTransport::_write( FdSet& fdset )
          (sendData->data.data(), sendData->data.size(),
           sendData->sigcompId.data(), sendData->sigcompId.size(),
           isReliable());
+
+       DebugLog (<< "Compressed message from "
+                 << sendData->data.size() << " bytes to " 
+                 << sm->getDatagramLength() << " bytes");
 
        expected = sm->getDatagramLength();
 
