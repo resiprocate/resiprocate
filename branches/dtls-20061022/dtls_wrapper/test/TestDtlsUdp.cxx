@@ -1,11 +1,15 @@
-#include <iostream>
+ #include <iostream>
 
+#if !defined(WIN32)
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
+
 #include <memory.h>
+
 
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
@@ -33,7 +37,7 @@ TestDtlsUdpSocketContext::TestDtlsUdpSocketContext(int fd,sockaddr_in *peerAddr)
 
 void
 TestDtlsUdpSocketContext::write(const unsigned char* data, unsigned int len){
-  int s = sendto(mFd, data, len, 0, (const sockaddr *)&mPeerAddr, sizeof(struct sockaddr_in));
+  int s = sendto(mFd, (const char*)data, len, 0, (const sockaddr *)&mPeerAddr, sizeof(struct sockaddr_in));
 
    if ( s == SOCKET_ERROR )
    {
@@ -97,6 +101,17 @@ TestDtlsUdpSocketContext::handshakeCompleted(){
   useSrtp=true;
   
   cout << "Made SRTP policies\n";
+  if(mSocket->getSocketType()==DtlsSocket::Client) 
+    {
+	char *testData="test data";
+	sendRtpData((const unsigned char *)testData,strlen(testData));
+
+
+#if defined(WIN32)
+	char *testData2="test bobo";
+	sendRtpData((const unsigned char *)testData2,strlen(testData));
+#endif
+  }
 }
 
 void
