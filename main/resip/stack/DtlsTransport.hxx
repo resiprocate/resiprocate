@@ -26,6 +26,8 @@
 #include <map>
 #include <openssl/ssl.h>
 
+#include "resip/stack/Compression.hxx"
+
 namespace resip
 {
 
@@ -115,11 +117,13 @@ class DtlsTransport : public UdpTransport
                     IpVersion version,
                     const Data& interfaceObj,
                     Security& security,
-                    const Data& sipDomain);
+                    const Data& sipDomain,
+                    Compression &compression);
       virtual  ~DtlsTransport();
 
       void process(FdSet& fdset);
       bool isReliable() const { return false; }
+      bool isDatagram() const { return true; }
       TransportType transport() const { return DTLS; }
       virtual void buildFdSet( FdSet& fdset);
 

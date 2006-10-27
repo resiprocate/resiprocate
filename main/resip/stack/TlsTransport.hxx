@@ -4,6 +4,7 @@
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/SecurityTypes.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
+#include "resip/stack/Compression.hxx"
 
 namespace resip
 {
@@ -22,7 +23,8 @@ class TlsTransport : public TcpBaseTransport
                    const Data& interfaceObj,
                    Security& security,
                    const Data& sipDomain, 
-                   SecurityTypes::SSLType sslType
+                   SecurityTypes::SSLType sslType,
+                   Compression &compression = Compression::Disabled
                    );
       virtual  ~TlsTransport();
 

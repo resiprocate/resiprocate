@@ -30,6 +30,8 @@ USE_DISTCC := no
 USE_CCACHE := no
 USE_DTLS := no
 USE_SSL := yes
+USE_SIGCOMP := no
+SIGCOMP_BASEDIR:= /usr/local
 USE_POPT := yes
 USE_CURL := no
 USE_GOOGLE_MALLOC := no
@@ -154,6 +156,20 @@ $uname = `uname`;
     default     => "yes",
     validate    => [@yesno],
     flag        => 'ssl',
+  },
+  {
+    name        => "USE_SIGCOMP",
+    description => "Do you want to include SigComp support?",
+    default     => &sigcompInstalled,
+    validate    => [@yesno],
+    flag        => 'sigcomp',
+  },
+  {
+    name        => "SIGCOMP_BASEDIR",
+    description => "What is the base directory Open SigComp is installed in?",
+    default     => "/usr/local",
+    predicate   => "\$config{USE_SIGCOMP} eq 'yes'",
+    option      => 'with-sigcomp-basedir',
   },
   {
     name        => "USE_POPT",
@@ -426,6 +442,15 @@ sub detectToolchain
 sub detectDistcc
 {
   if ($ENV{DISTCC_HOSTS})
+  {
+    return "yes";
+  }
+  "no";
+}
+
+sub sigcompInstalled
+{
+  if (-e "/usr/local/lib/libopensigcomp.a")
   {
     return "yes";
   }
