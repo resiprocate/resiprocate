@@ -58,6 +58,12 @@
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
 
+#ifdef USE_SIGCOMP
+#include <osc/Stack.h>
+#include <osc/StateChanges.h>
+#include <osc/SigcompMessage.h>
+#endif
+
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 using namespace std;
@@ -68,9 +74,10 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              IpVersion version,
                              const Data& interfaceObj,
                              Security& security,
-                             const Data& sipDomain)
+                             const Data& sipDomain,
+                             Compression& compression)
                              : UdpTransport( fifo, portNum, version, 
-                                 StunDisabled, interfaceObj ),
+                                 StunDisabled, interfaceObj, compression ),
                                mTimer( mHandshakePending ),
                                mSecurity( &security ),
                                mDomain(sipDomain)
@@ -267,6 +274,51 @@ DtlsTransport::_read( FdSet& fdset )
    if ( SSL_in_init( ssl ) )
       mTimer.add( ssl, DtlsReceiveTimeout ) ;
 
+   // XXX Hook SigComp decompression here -- copy from UdpTransport
+
+#ifdef USE_SIGCOMP
+   osc::StateChanges *sc = 0;
+#endif
+
+   if ((pt[0] & 0xf8) == 0xf8)
+   {
+      if(!mCompression.isEnabled())
+      {
+        InfoLog(<< "Discarding unexpected SigComp message");
+        delete [] pt;
+        return;
+      }
+#ifdef USE_SIGCOMP
+      unsigned char *newPt = new unsigned char[ bufferLen ] ;
+      size_t uncompressedLength =
+        mSigcompStack->uncompressMessage(pt, len,
+                                         newPt, UdpTransport::MaxBufferSize,
+                                         sc);
+
+      DebugLog (<< "Unompressed message from "
+                << len << " bytes to " 
+                << uncompressedLength << " bytes");
+
+      osc::SigcompMessage *nack = mSigcompStack->getNack();
+
+      if (nack)
+      {
+        mTxFifo.add(new SendData(tuple,
+                                 Data(nack->getDatagramMessage(),
+                                      nack->getDatagramLength()),
+                                 Data::Empty,
+                                 Data::Empty,
+                                 true)
+                   );
+        delete nack;
+      }
+
+      delete[] buffer;
+      buffer = newBuffer;
+      len = uncompressedLength;
+#endif
+   }
+
    SipMessage* message = new SipMessage(this);
    
    // set the received from information into the received= parameter in the
@@ -325,6 +377,42 @@ DtlsTransport::_read( FdSet& fdset )
    }
    
    stampReceived( message) ;
+
+#ifdef USE_SIGCOMP
+      if (mCompression.isEnabled() && sc)
+      {
+        const Via &via = message->header(h_Vias).front();
+        if (message->isRequest())
+        {
+          // For requests, the compartment ID is read out of the
+          // top via header field; if not present, we use the
+          // TCP connection for identification purposes.
+          if (via.exists(p_sigcompId))
+          {
+            Data compId = via.param(p_sigcompId);
+            mSigcompStack->provideCompartmentId(
+                             sc, compId.data(), compId.size());
+          }
+          else
+          {
+            mSigcompStack->provideCompartmentId(sc, this, sizeof(this));
+          }
+        }
+        else
+        {
+          // For responses, the compartment ID is supposed to be
+          // the same as the compartment ID of the request. We
+          // *could* dig down into the transaction layer to try to
+          // figure this out, but that's a royal pain, and a rather
+          // severe layer violation. In practice, we're going to ferret
+          // the ID out of the the Via header field, which is where we
+          // squirreled it away when we sent this request in the first place.
+          Data compId = via.param(p_branch).getSigcompCompartment();
+          mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+        }
+
+      }
+#endif
    
    mStateMachineFifo.add( message ) ;
 }
@@ -371,9 +459,40 @@ void DtlsTransport::_write( FdSet& fdset )
        * connection fails later */
       mDtlsConnections [ *((struct sockaddr_in *)&peer) ] = ssl ;
    }
-   
-   int count = SSL_write(ssl, sendData->data.data(), 
-       sendData->data.size());
+
+   int expected;
+   int count;
+
+#ifdef USE_SIGCOMP
+   // If message needs to be compressed, compress it here.
+   if (mSigcompStack &&
+       sendData->sigcompId.size() > 0 &&
+       !sendData->isAlreadyCompressed )
+   {
+       osc::SigcompMessage *sm = mSigcompStack->compressMessage
+         (sendData->data.data(), sendData->data.size(),
+          sendData->sigcompId.data(), sendData->sigcompId.size(),
+          isReliable());
+
+       DebugLog (<< "Compressed message from "
+                 << sendData->data.size() << " bytes to " 
+                 << sm->getDatagramLength() << " bytes");
+
+       expected = sm->getDatagramLength();
+
+       count = SSL_Write(ssl,
+                         sm->getDatagramMessage(),
+                         sm->getDatagramLength());
+       delete sm;
+   }
+   else
+#endif
+   {
+      expected = sendData->data.size();
+
+      count = SSL_write(ssl, sendData->data.data(), 
+                        sendData->data.size());
+   }
 
    /* 
     * all reads go through _read, so the most likely result during a handshake 

@@ -763,7 +763,7 @@ main(int argc, char** argv)
 
    {
      char * txt = ("SIP/2.0 489 Bad Event" CRLF
-                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1---d87543-" CRLF
                    "CSeq: 1 SUBSCRIBE" CRLF
                    "Allow-Events: " CRLF
                    "Call-ID:  f354ce714fb8a95c" CRLF
@@ -780,7 +780,7 @@ main(int argc, char** argv)
      assert(Data::from(response->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(wire)");
      
      char * txt2 = ("SIP/2.0 489 Bad Event" CRLF
-                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1---d87543-" CRLF
                     "CSeq: 1 SUBSCRIBE" CRLF
                     "Call-ID:  f354ce714fb8a95c" CRLF
                     "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
@@ -794,7 +794,7 @@ main(int argc, char** argv)
      assert(r2->header(h_AllowEvents).size() == 0);
 
      char * txt3 =("SIP/2.0 489 Bad Event" CRLF
-                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1---d87543-" CRLF
                    "CSeq: 1 SUBSCRIBE" CRLF
                    "Call-ID:  f354ce714fb8a95c" CRLF
                    "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
@@ -812,7 +812,7 @@ main(int argc, char** argv)
      assert(Data::from(r3->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(tu)");
 
      char * txt4 = ("SIP/2.0 489 Bad Event" CRLF
-                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1---d87543-" CRLF
                     "CSeq: 1 SUBSCRIBE" CRLF
                     "Call-ID:  f354ce714fb8a95c" CRLF
                     "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
@@ -833,7 +833,7 @@ main(int argc, char** argv)
 
 
      char * txt5 = ("SIP/2.0 489 Bad Event" CRLF
-                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1---d87543-" CRLF
                     "CSeq: 1 SUBSCRIBE" CRLF
                     "Call-ID:  f354ce714fb8a95c" CRLF
                     "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
@@ -853,7 +853,7 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-11111-1-client_data-d87543-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-11111-1-client_data--d87543-;stid=489573115\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
                    "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
@@ -881,8 +881,8 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-563465-1--d87543-;stid=489573115\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-d87543-489573115-1--d87543-;received=192.168.2.220\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-563465-1---d87543-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-d87543-489573115-1---d87543-;received=192.168.2.220\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
                    "Proxy-Authorization: Digest username=\"Alice\",realm=\"atlanta.com\",nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\",response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
@@ -906,8 +906,8 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-21312-1--d87543-;stid=489573115\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-d87543-489573115-1--d87543-;received=192.168.2.220\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-21312-1---d87543-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-d87543-489573115-1---d87543-;received=192.168.2.220\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
                    "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"

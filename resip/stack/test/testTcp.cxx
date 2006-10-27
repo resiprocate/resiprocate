@@ -138,7 +138,7 @@ main(int argc, char* argv[])
             outstanding++;
             delete next;
          }
-         sender->send(dest, encoded, Data(tid++));
+         sender->send(dest, encoded, Data(tid++), Data::Empty);
       }
 
       FdSet fdset; 
@@ -248,7 +248,7 @@ main(int argc, char* argv[])
       
       encoded.replace("\r\n\r\n","\r\nContent-Length: "+( (oscillator=1-oscillator) ? badContentLength1 : badContentLength2)+"\r\n\r\n");
       
-      sender->send(dest, encoded, Data(tid++));
+      sender->send(dest, encoded, Data(tid++), Data::Empty);
 
       FdSet fdset; 
       if (receiver) receiver->buildFdSet(fdset);

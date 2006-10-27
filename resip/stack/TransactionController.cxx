@@ -27,7 +27,10 @@ TransactionController::TransactionController(SipStack& stack) :
    mDiscardStrayResponses(true),
    mStateMacFifo(),
    mTuSelector(stack.mTuSelector),
-   mTransportSelector(mStateMacFifo, stack.getSecurity(), stack.getDnsStub()),
+   mTransportSelector(mStateMacFifo,
+                      stack.getSecurity(),
+                      stack.getDnsStub(),
+                      stack.getCompression()),
    mTimers(mStateMacFifo),
    mShuttingDown(false),
    mStatsManager(stack.mStatsManager)

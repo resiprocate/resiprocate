@@ -10,10 +10,16 @@ namespace resip
 class SendData
 {
    public:
-      SendData(const Tuple& dest, const Data& pdata, const Data& tid): 
+      SendData(const Tuple& dest,
+               const Data& pdata,
+               const Data& tid,
+               const Data& scid,
+               bool isCompressed = false): 
          destination(dest),
          data(pdata),
-         transactionId(tid) 
+         transactionId(tid),
+         sigcompId(scid),
+         isAlreadyCompressed(isCompressed)
       {
       }
 
@@ -21,7 +27,9 @@ class SendData
       SendData(const Tuple& dest, char* buffer, int length) : 
          destination(dest),
          data(Data::Take, buffer, length),
-         transactionId(Data::Empty)
+         transactionId(Data::Empty),
+         sigcompId(Data::Empty),
+         isAlreadyCompressed(false)
       {
       }
       
@@ -29,6 +37,8 @@ class SendData
       Tuple destination;
       const Data data;
       const Data transactionId;
+      const Data sigcompId;
+      bool isAlreadyCompressed;
 };
 
 }

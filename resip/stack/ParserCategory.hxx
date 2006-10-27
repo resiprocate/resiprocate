@@ -157,6 +157,7 @@ class ParserCategory : public LazyParser
       defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
 
       defineParam(addTransport, "addTransport", ExistsParameter, "");
+      defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
 
       void parseParameters(ParseBuffer& pb);
       std::ostream& encodeParameters(std::ostream& str) const;

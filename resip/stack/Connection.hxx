@@ -18,6 +18,7 @@ class Message;
 class TlsConnection;
 class ConnectionManager;
 class Connection;
+class Compression;
 
 /// three intrusive list types for in-place reference
 typedef IntrusiveListElement<Connection*> ConnectionLruList;
@@ -36,7 +37,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
 
    public:
-      Connection(const Tuple& who, Socket socket);
+      Connection(const Tuple& who, Socket socket, Compression &compression);
       virtual ~Connection();
       
       ConnectionId getId() const;

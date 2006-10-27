@@ -6,6 +6,7 @@
 #include "rutil/Fifo.hxx"
 #include "resip/stack/TransportFailure.hxx"
 #include "resip/stack/Tuple.hxx"
+#include "resip/stack/Compression.hxx"
 
 namespace resip
 {
@@ -13,6 +14,7 @@ namespace resip
 class TransactionMessage;
 class SipMessage;
 class Connection;
+class Compression;
 
 class Transport
 {
@@ -28,7 +30,8 @@ class Transport
       Transport(Fifo<TransactionMessage>& rxFifo, 
                 const GenericIPAddress& address,
                 const Data& tlsDomain = Data::Empty, //!dcm! where is this used?
-                AfterSocketCreationFuncPtr socketFunc = 0
+                AfterSocketCreationFuncPtr socketFunc = 0,
+                Compression &compression = Compression::Disabled
          );
 
       Transport(Fifo<TransactionMessage>& rxFifo, 
@@ -36,14 +39,15 @@ class Transport
                 IpVersion version, 
                 const Data& interfaceObj,
                 const Data& tlsDomain = Data::Empty,
-                AfterSocketCreationFuncPtr socketFunc = 0
+                AfterSocketCreationFuncPtr socketFunc = 0,
+                Compression &compression = Compression::Disabled
          );
 
       virtual ~Transport();
 
       virtual bool isFinished() const=0;
       
-      virtual void send( const Tuple& tuple, const Data& data, const Data& tid);
+      virtual void send( const Tuple& tuple, const Data& data, const Data& tid, const Data &sigcompId = Data::Empty);
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
 
@@ -67,6 +71,7 @@ class Transport
 
       virtual TransportType transport() const =0 ;
       virtual bool isReliable() const =0;
+      virtual bool isDatagram() const =0;
 
       // return true here if the subclass has a specific contact value that it
       // wishes the TransportSelector to use. 
@@ -131,7 +136,7 @@ class Transport
       //not a great name, just adds the message to the fifo in the synchronous(default) case,
       //actually transmits in the asyncronous case.  Don't make a SendData because asynchronous
       //transports would require another copy.
-      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid) = 0;
+      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data &sigcompId) = 0;
 
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
    private:
@@ -141,6 +146,7 @@ class Transport
       Data mTlsDomain;      
    protected:
       AfterSocketCreationFuncPtr mSocketFunc;      
+      Compression &mCompression;
 };
 
 std::ostream& operator<<(std::ostream& strm, const Transport& rhs);

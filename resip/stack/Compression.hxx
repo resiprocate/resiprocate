@@ -1,87 +1,75 @@
-#if !defined(RESIP_RANDOM_HXX)
-#define RESIP_RANDOM_HXX 
+#if !defined(RESIP_COMPRESSION_HXX)
+#define RESIP_COMPRESSION_HXX
 
-#include "rutil/Mutex.hxx"
-#include "rutil/Data.hxx"
-#include <cassert>
+namespace osc
+{
+    class StateHandler;
+    class Stack;
+}
 
 namespace resip
 {
 
-class Random
+class Compression
 {
    public:
-      static void initialize();
+     typedef enum
+     {
+       NONE,
+       DEFLATE
+     } Algorithm;
 
-      enum {maxLength = 512};
-      
-      static Data getRandom(unsigned int numBytes);
-      static Data getRandomHex(unsigned int numBytes); // actual length is 2*numBytes
-      static Data getRandomBase64(unsigned int numBytes); // actual length is 1.5*numBytes
+     Compression(Algorithm algorithm         = DEFLATE,
+                 int stateMemorySize         = 8192,
+                 int cyclesPerBit            = 64,
+                 int decompressionMemorySize = 8192,
+                 Data sigcompId              = Data::Empty);
 
-      static Data getCryptoRandom(unsigned int numBytes);
-      static Data getCryptoRandomHex(unsigned int numBytes); // actual length is 2*numBytes
-      static Data getCryptoRandomBase64(unsigned int numBytes); // actual length is 1.5*numBytes
+     ~Compression();
 
-      /**
-        Returns a version 4 (random) UUID as defined in RFC 4122
+     bool isEnabled() { return (mAlgorithm != NONE); }
+     Algorithm getAlgorithm() const { return mAlgorithm; }
+     osc::StateHandler &getStateHandler(){ return *mStateHandler; }
 
-        @todo This is something of a suboptimal hack. Ideally, we would
-              encapsulate UUID as its own class, with options to create
-              any of versions 1 through 5 (and Nil UUIDs). This class
-              would have various access methods to pull the result out
-              as a bitstring, as raw data, as a URN, etc. For what
-              I need to do right now, however, version 4 UUIDs get me
-              where I need to go. <abr>
-      */
-      static Data getVersion4UuidUrn();
+     void addCompressorsToStack(osc::Stack *);
 
-      static int  getRandom();
-      static int  getCryptoRandom();
+     const Data &getSigcompId() {return mSigcompId;}
+
+     /// Represents a compression configuration object with
+     /// compression disabled
+     static Compression Disabled;
 
    private:
-      static Mutex mMutex;
-      static bool  mIsInitialized;
-      
-#ifdef WIN32
-      // ensure each thread is initialized since windows requires you to call srand for each thread
-      class Initializer
-      {
-         public:
-            Initializer();
-            ~Initializer();
-            void setInitialized();
-            bool isInitialized();
+     Algorithm          mAlgorithm;
+     osc::StateHandler *mStateHandler;
 
-         private:
-            DWORD mThreadStorage;
-      };
-      static Initializer mInitializer;
-#endif
-      
+     // This is the unique compartment identifier for this
+     // client or server (or cluster of servers with shared state).
+     // See draft-ietf-rohc-sigcomp-sip
+     Data mSigcompId;
 };
- 
+
 }
 
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
- * Copyright (c) 2005.   All rights reserved.
- * 
+ * The Vovida Software License, Version 1.0
+ *
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -91,7 +79,7 @@ class Random
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -105,9 +93,9 @@ class Random
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see
