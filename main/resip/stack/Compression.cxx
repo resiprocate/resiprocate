@@ -36,7 +36,7 @@ resip::Compression::Compression(resip::Compression::Algorithm algorithm,
   }
   DebugLog (<< "Set SigcompId to " << sigcompId);
 #else
-  algorithm = NONE;
+  mAlgorithm = NONE;
   DebugLog (<< "COMPRESSION SUPPORT NOT COMPILED IN");
 #endif
   DebugLog (<< "Compression configuration object created; algorithm = "
