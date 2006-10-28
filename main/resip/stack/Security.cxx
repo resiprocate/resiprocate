@@ -1553,7 +1553,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    if (mDomainPrivateKeys.count(signerDomain) == 0)
    {
-      ErrLog( << "No private key for " << signerDomain );
+      InfoLog( << "No private key for " << signerDomain );
       throw Exception("Missing private key when computing identity",__FILE__,__LINE__);
    }
 
