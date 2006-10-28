@@ -1972,12 +1972,18 @@ TestSipEndPoint::Answer::go(boost::shared_ptr<resip::SipMessage> msg)
    boost::shared_ptr<resip::SipMessage> invite;                         
    invite = mEndPoint.getReceivedInvite(msg->header(resip::h_CallId));  
    boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*invite, 200);
-   const resip::SdpContents* sdp;
+   
+   const resip::SdpContents* sdp=0;
    if( mSdp.get() )
+   {
       sdp = dynamic_cast<const resip::SdpContents*>(mSdp.get());
+      response->setContents(sdp);
+   }
    else
-      sdp = dynamic_cast<const resip::SdpContents*>(invite->getContents());
-   response->setContents(sdp);
+   {
+      //sdp = dynamic_cast<const resip::SdpContents*>(invite->getContents());
+   }
+
    return response;
 }                                                                           
 
@@ -2027,8 +2033,12 @@ TestSipEndPoint::Ring183::go(boost::shared_ptr<resip::SipMessage> msg)
       bool required = msg->exists(h_Requires) && msg->header(h_Requires).find(Token(Symbols::C100rel));
       bool supported = msg->exists(h_Supporteds) && msg->header(h_Supporteds).find(Token(Symbols::C100rel));
 
-      if (mReliable && (!required || !supported) )
+      if ( mReliable && (!required && !supported) )
       {
+         InfoLog (<< "Supported header: " << Inserter(msg->header(h_Supporteds))
+                  << " : " 
+                  << msg->header(h_Supporteds).find(Token(Symbols::C100rel)));
+
          throw AssertException("Trying to send reliable provisional when UAC doesn't support it",
                                __FILE__, __LINE__);
       }
