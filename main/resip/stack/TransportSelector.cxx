@@ -877,7 +877,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             catch (Security::Exception& e)
             {
-               ErrLog (<< "Couldn't add identity header: " << e);
+               InfoLog (<< "Couldn't add identity header: " << e);
                msg->remove(h_Identity);
                if (msg->exists(h_IdentityInfo)) 
                {
