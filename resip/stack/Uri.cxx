@@ -848,7 +848,7 @@ Uri::clone() const
 
 void Uri::setUriUserEncoding(char c, bool encode) 
 {
-   if(c < 0 || c >= URI_ENCODING_TABLE_SIZE)
+   if(c < 0)
    {
       ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
       return;
@@ -859,7 +859,7 @@ void Uri::setUriUserEncoding(char c, bool encode)
 
 void Uri::setUriPasswordEncoding(char c, bool encode)
 {
-   if(c < 0 || c >= URI_ENCODING_TABLE_SIZE)
+   if(c < 0)
    {
       ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
       return;
@@ -874,15 +874,21 @@ void Uri::initialiseEncodingTables() {
    mUriEncodingUserTable.set();
    mUriEncodingPasswordTable.set();
 
-   for(Data::size_type i = 0; i < mUriNonEncodingUserChars.size(); i++) {
+   for(Data::size_type i = 0; i < mUriNonEncodingUserChars.size(); i++) 
+   {
       char& c = mUriNonEncodingUserChars.at(i);
-      if(c >= 0 && c < URI_ENCODING_TABLE_SIZE)
+      if(c >= 0)
+      {
          mUriEncodingUserTable[c] = false;
+      }
    }
-   for(Data::size_type i = 0; i < mUriNonEncodingPasswordChars.size(); i++) {
+   for(Data::size_type i = 0; i < mUriNonEncodingPasswordChars.size(); i++) 
+   {
       char& c = mUriNonEncodingPasswordChars.at(i);
-      if(c >= 0 && c < URI_ENCODING_TABLE_SIZE)
+      if(c >= 0)
+      {
          mUriEncodingPasswordTable[c] = false; 
+      }
    }
 
    mEncodingReady = true;
@@ -892,10 +898,14 @@ inline bool
 Uri::shouldEscapeUserChar(char c)
 {
    if(!mEncodingReady)
+   {
       initialiseEncodingTables();
+   }
 
-   if(c < 0 || c >= URI_ENCODING_TABLE_SIZE)
+   if(c < 0)
+   {
       return false;
+   }
 
    return mUriEncodingUserTable[c];
 }
@@ -904,10 +914,14 @@ inline bool
 Uri::shouldEscapePasswordChar(char c)
 {
    if(!mEncodingReady)
+   {
       initialiseEncodingTables();
+   }
 
-   if(c < 0 || c >= URI_ENCODING_TABLE_SIZE)
+   if(c < 0)
+   {
       return false;
+   }
 
    return mUriEncodingPasswordTable[c];
 }
