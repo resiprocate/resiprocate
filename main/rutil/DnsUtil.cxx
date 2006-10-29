@@ -107,7 +107,7 @@ DnsUtil::getLocalHostName()
 {
    char buffer[MAXHOSTNAMELEN];
    buffer[0] = '\0';
-   if (int e = gethostname(buffer,sizeof(buffer)) == -1)
+   if (gethostname(buffer,sizeof(buffer)) == -1)
    {
       int err = getErrno();
       switch (err)
