@@ -5,7 +5,7 @@
 
 extern "C" 
 {
-#include <srtp/include/srtp.h>
+#include <srtp.h>
 }
 
 #include <openssl/e_os2.h>
