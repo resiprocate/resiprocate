@@ -6,7 +6,7 @@
 
 extern "C" 
 {
-#include <srtp/include/srtp.h>
+#include <srtp.h>
 }
 
 namespace dtls
