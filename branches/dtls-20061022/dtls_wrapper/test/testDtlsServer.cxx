@@ -1,8 +1,3 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <ctype.h>
 #include <iostream>
 
@@ -25,6 +20,7 @@ int main(int argc,char **argv)
   X509 *serverCert;
   EVP_PKEY *serverKey;
 
+  resip::initNetwork();
   srtp_init();
   
   assert(argc==2);
@@ -36,7 +32,7 @@ int main(int argc,char **argv)
 
   cout << "Created the factory\n";
 
-  int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  Socket fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if ( fd == -1 )
   {
     assert(0);
@@ -81,7 +77,7 @@ int main(int argc,char **argv)
       if (fdset.readyToRead(fd))
       {
         srclen=sizeof(src);
-        r=recvfrom(fd, buffer, sizeof(buffer), 0, (sockaddr *)&src,&srclen);
+        r=recvfrom(fd, (char*)buffer, sizeof(buffer), 0, (sockaddr *)&src,&srclen);
         assert(r>=0);
 
         // The first packet initiates the association
@@ -104,7 +100,7 @@ int main(int argc,char **argv)
             unsigned int buf2l;
 
             sockContext->recvRtpData(buffer,r,buf2,&buf2l,sizeof(buf2));
-
+	    
             cout << "Read RTP data of length " << buf2l << endl;
             cout << buf2 << endl;
 

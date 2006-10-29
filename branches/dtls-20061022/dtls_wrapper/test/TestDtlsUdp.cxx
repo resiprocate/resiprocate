@@ -25,18 +25,45 @@ extern "C"
 #include <srtp/include/srtp_priv.h>
 }
 
+void DumpHexa2(const unsigned char* pInMsg, unsigned long ulInMsgLen, std::string &rOutDump)
+{
+  if(ulInMsgLen == 0 || NULL == pInMsg)
+  {
+     return;
+  }
+
+   char tmp[5];
+   const unsigned char* pp = pInMsg;
+
+   rOutDump += "\n\n***new data*** length: ";
+   rOutDump += ulInMsgLen;
+   rOutDump += " dump: ";
+
+   for (unsigned int z=0; z < ulInMsgLen; z++)
+   {
+      memset(tmp, 0, sizeof(tmp));
+      sprintf(tmp, "%02X ",pp[z]);
+      pp++;
+      rOutDump += tmp;
+   }
+}
 
 using namespace std;
 using namespace dtls;
 using namespace resip;
 
-TestDtlsUdpSocketContext::TestDtlsUdpSocketContext(int fd,sockaddr_in *peerAddr){
-  mFd=fd;
-  memcpy(&mPeerAddr,peerAddr,sizeof(sockaddr_in));
+TestDtlsUdpSocketContext::TestDtlsUdpSocketContext(int fd,sockaddr_in *peerAddr)
+{
+   mFd=fd;
+   memcpy(&mPeerAddr,peerAddr,sizeof(sockaddr_in));
 }
 
 void
 TestDtlsUdpSocketContext::write(const unsigned char* data, unsigned int len){
+   std::string cdata;
+   DumpHexa2(data, len, cdata);
+   cout << cdata << endl;
+
   int s = sendto(mFd, (const char*)data, len, 0, (const sockaddr *)&mPeerAddr, sizeof(struct sockaddr_in));
 
    if ( s == SOCKET_ERROR )
