@@ -274,8 +274,6 @@ DtlsTransport::_read( FdSet& fdset )
    if ( SSL_in_init( ssl ) )
       mTimer.add( ssl, DtlsReceiveTimeout ) ;
 
-   // XXX Hook SigComp decompression here -- copy from UdpTransport
-
 #ifdef USE_SIGCOMP
    osc::StateChanges *sc = 0;
 #endif
