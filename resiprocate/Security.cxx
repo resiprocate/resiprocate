@@ -328,7 +328,7 @@ BaseSecurity::addCertDER (PEMType type,
 
    X509* cert = 0;
    unsigned char* in = (unsigned char*)certDER.c_str();
-   if (d2i_X509(&cert,&in,certDER.size()) == 0)
+   if (d2i_X509(&cert,(const unsigned char**)&in,certDER.size()) == 0)
    {
       ErrLog(<< "Could not read DER certificate from " << certDER );
       throw BaseSecurity::Exception("Could not read DER certificate ", 
@@ -1710,7 +1710,7 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
       if ( !certDer.empty() )
       {
          unsigned char* in = (unsigned char*)certDer.c_str();
-         if (d2i_X509(&cert,&in,certDer.size()) == 0)
+         if (d2i_X509(&cert,(const unsigned char**)&in,certDer.size()) == 0)
          {
             DebugLog(<< "Could not read DER certificate from " << certDer );
             cert = NULL;
@@ -2324,10 +2324,10 @@ BaseSecurity::getCetName(X509 *cert)
 
 #if (OPENSSL_VERSION_NUMBER > 0x00907000L)
                 if (meth->it)
-                  ext_str = ASN1_item_d2i(NULL, &data, ext->value->length,
+                  ext_str = ASN1_item_d2i(NULL, (const unsigned char**)&data, ext->value->length,
                                           ASN1_ITEM_ptr(meth->it));
                 else
-                  ext_str = meth->d2i(NULL, &data, ext->value->length);
+                  ext_str = meth->d2i(NULL, (const unsigned char**)&data, ext->value->length);
 #else
                 ext_str = meth->d2i(NULL, &data, ext->value->length);
 #endif
