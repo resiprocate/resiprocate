@@ -259,7 +259,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
       msg.header(h_StatusLine).statusCode() == 603) &&
       msg.exists(h_RetryAfter)))
    {
-      int retry;
+      int retry = 0;
 
       if (msg.header(h_StatusLine).statusCode() == 408)
       {
@@ -291,6 +291,8 @@ ClientSubscription::processResponse(const SipMessage& msg)
       }
       else 
       {
+         DebugLog(<< "Received " << msg.header(h_StatusLine).statusCode() << " to SUBSCRIBE "
+            << mLastRequest.header(h_To) << " : resubscribe in " << retry << " seconds");
          // leave the usage around until the timeout
          // !dlb! would be nice to set the state to something dead, but not used
          mDum.addTimer(DumTimeout::SubscriptionRetry, 
