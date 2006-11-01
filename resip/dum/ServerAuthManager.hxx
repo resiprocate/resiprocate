@@ -59,7 +59,6 @@ class ServerAuthManager : public DumFeature
       };
 
       // this call back should async cause a post of UserAuthInfo
-
       virtual void requestCredential(const Data& user, 
                                      const Data& realm, 
                                      const SipMessage& msg,
@@ -67,6 +66,7 @@ class ServerAuthManager : public DumFeature
                                      const Data& transactionToken ) = 0;
       
       virtual bool useAuthInt() const;
+      virtual bool proxyAuthenticationMode() const;
       
       typedef std::map<Data, SipMessage*> MessageMap;
       MessageMap mMessages;
