@@ -157,7 +157,8 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
          Helper::advancedAuthenticateRequest(*requestWithAuth, 
                                              userAuth->getRealm(),
                                              userAuth->getA1(),
-                                             3000);
+                                             3000,
+                                             proxyAuthenticationMode());
 
       switch (resPair.first) 
       {
@@ -191,10 +192,11 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
    {
       InfoLog (<< "Nonce expired for " << userAuth->getUser());
 
-      SharedPtr<SipMessage> challenge(Helper::makeProxyChallenge(*requestWithAuth,
-                                                                 requestWithAuth->header(h_RequestLine).uri().host(),
-                                                                 useAuthInt(),
-                                                                 true));
+      SharedPtr<SipMessage> challenge(Helper::makeChallenge(*requestWithAuth,
+                                                            requestWithAuth->header(h_RequestLine).uri().host(),
+                                                            useAuthInt(),
+                                                            true,
+                                                            proxyAuthenticationMode()));
 
       InfoLog (<< "Sending challenge to " << requestWithAuth->brief());
       mDum.send(challenge);
@@ -230,7 +232,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       // Handles digestAccepted == false, DigestNotAccepted and any other
       // case that is not recognised by the foregoing logic
 
-      InfoLog (<< "Invalid password provided " << userAuth->getUser() << " in " << userAuth->getRealm());
+      InfoLog (<< "Invalid password provided for " << userAuth->getUser() << " in " << userAuth->getRealm());
       InfoLog (<< "  a1 hash of password from db was " << userAuth->getA1() );
 
       SharedPtr<SipMessage> response(new SipMessage);
@@ -247,6 +249,13 @@ bool
 ServerAuthManager::useAuthInt() const
 {
    return false;
+}
+
+
+bool
+ServerAuthManager::proxyAuthenticationMode() const
+{
+   return true;
 }
 
 
@@ -291,15 +300,27 @@ ServerAuthManager::handle(SipMessage* sipMsg)
        sipMsg->header(h_RequestLine).method() != ACK && 
        sipMsg->header(h_RequestLine).method() != CANCEL)  // Do not challenge ACKs or CANCELs
    {
-      if (!sipMsg->exists(h_ProxyAuthorizations))
+      ParserContainer<Auth>* auths;
+      if (proxyAuthenticationMode())
       {
-         return issueChallengeIfRequired(sipMsg);
+         if(!sipMsg->exists(h_ProxyAuthorizations))
+         {
+            return issueChallengeIfRequired(sipMsg);
+         }
+         auths = &sipMsg->header(h_ProxyAuthorizations);
+      }
+      else
+      {
+         if(!sipMsg->exists(h_Authorizations))
+         {
+            return issueChallengeIfRequired(sipMsg);
+         }
+         auths = &sipMsg->header(h_Authorizations);
       }
  
       try
       {
-         for(Auths::iterator it = sipMsg->header(h_ProxyAuthorizations).begin();
-             it  != sipMsg->header(h_ProxyAuthorizations).end(); it++)
+         for(Auths::iterator it = auths->begin(); it != auths->end(); it++)
          {
             if (isMyRealm(it->param(p_realm)))
             {
@@ -355,10 +376,11 @@ void
 ServerAuthManager::issueChallenge(SipMessage *sipMsg) 
 {
   //assume TransactionUser has matched/repaired a realm
-  SharedPtr<SipMessage> challenge(Helper::makeProxyChallenge(*sipMsg,
-                                                             getChallengeRealm(*sipMsg), 
-                                                             useAuthInt(), 
-                                                             false /*stale*/));
+  SharedPtr<SipMessage> challenge(Helper::makeChallenge(*sipMsg,
+                                                        getChallengeRealm(*sipMsg), 
+                                                        useAuthInt(), 
+                                                        false /*stale*/,
+                                                        proxyAuthenticationMode()));
 
   InfoLog (<< "Sending challenge to " << sipMsg->brief());
   mDum.send(challenge);
