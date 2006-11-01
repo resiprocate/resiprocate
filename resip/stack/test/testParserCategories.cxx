@@ -19,6 +19,7 @@ using namespace std;
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+#define RESIP_COOKIE "-d8754z-"
 
 class TR
 {
@@ -1409,7 +1410,7 @@ main(int arc, char** argv)
       stringstream s2;
       via.encode(s2);
       cerr << "!! " << s2.str() << endl;
-      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-d87543-jason-1---d87543-");
+      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK" RESIP_COOKIE "jason-1--" RESIP_COOKIE "");
       assert(via.param(p_branch).getTransactionId() == "jason");
    }
 
@@ -1440,7 +1441,7 @@ main(int arc, char** argv)
       via.param(p_branch).reset("jason");
       stringstream s2;
       via.encode(s2);
-      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK-d87543-jason-1---d87543-");
+      assert(s2.str() == "SIP/2.0/UDP ;branch=z9hG4bK" RESIP_COOKIE "jason-1--" RESIP_COOKIE "");
       assert(via.param(p_branch).getTransactionId() == "jason");
    }
 
@@ -1463,7 +1464,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Via 6 parse with known parameter");
-      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-ec1e.0-1---d87543-;ttl=4\r\n";
+      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "ec1e.0-1--" RESIP_COOKIE ";ttl=4\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1475,7 +1476,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Via 7 parse with unknown parameter");
-      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-ec1e.0-1---d87543-;stid=489573115\r\n";
+      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "ec1e.0-1--" RESIP_COOKIE ";stid=489573115\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1488,7 +1489,7 @@ main(int arc, char** argv)
    {
       TR _tr("Branch parameter 1");
       
-      Data txt("=z9hG4bK-d87543-jason-1---d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "jason-1--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
       BranchParameter bp(ParameterTypes::branch, pb, ";");
       assert(bp.hasMagicCookie());
@@ -1504,13 +1505,13 @@ main(int arc, char** argv)
          bp.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543-jason.10-1---d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "jason.10-1--" RESIP_COOKIE "");
    }
 
       
    {
       TR _tr("Branch parameter 2");
-      Data txt("=z9hG4bK-d87543-jason.1.2.3-14---d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "jason.1.2.3-14--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpc(ParameterTypes::branch, pb, ";");
@@ -1523,17 +1524,17 @@ main(int arc, char** argv)
          bpc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543-jason.1.2.3-14---d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "jason.1.2.3-14--" RESIP_COOKIE "");
    }
 
    {
       TR _tr("Branch parameter 3");
-      Data txt("=z9hG4bK-d87543-3e565-ef7w-17.1.2.3-14---d87543-foobie");
+      Data txt("=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "foobie");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
       assert(bpcc.hasMagicCookie());
-      assert(bpcc.getTransactionId() == "-d87543-3e565-ef7w-17.1.2.3-14---d87543-foobie");
+      assert(bpcc.getTransactionId() == "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "foobie");
 
       Data o;
       {
@@ -1541,7 +1542,7 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543-3e565-ef7w-17.1.2.3-14---d87543-foobie");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "foobie");
 
       bpcc.reset("foobie");
 
@@ -1551,12 +1552,12 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543-foobie-1---d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "foobie-1--" RESIP_COOKIE "");
    }
 
    {
       TR _tr("Branch parameter 4");
-      Data txt("=z9hG4bK-d87543-3e565-ef7w-17.1.2.3-14---d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
@@ -1569,17 +1570,17 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543-3e565-ef7w-17.1.2.3-14---d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "");
    }
 
    {
       TR _tr("Branch parameter 5 externally spiralled branch returns");
-      Data txt("=z9hG4bK-d87543--d87543-3e565-ef7w-17.1.2.3-14-d87543-foobie-1---d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14" RESIP_COOKIE "foobie-1--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
       assert(bpcc.hasMagicCookie());
-      assert(bpcc.getTransactionId() == "-d87543-3e565-ef7w-17.1.2.3-14-d87543-foobie");
+      assert(bpcc.getTransactionId() == "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14" RESIP_COOKIE "foobie");
 
       Data o;
       {
@@ -1587,17 +1588,17 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543--d87543-3e565-ef7w-17.1.2.3-14-d87543-foobie-1---d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14" RESIP_COOKIE "foobie-1--" RESIP_COOKIE "");
    }
    
    {
       TR _tr("Branch parameter 6 not one of ours");
-      Data txt("=z9hG4bK-d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
       assert(bpcc.hasMagicCookie());
-      assert(bpcc.getTransactionId() == "-d87543-");
+      assert(bpcc.getTransactionId() == "" RESIP_COOKIE "");
 
       Data o;
       {
@@ -1605,12 +1606,12 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "");
    }
 
    {
       TR _tr("Branch parameter 7 empty ours");
-      Data txt("=z9hG4bK-d87543--1---d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "-1--" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
       BranchParameter bpcc(ParameterTypes::branch, pb, ";");
@@ -1623,12 +1624,12 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543--1---d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "-1--" RESIP_COOKIE "");
    }
 
    {
       TR _tr("Branch parameter 8 badly formed ours");
-      Data txt("=z9hG4bK-d87543--------d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "------" RESIP_COOKIE "");
       ParseBuffer pb(txt.data(), txt.size());
 
       try
@@ -1646,7 +1647,7 @@ main(int arc, char** argv)
    {
       TR _tr("Branch parameter 9");
 
-      Data txt("=z9hG4bK-d87543-5b42cb698e8c6827790212ac5bdade1a-1-UEEzMjc2OA..--d87543-;rport;received=64.124.66.32");
+      Data txt("=z9hG4bK" RESIP_COOKIE "5b42cb698e8c6827790212ac5bdade1a-1-UEEzMjc2OA..-" RESIP_COOKIE ";rport;received=64.124.66.32");
       ParseBuffer pb(txt.data(), txt.size());
       BranchParameter bp(ParameterTypes::branch, pb, ";");
       assert(bp.hasMagicCookie());
@@ -1747,7 +1748,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Branch testing 4 with clientData");
-      Data txt("=z9hG4bK-d87543-T-i-D-314-Q2xpZW50RGF0YQ..--d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "T-i-D-314-Q2xpZW50RGF0YQ..-" RESIP_COOKIE "");
 
       ParseBuffer pb(txt.data(), txt.size());
 
@@ -1761,12 +1762,12 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       // cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543-T-i-D-314-Q2xpZW50RGF0YQ..--d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "T-i-D-314-Q2xpZW50RGF0YQ..-" RESIP_COOKIE "");
    }
 
    {
       TR _tr("Branch testing 5 with sigcomp ID");
-      Data txt("=z9hG4bK-d87543-T-i-D-314--PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4.-d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "T-i-D-314--PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4." RESIP_COOKIE "");
 
       ParseBuffer pb(txt.data(), txt.size());
 
@@ -1783,12 +1784,12 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
 //      cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543-T-i-D-314--PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4.-d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "T-i-D-314--PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4." RESIP_COOKIE "");
    }
 
    {
       TR _tr("Branch testing 6 with sigcomp ID and Client Data");
-      Data txt("=z9hG4bK-d87543-T-i-D-314-Q2xpZW50RGF0YQ..-PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4.-d87543-");
+      Data txt("=z9hG4bK" RESIP_COOKIE "T-i-D-314-Q2xpZW50RGF0YQ..-PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4." RESIP_COOKIE "");
 
       ParseBuffer pb(txt.data(), txt.size());
 
@@ -1805,7 +1806,7 @@ main(int arc, char** argv)
          bpcc.encode(s);
       }
       // cerr << "!! " << o << endl;
-      assert(o == "branch=z9hG4bK-d87543-T-i-D-314-Q2xpZW50RGF0YQ..-PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4.-d87543-");
+      assert(o == "branch=z9hG4bK" RESIP_COOKIE "T-i-D-314-Q2xpZW50RGF0YQ..-PHVybjp1dWlkOmZhMzNjNzJkLTEyMWYtNDdlOC00MmUyLTFlYjZlMjRhYmE2ND4." RESIP_COOKIE "");
    }
 
    //3329 tests
