@@ -69,7 +69,7 @@ const char* Symbols::Digest = "Digest";
 const char* Symbols::Basic = "Basic";
 
 const char * const Symbols::MagicCookie = "z9hG4bK";
-const char * const Symbols::resipCookie= "-d87543-";
+const char * const Symbols::resipCookie= "-d8754z-";
 
 const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;
