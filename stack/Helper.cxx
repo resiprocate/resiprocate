@@ -654,16 +654,32 @@ std::pair<Helper::AuthResult,Data>
 Helper::advancedAuthenticateRequest(const SipMessage& request, 
                                     const Data& realm,
                                     const Data& a1,
-                                    int expiresDelta)
+                                    int expiresDelta,
+                                    bool proxyAuthorization)
 {
    Data username;
    DebugLog(<< "Authenticating: realm=" << realm << " expires=" << expiresDelta);
    //DebugLog(<< request);
    
-   if (request.exists(h_ProxyAuthorizations))
+   const ParserContainer<Auth>* auths = 0;
+   if(proxyAuthorization)
    {
-      const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
-      for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
+      if(request.exists(h_ProxyAuthorizations))
+      {
+         auths = &request.header(h_ProxyAuthorizations);
+      }
+   }
+   else
+   {
+      if(request.exists(h_Authorizations))
+      {
+         auths = &request.header(h_Authorizations);
+      }
+   }
+
+   if (auths)
+   {
+      for (ParserContainer<Auth>::const_iterator i = auths->begin(); i != auths->end(); i++)
       {
          if (i->exists(p_realm) && 
              i->exists(p_nonce) &&
@@ -1091,6 +1107,12 @@ Helper::make405(const SipMessage& request,
 SipMessage*
 Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool useAuth, bool stale)
 {
+   return makeChallenge(request, realm, useAuth, stale, true);
+}
+
+SipMessage*
+Helper::makeChallenge(const SipMessage& request, const Data& realm, bool useAuth, bool stale, bool proxy)
+{
    Auth auth;
    auth.scheme() = "Digest";
    Data timestamp(Timer::getTimeMs()/1000);
@@ -1105,8 +1127,17 @@ Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool us
    {
       auth.param(p_stale) = "true";
    }
-   SipMessage *response = Helper::makeResponse(request, 407);
-   response->header(h_ProxyAuthenticates).push_back(auth);
+   SipMessage *response;
+   if(proxy)
+   {
+      response = Helper::makeResponse(request, 407);
+      response->header(h_ProxyAuthenticates).push_back(auth);
+   }
+   else
+   {
+      response = Helper::makeResponse(request, 401);
+      response->header(h_WWWAuthenticates).push_back(auth);
+   }
    return response;
 }
 

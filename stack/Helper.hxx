@@ -368,13 +368,22 @@ class Helper
                 advancedAuthenticateRequest(const SipMessage& request, 
                                             const Data& realm,
                                             const Data& a1,
-                                            int expiresDelta = 0);
+                                            int expiresDelta = 0,
+                                            bool proxyAuthorization = true);
       
       // create a 407 response with Proxy-Authenticate header filled in
       static SipMessage* makeProxyChallenge(const SipMessage& request, 
                                             const Data& realm,
                                             bool useAuth = true,
                                             bool stale = false);
+
+      // create a 401 or 407 response with Proxy-Authenticate or Authenticate header 
+      // filled in
+      static SipMessage* makeChallenge(const SipMessage& request, 
+                                       const Data& realm,
+                                       bool useAuth = true,
+                                       bool stale = false,
+                                       bool proxy = false);
 
       static bool algorithmAndQopSupported(const Auth& challenge);
       
