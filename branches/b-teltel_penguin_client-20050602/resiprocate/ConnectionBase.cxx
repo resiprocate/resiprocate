@@ -178,7 +178,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                else
                {
                   Transport::stampReceived(mMessage);
-                  DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+                  DebugLog(<< "##Connection: " << *this << " received:\n" << *mMessage);
                   fifo.add(mMessage);
                   mMessage = 0;                  
                }
