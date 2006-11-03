@@ -161,7 +161,6 @@ TuSelector::markShuttingDown(TransactionUser* tu)
          return;
       }
    }
-   assert(0);
 }
 
 void
@@ -177,7 +176,6 @@ TuSelector::remove(TransactionUser* tu)
          return;
       }
    }
-   assert(0);
 }
 
 bool
