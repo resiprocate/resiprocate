@@ -372,8 +372,8 @@ SipStack::receive()
       // we should only ever have SIP messages on the TU Fifo
       // unless we've registered for termination messages. 
       Message* msg = mTUFifo.getNext();
-      SipMessage* sip=0;
-      if ((sip=dynamic_cast<SipMessage*>(msg)))
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      if (sip)
       {
          DebugLog (<< "RECV: " << sip->brief());
          return sip;

@@ -71,6 +71,7 @@ Contents::clear()
    delete mLanguages;
    delete mId;
    delete mDescription;
+   delete mLength;
 
    mDisposition = 0;
    mTransferEncoding = 0;
