@@ -55,12 +55,17 @@ class SrtpSessionKeys
       int serverMasterSaltLen;
 };
 
+class DtlsSocketTimer;
+   
+
 class DtlsSocket
 {
    public:
 	  enum SocketType { Client, Server};
       bool handlePacketMaybe(const unsigned char* bytes, unsigned int len);
-      void forceRetransmit();
+      
+      void expired(DtlsSocketTimer*);
+      
       bool checkFingerprint(const char* fingerprint, unsigned int len);
       bool DtlsSocket::getRemoteFingerprint(char *fingerprint);
       void DtlsSocket::getMyCertFingerprint(char *fingerprint);
@@ -74,9 +79,13 @@ class DtlsSocket
       void createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);      
       
       bool handshakeCompleted() { return mHandshakeCompleted; }
+
+
+      ~DtlsSocket(); 
+
    private:
       friend class DtlsFactory;
-     
+      void forceRetransmit();     
       DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType);
       void doHandshakeIteration();
       int getReadTimeout();
