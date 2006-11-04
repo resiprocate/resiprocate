@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\inc32&quot;;&quot;..\..\..\contrib\dtls-srtp\srtp\include&quot;;&quot;..\..\..\contrib\dtls-srtp\srtp\crypto\include&quot;;..\..\..\dtls;..\..\dtls_wrapper"
+				AdditionalIncludeDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\inc32&quot;;&quot;..\..\..\contrib\dtls-srtp\srtp\include&quot;;&quot;..\..\..\contrib\dtls-srtp\srtp\crypto\include&quot;;&quot;..\..\..\contrib\dtls-srtp&quot;;..\..\dtls_wrapper;..\..\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -32,10 +32,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib"
-				OutputFile="$(OutDir)/dtls_wrapper_server_test.exe"
+				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib resiprocate.lib dtls_wrapper.lib libsrtp.lib"
+				OutputFile="$(OutDir)/testDtlsServer.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\out32&quot;;..\..\..\Projects\resiprocate\Win32\Debug;..\Debug;&quot;..\..\..\..\SRTP\libSRTP-dtls\Debug&quot;"
+				AdditionalLibraryDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\out32&quot;;..\..\..\Projects\resiprocate\Win32\Debug;..\Debug;&quot;..\..\..\contrib\dtls-srtp\srtp\Debug&quot;"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/dtls_wrapper_server_test.pdb"
 				SubSystem="1"
@@ -116,13 +116,31 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath=".\CreateCert.cxx">
+			</File>
+			<File
 				RelativePath=".\testDtlsServer.cxx">
+			</File>
+			<File
+				RelativePath=".\TestDtlsUdp.cxx">
+			</File>
+			<File
+				RelativePath=".\TestTimerContext.cxx">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			<File
+				RelativePath=".\CreateCert.hxx">
+			</File>
+			<File
+				RelativePath=".\TestDtlsUdp.hxx">
+			</File>
+			<File
+				RelativePath=".\TestTimerContext.hxx">
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
