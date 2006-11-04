@@ -62,7 +62,23 @@ void
 TestDtlsUdpSocketContext::write(const unsigned char* data, unsigned int len){
    std::string cdata;
    DumpHexa2(data, len, cdata);
-   cout << cdata << endl;
+
+#if 0
+   //FILE *f = fopen("c:\\testDtlsClient.txt", "a");
+   //if(f)
+   //{
+   //   fprintf(f, cdata.c_str());
+   //   fclose(f);
+   //}
+   FILE *f = fopen("c:\\testDtlsClient_binary.txt", "ab");
+   if(f)
+   {
+      fwrite(data, 1, len, f);
+      fclose(f);
+   }
+#else
+   cout << cdata <<endl;
+#endif
 
   int s = sendto(mFd, (const char*)data, len, 0, (const sockaddr *)&mPeerAddr, sizeof(struct sockaddr_in));
 
