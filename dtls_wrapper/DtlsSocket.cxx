@@ -9,20 +9,26 @@ using namespace std;
 using namespace dtls;
 
 // Our local timers
-class DtlsSocketTimer : public DtlsTimer
+class dtls::DtlsSocketTimer : public DtlsTimer
 {
   public:
      DtlsSocketTimer(unsigned int seq,DtlsSocket *socket): DtlsTimer(seq),mSocket(socket){}
-     ~DtlsSocketTimer(){}
+     ~DtlsSocketTimer()
+      {
+      }
      
-     void expired(){
-       mSocket->forceRetransmit();
-     }
-     
+      void expired()
+      {
+         mSocket->expired(this);        
+      }
   private:
      DtlsSocket *mSocket;
 };
 
+DtlsSocket::~DtlsSocket()
+{
+   mReadTimer->invalidate();
+}
 
 DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
    mSocketContext(socketContext),
@@ -30,8 +36,7 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
    mReadTimer(0),
    mSocketType(type), 
    mHandshakeCompleted(false)
- {
-  mSocketContext->setDtlsSocket(this);
+ {  mSocketContext->setDtlsSocket(this);
     
   assert(factory->mContext);
   ssl=SSL_new(factory->mContext);
@@ -57,6 +62,16 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
   BIO_push(mOutBio,BIO_new(BIO_s_mem()));
     
   SSL_set_bio(ssl,mInBio,mOutBio);
+}
+
+
+void
+DtlsSocket::expired(DtlsSocketTimer* timer)
+{
+   forceRetransmit();
+   delete timer;
+   assert(timer == mReadTimer);   
+   mReadTimer = 0;   
 }
 
 void 
