@@ -69,9 +69,10 @@ void
 DtlsSocket::expired(DtlsSocketTimer* timer)
 {
    forceRetransmit();
-   delete timer;
-   assert(timer == mReadTimer);   
-   mReadTimer = 0;   
+   //delete timer;
+
+   //assert(timer == mReadTimer);   
+   //mReadTimer = 0;
 }
 
 void 
@@ -117,6 +118,9 @@ DtlsSocket::doHandshakeIteration() {
   char errbuf[1024];
   int sslerr;
   
+  if(mHandshakeCompleted)
+     return;
+
   r=SSL_do_handshake(ssl);
   errbuf[0]=0;
   ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
@@ -125,7 +129,6 @@ DtlsSocket::doHandshakeIteration() {
   int outBioLen;
   unsigned char *outBioData;  
   outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
-
  
   // Now handle handshake errors */
   switch(sslerr=SSL_get_error(ssl,r)){
