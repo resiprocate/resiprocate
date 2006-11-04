@@ -3,7 +3,7 @@
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += OPENSSL SRTP
+PACKAGES += OPENSSL SRTP RUTIL 
 
 CODE_SUBDIRS = 
 TARGET_LIBRARY = libdtls_wrapper
