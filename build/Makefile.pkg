@@ -69,10 +69,12 @@ $(DTLS_WRAPPER_DEPENDS):
 
 OPENSSL_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/openssl/include
 OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl
-OPENSSL_LIBNAME = ssl crypto
+OPENSSL_LIBNAME = ssl crypto dl
 endif
 
-SRTP_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp $(ROOT)/../contrib/dtls-srtp/srtp/crypto/include/
+SRTP_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/srtp/include $(ROOT)/../contrib/dtls-srtp/srtp/crypto/include/
+SRTP_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/srtp/
+SRTP_LIBNAME := srtp
 
 ifeq ($(USE_MYSQL),yes)
 MYSQL_LIBNAME :=  mysqlclient z m
