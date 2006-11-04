@@ -14,13 +14,13 @@
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
-			ConfigurationType="1"
+			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				InlineFunctionExpansion="0"
-				AdditionalIncludeDirectories="C:\dev\foo\srtp;&quot;$(SolutionDir)&quot;;.\include;.\crypto\include;&quot;..\..\OpenSSL\openssl-0.9.7i\inc32&quot;;&quot;C:Library\OpenSSL\openssl-0.9.8\inc32&quot;"
+				AdditionalIncludeDirectories="..\srtp\crypto\include;..\openssl\inc32;..\srtp\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;DEBUG"
 				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="0"
@@ -33,10 +33,7 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib libeay32.lib ssleay32.lib"
-				AdditionalLibraryDirectories="&quot;Library\OpenSSL\openssl-0.9.8\libs&quot;"
-				GenerateDebugInformation="TRUE"/>
+				Name="VCLibrarianTool"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -52,8 +49,6 @@
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
 			<Tool
-				Name="VCWebDeploymentTool"/>
-			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
 				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
@@ -66,7 +61,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;.\include&quot;;&quot;.\crypto\include&quot;;&quot;..\..\OpenSSL\openssl-0.9.7i\inc32&quot;"
+				AdditionalIncludeDirectories="..\srtp\crypto\include;..\openssl\inc32;..\srtp\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="0"
@@ -106,9 +101,6 @@
 			Name="Source Files"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
-			<File
-				RelativePath=".\test\getopt.c">
-			</File>
 			<File
 				RelativePath=".\srtp\srtp.c">
 			</File>
