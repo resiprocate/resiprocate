@@ -1,0 +1,39 @@
+security test
+	 -- turn down sessionDuration and verify that all secure pages
+	 correctly block access for non-authenticated users
+	 -- test by directly entering URL's
+	 -- verify that changing the SALT blocks access & forces 
+	 reauthentication
+
+database hardening
+	 -- change queries to explicitly list the columns they are selecting
+	 -- set max lengths on input fields to match database column sizes
+	 -- take out hardcoded database login and passwords
+
+Https
+	-- make the page redirect URL's stay secured
+
+clean up
+	-- Move all file headers to the top of files
+	** get all the MD5 calls down into shared functions
+	-- delete imagefiles after verification
+
+document
+-- the reason why reset password doesn't take you to a change password
+screen that doesn't require the original password to be re-entered
+is that I would know Jason's user name and I could guess his email
+... that would let me make the change right there, by emailing the
+new password to Jason, I ensure he has to authenticate to something
+(his email system) before he can get the new password
+
+
+error handling
+      -- need to define where errors that the admins need to look at will
+      be logged and what information will be provided
+
+validation --- 
+	   aor -- any pattern match
+	   forward
+	   voicemail
+	   
+	   put the pattern as a constant
