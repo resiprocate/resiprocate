@@ -57,6 +57,7 @@ ClientInviteSession::provideAnswerAsync(std::auto_ptr<SdpContents> answer)
 void
 ClientInviteSession::endAsync()
 {
+   InfoLog(<< "end ClientInviteSession (async).");
    mDum.post(new InternalClientInviteSessionMessage_End(getHandle()));
 }
 
