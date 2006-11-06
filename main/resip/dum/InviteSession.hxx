@@ -55,7 +55,7 @@ class InviteSession : public DialogUsage
           send a 488 to a reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
 
-      /** will resend the current sdp in an UPDATE or reINVITE */
+      /** will send a reINVITE (current sdp) or UPDATE with new Contact header */
       virtual void targetRefresh(const NameAddr& localUri);
 
       // Following methods are for sending requests within a dialog
@@ -109,6 +109,7 @@ class InviteSession : public DialogUsage
       Tokens& getPeerSupportedLanguages() { return mPeerSupportedLanguages; }
       Tokens& getPeerAllowedEvents() { return mPeerAllowedEvents; }
       Data&   getPeerUserAgent() { return mPeerUserAgent; }
+      NameAddrs& getPeerPAssertedIdentities() { return mPeerPAssertedIdentities; }
 
       virtual std::ostream& dump(std::ostream& strm) const;
       InviteSessionHandle getSessionHandle();
@@ -292,6 +293,7 @@ class InviteSession : public DialogUsage
       Tokens mPeerSupportedLanguages;
       Tokens mPeerAllowedEvents;
       Data   mPeerUserAgent;
+      NameAddrs mPeerPAssertedIdentities;
 
       Event toEvent(const SipMessage& msg, const SdpContents* sdp);
       
