@@ -548,14 +548,12 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 {
    if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
-      // !jf! add interface to Dialog
-      //mDialog.setLocalContact(localUri);
-      provideOffer(*mCurrentLocalSdp);
+      mDialog.mLocalContact = localUri;
+      sessionRefresh();
    }
    else
    {
       WarningLog (<< "Can't targetRefresh before Connected");
-      assert(0);
       throw UsageUseException("targetRefresh not allowed in this context", __FILE__, __LINE__);
    }
 }
@@ -945,7 +943,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no sdp in update - just responsd immediately (likely session timer) - do we need a callback?
+         // ?slg? no sdp in update - just respond immediately (likely session timer) - do we need a callback?
          SharedPtr<SipMessage> response(new SipMessage);
          *mLastRemoteSessionModification = msg;
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
@@ -1829,6 +1827,12 @@ InviteSession::handleSessionTimerResponse(const SipMessage& msg)
 {
    assert(msg.header(h_CSeq).method() == INVITE || msg.header(h_CSeq).method() == UPDATE);
 
+   // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
+   if (msg.exists(h_PAssertedIdentities))
+   {
+       mPeerPAssertedIdentities = msg.header(h_PAssertedIdentities);
+   }
+
    // If session timers are locally supported then handle response
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
    {
@@ -1872,6 +1876,12 @@ void
 InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage& request)
 {
    assert(request.header(h_CSeq).method() == INVITE || request.header(h_CSeq).method() == UPDATE);
+
+   // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
+   if (request.exists(h_PAssertedIdentities))
+   {
+       mPeerPAssertedIdentities = request.header(h_PAssertedIdentities);
+   }
 
    // If session timers are locally supported then add necessary headers to response
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
