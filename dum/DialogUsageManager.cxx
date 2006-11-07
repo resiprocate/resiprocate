@@ -1575,7 +1575,17 @@ DialogUsageManager::processRequest(const SipMessage& request)
             {
                DialogSetId id(request);
                //cryptographically dangerous
-               assert(mDialogSetMap.find(id) == mDialogSetMap.end());
+               if(mDialogSetMap.find(id) != mDialogSetMap.end()) 
+               {
+                  // this can only happen if someone sends us a request with the same callid and from tag as one 
+                  // that is in the process of destroying - since this is bad endpoint behaviour - we will 
+                  // reject the request with a 400 response
+                  SipMessage badrequest;
+                  makeResponse(badrequest, request, 400);
+                  badrequest.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+                  sendResponse(badrequest);
+                  return;
+               }
             }
             if (mDumShutdownHandler)
             {
