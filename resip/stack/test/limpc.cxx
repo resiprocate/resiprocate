@@ -5,7 +5,7 @@
 #include <cstring>
 #include <cassert>
 #include <stdio.h>
-
+#include <signal.h>
 //#define USE_CURSES
 
 #ifdef USE_CURSES
