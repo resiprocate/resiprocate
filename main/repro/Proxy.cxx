@@ -142,13 +142,20 @@ Proxy::thread()
                   }
                   else if (sip->header(h_RequestLine).method() == ACK)
                   {
-                     // ACK needs to create its own RequestContext based on a
-                     // unique transaction id. 
-                     static Data ack("ack");
-                     Data tid = sip->getTransactionId() + ack;
+                     Data tid = sip->getTransactionId();
+
+                     // !bwc! This is going to be treated as a new transaction.
+                     // The stack is maintaining no state whatsoever for this.
+                     // We should treat this exactly like a new transaction.
+                     if(sip->mIsBadAck200)
+                     {
+                        static Data ack("ack");
+                        tid+=ack;
+                     }
+                     
                      RequestContext* context=0;
 
-                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
+                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(tid);
                      if(i == mServerRequestContexts.end())
                      {
                         context = new RequestContext(*this, 
