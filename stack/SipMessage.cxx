@@ -28,7 +28,8 @@ using namespace std;
 bool SipMessage::checkContentLength=true;
 
 SipMessage::SipMessage(const Transport* fromWire)
-   : mIsExternal(fromWire != 0),
+   : mIsBadAck200(false),
+      mIsExternal(fromWire != 0),
      mTransport(fromWire),
      mStartLine(0),
      mContentsHfv(0),
@@ -75,6 +76,7 @@ SipMessage::operator=(const SipMessage& rhs)
    {
       this->cleanUp();
 
+      mIsBadAck200 = rhs.mIsBadAck200;
       mIsExternal = rhs.mIsExternal;
       mTransport = rhs.mTransport;
       mSource = rhs.mSource;
