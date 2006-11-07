@@ -787,6 +787,13 @@ ResponseContext::processResponse(SipMessage& response)
                }
                else if (code / 100 == 3) // merge 3xx
                {
+                  if(mBestResponse.header(h_StatusLine).statusCode()/100!=3)
+                  {
+                     // !bwc! Do not merge contacts in 3xx with contacts from a
+                     // previous 4xx or 5xx
+                     mBestResponse.header(h_Contacts).clear();
+                  }
+
                   for (NameAddrs::iterator i=response.header(h_Contacts).begin(); 
                        i != response.header(h_Contacts).end(); ++i)
                   {
