@@ -114,6 +114,12 @@ TcpConnection::isGood()
    return true;
 }
 
+bool 
+TcpConnection::isWritable()
+{
+   return true;
+}
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
