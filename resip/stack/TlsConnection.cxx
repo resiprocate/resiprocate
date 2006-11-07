@@ -307,7 +307,8 @@ TlsConnection::checkState()
 
    InfoLog( << "TLS handshake done for peer " << getPeerNamesData()); 
    mTlsState = Up;
-
+   ensureWritable();
+   
 #endif // USE_SSL   
    return mTlsState;
 }
@@ -411,6 +412,7 @@ TlsConnection::write( const char* buf, int count )
       case Up:
          break;
       default:
+         DebugLog( << "Tried to Tls write - but connection is not Up"  );
          return 0;
          break;
    }
@@ -507,6 +509,17 @@ TlsConnection::isGood() // has data that can be read
    return true;
 }
 
+bool 
+TlsConnection::isWritable() 
+{
+#if defined(USE_SSL)
+   if (checkState() == Up && isGood())
+   {
+      return true;
+   }
+#endif 
+   return false;
+}
 
 const std::list<Data>&
 TlsConnection::getPeerNames() const
