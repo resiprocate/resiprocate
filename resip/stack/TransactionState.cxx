@@ -45,6 +45,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mMsgToRetransmit(0),
    mDnsResult(0),
    mId(id),
+   mAckIsValid(false),
    mTransactionUser(tu),
    mFailureReason(TransportFailure::None)
 {
@@ -217,40 +218,22 @@ TransactionState::process(TransactionController& controller)
    if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
    else state = controller.mServerTransactionMap.find(tid);
    
-   // this code makes sure that an ACK to a 200 is going to create a new
-   // stateless transaction. In an ACK to a failure response, the mToTag will
-   // have been set in the ServerTransaction as the 4xx passes through so it
-   // will match. 
+   // !bwc! This code ensures that the transaction state-machine can recover
+   // from ACK/200 with the same tid as the original INVITE. This problem is
+   // stupidly common. 
    if (state && sip && sip->isRequest() && sip->method() == ACK)
    {
-      try
+      if (!state->mAckIsValid)
       {
-         if (sip->header(h_To).exists(p_tag) && sip->header(h_To).param(p_tag) != state->mToTag)
-         {
-            // Must have received an ACK to a 200;
-            // !bwc! Please note; this is an incorrect ACK/200. ACK/200 is
-            // supposed to have a new new tid, although many clients get
-            // this wrong. It is also possible that a client has set the To tag
-            // incorrectly in an ACK/failure, but this is much less likely. 
-            // I am conflicted as to whether this code should remain; parsing
-            // To takes effort, and doing this in order to clean up after
-            // broken UACs irritates me...
-            InfoLog(<<"Someone sent us an ACK/200 with the same tid as the "
-                        "original INVITE. This is bad behavior, and should be "
-                        "corrected in the client.");
-            tid += "ack";
-            if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
-            else state = controller.mServerTransactionMap.find(tid);
-            // will be sent statelessly, if from TU
-         }
-      }
-      catch(resip::ParseBuffer::Exception& e)
-      {
-         // !bwc! Since we were trying to clean up after broken UACs above, we
-         // just ignore the error and pretend we never looked at To (since we
-         // technically shouldn't be in the first place).
-         InfoLog(<<"Someone sent us an ACK inside the INVITE transaction"
-                     " with a malformed To header. Assuming ACK/failure. " << e);
+         // Must have received an ACK to a 200;
+         // We will never respond to this, so nothing will need this tid for
+         // driving transaction state. Additionally, 
+         InfoLog(<<"Someone sent us an ACK/200 with the same tid as the "
+                     "original INVITE. This is bad behavior, and should be "
+                     "corrected in the client.");
+         sip->mIsBadAck200=true;
+         // !bwc! This is a new stateless transaction, despite its tid.
+         state=0;
       }
    }
 
@@ -1194,26 +1177,11 @@ TransactionState::processServerInvite(TransactionMessage* msg)
 
                if (mState == Trying || mState == Proceeding)
                {
+                     mAckIsValid=true;
                   StackLog (<< "Received failed response in Trying or Proceeding. Start Timer H, move to completed." << *this);
                   delete mMsgToRetransmit; 
                   mMsgToRetransmit = sip; 
-                  mState = Completed;
-                  try
-                  {
-                     if (sip->header(h_To).exists(p_tag))
-                     {
-                        mToTag = sip->header(h_To).param(p_tag);
-                     }
-                  }
-                  catch(resip::ParseBuffer::Exception&)
-                  {
-                     // !bwc! We are only storing this To tag in order to help 
-                     // distinguish ACK/failure from ACK/200 with the same tid
-                     // as the original invite (a common bug in UACs). Since
-                     // we technically shouldn't be doing this, we ignore the
-                     // malformed To header.
-                  }
-                  
+                     mState = Completed;                     
                   mController.mTimers.add(Timer::TimerH, mId, Timer::TH );
                   if (!mIsReliable)
                   {
