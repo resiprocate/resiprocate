@@ -373,6 +373,7 @@ BaseSecurity::addCertPEM (PEMType type,
 void
 BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write) const
 {
+   assert(cert);
    switch (type)
    {
       case DomainCert:

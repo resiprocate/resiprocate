@@ -61,29 +61,31 @@ Connection::performWrite()
 
    assert(!mOutstandingSends.empty());
    const Data& data = mOutstandingSends.front()->data;
-   DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
-   int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
-
-   if (nBytes < 0)
+   if (data.size())
    {
-      //fail(data.transactionId);
-      InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
-      delete this;
-   }
-   else
-   {
-     // Safe because of the conditional above ( < 0 ).
-     Data::size_type bytesWritten = static_cast<Data::size_type>(nBytes);
-     mSendPos += bytesWritten;
-      if (mSendPos == data.size())
+      DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
+      int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
+      if (nBytes < 0)
       {
-         mSendPos = 0;
-         delete mOutstandingSends.front();
-         mOutstandingSends.pop_front();
-
-         if (mOutstandingSends.empty())
+         //fail(data.transactionId);
+         InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
+         delete this;
+      }
+      else
+      {
+         // Safe because of the conditional above ( < 0 ).
+         Data::size_type bytesWritten = static_cast<Data::size_type>(nBytes);
+         mSendPos += bytesWritten;
+         if (mSendPos == data.size())
          {
-            getConnectionManager().removeFromWritable();
+            mSendPos = 0;
+            delete mOutstandingSends.front();
+            mOutstandingSends.pop_front();
+
+            if (mOutstandingSends.empty())
+            {
+               getConnectionManager().removeFromWritable();
+            }
          }
       }
    }
