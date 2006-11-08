@@ -17,7 +17,7 @@ class RESIP_API BaseException : public std::exception
       virtual const char* name() const = 0;
 
       const Data& getMessage() const {return message;}
-      virtual const char * __CLR_OR_THIS_CALL what() const { return message.c_str(); }
+      virtual const char * what() const { return message.c_str(); }
       
    protected:
       BaseException(const char* msg,
