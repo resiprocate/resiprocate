@@ -16,15 +16,15 @@
 #include "resiprocate/config.hxx"
 #endif
 
-//#if !defined(RESIP_DATA_LOCAL_SIZE)
-//# ifdef COMPACT_DATA
-//#  define RESIP_DATA_LOCAL_SIZE 0
-//# else
-//#  define RESIP_DATA_LOCAL_SIZE 16
-//# endif // # ifdef COMPACT_DATA
-//#else
-//# undef COMPACT_DATA
-//#endif
+#if !defined(RESIP_DATA_LOCAL_SIZE)
+# ifdef COMPACT_DATA
+#  define RESIP_DATA_LOCAL_SIZE 0
+# else
+#  define RESIP_DATA_LOCAL_SIZE 16
+# endif // # ifdef COMPACT_DATA
+#else
+# undef COMPACT_DATA
+#endif
 
 class TestData;
 namespace resip
@@ -203,10 +203,10 @@ class RESIP_API Data
       // Larger LocalAllocSize makes for larger objects that have Data members but
       // bulk allocation/deallocation of Data  members.
 
-//#ifndef COMPACT_DATA
-//      enum {LocalAllocSize = RESIP_DATA_LOCAL_SIZE};
-//      char mPreBuffer[LocalAllocSize+1];
-//#endif
+#ifndef COMPACT_DATA
+      enum {LocalAllocSize = RESIP_DATA_LOCAL_SIZE};
+      char mPreBuffer[LocalAllocSize+1];
+#endif
 
       size_type mSize;
       char* mBuf;
@@ -238,15 +238,14 @@ inline bool Data::isHex(char c)
 
 inline bool isEqualNoCase(const Data& left, const Data& right)
 {
-
-   return ( (left.size() == right.size()) && (!right.size() || 
-            (strncasecmp(left.c_str(), right.c_str(), left.size()) == 0)));
+   return ( (left.size() == right.size()) &&
+            (strncasecmp(left.data(), right.data(), left.size()) == 0) );
 }
 
 inline bool isLessThanNoCase(const Data& left, const Data& right)
 {
    size_t minsize = resipMin( left.size(), right.size() );
-   int res = strncasecmp(left.c_str(), right.c_str(), minsize);
+   int res = strncasecmp(left.data(), right.data(), minsize);
 
    if (res < 0)
    {
