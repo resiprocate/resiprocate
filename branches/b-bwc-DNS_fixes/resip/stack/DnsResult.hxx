@@ -45,21 +45,63 @@ class DnsResult : public DnsResultSink
 
       typedef std::vector<Data> DataVector;
 
-      // Starts a lookup.  Has the rules for determining the transport
-      // from a uri as per rfc3263 and then does a NAPTR lookup or an A
-      // lookup depending on the uri
+      
+      /*! Starts a lookup.  Has the rules for determining the transport
+         from a uri as per rfc3263 and then does a NAPTR lookup or an A
+         lookup depending on the uri.
+         
+         @param uri The uri to resolve.
+         @param enumSuffixes If the uri is enum searchable, this is the list of
+                  enum suffixes (for example "e164.arpa") that will be used in
+                  the attempt to resolve this uri.
+      */
       void lookup(const Uri& uri, const std::vector<Data> &enumSuffixes);
 
-      // Check if there are tuples available now. Will load new tuples in if
-      // necessary at a lower priority. 
+      /*!
+         Blacklist the last returned result until the specified time (ms)
+         
+         @param expiry The absolute expiry, in ms, of this blacklist.
+         @return true iff the last result could be blacklisted
+         @note This is a no-op if no results have been returned.
+      */
+      bool blacklistLast(time_t expiry);
+      
+      /*!
+         Tries to load the next tuple. If Available is returned, the tuple may
+         be accessed using current(). 
+         
+         @return Available if there is a result ready, Pending if it needs to
+                  follow an SRV (more results might come in later), or Finished
+                  if there are definitively no more results.
+         @note ALWAYS call this before calling next()
+      */
       Type available();
       
-      // return the next tuple available for this query. The caller should have
-      // checked available() before calling next()
+      /*!
+         Return the next tuple available for this query. 
+         
+         @return The next Tuple available for this query.
+         @note ALWAYS call available() and verify the return is Available
+               before calling this function.
+         @note This no longer results in the last result being blacklisted. To
+               blacklist the last result, use blacklistLast(). 
+      */
       Tuple next();
 
-      // whitelist the tuple returned by next().
-      void success();
+      /*!
+         Whitelist the last tuple returned by next(). This means that the path
+         to this result (NAPTR->SRV->A/AAAA) will be favored by the resolver 
+         from now on. (ie, this NAPTR will be favored above all others that 
+         match, even if the order/preference changes in the DNS, and this 
+         A/AAAA record will be favored above all others that match, even if new
+         ones are added.)
+         
+         @note It can be argued that using this is harmful, since the load-
+               leveling capabilities of DNS are ignored from here on.
+         @note This will also re-order SRV records, but the order in which
+               SRVs arrive is ignored by DnsResult (they are just re-sorted)
+      */
+      void whitelistLast();
 
       // return the target of associated query
       Data target() const { return mTarget; }
