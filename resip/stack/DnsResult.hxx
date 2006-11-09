@@ -202,20 +202,34 @@ class DnsResult : public DnsResultSink
 
       typedef struct
       {
-            Data domain;
-            int rrType;
-            Data value; // stores ip for A/AAAA, target host:port for SRV, and replacement for NAPTR.
+         Data domain;
+         int rrType;
+         Data value; // stores ip for A/AAAA, target host:port for SRV, and replacement for NAPTR.
       } Item;
 
-      std::stack<Item> mCurrResultPath;
-      std::stack<Item> mCurrSuccessPath;
+      /*!
+         @author bwc
+         This is a snapshot of mCurrentPath when it was returned last.
+         (This will be empty if we haven't returned anything)
+         This is primarily used for whitelisting the last returned result.
+      */
+      std::vector<Item> mLastReturnedPath;
+      
+      /*!
+         @author bwc
+         The current DNS path we are working on.
+         (ie NAPTR -> SRV -> A/AAAA) There is at most one of these types
+         in here at any given time, and they will always be in order.
+         This exists solely to allow mLastReturnedPath to be defined.
+      */
+      std::vector<Item> mCurrentPath;
+      
+      bool mHaveReturnedResults;
 
       void clearCurrPath();
-      void addToPath(const std::deque<Tuple>& results);
       void blacklistLastReturnedResult();
 
-      Tuple mLastReturnedResult;
-      bool mBlacklistLastReturnedResult;
+      Tuple mLastResult;
 
 };
 

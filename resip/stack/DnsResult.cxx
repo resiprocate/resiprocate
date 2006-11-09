@@ -69,7 +69,7 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, RRVip& vip, DnsHa
      mHaveChosenTransport(false),
      mType(Pending),
      mCumulativeWeight(0),
-     mBlacklistLastReturnedResult(false)
+     mHaveReturnedResults(false)
 {
 }
 
@@ -138,45 +138,39 @@ DnsResult::available()
 }
 
 Tuple
-DnsResult::next() 
+DnsResult::next()
 {
-   assert(available() == Available);
-   Tuple next = mResults.front();
+   assert(available()==Available);
+   assert(mCurrentPath.size()<=3);
+   
+   mLastResult=mResults.front();
    mResults.pop_front();
-   StackLog (<< "Returning next dns entry: " << next);
-  
-   assert(mCurrSuccessPath.size()<=3);
-   Item top;
-   if (!mCurrSuccessPath.empty())
+   
+   if(!mCurrentPath.empty() && 
+      (mCurrentPath.back().rrType==T_A || mCurrentPath.back().rrType==T_AAAA))
    {
-      top = mCurrSuccessPath.top();
-      if (top.rrType == T_A || top.rrType == T_AAAA)
-      {
-         mCurrSuccessPath.pop();
-      }
+      mCurrentPath.pop_back();
    }
    
-   if(!mCurrResultPath.empty())
-   {
-      assert(mCurrResultPath.top().rrType == T_A || mCurrResultPath.top().rrType == T_AAAA);
-      mCurrResultPath.pop();
-   }
+   Item AorAAAA;
+   AorAAAA.domain = mLastResult.getTargetDomain();
+   AorAAAA.rrType = mLastResult.isV4() ? T_A : T_AAAA;
+   AorAAAA.value = Tuple::inet_ntop(mLastResult);
+   mCurrentPath.push_back(AorAAAA);
    
-   top.domain = next.getTargetDomain();
-   top.rrType = next.isV4()? T_A : T_AAAA;
-   top.value = Tuple::inet_ntop(next);
-   mCurrSuccessPath.push(top);
-   return next;
+   StackLog (<< "Returning next dns entry: " << mLastResult);
+   mLastReturnedPath=mCurrentPath;
+   mHaveReturnedResults=true;
+   return mLastResult;
 }
 
 void DnsResult::success()
 {
-   while (!mCurrSuccessPath.empty())
+   std::vector<Item>::iterator i;
+   for (i=mLastReturnedPath.begin(); i!=mLastReturnedPath.end(); ++i)
    {
-      Item top = mCurrSuccessPath.top();
-      DebugLog( << "Whitelisting " << top.domain << "(" << top.rrType << "): " << top.value);
-      mVip.vip(top.domain, top.rrType, top.value);
-      mCurrSuccessPath.pop();
+      DebugLog( << "Whitelisting " << i->domain << "(" << i->rrType << "): " << i->value);
+      mVip.vip(i->domain, i->rrType, i->value);
    }
 }
 
@@ -416,27 +410,13 @@ DnsResult::primeResults()
       StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
       if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
       {
-         assert(mCurrResultPath.size()<=2);
          Item top;
-         if (!mCurrResultPath.empty())
+         while (!mCurrentPath.empty())
          {
-            top = mCurrResultPath.top();
-            if (top.rrType == T_SRV)
-            {
-               mCurrResultPath.pop();
-            }
-            else
-            {
-               assert(top.rrType==T_NAPTR);
-            }
-         }
-
-         while (!mCurrSuccessPath.empty())
-         {
-            top = mCurrSuccessPath.top();
+            top = mCurrentPath.back();
             if (top.rrType != T_NAPTR)
             {
-               mCurrSuccessPath.pop();
+               mCurrentPath.pop_back();
             }
             else
             {
@@ -446,8 +426,7 @@ DnsResult::primeResults()
          top.domain = next.key;
          top.rrType = T_SRV;
          top.value = next.target + ":" + Data(next.port);
-         mCurrResultPath.push(top);
-         mCurrSuccessPath.push(top);
+         mCurrentPath.push_back(top);
          lookupHost(next.target);
       }
       else
@@ -772,7 +751,6 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
          {
             transition(Available);
          }
-         addToPath(mResults);
       }
       if (changed && mHandler) mHandler->handle(this);
    }
@@ -1061,8 +1039,7 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
          item.rrType = T_NAPTR;
          item.value = mPreferredNAPTR.replacement;
          clearCurrPath();
-         mCurrResultPath.push(item);
-         mCurrSuccessPath.push(item);
+         mCurrentPath.push_back(item);
          mSRVCount++;
          InfoLog (<< "Doing SRV lookup of " << mPreferredNAPTR.replacement);
          mDns.lookup<RR_SRV>(mPreferredNAPTR.replacement, Protocol::Sip, this);
@@ -1159,21 +1136,17 @@ void DnsResult::onDnsResult(const DNSResult<DnsCnameRecord>& result)
 
 void DnsResult::clearCurrPath()
 {
-   while (!mCurrResultPath.empty())
+   while (!mCurrentPath.empty())
    {
-      mCurrResultPath.pop();
-   }
-
-   while (!mCurrSuccessPath.empty())
-   {
-      mCurrSuccessPath.pop();
+      mCurrentPath.pop_back();
    }
 }
 
 void DnsResult::blacklistLastReturnedResult()
 {
-   assert(!mCurrResultPath.empty());
-   Item top = mCurrResultPath.top();
+   assert(!mLastReturnedPath.empty());
+   assert(mLastReturnedPath.size()<=3);
+   Item top = mLastReturnedPath.back();
    assert(top.rrType==T_A || top.rrType==T_AAAA);
    assert(top.domain==mLastReturnedResult.getTargetDomain());
    assert(top.value==Tuple::inet_ntop(mLastReturnedResult));
@@ -1183,20 +1156,6 @@ void DnsResult::blacklistLastReturnedResult()
    mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
    DebugLog( << "Remove vip " << top.domain << "(" << top.rrType << ")");
    mVip.removeVip(top.domain, top.rrType);
-   mCurrResultPath.pop();
-}
-
-void DnsResult::addToPath(const std::deque<Tuple>& results)
-{
-   assert(mCurrResultPath.size()<=2);
-   for (std::deque<Tuple>::const_reverse_iterator it = results.rbegin(); it != results.rend(); ++it)
-   {
-      Item item;
-      item.domain = (*it).getTargetDomain();
-      item.rrType = (*it).isV4()? T_A : T_AAAA;
-      item.value = Tuple::inet_ntop((*it));
-      mCurrResultPath.push(item);
-   }
 }
 
 std::ostream& 
