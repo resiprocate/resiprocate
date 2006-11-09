@@ -732,25 +732,35 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
              delete [] pQueryResult;
              WSALookupServiceEnd(hQuery);
          }
+         
          if(mResults.empty())
          {
-            transition(Finished); 
+            if(mSRVResults.empty())
+            {
+               transition(Finished);
+               clearCurrPath();
+            }
+            else
+            {
+               transition(Available);
+            }
          }
 #else
-         transition(Finished); 
-#endif
-         clearCurrPath();
-      }
-      else 
-      {
-         if (mSRVResults.empty())
+         // !bwc! If this A query failed, don't give up if there are more SRVs!
+         if(mSRVResults.empty())
          {
-            transition(Available);
+            transition(Finished);
+            clearCurrPath();
          }
          else
          {
             transition(Available);
          }
+#endif
+      }
+      else 
+      {
+         transition(Available);
       }
       if (changed && mHandler) mHandler->handle(this);
    }
@@ -1190,7 +1200,6 @@ resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
         << " target=" << srv.target;
    return strm;
 }
-
 
 //  Copyright (c) 2003, Jason Fischl 
 /* ====================================================================
