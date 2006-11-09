@@ -116,6 +116,18 @@ DnsResult::destroy()
    }
 }
 
+bool
+DnsResult::blacklistLast(time_t expiry)
+{
+   if(mHaveReturnedResults)
+   {
+      blacklistLastReturnedResult(expiry);
+      return true;
+   }
+   
+   return false;
+}
+
 DnsResult::Type
 DnsResult::available()
 {
@@ -165,7 +177,8 @@ DnsResult::next()
    return mLastResult;
 }
 
-void DnsResult::success()
+void
+DnsResult::whitelistLast()
 {
    std::vector<Item>::iterator i;
    for (i=mLastReturnedPath.begin(); i!=mLastReturnedPath.end(); ++i)
