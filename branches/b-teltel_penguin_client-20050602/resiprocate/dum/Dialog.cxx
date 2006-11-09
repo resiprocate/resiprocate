@@ -795,6 +795,12 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 
    request.remove(h_RecordRoutes);  //!dcm! -- all of this is rather messy
 
+   const Data& instanceId = mDum.getMasterProfile()->getInstanceId();
+   if (!instanceId.empty())
+   {
+      mLocalContact.param(p_Instance) = instanceId;
+   }
+
    request.remove(h_Contacts);
    request.header(h_Contacts).push_front(mLocalContact);
 
