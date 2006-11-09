@@ -1148,8 +1148,8 @@ void DnsResult::blacklistLastReturnedResult()
    assert(mLastReturnedPath.size()<=3);
    Item top = mLastReturnedPath.back();
    assert(top.rrType==T_A || top.rrType==T_AAAA);
-   assert(top.domain==mLastReturnedResult.getTargetDomain());
-   assert(top.value==Tuple::inet_ntop(mLastReturnedResult));
+   assert(top.domain==mLastResult.getTargetDomain());
+   assert(top.value==Tuple::inet_ntop(mLastResult));
    vector<Data> records;
    records.push_back(top.value);
    DebugLog( << "Blacklisting " << top.domain << "(" << top.rrType << "): " << top.value);
