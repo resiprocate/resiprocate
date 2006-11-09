@@ -215,7 +215,8 @@ DnsResult::lookupInternal(const Uri& uri)
    if (uri.exists(p_transport))
    {
       mTransport = Tuple::toTransport(uri.param(p_transport));
-
+      mHaveChosenTransport=true;
+      
       if (isNumeric) // IP address specified
       {
          mPort = getDefaultPort(mTransport, uri.port());
@@ -237,6 +238,7 @@ DnsResult::lookupInternal(const Uri& uri)
             if (mTransport == UDP)
             {
                mTransport = DTLS;
+               mHaveChosenTransport=true;
                if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
@@ -250,6 +252,7 @@ DnsResult::lookupInternal(const Uri& uri)
             else
             {
                mTransport = TLS;
+               mHaveChosenTransport=true;
                if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
@@ -311,6 +314,8 @@ DnsResult::lookupInternal(const Uri& uri)
             mTransport = UDP;
          }
 
+         mHaveChosenTransport=true;
+         
          if (isNumeric) // IP address specified
          {
             mPort = getDefaultPort(mTransport, uri.port());
