@@ -46,6 +46,7 @@
 #include "resip/stack/Uri.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#include "rutil/Timer.hxx"
 
 #if !defined(USE_ARES)
 #warning "ARES is required"
@@ -1152,20 +1153,102 @@ void DnsResult::clearCurrPath()
    }
 }
 
-void DnsResult::blacklistLastReturnedResult()
+void DnsResult::blacklistLastReturnedResult(time_t expiry)
 {
    assert(!mLastReturnedPath.empty());
    assert(mLastReturnedPath.size()<=3);
    Item top = mLastReturnedPath.back();
-   assert(top.rrType==T_A || top.rrType==T_AAAA);
-   assert(top.domain==mLastResult.getTargetDomain());
-   assert(top.value==Tuple::inet_ntop(mLastResult));
-   vector<Data> records;
-   records.push_back(top.value);
-   DebugLog( << "Blacklisting " << top.domain << "(" << top.rrType << "): " << top.value);
-   mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
+
+   DnsResult::blacklist(mLastResult,expiry);
+
    DebugLog( << "Remove vip " << top.domain << "(" << top.rrType << ")");
    mVip.removeVip(top.domain, top.rrType);
+}
+
+DnsResult::Blacklist DnsResult::theBlacklist;
+resip::Mutex DnsResult::theBlacklistMutex;
+
+DnsResult::BlacklistEntry::BlacklistEntry()
+{}
+
+DnsResult::BlacklistEntry::BlacklistEntry(const Tuple& tuple, time_t expiry)
+{
+   mTuple=tuple;
+   mExpiry=expiry;
+}
+
+DnsResult::BlacklistEntry::BlacklistEntry(const DnsResult::BlacklistEntry& orig)
+{
+   mTuple=orig.mTuple;
+   mExpiry=orig.mExpiry;
+}
+
+DnsResult::BlacklistEntry::~BlacklistEntry()
+{}
+
+bool 
+DnsResult::BlacklistEntry::operator<(const DnsResult::BlacklistEntry& rhs) const
+{
+   if(mTuple < rhs.mTuple)
+   {
+      return true;
+   }
+   else if(rhs.mTuple < mTuple)
+   {
+      return false;
+   }
+   
+   return mTuple.getTargetDomain() < rhs.mTuple.getTargetDomain();
+}
+
+bool 
+DnsResult::BlacklistEntry::operator>(const DnsResult::BlacklistEntry& rhs) const
+{
+   if(rhs.mTuple < mTuple)
+   {
+      return true;
+   }
+   else if(mTuple < rhs.mTuple)
+   {
+      return false;
+   }
+   
+   return mTuple.getTargetDomain() > rhs.mTuple.getTargetDomain();
+}
+
+bool 
+DnsResult::BlacklistEntry::operator==(const DnsResult::BlacklistEntry& rhs) const
+{
+   return (mTuple==rhs.mTuple && mTuple.getTargetDomain()==rhs.mTuple.getTargetDomain());
+}
+
+bool DnsResult::blacklisted(const Tuple& tuple)
+{
+   BlacklistEntry entry(tuple,0);
+   resip::Lock g(DnsResult::theBlacklistMutex);
+   Blacklist::iterator i=DnsResult::theBlacklist.find(entry);
+   
+   if(i!=DnsResult::theBlacklist.end())
+   {
+      time_t now=Timer::getTimeMs();
+      if(i->mExpiry > now)
+      {
+         return true;
+      }
+      else
+      {
+         DnsResult::theBlacklist.erase(i);
+      }
+   }
+   
+   return false;
+}
+
+void DnsResult::blacklist(const Tuple& tuple,time_t expiry)
+{
+   BlacklistEntry entry(tuple,expiry);
+   resip::Lock g(DnsResult::theBlacklistMutex);
+   DnsResult::theBlacklist.insert(entry);
 }
 
 std::ostream& 
