@@ -270,18 +270,18 @@ main(int argc, const char** argv)
       "sips:127.0.0.1:5071;transport=tls",
       "sip:127.0.0.1;transport=udp",
       "sips:127.0.0.1;transport=tls",
-      "sip:user.test.resiprocate.org:5070;transport=udp",
-      "sips:user.test.resiprocate.org:5071;transport=tls",
-      "sip:user.test.resiprocate.org;transport=udp",
-      "sips:user.test.resiprocate.org;transport=tls",
+      "sip:user.test.estacado.net:5070;transport=udp",
+      "sips:user.test.estacado.net:5071;transport=tls",
+      "sip:user.test.estacado.net;transport=udp",
+      "sips:user.test.estacado.net;transport=tls",
       "sip:127.0.0.1:5070",
       "sips:127.0.0.1:5071",
       "sip:127.0.0.1",
       "sips:127.0.0.1",
-      "sip:user.test.resiprocate.org:5070",
-      "sips:user.test.resiprocate.org:5071",
-      "sip:user-tcp.test.resiprocate.org",
-      "sips:user-tcp.test.resiprocate.org"
+      "sip:user.test.estacado.net:5070",
+      "sips:user.test.estacado.net:5071",
+      "sip:user-tcp.test.estacado.net",
+      "sips:user-tcp.test.estacado.net"
    };
    
    
@@ -393,7 +393,7 @@ main(int argc, const char** argv)
          {
             if(n==0 && s==0)
             {
-               // !bwc! This is just user.test.resiprocate.org, which we have already done.
+               // !bwc! This is just user.test.estacado.net, which we have already done.
                continue;
             }
             
@@ -407,7 +407,7 @@ main(int argc, const char** argv)
             }
             
             
-            resip::Data hostname(resip::Data("user")+NAPTRstrings[n]+SRVstrings[s]+resip::Data(".test.resiprocate.org"));
+            resip::Data hostname(resip::Data("user")+NAPTRstrings[n]+SRVstrings[s]+resip::Data(".test.estacado.net"));
             resip::Data target=subUris[i];
             target.replace("<hostname>",hostname);
             
@@ -751,7 +751,7 @@ main(int argc, const char** argv)
    for(int numSRV=2;numSRV<5;++numSRV)
    {
       resip::Data hostname("loadlevel");
-      hostname+=Data::from(numSRV)+".test.resiprocate.org";
+      hostname+=Data::from(numSRV)+".test.estacado.net";
       
       Uri uri;
       uri.host()=hostname;

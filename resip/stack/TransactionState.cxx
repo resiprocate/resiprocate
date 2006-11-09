@@ -1426,6 +1426,13 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
 {
    TransportFailure* failure = dynamic_cast<TransportFailure*>(msg);
    assert(failure);
+
+   if(mDnsResult)
+   {
+      // !bwc! Blacklist for 32s
+      // TODO make this duration configurable.
+      mDnsResult->blacklistLast(Timer::getTimeMs()+32000);
+   }
    
    InfoLog (<< "Try sending request to a different dns result");
    assert(mMsgToRetransmit);
@@ -1707,44 +1714,36 @@ TransactionState::sendToTU(TransactionMessage* msg) const
       {
          case 503:
             // blacklist last target.
-            // !slg! TODO:  Need to blacklist only for Retry-After interval
-            if (mDnsResult != 0 && mDnsResult->available() == DnsResult::Available)
+            // !bwc! If there is no Retry-After, we do not blacklist
+            // (see RFC 3261 sec 21.5.4 para 1)
+            if(sipMsg->exists(resip::h_RetryAfter))
             {
-               mDnsResult->next();
+               try
+               {
+                  unsigned int relativeExpiry= sipMsg->header(resip::h_RetryAfter).value();
+                  
+                  mDnsResult->blacklistLast(resip::Timer::getTimeMs()+relativeExpiry*1000);
+               }
+               catch(resip::ParseBuffer::Exception& e)
+               {
+                  mDnsResult->blacklistLast(resip::Timer::getTimeMs()+32000);
+               }
             }
+            
             break;
          case 408:
             if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only blacklist if internally generated and we haven't received any responses yet
             {
                // blacklist last target.
-               if (mDnsResult->available() == DnsResult::Available)
-               {
-                  mDnsResult->next();
-               }
+               // !bwc! How long do we blacklist this for? Probably should make
+               // this configurable. TODO
+               mDnsResult->blacklistLast(resip::Timer::getTimeMs() + 32000);
             }
-            else
-            {
-               mDnsResult->success();
-            }
-            break;
-         case 500:
-         case 504:
-         case 600:
-            // !bwc! Only blacklist if Retry-After is present.
-            // (Although, this is somewhat silly right now, since the value
-            // of Retry-After is completely ignored.)
-            if(sipMsg->exists(h_RetryAfter) && 
-               mDnsResult->available() == DnsResult::Available)
-            {
-               mDnsResult->next();
-            }
-            else
-            {
-               mDnsResult->success();
-            }
+
             break;
          default:
-            mDnsResult->success();
+            // !bwc! Debatable.
+            mDnsResult->whitelistLast();
             break;
       }
    }
