@@ -1032,18 +1032,13 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
          
          StackLog (<< "Adding NAPTR record: " << naptr);
          
-         if ( mSips && naptr.service.find("SIPS") == 0)
+         if ( !mSips || naptr.service.find("SIPS") == 0)
          {
             if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
             {
                mPreferredNAPTR = naptr;
                StackLog (<< "Picked preferred: " << mPreferredNAPTR);
             }
-         }
-         else if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
-         {
-            mPreferredNAPTR = naptr;
-            StackLog (<< "Picked preferred: " << mPreferredNAPTR);
          }
       }
 
