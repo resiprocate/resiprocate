@@ -739,6 +739,7 @@ main(int argc, const char** argv)
    }
 
    assert(queries.empty());
+   assert(!dns.requiresProcess());
 
    std::map<resip::Tuple,int> ipAddrToNum;
    ipAddrToNum[Tuple("127.0.0.1",5060,V4,TCP)]=0;
@@ -823,6 +824,9 @@ main(int argc, const char** argv)
          }
          sleep(1);
       }
+      
+      assert(queries.empty());
+      assert(!dns.requiresProcess());
       
       std::cout << "Tabulated results:" << std::endl;
       for(int i=0;i<numSRV;++i)
