@@ -127,11 +127,6 @@ DnsResult::available()
       }
       else
       {
-         if (mBlacklistLastReturnedResult)
-         {
-            blacklistLastReturnedResult();
-            mBlacklistLastReturnedResult = false;
-         }
          primeResults();
          return available(); // recurse
       }
@@ -150,16 +145,6 @@ DnsResult::next()
    mResults.pop_front();
    StackLog (<< "Returning next dns entry: " << next);
   
-   if (mBlacklistLastReturnedResult)
-   {
-      blacklistLastReturnedResult();
-   }
-   else if (!mCurrResultPath.empty())
-   {
-      mBlacklistLastReturnedResult = true;
-   }
-   mLastReturnedResult = next;
-
    assert(mCurrSuccessPath.size()<=3);
    Item top;
    if (!mCurrSuccessPath.empty())
@@ -170,6 +155,13 @@ DnsResult::next()
          mCurrSuccessPath.pop();
       }
    }
+   
+   if(!mCurrResultPath.empty())
+   {
+      assert(mCurrResultPath.top().rrType == T_A || mCurrResultPath.top().rrType == T_AAAA);
+      mCurrResultPath.pop();
+   }
+   
    top.domain = next.getTargetDomain();
    top.rrType = next.isV4()? T_A : T_AAAA;
    top.value = Tuple::inet_ntop(next);
@@ -426,9 +418,6 @@ DnsResult::primeResults()
             top = mCurrResultPath.top();
             if (top.rrType == T_SRV)
             {
-               vector<Data> records;
-               records.push_back(top.value);
-               mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
                mCurrResultPath.pop();
             }
             else
@@ -468,18 +457,6 @@ DnsResult::primeResults()
    {
       bool changed = (mType == Pending);
       transition(Finished);
-      if (!mCurrResultPath.empty())
-      {
-         assert(mCurrResultPath.size()<=2);
-         while (!mCurrResultPath.empty())
-         {
-            Item top = mCurrResultPath.top();
-            vector<Data> records;
-            records.push_back(top.value);
-            mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
-            mCurrResultPath.pop();
-         }
-      }
       if (changed && mHandler) mHandler->handle(this);
    }
 
