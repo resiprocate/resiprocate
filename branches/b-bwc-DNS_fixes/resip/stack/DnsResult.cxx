@@ -216,10 +216,20 @@ DnsResult::lookupInternal(const Uri& uri)
       {
          mPort = getDefaultPort(mTransport, uri.port());
          Tuple tuple(mTarget, mPort, mTransport, mTarget);
-         DebugLog (<< "Found immediate result: " << tuple);
-         mResults.push_back(tuple);
-         transition(Available);
-         if (mHandler) mHandler->handle(this);         
+
+         if(!DnsResult::blacklisted(tuple))
+         {
+            DebugLog (<< "Found immediate result: " << tuple);
+            mResults.push_back(tuple);
+            transition(Available);
+            if (mHandler) mHandler->handle(this);
+         }
+         else
+         {
+            transition(Available);
+            if (mHandler) mHandler->handle(this);
+         }
+
       }
       else if (uri.port() != 0)
       {
@@ -300,29 +310,76 @@ DnsResult::lookupInternal(const Uri& uri)
    {
       if (isNumeric || uri.port() != 0)
       {
-         if (mSips || mTransport == TLS)
-         {
-            mTransport = TLS;
-         }
-         else 
-         {
-            mTransport = UDP;
-         }
-
-         mHaveChosenTransport=true;
+         bool foundTuple=false;
+         Tuple tuple;
          
-         if (isNumeric) // IP address specified
+         if(isNumeric)
          {
-            mPort = getDefaultPort(mTransport, uri.port());
-            Tuple tuple(mTarget, mPort, mTransport, mTarget);
-            mResults.push_back(tuple);
-            transition(Available);
-            DebugLog (<< "Numeric result so return immediately: " << tuple);
+            if(mSips)
+            {
+               mTransport=TLS;
+               mPort = getDefaultPort(mTransport,uri.port());
+               tuple=Tuple(mTarget,mPort,mTransport,mTarget);
+               foundTuple=!DnsResult::blacklisted(tuple);
+            }
+            else
+            {
+               if(!foundTuple)
+               {
+                  mTransport=UDP;
+                  mPort = getDefaultPort(mTransport,uri.port());
+                  tuple=Tuple(mTarget,mPort,mTransport,mTarget);
+                  foundTuple=!DnsResult::blacklisted(tuple);
+               }
+               
+               if(!foundTuple)
+               {
+                  mTransport=TCP;
+                  mPort = getDefaultPort(mTransport,uri.port());
+                  tuple=Tuple(mTarget,mPort,mTransport,mTarget);
+                  foundTuple=!DnsResult::blacklisted(tuple);
+               }
+               
+               if(!foundTuple)
+               {
+                  mTransport=TLS;
+                  mPort = getDefaultPort(mTransport,uri.port());
+                  tuple=Tuple(mTarget,mPort,mTransport,mTarget);
+                  foundTuple=!DnsResult::blacklisted(tuple);
+               }
+            }
+            
+            if(foundTuple)
+            {
+               mHaveChosenTransport=true;
+               mResults.push_back(tuple);
+               transition(Available);
+               DebugLog (<< "Numeric result so return immediately: " << tuple);
+            }
+            else
+            {
+               // !bwc! Numeric result is blacklisted. Oh well.
+               assert(mResults.empty());
+               transition(Available);
+               DebugLog(<< "Numeric result, but this result is currently blacklisted: " << tuple);
+            }
+            
             if (mHandler) mHandler->handle(this);
+
          }
-         else // port specified so we know the transport
+        else // port specified so we know the transport
          {
-            mPort = uri.port();
+            if(mSips)
+            {
+               mTransport=TLS;
+               mPort = uri.port();
+            }
+            else
+            {
+               mTransport=UDP;
+               mPort = uri.port();
+            }
+            
             if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
             {
                lookupHost(mTarget);
@@ -679,8 +736,13 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
          in_addr addr;
          addr.s_addr = (*it).addr().s_addr;
          Tuple tuple(addr, mPort, mTransport, mTarget);
-         StackLog (<< "Adding " << tuple << " to result set");
-         mResults.push_back(tuple);
+         
+         if(!DnsResult::blacklisted(tuple))
+         {
+            StackLog (<< "Adding " << tuple << " to result set");
+            mResults.push_back(tuple);
+         }
+      
       }
    }
    else
@@ -724,9 +786,14 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
                    {
      	              SOCKADDR_IN *pSockAddrIn = (SOCKADDR_IN *)pQueryResult->lpcsaBuffer[i].RemoteAddr.lpSockaddr;
                       Tuple tuple(pSockAddrIn->sin_addr, mPort, mTransport, mTarget);
-                      StackLog (<< "Adding (WIN) " << tuple << " to result set");
-                      mResults.push_back(tuple);
-                      transition(Available);
+                      
+                      if(!DnsResult::blacklisted(tuple))
+                      {
+                        StackLog (<< "Adding (WIN) " << tuple << " to result set");
+                        mResults.push_back(tuple);
+                        transition(Available);
+                      }
+                   
                    }
                 }
              }
@@ -792,8 +859,13 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
       for (vector<DnsAAAARecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          Tuple tuple((*it).v6Address(), mPort, mTransport, mTarget);
-         StackLog (<< "Adding " << tuple << " to result set");
-         mResults.push_back(tuple);
+         
+         if(!DnsResult::blacklisted(tuple))
+         {
+            StackLog (<< "Adding " << tuple << " to result set");
+            mResults.push_back(tuple);
+         }
+      
       }
    }
    else
