@@ -82,12 +82,19 @@ DnsResult::~DnsResult()
 void 
 DnsResult::transition(Type t)
 {
-   if ((t == Finished || t == Destroyed || t == Available) &&
-       (mType == Pending))
+   if ((t == Finished || t == Destroyed) &&
+       (mType == Pending || mType == Available))
    {
       mInterface.mActiveQueryCount--;
       assert(mInterface.mActiveQueryCount >= 0);
    }
+   
+   if((t == Pending || t== Available) && 
+         (mType== Finished || mType == Destroyed) )
+   {
+      assert(0);
+   }
+   
    mType = t;
 }
 
@@ -103,6 +110,7 @@ DnsResult::destroy()
    }
    else
    {
+      transition(Finished);
       delete this;
    }
 }
@@ -756,7 +764,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
                       Tuple tuple(pSockAddrIn->sin_addr, mPort, mTransport, mTarget);
                       StackLog (<< "Adding (WIN) " << tuple << " to result set");
                       mResults.push_back(tuple);
-                      mType = Available;
+                      transition(Available);
                    }
                 }
              }
@@ -765,10 +773,10 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
          }
          if(mResults.empty())
          {
-            mType = Finished; 
+            transition(Finished); 
          }
 #else
-         mType = Finished; 
+         transition(Finished); 
 #endif
          clearCurrPath();
       }
@@ -780,7 +788,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
          }
          else
          {
-            mType = Available;
+            transition(Available);
          }
          addToPath(mResults);
       }
