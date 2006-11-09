@@ -227,9 +227,39 @@ class DnsResult : public DnsResultSink
       bool mHaveReturnedResults;
 
       void clearCurrPath();
-      void blacklistLastReturnedResult();
+      void blacklistLastReturnedResult(time_t expiry);
 
       Tuple mLastResult;
+      
+   private:
+      
+      class BlacklistEntry
+      {
+         public:
+            BlacklistEntry();
+            BlacklistEntry(const Tuple& tuple, time_t expiry);
+            BlacklistEntry(const BlacklistEntry& orig);
+            ~BlacklistEntry();
+            bool operator<(const BlacklistEntry& rhs) const;
+            bool operator>(const BlacklistEntry& rhs) const;
+            bool operator==(const BlacklistEntry& rhs) const;
+            
+            Tuple mTuple;
+            time_t mExpiry;
+      };
+      
+      typedef std::set<BlacklistEntry> Blacklist;
+
+      /*!
+         @author bwc 
+         @todo Make less evil (implement a singleton pattern or something).
+      */
+      static Blacklist theBlacklist;
+      static resip::Mutex theBlacklistMutex;
+      
+      static bool blacklisted(const Tuple& tuple);
+      
+      static void blacklist(const Tuple& tuple,time_t expiry);
 
 };
 
