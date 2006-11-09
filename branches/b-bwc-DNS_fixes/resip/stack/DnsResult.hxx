@@ -39,6 +39,8 @@ class DnsResult : public DnsResultSink
          Pending,   // More results may be pending 
          Finished,  // No more results available and none pending
          Destroyed  // the associated transaction has been deleted
+                     // (ie, this DnsResult will delete itself as soon as it
+                     // gets a new result)
       } Type;
 
       typedef std::vector<Data> DataVector;
@@ -151,6 +153,13 @@ class DnsResult : public DnsResultSink
       */
       bool mHaveChosenTransport;
       
+      /*!
+         @author bwc
+         DnsResult::transition is the ONLY function that should ever touch this
+         (This is because we need to notify mInterface when we are done making
+         queries, and this is when we transition from either Pending or 
+         Available to either Destroyed or Finished.)
+      */
       Type mType;
 
       //Ugly hack
