@@ -10,7 +10,9 @@ using namespace resip;
 MasterProfile::MasterProfile() : 
    mValidateContentEnabled(true),
    mValidateContentLanguageEnabled(false),
-   mValidateAcceptEnabled(false)
+   mValidateAcceptEnabled(false),
+   mAllowBadRegistrationEnabled(false),
+   mCheckReqUriInMergeDetectionEnabled(false)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -300,6 +302,17 @@ MasterProfile::allowBadRegistrationEnabled()
    return mAllowBadRegistrationEnabled;   
 }
 
+const bool 
+MasterProfile::checkReqUriInMergeDetectionEnabled() const
+{
+   return mCheckReqUriInMergeDetectionEnabled;   
+}
+
+bool& 
+MasterProfile::checkReqUriInMergeDetectionEnabled()
+{
+   return mCheckReqUriInMergeDetectionEnabled;   
+}
 
 UserProfile*
 MasterProfile::clone() const
