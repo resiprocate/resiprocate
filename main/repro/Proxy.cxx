@@ -108,14 +108,36 @@ Proxy::thread()
                   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
 			   
                   // check the MaxForwards isn't too low
-                  if (sip->exists(h_MaxForwards) && sip->header(h_MaxForwards).value() <= 0)
-                  {                     
+                  if (!sip->exists(h_MaxForwards))
+                  {
+                     // !bwc! Add Max-Forwards header if not found.
+                     sip->header(h_MaxForwards).value()=20;
+                  }
+                  
+                  if(!sip->header(h_MaxForwards).isWellFormed())
+                  {
+                     //Malformed Max-Forwards! (Maybe we can be lenient and set
+                     // it to 70...)
+                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip,400));
+                     response->header(h_StatusLine).reason()="Malformed Max-Forwards";
+                     mStack.send(*response,this);
+                     delete sip;
+                     continue;                     
+                  }
+                  
+                  // !bwc! Unacceptable values for Max-Forwards
+                  if(sip->header(h_MaxForwards).value() > 255)
+                  {
+                     sip->header(h_MaxForwards).value()=20;                     
+                  }
+                  else if(sip->header(h_MaxForwards).value() <=0)
+                  {
                      if (sip->header(h_RequestLine).method() != OPTIONS)
                      {
-                        std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
-                        mStack.send(*response, this);
+                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
+                     mStack.send(*response, this);
                      }
-                     else  // If the request is an OPTIONS, send an appropropriate response
+                     else  // If the request is an OPTIONS, send an appropriate response
                      {
                         std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 200));
                         mStack.send(*response, this);                        
@@ -127,7 +149,7 @@ Proxy::thread()
 
                   // [TODO] !rwm! Need to check Proxy-Require header field values
                
-                  if (sip->header(h_RequestLine).method() == CANCEL)
+                  if (sip->method() == CANCEL)
                   {
                      HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
 
@@ -140,7 +162,7 @@ Proxy::thread()
                         i->second->process(std::auto_ptr<resip::SipMessage>(sip));
                      }
                   }
-                  else if (sip->header(h_RequestLine).method() == ACK)
+                  else if (sip->method() == ACK)
                   {
                      Data tid = sip->getTransactionId();
 
