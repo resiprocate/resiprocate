@@ -87,7 +87,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    // Merge Embedded parameters
    mLastRequest.mergeUri(target.uri());
 
-   DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
+   DebugLog ( << "BaseCreator::makeInitialRequest:\n" << mLastRequest);
 }
 
 
