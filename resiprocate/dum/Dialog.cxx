@@ -848,7 +848,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
       if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
    }
 
-   DebugLog ( << "Dialog::makeRequest: " << request );
+   DebugLog ( << "Dialog::makeRequest:\n" << request );
 }
 
 void
