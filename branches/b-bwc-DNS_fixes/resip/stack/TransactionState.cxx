@@ -46,6 +46,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mDnsResult(0),
    mId(id),
    mAckIsValid(false),
+   mWaitingForDnsResult(false),
    mTransactionUser(tu),
    mFailureReason(TransportFailure::None)
 {
@@ -1426,6 +1427,59 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
 {
    TransportFailure* failure = dynamic_cast<TransportFailure*>(msg);
    assert(failure);
+   assert(mState!=Bogus);
+
+   // !bwc! We should only try multiple dns results if we are originating a
+   // request. Additionally, there are (potential) cases where it would not
+   // be appropriate to fail over even then.
+   bool shouldFailover=false;
+   if(mMachine==ClientNonInvite)
+   {
+      if(mState==Completed || mState==Terminated)
+      {
+         WarningLog(<<"Got a TransportFailure message in a " << mState <<
+         " ClientNonInvite transaction. How did this happen? Since we have"
+         " already completed the transaction, we shouldn't try"
+         " additional DNS results.");
+      }
+      else
+      {
+         shouldFailover=true;
+      }
+   }
+   else if(mMachine==ClientInvite)
+   {
+      if(mState==Completed || mState==Terminated)
+      {
+         // !bwc! Perhaps the attempted transmission of the ACK failed here.
+         // (assuming this transaction got a failure response; not sure what
+         // might have happened if this is not the case)
+         // In any case, we should not try sending the INVITE anywhere else.
+         InfoLog(<<"Got a TransportFailure message in a " << mState <<
+         " ClientInvite transaction. Since we have"
+         " already completed the transaction, we shouldn't try"
+         " additional DNS results.");
+      }
+      else
+      {
+         if(mState==Proceeding)
+         {
+            // !bwc! We need to revert our state back to Calling, since we are
+            // going to be sending the INVITE to a new endpoint entirely.
+
+            // An interesting consequence occurs if our failover ultimately
+            // sends to the same instance of a resip stack; we increment the 
+            // transport sequence in our branch parameter, but any resip-based
+            // stack will ignore this change, and process this "new" request as
+            // a retransmission! Furthermore, our state will be out of phase
+            // with the state at the remote endpoint, and if we have sent a
+            // PRACK, it will know (and stuff will break)!
+            // TODO What else needs to be done here to safely revert our state?
+            mState=Calling;
+         }
+         shouldFailover=true;
+      }
+   }
 
    if(mDnsResult)
    {
@@ -1434,58 +1488,63 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
       mDnsResult->blacklistLast(Timer::getTimeMs()+32000);
    }
    
-   InfoLog (<< "Try sending request to a different dns result");
-   assert(mMsgToRetransmit);
-   if (failure->getFailureReason() > mFailureReason)
-   {
-      mFailureReason = failure->getFailureReason();
-   }
    
-   if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->method() == CANCEL)
+   if(shouldFailover)
    {
-      WarningLog (<< "Failed to deliver a CANCEL request");
-      StackLog (<< *this);
-      assert(mIsCancel);
-
-      // In the case of a client-initiated CANCEL, we don't want to
-      // try other transports in the case of transport error as the
-      // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
-      //?dcm? insepct failure enum?
-      SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
-      WarningCategory warning;
-      warning.hostname() = DnsUtil::getLocalHostName();
-      warning.code() = 499;
-      warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
-      response->header(h_Warnings).push_back(warning);
-      
-      sendToTU(response);
-      return;
-   }
-
-   assert(!mIsCancel);
-   if (mDnsResult)
-   {
-      switch (mDnsResult->available())
+      InfoLog (<< "Try sending request to a different dns result");
+      assert(mMsgToRetransmit);
+      if (failure->getFailureReason() > mFailureReason)
       {
-         case DnsResult::Available:
-            mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
-            mTarget = mDnsResult->next();
-            processReliability(mTarget.getType());
-            sendToWire(mMsgToRetransmit);
-            break;
+         mFailureReason = failure->getFailureReason();
+      }
+      
+      if (mMsgToRetransmit->isRequest() && mMsgToRetransmit->method() == CANCEL)
+      {
+         WarningLog (<< "Failed to deliver a CANCEL request");
+         StackLog (<< *this);
+         assert(mIsCancel);
+
+         // In the case of a client-initiated CANCEL, we don't want to
+         // try other transports in the case of transport error as the
+         // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
+         //?dcm? insepct failure enum?
+         SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
+         WarningCategory warning;
+         warning.hostname() = DnsUtil::getLocalHostName();
+         warning.code() = 499;
+         warning.text() = "Failed to deliver CANCEL using the same transport as the INVITE was used";
+         response->header(h_Warnings).push_back(warning);
          
-         case DnsResult::Pending:
-            mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
-            break;
+         sendToTU(response);
+         return;
+      }
 
-         case DnsResult::Finished:
-            processNoDnsResults();
-            break;
+      assert(!mIsCancel);
+      if (mDnsResult)
+      {      
+         switch (mDnsResult->available())
+         {
+            case DnsResult::Available:
+               mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
+               mTarget = mDnsResult->next();
+               processReliability(mTarget.getType());
+               sendToWire(mMsgToRetransmit);
+               break;
+            
+            case DnsResult::Pending:
+               mWaitingForDnsResult=true;
+               mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
+               break;
 
-         case DnsResult::Destroyed:
-         default:
-            InfoLog (<< "Bad state: " << *this);
-            assert(0);
+            case DnsResult::Finished:
+               processNoDnsResults();
+               break;
+
+            case DnsResult::Destroyed:
+            default:
+               InfoLog (<< "Bad state: " << *this);
+               assert(0);
+         }
       }
    }
 }
@@ -1494,6 +1553,14 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
 void
 TransactionState::rewriteRequest(const Uri& rewrite)
 {
+   // !bwc! TODO We need to address the race-conditions caused by callbacks
+   // into a class whose thread-safety is accomplished through message-passing.
+   // This function could very easily be called while other processing is
+   // taking place due to a message from the state-machine fifo. In the end, I
+   // imagine that we will need to have the callback place a message onto the
+   // queue, and move all the code below into a function that handles that
+   // message.
+
    assert(mMsgToRetransmit->isRequest());
    if (mMsgToRetransmit->header(h_RequestLine).uri() != rewrite)
    {
@@ -1505,21 +1572,32 @@ TransactionState::rewriteRequest(const Uri& rewrite)
 void 
 TransactionState::handle(DnsResult* result)
 {
+   // !bwc! TODO We need to address the race-conditions caused by callbacks
+   // into a class whose thread-safety is accomplished through message-passing.
+   // This function could very easily be called while other processing is
+   // taking place due to a message from the state-machine fifo. In the end, I
+   // imagine that we will need to have the callback place a message onto the
+   // queue, and move all the code below into a function that handles that
+   // message.
+
    // got a DNS response, so send the current message
    StackLog (<< *this << " got DNS result: " << *result);
    
-   if (mTarget.getType() == UNKNOWN_TRANSPORT) 
+   // !bwc! Were we expecting something from mDnsResult?
+   if (mWaitingForDnsResult) 
    {
       assert(mDnsResult);
       switch (mDnsResult->available())
       {
          case DnsResult::Available:
+            mWaitingForDnsResult=false;
             mTarget = mDnsResult->next();
             processReliability(mTarget.getType());
             mController.mTransportSelector.transmit(mMsgToRetransmit, mTarget);
             break;
             
          case DnsResult::Finished:
+            mWaitingForDnsResult=false;
             processNoDnsResults();
             break;
 
@@ -1531,11 +1609,6 @@ TransactionState::handle(DnsResult* result)
             assert(0);
             break;
       }
-   }
-   else
-   {
-      // can't be retransmission  
-      sendToWire(mMsgToRetransmit, false); 
    }
 }
 
@@ -1679,6 +1752,7 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       assert(sip->isRequest());
       assert(!mIsCancel);
       mDnsResult = mController.mTransportSelector.createDnsResult(this);
+      mWaitingForDnsResult=true;
       mController.mTransportSelector.dnsResolve(mDnsResult, sip);
    }
    else // reuse the last dns tuple
