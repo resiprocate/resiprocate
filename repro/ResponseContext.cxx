@@ -262,7 +262,7 @@ ResponseContext::cancelAllClientTransactions()
    }
 
    // CANCEL INVITE branches
-   if(mRequestContext.getOriginalRequest().header(h_RequestLine).method()==INVITE)
+   if(mRequestContext.getOriginalRequest().method()==INVITE)
    {
       for (TransactionMap::iterator i = mActiveTransactionMap.begin(); 
            i != mActiveTransactionMap.end(); ++i)
@@ -497,40 +497,44 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 
       request.header(h_RequestLine).uri() = target->uri(); 
 
-      if (request.exists(h_MaxForwards))
-      {
-         if (request.header(h_MaxForwards).value() <= 20)
-         {
-            request.header(h_MaxForwards).value()--;
-         }
-         else
-         {
-            request.header(h_MaxForwards).value() = 20; // !jf! use Proxy to retrieve this
-         }
-      }
-      else
-      {
-         request.header(h_MaxForwards).value() = 20; // !jf! use Proxy to retrieve this
-      }
+      // !bwc! Proxy checks whether this is valid, and rejects if not.
+      request.header(h_MaxForwards).value()--;
       
       static ExtensionParameter p_cid("cid");
       static ExtensionParameter p_cid1("cid1");
       static ExtensionParameter p_cid2("cid2");
       
-      // Record-Route addition only for dialogs
-      if ( !request.header(h_To).exists(p_tag) &&  // only for dialog-creating request
-           (request.header(h_RequestLine).method() == INVITE ||
-            request.header(h_RequestLine).method() == SUBSCRIBE ) )
+      bool inDialog=false;
+      
+      try
       {
-         
+         inDialog=request.header(h_To).exists(p_tag);
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         // !bwc! Do we ignore this and just say this is a dialog-creating
+         // request?
+      }
+      
+      // Record-Route addition only for new dialogs
+      if ( !inDialog &&  // only for dialog-creating request
+           (request.method() == INVITE ||
+            request.method() == SUBSCRIBE ) )
+      {
          NameAddr rt(mRequestContext.mProxy.getRecordRoute());
-         // !jf! could put unique id for this instance of the proxy in user portion
-
-         if (request.exists(h_Routes) && request.header(h_Routes).size() != 0)
+         // !bwc! Let's not record-route with a tel uri or something, shall we?
+         // If the topmost route header is malformed, we can get along without.
+         // (We are going to be popping it off in a moment anyway)
+         if (request.exists(h_Routes) && 
+               request.header(h_Routes).size() != 0 && 
+               request.header(h_Routes).front().isWellFormed() &&
+               (request.header(h_Routes).front().uri().scheme() == "sip" ||
+               request.header(h_Routes).front().uri().scheme() == "sips" ) )
          {
             rt.uri().scheme() == request.header(h_Routes).front().uri().scheme();
          }
-         else
+         else if(request.header(h_RequestLine).uri().scheme() == "sip" ||
+                  request.header(h_RequestLine).uri().scheme() == "sips")
          {
             rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
          }
@@ -598,14 +602,14 @@ ResponseContext::sendRequest(const resip::SipMessage& request)
 {
    assert (request.isRequest());
    mRequestContext.mProxy.send(request);
-   if (request.header(h_RequestLine).method() != CANCEL && 
-       request.header(h_RequestLine).method() != ACK)
+   if (request.method() != CANCEL && 
+       request.method() != ACK)
    {
       mRequestContext.getProxy().addClientTransaction(request.getTransactionId(), &mRequestContext);
       mRequestContext.mTransactionCount++;
    }
 
-   if (request.header(h_RequestLine).method() == ACK)
+   if (request.method() == ACK)
    {
      DebugLog(<<"Posting Ack200DoneMessage");
      mRequestContext.getProxy().post(new Ack200DoneMessage(mRequestContext.getTransactionId()));
@@ -617,7 +621,7 @@ void
 ResponseContext::processCancel(const SipMessage& request)
 {
    assert(request.isRequest());
-   assert(request.header(h_RequestLine).method() == CANCEL);
+   assert(request.method() == CANCEL);
 
    std::auto_ptr<SipMessage> ok(Helper::makeResponse(request, 200));   
    mRequestContext.sendResponse(*ok);
@@ -657,12 +661,12 @@ ResponseContext::processResponse(SipMessage& response)
       // Silently stop processing the CANCEL responses.
       // We will handle the 100 responses later
       // Log other responses we can't forward
-      if(response.header(h_CSeq).method()==CANCEL)
+      if(response.method()==CANCEL)
       {
          return;
       }
       
-      if ((response.header(h_CSeq).method() != CANCEL) && 
+      if ((response.method() != CANCEL) && 
           (response.header(h_StatusLine).statusCode() != 100)) {
          InfoLog( << "Received response, but can't forward as there are no more Vias: " << response.brief() );
       }
@@ -670,9 +674,28 @@ ResponseContext::processResponse(SipMessage& response)
    else
    {
       const Via& via = response.header(h_Vias).front();
+      if(!via.isWellFormed())
+      {
+         // !bwc! Garbage via. Unrecoverable. Ignore if provisional, terminate
+         // transaction if not.
+         DebugLog(<<"Some endpoint has corrupted one of our Vias"
+            " in their response. (Via is malformed) This is not fixable.");
+         if(response.header(h_StatusLine).statusCode() > 199)
+         {
+            terminateClientTransaction(transactionId);
+         }
+         
+         return;
+      }
+      
       if (!via.exists(p_branch) || !via.param(p_branch).hasMagicCookie())
       {
-         response.setRFC2543TransactionId(mRequestContext.mOriginalRequest->getTransactionId());
+         DebugLog(<<"Some endpoint has corrupted one of our Vias"
+            " in their response. (branch param is either missing, or doesn't "
+            "have the magic cookie) We remember our transaction ID, so we can "
+            "repair it.");
+         response.header(h_Vias).front().param(p_branch)=
+            mRequestContext.mOriginalRequest->header(h_Vias).front().param(p_branch);
       }
    }
    
@@ -738,7 +761,7 @@ ResponseContext::processResponse(SipMessage& response)
          
       case 2:
          terminateClientTransaction(transactionId);
-         if (response.header(h_CSeq).method() == INVITE)
+         if (response.method() == INVITE)
          {
             cancelAllClientTransactions();
             mRequestContext.mHaveSentFinalResponse = true;
@@ -800,10 +823,19 @@ ResponseContext::processResponse(SipMessage& response)
                   for (NameAddrs::iterator i=response.header(h_Contacts).begin(); 
                        i != response.header(h_Contacts).end(); ++i)
                   {
-                     if (!i->isAllContacts())
+                     // TODO !bwc! if we are going to be checking whether
+                     // this is "*", we should see if it is well-formed
+                     // first. If we shouldn't be doing any checks on
+                     // the contacts, we should simply remove all of this
+                     // checking code and just blindly copy the contacts over.
+
+                     if(!i->isWellFormed() || i->isAllContacts())
                      {
-                        mBestResponse.header(h_Contacts).push_back(*i);
+                        // !bwc! Garbage contact; ignore it.
+                        continue;
                      }
+                     
+                     mBestResponse.header(h_Contacts).push_back(*i);
                   }
                   mBestResponse.header(h_StatusLine).statusCode() = 300;
                }
@@ -829,7 +861,7 @@ ResponseContext::processResponse(SipMessage& response)
             {
                mBestResponse = response;
                mBestPriority=0; //6xx class responses take precedence over all 3xx,4xx, and 5xx
-               if (response.header(h_CSeq).method() == INVITE)
+               if (response.method() == INVITE)
                {
                   // CANCEL INVITE branches
                   cancelAllClientTransactions();
@@ -1072,7 +1104,7 @@ ResponseContext::forwardBestResponse()
    
    clearCandidateTransactions();
    
-   if(mRequestContext.getOriginalRequest().header(h_RequestLine).method()==INVITE)
+   if(mRequestContext.getOriginalRequest().method()==INVITE)
    {
       cancelActiveClientTransactions();
    }
@@ -1085,7 +1117,7 @@ ResponseContext::forwardBestResponse()
       mRequestContext.sendResponse(mBestResponse);
    }
    else if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
-            mBestResponse.header(h_CSeq).method() == INVITE)
+            mBestResponse.method() == INVITE)
    {
       // don't forward 408 to Non-INVITE Transactions (NITs)
       mRequestContext.sendResponse(mBestResponse);
