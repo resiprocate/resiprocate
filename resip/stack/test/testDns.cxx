@@ -66,6 +66,17 @@ class TestDnsHandler : public DnsHandler
          mPermutationNumber(0)
       {}
       
+      TestDnsHandler(const std::vector<Tuple>& expectedResults, 
+                     const std::set<Tuple>& resultsToBlacklist,
+                     const resip::Uri& uri) 
+      : mComplete(false),
+         mExpectedResults(expectedResults),
+         mCheckExpectedResults(true),
+         mUri(uri),
+         mPermutationNumber(0),
+         mResultsToBlacklist(resultsToBlacklist)
+      {}
+      
       void handle(DnsResult* result)
       {
          
@@ -77,6 +88,10 @@ class TestDnsHandler : public DnsHandler
             Tuple tuple = result->next();
             results.push_back(tuple);
             std::cout << gf << result->target() << " -> " << tuple << ub <<  std::endl;
+            if(mResultsToBlacklist.count(tuple)!=0)
+            {
+               result->blacklistLast(Timer::getTimeMs()+15000);
+            }
          }
          if (type != DnsResult::Pending)
          {
@@ -173,6 +188,7 @@ class TestDnsHandler : public DnsHandler
       Uri mUri;
       std::list<int> mPermutation;
       int mPermutationNumber;
+      std::set<resip::Tuple> mResultsToBlacklist;
 };
 
 /*
@@ -799,9 +815,9 @@ main(int argc, const char** argv)
             if ((*it).handler->complete())
             {
                cerr << rf << "DNS results for " << (*it).uri << ub << endl;
-               //assert(it->handler->results.size()==numSRV);
+               assert(it->handler->results.size()==numSRV);
                
-                for(int i=0;i<it->handler->results.size();++i)
+                for(int i=0;i<numSRV;++i)
                {
                   assert(ipAddrToNum[it->handler->results[i]] >=0);
                   assert(ipAddrToNum[it->handler->results[i]] <numSRV);
@@ -841,6 +857,106 @@ main(int argc, const char** argv)
    }
 
 
+   // !bwc! Test blacklisting
+   {
+      Tuple toBlacklist("127.0.0.1",5060,V4,TCP);
+      Tuple ok2("127.0.0.2",5060,V4,TCP);
+      Tuple ok3("127.0.0.3",5060,V4,TCP);
+      Tuple ok4("127.0.0.4",5060,V4,TCP);
+      
+      std::vector<Tuple> expected;
+      expected.push_back(ok2);
+      expected.push_back(ok3);
+      expected.push_back(ok4);
+      expected.push_back(toBlacklist);
+      
+      std::set<Tuple> blacklist;
+      blacklist.insert(toBlacklist);
+      
+      Uri uri;
+      uri.scheme()="sip";
+      uri.host()="loadlevel4.test.estacado.net";
+      
+      Query query;                        
+      query.handler = new TestDnsHandler(expected,blacklist,uri);
+      query.uri = uri;
+      cerr << "Creating DnsResult" << endl;      
+      DnsResult* res = dns.createDnsResult(query.handler);
+      query.result = res;      
+      queries.push_back(query);
+      cerr << rf << "Looking up" << ub << endl;
+      dns.lookup(res, uri);
+      
+      // !bwc! Give this query plenty of time.
+      sleep(2);
+      
+      // This removes the Tuple toBlacklist
+      expected.pop_back();
+      
+      for(int i=0;i<20;++i)
+      {
+         Query query;                        
+         query.handler = new TestDnsHandler(expected,uri);
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri);
+      }
+      
+      // !bwc! Wait for blacklist to expire.
+      sleep(16);
+      
+      // Put the blacklisted Tuple back.
+      expected.push_back(toBlacklist);
+      
+      for(int i=0;i<20;++i)
+      {
+         Query query;                        
+         query.handler = new TestDnsHandler(expected,uri);
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri);
+      }
+      
+      int count = queries.size();
+      while (count>0)
+      {
+         for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); )
+         {
+            if ((*it).handler->complete())
+            {
+               cerr << rf << "DNS results for " << (*it).uri << ub << endl;
+               for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
+               {
+                  cerr << rf << (*i) << ub << endl;
+               }
+               
+               --count;
+               (*it).result->destroy();
+               delete (*it).handler;
+   
+               std::list<Query>::iterator temp = it;
+               ++it;
+               queries.erase(temp);
+            }
+            else
+            {
+               ++it;
+            }
+         }
+         sleep(1);
+      }
+   
+      assert(queries.empty());
+
+   }
 
    
    dns.shutdown();
