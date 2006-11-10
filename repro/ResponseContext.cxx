@@ -608,8 +608,7 @@ ResponseContext::sendRequest(const resip::SipMessage& request)
    if (request.header(h_RequestLine).method() == ACK)
    {
      DebugLog(<<"Posting Ack200DoneMessage");
-     static Data ack("ack");
-     mRequestContext.getProxy().post(new Ack200DoneMessage(mRequestContext.getTransactionId()+ack));
+     mRequestContext.getProxy().post(new Ack200DoneMessage(mRequestContext.getTransactionId()));
    }
 }
 
@@ -743,12 +742,16 @@ ResponseContext::processResponse(SipMessage& response)
          {
             cancelAllClientTransactions();
             mRequestContext.mHaveSentFinalResponse = true;
+            mBestResponse.header(h_StatusLine).statusCode()=
+               response.header(h_StatusLine).statusCode();
             mRequestContext.sendResponse(response);
          }
          else if (!mRequestContext.mHaveSentFinalResponse)
          {
             clearCandidateTransactions();
             mRequestContext.mHaveSentFinalResponse = true;
+            mBestResponse.header(h_StatusLine).statusCode()=
+               response.header(h_StatusLine).statusCode();
             mRequestContext.sendResponse(response);            
          }
          break;
