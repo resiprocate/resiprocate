@@ -80,7 +80,14 @@ class MasterProfile : public UserProfile
       ///Set this to allow the Registration Server to accept registration requests that contain 
       ///a To Tag.
       virtual bool& allowBadRegistrationEnabled();
-      virtual const bool allowBadRegistrationEnabled() const;      
+      virtual const bool allowBadRegistrationEnabled() const;  
+
+      ///Set this to include the RequestURI in merge request detection.
+      ///*!*!*!*!*!*! RED FLASHING LIGHT *!*!*!*!*!*! 
+      ///Endpoints implementing a B2BUA, Gateway or other device capable of rendering 
+      ///media from multiple endpoints for multiple identities, should enable this option.
+      virtual bool& checkReqUriInMergeDetectionEnabled();
+      virtual const bool checkReqUriInMergeDetectionEnabled() const;
 
    private:
       virtual UserProfile* clone() const;
@@ -96,7 +103,8 @@ class MasterProfile : public UserProfile
       bool mValidateContentEnabled;
       bool mValidateContentLanguageEnabled;
       bool mValidateAcceptEnabled;
-      bool mAllowBadRegistrationEnabled;      
+      bool mAllowBadRegistrationEnabled;    
+      bool mCheckReqUriInMergeDetectionEnabled;
 };
    
 }
