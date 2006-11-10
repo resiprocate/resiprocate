@@ -24,12 +24,14 @@ class LazyParser
 
       std::ostream& encode(std::ostream& str) const;
       std::ostream& encodeFromHeaderFieldValue(std::ostream& str) const;
-      bool isParsed() const {return mIsParsed;}
+      bool isParsed() const {return (mState!=NOT_PARSED);}
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
 
       // call (internally) before every access 
       void checkParsed() const;
+      
+      bool isWellFormed() const;
    protected:
       LazyParser();
 
@@ -44,8 +46,16 @@ class LazyParser
       friend class Contents;
 
       HeaderFieldValue* mHeaderField;
+
+      typedef enum
+      {
+         NOT_PARSED,
+         WELL_FORMED,
+         MALFORMED,
+         EMPTY 
+      } ParseState;
+      ParseState mState;
       bool mIsMine;
-      bool mIsParsed;
 };
 
 std::ostream&
