@@ -1437,7 +1437,7 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
 
    if (!request.header(h_To).exists(p_tag))
    {
-      if (mMergedRequests.count(MergedRequestKey(request)))
+      if (mMergedRequests.count(MergedRequestKey(request, getMasterProfile()->checkReqUriInMergeDetectionEnabled())))
       {
          SipMessage failure;
          makeResponse(failure, request, 482, "Merged Request");
