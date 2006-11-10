@@ -96,8 +96,27 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       mOriginalRequest=sip;
 	  
 	  // RFC 3261 Section 16.4
-      fixStrictRouterDamage();
-      removeTopRouteIfSelf();
+      try
+      {
+         fixStrictRouterDamage();
+         removeTopRouteIfSelf();
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         InfoLog(<<"Parse failure Exception caught: " << e);
+         resip::SipMessage response;
+         Helper::makeResponse(response, *mOriginalRequest,400); 
+         response.header(h_StatusLine).reason()="Malformed header-field-value: " + e.getMessage();
+         sendResponse(response);
+      }
+      catch(resip::BaseException& e)
+      {
+         ErrLog(<<"Exception caught: " << e);
+         resip::SipMessage response;
+         Helper::makeResponse(response, *mOriginalRequest,500); 
+         response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
+         sendResponse(response);
+      }
    }
 
    Processor::processor_action_t ret=Processor::Continue;
@@ -186,7 +205,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   ||
                   (
                      !getProxy().isMyUri(sip->header(h_RequestLine).uri()) && 
-                     getProxy().isMyUri(sip->header(h_From).uri()) 
+                     (sip->header(h_From).isWellFormed() && getProxy().isMyUri(sip->header(h_From).uri())) 
                   )
                   )
                {
