@@ -54,7 +54,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
 
 // UAS 
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
-   mMergeKey(request),
+   mMergeKey(request, dum.getMasterProfile()->checkReqUriInMergeDetectionEnabled()),
    mDialogs(),
    mCreator(0),
    mId(request),
