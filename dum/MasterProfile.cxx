@@ -7,6 +7,10 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 
+// Be sure to look at the documentation of the accessors for 
+// the members being set by this constructor in the .hxx file 
+// for the implications of these default values.
+
 MasterProfile::MasterProfile() : 
    mValidateContentEnabled(true),
    mValidateContentLanguageEnabled(false),
