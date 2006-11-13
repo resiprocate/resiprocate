@@ -101,12 +101,7 @@ TransportSelector::~TransportSelector()
 {
    deleteMap(mExactTransports);
    deleteMap(mAnyInterfaceTransports);
-   deleteMap(mV4TlsTransports);
-   deleteMap(mV4DtlsTransports);
-#ifdef USE_IPV6
-   deleteMap(mV6TlsTransports);
-   deleteMap(mV6DtlsTransports);
-#endif
+   deleteMap(mTlsTransports);
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
@@ -176,43 +171,11 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
       }
       break;
       case TLS:
-      {
-         if(transport->ipVersion()==V4)
-         {
-            mV4TlsTransports[transport->tlsDomain()] = transport;
-         }
-         else if(transport->ipVersion()==V6)
-         {
-#ifdef USE_IPV6
-            mV6TlsTransports[transport->tlsDomain()] = transport;
-#endif
-         }
-         else
-         {
-            assert(0);
-         }
-      }
-      break;
-#ifdef USE_DTLS
       case DTLS:
       {
-         if(transport->ipVersion()==V4)
-         {
-            mV4DtlsTransports[transport->tlsDomain()] = transport;
-         }
-         else if(transport->ipVersion()==V6)
-         {
-#ifdef USE_IPV6
-            mV6DtlsTransports[transport->tlsDomain()] = transport;
-#endif
-         }
-         else
-         {
-            assert(0);
-         }
+         TlsTransportKey key(transport->tlsDomain(),transport->transport(),transport->ipVersion());
+         mTlsTransports[key]=transport;
       }
-      break;
-#endif
       default:
          assert(0);
          break;
@@ -973,37 +936,12 @@ TransportSelector::sumTransportFifoSizes() const
       sum += i->second->getFifoSize();
    }
 
-   for (TlsTransportMap::const_iterator i = mV4TlsTransports.begin();
-        i != mV4TlsTransports.end(); ++i)
+   for (TlsTransportMap::const_iterator i = mTlsTransports.begin();
+        i != mTlsTransports.end(); ++i)
    {
       sum += i->second->getFifoSize();
    }
 
-#ifdef USE_IPV6
-   for (TlsTransportMap::const_iterator i = mV6TlsTransports.begin();
-        i != mV6TlsTransports.end(); ++i)
-   {
-      sum += i->second->getFifoSize();
-   }
-#endif
-
-#ifdef USE_DTLS
-   for (TlsTransportMap::const_iterator i = mV4DtlsTransports.begin();
-        i != mV4DtlsTransports.end(); ++i)
-   {
-      sum += i->second->getFifoSize();
-   }
-
-#ifdef USE_IPV6
-   for (TlsTransportMap::const_iterator i = mV6DtlsTransports.begin();
-        i != mV6DtlsTransports.end(); ++i)
-   {
-      sum += i->second->getFifoSize();
-   }
-#endif
-
-#endif
-   
    return sum;
 }
 
@@ -1084,13 +1022,9 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
          {
             return conn->transport();
          }
-         else if(target.getType()==TLS)
+         else if(target.getType()==TLS || target.getType()==DTLS)
          {
-            return findTlsTransport(msg->getTlsDomain(), target.ipVersion());
-         }
-         else if(target.getType()==DTLS)
-         {
-            return findTlsTransport(msg->getTlsDomain(), target.ipVersion());
+            return findTlsTransport(msg->getTlsDomain(),target.getType(),target.ipVersion());
          }
 
       }
@@ -1237,111 +1171,40 @@ TransportSelector::findTransportBySource(Tuple& search)
 
 
 Transport*
-TransportSelector::findTlsTransport(const Data& domainname,resip::IpVersion version)
+TransportSelector::findTlsTransport(const Data& domainname,resip::TransportType type,resip::IpVersion version)
 {
+   assert(type==TLS || type==DTLS);
+   DebugLog (<< "Searching for" << ((type==TLS) ? "TLS" : "DTLS") << "transport for domain='" 
+                  << domainname << "'" << " have " << mTlsTransports.size());
 
-   if(version==V4)
+   if (domainname == Data::Empty)
    {
-      DebugLog (<< "Searching for TLS transport for domain='" 
-                   << domainname << "'" << " have " << mV4TlsTransports.size());
-      // If no domainname specified and there is only 1 TLS transport, use it.
-      if (domainname == Data::Empty && mV4TlsTransports.size() == 1)
+      for(TlsTransportMap::iterator i=mTlsTransports.begin();
+            i!=mTlsTransports.end();++i)
       {
-         DebugLog (<< "Found default TLS transport for domain=" << mV4TlsTransports.begin()->first);
-         return mV4TlsTransports.begin()->second;
+         if(i->first.mType==type && i->first.mVersion==version)
+         {
+            DebugLog(<<"Found a default transport.");
+            return i->second;
+         }
       }
-
-      if (mV4TlsTransports.count(domainname))
-      {
-         DebugLog (<< "Found TLS transport for domain=" << mV4TlsTransports.begin()->first);
-         return mV4TlsTransports[domainname];
-      }
-
-      // don't know which one to use
-      DebugLog (<< "No TLS transport found");
-      return 0;
-   }
-   else if(version==V6)
-   {
-#ifdef USE_IPV6
-      DebugLog (<< "Searching for TLS transport for domain='" 
-                << domainname << "'" << " have " << mV6TlsTransports.size());
-      // If no domainname specified and there is only 1 TLS transport, use it.
-      if (domainname == Data::Empty && mV6TlsTransports.size() == 1)
-      {
-         DebugLog (<< "Found default TLS transport for domain=" << mV6TlsTransports.begin()->first);
-         return mV6TlsTransports.begin()->second;
-      }
-
-      if (mV6TlsTransports.count(domainname))
-      {
-         DebugLog (<< "Found TLS transport for domain=" << mV6TlsTransports.begin()->first);
-         return mV6TlsTransports[domainname];
-      }
-#endif
-      // don't know which one to use
-      DebugLog (<< "No TLS transport found");
-      return 0;   
    }
    else
    {
-      assert(0);
-      return 0;
-   }
-}
-
-
-Transport*
-TransportSelector::findDtlsTransport(const Data& domainname,resip::IpVersion version)
-
-{
-#ifdef USE_DTLS
-   if(version==V4)
-   {
-      DebugLog (<< "Searching for DTLS transport for domain='" << domainname << "'");
-      // If no domainname specified and there is only 1 TLS transport, use it.
-         if (domainname == Data::Empty && mV4DtlsTransports.size() == 1)
-      {
-         DebugLog (<< "Found default DTLS transport for domain=" << mV4DtlsTransports.begin()->first);
-         return (Transport*)mV4DtlsTransports.begin()->second;
-      }
-      
-         if (mV4DtlsTransports.count(domainname))
-      {
-         DebugLog (<< "Found DTLS transport for domain=" << mV4DtlsTransports.begin()->first);
-         return (Transport*)mV4DtlsTransports[domainname];
-      }
-   }
-   else if(version==V6)
-   {
-#ifdef USE_IPV6
-      DebugLog (<< "Searching for DTLS transport for domain='" << domainname << "'");
-      // If no domainname specified and there is only 1 TLS transport, use it.
-      if (domainname == Data::Empty && mV6DtlsTransports.size() == 1)
-      {
-         DebugLog (<< "Found default DTLS transport for domain=" << mV6DtlsTransports.begin()->first);
-         return (Transport*)mV6DtlsTransports.begin()->second;
-      }
-      
-      if (mV6DtlsTransports.count(domainname))
-      {
-         DebugLog (<< "Found DTLS transport for domain=" << mV6DtlsTransports.begin()->first);
-         return (Transport*)mV6DtlsTransports[domainname];
-      }
-#endif
-   }
-   else
-   {
-      assert(0);
-   }
-#endif
+      TlsTransportKey key(domainname,type,version);
    
-   // don't know which one to use
-   DebugLog (<< "No DTLS transport found");
+      TlsTransportMap::iterator i=mTlsTransports.find(key);
+      
+      if(i!=mTlsTransports.end())
+      {
+         DebugLog(<< "Found a transport.");
+         return i->second;
+      }
+   }
+   
+   DebugLog(<<"No transport found.");
    return 0;
 }
-
-
 
 unsigned int 
 TransportSelector::getTimeTillNextProcessMS()
