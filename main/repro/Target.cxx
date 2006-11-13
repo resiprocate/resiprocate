@@ -10,40 +10,37 @@ namespace repro
 {
 
 Target::Target()
-   : mPriorityMetric(0),
-   mShouldAutoProcess(true),
-   mCid(0),
-   mStatus(Candidate)
 {
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
+   mStatus=Candidate;
 }
 
 Target::Target(const resip::Uri& uri)
-   : mPriorityMetric(0),
-   mShouldAutoProcess(true),
-   mCid(0),
-   mStatus(Candidate),
-   mNameAddr(uri)
 {  
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
+   mNameAddr=resip::NameAddr(uri);
+   mStatus=Candidate;
 }
 
 Target::Target(const resip::NameAddr& target)
-   : mPriorityMetric(0),
-   mShouldAutoProcess(true),
-   mCid(0),
-   mStatus(Candidate),
-   mNameAddr(target)
 {
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
+   mNameAddr=target;
+   mStatus=Candidate;
 }
 
 Target::Target(const repro::Target& target)
-   : mPriorityMetric(target.mPriorityMetric),
-   mShouldAutoProcess(target.mShouldAutoProcess),
-   mCid(0),
-   mStatus(target.mStatus),
-   mVia(target.mVia),
-   mNameAddr(target.mNameAddr)
 {
+   mPriorityMetric=target.mPriorityMetric;
+   mShouldAutoProcess=target.mShouldAutoProcess;
+   mNameAddr=target.mNameAddr;
+   mStatus=target.mStatus;
+   mVia=target.mVia;
 }
+
 
 
 Target::~Target()

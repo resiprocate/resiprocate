@@ -157,9 +157,9 @@ TransactionState::process(TransactionController& controller)
       delete message;
       return;
    }
-
+   
    SipMessage* sip = dynamic_cast<SipMessage*>(message);
-
+   
    if(sip)
    {
       // !bwc! Should this come after checking for error conditions?
@@ -167,7 +167,7 @@ TransactionState::process(TransactionController& controller)
       {
          controller.mStatsManager.received(sip);
       }
-
+      
       // !bwc! Check for error conditions we can respond to.
       if(sip->isRequest() && sip->method() != ACK)
       {
@@ -213,12 +213,10 @@ TransactionState::process(TransactionController& controller)
          tid += "cancel";
       }
    }
-
+      
    TransactionState* state = 0;
-   if (message->isClientTransaction()) 
-      state = controller.mClientTransactionMap.find(tid);
-   else 
-      state = controller.mServerTransactionMap.find(tid);
+   if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
+   else state = controller.mServerTransactionMap.find(tid);
    
    // !bwc! This code ensures that the transaction state-machine can recover
    // from ACK/200 with the same tid as the original INVITE. This problem is
