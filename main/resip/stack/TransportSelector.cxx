@@ -176,6 +176,7 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
          TlsTransportKey key(transport->tlsDomain(),transport->transport(),transport->ipVersion());
          mTlsTransports[key]=transport;
       }
+         break;
       default:
          assert(0);
          break;
