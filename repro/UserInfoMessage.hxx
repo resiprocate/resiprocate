@@ -2,6 +2,7 @@
 #define USER_INFO_MESSAGE_HXX 1
 
 #include "repro/ProcessorMessage.hxx"
+#include "repro/AbstractDb.hxx"
 
 namespace repro
 {
@@ -9,7 +10,7 @@ namespace repro
 class UserInfoMessage : public ProcessorMessage
 {
    public:
-      UserInfoMessage(const Processor& proc,
+      UserInfoMessage(Processor& proc,
                      const resip::Data& tid,
                      resip::TransactionUser* passedtu):
          ProcessorMessage(proc,tid,passedtu)
@@ -19,21 +20,22 @@ class UserInfoMessage : public ProcessorMessage
       UserInfoMessage(const UserInfoMessage& orig):
          ProcessorMessage(orig)
       {
-         mUser=orig.user();
-         mRealm=orig.realm();
-         mA1=orig.A1();
+         mRec=orig.mRec;
       }
       
       resip::Data& tid(){return mTid;}
       
-      const resip::Data& user() const{return mUser;}
-      resip::Data& user(){return mUser;}
+      const resip::Data& user() const{return mRec.user;}
+      resip::Data& user(){return mRec.user;}
       
-      const resip::Data& realm() const{return mRealm;}
-      resip::Data& realm(){return mRealm;}
+      const resip::Data& realm() const{return mRec.realm;}
+      resip::Data& realm(){return mRec.realm;}
       
-      const resip::Data& A1() const{return mA1;}
-      resip::Data& A1(){return mA1;}
+      const resip::Data& domain() const{return mRec.domain;}
+      resip::Data& domain(){return mRec.domain;}
+      
+      const resip::Data& A1() const{return mRec.passwordHash;}
+      resip::Data& A1(){return mRec.passwordHash;}
       
       
       virtual UserInfoMessage* clone() const {return new UserInfoMessage(*this);};
@@ -42,10 +44,7 @@ class UserInfoMessage : public ProcessorMessage
       virtual std::ostream& encode(std::ostream& ostr) const { ostr << "UserInfoMessage("<<mTid<<") "; return ostr; };
       virtual std::ostream& encodeBrief(std::ostream& ostr) const{ ostr << "UserInfoMessage("<<mTid<<") "; return ostr; };
       
-   protected:
-      resip::Data mUser;
-      resip::Data mRealm;
-      resip::Data mA1;
+      AbstractDb::UserRecord mRec;
       
 };
 
