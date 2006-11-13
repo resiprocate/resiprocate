@@ -43,18 +43,19 @@ LocationServer::process(RequestContext& context)
          RegistrationPersistenceManager::ContactRecord contact = *i;
          if (contact.expires>=time(NULL))
          {
+            if(contact.cid != 0)
+            {
+               static ExtensionParameter p_cid("cid");
+               contact.uri.param(p_cid)=resip::Data(contact.cid);
+            }
             InfoLog (<< *this << " adding target " << contact.uri);
             if(contact.useQ)
             {
-               QValueTarget* target=new QValueTarget(contact.uri,contact.q);
-               target->mCid=contact.cid;
-               batch.push_back(target);
+               batch.push_back(new QValueTarget(contact.uri,contact.q));
             }
             else
             {
-               QValueTarget* target=new QValueTarget(contact.uri,1.0);
-               target->mCid=contact.cid;
-               batch.push_back(target);
+               batch.push_back(new QValueTarget(contact.uri,1.0));   
             }
          }
          else

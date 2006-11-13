@@ -567,12 +567,10 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       //should be the same from here on out.
       request.header(h_Vias).push_front(target->via());
 
-      if (target->mCid != 0)
+      if (mRequestContext.mTargetConnectionId != 0)
       {
-         Tuple tuple;
-         tuple.connectionId=target->mCid;
-         request.setDestination(tuple);
-         InfoLog (<< "Use an existing connection id: " << target->mCid);
+         request.header(h_RequestLine).uri().param(p_cid) = Data(mRequestContext.mTargetConnectionId);
+         InfoLog (<< "Use an existing connection id: " << request.header(h_RequestLine).uri());
       }
 
       
