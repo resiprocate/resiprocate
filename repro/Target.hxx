@@ -4,6 +4,7 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "resip/stack/Via.hxx"
 
 namespace repro
@@ -66,6 +67,7 @@ class Target
       */
       float mPriorityMetric;
       bool mShouldAutoProcess;
+      resip::ConnectionId mCid;
       
    protected:
       Status mStatus;
