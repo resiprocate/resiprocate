@@ -38,7 +38,7 @@ LocationServer::process(RequestContext& context)
 
       std::list<Target*> batch;
       for ( RegistrationPersistenceManager::ContactRecordList::iterator i  = contacts.begin()
-         ; i != contacts.end()    ; ++i)
+            ; i != contacts.end()    ; ++i)
       {
          RegistrationPersistenceManager::ContactRecord contact = *i;
          if (contact.expires>=time(NULL))
@@ -71,7 +71,7 @@ LocationServer::process(RequestContext& context)
          context.getResponseContext().addTargetBatch(batch);
          //ResponseContext should be consuming the vector
          assert(batch.empty());
-      }          
+      }
    }
    else
    {
