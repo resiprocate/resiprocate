@@ -126,6 +126,7 @@ Proxy::thread()
                   }
                   
                   // !bwc! Unacceptable values for Max-Forwards
+                  // TODO make this ceiling configurable
                   if(sip->header(h_MaxForwards).value() > 255)
                   {
                      sip->header(h_MaxForwards).value()=20;                     
