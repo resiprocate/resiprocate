@@ -98,7 +98,7 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
       mCandidateTransactionMap[target.tid()]=target.clone();
    }
    
-   return true;   
+   return true;
 }
 
 bool
@@ -119,7 +119,7 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
       targets.clear();
       return false;
    }
-     
+
    
    for(it=targets.begin();it!=targets.end();it++)
    {
@@ -191,9 +191,8 @@ ResponseContext::beginClientTransactions()
       mCandidateTransactionMap.erase(temp);
    }
    
-   return true;
+   return result;
 }
-
 
 bool 
 ResponseContext::beginClientTransaction(const resip::Data& tid)
@@ -220,7 +219,6 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
    
    return true;
 }
-
 
 bool 
 ResponseContext::cancelActiveClientTransactions()
@@ -304,16 +302,18 @@ ResponseContext::clearCandidateTransactions()
 
 }
 
-
 bool 
 ResponseContext::cancelClientTransaction(const resip::Data& tid)
 {
 
    TransactionMap::iterator i = mActiveTransactionMap.find(tid);
-   if(i!=mActiveTransactionMap.end())
+   if(mRequestContext.getOriginalRequest().method()==INVITE)
    {
-      cancelClientTransaction(i->second);      
-      return true;
+      if(i!=mActiveTransactionMap.end())
+      {
+         cancelClientTransaction(i->second);      
+         return true;
+      }
    }
    
    TransactionMap::iterator j = mCandidateTransactionMap.find(tid);
@@ -327,7 +327,6 @@ ResponseContext::cancelClientTransaction(const resip::Data& tid)
    
    return false;
 }
-
 
 Target* 
 ResponseContext::getTarget(const resip::Data& tid) const
@@ -358,13 +357,11 @@ ResponseContext::getTarget(const resip::Data& tid) const
    return 0;
 }
 
-
 const ResponseContext::TransactionMap& 
 ResponseContext::getCandidateTransactionMap() const
 {
    return mCandidateTransactionMap;
 }
-
 
 bool 
 ResponseContext::hasCandidateTransactions() const
@@ -372,20 +369,17 @@ ResponseContext::hasCandidateTransactions() const
    return !mRequestContext.mHaveSentFinalResponse && !mCandidateTransactionMap.empty();
 }
 
-
 bool 
 ResponseContext::hasActiveTransactions() const
 {
    return !mActiveTransactionMap.empty();
 }
 
-
 bool 
 ResponseContext::hasTerminatedTransactions() const
 {
    return !mTerminatedTransactionMap.empty();
 }
-
 
 bool
 ResponseContext::hasTargets() const
@@ -401,14 +395,12 @@ ResponseContext::areAllTransactionsTerminated() const
    return (mCandidateTransactionMap.empty() && mActiveTransactionMap.empty());
 }
 
-
 bool
 ResponseContext::isCandidate(const resip::Data& tid) const
 {
    TransactionMap::const_iterator i=mCandidateTransactionMap.find(tid);
    return i!=mCandidateTransactionMap.end();
 }
-
 
 bool
 ResponseContext::isActive(const resip::Data& tid) const
@@ -417,14 +409,12 @@ ResponseContext::isActive(const resip::Data& tid) const
    return i!=mActiveTransactionMap.end();
 }
 
-
 bool
 ResponseContext::isTerminated(const resip::Data& tid) const
 {
    TransactionMap::const_iterator i=mTerminatedTransactionMap.find(tid);
    return i!=mTerminatedTransactionMap.end();
 }
-
 
 void 
 ResponseContext::removeClientTransaction(const resip::Data& transactionId)
@@ -462,8 +452,7 @@ ResponseContext::removeClientTransaction(const resip::Data& transactionId)
    }
          
 }
- 
- 
+
 bool
 ResponseContext::isDuplicate(const repro::Target* target) const
 {
@@ -539,10 +528,14 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
          }
          
+         // !bwc! This Via is well-formed, since we grabbed the tid from it.
          const Data& sentTransport = request.header(h_Vias).front().transport();
          if (sentTransport != Symbols::UDP)
          {
-            rt.uri().param(p_transport) = sentTransport;
+            if(!rt.uri().exists(p_transport))
+            {
+               rt.uri().param(p_transport) = sentTransport;
+            }
             
             if (mRequestContext.getOriginalRequest().getSource().connectionId != 0)
             {
@@ -601,7 +594,7 @@ void
 ResponseContext::sendRequest(const resip::SipMessage& request)
 {
    assert (request.isRequest());
-   mRequestContext.mProxy.send(request);
+
    if (request.method() != CANCEL && 
        request.method() != ACK)
    {
@@ -614,6 +607,8 @@ ResponseContext::sendRequest(const resip::SipMessage& request)
      DebugLog(<<"Posting Ack200DoneMessage");
      mRequestContext.getProxy().post(new Ack200DoneMessage(mRequestContext.getTransactionId()));
    }
+
+   mRequestContext.mProxy.send(request);
 }
 
 
@@ -629,6 +624,12 @@ ResponseContext::processCancel(const SipMessage& request)
    if (!mRequestContext.mHaveSentFinalResponse)
    {
       cancelAllClientTransactions();
+      if(!hasActiveTransactions())
+      {
+         SipMessage reqterm;
+         Helper::makeResponse(reqterm,mRequestContext.getOriginalRequest(),487);
+         mRequestContext.sendResponse(reqterm);
+      }
    }
 }
 
@@ -661,19 +662,28 @@ ResponseContext::processResponse(SipMessage& response)
       // Silently stop processing the CANCEL responses.
       // We will handle the 100 responses later
       // Log other responses we can't forward
+
       if(response.method()==CANCEL)
       {
          return;
       }
-      
-      if ((response.method() != CANCEL) && 
-          (response.header(h_StatusLine).statusCode() != 100)) {
+      else if (response.header(h_StatusLine).statusCode() > 199)
+      {
+         InfoLog( << "Received final response, but can't forward as there are no more Vias: " << response.brief() );
+         // !bwc! Treat as server error.
+         terminateClientTransaction(transactionId);
+         return;
+      }
+      else if(response.header(h_StatusLine).statusCode() != 100)
+      {
          InfoLog( << "Received response, but can't forward as there are no more Vias: " << response.brief() );
+         return;
       }
    }
    else
    {
       const Via& via = response.header(h_Vias).front();
+
       if(!via.isWellFormed())
       {
          // !bwc! Garbage via. Unrecoverable. Ignore if provisional, terminate
@@ -702,6 +712,7 @@ ResponseContext::processResponse(SipMessage& response)
    InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
 
    TransactionMap::iterator i = mActiveTransactionMap.find(transactionId);
+
    int code = response.header(h_StatusLine).statusCode();
    if (i == mActiveTransactionMap.end())
    {
@@ -710,21 +721,21 @@ ResponseContext::processResponse(SipMessage& response)
       // Log the response here:
       if ((code / 100) != 2)
       {
-        InfoLog( << "Discarding stray response" );
+         InfoLog( << "Discarding stray response" );
       }
       // Even though this is a tremendously bad idea, some developers may
       // decide they want to statelessly forward the response
       // Here is the gun.  Don't say we didn't warn you!
       else
       {
-        // !abr! Because we don't run timers on the transaction after
-        //       it has terminated and because the ACKs on INVITE
-        //       200-class responses are end-to-end, we don't discard
-        //       200 responses. To do this properly, we should run a
-        //       transaction timer for 64*T1 and remove transactions from
-        //       the ActiveTransactionMap *only* after that timer expires.
-        //       IN OTHER WORDS, REMOVE THIS CODE.
-        mRequestContext.sendResponse(response);
+         // !abr! Because we don't run timers on the transaction after
+         //       it has terminated and because the ACKs on INVITE
+         //       200-class responses are end-to-end, we don't discard
+         //       200 responses. To do this properly, we should run a
+         //       transaction timer for 64*T1 and remove transactions from
+         //       the ActiveTransactionMap *only* after that timer expires.
+         //       IN OTHER WORDS, REMOVE THIS CODE.
+         mRequestContext.sendResponse(response);
       }
       return;
    }
@@ -761,7 +772,7 @@ ResponseContext::processResponse(SipMessage& response)
          
       case 2:
          terminateClientTransaction(transactionId);
-         if (response.method() == INVITE)
+         if (mRequestContext.getOriginalRequest().method() == INVITE)
          {
             cancelAllClientTransactions();
             mRequestContext.mHaveSentFinalResponse = true;
@@ -813,6 +824,7 @@ ResponseContext::processResponse(SipMessage& response)
                }
                else if (code / 100 == 3) // merge 3xx
                {
+
                   if(mBestResponse.header(h_StatusLine).statusCode()/100!=3)
                   {
                      // !bwc! Do not merge contacts in 3xx with contacts from a
@@ -837,6 +849,10 @@ ResponseContext::processResponse(SipMessage& response)
                      
                      mBestResponse.header(h_Contacts).push_back(*i);
                   }
+
+                  // !bwc! it is possible for this code to end up with a 300
+                  // with no Contacts in it (because they were all malformed)
+                  // Is this acceptable? Also, is 300 the code we want here?
                   mBestResponse.header(h_StatusLine).statusCode() = 300;
                }
             }
@@ -861,7 +877,7 @@ ResponseContext::processResponse(SipMessage& response)
             {
                mBestResponse = response;
                mBestPriority=0; //6xx class responses take precedence over all 3xx,4xx, and 5xx
-               if (response.method() == INVITE)
+               if (mRequestContext.getOriginalRequest().method() == INVITE)
                {
                   // CANCEL INVITE branches
                   cancelAllClientTransactions();
@@ -870,7 +886,7 @@ ResponseContext::processResponse(SipMessage& response)
             
             if (areAllTransactionsTerminated())
             {
-               mRequestContext.sendResponse(mBestResponse);
+               forwardBestResponse();
             }
          }
          break;
@@ -952,133 +968,133 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
    int responseCode = msg.header(h_StatusLine).statusCode();
    int p = 0;  // "p" is the relative priority of the response
 
-	assert(responseCode >= 300 && responseCode <= 599);
-	if (responseCode <= 399)  // 3xx response
-	{ 
-		return 5;  // response priority is 5
-	}
-	if (responseCode >= 500)
-	{
-		switch(responseCode)
-		{
-			case 501:	// these three have different priorities
-			case 503:   // which are addressed in the case statement
-			case 580:	// below (with the 4xx responses)
-         case 513:
-				break;
-			default:
-				return 42; // response priority of other 5xx is 42
-		}
-	}
+      assert(responseCode >= 300 && responseCode <= 599);
+      if (responseCode <= 399)  // 3xx response
+      { 
+         return 5;  // response priority is 5
+      }
+      if (responseCode >= 500)
+      {
+         switch(responseCode)
+         {
+            case 501:	// these four have different priorities
+            case 503:   // which are addressed in the case statement
+            case 580:	// below (with the 4xx responses)
+            case 513:
+                  break;
+            default:
+                  return 42; // response priority of other 5xx is 42
+         }
+      }
 
-	switch(responseCode)
-	{
-		// Easy to Repair Responses: 412, 484, 422, 423, 407, 401, 300..399, 402
-		case 412:		// Publish ETag was stale
-           return 1;
-		case 484:		// overlap dialing
-           return 2;
-		case 422:		// Session-Timer duration too long
-		case 423:		// Expires too short
-           return 3;
-		case 407:		// Proxy-Auth
-		case 401:		// UA Digest challenge
-           return 4;
-			
-		// 3xx responses have p = 5
-		case 402:		// Payment required
-           return 6;
+      switch(responseCode)
+      {
+         // Easy to Repair Responses: 412, 484, 422, 423, 407, 401, 300..399, 402
+         case 412:		// Publish ETag was stale
+            return 1;
+         case 484:		// overlap dialing
+            return 2;
+         case 422:		// Session-Timer duration too long
+         case 423:		// Expires too short
+            return 3;
+         case 407:		// Proxy-Auth
+         case 401:		// UA Digest challenge
+            return 4;
+                  
+         // 3xx responses have p = 5
+         case 402:		// Payment required
+            return 6;
 
-		// Responses used for negotiation: 493, 429, 420, 406, 415, 488
-		case 493:		// Undecipherable, try again unencrypted 
-           return 10;
+         // Responses used for negotiation: 493, 429, 420, 406, 415, 488
+         case 493:		// Undecipherable, try again unencrypted 
+            return 10;
 
-		case 420:		// Required Extension not supported, try again without
-           return 12;
+         case 420:		// Required Extension not supported, try again without
+            return 12;
 
-		case 406:		// Not Acceptable
-		case 415:		// Unsupported Media Type
-		case 488:		// Not Acceptable Here
-           return 13;
-			
-		// Possibly useful for negotiation, but less likely: 421, 416, 417, 494, 580, 485, 405, 501, 413, 414
-		
-		case 416:		// Unsupported scheme
-		case 417:		// Unknown Resource-Priority
-           return 20;
+         case 406:		// Not Acceptable
+         case 415:		// Unsupported Media Type
+         case 488:		// Not Acceptable Here
+            return 13;
+                  
+         // Possibly useful for negotiation, but less likely: 421, 416, 417, 494, 580, 485, 405, 501, 413, 414
+         
+         case 416:		// Unsupported scheme
+         case 417:		// Unknown Resource-Priority
+            return 20;
 
-		case 405:		// Method not allowed (both used for negotiating REFER, PUBLISH, etc..
-		case 501:		// Usually used when the method is not OK
-           return 21;
+         case 405:		// Method not allowed (both used for negotiating REFER, PUBLISH, etc..
+         case 501:		// Usually used when the method is not OK
+            return 21;
 
-		case 580:		// Preconditions failure
-           return 22;
+         case 580:		// Preconditions failure
+            return 22;
 
-		case 485:		// Ambiguous userpart.  A bit better than 404?
-           return 23;
+         case 485:		// Ambiguous userpart.  A bit better than 404?
+            return 23;
 
-		case 428:		// Use Identity header
-		case 429:		// Provide Referrer Identity 
-		case 494:		// Use the sec-agree mechanism
-           return 24;
+         case 428:		// Use Identity header
+         case 429:		// Provide Referrer Identity 
+         case 494:		// Use the sec-agree mechanism
+            return 24;
 
-		case 413:		// Request too big
-		case 414:		// URI too big
-           return 25;
+         case 413:		// Request too big
+         case 414:		// URI too big
+            return 25;
 
-		case 421:		// An extension required by the server was not in the Supported header
-           return 26;
-		
-		// The request isn't repairable, but at least we can try to provide some 
-		// useful information: 486, 480, 410, 404, 403, 487
-		
-		case 486:		// Busy Here
-           return 30;
+         case 421:		// An extension required by the server was not in the Supported header
+            return 26;
+         
+         // The request isn't repairable, but at least we can try to provide some 
+         // useful information: 486, 480, 410, 404, 403, 487
+         
+         case 486:		// Busy Here
+            return 30;
 
-		case 480:		// Temporarily unavailable
-           return 31;
+         case 480:		// Temporarily unavailable
+            return 31;
 
-		case 410:		// Gone
-           return 32;
+         case 410:		// Gone
+            return 32;
 
-		case 436:		// Bad Identity-Info 
-		case 437:		// Unsupported Certificate
-      case 513:      // Message too large
-           return 33;
+         case 436:		// Bad Identity-Info 
+         case 437:		// Unsupported Certificate
+         case 513:      // Message too large
+            return 33;
 
-		case 403:		// Forbidden
-           return 34;
+         case 403:		// Forbidden
+            return 34;
 
-		case 404:		// Not Found
-           return 35;
+         case 404:		// Not Found
+            return 35;
 
-		case 487:		// Some branches were cancelled, if the UAC sent a CANCEL this is good news
-           return 36;
+         case 487:		// Some branches were cancelled, if the UAC sent a CANCEL this is good news
+            return 36;
 
-		// We are hosed: 503, 483, 482, 481, other 5xx, 400, 491, 408  // totally useless
+         // We are hosed: 503, 483, 482, 481, other 5xx, 400, 491, 408  // totally useless
 
-		case 503:	// bad news, but maybe we got a 
-           return 40;
+         case 503:	// bad news, we should never forward this back anyway
+            return 43;
 
-		case 483:	// loops, encountered
-		case 482:
-           return 41;
-			
-		// other 5xx   p = 42
+         case 483:	// loops, encountered
+         case 482:
+            return 41;
+                  
+         // other 5xx   p = 42
 
-		// UAS is seriously confused: p = 43
-		// case 481:	
-		// case 400:
-		// case 491:
-		// default:
-		
-		case 408:	// very, very bad  (even worse than the remaining 4xx responses)
-           return 49;
-		
-		default:
-           return 43;
-	}
-    return p;
+         // UAS is seriously confused: p = 43
+         // case 481:	
+         // case 400:
+         // case 491:
+         // default:
+         
+         case 408:	// very, very bad  (even worse than the remaining 4xx responses)
+            return 49;
+         
+         default:
+            return 43;
+      }
+   return p;
 }
 
 bool 
@@ -1117,7 +1133,7 @@ ResponseContext::forwardBestResponse()
       mRequestContext.sendResponse(mBestResponse);
    }
    else if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
-            mBestResponse.method() == INVITE)
+            mRequestContext.getOriginalRequest().method() == INVITE)
    {
       // don't forward 408 to Non-INVITE Transactions (NITs)
       mRequestContext.sendResponse(mBestResponse);
