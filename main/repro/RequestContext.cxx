@@ -224,7 +224,18 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       }
       else
       {
-         ret = mRequestProcessorChain.process(*this);
+         try
+         {
+            ret = mRequestProcessorChain.process(*this);
+         }
+         catch(resip::BaseException& e)
+         {
+            SipMessage response;
+            Helper::makeResponse(response,*mOriginalRequest,500);
+            response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
+            ErrLog(<<"Exception caught: " << e);
+            sendResponse(response);
+         }
       }
       
 
@@ -247,7 +258,29 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             << mResponseContext.mCandidateTransactionMap.size() 
             << " candidates -> continue");
             
-            ret = mTargetProcessorChain.process(*this);
+            try
+            {
+               ret = mTargetProcessorChain.process(*this);
+            }
+            catch(resip::BaseException& e)
+            {
+               if(mResponseContext.hasActiveTransactions())
+               {
+                  // !bwc! Whoops. We may have just forwarded garbage upstream.
+                  // TODO is it appropriate to try to CANCEL here?
+                  ErrLog(<<"Server error caught after"
+                                 " request was forwarded. Exception was: "<<e);
+               }
+               else
+               {
+                  mResponseContext.clearCandidateTransactions();
+                  SipMessage response;
+                  Helper::makeResponse(response,*mOriginalRequest,500);
+                  response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
+                  ErrLog(<<"Exception caught: " << e);
+                  sendResponse(response);
+               }            
+            }
 
             if(ret != Processor::WaitingForEvent &&
                !mHaveSentFinalResponse && 
@@ -271,7 +304,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   << " appears to have added Targets, but all of these Targets"
                   << " are already Terminated. Further, there are no candidate"
                   << " Targets. (Bad monkey?)");
-
                   // Send best response
                   mResponseContext.forwardBestResponse();
                }
@@ -285,7 +317,21 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       // Call handle Response if its a response
       
       Processor::processor_action_t ret = Processor::Continue;
-      ret = mResponseProcessorChain.process(*this);
+      try
+      {
+         ret = mResponseProcessorChain.process(*this);
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         InfoLog(<<"Garbage in response; dropping message. " << e);
+         delete sip;
+         return;
+      }
+      catch(resip::BaseException& e)
+      {
+         ErrLog(<<"Exception thrown in response processor chain: " << e);
+         //!bwc! TODO what do we do here? Continue processing? Give up?
+      }
 
       // TODO
       // this is temporarily not allowed.  Allowing async requests in the
@@ -307,6 +353,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             if(mResponseContext.hasCandidateTransactions())
             {
                resip::SipMessage response;
+               Helper::makeResponse(response, *mOriginalRequest, 500); 
                // The last active transaction has ended, and the response processors
                // did not start any of the pending transactions.
                // Send a 500 response.
@@ -315,7 +362,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                        << " remaining. (Bad baboon?)"
                        << "Sending a 500 response for this request:" 
                        << mOriginalRequest->header(h_RequestLine).uri() );
-               Helper::makeResponse(response, *mOriginalRequest, 500); 
                sendResponse(response);
             }
             else
@@ -328,8 +374,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                mResponseContext.forwardBestResponse();
             }
          }
-         
-         return;
       }
    }
 }
@@ -354,6 +398,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
    }
 
    TimerCMessage* tc = dynamic_cast<TimerCMessage*>(mCurrentEvent);
+
    if(tc)
    {
       if(tc->mSerial == mTCSerial)
@@ -365,6 +410,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
    }
 
    ChainTraverser* ct=dynamic_cast<ChainTraverser*>(mCurrentEvent);
+   
    if(ct)
    {
       Processor::ChainType type = ct->chainType();
@@ -372,7 +418,7 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 
       switch(type)
       {
-      case Processor::REQUEST_CHAIN:
+         case Processor::REQUEST_CHAIN:
             try
             {
                ret = mRequestProcessorChain.process(*this);
@@ -386,21 +432,21 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                sendResponse(response);            
             }
 
-         if(ret != Processor::WaitingForEvent && !mHaveSentFinalResponse)
-         {
-            if (!mResponseContext.hasTargets())
+            if(ret != Processor::WaitingForEvent && !mHaveSentFinalResponse)
             {
-               // make 480, send, dispose of memory
-               resip::SipMessage response;
-               InfoLog (<< *this << ": no targets for " 
-                  << mOriginalRequest->header(h_RequestLine).uri() 
-                  << " send 480");
-               Helper::makeResponse(response, *mOriginalRequest, 480); 
-               sendResponse(response);
-            }
-            else
-            {
-               InfoLog (<< *this << " there are " 
+               if (!mResponseContext.hasTargets())
+               {
+                  // make 480, send, dispose of memory
+                  resip::SipMessage response;
+                  Helper::makeResponse(response, *mOriginalRequest, 480); 
+                  InfoLog (<< *this << ": no targets for " 
+                           << mOriginalRequest->header(h_RequestLine).uri() 
+                           << " send 480");
+                  sendResponse(response);
+               }
+               else
+               {
+                  InfoLog (<< *this << " there are " 
                   << mResponseContext.mCandidateTransactionMap.size() 
                   << " candidates -> continue");
 
@@ -428,52 +474,52 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                      }            
                   }
 
-               if(ret != Processor::WaitingForEvent &&
-                  !mHaveSentFinalResponse && 
-                  !mResponseContext.hasActiveTransactions())
-               {
-                  if(mResponseContext.hasCandidateTransactions())
+                  if(ret != Processor::WaitingForEvent &&
+                     !mHaveSentFinalResponse && 
+                     !mResponseContext.hasActiveTransactions())
                   {
-                     resip::SipMessage response;
-                     // Someone forgot to start any of the targets they just added.
-                     // Send a 500 response
-                     ErrLog( << "In RequestContext, request and target processor"
-                        << " chains have run, and we have some Candidate Targets,"
-                        << " but no active Targets. (Bad baboon?)"
-                        << "Sending a 500 response for this request:" 
-                        << mOriginalRequest->header(h_RequestLine).uri() );
-                     Helper::makeResponse(response, *mOriginalRequest, 500); 
-                     sendResponse(response);
-                  }
-                  else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
-                  {
-                     ErrLog(<< "In RequestContext, request and target processor "
+                     if(mResponseContext.hasCandidateTransactions())
+                     {
+                        resip::SipMessage response;
+                        Helper::makeResponse(response, *mOriginalRequest, 500); 
+                        // Someone forgot to start any of the targets they just added.
+                        // Send a 500 response
+                        ErrLog( << "In RequestContext, request and target processor"
+                                 << " chains have run, and we have some Candidate Targets,"
+                                 << " but no active Targets. (Bad baboon?)"
+                                 << "Sending a 500 response for this request:" 
+                                 << mOriginalRequest->header(h_RequestLine).uri() );
+                        sendResponse(response);
+                     }
+                     else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
+                     {
+                        ErrLog(<< "In RequestContext, request and target processor "
                         << "chains have run, and all Targets are now Terminated."
                         << " However, we have not sent a final response, and our "
                         << "best final response is not a 408.(What happened here?)");
 
-                     // Send best response
-                     mResponseContext.forwardBestResponse();
+                        // Send best response
+                        mResponseContext.forwardBestResponse();
+                     }
                   }
                }
             }
-         }
-         break;
+            break;
 
-      case Processor::RESPONSE_CHAIN:
-         ret = mResponseProcessorChain.process(*this);
+         case Processor::RESPONSE_CHAIN:
+            ret = mResponseProcessorChain.process(*this);
 
-         mTargetProcessorChain.process(*this);
-         break;
+            mTargetProcessorChain.process(*this);
+            break;
 
-      case Processor::TARGET_CHAIN:
-         ret = mTargetProcessorChain.process(*this);
-         break;
+         case Processor::TARGET_CHAIN:
+            ret = mTargetProcessorChain.process(*this);
+            break;
 
-      default:
-         ErrLog(<<"RequestContext " << getTransactionId() << " got a "
-            << "ProcessorMessage addressed to a non existent chain "
-            << type);
+         default:
+            ErrLog(<<"RequestContext " << getTransactionId() << " got a "
+                     << "ProcessorMessage addressed to a non existent chain "
+                     << type);
       }
    }
 }
@@ -565,7 +611,6 @@ RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,in
    mProxy.postMS(msg,seconds);
 }
 
-
 void
 RequestContext::sendResponse(const SipMessage& msg)
 {
@@ -581,16 +626,16 @@ RequestContext::sendResponse(const SipMessage& msg)
    }
    else
    {
+      //!bwc! Provisionals are not final responses, and CANCEL/200 is not a final
+      //response in this context.
+      if (msg.header(h_StatusLine).statusCode()>199 && msg.method()!=CANCEL)
+      {
+         DebugLog(<<"Sending final response.");
+         mHaveSentFinalResponse=true;
+      }
       mProxy.send(msg);
    }
    
-   //!bwc! Provisionals are not final responses, and CANCEL/200 is not a final
-   //response in this context.
-   if (msg.header(h_StatusLine).statusCode()>199 && msg.method()!=CANCEL)
-   {
-      DebugLog(<<"Sending final response.");
-      mHaveSentFinalResponse=true;
-   }
 }
 
 //      This function assumes that if ;lr shows up in the

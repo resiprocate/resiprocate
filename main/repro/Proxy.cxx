@@ -104,9 +104,9 @@ Proxy::thread()
                      delete sip;
                      continue;  
                   }
-			   
+
                   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
-			   
+
                   // check the MaxForwards isn't too low
                   if (!sip->exists(h_MaxForwards))
                   {
@@ -155,11 +155,26 @@ Proxy::thread()
 
                      if(i == mServerRequestContexts.end())
                      {
-                        WarningLog(<< "Could not find Request Context for a CANCEL. Doing nothing.");
+                        SipMessage response;
+                        Helper::makeResponse(response,*sip,481);
+                        mStack.send(response,this);
+                        delete sip;
                      }
                      else
                      {
-                        i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                        try
+                        {
+                           i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                        }
+                        catch(resip::BaseException& e)
+                        {
+                           // !bwc! Some sort of unhandled error in process.
+                           // This is very bad; we cannot form a response 
+                           // at this point because we do not know
+                           // whether the original request still exists.
+                           ErrLog(<<"Uncaught exception in process on a CANCEL request: " << e
+                                          << std::endl << "This has a high probability of leaking memory!");
+                        }
                      }
                   }
                   else if (sip->method() == ACK)
@@ -178,6 +193,8 @@ Proxy::thread()
                      RequestContext* context=0;
 
                      HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(tid);
+                     
+                     // !bwc! This might be an ACK/200, or a stray ACK/failure
                      if(i == mServerRequestContexts.end())
                      {
                         context = new RequestContext(*this, 
@@ -186,7 +203,7 @@ Proxy::thread()
                                                      mTargetProcessorChain);
                         mServerRequestContexts[tid] = context;
                      }
-                     else
+                     else // !bwc! ACK/failure
                      {
                         context = i->second;
                      }
@@ -194,7 +211,16 @@ Proxy::thread()
                      // The stack will send TransactionTerminated messages for
                      // client and server transaction which will clean up this
                      // RequestContext 
-                     context->process(std::auto_ptr<resip::SipMessage>(sip));
+                     try
+                     {
+                        context->process(std::auto_ptr<resip::SipMessage>(sip));
+                     }
+                     catch(resip::BaseException& e)
+                     {
+                        // !bwc! Some sort of unhandled error in process.
+                        ErrLog(<<"Uncaught exception in process on an ACK request: " << e
+                                       << std::endl << "This has a high probability of leaking memory!");
+                     }
                   }
                   else
                   {
@@ -211,7 +237,19 @@ Proxy::thread()
                         InfoLog (<< "Inserting new RequestContext tid=" << sip->getTransactionId() << " -> " << *context);
                         mServerRequestContexts[sip->getTransactionId()] = context;
                         DebugLog (<< "RequestContexts: " << Inserter(mServerRequestContexts));
-                        context->process(std::auto_ptr<resip::SipMessage>(sip));
+                        try
+                        {
+                           context->process(std::auto_ptr<resip::SipMessage>(sip));
+                        }
+                        catch(resip::BaseException& e)
+                        {
+                           // !bwc! Some sort of unhandled error in process.
+                           // This is very bad; we cannot form a response 
+                           // at this point because we do not know
+                           // whether the original request still exists.
+                           ErrLog(<<"Uncaught exception in process on a new request: " << e
+                                          << std::endl << "This has a high probability of leaking memory!");
+                        }
                      }
                      else
                      {
@@ -227,7 +265,15 @@ Proxy::thread()
                   HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(sip->getTransactionId());
                   if (i != mClientRequestContexts.end())
                   {
-                     i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                     try
+                     {
+                        i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                     }
+                     catch(resip::BaseException& e)
+                     {
+                        // !bwc! Some sort of unhandled error in process.
+                        ErrLog(<<"Uncaught exception in process on a response: " << e);
+                     }
                   }
                   else
                   {
@@ -250,7 +296,15 @@ Proxy::thread()
                   // (the intent is that Monkeys may eventually handle non-SIP
                   //  application messages).
                   bool eraseThisTid =  (dynamic_cast<Ack200DoneMessage*>(app)!=0);
-                  i->second->process(std::auto_ptr<resip::ApplicationMessage>(app));
+                  try
+                  {
+                     i->second->process(std::auto_ptr<resip::ApplicationMessage>(app));
+                  }
+                  catch(resip::BaseException& e)
+                  {
+                     ErrLog(<<"Uncaught exception in process: " << e);
+                  }
+                  
                   if (eraseThisTid)
                   {
                      mServerRequestContexts.erase(i);
@@ -269,7 +323,14 @@ Proxy::thread()
                   HashMap<Data,RequestContext*>::iterator i=mClientRequestContexts.find(term->getTransactionId());
                   if (i != mClientRequestContexts.end())
                   {
-                     i->second->process(*term);
+                     try
+                     {
+                        i->second->process(*term);
+                     }
+                     catch(resip::BaseException& e)
+                     {
+                        ErrLog(<<"Uncaught exception in process: " << e);
+                     }
                      mClientRequestContexts.erase(i);
                   }
                }
@@ -278,7 +339,14 @@ Proxy::thread()
                   HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(term->getTransactionId());
                   if (i != mServerRequestContexts.end())
                   {
-                     i->second->process(*term);
+                     try
+                     {
+                        i->second->process(*term);
+                     }
+                     catch(resip::BaseException& e)
+                     {
+                        ErrLog(<<"Uncaught exception in process: " << e);
+                     }
                      mServerRequestContexts.erase(i);
                   }
                }
@@ -288,11 +356,11 @@ Proxy::thread()
       }
       catch (BaseException& e)
       {
-         WarningLog (<< "Caught: " << e);
+         ErrLog (<< "Caught: " << e);
       }
       catch (...)
       {
-         WarningLog (<< "Caught unknown exception");
+         ErrLog (<< "Caught unknown exception");
       }
    }
    InfoLog (<< "Proxy::thread exit");
