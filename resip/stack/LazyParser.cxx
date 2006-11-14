@@ -102,7 +102,7 @@ LazyParser::isWellFormed() const
    {
       checkParsed();
    }
-   catch(resip::ParseBuffer::Exception& e)
+   catch(resip::ParseBuffer::Exception&)
    {
    }
    

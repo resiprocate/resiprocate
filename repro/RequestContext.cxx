@@ -154,7 +154,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                      // Route headers. Refusing to do so.
                   }
                }
-               catch(resip::ParseBuffer::Exception& e)
+               catch(resip::ParseBuffer::Exception&)
                {
                   // !bwc! Someone is trying to get us to relay an ACK, but
                   // can't get a host out of From to authorize the relay.
