@@ -1,35 +1,44 @@
-#if !defined(RESIP_FLOWID_HXX)
-#define RESIP_FLOWID_HXX
+#ifndef FLOW_MANAGER_HXX
+#define FLOW_MANAGER_HXX
 
 #include "resip/stack/Tuple.hxx"
+#include <map>
+#include <set>
+#include "rutil/Mutex.hxx"
 
 namespace resip
 {
-
-class FlowId
+class FlowManager
 {
    public:
-      FlowId(const Tuple& t);
+      FlowManager();
+      virtual ~FlowManager();
       
-      //can throw a ParseBuffer::Exception, inverse of toData/operator<<
-      FlowId(const Data& d);      
-
-      //.dcm. -- I suspect we only will need one of these
-      Tuple makeConnectionTuple() const;
-      Tuple& pointTupleToFlow(Tuple& t) const;      
-
-      Data toData() const;
-      bool operator==(const FlowId& rhs) const;
-      bool operator<(const FlowId& rhs) const;
+      bool addFlow(const resip::Tuple& flow);
+      bool flowAlive(const resip::Tuple& flow) const;
+      bool killFlow(const resip::Tuple& flow);
+   
    private:
-      Transport* transport;
-      ConnectionId connectionId;
-      friend std::ostream& operator<<(std::ostream& strm, const FlowId& f);
+   
+      class ConnectionlessFlowCompare
+      {
+         public:
+            bool operator()(const Tuple& lhs, const Tuple& rhs) const;
+      };
+
+      typedef std::map<Socket,Tuple> ConnectionFlowSet;
+      typedef std::set<Tuple,ConnectionlessFlowCompare> ConnectionlessFlowSet;
+
+      ConnectionFlowSet mConnectionFlows;
+      ConnectionlessFlowSet mConnectionlessFlows;
+      mutable Mutex mConnectionFlowMutex;
+      mutable Mutex mConnectionlessFlowMutex;
 };
 
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

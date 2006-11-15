@@ -489,9 +489,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       // !bwc! Proxy checks whether this is valid, and rejects if not.
       request.header(h_MaxForwards).value()--;
       
-      static ExtensionParameter p_cid("cid");
-      static ExtensionParameter p_cid1("cid1");
-      static ExtensionParameter p_cid2("cid2");
+      static ExtensionParameter p_fid("fid");
+      static ExtensionParameter p_fid1("fid1");
+      static ExtensionParameter p_fid2("fid2");
       
       bool inDialog=false;
       
@@ -537,14 +537,14 @@ ResponseContext::beginClientTransaction(repro::Target* target)
                rt.uri().param(p_transport) = sentTransport;
             }
             
-            if (mRequestContext.getOriginalRequest().getSource().connectionId != 0)
+            if (mRequestContext.getOriginalRequest().getSource().mFlowKey != 0)
             {
-               rt.uri().param(p_cid1) = Data(mRequestContext.getOriginalRequest().getSource().connectionId);
+               rt.uri().param(p_fid1) = Data(mRequestContext.getOriginalRequest().getSource().mFlowKey);
             }
             
-            if (request.header(h_RequestLine).uri().exists(p_cid))
+            if (request.header(h_RequestLine).uri().exists(p_fid))
             {
-               rt.uri().param(p_cid2) = request.header(h_RequestLine).uri().param(p_cid);
+               rt.uri().param(p_fid2) = request.header(h_RequestLine).uri().param(p_fid);
             }
             InfoLog (<< "Added Record-Route: " << rt);
          }
@@ -567,10 +567,10 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       //should be the same from here on out.
       request.header(h_Vias).push_front(target->via());
 
-      if (mRequestContext.mTargetConnectionId != 0)
+      if (mRequestContext.mTargetFlowKey != 0)
       {
-         request.header(h_RequestLine).uri().param(p_cid) = Data(mRequestContext.mTargetConnectionId);
-         InfoLog (<< "Use an existing connection id: " << request.header(h_RequestLine).uri());
+         request.header(h_RequestLine).uri().param(p_fid) = Data(mRequestContext.mTargetFlowKey);
+         InfoLog (<< "Use an existing flow id: " << request.header(h_RequestLine).uri());
       }
 
       

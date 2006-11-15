@@ -54,8 +54,8 @@ class FakeTransport :  public Transport
 class TestConnection : public ConnectionBase
 {
    public:
-      TestConnection(const Tuple& who, const Data& bytes, Fifo<TransactionMessage>& fifo) : 
-         ConnectionBase(who),
+      TestConnection(Transport* transport,const Tuple& who, const Data& bytes, Fifo<TransactionMessage>& fifo) : 
+         ConnectionBase(transport,who),
          mTestStream(bytes),
          mStreamPos(0),
          mRxFifo(fifo)
@@ -130,14 +130,13 @@ main(int argc, char** argv)
    Fifo<TransactionMessage> testRxFifo;
    FakeTransport fake(testRxFifo, 5060, V4, Data::Empty);
    Tuple who(fake.getTuple());
-   who.transport = &fake;
   
    int chunkRange = 700;
    unsigned int runs = 100;
 
    for (unsigned int i=0; i < runs; i++)
    {
-      TestConnection cBase(who, bytes, testRxFifo);
+      TestConnection cBase(&fake,who, bytes, testRxFifo);
       int minChunk = Random::getRandom() % chunkRange;
       int maxChunk = Random::getRandom() % chunkRange;
       if (maxChunk < minChunk) swap(maxChunk, minChunk);

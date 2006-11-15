@@ -31,8 +31,8 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DNS
 
 Tuple::Tuple() : 
+   mFlowKey(0),
    transport(0),
-   connectionId(0),
    onlyUseExistingConnection(false),
    mTransportType(UNKNOWN_TRANSPORT)
 {
@@ -43,8 +43,8 @@ Tuple::Tuple() :
 
 Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type, 
              const Data& targetDomain) : 
+   mFlowKey(0),
    transport(0),
-   connectionId(0),
    onlyUseExistingConnection(false),
    mTransportType(type),
    mTargetDomain(targetDomain)
@@ -71,8 +71,8 @@ Tuple::Tuple(const Data& printableAddr,
              IpVersion ipVer,
              TransportType type,
              const Data& targetDomain) :
+   mFlowKey(0),
    transport(0),
-   connectionId(0),
    onlyUseExistingConnection(false),
    mTransportType(type),
    mTargetDomain(targetDomain)
@@ -116,8 +116,8 @@ Tuple::Tuple(const Data& printableAddr,
              int port,
              TransportType ptype,
              const Data& targetDomain) : 
+   mFlowKey(0),
    transport(0),
-   connectionId(0),
    onlyUseExistingConnection(false),
    mTransportType(ptype),
    mTargetDomain(targetDomain)
@@ -147,8 +147,8 @@ Tuple::Tuple(const in_addr& ipv4,
              int port,
              TransportType ptype,
              const Data& targetDomain)
-   : transport(0),
-     connectionId(0),
+     :mFlowKey(0),
+   transport(0),
      onlyUseExistingConnection(false),
      mTransportType(ptype),
      mTargetDomain(targetDomain)
@@ -164,8 +164,8 @@ Tuple::Tuple(const in6_addr& ipv6,
              int port,
              TransportType ptype,
              const Data& targetDomaina)
-   : transport(0),
-     connectionId(0),
+     :mFlowKey(0),
+   transport(0),
      onlyUseExistingConnection(false),
      mTransportType(ptype),
      mTargetDomain(targetDomaina)
@@ -180,8 +180,8 @@ Tuple::Tuple(const in6_addr& ipv6,
 Tuple::Tuple(const struct sockaddr& addr, 
              TransportType ptype,
              const Data& targetDomain) : 
+   mFlowKey(0),
    transport(0),
-   connectionId(0),
    onlyUseExistingConnection(false),
    mSockaddr(addr),
    mTransportType(ptype),
@@ -201,6 +201,106 @@ Tuple::Tuple(const struct sockaddr& addr,
    {
       assert(0);
    }
+}
+
+void
+Tuple::binaryToken(const resip::Tuple& tuple,resip::Data& container)
+{
+   UInt32 rawToken[6];
+   bzero(&rawToken, 24);
+
+   rawToken[0] = tuple.mFlowKey;
+
+   rawToken[1] += (tuple.getType() << 8);
+
+   rawToken[1] += (tuple.getPort() << 16);
+
+   if(tuple.ipVersion()==V6)
+   {
+      rawToken[1] += 0x00000010;
+      in6_addr address = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr()).sin6_addr;
+      assert(sizeof(address)==16);
+      memcpy(&rawToken[2],&address,16);
+   }
+   else
+   {
+      in_addr address = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr()).sin_addr;
+      assert(sizeof(address)==4);
+      memcpy(&rawToken[2],&address,4);
+   }
+   
+   container.clear();
+   container.append((char*)&rawToken[0],(tuple.ipVersion()==V6) ? 24 : 12);
+
+}
+
+
+Tuple
+Tuple::makeTuple(const resip::Data& binaryFlowToken)
+{
+   if(binaryFlowToken.size()<12)
+   {
+      // !bwc! Should not assert here, since this sort of thing
+      // can come off the wire easily.
+      // TODO Throw an exception here?
+      DebugLog(<<"binary flow token was too small: " << binaryFlowToken.size());
+      return Tuple();
+   }
+
+   const UInt32* rawToken=reinterpret_cast<const UInt32*>(binaryFlowToken.data());
+
+   Socket mFlowKey=rawToken[0];
+
+   IpVersion version = (rawToken[1] & 0x00000010 ? V6 : V4);
+   
+   if(!((version==V4 && binaryFlowToken.size()==12) ||
+         (version==V6 && binaryFlowToken.size()==24)))
+   {
+      DebugLog(<<"Binary flow token is the wrong size for its IP version.");
+      return Tuple();
+   }
+
+   UInt8 temp = (TransportType)((rawToken[1] & 0x00000F00) >> 8);
+
+   if(temp >= MAX_TRANSPORT)
+   {
+      DebugLog(<<"Garbage transport type in flow token: " << temp );
+      return Tuple();
+   }
+   
+   TransportType type = (TransportType)temp;
+   
+   UInt16 port= (rawToken[1] >> 16);
+   
+   if(version==V6)
+   {
+#ifdef USE_IPV6
+      in6_addr address;
+      assert(sizeof(address)==16);
+      memcpy(&address,&rawToken[2],16);
+      Tuple result(address,port,type);
+#else
+      Tuple result(resip::Data::Empty, port, type);
+#endif
+      result.mFlowKey=mFlowKey;
+      return result;
+   }
+   else
+   {
+      in_addr address;
+      assert(sizeof(address)==4);
+      memcpy(&address,&rawToken[2],4);
+      Tuple result(address,port,type);
+      result.mFlowKey=mFlowKey;
+      return result;
+   }
+   
+   // !bwc! We should never end up down here, regardless of what is in token
+   // This is just here to keep the compiler from whining.
+   assert(0);
+   return Tuple();
+   
+
 }
 
 Data 
@@ -472,11 +572,7 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
    if (tuple.mTargetDomain.empty()) ostrm << "unspecified";
    else ostrm << tuple.mTargetDomain;
    
-   if (tuple.transport)
-   {
-      ostrm << " received on: " << *tuple.transport;
-   }
-   ostrm << " connectionId=" << tuple.connectionId
+   ostrm << " mFlowKey=" << tuple.mFlowKey
          << " ]";
    
    return ostrm;

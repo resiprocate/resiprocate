@@ -37,11 +37,17 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
 
    public:
-      Connection(const Tuple& who, Socket socket, Compression &compression);
+      Connection(Transport* transport,const Tuple& who, Socket socket, Compression &compression);
       virtual ~Connection();
       
-      ConnectionId getId() const;
-      Socket getSocket() const {return mSocket;}
+      /*!
+         @note Right now, Connection is assumed to be a TCP connection.
+               This means that there is a 1-1 correspondence between
+               FD and Connection. If this changes down the line (say, if
+               we use this class to do SCTP connections), we can just remove
+               this function.
+      */
+      Socket getSocket() const {return mWho.mFlowKey;}
 
       /// always true -- always add to fdset as read ready
       virtual bool hasDataToRead();
@@ -63,21 +69,19 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
           @todo store fifo rather than pass */
       int read(Fifo<TransactionMessage>& fifo);
 
-      /// @todo should be reference
-      Transport* transport();
    protected:
       /// pure virtual, but need concrete Connection for book-ends of lists
       virtual int read(char* /* buffer */, const int /* count */) { return 0; }
       /// pure virtual, but need concrete Connection for book-ends of lists
       virtual int write(const char* /* buffer */, const int /* count */) { return 0; }
 
-      Connection();
-
-      Socket mSocket;
 
    private:
       ConnectionManager& getConnectionManager() const;
       bool mInWritable;
+      
+      /// no default c'tor
+      Connection();
 
       /// no value semantics
       Connection(const Connection&);
