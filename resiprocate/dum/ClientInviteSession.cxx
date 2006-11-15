@@ -656,11 +656,11 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onNewSession(getHandle(), Answer, msg);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
+            handler->onConnected(getHandle(), msg);
             handler->onAnswer(getSessionHandle(), msg, *sdp);
-            if(!isTerminated())  // onAnswer callback may call end() or reject()
-            {
-               handler->onConnected(getHandle(), msg);
-            }
+            //if(!isTerminated())  // onAnswer callback may call end() or reject()
+            //{
+            //}
          }
          break;
 
