@@ -40,7 +40,7 @@ RequestContext::RequestContext(Proxy& proxy,
    mTargetProcessorChain(targetP),
    mTransactionCount(1),
    mProxy(proxy),
-   mTargetConnectionId(0),
+   mTargetFlowKey(0),
    mResponseContext(*this),
    mTCSerial(0),
    mFromTrustedNode(false)
@@ -699,9 +699,9 @@ RequestContext::getTopRoute()
 }
 
 void
-RequestContext::setTargetConnection(ConnectionId cid)
+RequestContext::setTargetConnection(FlowKey fid)
 {
-   mTargetConnectionId = cid;
+   mTargetFlowKey = fid;
 }
 
 void 

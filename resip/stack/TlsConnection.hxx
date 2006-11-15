@@ -23,7 +23,7 @@ class TlsConnection : public Connection
    public:
       RESIP_HeapCount(TlsConnection);
 
-      TlsConnection( const Tuple& who, Socket fd, 
+      TlsConnection( Transport* transport, const Tuple& who, Socket fd, 
                      Security* security, bool server, Data domain, 
                      SecurityTypes::SSLType sslType ,
                      Compression &compression);
@@ -42,6 +42,8 @@ class TlsConnection : public Connection
       static const char * fromState(TlsState);
    
    private:
+      /// No default c'tor
+      TlsConnection();
       void computePeerName();
       Data getPeerNamesData() const;
       TlsState checkState();

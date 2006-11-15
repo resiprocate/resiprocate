@@ -1,56 +1,131 @@
-#include "resip/stack/FlowId.hxx"
+#include "rutil/TransportType.hxx"
 
-#include <sstream>
-
-using namespace resip;
-using namespace std;
-
-int main()
+namespace resip
 {
-#if 0
-   Transport* orig = (Transport*) 0x0077ffee;
-
-
-   Data out;
-   
-   DataStream ds(foo);
-//   stringstream ds;
-   
-   ds << orig;
-
-   Transport* fromStream;
-   ds >> (long)fromStream;
-   cerr << orig << " " << fromStream << endl;   
-   ds.flush();
-   
-   assert(fromStream == orig);
-   
-#else
-   Tuple tup;
-   tup.transport = (Transport*) 0x0077ffee;
-   tup.connectionId = 7;
-   
-   FlowId flow(tup);
-   Data d = Data::from(flow);
-   Data e;
-   {
-      DataStream ds(e);
-      ds << flow;
-   }
-   assert(d == e);
-   FlowId flowFromData(e);
-
-   std::cerr << "flow: " << flow << " flowFromData: " << flowFromData << std::endl;
-   assert(flow == flowFromData);
-#endif
-   return 0;   
+TransportType getTransportTypeFromName(const std::string & transportName)
+{
+    if( transportName == "UDP" )
+    {
+        return UDP;
+    }
+    if( transportName == "TCP" )
+    {
+        return TCP;
+    }
+    if( transportName == "TLS" )
+    {
+        return TLS;
+    }
+    if( transportName == "SCTP" )
+    {
+        return SCTP;
+    }
+    if( transportName == "DCCP" )
+    {
+        return DCCP;
+    }
+    if( transportName == "DTLS" )
+    {
+        return DTLS;
+    }
+    return UNKNOWN_TRANSPORT;
 }
 
+std::string getTransportNameFromType(const TransportType typeEnum)
+{
+    switch(typeEnum)
+    {
+        case UDP:  return "UDP";
+        case TCP:  return "TCP";
+        case TLS:  return "TLS";
+        case SCTP: return "SCTP";
+        case DCCP: return "DCCP";
+        case DTLS: return "DTLS";
+        default: return "UNKNOWN";
+    }
+    return "UNKNOWN_TRANSPORT";
+}
+
+resip::Data toData(const TransportType typeEnum)
+{
+   switch(typeEnum)
+   {
+      case UNKNOWN_TRANSPORT:
+         return resip::Data("UNKNOWN_TRANSPORT");
+      case UDP:
+         return resip::Data("UDP");
+      case TCP:
+         return resip::Data("TCP");
+      case TLS:
+         return resip::Data("TLS");
+      case SCTP:
+         return resip::Data("SCTP");
+      case DCCP:
+         return resip::Data("DCCP");
+      case DTLS:
+         return resip::Data("DTLS");
+      default:
+         return resip::Data("UNKNOWN");
+   }
+}
+
+TransportType toTransportType(const resip::Data & transportName)
+{
+   if(transportName=="UDP")
+   {
+      return resip::UDP;
+   }
+   else if(transportName=="TCP")
+   {
+      return resip::TCP;
+   }
+   else if(transportName=="TLS")
+   {
+      return resip::TLS;
+   }
+   else if(transportName=="DTLS")
+   {
+      return resip::DTLS;
+   }
+   else if(transportName=="SCTP")
+   {
+      return resip::SCTP;
+   }
+   else if(transportName=="DCCP")
+   {
+      return resip::DCCP;
+   }
+   else
+   {
+      return resip::UNKNOWN_TRANSPORT;      
+   }
+   
+
+}
+
+bool
+isReliable(TransportType type)
+{
+   switch(type)
+   {
+      case TLS:
+      case TCP:
+      case SCTP:
+         return true;
+      case UDP:
+      case DCCP:
+      case DTLS:
+      default:
+         return false;
+   }
+}
+
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

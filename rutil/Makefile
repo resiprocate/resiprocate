@@ -39,6 +39,7 @@ SRC = \
 	SysLogStream.cxx \
 	ThreadIf.cxx \
 	Timer.cxx \
+	TransportType.cxx \
 	vmd5.cxx \
 	\
 	dns/AresDns.cxx \

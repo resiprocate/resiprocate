@@ -20,40 +20,30 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-Connection::Connection()
-   : mSocket(INVALID_SOCKET),
-     mInWritable(false)
-{
-}
-
-Connection::Connection(const Tuple& who, Socket socket,
+Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
                        Compression &compression)
-   : ConnectionBase(who,compression),
-     mSocket(socket),
+   : ConnectionBase(transport,who,compression),
      mInWritable(false)
 {
-   getConnectionManager().addConnection(this);
+   mWho.mFlowKey=socket;
+   if(mWho.mFlowKey && ConnectionBase::transport())
+   {
+      getConnectionManager().addConnection(this);
+   }
 }
 
 Connection::~Connection()
 {
-   if (mSocket != INVALID_SOCKET) // bogus Connections
+   if(mWho.mFlowKey && ConnectionBase::transport())
    {
-      closeSocket(mSocket);
+      closeSocket(mWho.mFlowKey);
       getConnectionManager().removeConnection(this);
    }
-}
-
-ConnectionId
-Connection::getId() const
-{
-   return mWho.connectionId;
 }
 
 void
 Connection::requestWrite(SendData* sendData)
 {
-   assert(mWho.transport);
    mOutstandingSends.push_back(sendData);
    if (isWritable())
    {
@@ -154,8 +144,7 @@ Connection::ensureWritable()
 ConnectionManager&
 Connection::getConnectionManager() const
 {
-   assert(mWho.transport);
-   TcpBaseTransport* transport = static_cast<TcpBaseTransport*>(mWho.transport);
+   TcpBaseTransport* transport = static_cast<TcpBaseTransport*>(ConnectionBase::transport());
    
    return transport->getConnectionManager();
 }
@@ -165,12 +154,6 @@ resip::operator<<(std::ostream& strm, const resip::Connection& c)
 {
    strm << "CONN: " << &c << " " << int(c.getSocket()) << " " << c.mWho;
    return strm;
-}
-
-Transport* 
-Connection::transport()
-{
-   return mWho.transport;
 }
 
 int
