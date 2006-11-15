@@ -11,9 +11,9 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TcpConnection::TcpConnection(const Tuple& who, Socket fd,
+TcpConnection::TcpConnection(Transport* transport,const Tuple& who, Socket fd,
                              Compression &compression) 
-  : Connection(who, fd, compression)
+  : Connection(transport,who, fd, compression)
 {
    DebugLog (<< "Creating TCP connection " << who << " on " << fd);
 }
@@ -25,9 +25,9 @@ TcpConnection::read( char* buf, int count )
    assert(count > 0);
    
 #if defined(WIN32)
-   int bytesRead = ::recv(mSocket, buf, count, 0);
+   int bytesRead = ::recv(getSocket(), buf, count, 0);
 #else
-   int bytesRead = ::read(mSocket, buf, count);
+   int bytesRead = ::read(getSocket(), buf, count);
 #endif
 
    if (bytesRead == INVALID_SOCKET)
@@ -62,7 +62,7 @@ TcpConnection::read( char* buf, int count )
             break;
       }
 
-      InfoLog (<< "Failed read on " << mSocket << " " << strerror(e));
+      InfoLog (<< "Failed read on " << getSocket() << " " << strerror(e));
       Transport::error(e);
       
       return -1;
@@ -86,15 +86,15 @@ TcpConnection::write( const char* buf, const int count )
    assert(count > 0);
 
 #if defined(WIN32)
-   int bytesWritten = ::send(mSocket, buf, count, 0);
+   int bytesWritten = ::send(getSocket(), buf, count, 0);
 #else
-   int bytesWritten = ::write(mSocket, buf, count);
+   int bytesWritten = ::write(getSocket(), buf, count);
 #endif
 
    if (bytesWritten == INVALID_SOCKET)
    {
       int e = getErrno();
-      InfoLog (<< "Failed write on " << mSocket << " " << strerror(e));
+      InfoLog (<< "Failed write on " << getSocket() << " " << strerror(e));
       Transport::error(e);
       return -1;
    }
