@@ -34,6 +34,7 @@ HandleManager::create(Handled* handled)
    if (!mShuttingDown)
    {
       mHandleMap[++mLastId] = handled;
+      DebugLog (<< "HandleManager::create | Handle id: " << mLastId);
       return mLastId;
    }
    else
@@ -78,6 +79,7 @@ void HandleManager::onAllHandlesDestroyed()
 void
 HandleManager::remove(Handled::Id id)
 {
+   DebugLog (<< "HandleManager::remove | Handle id: " << id);
    HandleMap::iterator i = mHandleMap.find(id);
    assert (i != mHandleMap.end());
    mHandleMap.erase(i);
@@ -107,8 +109,7 @@ HandleManager::dumpHandles() const
 bool
 HandleManager::isValidHandle(Handled::Id id) const
 {
-   //!dcm! -- fix; use find
-   return mHandleMap.count(id) != 0;
+   return mHandleMap.find(id) != mHandleMap.end();
 }
 
 Handled*

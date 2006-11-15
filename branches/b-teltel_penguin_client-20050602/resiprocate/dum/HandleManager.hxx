@@ -4,6 +4,7 @@
 #include "resiprocate/os/HashMap.hxx"
 #include "resiprocate/dum/Handled.hxx"
 #include "resiprocate/dum/Win32ExportDum.hxx"
+#include "resiprocate/os/RWMutex.hxx"
 
 namespace resip
 {
