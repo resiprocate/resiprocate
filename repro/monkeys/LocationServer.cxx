@@ -45,8 +45,8 @@ LocationServer::process(RequestContext& context)
          {
             if(contact.cid != 0)
             {
-               static ExtensionParameter p_cid("cid");
-               contact.uri.param(p_cid)=resip::Data(contact.cid);
+               static ExtensionParameter p_fid("fid");
+               contact.uri.param(p_fid)=resip::Data(contact.cid);
             }
             InfoLog (<< *this << " adding target " << contact.uri);
             if(contact.useQ)

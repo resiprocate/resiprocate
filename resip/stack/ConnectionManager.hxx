@@ -51,7 +51,7 @@ class ConnectionManager
       void gc(UInt64 threshhold);
 
       typedef std::map<Tuple, Connection*> AddrMap;
-      typedef std::map<ConnectionId, Connection*> IdMap;
+      typedef std::map<Socket, Connection*> IdMap;
 
       void addConnection(Connection* connection);
       void removeConnection(Connection* connection);
@@ -77,8 +77,6 @@ class ConnectionManager
       ConnectionLruList* mLRUHead;
       //<<---------------------------------
 
-      static ConnectionId theConnectionIdGenerator;
-      static resip::Mutex theCidMutex;
       friend class TcpBaseTransport;
 };
 

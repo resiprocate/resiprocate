@@ -99,6 +99,7 @@ deleteMap(T& m)
 
 TransportSelector::~TransportSelector()
 {
+   mConnectionlessMap.clear();
    deleteMap(mExactTransports);
    deleteMap(mAnyInterfaceTransports);
    deleteMap(mTlsTransports);
@@ -180,6 +181,11 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
       default:
          assert(0);
          break;
+   }
+
+   if(transport->transport()==UDP || transport->transport()==DTLS)
+   {
+      mConnectionlessMap[transport->getTuple().mFlowKey]=transport;
    }
 
    if (transport->shareStackProcessAndSelect())
@@ -777,9 +783,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                {
                   if (contact.uri().exists(p_addTransport))
                   {
-                     if (target.transport->transport() != UDP)
+                     if (target.getType() != UDP)
                      {
-                        contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+                        contact.uri().param(p_transport) = Tuple::toData(target.getType());
                      }
                      contact.uri().remove(p_addTransport);
                   }
@@ -805,9 +811,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                rr.uri().host() = Tuple::inet_ntop(source);
                rr.uri().port() = target.transport->port();
-               if (target.transport->transport() != UDP && !rr.uri().exists(p_transport))
+               if (target.getType() != UDP && !rr.uri().exists(p_transport))
                {
-                  rr.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+                  rr.uri().param(p_transport) = Tuple::toData(target.getType());
                }
                // Add comp=sigcomp and sigcomp-id="<urn>" to Record-Route
                // XXX This isn't quite right -- should be set only
@@ -993,28 +999,39 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
 {
    if(!target.transport)
    {
-      if(target.getType()!=UDP) // !bwc! Maybe we can find a connection?
+      if( !target.mFlowKey) // !bwc! Don't have a flowkey yet...
       {
-         if( !target.connectionId) // !bwc! Don't have a cid yet...
+         static ExtensionParameter p_fid("fid");
+         unsigned long fid=0;
+         if(msg->exists(h_Routes) && 
+            !msg->header(h_Routes).empty() && 
+            msg->header(h_Routes).front().uri().exists(p_fid))
          {
-            static ExtensionParameter p_cid("cid");
-            unsigned long cid=0;
-            if(msg->exists(h_Routes) && 
-               !msg->header(h_Routes).empty() && 
-               msg->header(h_Routes).front().uri().exists(p_cid))
-            {
-               cid = msg->header(h_Routes).front().uri().param(p_cid).convertUnsignedLong();
-               msg->header(h_Routes).front().uri().remove(p_cid);
-            }
-            else if (msg->header(h_RequestLine).uri().exists(p_cid))
-            {
-               cid = msg->header(h_RequestLine).uri().param(p_cid).convertUnsignedLong();
-               msg->header(h_RequestLine).uri().remove(p_cid);
-            }
-            
-            target.connectionId=cid;
+            fid = msg->header(h_Routes).front().uri().param(p_fid).convertUnsignedLong();
+            msg->header(h_Routes).front().uri().remove(p_fid);
+         }
+         else if (msg->header(h_RequestLine).uri().exists(p_fid))
+         {
+            fid = msg->header(h_RequestLine).uri().param(p_fid).convertUnsignedLong();
+            msg->header(h_RequestLine).uri().remove(p_fid);
          }
          
+         target.mFlowKey=fid;
+      }
+         
+      if(target.getType()==UDP || target.getType()==DTLS)
+      {
+         if(target.mFlowKey)
+         {
+            std::map<FlowKey,Transport*>::iterator i=mConnectionlessMap.find(target.mFlowKey);
+            if(i!=mConnectionlessMap.end())
+            {
+               return i->second;
+            }
+         }
+      }
+      else if(target.getType()==TCP || target.getType()==TLS)
+      {
          // !bwc! We might find a match by the cid, or maybe using the
          // tuple itself.
          Connection* conn = findConnection(target);
@@ -1023,11 +1040,12 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
          {
             return conn->transport();
          }
-         else if(target.getType()==TLS || target.getType()==DTLS)
-         {
-            return findTlsTransport(msg->getTlsDomain(),target.getType(),target.ipVersion());
-         }
-
+      }
+      
+      // !bwc! No luck finding with a FlowKey.
+      if(target.getType()==TLS || target.getType()==DTLS)
+      {
+         return findTlsTransport(msg->getTlsDomain(),target.getType(),target.ipVersion());
       }
             
    }

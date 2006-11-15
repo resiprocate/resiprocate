@@ -196,7 +196,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
         return;
       }
 
-      unsigned int cid = msg.getSource().connectionId;
+      FlowKey cid = msg.getSource().mFlowKey;
       
       // Check to see if this is a removal.
       if (expires == 0)

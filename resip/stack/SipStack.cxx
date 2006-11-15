@@ -325,7 +325,6 @@ void
 SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   assert(destination.transport);
    
    if (tu) msg->setTransactionUser(tu);
    msg->setDestination(destination);
@@ -357,7 +356,6 @@ void
 SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   assert(destination.transport);
    
    //SipMessage* toSend = new SipMessage(msg);
    SipMessage* toSend = dynamic_cast<SipMessage*>(msg.clone());

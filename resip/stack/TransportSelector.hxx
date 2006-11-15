@@ -123,6 +123,8 @@ class TransportSelector
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
       AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
+      std::map<FlowKey,Transport*> mConnectionlessMap;
+      
       class TlsTransportKey
       {
          public:

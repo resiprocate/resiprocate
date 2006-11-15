@@ -48,12 +48,8 @@ Connection*
 TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
 {
    assert(this);
-   who.transport = this;
-   assert(  who.transport );
-
-   Connection* conn = new TlsConnection(who, fd, mSecurity, server,
+   Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
                                         tlsDomain(), mSslType, mCompression );
-   assert( conn->transport() );
    return conn;
 }
 

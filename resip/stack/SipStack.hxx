@@ -494,7 +494,7 @@ class SipStack
       
       /// Used to Track stack statistics
       StatisticsManager mStatsManager;
-
+      
       /// All aspects of the Transaction State Machine / DNS resolver
       TransactionController mTransactionController;
 
@@ -526,8 +526,7 @@ inline void
 SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
                                      TransactionUser* tu)
 {
-   assert(tuple.transport);
-   assert(tuple.connectionId);   
+   assert(tuple.mFlowKey);   
    Tuple tup(tuple);
    tup.onlyUseExistingConnection = true;   
    sendTo(msg, tuple, tu);
