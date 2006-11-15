@@ -1,0 +1,41 @@
+Credits
+
+Netxx it brought to you by the following people.
+
+  * Peter Jones
+   
+      + Original designer of Netxx and project maintainer.
+       
+      + Ported to the Win32 platform.
+       
+      + Ported to the MacOS X platform.
+       
+      + Added TLS support via OpenSSL.
+       
+  * Alex Mitrofanov
+   
+      + Updated all the TLS code to the new internal API.
+       
+      + Completed Netxx::TLS::Stream so that it could act as a server.
+       
+      + Fixed a bug in the Netxx::TLS::Stream::read() function.
+       
+      + Wrote the tls_* examples.
+       
+      + Wrote the http_https_server example
+       
+      + Fixed up the new Netxx::Peer code to be more portable.
+       
+      + Wrote the Netxx::TLS::Certificate class.
+       
+  * Steve Bannister
+   
+      + Found and fixed a bug in the Netxx::Socket class.
+       
+      + Found a bug in the Netxx::StreamBase class relating to non-blocking
+        connects.
+       
+  * Isaac Foraker
+   
+      + Answered stupid Win32 questions.
+       
