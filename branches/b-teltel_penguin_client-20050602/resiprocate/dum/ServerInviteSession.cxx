@@ -666,6 +666,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          mCurrentRetransmit200Map.clear();
          transition(Connected);
          handler->onConnected(getSessionHandle(), msg);  // !slg! not needed since onConnected is called when 200 is sent
+         handler->onAckReceived(getSessionHandle(), msg);
          break;
       }
 

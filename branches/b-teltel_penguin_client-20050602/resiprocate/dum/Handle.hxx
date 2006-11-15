@@ -99,9 +99,9 @@ class Handle
       
 
    protected:
-      Handle(HandleManager& ham, Handled* handled) : mHam(&ham), mId(mHam->create(this)) 
-      {
-      }
+      //Handle(HandleManager& ham, Handled* handled) : mHam(&ham), mId(mHam->create(handled)) 
+      //{
+      //}
 
       //for invalid handles
 
