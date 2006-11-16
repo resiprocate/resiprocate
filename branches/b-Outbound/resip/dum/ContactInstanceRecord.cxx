@@ -11,6 +11,14 @@ ContactInstanceRecord::ContactInstanceRecord() :
 {
 }
 
+bool
+ContactInstanceRecord::operator==(const ContactInstanceRecord& rhs) const
+{
+   return (mClientFlowId == rhs.mClientFlowId &&
+            mInstance == rhs.mInstance &&
+            mContact.uri() == rhs.mContact.uri());
+}
+
 ContactInstanceRecord 
 ContactInstanceRecord::makeRemoveDelta(const NameAddr& contact)
 {
@@ -36,9 +44,9 @@ ContactInstanceRecord::makeUpdateDelta(const NameAddr& contact,
    {
       c.mInstance = contact.param(p_Instance);
    }
-   if (contact.exists(p_FlowId))
+   if (contact.exists(p_regid))
    {
-      c.mClientFlowId = contact.param(p_FlowId);
+      c.mClientFlowId = contact.param(p_regid);
    }
    // !jf! need to fill in mServerSessionId here
    return c;

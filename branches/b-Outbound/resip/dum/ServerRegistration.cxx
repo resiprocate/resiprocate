@@ -43,8 +43,8 @@ ServerRegistration::accept(SipMessage& ok)
   
   // Add all registered contacts to the message.
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-  RegistrationPersistenceManager::ContactRecordList contacts;
-  RegistrationPersistenceManager::ContactRecordList::iterator i;
+  ContactList contacts;
+  ContactList::iterator i;
   contacts = database->getContacts(mAor);
   database->unlockRecord(mAor);
 
@@ -54,17 +54,14 @@ ServerRegistration::accept(SipMessage& ok)
   NameAddr contact;
   for (i = contacts.begin(); i != contacts.end(); i++)
   {
-    if (i->expires - now <= 0)
+    if (i->mRegExpires <= now)
     {
+      database->removeContact(mAor,*i);
       continue;
     }
-    contact.uri() = i->uri;
-    contact.param(p_expires) = UInt32(i->expires - now);
+    contact = i->mContact;
+    contact.param(p_expires) = UInt32(i->mRegExpires - now);
     ok.header(h_Contacts).push_back(contact);
-    if(i->useQ)
-    {
-      ok.header(h_Contacts).back().param(p_q)=(int)i->q;
-    }
   }
 
   SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
@@ -142,7 +139,8 @@ ServerRegistration::dispatch(const SipMessage& msg)
     database->lockRecord(mAor);
 
     UInt32 globalExpires = 0;
-
+    UInt32 expires=0;
+    
     if (msg.exists(h_Expires))
     {
       globalExpires = msg.header(h_Expires).value();
@@ -163,12 +161,12 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
     ParserContainer<NameAddr>::iterator i;
-    UInt32 expires;
     time_t now;
     time(&now);
 
     for(i = contactList.begin(); i != contactList.end(); i++)
     {
+      ContactInstanceRecord rec;
       if (i->exists(p_expires))
       {
          expires = i->param(p_expires);
@@ -195,8 +193,35 @@ ServerRegistration::dispatch(const SipMessage& msg)
         handler->onRemoveAll(getHandle(), msg);
         return;
       }
+      
+      rec.mContact=*i;
+   
+      rec.mRegExpires=expires+now;
 
-      FlowKey cid = msg.getSource().mFlowKey;
+      rec.mReceivedFrom=msg.getSource();
+
+      if(i->exists(p_Instance) && i->exists(p_regid))
+      {
+         try
+         {
+            rec.mInstance=i->param(p_Instance);
+            rec.mClientFlowId=i->param(p_regid);
+         }
+         catch(resip::ParseBuffer::Exception& e)
+         {
+            // !bwc! Must not REALLY want to do outbound.
+         }
+      }
+
+      // !bwc! Path header support (necessary for outbound support, but
+      // not vice-versa)
+      if(msg.exists(h_Paths))
+      {
+         // !bwc! Should we check whether this is well-formed now?
+         rec.mSipPath=msg.header(h_Paths);
+      }
+      
+      rec.mLastUpdated=now;
       
       // Check to see if this is a removal.
       if (expires == 0)
@@ -205,21 +230,14 @@ ServerRegistration::dispatch(const SipMessage& msg)
         {
           operation = REMOVE;
         }
-        database->removeContact(mAor, i->uri());
+        database->removeContact(mAor, rec);
       }
       // Otherwise, it's an addition or refresh.
       else
       {
         RegistrationPersistenceManager::update_status_t status;
         InfoLog (<< "Adding " << mAor << " -> " << *i  );
-        if(i->exists(p_q))
-        {
-            status = database->updateContact(mAor, i->uri(), now + expires,cid,i->param(p_q).getValue());
-        }
-        else
-        {
-            status = database->updateContact(mAor, i->uri(), now + expires,cid);
-         }
+         status = database->updateContact(mAor, rec);
         if (status == RegistrationPersistenceManager::CONTACT_CREATED)
         {
           operation = ADD;
