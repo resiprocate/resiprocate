@@ -23,6 +23,7 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, 
      mEnded(false),
      mExpires(0)
 {
+   InfoLog(<< "new ClientSubscription (request from): " << request.header(h_From).uri());
    mDialog.makeRequest(mLastRequest, SUBSCRIBE);
 }
 
