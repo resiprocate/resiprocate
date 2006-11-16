@@ -25,6 +25,7 @@ SRC =   \
 	ClientPublication.cxx \
 	ClientRegistration.cxx \
 	ClientSubscription.cxx \
+	ContactInstanceRecord.cxx \
 	DefaultServerReferHandler.cxx \
 	DestroyUsage.cxx \
 	Dialog.cxx \
