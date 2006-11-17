@@ -997,6 +997,18 @@ TransportSelector::findConnection(const Tuple& target)
 Transport*
 TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
 {
+   // !bwc! This would be lighter-weight if we just put the flow-token in the
+   // user part, but TUs may want to put something else there.
+   ExtensionParameter p_ftok("ftok");
+   
+   if(msg->exists(h_Routes) && 
+      !msg->header(h_Routes).empty() &&
+      msg->header(h_Routes).front().uri().exists(p_ftok))
+   {
+      resip::Data binaryToken(msg->header(h_Routes).front().uri().param(p_ftok).base64decode());
+      target=Tuple::makeTuple(binaryToken);
+   }
+   
    if(!target.transport)
    {
       if( !target.mFlowKey) // !bwc! Don't have a flowkey yet...
