@@ -217,7 +217,7 @@ Tuple::binaryToken(const resip::Tuple& tuple,resip::Data& container)
 
    if(tuple.ipVersion()==V6)
    {
-      rawToken[1] += 0x00000010;
+      rawToken[1] += 0x00000001;
       in6_addr address = reinterpret_cast<const sockaddr_in6&>(tuple.getSockaddr()).sin6_addr;
       assert(sizeof(address)==16);
       memcpy(&rawToken[2],&address,16);
@@ -227,6 +227,11 @@ Tuple::binaryToken(const resip::Tuple& tuple,resip::Data& container)
       in_addr address = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr()).sin_addr;
       assert(sizeof(address)==4);
       memcpy(&rawToken[2],&address,4);
+   }
+   
+   if(tuple.onlyUseExistingConnection)
+   {
+      rawToken[1] += 0x00000010;
    }
    
    container.clear();
@@ -251,7 +256,7 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
 
    Socket mFlowKey=rawToken[0];
 
-   IpVersion version = (rawToken[1] & 0x00000010 ? V6 : V4);
+   IpVersion version = (rawToken[1] & 0x00000001 ? V6 : V4);
    
    if(!((version==V4 && binaryFlowToken.size()==12) ||
          (version==V6 && binaryFlowToken.size()==24)))
@@ -260,6 +265,8 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
       return Tuple();
    }
 
+   bool isRealFlow = (rawToken[1] & 0x00000010 ? true : false);
+   
    UInt8 temp = (TransportType)((rawToken[1] & 0x00000F00) >> 8);
 
    if(temp >= MAX_TRANSPORT)
@@ -283,6 +290,7 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
       Tuple result(resip::Data::Empty, port, type);
 #endif
       result.mFlowKey=mFlowKey;
+      result.onlyUseExistingConnection=isRealFlow;
       return result;
    }
    else
@@ -292,6 +300,7 @@ Tuple::makeTuple(const resip::Data& binaryFlowToken)
       memcpy(&address,&rawToken[2],4);
       Tuple result(address,port,type);
       result.mFlowKey=mFlowKey;
+      result.onlyUseExistingConnection=isRealFlow;
       return result;
    }
    

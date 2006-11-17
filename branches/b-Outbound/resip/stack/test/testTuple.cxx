@@ -44,6 +44,52 @@ main()
       assert(!t1.isEqualWithMask(t6, 8, false));   // port is different
       assert(loopback.isLoopback());
       assert(!t1.isLoopback());
+      
+      resip::Data token1;
+      resip::Data token2;
+      resip::Data token3;
+      resip::Data token4;
+      resip::Data token5;
+      resip::Data token6;
+      resip::Data tokenloopback;
+      
+      Tuple::binaryToken(t1,token1);
+      Tuple::binaryToken(t2,token2);
+      Tuple::binaryToken(t3,token3);
+      Tuple::binaryToken(t4,token4);
+      Tuple::binaryToken(t5,token5);
+      Tuple::binaryToken(t6,token6);
+      Tuple::binaryToken(loopback,tokenloopback);
+            
+      Tuple t1prime=Tuple::makeTuple(token1);
+      Tuple t2prime=Tuple::makeTuple(token2);
+      Tuple t3prime=Tuple::makeTuple(token3);
+      Tuple t4prime=Tuple::makeTuple(token4);
+      Tuple t5prime=Tuple::makeTuple(token5);
+      Tuple t6prime=Tuple::makeTuple(token6);
+      Tuple loopbackprime=Tuple::makeTuple(tokenloopback);
+      
+      assert(t1==t1prime);
+      assert(t2==t2prime);
+      assert(t3==t3prime);
+      assert(t4==t4prime);
+      assert(t5==t5prime);
+      assert(t6==t6prime);
+      assert(loopback==loopbackprime);
+      assert(t1.onlyUseExistingConnection == t1prime.onlyUseExistingConnection);
+      assert(t2.onlyUseExistingConnection == t2prime.onlyUseExistingConnection);
+      assert(t3.onlyUseExistingConnection == t3prime.onlyUseExistingConnection);
+      assert(t4.onlyUseExistingConnection == t4prime.onlyUseExistingConnection);
+      assert(t5.onlyUseExistingConnection == t5prime.onlyUseExistingConnection);
+      assert(t6.onlyUseExistingConnection == t6prime.onlyUseExistingConnection);
+      assert(loopback.onlyUseExistingConnection == loopbackprime.onlyUseExistingConnection);
+      assert(t1.mFlowKey == t1prime.mFlowKey);
+      assert(t2.mFlowKey == t2prime.mFlowKey);
+      assert(t3.mFlowKey == t3prime.mFlowKey);
+      assert(t4.mFlowKey == t4prime.mFlowKey);
+      assert(t5.mFlowKey == t5prime.mFlowKey);
+      assert(t6.mFlowKey == t6prime.mFlowKey);
+      assert(loopback.mFlowKey == loopbackprime.mFlowKey);
    }
 
 #ifdef USE_IPV6
@@ -63,8 +109,58 @@ main()
       assert(t1.isEqualWithMask(t6, 120, false)); 
       assert(loopback.isLoopback());
       assert(!t1.isLoopback());
+      
+      resip::Data token1;
+      resip::Data token2;
+      resip::Data token3;
+      resip::Data token4;
+      resip::Data token5;
+      resip::Data token6;
+      resip::Data tokenloopback;
+      
+      Tuple::binaryToken(t1,token1);
+      Tuple::binaryToken(t2,token2);
+      Tuple::binaryToken(t3,token3);
+      Tuple::binaryToken(t4,token4);
+      Tuple::binaryToken(t5,token5);
+      Tuple::binaryToken(t6,token6);
+      Tuple::binaryToken(loopback,tokenloopback);
+            
+      Tuple t1prime=Tuple::makeTuple(token1);
+      Tuple t2prime=Tuple::makeTuple(token2);
+      Tuple t3prime=Tuple::makeTuple(token3);
+      Tuple t4prime=Tuple::makeTuple(token4);
+      Tuple t5prime=Tuple::makeTuple(token5);
+      Tuple t6prime=Tuple::makeTuple(token6);
+      Tuple loopbackprime=Tuple::makeTuple(tokenloopback);
+      
+      assert(t1==t1prime);
+      assert(t2==t2prime);
+      assert(t3==t3prime);
+      assert(t4==t4prime);
+      assert(t5==t5prime);
+      assert(t6==t6prime);
+      assert(loopback==loopbackprime);
+      assert(t1.onlyUseExistingConnection == t1prime.onlyUseExistingConnection);
+      assert(t2.onlyUseExistingConnection == t2prime.onlyUseExistingConnection);
+      assert(t3.onlyUseExistingConnection == t3prime.onlyUseExistingConnection);
+      assert(t4.onlyUseExistingConnection == t4prime.onlyUseExistingConnection);
+      assert(t5.onlyUseExistingConnection == t5prime.onlyUseExistingConnection);
+      assert(t6.onlyUseExistingConnection == t6prime.onlyUseExistingConnection);
+      assert(loopback.onlyUseExistingConnection == loopbackprime.onlyUseExistingConnection);
+      assert(t1.mFlowKey == t1prime.mFlowKey);
+      assert(t2.mFlowKey == t2prime.mFlowKey);
+      assert(t3.mFlowKey == t3prime.mFlowKey);
+      assert(t4.mFlowKey == t4prime.mFlowKey);
+      assert(t5.mFlowKey == t5prime.mFlowKey);
+      assert(t6.mFlowKey == t6prime.mFlowKey);
+      assert(loopback.mFlowKey == loopbackprime.mFlowKey);
    }
 #endif
+
+   {
+      
+   }
 
    std::cerr << "ALL OK" << std::endl;
 }
