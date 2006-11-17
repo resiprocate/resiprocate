@@ -653,7 +653,7 @@ int gCount = 0;
 #endif
 Data::~Data()
 {
-   if (mMine == Take)
+   if (mMine == Take && mBuf)
    {
       delete[] mBuf;
    }

@@ -18,7 +18,7 @@ class Handle
       {
       }
 
-      Handle() : mHam(0)
+      Handle() : mHam(0), mId(Handled::npos)
       {
       }
 
