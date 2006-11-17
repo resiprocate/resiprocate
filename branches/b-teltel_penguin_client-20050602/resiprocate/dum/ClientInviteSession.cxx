@@ -639,11 +639,12 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          assert(mProposedLocalSdp.get() == 0);
          if(!isTerminated())  
          {
+            handler->onConnected(getHandle(), msg);
             handler->onOffer(getSessionHandle(), msg, *sdp);
-            if(!isTerminated())  
-            {
-               handler->onConnected(getHandle(), msg);
-            }
+            //if(!isTerminated())  
+            //{
+            //   
+            //}
          }
          break;
 
@@ -749,11 +750,12 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          assert(mProposedLocalSdp.get() == 0);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
 
+         handler->onConnected(getHandle(), msg);
          handler->onOffer(getSessionHandle(), msg, *sdp);
-         if(!isTerminated())  
-         {
-            handler->onConnected(getHandle(), msg);
-         }
+         //if(!isTerminated())  
+         //{
+         //   handler->onConnected(getHandle(), msg);
+         //}
          break;
 
       case On2xxAnswer:
@@ -762,11 +764,12 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          handleFinalResponse(msg);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onConnected(getHandle(), msg);
          handler->onAnswer(getSessionHandle(), msg, *sdp);
-         if(!isTerminated())  // onNewSession callback may call end() or reject()
-         {
-            handler->onConnected(getHandle(), msg);
-         }
+         //if(!isTerminated())  // onNewSession callback may call end() or reject()
+         //{
+         //   handler->onConnected(getHandle(), msg);
+         //}
          break;
 
       case On2xx:
