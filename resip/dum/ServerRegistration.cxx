@@ -63,6 +63,11 @@ ServerRegistration::accept(SipMessage& ok)
     contact.param(p_expires) = UInt32(i->mRegExpires - now);
     ok.header(h_Contacts).push_back(contact);
   }
+  
+  // !bwc! Not exactly right. We need some way of learning whether outbound
+  // processing was successful or not.
+  static Token outbound("outbound");
+  ok.header(h_Supporteds).push_back(outbound);
 
   SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
   mDum.send(msg);
@@ -195,32 +200,47 @@ ServerRegistration::dispatch(const SipMessage& msg)
       }
       
       rec.mContact=*i;
-   
       rec.mRegExpires=expires+now;
-
       rec.mReceivedFrom=msg.getSource();
-
-      if(i->exists(p_Instance) && i->exists(p_regid))
+      
+      bool supportsOutbound=true;
+      try
+      {
+         if(msg.exists(h_Paths))
+         {
+            for(NameAddrs::const_iterator i = msg.header(h_Paths).begin();
+                  i!=msg.header(h_Paths).end();++i)
+            {
+               if(!i->exists(p_ob))
+               {
+                  supportsOutbound=false;
+                  break;
+               }
+            }
+            rec.mSipPath=msg.header(h_Paths);
+         }
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         supportsOutbound=false;
+      }
+      
+      if(supportsOutbound && i->exists(p_Instance) && i->exists(p_regid))
       {
          try
          {
             rec.mInstance=i->param(p_Instance);
             rec.mClientFlowId=i->param(p_regid);
-         }
+            rec.mReceivedFrom.onlyUseExistingConnection=true;
+            mDum.getSipStack().addFlow(msg.getSource());
+            DebugLog(<<"Added flow: " << msg.getSource());
+        }
          catch(resip::ParseBuffer::Exception& e)
          {
-            // !bwc! Must not REALLY want to do outbound.
+            supportsOutbound=false;
          }
       }
 
-      // !bwc! Path header support (necessary for outbound support, but
-      // not vice-versa)
-      if(msg.exists(h_Paths))
-      {
-         // !bwc! Should we check whether this is well-formed now?
-         rec.mSipPath=msg.header(h_Paths);
-      }
-      
       rec.mLastUpdated=now;
       
       // Check to see if this is a removal.
