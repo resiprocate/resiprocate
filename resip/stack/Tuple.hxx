@@ -104,7 +104,7 @@ class Tuple
       /// instances of a transport type)
       FlowKey mFlowKey;
       Transport* transport;
-      bool onlyUseExistingConnection;      
+      bool onlyUseExistingConnection;
 
       /// compares this tuple with the one passed in for family, port and address equality
       /// using the passed in address mask (mask is specified by number of bits)
