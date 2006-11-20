@@ -28,13 +28,13 @@ class UserAuthGrabber : public Worker
          if(uinf)
          {
             AbstractDb::UserRecord rec=
-               mUserStore.getUserInfo(uinf->user()+"@"+uinf->realm());
-            if(rec.user==uinf->user() && rec.domain==uinf->realm())
+               mUserStore.getUserInfo(uinf->user()+"@"+uinf->domain());
+            if(rec.user==uinf->user() && rec.domain==uinf->domain())
             {
                uinf->mRec=rec;
             }
             DebugLog(<<"Grabbed user info for " 
-                           << uinf->user() <<"@"<<uinf->realm()
+                           << uinf->user() <<"@"<<uinf->domain()
                            << " : " << uinf->A1());
          }
          else

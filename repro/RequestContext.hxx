@@ -51,7 +51,6 @@ class RequestContext
       ResponseContext& getResponseContext();
       
       resip::NameAddr& getTopRoute();
-      void setTargetConnection(resip::FlowKey);
       
       //Will return the tid of the new target, since this creates the instance 
       //of class Target for the user. (see ResponseContext::addTarget())
@@ -81,7 +80,6 @@ class RequestContext
       int mTransactionCount;
       Proxy& mProxy;
       resip::NameAddr mTopRoute;
-      resip::FlowKey mTargetFlowKey;
       ResponseContext mResponseContext;
       int mTCSerial;
       resip::Data mTid;

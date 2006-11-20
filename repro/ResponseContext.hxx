@@ -82,6 +82,8 @@ class ResponseContext
       bool addTargetBatch(std::list<Target*>& targets,
                            bool highPriority=false);
       
+      bool addOutboundBatch(std::map<resip::Data, std::list<Target*> > batch);
+      
       /**
          Begins all Candidate client transactions.
          
@@ -206,7 +208,12 @@ class ResponseContext
 
       std::list<std::list<resip::Data> > mTransactionQueueCollection;
 
+      // !bwc! Map from instance-id to lists of tid
+      // (Each elem in list has identical instance id)
+      typedef std::map<resip::Data, std::list<resip::Data> > OutboundMap;
 
+      OutboundMap mOutboundMap;
+      
    private:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
@@ -241,7 +248,7 @@ class ResponseContext
       
       //Maybe someday canonicalized Uris will go here, and checking for duplicates
       //will be much faster
-      std::list<resip::Uri> mTargetList;
+      resip::ContactList mTargetList;
       
       bool isDuplicate(const repro::Target* target) const;
       

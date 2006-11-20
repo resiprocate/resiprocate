@@ -80,7 +80,7 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
          return false;
       }
    
-      mTargetList.push_back(target.uri());
+      mTargetList.push_back(target.rec());
       
       beginClientTransaction(&target);
       target.status()=Target::Trying;
@@ -156,6 +156,25 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
    return true;
 }
 
+bool
+ResponseContext::addOutboundBatch(std::map<resip::Data, std::list<Target*> > batch)
+{
+   std::map<resip::Data, std::list<Target*> >::iterator i;
+   for(i=batch.begin();i!=batch.end();++i)
+   {
+      std::list<resip::Data>& subList=mOutboundMap[i->first];
+      while(!i->second.empty())
+      {
+         Target* target = i->second.front();
+         mCandidateTransactionMap[target->tid()]=target;
+         i->second.pop_front();
+         subList.push_back(target->tid());
+      }
+   }
+   
+   return true;
+}
+
 bool 
 ResponseContext::beginClientTransactions()
 {
@@ -171,7 +190,7 @@ ResponseContext::beginClientTransactions()
    {
       if(!isDuplicate(i->second) && !mRequestContext.mHaveSentFinalResponse)
       {
-         mTargetList.push_back(i->second->uri());
+         mTargetList.push_back(i->second->rec());
          beginClientTransaction(i->second);
          result=true;
          // see rfc 3261 section 16.6
@@ -210,7 +229,7 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
       return false;
    }
    
-   mTargetList.push_back(i->second->uri());
+   mTargetList.push_back(i->second->rec());
    
    beginClientTransaction(i->second);
    mActiveTransactionMap[i->second->tid()] = i->second;
@@ -456,7 +475,7 @@ ResponseContext::removeClientTransaction(const resip::Data& transactionId)
 bool
 ResponseContext::isDuplicate(const repro::Target* target) const
 {
-   std::list<resip::Uri>::const_iterator i;
+   resip::ContactList::const_iterator i;
    // make sure each target is only inserted once
 
    // !bwc! We can not optimize this by using stl, because operator
@@ -466,7 +485,7 @@ ResponseContext::isDuplicate(const repro::Target* target) const
 
    for(i=mTargetList.begin();i!=mTargetList.end();i++)
    {
-      if(*i==target->uri())
+      if(*i==target->rec())
       {
          return true;
       }
@@ -557,6 +576,18 @@ ResponseContext::beginClientTransaction(repro::Target* target)
          }
       }
       
+      if(!target->rec().mInstance.empty())
+      {
+         target->rec().mReceivedFrom.onlyUseExistingConnection=true;
+      }
+      
+      request->setDestination(target->rec().mReceivedFrom);
+
+      DebugLog(<<"Set tuple dest: " << request->getDestination());
+
+      // !bwc! Path header addition.
+      request->header(h_Routes).append(target->rec().mSipPath);
+            
       // !jf! unleash the baboons here
       // a baboon might adorn the message, record call logs or CDRs, might
       // insert loose routes on the way to the next hop
@@ -567,13 +598,6 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       //should be the same from here on out.
       request.header(h_Vias).push_front(target->via());
 
-      if (mRequestContext.mTargetFlowKey != 0)
-      {
-         request.header(h_RequestLine).uri().param(p_fid) = Data(mRequestContext.mTargetFlowKey);
-         InfoLog (<< "Use an existing flow id: " << request.header(h_RequestLine).uri());
-      }
-
-      
       if(!mRequestContext.mInitialTimerCSet)
       {
          mRequestContext.mInitialTimerCSet=true;

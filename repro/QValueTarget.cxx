@@ -6,41 +6,20 @@ namespace repro
 {
 
 
-QValueTarget::QValueTarget(float q):
-   Target()
+QValueTarget::QValueTarget(const resip::ContactInstanceRecord& rec)
 {
-   mPriorityMetric=q;
-   mShouldAutoProcess=true;
-}
-
-QValueTarget::QValueTarget(const resip::Uri& uri,float q):
-   Target(uri)
-{
-   mPriorityMetric=q;
-   mShouldAutoProcess=true;   
-}
-
-QValueTarget::QValueTarget(const resip::NameAddr& nameAddr,float q):
-   Target(nameAddr)
-{
-   mPriorityMetric=q;
-   mShouldAutoProcess=true;   
-}
-
-QValueTarget::QValueTarget(const Target& orig,float q):
-   Target(orig)
-{
-   mPriorityMetric=q;
-   mShouldAutoProcess=true;   
-}
-
-QValueTarget::QValueTarget(const QValueTarget& orig)
-{
-   mPriorityMetric=orig.mPriorityMetric;
-   mShouldAutoProcess=orig.mShouldAutoProcess;
-   mNameAddr=orig.mNameAddr;
-   mVia=orig.mVia;
-   mStatus=orig.mStatus;
+   mContact=rec;
+   if(mContact.mContact.exists(resip::p_q))
+   {
+      try
+      {
+         mPriorityMetric=mContact.mContact.param(resip::p_q);
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         mPriorityMetric=0;
+      }
+   }
 }
    
 QValueTarget::~QValueTarget(){}

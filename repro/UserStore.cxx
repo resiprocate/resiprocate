@@ -41,7 +41,17 @@ UserStore::requestUserAuthInfo( const resip::Data& user,
    // read that and then do the stuff in the rest of this fucntion
    
    resip::Data a1 = getUserAuthInfo(user, domain);
-   UserAuthInfo* msg = new UserAuthInfo(user,domain,a1,transactionToken);
+   
+   UserAuthInfo* msg=0;
+
+   if(a1.empty())
+   {
+      msg = new UserAuthInfo(user,domain,UserAuthInfo::UserUnknown,transactionToken);
+   }
+   else
+   {
+      msg = new UserAuthInfo(user,domain,a1,transactionToken);
+   }
    transactionUser.post( msg );
 }
 
