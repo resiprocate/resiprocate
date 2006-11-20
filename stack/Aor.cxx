@@ -157,19 +157,21 @@ Aor::value() const
 
       mValue.reserve(mUser.size() + mCanonicalHost.size() + 10);
 
-      DataStream strm(mValue);
-      strm << mScheme;
-      strm << Symbols::COLON;
-      strm << mUser;
-      if (!mCanonicalHost.empty())
-      {
-         strm << Symbols::AT_SIGN;
-         strm << mCanonicalHost;
-
-         if (mPort != 0)
+      {//Make sure strm goes out of scope before anything tries using mValue
+         DataStream strm(mValue);
+         strm << mScheme;
+         strm << Symbols::COLON;
+         strm << mUser;
+         if (!mCanonicalHost.empty())
          {
-            strm << Symbols::COLON;
-            strm << Data(mPort);
+            strm << Symbols::AT_SIGN;
+            strm << mCanonicalHost;
+
+            if (mPort != 0)
+            {
+               strm << Symbols::COLON;
+               strm << Data(mPort);
+            }
          }
       }
    }
