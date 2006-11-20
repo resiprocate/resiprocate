@@ -5,6 +5,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
 #include "resip/stack/Via.hxx"
+#include "resip/dum/ContactInstanceRecord.hxx"
 
 namespace repro
 {
@@ -31,7 +32,7 @@ class Target
       Target();
       Target(const resip::Uri& uri);
       Target(const resip::NameAddr& target);
-      Target(const repro::Target& target);
+      Target(const resip::ContactInstanceRecord& record);
 
       virtual ~Target();
       
@@ -41,14 +42,14 @@ class Target
       virtual Status& status();
       virtual const Status& status() const;
       
-      virtual const resip::Uri& setUri(const resip::Uri& uri);
-      virtual const resip::Uri& uri() const;
-      
       virtual const resip::Via& setVia(const resip::Via& via);
       virtual const resip::Via& via() const;
       
-      virtual const resip::NameAddr& setNameAddr(const resip::NameAddr& nameAddr);
-      virtual const resip::NameAddr& nameAddr() const;
+      virtual const resip::Uri& uri() const {return mRec.mContact.uri();}
+      
+      virtual const resip::ContactInstanceRecord& rec() const;
+      virtual const resip::ContactInstanceRecord& rec();
+      virtual void setRec(const resip::ContactInstanceRecord& rec);
       
       virtual Target* clone() const;
       
@@ -70,7 +71,7 @@ class Target
    protected:
       Status mStatus;
       resip::Via mVia;
-      resip::NameAddr mNameAddr;
+      resip::ContactInstanceRecord mRec;
       
 };// class Target
 

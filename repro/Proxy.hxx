@@ -38,6 +38,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       const resip::NameAddr& getRecordRoute() const;
       
       UserStore& getUserStore();
+      resip::SipStack& getStack(){return mStack;}
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
 

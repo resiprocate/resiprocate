@@ -711,11 +711,11 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                aor = aors.begin(); aor != aors.end(); ++aor )
       {
          Uri uri = *aor;
-         RegistrationPersistenceManager::ContactRecordList 
+         ContactList 
             contacts = mRegDb.getContacts(uri);
          
          bool first = true;
-         for (RegistrationPersistenceManager::ContactRecordList::iterator i = contacts.begin();
+         for (ContactList::iterator i = contacts.begin();
               i != contacts.end(); ++i )
          {
             if (i->expires >= time(NULL))
@@ -730,7 +730,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                s << "</td>" << endl
                  << "  <td>";
             
-               const RegistrationPersistenceManager::ContactRecord& r = *i;
+               const ContactInstanceRecord& r = *i;
                const Uri& contact = r.uri; 
 
                s << contact;

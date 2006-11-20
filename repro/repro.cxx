@@ -35,9 +35,9 @@
 #include "repro/monkeys/SimpleStaticRoute.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/StrictRouteFixup.hxx"
+#include "repro/monkeys/OutboundTargetHandler.hxx"
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
-#include "repro/monkeys/SetTargetConnection.hxx"
 
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
@@ -340,6 +340,9 @@ main(int argc, char** argv)
    
    ProcessorChain* baboons = new ProcessorChain;
 
+   OutboundTargetHandler* ob = new OutboundTargetHandler;
+   baboons->addProcessor(auto_ptr<Processor>(ob));
+   
    if( args.mDoQValue)
    {
       QValueTargetHandler::ForkBehavior behavior=QValueTargetHandler::EQUAL_Q_PARALLEL;
@@ -394,6 +397,8 @@ main(int argc, char** argv)
 #ifdef USE_SSL
    profile->addSupportedScheme(Symbols::Sips);
 #endif
+   profile->addSupportedOptionTag(Token("outbound"));
+   profile->addSupportedOptionTag(Token("path"));
    if(args.mAllowBadReg)
    {
        profile->allowBadRegistrationEnabled() = true;
