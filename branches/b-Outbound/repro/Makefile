@@ -67,13 +67,13 @@ SRC 	+=   \
 	monkeys/IsTrustedNode.cxx \
 	monkeys/ConstantLocationMonkey.cxx \
 	monkeys/LocationServer.cxx \
+	monkeys/OutboundTargetHandler.cxx \
 	monkeys/RecursiveRedirect.cxx \
 	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/QValueTargetHandler.cxx \
 	monkeys/SimpleTargetHandler.cxx \
-	monkeys/SetTargetConnection.cxx \
 	\
 
 

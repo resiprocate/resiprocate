@@ -219,6 +219,13 @@ ServerRegistration::dispatch(const SipMessage& msg)
             }
             rec.mSipPath=msg.header(h_Paths);
          }
+         else if(msg.header(h_Vias).size() > 1)
+         {
+            // !bwc! If there are no path-headers, but there is more than one
+            // Via, this REGISTER has passed through an edge proxy that doesn't
+            // support outbound. We will not be able to reach the UA.
+            supportsOutbound=false;
+         }
       }
       catch(resip::ParseBuffer::Exception& e)
       {

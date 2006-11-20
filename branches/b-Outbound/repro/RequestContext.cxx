@@ -40,7 +40,6 @@ RequestContext::RequestContext(Proxy& proxy,
    mTargetProcessorChain(targetP),
    mTransactionCount(1),
    mProxy(proxy),
-   mTargetFlowKey(0),
    mResponseContext(*this),
    mTCSerial(0),
    mFromTrustedNode(false)
@@ -696,12 +695,6 @@ NameAddr&
 RequestContext::getTopRoute()
 {
    return mTopRoute;
-}
-
-void
-RequestContext::setTargetConnection(FlowKey fid)
-{
-   mTargetFlowKey = fid;
 }
 
 void 
