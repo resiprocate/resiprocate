@@ -66,7 +66,9 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, RRVip& vip, DnsHa
      mSips(false),
      mTransport(UNKNOWN_TRANSPORT),
      mPort(-1),
+     mHaveChosenTransport(false),
      mType(Pending),
+     mCumulativeWeight(0),
      mBlacklistLastReturnedResult(false)
 {
 }
@@ -486,34 +488,65 @@ DnsResult::retrieveSRV()
 {
     // !ah! if mTransport is known -- should we ignore those that don't match?!
    assert(!mSRVResults.empty());
+   assert(mSRVCount==0);
 
    const SRV& srv = *mSRVResults.begin();
-   if (srv.cumulativeWeight == 0)
-   {
-      int priority = srv.priority;
+   int priority = srv.priority;
+   TransportType transport=UNKNOWN_TRANSPORT;
    
-     mCumulativeWeight=0;
-      //!dcm! -- this should be fixed properly; TCP req. lines were being sent
-      //out on UDP
-      TransportType transport = mSRVResults.begin()->transport;      
+   if(!mHaveChosenTransport)
+   {
+      // !bwc! We have not chosen a transport yet; this happens when we fail
+      // to find a NAPTR record, and the transport is not specified in the uri.
+      // In this contingency, we manufacture best-guess SRV queries for each
+      // transport we support, and try one transport at a time. This
+      // means we might try more than one transport for the uri in question.
+      transport = srv.transport;
+   }
+   else
+   {
+      // !bwc! We chose our transport before we started looking up SRVs.
+      // All SRVs must match. 
+      
+      transport=mTransport;
+      assert(mSRVResults.begin()->transport==transport);
+   }
+   
+   if (mCumulativeWeight == 0)
+   {
       for (std::vector<SRV>::iterator i=mSRVResults.begin(); 
            i!=mSRVResults.end() 
               && i->priority == priority 
               && i->transport == transport; i++)
       {
+         assert(i->weight>=0);
          mCumulativeWeight += i->weight;
-         i->cumulativeWeight = mCumulativeWeight;
       }
    }
    
-   int selected = Random::getRandom() % (mCumulativeWeight+1);
-
+   int selected =0;
+   if(mCumulativeWeight!=0)
+   {
+      selected = Random::getRandom() % (mCumulativeWeight);
+   }
+   else
+   {
+      // !bwc! All of the remaining SRVs (at this priority/type) have a weight
+      // of 0. The best we can do here is pick arbitrarily. In this case, we 
+      // will end up picking the first.
+      // (selected will be less than the weight of the first SRV, causing the
+      // loop below to break on the first iteration)
+      selected=-1;
+   }
+   
    StackLog (<< "cumulative weight = " << mCumulativeWeight << " selected=" << selected);
 
    std::vector<SRV>::iterator i;
-   for (i=mSRVResults.begin(); i!=mSRVResults.end(); i++)
+   int cumulativeWeight=0;
+   for (i=mSRVResults.begin(); i!=mSRVResults.end(); ++i)
    {
-      if (i->cumulativeWeight >= selected)
+      cumulativeWeight+=i->weight;
+      if (cumulativeWeight > selected)
       {
          break;
       }
@@ -525,8 +558,21 @@ DnsResult::retrieveSRV()
    }
    assert(i != mSRVResults.end());
    SRV next = *i;
-   mCumulativeWeight -= next.cumulativeWeight;
+   mCumulativeWeight -= next.weight;
    mSRVResults.erase(i);
+   
+   if(!mSRVResults.empty())
+   {
+      int nextPriority=mSRVResults.begin()->priority;
+      TransportType nextTransport=mSRVResults.begin()->transport;
+      
+      // !bwc! If we have finished traversing a priority value/transport type,
+      // we reset the cumulative weight to 0, to prompt its recalculation.
+      if(priority!=nextPriority || transport!=nextTransport)
+      {
+         mCumulativeWeight=0;
+      }
+   }
    
    StackLog (<< "SRV: " << Inserter(mSRVResults));
 
@@ -603,7 +649,7 @@ DnsResult::NAPTR::operator<(const DnsResult::NAPTR& rhs) const
    return false;
 }
 
-DnsResult::SRV::SRV() : priority(0), weight(0), cumulativeWeight(0), port(0)
+DnsResult::SRV::SRV() : priority(0), weight(0), port(0)
 {
 }
 
@@ -836,7 +882,15 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
             StackLog (<< "Skipping SRV " << srv.key);
             continue;
          }
-         mSRVResults.push_back(srv);
+         
+         if(!mHaveChosenTransport || srv.transport==mTransport)
+         {
+            // !bwc! If we have not committed to a given transport, or we have 
+            // committed to a given transport which this SRV matches, we will
+            // add this SRV. We do not add SRVs that do not match a transport
+            // we have committed to.
+            mSRVResults.push_back(srv);
+         }
       }
    }
    else
@@ -854,11 +908,31 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
             if (mSips)
             {
                mTransport = TLS;
+               mHaveChosenTransport=true;
                mPort = Symbols::DefaultSipsPort;
             }
             else
             {
-               mTransport = UDP;
+               if (mInterface.isSupported(UDP, V4))
+               {
+                  mTransport = UDP;
+                  mHaveChosenTransport=true;
+               }
+               else if (mInterface.isSupported(TCP, V4))
+               {
+                  mTransport = TCP;
+                  mHaveChosenTransport=true;
+               }
+               /* Yes, there is the possibility that at this point mTransport
+                  is still UNKNOWN_TRANSPORT, but this is likely to fail just as
+                  well as defaulting to UDP when there isn't an interface that
+                  supports UDP.
+                  It doesn't support failover to TCP when there is a UDP failure,
+                  but neither does the original code.
+                  This fixes the case where there is no UDP transport, but
+                  there was no explicit ;transport=tcp on the uri.
+                  (mjf)
+                */
                mPort = Symbols::DefaultSipPort;
             }
          }
@@ -1168,7 +1242,6 @@ resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
         << " t=" << Tuple::toData(srv.transport) 
         << " p=" << srv.priority
         << " w=" << srv.weight
-        << " c=" << srv.cumulativeWeight
         << " port=" << srv.port
         << " target=" << srv.target;
    return strm;

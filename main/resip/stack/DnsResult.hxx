@@ -96,7 +96,6 @@ class DnsResult : public DnsResultSink
             TransportType transport;
             int priority;
             int weight;
-            int cumulativeWeight; // for picking 
             int port;
             Data target;
       };
@@ -138,6 +137,20 @@ class DnsResult : public DnsResultSink
       Data mSrvKey;
       TransportType mTransport; // current
       int mPort; // current
+      
+      /*!
+         @author bwc
+         This is set to true when the RFC 3263 logic has chosen the transport
+         it will be using. Incoming SRVs will be filtered according to
+         mTransport if mHaveChosenTransport is true. It is VITAL that this
+         boolean not change during the phase where we are acquiring/processing
+         SRV records, because the state of this boolean denotes whether we
+         filtered incoming SRVs or not. (If it changes halfway through, some
+         of the SRVs will have been filtered, but some won't, and this will
+         break retrieveSRV() )
+      */
+      bool mHaveChosenTransport;
+      
       Type mType;
 
       //Ugly hack
