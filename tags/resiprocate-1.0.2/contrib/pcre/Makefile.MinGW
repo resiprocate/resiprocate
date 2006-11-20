@@ -1,0 +1,18 @@
+CFLAGS := -I. -DPCRE_STATIC -DSUPPORT_UTF8 -DPOSIX_MALLOC_THRESHOLD=10 -DWIN32 -Wall
+
+all: libpcre.a libpcreposix.a pcretest.o
+	$(CC) -o pcretest.exe pcretest.o -L. -lpcreposix -lpcre
+
+libpcre.a: chartables.o maketables.o get.o study.o pcre.o
+	$(AR) r $@ $^
+	ranlib $@
+
+libpcreposix.a: pcreposix.o
+	$(AR) r $@ $^
+	ranlib $@
+
+chartables.c: dftables
+	dftables chartables.c
+
+clean:
+	$(RM) *.o *.a *.obj *.exe *.a *.exp *.dll
