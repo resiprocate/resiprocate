@@ -1,3 +1,14 @@
+Version 1.0.2
+
+Fixed a bug in the SRV load-leveling logic that could cause the stack to crash.
+Fixed race-conditions in DUM that could cause a crash if a client reused transaction ids rapidly.
+
+Version 1.0.1
+
+Fixed a bug that would cause the stack to crash if it received a request with a single empty Via header.
+
+Version 1.0
+
 Overall project changes:
 The resiprocate/os directory has been broken into two separate directories: rutil, and resip/stack. DUM now lives in resip/dum. repro no longer resides within the resiprocate directory.
 
