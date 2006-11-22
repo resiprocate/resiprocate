@@ -782,7 +782,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          transition(Connected);
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Ack);
          if(!isTerminated())  // onAnswer callback may call end() or reject()
          {
             handler->onConnected(getSessionHandle(), msg);

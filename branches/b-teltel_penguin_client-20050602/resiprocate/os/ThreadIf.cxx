@@ -18,7 +18,6 @@ typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 #include <cassert>
 #include <iostream>
 #include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -186,22 +185,14 @@ ThreadIf::shutdown()
    if (!mShutdown)
    {
       mShutdown = true;
-      mShutdownCondition.signal();
+      //mShutdownCondition.signal();
    }
-}
-
-bool
-ThreadIf::waitForShutdown(int ms) const
-{
-   Lock lock(mShutdownMutex);
-   mShutdownCondition.wait(mShutdownMutex, ms);
-   return mShutdown;
 }
 
 bool
 ThreadIf::isShutdown() const
 {
-   Lock lock(mShutdownMutex);
+   Lock lock(mShutdownMutex, VOCAL_READLOCK);
    (void)lock;
    return ( mShutdown );
 }

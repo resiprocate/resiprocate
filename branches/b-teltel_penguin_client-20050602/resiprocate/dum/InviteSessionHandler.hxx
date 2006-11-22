@@ -66,9 +66,16 @@ class DUM_API InviteSessionHandler
       /// called to allow app to adorn a message. default is to send immediately
       virtual void onReadyToSend(InviteSessionHandle, SipMessage& msg);
 
+
+      typedef enum
+      {
+         FirstInvite,   // answer SDP upon first invite
+         Reinvite,      // answer SDP upon re-invite
+         Ack,           // answer SDP upon ack
+      } AnswerReason;
       /// called when an SDP answer is received - has nothing to do with user
       /// answering the call 
-      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&, InviteSessionHandler::AnswerReason reason)=0;
 
       /// called when an SDP offer is received - must send an answer soon after this
       virtual void onOffer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)=0;      

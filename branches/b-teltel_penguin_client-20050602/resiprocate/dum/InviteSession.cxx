@@ -829,7 +829,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          {
             mCurrentLocalSdp = mProposedLocalSdp;
             mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
          }
          else if(mProposedLocalSdp.get()) 
          {
@@ -920,7 +920,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
             mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
             // !jf! I need to potentially include an answer in the ACK here
             sendAck();
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
          }
 
          // !jf! do I need to allow a reINVITE overlapping the retransmission of

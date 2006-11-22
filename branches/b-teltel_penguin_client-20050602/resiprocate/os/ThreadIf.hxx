@@ -10,7 +10,7 @@
 #  include <pthread.h>
 #endif
 
-#include "resiprocate/os/Mutex.hxx"
+#include "resiprocate/os/RWMutex.hxx"
 #include "resiprocate/os/Condition.hxx"
 #include "resiprocate/os/Win32Export.hxx"
 
@@ -54,10 +54,6 @@ class RESIP_API ThreadIf
       // request the thread running thread() to return, by setting  mShutdown
       void shutdown();
 
-      //waits for waitMs, or stops waiting and returns true if shutdown was
-      //called
-      bool waitForShutdown(int ms) const;
-
       // returns true if the thread has been asked to shutdown or not running
       bool isShutdown() const;
       bool isRunning() const;
@@ -85,8 +81,7 @@ class RESIP_API ThreadIf
       Id mId;
 
       bool mShutdown;
-      mutable Mutex mShutdownMutex;
-      mutable Condition mShutdownCondition;
+      mutable RWMutex mShutdownMutex;
 
    private:
       // Suppress copying
