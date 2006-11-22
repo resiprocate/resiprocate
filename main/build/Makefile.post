@@ -230,8 +230,7 @@ endif
 # build executables
 $(BIN)/%: $(OBJ)/%.o $(OBJS)  $(EXTRAS)  .dependlibs
 	$(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS)
-	-@ test -f $(patsubst $(BIN)/%,%,$@) && /bin/rm -f $(patsubst $(BIN)/%,%,$@)
-	-@ test -h $(patsubst $(BIN)/%,%,$@) || ln -s $@ $(patsubst $(BIN)/%,%,$@)
+	-@/bin/rm -f $(patsubst $(BIN)/%,%,$@) || ln -s $@ $(patsubst $(BIN)/%,%,$@)
 
 # these rules build dependency files in the cases that need them.
 
