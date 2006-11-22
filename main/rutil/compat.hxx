@@ -83,8 +83,12 @@ namespace resip
 {
 
 #if defined(WIN32) || defined(__QNX__)
+#ifndef strcasecmp
 #  define strcasecmp(a,b)    stricmp(a,b)
+#endif
+#ifndef strncasecmp
 #  define strncasecmp(a,b,c) strnicmp(a,b,c)
+#endif
 #endif
 
 #if defined(__QNX__) || defined(__sun) || defined(WIN32)
