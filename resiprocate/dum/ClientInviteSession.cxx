@@ -517,7 +517,7 @@ ClientInviteSession::handleAnswer (const SipMessage& msg, const SdpContents& sdp
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    handleProvisional(msg);
-   handler->onAnswer(getSessionHandle(), msg, sdp);
+   handler->onAnswer(getSessionHandle(), msg, sdp, InviteSessionHandler::FirstInvite);
 
    sendPrackIfNeeded(msg);
 }
@@ -658,7 +658,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
             handler->onConnected(getHandle(), msg);
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
             //if(!isTerminated())  // onAnswer callback may call end() or reject()
             //{
             //}
@@ -765,7 +765,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          mCurrentLocalSdp = mProposedLocalSdp;
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onConnected(getHandle(), msg);
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
          //if(!isTerminated())  // onNewSession callback may call end() or reject()
          //{
          //   handler->onConnected(getHandle(), msg);
