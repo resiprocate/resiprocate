@@ -428,7 +428,7 @@ Dialog::dispatch(const SipMessage& msg)
                if (creator && (creator->getLastRequest().header(h_RequestLine).method() == SUBSCRIBE ||
                   creator->getLastRequest().header(h_RequestLine).method() == REFER))  // !slg! OOD Refer?  Click-to-Call?
                {
-                  DebugLog (<< "Making subscription (from creator) request: " << creator->getLastRequest());
+                  DebugLog (<< "Making subscription (from creator) request:\n" << creator->getLastRequest());
                   ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
                   mClientSubscriptions.push_back(sub);
                   sub->dispatch(request);
@@ -437,7 +437,7 @@ Dialog::dispatch(const SipMessage& msg)
                {
                   if (mInviteSession != 0 && (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer"))
                   {
-                     DebugLog (<< "Making subscription from NOTIFY: " << msg);
+                     DebugLog (<< "Making subscription from NOTIFY:\n" << msg);
                      ClientSubscription* sub = makeClientSubscription(msg);
                      mClientSubscriptions.push_back(sub);
                      ClientSubscriptionHandle client = sub->getHandle();				      
