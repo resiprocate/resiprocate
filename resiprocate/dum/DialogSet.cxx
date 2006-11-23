@@ -695,7 +695,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
       }
 
-      DebugLog ( << "Creating a new Dialog from msg: " << msg);
+      DebugLog ( << "Creating a new Dialog from msg:\n" << msg);
       try
       {
          // !jf! This could throw due to bad header in msg, should we catch and rethrow
@@ -732,7 +732,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
 
       assert(mState != WaitingToEnd);
-      DebugLog ( << "### Calling CreateAppDialog ### " << msg);
+      DebugLog ( << "### Calling CreateAppDialog ###\n" << msg);
       AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
       dialog->mAppDialog = appDialog;
       appDialog->mDialog = dialog;

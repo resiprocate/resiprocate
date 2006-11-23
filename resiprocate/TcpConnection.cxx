@@ -78,7 +78,7 @@ TcpConnection::read( char* buf, int count )
 int 
 TcpConnection::write( const char* buf, const int count )
 {
-   DebugLog (<< "Writing " << buf);
+   DebugLog (<< "Writing:\n" << buf);
 
    assert(buf);
    assert(count > 0);
