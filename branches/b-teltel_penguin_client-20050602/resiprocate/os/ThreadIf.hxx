@@ -58,12 +58,8 @@ class RESIP_API ThreadIf
       bool isShutdown() const;
       bool isRunning() const;
 
-#ifdef WIN32
-#ifdef _WIN32_WCE
+#ifdef _WIN32
       typedef DWORD Id;
-#else
-      typedef unsigned int Id;
-#endif
 #else
       typedef pthread_t Id;
       static Id selfId();
@@ -75,7 +71,7 @@ class RESIP_API ThreadIf
       virtual void thread() = 0;
 
    protected:
-#ifdef WIN32
+#ifdef _WIN32
       HANDLE mThread;
 #endif
       Id mId;
