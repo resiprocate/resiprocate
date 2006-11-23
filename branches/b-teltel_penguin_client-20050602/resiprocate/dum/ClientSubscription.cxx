@@ -336,6 +336,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
 void
 ClientSubscription::dispatch(const DumTimeout& timer)
 {
+   DebugLog (<< "ClientSubscription::dispatch(DumTimeout) | mTimerSeq: " << mTimerSeq << " | timer.seq(): " << timer.seq());
    if (timer.seq() == mTimerSeq)
    {
       if (timer.type() == DumTimeout::SubscriptionRetry)
@@ -369,11 +370,16 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          requestRefresh();
       }
    }
+   else
+   {
+      DebugLog(<< "ClientSubscription::dispatch timer SEQ does not match");
+   }
 }
 
 void
 ClientSubscription::requestRefresh(int expires)
 {
+   DebugLog(<< "ClientSubscription::requestRefresh | Ended: " << mEnded << " | Expires: " << expires);
    if (!mEnded)
    {
       mDialog.makeRequest(mLastRequest, SUBSCRIBE);
@@ -384,7 +390,8 @@ ClientSubscription::requestRefresh(int expires)
          mLastRequest.header(h_Expires).value() = expires;
       }
       mExpires = 0;
-      InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
+      //InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_Contacts).front());
+      InfoLog (<< "Refresh subscription: " << mLastRequest.header(h_RequestLine).uri());
       send(mLastRequest);
    }
 }

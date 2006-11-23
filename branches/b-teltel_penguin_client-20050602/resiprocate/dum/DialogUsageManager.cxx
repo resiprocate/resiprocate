@@ -961,6 +961,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
          InfoLog(<< "Timeout Message" );
          if (!dumMsg->getBaseUsage().isValid())
          {
+            DebugLog(<< "BaseUsage Invalid, discard Timeout Message");
             return;
          }
 

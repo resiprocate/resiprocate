@@ -144,7 +144,7 @@ DumTimeout::encode(std::ostream& strm) const
    }
    else 
    {
-      strm << " defunct";
+      strm << " mUsageHandle defunct; handle id: " << mUsageHandle.getId();
    }
    
    strm << ": duration=" << mDuration << " seq=" << mSeq;
