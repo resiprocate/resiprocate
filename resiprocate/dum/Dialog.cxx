@@ -578,12 +578,13 @@ Dialog::dispatch(const SipMessage& msg)
                   {
                      return;
                   }
-                  else
+                  else // !nash! what is this scenario?
                   {
                      ClientSubscriptionHandler* handler =
                         mDum.getClientSubscriptionHandler(creator->getLastRequest().header(h_Event).value());
                      if (handler)
                      {
+                        DebugLog (<< "Making subscription from SUBSCRIBE response:\n" << msg);
                         ClientSubscription* sub = makeClientSubscription(creator->getLastRequest());
                         mClientSubscriptions.push_back(sub);
                         sub->dispatch(response);

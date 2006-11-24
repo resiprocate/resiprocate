@@ -659,11 +659,15 @@ InviteSession::dispatch(const DumTimeout& timeout)
          mDum.mInviteSessionHandler->onAckNotReceived(getSessionHandle());
 
          // If we are waiting for an Ack and it times out, then end with a BYE
-         if(mState == UAS_WaitingToHangup)
+         switch (mState)
          {
-             sendBye();
-             transition(Terminated);
-             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+         case UAS_WaitingToHangup:
+         case UAS_Accepted:
+         case Connected:
+            sendBye();
+            transition(Terminated);
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+            break;
          }
       }
 
