@@ -382,18 +382,22 @@ class RESIP_API SdpContents : public Contents
                   void addCodec(const Codec& codec);
 
                   const std::list<Data>& getFormats() const {return mFormats;}
-                  const Data& information() const {return mInformation;}
+                  // media title - i attribute
+                  const Data& information() const {return mInformation;} 
                   Data& information() {return mInformation;}
+                  // bandwidth - b attribute
                   const std::list<Bandwidth>& bandwidths() const {return mBandwidths;}
                   std::list<Bandwidth>& bandwidths() {return mBandwidths;}
 
                   // from session if empty
                   const std::list<Connection> getConnections() const;
-                  // does not include session connections
+                  // connections - c attribute
+                  // does not include session connections 
                   std::list<Connection>& getMediumConnections() {return mConnections;}
-                  const Encryption& getEncryption() const {return mEncryption;}
+                  // k - attribute
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}
+
                   bool exists(const Data& key) const;
                   const std::list<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
