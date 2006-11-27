@@ -45,7 +45,7 @@ LocationServer::process(RequestContext& context)
                ; i != contacts.end()    ; ++i)
       {
          resip::ContactInstanceRecord contact = *i;
-         if (contact.mRegExpires>=time(NULL))
+         if (contact.mRegExpires>=(UInt64)time(NULL))
          {
             InfoLog (<< *this << " adding target " << contact.mContact);
             if(contact.mInstance.empty())
