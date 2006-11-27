@@ -25,7 +25,7 @@ class ContactInstanceRecord
       Tuple mReceivedFrom;  // source transport, IP address, and port 
       NameAddrs mSipPath;     // Value of SIP Path header from the request
       Data mInstance;   // From the instance parameter; usually a UUID URI
-      UInt32 mClientFlowId;
+      UInt32 mRegId;
       Data mServerSessionId;   // if there is no SIP Path header, the connection/session identifier 
       // Uri gruu;  (GRUU is currently derived)
       

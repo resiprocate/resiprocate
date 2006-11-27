@@ -48,7 +48,7 @@ class Target
       virtual const resip::Uri& uri() const {return mRec.mContact.uri();}
       
       virtual const resip::ContactInstanceRecord& rec() const;
-      virtual const resip::ContactInstanceRecord& rec();
+      virtual resip::ContactInstanceRecord& rec();
       virtual void setRec(const resip::ContactInstanceRecord& rec);
       
       virtual Target* clone() const;
