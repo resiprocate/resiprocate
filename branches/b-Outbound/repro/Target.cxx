@@ -20,7 +20,7 @@ Target::Target(const resip::Uri& uri)
    mShouldAutoProcess(true),
    mStatus(Candidate)
 {  
-   mContact.mContact.uri()=uri;
+   mRec.mContact.uri()=uri;
 }
 
 Target::Target(const resip::NameAddr& target)
@@ -34,8 +34,8 @@ Target::Target(const resip::NameAddr& target)
 Target::Target(const resip::ContactInstanceRecord& rec)
    :mPriorityMetric(0),
    mShouldAutoProcess(true),
-   mContact(rec),
-   mStatus(Candidate)
+   mStatus(Candidate),
+   mRec(rec)
 {}
 
 Target::~Target()
@@ -78,31 +78,19 @@ Target::via() const
 const resip::ContactInstanceRecord& 
 Target::rec() const
 {
-   return mContact;
+   return mRec;
 }
 
 resip::ContactInstanceRecord& 
 Target::rec()
 {
-   return mContact;
+   return mRec;
 }
 
 void 
 Target::setRec(const resip::ContactInstanceRecord& rec)
 {
-   mContact=rec;
-}
-
-const resip::NameAddr&
-Target::setNameAddr(const resip::NameAddr& nameAddr)
-{
-   return mNameAddr=nameAddr;
-}
-
-const resip::NameAddr&
-Target::nameAddr() const
-{
-   return mNameAddr;
+   mRec=rec;
 }
 
 Target*

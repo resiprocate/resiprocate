@@ -237,7 +237,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
          try
          {
             rec.mInstance=i->param(p_Instance);
-            rec.mClientFlowId=i->param(p_regid);
+            rec.mRegId=i->param(p_regid);
             rec.mReceivedFrom.onlyUseExistingConnection=true;
             mDum.getSipStack().addFlow(msg.getSource());
             DebugLog(<<"Added flow: " << msg.getSource());

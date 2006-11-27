@@ -8,12 +8,12 @@ namespace repro
 
 QValueTarget::QValueTarget(const resip::ContactInstanceRecord& rec)
 {
-   mContact=rec;
-   if(mContact.mContact.exists(resip::p_q))
+   mRec=rec;
+   if(mRec.mContact.exists(resip::p_q))
    {
       try
       {
-         mPriorityMetric=mContact.mContact.param(resip::p_q);
+         mPriorityMetric=mRec.mContact.param(resip::p_q);
       }
       catch(resip::ParseBuffer::Exception& e)
       {
