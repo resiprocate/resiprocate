@@ -7,14 +7,14 @@ using namespace resip;
 ContactInstanceRecord::ContactInstanceRecord() : 
    mRegExpires(0),
    mLastUpdated(Timer::getTimeSecs()),
-   mClientFlowId(0)
+   mRegId(0)
 {
 }
 
 bool
 ContactInstanceRecord::operator==(const ContactInstanceRecord& rhs) const
 {
-   return (mClientFlowId == rhs.mClientFlowId &&
+   return (mRegId == rhs.mRegId &&
             mInstance == rhs.mInstance &&
             mContact.uri() == rhs.mContact.uri());
 }
@@ -46,7 +46,7 @@ ContactInstanceRecord::makeUpdateDelta(const NameAddr& contact,
    }
    if (contact.exists(p_regid))
    {
-      c.mClientFlowId = contact.param(p_regid);
+      c.mRegId = contact.param(p_regid);
    }
    // !jf! need to fill in mServerSessionId here
    return c;

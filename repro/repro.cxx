@@ -286,9 +286,6 @@ main(int argc, char** argv)
       StrictRouteFixup* srf = new StrictRouteFixup;
       locators->addProcessor(std::auto_ptr<Processor>(srf));
 
-      SetTargetConnection* stc = new SetTargetConnection;   
-      locators->addProcessor(std::auto_ptr<Processor>(stc)); 
-      
       IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
       locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 

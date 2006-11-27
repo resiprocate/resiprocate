@@ -576,17 +576,19 @@ ResponseContext::beginClientTransaction(repro::Target* target)
          }
       }
       
+      Tuple dest=target->rec().mReceivedFrom;
+      
       if(!target->rec().mInstance.empty())
       {
-         target->rec().mReceivedFrom.onlyUseExistingConnection=true;
+         dest.onlyUseExistingConnection=true;
       }
       
-      request->setDestination(target->rec().mReceivedFrom);
+      request.setDestination(dest);
 
-      DebugLog(<<"Set tuple dest: " << request->getDestination());
+      DebugLog(<<"Set tuple dest: " << request.getDestination());
 
       // !bwc! Path header addition.
-      request->header(h_Routes).append(target->rec().mSipPath);
+      request.header(h_Routes).append(target->rec().mSipPath);
             
       // !jf! unleash the baboons here
       // a baboon might adorn the message, record call logs or CDRs, might
