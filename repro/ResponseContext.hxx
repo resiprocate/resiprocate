@@ -213,7 +213,7 @@ class ResponseContext
       typedef std::map<resip::Data, std::list<resip::Data> > OutboundMap;
 
       OutboundMap mOutboundMap;
-      
+      resip::Data mCurrentResponseTid;      
    private:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
