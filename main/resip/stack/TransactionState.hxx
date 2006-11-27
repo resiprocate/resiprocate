@@ -124,6 +124,7 @@ class TransactionState : public DnsHandler
 
       Data mId;
       bool mAckIsValid;
+      bool mWaitingForDnsResult;
       TransactionUser* mTransactionUser;
       TransportFailure::FailureReason mFailureReason;      
 
