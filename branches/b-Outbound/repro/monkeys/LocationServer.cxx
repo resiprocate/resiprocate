@@ -36,7 +36,7 @@ LocationServer::process(RequestContext& context)
    if (true) // TODO fix mStore.aorExists(inputUri))
    {  
       resip::ContactList contacts;
-
+      mStore.getContacts(inputUri,contacts);
       mStore.unlockRecord(inputUri);
       
       std::list<Target*> batch;
@@ -45,7 +45,7 @@ LocationServer::process(RequestContext& context)
                ; i != contacts.end()    ; ++i)
       {
          resip::ContactInstanceRecord contact = *i;
-         if (contact.mRegExpires>=(UInt64)time(NULL))
+         if (contact.mRegExpires - time(NULL) >= 0)
          {
             InfoLog (<< *this << " adding target " << contact.mContact);
             if(contact.mInstance.empty())

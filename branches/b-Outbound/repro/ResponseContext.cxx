@@ -132,7 +132,7 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
          {
             queue.push_back(target->tid());
          }
-         DebugLog(<<"Adding Target to Candidates: " << target->uri());
+         DebugLog(<<"Adding Target to Candidates: " << target->uri() << " tid=" << target->tid());
          mCandidateTransactionMap[target->tid()]=target;
       }
       else
@@ -675,7 +675,7 @@ ResponseContext::processResponse(SipMessage& response)
    InfoLog (<< "processResponse: " << endl << response);
 
    // store this before we pop the via and lose the branch tag
-   const Data transactionId = response.getTransactionId();
+   mCurrentResponseTid = response.getTransactionId();
    
    assert (response.isResponse());
    assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
@@ -697,7 +697,7 @@ ResponseContext::processResponse(SipMessage& response)
       {
          InfoLog( << "Received final response, but can't forward as there are no more Vias: " << response.brief() );
          // !bwc! Treat as server error.
-         terminateClientTransaction(transactionId);
+         terminateClientTransaction(mCurrentResponseTid);
          return;
       }
       else if(response.header(h_StatusLine).statusCode() != 100)
@@ -718,7 +718,7 @@ ResponseContext::processResponse(SipMessage& response)
             " in their response. (Via is malformed) This is not fixable.");
          if(response.header(h_StatusLine).statusCode() > 199)
          {
-            terminateClientTransaction(transactionId);
+            terminateClientTransaction(mCurrentResponseTid);
          }
          
          return;
@@ -735,9 +735,9 @@ ResponseContext::processResponse(SipMessage& response)
       }
    }
    
-   InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
+   InfoLog (<< "Search for " << mCurrentResponseTid << " in " << Inserter(mActiveTransactionMap));
 
-   TransactionMap::iterator i = mActiveTransactionMap.find(transactionId);
+   TransactionMap::iterator i = mActiveTransactionMap.find(mCurrentResponseTid);
 
    int code = response.header(h_StatusLine).statusCode();
    if (i == mActiveTransactionMap.end())
@@ -797,7 +797,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 2:
-         terminateClientTransaction(transactionId);
+         terminateClientTransaction(mCurrentResponseTid);
          if (mRequestContext.getOriginalRequest().method() == INVITE)
          {
             cancelAllClientTransactions();
@@ -821,7 +821,7 @@ ResponseContext::processResponse(SipMessage& response)
       case 5:
          DebugLog (<< "forwardedFinal=" << mRequestContext.mHaveSentFinalResponse 
                    << " outstanding client transactions: " << Inserter(mActiveTransactionMap));
-         terminateClientTransaction(transactionId);
+         terminateClientTransaction(mCurrentResponseTid);
          if (!mRequestContext.mHaveSentFinalResponse)
          {
             int priority = getPriority(response);
@@ -896,7 +896,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 6:
-         terminateClientTransaction(transactionId);
+         terminateClientTransaction(mCurrentResponseTid);
          if (!mRequestContext.mHaveSentFinalResponse)
          {
             if (mBestResponse.header(h_StatusLine).statusCode() / 100 != 6)

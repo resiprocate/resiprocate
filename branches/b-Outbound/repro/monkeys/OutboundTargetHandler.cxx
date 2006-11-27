@@ -1,8 +1,11 @@
 #include "repro/monkeys/OutboundTargetHandler.hxx"
 
+#include "rutil/Logger.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
 namespace repro
 {
@@ -30,9 +33,10 @@ OutboundTargetHandler::process(RequestContext & rc)
    
    // !bwc! Check to see whether we need to move on to another reg-id
    resip::SipMessage* sip = dynamic_cast<resip::SipMessage*>(msg);
-   if(sip && sip->isResponse())
+   if(sip && sip->isResponse() && sip->header(resip::h_StatusLine).responseCode() > 299)
    {
-      const resip::Data& tid=sip->getTransactionId();
+      const resip::Data& tid=rsp.mCurrentResponseTid;
+      DebugLog(<<"Looking for tid " << tid);
       Target* target = rsp.getTarget(tid);
       assert(target);
       if(target)
