@@ -32,6 +32,11 @@ class ConnectionTerminated : public TransactionMessage
          return mFlow.mFlowKey;
       }
       
+      const Tuple& getFlow() const
+      {
+         return mFlow;
+      }
+      
    private:
       const Tuple mFlow;
 };
