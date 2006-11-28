@@ -1115,6 +1115,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    if (terminated)
    {
       DebugLog(<< "connection terminated message");
+      getSipStack().killFlow(terminated->getFlow());
       if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
       {
          msg.release();

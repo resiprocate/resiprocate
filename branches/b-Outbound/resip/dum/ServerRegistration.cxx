@@ -203,10 +203,12 @@ ServerRegistration::dispatch(const SipMessage& msg)
       rec.mRegExpires=expires+now;
       rec.mReceivedFrom=msg.getSource();
       
+      // !bwc! If, in the end, this is true, it means all necessary conditions
+      // for outbound support have been met.
       bool supportsOutbound=true;
       try
       {
-         if(msg.exists(h_Paths))
+         if(supportsOutbound && msg.exists(h_Paths))
          {
             for(NameAddrs::const_iterator i = msg.header(h_Paths).begin();
                   i!=msg.header(h_Paths).end();++i)
@@ -239,8 +241,18 @@ ServerRegistration::dispatch(const SipMessage& msg)
             rec.mInstance=i->param(p_Instance);
             rec.mRegId=i->param(p_regid);
             rec.mReceivedFrom.onlyUseExistingConnection=true;
-            mDum.getSipStack().addFlow(msg.getSource());
-            DebugLog(<<"Added flow: " << msg.getSource());
+            // !bwc! We do not store flow-state for connectionless transports,
+            // since as a server we are not assured that we will ever know when
+            // a connectionless flow dies. (We could go to the trouble of
+            // keeping a count of how many different registrations are using
+            // a given flow, and remove said flow when that count reaches zero,
+            // but it is unclear to me whether this is worth doing)
+            if(rec.mReceivedFrom.getType() == TCP 
+               || rec.mReceivedFrom.getType()==TLS)
+            {
+               mDum.getSipStack().addFlow(msg.getSource());
+               DebugLog(<<"Added flow: " << msg.getSource());
+            }
         }
          catch(resip::ParseBuffer::Exception& e)
          {
