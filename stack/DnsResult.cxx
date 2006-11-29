@@ -382,19 +382,31 @@ DnsResult::lookupInternal(const Uri& uri)
          }
         else // port specified so we know the transport
          {
+            mTransport=UNKNOWN_TRANSPORT;
+            
             if(mSips)
             {
-               mTransport=TLS;
-               mPort = uri.port();
+               if(mInterface.isSupported(TLS, V4) || mInterface.isSupported(TLS, V6))
+               {
+                  mTransport=TLS;
+               }
             }
-            else
+            else if(mInterface.isSupported(UDP, V4) || mInterface.isSupported(UDP, V6))
             {
                mTransport=UDP;
-               mPort = uri.port();
+            }
+            else if(mInterface.isSupported(TCP, V4) || mInterface.isSupported(TCP, V6))
+            {
+               mTransport=TCP;
+            }
+            else if(mInterface.isSupported(TLS, V4) || mInterface.isSupported(TLS, V6))
+            {
+               mTransport=TLS;
             }
             
-            if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
+            if(mTransport!=UNKNOWN_TRANSPORT)
             {
+               mPort=uri.port();
                lookupHost(mTarget);
             }
             else
