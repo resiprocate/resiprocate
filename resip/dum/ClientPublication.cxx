@@ -73,7 +73,7 @@ ClientPublication::dispatch(const SipMessage& msg)
 
       if (code < 300)
       {
-         if (mPublish->header(h_Expires).value() == 0)
+         if (mPublish->exists(h_Expires) && mPublish->header(h_Expires).value() == 0)
          {
             handler->onRemove(getHandle(), msg);
             delete this;
@@ -195,7 +195,7 @@ ClientPublication::dispatch(const DumTimeout& timer)
 void
 ClientPublication::refresh(unsigned int expiration)
 {
-   if (expiration == 0)
+   if (expiration == 0 && mPublish->exists(h_Expires))
    {
       expiration = mPublish->header(h_Expires).value();
    }
