@@ -697,9 +697,11 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          int code = msg.header(h_StatusLine).statusCode();
          
-         if (!msg.exists(h_Contacts) && code > 100 && code < 200)
+         if (code > 100 && code < 200 && 
+             (!msg.exists(h_Contacts) ||
+              !msg.exists(h_To) || !msg.header(h_To).exists(p_tag)))
          {
-            InfoLog ( << "Cannot create a dialog, no Contact in 180." );
+            InfoLog ( << "Cannot create a dialog, no Contact or To tag in 1xx." );
             if (mDum.mDialogSetHandler)
             {
                mDum.mDialogSetHandler->onNonDialogCreatingProvisional(mAppDialogSet->getHandle(), msg);
