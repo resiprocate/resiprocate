@@ -222,7 +222,7 @@ TransactionState::process(TransactionController& controller)
    // !bwc! This code ensures that the transaction state-machine can recover
    // from ACK/200 with the same tid as the original INVITE. This problem is
    // stupidly common. 
-   if (state && sip && sip->isRequest() && sip->method() == ACK)
+   if (state && sip && sip->isExternal() && sip->isRequest() && sip->method() == ACK)
    {
       if (!state->mAckIsValid)
       {
