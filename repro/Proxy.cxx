@@ -415,7 +415,7 @@ Proxy::name() const
 bool 
 Proxy::isMyUri(const Uri& uri)
 {
-   bool ret = mStack.isMyDomain(uri.host(),uri.port());
+   bool ret = isMyDomain(uri.host());
    DebugLog( << "Proxy::isMyUri " << uri << " " << ret);
    return ret;
 }
