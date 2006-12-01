@@ -194,18 +194,11 @@ SipStack::stateMacFifo()
 void
 SipStack::addAlias(const Data& domain, int port)
 {
+   int portToUse = (port == 0) ? Symbols::DefaultSipPort : port;
    
-   DebugLog (<< "Adding domain alias: " << domain << ":" << port);
+   DebugLog (<< "Adding domain alias: " << domain << ":" << portToUse);
    assert(!mShuttingDown);
-   
-   // !bwc! General alias (port-insensitive)
-   mDomains.insert(domain);
-   
-   if(port)
-   {
-      // !bwc! Port-sensitive alias.
-      mDomains.insert(domain + ":" + Data(port));
-   }
+   mDomains.insert(domain + ":" + Data(portToUse));
 }
 
 Data 
@@ -266,16 +259,8 @@ SipStack::getHostAddress()
 bool 
 SipStack::isMyDomain(const Data& domain, int port) const
 {
-   if(port)
-   {
-      // !bwc! Port-sensitive query.
-      return (mDomains.count(domain + ":" + Data(port))!=0);
-   }
-   else
-   {
-      // !bwc! Port-insensitive query.
-      return (mDomains.count(domain)!=0);
-   }
+   return (mDomains.count(domain + ":" + 
+                          Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
 }
 
 const Uri&
