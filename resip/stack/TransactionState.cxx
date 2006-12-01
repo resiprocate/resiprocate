@@ -1353,8 +1353,8 @@ TransactionState::processServerStale(TransactionMessage* msg)
    }
    else if (sip && isRequest(sip) && sip->method() == ACK)
    {
-      // this can happen when an upstream UAC sends an ACK with no to-tag when
-      // it should
+      // !bwc! We should never fall into this block. There is code in process
+      // that should prevent it.
       assert(isFromWire(msg));
       InfoLog (<< "Passing ACK directly to TU: " << sip->brief());
       sendToTU(msg);
