@@ -59,7 +59,7 @@ class RequestContext
       
       void sendResponse(const resip::SipMessage& response);
 
-      void forwardAck(const resip::SipMessage& ack);
+      void forwardAck200(const resip::SipMessage& ack);
 
       void updateTimerC();
       bool mInitialTimerCSet;
@@ -73,6 +73,7 @@ class RequestContext
    private:
       resip::SipMessage*  mOriginalRequest;
       resip::Message*  mCurrentEvent;
+      resip::SipMessage* mAck200ToRetransmit;
       ProcessorChain& mRequestProcessorChain; // monkeys
       ProcessorChain& mResponseProcessorChain; // lemurs
       ProcessorChain& mTargetProcessorChain; // baboons

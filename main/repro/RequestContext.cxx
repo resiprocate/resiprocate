@@ -35,6 +35,7 @@ RequestContext::RequestContext(Proxy& proxy,
    mHaveSentFinalResponse(false),
    mOriginalRequest(0),
    mCurrentEvent(0),
+   mAck200ToRetransmit(0),
    mRequestProcessorChain(requestP),
    mResponseProcessorChain(responseP),
    mTargetProcessorChain(targetP),
@@ -58,6 +59,8 @@ RequestContext::~RequestContext()
    }
    delete mCurrentEvent;
    mCurrentEvent = 0;
+   delete mAck200ToRetransmit;
+   mAck200ToRetransmit=0;
 }
 
 
@@ -136,7 +139,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             if(sip->exists(h_Routes) && !sip->header(h_Routes).empty())
             {
                mResponseContext.cancelAllClientTransactions();
-               addTarget(NameAddr(sip->header(h_RequestLine).uri()),true);
+               forwardAck200(*mOriginalRequest);
             }
             else if(!getProxy().isMyUri(sip->header(h_RequestLine).uri()))
             {
@@ -145,7 +148,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   if (getProxy().isMyUri(sip->header(h_From).uri()))
                   {
                      mResponseContext.cancelAllClientTransactions();
-                     addTarget(NameAddr(sip->header(h_RequestLine).uri()),true);
+                     forwardAck200(*mOriginalRequest);
                   }
                   else
                   {
@@ -170,12 +173,25 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             }
 
             DebugLog(<<"Posting Ack200DoneMessage");
-            mProxy.post(new Ack200DoneMessage(getTransactionId()));
+            // !bwc! This needs to have a timer attached to it. (We need to
+            // wait until all potential retransmissions of the ACK/200 have
+            // stopped. However, we must be mindful that we may receive a new,
+            // non-ACK transaction with the same tid during this time, and make
+            // sure we don't explode violently when this happens.)
+            mProxy.postMS(
+               std::auto_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
+               64*resip::Timer::T1);
          
 
          }
          else //This takes care of ACK/failure and malformed ACK/200
          {
+            // !bwc! The stack should not be forwarding ACK/failure to the TU,
+            // nor should we be getting a bad ACK/200. (There is code further
+            // up that makes bad ACK/200 look like a new transaction, like it
+            // is supposed to be.)
+            // TODO Remove this code block entirely.
+            
             DebugLog(<<"This ACK has the same tid as the original INVITE.");
             DebugLog(<<"The reponse we sent back was a " 
                   << mResponseContext.mBestResponse.header(h_StatusLine).statusCode());
@@ -191,9 +207,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             }
             else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() / 100 == 2)
             {
-               // !bwc! Ugh. Some bozo didn't change the transaction id for
-               // the ACK/200.
-               
                InfoLog(<<"Got an ACK within an INVITE transaction, but our "
                         "response was a 2xx. Someone didn't change their tid "
                         "like they were supposed to...");
@@ -209,7 +222,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   )
                   )
                {
-                  forwardAck(*sip);
+                  forwardAck200(*sip);
                }
             }
             
@@ -525,15 +538,18 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 }
 
 void
-RequestContext::forwardAck(const resip::SipMessage& ack)
+RequestContext::forwardAck200(const resip::SipMessage& ack)
 {
-   resip::SipMessage toSend(ack);
-   toSend.header(h_MaxForwards).value()--;
-   Helper::processStrictRoute(toSend);
-   
-   toSend.header(h_Vias).push_front(Via());
+   if(!mAck200ToRetransmit)
+   {
+      mAck200ToRetransmit = new SipMessage(ack);
+      mAck200ToRetransmit->header(h_MaxForwards).value()--;
+      Helper::processStrictRoute(*mAck200ToRetransmit);
+      
+      mAck200ToRetransmit->header(h_Vias).push_front(Via());
+   }
 
-   mProxy.send(toSend);
+   mProxy.send(*mAck200ToRetransmit);
 }
 
 resip::SipMessage& 
@@ -551,7 +567,7 @@ RequestContext::getOriginalRequest() const
 resip::Data
 RequestContext::getTransactionId() const
 {
-   if(mOriginalRequest->method()==ACK)
+   if(mOriginalRequest->mIsBadAck200)
    {
       static Data ack("ack");
       return mOriginalRequest->getTransactionId()+ack;
