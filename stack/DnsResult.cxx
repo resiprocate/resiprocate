@@ -117,7 +117,7 @@ DnsResult::destroy()
 }
 
 bool
-DnsResult::blacklistLast(time_t expiry)
+DnsResult::blacklistLast(UInt64 expiry)
 {
    if(mHaveReturnedResults)
    {
@@ -1250,7 +1250,7 @@ void DnsResult::clearCurrPath()
    }
 }
 
-void DnsResult::blacklistLastReturnedResult(time_t expiry)
+void DnsResult::blacklistLastReturnedResult(UInt64 expiry)
 {
    assert(!mLastReturnedPath.empty());
    assert(mLastReturnedPath.size()<=3);
@@ -1268,7 +1268,7 @@ resip::Mutex DnsResult::theBlacklistMutex;
 DnsResult::BlacklistEntry::BlacklistEntry()
 {}
 
-DnsResult::BlacklistEntry::BlacklistEntry(const Tuple& tuple, time_t expiry)
+DnsResult::BlacklistEntry::BlacklistEntry(const Tuple& tuple, UInt64 expiry)
 {
    mTuple=tuple;
    mExpiry=expiry;
@@ -1327,7 +1327,7 @@ bool DnsResult::blacklisted(const Tuple& tuple)
    
    if(i!=DnsResult::theBlacklist.end())
    {
-      time_t now=Timer::getTimeMs();
+      UInt64 now=Timer::getTimeMs();
       if(i->mExpiry > now)
       {
          return true;
@@ -1341,7 +1341,7 @@ bool DnsResult::blacklisted(const Tuple& tuple)
    return false;
 }
 
-void DnsResult::blacklist(const Tuple& tuple,time_t expiry)
+void DnsResult::blacklist(const Tuple& tuple,UInt64 expiry)
 {
    BlacklistEntry entry(tuple,expiry);
    resip::Lock g(DnsResult::theBlacklistMutex);
