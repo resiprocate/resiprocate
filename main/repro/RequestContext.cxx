@@ -84,6 +84,7 @@ RequestContext::process(resip::TransactionTerminated& msg)
 void
 RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 {
+   bool original = false;
    DebugLog (<< "process(SipMessage) " << *this);
 
    if (mCurrentEvent != mOriginalRequest)
@@ -97,6 +98,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
    { 
       assert(sip);
       mOriginalRequest=sip;
+      original = true;
 	  
 	  // RFC 3261 Section 16.4
       try
@@ -136,7 +138,8 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          if(mOriginalRequest->method() == ACK)
          {
             DebugLog(<<"This ACK has its own tid.");
-            if(sip->exists(h_Routes) && !sip->header(h_Routes).empty())
+            // !slg! look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
+            if(mOriginalRequest->exists(h_Routes) && !mOriginalRequest->header(h_Routes).empty()) 
             {
                mResponseContext.cancelAllClientTransactions();
                forwardAck200(*mOriginalRequest);
@@ -172,17 +175,18 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                InfoLog(<<"Stray ACK aimed at us. Dropping it...");            
             }
 
-            DebugLog(<<"Posting Ack200DoneMessage");
-            // !bwc! This needs to have a timer attached to it. (We need to
-            // wait until all potential retransmissions of the ACK/200 have
-            // stopped. However, we must be mindful that we may receive a new,
-            // non-ACK transaction with the same tid during this time, and make
-            // sure we don't explode violently when this happens.)
-            mProxy.postMS(
-               std::auto_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
-               64*resip::Timer::T1);
-         
-
+            if(original)  // Only queue Ack200Done if this is the original request
+            {
+               DebugLog(<<"Posting Ack200DoneMessage");
+               // !bwc! This needs to have a timer attached to it. (We need to
+               // wait until all potential retransmissions of the ACK/200 have
+               // stopped. However, we must be mindful that we may receive a new,
+               // non-ACK transaction with the same tid during this time, and make
+               // sure we don't explode violently when this happens.)
+               mProxy.postMS(
+                  std::auto_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
+                  64*resip::Timer::T1);
+            }
          }
          else //This takes care of ACK/failure and malformed ACK/200
          {

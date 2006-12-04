@@ -416,6 +416,33 @@ bool
 Proxy::isMyUri(const Uri& uri)
 {
    bool ret = isMyDomain(uri.host());
+   if(ret) 
+   {
+      // check if we are listening on the specified port
+      // !slg! this is not perfect, but it will allow us to operate in most environments
+      //       where the repro proxy and a UA are running on the same machine.
+      //       Note:  There is a scenario that we cannot correctly handle - when a UA and 
+      //       repro are running on the same machine, and they are using the same port but on 
+      //       different transports types or interfaces.  In this case we cannot tell, by looking
+      //       at a requestUri or From header if the uri is ours or the UA's, and things will break.
+      if(uri.port() == 0)
+      {
+         if(uri.scheme() == Symbols::Sips || 
+            (uri.exists(p_transport) && (uri.param(p_transport) == Symbols::TLS ||
+                                         uri.param(p_transport) == Symbols::DTLS)))
+         {
+            ret = mStack.isMyPort(Symbols::DefaultSipsPort);
+         }
+         else
+         {
+            ret = mStack.isMyPort(Symbols::DefaultSipPort);
+         }
+      }
+      else
+      {
+         ret = mStack.isMyPort(uri.port());
+      }
+   }
    DebugLog( << "Proxy::isMyUri " << uri << " " << ret);
    return ret;
 }
