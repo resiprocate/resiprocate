@@ -425,18 +425,18 @@ Log::Guard::Guard(resip::Log::Level level,
    mStream(mData.clear())
 {
 	
-	if (resip::Log::_type != resip::Log::OnlyExternalNoHeaders)
-	{
-		Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
-		mStream << resip::Log::delim;
-		mStream.flush();
-   
-		mHeaderLength = mData.size();
-	}
-	else
-	{
-		mHeaderLength = 0;
-	}
+   if (resip::Log::_type != resip::Log::OnlyExternalNoHeaders)
+   {
+      Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
+      mStream << resip::Log::delim;
+      mStream.flush();
+
+      mHeaderLength = mData.size();
+   }
+   else
+   {
+      mHeaderLength = 0;
+   }
 }
 
 Log::Guard::~Guard()
