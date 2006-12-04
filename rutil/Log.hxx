@@ -39,7 +39,9 @@ class Log
          File, 
          Cerr,
          VSDebugWindow,   // Use only for Visual Studio Debug Window logging - WIN32 must be defined
-         OnlyExternal // log messages are only written to external logger
+         OnlyExternal, // log messages are only written to external logger
+		 OnlyExternalNoHeaders //!< same as OnlyExternal, only the messageWithHeaders param of the ExternalLogger
+								//!< will be empty.  This paramater usually contains a pre-formatted log entry.
       };
       
       enum Level
