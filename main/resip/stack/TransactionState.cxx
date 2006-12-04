@@ -1178,11 +1178,11 @@ TransactionState::processServerInvite(TransactionMessage* msg)
 
                if (mState == Trying || mState == Proceeding)
                {
-                     mAckIsValid=true;
+                  mAckIsValid=true;
                   StackLog (<< "Received failed response in Trying or Proceeding. Start Timer H, move to completed." << *this);
                   delete mMsgToRetransmit; 
                   mMsgToRetransmit = sip; 
-                     mState = Completed;                     
+                  mState = Completed;                     
                   mController.mTimers.add(Timer::TimerH, mId, Timer::TH );
                   if (!mIsReliable)
                   {
@@ -1798,7 +1798,7 @@ TransactionState::sendToTU(TransactionMessage* msg) const
                   
                   mDnsResult->blacklistLast(resip::Timer::getTimeMs()+relativeExpiry*1000);
                }
-               catch(resip::ParseBuffer::Exception& e)
+               catch(resip::ParseBuffer::Exception&)
                {
                   mDnsResult->blacklistLast(resip::Timer::getTimeMs()+32000);
                }
