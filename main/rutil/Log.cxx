@@ -467,7 +467,8 @@ Log::Guard::~Guard()
       mData += "\r\n";
       resip::GenericLogImpl::OutputToWin32DebugWindow(mData);
    }
-   else if(resip::Log::_type == resip::Log::OnlyExternal) 
+   else if(resip::Log::_type == resip::Log::OnlyExternal ||
+	   resip::Log::_type == resip::Log::OnlyExternalNoHeaders) 
    {
       return;
    }
