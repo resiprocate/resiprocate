@@ -34,10 +34,10 @@ class StatisticsManager : public StatisticsMessage::Payload
       // not stricly thread-safe; needs to be called through the fifo somehow
       void setInterval(unsigned long intvSecs);
 	  
-	  void setExternalStatsHandler(ExternalStatsHandler *handler)
-	  {
-		  mExternalHandler = handler;
-	  }
+      void setExternalStatsHandler(ExternalStatsHandler *handler)
+      {
+         mExternalHandler = handler;
+      }
 
    private:
       friend class TransactionState;
@@ -50,7 +50,7 @@ class StatisticsManager : public StatisticsMessage::Payload
       UInt64 mInterval;
       UInt64 mNextPoll;
 
-	  ExternalStatsHandler *mExternalHandler;
+      ExternalStatsHandler *mExternalHandler;
 };
 
 }
