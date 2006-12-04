@@ -314,6 +314,9 @@
 				RelativePath=".\Timer.cxx">
 			</File>
 			<File
+				RelativePath=".\TransportType.cxx">
+			</File>
+			<File
 				RelativePath=".\stun\Udp.cxx">
 			</File>
 			<File

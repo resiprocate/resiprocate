@@ -64,7 +64,7 @@ class DnsResult : public DnsResultSink
          @return true iff the last result could be blacklisted
          @note This is a no-op if no results have been returned.
       */
-      bool blacklistLast(time_t expiry);
+      bool blacklistLast(UInt64 expiry);
       
       /*!
          Tries to load the next tuple. If Available is returned, the tuple may
@@ -269,7 +269,7 @@ class DnsResult : public DnsResultSink
       bool mHaveReturnedResults;
 
       void clearCurrPath();
-      void blacklistLastReturnedResult(time_t expiry);
+      void blacklistLastReturnedResult(UInt64 expiry);
 
       Tuple mLastResult;
       
@@ -279,7 +279,7 @@ class DnsResult : public DnsResultSink
       {
          public:
             BlacklistEntry();
-            BlacklistEntry(const Tuple& tuple, time_t expiry);
+            BlacklistEntry(const Tuple& tuple, UInt64 expiry);
             BlacklistEntry(const BlacklistEntry& orig);
             ~BlacklistEntry();
             bool operator<(const BlacklistEntry& rhs) const;
@@ -287,7 +287,7 @@ class DnsResult : public DnsResultSink
             bool operator==(const BlacklistEntry& rhs) const;
             
             Tuple mTuple;
-            time_t mExpiry;
+            UInt64 mExpiry;
       };
       
       typedef std::set<BlacklistEntry> Blacklist;
@@ -301,7 +301,7 @@ class DnsResult : public DnsResultSink
       
       static bool blacklisted(const Tuple& tuple);
       
-      static void blacklist(const Tuple& tuple,time_t expiry);
+      static void blacklist(const Tuple& tuple,UInt64 expiry);
 
 };
 
