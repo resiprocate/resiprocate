@@ -18,7 +18,7 @@ StatisticsManager::StatisticsManager(SipStack& stack, unsigned long intervalSecs
      mStack(stack),
      mInterval(intervalSecs*1000),
      mNextPoll(Timer::getTimeMs() + mInterval),
-	 mExternalHandler(NULL)
+     mExternalHandler(NULL)
 {}
 
 void 
@@ -46,13 +46,13 @@ StatisticsManager::poll()
 
    if( mExternalHandler )
    {
-		postToStack = (*mExternalHandler)(msg);
+      postToStack = (*mExternalHandler)(msg);
    }
 
    if( postToStack )
    {
-		// let the app do what it wants with it
-		mStack.post(msg);
+      // let the app do what it wants with it
+      mStack.post(msg);
    }
 }
 
