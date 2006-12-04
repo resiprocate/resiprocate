@@ -113,6 +113,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          Helper::makeResponse(response, *mOriginalRequest,400); 
          response.header(h_StatusLine).reason()="Malformed header-field-value: " + e.getMessage();
          sendResponse(response);
+         return;
       }
       catch(resip::BaseException& e)
       {
@@ -121,6 +122,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          Helper::makeResponse(response, *mOriginalRequest,500); 
          response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
          sendResponse(response);
+         return;
       }
    }
 
