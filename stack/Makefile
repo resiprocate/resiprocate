@@ -100,6 +100,7 @@ SRC = \
 	SipStack.cxx \
 	StackThread.cxx \
     InterruptableStackThread.cxx \
+  StatisticsHandler.cxx \
 	StatisticsManager.cxx \
 	StatisticsMessage.cxx \
 	Symbols.cxx \
