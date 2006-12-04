@@ -267,7 +267,7 @@ SipStack::isMyDomain(const Data& domain, int port) const
 bool
 SipStack::isMyPort(int port) const
 {
-   return mPorts.count(port);
+   return mPorts.count(port) != 0;
 }
 
 const Uri&
