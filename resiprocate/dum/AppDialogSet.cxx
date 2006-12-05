@@ -35,6 +35,9 @@ AppDialogSet::end()
    {
       mDialogSet->end();
    }
+
+   // destroy itself
+   destroy();
 }
 
 UserProfile*  

@@ -1030,7 +1030,13 @@ DialogUsageManager::process()
    {
       return false;
    }
-#if defined(DUM_PROCESS_STACK_FIFO)
+#ifdef USE_DUM_TRANSACTIONUSER
+   if (mFifo.messageAvailable())
+   {
+      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+   }
+   return mFifo.messageAvailable();
+#else
    // process stack's fifo directly
    if(mStack.hasMessage())
    {
@@ -1040,13 +1046,7 @@ DialogUsageManager::process()
    {
       internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
    }
-   return mStack.hasMessage() || mFifo.messageAvailable() ;
-#else
-   if (mFifo.messageAvailable())
-   {
-      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
-   }
-   return mFifo.messageAvailable();
+   return mStack.hasMessage() || mFifo.messageAvailable();
 #endif
 }
 
