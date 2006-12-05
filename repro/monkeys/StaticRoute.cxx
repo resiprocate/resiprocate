@@ -40,7 +40,7 @@ StaticRoute::process(RequestContext& context)
    Uri ruri(msg.header(h_RequestLine).uri());
    Data method(getMethodName(msg.header(h_RequestLine).method()));
    Data event;
-   if ( msg.exists(h_Event) && msg.header(h_Event).isWellFormed())
+   if ( msg.exists(h_Event) )
    {
       event = msg.header(h_Event).value() ;
    }
@@ -50,8 +50,8 @@ StaticRoute::process(RequestContext& context)
                                                     event));
    bool requireAuth = false;
    if(!context.fromTrustedNode() && 
-      msg.method() != ACK && 
-      msg.method() != BYE)
+      msg.header(h_RequestLine).method() != ACK && 
+      msg.header(h_RequestLine).method() != BYE)
    {
       for ( RouteStore::UriList::const_iterator i = targets.begin();
             i != targets.end(); i++ )

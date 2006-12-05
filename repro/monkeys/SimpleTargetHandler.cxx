@@ -18,40 +18,13 @@ Processor::processor_action_t
 SimpleTargetHandler::process(RequestContext &rc)
 {
    ResponseContext& rsp=rc.getResponseContext();
-   std::list<std::list<resip::Data> >& tidBank=
-      rsp.mTransactionQueueCollection;
-      
-   std::list<std::list<resip::Data> >::iterator outer=tidBank.begin();
 
-   while(!rsp.hasActiveTransactions() && outer!=tidBank.end())
-   {
+   //The idea is that this goes at the end of the target ProcessorChain.
+   //If control gets here, it means that every other processor has finished
+   //everything it was intended to do, so we just fire up any stragglers.
+   rsp.beginClientTransactions();
    
-      for(;
-            outer!=tidBank.end() && !rsp.hasActiveTransactions();
-            outer++)
-      {
-         std::list<resip::Data>::const_iterator i;
-
-         for(i=outer->begin();i!=outer->end();i++)
-         {
-            rsp.beginClientTransaction(*i);
-         }
-      
-      }
-   
-   }
-   
-   if(rsp.hasActiveTransactions())
-   {
-      return Processor::SkipAllChains;
-   }
-   else
-   {
-      //If after all this we still don't have any active transactions,
-      //make it a free-for-all.
-      rsp.beginClientTransactions();
-      return Processor::Continue;
-   }
+   return Processor::Continue;
 }
 
 void 

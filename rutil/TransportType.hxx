@@ -1,10 +1,6 @@
 #if !defined(RESIP_TRANSPORTTYPE_HXX)
 #define RESIP_TRANSPORTTYPE_HXX
 
-#include <ostream>
-#include <string>
-#include "rutil/Data.hxx"
-
 namespace resip
 {
 
@@ -25,24 +21,6 @@ typedef enum
    V4,
    V6
 } IpVersion;
-
-/**
-    Function which translates a transport name to its corrisponding integer enum value.
-    @param transportName the name of the transport e.g. "TCP"
-    @return the enum value for that transport
-**/
-TransportType getTransportTypeFromName(const std::string & transportName);
-
-/**
-    Function which translates a transport enum value to its corrisponding name.
-    @param transportNum the enum value of the transport
-    @return the transport name
-**/
-std::string getTransportNameFromType(const TransportType typeEnum);
-
-resip::Data toData(const TransportType typeEnum);
-
-TransportType toTransportType(const resip::Data & transportName);
 
 // Indicate whether or not to run a stun server on a Transport
 typedef enum

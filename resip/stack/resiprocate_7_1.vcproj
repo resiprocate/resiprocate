@@ -462,9 +462,6 @@
 				RelativePath=".\StackThread.cxx">
 			</File>
 			<File
-				RelativePath=".\StatisticsHandler.cxx">
-			</File>
-			<File
 				RelativePath=".\StatisticsManager.cxx">
 			</File>
 			<File
@@ -860,9 +857,6 @@
 			</File>
 			<File
 				RelativePath=".\StackThread.hxx">
-			</File>
-			<File
-				RelativePath=".\StatisticsHandler.hxx">
 			</File>
 			<File
 				RelativePath=".\StatisticsManager.hxx">

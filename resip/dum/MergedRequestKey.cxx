@@ -10,12 +10,11 @@ MergedRequestKey::MergedRequestKey()
 {
 }
 
-MergedRequestKey::MergedRequestKey(const SipMessage& req, bool checkRequestUri) : 
-   mRequestUri(Data::from(req.header(h_RequestLine).uri())),
+MergedRequestKey::MergedRequestKey(const SipMessage& req) : 
+//   mRequestUri(Data::from(req.header(h_RequestLine).uri())),
    mCSeq(Data::from(req.header(h_CSeq))),
    mTag(req.header(h_From).exists(p_tag) ? req.header(h_From).param(p_tag) : Data::Empty),
-   mCallId(req.header(h_CallID).value()),
-   mCheckRequestUri(checkRequestUri)
+   mCallId(req.header(h_CallID).value())
 {
 }
 
@@ -24,8 +23,9 @@ MergedRequestKey::operator==(const MergedRequestKey& other) const
 {
    return (mCallId == other.mCallId  &&
            mTag == other.mTag &&
-           mCSeq == other.mCSeq &&
-           (!mCheckRequestUri || (mRequestUri == other.mRequestUri)));
+           mCSeq == other.mCSeq
+//           && mRequestUri == other.mRequestUri
+      );
 }
 
 bool
@@ -55,23 +55,19 @@ MergedRequestKey::operator<(const MergedRequestKey& other) const
       return false;
    }
    
-   if(!mCheckRequestUri)
+   return (mCSeq < other.mCSeq);
+#if 0
+   if (mCSeq < other.mCSeq)
    {
-      return (mCSeq < other.mCSeq);
+      return true;
    }
-   else
+   else if (mCSeq > other.mCSeq)
    {
-      if (mCSeq < other.mCSeq)
-      {
-         return true;
-      }
-      else if (mCSeq > other.mCSeq)
-      {
-         return false;
-      }
+      return false;
+   }
    
-      return (mRequestUri < other.mRequestUri);
-   }
+   return (mRequestUri < other.mRequestUri);
+#endif
 }
 
 Data& MergedRequestKey::cseq()

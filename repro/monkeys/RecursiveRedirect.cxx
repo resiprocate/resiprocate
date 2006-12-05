@@ -36,10 +36,7 @@ RecursiveRedirect::process(RequestContext& context)
       for (NameAddrs::const_iterator i=response->header(h_Contacts).begin(); 
            i != response->header(h_Contacts).end(); ++i)
       {
-         if(i->isWellFormed() && !i->isAllContacts())
-         {
-            context.addTarget(*i);
-         }
+         context.addTarget(*i);
       }
       return Processor::SkipAllChains;
    }

@@ -46,51 +46,14 @@ AmIResponsible::process(RequestContext& context)
          // if this is not for a domain for which the proxy is responsible,
          // check that we relay from this sender and send to the Request URI
          
-         if(!request.header(h_From).isWellFormed())
-         {
-            InfoLog(<<"Garbage in From header: needed for relay check.");
-            resip::SipMessage response;
-            Helper::makeResponse(response,context.getOriginalRequest(), 400, "Malformed From: header");
-            context.sendResponse(response);
-            return Processor::SkipThisChain;            
-         }
-         
-         // !rwm! verify the AuthenticatioInfo object here.
-         
-         // !rwm! TODO check some kind of relay list here
-         // for now, just see if the sender claims to be from one of our domains
-         // send a 403 if not on the list         
-         if (!context.getProxy().isMyUri(request.header(h_From).uri()))
-         {
-            // make 403, send, dispose of memory
-            InfoLog (<< *this << ": will not relay to " << uri << " from " 
-                     << request.header(h_From).uri() << ", send 403");
-            resip::SipMessage response;
-            Helper::makeResponse(response, context.getOriginalRequest(), 403, "Relaying Forbidden"); 
-            context.sendResponse(response);
-            return Processor::SkipThisChain;
-         }
-
          // only perform relay check for out-of-dialog requests
-         // !bwc! Um, then all anyone has to do to get us to be their relay
-         // is throw in a spurious to-tag...
-         // This smells funny. I am commenting it out.
-/*         if (!request.header(h_To).exists(p_tag))
+         if (!request.header(h_To).exists(p_tag))
          {         
             // !rwm! verify the AuthenticatioInfo object here.
             
             // !rwm! TODO check some kind of relay list here
             // for now, just see if the sender claims to be from one of our domains
-            // send a 403 if not on the list
-            if(!request.header(h_From).isWellFormed())
-            {
-               resip::SipMessage response;
-               InfoLog(<<"Garbage in From header: needed for relay check.");
-               Helper::makeResponse(response,context.getOriginalRequest(), 400, "Malformed From: header"));
-               context.sendResponse(response);
-               return Processor::SkipThisChain;
-            }
-
+            // send a 403 if not on the list         
             if (!context.getProxy().isMyUri(request.header(h_From).uri()))
             {
                // make 403, send, dispose of memory
@@ -101,7 +64,7 @@ AmIResponsible::process(RequestContext& context)
                context.sendResponse(response);
                return Processor::SkipThisChain;
             }
-         }*/
+         }
          
          context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
          InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());

@@ -293,8 +293,6 @@ class SipMessage : public TransactionMessage
       void addOutboundDecorator(MessageDecorator *md){mOutboundDecorators.push_back(md);}
       void callOutboundDecorators(const Tuple &src, const Tuple &dest);
 
-      bool mIsBadAck200;
-
    protected:
       void cleanUp();
    

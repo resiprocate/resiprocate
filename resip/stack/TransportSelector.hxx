@@ -100,7 +100,8 @@ class TransportSelector
       Connection* findConnection(const Tuple& dest);
       Transport* findTransportBySource(Tuple& src);
       Transport* findTransportByDest(SipMessage* msg, Tuple& dest);
-      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
+      Transport* findTlsTransport(const Data& domain,const IpVersion ipv);
+      Transport* findDtlsTransport(const Data& domain, const IpVersion ipv);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
       DnsInterface mDns;
@@ -123,54 +124,12 @@ class TransportSelector
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
       AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
-      class TlsTransportKey
-      {
-         public:
-            TlsTransportKey(const resip::Data& domain, resip::TransportType type, resip::IpVersion version)
-               :mDomain(domain),
-               mType(type),
-               mVersion(version)
-            {}
-            
-            TlsTransportKey(const TlsTransportKey& orig)
-            {
-               mDomain=orig.mDomain;
-               mType=orig.mType;
-               mVersion=orig.mVersion;
-            }
-            
-            ~TlsTransportKey(){}
-            bool operator<(const TlsTransportKey& rhs) const
-            {
-               if(mDomain < rhs.mDomain)
-               {
-                  return true;
-               }
-               else if(mDomain == rhs.mDomain)
-               {
-                  if(mType < rhs.mType)
-                  {
-                     return true;
-                  }
-                  else if(mType == rhs.mType)
-                  {
-                     return mVersion < rhs.mVersion;
-                  }
-               }
-               return false;
-            }
-            
-            resip::Data mDomain;
-            resip::TransportType mType;
-            resip::IpVersion mVersion;
-         
-         private:
-            TlsTransportKey();
-      };
-      
-      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;
-      
-      TlsTransportMap mTlsTransports;
+      // domain name -> Transport
+      typedef std::map<Data, Transport*> TlsTransportMap ;
+      TlsTransportMap mV4TlsTransports;     
+      TlsTransportMap mV4DtlsTransports;
+      TlsTransportMap mV6TlsTransports;     
+      TlsTransportMap mV6DtlsTransports;
 
       typedef std::vector<Transport*> TransportList;
       TransportList mSharedProcessTransports;

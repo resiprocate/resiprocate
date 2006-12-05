@@ -424,19 +424,11 @@ Log::Guard::Guard(resip::Log::Level level,
    mData(Data::Borrow, mBuffer, sizeof(mBuffer)),
    mStream(mData.clear())
 {
-	
-   if (resip::Log::_type != resip::Log::OnlyExternalNoHeaders)
-   {
-      Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
-      mStream << resip::Log::delim;
-      mStream.flush();
-
-      mHeaderLength = mData.size();
-   }
-   else
-   {
-      mHeaderLength = 0;
-   }
+   Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
+   mStream << resip::Log::delim;
+   mStream.flush();
+   
+   mHeaderLength = mData.size();
 }
 
 Log::Guard::~Guard()
@@ -467,8 +459,7 @@ Log::Guard::~Guard()
       mData += "\r\n";
       resip::GenericLogImpl::OutputToWin32DebugWindow(mData);
    }
-   else if(resip::Log::_type == resip::Log::OnlyExternal ||
-	   resip::Log::_type == resip::Log::OnlyExternalNoHeaders) 
+   else if(resip::Log::_type == resip::Log::OnlyExternal) 
    {
       return;
    }

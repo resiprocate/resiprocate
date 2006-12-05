@@ -91,13 +91,12 @@ const char* Symbols::Presence = "presence";
 const char* Symbols::Required = "required";
 const char* Symbols::Optional = "optional";
 
-const char* Symbols::C100rel      = "100rel";
-const char* Symbols::Replaces     = "replaces";
-const char* Symbols::Timer        = "timer";
-const char* Symbols::NoReferSub   = "norefersub";
-const char* Symbols::AnswerMode   = "answermode";
-const char* Symbols::TargetDialog = "tdialog";
-const char* Symbols::Undefined    = "UNDEFINED";
+const char* Symbols::C100rel  = "100rel";
+const char* Symbols::Replaces = "replaces";
+const char* Symbols::Timer    = "timer";
+const char* Symbols::NoReferSub = "norefersub";
+const char* Symbols::AnswerMode = "answermode";
+const char* Symbols::Undefined = "UNDEFINED";
 
 const char* Symbols::Pending = "pending";
 const char* Symbols::Active = "active";

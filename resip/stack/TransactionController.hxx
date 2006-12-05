@@ -56,6 +56,8 @@ class TransactionController
       TransactionController& operator=(const TransactionController& rhs);
       SipStack& mStack;
       
+      bool mMultiThreaded;
+      
       // If true, indicate to the Transaction to ignore responses for which
       // there is no transaction. 
       // !jf! Probably should transmit stray responses statelessly. see RFC3261

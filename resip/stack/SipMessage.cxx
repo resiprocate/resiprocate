@@ -28,8 +28,7 @@ using namespace std;
 bool SipMessage::checkContentLength=true;
 
 SipMessage::SipMessage(const Transport* fromWire)
-   : mIsBadAck200(false),
-      mIsExternal(fromWire != 0),
+   : mIsExternal(fromWire != 0),
      mTransport(fromWire),
      mStartLine(0),
      mContentsHfv(0),
@@ -76,7 +75,6 @@ SipMessage::operator=(const SipMessage& rhs)
    {
       this->cleanUp();
 
-      mIsBadAck200 = rhs.mIsBadAck200;
       mIsExternal = rhs.mIsExternal;
       mTransport = rhs.mTransport;
       mSource = rhs.mSource;
@@ -432,8 +430,7 @@ SipMessage::compute2543TransactionHash() const
 const Data&
 SipMessage::getRFC2543TransactionId() const
 {
-   if(!( exists(h_Vias) && !header(h_Vias).empty() && 
-         header(h_Vias).front().exists(p_branch) &&
+   if(!( exists(h_Vias) && header(h_Vias).front().exists(p_branch) &&
          header(h_Vias).front().param(p_branch).hasMagicCookie() ) )
    {
       if (mRFC2543TransactionId.empty())

@@ -5,7 +5,7 @@
 #include <cstring>
 #include <cassert>
 #include <stdio.h>
-#include <signal.h>
+
 //#define USE_CURSES
 
 #ifdef USE_CURSES
@@ -440,14 +440,6 @@ processStdin( Uri* dest, bool sign, bool encryp )
 int
 main(int argc, char* argv[])
 {
-#ifndef _WIN32
-   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
-   {
-      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
-      exit(-1);
-   }
-#endif
-
    int r;
    
    try

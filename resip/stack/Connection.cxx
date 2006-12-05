@@ -21,16 +21,14 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 Connection::Connection()
-   : mSocket(INVALID_SOCKET),
-     mInWritable(false)
+   : mSocket(INVALID_SOCKET)
 {
 }
 
 Connection::Connection(const Tuple& who, Socket socket,
                        Compression &compression)
    : ConnectionBase(who,compression),
-     mSocket(socket),
-     mInWritable(false)
+     mSocket(socket)
 {
    getConnectionManager().addConnection(this);
 }
@@ -54,11 +52,11 @@ void
 Connection::requestWrite(SendData* sendData)
 {
    assert(mWho.transport);
-   mOutstandingSends.push_back(sendData);
-   if (isWritable())
+   if (mOutstandingSends.empty())
    {
-      ensureWritable();
+      getConnectionManager().addToWritable(this);
    }
+   mOutstandingSends.push_back(sendData);
 }
 
 void
@@ -110,9 +108,9 @@ Connection::performWrite()
 
    const Data& data = mOutstandingSends.front()->data;
 
-   int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
+//   DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
 
-   //DebugLog (<< "Tried to send " << data.size() - mSendPos << " bytes, sent " << nBytes << " bytes");
+   int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
 
    if (nBytes < 0)
    {
@@ -133,24 +131,12 @@ Connection::performWrite()
 
          if (mOutstandingSends.empty())
          {
-            assert(mInWritable);
             getConnectionManager().removeFromWritable();
-            mInWritable = false;
          }
       }
    }
 }
-    
-void 
-Connection::ensureWritable()
-{
-   if(!mInWritable && !mOutstandingSends.empty())
-   {
-      getConnectionManager().addToWritable(this);
-      mInWritable = true;
-   }
-}
-
+            
 ConnectionManager&
 Connection::getConnectionManager() const
 {
@@ -230,12 +216,6 @@ Connection::hasDataToRead()
 
 bool 
 Connection::isGood()
-{
-   return true;
-}
-
-bool 
-Connection::isWritable()
 {
    return true;
 }
