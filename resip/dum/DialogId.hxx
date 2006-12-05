@@ -3,13 +3,16 @@
 
 #include "rutil/Data.hxx"
 #include "resip/dum/DialogSetId.hxx"
+/* ivr mod */#include "resip/dum/Handled.hxx"
 
 namespace resip
 {
 
-class DialogId
+class DialogId 
 {
    public:
+/* ivr mod */
+	  DialogId(const DialogId &that);
       DialogId(const SipMessage& msg );
       DialogId(const Data& callId, const Data& localTag, const Data& remoteTag );
       DialogId(const DialogSetId& id, const Data& remoteTag );
@@ -27,7 +30,7 @@ class DialogId
       size_t hash() const;
 
    private:
-      friend std::ostream& operator<<(std::ostream&, const DialogId& id);
+      friend EncodeStream& operator<<(EncodeStream&, const DialogId& id);
       DialogSetId mDialogSetId;
       Data mRemoteTag;
 };

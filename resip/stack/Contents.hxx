@@ -53,7 +53,7 @@ class Contents : public LazyParser
       Contents& operator=(const Contents& rhs);
 
       void preParseHeaders(ParseBuffer& pb);
-      std::ostream& encodeHeaders(std::ostream& str) const;
+      EncodeStream& encodeHeaders(EncodeStream& str) const;
 
       // access to wrapped contents (signed, encrypted)
       virtual Contents* getContents() {return this;}

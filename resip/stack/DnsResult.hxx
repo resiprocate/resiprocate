@@ -159,9 +159,9 @@ class DnsResult : public DnsResultSink
       std::vector<SRV> mSRVResults;
       
       friend class DnsInterface;
-      friend std::ostream& operator<<(std::ostream& strm, const DnsResult&);
-      friend std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
-      friend std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
+      friend EncodeStream& operator<<(EncodeStream& strm, const DnsResult&);
+      friend EncodeStream& operator<<(EncodeStream& strm, const DnsResult::SRV&);
+      friend EncodeStream& operator<<(EncodeStream& strm, const DnsResult::NAPTR&);
 
       // DnsResultSink
       void onDnsResult(const DNSResult<DnsHostRecord>&);
@@ -197,9 +197,9 @@ class DnsResult : public DnsResultSink
 
 };
 
-std::ostream& operator<<(std::ostream& strm, const DnsResult&);
-std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
-std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
+EncodeStream& operator<<(EncodeStream& strm, const DnsResult&);
+EncodeStream& operator<<(EncodeStream& strm, const DnsResult::SRV&);
+EncodeStream& operator<<(EncodeStream& strm, const DnsResult::NAPTR&);
 
 }
 

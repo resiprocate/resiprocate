@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "DialogSetId.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
@@ -7,8 +8,14 @@
 
 using namespace resip;
 
+
 const DialogSetId DialogSetId::Empty;
 
+/* ivr mod */DialogSetId::DialogSetId(const DialogSetId &that)
+:mCallId(that.mCallId), mTag(that.mTag)
+{
+
+}
 DialogSetId::DialogSetId(const SipMessage& msg) : 
    mCallId(msg.header(h_CallID).value())
 {
@@ -106,8 +113,8 @@ size_t DialogSetId::hash() const
 }
 
 
-std::ostream&
-resip::operator<<(std::ostream& os, const DialogSetId& id)
+EncodeStream&
+resip::operator<<(EncodeStream& os, const DialogSetId& id)
 {
     return os << id.mCallId << '-' << id.mTag ;
 }

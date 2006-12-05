@@ -22,7 +22,7 @@ class IntegerCategory : public ParserCategory
       IntegerCategory& operator=(const IntegerCategory&);
 
       virtual void parse(ParseBuffer& pb);
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 
       int& value() const;

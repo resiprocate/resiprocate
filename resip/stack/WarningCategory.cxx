@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -114,8 +115,8 @@ WarningCategory::text() const
    return mText;
 }
 
-std::ostream& 
-WarningCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+WarningCategory::encodeParsed(EncodeStream& str) const
 {
    str << mCode << Symbols::SPACE[0];
    str << mHostname << Symbols::SPACE[0];

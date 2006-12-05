@@ -25,9 +25,9 @@ class HeaderFieldValueList
       void setParserContainer(ParserContainerBase* parser) {mParserContainer = parser;}
       ParserContainerBase* getParserContainer() const {return mParserContainer;}
 
-      std::ostream& encode(int headerEnum, std::ostream& str);
-      std::ostream& encode(const Data& headerName, std::ostream& str);
-      std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str);
+      EncodeStream& encode(int headerEnum, EncodeStream& str);
+      EncodeStream& encode(const Data& headerName, EncodeStream& str);
+      EncodeStream& encodeEmbedded(const Data& headerName, EncodeStream& str);
 
       bool empty() const {return mHeaders.empty();}
       size_t size() const {return mHeaders.size();}

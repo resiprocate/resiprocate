@@ -26,11 +26,11 @@ class Auth : public ParserCategory
       Auth& operator=(const Auth&);
 
       virtual void parse(ParseBuffer& pb);
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 
       void parseAuthParameters(ParseBuffer& pb);
-      std::ostream& encodeAuthParameters(std::ostream& str) const;
+      EncodeStream& encodeAuthParameters(EncodeStream& str) const;
 
       Data& scheme();
       const Data& scheme() const;

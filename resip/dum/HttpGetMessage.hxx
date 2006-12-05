@@ -18,8 +18,8 @@ class HttpGetMessage : public DumFeatureMessage
       const Mime& getType() const {return mType;}
 
       virtual Message* clone() const;
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
    private:
       bool mSuccess;
       Data mBody;

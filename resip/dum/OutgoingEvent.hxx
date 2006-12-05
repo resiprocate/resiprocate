@@ -23,8 +23,8 @@ class OutgoingEvent : public Message
       //void releaseMessage();
 
       virtual Message* clone() const;
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
       
    private:
       //mutable std::auto_ptr<SipMessage> mMessage;

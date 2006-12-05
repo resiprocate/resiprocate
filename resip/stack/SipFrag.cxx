@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -92,8 +93,8 @@ SipFrag::message() const
    return *mMessage;
 }
 
-std::ostream& 
-SipFrag::encodeParsed(std::ostream& str) const
+EncodeStream& 
+SipFrag::encodeParsed(EncodeStream& str) const
 {
    mMessage->encodeSipFrag(str);
 
@@ -221,7 +222,7 @@ SipFrag::parse(ParseBuffer& pb)
    //      in test/testSipFrag.cxx
    if (false && scanChunkResult != MsgHeaderScanner::scrEnd) 
    {
-      CerrLog(<< "not MsgHeaderScanner::scrEnd");
+//      CerrLog(<< "not MsgHeaderScanner::scrEnd");
       pb.fail(__FILE__, __LINE__);
    } 
    else 

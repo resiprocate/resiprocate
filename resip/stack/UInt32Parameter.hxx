@@ -1,6 +1,8 @@
 #if !defined(RESIP_UINT32PARAMETER_HXX)
 #define RESIP_UINT32PARAMETER_HXX 
 
+/*ivr mod*/#include "rutil/resipfaststreams.h"
+
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/Parameter.hxx"
 #include <iosfwd>
@@ -23,7 +25,7 @@ class UInt32Parameter : public Parameter
          return new UInt32Parameter(type, pb, terminators);
       }
 
-      virtual std::ostream& encode(std::ostream& stream) const;
+      virtual EncodeStream& encode(EncodeStream& stream) const;
 
       virtual Parameter* clone() const;
    private:

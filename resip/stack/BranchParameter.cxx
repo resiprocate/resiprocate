@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -272,8 +273,8 @@ BranchParameter::clone() const
    return new BranchParameter(*this);
 }
 
-ostream& 
-BranchParameter::encode(ostream& stream) const
+EncodeStream& 
+BranchParameter::encode(EncodeStream& stream) const
 {
    stream << getName() << Symbols::EQUALS;
    if (mHasMagicCookie)

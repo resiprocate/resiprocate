@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -529,7 +530,7 @@ DateCategory::clone() const
    return new DateCategory(*this);
 }
 
-static void pad2(const int x, std::ostream& str)
+static void pad2(const int x, EncodeStream& str)
 {
    if (x < 10)
    {
@@ -538,8 +539,8 @@ static void pad2(const int x, std::ostream& str)
    str << x;
 }
 
-std::ostream& 
-DateCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+DateCategory::encodeParsed(EncodeStream& str) const
 {
    str << DayOfWeekData[mDayOfWeek] // Mon
        << Symbols::COMMA[0] << Symbols::SPACE[0];

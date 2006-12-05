@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -64,8 +65,8 @@ Rlmi::getStaticType()
    return type;
 }
 
-std::ostream& 
-Rlmi::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Rlmi::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "Rlmi::encodeParsed " << mText);
    str << mText;

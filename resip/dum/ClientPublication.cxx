@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <cassert>
 
 #include "resip/stack/Helper.hxx"
@@ -31,12 +32,12 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
      mTimerSeq(0),
      mDocument(mPublish->releaseContents().release())
 {
-   DebugLog( << "ClientPublication::ClientPublication: " << mId);   
+/* ivr mod */   DebugLog( << "ClientPublication::ClientPublication: " << mHandledId);   
 }
 
 ClientPublication::~ClientPublication()
 {
-   DebugLog( << "ClientPublication::~ClientPublication: " << mId);   
+/* ivr mod */   DebugLog( << "ClientPublication::~ClientPublication: " << mHandledId);   
    mDialogSet.mClientPublication = 0;
    delete mDocument;
 }
@@ -241,10 +242,10 @@ ClientPublication::send(SharedPtr<SipMessage> request)
    }
 }
 
-std::ostream& 
-ClientPublication::dump(std::ostream& strm) const
+EncodeStream& 
+ClientPublication::dump(EncodeStream& strm) const
 {
-   strm << "ClientPublication " << mId << " " << mPublish->header(h_From).uri();
+/* ivr mod */   strm << "ClientPublication " << mHandledId << " " << mPublish->header(h_From).uri();
    return strm;
 }
 

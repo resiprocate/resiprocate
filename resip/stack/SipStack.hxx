@@ -382,8 +382,14 @@ class SipStack
       /// Sets the interval that determines the time between Statistics messages
       void setStatisticsInterval(unsigned long seconds);
 
+	  //ivr mod
+	  void setExternalStatsHandler(ExternalStatsHandler *handler)
+	  {
+		  mStatsManager.setExternalStatsHandler(handler);
+	  }
+
       /// output current state of the stack - for debug
-      std::ostream& dump(std::ostream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const;
       
       /// Returns a pointer to the embedded Security object, 0 if not set
       Security* getSecurity() const;
@@ -520,7 +526,7 @@ class SipStack
       friend class TuSelector;
 };
 
-std::ostream& operator<<(std::ostream& strm, const SipStack& stack);
+EncodeStream& operator<<(EncodeStream& strm, const SipStack& stack);
 
 inline void 
 SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,

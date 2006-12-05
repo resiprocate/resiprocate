@@ -1,6 +1,7 @@
 #if !defined(RESIP_HANDLED_HXX)
 #define RESIP_HANDLED_HXX
 
+/*ivr mod*/#include "rutil/resipfaststreams.h"
 #include <iosfwd>
 
 namespace resip
@@ -16,15 +17,15 @@ class Handled
       Handled(HandleManager& ham);
       virtual ~Handled();
       
-      virtual std::ostream& dump(std::ostream& strm) const=0;
+      virtual EncodeStream& dump(EncodeStream& strm) const=0;
       
    protected:
       HandleManager& mHam;
-      Handled::Id mId;
+/* ivr mod */      Handled::Id mHandledId;
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const Handled& usage);
+EncodeStream& 
+operator<<(EncodeStream& strm, const Handled& usage);
  
 }
 

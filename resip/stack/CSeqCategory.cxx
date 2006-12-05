@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -147,8 +148,8 @@ CSeqCategory::parse(ParseBuffer& pb)
    pb.data(mUnknownMethodName, anchorPtr);
 }
 
-std::ostream& 
-CSeqCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+CSeqCategory::encodeParsed(EncodeStream& str) const
 {
    str << mSequence 
        << Symbols::SPACE 

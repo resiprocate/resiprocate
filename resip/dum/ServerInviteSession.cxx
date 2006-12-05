@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/MultipartAlternativeContents.hxx"
 #include "resip/dum/Dialog.hxx"
@@ -1055,6 +1056,14 @@ ServerInviteSession::sendProvisional(int code)
             setSdp(*m1xx, mCurrentLocalSdp.get());
          }
          break;
+
+		 /*ivr mod */ 
+		case UAS_EarlyProvidedOffer:
+		if( mProposedLocalSdp.get())
+		{
+			setSdp(*m1xx, mProposedLocalSdp.get());
+		}
+		break;
 
       default:
          break;

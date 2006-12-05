@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"

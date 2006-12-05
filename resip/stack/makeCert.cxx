@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <openssl/ssl.h>
 #include <openssl/pem.h>
 #include <openssl/ossl_typ.h>

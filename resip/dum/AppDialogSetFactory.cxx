@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/AppDialogSetFactory.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/stack/SipMessage.hxx"

@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <cassert>
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"

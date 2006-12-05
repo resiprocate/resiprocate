@@ -500,12 +500,12 @@ class Data
       /**
         Escapes a Data to a stream according to HTTP URL encoding rules.
       */
-      std::ostream& urlEncode(std::ostream& s) const;
+      EncodeStream& urlEncode(EncodeStream& s) const;
 
       /**
         Un-escapes a Data to a stream according to HTTP URL encoding rules.
       */
-      std::ostream& urlDecode(std::ostream& s) const;
+      EncodeStream& urlDecode(EncodeStream& s) const;
 
       /**
         Performs in-place XML Character Data escaping of a Data.
@@ -520,12 +520,12 @@ class Data
       /**
         Escapes a Data to a stream according to XML Character Data encoding rules.
       */
-	  std::ostream& xmlCharDataEncode(std::ostream& s) const;
+	  EncodeStream& xmlCharDataEncode(EncodeStream& s) const;
 
       /**
         Un-escapes a Data to a stream according to XML Character Data encoding rules.
       */
-	  std::ostream& xmlCharDataDecode(std::ostream& s) const;
+	  EncodeStream& xmlCharDataDecode(EncodeStream& s) const;
 
       /**
         Shortens the size of this Data. If the contents are truncated,
@@ -689,8 +689,8 @@ class Data
 
 	@deprecated dlb -- pass a 256 array of bits rather than a function.
       */      
-      template<class Predicate> std::ostream& 
-          escapeToStream(std::ostream& str, 
+      template<class Predicate> EncodeStream& 
+          escapeToStream(EncodeStream& str, 
                          Predicate shouldEscape) const;
 
    private:
@@ -728,7 +728,8 @@ class Data
 
       friend bool operator==(const char* s, const Data& d);
       friend bool operator!=(const char* s, const Data& d);
-      friend std::ostream& operator<<(std::ostream& strm, const Data& d);
+	  friend std::ostream& operator<<(std::ostream& strm, const Data& d);
+	  friend EncodeStream& operator<<(EncodeStream& strm, const Data& d);
       friend class ParseBuffer;
       friend class DataBuffer;
       friend class DataStream;
@@ -770,8 +771,8 @@ inline bool isLessThanNoCase(const Data& left, const Data& right)
    }
 }
 
-template<class Predicate> std::ostream& 
-Data::escapeToStream(std::ostream& str, Predicate shouldEscape) const
+template<class Predicate> EncodeStream& 
+Data::escapeToStream(EncodeStream& str, Predicate shouldEscape) const
 {
    static char hex[] = "0123456789ABCDEF";
 
@@ -815,6 +816,9 @@ bool operator==(const char* s, const Data& d);
 bool operator!=(const char* s, const Data& d);
 bool operator<(const char* s, const Data& d);
 
+#ifndef  RESIP_USE_STL_STREAMS
+EncodeStream& operator<<(EncodeStream& strm, const Data& d);
+#endif
 std::ostream& operator<<(std::ostream& strm, const Data& d);
 
 inline Data

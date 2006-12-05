@@ -1,3 +1,4 @@
+#include "precompile.h"
 
 #include <cassert>
 
@@ -82,21 +83,21 @@ UserAuthInfo::clone() const
 }
 
 
-std::ostream& 
-UserAuthInfo::encode(std::ostream& strm) const
+EncodeStream& 
+UserAuthInfo::encode(EncodeStream& strm) const
 {
    strm << brief();
    return strm;
 }
 
-std::ostream&
-UserAuthInfo::encodeBrief(std::ostream& strm) const
+EncodeStream&
+UserAuthInfo::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const UserAuthInfo& msg)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const UserAuthInfo& msg)
 {
    return msg.encode(strm);
 }

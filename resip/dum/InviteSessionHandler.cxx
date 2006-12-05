@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/InviteSessionHandler.hxx"
 #include "resip/dum/ClientInviteSession.hxx"

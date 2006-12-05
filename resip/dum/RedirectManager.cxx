@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/RedirectManager.hxx"
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Logger.hxx"

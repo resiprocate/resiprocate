@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -603,8 +604,8 @@ SipStack::statisticsManagerEnabled() const
    return mStatisticsManagerEnabled;   
 }
 
-std::ostream& 
-SipStack::dump(std::ostream& strm)  const
+EncodeStream& 
+SipStack::dump(EncodeStream& strm)  const
 {
    Lock lock(mAppTimerMutex);
    strm << "SipStack: " << (this->mSecurity ? "with security " : "without security ")
@@ -621,8 +622,8 @@ SipStack::dump(std::ostream& strm)  const
    return strm;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, 
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
 const SipStack& stack) 
 {
    return stack.dump(strm);

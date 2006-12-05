@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -8,6 +9,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
+/*ivr mod*/#include "rutil/GenericIPAddress.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
@@ -104,6 +106,14 @@ TcpBaseTransport::processListen(FdSet& fdset)
          }
          return;
       }
+
+	  //ivrmod
+	  if( false == TransportScreenSingleton::Screen(tuple.toGenericIPAddress()) )
+	  {
+		  InfoLog(<< "TCP Connection did not pass screening");
+		close(sock);
+		return;
+	  }
       makeSocketNonBlocking(sock);
       
       tuple.transport = this;

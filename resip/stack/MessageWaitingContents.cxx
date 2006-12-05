@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -139,8 +140,8 @@ MessageWaitingContents::clone() const
    return new MessageWaitingContents(*this);
 }
 
-ostream& 
-MessageWaitingContents::encodeParsed(ostream& s) const
+EncodeStream& 
+MessageWaitingContents::encodeParsed(EncodeStream& s) const
 {
    s << "Messages-Waiting" << Symbols::COLON[0] << Symbols::SPACE[0]
      << (mHasMessages ? "yes" : "no") << Symbols::CRLF;

@@ -30,8 +30,8 @@ class TargetCommand : public DumCommand
 
 
       Message* clone() const;
-      std::ostream& encode(std::ostream& strm) const;
-      std::ostream& encodeBrief(std::ostream& strm) const;
+      EncodeStream& encode(EncodeStream& strm) const;
+      EncodeStream& encodeBrief(EncodeStream& strm) const;
       
    private:
       Target& mTarget;

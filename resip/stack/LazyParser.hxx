@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include "resip/stack/HeaderFieldValue.hxx"
+/*ivr mod*/#include "rutil/resipfaststreams.h"
 
 namespace resip
 {
@@ -19,11 +20,11 @@ class LazyParser
       LazyParser& operator=(const LazyParser& rhs);
       virtual ~LazyParser();
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const = 0;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const = 0;
       virtual void parse(ParseBuffer& pb) = 0;
 
-      std::ostream& encode(std::ostream& str) const;
-      std::ostream& encodeFromHeaderFieldValue(std::ostream& str) const;
+      EncodeStream& encode(EncodeStream& str) const;
+      EncodeStream& encodeFromHeaderFieldValue(EncodeStream& str) const;
       bool isParsed() const {return mIsParsed;}
 
       HeaderFieldValue& getHeaderField() { return *mHeaderField; }
@@ -47,6 +48,13 @@ class LazyParser
       bool mIsMine;
       bool mIsParsed;
 };
+
+#ifndef  RESIP_USE_STL_STREAMS
+EncodeStream&
+operator<<(EncodeStream&, const LazyParser& lp);
+#endif
+
+//need this for MD5Stream
 
 std::ostream&
 operator<<(std::ostream&, const LazyParser& lp);

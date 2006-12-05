@@ -24,7 +24,7 @@ class FlowId
    private:
       Transport* transport;
       ConnectionId connectionId;
-      friend std::ostream& operator<<(std::ostream& strm, const FlowId& f);
+      friend EncodeStream& operator<<(EncodeStream& strm, const FlowId& f);
 };
 
 }

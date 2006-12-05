@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -1920,8 +1921,8 @@ TransactionState::terminateServerTransaction(const Data& tid)
    }
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::TransactionState& state)
 {
    strm << "tid=" << state.mId << " [ ";
    switch (state.mMachine)

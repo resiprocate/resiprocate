@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -24,6 +25,9 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+
+/* IVR MOD */
+TransportScreenSingleton *	TransportScreenSingleton::mInstance = 0;
 
 Transport::Exception::Exception(const Data& msg, const Data& file, const int line) :
    BaseException(msg,file,line)
@@ -334,8 +338,8 @@ Transport::operator==(const Transport& rhs) const
             ( memcmp(&boundInterface(),&rhs.boundInterface(),mTuple.length()) == 0) );
 }
     
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::Transport& rhs)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::Transport& rhs)
 {
    strm << "Transport: " << rhs.mTuple;
    if (!rhs.mInterface.empty()) strm << " on " << rhs.mInterface;

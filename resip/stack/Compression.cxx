@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
 #include "resip/stack/Compression.hxx"

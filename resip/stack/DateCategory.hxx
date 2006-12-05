@@ -53,7 +53,7 @@ class DateCategory : public ParserCategory
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       
       static DayOfWeek DayOfWeekFromData(const Data&);
       static Month MonthFromData(const Data&);

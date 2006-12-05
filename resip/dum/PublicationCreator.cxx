@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "PublicationCreator.hxx"
 #include "resip/stack/SipMessage.hxx"
 

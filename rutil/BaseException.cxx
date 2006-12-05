@@ -21,11 +21,19 @@ BaseException::BaseException( const Data& msg,
 BaseException::~BaseException() throw()
 {}
 
-ostream& resip::operator<<(ostream& strm, const BaseException& e)
+EncodeStream& resip::operator<<(EncodeStream& strm, const BaseException& e)
 {
    strm << e.name() << " " << e.message << " @ " << e.fileName << ":" << e.lineNumber;
    return strm;
 }
+
+#ifndef RESIP_USE_STL_STREAMS
+std::ostream& resip::operator<<(std::ostream& strm, const BaseException& e)
+{
+   strm << e.name() << " " << e.message << " @ " << e.fileName << ":" << e.lineNumber;
+   return strm;
+}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/DtlsMessage.hxx"
 
 #ifdef USE_DTLS

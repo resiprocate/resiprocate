@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/MultipartAlternativeContents.hxx"
 #include "resip/dum/InviteSessionCreator.hxx"

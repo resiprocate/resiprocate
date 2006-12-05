@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogUsageManager.hxx"

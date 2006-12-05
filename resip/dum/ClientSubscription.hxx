@@ -27,7 +27,7 @@ class ClientSubscription: public BaseSubscription
       
       void requestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
       virtual void end();
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
 
    protected:
       virtual ~ClientSubscription();

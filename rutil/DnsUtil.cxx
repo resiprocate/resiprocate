@@ -267,7 +267,8 @@ DnsUtil::isIpV6Address(const Data& ipAddress)
    }
 
    // first character must be a hex digit or colon
-   if (!isxdigit(*ipAddress.data()) &&
+   /*ivrmod  This is just so the _DEBUG builds don't assert*/int digit = *ipAddress.data();
+   /*ivrmod*/if( ( ((unsigned)(digit + 1) > 256) || !isxdigit(digit) ) &&
        *ipAddress.data() != ':')
    {
       return false;

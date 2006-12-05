@@ -116,7 +116,7 @@ class XMLCursor
       const AttributeMap& getAttributes() const;
       const Data& getValue() const;
 
-      static std::ostream& encode(std::ostream& strm, const AttributeMap& attrs);
+      static EncodeStream& encode(EncodeStream& strm, const AttributeMap& attrs);
       class Node;
 
 		class AttributeValueEqual {
@@ -176,12 +176,12 @@ public:
             Node(const Node&);
             Node& operator=(const Node&);
 
-            friend std::ostream& operator<<(std::ostream& str, const XMLCursor& cursor);
-            // friend std::ostream& operator<<(std::ostream& str, const XMLCursor::Node& cursor); // this line won't compile in windows 
+            friend EncodeStream& operator<<(EncodeStream& str, const XMLCursor& cursor);
+            // friend EncodeStream& operator<<(EncodeStream& str, const XMLCursor::Node& cursor); // this line won't compile in windows 
       };
    private:
-      friend std::ostream& operator<<(std::ostream&, const XMLCursor&);
-      friend std::ostream& operator<<(std::ostream&, const XMLCursor::Node&);
+      friend EncodeStream& operator<<(EncodeStream&, const XMLCursor&);
+      friend EncodeStream& operator<<(EncodeStream&, const XMLCursor::Node&);
 
       // no value semantics
       XMLCursor(const XMLCursor&);
@@ -189,11 +189,11 @@ public:
       friend class Node;
 };
 
-std::ostream&
-operator<<(std::ostream& str, const XMLCursor& cursor);
+EncodeStream&
+operator<<(EncodeStream& str, const XMLCursor& cursor);
 
-std::ostream&
-operator<<(std::ostream& str, const XMLCursor::Node& cursor);
+EncodeStream&
+operator<<(EncodeStream& str, const XMLCursor::Node& cursor);
 
 }
 

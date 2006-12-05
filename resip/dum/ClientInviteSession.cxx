@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/SdpContents.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
 #include "resip/dum/Dialog.hxx"

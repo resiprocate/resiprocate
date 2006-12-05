@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -83,8 +84,8 @@ X509Contents::getStaticType()
    return type;
 }
 
-std::ostream& 
-X509Contents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+X509Contents::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "X509Contents::encodeParsed " << mText);
    str << mText;

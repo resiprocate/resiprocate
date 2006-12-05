@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <cassert>
 #include <list>
 #include "rutil/BaseException.hxx"
