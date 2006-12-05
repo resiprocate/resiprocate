@@ -17,7 +17,6 @@ class TcpConnection : public Connection
       int write( const char* buf, const int count );
       virtual bool hasDataToRead(); // has data that can be read 
       virtual bool isGood(); // has valid connection
-      virtual bool isWritable();
       Data peerName();      
 };
  

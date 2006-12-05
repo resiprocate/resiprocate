@@ -156,14 +156,6 @@ class SipStack
       */
       bool isMyDomain(const Data& domain, int port) const;
       
-      /**
-          Returns true if port is handled by this stack.  Convenience for
-          Transaction Users. 
-
-          @param port     Port number to check.        
-      */
-      bool isMyPort(int port) const;
-
       /** 
           Get one of the names for this host (calls through to gethostbyname) and
           is not threadsafe.
@@ -509,10 +501,6 @@ class SipStack
       /** store all domains that this stack is responsible for. Controlled by
           addAlias and addTransport interfaces and checks can be made with isMyDomain() */
       std::set<Data> mDomains;
-
-      /** store all ports that this stack is lisenting on.  Controlled by addTransport
-          and checks can be made with isMyPort() */
-      std::set<int> mPorts;
 
       bool mShuttingDown;
       volatile bool mStatisticsManagerEnabled;

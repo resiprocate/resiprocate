@@ -52,55 +52,51 @@ QValueTargetHandler::process(RequestContext &rc)
    resip::Message* msg = rc.getCurrentEvent();
    assert(msg);
 
-   if(msg)
+
+   repro::ForkControlMessage* fc = dynamic_cast<repro::ForkControlMessage*>(msg);
+   
+   if(fc)
    {
-      repro::ForkControlMessage* fc = dynamic_cast<repro::ForkControlMessage*>(msg);
+      shouldContinue=false;
       
-      if(fc)
+      std::vector<resip::Data>::iterator i;
+      
+      //Might we have scheduled cancellations? If so, is there anything else
+      //worth trying? (We won't cancel stuff if there is nothing else left 
+      //to try)
+      if(mCancelBetweenForkGroups && rsp.hasCandidateTransactions())
       {
-         shouldContinue=false;
-         
-         std::vector<resip::Data>::iterator i;
-         
-         //Might we have scheduled cancellations? If so, is there anything else
-         //worth trying? (We won't cancel stuff if there is nothing else left 
-         //to try)
-         if(mCancelBetweenForkGroups && rsp.hasCandidateTransactions())
+         std::vector<resip::Data>& cancelTids=fc->mTransactionsToCancel;
+         for(i=cancelTids.begin();i!=cancelTids.end();i++)
          {
-            std::vector<resip::Data>& cancelTids=fc->mTransactionsToCancel;
-            for(i=cancelTids.begin();i!=cancelTids.end();i++)
-            {
-               //Calling cancelClientTransaction on an already cancelled
-               //target is safe, and usually more efficient than checking
-               //beforehand.
-               rsp.cancelClientTransaction(*i);
-            }
-            
+            //Calling cancelClientTransaction on an already cancelled
+            //target is safe, and usually more efficient than checking
+            //beforehand.
+            rsp.cancelClientTransaction(*i);
          }
          
-         //Might we have scheduled some transactions to start?
-         //(and if we did, should we now schedule them for cancellation later?)
-         if(!mWaitForTerminate)
-         {
-            std::vector<resip::Data>& beginTids=fc->mTransactionsToProcess;
-            for(i=beginTids.begin();i!=beginTids.end();i++)
-            {
-               //Calling beginClientTransaction on an already active
-               // (or Terminated) transaction is safe, and more
-               // efficient than checking beforehand.
-               rsp.beginClientTransaction(*i);
-               if(mCancelBetweenForkGroups)
-               {            
-                  nextCancelTids.push_back(*i);
-               }
-            }
-         }
       }
-      else
+      
+      //Might we have scheduled some transactions to start?
+      //(and if we did, should we now schedule them for cancellation later?)
+      if(!mWaitForTerminate)
       {
-         DebugLog(<<"No ForkControlMessage for me.");
+         std::vector<resip::Data>& beginTids=fc->mTransactionsToProcess;
+         for(i=beginTids.begin();i!=beginTids.end();i++)
+         {
+            //Calling beginClientTransaction on an already active
+            // (or Terminated) transaction is safe, and more
+            // efficient than checking beforehand.
+            rsp.beginClientTransaction(*i);
+            if(mCancelBetweenForkGroups)
+            {            
+               nextCancelTids.push_back(*i);
+            }
+         }
+
       }
    }
+
 
    std::list<std::list<resip::Data> >& targetCollection = 
          rsp.mTransactionQueueCollection;

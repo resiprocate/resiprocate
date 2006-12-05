@@ -2872,7 +2872,12 @@ class TestHolder : public Fixture
       RouteGuard spiral1(*proxy,"sip:spiral1@.*","sip:spiral2@localhost");
       RouteGuard spiral2(*proxy,"sip:spiral2@.*","sip:spiral3@localhost");
       RouteGuard spiral3(*proxy,"sip:spiral3@.*","sip:spiral4@localhost");
-      RouteGuard spiral4(*proxy,"sip:spiral4@.*","sip:exit@localhost");
+      RouteGuard spiral4(*proxy,"sip:spiral4@.*","sip:spiral5@localhost");
+      RouteGuard spiral5(*proxy,"sip:spiral5@.*","sip:spiral6@localhost");
+      RouteGuard spiral6(*proxy,"sip:spiral6@.*","sip:spiral7@localhost");
+      RouteGuard spiral7(*proxy,"sip:spiral7@.*","sip:spiral8@localhost");
+      RouteGuard spiral8(*proxy,"sip:spiral8@.*","sip:spiral9@localhost");
+      RouteGuard spiral9(*proxy,"sip:spiral9@.*","sip:exit@localhost");
       RouteGuard exit(*proxy,"sip:exit@.*","sip:enlai@localhost");
 
       set<NameAddr> contacts = mergeContacts(*derek,*jason,*enlai);
@@ -2880,7 +2885,7 @@ class TestHolder : public Fixture
       Seq
       (
          enlai->registerUser(60,contacts),
-         enlai->expect(REGISTER/401,from(proxy),WaitForResponse,enlai->digestRespond()),
+         enlai->expect(REGISTER/407,from(proxy),WaitForResponse,enlai->digestRespond()),
          enlai->expect(REGISTER/200,from(proxy),WaitForResponse,enlai->noAction()),
          WaitForEndOfSeq
       );
@@ -2903,15 +2908,33 @@ class TestHolder : public Fixture
             (
                jason->expect(INVITE,contact(david),WaitForCommand,jason->ring()),
                david->expect(INVITE/180,contact(jason),WaitForResponse,david->noAction()),
-               jason->expect(CANCEL,from(proxy),3000,chain(jason->ok(), jason->send487())),
-               jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
+               And
+               (
+                  Sub
+                  (
+                     jason->expect(CANCEL,from(proxy),3000,chain(jason->ok(), jason->send487()))
+                  ),
+                  Sub
+                  (
+                     jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
+                  )
+               )
             ),
             Sub
             (
                derek->expect(INVITE,contact(david),WaitForCommand,derek->ring()),
                david->expect(INVITE/180,contact(derek),WaitForResponse,david->noAction()),
-               derek->expect(CANCEL,from(proxy),3000,chain(derek->ok(), derek->send487())),
-               derek->expect(ACK,from(proxy),WaitForResponse,derek->noAction())
+               And
+               (
+                  Sub
+                  (
+                     derek->expect(CANCEL,from(proxy),3000,chain(derek->ok(), derek->send487()))
+                  ),
+                  Sub
+                  (
+                     derek->expect(ACK,from(proxy),WaitForResponse,derek->noAction())
+                  )
+               )
             ),
             Sub
             (

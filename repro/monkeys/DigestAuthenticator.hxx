@@ -6,10 +6,7 @@
 #include "repro/Dispatcher.hxx"
 #include "repro/UserStore.hxx"
 
-namespace resip
-{
-   class SipStack;
-}
+class resip::SipStack;
 
 namespace repro
 {

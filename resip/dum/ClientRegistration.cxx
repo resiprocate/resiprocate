@@ -518,7 +518,6 @@ ClientRegistration::dispatch(const SipMessage& msg)
                                 retry, 
                                 getBaseHandle(),
                                 ++mTimerSeq);       
-                  mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
                   return;
                }
             }

@@ -15,24 +15,25 @@ using namespace resip;
 
 LazyParser::LazyParser(HeaderFieldValue* headerFieldValue)
    : mHeaderField(headerFieldValue),
-      mState(mHeaderField->mField == 0 ? EMPTY : NOT_PARSED),
-      mIsMine(false)
+      mIsMine(false),
+      mIsParsed(mHeaderField->mField == 0) //although this has a hfv it is
+                                           //parsed, as the hfv has no content
 {
 }
   
 LazyParser::LazyParser()
    : mHeaderField(0),
-      mState(EMPTY),
-     mIsMine(true)
+     mIsMine(true),
+     mIsParsed(true)
 {
 }
 
 LazyParser::LazyParser(const LazyParser& rhs)
    : mHeaderField(0),
-      mState(rhs.mState),
-     mIsMine(true)
+     mIsMine(true),
+     mIsParsed(rhs.mIsParsed)
 {
-   if (rhs.mState==NOT_PARSED && rhs.mHeaderField)
+   if (!mIsParsed && rhs.mHeaderField)
    {
       mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
    }
@@ -40,10 +41,10 @@ LazyParser::LazyParser(const LazyParser& rhs)
 
 LazyParser::LazyParser(const LazyParser& rhs,HeaderFieldValue::CopyPaddingEnum e)
    :  mHeaderField(0),
-      mState(rhs.mState),
-      mIsMine(true)
+      mIsMine(true),
+      mIsParsed(rhs.mIsParsed)
 {
-   if (rhs.mState==NOT_PARSED && rhs.mHeaderField)
+   if (!mIsParsed && rhs.mHeaderField)
    {
       mHeaderField = new HeaderFieldValue(*rhs.mHeaderField,e);
    }
@@ -64,8 +65,8 @@ LazyParser::operator=(const LazyParser& rhs)
    if (this != &rhs)
    {
       clear();
-      mState = rhs.mState;
-      if (rhs.mState!=NOT_PARSED)
+      mIsParsed = rhs.mIsParsed;
+      if (rhs.mIsParsed)
       {
          mHeaderField = 0;
          mIsMine = false;
@@ -82,31 +83,14 @@ LazyParser::operator=(const LazyParser& rhs)
 void
 LazyParser::checkParsed() const
 {
-   if (mState==NOT_PARSED)
+   if (!mIsParsed)
    {
       LazyParser* ncThis = const_cast<LazyParser*>(this);
-      // !bwc! We assume the worst, and if the parse succeeds, we update.
-      ncThis->mState = MALFORMED;
+      ncThis->mIsParsed = true;
       assert(mHeaderField);
       ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength, errorContext());
       ncThis->parse(pb);
-      // !bwc! If we get this far without throwing, the parse has succeeded.
-      ncThis->mState = WELL_FORMED;
    }
-}
-
-bool
-LazyParser::isWellFormed() const
-{
-   try
-   {
-      checkParsed();
-   }
-   catch(resip::ParseBuffer::Exception&)
-   {
-   }
-   
-   return (mState!=MALFORMED);
 }
 
 void

@@ -177,12 +177,11 @@ SipStack::addTransport( TransportType protocol,
 void 
 SipStack::addTransport( std::auto_ptr<Transport> transport)
 {
-   //.dcm. once addTransport starts throwing, need to back out alias
+   //.dcm. once addTransport starts throwing, ned to back out alias
    if (!transport->interfaceName().empty()) 
    {
       addAlias(transport->interfaceName(), transport->port());
    }
-   mPorts.insert(transport->port());
    mTransactionController.transportSelector().addTransport(transport);
 }
 
@@ -262,12 +261,6 @@ SipStack::isMyDomain(const Data& domain, int port) const
 {
    return (mDomains.count(domain + ":" + 
                           Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
-}
-
-bool
-SipStack::isMyPort(int port) const
-{
-   return mPorts.count(port) != 0;
 }
 
 const Uri&
@@ -457,8 +450,8 @@ SipStack::receive()
       // we should only ever have SIP messages on the TU Fifo
       // unless we've registered for termination messages. 
       Message* msg = mTUFifo.getNext();
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      if (sip)
+      SipMessage* sip=0;
+      if ((sip=dynamic_cast<SipMessage*>(msg)))
       {
          DebugLog (<< "RECV: " << sip->brief());
          return sip;

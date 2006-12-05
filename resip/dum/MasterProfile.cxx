@@ -7,16 +7,10 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 
-// Be sure to look at the documentation of the accessors for 
-// the members being set by this constructor in the .hxx file 
-// for the implications of these default values.
-
 MasterProfile::MasterProfile() : 
    mValidateContentEnabled(true),
    mValidateContentLanguageEnabled(false),
-   mValidateAcceptEnabled(false),
-   mAllowBadRegistrationEnabled(false),
-   mCheckReqUriInMergeDetectionEnabled(false)
+   mValidateAcceptEnabled(false)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -306,17 +300,6 @@ MasterProfile::allowBadRegistrationEnabled()
    return mAllowBadRegistrationEnabled;   
 }
 
-const bool 
-MasterProfile::checkReqUriInMergeDetectionEnabled() const
-{
-   return mCheckReqUriInMergeDetectionEnabled;   
-}
-
-bool& 
-MasterProfile::checkReqUriInMergeDetectionEnabled()
-{
-   return mCheckReqUriInMergeDetectionEnabled;   
-}
 
 UserProfile*
 MasterProfile::clone() const

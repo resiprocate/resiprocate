@@ -54,7 +54,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
 
 // UAS 
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
-   mMergeKey(request, dum.getMasterProfile()->checkReqUriInMergeDetectionEnabled()),
+   mMergeKey(request),
    mDialogs(),
    mCreator(0),
    mId(request),
@@ -72,12 +72,9 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    assert(request.isRequest());
    assert(request.isExternal());
    mDum.mMergedRequests.insert(mMergeKey);
+   assert(mDum.mCancelMap.count(request.getTransactionId()) == 0);
    if (request.header(h_RequestLine).method() == INVITE)
    {
-      if(mDum.mCancelMap.count(request.getTransactionId()) != 0)
-      {
-         WarningLog ( << "An endpoint is using the same tid in multiple INVITE requests, ability to match CANCEL requests correctly may be comprimised, tid=" << request.getTransactionId() );
-      }
       mCancelKey = request.getTransactionId();
       mDum.mCancelMap[mCancelKey] = this;
    }
@@ -697,11 +694,9 @@ DialogSet::dispatch(const SipMessage& msg)
       {
          int code = msg.header(h_StatusLine).statusCode();
          
-         if (code > 100 && code < 200 && 
-             (!msg.exists(h_Contacts) ||
-              !msg.exists(h_To) || !msg.header(h_To).exists(p_tag)))
+         if (!msg.exists(h_Contacts) && code > 100 && code < 200)
          {
-            InfoLog ( << "Cannot create a dialog, no Contact or To tag in 1xx." );
+            InfoLog ( << "Cannot create a dialog, no Contact in 180." );
             if (mDum.mDialogSetHandler)
             {
                mDum.mDialogSetHandler->onNonDialogCreatingProvisional(mAppDialogSet->getHandle(), msg);

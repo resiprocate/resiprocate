@@ -11,7 +11,7 @@ class MergedRequestKey
 {
    public:
       MergedRequestKey();
-      MergedRequestKey(const SipMessage& request, bool checkRequestUri);
+      MergedRequestKey(const SipMessage& request);
       bool operator==(const MergedRequestKey& other) const;
       bool operator!=(const MergedRequestKey& other) const;
       bool operator<(const MergedRequestKey& other) const;
@@ -24,11 +24,10 @@ class MergedRequestKey
       //MergedRequestKey(const MergedRequestKey& key);
       MergedRequestKey& operator=(const MergedRequestKey& key);
       
-      Data mRequestUri;
+//      Data mRequestUri;
       Data mCSeq;
       Data mTag;
       Data mCallId;
-      bool mCheckRequestUri;
 };
  
 }

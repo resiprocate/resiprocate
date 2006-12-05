@@ -37,7 +37,7 @@ class RequestContext
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
       const resip::SipMessage& getOriginalRequest() const;
-      resip::Data getTransactionId() const;
+      const resip::Data& getTransactionId() const;
       
       /** Returns the event that we are currently working on. Use a pointer
           since users need to check for null */
@@ -58,9 +58,7 @@ class RequestContext
       resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=false);
       
       void sendResponse(const resip::SipMessage& response);
-
-      void forwardAck200(const resip::SipMessage& ack);
-
+            
       void updateTimerC();
       bool mInitialTimerCSet;
 
@@ -73,7 +71,6 @@ class RequestContext
    private:
       resip::SipMessage*  mOriginalRequest;
       resip::Message*  mCurrentEvent;
-      resip::SipMessage* mAck200ToRetransmit;
       ProcessorChain& mRequestProcessorChain; // monkeys
       ProcessorChain& mResponseProcessorChain; // lemurs
       ProcessorChain& mTargetProcessorChain; // baboons

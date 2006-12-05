@@ -123,8 +123,7 @@ class TransactionState : public DnsHandler
       Tuple mResponseTarget; // used to reply to requests
 
       Data mId;
-      bool mAckIsValid;
-      bool mWaitingForDnsResult;
+      Data mToTag; // for failure responses on ServerInviteTransaction 
       TransactionUser* mTransactionUser;
       TransportFailure::FailureReason mFailureReason;      
 

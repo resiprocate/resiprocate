@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/ServerAuthManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
 #include "repro/UserStore.hxx"

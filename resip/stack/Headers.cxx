@@ -201,7 +201,7 @@ defineMultiHeader(Path, "Path", NameAddr, "RFC 3327");
 defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841");
 defineMultiHeader(RejectContact, "Reject-Contact", NameAddr, "RFC 3841");
 defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325");
-// explicitly declare to avoid h_PPrefferedIdentitys
+// explicitly declare to avoid h_PAssertedIdentitys
 H_PPreferredIdentitys resip::h_PPreferredIdentities;
 
 defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325");

@@ -46,7 +46,6 @@
 #include "resip/stack/Uri.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-#include "rutil/Timer.hxx"
 
 #if !defined(USE_ARES)
 #warning "ARES is required"
@@ -67,10 +66,8 @@ DnsResult::DnsResult(DnsInterface& interfaceObj, DnsStub& dns, RRVip& vip, DnsHa
      mSips(false),
      mTransport(UNKNOWN_TRANSPORT),
      mPort(-1),
-     mHaveChosenTransport(false),
      mType(Pending),
-     mCumulativeWeight(0),
-     mHaveReturnedResults(false)
+     mBlacklistLastReturnedResult(false)
 {
 }
 
@@ -83,19 +80,12 @@ DnsResult::~DnsResult()
 void 
 DnsResult::transition(Type t)
 {
-   if ((t == Finished || t == Destroyed) &&
-       (mType == Pending || mType == Available))
+   if ((t == Finished || t == Destroyed || t == Available) &&
+       (mType == Pending))
    {
       mInterface.mActiveQueryCount--;
       assert(mInterface.mActiveQueryCount >= 0);
    }
-   
-   if((t == Pending || t== Available) && 
-         (mType== Finished || mType == Destroyed) )
-   {
-      assert(0);
-   }
-   
    mType = t;
 }
 
@@ -111,21 +101,8 @@ DnsResult::destroy()
    }
    else
    {
-      transition(Finished);
       delete this;
    }
-}
-
-bool
-DnsResult::blacklistLast(UInt64 expiry)
-{
-   if(mHaveReturnedResults)
-   {
-      blacklistLastReturnedResult(expiry);
-      return true;
-   }
-   
-   return false;
 }
 
 DnsResult::Type
@@ -140,6 +117,11 @@ DnsResult::available()
       }
       else
       {
+         if (mBlacklistLastReturnedResult)
+         {
+            blacklistLastReturnedResult();
+            mBlacklistLastReturnedResult = false;
+         }
          primeResults();
          return available(); // recurse
       }
@@ -151,40 +133,48 @@ DnsResult::available()
 }
 
 Tuple
-DnsResult::next()
+DnsResult::next() 
 {
-   assert(available()==Available);
-   assert(mCurrentPath.size()<=3);
-   
-   mLastResult=mResults.front();
+   assert(available() == Available);
+   Tuple next = mResults.front();
    mResults.pop_front();
-   
-   if(!mCurrentPath.empty() && 
-      (mCurrentPath.back().rrType==T_A || mCurrentPath.back().rrType==T_AAAA))
+   StackLog (<< "Returning next dns entry: " << next);
+  
+   if (mBlacklistLastReturnedResult)
    {
-      mCurrentPath.pop_back();
+      blacklistLastReturnedResult();
    }
-   
-   Item AorAAAA;
-   AorAAAA.domain = mLastResult.getTargetDomain();
-   AorAAAA.rrType = mLastResult.isV4() ? T_A : T_AAAA;
-   AorAAAA.value = Tuple::inet_ntop(mLastResult);
-   mCurrentPath.push_back(AorAAAA);
-   
-   StackLog (<< "Returning next dns entry: " << mLastResult);
-   mLastReturnedPath=mCurrentPath;
-   mHaveReturnedResults=true;
-   return mLastResult;
+   else if (!mCurrResultPath.empty())
+   {
+      mBlacklistLastReturnedResult = true;
+   }
+   mLastReturnedResult = next;
+
+   assert(mCurrSuccessPath.size()<=3);
+   Item top;
+   if (!mCurrSuccessPath.empty())
+   {
+      top = mCurrSuccessPath.top();
+      if (top.rrType == T_A || top.rrType == T_AAAA)
+      {
+         mCurrSuccessPath.pop();
+      }
+   }
+   top.domain = next.getTargetDomain();
+   top.rrType = next.isV4()? T_A : T_AAAA;
+   top.value = Tuple::inet_ntop(next);
+   mCurrSuccessPath.push(top);
+   return next;
 }
 
-void
-DnsResult::whitelistLast()
+void DnsResult::success()
 {
-   std::vector<Item>::iterator i;
-   for (i=mLastReturnedPath.begin(); i!=mLastReturnedPath.end(); ++i)
+   while (!mCurrSuccessPath.empty())
    {
-      DebugLog( << "Whitelisting " << i->domain << "(" << i->rrType << "): " << i->value);
-      mVip.vip(i->domain, i->rrType, i->value);
+      Item top = mCurrSuccessPath.top();
+      DebugLog( << "Whitelisting " << top.domain << "(" << top.rrType << "): " << top.value);
+      mVip.vip(top.domain, top.rrType, top.value);
+      mCurrSuccessPath.pop();
    }
 }
 
@@ -223,26 +213,15 @@ DnsResult::lookupInternal(const Uri& uri)
    if (uri.exists(p_transport))
    {
       mTransport = Tuple::toTransport(uri.param(p_transport));
-      mHaveChosenTransport=true;
-      
+
       if (isNumeric) // IP address specified
       {
          mPort = getDefaultPort(mTransport, uri.port());
          Tuple tuple(mTarget, mPort, mTransport, mTarget);
-
-         if(!DnsResult::blacklisted(tuple))
-         {
-            DebugLog (<< "Found immediate result: " << tuple);
-            mResults.push_back(tuple);
-            transition(Available);
-            if (mHandler) mHandler->handle(this);
-         }
-         else
-         {
-            transition(Available);
-            if (mHandler) mHandler->handle(this);
-         }
-
+         DebugLog (<< "Found immediate result: " << tuple);
+         mResults.push_back(tuple);
+         transition(Available);
+         if (mHandler) mHandler->handle(this);         
       }
       else if (uri.port() != 0)
       {
@@ -256,7 +235,6 @@ DnsResult::lookupInternal(const Uri& uri)
             if (mTransport == UDP)
             {
                mTransport = DTLS;
-               mHaveChosenTransport=true;
                if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
@@ -270,7 +248,6 @@ DnsResult::lookupInternal(const Uri& uri)
             else
             {
                mTransport = TLS;
-               mHaveChosenTransport=true;
                if (!mInterface.isSupportedProtocol(mTransport))
                {
                   transition(Finished);
@@ -323,90 +300,29 @@ DnsResult::lookupInternal(const Uri& uri)
    {
       if (isNumeric || uri.port() != 0)
       {
-         bool foundTuple=false;
-         Tuple tuple;
-         
-         if(isNumeric)
+         if (mSips || mTransport == TLS)
          {
-            if(mSips)
-            {
-               mTransport=TLS;
-               mPort = getDefaultPort(mTransport,uri.port());
-               tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-               foundTuple=!DnsResult::blacklisted(tuple);
-            }
-            else
-            {
-               if(!foundTuple)
-               {
-                  mTransport=UDP;
-                  mPort = getDefaultPort(mTransport,uri.port());
-                  tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-                  foundTuple=!DnsResult::blacklisted(tuple);
-               }
-               
-               if(!foundTuple)
-               {
-                  mTransport=TCP;
-                  mPort = getDefaultPort(mTransport,uri.port());
-                  tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-                  foundTuple=!DnsResult::blacklisted(tuple);
-               }
-               
-               if(!foundTuple)
-               {
-                  mTransport=TLS;
-                  mPort = getDefaultPort(mTransport,uri.port());
-                  tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-                  foundTuple=!DnsResult::blacklisted(tuple);
-               }
-            }
-            
-            if(foundTuple)
-            {
-               mHaveChosenTransport=true;
-               mResults.push_back(tuple);
-               transition(Available);
-               DebugLog (<< "Numeric result so return immediately: " << tuple);
-            }
-            else
-            {
-               // !bwc! Numeric result is blacklisted. Oh well.
-               assert(mResults.empty());
-               transition(Available);
-               DebugLog(<< "Numeric result, but this result is currently blacklisted: " << tuple);
-            }
-            
-            if (mHandler) mHandler->handle(this);
-
+            mTransport = TLS;
          }
-        else // port specified so we know the transport
+         else 
          {
-            mTransport=UNKNOWN_TRANSPORT;
-            
-            if(mSips)
+            mTransport = UDP;
+         }
+
+         if (isNumeric) // IP address specified
+         {
+            mPort = getDefaultPort(mTransport, uri.port());
+            Tuple tuple(mTarget, mPort, mTransport, mTarget);
+            mResults.push_back(tuple);
+            transition(Available);
+            DebugLog (<< "Numeric result so return immediately: " << tuple);
+            if (mHandler) mHandler->handle(this);
+         }
+         else // port specified so we know the transport
+         {
+            mPort = uri.port();
+            if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
             {
-               if(mInterface.isSupported(TLS, V4) || mInterface.isSupported(TLS, V6))
-               {
-                  mTransport=TLS;
-               }
-            }
-            else if(mInterface.isSupported(UDP, V4) || mInterface.isSupported(UDP, V6))
-            {
-               mTransport=UDP;
-            }
-            else if(mInterface.isSupported(TCP, V4) || mInterface.isSupported(TCP, V6))
-            {
-               mTransport=TCP;
-            }
-            else if(mInterface.isSupported(TLS, V4) || mInterface.isSupported(TLS, V6))
-            {
-               mTransport=TLS;
-            }
-            
-            if(mTransport!=UNKNOWN_TRANSPORT)
-            {
-               mPort=uri.port();
                lookupHost(mTarget);
             }
             else
@@ -493,13 +409,30 @@ DnsResult::primeResults()
       StackLog (<< "No A or AAAA record for " << next.target << " in additional records");
       if (mInterface.isSupported(mTransport, V6) || mInterface.isSupported(mTransport, V4))
       {
+         assert(mCurrResultPath.size()<=2);
          Item top;
-         while (!mCurrentPath.empty())
+         if (!mCurrResultPath.empty())
          {
-            top = mCurrentPath.back();
+            top = mCurrResultPath.top();
+            if (top.rrType == T_SRV)
+            {
+               vector<Data> records;
+               records.push_back(top.value);
+               mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
+               mCurrResultPath.pop();
+            }
+            else
+            {
+               assert(top.rrType==T_NAPTR);
+            }
+         }
+
+         while (!mCurrSuccessPath.empty())
+         {
+            top = mCurrSuccessPath.top();
             if (top.rrType != T_NAPTR)
             {
-               mCurrentPath.pop_back();
+               mCurrSuccessPath.pop();
             }
             else
             {
@@ -509,7 +442,8 @@ DnsResult::primeResults()
          top.domain = next.key;
          top.rrType = T_SRV;
          top.value = next.target + ":" + Data(next.port);
-         mCurrentPath.push_back(top);
+         mCurrResultPath.push(top);
+         mCurrSuccessPath.push(top);
          lookupHost(next.target);
       }
       else
@@ -524,6 +458,18 @@ DnsResult::primeResults()
    {
       bool changed = (mType == Pending);
       transition(Finished);
+      if (!mCurrResultPath.empty())
+      {
+         assert(mCurrResultPath.size()<=2);
+         while (!mCurrResultPath.empty())
+         {
+            Item top = mCurrResultPath.top();
+            vector<Data> records;
+            records.push_back(top.value);
+            mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
+            mCurrResultPath.pop();
+         }
+      }
       if (changed && mHandler) mHandler->handle(this);
    }
 
@@ -540,65 +486,34 @@ DnsResult::retrieveSRV()
 {
     // !ah! if mTransport is known -- should we ignore those that don't match?!
    assert(!mSRVResults.empty());
-   assert(mSRVCount==0);
 
    const SRV& srv = *mSRVResults.begin();
-   int priority = srv.priority;
-   TransportType transport=UNKNOWN_TRANSPORT;
+   if (srv.cumulativeWeight == 0)
+   {
+      int priority = srv.priority;
    
-   if(!mHaveChosenTransport)
-   {
-      // !bwc! We have not chosen a transport yet; this happens when we fail
-      // to find a NAPTR record, and the transport is not specified in the uri.
-      // In this contingency, we manufacture best-guess SRV queries for each
-      // transport we support, and try one transport at a time. This
-      // means we might try more than one transport for the uri in question.
-      transport = srv.transport;
-   }
-   else
-   {
-      // !bwc! We chose our transport before we started looking up SRVs.
-      // All SRVs must match. 
-      
-      transport=mTransport;
-      assert(mSRVResults.begin()->transport==transport);
-   }
-   
-   if (mCumulativeWeight == 0)
-   {
+     mCumulativeWeight=0;
+      //!dcm! -- this should be fixed properly; TCP req. lines were being sent
+      //out on UDP
+      TransportType transport = mSRVResults.begin()->transport;      
       for (std::vector<SRV>::iterator i=mSRVResults.begin(); 
            i!=mSRVResults.end() 
               && i->priority == priority 
               && i->transport == transport; i++)
       {
-         assert(i->weight>=0);
          mCumulativeWeight += i->weight;
+         i->cumulativeWeight = mCumulativeWeight;
       }
    }
    
-   int selected =0;
-   if(mCumulativeWeight!=0)
-   {
-      selected = Random::getRandom() % (mCumulativeWeight);
-   }
-   else
-   {
-      // !bwc! All of the remaining SRVs (at this priority/type) have a weight
-      // of 0. The best we can do here is pick arbitrarily. In this case, we 
-      // will end up picking the first.
-      // (selected will be less than the weight of the first SRV, causing the
-      // loop below to break on the first iteration)
-      selected=-1;
-   }
-   
+   int selected = Random::getRandom() % (mCumulativeWeight+1);
+
    StackLog (<< "cumulative weight = " << mCumulativeWeight << " selected=" << selected);
 
    std::vector<SRV>::iterator i;
-   int cumulativeWeight=0;
-   for (i=mSRVResults.begin(); i!=mSRVResults.end(); ++i)
+   for (i=mSRVResults.begin(); i!=mSRVResults.end(); i++)
    {
-      cumulativeWeight+=i->weight;
-      if (cumulativeWeight > selected)
+      if (i->cumulativeWeight >= selected)
       {
          break;
       }
@@ -610,21 +525,8 @@ DnsResult::retrieveSRV()
    }
    assert(i != mSRVResults.end());
    SRV next = *i;
-   mCumulativeWeight -= next.weight;
+   mCumulativeWeight -= next.cumulativeWeight;
    mSRVResults.erase(i);
-   
-   if(!mSRVResults.empty())
-   {
-      int nextPriority=mSRVResults.begin()->priority;
-      TransportType nextTransport=mSRVResults.begin()->transport;
-      
-      // !bwc! If we have finished traversing a priority value/transport type,
-      // we reset the cumulative weight to 0, to prompt its recalculation.
-      if(priority!=nextPriority || transport!=nextTransport)
-      {
-         mCumulativeWeight=0;
-      }
-   }
    
    StackLog (<< "SRV: " << Inserter(mSRVResults));
 
@@ -701,7 +603,7 @@ DnsResult::NAPTR::operator<(const DnsResult::NAPTR& rhs) const
    return false;
 }
 
-DnsResult::SRV::SRV() : priority(0), weight(0), port(0)
+DnsResult::SRV::SRV() : priority(0), weight(0), cumulativeWeight(0), port(0)
 {
 }
 
@@ -761,13 +663,8 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
          in_addr addr;
          addr.s_addr = (*it).addr().s_addr;
          Tuple tuple(addr, mPort, mTransport, mTarget);
-         
-         if(!DnsResult::blacklisted(tuple))
-         {
-            StackLog (<< "Adding " << tuple << " to result set");
-            mResults.push_back(tuple);
-         }
-      
+         StackLog (<< "Adding " << tuple << " to result set");
+         mResults.push_back(tuple);
       }
    }
    else
@@ -811,49 +708,35 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
                    {
      	              SOCKADDR_IN *pSockAddrIn = (SOCKADDR_IN *)pQueryResult->lpcsaBuffer[i].RemoteAddr.lpSockaddr;
                       Tuple tuple(pSockAddrIn->sin_addr, mPort, mTransport, mTarget);
-                      
-                      if(!DnsResult::blacklisted(tuple))
-                      {
-                        StackLog (<< "Adding (WIN) " << tuple << " to result set");
-                        mResults.push_back(tuple);
-                        transition(Available);
-                      }
-                   
+                      StackLog (<< "Adding (WIN) " << tuple << " to result set");
+                      mResults.push_back(tuple);
+                      mType = Available;
                    }
                 }
              }
              delete [] pQueryResult;
              WSALookupServiceEnd(hQuery);
          }
-         
          if(mResults.empty())
          {
-            if(mSRVResults.empty())
-            {
-               transition(Finished);
-               clearCurrPath();
-            }
-            else
-            {
-               transition(Available);
-            }
+            mType = Finished; 
          }
 #else
-         // !bwc! If this A query failed, don't give up if there are more SRVs!
-         if(mSRVResults.empty())
-         {
-            transition(Finished);
-            clearCurrPath();
-         }
-         else
-         {
-            transition(Available);
-         }
+         mType = Finished; 
 #endif
+         clearCurrPath();
       }
       else 
       {
-         transition(Available);
+         if (mSRVResults.empty())
+         {
+            transition(Available);
+         }
+         else
+         {
+            mType = Available;
+         }
+         addToPath(mResults);
       }
       if (changed && mHandler) mHandler->handle(this);
    }
@@ -884,13 +767,8 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
       for (vector<DnsAAAARecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          Tuple tuple((*it).v6Address(), mPort, mTransport, mTarget);
-         
-         if(!DnsResult::blacklisted(tuple))
-         {
-            StackLog (<< "Adding " << tuple << " to result set");
-            mResults.push_back(tuple);
-         }
-      
+         StackLog (<< "Adding " << tuple << " to result set");
+         mResults.push_back(tuple);
       }
    }
    else
@@ -958,15 +836,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
             StackLog (<< "Skipping SRV " << srv.key);
             continue;
          }
-         
-         if(!mHaveChosenTransport || srv.transport==mTransport)
-         {
-            // !bwc! If we have not committed to a given transport, or we have 
-            // committed to a given transport which this SRV matches, we will
-            // add this SRV. We do not add SRVs that do not match a transport
-            // we have committed to.
-            mSRVResults.push_back(srv);
-         }
+         mSRVResults.push_back(srv);
       }
    }
    else
@@ -984,31 +854,11 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
             if (mSips)
             {
                mTransport = TLS;
-               mHaveChosenTransport=true;
                mPort = Symbols::DefaultSipsPort;
             }
             else
             {
-               if (mInterface.isSupported(UDP, V4))
-               {
-                  mTransport = UDP;
-                  mHaveChosenTransport=true;
-               }
-               else if (mInterface.isSupported(TCP, V4))
-               {
-                  mTransport = TCP;
-                  mHaveChosenTransport=true;
-               }
-               /* Yes, there is the possibility that at this point mTransport
-                  is still UNKNOWN_TRANSPORT, but this is likely to fail just as
-                  well as defaulting to UDP when there isn't an interface that
-                  supports UDP.
-                  It doesn't support failover to TCP when there is a UDP failure,
-                  but neither does the original code.
-                  This fixes the case where there is no UDP transport, but
-                  there was no explicit ;transport=tcp on the uri.
-                  (mjf)
-                */
+               mTransport = UDP;
                mPort = Symbols::DefaultSipPort;
             }
          }
@@ -1123,13 +973,18 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
          
          StackLog (<< "Adding NAPTR record: " << naptr);
          
-         if ( !mSips || naptr.service.find("SIPS") == 0)
+         if ( mSips && naptr.service.find("SIPS") == 0)
          {
             if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
             {
                mPreferredNAPTR = naptr;
                StackLog (<< "Picked preferred: " << mPreferredNAPTR);
             }
+         }
+         else if (mInterface.isSupported(naptr.service) && naptr < mPreferredNAPTR)
+         {
+            mPreferredNAPTR = naptr;
+            StackLog (<< "Picked preferred: " << mPreferredNAPTR);
          }
       }
 
@@ -1147,7 +1002,8 @@ DnsResult::onNaptrResult(const DNSResult<DnsNaptrRecord>& result)
          item.rrType = T_NAPTR;
          item.value = mPreferredNAPTR.replacement;
          clearCurrPath();
-         mCurrentPath.push_back(item);
+         mCurrResultPath.push(item);
+         mCurrSuccessPath.push(item);
          mSRVCount++;
          InfoLog (<< "Doing SRV lookup of " << mPreferredNAPTR.replacement);
          mDns.lookup<RR_SRV>(mPreferredNAPTR.replacement, Protocol::Sip, this);
@@ -1244,108 +1100,44 @@ void DnsResult::onDnsResult(const DNSResult<DnsCnameRecord>& result)
 
 void DnsResult::clearCurrPath()
 {
-   while (!mCurrentPath.empty())
+   while (!mCurrResultPath.empty())
    {
-      mCurrentPath.pop_back();
+      mCurrResultPath.pop();
+   }
+
+   while (!mCurrSuccessPath.empty())
+   {
+      mCurrSuccessPath.pop();
    }
 }
 
-void DnsResult::blacklistLastReturnedResult(UInt64 expiry)
+void DnsResult::blacklistLastReturnedResult()
 {
-   assert(!mLastReturnedPath.empty());
-   assert(mLastReturnedPath.size()<=3);
-   Item top = mLastReturnedPath.back();
-
-   DnsResult::blacklist(mLastResult,expiry);
-
+   assert(!mCurrResultPath.empty());
+   Item top = mCurrResultPath.top();
+   assert(top.rrType==T_A || top.rrType==T_AAAA);
+   assert(top.domain==mLastReturnedResult.getTargetDomain());
+   assert(top.value==Tuple::inet_ntop(mLastReturnedResult));
+   vector<Data> records;
+   records.push_back(top.value);
+   DebugLog( << "Blacklisting " << top.domain << "(" << top.rrType << "): " << top.value);
+   mDns.blacklist(top.domain, top.rrType, Protocol::Sip, records);
    DebugLog( << "Remove vip " << top.domain << "(" << top.rrType << ")");
    mVip.removeVip(top.domain, top.rrType);
+   mCurrResultPath.pop();
 }
 
-DnsResult::Blacklist DnsResult::theBlacklist;
-resip::Mutex DnsResult::theBlacklistMutex;
-
-DnsResult::BlacklistEntry::BlacklistEntry()
-{}
-
-DnsResult::BlacklistEntry::BlacklistEntry(const Tuple& tuple, UInt64 expiry)
+void DnsResult::addToPath(const std::deque<Tuple>& results)
 {
-   mTuple=tuple;
-   mExpiry=expiry;
-}
-
-DnsResult::BlacklistEntry::BlacklistEntry(const DnsResult::BlacklistEntry& orig)
-{
-   mTuple=orig.mTuple;
-   mExpiry=orig.mExpiry;
-}
-
-DnsResult::BlacklistEntry::~BlacklistEntry()
-{}
-
-bool 
-DnsResult::BlacklistEntry::operator<(const DnsResult::BlacklistEntry& rhs) const
-{
-   if(mTuple < rhs.mTuple)
+   assert(mCurrResultPath.size()<=2);
+   for (std::deque<Tuple>::const_reverse_iterator it = results.rbegin(); it != results.rend(); ++it)
    {
-      return true;
+      Item item;
+      item.domain = (*it).getTargetDomain();
+      item.rrType = (*it).isV4()? T_A : T_AAAA;
+      item.value = Tuple::inet_ntop((*it));
+      mCurrResultPath.push(item);
    }
-   else if(rhs.mTuple < mTuple)
-   {
-      return false;
-   }
-   
-   return mTuple.getTargetDomain() < rhs.mTuple.getTargetDomain();
-}
-
-bool 
-DnsResult::BlacklistEntry::operator>(const DnsResult::BlacklistEntry& rhs) const
-{
-   if(rhs.mTuple < mTuple)
-   {
-      return true;
-   }
-   else if(mTuple < rhs.mTuple)
-   {
-      return false;
-   }
-   
-   return mTuple.getTargetDomain() > rhs.mTuple.getTargetDomain();
-}
-
-bool 
-DnsResult::BlacklistEntry::operator==(const DnsResult::BlacklistEntry& rhs) const
-{
-   return (mTuple==rhs.mTuple && mTuple.getTargetDomain()==rhs.mTuple.getTargetDomain());
-}
-
-bool DnsResult::blacklisted(const Tuple& tuple)
-{
-   BlacklistEntry entry(tuple,0);
-   resip::Lock g(DnsResult::theBlacklistMutex);
-   Blacklist::iterator i=DnsResult::theBlacklist.find(entry);
-   
-   if(i!=DnsResult::theBlacklist.end())
-   {
-      UInt64 now=Timer::getTimeMs();
-      if(i->mExpiry > now)
-      {
-         return true;
-      }
-      else
-      {
-         DnsResult::theBlacklist.erase(i);
-      }
-   }
-   
-   return false;
-}
-
-void DnsResult::blacklist(const Tuple& tuple,UInt64 expiry)
-{
-   BlacklistEntry entry(tuple,expiry);
-   resip::Lock g(DnsResult::theBlacklistMutex);
-   DnsResult::theBlacklist.insert(entry);
 }
 
 std::ostream& 
@@ -1376,10 +1168,12 @@ resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
         << " t=" << Tuple::toData(srv.transport) 
         << " p=" << srv.priority
         << " w=" << srv.weight
+        << " c=" << srv.cumulativeWeight
         << " port=" << srv.port
         << " target=" << srv.target;
    return strm;
 }
+
 
 //  Copyright (c) 2003, Jason Fischl 
 /* ====================================================================
