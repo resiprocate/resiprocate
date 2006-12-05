@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/MessageFilterRule.hxx"
 #include "rutil/Logger.hxx"
@@ -7,9 +8,11 @@
 
 using namespace resip;
 
-TransactionUser::TransactionUser(TransactionTermination t,
-                                 ConnectionTermination c)
-   : mFifo(0, 0),
+/*ivr mod*/TransactionUser::TransactionUser(TransactionTermination t,
+                                 ConnectionTermination c,
+					  unsigned int maxTuFifoDurationSecs/*=0*/,
+					  unsigned int maxTuMessages/*=0*/)
+   : mFifo(maxTuFifoDurationSecs, maxTuMessages),
      mRuleList(),
      mDomainList(),
      mRegisteredForTransactionTermination(t == RegisterForTransactionTermination),
@@ -90,8 +93,8 @@ void TransactionUser::addDomain(const Data& domain)
    mDomainList.insert(domain);
 }
 
-std::ostream& 
-TransactionUser::encode(std::ostream& strm) const
+EncodeStream& 
+TransactionUser::encode(EncodeStream& strm) const
 {
    strm << "TU: " << name() << " size=" << mFifo.size();
    return strm;
@@ -115,8 +118,8 @@ TransactionUser::isRegisteredForConnectionTermination() const
    return mRegisteredForConnectionTermination;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::TransactionUser& tu)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::TransactionUser& tu)
 {
    tu.encode(strm);
    return strm;

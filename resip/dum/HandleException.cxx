@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/HandleException.hxx"
 
 using namespace resip;

@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -127,8 +128,8 @@ Pkcs7SignedContents::getStaticType()
 }
 
 
-std::ostream& 
-Pkcs7Contents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Pkcs7Contents::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "Pkcs7Contents::encodeParsed " << mText);
    str << mText;

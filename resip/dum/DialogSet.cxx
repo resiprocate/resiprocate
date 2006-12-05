@@ -1,3 +1,4 @@
+#include "precompile.h"
 
 #include "resip/stack/Helper.hxx"
 #include "resip/dum/AppDialog.hxx"
@@ -31,7 +32,8 @@ using namespace resip;
 using namespace std;
 
 // UAC 
-DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
+/* ivr mod */DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
+Handled(dum),
    mMergeKey(),
    mDialogs(),
    mCreator(creator),
@@ -53,7 +55,8 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
 }
 
 // UAS 
-DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
+/* ivr mod */DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
+Handled(dum),
    mMergeKey(request),
    mDialogs(),
    mCreator(0),
@@ -139,11 +142,11 @@ void DialogSet::possiblyDie()
         mServerRegistration))
    {
       mState = Destroying;
-      mDum.destroy(this);
+/* ivr mod */      mDum.destroy(getHandle());
    }
 }
 
-DialogSetId
+/* ivr mod */const DialogSetId &
 DialogSet::getId() const
 {
    return mId;
@@ -326,7 +329,7 @@ DialogSet::dispatch(const SipMessage& msg)
                else
                {
                   mState = Destroying;
-                  mDum.destroy(this);
+/* ivr mod */                  mDum.destroy(getHandle());
                }
                break;
             case SUBSCRIBE:
@@ -348,7 +351,7 @@ DialogSet::dispatch(const SipMessage& msg)
                else
                {
                   mState = Destroying;
-                  mDum.destroy(this);
+                  mDum.destroy(/*ivrmod this*/getHandle());
                }
                break;
             case PUBLISH:
@@ -370,13 +373,13 @@ DialogSet::dispatch(const SipMessage& msg)
                else
                {
                   mState = Destroying;
-                  mDum.destroy(this);
+                  mDum.destroy(/*ivr mod this*/getHandle());
                }
                break;
                // ?slg? shouldn't we handle register, ood and refer there too?
             default:
                mState = Destroying;
-               mDum.destroy(this);
+               mDum.destroy(/*ivr mod this*/getHandle());
                break;
          }
       }
@@ -729,7 +732,7 @@ DialogSet::dispatch(const SipMessage& msg)
             {
                // really we should wait around 32s before deleting this
                mState = Destroying;
-               mDum.destroy(this);
+               /*ivr mod*/mDum.destroy(getHandle());
             }
          }
          else
@@ -742,7 +745,7 @@ DialogSet::dispatch(const SipMessage& msg)
             if(mDialogs.empty())
             {
                mState = Destroying;
-               mDum.destroy(this);
+/* ivr mod */               mDum.destroy(getHandle());
             }
          }
          return;
@@ -824,7 +827,7 @@ DialogSet::end()
             // Add a new state, if we receive a 200/INV in this state, ACK and
             // then send a BYE and destroy the dialogset. 
             mState = Destroying;
-            mDum.destroy(this);
+/* ivr mod */            mDum.destroy(getHandle());
          }
          else
          {
@@ -994,6 +997,18 @@ DialogSet::setUserProfile(SharedPtr<UserProfile> userProfile)
    mUserProfile = userProfile;
 }
 
+/* ivr mod */EncodeStream& 
+DialogSet::dump(EncodeStream& strm) const
+{
+   strm << "DialogSet: " << mId;
+   return strm;
+}
+
+DialogSetHandle 
+DialogSet::getHandle(void)
+{
+	return DialogSetHandle(mDum, mHandledId);
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

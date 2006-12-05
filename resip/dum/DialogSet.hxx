@@ -10,6 +10,7 @@
 #include "resip/dum/Handles.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/SharedPtr.hxx"
+/* ivr mod */#include "resip/dum/Handled.hxx"
 
 namespace resip
 {
@@ -21,14 +22,17 @@ class AppDialogSet;
 class ClientOutOfDialogReq;
 class UserProfile;
 
-class DialogSet
+/* ivr mod */class DialogSet : public Handled
 {
    public:
       DialogSet(BaseCreator* creator, DialogUsageManager& dum);
       DialogSet(const SipMessage& request, DialogUsageManager& dum);
       virtual ~DialogSet();
       
-      DialogSetId getId() const;
+/* ivr mod */      const DialogSetId & getId() const;
+
+/* ivr mod */	  DialogSetHandle getHandle(void);
+
       void addDialog(Dialog*);
       bool empty() const;
       BaseCreator* getCreator();
@@ -46,6 +50,9 @@ class DialogSet
       ServerOutOfDialogReqHandle getServerOutOfDialog();
 
       bool isDestroying() { return mState == Destroying; };
+
+protected: 
+/* ivr mod */	 virtual EncodeStream& dump(EncodeStream& strm) const;
 
    private:
       friend class Dialog;

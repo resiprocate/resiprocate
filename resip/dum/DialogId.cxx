@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "DialogId.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/Logger.hxx"
@@ -6,6 +7,11 @@
 
 using namespace resip;
 
+/* ivr mod */DialogId::DialogId(const DialogId &that)
+:mDialogSetId(that.mDialogSetId),mRemoteTag(that.mRemoteTag)
+{
+
+}
 DialogId::DialogId(const SipMessage& msg) : 
    mDialogSetId(msg),
    mRemoteTag(Data::Empty)
@@ -114,8 +120,8 @@ DialogId::getRemoteTag() const
 }
 
 
-std::ostream&
-resip::operator<<(std::ostream& os, const DialogId& id)
+EncodeStream&
+resip::operator<<(EncodeStream& os, const DialogId& id)
 {
     return os << id.mDialogSetId << "-" << id.mRemoteTag;
 }

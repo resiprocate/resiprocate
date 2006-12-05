@@ -34,6 +34,10 @@ class HandleManager
       HandleMap mHandleMap;
       bool mShuttingDown;      
       Handled::Id mLastId;
+
+public:
+	/* ivr mod for performance counting */
+	  HandleMap::size_type handleCount(void) const { return mHandleMap.size(); }
 };
  
 }

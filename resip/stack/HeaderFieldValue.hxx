@@ -32,7 +32,7 @@ class HeaderFieldValue
 
       ~HeaderFieldValue();
 
-      std::ostream& encode(std::ostream& str) const;
+      EncodeStream& encode(EncodeStream& str) const;
       
       const char* mField;
       const unsigned int mFieldLength;
@@ -42,10 +42,10 @@ class HeaderFieldValue
       
       const bool mMine;
 
-      friend std::ostream& operator<<(std::ostream&, HeaderFieldValue&);
+      friend EncodeStream& operator<<(EncodeStream&, HeaderFieldValue&);
 };
 
-std::ostream& operator<<(std::ostream& stream, 
+EncodeStream& operator<<(EncodeStream& stream, 
 			 HeaderFieldValue& hList);
 
 

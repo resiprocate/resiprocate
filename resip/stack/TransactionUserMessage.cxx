@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/TransactionUserMessage.hxx"
 
 using namespace resip;
@@ -9,14 +10,14 @@ TransactionUserMessage::TransactionUserMessage(Type type, TransactionUser* ptu) 
    assert(tu);
 }
 
-std::ostream& 
-TransactionUserMessage::encode(std::ostream& strm) const
+EncodeStream& 
+TransactionUserMessage::encode(EncodeStream& strm) const
 {
    return strm << brief(); 
 }
 
-std::ostream&
-TransactionUserMessage::encodeBrief(std::ostream& str) const
+EncodeStream&
+TransactionUserMessage::encodeBrief(EncodeStream& str) const
 { 
    return str << "TransactionUserMessage";
 }

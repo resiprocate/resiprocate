@@ -12,8 +12,8 @@ class ShutdownMessage : public ApplicationMessage
       ShutdownMessage() {};
 
       virtual Message* clone() const { return new ShutdownMessage; }
-      virtual std::ostream& encode(std::ostream& strm) const { return strm << brief(); }
-      virtual std::ostream& encodeBrief(std::ostream& str) const {  return str << "Shutdown"; }
+      virtual EncodeStream& encode(EncodeStream& strm) const { return strm << brief(); }
+      virtual EncodeStream& encodeBrief(EncodeStream& str) const {  return str << "Shutdown"; }
 };
  
 }

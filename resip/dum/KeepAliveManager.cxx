@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/KeepAliveMessage.hxx"
 #include "resip/dum/KeepAliveManager.hxx"
 #include "resip/dum/KeepAliveTimeout.hxx"

@@ -22,7 +22,7 @@ class ExpiresCategory : public ParserCategory
       ExpiresCategory& operator=(const ExpiresCategory&);
 
       virtual void parse(ParseBuffer& pb);
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 
       UInt32& value();

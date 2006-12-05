@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/Dialog.hxx"
 
@@ -17,7 +18,7 @@ AppDialog::~AppDialog()
 AppDialogHandle 
 AppDialog::getHandle()
 {
-   return AppDialogHandle(mHam, mId);
+   /* ivr mod */ return AppDialogHandle(mHam, mHandledId);
 }
 
 vector<ClientSubscriptionHandle> 
@@ -51,7 +52,7 @@ AppDialog::getInviteSession()
    return mDialog->getInviteSession();
 }
 
-DialogId 
+/* ivr mod */const DialogId &
 AppDialog::getDialogId() const
 {
    return mDialog->getId();   
@@ -63,10 +64,10 @@ AppDialog::getContact()
   return mDialog->mLocalContact;
 }
 
-std::ostream& 
-AppDialog::dump(std::ostream& strm) const
+EncodeStream& 
+AppDialog::dump(EncodeStream& strm) const
 {
-   strm << "AppDialog " << mId;
+/* ivr mod */   strm << "AppDialog " << mHandledId;
    return strm;
 }
 

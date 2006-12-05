@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/MethodTypes.hxx"
 #include "resip/dum/ServerOutOfDialogReq.hxx"

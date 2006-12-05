@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -67,8 +68,8 @@ UnknownParameter::clone() const
    return new UnknownParameter(*this);
 }
 
-ostream&
-UnknownParameter::encode(ostream& stream) const
+EncodeStream&
+UnknownParameter::encode(EncodeStream& stream) const
 {
    if (mIsQuoted)
    {
@@ -85,7 +86,7 @@ UnknownParameter::encode(ostream& stream) const
    }
 }
 
-ostream& operator<<(ostream& stream, UnknownParameter& comp)
+EncodeStream& operator<<(EncodeStream& stream, UnknownParameter& comp)
 {
    return stream << comp.getName() << "=" << comp.value();
 }

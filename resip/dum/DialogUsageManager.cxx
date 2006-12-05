@@ -1,3 +1,4 @@
+#include "precompile.h"
  #include "resip/stack/Security.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
@@ -61,8 +62,11 @@
 using namespace resip;
 using namespace std;
 
-DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatures) :
-   TransactionUser(TransactionUser::DoNotRegisterForTransactionTermination, TransactionUser::RegisterForConnectionTermination),
+/*ivr mod */DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatures,
+					  unsigned int maxTuFifoDurationSecs/*=0*/,
+					  unsigned int maxTuMessages/*=0*/) :
+TransactionUser(DoNotRegisterForTransactionTermination,DoNotRegisterForConnectionTermination,
+				maxTuFifoDurationSecs,maxTuMessages),
    mRedirectManager(new RedirectManager()),
    mInviteSessionHandler(0),
    mClientRegistrationHandler(0),
@@ -957,12 +961,16 @@ DialogUsageManager::destroy(const BaseUsage* usage)
    }
 }
 
-void
-DialogUsageManager::destroy(DialogSet* dset)
+/* ivr mod */void
+DialogUsageManager::destroy(const DialogSetHandle &dset)
 {
    if (mShutdownState != Destroying)
    {
-      post(new DestroyUsage(dset));
+	   if( dset.isValid() )
+	   {
+		InfoLog(<< "DUM::destroy, posting DestroyUsage DialogSet * : " << std::hex << dset.get());
+		post(new DestroyUsage(dset));
+	   }
    }
    else
    {
@@ -970,12 +978,15 @@ DialogUsageManager::destroy(DialogSet* dset)
    }
 }
 
-void
-DialogUsageManager::destroy(Dialog* d)
+/* ivr mod */void
+DialogUsageManager::destroy(const DialogHandle& dialog)
 {
    if (mShutdownState != Destroying)
    {
-      post(new DestroyUsage(d));
+	   if( dialog.isValid() )
+	   {
+		post(new DestroyUsage(dialog));
+	   }
    }
    else
    {
@@ -1082,7 +1093,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
    if (destroyUsage)
    {
-      //DebugLog(<< "Destroying usage" );
+      InfoLog(<< "Destroying usage" );
       destroyUsage->destroy();
       return;
    }
@@ -1090,7 +1101,7 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
    DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
    if (dumMsg)
    {
-      //DebugLog(<< "Timeout Message" );
+      InfoLog(<< "Timeout Message" );
       if (!dumMsg->getBaseUsage().isValid())
       {
          return;
@@ -1633,7 +1644,7 @@ DialogUsageManager::processResponse(const SipMessage& response)
 
       if (ds)
       {
-         DebugLog ( << "DialogUsageManager::processResponse: " << std::endl << std::endl << response.brief());
+		  /* ivr mod */         DebugLog ( << "DialogUsageManager::processResponse dialogSet: " << std::hex << ds << std::endl << std::endl << response.brief());
          ds->dispatch(response);
       }
       else
@@ -1740,7 +1751,7 @@ DialogSet*
 DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
    StackLog ( << "Looking for dialogSet: " << id << " in map:" );
-   StackLog ( << Inserter(mDialogSetMap) );
+   //ivrmod too verbose StackLog ( << Inserter(mDialogSetMap) );
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
 
    if (it == mDialogSetMap.end())
@@ -1778,9 +1789,9 @@ void
 DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
 {
    StackLog ( << "************* Removing DialogSet ***************" );
-   StackLog ( << "Before: " << Inserter(mDialogSetMap) );
+   //ivrmod StackLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap.erase(dsId);
-   StackLog ( << "After: " << Inserter(mDialogSetMap) );
+   //ivrmod StackLog ( << "After: " << Inserter(mDialogSetMap) );
    if (mRedirectManager.get())
    {
       mRedirectManager->removeDialogSet(dsId);

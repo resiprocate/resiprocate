@@ -1,3 +1,4 @@
+#include "precompile.h"
 
 #include "resip/stack/SERNonceHelper.hxx"
 #include "rutil/Random.hxx"

@@ -1,37 +1,38 @@
 #if !defined(RESIP_DESTORYUSAGE_HXX)
 #define RESIP_DESTORYUSAGE_HXX 
-
+/* ivr mod !Entire File!*/
 #include <iosfwd>
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/dum/Handles.hxx"
+#include "resip/dum/DialogSet.hxx"
+#include "resip/dum/Dialog.hxx"
+#include "resip/dum/DialogSetId.hxx"
+#include "resip/dum/DialogId.hxx"
 
 namespace resip
 {
 
-class Dialog;
-class DialogSet;
-
 class DestroyUsage : public ApplicationMessage
 {
    public:
-      DestroyUsage(BaseUsageHandle target);
-      DestroyUsage(Dialog* dialog);
-      DestroyUsage(DialogSet* dialogSet);
+      explicit DestroyUsage(const BaseUsageHandle &target);
+      explicit DestroyUsage(const DialogHandle &dialog);
+      explicit DestroyUsage(const DialogSetHandle &dialogSet);
       
       virtual ~DestroyUsage();
 
       virtual Message* clone() const;
       void destroy();
       
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
       
    private:
       DestroyUsage(const DestroyUsage& other);
       
       BaseUsageHandle mHandle;
-      DialogSet* mDialogSet;
-      Dialog* mDialog;
+      DialogSetHandle mDialogSetHandle;
+      DialogHandle mDialogHandle;
 };
 
 }

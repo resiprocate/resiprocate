@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -57,8 +58,8 @@ DataParameter::clone() const
    return new DataParameter(*this);
 }
 
-ostream& 
-DataParameter::encode(ostream& stream) const
+EncodeStream& 
+DataParameter::encode(EncodeStream& stream) const
 {
    if (mQuoted)
    {

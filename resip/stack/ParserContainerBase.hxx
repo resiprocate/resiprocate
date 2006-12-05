@@ -25,8 +25,8 @@ class ParserContainerBase
       virtual ParserContainerBase* clone() const = 0;
       size_t size() const;
       bool empty() const;
-      std::ostream& encode(const Data& headerName, std::ostream& str) const;
-      std::ostream& encodeEmbedded(const Data& headerName, std::ostream& str) const;
+      EncodeStream& encode(const Data& headerName, EncodeStream& str) const;
+      EncodeStream& encodeEmbedded(const Data& headerName, EncodeStream& str) const;
 
       ParserCategory* front();
       void pop_front();

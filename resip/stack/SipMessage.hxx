@@ -84,13 +84,13 @@ class SipMessage : public TransactionMessage
 
       virtual bool isClientTransaction() const;
       
-      virtual std::ostream& encode(std::ostream& str) const;      
+	  /*ivr mod*/virtual EncodeStream& encode(EncodeStream& str) const;      
       //sipfrags will not output Content Length if there is no body--introduce
       //friendship to hide this?
-      virtual std::ostream& encodeSipFrag(std::ostream& str) const;
-      std::ostream& encodeEmbedded(std::ostream& str) const;
+      /*ivr mod*/virtual EncodeStream& encodeSipFrag(EncodeStream& str) const;
+      /*ivr mod*/EncodeStream& encodeEmbedded(EncodeStream& str) const;
       
-      virtual std::ostream& encodeBrief(std::ostream& str) const;
+      /*ivr mod*/virtual EncodeStream& encodeBrief(EncodeStream& str) const;
 
       bool isRequest() const;
       bool isResponse() const;
@@ -299,8 +299,8 @@ class SipMessage : public TransactionMessage
    private:
       void compute2543TransactionHash() const;
 
-      std::ostream& 
-      encode(std::ostream& str, bool isSipFrag) const;      
+      /*ivr mod*/EncodeStream& 
+      encode(EncodeStream& str, bool isSipFrag) const;      
 
       void copyFrom(const SipMessage& message);
 

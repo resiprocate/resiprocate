@@ -17,7 +17,7 @@ class MessageId
       } Type;
 
       MessageId(const Data& id, const Data& aor, Type type) : mId(id), mAor(aor), mType(type) {}
-      friend std::ostream& operator<<(std::ostream& strm, const MessageId& id);
+      friend EncodeStream& operator<<(EncodeStream& strm, const MessageId& id);
       Data mId;
       Data mAor;
       Type mType;
@@ -31,8 +31,8 @@ class CertMessage : public Message
       const Data& body() const { return mBody; }
       const MessageId& id() const { return mId; }
       virtual Message* clone() const;
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
       MessageId mId;

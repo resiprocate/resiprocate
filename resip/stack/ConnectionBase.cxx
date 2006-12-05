@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -505,8 +506,8 @@ ConnectionBase::transport()
    return mWho.transport;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, 
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
                   const resip::ConnectionBase& c)
 
 {

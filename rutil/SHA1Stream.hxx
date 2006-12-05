@@ -47,7 +47,7 @@ class SHA1Buffer : public std::streambuf
 /** SHA1Stream is used to accumlate data written to the stream in a SHA1Buffer and
     convert the data to SHA1.
  */
-class SHA1Stream : private SHA1Buffer, public std::ostream
+class SHA1Stream : private SHA1Buffer, public EncodeStream
 {
    public:
       SHA1Stream();

@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/HandleManager.hxx"
 #include "resip/dum/Handled.hxx"
 #include "rutil/Log.hxx"
@@ -8,25 +9,25 @@
 
 using namespace resip;
 
-Handled::Handled(HandleManager& ham) : 
+/* ivr mod */Handled::Handled(HandleManager& ham) : 
    mHam(ham),
-   mId(Handled::npos)
+   mHandledId(Handled::npos)
 {
-   mId = mHam.create(this);
-   StackLog ( << "&&&&&& Handled::Handled " << mId << "this(" << this << ") " << &ham );
+   mHandledId = mHam.create(this);
+   StackLog ( << "&&&&&& Handled::Handled " << mHandledId << "this(" << this << ") " << &ham );
 }
 
-Handled::~Handled()
+/* ivr mod */Handled::~Handled()
 {
-   if (mId != Handled::npos)
+   if (mHandledId != Handled::npos)
    {
-      StackLog ( << "&&&&&& ~Handled " << mId << "this(" << this << ") " << &mHam );
-      mHam.remove(mId);
+      StackLog ( << "&&&&&& ~Handled " << mHandledId << "this(" << this << ") " << &mHam );
+      mHam.remove(mHandledId);
    }
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const Handled& handled)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const Handled& handled)
 {
    return handled.dump(strm);
 }

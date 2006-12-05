@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "rutil/Logger.hxx"

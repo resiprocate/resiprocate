@@ -64,7 +64,7 @@ SHA1Buffer::getBin()
 }
 
 SHA1Stream::SHA1Stream()
-   : std::ostream(this)
+: std::ostream(this)
 {
 }
 

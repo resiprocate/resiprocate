@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -120,8 +121,8 @@ StatusLine::parse(ParseBuffer& pb)
    pb.data(mReason, start);
 }
 
-ostream&
-StatusLine::encodeParsed(ostream& str) const
+EncodeStream&
+StatusLine::encodeParsed(EncodeStream& str) const
 {
    str << mSipVersion << Symbols::SPACE 
        << mResponseCode << Symbols::SPACE

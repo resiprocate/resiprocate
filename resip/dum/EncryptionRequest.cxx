@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/EncryptionRequest.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -38,14 +39,14 @@ EncryptionRequest::encryptionLevel() const
    return mLevel;
 }
      
-std::ostream&
-EncryptionRequest::encodeBrief(std::ostream& strm) const
+EncodeStream&
+EncryptionRequest::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }
 
-std::ostream& 
-EncryptionRequest::encode(std::ostream& strm) const
+EncodeStream& 
+EncryptionRequest::encode(EncodeStream& strm) const
 {
    mMessage.encode(strm); 
    strm << "Encryption level: " << mLevel << endl;

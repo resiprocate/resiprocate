@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -234,8 +235,8 @@ NameAddr::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
-ostream&
-NameAddr::encodeParsed(ostream& str) const
+EncodeStream&
+NameAddr::encodeParsed(EncodeStream& str) const
 {
    //bool displayName = !mDisplayName.empty();
   if (mAllContacts)

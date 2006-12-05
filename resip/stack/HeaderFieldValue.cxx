@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -52,14 +53,14 @@ HeaderFieldValue::~HeaderFieldValue()
   }
 }
 
-ostream& 
-HeaderFieldValue::encode(ostream& str) const
+EncodeStream& 
+HeaderFieldValue::encode(EncodeStream& str) const
 {
    str.write(mField, mFieldLength);
    return str;
 }
 
-ostream& resip::operator<<(ostream& stream, HeaderFieldValue& hfv)
+EncodeStream& resip::operator<<(EncodeStream& stream, HeaderFieldValue& hfv)
 {
    hfv.encode(stream);
    return stream;

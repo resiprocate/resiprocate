@@ -28,7 +28,10 @@ class BaseException : public std::exception
       resip::Data fileName;
       int lineNumber;
 
-      friend std::ostream& operator<<(std::ostream& strm, const BaseException& e);
+      friend EncodeStream& operator<<(EncodeStream& strm, const BaseException& e);
+#ifndef RESIP_USE_STL_STREAMS
+	  friend std::ostream& operator<<(std::ostream& strm, const BaseException& e);
+#endif
 };
  
 }

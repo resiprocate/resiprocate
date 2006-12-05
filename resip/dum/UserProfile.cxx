@@ -1,3 +1,4 @@
+#include "precompile.h"
 
 #include "resip/dum/Profile.hxx"
 #include "resip/dum/UserProfile.hxx"
@@ -56,6 +57,25 @@ NameAddr&
 UserProfile::getDefaultFrom()
 {
    return mDefaultFrom;
+}
+//ivr mod
+void UserProfile::setDefaultVia(const Via &via)
+{
+	defaultVia_ = via;
+}
+Via &UserProfile::getDefaultVia()
+{
+	return defaultVia_;
+}
+
+void 
+UserProfile::setCallID(const Data &callid)
+{//ivr mod
+	callID_ = callid;
+}
+Data& UserProfile::getCallID()
+{//ivr mod
+	return callID_;
 }
 
 void
@@ -194,15 +214,15 @@ UserProfile::DigestCredential::operator<(const DigestCredential& rhs) const
    return realm < rhs.realm;
 }
 
-std::ostream&
-resip::operator<<(std::ostream& strm, const UserProfile& profile)
+EncodeStream&
+resip::operator<<(EncodeStream& strm, const UserProfile& profile)
 {
    strm << "UserProfile: " << profile.mDefaultFrom << Inserter(profile.mDigestCredentials);
    return strm;
 }
 
-std::ostream&
-resip::operator<<(std::ostream& strm, const UserProfile::DigestCredential& cred)
+EncodeStream&
+resip::operator<<(EncodeStream& strm, const UserProfile::DigestCredential& cred)
 {
    strm << "realm=" << cred.realm << " user=" << cred.user ;
    return strm;

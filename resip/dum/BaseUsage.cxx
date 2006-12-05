@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/BaseUsage.hxx"
@@ -21,10 +22,10 @@ BaseUsage::Exception::name() const
    return "BaseUsage::Exception";
 }
 
-BaseUsage::BaseUsage(DialogUsageManager& dum) :
+/* ivr mod */ BaseUsage::BaseUsage(DialogUsageManager& dum) :
    Handled(dum),
    mDum(dum),
-   mHandle(dum, mId)
+   mHandle(dum, mHandledId)
 {
 }
 
@@ -38,10 +39,10 @@ BaseUsage::getBaseHandle()
    return mHandle;
 }
 
-std::ostream& 
-BaseUsage::dump(std::ostream& strm) const
+EncodeStream& 
+BaseUsage::dump(EncodeStream& strm) const
 {
-   strm << "BaseUsage: " << mId;
+/* ivr mod */   strm << "BaseUsage: " << mHandledId;
    return strm;
 }
 

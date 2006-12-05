@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -43,8 +44,8 @@ FloatParameter::clone() const
    return new FloatParameter(*this);
 }
 
-ostream&
-FloatParameter::encode(ostream& stream) const
+EncodeStream&
+FloatParameter::encode(EncodeStream& stream) const
 {
    return stream << getName() << Symbols::EQUALS << mValue;
 }

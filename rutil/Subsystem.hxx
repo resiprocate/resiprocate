@@ -34,7 +34,7 @@ class Subsystem
 
       Data mSubsystem;
 
-      friend std::ostream& operator<<(std::ostream& strm, const Subsystem& ss);
+      friend EncodeStream& operator<<(EncodeStream& strm, const Subsystem& ss);
 };
 
 

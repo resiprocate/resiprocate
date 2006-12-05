@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <algorithm>
 #include <iterator>
 
@@ -271,8 +272,8 @@ ClientRegistration::end()
    removeMyBindings(true);
 }
 
-std::ostream& 
-ClientRegistration::dump(std::ostream& strm) const
+EncodeStream& 
+ClientRegistration::dump(EncodeStream& strm) const
 {
    strm << "ClientRegistration " << mLastRequest->header(h_From).uri();
    return strm;

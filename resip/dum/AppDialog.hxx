@@ -23,7 +23,7 @@ class AppDialog : public Handled
       virtual ~AppDialog();
 
       AppDialogHandle getHandle();
-      DialogId getDialogId() const;
+/* ivr mod */      const DialogId & getDialogId() const;
 
       //?dcm? -- further evidence that this should possbily be a dialog
       //subclass(cancel gets tricky). List vs vector?(here and in Dialog)
@@ -40,7 +40,7 @@ class AppDialog : public Handled
       // modify contact only onNew
       NameAddr& getContact();
       
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
 
    private:
       friend class DialogSet;      

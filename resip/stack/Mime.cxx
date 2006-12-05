@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -125,8 +126,8 @@ Mime::clone() const
    return new Mime(*this);
 }
 
-std::ostream&
-Mime::encodeParsed(std::ostream& str) const
+EncodeStream&
+Mime::encodeParsed(EncodeStream& str) const
 {
    str << mType << Symbols::SLASH << mSubType ;
    encodeParameters(str);

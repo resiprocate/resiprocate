@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/InterruptableStackThread.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/SipMessage.hxx"

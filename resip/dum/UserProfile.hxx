@@ -22,6 +22,12 @@ class UserProfile : public Profile
       virtual void setDefaultFrom(const NameAddr& from);
       virtual NameAddr& getDefaultFrom();
 
+/* ivr mod */	  virtual void setDefaultVia(const Via &via);
+	  virtual Via &getDefaultVia();
+
+	  virtual void setCallID(const Data &callidAppend);
+	  virtual Data& getCallID();
+/* end ivr mod */
       virtual void setServiceRoute( const NameAddrs& sRoute);
       virtual NameAddrs& getServiceRoute();
       
@@ -83,19 +89,21 @@ class UserProfile : public Profile
       Data mInstanceId;
       NameAddrs mServiceRoute;
       Uri mImsAuthUri;
+      Via		defaultVia_; //ivrmod
+	  Data		callID_; //ivr mod
       bool mIsAnonymous;
       
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
 
-      friend std::ostream& operator<<(std::ostream&, const UserProfile& profile);
+      friend EncodeStream& operator<<(EncodeStream&, const UserProfile& profile);
 };
   
-std::ostream& 
-operator<<(std::ostream&, const UserProfile& profile);
+EncodeStream& 
+operator<<(EncodeStream&, const UserProfile& profile);
 
-std::ostream& 
-operator<<(std::ostream&, const UserProfile::DigestCredential& cred);
+EncodeStream& 
+operator<<(EncodeStream&, const UserProfile::DigestCredential& cred);
  
 }
 

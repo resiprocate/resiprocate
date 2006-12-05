@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -143,8 +144,8 @@ RAckCategory::parse(ParseBuffer& pb)
    pb.data(mUnknownMethodName, anchorPtr);
 }
 
-std::ostream& 
-RAckCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+RAckCategory::encodeParsed(EncodeStream& str) const
 {
    str << mRSequence << Symbols::SPACE 
        << mCSequence << Symbols::SPACE 

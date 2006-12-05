@@ -134,11 +134,11 @@ class DeprecatedDialog
 
       UInt64 expireyTimeAbsoluteMs;
       
-      friend std::ostream& operator<<(std::ostream&, const DeprecatedDialog&);
+      friend EncodeStream& operator<<(EncodeStream&, const DeprecatedDialog&);
 };
 
-std::ostream&
-operator<<(std::ostream& strm, const DeprecatedDialog& d);
+EncodeStream&
+operator<<(EncodeStream& strm, const DeprecatedDialog& d);
  
 } // namespace Cathay
 

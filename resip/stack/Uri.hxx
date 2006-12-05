@@ -68,11 +68,11 @@ class Uri : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       
       // parse the headers into this as SipMessage
       void parseEmbeddedHeaders(ParseBuffer& pb);
-      std::ostream& encodeEmbeddedHeaders(std::ostream& str) const;
+      EncodeStream& encodeEmbeddedHeaders(EncodeStream& str) const;
 
       Uri& operator=(const Uri& rhs);
       bool operator==(const Uri& other) const;

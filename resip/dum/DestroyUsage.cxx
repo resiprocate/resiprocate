@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/DestroyUsage.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/dum/BaseUsage.hxx"
@@ -9,29 +10,23 @@
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 using namespace resip;
-
-DestroyUsage::DestroyUsage(BaseUsageHandle target)
-   :mHandle(target),
-    mDialogSet(0),
-    mDialog(0)
+/* ivr mod !Entire File!*/
+DestroyUsage::DestroyUsage(const BaseUsageHandle &target)
+   :mHandle(target)
 {}
 
-DestroyUsage::DestroyUsage(DialogSet* dialogSet)
-   :mHandle(),
-    mDialogSet(dialogSet),
-    mDialog(0)
+DestroyUsage::DestroyUsage(const DialogSetHandle& dialogSet)
+   :mDialogSetHandle(dialogSet)
 {}
 
-DestroyUsage::DestroyUsage(Dialog* dialog)
-   :mHandle(),
-    mDialogSet(0),
-    mDialog(dialog)
+DestroyUsage::DestroyUsage(const DialogHandle& dialog)
+   :   mDialogHandle(dialog)
 {}
 
 DestroyUsage::DestroyUsage(const DestroyUsage& other) :
    mHandle(other.mHandle),
-   mDialogSet(other.mDialogSet),
-   mDialog(other.mDialog)
+   mDialogSetHandle(other.mDialogSetHandle),
+   mDialogHandle(other.mDialogHandle)
 {}
 
 DestroyUsage::~DestroyUsage()
@@ -43,18 +38,18 @@ DestroyUsage::clone() const
    return new DestroyUsage(*this);
 }
 
-std::ostream& 
-DestroyUsage::encodeBrief(std::ostream& strm) const
+EncodeStream& 
+DestroyUsage::encodeBrief(EncodeStream& strm) const
 {
-   if (mDialogSet)
+	if (mDialogSetHandle.isValid())
    {
       static Data d("DestroyDialogSet");
-      strm << d << " " << mDialogSet->getId();
+	  strm << d << " " << std::hex << mDialogSetHandle.get();
    }
-   else if (mDialog)
+	else if (mDialogHandle.isValid())
    {
       static Data d("DestroyDialog");
-      strm << d << " " << mDialog->getId();
+	  strm << d << " " << std::hex << mDialogHandle.get();
    }
    else
    {
@@ -65,8 +60,8 @@ DestroyUsage::encodeBrief(std::ostream& strm) const
    return strm;
 }
 
-std::ostream& 
-DestroyUsage::encode(std::ostream& strm) const
+EncodeStream& 
+DestroyUsage::encode(EncodeStream& strm) const
 {
    return strm << brief();
 }
@@ -74,16 +69,19 @@ DestroyUsage::encode(std::ostream& strm) const
 void
 DestroyUsage::destroy()
 {
-   if (mDialogSet)
+	if (mDialogSetHandle.isValid())
    {
-      delete mDialogSet;
+	   InfoLog(<< "DestroyUsage::destroy(), Deleting mDialogSetHandle: " << std::hex << mDialogSetHandle.get());
+      delete mDialogSetHandle.get();
    }
-   else if (mDialog)
+	else if (mDialogHandle.isValid())
    {
-      delete mDialog;
+	   InfoLog(<< "DestroyUsage::destroy(), Deleting mDialogHandle: " << std::hex << mDialogHandle.get());
+      delete mDialogHandle.get();
    }
    else if (mHandle.isValid())
    {
+	   InfoLog(<< "DestroyUsage::destroy(), Deleting mhandle: " << std::hex << mHandle.get());
       delete mHandle.get();
    }
 }

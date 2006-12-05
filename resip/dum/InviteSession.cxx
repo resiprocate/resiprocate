@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/MultipartAlternativeContents.hxx"
 #include "resip/stack/SdpContents.hxx"
@@ -272,10 +273,10 @@ InviteSession::isTerminated() const
    }
 }
 
-std::ostream&
-InviteSession::dump(std::ostream& strm) const
+EncodeStream&
+InviteSession::dump(EncodeStream& strm) const
 {
-   strm << "INVITE: " << mId
+/* ivr mod */   strm << "INVITE: " << mHandledId
         << " " << toData(mState)
         << " ADDR=" << myAddr()
         << " PEER=" << peerAddr();
@@ -616,7 +617,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = mDialog.mLocalContact; // ?slg? is it ok to do this - should it be an option?
       CallId replaces;
-      DialogId id = sessionToReplace->mDialog.getId();
+/* ivr mod */      DialogId id(sessionToReplace->mDialog.getId());
       replaces.value() = id.getCallId();
       replaces.param(p_toTag) = id.getRemoteTag();
       replaces.param(p_fromTag) = id.getLocalTag();

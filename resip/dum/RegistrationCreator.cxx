@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/RegistrationCreator.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"

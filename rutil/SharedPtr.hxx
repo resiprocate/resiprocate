@@ -345,7 +345,7 @@ template<class T> inline T * get_pointer(SharedPtr<T> const & p)
 
 // operator<<
 #if defined(__GNUC__) &&  (__GNUC__ < 3)
-template<class Y> std::ostream & operator<< (std::ostream & os, SharedPtr<Y> const & p)
+template<class Y> EncodeStream & operator<< (EncodeStream & os, SharedPtr<Y> const & p)
 {
     os << p.get();
     return os;

@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -42,8 +43,8 @@ ExistsParameter::clone() const
    return new ExistsParameter(*this);
 }
 
-ostream&
-ExistsParameter::encode(ostream& stream) const
+EncodeStream&
+ExistsParameter::encode(EncodeStream& stream) const
 {
    if (mValue)
    {

@@ -14,7 +14,8 @@ class DialogSetId
    public:
       static const DialogSetId Empty;
       
-      DialogSetId(const SipMessage& msg);
+/* ivr mod */	  DialogSetId(const DialogSetId &that);
+/* ivr mod */     DialogSetId(const SipMessage& msg);
       DialogSetId(const Data& callId, const Data& senderRequestFromTag);
 
       bool operator==(const DialogSetId& rhs) const;
@@ -22,7 +23,7 @@ class DialogSetId
       bool operator<(const DialogSetId& rhs) const;
       bool operator>(const DialogSetId& rhs) const;
       size_t hash() const;
-      friend std::ostream& operator<<(std::ostream&, const DialogSetId& id);
+      friend EncodeStream& operator<<(EncodeStream&, const DialogSetId& id);
       
       const Data& getCallId() const { return mCallId; }
       const Data& getLocalTag() const { return mTag; }
@@ -33,7 +34,7 @@ class DialogSetId
       Data mTag;
 };
 
-    std::ostream& operator<<(std::ostream&, const DialogSetId&);
+    EncodeStream& operator<<(EncodeStream&, const DialogSetId&);
 
 }
 
