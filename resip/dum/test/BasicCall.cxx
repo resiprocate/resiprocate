@@ -407,7 +407,7 @@ class TestUas : public TestInviteSessionHandler
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
          cout << name << ": InviteSession-onTerminated - " << endl;
-         done = true;
+         //done = true;
       }
 
       virtual void onOffer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
@@ -525,7 +525,7 @@ main (int argc, char** argv)
    //set up UAS
    SipStack stackUas;
    DialogUsageManager* dumUas = new DialogUsageManager(stackUas);
-   dumUas->addTransport(UDP, 12010);
+   dumUas->addTransport(UDP, 5060);
    
    SharedPtr<MasterProfile> uasMasterProfile(new MasterProfile);
    std::auto_ptr<ClientAuthManager> uasAuth(new ClientAuthManager);
@@ -536,7 +536,7 @@ main (int argc, char** argv)
    dumUas->getMasterProfile()->setDigestCredential(uasAor.uri().host(), uasAor.uri().user(), uasPasswd);
    //dumUas->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
 #else
-   uasAor = NameAddr("sip:UAS@127.0.0.1:12010");
+   uasAor = NameAddr("sip:UAS@192.168.2.31");
 #endif
 
    dumUas->getMasterProfile()->setDefaultFrom(uasAor);
@@ -616,6 +616,7 @@ main (int argc, char** argv)
         }
 
         // Check if we should hangup yet
+		/*
         if (bHangupAt!=0)
         {
            if (time(NULL)>bHangupAt && !hungup)
@@ -624,6 +625,7 @@ main (int argc, char** argv)
               uas.hangup();
            }
         }
+		*/
      }
      else
      {
