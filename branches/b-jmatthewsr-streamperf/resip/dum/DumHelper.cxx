@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/DumHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"

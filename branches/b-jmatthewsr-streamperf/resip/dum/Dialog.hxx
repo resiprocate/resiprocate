@@ -14,6 +14,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/NetworkAssociation.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+/* ivr mod */#include "resip/dum/Handled.hxx"
 
 namespace resip
 {
@@ -25,7 +26,7 @@ class AppDialog;
 
 //!dcm! -- kill typedef std::list<DialogId> DialogIdSet;
 
-class Dialog 
+/* ivr mod */class Dialog : public Handled
 {
    public:
       class Exception : public BaseException
@@ -40,6 +41,8 @@ class Dialog
       Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds);
 
       const DialogId& getId() const;
+
+/* ivr mod */	  DialogHandle getHandle(void);
       
       // pass dialog sip messages through dialog so we can cache the requests on
       // the way out to be able to respond to digest authenticate requests
@@ -72,6 +75,9 @@ class Dialog
       void cancel();
 
       bool isDestroying() { return mDestroying; };
+
+/* ivr mod */protected:
+/* ivr mod */	 virtual EncodeStream& dump(EncodeStream& strm) const;
 
    private:
       virtual ~Dialog();
@@ -153,10 +159,10 @@ class Dialog
       bool mDestroying;
       bool mReUseDialogSet;
 
-      friend std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
+      friend EncodeStream& operator<<(EncodeStream& strm, const Dialog& dialog);
 };
 
-std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
+EncodeStream& operator<<(EncodeStream& strm, const Dialog& dialog);
 
 }
 

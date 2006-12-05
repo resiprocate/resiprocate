@@ -23,7 +23,7 @@ class IntegerParameter : public Parameter
          return new IntegerParameter(type, pb, terminators);
       }
 
-      virtual std::ostream& encode(std::ostream& stream) const;
+      virtual EncodeStream& encode(EncodeStream& stream) const;
 
       virtual Parameter* clone() const;
    private:

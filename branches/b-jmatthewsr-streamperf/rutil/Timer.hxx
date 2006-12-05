@@ -95,7 +95,10 @@ class Timer
 
       friend bool operator<(const Timer& t1, const Timer& t2);
       friend bool operator>(const Timer& t1, const Timer& t2);
-      friend std::ostream& operator<<(std::ostream&, const Timer&);
+#ifndef RESIP_USE_STL_STREAMS
+	  friend std::ostream& operator<<(std::ostream&, const Timer&);
+#endif
+      friend EncodeStream& operator<<(EncodeStream&, const Timer&);
       friend class BaseTimeLimitTimerQueue;
       friend class BaseTimerQueue;
       friend class DtlsTimerQueue;
@@ -104,7 +107,7 @@ class Timer
       friend class TuSelectorTimerQueue;
 };
  
-std::ostream& operator<<(std::ostream&, const Timer&);
+EncodeStream& operator<<(EncodeStream&, const Timer&);
 
 }
 

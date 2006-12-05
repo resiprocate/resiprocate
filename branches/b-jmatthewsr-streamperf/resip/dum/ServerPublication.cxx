@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ServerPublication.hxx"
 #include "resip/dum/PublicationHandler.hxx"

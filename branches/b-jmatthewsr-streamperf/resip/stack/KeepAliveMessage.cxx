@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/KeepAliveMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -36,8 +37,8 @@ KeepAliveMessage::clone() const
    return new KeepAliveMessage(*this);
 }
 
-std::ostream&
-KeepAliveMessage::encode(std::ostream& str) const
+EncodeStream&
+KeepAliveMessage::encode(EncodeStream& str) const
 {
    str << Symbols::CRLF << Symbols::CRLF;
    return str;

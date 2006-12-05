@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -82,8 +83,8 @@ PlainContents::getStaticType()
    return type;
 }
 
-std::ostream& 
-PlainContents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+PlainContents::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "PlainContents::encodeParsed " << mText);
    str << mText;

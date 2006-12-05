@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
@@ -61,7 +62,15 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
    mLastRequest->header(h_CSeq).sequence() = 1;
    mLastRequest->header(h_From) = from;
    mLastRequest->header(h_From).param(p_tag) = Helper::computeTag(Helper::tagSize);
+   //ivr mod
+   if( false == mUserProfile->getCallID().empty() )
+   {
+		mLastRequest->header(h_CallId).value() = mUserProfile->getCallID();
+   }
+   else
+   {
    mLastRequest->header(h_CallId).value() = Helper::computeCallId();
+   }
 
    NameAddr contact; // if no GRUU, let the stack fill in the contact 
 
@@ -124,7 +133,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
 
    //DumHelper::setOutgoingEncryptionLevel(mLastRequest, mEncryptionLevel);
 
-   DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
+/* ivr mod */   DebugLog ( << "BaseCreator::makeInitialRequest: " << std::endl << std::endl << mLastRequest);
 }
 
 

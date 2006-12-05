@@ -23,7 +23,7 @@ class ExistsParameter : public Parameter
       }
 
       virtual Parameter* clone() const;
-      virtual std::ostream& encode(std::ostream& stream) const;
+      virtual EncodeStream& encode(EncodeStream& stream) const;
 
    private:
       friend class ParserCategory;

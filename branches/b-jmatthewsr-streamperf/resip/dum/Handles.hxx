@@ -23,9 +23,15 @@ class ServerPublication;
 class ServerRegistration;
 class ServerSubscription;
 class BaseUsage;
+/* ivr mod */
+class DialogSet;
+class Dialog;
 
 typedef Handle<AppDialogSet> AppDialogSetHandle;
 typedef Handle<AppDialog> AppDialogHandle;
+/* ivr mod */
+typedef Handle<DialogSet> DialogSetHandle;
+typedef Handle<Dialog> DialogHandle;
 typedef Handle<BaseUsage> BaseUsageHandle;
 typedef Handle<ClientOutOfDialogReq> ClientOutOfDialogReqHandle;
 typedef Handle<ClientPublication> ClientPublicationHandle;

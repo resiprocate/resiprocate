@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <cassert>
 
 #include "resip/dum/ChallengeInfo.hxx"

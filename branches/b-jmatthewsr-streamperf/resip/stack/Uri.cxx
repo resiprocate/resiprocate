@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -927,8 +928,8 @@ Uri::shouldEscapePasswordChar(char c)
 }
  
 // should not encode user parameters unless its a tel?
-std::ostream& 
-Uri::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Uri::encodeParsed(EncodeStream& str) const
 {
    str << mScheme << Symbols::COLON; 
    if (!mUser.empty())
@@ -1054,8 +1055,8 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
    }
 }
 
-std::ostream& 
-Uri::encodeEmbeddedHeaders(std::ostream& str) const
+EncodeStream& 
+Uri::encodeEmbeddedHeaders(EncodeStream& str) const
 {
    if (mEmbeddedHeaders)
    {

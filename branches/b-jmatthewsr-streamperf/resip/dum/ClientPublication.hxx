@@ -24,7 +24,7 @@ class ClientPublication : public NonDialogUsage
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
 
    protected:
       virtual ~ClientPublication();

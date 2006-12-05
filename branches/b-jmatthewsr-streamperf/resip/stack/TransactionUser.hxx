@@ -21,10 +21,11 @@ class TransactionUser
       void addDomain(const Data& domain);
 
       virtual const Data& name() const=0;
-      virtual std::ostream& encode(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
       void setMessageFilterRuleList(MessageFilterRuleList &rules);
       bool isRegisteredForTransactionTermination() const;
       bool isRegisteredForConnectionTermination() const;
+	  /*ivr mod*/unsigned int getTuFifoSize(void) const { return mFifo.size(); }
       
    protected:
       enum TransactionTermination 
@@ -39,8 +40,10 @@ class TransactionUser
          DoNotRegisterForConnectionTermination
       };
          
-      TransactionUser(TransactionTermination t=DoNotRegisterForTransactionTermination,
-                      ConnectionTermination c=DoNotRegisterForConnectionTermination);
+      /*ivr mod*/TransactionUser(TransactionTermination t=DoNotRegisterForTransactionTermination,
+                      ConnectionTermination c=DoNotRegisterForConnectionTermination,
+					  unsigned int maxTuFifoDurationSecs=0,
+					  unsigned int maxTuMessages=0);
       TransactionUser(MessageFilterRuleList &rules, 
                       TransactionTermination t=DoNotRegisterForTransactionTermination,
                       ConnectionTermination c=DoNotRegisterForConnectionTermination);
@@ -64,8 +67,8 @@ class TransactionUser
       friend class TuSelector;      
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const TransactionUser& tu);
+EncodeStream& 
+operator<<(EncodeStream& strm, const TransactionUser& tu);
 
 }
 

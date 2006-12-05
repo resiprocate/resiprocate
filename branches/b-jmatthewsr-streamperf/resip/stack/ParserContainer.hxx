@@ -154,8 +154,8 @@ class ParserContainer : public ParserContainerBase
 };
 
 template <class T>
-std::ostream&
-insert(std::ostream& s, const resip::ParserContainer<T>& c)
+EncodeStream&
+insert(EncodeStream& s, const resip::ParserContainer<T>& c)
 {
    s << "[";
    for (typename resip::ParserContainer <T>::const_iterator i = c.begin();

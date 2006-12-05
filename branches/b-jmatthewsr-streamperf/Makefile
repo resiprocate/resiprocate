@@ -5,9 +5,9 @@ BUILD 	=	build
 -include $(BUILD)/Makefile.conf
 -include $(BUILD)/Makefile.all
 
-stack: repro dum tests
+stack: dum tests
 
-all: repro dum tests tfm
+all: dum tests tfm
 
 tfm: tfmcontrib
 	cd tfm; $(MAKE)

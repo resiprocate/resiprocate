@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -1149,9 +1150,10 @@ void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
    }
    nonceCount++;
    {
-      DataStream s(nonceCountString);
+	   /*ivr mod*/
+      //DataStream s(nonceCountString);
       
-      s << std::setw(8) << std::setfill('0') << std::hex << nonceCount;
+      //s << std::setw(8) << std::setfill('0') << std::hex << nonceCount;
    }
    DebugLog(<< "nonceCount is now: [" << nonceCountString << "]");
 }

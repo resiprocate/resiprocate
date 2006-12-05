@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -59,8 +60,8 @@ StringCategory::parse(ParseBuffer& pb)
    pb.data(mValue, anchor);
 }
 
-std::ostream& 
-StringCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+StringCategory::encodeParsed(EncodeStream& str) const
 {
    str << mValue;
    return str;

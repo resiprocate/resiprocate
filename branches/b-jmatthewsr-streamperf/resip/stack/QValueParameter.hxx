@@ -1,6 +1,8 @@
 #if !defined(RESIP_QVALUEPARAMETER_HXX)
 #define RESIP_QVALUEPARAMETER_HXX 
 
+/*ivr mod*/#include "rutil/resipfaststreams.h"
+
 #include "resip/stack/Parameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/QValue.hxx"
@@ -25,7 +27,7 @@ namespace resip
       }
 
       virtual Parameter* clone() const;
-      virtual std::ostream& encode(std::ostream& stream) const;
+      virtual EncodeStream& encode(EncodeStream& stream) const;
 
    private:
       friend class ParserCategory;
@@ -35,7 +37,7 @@ namespace resip
       Type mValue;
    };
 
-   std::ostream& operator<<(std::ostream& stream, const QValue& qvalue);
+   EncodeStream& operator<<(EncodeStream& stream, const QValue& qvalue);
 
 }
 

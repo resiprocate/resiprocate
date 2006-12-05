@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/dum/Handles.hxx"
 #include "resip/dum/KeepAliveTimeout.hxx"
@@ -27,14 +28,14 @@ KeepAliveTimeout::clone() const
    return new KeepAliveTimeout(*this);
 }
 
-std::ostream&
-KeepAliveTimeout::encodeBrief(std::ostream& strm) const
+EncodeStream&
+KeepAliveTimeout::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }
 
-std::ostream& 
-KeepAliveTimeout::encode(std::ostream& strm) const
+EncodeStream& 
+KeepAliveTimeout::encode(EncodeStream& strm) const
 {
    return strm << mTarget << "(" << mId << ")";
 }

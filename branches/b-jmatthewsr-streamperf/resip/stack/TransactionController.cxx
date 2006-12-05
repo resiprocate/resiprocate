@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -78,7 +79,10 @@ TransactionController::process(FdSet& fdset)
       mTransportSelector.process(fdset);
       mTimers.process();
 
-      while (mStateMacFifo.messageAvailable())
+       //while (mStateMacFifo.messageAvailable())
+	  unsigned fifosize = mStateMacFifo.size();
+	  for(unsigned ui=0; ui< fifosize; ui++ )
+	  /*ivr mod for(int i=0; i<2 && mStateMacFifo.messageAvailable(); i++)*/
       {
          TransactionState::process(*this);
       }

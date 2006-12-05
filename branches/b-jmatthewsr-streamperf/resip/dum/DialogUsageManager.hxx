@@ -88,7 +88,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
   
       // If createDefaultFeatures is true dum will construct a
       // IdentityHandler->EncryptionManager chain.
-      DialogUsageManager(SipStack& stack, bool createDefaultFeatures=false);
+      /*ivr mod*/DialogUsageManager(SipStack& stack, bool createDefaultFeatures=false,
+					  unsigned int maxTuFifoDurationSecs=0,
+					  unsigned int maxTuMessages=0);
       virtual ~DialogUsageManager();
             
       void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
@@ -419,8 +421,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       // For delayed delete of a Usage
       void destroy(const BaseUsage* usage);
-      void destroy(DialogSet*);
-      void destroy(Dialog*);
+/* ivr mod */      void destroy(const DialogSetHandle &dialogSetId);
+/* ivr mod */      void destroy(const DialogHandle &dialog);
 
       void requestMergedRequestRemoval(const MergedRequestKey&);
       void removeMergedRequest(const MergedRequestKey&);

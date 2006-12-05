@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -92,8 +93,8 @@ AttributeHelper::getValues(const Data& key) const
    return mAttributes.find(key)->second;
 }
 
-ostream&
-AttributeHelper::encode(ostream& s) const
+EncodeStream&
+AttributeHelper::encode(EncodeStream& s) const
 {
    for (HashMap< Data, list<Data> >::const_iterator i = mAttributes.begin();
         i != mAttributes.end(); ++i)
@@ -206,8 +207,8 @@ SdpContents::parse(ParseBuffer& pb)
    mSession.parse(pb);
 }
 
-ostream&
-SdpContents::encodeParsed(ostream& s) const
+EncodeStream&
+SdpContents::encodeParsed(EncodeStream& s) const
 {
    mSession.encode(s);
    return s;
@@ -266,8 +267,8 @@ SdpContents::Session::Origin::Origin(const Data& user,
      mAddress(address)
 {}
 
-ostream&
-SdpContents::Session::Origin::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Origin::encode(EncodeStream& s) const
 {
    s << "o="
      << mUser << Symbols::SPACE[0]
@@ -351,8 +352,8 @@ SdpContents::Session::Email::operator=(const Email& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Email::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Email::encode(EncodeStream& s) const
 {
    s << "e=" << mAddress;
    if (!mFreeText.empty())
@@ -443,8 +444,8 @@ SdpContents::Session::Phone::operator=(const Phone& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Phone::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Phone::encode(EncodeStream& s) const
 {
   s << "p=" << mNumber;
    if (!mFreeText.empty())
@@ -498,8 +499,8 @@ SdpContents::Session::Connection::operator=(const Connection& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Connection::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Connection::encode(EncodeStream& s) const
 {
    s << "c=IN "
      << NetworkType[mAddrType] << Symbols::SPACE[0] << mAddress;
@@ -584,8 +585,8 @@ SdpContents::Session::Bandwidth::operator=(const Bandwidth& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Bandwidth::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Bandwidth::encode(EncodeStream& s) const
 {
    s << "b="
      << mModifier
@@ -639,8 +640,8 @@ SdpContents::Session::Time::operator=(const Time& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Time::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Time::encode(EncodeStream& s) const
 {
    s << "t=" << mStart << Symbols::SPACE[0]
      << mStop
@@ -687,8 +688,8 @@ SdpContents::Session::Time::Repeat::Repeat(unsigned long interval,
      mOffsets(offsets)
 {}
 
-ostream&
-SdpContents::Session::Time::Repeat::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Time::Repeat::encode(EncodeStream& s) const
 {
    s << "r="
      << mInterval << Symbols::SPACE[0]
@@ -791,8 +792,8 @@ SdpContents::Session::Timezones::operator=(const Timezones& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Timezones::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Timezones::encode(EncodeStream& s) const
 {
    if (!mAdjustments.empty())
    {
@@ -873,8 +874,8 @@ SdpContents::Session::Encryption::operator=(const Encryption& rhs)
 
 const char* KeyTypes[] = {"????", "prompt", "clear", "base64", "uri"};
 
-ostream&
-SdpContents::Session::Encryption::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Encryption::encode(EncodeStream& s) const
 {
    s << "k="
      << KeyTypes[mMethod];
@@ -937,7 +938,9 @@ SdpContents::Session::Session(int version,
    : mVersion(version),
      mOrigin(origin),
      mName(name)
-{}
+{
+	/*ivrmod*/mMedia.reserve(16);
+}
 
 SdpContents::Session::Session(const Session& rhs)
 {
@@ -964,7 +967,7 @@ SdpContents::Session::operator=(const Session& rhs)
       mEncryption = rhs.mEncryption;
       mAttributeHelper = rhs.mAttributeHelper;
 
-      for (std::list<Medium>::iterator i=mMedia.begin(); i != mMedia.end(); ++i)
+/*ivr mod*/      for (MediumContainer::iterator i=mMedia.begin(); i != mMedia.end(); ++i)
       {
          i->setSession(this);
       }
@@ -1053,8 +1056,8 @@ SdpContents::Session::parse(ParseBuffer& pb)
    }
 }
 
-ostream&
-SdpContents::Session::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::encode(EncodeStream& s) const
 {
    s << "v=" << mVersion << Symbols::CRLF;
    mOrigin.encode(s);
@@ -1116,7 +1119,7 @@ SdpContents::Session::encode(ostream& s) const
 
    mAttributeHelper.encode(s);
 
-   for (list<Medium>::const_iterator i = mMedia.begin();
+   /*ivr mod*/for (MediumContainer::const_iterator i = mMedia.begin();
         i != mMedia.end(); ++i)
    {
       i->encode(s);
@@ -1163,7 +1166,7 @@ SdpContents::Session::addAttribute(const Data& key, const Data& value)
 
    if (key == rtpmap)
    {
-      for (list<Medium>::iterator i = mMedia.begin();
+      for (MediumContainer::iterator i = mMedia.begin();
            i != mMedia.end(); ++i)
       {
          i->mRtpMapDone = false;
@@ -1178,7 +1181,7 @@ SdpContents::Session::clearAttribute(const Data& key)
 
    if (key == rtpmap)
    {
-      for (list<Medium>::iterator i = mMedia.begin();
+      for (MediumContainer::iterator i = mMedia.begin();
            i != mMedia.end(); ++i)
       {
          i->mRtpMapDone = false;
@@ -1208,14 +1211,18 @@ SdpContents::Session::Medium::Medium(const Data& name,
      mMulticast(multicast),
      mProtocol(protocol),
      mRtpMapDone(false)
-{}
+{
+	  /*ivrmod*/mCodecs.reserve(32);
+}
 
 SdpContents::Session::Medium::Medium()
    : mSession(0),
      mPort(0),
      mMulticast(1),
      mRtpMapDone(false)
-{}
+{
+	 /*ivrmod*/mCodecs.reserve(32);
+}
 
 SdpContents::Session::Medium::Medium(const Medium& rhs)
    : mSession(0),
@@ -1368,8 +1375,8 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
    mAttributeHelper.parse(pb);
 }
 
-ostream&
-SdpContents::Session::Medium::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Medium::encode(EncodeStream& s) const
 {
    s << "m="
      << mName << Symbols::SPACE[0]
@@ -1389,7 +1396,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
 
    if (!mCodecs.empty())
    {
-      for (list<Codec>::const_iterator i = mCodecs.begin();
+      /*ivr mod*/for (CodecContainer::const_iterator i = mCodecs.begin();
            i != mCodecs.end(); ++i)
       {
          s << Symbols::SPACE[0] << i->payloadType();
@@ -1423,7 +1430,7 @@ SdpContents::Session::Medium::encode(ostream& s) const
    if (!mCodecs.empty())
    {
       // add codecs to information and attributes
-      for (list<Codec>::const_iterator i = mCodecs.begin();
+      /*ivr mod*/for (CodecContainer::const_iterator i = mCodecs.begin();
            i != mCodecs.end(); ++i)
       {
           // If codec is static (defined in RFC 3551) we probably shouldn't
@@ -1558,13 +1565,13 @@ SdpContents::Session::Medium::addCodec(const Codec& codec)
 }
 
 
-const list<Codec>&
+const SdpContents::Session::Medium::CodecContainer&
 SdpContents::Session::Medium::codecs() const
 {
    return const_cast<Medium*>(this)->codecs();
 }
 
-list<Codec>&
+SdpContents::Session::Medium::CodecContainer&
 SdpContents::Session::Medium::codecs()
 {
 #if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)  // CJ TODO fix 
@@ -1619,6 +1626,16 @@ SdpContents::Session::Medium::codecs()
          }
       }
 
+	  //ivr mod, need to store names without sharing parse buffer
+	  //which is destroyed in the following calls to clearAttribute
+	  //May need to revisit this, only Debug build seems to overwrite memory.
+		RtpMap::iterator ritEnd(mRtpMap.end());
+		for( RtpMap::iterator rit = mRtpMap.begin(); rit != ritEnd; ++rit )
+		{
+			rit->second = Codec(rit->second);
+		}
+
+
       // don't store twice
       mFormats.clear();
       mAttributeHelper.clearAttribute(rtpmap);
@@ -1630,13 +1647,13 @@ SdpContents::Session::Medium::codecs()
 }
 
 const Codec& 
-SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& codecs, Codec* pMatchingCodec) const
+/*ivr mod*/SdpContents::Session::Medium::findFirstMatchingCodecs(const CodecContainer& codecs, Codec* pMatchingCodec) const
 {
    static Codec emptyCodec;
-   std::list<resip::SdpContents::Session::Codec>::const_iterator sIter;
-   std::list<resip::SdpContents::Session::Codec>::const_iterator sEnd = mCodecs.end();
-   std::list<resip::SdpContents::Session::Codec>::const_iterator eIter;
-   std::list<resip::SdpContents::Session::Codec>::const_iterator eEnd = codecs.end();
+   /*ivr mod*/resip::SdpContents::Session::Medium::CodecContainer::const_iterator sIter;
+   /*ivr mod*/resip::SdpContents::Session::Medium::CodecContainer::const_iterator sEnd = mCodecs.end();
+   /*ivr mod*/resip::SdpContents::Session::Medium::CodecContainer::const_iterator eIter;
+   /*ivr mod*/resip::SdpContents::Session::Medium::CodecContainer::const_iterator eEnd = codecs.end();
    bool found = false;
    for (eIter = codecs.begin(); eIter != eEnd ; ++eIter)
    {
@@ -1656,8 +1673,8 @@ SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& co
 int
 SdpContents::Session::Medium::findTelephoneEventPayloadType() const
 {
-   const std::list<Codec>& codecList = codecs();
-   for (std::list<Codec>::const_iterator i = codecList.begin(); i != codecList.end(); i++)
+   /*ivr mod*/const CodecContainer& codecList = codecs();
+   /*ivr mod*/for (CodecContainer::const_iterator i = codecList.begin(); i != codecList.end(); i++)
    {
       if (i->getName() == SdpContents::Session::Codec::TelephoneEvent.getName())
       {
@@ -1798,8 +1815,8 @@ resip::operator==(const Codec& lhs, const Codec& rhs)
    return (isEqualNoCase(lhs.mName, rhs.mName) && lhs.mRate == rhs.mRate);
 }
 
-ostream&
-resip::operator<<(ostream& str, const Codec& codec)
+EncodeStream&
+resip::operator<<(EncodeStream& str, const Codec& codec)
 {
    str << codec.mName;
    str << Symbols::SLASH[0];

@@ -21,7 +21,7 @@ class Parameter
 
       virtual Parameter* clone() const = 0;
 
-      virtual std::ostream& encode(std::ostream& stream) const = 0;
+      virtual EncodeStream& encode(EncodeStream& stream) const = 0;
 
       virtual bool isQuoted() const { return false; } // only on DataParameter
       virtual void setQuoted(bool /*b*/) { }; // only on DataParameter

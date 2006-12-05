@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -18,8 +19,8 @@ QValue::getData() const
    return mDataValue;
 }
 
-ostream&
-QValue::encode(ostream& stream) const
+EncodeStream&
+QValue::encode(EncodeStream& stream) const
 {
 	int i = mValue;
 	

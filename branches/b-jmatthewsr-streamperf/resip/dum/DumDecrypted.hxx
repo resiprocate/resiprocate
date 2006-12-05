@@ -17,8 +17,8 @@ class DumDecrypted : public Message
       SipMessage* decrypted();
       const SipMessage& decrypted() const;
       Message* clone() const;
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
       
    private:
       SipMessage mDecrypted;

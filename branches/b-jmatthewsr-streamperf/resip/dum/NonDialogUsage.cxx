@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/NonDialogUsage.hxx"
 #include "resip/dum/DialogSet.hxx"

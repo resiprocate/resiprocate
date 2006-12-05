@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "HttpProvider.hxx"
 #include "rutil/Lock.hxx"
 

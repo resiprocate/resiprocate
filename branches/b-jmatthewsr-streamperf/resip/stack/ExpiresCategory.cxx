@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -77,8 +78,8 @@ ExpiresCategory::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
-std::ostream& 
-ExpiresCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+ExpiresCategory::encodeParsed(EncodeStream& str) const
 {
    str << mValue;
    encodeParameters(str);

@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -135,8 +136,8 @@ RequestLine::parse(ParseBuffer& pb)
    pb.data(mSipVersion, start);
 }
 
-ostream&
-RequestLine::encodeParsed(ostream& str) const
+EncodeStream&
+RequestLine::encodeParsed(EncodeStream& str) const
 {
    str << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName) << Symbols::SPACE;
    mUri.encodeParsed(str);

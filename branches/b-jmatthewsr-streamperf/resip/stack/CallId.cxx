@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -81,8 +82,8 @@ CallID::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
-ostream&
-CallID::encodeParsed(ostream& str) const
+EncodeStream&
+CallID::encodeParsed(EncodeStream& str) const
 {
    str << mValue;
    encodeParameters(str);

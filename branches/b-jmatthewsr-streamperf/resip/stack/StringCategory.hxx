@@ -24,7 +24,7 @@ class StringCategory : public ParserCategory
       StringCategory& operator=(const StringCategory&);
 
       virtual void parse(ParseBuffer& pb);
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 
       const Data& value() const;

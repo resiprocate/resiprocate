@@ -110,7 +110,7 @@ class InviteSession : public DialogUsage
       Tokens& getPeerAllowedEvents() { return mPeerAllowedEvents; }
       Data&   getPeerUserAgent() { return mPeerUserAgent; }
 
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       InviteSessionHandle getSessionHandle();
 
       typedef enum

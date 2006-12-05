@@ -2,6 +2,7 @@
 #define RESIP_DataStream_hxx
 
 #include <iostream>
+#include "resipfaststreams.h"
 
 namespace resip
 {
@@ -10,16 +11,29 @@ class Data;
 
 /** DataBuffer is used to back the DataStream, iDataStream, and oDataStream.
  */
-class DataBuffer : public std::streambuf
+class DataBuffer : 
+#ifdef RESIP_USE_STL_STREAMS
+	public std::streambuf
+#else
+	public ResipStreamBuf
+#endif
 {
    public:
-      DataBuffer(Data& str);
+	   DataBuffer(Data& str);
       virtual ~DataBuffer();
 
    protected:
       virtual int sync();
       virtual int overflow(int c = -1);
       Data& mStr;
+
+#ifndef RESIP_USE_STL_STREAMS
+	  virtual size_t writebuf(const char *s, size_t count);
+	  virtual size_t putbuf(char ch);
+	  virtual void flushbuf(void){}
+
+	  virtual UInt64 tellpbuf(void);
+#endif
 
    private:
       DataBuffer(const DataBuffer&);
@@ -33,7 +47,13 @@ class DataBuffer : public std::streambuf
    Data read from the stream is read from the reference passed to the
    constructor.
  */
-class DataStream : private DataBuffer, public std::iostream
+class DataStream : private DataBuffer
+#ifdef  RESIP_USE_STL_STREAMS
+	, public std::iostream
+#else
+	, public ResipFastOStream
+#endif
+
 {
    public:
       /** Constructs a DataStream with a Data to operate on.
@@ -53,6 +73,7 @@ class DataStream : private DataBuffer, public std::iostream
 /**
    iDataStream is an istream that operates on an existing Data.
  */
+#ifdef RESIP_USE_STL_STREAMS
 class iDataStream : private DataBuffer, public std::istream
 {
    public:
@@ -67,13 +88,15 @@ class iDataStream : private DataBuffer, public std::istream
       iDataStream& operator=(const iDataStream&);
 
 };
-
+#endif
 /**
    oDataStream operates on an existing Data.  The data is appended to the
    reference passed to the constructor.  The data is valid after DataStream's
    destructor is called.
  */
-class oDataStream : private DataBuffer, public std::ostream {
+class oDataStream : private DataBuffer, public EncodeStream 
+	
+{
    public:
       /** Constructs a oDataStream with a Data to operate on.
           @param str A Data to operate on.

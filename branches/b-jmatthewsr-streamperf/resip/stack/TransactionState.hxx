@@ -129,7 +129,7 @@ class TransactionState : public DnsHandler
 
       static unsigned long StatelessIdCounter;
       
-      friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
+      friend EncodeStream& operator<<(EncodeStream& strm, const TransactionState& state);
       friend class TransactionController;
 };
 

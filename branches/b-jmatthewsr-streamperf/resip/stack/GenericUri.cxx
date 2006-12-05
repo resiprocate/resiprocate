@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -71,8 +72,8 @@ GenericUri::clone() const
    return new GenericUri(*this);
 }
 
-std::ostream& 
-GenericUri::encodeParsed(std::ostream& str) const
+EncodeStream& 
+GenericUri::encodeParsed(EncodeStream& str) const
 {
    str << Symbols::LA_QUOTE[0]
        << mUri

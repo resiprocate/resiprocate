@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "PagerMessageCreator.hxx"
 
 using namespace resip;

@@ -1,6 +1,8 @@
 #if !defined(RESIP_UINT32_CATEGORY_HXX)
 #define RESIP_UINT32_CATEGORY_HXX
 
+/*ivr mod*/#include "rutil/resipfaststreams.h"
+
 #include <iosfwd>
 #include "rutil/Data.hxx"
 #include "resip/stack/ParserCategory.hxx"
@@ -22,7 +24,7 @@ class UInt32Category : public ParserCategory
       UInt32Category& operator=(const UInt32Category&);
 
       virtual void parse(ParseBuffer& pb);
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 
       UInt32& value() const;

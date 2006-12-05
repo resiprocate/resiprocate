@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -61,8 +62,8 @@ RportParameter::clone() const
    return new RportParameter(*this);
 }
 
-ostream&
-RportParameter::encode(ostream& stream) const
+EncodeStream&
+RportParameter::encode(EncodeStream& stream) const
 {
    if (mHasValue || mValue > 0)
    {

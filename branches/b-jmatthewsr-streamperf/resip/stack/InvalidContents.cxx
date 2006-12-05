@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -68,8 +69,8 @@ InvalidContents::getStaticType()
    return type;
 }
 
-std::ostream& 
-InvalidContents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+InvalidContents::encodeParsed(EncodeStream& str) const
 {
    str << mText;
    return str;

@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -223,8 +224,8 @@ ParserCategory::parseParameters(ParseBuffer& pb)
 
 static Data up_Msgr("msgr");
 
-ostream&
-ParserCategory::encodeParameters(ostream& str) const
+EncodeStream&
+ParserCategory::encodeParameters(EncodeStream& str) const
 {
     
    for (ParameterList::iterator it = mParameters.begin();
@@ -289,8 +290,8 @@ ParserCategory::encodeParameters(ostream& str) const
    return str;
 }
 
-ostream&
-resip::operator<<(ostream& stream, const ParserCategory& category)
+EncodeStream&
+resip::operator<<(EncodeStream& stream, const ParserCategory& category)
 {
    category.checkParsed();
    return category.encode(stream);
