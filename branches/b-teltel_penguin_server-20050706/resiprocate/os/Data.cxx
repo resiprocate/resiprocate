@@ -12,10 +12,10 @@
 using namespace resip;
 using namespace std;
 
-const Data Data::Empty("", 0);
-const Data::size_type Data::npos = UINT_MAX;
-
 static char emptyBuffer[] = "";
+
+const Data Data::Empty(Borrow, emptyBuffer, 0);
+const Data::size_type Data::npos = UINT_MAX;
 
 bool
 Data::init()
