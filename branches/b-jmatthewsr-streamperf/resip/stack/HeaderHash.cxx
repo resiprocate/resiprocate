@@ -1,3 +1,4 @@
+#include "precompile.h"
 /* C++ code produced by gperf version 3.0.1 */
 /* Command-line: gperf -D --enum -E -L C++ -t -k '*' --compare-strncmp -Z HeaderHash HeaderHash.gperf  */
 

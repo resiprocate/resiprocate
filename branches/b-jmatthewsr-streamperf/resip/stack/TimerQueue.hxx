@@ -49,7 +49,10 @@ class BaseTimerQueue
       unsigned int msTillNextTimer();
       
    protected:
-      friend std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
+      friend EncodeStream& operator<<(EncodeStream&, const BaseTimerQueue&);
+#ifndef RESIP_USE_STL_STREAMS
+	  friend std::ostream& operator<<(std::ostream& strm, const BaseTimerQueue&);
+#endif
       std::multiset<Timer> mTimers;
 };
 
@@ -112,7 +115,7 @@ class DtlsTimerQueue : public BaseTimerQueue
 
 #endif
 
-std::ostream& operator<<(std::ostream&, const BaseTimerQueue&);
+EncodeStream& operator<<(EncodeStream&, const BaseTimerQueue&);
 
 }
 

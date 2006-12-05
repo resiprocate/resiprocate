@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -72,13 +73,13 @@ TimerMessage::isClientTransaction() const
 
 
 
-std::ostream&
-TimerMessage::encodeBrief(std::ostream& str) const
+EncodeStream&
+TimerMessage::encodeBrief(EncodeStream& str) const
 {
    return str << "Timer: " << Timer::toData(mType) << " " << mDuration;
 }
 
-std::ostream& TimerMessage::encode(std::ostream& strm) const
+EncodeStream& TimerMessage::encode(EncodeStream& strm) const
 {
    return strm << "TimerMessage TransactionId[" << mTransactionId << "] "
                << " Type[" << Timer::toData(mType) << "]"

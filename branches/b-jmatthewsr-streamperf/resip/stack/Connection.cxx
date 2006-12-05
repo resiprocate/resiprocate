@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -146,8 +147,8 @@ Connection::getConnectionManager() const
    return transport->getConnectionManager();
 }
             
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::Connection& c)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::Connection& c)
 {
    strm << "CONN: " << &c << " " << int(c.getSocket()) << " " << c.mWho;
    return strm;
@@ -167,7 +168,6 @@ Connection::read(Fifo<TransactionMessage>& fifo)
                                  static_cast<size_t>(Connection::ChunkSize));
          
    assert(bytesToRead > 0);
-
    int bytesRead = read(writePair.first, bytesToRead);
    if (bytesRead <= 0)
    {

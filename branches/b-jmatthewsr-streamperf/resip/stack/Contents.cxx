@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <vector>
 
 #if defined(HAVE_CONFIG_H)
@@ -449,8 +450,8 @@ Contents::preParseHeaders(ParseBuffer& pb)
    }
 }
 
-std::ostream&
-Contents::encodeHeaders(std::ostream& str) const
+EncodeStream&
+Contents::encodeHeaders(EncodeStream& str) const
 {
    if (mVersion != 1 || mMinorVersion != 0)
    {

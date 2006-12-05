@@ -141,7 +141,7 @@ class Transport
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
    private:
       static const Data transportNames[MAX_TRANSPORT];
-      friend std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
+      friend EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
 
       Data mTlsDomain;      
    protected:
@@ -149,8 +149,62 @@ class Transport
       Compression &mCompression;
 };
 
-std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
-      
+EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
+/** ivr mod */
+typedef bool (*TransportScreenFunction)(const GenericIPAddress &source);
+
+class TransportScreenSingleton
+{
+public:	
+    
+	~TransportScreenSingleton()
+	{
+		Destroy();
+	}
+    static bool Create(TransportScreenFunction function)
+	{
+		if (!mInstance)
+        {
+            mInstance = new TransportScreenSingleton();
+			mInstance->mFunction = function;
+			mInstance->mDestroying = false;
+			return true;
+        }
+		return false;
+	}
+
+	static bool Destroy(void)
+	{
+		if( mInstance && !mInstance->mDestroying)
+		{			
+			mInstance->mDestroying = true;
+			delete mInstance;
+			mInstance = 0;
+		}
+		return true;
+	}
+
+	static bool Screen(const GenericIPAddress &source)
+	{
+		if(!mInstance || !mInstance->mFunction)
+		{
+			return true;
+		}
+		
+		return (mInstance->mFunction)(source);
+	}
+    	
+private:    
+	
+    // Protection
+	TransportScreenSingleton():mFunction(NULL),mDestroying(false){}
+    
+    // Data        
+    static TransportScreenSingleton	*mInstance;
+	TransportScreenFunction			mFunction;
+	bool							mDestroying;
+};
+
 }
 
 #endif

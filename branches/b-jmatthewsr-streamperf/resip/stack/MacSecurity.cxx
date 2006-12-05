@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/MacSecurity.hxx"
 #include "rutil/Logger.hxx"
 

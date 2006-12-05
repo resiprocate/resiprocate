@@ -1,3 +1,4 @@
+#include "precompile.h"
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

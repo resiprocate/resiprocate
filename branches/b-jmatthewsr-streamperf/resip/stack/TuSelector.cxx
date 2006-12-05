@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/TuSelector.hxx"
 #include "resip/stack/TransactionUser.hxx"

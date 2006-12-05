@@ -1,6 +1,8 @@
 #ifndef RESIP_HeapInstanceCounter_hxx
 #define RESIP_HeapInstanceCounter_hxx
 
+//#define RESIP_HEAP_COUNT 
+
 #ifdef RESIP_HEAP_COUNT
 
 #include <typeinfo>

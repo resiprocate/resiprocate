@@ -1,3 +1,4 @@
+#include "precompile.h"
 
 #include "resip/dum/Profile.hxx"
 #include "resip/stack/SipMessage.hxx"

@@ -25,7 +25,7 @@ class BaseUsage : public Handled
       };
 
       virtual void end()=0;
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
       
    protected:
       BaseUsage(DialogUsageManager& dum);      

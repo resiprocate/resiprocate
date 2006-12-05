@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/SelectInterruptor.hxx"
 
 #include <cassert>

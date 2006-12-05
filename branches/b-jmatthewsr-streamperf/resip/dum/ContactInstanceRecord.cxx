@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/ContactInstanceRecord.hxx"
 #include "rutil/Timer.hxx"
 #include "resip/stack/SipMessage.hxx"

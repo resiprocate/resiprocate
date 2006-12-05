@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <cassert>
 #include "DumTimeout.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -54,14 +55,14 @@ DumTimeout::isClientTransaction() const
    return false;
 }
       
-std::ostream&
-DumTimeout::encodeBrief(std::ostream& strm) const
+EncodeStream&
+DumTimeout::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }
 
-std::ostream& 
-DumTimeout::encode(std::ostream& strm) const
+EncodeStream& 
+DumTimeout::encode(EncodeStream& strm) const
 {
    strm << "DumTimeout::";
    switch (mType)

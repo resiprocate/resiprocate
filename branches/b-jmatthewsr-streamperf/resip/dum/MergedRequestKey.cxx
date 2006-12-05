@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/MergedRequestKey.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/CSeqCategory.hxx"

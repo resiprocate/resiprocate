@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -84,8 +85,8 @@ Auth::parse(ParseBuffer& pb)
    }
 }
 
-std::ostream& 
-Auth::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Auth::encodeParsed(EncodeStream& str) const
 {
    if (!mScheme.empty())
    {
@@ -132,8 +133,8 @@ Auth::parseAuthParameters(ParseBuffer& pb)
    }
 }      
 
-ostream&
-Auth::encodeAuthParameters(ostream& str) const
+EncodeStream&
+Auth::encodeAuthParameters(EncodeStream& str) const
 {
    bool first = true;
    for (ParameterList::iterator it = mParameters.begin();

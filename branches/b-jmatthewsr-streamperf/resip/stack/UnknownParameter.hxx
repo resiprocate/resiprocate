@@ -22,7 +22,7 @@ class UnknownParameter : public Parameter
 
       // for making a new unknown parameter 
       explicit UnknownParameter(const Data& name);
-      std::ostream& encode(std::ostream& stream) const;
+      EncodeStream& encode(EncodeStream& stream) const;
 
       Data& value() {return mValue;}
       const Data& value() const {return mValue;}
@@ -41,7 +41,7 @@ class UnknownParameter : public Parameter
 
 }
 
-std::ostream& operator<<(std::ostream& stream, resip::UnknownParameter& comp);
+resip::EncodeStream& operator<<(resip::EncodeStream& stream, resip::UnknownParameter& comp);
 
 #endif
 

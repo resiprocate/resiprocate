@@ -35,13 +35,15 @@ class Log
       enum Type
       {
          Cout = 0,
-         Syslog, 
-         File, 
+         Syslog,
+         File,
          Cerr,
          VSDebugWindow,   // Use only for Visual Studio Debug Window logging - WIN32 must be defined
-         OnlyExternal // log messages are only written to external logger
-      };
-      
+         OnlyExternal, // log messages are only written to external logger
+         OnlyExternalNoHeaders //!< same as OnlyExternal, only the messageWithHeaders param of the ExternalLogger
+         //!< will be empty.  This paramater usually contains a pre-formatted log entry.
+   };
+
       enum Level
       {
          None = -1,
@@ -53,11 +55,11 @@ class Log
          Debug = 7,
 #else
          Crit = LOG_CRIT,
-// #ifdef ERR // ncurses defines a macro called ERR 
-//          SIP2_ERR = LOG_ERR,
-// #else
-//          ERR = LOG_ERR,
-// #endif
+         // #ifdef ERR // ncurses defines a macro called ERR
+         //          SIP2_ERR = LOG_ERR,
+         // #else
+         //          ERR = LOG_ERR,
+         // #endif
          Err,
          Warning = LOG_WARNING,
          Info = LOG_INFO,
@@ -66,69 +68,69 @@ class Log
          Stack = 8,
          StdErr = 9,
          Bogus = 666
-      };
-      
+   };
+
 
       /**
-	 Implementation for logging macros.
-	 Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__) << ... ;
+      Implementation for logging macros.
+      Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__) << ... ;
       */
       class Guard
       {
-	 public:
-	    /** Remember the logging values and be a a stream to receive
-		the log contents. */
-	    Guard(Level level,
-		  const Subsystem& system,
-		  const char* file,
-		  int line);
+         public:
+            /** Remember the logging values and be a a stream to receive
+            the log contents. */
+            Guard(Level level,
+                  const Subsystem& system,
+                  const char* file,
+                  int line);
 
-	    /** Commit logging */
-	    ~Guard();
+            /** Commit logging */
+            ~Guard();
 
-	    std::ostream& asStream() {return mStream;}
-	    operator std::ostream&() {return mStream;}
-	    
-	 private:
-	    resip::Log::Level mLevel;
-	    resip::Subsystem mSubsystem;
-	    resip::Data::size_type mHeaderLength;
-	    const char* mFile;
-	    int mLine;
-	    char mBuffer[128];
-	    Data mData;
-	    oDataStream mStream;
-	    Guard& operator=(const Guard&);
+            EncodeStream& asStream() {return mStream;}
+            operator EncodeStream&() {return mStream;}
+
+         private:
+            resip::Log::Level mLevel;
+            resip::Subsystem mSubsystem;
+            resip::Data::size_type mHeaderLength;
+            const char* mFile;
+            int mLine;
+            char mBuffer[128];
+            Data mData;
+            oDataStream mStream;
+            Guard& operator=(const Guard&);
       };
 
       class ThreadSetting
       {
          public:
             ThreadSetting()
-               : service(-1),
-               level(Err)
+                  : service(-1),
+                  level(Err)
             {}
 
             ThreadSetting(int serv, Level l)
-               : service(serv),
-                 level(l)
+                  : service(serv),
+                  level(l)
             {}
 
             ThreadSetting(const ThreadSetting& rhs)
-               : service(rhs.service),
-                 level(rhs.level)
+                  : service(rhs.service),
+                  level(rhs.level)
             {}
-            
+
             int service;
             Level level;
       };
 
       /// output the loglevel, hostname, appname, pid, tid, subsystem
-      static std::ostream& tags(Log::Level level, 
-                                const Subsystem& subsystem, 
+      static EncodeStream& tags(Log::Level level,
+                                const Subsystem& subsystem,
                                 const char* file,
                                 int line,
-                                std::ostream& strm);
+                                EncodeStream& strm);
       static Data& timestamp(Data& result);
       static Data timestamp();
       static ExternalLogger* getExternal()
@@ -187,7 +189,7 @@ class Log
       static ExternalLogger* mExternalLogger;
 #ifndef WIN32
       static pid_t mPid;
-#else   
+#else
       static int mPid;
 #endif
       static const char mDescriptions[][32];
@@ -209,12 +211,12 @@ class ExternalLogger
       virtual ~ExternalLogger()=0;
       /** return true to also do default logging, false to supress default logging. */
       virtual bool operator()(Log::Level level,
-                              const Subsystem& subsystem, 
+                              const Subsystem& subsystem,
                               const Data& appName,
                               const char* file,
                               int line,
                               const Data& message,
-			      const Data& messageWithHeaders) = 0;
+                              const Data& messageWithHeaders) = 0;
 };
 
 }
@@ -222,22 +224,22 @@ class ExternalLogger
 #endif
 
 /* ====================================================================
- * The Vovida Software License, Version 1.0 
- * 
+ * The Vovida Software License, Version 1.0
+ *
  * Copyright (c) 2000-2005.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 
+ *
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
  *    and "Vovida Open Communication Application Library (VOCAL)" must
  *    not be used to endorse or promote products derived from this
@@ -247,7 +249,7 @@ class ExternalLogger
  * 4. Products derived from this software may not be called "VOCAL", nor
  *    may "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
@@ -261,9 +263,9 @@ class ExternalLogger
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
- * 
+ *
  * ====================================================================
- * 
+ *
  * This software consists of voluntary contributions made by Vovida
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
  * Inc.  For more information on Vovida Networks, Inc., please see

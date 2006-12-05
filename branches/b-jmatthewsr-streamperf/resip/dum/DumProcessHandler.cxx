@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/SipStack.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumProcessHandler.hxx"

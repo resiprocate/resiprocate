@@ -52,7 +52,7 @@ GenericLogImpl::Instance()
    }
 }
 
-void 
+void
 GenericLogImpl::reset()
 {
    delete mLogger;
@@ -72,10 +72,10 @@ GenericLogImpl::OutputToWin32DebugWindow(const Data& result)
    const char *text = result.c_str();
 #ifdef UNDER_CE
    LPWSTR lpwstrText = resip::ToWString(text);
-	OutputDebugStringW(lpwstrText);
-	FreeWString(lpwstrText);
+   OutputDebugStringW(lpwstrText);
+   FreeWString(lpwstrText);
 #else
-	OutputDebugStringA(text);
+   OutputDebugStringA(text);
 #endif
 #endif
 }
@@ -85,7 +85,7 @@ genericLogCheckLevel(resip::Log::Level level)
 {
    const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting();
    return ((setting && level <= setting->level) ||
-	   (!setting && resip::GenericLogImpl::isLogging(level)));
+           (!setting && resip::GenericLogImpl::isLogging(level)));
 }
 
 /* ====================================================================

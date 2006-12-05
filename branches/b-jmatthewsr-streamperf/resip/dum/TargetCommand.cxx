@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/TargetCommand.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -29,14 +30,14 @@ Message* TargetCommand::clone() const
    return new TargetCommand(*this);
 }
 
-ostream&
-TargetCommand::encode(ostream& strm) const
+EncodeStream&
+TargetCommand::encode(EncodeStream& strm) const
 {
    return strm;
 }
 
-ostream&
-TargetCommand::encodeBrief(ostream& strm) const
+EncodeStream&
+TargetCommand::encodeBrief(EncodeStream& strm) const
 {
    return strm;
 }

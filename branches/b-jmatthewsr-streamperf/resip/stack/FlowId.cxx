@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/FlowId.hxx"
 #include "resip/stack/Transport.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -30,6 +31,7 @@ FlowId::FlowId(const Data& d)
       // !kh!
       // needs a reference for stream extraction operator
       // str >> (void*) transport;
+	  /*ivr mod @TODO how to support this?  What is this?
       void* p = 0;
       str >> p;
       transport = reinterpret_cast<Transport*>(p);
@@ -37,6 +39,7 @@ FlowId::FlowId(const Data& d)
       cerr << "IntData is: " << "[" << intData << "]" << endl;
 
       cerr << "Transport now: " << transport << endl;
+	  */
    }
 
    pb.skipChar();
@@ -72,8 +75,8 @@ FlowId::pointTupleToFlow(Tuple& t) const
    return t;
 }
 
-std::ostream&
-resip::operator<<(std::ostream& ostrm, const FlowId& f)
+EncodeStream&
+resip::operator<<(EncodeStream& ostrm, const FlowId& f)
 {
    Data res;
    {

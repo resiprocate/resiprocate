@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/SecurityAttributes.hxx"
 
 using namespace resip;
@@ -14,8 +15,8 @@ SecurityAttributes::SecurityAttributes()  :
 SecurityAttributes::~SecurityAttributes() 
 {};
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const SecurityAttributes& sa)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const SecurityAttributes& sa)
 {
    const char* strengthText[] = 
       {

@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/SubscriptionState.hxx"
 #include "rutil/Data.hxx"
 

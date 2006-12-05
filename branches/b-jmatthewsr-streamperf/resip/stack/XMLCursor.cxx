@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -409,8 +410,8 @@ XMLCursor::getValue() const
    return mValue;
 }
 
-std::ostream&
-XMLCursor::encode(std::ostream& str, const AttributeMap& attrs)
+EncodeStream&
+XMLCursor::encode(EncodeStream& str, const AttributeMap& attrs)
 {
    for(AttributeMap::const_iterator i = attrs.begin();
        i != attrs.end(); ++i)
@@ -593,8 +594,8 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
    return pb.position();
 }
 
-std::ostream&
-resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
+EncodeStream&
+resip::operator<<(EncodeStream& str, const XMLCursor::Node& node)
 {
    Data::size_type size = node.mPb.end() - node.mPb.start();
 
@@ -608,8 +609,8 @@ resip::operator<<(std::ostream& str, const XMLCursor::Node& node)
    return str;
 }
 
-std::ostream&
-resip::operator<<(std::ostream& str, const XMLCursor& cursor)
+EncodeStream&
+resip::operator<<(EncodeStream& str, const XMLCursor& cursor)
 {
    str << "XMLCursor " << *cursor.mCursor;
    return str;

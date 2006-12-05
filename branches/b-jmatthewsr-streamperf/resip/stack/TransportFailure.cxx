@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "TransportFailure.hxx"
 
 using namespace resip;
@@ -21,14 +22,14 @@ TransportFailure::isClientTransaction() const
    return true; 
 } 
       
-std::ostream&
-TransportFailure::encodeBrief(std::ostream& str) const 
+EncodeStream&
+TransportFailure::encodeBrief(EncodeStream& str) const 
 {
    return str << "TransportFailure: " << mTransactionId;
 }
       
-std::ostream&
-TransportFailure::encode(std::ostream& strm) const
+EncodeStream&
+TransportFailure::encode(EncodeStream& strm) const
 {
    return encodeBrief(strm);
 }

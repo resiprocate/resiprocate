@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/AppDialog.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
@@ -19,7 +20,7 @@ AppDialogSet::~AppDialogSet()
 AppDialogSetHandle 
 AppDialogSet::getHandle()
 {
-   return AppDialogSetHandle(mHam, mId);
+/* ivr mod */   return AppDialogSetHandle(mHam, mHandledId);
 }
 
 void
@@ -63,8 +64,8 @@ AppDialogSet::createAppDialog(const SipMessage&)
    return new AppDialog(mDum);
 }
 
-DialogSetId 
-AppDialogSet::getDialogSetId()
+/* ivr mod */ const DialogSetId &
+AppDialogSet::getDialogSetId() const 
 {
    if (mDialogSet)
    {
@@ -72,7 +73,7 @@ AppDialogSet::getDialogSetId()
    }
    else
    {
-       return DialogSetId(Data::Empty, Data::Empty);
+       return DialogSetId::Empty;
    }
 }
 
@@ -99,10 +100,10 @@ AppDialogSet::getClassName()
    return "AppDialogSet";
 }
 
-std::ostream& 
-AppDialogSet::dump(std::ostream& strm) const
+EncodeStream& 
+AppDialogSet::dump(EncodeStream& strm) const
 {
-   strm << "AppDialogSet " << mId;
+/* ivr mod */   strm << "AppDialogSet " << mHandledId;
    return strm;
 }
 

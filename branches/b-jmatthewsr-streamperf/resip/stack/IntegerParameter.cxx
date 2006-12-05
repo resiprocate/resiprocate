@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -56,8 +57,8 @@ IntegerParameter::clone() const
    return new IntegerParameter(*this);
 }
 
-ostream&
-IntegerParameter::encode(ostream& stream) const
+EncodeStream&
+IntegerParameter::encode(EncodeStream& stream) const
 {
    return stream << getName() << Symbols::EQUALS << mValue;
 }

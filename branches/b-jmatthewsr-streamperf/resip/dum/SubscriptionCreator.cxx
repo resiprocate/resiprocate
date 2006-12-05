@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "SubscriptionCreator.hxx"
 #include "DialogUsageManager.hxx"
 

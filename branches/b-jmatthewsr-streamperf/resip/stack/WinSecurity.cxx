@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/WinSecurity.hxx"
 #include <sys/types.h>
 
@@ -22,7 +23,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-#include <windows.h>
+//*ivr mod now in precompile.h: #include <windows.h>
 #include <wincrypt.h>
 
 void 

@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -33,17 +34,17 @@ resip::operator<<(std::ostream& strm,
    // Data's coming from a marked buffer should assume they need to be escaped.
    // Data's coming from user should assume they need to be escaped.
    // Otherwise, Data's should NOT escape.
-/*
+
    Data encoded;
 
    DataStream encodeStream(encoded);
    msg.encode(encodeStream);
    encodeStream.flush();
 
-   strm << encoded.escaped();
-*/
-
-   msg.encode(strm);
+  // strm << encoded.escaped();
+	
+	strm << encoded.c_str();
+   //msg.encode(strm);
    
    return strm;
 }
@@ -52,8 +53,33 @@ std::ostream&
 resip::operator<<(std::ostream& strm, 
                   const resip::Message::Brief& brief)
 {
+	Data encoded;
+
+   DataStream encodeStream(encoded);
+   brief.mSource.encodeBrief(encodeStream);
+   encodeStream.flush();
+
+   strm << encoded.c_str();
+
+   return strm;
+}
+
+#ifndef  RESIP_USE_STL_STREAMS
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
+                  const resip::Message& msg)
+{
+msg.encode(strm);
+return strm;
+}
+
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
+                  const resip::Message::Brief& brief)
+{
    return brief.mSource.encodeBrief(strm);
 }
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

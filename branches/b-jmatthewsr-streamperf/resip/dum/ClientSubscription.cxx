@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <queue>
 
 #include "resip/stack/Helper.hxx"
@@ -536,8 +537,8 @@ void ClientSubscription::dialogDestroyed(const SipMessage& msg)
    delete this;   
 }
 
-std::ostream&
-ClientSubscription::dump(std::ostream& strm) const
+EncodeStream&
+ClientSubscription::dump(EncodeStream& strm) const
 {
    strm << "ClientSubscription " << mLastRequest->header(h_From).uri();
    return strm;

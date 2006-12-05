@@ -545,7 +545,7 @@ ParseBuffer::skipBackChar(char c)
 //      ^
 // skipBackToChar('c');
 // abcde
-//    ^
+//   ^
 const char*
 ParseBuffer::skipBackToChar(char c)
 {

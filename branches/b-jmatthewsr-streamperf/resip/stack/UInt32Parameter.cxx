@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -52,8 +53,8 @@ UInt32Parameter::clone() const
    return new UInt32Parameter(*this);
 }
 
-ostream&
-UInt32Parameter::encode(ostream& stream) const
+EncodeStream&
+UInt32Parameter::encode(EncodeStream& stream) const
 {
    return stream << getName() << Symbols::EQUALS << mValue;
 }

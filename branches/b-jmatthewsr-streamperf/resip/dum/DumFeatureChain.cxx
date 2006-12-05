@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include <vector>
 
 #include "rutil/SharedPtr.hxx"

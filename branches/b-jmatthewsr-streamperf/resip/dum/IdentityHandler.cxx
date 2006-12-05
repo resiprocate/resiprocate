@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/IdentityHandler.hxx"

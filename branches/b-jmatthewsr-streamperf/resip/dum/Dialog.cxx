@@ -1,3 +1,4 @@
+#include "precompile.h"
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -24,8 +25,10 @@
 using namespace resip;
 using namespace std;
 
-Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
-   : mDum(dum),
+/* ivr mod */Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
+   : 
+Handled(dum),
+mDum(dum),
      mDialogSet(ds),
      mId("INVALID", "INVALID", "INVALID"),
      mClientSubscriptions(),
@@ -966,7 +969,8 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
       Helper::makeResponse(response, request, code);
       response.header(h_To).param(p_tag) = mId.getLocalTag();
    }
-
+   //ivr mod
+   //response.header(h_Vias).push_front(mDialogSet.getUserProfile()->getDefaultVia());
    DebugLog ( << "Dialog::makeResponse: " << std::endl << std::endl << response);
 }
 
@@ -1038,13 +1042,21 @@ void Dialog::possiblyDie()
           !mInviteSession)
       {
          mDestroying = true;
-         mDum.destroy(this);
+/* ivr mod */         mDum.destroy(getHandle());
       }
    }
 }
 
-ostream&
-resip::operator<<(ostream& strm, const Dialog& dialog)
+/* ivr mod */
+EncodeStream& 
+Dialog::dump(EncodeStream& strm) const
+{
+   strm << *this;
+   return strm;
+}
+
+EncodeStream&
+resip::operator<<(EncodeStream& strm, const Dialog& dialog)
 {
    strm
       << "mClientSubscriptions("
@@ -1054,6 +1066,12 @@ resip::operator<<(ostream& strm, const Dialog& dialog)
       << dialog.mServerSubscriptions.size()
       << ")";
    return strm;
+}
+/* ivr mod */
+DialogHandle 
+Dialog::getHandle()
+{
+   return DialogHandle(mDum, mHandledId);
 }
 
 

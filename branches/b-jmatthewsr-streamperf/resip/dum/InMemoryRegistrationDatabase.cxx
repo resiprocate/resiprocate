@@ -1,5 +1,5 @@
+#include "precompile.h"
 #include <ctime>
-
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Logger.hxx"

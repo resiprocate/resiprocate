@@ -1,3 +1,4 @@
+#include "precompile.h"
 #if defined(HAVE_CONFIG_H)
 #include "resip/stack/config.hxx"
 #endif
@@ -15,7 +16,7 @@
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/stun/Stun.hxx"
-
+/* ivr mod*/#include "rutil/GenericIPAddress.hxx"
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>
 #include <osc/StateChanges.h>
@@ -43,6 +44,16 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
+   /*ivr mod*/
+   int size = 32768;
+   if (setsockopt(mFd,SOL_SOCKET,SO_RCVBUF,(const char *)&size,sizeof(int)) != 0)
+	{
+		ErrLog(<<"Unable to set receive buffer size on UDP socket");
+   }
+   if (setsockopt(mFd,SOL_SOCKET,SO_SNDBUF,(const char *)&size,sizeof(int)) != 0)
+	{
+		ErrLog(<<"Unable to set send buffer size on UDP socket");
+   }
    bind();
 #ifdef USE_SIGCOMP
    if (mCompression.isEnabled())
@@ -80,6 +91,7 @@ UdpTransport::process(FdSet& fdset)
       std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
       //DebugLog (<< "Sent: " <<  sendData->data);
       //DebugLog (<< "Sending message on udp.");
+	  DebugLog(<< "Sending packet to:" << sendData->destination  << ", tid=" << sendData->transactionId );
 
       assert( &(*sendData) );
       assert( sendData->destination.getPort() != 0 );
@@ -183,6 +195,12 @@ UdpTransport::process(FdSet& fdset)
          return;
       }
 
+	  if( false == TransportScreenSingleton::Screen(tuple.toGenericIPAddress()) )
+	  {
+		  InfoLog(<<"Datagram did not pass screening.");
+		  delete [] buffer; buffer=0;
+		  return;
+	  }
       //handle incoming CRLFCRLF keep-alive packets
       if (len == 4 &&
           strncmp(buffer, Symbols::CRLFCRLF, len) == 0)

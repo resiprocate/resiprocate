@@ -21,8 +21,8 @@ const Data& Subsystem::getSubsystem() const
     return mSubsystem;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const Subsystem& ss)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const Subsystem& ss)
 {
    strm << ss.mSubsystem;
    return strm;

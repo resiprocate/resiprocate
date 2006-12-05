@@ -33,8 +33,8 @@ class TransportFailure : public TransactionMessage
       
       FailureReason getFailureReason() const { return mFailureReason; }
          
-      virtual std::ostream& encodeBrief(std::ostream& str) const;
-      virtual std::ostream& encode(std::ostream& strm) const;      
+      virtual EncodeStream& encodeBrief(EncodeStream& str) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;      
       
    private:
       Data mTransactionId;
