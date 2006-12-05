@@ -29,7 +29,7 @@ BUILD_SHARED_LIBS := no
 USE_DISTCC := no
 USE_CCACHE := no
 USE_DTLS := no
-USE_SSL := yes
+USE_SSL := no
 USE_SIGCOMP := no
 SIGCOMP_BASEDIR:= /usr/local
 USE_POPT := yes
@@ -153,7 +153,7 @@ $uname = `uname`;
   {
     name        => "USE_SSL",
     description => "Do you want to include SSL support?",
-    default     => "yes",
+    default     => "no",
     validate    => [@yesno],
     flag        => 'ssl',
   },
