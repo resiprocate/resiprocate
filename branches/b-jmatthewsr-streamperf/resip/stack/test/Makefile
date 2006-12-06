@@ -20,7 +20,8 @@ endif
 
 
 TESTPROGRAMS += \
-testStack.cxx 
+testStack.cxx \
+testSipMsgEncode.cxx
 
 
 #testTransportSelector.cxx
