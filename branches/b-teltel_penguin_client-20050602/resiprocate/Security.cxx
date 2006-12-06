@@ -102,11 +102,11 @@ readIntoData(const Data& filename)
    int length = is.tellg();
    is.seekg (0, ios::beg);
    
-   char* buffer = new char [length];
+   char* buffer = new char [length + 1];
    
    // read data as a block:
    is.read (buffer,length);
-   
+   buffer[length] = '\0';
    Data target(Data::Take, buffer, length);
    
    is.close();
@@ -163,7 +163,6 @@ Security::Security(const Data& directory, bool serverAuthentication)
 void
 Security::preload()
 {
-#if 1
    FileSystem::Directory dir(mPath);
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
@@ -206,65 +205,6 @@ Security::preload()
          InfoLog(<<"Sucessfully loaded " << fileName );
       }
    }
-#else
-   // CJ - TODO - delete this old crap 
-   DIR* dir = opendir( mPath.c_str() );
-
-   if (!dir )
-   {
-      ErrLog( << "Error reading public key directory  " << mPath );
-      return;      
-   }
-
-   struct dirent * d = 0;
-   while (1)
-   {
-      d = readdir(dir);
-      if ( !d )
-      {
-         break;
-      }
-
-      Data name( d->d_name );
-      Data fileName = mPath+name;
-      
-      if (name.postfix(PEM))
-      {
-         InfoLog( << "Going to try to read file " << fileName );
-         
-         try
-         {
-            if (name.prefix(pemTypePrefixes(UserCert)))
-            {
-               addCertPEM( UserCert, getAor(name, UserCert), readIntoData(fileName), false );
-            }
-            else if (name.prefix(pemTypePrefixes(UserPrivateKey)))
-            {
-               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), readIntoData(fileName), false);
-            }
-            else if (name.prefix(pemTypePrefixes(DomainCert)))
-            {
-               addCertPEM( DomainCert, getAor(name, DomainCert), readIntoData(fileName), false);
-            }
-            else if (name.prefix(pemTypePrefixes(DomainPrivateKey)))
-            {
-               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), readIntoData(fileName), false);
-            }
-            else if (name.prefix(pemTypePrefixes(RootCert)))
-            {
-               addRootCertPEM(readIntoData(fileName));
-            }
-         }
-         catch (...)
-         {  
-            ErrLog(<< "Some problem reading " << fileName );
-         }
-         
-         InfoLog(<<"Sucessfully loaded " << fileName );
-      }
-   }
-   closedir( dir );
-#endif
 }
 
 
