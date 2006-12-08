@@ -746,6 +746,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
       if (target.transport)
       {
+         // !bwc! TODO This filling in of stuff really ought to be handled with
+         // the callOutboundDecorators() callback. (Or, at the very least,
+         // we should allow this code to be turned off through configuration)
          // There is a contact header and it contains exactly one entry
          if (msg->exists(h_Contacts) && msg->header(h_Contacts).size()==1)
          {
