@@ -955,8 +955,8 @@ TransportSelector::sumTransportFifoSizes() const
 Connection*
 TransportSelector::findConnection(const Tuple& target)
 {
-   //!bwc! If we can find a match in the ConnectionManager, we can get
-   //determine what Tranport this needs to be sent on. This may also let
+   // !bwc! If we can find a match in the ConnectionManager, we can
+   // determine what Transport this needs to be sent on. This may also let
    // us know immediately what our source needs to be.
    if(target.getType()==TCP || target.getType()==TLS)
    {
@@ -966,7 +966,8 @@ TransportSelector::findConnection(const Tuple& target)
 
       for(i=mSharedProcessTransports.begin();i!=mSharedProcessTransports.end();i++)
       {
-         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) )
+         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) 
+               && tcpb->transport() == target.getType() )
          {
             conn = tcpb->getConnectionManager().findConnection(target);
             if(conn)
@@ -978,7 +979,8 @@ TransportSelector::findConnection(const Tuple& target)
       
       for(i=mHasOwnProcessTransports.begin();i!=mHasOwnProcessTransports.end();i++)
       {
-         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) )
+         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) 
+               && tcpb->transport() == target.getType() )
          {
             conn = tcpb->getConnectionManager().findConnection(target);
             if(conn)
@@ -999,7 +1001,7 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
 {
    if(!target.transport)
    {
-      if( !target.mFlowKey) // !bwc! Don't have a flowkey yet...
+      if( !target.mFlowKey)
       {
          // !bwc! TODO Remove this code. This really is a TU responsibility.
          // The stack is responsible for exposing a way for the TU to completely
