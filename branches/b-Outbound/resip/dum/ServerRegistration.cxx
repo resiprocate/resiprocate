@@ -21,7 +21,8 @@ ServerRegistration::getHandle()
 
 ServerRegistration::ServerRegistration(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& request)
    : NonDialogUsage(dum, dialogSet),
-     mRequest(request)
+     mRequest(request),
+     mDidOutbound(false)
 {}
 
 ServerRegistration::~ServerRegistration()
@@ -64,10 +65,11 @@ ServerRegistration::accept(SipMessage& ok)
     ok.header(h_Contacts).push_back(contact);
   }
   
-  // !bwc! Not exactly right. We need some way of learning whether outbound
-  // processing was successful or not.
-  static Token outbound("outbound");
-  ok.header(h_Supporteds).push_back(outbound);
+  if(mDidOutbound)
+  {
+     static Token outbound("outbound");
+     ok.header(h_Supporteds).push_back(outbound);
+  }
 
   SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
   mDum.send(msg);
@@ -282,6 +284,11 @@ ServerRegistration::dispatch(const SipMessage& msg)
           operation = ADD;
         }
       }
+   
+      // !bwc! If we perform outbound processing for any Contact, we need to
+      // set this to true.
+      mDidOutbound |= supportsOutbound;
+
     }
 
     // The way this works is:

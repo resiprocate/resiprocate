@@ -34,6 +34,7 @@ class ServerRegistration: public NonDialogUsage
       SipMessage mRequest;
       Uri mAor;
       ContactList mOriginalContacts;
+      bool mDidOutbound;
 
       // disabled
       ServerRegistration(const ServerRegistration&);
