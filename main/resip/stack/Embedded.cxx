@@ -71,6 +71,34 @@ Embedded::decode(const Data& in, unsigned int& count)
 
 static char hexMap[] = "0123456789ABCDEF";
 
+/*
+  This method encodes the hname and hvalue production of SIP-URI.
+
+    SIP-URI          =  "sip:" [ userinfo ] hostport
+                        uri-parameters [ headers ]
+
+    headers         =  "?" header *( "&" header )
+    header          =  hname "=" hvalue
+    hname           =  1*( hnv-unreserved / unreserved / escaped )
+    hvalue          =  *( hnv-unreserved / unreserved / escaped )
+
+    hnv-unreserved  =  "[" / "]" / "/" / "?" / ":" / "+" / "$"
+
+    unreserved  =  alphanum / mark
+    mark        =  "-" / "_" / "." / "!" / "~" / "*" / "'"
+                   / "(" / ")"
+    escaped     =  "%" HEXDIG HEXDIG
+
+    alphanum  =  ALPHA / DIGIT
+
+  It is both unsafe and unwise to express what needs to be escaped
+  and simply not escape everything else, because the omission of an item
+  in need of escaping will cause mis-parsing on the remote end.
+  Because escaping unnecessarily causes absolutely no harm, the omission
+  of a symbol from the list of items positively allowed causes no
+  damage whatsoever.
+*/
+
 Data
 Embedded::encode(const Data& dat)
 {
@@ -82,13 +110,23 @@ Embedded::encode(const Data& dat)
       {
          switch (dat[i])
          {
-            case ';' :
-            case '@' :
-            case '&' :
-            case '=' :
-            case ' ' :
-            case ',' :
-            case '%' : 
+            case '0': case '1': case '2': case '3': case '4': case '5':
+            case '6': case '7': case '8': case '9': case 'a': case 'b':
+            case 'c': case 'd': case 'e': case 'f': case 'g': case 'h':
+            case 'i': case 'j': case 'k': case 'l': case 'm': case 'n':
+            case 'o': case 'p': case 'q': case 'r': case 's': case 't':
+            case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+            case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+            case 'G': case 'H': case 'I': case 'J': case 'K': case 'L':
+            case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R':
+            case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
+            case 'Y': case 'Z': case '[': case ']': case ',': case '?':
+            case ':': case '+': case '$': case '-': case '_': case '.':
+            case '!': case '~': case '*': case '\'': case '(': case ')':
+               str << dat[i];
+               break;
+
+            default:
             {
                str << Symbols::PERCENT;
 
@@ -98,10 +136,7 @@ Embedded::encode(const Data& dat)
 
                str << hexMap[hi];
                str << hexMap[low];
-               break;
             }
-            default :
-               str << dat[i];
          }
       }
    }
