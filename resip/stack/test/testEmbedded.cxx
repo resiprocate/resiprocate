@@ -25,9 +25,10 @@ main(int argc, char** argv)
    }
 
    {
+      // ^ is not valid in this part of a URI; see RFC 3261.
       Data foo("abcdefghi1232454435^ * ");
       cerr << Embedded::encode(foo) << endl;
-      assert(Embedded::encode(foo) == "abcdefghi1232454435^%20*%20");
+      assert(Embedded::encode(foo) == "abcdefghi1232454435%5E%20*%20");
    }
 
    {
@@ -113,13 +114,19 @@ main(int argc, char** argv)
       via.param(p_branch) = branch;
       foo.embedded().header(h_Vias).push_back(via);
 
+      NameAddr route;
+      route.uri() = Uri("sip:flibble@gronk.example.com");
+      foo.embedded().header(h_Routes).push_back(route);
+
       Data buf;
       {
          DataStream str(buf);
          foo.encode(str);
       }
+
       cerr << buf << endl;
-      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "fobbieBletch-1--" RESIP_COOKIE "%3Brport&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "bletchieFoo-1--" RESIP_COOKIE "%3Brport&CSeq=4178%20ACK");
+
+      assert(buf == "sip:speedy@cathaynetworks.com?Via=SIP%2F2.0%2FTLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "fobbieBletch-1--" RESIP_COOKIE "%3Brport&Via=SIP%2F2.0%2FTCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "bletchieFoo-1--" RESIP_COOKIE "%3Brport&Route=%3Csip:flibble%40gronk.example.com%3E&CSeq=4178%20ACK");
    }
 
    {
