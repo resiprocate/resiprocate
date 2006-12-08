@@ -546,7 +546,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       // !bwc! We need 3 things here:
       // 1) A Transport* to call send() on.
       // 2) A complete Tuple to pass in this call (target).
-      // 3) A host, port, and protocol for filling out the topmost via (source)
+      // 3) A host, port, and protocol for filling out the topmost via, and
+      //    possibly stuff like Contact, Referred-By, and other headers that
+      //    must specify a hostname that the TU was unable to supply, because
+      //    it didn't know what interface/port the message would be sent on.
+      //    (source)
       /*
          Our Transport* might be found in target. If so, we can skip this block
          of stuff.
