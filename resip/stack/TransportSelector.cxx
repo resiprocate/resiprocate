@@ -1001,6 +1001,10 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
    {
       if( !target.mFlowKey) // !bwc! Don't have a flowkey yet...
       {
+         // !bwc! TODO Remove this code. This really is a TU responsibility.
+         // The stack is responsible for exposing a way for the TU to completely
+         // specify where a message is to be sent, without relying on bits in
+         // the actual sip message.
          static ExtensionParameter p_fid("fid");
          unsigned long fid=0;
          if(msg->exists(h_Routes) && 
