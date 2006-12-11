@@ -281,14 +281,18 @@ ParseBuffer::skipToChars(const char* cs)
    {
       rpos = mPosition;
       cpos = cs;
+      bool cont = false;
       for (unsigned int i = 0; i < l; i++)
       {
          if (*cpos++ != *rpos++)
          {
             mPosition++;
-            continue;
+            cont = true;
+            break;
          }
       }
+      if (cont)
+         continue;
       return Pointer(*this, mPosition, false);
    }
    return Pointer(*this, mPosition, true);
