@@ -695,6 +695,21 @@ DialogSet::dispatch(const SipMessage& msg)
 
       if (msg.isResponse())
       {
+	     if( mCreator )
+		 {
+		    SharedPtr<SipMessage> lastRequest(mCreator->getLastRequest());
+			if( 0 != lastRequest && !(lastRequest->header(h_CSeq) == msg.header(h_CSeq)))
+			{
+		       InfoLog(<< "Cannot create a dialog, cseq does not match initial dialog request (illegal mid-dialog fork? see 3261 14.1).");
+		       return;
+			}
+		 }
+		 else
+		 {
+		    ErrLog(<< "Can’t create a dialog, on a UAS response.");
+			return;
+		 }
+
          int code = msg.header(h_StatusLine).statusCode();
          
          if (code > 100 && code < 200 && 
