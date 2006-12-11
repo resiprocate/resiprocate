@@ -520,7 +520,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
                (request.header(h_Routes).front().uri().scheme() == "sip" ||
                request.header(h_Routes).front().uri().scheme() == "sips" ) )
          {
-            rt.uri().scheme() == request.header(h_Routes).front().uri().scheme();
+            rt.uri().scheme() = request.header(h_Routes).front().uri().scheme();
          }
          else if(request.header(h_RequestLine).uri().scheme() == "sip" ||
                   request.header(h_RequestLine).uri().scheme() == "sips")
