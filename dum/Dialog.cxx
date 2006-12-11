@@ -172,27 +172,27 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                {
                   const NameAddr& contact = response.header(h_Contacts).front();
                   if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
-                      isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
+                     isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                   {
                      BaseCreator* creator = mDialogSet.getCreator();					 
-					                 
-					 if( 0 == creator )
-					 {
-						 ErrLog(<< "BaseCreator is null for DialogSet");
-						 ErrLog(<< response);
-						 throw Exception("BaseCreator is null for DialogSet", __FILE__, __LINE__);
-					 }
-					 
-					 SharedPtr<SipMessage> lastRequest(creator->getLastRequest());
 
-					 if( 0 == lastRequest ||
-						 !lastRequest->exists(h_Contacts) ||
-						 lastRequest->header(h_Contacts).empty())
-					 {
-						InfoLog(<< "lastRequest does not contain a valid contact");						
-						InfoLog(<< response);
-						throw Exception("lastRequest does not contain a valid contact.", __FILE__, __LINE__);
-					 }
+                     if( 0 == creator )
+                     {
+                        ErrLog(<< "BaseCreator is null for DialogSet");
+                        ErrLog(<< response);
+                        throw Exception("BaseCreator is null for DialogSet", __FILE__, __LINE__);
+                     }
+
+                     SharedPtr<SipMessage> lastRequest(creator->getLastRequest());
+
+                     if( 0 == lastRequest ||
+                        !lastRequest->exists(h_Contacts) ||
+                        lastRequest->header(h_Contacts).empty())
+                     {
+                        InfoLog(<< "lastRequest does not contain a valid contact");						
+                        InfoLog(<< response);
+                        throw Exception("lastRequest does not contain a valid contact.", __FILE__, __LINE__);
+                     }
                      mLocalContact = creator->getLastRequest()->header(h_Contacts).front();
                      mRemoteTarget = contact;
                   }
