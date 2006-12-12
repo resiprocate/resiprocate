@@ -46,7 +46,7 @@ OutboundTargetHandler::process(RequestContext & rc)
          
          if(i!=map.end())
          {
-            if(sip->header(resip::h_StatusLine).responseCode()==410 && !i->second.empty())
+            if(sip->header(resip::h_StatusLine).responseCode()==430 && !i->second.empty())
             {
                if(i->second.front()==tid)
                {
