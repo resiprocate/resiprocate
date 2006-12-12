@@ -25,6 +25,10 @@
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/InternalTransport.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
+#include "resip/stack/TcpTransport.hxx"
+#include "resip/stack/TlsTransport.hxx"
+#include "resip/stack/UdpTransport.hxx"
+#include "resip/stack/DtlsTransport.hxx"
 #include "resip/stack/Uri.hxx"
 
 #include "rutil/DataStream.hxx"
@@ -144,7 +148,7 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
    mDns.addTransportType(transport->transport(), transport->ipVersion());
 
    // !bwc! This is a multimap from TransportType/IpVersion to Transport*.
-   // Make extra sure that no garbage goes in here.
+   // Make _extra_ sure that no garbage goes in here.
    if(transport->transport()==TCP)
    {
       assert(dynamic_cast<TcpTransport*>(transport));
@@ -157,29 +161,30 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
    {
       assert(dynamic_cast<UdpTransport*>(transport));
    }
+#if USE_DTLS
    else if(transport->transport()==DTLS)
    {
       assert(dynamic_cast<DtlsTransport*>(transport));
    }
+#endif
    else
    {
       assert(0);
    }
    
-   mTypeToTransportMap.insert(make_pair(key,transport));
+   Tuple tuple(transport->interfaceName(), transport->port(), 
+                   transport->ipVersion(), transport->transport());
+   mTypeToTransportMap.insert(std::make_pair(tuple,transport));
    
    switch (transport->transport())
    {
       case UDP:
       case TCP:
       {
-         Tuple key(transport->interfaceName(), transport->port(), 
-                   transport->ipVersion(), transport->transport());
-         
-         assert(mExactTransports.find(key) == mExactTransports.end() &&
-                mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
+         assert(mExactTransports.find(tuple) == mExactTransports.end() &&
+                mAnyInterfaceTransports.find(tuple) == mAnyInterfaceTransports.end());
 
-         DebugLog (<< "Adding transport: " << key);
+         DebugLog (<< "Adding transport: " << tuple);
          
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
@@ -187,13 +192,13 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
          if (transport->interfaceName().empty() ||
              transport->hasSpecificContact() )
          {
-            mAnyInterfaceTransports[key] = transport;
-            mAnyPortAnyInterfaceTransports[key] = transport;
+            mAnyInterfaceTransports[tuple] = transport;
+            mAnyPortAnyInterfaceTransports[tuple] = transport;
          }
          else
          {
-            mExactTransports[key] = transport;
-            mAnyPortTransports[key] = transport;
+            mExactTransports[tuple] = transport;
+            mAnyPortTransports[tuple] = transport;
          }
       }
       break;
@@ -1004,10 +1009,10 @@ TransportSelector::findConnection(const Tuple& target) const
       Connection* conn=0;
       TypeToTransportMap::const_iterator i;
       TypeToTransportMap::const_iterator l=mTypeToTransportMap.lower_bound(target);
-      TypeToTransportMap::const_iterator u=mmTypeToTransportMap.upper_bound(target);
+      TypeToTransportMap::const_iterator u=mTypeToTransportMap.upper_bound(target);
       for(i=l;i!=u;++i)
       {
-         tcpb=static_cast<TcpBaseTransport*>(*i);
+         tcpb=static_cast<TcpBaseTransport*>(i->second);
          conn = tcpb->getConnectionManager().findConnection(target);
          if(conn)
          {
