@@ -12,7 +12,6 @@
 #include "resip/stack/SecurityTypes.hxx"
 #include "resip/stack/StatisticsManager.hxx"
 #include "resip/stack/TuSelector.hxx"
-#include "resip/stack/FlowManager.hxx"
 #include "rutil/dns/DnsStub.hxx"
 
 namespace resip 
@@ -460,8 +459,6 @@ class SipStack
       Compression &getCompression() { return *mCompression; }
       
       bool isFlowAlive(const resip::Tuple& flow) const;
-      bool addFlow(const resip::Tuple& flow);
-      bool killFlow(const resip::Tuple& flow);
       
    private:
       /// Notify an async process handler - if one has been registered
@@ -503,10 +500,6 @@ class SipStack
       /// All aspects of the Transaction State Machine / DNS resolver
       TransactionController mTransactionController;
       
-      /// TUs can use this to store their flows. Nothing in the stack touches
-      /// this. (TUs don't touch this directly, but through SipStack::addFlow()
-      /// , SipStack::isFlowAlive(), and SipStack::killFlow() )
-      FlowManager mFlowManager;
       
       /** store all domains that this stack is responsible for. Controlled by
           addAlias and addTransport interfaces and checks can be made with isMyDomain() */

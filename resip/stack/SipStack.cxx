@@ -629,20 +629,9 @@ const SipStack& stack)
 bool
 SipStack::isFlowAlive(const resip::Tuple& flow) const
 {
-   return mFlowManager.flowAlive(flow);
+   return mTransactionController.transportSelector().connectionAlive(flow);
 }
 
-bool
-SipStack::addFlow(const resip::Tuple& flow)
-{
-   return mFlowManager.addFlow(flow);
-}
-
-bool
-SipStack::killFlow(const resip::Tuple& flow)
-{
-   return mFlowManager.killFlow(flow);
-}
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
