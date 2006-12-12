@@ -207,7 +207,14 @@ ServerRegistration::dispatch(const SipMessage& msg)
       
       // !bwc! If, in the end, this is true, it means all necessary conditions
       // for outbound support have been met.
+      // TODO allow outbound support to be disabled
       bool supportsOutbound=true;
+      
+      // !bwc! We only store flow information if we have a direct flow to the
+      // endpoint. We do not create a flow if there is an edge-proxy, because if
+      // our connection to the edge proxy fails, the flow from the edge-proxy to
+      // the endpoint is still good, so we should not discard the registration.
+      bool haveDirectFlow=true;
       try
       {
          if(supportsOutbound && msg.exists(h_Paths))
@@ -215,6 +222,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
             for(NameAddrs::const_iterator i = msg.header(h_Paths).begin();
                   i!=msg.header(h_Paths).end();++i)
             {
+               haveDirectFlow=false;
                if(!i->exists(p_ob))
                {
                   supportsOutbound=false;
@@ -242,20 +250,8 @@ ServerRegistration::dispatch(const SipMessage& msg)
          {
             rec.mInstance=i->param(p_Instance);
             rec.mRegId=i->param(p_regid);
-            rec.mReceivedFrom.onlyUseExistingConnection=true;
-            // !bwc! We do not store flow-state for connectionless transports,
-            // since as a server we are not assured that we will ever know when
-            // a connectionless flow dies. (We could go to the trouble of
-            // keeping a count of how many different registrations are using
-            // a given flow, and remove said flow when that count reaches zero,
-            // but it is unclear to me whether this is worth doing)
-            if(rec.mReceivedFrom.getType() == TCP 
-               || rec.mReceivedFrom.getType()==TLS)
-            {
-               mDum.getSipStack().addFlow(msg.getSource());
-               DebugLog(<<"Added flow: " << msg.getSource());
-            }
-        }
+            rec.mReceivedFrom.onlyUseExistingConnection=haveDirectFlow;
+         }
          catch(resip::ParseBuffer::Exception& e)
          {
             supportsOutbound=false;

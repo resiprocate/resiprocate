@@ -52,7 +52,6 @@ SRC = \
 	ExternalBodyContents.cxx \
 	QValue.cxx \
 	QValueParameter.cxx \
-	FlowManager.cxx \
 	GenericContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
