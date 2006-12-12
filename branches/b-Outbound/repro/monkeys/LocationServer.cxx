@@ -53,14 +53,24 @@ LocationServer::process(RequestContext& context)
                QValueTarget* target = new QValueTarget(contact);
                batch.push_back(target);
             }
-            else if(context.getProxy().getStack().isFlowAlive(contact.mReceivedFrom))
+            else if(!contact.mReceivedFrom.onlyUseExistingConnection ||
+               context.getProxy().getStack().isFlowAlive(contact.mReceivedFrom))
             {
+               // !bwc! If we have an outbound target with 
+               // onlyUseExistingConnection=false, this means that we do not
+               // have a direct flow to the endpoint, but there is an edge-proxy
+               // in the path that does. So, if we still have a connection to
+               // that edge-proxy, we will use it, but if we do not, we will
+               // send anyway using the normal method of DNS lookup. (ie, if no
+               // direct connection, we do not need the flow to still be alive)
                Target* target = new Target(contact);
                target->mPriorityMetric=contact.mLastUpdated;
                outboundBatch[contact.mInstance].push_back(target);
             }
             else
             {
+               // !bwc! If our direct flow to the endpoint has failed, we remove 
+               // the contact.
                mStore.removeContact(inputUri,contact);
             }
          }
