@@ -142,6 +142,32 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
 {
    Transport* transport = tAuto.release();   
    mDns.addTransportType(transport->transport(), transport->ipVersion());
+
+   // !bwc! This is a multimap from TransportType/IpVersion to Transport*.
+   // Make extra sure that no garbage goes in here.
+   if(transport->transport()==TCP)
+   {
+      assert(dynamic_cast<TcpTransport*>(transport));
+   }
+   else if(transport->transport()==TLS)
+   {
+      assert(dynamic_cast<TlsTransport*>(transport));
+   }
+   else if(transport->transport()==UDP)
+   {
+      assert(dynamic_cast<UdpTransport*>(transport));
+   }
+   else if(transport->transport()==DTLS)
+   {
+      assert(dynamic_cast<DtlsTransport*>(transport));
+   }
+   else
+   {
+      assert(0);
+   }
+   
+   mTypeToTransportMap.insert(make_pair(key,transport));
+   
    switch (transport->transport())
    {
       case UDP:
@@ -154,7 +180,7 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
                 mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
 
          DebugLog (<< "Adding transport: " << key);
-
+         
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
          // specifies an interface. See TransportSelector::findTransport.
@@ -746,9 +772,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
       if (target.transport)
       {
-         // !bwc! TODO This filling in of stuff really ought to be handled with
+         // !bwc! TODO This filling in of stuff really should be handled with
          // the callOutboundDecorators() callback. (Or, at the very least,
-         // we should allow this code to be turned off through configuration)
+         // we should allow this code to be turned off through configuration.
+         // There are plenty of cases where this stuff is not at all necessary.)
          // There is a contact header and it contains exactly one entry
          if (msg->exists(h_Contacts) && msg->header(h_Contacts).size()==1)
          {
@@ -959,8 +986,14 @@ TransportSelector::sumTransportFifoSizes() const
    return sum;
 }
 
-Connection*
-TransportSelector::findConnection(const Tuple& target)
+bool
+TransportSelector::connectionAlive(const Tuple& target) const
+{
+   return (findConnection(target)!=0);
+}
+
+const Connection*
+TransportSelector::findConnection(const Tuple& target) const
 {
    // !bwc! If we can find a match in the ConnectionManager, we can
    // determine what Transport this needs to be sent on. This may also let
@@ -969,34 +1002,18 @@ TransportSelector::findConnection(const Tuple& target)
    {
       TcpBaseTransport* tcpb=0;
       Connection* conn=0;
-      TransportList::const_iterator i;
-
-      for(i=mSharedProcessTransports.begin();i!=mSharedProcessTransports.end();i++)
+      TypeToTransportMap::const_iterator i;
+      TypeToTransportMap::const_iterator l=mTypeToTransportMap.lower_bound(target);
+      TypeToTransportMap::const_iterator u=mmTypeToTransportMap.upper_bound(target);
+      for(i=l;i!=u;++i)
       {
-         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) 
-               && tcpb->transport() == target.getType() )
+         tcpb=static_cast<TcpBaseTransport*>(*i);
+         conn = tcpb->getConnectionManager().findConnection(target);
+         if(conn)
          {
-            conn = tcpb->getConnectionManager().findConnection(target);
-            if(conn)
-            {
-               return conn;
-            }
+            return conn;
          }
       }
-      
-      for(i=mHasOwnProcessTransports.begin();i!=mHasOwnProcessTransports.end();i++)
-      {
-         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) 
-               && tcpb->transport() == target.getType() )
-         {
-            conn = tcpb->getConnectionManager().findConnection(target);
-            if(conn)
-            {
-               return conn;
-            }
-         }
-      }
-
    }
    
    return 0;
@@ -1008,30 +1025,6 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
 {
    if(!target.transport)
    {
-      if( !target.mFlowKey)
-      {
-         // !bwc! TODO Remove this code. This really is a TU responsibility.
-         // The stack is responsible for exposing a way for the TU to completely
-         // specify where a message is to be sent, without relying on bits in
-         // the actual sip message.
-         static ExtensionParameter p_fid("fid");
-         unsigned long fid=0;
-         if(msg->exists(h_Routes) && 
-            !msg->header(h_Routes).empty() && 
-            msg->header(h_Routes).front().uri().exists(p_fid))
-         {
-            fid = msg->header(h_Routes).front().uri().param(p_fid).convertUnsignedLong();
-            msg->header(h_Routes).front().uri().remove(p_fid);
-         }
-         else if (msg->header(h_RequestLine).uri().exists(p_fid))
-         {
-            fid = msg->header(h_RequestLine).uri().param(p_fid).convertUnsignedLong();
-            msg->header(h_RequestLine).uri().remove(p_fid);
-         }
-         
-         target.mFlowKey=fid;
-      }
-         
       if(target.getType()==UDP || target.getType()==DTLS)
       {
          if(target.mFlowKey)
@@ -1047,7 +1040,7 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
       {
          // !bwc! We might find a match by the cid, or maybe using the
          // tuple itself.
-         Connection* conn = findConnection(target);
+         const Connection* conn = findConnection(target);
          
          if(conn) // !bwc! Woohoo! Home free!
          {
