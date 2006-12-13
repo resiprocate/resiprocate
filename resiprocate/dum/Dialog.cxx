@@ -74,8 +74,7 @@ mDestroying(false)
          mType = Fake;
       }
 
-      if (//mDialogSet.mState == DialogSet::Established && 
-         //request.header(h_CSeq).method() != NOTIFY && 
+      if ((mDialogSet.mState == DialogSet::Established || request.header(h_CSeq).method() == NOTIFY) && 
          request.exists(h_RecordRoutes))
       {
          mRouteSet = request.header(h_RecordRoutes); // !jf! is this right order
@@ -505,7 +504,7 @@ Dialog::dispatch(const SipMessage& msg)
       const SipMessage& response = msg;
       int code = response.header(h_StatusLine).statusCode();
       // RFC3261 - 12.2. Requests within a Dialog: UA cannot reset routeSet in any in-dialog transaction.
-      if (mDialogSet.mState == DialogSet::Established && !mRouteSet.size() && code >=200 && code < 300)
+      if (mDialogSet.mState == DialogSet::Established && !mRouteSet.empty() && code >=200 && code < 300)
       {
          if (response.exists(h_RecordRoutes))
          {
