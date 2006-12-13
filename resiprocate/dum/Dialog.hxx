@@ -131,6 +131,7 @@ class DUM_API Dialog
 //      Data mLocalTag;
 //      Data mRemoteTag;
       NameAddrs mRouteSet;
+      //bool      mIsEarlyRouteSet;
       
       //variants
       NameAddr mLocalContact;

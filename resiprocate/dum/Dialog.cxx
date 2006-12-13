@@ -34,6 +34,7 @@ mInviteSession(0),
 mType(Fake),
 mRouteSet(),
 mLocalContact(),
+//mIsEarlyRouteSet(true),
 mLocalCSeq(0),
 mRemoteCSeq(0),
 mAckId(0),
@@ -72,7 +73,10 @@ mDestroying(false)
       default:
          mType = Fake;
       }
-      if (request.exists(h_RecordRoutes))
+
+      if (//mDialogSet.mState == DialogSet::Established && 
+         //request.header(h_CSeq).method() != NOTIFY && 
+         request.exists(h_RecordRoutes))
       {
          mRouteSet = request.header(h_RecordRoutes); // !jf! is this right order
       }
@@ -146,9 +150,13 @@ mDestroying(false)
          mType = Fake;
       }
 
-      if (response.exists(h_RecordRoutes))
+      if (mDialogSet.mState == DialogSet::Established && response.exists(h_RecordRoutes))
       {
          mRouteSet = response.header(h_RecordRoutes).reverse();
+         //if (response.header(h_StatusLine).statusCode() >= 200)
+         //{
+         //   mIsEarlyRouteSet = false;
+         //}
       }
 
       switch (response.header(h_CSeq).method())
@@ -497,11 +505,12 @@ Dialog::dispatch(const SipMessage& msg)
       const SipMessage& response = msg;
       int code = response.header(h_StatusLine).statusCode();
       // RFC3261 - 12.2. Requests within a Dialog: UA cannot reset routeSet in any in-dialog transaction.
-      if (mRouteSet.empty() && code >=200 && code < 300)
+      if (mDialogSet.mState == DialogSet::Established && !mRouteSet.size() && code >=200 && code < 300)
       {
          if (response.exists(h_RecordRoutes))
          {
             mRouteSet = response.header(h_RecordRoutes).reverse();
+            //mIsEarlyRouteSet = false;
          }
       }
 
