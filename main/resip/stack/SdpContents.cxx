@@ -1669,11 +1669,13 @@ SdpContents::Session::Medium::findTelephoneEventPayloadType() const
 
 Codec::Codec(const Data& name,
              unsigned long rate,
-             const Data& parameters)
+             const Data& parameters,
+             const Data& encodingParameters)
    : mName(name),
      mRate(rate),
      mPayloadType(-1),
-     mParameters(parameters)
+     mParameters(parameters),
+     mEncodingParameters(encodingParameters)
 {
 }
 
@@ -1681,15 +1683,15 @@ Codec::Codec(const Codec& rhs)
    : mName(rhs.mName),
      mRate(rhs.mRate),
      mPayloadType(rhs.mPayloadType),
-     mParameters(rhs.mParameters)
+     mParameters(rhs.mParameters),
+     mEncodingParameters(rhs.mEncodingParameters)
 {
 }
 
 Codec::Codec(const Data& name, int payloadType, int rate)
    : mName(name),
      mRate(rate),
-     mPayloadType(payloadType),
-     mParameters()
+     mPayloadType(payloadType)
 {
 }
 
@@ -1702,6 +1704,7 @@ Codec::operator=(const Codec& rhs)
       mRate = rhs.mRate;
       mPayloadType = rhs.mPayloadType;
       mParameters = rhs.mParameters;
+      mEncodingParameters = rhs.mEncodingParameters;
    }
    return *this;
 }
@@ -1716,6 +1719,13 @@ Codec::parse(ParseBuffer& pb,
    pb.data(mName, anchor);
    pb.skipChar(Symbols::SLASH[0]);
    mRate = pb.integer();
+   pb.skipToChar(Symbols::SLASH[0]);
+   if(!pb.eof() && *pb.position() == Symbols::SLASH[0])
+   {
+      anchor = pb.skipChar(Symbols::SLASH[0]);
+      pb.skipToEnd();
+      pb.data(mEncodingParameters, anchor);
+   }
    mPayloadType = payloadType;
 
    // get parameters if they exist
@@ -1795,7 +1805,7 @@ Codec::CodecMap& Codec::getStaticCodecs()
 bool
 resip::operator==(const Codec& lhs, const Codec& rhs)
 {
-   return (isEqualNoCase(lhs.mName, rhs.mName) && lhs.mRate == rhs.mRate);
+   return (isEqualNoCase(lhs.mName, rhs.mName) && lhs.mRate == rhs.mRate && lhs.mEncodingParameters == rhs.mEncodingParameters);
 }
 
 ostream&
@@ -1804,6 +1814,11 @@ resip::operator<<(ostream& str, const Codec& codec)
    str << codec.mName;
    str << Symbols::SLASH[0];
    str << codec.mRate;
+   if(!codec.mEncodingParameters.empty())
+   {
+      str << Symbols::SLASH[0];
+      str << codec.mEncodingParameters;
+   }
    return str;
 }
 
