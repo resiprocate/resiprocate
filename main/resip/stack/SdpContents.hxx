@@ -52,7 +52,7 @@ class SdpContents : public Contents
             {
                public:
                   Codec() : mName(), mRate(0), mPayloadType(-1) {}
-                  Codec(const Data& name, unsigned long rate, const Data& parameters = Data::Empty);
+                  Codec(const Data& name, unsigned long rate, const Data& parameters = Data::Empty, const Data& encodingParameters = Data::Empty);
                   Codec(const Data& name, int payloadType, int rate=8000);
                   Codec(const Codec& rhs);
                   Codec& operator=(const Codec& codec);
@@ -69,6 +69,9 @@ class SdpContents : public Contents
 
                   const Data& parameters() const {return mParameters;}
                   Data& parameters() {return mParameters;}
+
+                  const Data& encodingParameters() const {return mEncodingParameters;}
+                  Data& encodingParameters() {return mEncodingParameters;}
 
                   static const Codec ULaw_8000;
                   static const Codec ALaw_8000;
@@ -89,7 +92,8 @@ class SdpContents : public Contents
                   Data mName;
                   unsigned long mRate;
                   int mPayloadType;
-                  Data mParameters;
+                  Data mParameters;  // Format parameters
+                  Data mEncodingParameters;
 
                   static std::auto_ptr<CodecMap> sStaticCodecs;
                   static bool sStaticCodecsCreated;
