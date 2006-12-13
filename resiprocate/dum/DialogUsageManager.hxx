@@ -196,8 +196,9 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
       ClientPagerMessageHandle makePagerMessage(const NameAddr& target, AppDialogSet* = 0);
       
       void end(DialogSetId invSessionId);
-      void send(SipMessage& request); 
+      void send(SipMessage& request);
       void cancelInvite(const DialogSetId& invSessionId);
+      void cancelInviteAsync(const DialogSetId& invSessionId);
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 

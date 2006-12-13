@@ -699,6 +699,13 @@ DialogUsageManager::end(DialogSetId setid)
 void
 DialogUsageManager::cancelInvite(const DialogSetId& invSessionId)
 {
+   InfoLog(<< "Cancel outgoing INVITE (sync)");
+   end(invSessionId);
+}
+
+void
+DialogUsageManager::cancelInviteAsync(const DialogSetId& invSessionId)
+{
    InfoLog(<< "Post cancel outgoing message (async)");
    post(new InternalDumCancelOutgoingMessage(invSessionId, *this));
 }
