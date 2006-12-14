@@ -42,6 +42,76 @@ const int Helper::tagSize = 4;
 // (e.g. proxies) want to share the same secret
 Helper::NonceHelperPtr Helper::mNonceHelperPtr;
 
+void Helper::integer2hex(char* _d, unsigned int _s, bool _l)
+{
+   int i;
+   unsigned char j;
+   int k = 0;
+   char* s;
+
+   _s = htonl(_s);
+   s = (char*)&_s;
+
+   for (i = 0; i < 4; i++) 
+   {
+      j = (s[i] >> 4) & 0xf;
+      if (j <= 9) 
+      {
+         if(_l || j != 0 || k != 0)
+         {
+            _d[k++] = (j + '0');
+         }
+      }
+      else 
+      {
+         _d[k++] = (j + 'a' - 10);
+      }
+
+      j = s[i] & 0xf;
+      if (j <= 9) 
+      {
+         if(_l || j != 0 || k != 0)
+         {
+            _d[k++] = (j + '0');
+         }
+      }
+      else 
+      {
+         _d[k++] = (j + 'a' - 10);
+      }
+   }
+}
+
+unsigned int Helper::hex2integer(const char* _s)
+{
+   unsigned int i, res = 0;
+
+   for(i = 0; i < 8; i++) 
+   {
+      if ((_s[i] >= '0') && (_s[i] <= '9')) 
+      {
+         res *= 16;
+         res += _s[i] - '0';
+      }
+      else if ((_s[i] >= 'a') && (_s[i] <= 'f')) 
+      {
+         res *= 16;
+         res += _s[i] - 'a' + 10;
+      } 
+      else if ((_s[i] >= 'A') && (_s[i] <= 'F')) 
+      {
+         res *= 16;
+         res += _s[i] - 'A' + 10;
+      }
+      else 
+      {
+         return res;
+      }
+   }
+
+   return res;
+}
+
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {

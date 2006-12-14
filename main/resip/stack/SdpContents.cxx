@@ -3,6 +3,7 @@
 #endif
 
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/DataStream.hxx"
 #include "resip/stack/Symbols.hxx"
@@ -549,7 +550,7 @@ SdpContents::Session::Connection::parse(ParseBuffer& pb)
    pb.data(mAddress, anchor);
 
    mTTL = 0;
-   if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
+   if (mAddrType == IP4 && !pb.eof() && *pb.position() == Symbols::SLASH[0])
    {
       pb.skipChar();
       mTTL = pb.integer();
@@ -1323,6 +1324,8 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
       mConnections.back().parse(pb);
       if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
+         // Note:  we only get here if there was a /<number of addresses> 
+         //        parameter following the connection address. 
          pb.skipChar();
          int num = pb.integer();
 
@@ -1331,22 +1334,36 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
          int i = addr.size() - 1;
          for (; i; i--)
          {
-            if (addr[i] == '.')
+            if (addr[i] == '.' || addr[i] == ':') // ipv4 or ipv6
             {
                break;
             }
          }
 
-         if (addr[i] == '.')
+         if (addr[i] == '.')  // add a number of ipv4 connections
          {
-            Data before(addr.data(), i);
+            Data before(addr.data(), i+1);
             ParseBuffer subpb(addr.data()+i+1, addr.size()-i-1);
             int after = subpb.integer();
 
-            for (int i = 0; i < num-1; i++)
+            for (int i = 1; i < num; i++)
             {
                addConnection(con);
                mConnections.back().mAddress = before + Data(after+i);
+            }
+         }
+         if (addr[i] == ':') // add a number of ipv6 connections
+         {
+            Data before(addr.data(), i+1);
+            int after = Helper::hex2integer(addr.data()+i+1);
+            char hexstring[9];
+
+            for (int i = 1; i < num; i++)
+            {
+               addConnection(con);
+               memset(hexstring, 0, sizeof(hexstring));
+               Helper::integer2hex(hexstring, after+i, false /* supress leading zeros */);
+               mConnections.back().mAddress = before + Data(hexstring);
             }
          }
 
@@ -1497,7 +1514,9 @@ const list<SdpContents::Session::Connection>
 SdpContents::Session::Medium::getConnections() const
 {
    list<Connection> connections = const_cast<Medium*>(this)->getMediumConnections();
-   if (mSession)
+   // If there are connections specified at the medium level, then check if a session level
+   // connection is present - if so then return it
+   if (connections.empty() && mSession && !mSession->connection().getAddress().empty())
    {
       connections.push_back(mSession->connection());
    }
