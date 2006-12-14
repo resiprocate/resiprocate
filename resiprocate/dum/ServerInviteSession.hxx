@@ -24,39 +24,38 @@ class DUM_API ServerInviteSession: public InviteSession
       typedef Handle<ServerInviteSession> ServerInviteSessionHandle;
       ServerInviteSessionHandle getHandle();
 
-      void         redirectAsync(const NameAddrs& contacts, int code=302);
-      void         provisionalAsync(int code=180);
-      virtual void provideOfferAsync(std::auto_ptr<SdpContents> offer);
-      virtual void provideAnswerAsync(std::auto_ptr<SdpContents> answer);
-      virtual void endAsync();
-      virtual void rejectAsync(int statusCode, WarningCategory *warning = 0);
-      void         acceptAsync(int statusCode=200);
 
-   protected:  // !polo! all public methods changed to aysnc.
       // send a 3xx
       void redirect(const NameAddrs& contacts, int code=302);
+      void redirectAsync(const NameAddrs& contacts, int code=302);
 
       /// send a 1xx - provisional response
       void provisional(int code=180);
+      void provisionalAsync(int code=180);
       
       /** Called to set the offer that will be used in the next messages that
           sends and offer. Does not send an offer */
       virtual void provideOffer(const SdpContents& offer);
+      virtual void provideOfferAsync(std::auto_ptr<SdpContents> offer);
 
       /** Called to set the answer that will be used in the next messages that
           sends an offer. Does not send an answer */
       virtual void provideAnswer(const SdpContents& answer);
+      virtual void provideAnswerAsync(std::auto_ptr<SdpContents> answer);
 
       /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
+      virtual void endAsync();
 
       /** Rejects an offer at the SIP level. So this can send a 488 to a
           reINVITE or UPDATE */
       virtual void reject(int statusCode, const WarningCategory *warning = 0);  // sync.
+      virtual void rejectAsync(int statusCode, WarningCategory *warning = 0);
 
       /** accept a re-invite, etc.  Always 200? this is only applicable to the
           UAS */
       virtual void accept(int statusCode=200);
+      virtual void acceptAsync(int statusCode=200);
             
    private:
       friend class Dialog;
