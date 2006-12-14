@@ -34,17 +34,7 @@ class DUM_API InviteSession : public DialogUsage
 
       static std::auto_ptr<SdpContents> getSdp(const SipMessage& msg);
 
-      virtual void provideOfferAsync(std::auto_ptr<SdpContents> offer);
-      virtual void provideAnswerAsync(std::auto_ptr<SdpContents> answer);
-      virtual void endAsync();
-      virtual void rejectAsync(int statusCode, WarningCategory *warning = 0);
       void targetRefreshAsync(const NameAddr& localUri);
-      // Following methods are for sending requests within a dialog
-      void referAsync(const NameAddr& referTo);
-      void referAsync(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
-      void infoAsync(std::auto_ptr<Contents> contents);
-      void acceptInfoAsync(int statusCode = 200);
-      void rejectInfoAsync(int statusCode = 488);
       
       // !polo!: Set reINVITE headers for multi-party call (2005/09/13).
       void setReInviteHeader(const ExtensionHeader&        extensionHeader,
@@ -72,25 +62,27 @@ class DUM_API InviteSession : public DialogUsage
          Answer
       } OfferAnswerType;
 
-   protected: // protect for DUM thread synchronization.
-
       /** Called to set the offer that will be used in the next message that
           sends an offer. If possible, this will synchronously send the
           appropriate request or response. In some cases, the UAS might have to
           call accept in order to cause the message to be sent. */
       virtual void provideOffer(const SdpContents& offer);
+      virtual void provideOfferAsync(std::auto_ptr<SdpContents> offer);
 
       /** Similar to provideOffer - called to set the answer to be signalled to
           the peer. May result in message being sent synchronously depending on
           the state. */
       virtual void provideAnswer(const SdpContents& answer);
+      virtual void provideAnswerAsync(std::auto_ptr<SdpContents> answer);
 
       /// Makes the specific dialog end. Will send a BYE (not a CANCEL)
       virtual void end();
+      virtual void endAsync();
 
       /** Rejects an offer at the SIP level. So this can send a 488 to a
           reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);   // sync.
+      virtual void rejectAsync(int statusCode, WarningCategory *warning = 0);
       
       /// will resend the current sdp in an UPDATE or reINVITE
       virtual void targetRefresh(const NameAddr& localUri);
@@ -99,13 +91,18 @@ class DUM_API InviteSession : public DialogUsage
 
       ///
       virtual void refer(const NameAddr& referTo);
+      void referAsync(const NameAddr& referTo);
       ///
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
+      void referAsync(const NameAddr& referTo, InviteSessionHandle sessionToReplace);
       ///
       virtual void info(const Contents& contents);                // sync.
+      void infoAsync(std::auto_ptr<Contents> contents);
       
       virtual void acceptInfo(int statusCode = 200);
+      void acceptInfoAsync(int statusCode = 200);
       virtual void rejectInfo(int statusCode = 488);
+      void rejectInfoAsync(int statusCode = 488);
       // !polo! - deprecates acceptInfo() and rejectInfo().
       virtual void acceptInfoInternal(std::auto_ptr<SipMessage> responseMsg);
       virtual void rejectInfoInternal(std::auto_ptr<SipMessage> responseMsg);
