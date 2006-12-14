@@ -1,6 +1,7 @@
 
 #include "resip/stack/SERNonceHelper.hxx"
 #include "rutil/Random.hxx"
+#include "resip/stack/Helper.hxx"
 
 using namespace resip;
 
@@ -18,10 +19,6 @@ using namespace resip;
  *    the default implementation of NonceHelper in the reSIProcate stack
  *
  */
-
-static inline void integer2hex(char* _d, unsigned int _s);
-static inline unsigned int hex2integer(const char* _s);
-
 
 
 SERNonceHelper::SERNonceHelper(int serOffset) : serOffset(serOffset)
@@ -47,7 +44,7 @@ SERNonceHelper::makeNonce(const SipMessage& request, const Data& timestamp)
    Data md5buf(8, Data::Preallocate);
    Data nonce(40, Data::Preallocate);
    int ts = timestamp.convertInt() + serOffset;
-   integer2hex(buf, ts);
+   Helper::integer2hex(buf, ts);
    md5buf.append(buf, 8);
    nonce.append(buf, 8);
    md5buf += privateKey;
@@ -63,71 +60,10 @@ SERNonceHelper::parseNonce(const Data& nonce)
       return SERNonceHelper::Nonce(0);
    }
    const char *s = nonce.data();
-   unsigned int ts = hex2integer(s) - serOffset;
+   unsigned int ts = Helper::hex2integer(s) - serOffset;
    return SERNonceHelper::Nonce(ts); 
 }
 
-
-static inline void integer2hex(char* _d, unsigned int _s)
-{
-   int i;
-   unsigned char j;
-   char* s;
-
-   _s = htonl(_s);
-   s = (char*)&_s;
-
-   for (i = 0; i < 4; i++) 
-   {
-      j = (s[i] >> 4) & 0xf;
-      if (j <= 9) 
-      {
-         _d[i * 2] = (j + '0');
-      }
-      else 
-      {
-         _d[i * 2] = (j + 'a' - 10);
-      }
-
-      j = s[i] & 0xf;
-      if (j <= 9) 
-      {
-         _d[i * 2 + 1] = (j + '0');
-      }
-      else 
-      {
-         _d[i * 2 + 1] = (j + 'a' - 10);
-      }
-   }
-}
-
-static inline unsigned int hex2integer(const char* _s)
-{
-   unsigned int i, res = 0;
-
-   for(i = 0; i < 8; i++) 
-   {
-      res *= 16;
-      if ((_s[i] >= '0') && (_s[i] <= '9')) 
-      {
-         res += _s[i] - '0';
-      }
-      else if ((_s[i] >= 'a') && (_s[i] <= 'f')) 
-      {
-         res += _s[i] - 'a' + 10;
-      } 
-      else if ((_s[i] >= 'A') && (_s[i] <= 'F')) 
-      {
-         res += _s[i] - 'A' + 10;
-      }
-      else 
-      {
-         return 0;
-      }
-   }
-
-   return res;
-}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
