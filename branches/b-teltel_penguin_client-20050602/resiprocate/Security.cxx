@@ -85,9 +85,11 @@ static Data
 readIntoData(const Data& filename)
 {
    DebugLog( << "Trying to read file " << filename );
-   
+
+#if !defined(_WIN32) 
    ifstream is;
    is.open(filename.c_str(), ios::binary );
+
    if ( !is.is_open() )
    {
       ErrLog( << "Could not open file " << filename << " for read");
@@ -110,7 +112,37 @@ readIntoData(const Data& filename)
    Data target(Data::Take, buffer, length);
    
    is.close();
+#else
+   OFSTRUCT of;
+   memset((void*)&of, 0, sizeof(OFSTRUCT));
+   of.cBytes = sizeof(OFSTRUCT);
+
+   HFILE hFile = OpenFile(filename.c_str(), &of, OF_READ); 
+   if (hFile == HFILE_ERROR)
+   {
+      ErrLog( << "Could not open file " << filename << " for read");
+      throw BaseSecurity::Exception("Could not read file ", 
+         __FILE__,__LINE__);
+   }
+   DWORD dwSize = GetFileSize((HANDLE)hFile, NULL);
+
+   char* buffer = new char [dwSize + 1];
+   DWORD nBytesRead;
+   bool bReturn = ReadFile((HANDLE)hFile, buffer, dwSize, &nBytesRead, NULL);
+   if (!bReturn)
+   {
+      ErrLog( << "Could not read file " << filename << " for read");
+      delete []buffer;
+      throw BaseSecurity::Exception("Could not read file ", 
+         __FILE__,__LINE__);
+   }
    
+   buffer[dwSize] = '\0';
+   Data target(Data::Take, buffer, dwSize);
+
+   CloseHandle((HANDLE)hFile);
+#endif
+
    return target;
 }
 
