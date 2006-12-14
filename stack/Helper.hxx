@@ -51,6 +51,33 @@ class Helper
          return resipMax(T(0), resipMin(T(secs-5), T(9*secs/10)));
       }
 
+      /** 
+          Converts an interger in a character string containing the
+          hexidecimal representation of the integer.  Note:  The 
+          string buffer provided should be at least 8 characters long.
+          This function will NOT NULL terminate the string.
+
+          @param _d     A pointer to the character buffer to write
+                        the hex string
+
+          @param _s     The integer value to convert.
+
+          @param _l     Boolean flag to include leading 0 zeros or 
+                        not.
+      */
+      static void integer2hex(char* _d, unsigned int _s, bool _l = true);
+
+      /** 
+          Converts a character string containing a hexidecimal value
+          into an unsigned int.  Note:  Parsing stops after the first
+          non-hex character, or after 8 characters have been processed.
+
+          @param _s     A pointer to the character buffer to convert.
+
+          @returns      The integer value of the coverted hex string.
+      */
+      static unsigned int hex2integer(const char* _s);
+
       /**
            Used to jitter the expires in a SUBSCRIBE or REGISTER expires header
 
