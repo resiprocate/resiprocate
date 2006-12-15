@@ -548,7 +548,9 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       ErrLog(<< "Could encode certificate of '" << key << "' to DER form");
       throw BaseSecurity::Exception("Could encode certificate to DER form", __FILE__,__LINE__);
    }
-   return   Data(Data::Take, (char*)buffer, len);
+   Data certDER((char*)buffer, len);
+   OPENSSL_free(buffer);
+   return certDER;
 }
 
 
