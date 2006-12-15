@@ -185,7 +185,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
 
                      SharedPtr<SipMessage> lastRequest(creator->getLastRequest());
 
-                     if( 0 == lastRequest ||
+                     if( 0 == lastRequest.get() ||
                         !lastRequest->exists(h_Contacts) ||
                         lastRequest->header(h_Contacts).empty())
                      {

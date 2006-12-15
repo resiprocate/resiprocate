@@ -698,7 +698,7 @@ DialogSet::dispatch(const SipMessage& msg)
          if( mCreator )
          {
             SharedPtr<SipMessage> lastRequest(mCreator->getLastRequest());
-            if( 0 != lastRequest && !(lastRequest->header(h_CSeq) == msg.header(h_CSeq)))
+            if( 0 != lastRequest.get() && !(lastRequest->header(h_CSeq) == msg.header(h_CSeq)))
             {
                InfoLog(<< "Cannot create a dialog, cseq does not match initial dialog request (illegal mid-dialog fork? see 3261 14.1).");
                return;
