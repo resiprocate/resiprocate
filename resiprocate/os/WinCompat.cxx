@@ -138,10 +138,25 @@ WinCompat::determineSourceInterface(const Tuple& destination)
 
          ULONG addr = pIpAddrTable->table[i].dwAddr;
          ULONG gw = bestRoute.dwForwardNextHop;
-         if( (entry.dwIndex == bestRoute.dwForwardIfIndex) &&
-            (entry.dwAddr & entry.dwMask) == (bestRoute.dwForwardNextHop & entry.dwMask) ) {
+         if(entry.dwIndex == bestRoute.dwForwardIfIndex) 
+         {
+            bool valid = false;
+            if (gw) // !nash! somehow on Windows Vista this value is 0, may be bug inside GetBestRoute() API in the IPHLPAPI lib
+            {
+               if ((entry.dwAddr & entry.dwMask) == (gw & entry.dwMask))
+               {
+                  valid = true;
+               }
+            }
+            else
+            {
+               valid = true;
+            }
+            if (valid)
+            {
                sourceIP.s_addr = entry.dwAddr;
                break;
+            }
          }
       }
    }
