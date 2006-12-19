@@ -4859,7 +4859,7 @@ class TestHolder : public Fixture
             ),
              // note: 408 to NIT are not forwarded by repro
              //derek->expect(INFO/408, from(proxy), 4800, jason->noAction()),
-             32);// Wait extra long for blacklist to expire
+             32000);// Wait extra long for blacklist to expire
          ExecuteSequences();
       }
       
