@@ -25,6 +25,7 @@ main(int argc, char* argv[])
 {
    Log::initialize(Log::Cout, Log::Info ,"testDtlsTransport");   
 
+#ifdef USE_DTLS
    Security* serverSecurity = new Security();
    SipStack serverStack(serverSecurity);
 
@@ -74,6 +75,7 @@ main(int argc, char* argv[])
          break;         
       }
    }
+#endif
    return 0;
 }
 /* ====================================================================
