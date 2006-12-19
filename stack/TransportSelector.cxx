@@ -800,7 +800,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          if (msg->exists(h_RecordRoutes) && !msg->header(h_RecordRoutes).empty())
          {
-            NameAddr& rr = msg->header(h_RecordRoutes).back();
+            NameAddr& rr = msg->header(h_RecordRoutes).front();
             if (rr.uri().host().empty())
             {
                rr.uri().host() = Tuple::inet_ntop(source);
