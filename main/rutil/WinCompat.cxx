@@ -231,13 +231,23 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
              {
                 if (AI->FirstUnicastAddress->Address.lpSockaddr->sa_family != saddr->sa_family)
                    continue;
-                if ((saddr->sa_family == AF_INET6 && AI->Ipv6IfIndex == dwBestIfIndex) ||
-                   (saddr->sa_family == AF_INET && AI->IfIndex == dwBestIfIndex))
+                if (saddr->sa_family == AF_INET && AI->IfIndex == dwBestIfIndex)
                 {
                    GenericIPAddress ipaddress(*AI->FirstUnicastAddress->Address.lpSockaddr);
                    LocalFree(pAdapterAddresses);
                    return(ipaddress);
                 }
+#ifdef USE_IPV6
+                else if (saddr->sa_family == AF_INET6 && AI->Ipv6IfIndex == dwBestIfIndex)
+                {
+                   // explicitly cast to sockaddr_in6, to use that version of GenericIPAddress' ctor. If we don't, then compiler
+                   // defaults to ctor for sockaddr_in (at least under Win32), which will truncate the lower-bits of the IPv6 address.
+                   const struct sockaddr_in6* psa = reinterpret_cast<const struct sockaddr_in6*>(AI->FirstUnicastAddress->Address.lpSockaddr);
+                   GenericIPAddress ipaddress(*psa);
+                   LocalFree(pAdapterAddresses);
+                   return(ipaddress);
+                }
+#endif
             } 
          }
       }
