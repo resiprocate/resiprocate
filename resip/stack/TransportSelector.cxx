@@ -389,7 +389,8 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 #if defined(WIN32) && !defined(NO_IPHLPAPI)
       try
       {
-         source.getMutableSockaddr() = WinCompat::determineSourceInterface(target.toGenericIPAddress()).address;
+         GenericIPAddress addr = WinCompat::determineSourceInterface(target.toGenericIPAddress());
+         source.setSockaddr(addr);
       }
       catch (WinCompat::Exception&)
       {
