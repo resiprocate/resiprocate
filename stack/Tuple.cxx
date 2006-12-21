@@ -49,20 +49,7 @@ Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type,
    mTransportType(type),
    mTargetDomain(targetDomain)
 {
-  if (genericAddress.isVersion4())
-  {
-     m_anonv4 = genericAddress.v4Address;
-  }
-  else
-#ifdef USE_IPV6
-  {
-     m_anonv6 = genericAddress.v6Address;
-  }
-#else
-  {
-     assert(0);
-  }
-#endif
+  setSockaddr(genericAddress);
 }
 
 
@@ -201,6 +188,25 @@ Tuple::Tuple(const struct sockaddr& addr,
    {
       assert(0);
    }
+}
+
+void
+Tuple::setSockaddr(const GenericIPAddress& addr)
+{
+  if (addr.isVersion4())
+  {
+     m_anonv4 = addr.v4Address;
+  }
+  else
+#ifdef USE_IPV6
+  {
+     m_anonv6 = addr.v6Address;
+  }
+#else
+  {
+     assert(0);
+  }
+#endif
 }
 
 Data 
