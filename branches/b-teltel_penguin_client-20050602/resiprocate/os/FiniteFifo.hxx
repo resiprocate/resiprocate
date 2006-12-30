@@ -40,7 +40,7 @@ FiniteFifo<Msg>::FiniteFifo(unsigned int maxSize)
 template <class Msg>
 FiniteFifo<Msg>::~FiniteFifo()
 {
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
    while ( ! mFifo.empty() )
    {
       delete static_cast<Msg*>(mFifo.front());
@@ -53,7 +53,7 @@ template <class Msg>
 bool
 FiniteFifo<Msg>::add(Msg* msg)
 {
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
    if (mMaxSize != NoSize &&
        mSize >= mMaxSize)
    {
