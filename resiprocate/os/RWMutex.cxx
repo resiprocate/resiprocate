@@ -100,14 +100,6 @@ RWMutex::writelock()
    mWriterHasLock = true;
 }
 
-
-void
-RWMutex::lock()
-{
-   writelock();
-}
-
-
 void
 RWMutex::unlock()
 {

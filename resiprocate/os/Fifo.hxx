@@ -64,7 +64,7 @@ template <class Msg>
 void
 Fifo<Msg>::clear()
 {
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
    while ( ! mFifo.empty() )
    {
       Msg* msg = static_cast<Msg*>(mFifo.front());
@@ -79,7 +79,7 @@ template <class Msg>
 void
 Fifo<Msg>::add(Msg* msg)
 {
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
    mFifo.push_back(msg);
    mSize++;
    mCondition.signal();
