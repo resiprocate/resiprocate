@@ -19,7 +19,7 @@ class RESIP_API RWMutex : public Lockable
       ~RWMutex();
       void readlock();
       void writelock();
-      void lock();
+      void lock() { writelock(); }
       void unlock();
       unsigned int readerCount() const;
       unsigned int pendingWriterCount() const;

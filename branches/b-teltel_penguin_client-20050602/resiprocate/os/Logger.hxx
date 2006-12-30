@@ -68,7 +68,7 @@ do                                                                              
    if (genericLogCheckLevel(level_))                                                     \
    {                                                                                     \
       resip::Log::Guard _resip_log_guard(level_, system_, __FILE__, __LINE__);           \
-      _resip_log_guard.asStream()  args_;                                                \
+      _resip_log_guard.asStream() args_;                                                 \
    }                                                                                     \
 } while (0)
 

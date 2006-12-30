@@ -1110,7 +1110,7 @@ DialogUsageManager::process(bool block, resip::RWMutex* mutex)   // !polo! block
       {
          if (mutex)
          {
-            resip::Lock lock(*mutex); (void)lock;
+            resip::Lock lock(*mutex); 
             internalProcess(msg);
          }
          else
