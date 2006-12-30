@@ -17,7 +17,7 @@ AbstractFifo::~AbstractFifo()
 void*
 AbstractFifo ::getNext()
 {
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
 
    // Wait util there are messages available.
    while (mFifo.empty())
@@ -40,7 +40,7 @@ AbstractFifo::getNext(int ms)
    const UInt64 begin(Timer::getTimeMs());
    const UInt64 end(begin + (unsigned int)(ms)); // !kh! the parameter ms should've been unsigned :(
 
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
    
    // Wait until there are messages available
    while (mFifo.empty())
@@ -69,7 +69,7 @@ AbstractFifo::getNext(int ms)
 void*
 AbstractFifo::getNext(bool& hasNext)
 {
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
 
    // Wait util there are messages available.
    if (mFifo.empty())
@@ -90,14 +90,14 @@ AbstractFifo::getNext(bool& hasNext)
 bool
 AbstractFifo::empty() const
 {
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
    return mSize == 0;
 }
 
 unsigned int
 AbstractFifo ::size() const
 {
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
    return mSize;
 }
 
@@ -110,7 +110,7 @@ AbstractFifo::timeDepth() const
 bool
 AbstractFifo::messageAvailable() const
 {
-   Lock lock(mMutex); (void)lock;
+   Lock lock(mMutex); 
    assert(mSize != NoSize);
    return !mFifo.empty();
 }

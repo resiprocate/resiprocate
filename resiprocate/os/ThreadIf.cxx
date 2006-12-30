@@ -78,6 +78,8 @@ void
 ThreadIf::run()
 {
    assert(mId == 0);
+   if (mId)
+      return;
 #if defined(WIN32)
    // !kh!
    // Why _beginthreadex() instead of CreateThread():
@@ -193,7 +195,7 @@ bool
 ThreadIf::isShutdown() const
 {
    Lock lock(mShutdownMutex, VOCAL_READLOCK);
-   (void)lock;
+   
    return ( mShutdown );
 }
 
