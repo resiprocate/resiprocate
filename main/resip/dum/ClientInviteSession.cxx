@@ -705,6 +705,10 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -801,6 +805,10 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -846,6 +854,10 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          break;
       }
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -890,6 +902,10 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
+         break;
+
+      case OnBye:
+         dispatchBye(msg);
          break;
 
       default:
@@ -948,6 +964,10 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
+         break;
+
+      case OnBye:
+         dispatchBye(msg);
          break;
 
       default:
@@ -1023,6 +1043,10 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -1084,6 +1108,10 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -1140,6 +1168,10 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
          mCancelledTimerSeq++;
          break;
       }
+
+      case OnBye:
+         dispatchBye(msg);
+         break;
 
       default:
          break;
