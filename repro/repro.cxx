@@ -434,11 +434,15 @@ main(int argc, char** argv)
 
       // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
       resip::MessageFilterRule::MethodList methodList;
+      resip::MessageFilterRule::EventList eventList;
       methodList.push_back(resip::SUBSCRIBE);
       methodList.push_back(resip::PUBLISH);
+      eventList.push_back(resip::Symbols::Credential);
+      eventList.push_back(resip::Symbols::Certificate);
       ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
                                            resip::MessageFilterRule::Any,
-                                           methodList) );
+                                           methodList,
+                                           eventList);
 #endif
    }
 

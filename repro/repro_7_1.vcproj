@@ -55,14 +55,15 @@ echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx
 :: Get VERSION in a variable
 set lineNro_=
 for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (
-  set /a lineNro_+=1
-  echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
+set /a lineNro_+=1
+echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
 del %temp%\tmp$$$.cmd
 
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
-endlocal"/>
+endlocal
+"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -120,14 +121,15 @@ echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx
 :: Get VERSION in a variable
 set lineNro_=
 for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (
-  set /a lineNro_+=1
-  echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
+set /a lineNro_+=1
+echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
 del %temp%\tmp$$$.cmd
 
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
-endlocal"/>
+endlocal
+"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -166,7 +168,7 @@ endlocal"/>
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -187,14 +189,15 @@ echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx
 :: Get VERSION in a variable
 set lineNro_=
 for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (
-  set /a lineNro_+=1
-  echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
+set /a lineNro_+=1
+echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
 del %temp%\tmp$$$.cmd
 
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
-endlocal"/>
+endlocal
+"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -230,7 +233,7 @@ endlocal"/>
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -252,14 +255,15 @@ echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx
 :: Get VERSION in a variable
 set lineNro_=
 for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (
-  set /a lineNro_+=1
-  echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
+set /a lineNro_+=1
+echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)
 call %temp%\tmp$$$.cmd
 del %temp%\tmp$$$.cmd
 
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
-endlocal"/>
+endlocal
+"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
