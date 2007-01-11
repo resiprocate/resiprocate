@@ -20,6 +20,7 @@ endif
 
 
 TESTPROGRAMS += \
+testIdentity.cxx \
 testEmptyHfv.cxx \
 RFC4475TortureTests.cxx \
 limpc.cxx \
