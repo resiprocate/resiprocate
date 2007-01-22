@@ -561,6 +561,7 @@ Dialog::dispatch(const SipMessage& msg)
       const SipMessage& response = msg;
       int code = response.header(h_StatusLine).statusCode();
       // If this is a 200 response to the initial request, then store the routeset (if present)
+      BaseCreator* creator = mDialogSet.getCreator();
       if (creator && (creator->getLastRequest()->header(h_CSeq).sequence() == response.header(h_CSeq).sequence()) && code >=200 && code < 300)
       {
          if (response.exists(h_RecordRoutes))
