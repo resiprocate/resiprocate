@@ -75,7 +75,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       }
       if (request.exists(h_RecordRoutes))
       {
-         mRouteSet = request.header(h_RecordRoutes); // !jf! is this right order
+         mRouteSet = request.header(h_RecordRoutes); 
       }
 
       switch (request.header(h_CSeq).method())
@@ -560,7 +560,8 @@ Dialog::dispatch(const SipMessage& msg)
       
       const SipMessage& response = msg;
       int code = response.header(h_StatusLine).statusCode();
-      if (code >=200 && code < 300)
+      // If this is a 200 response to the initial request, then store the routeset (if present)
+      if (creator && (creator->getLastRequest()->header(h_CSeq).sequence() == response.header(h_CSeq).sequence()) && code >=200 && code < 300)
       {
          if (response.exists(h_RecordRoutes))
          {
