@@ -2017,7 +2017,7 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
       }
    }
 
-   DebugLog(<< "No sdp" << endl);
+   //DebugLog(<< "No sdp" << endl);
    return empty;
 }
 
