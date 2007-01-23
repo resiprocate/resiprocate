@@ -330,14 +330,19 @@ DnsResult::lookupInternal(const Uri& uri)
          {
             if(mSips)
             {
-               mTransport=TLS;
-               mPort = getDefaultPort(mTransport,uri.port());
-               tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-               foundTuple=!DnsResult::blacklisted(tuple);
+               if((mInterface.isSupported(TLS, V4) ||
+                   mInterface.isSupported(TLS, V6)))
+               {
+                  mTransport=TLS;
+                  mPort = getDefaultPort(mTransport,uri.port());
+                  tuple=Tuple(mTarget,mPort,mTransport,mTarget);
+                  foundTuple=!DnsResult::blacklisted(tuple);
+               }
             }
             else
             {
-               if(!foundTuple)
+               if(!foundTuple && (mInterface.isSupported(UDP, V4) ||
+                                    mInterface.isSupported(UDP, V6)))
                {
                   mTransport=UDP;
                   mPort = getDefaultPort(mTransport,uri.port());
@@ -345,7 +350,8 @@ DnsResult::lookupInternal(const Uri& uri)
                   foundTuple=!DnsResult::blacklisted(tuple);
                }
                
-               if(!foundTuple)
+               if(!foundTuple && (mInterface.isSupported(TCP, V4) ||
+                                    mInterface.isSupported(TCP, V6)))
                {
                   mTransport=TCP;
                   mPort = getDefaultPort(mTransport,uri.port());
@@ -353,7 +359,8 @@ DnsResult::lookupInternal(const Uri& uri)
                   foundTuple=!DnsResult::blacklisted(tuple);
                }
                
-               if(!foundTuple)
+               if(!foundTuple && (mInterface.isSupported(TLS, V4) ||
+                                    mInterface.isSupported(TLS, V6)))
                {
                   mTransport=TLS;
                   mPort = getDefaultPort(mTransport,uri.port());
@@ -380,7 +387,7 @@ DnsResult::lookupInternal(const Uri& uri)
             if (mHandler) mHandler->handle(this);
 
          }
-        else // port specified so we know the transport
+        else // host is not numeric, so we need to make a query
          {
             mTransport=UNKNOWN_TRANSPORT;
             
@@ -411,6 +418,7 @@ DnsResult::lookupInternal(const Uri& uri)
             }
             else
             {
+               // !bwc! Debatable.
                assert(0);
                if (mHandler) mHandler->handle(this);
             }
