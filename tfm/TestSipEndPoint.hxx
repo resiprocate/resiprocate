@@ -609,6 +609,25 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       MessageExpectAction* answer();
       MessageExpectAction* answer(const boost::shared_ptr<resip::SdpContents>& sdp);
 
+      class AnswerTo : public MessageAction
+      {
+         public:
+            AnswerTo(
+               TestSipEndPoint& from,
+               const boost::shared_ptr<resip::SipMessage>&msg,
+               boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual resip::Data toString() const;
+         private:
+            virtual boost::shared_ptr<resip::SipMessage> go();
+            const boost::shared_ptr<resip::SipMessage>& mMsg;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
+      // need the ability to delay the answer to an INVITE: outside of the expect-action. i.e. In the Branch's end action (And(...)-action)
+      // or a new sequence action perhaps.
+      MessageAction* answerTo(
+         const boost::shared_ptr<resip::SipMessage>& msg,
+         boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ring, 180);
       MessageExpectAction* ring();
 
