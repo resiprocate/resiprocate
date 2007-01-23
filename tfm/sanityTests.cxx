@@ -2880,7 +2880,7 @@ class TestHolder : public Fixture
       Seq
       (
          enlai->registerUser(60,contacts),
-         enlai->expect(REGISTER/401,from(proxy),WaitForResponse,enlai->digestRespond()),
+         enlai->expect(REGISTER/407,from(proxy),WaitForResponse,enlai->digestRespond()),
          enlai->expect(REGISTER/200,from(proxy),WaitForResponse,enlai->noAction()),
          WaitForEndOfSeq
       );
