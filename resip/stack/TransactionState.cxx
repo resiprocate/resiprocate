@@ -1758,21 +1758,36 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
    else // reuse the last dns tuple
    {
       assert(sip->isRequest());
-      assert(mTarget.getType() != UNKNOWN_TRANSPORT);
-      if (resend)
+      if(mTarget.getType() != UNKNOWN_TRANSPORT)
       {
-         if (mTarget.transport)
+         if (resend)
          {
-            mController.mTransportSelector.retransmit(sip, mTarget);
+            if (mTarget.transport)
+            {
+               mController.mTransportSelector.retransmit(sip, mTarget);
+            }
+            else
+            {
+               DebugLog (<< "No transport found(network could be down) for " << sip->brief());
+            }
          }
          else
          {
-            DebugLog (<< "No transport found(network could be down) for " << sip->brief());
+            mController.mTransportSelector.transmit(sip, mTarget);
          }
       }
       else
       {
-         mController.mTransportSelector.transmit(sip, mTarget);
+         // !bwc! While the resolver was attempting to find a target, another
+         // request came down from the TU. This could be a bug in the TU, or 
+         // could be a retransmission of an ACK/200. Either way, we cannot
+         // expect to ever be able to send this request (nowhere to store it
+         // temporarily).
+         DebugLog(<< "Received a second request from the TU for a transaction"
+                     " that already existed, before the DNS subsystem was done "
+                     "resolving the target for the first request. Either the TU"
+                     " has messed up, or it is retransmitting ACK/200 (the only"
+                     " valid case for this to happen)");
       }
    }
 }
