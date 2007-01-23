@@ -442,7 +442,7 @@ main(int argc, char** argv)
       ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
                                            resip::MessageFilterRule::Any,
                                            methodList,
-                                           eventList);
+                                           eventList));
 #endif
    }
 
