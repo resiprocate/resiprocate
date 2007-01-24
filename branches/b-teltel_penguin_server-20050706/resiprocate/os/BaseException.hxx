@@ -21,13 +21,16 @@ class BaseException : public std::exception
       const Data& getMessage() const {return message;}
       
    protected:
+      BaseException(const char* msg,
+                    const char* file,
+                    int line);
       BaseException(const Data& msg,
                     const Data& file,
                     int line);
       // not pure virtual -- don't want to require every derived class to have
       // to define
       virtual ~BaseException() throw();
-      
+
       resip::Data message;
       resip::Data fileName;
       int lineNumber;
