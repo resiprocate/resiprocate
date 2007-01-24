@@ -9,12 +9,24 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
 
-BaseException::BaseException( const Data& msg,
-                        const Data& file,
-                        const int line) : 
-        message( msg ),
-        fileName( file ),
-        lineNumber( line )
+BaseException::BaseException(const char* msg,
+			     const char* file,
+			     const int line)
+   : message( msg ),
+     fileName( file ),
+     lineNumber( line )
+{
+#if !defined(RESIP_NO_EXCEPTION_DEBUG_LOGS)
+   DebugLog(<< "BaseException at " << file << ":" << line << " " << message);
+#endif
+}
+
+BaseException::BaseException(const Data& msg,
+			     const Data& file,
+			     const int line)
+   : message( msg ),
+     fileName( file ),
+     lineNumber( line )
 {
 #if !defined(RESIP_NO_EXCEPTION_DEBUG_LOGS)
    DebugLog(<< "BaseException at " << file << ":" << line << " " << message);
