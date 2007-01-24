@@ -26,37 +26,12 @@ class TimeAccumulate
       };
 
    public:
-#if 1
       TimeAccumulate(const Data& name)
          : mName(name),
            mStart(Timer::getTimeMs())
       {}
 
-      ~TimeAccumulate()
-      {
-         UInt64 end = Timer::getTimeMs();
-         end -= mStart;
-         Lock lock(TimeAccumulate::mMutex);
-
-         Accumulator& acc = TimeAccumulate::mTimes[mName];
-         acc.count += 1;
-         acc.totalTime += end;
-      }
-#else
-      TimeAccumulate(const char* chars)
-         : mName(Data::Empty),
-           mStart(0)
-      {}
-
-      TimeAccumulate(const Data& name)
-         : mName(Data::Empty),
-           mStart(0)
-      {}
-
-      ~TimeAccumulate()
-      {
-      }
-#endif
+      ~TimeAccumulate();
       
       static UInt64 getTime(const Data& name)
       {
