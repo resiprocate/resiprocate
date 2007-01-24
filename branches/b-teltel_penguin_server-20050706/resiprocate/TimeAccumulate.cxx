@@ -9,6 +9,17 @@ resip::Mutex TimeAccumulate::mMutex;
 
 TimeAccumulate::TimeMap TimeAccumulate::mTimes;
 
+TimeAccumulate::~TimeAccumulate()
+{
+   UInt64 end = Timer::getTimeMs();
+   end -= mStart;
+   Lock lock(TimeAccumulate::mMutex);
+
+   Accumulator& acc = TimeAccumulate::mTimes[mName];
+   acc.count += 1;
+   acc.totalTime += end;
+}
+
 void
 TimeAccumulate::dump()
 {
