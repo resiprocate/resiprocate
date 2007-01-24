@@ -1467,9 +1467,18 @@ InviteSession::dispatchTerminated(const SipMessage& msg)
 
    if (msg.isRequest())
    {
-      SharedPtr<SipMessage> response(new SipMessage);
-      mDialog.makeResponse(*response, msg, 481);
-      send(response);
+      if (BYE == msg.header(h_CSeq).method())
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+      }
+      else
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 481);
+         send(response);
+      }
 
       // !jf! means the peer sent BYE while we are waiting for response to BYE
       //mDum.destroy(this);
