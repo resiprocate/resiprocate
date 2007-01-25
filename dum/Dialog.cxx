@@ -1043,7 +1043,7 @@ Dialog::onForkAccepted()
 
 void Dialog::possiblyDie()
 {
-   // !slg! Note:  dialogs should really stick around for 32s, in order to ensure that all 2xx retransmissions get 481 correctly
+   // !slg! Note:  dialogs should really stick around for 32s, in order to ensure that all 2xx retransmissions get Ack'd, then BYE'd correctly
    if (!mDestroying)
    {
       if (mClientSubscriptions.empty() &&
