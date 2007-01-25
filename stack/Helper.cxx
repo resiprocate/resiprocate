@@ -622,7 +622,23 @@ Data
 Helper::computeCallId()
 {
    static Data hostname = DnsUtil::getLocalHostName();
-   Data hostAndSalt(hostname + Random::getRandomHex(8));
+   Data hostAndSalt(hostname + Random::getRandomHex(16));
+#ifndef USE_SSL // !bwc! None of this is neccessary if we're using openssl
+#if defined(__linux__) || defined(__APPLE__)
+   pid_t pid = getpid();
+   hostAndSalt.append((char*)&pid,sizeof(pid));
+#endif
+#ifdef __APPLE__
+   pthread_t thread = pthread_self();
+   hostAndSalt.append((char*)&thread,sizeof(thread));
+#endif
+#ifdef WIN32
+   DWORD proccessId = ::GetCurrentProcessId();
+   DWORD threadId = ::GetCurrentThreadId();
+   hostAndSalt.append((char*)&proccessId,sizeof(proccessId));
+   hostAndSalt.append((char*)&threadId,sizeof(threadId));
+#endif
+#endif // of USE_SSL
    return hostAndSalt.md5().base64encode(true);
 }
 
