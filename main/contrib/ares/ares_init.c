@@ -40,6 +40,10 @@
 #include <io.h>
 #include <Windns.h>
 #endif
+#if defined(__APPLE__) || defined(__MACH__)
+#define __CF_USE_FRAMEWORK_INCLUDES__
+#include <SystemConfiguration/SystemConfiguration.h>
+#endif
 
 #include "ares.h"
 #include "ares_private.h"
@@ -378,6 +382,68 @@ static int init_by_resolv_conf(ares_channel channel)
   return ARES_SUCCESS;
 }
 
+#if defined(__APPLE__) || defined(__MACH__)
+static void init_by_defaults_systemconfiguration(ares_channel channel)
+{
+  SCDynamicStoreContext context = {0, NULL, NULL, NULL, NULL};
+  SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("init_by_defaults_systemconfiguration"), NULL, &context);
+  
+  channel->nservers = 0;
+
+  if (store)
+  {
+    // kSCDynamicStoreDomainState/kSCCompNetwork/kSCCompGlobal/kSCEntNetDNS
+    CFStringRef key = CFSTR("State:/Network/Global/DNS");
+    CFDictionaryRef dnsDict = SCDynamicStoreCopyValue(store, key);
+
+    if (dnsDict)
+    {
+      CFArrayRef addresses = (CFArrayRef) CFDictionaryGetValue(dnsDict, kSCPropNetDNSServerAddresses);
+      if (addresses)
+      {
+        //CFShow(addresses);
+        channel->nservers = CFArrayGetCount(addresses);
+        channel->servers = malloc(channel->nservers * sizeof(struct server_state));
+        memset(channel->servers, '\0', channel->nservers * sizeof(struct server_state));
+
+        int i;
+        for (i = 0; i < channel->nservers; i++)
+        {
+          CFStringRef address = CFArrayGetValueAtIndex(addresses, i);
+          //CFShow(address);
+          const int kBufferSize = 20;
+          char str[kBufferSize];
+
+          CFStringGetCString(address, str, kBufferSize, kCFStringEncodingUTF8);
+          inet_pton4(str, (u_char*)&channel->servers[i].addr);
+#ifdef USE_IPV6
+          channel->servers[i].family = AF_INET;
+#endif
+        }
+      }
+
+      CFRelease(dnsDict);
+    }
+
+    /* If no specified servers, try a local named. */
+    if (channel->nservers == 0)
+    {
+      channel->servers = malloc(sizeof(struct server_state));
+      memset(channel->servers, '\0', sizeof(struct server_state));
+
+#ifdef USE_IPV6			 
+      channel->servers[0].family = AF_INET;
+#endif
+
+      channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
+      channel->nservers = 1;
+    }
+
+    CFRelease(store);
+  }
+}
+#endif
+
 static int init_by_defaults(ares_channel channel)
 {
   char hostname[MAXHOSTNAMELEN + 1];
@@ -498,6 +564,8 @@ static int init_by_defaults(ares_channel channel)
         GlobalFree( FixedInfo );
 	    FreeLibrary(hLib);
 	  }
+#elif defined(__APPLE__) || defined(__MACH__)
+      init_by_defaults_systemconfiguration(channel);
 #else
 		/* If nobody specified servers, try a local named. */
 		channel->servers = malloc(sizeof(struct server_state));
