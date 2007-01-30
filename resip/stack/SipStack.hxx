@@ -88,16 +88,14 @@ class SipStack
 
          @param protocol              TCP, UDP, TLS, DTLS, etc.
 
-         @param port                  Specifies which port to bind to.  See sipDomainname
-                                      parameter for more info.
+         @param port                  Specifies which port to bind to.
 
          @param version               Protocol Version:  V4 or V6
 
          @param ipInterface           Specifies which ethernet interface to bind to. If set to 
                                       Data::Empty, bind to all interfaces.
 
-         @param sipDomainname         For TLS only, if port = 0, use DNS to lookup the port number 
-                                      for the specified domain. Only allow messages to 
+         @param sipDomainname         Only allow messages to 
                                       be sent as the specified domain.  For default case, 
                                       you can pass in domainname = DnsUtil::getLocalDomainName().
 
@@ -108,7 +106,7 @@ class SipStack
          @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
       */      
       Transport* addTransport( TransportType protocol,
-                         int port=0, 
+                         int port, 
                          IpVersion version=V4,
                          StunSetting stun=StunDisabled,
                          const Data& ipInterface = Data::Empty, 
