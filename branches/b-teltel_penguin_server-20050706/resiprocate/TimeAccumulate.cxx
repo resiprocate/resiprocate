@@ -23,7 +23,7 @@ TimeAccumulate::~TimeAccumulate()
 void
 TimeAccumulate::dump()
 {
-   Lock lock(mMutex);
+   Lock lock(TimeAccumulate::mMutex);
    WarningLog(<< "Accumulated times -------------------------:");
    for (TimeMap::const_iterator i = TimeAccumulate::mTimes.begin();
         i != TimeAccumulate::mTimes.end(); i++)
@@ -40,7 +40,7 @@ TimeAccumulate::dump()
 void
 TimeAccumulate::clear()
 {
-   Lock lock(mMutex);
+   Lock lock(TimeAccumulate::mMutex);
 
    for (TimeMap::iterator i = TimeAccumulate::mTimes.begin();
         i != TimeAccumulate::mTimes.end(); i++)
