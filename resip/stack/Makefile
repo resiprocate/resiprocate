@@ -157,5 +157,5 @@ MethodHash.cxx: MethodHash.gperf
 	sed -e 's/\!strncmp/\!strncasecmp/'  > $@
 
 include $(BUILD)/Makefile.post
-INSTALL_INCDIR := $(INSTALL_PREFIX)/include/resip/stack
+INSTALL_INCDIR := $(DESTDIR)$(INSTALL_PREFIX)/include/resip/stack
 
