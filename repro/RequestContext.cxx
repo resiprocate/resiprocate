@@ -160,12 +160,14 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                      // !bwc! Someone is using us to relay an ACK, but host in
                      // From isn't ours, host in request-uri isn't ours, and no
                      // Route headers. Refusing to do so.
+                     InfoLog(<<"Host in From header or host in request uri are not ours.  We do not allow relaying ACKs.  Dropping it...");            
                   }
                }
                catch(resip::ParseBuffer::Exception&)
                {
                   // !bwc! Someone is trying to get us to relay an ACK, but
                   // can't get a host out of From to authorize the relay.
+                  InfoLog(<<"Error trying to get host out of ACK From header. Dropping it...");            
                }
             }
             else
