@@ -82,7 +82,10 @@ ClientPublication::dispatch(const SipMessage& msg)
          else if (msg.exists(h_SIPETag) && msg.exists(h_Expires))
          {
             mPublish->header(h_SIPIfMatch) = msg.header(h_SIPETag);
-            mPublish->releaseContents();
+            if(!mPendingPublish)
+            {
+               mPublish->releaseContents();           
+            }
             mDum.addTimer(DumTimeout::Publication, 
                           Helper::aBitSmallerThan(msg.header(h_Expires).value()), 
                           getBaseHandle(),
