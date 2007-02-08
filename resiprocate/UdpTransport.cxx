@@ -23,11 +23,11 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            int portNum,  
                            IpVersion version,
                            const Data& pinterface) 
-   : InternalTransport(fifo, portNum, version, pinterface)
+                           : InternalTransport(fifo, portNum, version, pinterface)
 {
    InfoLog (<< "Creating UDP transport host=" << pinterface 
-            << " port=" << portNum
-            << " ipv4=" << bool(version==V4) );
+      << " port=" << portNum
+      << " ipv4=" << bool(version==V4) );
 
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
@@ -50,19 +50,19 @@ UdpTransport::process(FdSet& fdset)
 
    if (mTxFifo.messageAvailable() && fdset.readyToWrite(mFd))
    {
-      std::auto_ptr<SendData> sendData = std::auto_ptr<SendData>(mTxFifo.getNext());
+      std::auto_ptr<SendData> sendData(mTxFifo.getNext());
       //DebugLog (<< "Sent: " <<  sendData->data);
       //DebugLog (<< "Sending message on udp.");
 
       assert( &(*sendData) );
       assert( sendData->destination.getPort() != 0 );
-      
+
       const sockaddr& addr = sendData->destination.getSockaddr();
       int count = sendto(mFd, 
-                         sendData->data.data(), sendData->data.size(),  
-                         0, // flags
-                         &addr, sendData->destination.length());
-      
+         sendData->data.data(), sendData->data.size(),  
+         0, // flags
+         &addr, sendData->destination.length());
+
       if ( count == SOCKET_ERROR )
       {
          int e = getErrno();
@@ -79,7 +79,7 @@ UdpTransport::process(FdSet& fdset)
          }
       }
    }
-   
+
    // !jf! this may have to change - when we read a message that is too big
    if ( fdset.readyToRead(mFd) )
    {
@@ -96,11 +96,11 @@ UdpTransport::process(FdSet& fdset)
       Tuple tuple(mTuple);
       socklen_t slen = tuple.length();
       int len = recvfrom( mFd,
-                          buffer,
-                          MaxBufferSize,
-                          0 /*flags */,
-                          &tuple.getMutableSockaddr(), 
-                          &slen);
+         buffer,
+         MaxBufferSize,
+         0 /*flags */,
+         &tuple.getMutableSockaddr(), 
+         &slen);
       if ( len == SOCKET_ERROR )
       {
          int err = getErrno();
@@ -113,23 +113,36 @@ UdpTransport::process(FdSet& fdset)
       if (len == 0 || len == SOCKET_ERROR)
       {
          delete[] buffer; 
-         buffer=0;
+         //buffer=0;
          return;
       }
 
       if (len+1 >= MaxBufferSize)
       {
          InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
-         delete [] buffer; buffer=0;
+         delete [] buffer; 
+         //buffer=0;
          return;
       }
 
-      //handle incoming CRLFCRLF keep-alive packets
-      if (len == 4 &&
-          strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
+      //handle incoming CRLFCRLF keep-alive packets or 4 bytes (zero filled) UDP NAT Ping
+      if (len == 4)
       {
-         StackLog(<<"Throwing away incoming firewall keep-alive");
-         return;
+         const unsigned long NAT_PING = 0;
+         // !nash! add this to support UDP NAT Ping
+         if (strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
+         {
+            StackLog(<<"Throwing away incoming firewall keep-alive");
+            return;
+         }
+         else if(memcpy(buffer, &NAT_PING, len) == 0)
+         {
+            int count = sendto(mFd, 
+               Symbols::CRLF, 2,  
+               0, // flags
+               &(tuple.getMutableSockaddr()), tuple.length());
+            return;
+         }
       }
 
       buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
@@ -137,7 +150,7 @@ UdpTransport::process(FdSet& fdset)
       //DebugLog ( << "UDP Rcv : " << len << " b" );
       //DebugLog ( << Data(buffer, len).escaped().c_str());
 
-      SipMessage* message = new SipMessage(this);
+      std::auto_ptr<SipMessage> message(new SipMessage(this));
 
       // set the received from information into the received= parameter in the
       // via
@@ -150,23 +163,21 @@ UdpTransport::process(FdSet& fdset)
       tuple.transport = this;
       message->setSource(tuple);   
       //DebugLog (<< "Received from: " << tuple);
-   
+
       // Tell the SipMessage about this datagram buffer.
       message->addBuffer(buffer);
 
 
-      mMsgHeaderScanner.prepareForMessage(message);
+      mMsgHeaderScanner.prepareForMessage(message.get());
 
       char *unprocessedCharPtr;
       if (mMsgHeaderScanner.scanChunk(buffer,
-                                      len,
-                                      &unprocessedCharPtr) !=
-          MsgHeaderScanner::scrEnd)
+         len,
+         &unprocessedCharPtr) !=
+         MsgHeaderScanner::scrEnd)
       {
          StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
          StackLog(<< Data(buffer, len));
-         delete message; 
-         message=0; 
          return;
       }
 
@@ -188,15 +199,13 @@ UdpTransport::process(FdSet& fdset)
 
       if (!basicCheck(*message))
       {
-         delete message; // cannot use it, so, punt on it...
          // basicCheck queued any response required
-         message = 0;
          return;
       }
 
-      stampReceived(message);
+      stampReceived(message.get());
 
-      mStateMachineFifo.add(message);
+      mStateMachineFifo.add(message.release());
    }
 }
 
@@ -205,10 +214,10 @@ void
 UdpTransport::buildFdSet( FdSet& fdset ) const
 {
    fdset.setRead(mFd);
-    
+
    if (mTxFifo.messageAvailable())
    {
-     fdset.setWrite(mFd);
+      fdset.setWrite(mFd);
    }
 }
 
