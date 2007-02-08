@@ -489,45 +489,46 @@ Dialog::dispatch(const SipMessage& msg)
          }
          break;
          case NOTIFY:
-         {
-            ClientSubscription* client = findMatchingClientSub(request);
-            if (client)
             {
-               client->dispatch(request);
-            }
-            else
-            {
-               BaseCreator* creator = mDialogSet.getCreator();
-               if (creator && (creator->getLastRequest()->header(h_RequestLine).method() == SUBSCRIBE ||
-                               creator->getLastRequest()->header(h_RequestLine).method() == REFER))  
+               ClientSubscription* client = findMatchingClientSub(request);
+               if (client)
                {
-                  DebugLog (<< "Making subscription (from creator) request: " << *creator->getLastRequest());
-                  ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
-                  mClientSubscriptions.push_back(sub);
-                  sub->dispatch(request);
+                  client->dispatch(request);
                }
                else
                {
-		           if (mInviteSession != 0 && (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer"))
-                   {
-	                  DebugLog (<< "Making subscription from NOTIFY: " << msg);
-                      ClientSubscription* sub = makeClientSubscription(msg);
-                      mClientSubscriptions.push_back(sub);
-			          ClientSubscriptionHandle client = sub->getHandle();
-                      mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);				      
-                      mInviteSession->mSentRefer = false;
-                      sub->dispatch(request);
-				   }
-				   else
-				   {
-                      SharedPtr<SipMessage> response(new SipMessage);
-                      makeResponse(*response, msg, 406);
-                      send(response);
-				   }
-			   }
+                  BaseCreator* creator = mDialogSet.getCreator();
+                  if (creator && (creator->getLastRequest()->header(h_RequestLine).method() == SUBSCRIBE ||
+                     creator->getLastRequest()->header(h_RequestLine).method() == REFER))  
+                  {
+                     DebugLog (<< "Making subscription (from creator) request: " << *creator->getLastRequest());
+                     ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
+                     mClientSubscriptions.push_back(sub);
+                     sub->dispatch(request);
+                  }
+                  else
+                  {
+                     if (mInviteSession != 0 && (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer") && 
+                         mDum.getClientSubscriptionHandler("refer")!=0) 
+                     {
+                        DebugLog (<< "Making subscription from NOTIFY: " << msg);
+                        ClientSubscription* sub = makeClientSubscription(msg);
+                        mClientSubscriptions.push_back(sub);
+                        ClientSubscriptionHandle client = sub->getHandle();
+                        mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);				      
+                        mInviteSession->mSentRefer = false;
+                        sub->dispatch(request);
+                     }
+                     else
+                     {
+                        SharedPtr<SipMessage> response(new SipMessage);
+                        makeResponse(*response, msg, 406);
+                        send(response);
+                     }
+                  }
+               }
             }
-         }
-         break;
+            break;
         default:
            assert(0);
            return;
