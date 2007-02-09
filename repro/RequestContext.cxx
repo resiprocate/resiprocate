@@ -140,43 +140,38 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          if(mOriginalRequest->method() == ACK)
          {
             DebugLog(<<"This ACK has its own tid.");
-            // !slg! look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
-            if(mOriginalRequest->exists(h_Routes) && !mOriginalRequest->header(h_Routes).empty()) 
+
+            try
             {
-               mResponseContext.cancelAllClientTransactions();
-               forwardAck200(*mOriginalRequest);
-            }
-            else if(!getProxy().isMyUri(sip->header(h_RequestLine).uri()))
-            {
-               try
+               // !slg! look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
+               if((!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
+                   getProxy().isMyUri(sip->header(h_RequestLine).uri()))
                {
-                  if (getProxy().isMyUri(sip->header(h_From).uri()))
-                  {
-                     mResponseContext.cancelAllClientTransactions();
-                     forwardAck200(*mOriginalRequest);
-                  }
-                  else
-                  {
-                     // !bwc! Someone is using us to relay an ACK, but host in
-                     // From isn't ours, host in request-uri isn't ours, and no
-                     // Route headers. Refusing to do so.
-                     InfoLog(<<"Host in From header or host in request uri are not ours.  We do not allow relaying ACKs.  Dropping it...");            
-                  }
+                  // !bwc! Someone sent an ACK with us in the Request-Uri, and no
+                  // Route headers (after we have removed ourself). We will never perform 
+                  // location service or retargeting on an ACK, and we shouldn't send 
+                  // it to ourselves.  So, just drop the thing.
+                  InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");            
                }
-               catch(resip::ParseBuffer::Exception&)
+               // Note: mTopRoute is only populated if RemoteTopRouteIfSelf successfully removes the top route.
+               else if(!mTopRoute.uri().host().empty() || getProxy().isMyUri(sip->header(h_From).uri()))
                {
-                  // !bwc! Someone is trying to get us to relay an ACK, but
-                  // can't get a host out of From to authorize the relay.
-                  InfoLog(<<"Error trying to get host out of ACK From header. Dropping it...");            
+                  // Top most route is us, or From header uri is ours.  Note:  The From check is 
+                  // required to interoperate with endpoints that configure outbound proxy 
+                  // settings, and do not place the outbound proxy in a Route header.
+                  mResponseContext.cancelAllClientTransactions();
+                  forwardAck200(*mOriginalRequest);
+               }
+               else
+               {
+                  // !slg! Someone is using us to relay an ACK, but we are not the 
+                  // top-most route and the host in From isn't ours. Refusing to do so.
+                  InfoLog(<<"Top most route or From header are not ours.  We do not allow relaying ACKs.  Dropping it...");            
                }
             }
-            else
+            catch(resip::ParseBuffer::Exception&)
             {
-               // !bwc! Someone sent an ACK with us in the Request-Uri, and no
-               // Route headers. We will never perform location service or
-               // retargeting on an ACK, and we shouldn't send it to ourselves.
-               // So, just drop the thing.
-               InfoLog(<<"Stray ACK aimed at us. Dropping it...");            
+               InfoLog(<<"Parse error processing ACK. Dropping it...");            
             }
 
             if(original)  // Only queue Ack200Done if this is the original request
