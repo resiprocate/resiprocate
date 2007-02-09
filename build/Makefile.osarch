@@ -125,7 +125,7 @@ ifeq ($(OSTYPE),Darwin)
 
     CXXFLAGS += -D_REENTRANT
     CFLAGS   += -D_REENTRANT
-
+    LDFLAGS  += -framework CoreFoundation -framework SystemConfiguration 
     INCDIRS += /sw/include /opt/local/include
     LIBDIRS += /sw/lib /opt/local/lib
 
