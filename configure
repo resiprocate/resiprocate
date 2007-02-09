@@ -6,12 +6,12 @@ for PERL in /usr/bin/perl \
             /usr/pkg/bin/perl \
             /usr/athena/bin/perl \
             `which perl`
-{
+do
   if [ -x $PERL ]
   then
     break
   fi
-}
+done
 
 if [ ! -x $PERL ]
 then
@@ -48,7 +48,7 @@ INSTALL_PREFIX := /usr/local" > build/Makefile.conf
 fi
 
 exec $PERL -wx $0 $@
-
+echo <<__END__
 #!perl
 
 ######################################################################
