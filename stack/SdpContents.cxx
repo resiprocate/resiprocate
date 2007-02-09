@@ -1068,6 +1068,7 @@ SdpContents::Session::encode(ostream& s) const
 
    if (!mUri.host().empty())
    {
+      s << "u=";
       mUri.encode(s);
       s << Symbols::CRLF;
    }
