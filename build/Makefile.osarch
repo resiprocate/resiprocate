@@ -58,7 +58,13 @@ endif
 ifeq ($(ARCH),i386)
 	CXXFLAGS += -march=i386
 endif
-
+ifeq ($(ARCH),x86_64)
+	CXXFLAGS += -march=x86-64
+ifeq ($(BUILD_SHARED_LIBS),yes)
+	CXXFLAGS += -fPIC
+	CFLAGS   += -fPIC
+endif
+endif
 #       LDFLAGS += -frepo
 #	CXXFLAGS += -D_REENTRANT -frepo
 	CXXFLAGS += -D_REENTRANT
