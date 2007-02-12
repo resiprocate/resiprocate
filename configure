@@ -40,7 +40,8 @@ USE_IPV6 := no
 DB_HEADERS := /usr/include/db4
 RESIP_FIXED_POINT := no
 PEDANTIC_STACK := no
-INSTALL_PREFIX := /usr/local" > build/Makefile.conf
+INSTALL_PREFIX := /usr/local
+ARES_PREFIX := /usr/local " > build/Makefile.conf
     exit
   fi
   echo "*** Leaving build/Makefile.conf unmodified"
@@ -231,6 +232,12 @@ $uname = `uname`;
     description => "Where should the libraries be installed?",
     default     => "/usr/local",
     option      => "prefix",
+  },
+  {
+    name        => "ARES_PREFIX",
+    description => "Where should ares be installed?",
+    default     => "/usr/local",
+    option      => "ares-prefix",
   },
 );
 
