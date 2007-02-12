@@ -155,7 +155,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
 #line 23 "ParameterHash.gperf"
       {"actor", ParameterTypes::actor},
 #line 62 "ParameterHash.gperf"
-      {"qop", ParameterTypes::qopFactory},
+      {"qop", ParameterTypes::qop},
 #line 78 "ParameterHash.gperf"
       {"site", ParameterTypes::site},
 #line 48 "ParameterHash.gperf"
