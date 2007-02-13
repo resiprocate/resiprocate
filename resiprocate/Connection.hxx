@@ -33,6 +33,8 @@ typedef IntrusiveListElement<Connection*> ConnectionLruList;
 typedef IntrusiveListElement1<Connection*> ConnectionReadList;
 typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
 
+class ConnectionManager;
+
 class Connection : public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
 {
       friend class ConnectionManager;
