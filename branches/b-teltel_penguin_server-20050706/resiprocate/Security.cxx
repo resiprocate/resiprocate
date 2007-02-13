@@ -317,7 +317,7 @@ BaseSecurity::addCertDER (PEMType type,
    assert( !certDER.empty() );
 
    X509* cert = 0;
-   unsigned char* in = (unsigned char*)certDER.data();
+   const unsigned char* in = (const unsigned char*)certDER.data();
    if (d2i_X509(&cert,&in,certDER.size()) == 0)
    {
       ErrLog(<< "Could not read DER certificate from " << certDER );
@@ -1690,7 +1690,7 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
    {
       if ( !certDer.empty() )
       {
-         unsigned char* in = (unsigned char*)certDer.data();
+         const unsigned char* in = (const unsigned char*)certDer.data();
          if (d2i_X509(&cert,&in,certDer.size()) == 0)
          {
             DebugLog(<< "Could not read DER certificate from " << certDer );
@@ -2293,7 +2293,7 @@ BaseSecurity::getCetName(X509 *cert)
             if (!strcmp(extstr, "subjectAltName"))
             {
                 int                  j;
-                unsigned char        *data;
+                const unsigned char  *data;
                 STACK_OF(CONF_VALUE) *val;
                 CONF_VALUE           *nval;
                 X509V3_EXT_METHOD    *meth;
