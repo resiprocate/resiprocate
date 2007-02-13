@@ -15,7 +15,9 @@ class SipMessage;
 class NameAddr;
 class SecurityAttributes;
 class Security;
-
+class Contents;
+class Auth;
+    
 class UnsupportedAuthenticationScheme : public BaseException
 {
    public:
