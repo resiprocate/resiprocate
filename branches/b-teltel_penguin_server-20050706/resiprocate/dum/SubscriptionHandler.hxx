@@ -8,6 +8,7 @@ namespace resip
 {
 class SipMessage;
 class SecurityAttributes;
+class Contents;
 
 class ClientSubscriptionHandler
 {
