@@ -19,7 +19,6 @@ CFG=TestRunner - Win32 Debug Unicode
 !MESSAGE 
 !MESSAGE "TestRunner - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "TestRunner - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
-!MESSAGE "TestRunner - Win32 Debug Crossplatform Setting" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "TestRunner - Win32 Release Unicode" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "TestRunner - Win32 Debug Unicode" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
@@ -46,7 +45,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /GR /GX /O2 /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /D "WIN32" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GR /GX /Zd /O2 /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "NDEBUG" /D "_AFXEXT" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "WIN32" /D "OEMRESOURCE" /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
@@ -56,8 +55,16 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 ..\..\..\lib\cppunit.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /def:".\TestRunner.def" /out:"..\..\..\lib\testrunner.dll" /implib:"..\..\..\lib\testrunner.lib"
-# SUBTRACT LINK32 /pdb:none
+# ADD LINK32 ..\..\..\lib\cppunit.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /def:".\TestRunner.def"
+# SUBTRACT LINK32 /pdb:none /incremental:yes
+# Begin Special Build Tool
+TargetDir=.\Release
+TargetPath=.\Release\TestRunner.dll
+TargetName=TestRunner
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copying target to lib/
+PostBuild_Cmds=copy "$(TargetPath)" ..\..\..\lib\$(TargetName).dll	copy "$(TargetDir)\$(TargetName).lib" ..\..\..\lib\$(TargetName).lib
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "TestRunner - Win32 Debug"
 
@@ -73,7 +80,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /D "WIN32" /FR /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /Zi /Od /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "_DEBUG" /D "_AFXEXT" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "WIN32" /D "OEMRESOURCE" /FR /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
@@ -83,37 +90,16 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\..\..\lib\cppunitd.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\..\..\lib\testrunnerd.dll" /implib:"..\..\..\lib\testrunnerd.lib" /pdbtype:sept
-# SUBTRACT LINK32 /profile /pdb:none /map
-
-!ELSEIF  "$(CFG)" == "TestRunner - Win32 Debug Crossplatform Setting"
-
-# PROP BASE Use_MFC 6
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "TestRunner___Win32_Debug_Without_CPPUNIT_USE_TYPEINFO"
-# PROP BASE Intermediate_Dir "TestRunner___Win32_Debug_Without_CPPUNIT_USE_TYPEINFO"
-# PROP BASE Ignore_Export_Lib 0
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 6
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "DebugNoTypeInfo"
-# PROP Intermediate_Dir "DebugNoTypeInfo"
-# PROP Ignore_Export_Lib 0
-# PROP Target_Dir ""
-# ADD BASE CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /D "CPPUNIT_USE_TYPEINFO" /D "WIN32" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /D "WIN32" /D "CPPUNIT_DONT_USE_TYPEINFO" /Yu"stdafx.h" /FD /c
-# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
-# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
-# ADD BASE RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
-# ADD RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LINK32=link.exe
-# ADD BASE LINK32 ..\..\..\lib\cppunitd.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\..\..\lib\testrunnerd.dll" /implib:"..\..\..\lib\testrunnerd.lib" /pdbtype:sept
-# SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 ..\..\..\lib\cppunitcd.lib winmm.lib /nologo /subsystem:windows /dll /pdb:"DebugCrossplatform/testrunnercd.pdb" /debug /machine:I386 /def:".\TestRunner.def" /out:"..\..\..\lib\testrunnercd.dll" /implib:"..\..\..\lib\testrunnercd.lib" /pdbtype:sept
+# ADD LINK32 ..\..\..\lib\cppunitd.lib winmm.lib /nologo /subsystem:windows /dll /incremental:no /debug /machine:I386 /def:".\TestRunner.def" /out:"Debug\testrunnerd.dll" /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
+# Begin Special Build Tool
+TargetDir=.\Debug
+TargetPath=.\Debug\testrunnerd.dll
+TargetName=testrunnerd
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copying target to lib/
+PostBuild_Cmds=copy "$(TargetPath)" ..\..\..\lib\$(TargetName).dll	copy "$(TargetDir)\$(TargetName).lib" ..\..\..\lib\$(TargetName).lib
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "TestRunner - Win32 Release Unicode"
 
@@ -130,7 +116,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GR /GX /O2 /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /D "WIN32" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /GR /GX /O2 /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /D "WIN32" /D "_UNICODE" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GR /GX /Zd /O2 /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "NDEBUG" /D "_UNICODE" /D "_AFXEXT" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "WIN32" /D "OEMRESOURCE" /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
@@ -141,8 +127,16 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 ..\..\..\lib\cppunit.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /def:".\TestRunner.def" /out:"..\..\..\lib\testrunner.dll" /implib:"..\..\..\lib\testrunner.lib"
 # SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 ..\..\..\lib\cppunit.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /def:".\TestRunner.def" /out:"..\..\..\lib\testrunneru.dll" /implib:"..\..\..\lib\testrunneru.lib"
-# SUBTRACT LINK32 /pdb:none
+# ADD LINK32 ..\..\..\lib\cppunit.lib winmm.lib /nologo /subsystem:windows /dll /machine:I386 /def:".\TestRunner.def" /out:"ReleaseUnicode\testrunneru.dll"
+# SUBTRACT LINK32 /pdb:none /incremental:yes
+# Begin Special Build Tool
+TargetDir=.\ReleaseUnicode
+TargetPath=.\ReleaseUnicode\testrunneru.dll
+TargetName=testrunneru
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copying target to lib/
+PostBuild_Cmds=copy "$(TargetPath)" ..\..\..\lib\$(TargetName).dll	copy "$(TargetDir)\$(TargetName).lib" ..\..\..\lib\$(TargetName).lib
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "TestRunner - Win32 Debug Unicode"
 
@@ -159,7 +153,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /D "WIN32" /FR /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_AFXEXT" /D "WIN32" /D "_UNICODE" /FR /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /Zi /Od /I "..\..\..\include" /I "..\..\..\include\msvc6" /D "_DEBUG" /D "_UNICODE" /D "_AFXEXT" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "WIN32" /D "OEMRESOURCE" /FR /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
@@ -170,8 +164,16 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 ..\..\..\lib\cppunitd.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\..\..\lib\testrunnerd.dll" /implib:"..\..\..\lib\testrunnerd.lib" /pdbtype:sept
 # SUBTRACT BASE LINK32 /profile /pdb:none /map
-# ADD LINK32 ..\..\..\lib\cppunitd.lib winmm.lib /nologo /subsystem:windows /dll /debug /machine:I386 /def:".\TestRunner.def" /out:"..\..\..\lib\testrunnerud.dll" /implib:"..\..\..\lib\testrunnerud.lib" /pdbtype:sept
+# ADD LINK32 ..\..\..\lib\cppunitd.lib winmm.lib /nologo /subsystem:windows /dll /incremental:no /debug /machine:I386 /def:".\TestRunner.def" /out:"DebugUnicode\testrunnerud.dll" /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
+# Begin Special Build Tool
+TargetDir=.\DebugUnicode
+TargetPath=.\DebugUnicode\testrunnerud.dll
+TargetName=testrunnerud
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copying target to lib/
+PostBuild_Cmds=copy "$(TargetPath)" ..\..\..\lib\$(TargetName).dll	copy "$(TargetDir)\$(TargetName).lib" ..\..\..\lib\$(TargetName).lib
+# End Special Build Tool
 
 !ENDIF 
 
@@ -179,7 +181,6 @@ LINK32=link.exe
 
 # Name "TestRunner - Win32 Release"
 # Name "TestRunner - Win32 Debug"
-# Name "TestRunner - Win32 Debug Crossplatform Setting"
 # Name "TestRunner - Win32 Release Unicode"
 # Name "TestRunner - Win32 Debug Unicode"
 # Begin Group "Resource Files"
@@ -205,6 +206,87 @@ SOURCE=.\res\tfwkui_r.bmp
 # Begin Group "UserInterface"
 
 # PROP Default_Filter ""
+# Begin Group "DynamicWindow"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicBar.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicBar.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicControlsManager.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicControlsManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicDialog.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicDialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicFormView.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicFormView.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicPropSheet.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicPropSheet.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicWnd.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicWnd.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicWndEx.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCDynamicWndEx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCSizeIconCtrl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\cdxCSizeIconCtrl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\SizeCBar.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\DynamicWindow\SizeCBar.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\ListCtrlFormatter.cpp
@@ -243,6 +325,14 @@ SOURCE=.\Resource.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ResourceLoaders.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ResourceLoaders.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -259,8 +349,6 @@ SOURCE=.\TestRunner.def
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "TestRunner - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "TestRunner - Win32 Debug Crossplatform Setting"
 
 # PROP Exclude_From_Build 1
 
@@ -322,11 +410,15 @@ SOURCE=.\MfcSynchronizationObject.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\TestRunner.cpp
+SOURCE=.\MfcTestRunner.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\include\cppunitui\mfc\TestRunner.h
+SOURCE=..\..\..\include\cppunit\ui\mfc\MfcTestRunner.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\cppunit\ui\mfc\TestRunner.h
 # End Source File
 # Begin Source File
 
@@ -354,7 +446,7 @@ SOURCE=.\MostRecentTests.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\include\msvc6\DSPlugIn\TestRunnerDSPlugin_i.c
+SOURCE=..\..\..\include\msvc6\DSPlugin\TestRunnerDSPluginVC6_i.c
 # SUBTRACT CPP /YX /Yc /Yu
 # End Source File
 # End Group

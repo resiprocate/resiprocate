@@ -54,13 +54,13 @@ Profile::reset()
 }
 
 void
-Profile::setDefaultRegistrationTime(int secs)
+Profile::setDefaultRegistrationTime(UInt32 secs)
 {
    mDefaultRegistrationExpires = secs;
    mHasDefaultRegistrationExpires = true;
 }
 
-int 
+UInt32 
 Profile::getDefaultRegistrationTime() const
 {
    // Fall through seting (if required)
@@ -86,13 +86,13 @@ Profile::unsetDefaultRegistrationTime()
 }
 
 void
-Profile::setDefaultMaxRegistrationTime(int secs)
+Profile::setDefaultMaxRegistrationTime(UInt32 secs)
 {
    mDefaultMaxRegistrationExpires = secs;
    mHasDefaultMaxRegistrationExpires = true;
 }
 
-int 
+UInt32 
 Profile::getDefaultMaxRegistrationTime() const
 {
    // Fall through seting (if required)
@@ -150,13 +150,13 @@ Profile::unsetDefaultRegistrationRetryTime()
 }
 
 void
-Profile::setDefaultSubscriptionTime(int secs)
+Profile::setDefaultSubscriptionTime(UInt32 secs)
 {
    mDefaultSubscriptionExpires = secs;
    mHasDefaultSubscriptionExpires = true;
 }
 
-int 
+UInt32 
 Profile::getDefaultSubscriptionTime() const
 {
    // Fall through seting (if required)
@@ -182,13 +182,13 @@ Profile::unsetDefaultSubscriptionTime()
 }
 
 void
-Profile::setDefaultPublicationTime(int secs)
+Profile::setDefaultPublicationTime(UInt32 secs)
 {
    mDefaultPublicationExpires = secs;
    mHasDefaultPublicationExpires = true;
 }
 
-int 
+UInt32 
 Profile::getDefaultPublicationTime() const
 {
    // Fall through seting (if required)
@@ -246,13 +246,13 @@ Profile::unsetDefaultStaleCallTime()
 }
 
 void
-Profile::setDefaultSessionTime(int secs)
+Profile::setDefaultSessionTime(UInt32 secs)
 {
    mDefaultSessionExpires = secs;
    mHasDefaultSessionExpires = true;
 }
 
-int 
+UInt32 
 Profile::getDefaultSessionTime() const
 {
    // Fall through seting (if required)

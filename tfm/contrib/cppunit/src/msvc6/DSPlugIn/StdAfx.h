@@ -8,6 +8,10 @@
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 
+#if _MSC_VER >= 1300     // VC++ 7 or more
+#error This add-in is for VC++ 6.0 only.
+#endif
+
 #include <afxwin.h>         // MFC core and standard components
 #include <afxdisp.h>
 

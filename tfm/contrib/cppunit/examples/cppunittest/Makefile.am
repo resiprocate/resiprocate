@@ -1,4 +1,4 @@
-EXTRA_DIST = CppUnitTestMain.dsw CppUnitTestMain.dsp
+EXTRA_DIST = CppUnitTestMain.dsw CppUnitTestMain.dsp CppUnitTestPlugIn.dsp CppUnitTestPlugIn.cpp
 
 TESTS = cppunittestmain
 check_PROGRAMS = $(TESTS)
@@ -11,25 +11,30 @@ cppunittestmain_SOURCES = \
 	CoreSuite.h \
 	CppUnitTestMain.cpp \
 	CppUnitTestSuite.cpp \
-	CppUnitTestSuite.h \
 	ExceptionTest.cpp \
 	ExceptionTest.h \
+  ExceptionTestCaseDecoratorTest.h \
+  ExceptionTestCaseDecoratorTest.cpp \
 	ExtensionSuite.h \
 	FailureException.h \
 	HelperMacrosTest.cpp \
 	HelperMacrosTest.h \
 	HelperSuite.h \
+	MessageTest.h \
+	MessageTest.cpp \
+  MockFunctor.h \
+  MockProtector.h \
 	MockTestCase.h \
 	MockTestCase.cpp \
 	MockTestListener.cpp \
 	MockTestListener.h \
-	NotEqualExceptionTest.cpp \
-	NotEqualExceptionTest.h \
 	OrthodoxTest.cpp \
 	OrthodoxTest.h \
 	OutputSuite.h \
 	RepeatedTestTest.cpp \
 	RepeatedTestTest.h \
+  StringToolsTest.h \
+  StringToolsTest.cpp \
 	SubclassedTestCase.cpp \
 	SubclassedTestCase.h \
 	SynchronizedTestResult.h \
@@ -43,6 +48,8 @@ cppunittestmain_SOURCES = \
 	TestDecoratorTest.h \
 	TestFailureTest.cpp \
 	TestFailureTest.h \
+	TestPathTest.h \
+	TestPathTest.cpp \
 	TestResultCollectorTest.cpp \
 	TestResultCollectorTest.h \
 	TestResultTest.cpp \
@@ -51,9 +58,14 @@ cppunittestmain_SOURCES = \
 	TestSetUpTest.h \
 	TestSuiteTest.cpp \
 	TestSuiteTest.h \
+	TestTest.cpp \
+	TestTest.h \
+  ToolsSuite.h \
 	TrackedTestCase.cpp \
 	TrackedTestCase.h \
 	UnitTestToolSuite.h \
+	XmlElementTest.h \
+	XmlElementTest.cpp \
 	XmlOutputterTest.h \
 	XmlOutputterTest.cpp \
 	XmlUniformiser.h \
@@ -63,3 +75,7 @@ cppunittestmain_SOURCES = \
 
 cppunittestmain_LDADD= \
   $(top_builddir)/src/cppunit/libcppunit.la 
+
+cppunittestmain_LDFLAGS = $(LIBADD_DL)
+
+

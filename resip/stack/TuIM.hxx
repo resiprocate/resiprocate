@@ -116,6 +116,17 @@ public:
             UInt64 mNextTimeToSubscribe;
             bool online;
             Data status;
+            
+            Buddy() {};
+            Buddy(const Buddy& rhs)
+            {
+                uri = rhs.uri;
+                group = rhs.group;
+                presDialog = rhs.presDialog;
+                mNextTimeToSubscribe = rhs.mNextTimeToSubscribe;
+                online = rhs.online;
+                status = rhs.status;
+            };
       };
 
       // people I subscribe to
@@ -163,7 +174,7 @@ public:
       DeprecatedDialog mRegistrationDialog;
       UInt64 mNextTimeToRegister;
       Data   mRegistrationPassword;
-      int    mLastAuthCSeq; // This is the CSeq of the last registration message
+      unsigned int mLastAuthCSeq; // This is the CSeq of the last registration message
                             // sent that included digest authorization information 
 
       const int    mRegistrationTimeSeconds; // this is the default time to request in

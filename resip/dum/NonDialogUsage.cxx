@@ -46,15 +46,24 @@ NonDialogUsage::getUserProfile()
 void 
 NonDialogUsage::send(SharedPtr<SipMessage> msg)
 {
-   InfoLog(<< "Applying service route: " << Inserter(getUserProfile()->getServiceRoute()) << " to " << msg->brief());   
    const NameAddrs& sRoute = getUserProfile()->getServiceRoute();
-   if (sRoute.empty())
+
+   // Clear the routes if there was previously a service_route. Otherwise
+   // keep the route incase there exists custom routes
+
+   if (!sRoute.empty())
    {
-      msg->remove(h_Routes);
-   }
-   else
-   {
-      msg->header(h_Routes) = sRoute;
+      if (msg->header(h_RequestLine).method() == REGISTER)
+      {
+         const NameAddrs emptyRoute;         
+         msg->remove(h_Routes);
+         getUserProfile()->setServiceRoute(emptyRoute);
+      }
+      else
+      {
+         InfoLog(<< "Applying service route: " << Inserter(getUserProfile()->getServiceRoute()) << " to " << msg->brief());   
+         msg->header(h_Routes) = sRoute;
+      }
    }
    
    mDum.send(msg);

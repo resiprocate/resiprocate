@@ -1,4 +1,4 @@
-#include <cppunit/TestSuite.h>
+#include <cppunit/Test.h>
 #include <qlistview.h>
 #include <qmessagebox.h>
 #include "TestBrowserDlgImpl.h"
@@ -29,7 +29,7 @@ TestBrowser::~TestBrowser()
 
 
 void 
-TestBrowser::setRootTest( CppUnit::Test *rootTest )
+TestBrowser::setRootTest( CPPUNIT_NS::Test *rootTest )
 {
   QListViewItem *dummyRoot = new QListViewItem( _listTests );
 
@@ -44,22 +44,22 @@ TestBrowser::setRootTest( CppUnit::Test *rootTest )
 
 
 void 
-TestBrowser::insertItemFor( CppUnit::Test *test,
+TestBrowser::insertItemFor( CPPUNIT_NS::Test *test,
                             QListViewItem *parentItem )
 {
-  CppUnit::TestSuite *suite = dynamic_cast<CppUnit::TestSuite *>(test);
   QListViewItem *item = new TestListViewItem( test, parentItem );
   QString testName = QString::fromLatin1( test->getName().c_str() );
   item->setText( 0, testName );
-  if ( suite != NULL )
+  if ( test->getChildTestCount() > 0  ||    // suite with test
+       test->countTestCases() == 0 )        // empty suite
   {
-    for ( int index =0; index < suite->getTests().size(); ++index )
-      insertItemFor( suite->getTests()[index], item );
+    for ( int index =0; index < test->getChildTestCount(); ++index )
+      insertItemFor( test->getChildTestAt( index ), item );
   }
 }
 
 
-CppUnit::Test *
+CPPUNIT_NS::Test *
 TestBrowser::selectedTest()
 {
   return _selectedTest;

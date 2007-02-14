@@ -1,8 +1,9 @@
-#include "cppunit/Exception.h"
-#include "cppunit/Test.h"
-#include "cppunit/TestFailure.h"
+#include <cppunit/Exception.h>
+#include <cppunit/Test.h>
+#include <cppunit/TestFailure.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 /// Constructs a TestFailure with the given test and exception.
 TestFailure::TestFailure( Test *failedTest, 
@@ -60,18 +61,11 @@ TestFailure::failedTestName() const
 }
 
 
-/// Returns a short description of the failure.
-std::string 
-TestFailure::toString() const 
-{ 
-  return m_failedTest->toString() + ": " + m_thrownException->what();
-}
-
-
 TestFailure *
 TestFailure::clone() const
 {
   return new TestFailure( m_failedTest, m_thrownException->clone(), m_isError );
 }
 
-} // namespace CppUnit
+
+CPPUNIT_NS_END

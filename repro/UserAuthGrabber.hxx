@@ -2,6 +2,7 @@
 #define USER_AUTH_GRABBER 1
 
 #include "repro/Worker.hxx"
+#include "repro/AbstractDb.hxx"
 #include "repro/UserStore.hxx"
 #include "resip/stack/Message.hxx"
 #include "repro/UserInfoMessage.hxx"
@@ -26,13 +27,19 @@ class UserAuthGrabber : public Worker
          repro::UserInfoMessage* uinf = dynamic_cast<UserInfoMessage*>(msg);
          if(uinf)
          {
-            uinf->A1()=mUserStore.getUserAuthInfo(uinf->user(),uinf->realm());
-            DebugLog(<<"Grabbed an A1 for " << uinf->user() <<"@"<<uinf->realm()
-                     << " : " << uinf->A1());
+            AbstractDb::UserRecord rec=
+               mUserStore.getUserInfo(uinf->user()+"@"+uinf->realm());
+            if(rec.user==uinf->user() && rec.domain==uinf->realm())
+            {
+               uinf->mRec=rec;
+            }
+            DebugLog(<<"Grabbed user info for " 
+                           << uinf->user() <<"@"<<uinf->realm()
+                           << " : " << uinf->A1());
          }
          else
          {
-            DebugLog(<<"Did not recognize message type...");
+            WarningLog(<<"Did not recognize message type...");
          }
       }
       

@@ -65,11 +65,11 @@ DialogUsage::getUserProfile()
 void 
 DialogUsage::send(SharedPtr<SipMessage> msg)
 {
-   if (msg->isRequest())
-   {
+   //if (msg->isRequest())
+   //{
       // give app an chance to adorn the message.
       onReadyToSend(*msg);
-   }
+   //}
    mDialog.send(msg);
 }
 

@@ -2,11 +2,13 @@
 #define CPPUNIT_EXCEPTION_H
 
 #include <cppunit/Portability.h>
+#include <cppunit/Message.h>
 #include <cppunit/SourceLine.h>
 #include <exception>
-#include <string>
 
-namespace CppUnit {
+
+CPPUNIT_NS_BEGIN
+
 
 /*! \brief Exceptions thrown by failed assertions.
  * \ingroup BrowsingCollectedTestResult
@@ -17,65 +19,72 @@ namespace CppUnit {
 class CPPUNIT_API Exception : public std::exception
 {
 public:
-
-    class Type
-    {
-    public:
-        Type( std::string type ) : m_type ( type ) {}
-
-        bool operator ==( const Type &other ) const
-        {
-	    return m_type == other.m_type;
-        }
-    private:
-        const std::string m_type;
-    };
-
-
-    Exception( std::string  message = "", 
-	       SourceLine sourceLine = SourceLine() );
+  /*! \brief Constructs the exception with the specified message and source location.
+   * \param message Message associated to the exception.
+   * \param sourceLine Source location related to the exception.
+   */
+  Exception( const Message &message = Message(), 
+             const SourceLine &sourceLine = SourceLine() );
 
 #ifdef CPPUNIT_ENABLE_SOURCELINE_DEPRECATED
-    Exception( std::string  message, 
-	       long lineNumber, 
-	       std::string fileName );
+  /*!
+   * \deprecated Use other constructor instead.
+   */
+  Exception( std::string  message, 
+	     long lineNumber, 
+	     std::string fileName );
 #endif
 
-    Exception (const Exception& other);
+  /*! \brief Constructs a copy of an exception.
+   * \param other Exception to copy.
+   */
+  Exception( const Exception &other );
 
-    virtual ~Exception () throw();
+  /// Destructs the exception
+  virtual ~Exception() throw();
 
-    Exception& operator= (const Exception& other);
+  /// Performs an assignment
+  Exception &operator =( const Exception &other );
 
-    const char *what() const throw ();
+  /// Returns descriptive message
+  const char *what() const throw();
 
-    SourceLine sourceLine() const;
+  /// Location where the error occured
+  SourceLine sourceLine() const;
+
+  /// Message related to the exception.
+  Message message() const;
+
+  /// Set the message.
+  void setMessage( const Message &message );
 
 #ifdef CPPUNIT_ENABLE_SOURCELINE_DEPRECATED
-    long lineNumber() const;
-    std::string fileName() const;
+  /// The line on which the error occurred
+  long lineNumber() const;
 
-    static const std::string UNKNOWNFILENAME;
-    static const long UNKNOWNLINENUMBER;
+  /// The file in which the error occurred
+  std::string fileName() const;
+
+  static const std::string UNKNOWNFILENAME;
+  static const long UNKNOWNLINENUMBER;
 #endif
 
-    virtual Exception *clone() const;
-    
-    virtual bool isInstanceOf( const Type &type ) const;
+  /// Clones the exception.
+  virtual Exception *clone() const;
 
-    static Type type();
+protected:
+  // VC++ does not recognize call to parent class when prefixed
+  // with a namespace. This is a workaround.
+  typedef std::exception SuperClass;
 
-private:
-    // VC++ does not recognize call to parent class when prefixed
-    // with a namespace. This is a workaround.
-    typedef std::exception SuperClass;
-
-    std::string m_message;
-    SourceLine m_sourceLine;
+  Message m_message;
+  SourceLine m_sourceLine;
+  std::string m_whatMessage;
 };
 
 
-} // namespace CppUnit
+CPPUNIT_NS_END
+
 
 #endif // CPPUNIT_EXCEPTION_H
 

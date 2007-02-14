@@ -3,8 +3,8 @@
 #endif
 
 #include "resip/stack/SipMessage.hxx"
-#include "StrictRouteFixup.hxx"
-#include "../RequestContext.hxx"
+#include "repro/monkeys/StrictRouteFixup.hxx"
+#include "repro/RequestContext.hxx"
 
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO

@@ -44,7 +44,7 @@ class BaseSubscription: public DialogUsage
       Data mDocumentKey;
       Data mEventType;
       Data mSubscriptionId;
-      int mTimerSeq;      
+      unsigned int mTimerSeq;      
       SubscriptionState mSubscriptionState;
 
       // disabled

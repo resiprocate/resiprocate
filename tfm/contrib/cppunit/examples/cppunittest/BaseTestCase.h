@@ -4,7 +4,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 
-class BaseTestCase : public CppUnit::TestCase
+class BaseTestCase : public CPPUNIT_NS::TestCase
 {
   CPPUNIT_TEST_SUITE( BaseTestCase );
   CPPUNIT_TEST( testUsingCheckIt );

@@ -62,7 +62,9 @@ BOOL CHostAppApp::InitInstance()
     //  the specific initialization routines you do not need.
 
 #ifdef _AFXDLL
-    Enable3dControls();         // Call this when using MFC in a shared DLL
+# if _MSC_VER < 1300   // vc6
+	Enable3dControls();			// Call this when using MFC in a shared DLL
+# endif
 #else
     Enable3dControlsStatic();   // Call this when linking to MFC statically
 #endif
@@ -108,8 +110,8 @@ BOOL CHostAppApp::InitInstance()
 void 
 CHostAppApp::RunUnitTests()
 {
-  CppUnit::MfcUi::TestRunner runner;
-  runner.addTest( CppUnit::TestFactoryRegistry::getRegistry().makeTest() );
+  CPPUNIT_NS::MfcUi::TestRunner runner;
+  runner.addTest( CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest() );
 
   runner.run();    
 }

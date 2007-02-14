@@ -14,6 +14,7 @@ class TransactionMessage;
 class ApplicationMessage;
 class StatisticsManager;
 class SipStack;
+class Compression;
 
 class TransactionController
 {
@@ -54,8 +55,6 @@ class TransactionController
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
       SipStack& mStack;
-      
-      bool mMultiThreaded;
       
       // If true, indicate to the Transaction to ignore responses for which
       // there is no transaction. 

@@ -26,33 +26,52 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_TEST_PLUG_IN_RUNNER DIALOG DISCARDABLE  0, 0, 403, 215
+CPP_UNIT_TEST_RUNNER_PLUG_IN_IDD_TEST_PLUG_IN_RUNNER DIALOG DISCARDABLE  0, 0, 330, 226
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TestRunner"
+CAPTION "Test plug-in runner"
 FONT 8, "MS Sans Serif"
 BEGIN
-    PUSHBUTTON      "&Browse",IDC_BROWSE_TEST,346,16,50,14
-    DEFPUSHBUTTON   "&Run",ID_RUN,346,39,50,14
-    LTEXT           "Test name:",IDC_STATIC,7,7,179,9
-    COMBOBOX        IDC_COMBO_TEST,7,17,332,157,CBS_DROPDOWNLIST | 
+    PUSHBUTTON      "&Choose DLL",IDC_CHOOSE_DLL,273,72,50,14
+    PUSHBUTTON      "Re&load DLL",IDC_RELOAD_DLL,273,88,50,14
+    LTEXT           "&Test:",IDC_STATIC_TEST_NAME,7,7,17,8
+    COMBOBOX        IDC_COMBO_TEST,28,7,235,157,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Browse",IDC_BROWSE_TEST,273,7,50,14
+    DEFPUSHBUTTON   "&Run",ID_RUN,273,23,50,14
+    LTEXT           "Progress:",IDC_STATIC_PROGRESS,7,23,33,9
+    LTEXT           "none",IDC_RUNNING_TEST_CASE_LABEL,43,23,220,9
+    LTEXT           "Progress Bar",IDC_STATIC_PROGRESS_BAR,7,34,256,15,NOT 
+                    WS_VISIBLE
+    LTEXT           "Runs:",IDC_STATIC_LABEL_RUNS,7,55,29,10
+    LTEXT           "0",IDC_STATIC_RUNS,48,55,30,8
+    LTEXT           "Errors:",IDC_STATIC_LABEL_ERRORS,89,55,29,10
+    LTEXT           "0",IDC_STATIC_ERRORS,127,55,19,8
+    LTEXT           "Failures:",IDC_STATIC_LABEL_FAILURES,174,55,29,10
+    LTEXT           "0",IDC_STATIC_FAILURES,212,55,19,8
+    LTEXT           "&Errors and Failures:",IDC_STATIC,7,70,67,9
+    CONTROL         "List1",IDC_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | 
+                    WS_TABSTOP,7,81,257,60
+    LTEXT           "&Details:",IDC_STATIC_DETAILS,7,145,24,8
+    EDITTEXT        IDC_DETAILS,7,156,316,48,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_READONLY
     CONTROL         "&Autorun at startup",IDC_CHECK_AUTORUN,"Button",
-                    BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,347,67,49,25
-    PUSHBUTTON      "&Stop",ID_STOP,346,175,50,14
-    PUSHBUTTON      "&Close",IDOK,346,194,50,14
-    LTEXT           "Progress:",IDC_STATIC,7,38,49,9
-    LTEXT           "Runs:",IDC_STATIC,103,76,29,10
-    LTEXT           "0",IDC_STATIC_RUNS,141,76,19,8
-    LTEXT           "Errors:",IDC_STATIC,169,76,29,10
-    LTEXT           "0",IDC_STATIC_ERRORS,207,76,19,8
-    LTEXT           "Failures:",IDC_STATIC,235,76,29,10
-    LTEXT           "0",IDC_STATIC_FAILURES,273,76,19,8
-    LTEXT           "Errors and Failures:",IDC_STATIC,7,94,67,9
-    CONTROL         "List1",IDC_LIST,"SysListView32",LVS_REPORT | WS_BORDER | 
-                    WS_TABSTOP,7,105,331,86
-    EDITTEXT        IDC_EDIT_TIME,7,195,332,13,ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON      "&Choose DLL",IDC_CHOOSE_DLL,346,97,50,14
-    PUSHBUTTON      "Re&load DLL",IDC_RELOAD_DLL,346,122,50,14
+                    BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,273,46,49,19
+    PUSHBUTTON      "&Stop",ID_STOP,273,112,50,14
+    PUSHBUTTON      "&Close",IDOK,273,128,50,14
+    EDITTEXT        IDC_EDIT_TIME,7,206,316,13,ES_AUTOHSCROLL | ES_READONLY
+END
+
+CPP_UNIT_TEST_RUNNER_IDD_DIALOG_TEST_HIERARCHY DIALOG DISCARDABLE  0, 0, 259, 250
+STYLE DS_MODALFRAME | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION "Test hierarchy"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Select",IDOK,202,7,50,14
+    CONTROL         "Tree1",IDC_TREE_TEST,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_FULLROWSELECT | 
+                    WS_BORDER | WS_TABSTOP,7,7,189,236
+    PUSHBUTTON      "&Close",IDCANCEL,202,34,50,14
 END
 
 
@@ -107,16 +126,44 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO DISCARDABLE 
 BEGIN
-    IDD_TEST_PLUG_IN_RUNNER, DIALOG
+    "CPP_UNIT_TEST_RUNNER_PLUG_IN_IDD_TEST_PLUG_IN_RUNNER", DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 396
+        RIGHTMARGIN, 323
         TOPMARGIN, 7
-        BOTTOMMARGIN, 208
+        BOTTOMMARGIN, 219
+    END
+
+    "CPP_UNIT_TEST_RUNNER_IDD_DIALOG_TEST_HIERARCHY", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 252
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 243
     END
 END
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR_TEST_RUNNER ACCELERATORS DISCARDABLE 
+BEGIN
+    "Q",            ID_QUIT_APPLICATION,    VIRTKEY, NOINVERT
+    VK_SPACE,       ID_RUN,                 VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+CPP_UNIT_TEST_RUNNER_IDB_ERROR_TYPE          BITMAP  DISCARDABLE     "res\\errortype.bmp"
+CPP_UNIT_TEST_RUNNER_IDB_TEST_TYPE           BITMAP  DISCARDABLE     "res\\test_type.bmp"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -175,7 +222,23 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_TEST_PLUGIN_RUNNER  ICON    DISCARDABLE     "res\\TestPlugInRunner.ico"
+CPP_UNIT_TEST_RUNNER_PLUG_IN_IDR_TEST_PLUGIN_RUNNER ICON    DISCARDABLE     "res\\TestPlugInRunner.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_SELECT_TEST   "You must select a test!"
+    IDS_ERRORLIST_TYPE      "Type"
+    IDS_ERRORLIST_NAME      "Name"
+    IDS_ERRORLIST_FAILED_CONDITION "Failed Condition"
+    IDS_ERRORLIST_LINE_NUMBER "Line Number"
+    IDS_ERRORLIST_FILE_NAME "File Name"
+END
+
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 

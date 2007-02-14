@@ -3,10 +3,9 @@
 #endif
 
 #include <memory>
-#include "rutil/compat.hxx"
+#include "rutil/Socket.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
-#include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 
@@ -18,9 +17,11 @@ using namespace resip;
 const size_t TcpBaseTransport::MaxWriteSize = 4096;
 const size_t TcpBaseTransport::MaxReadSize = 4096;
 
-TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum, IpVersion version,
-                                   const Data& pinterface)
-   : InternalTransport(fifo, portNum, version, pinterface)
+TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
+                                   int portNum, IpVersion version,
+                                   const Data& pinterface,
+                                   Compression &compression)
+   : InternalTransport(fifo, portNum, version, pinterface, 0, compression)
 {
    mFd = InternalTransport::socket(TCP, version);
    //DebugLog (<< "Opening TCP " << mFd << " : " << this);

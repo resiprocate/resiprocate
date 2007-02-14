@@ -1,57 +1,101 @@
 #include <cppunit/Asserter.h>
-#include <cppunit/NotEqualException.h>
+#include <cppunit/Exception.h>
+#include <cppunit/Message.h>
 
 
-namespace CppUnit
-{
-
-
-namespace Asserter
-{
+CPPUNIT_NS_BEGIN
 
 
 void 
-fail( std::string message, 
-      SourceLine sourceLine )
+Asserter::fail( std::string message, 
+                const SourceLine &sourceLine )
+{
+  fail( Message( "assertion failed", message ), sourceLine );
+}
+
+
+void 
+Asserter::fail( const Message &message, 
+                const SourceLine &sourceLine )
 {
   throw Exception( message, sourceLine );
 }
 
 
 void 
-failIf( bool shouldFail, 
-        std::string message, 
-        SourceLine location )
+Asserter::failIf( bool shouldFail, 
+                  const Message &message, 
+                  const SourceLine &sourceLine )
 {
   if ( shouldFail )
-    fail( message, location );
+    fail( message, sourceLine );
 }
 
 
 void 
-failNotEqual( std::string expected, 
-              std::string actual, 
-              SourceLine sourceLine,
-              std::string additionalMessage )
+Asserter::failIf( bool shouldFail, 
+                  std::string message, 
+                  const SourceLine &sourceLine )
 {
-  throw NotEqualException( expected, 
-                           actual, 
-                           sourceLine, 
-                           additionalMessage );
+  failIf( shouldFail, Message( "assertion failed", message ), sourceLine );
+}
+
+
+std::string 
+Asserter::makeExpected( const std::string &expectedValue )
+{
+  return "Expected: " + expectedValue;
+}
+
+
+std::string 
+Asserter::makeActual( const std::string &actualValue )
+{
+  return "Actual  : " + actualValue;
+}
+
+
+Message 
+Asserter::makeNotEqualMessage( const std::string &expectedValue,
+                               const std::string &actualValue,
+                               const AdditionalMessage &additionalMessage,
+                               const std::string &shortDescription )
+{
+  Message message( shortDescription,
+                   makeExpected( expectedValue ),
+                   makeActual( actualValue ) );
+  message.addDetail( additionalMessage );
+
+  return message;
 }
 
 
 void 
-failNotEqualIf( bool shouldFail,
-                std::string expected, 
-                std::string actual, 
-                SourceLine sourceLine,
-                std::string additionalMessage )
+Asserter::failNotEqual( std::string expected, 
+                        std::string actual, 
+                        const SourceLine &sourceLine,
+                        const AdditionalMessage &additionalMessage,
+                        std::string shortDescription )
 {
-  if ( shouldFail )
-    failNotEqual( expected, actual, sourceLine, additionalMessage );
+  fail( makeNotEqualMessage( expected,
+                             actual,
+                             additionalMessage,
+                             shortDescription ), 
+        sourceLine );
 }
 
 
-} // namespace Asserter
-} // namespace CppUnit
+void 
+Asserter::failNotEqualIf( bool shouldFail,
+                          std::string expected, 
+                          std::string actual, 
+                          const SourceLine &sourceLine,
+                          const AdditionalMessage &additionalMessage,
+                          std::string shortDescription )
+{
+  if ( shouldFail )
+    failNotEqual( expected, actual, sourceLine, additionalMessage, shortDescription );
+}
+
+
+CPPUNIT_NS_END

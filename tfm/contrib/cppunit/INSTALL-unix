@@ -83,3 +83,39 @@ The library appears to function OK.  Please let us know if you find
 it otherwise.
 
 
+Solaris/Sun CC compiler
+-----------------------
+
+Use the following configure line:
+
+./configure CXX=CC CXXFLAGS="-pta -instances=static -mt 
+-xtarget=generic -g -features=no%transitions 
+-xildoff" LD=CC LDFLAGS=-xildoff
+
+In Forte C++ compiler for Solaris all the linking has to go via
+CC and ar, ld should not be run directly. For archive use CC -xar and
+for linking and generating the .so use  CC -G 
+
+Notes: CC 5.5 don't need that much flag to compile correctly. Though, I'm not
+sure what are the required one.
+
+
+AIX
+---
+
+./configure --disable-shared
+
+The autogen tools don't seem to generate correctly script to handle dynamic linking.
+If anyone know how to get it working, please contact us.
+
+
+HP-UX
+-----
+Use the following options with configure to 
+enable the use of aCC and cc for the compilation of 
+CppUnit: 
+./configure --enable-hpuxshl CC=cc CXX=aCC CXXFLAGS="-AA"
+
+AA sets all the necessary flags to enable namespaces, 
+stl v2,.... 
+

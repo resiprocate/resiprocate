@@ -5,7 +5,7 @@
 
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION( TestFailureTest,
-                                       CppUnitTest::coreSuiteName() );
+                                       coreSuiteName() );
 
 
 TestFailureTest::TestFailureTest()
@@ -34,8 +34,8 @@ TestFailureTest::tearDown()
 void 
 TestFailureTest::testConstructorAndGetters()
 {
-  CppUnit::TestCase test;
-  CppUnit::Exception *error = new ObservedException( this );
+  CPPUNIT_NS::TestCase test;
+  CPPUNIT_NS::Exception *error = new ObservedException( this );
   checkTestFailure( &test, error, false );
   CPPUNIT_ASSERT( m_exceptionDestroyed );
 }
@@ -44,8 +44,8 @@ TestFailureTest::testConstructorAndGetters()
 void 
 TestFailureTest::testConstructorAndGettersForError()
 {
-  CppUnit::TestCase test;
-  CppUnit::Exception *error = new ObservedException( this );
+  CPPUNIT_NS::TestCase test;
+  CPPUNIT_NS::Exception *error = new ObservedException( this );
   checkTestFailure( &test, error, true );
   CPPUNIT_ASSERT( m_exceptionDestroyed );
 }
@@ -59,11 +59,11 @@ TestFailureTest::exceptionDestroyed()
 
 
 void 
-TestFailureTest::checkTestFailure( CppUnit::Test *test, 
-                                   CppUnit::Exception *error,
+TestFailureTest::checkTestFailure( CPPUNIT_NS::Test *test, 
+                                   CPPUNIT_NS::Exception *error,
                                    bool isError )
 {
-  CppUnit::TestFailure failure( test, error, isError );
+  CPPUNIT_NS::TestFailure failure( test, error, isError );
   CPPUNIT_ASSERT_EQUAL( test, failure.failedTest() );
   CPPUNIT_ASSERT_EQUAL( error, failure.thrownException() );
   CPPUNIT_ASSERT_EQUAL( isError, failure.isError() );

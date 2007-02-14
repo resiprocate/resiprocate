@@ -8,8 +8,8 @@
 #include "TestRunnerThreadFinishedEvent.h"
 
 
-TestRunnerThread::TestRunnerThread( CppUnit::Test *testToRun,
-                                    CppUnit::TestResult *result,
+TestRunnerThread::TestRunnerThread( CPPUNIT_NS::Test *testToRun,
+                                    CPPUNIT_NS::TestResult *result,
                                     QObject *eventTarget,
                               TestRunnerThreadFinishedEvent *finishedEvent ) :
     _testToRun( testToRun ),

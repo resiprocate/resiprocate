@@ -1,16 +1,13 @@
 #ifndef CPPUNITTEST_OUTPUTSUITE_H
 #define CPPUNITTEST_OUTPUTSUITE_H
 
+#include <cppunit/Portability.h>
 #include <string>
 
-namespace CppUnitTest
+inline std::string outputSuiteName()
 {
-
-  inline std::string outputSuiteName()
-  {
-    return "Output";
-  }
-
+  return "Output";
 }
+
 
 #endif // CPPUNITTEST_OUTPUTSUITE_H

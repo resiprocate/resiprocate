@@ -4,7 +4,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 
-class RepeatedTestTest : public CppUnit::TestFixture
+class RepeatedTestTest : public CPPUNIT_NS::TestFixture
 {
   CPPUNIT_TEST_SUITE( RepeatedTestTest );
   CPPUNIT_TEST( testRun );
@@ -20,7 +20,7 @@ public:
   void testRun();
 
 private:
-  class RunCountTest : public CppUnit::TestCase
+  class RunCountTest : public CPPUNIT_NS::TestCase
   {
   public:
     RunCountTest() : m_runCount( 0 ) {}
@@ -38,7 +38,7 @@ private:
 
 private:
   RunCountTest *m_test;
-  CppUnit::Test *m_repeatedTest;
+  CPPUNIT_NS::Test *m_repeatedTest;
   const int m_repeatCount;
 };
 

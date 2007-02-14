@@ -34,6 +34,8 @@ class ParserContainerBase
 
       void append(const ParserContainerBase& rhs);
 
+
+      virtual void parseAll()=0;
    protected:
       const Headers::Type mType;
       std::vector<ParserCategory*> mParsers;

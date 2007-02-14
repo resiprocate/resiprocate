@@ -51,6 +51,23 @@ int debugLogsInCall()
    return 17;
 }
 
+class TestExternalLogger : public ExternalLogger
+{
+   public:
+      virtual bool operator()(Log::Level level,
+                              const Subsystem& subsystem, 
+                              const Data& appName,
+                              const char* file,
+                              int line,
+                              const Data& message,
+                              const Data& messageWithHeaders)
+      {
+         cout << "From TestExternalLogger: " << message << endl;
+         return true;         
+      }
+};
+
+
 int
 main(int argc, char* argv[])
 {
@@ -104,7 +121,12 @@ main(int argc, char* argv[])
    Log::initialize(Log::Cout, Log::Info, argv[0]);
    InfoLog(<<"This should appear-back to Cout");
    sleep(2);   
-   
+
+   TestExternalLogger tel;
+   Log::initialize(Log::OnlyExternal, Log::Info, argv[0], tel);
+   InfoLog(<<"This should appear-back in cout through the extenal logger, and nowhere else");
+   sleep(2);   
+
    service1a.shutdown();
    service1b.shutdown();
    service1c.shutdown();
@@ -116,6 +138,10 @@ main(int argc, char* argv[])
    service1c.join();
    service2a.join();
    service2b.join();
+   
+   Log::initialize(Log::Cout, Log::Info, argv[0]);
+   InfoLog(<<"This should appear-back to Cout");
+   sleep(2);   
 
    Log::setLevel(Log::Info);
 

@@ -24,7 +24,7 @@ resip::operator<<(std::ostream& strm, const SecurityAttributes& sa)
 
    const char* sigstatusText[] = 
       {
-         "None", "Bad", "Trusted", "CA Trusted", "Untrusted"
+         "None", "Bad", "Trusted", "CA Trusted", "Untrusted", "Self-signed"
       };
 
    const char* encryptionLevelText[] = 

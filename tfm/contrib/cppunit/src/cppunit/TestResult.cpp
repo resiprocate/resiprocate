@@ -1,28 +1,31 @@
+#include <cppunit/Test.h>
 #include <cppunit/TestFailure.h>
 #include <cppunit/TestListener.h>
 #include <cppunit/TestResult.h>
+#include <cppunit/tools/Algorithm.h>
 #include <algorithm>
+#include "DefaultProtector.h"
+#include "ProtectorChain.h"
+#include "ProtectorContext.h"
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
 
-/// Construct a TestResult
+
 TestResult::TestResult( SynchronizationObject *syncObject )
     : SynchronizedObject( syncObject )
+    , m_protectorChain( new ProtectorChain() )
+    , m_stop( false )
 { 
-  reset();
+  m_protectorChain->push( new DefaultProtector() );
 }
 
 
-/// Destroys a test result
 TestResult::~TestResult()
 {
+  delete m_protectorChain;
 }
 
 
-/** Resets the result for a new run.
- *
- * Clear the previous run result.
- */
 void 
 TestResult::reset()
 {
@@ -31,30 +34,23 @@ TestResult::reset()
 }
 
 
-/** Adds an error to the list of errors. 
- *  The passed in exception
- *  caused the error
- */
 void 
 TestResult::addError( Test *test, 
                       Exception *e )
 { 
-  addFailure( TestFailure( test, e, true ) );
+  TestFailure failure( test, e, true );
+  addFailure( failure );
 }
 
 
-/** Adds a failure to the list of failures. The passed in exception
- * caused the failure.
- */
 void 
 TestResult::addFailure( Test *test, Exception *e )
 { 
-  addFailure( TestFailure( test, e, false ) );
+  TestFailure failure( test, e, false );
+  addFailure( failure );
 }
 
 
-/** Called to add a failure to the list of failures.
- */
 void 
 TestResult::addFailure( const TestFailure &failure )
 {
@@ -66,7 +62,6 @@ TestResult::addFailure( const TestFailure &failure )
 }
 
 
-/// Informs the result that a test will be started.
 void 
 TestResult::startTest( Test *test )
 { 
@@ -78,7 +73,6 @@ TestResult::startTest( Test *test )
 }
 
   
-/// Informs the result that a test was completed.
 void 
 TestResult::endTest( Test *test )
 { 
@@ -90,7 +84,28 @@ TestResult::endTest( Test *test )
 }
 
 
-/// Returns whether testing should be stopped
+void 
+TestResult::startSuite( Test *test )
+{
+  ExclusiveZone zone( m_syncObject ); 
+  for ( TestListeners::iterator it = m_listeners.begin();
+        it != m_listeners.end(); 
+        ++it )
+    (*it)->startSuite( test );
+}
+
+
+void 
+TestResult::endSuite( Test *test )
+{
+  ExclusiveZone zone( m_syncObject ); 
+  for ( TestListeners::iterator it = m_listeners.begin();
+        it != m_listeners.end(); 
+        ++it )
+    (*it)->endSuite( test );
+}
+
+
 bool 
 TestResult::shouldStop() const
 { 
@@ -99,7 +114,6 @@ TestResult::shouldStop() const
 }
 
 
-/// Stop testing
 void 
 TestResult::stop()
 { 
@@ -120,10 +134,63 @@ void
 TestResult::removeListener ( TestListener *listener )
 {
   ExclusiveZone zone( m_syncObject ); 
-  m_listeners.erase( std::remove( m_listeners.begin(), 
-                                  m_listeners.end(), 
-                                  listener ),
-                     m_listeners.end());
+  removeFromSequence( m_listeners, listener );
 }
 
-} // namespace CppUnit
+
+void 
+TestResult::runTest( Test *test )
+{
+  startTestRun( test );
+  test->run( this );
+  endTestRun( test );
+}
+
+
+void 
+TestResult::startTestRun( Test *test )
+{
+  ExclusiveZone zone( m_syncObject ); 
+  for ( TestListeners::iterator it = m_listeners.begin();
+        it != m_listeners.end(); 
+        ++it )
+    (*it)->startTestRun( test, this );
+}
+
+
+void 
+TestResult::endTestRun( Test *test )
+{
+  ExclusiveZone zone( m_syncObject ); 
+  for ( TestListeners::iterator it = m_listeners.begin();
+        it != m_listeners.end(); 
+        ++it )
+    (*it)->endTestRun( test, this );
+}
+
+
+bool 
+TestResult::protect( const Functor &functor,
+                     Test *test,
+                     const std::string &shortDescription )
+{
+  ProtectorContext context( test, this, shortDescription );
+  return m_protectorChain->protect( functor, context );
+}
+
+
+void 
+TestResult::pushProtector( Protector *protector )
+{
+  m_protectorChain->push( protector );
+}
+
+
+void 
+TestResult::popProtector()
+{
+  m_protectorChain->pop();
+}
+
+
+CPPUNIT_NS_END

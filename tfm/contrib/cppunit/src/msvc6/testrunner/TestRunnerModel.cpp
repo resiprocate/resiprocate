@@ -6,11 +6,25 @@
 
 #include "StdAfx.h"
 #include "TestRunnerModel.h"
+#include <cppunit/tools/Algorithm.h>
 #include <algorithm>
+#include <stdexcept>
 #include <cppunit/testsuite.h>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-TestRunnerModel::TestRunnerModel( CppUnit::Test *rootTest ) :
+
+
+const CString TestRunnerModel::settingKey( _T("CppUnit") );
+const CString TestRunnerModel::settingMainDialogKey( _T( "MainDialog" ) );
+const CString TestRunnerModel::settingBrowseDialogKey( _T( "BrowseDialog" ) );
+
+
+TestRunnerModel::TestRunnerModel( CPPUNIT_NS::Test *rootTest ) :
     m_rootTest( rootTest )
 {
 }
@@ -28,18 +42,16 @@ TestRunnerModel::history() const
 
 
 void 
-TestRunnerModel::selectHistoryTest( CppUnit::Test *test )
+TestRunnerModel::selectHistoryTest( CPPUNIT_NS::Test *test )
 {
-  History::iterator end = 
-      std::remove( m_history.begin(), m_history.end(), test );
-  m_history.erase( end, m_history.end() );
+   CPPUNIT_NS::removeFromSequence( m_history, test );
   
   if ( test != NULL )
     m_history.push_front( test );
 }
 
 
-CppUnit::Test *
+CPPUNIT_NS::Test *
 TestRunnerModel::selectedTest() const
 {
   if ( m_history.size() > 0 )
@@ -58,11 +70,6 @@ TestRunnerModel::loadSettings(Settings & s)
                                     _T("AutorunAtStartup"),
                                     1 );
   s.autorunOnLaunch = (autorun == 1);
-
-  s.dlgBounds.left = app->GetProfileInt( _T("CppUnit"), _T("Left"), 0 );
-  s.dlgBounds.top = app->GetProfileInt( _T("CppUnit"), _T("Top"), 0 );
-  s.dlgBounds.right = app->GetProfileInt( _T("CppUnit"), _T("Right"), 0 );
-  s.dlgBounds.bottom= app->GetProfileInt( _T("CppUnit"), _T("Bottom"), 0 );  
 
   s.col_1 = app->GetProfileInt( _T("CppUnit"), _T("Col_1"), 40 );
   s.col_2 = app->GetProfileInt( _T("CppUnit"), _T("Col_2"), 40 );
@@ -84,9 +91,13 @@ TestRunnerModel::loadHistory()
     if ( testName.IsEmpty() )
       break;
 
-    CppUnit::Test *test = findTestByName( testName );
-    if ( test != NULL )
-      m_history.push_back( test );
+    try
+    {
+      m_history.push_back( m_rootTest->findTest( toAnsiString(testName ) ) );
+    }
+    catch ( std::invalid_argument &)
+    {
+    }
   }
   while ( true );
 }
@@ -111,11 +122,6 @@ TestRunnerModel::saveSettings( const Settings & s )
   int autorun = s.autorunOnLaunch ? 1 : 0;
   app->WriteProfileInt( _T("CppUnit"), _T("AutorunAtStartup"), autorun );
 
-  app->WriteProfileInt( _T("CppUnit"), _T("Left"),	 s.dlgBounds.left );
-  app->WriteProfileInt( _T("CppUnit"), _T("Top"),	 s.dlgBounds.top );
-  app->WriteProfileInt( _T("CppUnit"), _T("Right"),  s.dlgBounds.right );
-  app->WriteProfileInt( _T("CppUnit"), _T("Bottom"), s.dlgBounds.bottom );
-
   app->WriteProfileInt( _T("CppUnit"), _T("Col_1"),	 s.col_1 );
   app->WriteProfileInt( _T("CppUnit"), _T("Col_2"),	 s.col_2 );
   app->WriteProfileInt( _T("CppUnit"), _T("Col_3"),	 s.col_3 );
@@ -126,7 +132,7 @@ TestRunnerModel::saveSettings( const Settings & s )
         it != m_history.end(); 
         ++it , ++idx )
   {
-    CppUnit::Test *test = *it;
+    CPPUNIT_NS::Test *test = *it;
     saveHistoryEntry( idx, test->getName().c_str() );
   }
 }
@@ -154,7 +160,7 @@ TestRunnerModel::getHistoryEntryName( int idx ) const
 }
 
 
-CppUnit::Test *
+CPPUNIT_NS::Test *
 TestRunnerModel::rootTest()
 {
   return m_rootTest;
@@ -162,38 +168,63 @@ TestRunnerModel::rootTest()
 
 
 void 
-TestRunnerModel::setRootTest( CppUnit::Test *test )
+TestRunnerModel::setRootTest( CPPUNIT_NS::Test *test )
 {
   m_rootTest = test;
 }
 
 
-CppUnit::Test * 
+CPPUNIT_NS::Test * 
 TestRunnerModel::findTestByName( CString name ) const
 {
   return findTestByNameFor( name, m_rootTest );
 }
 
 
-CppUnit::Test * 
+CPPUNIT_NS::Test * 
 TestRunnerModel::findTestByNameFor( const CString &name, 
-                                    CppUnit::Test *test ) const
+                                    CPPUNIT_NS::Test *test ) const
 {
   if ( name == test->getName().c_str() )
     return test;
 
-  CppUnit::TestSuite *suite = dynamic_cast<CppUnit::TestSuite *>(test);
+  CPPUNIT_NS::TestSuite *suite = dynamic_cast<CPPUNIT_NS::TestSuite *>(test);
   if ( suite == NULL )
     return NULL;
 
-  const std::vector<CppUnit::Test *> &tests = suite->getTests();
-  for ( std::vector<CppUnit::Test *>::const_iterator it = tests.begin(); 
+  const std::vector<CPPUNIT_NS::Test *> &tests = suite->getTests();
+  for ( std::vector<CPPUNIT_NS::Test *>::const_iterator it = tests.begin(); 
         it != tests.end(); 
         ++it )
   {
-    CppUnit::Test *testFound = findTestByNameFor( name, *it );
+    CPPUNIT_NS::Test *testFound = findTestByNameFor( name, *it );
     if ( testFound != NULL )
       return testFound;
   }
   return NULL;
+}
+
+
+// Utility method, should be moved somewhere else...
+std::string 
+TestRunnerModel::toAnsiString( const CString &text )
+{
+#ifdef _UNICODE
+  int bufferLength = ::WideCharToMultiByte( CP_THREAD_ACP, 0, 
+                                            text, text.GetLength(),
+                                            NULL, 0, NULL, NULL ) +1;
+  char *ansiString = new char[bufferLength];
+  ::WideCharToMultiByte( CP_THREAD_ACP, 0, 
+                         text, text.GetLength(),
+                         ansiString, bufferLength, 
+                                            NULL,
+                                            NULL );
+
+  std::string str( ansiString, bufferLength-1 );
+  delete[] ansiString;
+
+  return str;
+#else
+  return std::string( (LPCTSTR)text );
+#endif
 }

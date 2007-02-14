@@ -11,8 +11,23 @@ Package=<5>
 
 Package=<4>
 {{{
+}}}
+
+###############################################################################
+
+Project: "DllPlugInTester"=.\DllPlugInTester\DllPlugInTester.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
     Begin Project Dependency
     Project_Dep_Name cppunit
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name cppunit_dll
     End Project Dependency
 }}}
 
@@ -30,7 +45,7 @@ Package=<4>
     Project_Dep_Name TestRunner
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name cppunit
+    Project_Dep_Name cppunit_dll
     End Project Dependency
 }}}
 
@@ -46,9 +61,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name cppunit
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name DSPlugIn
     End Project Dependency
 }}}
 

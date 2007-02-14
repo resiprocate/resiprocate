@@ -2,3 +2,4 @@ Makefile.in
 *.Tags.WW
 Debug DebugCrossplatform Release ReleaseUnicode DebugUnicode
 *.ncb *.opt
+*.aps

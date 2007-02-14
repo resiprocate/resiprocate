@@ -3,3 +3,5 @@ Debug Release
 TestRunnerDSPlugin_p.c
 dlldata.c
 
+SunWS_cache
+ir.out

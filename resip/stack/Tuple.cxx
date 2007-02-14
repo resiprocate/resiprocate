@@ -2,6 +2,7 @@
 #include "resip/stack/config.hxx"
 #endif
 
+#include "resip/stack/Tuple.hxx"
 #include "rutil/compat.hxx"
 
 #include <iostream>
@@ -23,7 +24,7 @@
 #include "rutil/HashMap.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Transport.hxx"
-#include "resip/stack/Tuple.hxx"
+
 
 using namespace resip;
 
@@ -48,20 +49,7 @@ Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type,
    mTransportType(type),
    mTargetDomain(targetDomain)
 {
-  if (genericAddress.isVersion4())
-  {
-     m_anonv4 = genericAddress.v4Address;
-  }
-  else
-#ifdef USE_IPV6
-  {
-     m_anonv6 = genericAddress.v6Address;
-  }
-#else
-  {
-     assert(0);
-  }
-#endif
+  setSockaddr(genericAddress);
 }
 
 
@@ -202,6 +190,25 @@ Tuple::Tuple(const struct sockaddr& addr,
    }
 }
 
+void
+Tuple::setSockaddr(const GenericIPAddress& addr)
+{
+  if (addr.isVersion4())
+  {
+     m_anonv4 = addr.v4Address;
+  }
+  else
+#ifdef USE_IPV6
+  {
+     m_anonv6 = addr.v6Address;
+  }
+#else
+  {
+     assert(0);
+  }
+#endif
+}
+
 Data 
 Tuple::presentationFormat() const
 {
@@ -276,6 +283,36 @@ Tuple::isAnyInterface() const
 #else
    return false;
 #endif
+}
+
+bool
+Tuple::isLoopback() const
+{
+   
+   if(ipVersion()==V4)
+   {
+      static Tuple loopbackv4("127.0.0.1",0,UNKNOWN_TRANSPORT);
+      return isEqualWithMask(loopbackv4,8,true,true);
+   }
+   else if (ipVersion()==V6)
+   {
+#ifdef USE_IPV6
+#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+      return IN6_IS_ADDR_LOOPBACK(&(m_anonv6.sin6_addr)) != 0;
+#else
+      return ((*(const __uint32_t *)(const void *)(&(m_anonv6.sin6_addr.s6_addr[0])) == 0) && 
+             (*(const __uint32_t *)(const void *)(&(m_anonv6.sin6_addr.s6_addr[4])) == 0) && 
+             (*(const __uint32_t *)(const void *)(&(m_anonv6.sin6_addr.s6_addr[8])) == 0) && 
+             (*(const __uint32_t *)(const void *)(&(m_anonv6.sin6_addr.s6_addr[12])) == ntohl(1)));
+#endif
+#endif
+   }
+   else
+   {
+      assert(0);
+   }
+   
+   return false;
 }
 
 bool 
@@ -461,7 +498,7 @@ Tuple::hash() const
       const sockaddr_in6& in6 =
          reinterpret_cast<const sockaddr_in6&>(mSockaddr);
 
-      return size_t(in6.sin6_addr.s6_addr +
+      return size_t(Data(Data::Share, (const char *)&in6.sin6_addr.s6_addr, sizeof(in6.sin6_addr.s6_addr)).hash() +
                     5*in6.sin6_port +
                     25*mTransportType);
    }
@@ -530,9 +567,9 @@ Tuple::inet_ntop(const Tuple& tuple)
 
 
 bool
-Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort)
+Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool ignoreTransport) const
 {
-   if(getType() == compare.getType())  // check if transport type matches
+   if(ignoreTransport || getType() == compare.getType())  // check if transport type matches
    {
       if (mSockaddr.sa_family == compare.getSockaddr().sa_family && mSockaddr.sa_family == AF_INET) // v4
       {

@@ -4,8 +4,8 @@
 #include <cppunit/Portability.h>
 
 
-namespace CppUnit
-{
+CPPUNIT_NS_BEGIN
+
 
 /*! \brief Abstract outputter to print test result summary.
  * \ingroup WritingTestResult
@@ -20,12 +20,7 @@ public:
 };
 
 
-
-// Inlines methods for Outputter:
-// ------------------------------
-
-
-} //  namespace CppUnit
+CPPUNIT_NS_END
 
 
 #endif  // CPPUNIT_OUTPUTTER_H

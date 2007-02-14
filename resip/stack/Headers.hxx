@@ -10,6 +10,7 @@
 namespace resip
 {
 class SipMessage;
+class HeaderFieldValueList;
 
 //#define PARTIAL_TEMPLATE_SPECIALIZATION
 #ifdef PARTIAL_TEMPLATE_SPECIALIZATION
@@ -63,6 +64,15 @@ class HeaderBase
       virtual ~HeaderBase() {}
       virtual Headers::Type getTypeNum() const = 0;
       virtual void merge(SipMessage&, const SipMessage&)=0;
+      
+      static HeaderBase* getInstance(Headers::Type typenum)
+      {
+         return theHeaderInstances[typenum+1];
+      }
+      
+      virtual ParserContainerBase* makeContainer(HeaderFieldValueList* hfvs) const=0;
+   protected:
+      static HeaderBase* theHeaderInstances[Headers::MAX_HEADERS+1];
 };
 
 #define defineHeader(_enum, _name, _type, _rfc)                 \
@@ -74,6 +84,7 @@ class H_##_enum : public HeaderBase                             \
       typedef _type Type;                                       \
       UnusedChecking(_enum);                                    \
       static Type& knownReturn(ParserContainerBase* container); \
+      virtual ParserContainerBase* makeContainer(HeaderFieldValueList* hfvs) const;       \
       virtual Headers::Type getTypeNum() const;                 \
       virtual void merge(SipMessage&, const SipMessage&);       \
       H_##_enum();                                              \
@@ -89,6 +100,7 @@ class H_##_enum##s : public HeaderBase                          \
       typedef ParserContainer<_type> Type;                      \
       MultiUnusedChecking(_enum);                               \
       static Type& knownReturn(ParserContainerBase* container); \
+      virtual ParserContainerBase* makeContainer(HeaderFieldValueList* hfvs) const;       \
       virtual Headers::Type getTypeNum() const;                 \
       virtual void merge(SipMessage&, const SipMessage&);       \
       H_##_enum##s();                                           \
@@ -140,6 +152,8 @@ extern H_Privacys h_Privacies;
 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
 
 defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03");
+defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
+defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
 //====================
 // Mime
@@ -200,21 +214,25 @@ defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
 defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
 //====================
-// IntegerCategory:
+// ExpiresCategory:
 //====================
-typedef ParserContainer<IntegerCategory> IntegerCategories;
 
-// !dlb! not clear this needs to be exposed
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
-
-// !dlb! this one is not quite right -- can have (comment) after field value
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
 defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
+
+//====================
+// UInt32Category:
+//====================
+typedef ParserContainer<UInt32Category> UInt32Categories;
+defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
+// !dlb! not clear this needs to be exposed
+defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
+defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");
+defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
+
+// !dlb! this one is not quite right -- can have (comment) after field value
+defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 
 //====================
 // CallId:

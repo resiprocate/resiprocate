@@ -5,6 +5,7 @@
 #include <exception>
 #include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 #include <list>
 #include <boost/function.hpp>
 
@@ -41,8 +42,8 @@ class TestEndPoint
       virtual resip::Data getName() const = 0;
       static int DebugTimeMult();
       
-      SequenceSet* getSequenceSet() const;
-      void setSequenceSet(SequenceSet* set);
+      boost::weak_ptr<SequenceSet> getSequenceSet() const;
+      void setSequenceSet(boost::shared_ptr<SequenceSet> set);
       bool operator==(const TestEndPoint& endPoint) const;
       
       class Action : public ActionBase
@@ -161,7 +162,7 @@ class TestEndPoint
             virtual unsigned int getTimeout() const = 0;
 
             virtual bool queue(SequenceClass* parent);
-            virtual void setSequenceSet(SequenceSet* set);
+            virtual void setSequenceSet(boost::shared_ptr<SequenceSet> set);
             virtual std::ostream& output(std::ostream& s) const;
             virtual void prettyPrint(std::ostream& str, bool& previousActive, int ind) const;
 
@@ -229,7 +230,7 @@ class TestEndPoint
 
             virtual bool queue(SequenceClass* parent);
 
-            virtual void setSequenceSet(SequenceSet* set);
+            virtual void setSequenceSet(boost::shared_ptr<SequenceSet> set);
             
             /// never appears in output, but is called
             virtual resip::Data getMsgTypeString() const { return "And";}
@@ -266,7 +267,7 @@ class TestEndPoint
       TestEndPoint(const TestEndPoint&);
       TestEndPoint& operator=(const TestEndPoint&);
 
-      SequenceSet* mSequenceSet;
+      boost::weak_ptr<SequenceSet> mSequenceSet;
 };
 
 std::ostream& operator<<(std::ostream& s, const TestEndPoint&);

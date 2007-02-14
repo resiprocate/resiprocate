@@ -16,6 +16,9 @@ class MsDevCallerListCtrl : public CListCtrl
 public:
 	MsDevCallerListCtrl();
 
+  void setLineNumberSubItem( int subItemIndex );
+  void setFileNameSubItem( int fileNameItemIndex );
+
 // Attributes
 public:
 
@@ -40,8 +43,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-  static const int s_lineNumberSubItem;
-  static const int s_fileNameSubItem;
+  int m_lineNumberSubItem;
+  int m_fileNameSubItem;
+  bool m_initialized;
 };
 
 /////////////////////////////////////////////////////////////////////////////

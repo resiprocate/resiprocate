@@ -1,11 +1,13 @@
-#include "cppunit/TestSuite.h"
-#include "cppunit/TestResult.h"
+#include <cppunit/config/SourcePrefix.h>
+#include <cppunit/TestSuite.h>
+#include <cppunit/TestResult.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 /// Default constructor
 TestSuite::TestSuite( std::string name )
-    : m_name( name )
+    : TestComposite( name )
 {
 }
 
@@ -21,43 +23,11 @@ TestSuite::~TestSuite()
 void 
 TestSuite::deleteContents()
 {
-  for ( std::vector<Test *>::iterator it = m_tests.begin();
-        it != m_tests.end();
-        ++it)
-    delete *it;
+  int childCount = getChildTestCount();
+  for ( int index =0; index < childCount; ++index )
+    delete getChildTestAt( index );
+
   m_tests.clear();
-}
-
-
-/// Runs the tests and collects their result in a TestResult.
-void 
-TestSuite::run( TestResult *result )
-{
-  for ( std::vector<Test *>::iterator it = m_tests.begin();
-        it != m_tests.end();
-        ++it )
-  {
-    if ( result->shouldStop() )
-        break;
-
-    Test *test = *it;
-    test->run( result );
-  }
-}
-
-
-/// Counts the number of test cases that will be run by this test.
-int 
-TestSuite::countTestCases() const
-{
-  int count = 0;
-
-  for ( std::vector<Test *>::const_iterator it = m_tests.begin();
-        it != m_tests.end();
-        ++it )
-    count += (*it)->countTestCases();
-
-  return count;
 }
 
 
@@ -69,28 +39,26 @@ TestSuite::addTest( Test *test )
 }
 
 
-/// Returns a string representation of the test suite.
-std::string 
-TestSuite::toString() const
-{ 
-  return "suite " + getName();
-}
-
-
-/// Returns the name of the test suite.
-std::string 
-TestSuite::getName() const
-{ 
-  return m_name; 
-}
-
-
-const std::vector<Test *> &
+const CppUnitVector<Test *> &
 TestSuite::getTests() const
 {
   return m_tests;
 }
 
 
-} // namespace CppUnit
+int 
+TestSuite::getChildTestCount() const
+{
+  return m_tests.size();
+}
+
+
+Test *
+TestSuite::doGetChildTestAt( int index ) const
+{
+  return m_tests[index];
+}
+
+
+CPPUNIT_NS_END
 

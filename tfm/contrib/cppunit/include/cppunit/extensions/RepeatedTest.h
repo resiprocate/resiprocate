@@ -4,7 +4,8 @@
 #include <cppunit/Portability.h>
 #include <cppunit/extensions/TestDecorator.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 class Test;
 class TestResult;
@@ -17,24 +18,26 @@ class TestResult;
 class CPPUNIT_API RepeatedTest : public TestDecorator 
 {
 public:
-    RepeatedTest( Test *test, 
-                  int timesRepeat ) : 
-        TestDecorator( test ), 
-        m_timesRepeat(timesRepeat) {}
+  RepeatedTest( Test *test, 
+                int timesRepeat ) : 
+      TestDecorator( test ), 
+      m_timesRepeat(timesRepeat) 
+  {
+  }
 
-    void run( TestResult *result );
-    int countTestCases() const;
-    std::string toString() const;
+  void run( TestResult *result );
+
+  int countTestCases() const;
 
 private:
-    RepeatedTest( const RepeatedTest & );
-    void operator=( const RepeatedTest & );
+  RepeatedTest( const RepeatedTest & );
+  void operator=( const RepeatedTest & );
 
-    const int m_timesRepeat;
+  const int m_timesRepeat;
 };
 
 
+CPPUNIT_NS_END
 
-} // namespace CppUnit
 
 #endif // CPPUNIT_EXTENSIONS_REPEATEDTEST_H

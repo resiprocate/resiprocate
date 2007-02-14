@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "TreeHierarchyDlg.h"
+#include "TestRunnerModel.h"
+#include "ResourceLoaders.h"
 #include <algorithm>
 
 
@@ -18,9 +20,11 @@ static char THIS_FILE[] = __FILE__;
 
 
 TreeHierarchyDlg::TreeHierarchyDlg(CWnd* pParent )
-	: CDialog(TreeHierarchyDlg::IDD, pParent),
-    m_selectedTest( NULL )
+	: cdxCDynamicDialog(_T("CPP_UNIT_TEST_RUNNER_IDD_DIALOG_TEST_HIERARCHY"), pParent)
+  , m_selectedTest( NULL )
 {
+  ModifyFlags( flSWPCopyBits, 0 );      // anti-flickering option for resizing
+
 	//{{AFX_DATA_INIT(TreeHierarchyDlg)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
@@ -30,14 +34,14 @@ TreeHierarchyDlg::TreeHierarchyDlg(CWnd* pParent )
 void 
 TreeHierarchyDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
+	cdxCDynamicDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(TreeHierarchyDlg)
 	DDX_Control(pDX, IDC_TREE_TEST, m_treeTests);
 	//}}AFX_DATA_MAP
 }
 
 
-BEGIN_MESSAGE_MAP(TreeHierarchyDlg, CDialog)
+BEGIN_MESSAGE_MAP(TreeHierarchyDlg, cdxCDynamicDialog)
 	//{{AFX_MSG_MAP(TreeHierarchyDlg)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -45,7 +49,7 @@ END_MESSAGE_MAP()
 
 
 void 
-TreeHierarchyDlg::setRootTest( CppUnit::Test *test )
+TreeHierarchyDlg::setRootTest( CPPUNIT_NS::Test *test )
 {
   m_rootTest = test;
 }
@@ -54,18 +58,32 @@ TreeHierarchyDlg::setRootTest( CppUnit::Test *test )
 BOOL 
 TreeHierarchyDlg::OnInitDialog() 
 {
-	CDialog::OnInitDialog();
+  cdxCDynamicDialog::OnInitDialog();
 	
   fillTree();
+  initializeLayout();
+  RestoreWindowPosition( TestRunnerModel::settingKey, 
+                         TestRunnerModel::settingBrowseDialogKey );
   	
-	return TRUE;
+  return TRUE;
+}
+
+
+void 
+TreeHierarchyDlg::initializeLayout()
+{
+  // see DynamicWindow/doc for documentation
+  AddSzControl( IDC_TREE_TEST, mdResize, mdResize );
+  AddSzControl( IDOK, mdRepos, mdNone );
+  AddSzControl( IDCANCEL, mdRepos, mdNone );
 }
 
 
 void 
 TreeHierarchyDlg::fillTree()
 {
-  VERIFY( m_imageList.Create( IDB_TEST_TYPE, 16, 1, RGB( 255,0,255 ) ) );
+  VERIFY( m_imageList.Create( _T("CPP_UNIT_TEST_RUNNER_IDB_TEST_TYPE"), 
+                              16, 1, RGB( 255,0,255 ) ) );
 
   m_treeTests.SetImageList( &m_imageList, TVSIL_NORMAL );
 
@@ -75,10 +93,10 @@ TreeHierarchyDlg::fillTree()
 
 
 HTREEITEM
-TreeHierarchyDlg::addTest( CppUnit::Test *test, 
+TreeHierarchyDlg::addTest( CPPUNIT_NS::Test *test, 
                            HTREEITEM hParent )
 {
-  int testType = isTestSuite( test ) ? imgSuite : imgUnitTest;
+  int testType = isSuite( test ) ? imgSuite : imgUnitTest;
   HTREEITEM hItem = m_treeTests.InsertItem( CString(test->getName().c_str()),
                                             testType,
                                             testType,
@@ -86,42 +104,42 @@ TreeHierarchyDlg::addTest( CppUnit::Test *test,
   if ( hItem != NULL )
   {
     VERIFY( m_treeTests.SetItemData( hItem, (DWORD)test ) );
-    if ( isTestSuite( test ) )
-      addTestSuiteChildrenTo( static_cast<CppUnit::TestSuite *>(test),
-                              hItem );
+    if ( isSuite( test ) )
+      addTestSuiteChildrenTo( test, hItem );
   }
   return hItem;
 }
 
 
 void 
-TreeHierarchyDlg::addTestSuiteChildrenTo( CppUnit::TestSuite *suite,
+TreeHierarchyDlg::addTestSuiteChildrenTo( CPPUNIT_NS::Test *suite,
                                           HTREEITEM hItemSuite )
 {
-  Tests tests( suite->getTests() );
+  Tests tests;
+  int childIndex = 0;
+  for ( ; childIndex < suite->getChildTestCount(); ++childIndex )
+    tests.push_back( suite->getChildTestAt( childIndex ) );
   sortByName( tests );
 
-  for ( Tests::const_iterator it = tests.begin(); it != tests.end(); ++it )
-  {
-    addTest( *it, hItemSuite );
-  }
+  for ( childIndex = 0; childIndex < suite->getChildTestCount(); ++childIndex )
+    addTest( suite->getChildTestAt( childIndex ), hItemSuite );
 }
 
 
 bool 
-TreeHierarchyDlg::isTestSuite( CppUnit::Test *test )
+TreeHierarchyDlg::isSuite( CPPUNIT_NS::Test *test )
 {
-  CppUnit::TestSuite *suite = dynamic_cast<CppUnit::TestSuite *>(test);
-  return suite != NULL;
+  return ( test->getChildTestCount() > 0  ||    // suite with test
+           test->countTestCases() == 0 );       // empty suite
 }
 
 
 struct PredSortTest
 {
-  bool operator()( CppUnit::Test *test1, CppUnit::Test *test2 ) const
+  bool operator()( CPPUNIT_NS::Test *test1, CPPUNIT_NS::Test *test2 ) const
   {
-    bool isTest1Suite = TreeHierarchyDlg::isTestSuite( test1 );
-    bool isTest2Suite = TreeHierarchyDlg::isTestSuite( test2 );
+    bool isTest1Suite = TreeHierarchyDlg::isSuite( test1 );
+    bool isTest2Suite = TreeHierarchyDlg::isSuite( test2 );
     if ( isTest1Suite  &&  !isTest2Suite )
       return true;
     if ( isTest1Suite  &&  isTest2Suite )
@@ -140,19 +158,28 @@ TreeHierarchyDlg::sortByName( Tests &tests ) const
 void 
 TreeHierarchyDlg::OnOK() 
 {
-  CppUnit::Test *test = findSelectedTest();
+  CPPUNIT_NS::Test *test = findSelectedTest();
   if ( test == NULL )
   {
-    AfxMessageBox( IDS_ERROR_SELECT_TEST, MB_OK );
+    AfxMessageBox( loadCString(IDS_ERROR_SELECT_TEST), MB_OK );
     return;
   }
 
   m_selectedTest = test;
-  CDialog::OnOK();
+  storeDialogBounds();
+  cdxCDynamicDialog::OnOK();
 }
 
 
-CppUnit::Test *
+void 
+TreeHierarchyDlg::OnCancel() 
+{
+  storeDialogBounds();
+	cdxCDynamicDialog::OnCancel();
+}
+
+
+CPPUNIT_NS::Test *
 TreeHierarchyDlg::findSelectedTest()
 {
   HTREEITEM hItem = m_treeTests.GetSelectedItem();
@@ -160,14 +187,22 @@ TreeHierarchyDlg::findSelectedTest()
   {
     DWORD data;
     VERIFY( data = m_treeTests.GetItemData( hItem ) );
-    return reinterpret_cast<CppUnit::Test *>( data );
+    return reinterpret_cast<CPPUNIT_NS::Test *>( data );
   }
   return NULL;
 }
 
 
-CppUnit::Test *
+CPPUNIT_NS::Test *
 TreeHierarchyDlg::getSelectedTest() const
 {
   return m_selectedTest;
+}
+
+
+void 
+TreeHierarchyDlg::storeDialogBounds()
+{
+  StoreWindowPosition( TestRunnerModel::settingKey, 
+                       TestRunnerModel::settingBrowseDialogKey );
 }

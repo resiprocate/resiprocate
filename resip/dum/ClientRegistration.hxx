@@ -25,7 +25,7 @@ class ClientRegistration: public NonDialogUsage
       void addBinding(const NameAddr& contact);
 
       /** Adds a registration binding, using the specified registration time */
-      void addBinding(const NameAddr& contact, int registrationTime);
+      void addBinding(const NameAddr& contact, UInt32 registrationTime);
 
       /** Removes one particular binding */
       void removeBinding(const NameAddr& contact);
@@ -39,9 +39,9 @@ class ClientRegistration: public NonDialogUsage
           when complete */
       void removeMyBindings(bool stopRegisteringWhenDone=false);
 
-      /** Request a manual refresh of the registration.  Default to using original expires 
-          value (0 is not allowed - call removeXXX() instead) */
-      void requestRefresh(int expires = -1);  
+      /** Request a manual refresh of the registration.  If 0 then default to using original 
+          expires value (to remove use removeXXX() instead) */
+      void requestRefresh(UInt32 expires = 0);  
       
       /** kills the usgage, does not unregister, call removeMyBindings to unregister */
       void stopRegistering(); 
@@ -53,7 +53,7 @@ class ClientRegistration: public NonDialogUsage
       const NameAddrs& allContacts();
 
       /** returns the number of seconds until the registration expires - relative */
-      int whenExpires() const; 
+      UInt32 whenExpires() const; 
       
       /** Calls removeMyBindings and ends usage when complete */
       virtual void end();
@@ -80,7 +80,7 @@ class ClientRegistration: public NonDialogUsage
       } State;
 
       SharedPtr<SipMessage> tryModification(ClientRegistration::State state);
-      void internalRequestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call removeXXX() instead)
+      void internalRequestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove use removeXXX() instead)
 
       friend class DialogSet;
 
@@ -88,7 +88,7 @@ class ClientRegistration: public NonDialogUsage
       SharedPtr<SipMessage> mLastRequest;
       NameAddrs mMyContacts; // Contacts that this UA is requesting 
       NameAddrs mAllContacts; // All the contacts Registrar knows about 
-      int mTimerSeq; // expected timer seq (all < are stale)
+      unsigned int mTimerSeq; // expected timer seq (all < are stale)
 
       State mState;
       bool mEndWhenDone;

@@ -128,6 +128,7 @@ ParseBuffer::skipChars(const Data& cs)
 ParseBuffer::Pointer 
 ParseBuffer::skipNonWhitespace()
 {
+   assertNotEof();
    while (mPosition < mEnd)
    {
       switch (*mPosition)
@@ -544,7 +545,7 @@ ParseBuffer::skipBackChar(char c)
 //      ^
 // skipBackToChar('c');
 // abcde
-//   ^
+//    ^
 const char*
 ParseBuffer::skipBackToChar(char c)
 {
@@ -730,18 +731,23 @@ ParseBuffer::integer()
    }
    
    int num = 0;
+   int last=0;
    while (!eof() && isdigit(*mPosition))
    {
+      last=num;
       num = num*10 + (*mPosition-'0');
+      if(signum*last > signum*num)
+      {
+         fail(__FILE__, __LINE__,"Overflow detected.");
+      }
       skipChar();
    }
    
    return signum*num;
 }
 
-//!dcm! -- merge these, ask about length checks
-unsigned long
-ParseBuffer::unsignedInteger()
+UInt8
+ParseBuffer::uInt8()
 {
    if (this->eof())
    {
@@ -760,10 +766,54 @@ ParseBuffer::unsignedInteger()
       fail(__FILE__, __LINE__,msg);
    }
    
-   unsigned long num = 0;
+   UInt8 num = 0;
+   UInt8 last = 0;
    while (!eof() && isdigit(*mPosition))
    {
+      last = num;
       num = num*10 + (*mPosition-'0');
+      if(last>num)
+      {
+         fail(__FILE__, __LINE__,"Overflow detected.");
+      }
+      skipChar();
+   }
+   
+   return num;
+}
+
+
+//!dcm! -- merge these, ask about length checks
+UInt32
+ParseBuffer::uInt32()
+{
+   if (this->eof())
+   {
+
+      fail(__FILE__, __LINE__,"Expected a digit, got eof ");
+   }
+
+   const char* p = mPosition;
+   assert(p);
+   char c = *p;
+
+   if (!isdigit(c))
+   {
+      Data msg("Expected a digit, got: ");
+      msg += Data(mPosition, (mEnd - mPosition));
+      fail(__FILE__, __LINE__,msg);
+   }
+   
+   UInt32 num = 0;
+   UInt32 last = 0;
+   while (!eof() && isdigit(*mPosition))
+   {
+      last = num;
+      num = num*10 + (*mPosition-'0');
+      if(last>num)
+      {
+         fail(__FILE__, __LINE__,"Overflow detected.");
+      }
       skipChar();
    }
    
@@ -771,7 +821,7 @@ ParseBuffer::unsignedInteger()
 }
 
 UInt64
-ParseBuffer::unsignedLongLong()
+ParseBuffer::uInt64()
 {
    if (this->eof())
    {
@@ -791,15 +841,21 @@ ParseBuffer::unsignedLongLong()
    }
    
    UInt64 num = 0;
+   UInt64 last = 0;
    while (!eof() && isdigit(*mPosition))
    {
+      last = num;
       num = num*10 + (*mPosition-'0');
+      if(last>num)
+      {
+         fail(__FILE__, __LINE__,"Overflow detected.");
+      }
       skipChar();
-   }   
+   }
    return num;
 }
 
-
+#ifndef RESIP_FIXED_POINT
 float
 ParseBuffer::floatVal()
 {
@@ -811,26 +867,26 @@ ParseBuffer::floatVal()
 
       if (*mPosition == '.')
       {
-	  skipChar();
-	  const char* pos = mPosition;
-	  mant = float(integer());
-	  int s = mPosition - pos;
-	  while (s--)
-	  {
-	     mant /= 10.0;
-	  }
+         skipChar();
+         const char* pos = mPosition;
+         mant = float(integer());
+         int s = mPosition - pos;
+         while (s--)
+         {
+            mant /= 10.0;
+         }
       }
       return num + mant;
    }
    catch (Exception&)
    {
-     Data msg("Expected a floating point value, got: ");
-     msg += Data(s, mPosition - s);
-     fail(__FILE__, __LINE__,msg);
-     return 0.0;
+      Data msg("Expected a floating point value, got: ");
+      msg += Data(s, mPosition - s);
+      fail(__FILE__, __LINE__,msg);
+      return 0.0;
    }
 }
-
+#endif
 
 int
 ParseBuffer::qVal()
@@ -855,9 +911,9 @@ ParseBuffer::qVal()
          skipChar();
          
          int i = 100;
-         while(isdigit(*mPosition) && i)
+         while(!eof() && isdigit(*mPosition) && i)
          {
-            num += (*mPosition) * i;
+            num += (*mPosition-'0') * i;
             i /= 10;
             skipChar();
          }

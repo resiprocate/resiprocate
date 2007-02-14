@@ -218,7 +218,7 @@ WARN_FORMAT           = "$file:$line: $text"
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces. 
 
-INPUT                 = @top_srcdir@/include @top_srcdir@/src/cppunit @srcdir@/other_documentation.dox  @srcdir@/cookbook.dox 
+INPUT                 = @top_srcdir@/include @top_srcdir@/src/cppunit @srcdir@/other_documentation.dox  @srcdir@/cookbook.dox @srcdir@/Money.dox
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -481,13 +481,17 @@ INCLUDE_PATH          =
 # or name=definition (no spaces). If the definition and the = are 
 # omitted =1 is assumed. 
 
-PREDEFINED            = CPPUNIT_HAVE_CPP_SOURCE_ANNOTATION
+PREDEFINED             = CPPUNIT_HAVE_CPP_SOURCE_ANNOTATION \
+                         CPPUNIT_HAVE_NAMESPACES=1 \
+                         CPPUNIT_NS_BEGIN="namespace CppUnit {" \
+                         CPPUNIT_NS_END=} \
+                         CPPUNIT_NS=CppUnit
 
 # If the EXPAND_ONLY_PREDEF and MACRO_EXPANSION tags are both set to YES 
 # then the macro expansion is limited to the macros specified with the 
 # PREDEFINED tag. 
 
-EXPAND_ONLY_PREDEF    = NO
+EXPAND_ONLY_PREDEF    = YES
 
 #---------------------------------------------------------------------------
 # Configuration::addtions related to external references   

@@ -5,7 +5,7 @@
 #define AFX_DSADDIN_H__3F8385DE_5079_4944_A01B_236F76A0E901__INCLUDED_
 
 
-#include <msvc6/DSPlugin/TestRunnerDSPlugIn.h>
+#include "ToAddToDistribution/TestRunnerDSPluginVC6.h"
 #include "COMHelper.h"
 
 // {F193CE54-716C-41CB-80B2-FA74CA3EE2AC}

@@ -69,7 +69,7 @@ const char* Symbols::Digest = "Digest";
 const char* Symbols::Basic = "Basic";
 
 const char * const Symbols::MagicCookie = "z9hG4bK";
-const char * const Symbols::resipCookie= "-d87543-";
+const char * const Symbols::resipCookie= "-d8754z-";
 
 const int Symbols::DefaultSipPort = 5060;
 const int Symbols::SipTlsPort = 5061;
@@ -91,10 +91,13 @@ const char* Symbols::Presence = "presence";
 const char* Symbols::Required = "required";
 const char* Symbols::Optional = "optional";
 
-const char* Symbols::C100rel  = "100rel";
-const char* Symbols::Replaces = "replaces";
-const char* Symbols::Timer    = "timer";
-const char* Symbols::Undefined = "UNDEFINED";
+const char* Symbols::C100rel      = "100rel";
+const char* Symbols::Replaces     = "replaces";
+const char* Symbols::Timer        = "timer";
+const char* Symbols::NoReferSub   = "norefersub";
+const char* Symbols::AnswerMode   = "answermode";
+const char* Symbols::TargetDialog = "tdialog";
+const char* Symbols::Undefined    = "UNDEFINED";
 
 const char* Symbols::Pending = "pending";
 const char* Symbols::Active = "active";

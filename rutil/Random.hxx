@@ -23,6 +23,19 @@ class Random
       static Data getCryptoRandomHex(unsigned int numBytes); // actual length is 2*numBytes
       static Data getCryptoRandomBase64(unsigned int numBytes); // actual length is 1.5*numBytes
 
+      /**
+        Returns a version 4 (random) UUID as defined in RFC 4122
+
+        @todo This is something of a suboptimal hack. Ideally, we would
+              encapsulate UUID as its own class, with options to create
+              any of versions 1 through 5 (and Nil UUIDs). This class
+              would have various access methods to pull the result out
+              as a bitstring, as raw data, as a URN, etc. For what
+              I need to do right now, however, version 4 UUIDs get me
+              where I need to go. <abr>
+      */
+      static Data getVersion4UuidUrn();
+
       static int  getRandom();
       static int  getCryptoRandom();
 

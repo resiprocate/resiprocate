@@ -25,7 +25,8 @@ class TlsConnection : public Connection
 
       TlsConnection( const Tuple& who, Socket fd, 
                      Security* security, bool server, Data domain, 
-                     SecurityTypes::SSLType sslType );
+                     SecurityTypes::SSLType sslType ,
+                     Compression &compression);
       
       virtual ~TlsConnection();
 
@@ -33,23 +34,24 @@ class TlsConnection : public Connection
       int write( const char* buf, const int count );
       virtual bool hasDataToRead(); // has data that can be read 
       virtual bool isGood(); // has valid connection
+      virtual bool isWritable();
       
       const std::list<Data>& getPeerNames() const;
       
-      typedef enum State { Broken, Accepting, Connecting, Handshaking, Up } State;
-      static const char * fromState(State);
+      typedef enum TlsState { Broken, Accepting, Connecting, Handshaking, Up } TlsState;
+      static const char * fromState(TlsState);
    
    private:
       void computePeerName();
       Data getPeerNamesData() const;
-      State checkState();
+      TlsState checkState();
 
       bool mServer;
       Security* mSecurity;
       SecurityTypes::SSLType mSslType;
       Data mDomain;
       
-      State mState;
+      TlsState mTlsState;
 
       SSL* mSsl;
       BIO* mBio;

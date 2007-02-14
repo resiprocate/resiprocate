@@ -18,7 +18,7 @@ MostRecentTests::~MostRecentTests()
 
 
 void 
-MostRecentTests::setTestToRun( CppUnit::Test *test )
+MostRecentTests::setTestToRun( CPPUNIT_NS::Test *test )
 {
   m_tests.removeRef( test );
   m_tests.prepend( test );
@@ -32,7 +32,7 @@ MostRecentTests::setTestToRun( CppUnit::Test *test )
 }
 
 
-CppUnit::Test *
+CPPUNIT_NS::Test *
 MostRecentTests::testToRun()
 {
   return testAt( 0 );
@@ -61,7 +61,7 @@ MostRecentTests::testNameAt( int index )
 }
 
 
-CppUnit::Test *
+CPPUNIT_NS::Test *
 MostRecentTests::testAt( int index )
 {
   return m_tests.at( index );

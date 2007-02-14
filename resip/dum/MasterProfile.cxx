@@ -7,10 +7,16 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 
+// Be sure to look at the documentation of the accessors for 
+// the members being set by this constructor in the .hxx file 
+// for the implications of these default values.
+
 MasterProfile::MasterProfile() : 
    mValidateContentEnabled(true),
    mValidateContentLanguageEnabled(false),
-   mValidateAcceptEnabled(false)
+   mValidateAcceptEnabled(false),
+   mAllowBadRegistrationEnabled(false),
+   mCheckReqUriInMergeDetectionEnabled(false)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -131,19 +137,33 @@ MasterProfile::addSupportedMimeType(const MethodTypes& method, const Mime& mimeT
 bool 
 MasterProfile::isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType)
 {
-   return mSupportedMimeTypes[method].find(mimeType);
+   std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method); 
+   if (found != mSupportedMimeTypes.end()) 
+   { 
+      return found->second.find(mimeType); 
+   } 
+   return false; 
 }
 
 Mimes 
 MasterProfile::getSupportedMimeTypes(const MethodTypes& method)
 {
-   return mSupportedMimeTypes[method];
+   std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method); 
+   if (found != mSupportedMimeTypes.end()) 
+   { 
+      return found->second; 
+   } 
+   return Mimes(); 
 }
 
 void 
 MasterProfile::clearSupportedMimeTypes(const MethodTypes& method)
 {
-   mSupportedMimeTypes[method].clear();
+   std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method); 
+   if (found != mSupportedMimeTypes.end()) 
+   { 
+      found->second.clear(); 
+   } 
 }
 
 void 
@@ -286,6 +306,17 @@ MasterProfile::allowBadRegistrationEnabled()
    return mAllowBadRegistrationEnabled;   
 }
 
+const bool 
+MasterProfile::checkReqUriInMergeDetectionEnabled() const
+{
+   return mCheckReqUriInMergeDetectionEnabled;   
+}
+
+bool& 
+MasterProfile::checkReqUriInMergeDetectionEnabled()
+{
+   return mCheckReqUriInMergeDetectionEnabled;   
+}
 
 UserProfile*
 MasterProfile::clone() const

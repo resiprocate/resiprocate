@@ -12,13 +12,13 @@
 /*! \class TestFailureInfo
  * \brief This class represents a test failure.
  */
-class TestFailureInfo : public CppUnit::TestFailure
+class TestFailureInfo : public CPPUNIT_NS::TestFailure
 {
 public:
   /*! Constructs a TestFailureInfo object.
    */
-  TestFailureInfo( CppUnit::Test *failedTest, 
-                   CppUnit::Exception *thrownException,
+  TestFailureInfo( CPPUNIT_NS::Test *failedTest, 
+                   CPPUNIT_NS::Exception *thrownException,
                    bool isError );
 
   /*! Destructor.

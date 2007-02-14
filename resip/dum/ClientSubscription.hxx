@@ -14,7 +14,8 @@ class DialogUsageManager;
 class ClientSubscription: public BaseSubscription
 {
    public:      
-      ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request);
+      ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
+                         const SipMessage& request, UInt32 defaultSubExpiration);
 
       typedef Handle<ClientSubscription> ClientSubscriptionHandle;
       ClientSubscriptionHandle getHandle();
@@ -24,7 +25,7 @@ class ClientSubscription: public BaseSubscription
       void acceptUpdate(int statusCode = 200);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
       
-      void requestRefresh(int expires = -1);  // default to using original expires value (0 is not allowed - call end() instead)
+      void requestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
       virtual void end();
       virtual std::ostream& dump(std::ostream& strm) const;
 
@@ -61,13 +62,15 @@ class ClientSubscription: public BaseSubscription
       bool mOnNewSubscriptionCalled;
       //SipMessage mLastNotify;      
       bool mEnded;
-      UInt64 mExpires;
+      UInt64 mExpires;  // Absolute Expiration Time
+      // this is the expires value from the 2xx coming from the SUB message
+      UInt32 mDefaultExpires;
 
       bool mRefreshing;
       bool mHaveQueuedRefresh;
       int mQueuedRefreshInterval;
 
-      int mLargestNotifyCSeq;
+      unsigned int mLargestNotifyCSeq;
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);

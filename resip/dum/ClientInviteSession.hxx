@@ -80,9 +80,9 @@ class ClientInviteSession : public InviteSession
       void startStaleCallTimer();
       void sendSipFrag(const SipMessage& response);
 
-      int mLastReceivedRSeq;
-      int mStaleCallTimerSeq;
-      int mCancelledTimerSeq;      
+      unsigned int mLastReceivedRSeq;
+      unsigned int mStaleCallTimerSeq;
+      unsigned int mCancelledTimerSeq;      
       ServerSubscriptionHandle mServerSub;
 
       // disabled

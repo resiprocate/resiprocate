@@ -16,3 +16,4 @@ hierarchy_SOURCES= BoardGame.cpp \
 hierarchy_LDADD= \
   $(top_builddir)/src/cppunit/libcppunit.la 
 
+hierarchy_LDFLAGS = $(LIBADD_DL)

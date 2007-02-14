@@ -5,7 +5,7 @@
 #include <cppunit/extensions/TestSetUp.h>
 
 
-class TestSetUpTest : public CppUnit::TestFixture
+class TestSetUpTest : public CPPUNIT_NS::TestFixture
 {
   CPPUNIT_TEST_SUITE( TestSetUpTest );
   CPPUNIT_TEST( testRun );
@@ -21,11 +21,11 @@ public:
   void testRun();
 
 private:
-  class MockSetUp : public CppUnit::TestSetUp
+  class MockSetUp : public CPPUNIT_NS::TestSetUp
   {
   public:
-    MockSetUp( CppUnit::Test *test )
-        : CppUnit::TestSetUp( test )
+    MockSetUp( CPPUNIT_NS::Test *test )
+        : CPPUNIT_NS::TestSetUp( test )
         , m_setUpCalled( false )
         , m_tearDownCalled( false )
     {

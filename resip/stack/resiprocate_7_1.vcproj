@@ -228,6 +228,9 @@
 				RelativePath=".\CallId.cxx">
 			</File>
 			<File
+				RelativePath=".\Compression.cxx">
+			</File>
+			<File
 				RelativePath=".\Connection.cxx">
 			</File>
 			<File
@@ -286,9 +289,6 @@
 			</File>
 			<File
 				RelativePath=".\ExternalBodyContents.cxx">
-			</File>
-			<File
-				RelativePath=".\FloatParameter.cxx">
 			</File>
 			<File
 				RelativePath=".\FlowId.cxx">
@@ -417,6 +417,12 @@
 				RelativePath=".\QuotedDataParameter.cxx">
 			</File>
 			<File
+				RelativePath=".\QValue.cxx">
+			</File>
+			<File
+				RelativePath=".\QValueParameter.cxx">
+			</File>
+			<File
 				RelativePath=".\RAckCategory.cxx">
 			</File>
 			<File
@@ -438,6 +444,9 @@
 				RelativePath=".\SecurityAttributes.cxx">
 			</File>
 			<File
+				RelativePath=".\SelectInterruptor.cxx">
+			</File>
+			<File
 				RelativePath=".\SERNonceHelper.cxx">
 			</File>
 			<File
@@ -451,6 +460,9 @@
 			</File>
 			<File
 				RelativePath=".\StackThread.cxx">
+			</File>
+			<File
+				RelativePath=".\StatisticsHandler.cxx">
 			</File>
 			<File
 				RelativePath=".\StatisticsManager.cxx">
@@ -531,6 +543,12 @@
 				RelativePath=".\UdpTransport.cxx">
 			</File>
 			<File
+				RelativePath=".\UInt32Category.cxx">
+			</File>
+			<File
+				RelativePath=".\UInt32Parameter.cxx">
+			</File>
+			<File
 				RelativePath=".\UnknownParameter.cxx">
 			</File>
 			<File
@@ -587,6 +605,9 @@
 			</File>
 			<File
 				RelativePath=".\CancelableTimerQueue.hxx">
+			</File>
+			<File
+				RelativePath=".\Compression.hxx">
 			</File>
 			<File
 				RelativePath=".\Connection.hxx">
@@ -650,9 +671,6 @@
 			</File>
 			<File
 				RelativePath=".\ExternalBodyContents.hxx">
-			</File>
-			<File
-				RelativePath=".\FloatParameter.hxx">
 			</File>
 			<File
 				RelativePath=".\FlowId.hxx">
@@ -790,6 +808,12 @@
 				RelativePath=".\QuotedDataParameter.hxx">
 			</File>
 			<File
+				RelativePath=".\QValue.hxx">
+			</File>
+			<File
+				RelativePath=".\QValueParameter.hxx">
+			</File>
+			<File
 				RelativePath=".\RAckCategory.hxx">
 			</File>
 			<File
@@ -814,6 +838,9 @@
 				RelativePath=".\SecurityTypes.hxx">
 			</File>
 			<File
+				RelativePath=".\SelectInterruptor.hxx">
+			</File>
+			<File
 				RelativePath=".\SendData.hxx">
 			</File>
 			<File
@@ -833,6 +860,9 @@
 			</File>
 			<File
 				RelativePath=".\StackThread.hxx">
+			</File>
+			<File
+				RelativePath=".\StatisticsHandler.hxx">
 			</File>
 			<File
 				RelativePath=".\StatisticsManager.hxx">
@@ -919,6 +949,12 @@
 				RelativePath=".\UdpTransport.hxx">
 			</File>
 			<File
+				RelativePath=".\UInt32Category.hxx">
+			</File>
+			<File
+				RelativePath=".\UInt32Parameter.hxx">
+			</File>
+			<File
 				RelativePath=".\UnknownHeaderType.hxx">
 			</File>
 			<File
@@ -947,6 +983,19 @@
 			</File>
 			<File
 				RelativePath=".\XMLCursor.hxx">
+			</File>
+		</Filter>
+		<Filter
+			Name="GPerfFiles"
+			Filter="">
+			<File
+				RelativePath=".\HeaderHash.gperf">
+			</File>
+			<File
+				RelativePath=".\MethodHash.gperf">
+			</File>
+			<File
+				RelativePath=".\ParameterHash.gperf">
 			</File>
 		</Filter>
 	</Files>

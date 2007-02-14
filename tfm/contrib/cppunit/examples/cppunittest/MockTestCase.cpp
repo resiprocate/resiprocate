@@ -1,9 +1,10 @@
 #include "FailureException.h"
 #include "MockTestCase.h"
+#include <cppunit/TestPath.h>
 
 
 MockTestCase::MockTestCase( std::string name )
-    : CppUnit::TestCase( name )
+    : CPPUNIT_NS::TestCase( name )
     , m_hasSetUpExpectation( false )
     , m_expectedSetUpCall( 0 )
     , m_actualSetUpCall( 0 )
@@ -19,6 +20,7 @@ MockTestCase::MockTestCase( std::string name )
     , m_setUpThrow( false )
     , m_tearDownThrow( false )
     , m_runTestThrow( false )
+    , m_passingTest( NULL )
 {
 }
 
@@ -31,7 +33,8 @@ MockTestCase::~MockTestCase()
 int 
 MockTestCase::countTestCases() const
 {
-  ++m_actualCountTestCasesCallCount;
+  MockTestCase *mutableThis = CPPUNIT_CONST_CAST(MockTestCase *, this );
+  ++mutableThis->m_actualCountTestCasesCallCount;
   if ( m_expectCountTestCasesCall )
   {
     CPPUNIT_ASSERT_MESSAGE( getName() + ": unexpected MockTestCase::countTestCases() call",
@@ -85,6 +88,20 @@ MockTestCase::runTest()
     throw FailureException();
 }
 
+/*
+bool 
+MockTestCase::findTestPath( const CPPUNIT_NS::Test *test,
+                            CPPUNIT_NS::TestPath &testPath )
+{
+  if ( m_passingTest == test )
+  {
+    testPath.add( this );
+    return true;
+  }
+
+  return false;
+}
+*/
 
 void 
 MockTestCase::setExpectedSetUpCall( int callCount )

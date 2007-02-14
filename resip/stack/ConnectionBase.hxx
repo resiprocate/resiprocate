@@ -17,16 +17,24 @@
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "resip/stack/SendData.hxx"
 
+namespace osc
+{
+   class Stack;
+   class TcpStream;
+}
+
 namespace resip
 {
 
 class TransactionMessage;
+class Compression;
 
 class ConnectionBase
 {
       friend std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
    public:
-      ConnectionBase(const Tuple& who);
+      ConnectionBase(const Tuple& who,
+                     Compression &compression = Compression::Disabled);
       ConnectionId getId() const;
 
       Transport* transport();
@@ -37,16 +45,25 @@ class ConnectionBase
       enum { ChunkSize = 2048 }; // !jf! what is the optimal size here?
 
    protected:
-      enum State
+      enum ConnState
       {
          NewMessage = 0,
          ReadingHeaders,
          PartialBody,
+         SigComp, // This indicates that incoming bytes are compressed.
          MAX
       };
-	
-      State getCurrentState() const { return mState; }
+
+      typedef enum
+      {
+         Unknown,
+         Uncompressed,
+         Compressed
+      } TransmissionFormat;
+
+      ConnState getCurrentState() const { return mConnState; }
       void preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
+      void decompressNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
       std::pair<char*, size_t> getWriteBuffer();
       char* getWriteBufferForExtraBytes(int extraBytes);
       
@@ -64,6 +81,12 @@ class ConnectionBase
    protected:
       Tuple mWho;
       TransportFailure::FailureReason mFailureReason;      
+      Compression &mCompression;
+      osc::Stack *mSigcompStack;
+      osc::TcpStream *mSigcompFramer;
+      TransmissionFormat mSendingTransmissionFormat;
+      TransmissionFormat mReceivingTransmissionFormat;
+
    private:
       SipMessage* mMessage;
       char* mBuffer;
@@ -72,7 +95,7 @@ class ConnectionBase
 
       static char connectionStates[MAX][32];
       UInt64 mLastUsed;
-      State mState;
+      ConnState mConnState;
       MsgHeaderScanner mMsgHeaderScanner;
 };
 

@@ -13,7 +13,7 @@
  * \brief This class represents a lock object for synchronized object.
  */
 class MfcSynchronizationObject 
-    : public CppUnit::SynchronizedObject::SynchronizationObject
+    : public CPPUNIT_NS::SynchronizedObject::SynchronizationObject
 {
   CCriticalSection m_syncObject;
 

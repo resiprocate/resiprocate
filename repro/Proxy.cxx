@@ -104,18 +104,41 @@ Proxy::thread()
                      delete sip;
                      continue;  
                   }
-			   
+
                   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
-			   
+
                   // check the MaxForwards isn't too low
-                  if (sip->exists(h_MaxForwards) && sip->header(h_MaxForwards).value() <= 0)
-                  {                     
+                  if (!sip->exists(h_MaxForwards))
+                  {
+                     // !bwc! Add Max-Forwards header if not found.
+                     sip->header(h_MaxForwards).value()=20;
+                  }
+                  
+                  if(!sip->header(h_MaxForwards).isWellFormed())
+                  {
+                     //Malformed Max-Forwards! (Maybe we can be lenient and set
+                     // it to 70...)
+                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip,400));
+                     response->header(h_StatusLine).reason()="Malformed Max-Forwards";
+                     mStack.send(*response,this);
+                     delete sip;
+                     continue;                     
+                  }
+                  
+                  // !bwc! Unacceptable values for Max-Forwards
+                  // TODO make this ceiling configurable
+                  if(sip->header(h_MaxForwards).value() > 255)
+                  {
+                     sip->header(h_MaxForwards).value()=20;                     
+                  }
+                  else if(sip->header(h_MaxForwards).value() <=0)
+                  {
                      if (sip->header(h_RequestLine).method() != OPTIONS)
                      {
-                        std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
-                        mStack.send(*response, this);
+                     std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 483));
+                     mStack.send(*response, this);
                      }
-                     else  // If the request is an OPTIONS, send an appropropriate response
+                     else  // If the request is an OPTIONS, send an appropriate response
                      {
                         std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 200));
                         mStack.send(*response, this);                        
@@ -127,28 +150,52 @@ Proxy::thread()
 
                   // [TODO] !rwm! Need to check Proxy-Require header field values
                
-                  if (sip->header(h_RequestLine).method() == CANCEL)
+                  if (sip->method() == CANCEL)
                   {
                      HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
 
                      if(i == mServerRequestContexts.end())
                      {
-                        WarningLog(<< "Could not find Request Context for a CANCEL. Doing nothing.");
+                        SipMessage response;
+                        Helper::makeResponse(response,*sip,481);
+                        mStack.send(response,this);
+                        delete sip;
                      }
                      else
                      {
-                        i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                        try
+                        {
+                           i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                        }
+                        catch(resip::BaseException& e)
+                        {
+                           // !bwc! Some sort of unhandled error in process.
+                           // This is very bad; we cannot form a response 
+                           // at this point because we do not know
+                           // whether the original request still exists.
+                           ErrLog(<<"Uncaught exception in process on a CANCEL request: " << e
+                                          << std::endl << "This has a high probability of leaking memory!");
+                        }
                      }
                   }
-                  else if (sip->header(h_RequestLine).method() == ACK)
+                  else if (sip->method() == ACK)
                   {
-                     // ACK needs to create its own RequestContext based on a
-                     // unique transaction id. 
-                     static Data ack("ack");
-                     Data tid = sip->getTransactionId() + ack;
+                     Data tid = sip->getTransactionId();
+
+                     // !bwc! This is going to be treated as a new transaction.
+                     // The stack is maintaining no state whatsoever for this.
+                     // We should treat this exactly like a new transaction.
+                     if(sip->mIsBadAck200)
+                     {
+                        static Data ack("ack");
+                        tid+=ack;
+                     }
+                     
                      RequestContext* context=0;
 
-                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
+                     HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(tid);
+                     
+                     // !bwc! This might be an ACK/200, or a stray ACK/failure
                      if(i == mServerRequestContexts.end())
                      {
                         context = new RequestContext(*this, 
@@ -157,7 +204,7 @@ Proxy::thread()
                                                      mTargetProcessorChain);
                         mServerRequestContexts[tid] = context;
                      }
-                     else
+                     else // !bwc! ACK/failure
                      {
                         context = i->second;
                      }
@@ -165,7 +212,16 @@ Proxy::thread()
                      // The stack will send TransactionTerminated messages for
                      // client and server transaction which will clean up this
                      // RequestContext 
-                     context->process(std::auto_ptr<resip::SipMessage>(sip));
+                     try
+                     {
+                        context->process(std::auto_ptr<resip::SipMessage>(sip));
+                     }
+                     catch(resip::BaseException& e)
+                     {
+                        // !bwc! Some sort of unhandled error in process.
+                        ErrLog(<<"Uncaught exception in process on an ACK request: " << e
+                                       << std::endl << "This has a high probability of leaking memory!");
+                     }
                   }
                   else
                   {
@@ -182,7 +238,19 @@ Proxy::thread()
                         InfoLog (<< "Inserting new RequestContext tid=" << sip->getTransactionId() << " -> " << *context);
                         mServerRequestContexts[sip->getTransactionId()] = context;
                         DebugLog (<< "RequestContexts: " << Inserter(mServerRequestContexts));
-                        context->process(std::auto_ptr<resip::SipMessage>(sip));
+                        try
+                        {
+                           context->process(std::auto_ptr<resip::SipMessage>(sip));
+                        }
+                        catch(resip::BaseException& e)
+                        {
+                           // !bwc! Some sort of unhandled error in process.
+                           // This is very bad; we cannot form a response 
+                           // at this point because we do not know
+                           // whether the original request still exists.
+                           ErrLog(<<"Uncaught exception in process on a new request: " << e
+                                          << std::endl << "This has a high probability of leaking memory!");
+                        }
                      }
                      else
                      {
@@ -198,7 +266,15 @@ Proxy::thread()
                   HashMap<Data,RequestContext*>::iterator i = mClientRequestContexts.find(sip->getTransactionId());
                   if (i != mClientRequestContexts.end())
                   {
-                     i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                     try
+                     {
+                        i->second->process(std::auto_ptr<resip::SipMessage>(sip));
+                     }
+                     catch(resip::BaseException& e)
+                     {
+                        // !bwc! Some sort of unhandled error in process.
+                        ErrLog(<<"Uncaught exception in process on a response: " << e);
+                     }
                   }
                   else
                   {
@@ -221,7 +297,15 @@ Proxy::thread()
                   // (the intent is that Monkeys may eventually handle non-SIP
                   //  application messages).
                   bool eraseThisTid =  (dynamic_cast<Ack200DoneMessage*>(app)!=0);
-                  i->second->process(std::auto_ptr<resip::ApplicationMessage>(app));
+                  try
+                  {
+                     i->second->process(std::auto_ptr<resip::ApplicationMessage>(app));
+                  }
+                  catch(resip::BaseException& e)
+                  {
+                     ErrLog(<<"Uncaught exception in process: " << e);
+                  }
+                  
                   if (eraseThisTid)
                   {
                      mServerRequestContexts.erase(i);
@@ -240,7 +324,14 @@ Proxy::thread()
                   HashMap<Data,RequestContext*>::iterator i=mClientRequestContexts.find(term->getTransactionId());
                   if (i != mClientRequestContexts.end())
                   {
-                     i->second->process(*term);
+                     try
+                     {
+                        i->second->process(*term);
+                     }
+                     catch(resip::BaseException& e)
+                     {
+                        ErrLog(<<"Uncaught exception in process: " << e);
+                     }
                      mClientRequestContexts.erase(i);
                   }
                }
@@ -249,7 +340,14 @@ Proxy::thread()
                   HashMap<Data,RequestContext*>::iterator i=mServerRequestContexts.find(term->getTransactionId());
                   if (i != mServerRequestContexts.end())
                   {
-                     i->second->process(*term);
+                     try
+                     {
+                        i->second->process(*term);
+                     }
+                     catch(resip::BaseException& e)
+                     {
+                        ErrLog(<<"Uncaught exception in process: " << e);
+                     }
                      mServerRequestContexts.erase(i);
                   }
                }
@@ -259,11 +357,11 @@ Proxy::thread()
       }
       catch (BaseException& e)
       {
-         WarningLog (<< "Caught: " << e);
+         ErrLog (<< "Caught: " << e);
       }
       catch (...)
       {
-         WarningLog (<< "Caught unknown exception");
+         ErrLog (<< "Caught unknown exception");
       }
    }
    InfoLog (<< "Proxy::thread exit");
@@ -318,6 +416,33 @@ bool
 Proxy::isMyUri(const Uri& uri)
 {
    bool ret = isMyDomain(uri.host());
+   if(ret) 
+   {
+      // check if we are listening on the specified port
+      // !slg! this is not perfect, but it will allow us to operate in most environments
+      //       where the repro proxy and a UA are running on the same machine.
+      //       Note:  There is a scenario that we cannot correctly handle - when a UA and 
+      //       repro are running on the same machine, and they are using the same port but on 
+      //       different transports types or interfaces.  In this case we cannot tell, by looking
+      //       at a requestUri or From header if the uri is ours or the UA's, and things will break.
+      if(uri.port() == 0)
+      {
+         if(uri.scheme() == Symbols::Sips || 
+            (uri.exists(p_transport) && (uri.param(p_transport) == Symbols::TLS ||
+                                         uri.param(p_transport) == Symbols::DTLS)))
+         {
+            ret = mStack.isMyPort(Symbols::DefaultSipsPort);
+         }
+         else
+         {
+            ret = mStack.isMyPort(Symbols::DefaultSipPort);
+         }
+      }
+      else
+      {
+         ret = mStack.isMyPort(uri.port());
+      }
+   }
    DebugLog( << "Proxy::isMyUri " << uri << " " << ret);
    return ret;
 }

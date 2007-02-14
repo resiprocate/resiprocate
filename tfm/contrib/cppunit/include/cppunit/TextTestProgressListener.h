@@ -4,8 +4,8 @@
 #include <cppunit/TestListener.h>
 
 
-namespace CppUnit
-{
+CPPUNIT_NS_BEGIN
+
 
 /*! 
  * \brief TestListener that show the status of each TestCase test result.
@@ -22,9 +22,11 @@ public:
   virtual ~TextTestProgressListener();
 
   void startTest( Test *test );
+
   void addFailure( const TestFailure &failure );
 
-  void done();
+  void endTestRun( Test *test, 
+                   TestResult *eventManager );
 
 private:
   /// Prevents the use of the copy constructor.
@@ -37,7 +39,6 @@ private:
 };
 
 
-} //  namespace CppUnit
-
+CPPUNIT_NS_END
 
 #endif  // CPPUNIT_TEXTTESTPROGRESSLISTENER_H

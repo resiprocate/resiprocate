@@ -3,9 +3,10 @@
 
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
-#include <iostream>
+#include <cppunit/portability/Stream.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 class SourceLine;
 class Exception;
@@ -24,32 +25,14 @@ public:
 
   virtual void addFailure( const TestFailure &failure );
   virtual void startTest( Test *test );
-  virtual void print( std::ostream &stream );
-  virtual void printFailures( std::ostream &stream );
-  virtual void printHeader( std::ostream &stream );
-
-  virtual void printFailure( TestFailure *failure,
-                             int failureNumber,
-                             std::ostream &stream );
-  virtual void printFailureListMark( int failureNumber,
-                                     std::ostream &stream );
-  virtual void printFailureTestName( TestFailure *failure,
-                                     std::ostream &stream );
-  virtual void printFailureType( TestFailure *failure,
-                                 std::ostream &stream );
-  virtual void printFailureLocation( SourceLine sourceLine,
-                                     std::ostream &stream );
-  virtual void printFailureDetail( Exception *thrownException,
-                                   std::ostream &stream );
-  virtual void printFailureWarning( std::ostream &stream );
-  virtual void printStatistics( std::ostream &stream );
+  virtual void print( OStream &stream );
 };
 
 /** insertion operator for easy output */
-std::ostream &operator <<( std::ostream &stream, 
-                           TextTestResult &result );
+CPPUNIT_API OStream &operator <<( OStream &stream, 
+                                  TextTestResult &result );
 
-} // namespace CppUnit
+CPPUNIT_NS_END
 
 #endif // CPPUNIT_TEXTTESTRESULT_H
 

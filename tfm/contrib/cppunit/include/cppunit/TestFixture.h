@@ -3,7 +3,7 @@
 
 #include <cppunit/Portability.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
 
 
 /*! \brief Wraps a test case with setUp and tearDown methods.
@@ -93,6 +93,7 @@ public:
 };
 
 
-}
+CPPUNIT_NS_END
+
 
 #endif

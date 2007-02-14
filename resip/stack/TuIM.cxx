@@ -70,7 +70,7 @@ TuIM::TuIM(SipStack* stack,
      mRegistrationDialog(NameAddr(contact)),
      mNextTimeToRegister(0),
      mRegistrationPassword( Data::Empty ),
-     mLastAuthCSeq(-1),
+     mLastAuthCSeq(0),
      mRegistrationTimeSeconds(registrationTimeSeconds),
      mSubscriptionTimeSeconds(subscriptionTimeSeconds),
      mDefaultProtocol( UNKNOWN_TRANSPORT )
@@ -854,7 +854,7 @@ TuIM::processRegisterResponse(SipMessage* msg)
    int number = msg->header(h_StatusLine).responseCode();
    Uri to = msg->header(h_To).uri();
    InfoLog ( << "register of " << to << " got response " << number );   
-   int cSeq = msg->header(h_CSeq).sequence();
+   unsigned int cSeq = msg->header(h_CSeq).sequence();
 
    if ( number<200 )
    {
@@ -1270,10 +1270,10 @@ TuIM::addBuddy( const Uri& uri, const Data& group )
    buddy.group = group;
    buddy.presDialog = new DeprecatedDialog( NameAddr(mContact) );
    assert( buddy.presDialog );
-   
-   mBuddies.push_back( buddy );
 
    subscribeBuddy( buddy );
+
+   mBuddies.push_back( buddy );
 }
 
 

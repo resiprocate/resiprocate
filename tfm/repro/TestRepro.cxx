@@ -120,15 +120,15 @@ TestRepro::TestRepro(const resip::Data& name,
    mDumThread(mDum)
 {
    mStack.addTransport(UDP, port, V4);
-   //mStack.addTransport(TCP, port, V4);
+   mStack.addTransport(TCP, port, V4);
 #ifdef USE_SSL
-   mStack.addTransport(TLS, port, V4, StunDisabled, Data::Empty, host );
+   mStack.addTransport(TLS, port+1, V4, StunDisabled, Data::Empty, host );
 #endif
    mProxy.addDomain(host);
    
    mProfile->clearSupportedMethods();
    mProfile->addSupportedMethod(resip::REGISTER);
-   //mProfile->addSupportedScheme(Symbols::Sips);
+   mProfile->addSupportedScheme(Symbols::Sips);
 
    mDum.setMasterProfile(mProfile);
    mDum.setServerRegistrationHandler(&mRegistrar);

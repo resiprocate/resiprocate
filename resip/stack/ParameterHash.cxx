@@ -60,7 +60,7 @@ ParameterHash::hash (register const char *str, register unsigned int len)
       293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
       293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
       293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
-      293, 293, 293, 293, 293, 293, 293, 293, 293, 293,
+      293, 293, 293, 293,   0, 293, 293, 293, 293, 293,
       293, 293, 293, 293, 293, 293, 293,   0,  35,   0,
        15,   0,  20,   5,  40,  10, 293,   0,   0,  25,
         5,   5,   5,   0,   0,   0,   0,  40,  70,  30,
@@ -131,7 +131,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 83,
+      TOTAL_KEYWORDS = 85,
       MIN_WORD_LENGTH = 1,
       MAX_WORD_LENGTH = 13,
       MIN_HASH_VALUE = 1,
@@ -210,6 +210,8 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       {"size", ParameterTypes::size},
 #line 55 "ParameterHash.gperf"
       {"opaque", ParameterTypes::opaque},
+#line 93 "ParameterHash.gperf"
+      {"addTransport", ParameterTypes::addTransport},
 #line 24 "ParameterHash.gperf"
       {"text", ParameterTypes::text},
 #line 34 "ParameterHash.gperf"
@@ -286,6 +288,8 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       {"directory", ParameterTypes::directory},
 #line 39 "ParameterHash.gperf"
       {"from-tag", ParameterTypes::fromTag},
+#line 94 "ParameterHash.gperf"
+      {"sigcomp-id", ParameterTypes::sigcompId},
 #line 83 "ParameterHash.gperf"
       {"access-type", ParameterTypes::accessType},
 #line 68 "ParameterHash.gperf"
@@ -314,39 +318,39 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
          5,   -1,    6,   -1,   -1,    7,    8,    9,
         10,   -1,   -1,   11,   12,   13,   14,   15,
         16,   -1,   -1,   17,   18,   19,   20,   -1,
-        -1,   -1, -119,  -62,   -2,   -1,   -1,   23,
+        -1,   -1, -121,  -64,   -2,   -1,   -1,   23,
         -1,   -1,   -1,   24,   25,   -1,   26,   27,
         28,   29,   30,   31,   -1,   32,   33,   -1,
-        34,   -1,   -1,   35,   36,   37,   38,   39,
-        -1,   -1,   40,   -1,   41,   42,   43,   44,
-        45,   -1,   -1,   -1,   46,   47,   48,   49,
-        50,   51,   52,   53,   -1,   54,   55,   -1,
-        56,   57,   58,   59,   60,   -1,   61,   -1,
-        62,   63,   64,   -1,   65,   66,   -1,   67,
-        -1,   68,   69,   -1,   70,   71,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   72,   -1,
+        34,   35,   -1,   36,   37,   38,   39,   40,
+        -1,   -1,   41,   -1,   42,   43,   44,   45,
+        46,   -1,   -1,   -1,   47,   48,   49,   50,
+        51,   52,   53,   54,   -1,   55,   56,   -1,
+        57,   58,   59,   60,   61,   -1,   62,   -1,
+        63,   64,   65,   -1,   66,   67,   -1,   68,
+        -1,   69,   70,   -1,   71,   72,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   73,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   73,   -1,   -1,
-        -1,   74,   -1,   75,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   76,   -1,   -1,   -1,
-        -1,   -1,   -1,   77,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   74,   75,   -1,   -1,
+        -1,   76,   -1,   77,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   78,   -1,   -1,   -1,
+        -1,   -1,   -1,   79,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   78,   -1,   -1,   -1,   79,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        80,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   81,
+        -1,   -1,   80,   -1,   -1,   -1,   81,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        82,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   83,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
         -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-        -1,   -1,   -1,   -1,   82
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+        -1,   -1,   -1,   -1,   84
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -383,6 +387,6 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
     }
   return 0;
 }
-#line 93 "ParameterHash.gperf"
+#line 95 "ParameterHash.gperf"
 
 }

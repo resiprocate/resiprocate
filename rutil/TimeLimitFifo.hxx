@@ -96,7 +96,7 @@ TimeLimitFifo<Msg>::TimeLimitFifo(unsigned int maxDurationSecs,
                                   unsigned int maxSize)
    : AbstractFifo(maxSize),
      mMaxDurationSecs(maxDurationSecs),
-     mUnreservedMaxSize(int(maxSize * 0.8)) // !dlb! random guess
+     mUnreservedMaxSize((int)((maxSize*8)/10)) // !dlb! random guess
 {}
 
 template <class Msg>

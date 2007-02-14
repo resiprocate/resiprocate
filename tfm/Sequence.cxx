@@ -12,7 +12,7 @@ using namespace boost;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-SequenceSet* SequenceClass::CPUSequenceSet = 0;
+boost::shared_ptr<SequenceSet> SequenceClass::CPUSequenceSet;
 bool SequenceClass::CPUSequenceSetCleanup = true;
 
 void SequenceClass::CPUSequenceSetup()
@@ -20,8 +20,14 @@ void SequenceClass::CPUSequenceSetup()
    if (SequenceClass::CPUSequenceSetCleanup)
    {
       // get rid of the old SequenceSet
-      delete SequenceClass::CPUSequenceSet;      
-      SequenceClass::CPUSequenceSet = new SequenceSet();
+      if (SequenceClass::CPUSequenceSet)
+      {
+         //.dcm. -- should rationalize clear and release
+         SequenceClass::CPUSequenceSet->clear();
+         SequenceClass::CPUSequenceSet->release();
+      }      
+      SequenceSet* sset = new SequenceSet();
+      SequenceClass::CPUSequenceSet = sset->getHandle();
       // reuse this SequenceSet until executed
       SequenceClass::CPUSequenceSetCleanup = false;
    }
@@ -401,7 +407,7 @@ SequenceClass::~SequenceClass()
 
    delete mAfterAction;
 
-   mSet = 0;
+   mSet.reset();
 }
 
 ostream&
@@ -617,7 +623,7 @@ SequenceDoneEvent::briefString() const
 }
 
 void
-SequenceClass::setSequenceSet(SequenceSet* set)
+SequenceClass::setSequenceSet(boost::shared_ptr<SequenceSet> set)
 {
    mSet = set;
    for (list<TestEndPoint::ExpectBase*>::const_iterator i = mExpects.begin();

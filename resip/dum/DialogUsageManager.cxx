@@ -346,7 +346,7 @@ DialogUsageManager::setRemoteCertStore(auto_ptr<RemoteCertStore> store)
 
 void
 DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
-                             BaseUsageHandle target, int cseq, int rseq)
+                             BaseUsageHandle target, unsigned int cseq, unsigned int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
    mStack.post(t, duration, this);
@@ -354,7 +354,7 @@ DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
 
 void
 DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
-                               BaseUsageHandle target, int cseq, int rseq)
+                               BaseUsageHandle target, unsigned int cseq, unsigned int rseq)
 {
    DumTimeout t(type, duration, target, cseq, rseq);
    mStack.postMS(t, duration, this);
@@ -436,10 +436,10 @@ DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
    appDs->mDialogSet = ds;
    ds->mAppDialogSet = appDs;
 
-   DebugLog ( << "************* Adding DialogSet ***************" );
-   DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
+   StackLog ( << "************* Adding DialogSet ***************" );
+   StackLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap[ds->getId()] = ds;
-   DebugLog ( << "After: " << Inserter(mDialogSetMap) );
+   StackLog ( << "After: " << Inserter(mDialogSetMap) );
    return ds;
 }
 
@@ -514,6 +514,28 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
+                                               const SharedPtr<UserProfile>& userProfile, 
+                                               const SdpContents* initialOffer,
+                                               AppDialogSet* appDs)
+{
+   ServerSubscriptionHandle empty;
+   return makeInviteSessionFromRefer(refer, userProfile, empty, initialOffer, None, 0, appDs);
+}
+
+SharedPtr<SipMessage>
+DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
+                                               ServerSubscriptionHandle serverSub,
+                                               const SdpContents* initialOffer,
+                                               EncryptionLevel level,
+                                               const SdpContents* alternative,
+                                               AppDialogSet* appDs)
+{
+   return makeInviteSessionFromRefer(refer, serverSub.isValid() ? serverSub->mDialog.mDialogSet.getUserProfile() : getMasterUserProfile(), serverSub, initialOffer, level, alternative, appDs);
+}
+
+SharedPtr<SipMessage>
+DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
+                                               const SharedPtr<UserProfile>& userProfile, 
                                                ServerSubscriptionHandle serverSub,
                                                const SdpContents* initialOffer,
                                                EncryptionLevel level,
@@ -542,7 +564,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    // !jf! this code assumes you have a UserProfile
    SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this,
                                                                        target,
-                                                                       serverSub.isValid() ? serverSub->mDialog.mDialogSet.getUserProfile() : getMasterUserProfile(),
+                                                                       userProfile,
                                                                        initialOffer, level, alternative, serverSub), appDs);
    DumHelper::setOutgoingEncryptionLevel(*inv, level);
 
@@ -583,14 +605,14 @@ DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<Use
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType,
-                                     int subscriptionTime, AppDialogSet* appDs)
+                                     UInt32 subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime), appDs);
 }
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType,
-                                     int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
+                                     UInt32 subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, userProfile, eventType, subscriptionTime, refreshInterval), appDs);
 }
@@ -603,14 +625,14 @@ DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventTy
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
-                                     int subscriptionTime, AppDialogSet* appDs)
+                                     UInt32 subscriptionTime, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime), appDs);
 }
 
 SharedPtr<SipMessage>
 DialogUsageManager::makeSubscription(const NameAddr& target, const Data& eventType,
-                                     int subscriptionTime, int refreshInterval, AppDialogSet* appDs)
+                                     UInt32 subscriptionTime, int refreshInterval, AppDialogSet* appDs)
 {
    return makeNewSession(new SubscriptionCreator(*this, target, getMasterUserProfile(), eventType, subscriptionTime, refreshInterval), appDs);
 }
@@ -623,7 +645,7 @@ DialogUsageManager::makeRegistration(const NameAddr& target, const SharedPtr<Use
 }
 
 SharedPtr<SipMessage>
-DialogUsageManager::makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, int registrationTime, AppDialogSet* appDs)
+DialogUsageManager::makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, UInt32 registrationTime, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, userProfile, registrationTime), appDs);
 }
@@ -635,7 +657,7 @@ DialogUsageManager::makeRegistration(const NameAddr& target, AppDialogSet* appDs
 }
 
 SharedPtr<SipMessage>
-DialogUsageManager::makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* appDs)
+DialogUsageManager::makeRegistration(const NameAddr& target, UInt32 registrationTime, AppDialogSet* appDs)
 {
    return makeNewSession(new RegistrationCreator(*this, target, getMasterUserProfile(), registrationTime), appDs);
 }
@@ -645,7 +667,7 @@ DialogUsageManager::makePublication(const NameAddr& targetDocument,
                                     const SharedPtr<UserProfile>& userProfile,
                                     const Contents& body,
                                     const Data& eventType,
-                                    unsigned expiresSeconds,
+                                    UInt32 expiresSeconds,
                                     AppDialogSet* appDs)
 {
    return makeNewSession(new PublicationCreator(*this, targetDocument, userProfile, body, eventType, expiresSeconds), appDs);
@@ -655,7 +677,7 @@ SharedPtr<SipMessage>
 DialogUsageManager::makePublication(const NameAddr& targetDocument,
                                     const Contents& body,
                                     const Data& eventType,
-                                    unsigned expiresSeconds,
+                                    UInt32 expiresSeconds,
                                     AppDialogSet* appDs)
 {
    return makeNewSession(new PublicationCreator(*this, targetDocument, getMasterUserProfile(), body, eventType, expiresSeconds), appDs);
@@ -775,7 +797,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       }
    }
 
-   DebugLog (<< "SEND: " << *msg);
+   DebugLog (<< "SEND: " << std::endl << std::endl << *msg);
 
    OutgoingEvent* event = new OutgoingEvent(msg);
    outgoingProcess(auto_ptr<Message>(event));
@@ -1243,6 +1265,24 @@ DialogUsageManager::process()
    return mFifo.messageAvailable();
 }
 
+bool 
+DialogUsageManager::process(int timeoutMs)
+{
+   if(timeoutMs == -1)
+   {
+      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+   }
+   else
+   {
+      std::auto_ptr<Message> msg(mFifo.getNext(timeoutMs));
+      if (msg.get())
+      {
+         internalProcess(msg);
+      }
+   }
+   return mFifo.messageAvailable();
+}
+
 bool
 DialogUsageManager::validateRequestURI(const SipMessage& request)
 {
@@ -1397,7 +1437,7 @@ DialogUsageManager::mergeRequest(const SipMessage& request)
 
    if (!request.header(h_To).exists(p_tag))
    {
-      if (mMergedRequests.count(MergedRequestKey(request)))
+      if (mMergedRequests.count(MergedRequestKey(request, getMasterProfile()->checkReqUriInMergeDetectionEnabled())))
       {
          SipMessage failure;
          makeResponse(failure, request, 482, "Merged Request");
@@ -1535,7 +1575,17 @@ DialogUsageManager::processRequest(const SipMessage& request)
             {
                DialogSetId id(request);
                //cryptographically dangerous
-               assert(mDialogSetMap.find(id) == mDialogSetMap.end());
+               if(mDialogSetMap.find(id) != mDialogSetMap.end()) 
+               {
+                  // this can only happen if someone sends us a request with the same callid and from tag as one 
+                  // that is in the process of destroying - since this is bad endpoint behaviour - we will 
+                  // reject the request with a 400 response
+                  SipMessage badrequest;
+                  makeResponse(badrequest, request, 400);
+                  badrequest.header(h_AcceptLanguages) = getMasterProfile()->getSupportedLanguages();
+                  sendResponse(badrequest);
+                  return;
+               }
             }
             if (mDumShutdownHandler)
             {
@@ -1549,16 +1599,16 @@ DialogUsageManager::processRequest(const SipMessage& request)
             {
                DialogSet* dset =  new DialogSet(request, *this);
 
-               DebugLog ( << "*********** Calling AppDialogSetFactory *************"  );
+               StackLog ( << "*********** Calling AppDialogSetFactory *************"  );
                AppDialogSet* appDs = mAppDialogSetFactory->createAppDialogSet(*this, request);
                appDs->mDialogSet = dset;
                dset->setUserProfile(appDs->selectUASUserProfile(request));
                dset->mAppDialogSet = appDs;
 
-               DebugLog ( << "************* Adding DialogSet ***************" );
-               DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
+               StackLog ( << "************* Adding DialogSet ***************" );
+               StackLog ( << "Before: " << Inserter(mDialogSetMap) );
                mDialogSetMap[dset->getId()] = dset;
-               DebugLog ( << "After: Req" << Inserter(mDialogSetMap) );
+               StackLog ( << "After: Req" << Inserter(mDialogSetMap) );
 
                dset->dispatch(request);
             }
@@ -1593,12 +1643,12 @@ DialogUsageManager::processResponse(const SipMessage& response)
 
       if (ds)
       {
-         DebugLog ( << "DialogUsageManager::processResponse: " << response.brief());
+         DebugLog ( << "DialogUsageManager::processResponse: " << std::endl << std::endl << response.brief());
          ds->dispatch(response);
       }
       else
       {
-         InfoLog (<< "Throwing away stray response: " << response.brief());
+		 InfoLog (<< "Throwing away stray response: " << std::endl << std::endl << response.brief());
       }
    }
 }
@@ -1699,8 +1749,8 @@ DialogUsageManager::checkEventPackage(const SipMessage& request)
 DialogSet*
 DialogUsageManager::findDialogSet(const DialogSetId& id)
 {
-   DebugLog ( << "Looking for dialogSet: " << id << " in map:" );
-   DebugLog ( << Inserter(mDialogSetMap) );
+   StackLog ( << "Looking for dialogSet: " << id << " in map:" );
+   StackLog ( << Inserter(mDialogSetMap) );
    DialogSetMap::const_iterator it = mDialogSetMap.find(id);
 
    if (it == mDialogSetMap.end())
@@ -1737,10 +1787,10 @@ DialogUsageManager::findCreator(const DialogId& id)
 void
 DialogUsageManager::removeDialogSet(const DialogSetId& dsId)
 {
-   DebugLog ( << "************* Removing DialogSet ***************" );
-   DebugLog ( << "Before: " << Inserter(mDialogSetMap) );
+   StackLog ( << "************* Removing DialogSet ***************" );
+   StackLog ( << "Before: " << Inserter(mDialogSetMap) );
    mDialogSetMap.erase(dsId);
-   DebugLog ( << "After: " << Inserter(mDialogSetMap) );
+   StackLog ( << "After: " << Inserter(mDialogSetMap) );
    if (mRedirectManager.get())
    {
       mRedirectManager->removeDialogSet(dsId);

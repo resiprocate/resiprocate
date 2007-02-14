@@ -37,7 +37,7 @@ class RequestContext
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
       const resip::SipMessage& getOriginalRequest() const;
-      const resip::Data& getTransactionId() const;
+      resip::Data getTransactionId() const;
       
       /** Returns the event that we are currently working on. Use a pointer
           since users need to check for null */
@@ -55,10 +55,12 @@ class RequestContext
       
       //Will return the tid of the new target, since this creates the instance 
       //of class Target for the user. (see ResponseContext::addTarget())
-      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=true);
+      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=false);
       
       void sendResponse(const resip::SipMessage& response);
-            
+
+      void forwardAck200(const resip::SipMessage& ack);
+
       void updateTimerC();
       bool mInitialTimerCSet;
 
@@ -67,9 +69,11 @@ class RequestContext
       void setFromTrustedNode();
       bool fromTrustedNode() const;
       
+      bool mHaveSentFinalResponse;
    private:
       resip::SipMessage*  mOriginalRequest;
       resip::Message*  mCurrentEvent;
+      resip::SipMessage* mAck200ToRetransmit;
       ProcessorChain& mRequestProcessorChain; // monkeys
       ProcessorChain& mResponseProcessorChain; // lemurs
       ProcessorChain& mTargetProcessorChain; // baboons
@@ -77,7 +81,6 @@ class RequestContext
       resip::Data mDigestIdentity;
       int mTransactionCount;
       Proxy& mProxy;
-      bool mHaveSentFinalResponse;
       resip::NameAddr mTopRoute;
       resip::ConnectionId mTargetConnectionId;
       ResponseContext mResponseContext;

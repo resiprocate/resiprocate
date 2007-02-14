@@ -1,15 +1,21 @@
 #ifndef CPPUNIT_TESTPLUGINRUNNER_TESTPLUGININTERFACE_H
 #define CPPUNIT_TESTPLUGINRUNNER_TESTPLUGININTERFACE_H
 
-#ifndef NOMINMAX
-# define NOMINMAX
-#endif
-#include <windef.h>   // for WINAPI
-
-
 #include <cppunit/Test.h>
+#include <cppunit/TestSuite.h>
+
+#if !defined(WINAPI)
+#define WIN32_LEAN_AND_MEAN 
+#define NOGDI
+#define NOUSER
+#define NOKERNEL
+#define NOSOUND
+#define NOMINMAX
+#include <windows.h>
+#endif
 
 /*! \brief Abstract TestPlugIn for DLL.
+ * \deprecated Use CppUnitTestPlugIn instead.
  *
  * A Test plug-in DLL must subclass this class and "publish" an instance
  * using the following exported function:
@@ -43,5 +49,7 @@ typedef TestPlugInInterface* (WINAPI *GetTestPlugInInterfaceFunction)(void);
 extern "C" {
   __declspec(dllexport) TestPlugInInterface *GetTestPlugInInterface();
 }
+
+
 
 #endif // CPPUNIT_TESTPLUGINRUNNER_TESTPLUGININTERFACE_H

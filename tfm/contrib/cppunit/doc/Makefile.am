@@ -1,6 +1,6 @@
 EXTRA_DIST = $(doxygen_input) $(static_pages)
 
-doxygen_input = cookbook.dox other_documentation.dox header.html footer.html
+doxygen_input = cookbook.dox other_documentation.dox header.html footer.html Money.dox
 static_pages = FAQ
 
 
@@ -19,7 +19,7 @@ htmldir = $(pkgdatadir)/html
 html_DATA = $(static_pages) html/index.html
 
 install-data-hook:
-	cp -dpR html/* $(DESTDIR)$(htmldir)
+	cp -pR html/* $(DESTDIR)$(htmldir)
 
 # Automake's "distcheck" is sensitive to having files left over
 # after "make uninstall", so we have to clean up the install hook.
@@ -47,7 +47,7 @@ all-local: dox
 
 
 html/index.html: Doxyfile $(doxygen_input)
-	@DOXYGEN@
+	"@DOXYGEN@"
 
 
 # Make tarfile to distribute the HTML documentation.

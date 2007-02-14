@@ -8,7 +8,7 @@
 
 #include <string>
 #include <cppunit/test.h>
-#include <msvc6/testrunner/TestPlugInInterface.h>
+#include <cppunit/plugin/PlugInManager.h>
 
 
 /*! \class TestPlugIn
@@ -28,7 +28,7 @@ public:
   /*! Obtains a new test from a new copy of the dll.
    * \exception TestPlugInException if a error occurs.
    */
-  CppUnit::Test *makeTest();
+  CPPUNIT_NS::Test *makeTest();
 
 private:
   /// Prevents the use of the copy constructor.
@@ -38,7 +38,6 @@ private:
   void operator =( const TestPlugIn &copy );
 
   void reloadDll();
-  void releaseDll();
   void deleteDllCopy();
 
   /*! Copy m_fileName DLL to m_copyFileName.
@@ -53,16 +52,10 @@ private:
    */
   void loadDll();
 
-  /*! Get a pointer on the function "GetTestPlugInInterface" of the DLL.
-   * \exception TestPlugInException if the function does not exist.
-   */
-  void getDllInterface();
-
 private:
   std::string m_fileName;
   std::string m_copyFileName;
-  HINSTANCE m_dllHandle;
-  GetTestPlugInInterfaceFunction m_interfaceFunction;
+  CPPUNIT_NS::PlugInManager m_manager;
 };
 
 

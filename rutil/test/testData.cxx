@@ -456,86 +456,87 @@ class TestData
 	    assert(s8.convertSize() == 0);
          }
 
+#ifndef RESIP_FIXED_POINT
          {
             Data s1;
             assert(s1.convertDouble() == 0);
-            
+
             Data s2("12foo");
             assert(s2.convertDouble() == 12);
-            
+
             Data s3("12");
             assert(s3.convertDouble() == 12);
 
             Data s4("foo");
             assert(s4.convertDouble() == 0);
 
-	    Data s5("     ");
-	    assert(s5.convertDouble() == 0);
+            Data s5("     ");
+            assert(s5.convertDouble() == 0);
 
-	    Data s6("    +");
-	    assert(s6.convertDouble() == 0);
+            Data s6("    +");
+            assert(s6.convertDouble() == 0);
 
-	    Data s7("    +17");
-	    assert(s7.convertDouble() == 17);
+            Data s7("    +17");
+            assert(s7.convertDouble() == 17);
 
-	    Data s8("    -17");
-	    assert(s8.convertDouble() == -17);
+            Data s8("    -17");
+            assert(s8.convertDouble() == -17);
 
-	    Data s9("    --17");
-	    assert(s9.convertDouble() == 0);
+            Data s9("    --17");
+            assert(s9.convertDouble() == 0);
          }
 
          {
             Data s1(".");
             assert(s1.convertDouble() == 0);
-            
+
             Data s2("12.12foo");
             assert(s2.convertDouble() == 12.12);
-            
+
             Data s3("12.12");
             assert(s3.convertDouble() == 12.12);
 
             Data s4(".foo");
             assert(s4.convertDouble() == 0);
 
-	    Data s5("     .");
-	    assert(s5.convertDouble() == 0);
+            Data s5("     .");
+            assert(s5.convertDouble() == 0);
 
-	    Data s6("    +.");
-	    assert(s6.convertDouble() == 0);
+            Data s6("    +.");
+            assert(s6.convertDouble() == 0);
 
-	    Data s6a("    -.");
-	    assert(s6a.convertDouble() == 0);
+            Data s6a("    -.");
+            assert(s6a.convertDouble() == 0);
 
-	    Data s7("    +17.17");
-	    assert(s7.convertDouble() == 17.17);
+            Data s7("    +17.17");
+            assert(s7.convertDouble() == 17.17);
 
-	    Data s8("    -17.17");
-	    assert(s8.convertDouble() == -17.17);
+            Data s8("    -17.17");
+            assert(s8.convertDouble() == -17.17);
 
-	    Data s9("    -17.17foo");
-	    assert(s9.convertDouble() == -17.17);
+            Data s9("    -17.17foo");
+            assert(s9.convertDouble() == -17.17);
 
-	    Data s10("    --17.17");
-	    assert(s10.convertDouble() == 0);
+            Data s10("    --17.17");
+            assert(s10.convertDouble() == 0);
 
-	    Data s11("    -0000.017");
-	    assert(s11.convertDouble() == -0.017);
+            Data s11("    -0000.017");
+            assert(s11.convertDouble() == -0.017);
 
-	    Data s12(".017");
-	    assert(s12.convertDouble() == 0.017);
+            Data s12(".017");
+            assert(s12.convertDouble() == 0.017);
 
-	    Data s13("    .017");
-	    assert(s13.convertDouble() == 0.017);
+            Data s13("    .017");
+            assert(s13.convertDouble() == 0.017);
 
-	    Data s14("    +.017");
-	    assert(s14.convertDouble() == 0.017);
+            Data s14("    +.017");
+            assert(s14.convertDouble() == 0.017);
 
-	    Data s15("    -.017");
-	    assert(s15.convertDouble() == -0.017);
+            Data s15("    -.017");
+            assert(s15.convertDouble() == -0.017);
 
          }
-
+#endif
          {
             Data s;
             s = "some text";
@@ -1079,6 +1080,7 @@ class TestData
             assert(Data('c') == "c");
          }
 
+#ifndef RESIP_FIXED_POINT
          {
             assert(Data(0.21344) == "0.2134");
             assert(Data(0.21347) == "0.2135");
@@ -1088,7 +1090,7 @@ class TestData
             assert(Data(-123454.21344, Data::FiveDigitPrecision) == "-123454.21344");
             assert(Data(-123454.21344, Data::SevenDigitPrecision) == "-123454.21344");
          }
-      
+#endif      
          {
             Data empt;
             Data empt1;

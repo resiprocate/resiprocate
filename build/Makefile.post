@@ -98,7 +98,7 @@ CFLAGS += $(INCLUDE_LIST) $(DEFINE_LIST)
 OBJ = obj.$(TARGET_NAME)
 BIN = bin.$(TARGET_NAME)
 
-.PHONY : all code clean default $(BIN) $(OBJ) prefs full verify fakepre
+.PHONY : all code clean default $(BIN) $(OBJ) prefs full verify fakepre 
 
 SRC += $(SRC_$(OSCLASS))
 
@@ -182,6 +182,7 @@ cleanall: clean
 distclean: cleanall
 	-rm -rf *.db .dependlibs
 
+
 $(BIN):
 	-@ $(TOOLS)/mkbuildlinks $(BIN) $(ROOT)/.make_prefs
 ifdef CODE_SUBDIRS
@@ -191,11 +192,14 @@ endif
 $(OBJ):
 	-@ $(TOOLS)/mkbuildlinks $(OBJ) $(ROOT)/.make_prefs
 
-
 ifeq ($(CXXFLAGS),$(shell test -f $(OBJ)/cxxflags && cat $(OBJ)/cxxflags))
 else
-.PHONY: $(OBJ)/cflags $(OBJ)/cxxflags
+.PHONY: $(OBJ)/cxxflags
+endif
 
+ifeq ($(CFLAGS),$(shell test -f $(OBJ)/cflags && cat $(OBJ)/cflags))
+else
+.PHONY: $(OBJ)/cflags 
 endif
 
 
@@ -226,8 +230,7 @@ endif
 # build executables
 $(BIN)/%: $(OBJ)/%.o $(OBJS)  $(EXTRAS)  .dependlibs
 	$(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS)
-	-@ test -f $(patsubst $(BIN)/%,%,$@) && /bin/rm -f $(patsubst $(BIN)/%,%,$@)
-	-@ test -h $(patsubst $(BIN)/%,%,$@) || ln -s $@ $(patsubst $(BIN)/%,%,$@)
+	-@/bin/rm -f $(patsubst $(BIN)/%,%,$@) && ln -s $@ $(patsubst $(BIN)/%,%,$@)
 
 # these rules build dependency files in the cases that need them.
 
@@ -281,6 +284,8 @@ $(OBJ)/$(strip $(TARGET_LIBRARY)).a: $(OBJS) $(OTHERLIBS)
 	-@ test -f $@ && /bin/rm $@
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
+#	$(LINKER) $(LDFLAGS) -o dummy $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS) $(OTHERLIBS)
+
 
 $(OBJ)/$(strip $(TARGET_LIBRARY)).so: $(OBJS) $(OTHERLIBS)
 	-@ test -f $@ && /bin/rm $@
@@ -305,8 +310,8 @@ install: all
 	install -d $(DESTDIR)$(INSTALL_PREFIX)/lib
 	install $(OBJ)/$(TARGET_LIBRARY).$(LIBSUFFIX) $(INSTALL_LIBDIR)/$(TARGET_LIBRARY).$(LIBSUFFIX)
 	install -d $(INSTALL_INCDIR)
-	install *.h* $(INSTALL_INCDIR)
-	@ for subdir in $(CODE_SUBDIRS) ;  do ( install -d $(INSTALL_INCDIR)/$$subdir ; install $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
+	install -m 644 *.h* $(INSTALL_INCDIR)
+	@ for subdir in $(CODE_SUBDIRS) ;  do ( install -d $(INSTALL_INCDIR)/$$subdir ; install -m 644 $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
 endif
 endif
 

@@ -1,6 +1,7 @@
 #include <cppunit/extensions/TestSetUp.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 TestSetUp::TestSetUp( Test *test ) : TestDecorator( test ) 
 {
@@ -28,4 +29,4 @@ TestSetUp::run( TestResult *result )
 }
 
 
-} //  namespace CppUnit
+CPPUNIT_NS_END

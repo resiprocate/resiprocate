@@ -6,12 +6,12 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
-#include <cppunit/ui/mfc/TestRunner.h>
+#include <cppunit/ui/mfc/MfcTestRunner.h>
 
 /*! \brief MFC test runner (DEPRECATED)
  * \ingroup ExecutingTest
  * \deprecated Use CppUnit::MfcUi::TestRunner instead.
  */
-typedef CppUnit::MfcUi::TestRunner TestRunner;
+typedef CPPUNIT_NS::MfcTestRunner TestRunner;
 
 #endif  // CPPUNIT_MSVC_TESTRUNNER_H

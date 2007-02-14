@@ -80,7 +80,21 @@ class MasterProfile : public UserProfile
       ///Set this to allow the Registration Server to accept registration requests that contain 
       ///a To Tag.
       virtual bool& allowBadRegistrationEnabled();
-      virtual const bool allowBadRegistrationEnabled() const;      
+      virtual const bool allowBadRegistrationEnabled() const;  
+
+      ///Set this to include the RequestURI in merge request detection.
+      ///*!*!*!*!*!*! RED FLASHING LIGHT *!*!*!*!*!*! 
+      ///When false, DUM implements the policy that all RURIs that arrive are equivalent,
+      ///so if a request forks and arives here with different RURIs, we reject all but one
+      ///of them as merged requests. This makes sense for single-line endpoints.  Nodes
+      ///responsible for multiple simultaneous resources (like gateways, media-servers,
+      ///B2BUAs, etc) need to set this to true. Applications like multi-line business
+      ///phones will want to carefully consider the edge case of a request that forks
+      ///to more than one line - if you want only one line to ring, leave this false.
+      ///If you want them all to ring, set it to true.
+      
+      virtual bool& checkReqUriInMergeDetectionEnabled();
+      virtual const bool checkReqUriInMergeDetectionEnabled() const;
 
    private:
       virtual UserProfile* clone() const;
@@ -96,7 +110,8 @@ class MasterProfile : public UserProfile
       bool mValidateContentEnabled;
       bool mValidateContentLanguageEnabled;
       bool mValidateAcceptEnabled;
-      bool mAllowBadRegistrationEnabled;      
+      bool mAllowBadRegistrationEnabled;    
+      bool mCheckReqUriInMergeDetectionEnabled;
 };
    
 }

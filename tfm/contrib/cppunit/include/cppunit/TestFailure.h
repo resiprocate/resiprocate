@@ -4,7 +4,8 @@
 #include <cppunit/Portability.h>
 #include <string>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 class Exception;
 class SourceLine;
@@ -38,8 +39,6 @@ public:
   virtual bool isError() const;
 
   virtual std::string failedTestName() const;
-  
-  virtual std::string toString() const;
 
   virtual TestFailure *clone() const;
 
@@ -49,11 +48,11 @@ protected:
   bool m_isError;
 
 private: 
-      //TestFailure( const TestFailure &other ); 
-      TestFailure &operator =( const TestFailure& other ); 
+  TestFailure( const TestFailure &other ); 
+  TestFailure &operator =( const TestFailure& other ); 
 };
 
 
-} // namespace CppUnit
+CPPUNIT_NS_END
 
 #endif // CPPUNIT_TESTFAILURE_H

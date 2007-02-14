@@ -2,13 +2,14 @@
 #define CPPUNIT_TESTCASE_H
 
 #include <cppunit/Portability.h>
-#include <cppunit/Test.h>
+#include <cppunit/TestLeaf.h>
 #include <cppunit/TestAssert.h>
 #include <cppunit/TestFixture.h>
 #include <string>
 
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 class TestResult;
 
@@ -23,30 +24,23 @@ class TestResult;
  * You are expected to subclass TestCase is you need to write a class similiar
  * to TestCaller.
  */
-class CPPUNIT_API TestCase : public Test,
+class CPPUNIT_API TestCase : public TestLeaf,
                              public TestFixture
 {
 public:
 
-    TestCase( std::string Name );
-    //! \internal
+    TestCase( const std::string &name );
+
     TestCase();
+
     ~TestCase();
     
     virtual void run(TestResult *result);
-    virtual int countTestCases() const;
-    std::string getName() const;
-    std::string toString() const;
 
-    //! FIXME: what is this for?
-    virtual TestResult *run();
-    
-protected:
+    std::string getName() const;
+
     //! FIXME: this should probably be pure virtual.
     virtual void runTest();
-
-    //! Create TestResult for the run(void) method.
-    TestResult *defaultResult();
     
 private:
     TestCase( const TestCase &other ); 
@@ -56,6 +50,6 @@ private:
     const std::string m_name;
 };
 
-} // namespace CppUnit
+CPPUNIT_NS_END
 
 #endif // CPPUNIT_TESTCASE_H 

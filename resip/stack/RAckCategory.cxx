@@ -21,16 +21,16 @@ using namespace std;
 RAckCategory::RAckCategory(HeaderFieldValue* hfv, Headers::Type type)
    : ParserCategory(hfv, type), 
      mMethod(UNKNOWN), 
-     mRSequence(-1),
-     mCSequence(-1) 
+     mRSequence(0),
+     mCSequence(0) 
 {}
 
 RAckCategory::RAckCategory() 
    : ParserCategory(), 
      mMethod(UNKNOWN), 
      mUnknownMethodName(getMethodName(UNKNOWN)),
-     mRSequence(-1),
-     mCSequence(-1) 
+     mRSequence(0),
+     mCSequence(0) 
 {}
 
 RAckCategory::RAckCategory(const RAckCategory& rhs)
@@ -97,28 +97,28 @@ RAckCategory::unknownMethodName() const
    return mUnknownMethodName;
 }
 
-int& 
+unsigned int& 
 RAckCategory::rSequence()
 {
    checkParsed(); 
    return mRSequence;
 }
 
-int 
+unsigned int 
 RAckCategory::rSequence() const
 {
    checkParsed(); 
    return mRSequence;
 }
 
-int& 
+unsigned int& 
 RAckCategory::cSequence()
 {
    checkParsed(); 
    return mCSequence;
 }
 
-int 
+unsigned int 
 RAckCategory::cSequence() const
 {
    checkParsed(); 
@@ -130,10 +130,10 @@ RAckCategory::parse(ParseBuffer& pb)
 {
    const char* anchorPtr;
    pb.skipWhitespace();
-   mRSequence = pb.integer();
+   mRSequence = pb.uInt32();
 
    pb.skipWhitespace();
-   mCSequence = pb.integer();
+   mCSequence = pb.uInt32();
 
    anchorPtr = pb.skipWhitespace();
    pb.skipNonWhitespace();

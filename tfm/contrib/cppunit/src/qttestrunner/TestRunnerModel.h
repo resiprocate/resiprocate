@@ -8,6 +8,7 @@
 
 #include <cppunit/Test.h>
 #include <cppunit/TestListener.h>
+#include <qlist.h>
 #include <qobject.h>
 #include <qthread.h>
 #include "TestFailureInfo.h"
@@ -27,20 +28,20 @@ class TestRunnerThread;
  * TestResult. 
  */
 class TestRunnerModel : public QObject,
-                        private CppUnit::TestListener,
+                        private CPPUNIT_NS::TestListener,
                         private TestRunnerModelThreadInterface
 {
   Q_OBJECT
 public:
   /*! Constructs a TestRunnerModel object.
    */
-  TestRunnerModel( CppUnit::Test *rootTest );
+  TestRunnerModel( CPPUNIT_NS::Test *rootTest );
 
   /*! Destructor.
    */
   virtual ~TestRunnerModel();
 
-  CppUnit::Test *rootTest();
+  CPPUNIT_NS::Test *rootTest();
 
   int numberOfTestCase();
   int numberOfTestCaseFailure();
@@ -57,18 +58,18 @@ signals:
   void numberOfTestCaseFailureChanged( int numberOfFailure );
   void failureAdded( TestFailureInfo *failure );
   void failuresCleared();
-  void testRunStarted( CppUnit::Test *runningTest,
-                       CppUnit::TestResult *result );
+  void testRunStarted( CPPUNIT_NS::Test *runningTest,
+                       CPPUNIT_NS::TestResult *result );
   void testRunFinished();
 
 public slots:
-  void resetTestReportCounterFor( CppUnit::Test *testToRun );
+  void resetTestReportCounterFor( CPPUNIT_NS::Test *testToRun );
 
   /*! Request to run the specified test.
    * Returns immedialty. If a test is already running, then
    * the run request is ignored.
    */
-  void runTest( CppUnit::Test *testToRun );
+  void runTest( CPPUNIT_NS::Test *testToRun );
 
   /*! Request to stop running test.
    * This methods returns immediately. testRunFinished() signal
@@ -84,13 +85,13 @@ private:
   void operator =( const TestRunnerModel &copy );
 
   /// Called from the TestRunnerThread.
-  void startTest( CppUnit::Test *test );
+  void startTest( CPPUNIT_NS::Test *test );
 
   /// Called from the TestRunnerThread.
-  void addFailure( const CppUnit::TestFailure &failure );
+  void addFailure( const CPPUNIT_NS::TestFailure &failure );
   
   /// Called from the TestRunnerThread.
-  void endTest( CppUnit::Test *test );
+  void endTest( CPPUNIT_NS::Test *test );
 
   /// Called from the TestRunnerThread.
   void addFailureInfo( TestFailureInfo *failure );
@@ -134,13 +135,13 @@ private:
 
 
   QMutex _lock;
-  CppUnit::Test *_rootTest;
+  CPPUNIT_NS::Test *_rootTest;
   int _numberOfTestCase;
   int _numberOfTestCaseRun;
   int _numberOfTestCaseFailure;
   QList<TestFailureInfo> _failures;
   TestRunnerThread *_runnerThread;
-  CppUnit::TestResult *_result;
+  CPPUNIT_NS::TestResult *_result;
 };
 
 

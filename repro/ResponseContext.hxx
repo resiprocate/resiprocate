@@ -206,6 +206,7 @@ class ResponseContext
 
       std::list<std::list<resip::Data> > mTransactionQueueCollection;
 
+
    private:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
@@ -245,7 +246,6 @@ class ResponseContext
       bool isDuplicate(const repro::Target* target) const;
       
       resip::SipMessage mBestResponse;
-      bool mForwardedFinalResponse;
       int mBestPriority;
       bool mSecure;
 

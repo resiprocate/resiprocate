@@ -4,6 +4,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/CpimContents.hxx" // vk
 #include "resip/stack/SipFrag.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
@@ -14,6 +15,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
+#include "rutil/DnsUtil.hxx"
 
 #include "tfm/DialogSet.hxx"
 #include "tfm/PortAllocator.hxx"
@@ -36,6 +38,7 @@ boost::shared_ptr<resip::SipMessage> TestSipEndPoint::nil;
 resip::Uri TestSipEndPoint::NoOutboundProxy;
 
 TestSipEndPoint::IdentityMessageConditioner TestSipEndPoint::identity;
+TestSipEndPoint::IdentityRawConditioner TestSipEndPoint::raw_identity;
 
 TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
                                  const Uri& contactUrl,
@@ -106,16 +109,18 @@ TestSipEndPoint::TestSipEndPoint(const Uri& contactUrl,
    DebugLog(<< "TestSipEndPoint::TestSipEndPoint contact: " << mContact);
    if (hasStack)
    {
+      resip::IpVersion version = (DnsUtil::isIpV6Address(interfaceObj) ? V6 : V4);
+
       if (!contactUrl.exists(p_transport) ||
           (contactUrl.param(p_transport) == Tuple::toData(UDP)))
       {
          //CerrLog(<< "transport is UDP " << interfaceObj);
-         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, StunDisabled, interfaceObj);
+         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), version, StunDisabled, interfaceObj);
       }
       else if (contactUrl.param(p_transport) == Tuple::toData(TCP))
       {
          //CerrLog(<< "transport is TCP " << interfaceObj);
-         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), V4, interfaceObj);
+         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), version, interfaceObj);
       }
 /*
       else if (contactUrl.param(p_transport) == Tuple::toData(Transport::TLS))
@@ -173,7 +178,7 @@ TestSipEndPoint::setTransport(Transport* transport)
 }
 
 void 
-TestSipEndPoint::send(shared_ptr<SipMessage>& msg)
+TestSipEndPoint::send(shared_ptr<SipMessage>& msg, RawConditionerFn func)
 {
    const Tuple* useTuple = 0;
 
@@ -285,9 +290,11 @@ TestSipEndPoint::send(shared_ptr<SipMessage>& msg)
    
    DebugLog (<< "encoded=" << encoded.c_str());
 
+   resip::Data toWrite = func(encoded);
+   
    if (useTuple)
    {
-      useTuple->transport->send(*useTuple, encoded, "bogus");
+      useTuple->transport->send(*useTuple, toWrite, "bogus");
    }
    else
    {
@@ -295,7 +302,7 @@ TestSipEndPoint::send(shared_ptr<SipMessage>& msg)
       Resolver r(uri);
       assert (!r.mNextHops.empty());
       
-      mTransport->send(r.mNextHops.front(), encoded, "bogus");
+      mTransport->send(r.mNextHops.front(), toWrite, "bogus");
    }
 }
 
@@ -817,6 +824,12 @@ TestSipEndPoint::IdentityMessageConditioner::operator()(boost::shared_ptr<resip:
    return msg;
 }
 
+resip::Data 
+TestSipEndPoint::IdentityRawConditioner::operator()(const resip::Data& input)
+{
+   return input;
+}
+
 TestSipEndPoint::ChainConditions::ChainConditions(MessageConditionerFn fn1, 
                                                   MessageConditionerFn fn2)
    : mFn1(fn1),
@@ -829,6 +842,19 @@ TestSipEndPoint::ChainConditions::operator()(boost::shared_ptr<resip::SipMessage
 {
    msg = mFn2(msg);
    return mFn1(msg);
+}
+
+TestSipEndPoint::ChainRawConditions::ChainRawConditions(RawConditionerFn fn1, 
+                                                  RawConditionerFn fn2)
+   : mFn1(fn1),
+     mFn2(fn2)
+{
+}
+
+resip::Data
+TestSipEndPoint::ChainRawConditions::operator()(const resip::Data& input)
+{
+   return mFn1(mFn2(input));
 }
 
 TestSipEndPoint::SaveMessage::SaveMessage(boost::shared_ptr<resip::SipMessage>& msgPtr)
@@ -849,7 +875,8 @@ TestSipEndPoint::MessageAction::MessageAction(TestSipEndPoint& from,
    : mEndPoint(from),
      mTo(to),
      mMsg(),
-     mConditioner(TestSipEndPoint::identity)                 
+     mConditioner(TestSipEndPoint::identity),
+     mRawConditioner(TestSipEndPoint::raw_identity)     
 {
 }
 
@@ -859,15 +886,21 @@ TestSipEndPoint::MessageAction::setConditioner(MessageConditionerFn conditioner)
    mConditioner = ChainConditions(conditioner, mConditioner);
 }
 
+void 
+TestSipEndPoint::MessageAction::setRawConditioner(RawConditionerFn conditioner)
+{
+   mRawConditioner = ChainRawConditions(conditioner, mRawConditioner);
+}
+
 void
 TestSipEndPoint::MessageAction::operator()() 
 { 
    mMsg = go(); 
    if (mMsg.get())
    {
-      boost::shared_ptr<SipMessage> conditioned(mConditioner(mMsg));  
+      boost::shared_ptr<SipMessage> conditioned(mConditioner(mMsg));
       DebugLog(<< "sending: " << conditioned->brief());
-      mEndPoint.send(conditioned);
+      mEndPoint.send(conditioned,mRawConditioner);
    }
 }
 
@@ -988,7 +1021,8 @@ TestSipEndPoint::RawSend::RawSend(TestSipEndPoint* from,
                                   const resip::Data& rawText)
    : mEndPoint(*from),
      mTo(to),
-     mRawText(rawText)
+     mRawText(rawText),
+     mRawConditioner(TestSipEndPoint::raw_identity)
 {}
 
 void
@@ -1007,7 +1041,14 @@ void
 TestSipEndPoint::RawSend::go()
 {
    Tuple target(mTo.uri().host(), mTo.uri().port(), TCP);
+   mRawText=mRawConditioner(mRawText);
    mEndPoint.mTransport->send(target, mRawText, 0);
+}
+
+void
+TestSipEndPoint::RawSend::setRawConditioner(RawConditionerFn conditioner)
+{
+   mRawConditioner = ChainRawConditions(conditioner, mRawConditioner);
 }
 
 resip::Data
@@ -1081,9 +1122,26 @@ TestSipEndPoint::Subscribe::operator()()
 }
 
 void 
-TestSipEndPoint::Subscribe::operator()(boost::shared_ptr<Event> event) 
+TestSipEndPoint::Subscribe::operator()(boost::shared_ptr<Event> event)
 {
-   go(); 
+   if (! mEndPoint.getDialog())
+   {
+      // subscribe creating a dialog from an incoming request, as opposed to the normal 1xx, 2xx response to INVITE.
+      // The test we want to achieve is:
+      // --INV-->, <--SUB--, <--1xx--, <--2xx--, --ACK-->, --200(SUB)-->, etc...
+      SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
+      if (sipEvent)
+      {
+         shared_ptr<SipMessage> request = sipEvent->getMessage();
+         if (request && request->isRequest())
+         {
+            // Create the dialog by making a dummy response.
+            shared_ptr<SipMessage> dummy = mEndPoint.makeResponse(*request, 180);
+         }
+      }
+   }
+
+   go();
 }
 
 void
@@ -1239,8 +1297,29 @@ TestSipEndPoint::message(const TestUser& endPoint, const Data& text)
    return new Request(this, endPoint.getAddressOfRecord(), resip::MESSAGE, body);
 }
 
+// vk
 TestSipEndPoint::Request*
-TestSipEndPoint::message(const resip::Uri& target, const Data& text)
+TestSipEndPoint::message(const NameAddr& target, const Data& text, const messageType contentType)
+{
+   if (contentType == messageCpim)
+   {
+     CpimContents* cpim = new CpimContents;
+     cpim->text() = text;
+     boost::shared_ptr<resip::Contents> body(cpim);
+     return new Request(this, target.uri(), resip::MESSAGE, body);
+   }
+   else // if (contentType == textPlain)
+   {
+     PlainContents* plain = new PlainContents;
+     plain->text() = text;
+     boost::shared_ptr<resip::Contents> body(plain);
+     return new Request(this, target.uri(), resip::MESSAGE, body);
+   }
+}
+// end - vk
+
+TestSipEndPoint::Request*
+TestSipEndPoint::message(const Uri& target, const Data& text)
 {
    PlainContents* plain = new PlainContents;
    plain->text() = text;
@@ -1253,6 +1332,14 @@ TestSipEndPoint::message(const resip::Uri& target, const boost::shared_ptr<resip
 {
    return new Request(this, target, resip::MESSAGE, contents);
 }
+
+// vk
+TestSipEndPoint::Request*
+TestSipEndPoint::options(const Uri& url)
+{
+   return new Request(this, url, resip::OPTIONS);
+}
+// end - vk
 
 TestSipEndPoint::Retransmit::Retransmit(TestSipEndPoint* endPoint, 
                                         boost::shared_ptr<resip::SipMessage>& msg)
@@ -1323,7 +1410,8 @@ TestSipEndPoint::closeTransport()
 TestSipEndPoint::MessageExpectAction::MessageExpectAction(TestSipEndPoint& from)
    : mEndPoint(from),
      mMsg(),
-     mConditioner(TestSipEndPoint::identity)                 
+     mConditioner(TestSipEndPoint::identity),
+     mRawConditioner(TestSipEndPoint::raw_identity)
 {
 }
 
@@ -1345,7 +1433,7 @@ TestSipEndPoint::MessageExpectAction::operator()(boost::shared_ptr<Event> event)
    if (mMsg != 0)
    {
       DebugLog(<< "sending: " << mMsg->brief());
-      mEndPoint.send(mMsg);
+      mEndPoint.send(mMsg,mRawConditioner);
    }
 }
 
@@ -1353,6 +1441,12 @@ void
 TestSipEndPoint::MessageExpectAction::setConditioner(MessageConditionerFn conditioner)
 {
    mConditioner = ChainConditions(conditioner, mConditioner);
+}
+
+void 
+TestSipEndPoint::MessageExpectAction::setRawConditioner(RawConditionerFn conditioner)
+{
+   mRawConditioner = ChainRawConditions(conditioner, mRawConditioner);
 }
 
 TestSipEndPoint::RawReply::RawReply(TestSipEndPoint& from,
@@ -1400,6 +1494,209 @@ TestSipEndPoint::send300(std::set<resip::NameAddr> alternates)
    return new Send300(*this,alternates);
 }
 
+// vk
+
+// 301
+
+TestSipEndPoint::Send301::Send301(TestSipEndPoint & endPoint, std::set<resip::NameAddr> alternates)
+   : MessageExpectAction(endPoint),
+     mAlternates(alternates),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send301::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 301);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send301(std::set<resip::NameAddr> alternates)
+{
+   return new Send301(*this, alternates);
+}
+
+// 400
+
+TestSipEndPoint::Send400::Send400(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send400::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 400);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send400()
+{
+   return new Send400(*this);
+}
+
+// 407
+
+TestSipEndPoint::Send407::Send407(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send407::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 407);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send407()
+{
+   return new Send407(*this);
+}
+
+// 408
+
+TestSipEndPoint::Send408::Send408(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send408::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 408);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send408()
+{
+   return new Send408(*this);
+}
+
+// 410
+
+TestSipEndPoint::Send410::Send410(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send410::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 410);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send410()
+{
+   return new Send410(*this);
+}
+
+// 482
+
+TestSipEndPoint::Send482::Send482(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send482::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 482);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send482()
+{
+   return new Send482(*this);
+}
+
+// 483
+
+TestSipEndPoint::Send483::Send483(TestSipEndPoint & endPoint)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send483::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   return mEndPoint.makeResponse(*msg, 483);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send483()
+{
+   return new Send483(*this);
+}
+
+
+// 500
+
+TestSipEndPoint::Send500WithRetryAfter::Send500WithRetryAfter(TestSipEndPoint & endPoint, int retryAfter)
+   : MessageExpectAction(endPoint),
+     mRetryAfter(retryAfter),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send500WithRetryAfter::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 500);
+   response->header(h_RetryAfter).value() = mRetryAfter;
+   // response->header(h_RetryAfter).comment() = "Service Unavailable";
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send500WithRetryAfter(int retryAfter)
+{
+   return new Send500WithRetryAfter(*this, retryAfter);
+}
+
+
+// 503
+
+TestSipEndPoint::Send503WithRetryAfter::Send503WithRetryAfter(TestSipEndPoint & endPoint, int retryAfter)
+   : MessageExpectAction(endPoint),
+     mRetryAfter(retryAfter),
+     mEndPoint(endPoint)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Send503WithRetryAfter::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   assert (msg->isRequest());
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 503);
+   response->header(h_RetryAfter).value() = mRetryAfter;
+   // response->header(h_RetryAfter).comment() = "Service Unavailable";
+   return response;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send503WithRetryAfter(int retryAfter)
+{
+   return new Send503WithRetryAfter(*this, retryAfter);
+}
+
+// end - vk
 
 TestSipEndPoint::Send302::Send302(TestSipEndPoint & endPoint)
    : MessageExpectAction(endPoint),
@@ -1526,8 +1823,7 @@ TestSipEndPoint::Send401::go(boost::shared_ptr<resip::SipMessage> msg)
 
    Auth auth;
    auth.scheme() = "Digest";
-   Data timestamp((unsigned int)(Timer::getTimeMs()/1000));
-   auth.param(p_nonce) = Helper::makeNonce(*msg, timestamp);
+   auth.param(p_nonce) = Random::getCryptoRandomHex(8);
    auth.param(p_algorithm) = "MD5";
    auth.param(p_realm) = "localhost";
    auth.param(p_qopOptions) = "auth";
@@ -1561,9 +1857,9 @@ TestSipEndPoint::Send200ToRegister::go(boost::shared_ptr<resip::SipMessage> msg)
 
    // check whether we need to remove bindings
    bool bExpires = false;
-   if( msg->header(h_Contacts).front().param(p_expires) == 0 )
+   if( msg->header(h_Contacts).front().exists(p_expires) && msg->header(h_Contacts).front().param(p_expires) == 0 )
       bExpires = true;
-   if( msg->header(h_Expires).value() == 0 )
+   if( ! bExpires && msg->exists(h_Expires) && msg->header(h_Expires).value() == 0 )
       bExpires = true;
 
    if( !bExpires )
@@ -1578,7 +1874,10 @@ TestSipEndPoint::Send200ToRegister::go(boost::shared_ptr<resip::SipMessage> msg)
    // add rport and received to via
    if( mUseContact )
    {
-      response->header(h_Vias).front().param(p_received) = mContact.uri().host();
+      if (! mContact.uri().host().empty())
+         response->header(h_Vias).front().param(p_received) = mContact.uri().host();
+      else
+         response->header(h_Vias).front().remove(p_received);
       response->header(h_Vias).front().param(p_rport).port() = mContact.uri().port();
    }
 
@@ -1666,7 +1965,14 @@ TestSipEndPoint::Respond::go(boost::shared_ptr<resip::SipMessage> msg)
    {
       boost::shared_ptr<resip::SipMessage> invite;
       invite = mEndPoint.getReceivedInvite(msg->header(resip::h_CallId));
-      return mEndPoint.makeResponse(*invite, mCode);
+      if (invite == shared_ptr<SipMessage>())
+      {
+        return mEndPoint.makeResponse(*msg, mCode);
+      }
+      else
+      {
+        return mEndPoint.makeResponse(*invite, mCode);
+      }
    }
 }
 
@@ -1689,12 +1995,18 @@ TestSipEndPoint::Answer::go(boost::shared_ptr<resip::SipMessage> msg)
    boost::shared_ptr<resip::SipMessage> invite;                         
    invite = mEndPoint.getReceivedInvite(msg->header(resip::h_CallId));  
    boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*invite, 200);
-   const resip::SdpContents* sdp;
+   
+   const resip::SdpContents* sdp=0;
    if( mSdp.get() )
+   {
       sdp = dynamic_cast<const resip::SdpContents*>(mSdp.get());
+      response->setContents(sdp);
+   }
    else
-      sdp = dynamic_cast<const resip::SdpContents*>(invite->getContents());
-   response->setContents(sdp);
+   {
+      //sdp = dynamic_cast<const resip::SdpContents*>(invite->getContents());
+   }
+
    return response;
 }                                                                           
 
@@ -1708,6 +2020,47 @@ TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::answer(const boost::shared_ptr<resip::SdpContents>& sdp)
 {
    return new Answer(*this, sdp);
+}
+
+TestSipEndPoint::AnswerTo::AnswerTo(
+   TestSipEndPoint& endPoint,
+   const boost::shared_ptr<resip::SipMessage>& msg,
+   boost::shared_ptr<resip::SdpContents> sdp
+) :
+   MessageAction(endPoint, Uri()),
+   mMsg(msg),
+   mSdp(sdp)
+{}
+
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::AnswerTo::go()
+{
+   boost::shared_ptr<resip::SipMessage> invite;
+   invite = mEndPoint.getReceivedInvite(mMsg->header(resip::h_CallId));
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*invite, 200);
+   const resip::SdpContents* sdp;
+   if( mSdp.get() )
+      sdp = dynamic_cast<const resip::SdpContents*>(mSdp.get());
+   else
+      sdp = dynamic_cast<const resip::SdpContents*>(invite->getContents());
+   response->setContents(sdp);
+   return response;
+}
+
+resip::Data
+TestSipEndPoint::AnswerTo::toString() const
+{
+   return mEndPoint.getName() + ".answer()";
+}
+
+
+TestSipEndPoint::MessageAction*
+TestSipEndPoint::answerTo(
+   const boost::shared_ptr<resip::SipMessage>& invite,
+   boost::shared_ptr<resip::SdpContents> sdp
+)
+{
+   return new AnswerTo(*this, invite, sdp);
 }
 
 TestSipEndPoint::MessageExpectAction* 
@@ -1744,8 +2097,12 @@ TestSipEndPoint::Ring183::go(boost::shared_ptr<resip::SipMessage> msg)
       bool required = msg->exists(h_Requires) && msg->header(h_Requires).find(Token(Symbols::C100rel));
       bool supported = msg->exists(h_Supporteds) && msg->header(h_Supporteds).find(Token(Symbols::C100rel));
 
-      if (mReliable && (!required || !supported) )
+      if ( mReliable && (!required && !supported) )
       {
+         InfoLog (<< "Supported header: " << Inserter(msg->header(h_Supporteds))
+                  << " : " 
+                  << msg->header(h_Supporteds).find(Token(Symbols::C100rel)));
+
          throw AssertException("Trying to send reliable provisional when UAC doesn't support it",
                                __FILE__, __LINE__);
       }
@@ -1880,6 +2237,14 @@ TestSipEndPoint::send202()
    return new Send202(*this);
 }
 
+// vk
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::send200()
+{
+   return new Send200(*this);
+}
+// end - vk
+
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::send100()
 {
@@ -1904,11 +2269,33 @@ TestSipEndPoint::send513()
    return new Send513(*this);
 }
 
+// vk
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send501()
+{
+   return new Send501(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send502()
+{
+   return new Send502(*this);
+}
+// end- vk
+
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::send504()
 {
    return new Send504(*this);
 }
+
+// vk
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::send506()
+{
+   return new Send506(*this);
+}
+// end- vk
 
 TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::send600()
@@ -1986,6 +2373,109 @@ TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::ack(const boost::shared_ptr<resip::SdpContents>& sdp)
 {
    return new Ack(*this, sdp);
+}
+
+TestSipEndPoint::AckNewTid::AckNewTid(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mSdp(sdp)
+{
+}
+
+shared_ptr<SipMessage>
+TestSipEndPoint::AckNewTid::go(shared_ptr<SipMessage> response)
+{
+   assert(response->isResponse());
+   int code = response->header(h_StatusLine).responseCode();
+   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
+   assert (invite->header(h_RequestLine).getMethod() == INVITE);
+
+   shared_ptr<SipMessage> ack;
+
+   if (code == 200)
+   {
+      DebugLog(<< "Constructing ack against 200 using dialog.");
+      DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
+      assert (dialog);
+      DebugLog(<< *dialog);
+      // !dlb! should use contact from 200?
+      ack.reset(dialog->makeAck(*invite));
+      if( mSdp.get() )
+         ack->setContents(mSdp.get());
+   }
+   else
+   {
+      DebugLog(<<"Constructing failure ack.");
+      ack.reset(Helper::makeFailureAck(*invite, *response));
+   }
+   
+   ack->header(h_Vias).front().param(p_branch).reset();
+   
+   return ack;
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::ackNewTid()
+{
+   return new AckNewTid(*this);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::ackNewTid(const boost::shared_ptr<resip::SdpContents>& sdp)
+{
+   return new AckNewTid(*this, sdp);
+}
+
+TestSipEndPoint::AckOldTid::AckOldTid(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mSdp(sdp)
+{
+}
+
+shared_ptr<SipMessage>
+TestSipEndPoint::AckOldTid::go(shared_ptr<SipMessage> response)
+{
+   assert(response->isResponse());
+   int code = response->header(h_StatusLine).responseCode();
+   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
+   assert (invite->header(h_RequestLine).getMethod() == INVITE);
+
+   shared_ptr<SipMessage> ack;
+
+   if (code == 200)
+   {
+      DebugLog(<< "Constructing ack against 200 using dialog.");
+      DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
+      assert (dialog);
+      DebugLog(<< *dialog);
+      // !dlb! should use contact from 200?
+      ack.reset(dialog->makeAck(*invite));
+      if( mSdp.get() )
+         ack->setContents(mSdp.get());
+   }
+   else
+   {
+      DebugLog(<<"Constructing failure ack.");
+      ack.reset(Helper::makeFailureAck(*invite, *response));
+   }
+   
+   resip::Data oldTid(invite->header(h_Vias).front().param(p_branch).getTransactionId());
+
+   ack->header(h_Vias).front().param(p_branch).reset(oldTid);
+   return ack;
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::ackOldTid()
+{
+   return new AckOldTid(*this);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::ackOldTid(const boost::shared_ptr<resip::SdpContents>& sdp)
+{
+   return new AckOldTid(*this, sdp);
 }
 
 #if 0
@@ -2624,45 +3114,50 @@ TestSipEndPoint::process(FdSet& fdset)
    {
       DebugLog(<< "Caught: " << e);
       {
-         if (getSequenceSet())
+         boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+         if (sset)
          {
             Data msg;
             {
                DataStream str(msg);
                str << e;
             }
-            getSequenceSet()->globalFailure(msg);
+            sset->globalFailure(msg);
          }
       }
    }
    catch (resip::BaseException& e)
    {
       DebugLog (<< "Uncaught VOCAL exception: " << e << "...ignoring");
-      if (getSequenceSet())
+      
+      boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+      if (sset)
       {
          Data msg;
          {
             DataStream str(msg);
             str << e;
          }
-         getSequenceSet()->globalFailure(msg);
+         sset->globalFailure(msg);
       }
    }
    catch (std::exception& e)
    {
       DebugLog (<< "Uncaught std::exception exception: " << e.what() << "...ignoring");
-      if (getSequenceSet())
-      {
-         getSequenceSet()->globalFailure(e.what());
-      }
 
+      boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+      if (sset)
+      {
+         sset->globalFailure(e.what());
+      }
    }
    catch (...)
    {
       DebugLog (<< "Uncaught unknown exception ");
-      if (getSequenceSet())
+      boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+      if (sset)
       {
-         getSequenceSet()->globalFailure("Uncaught unknown exception ");
+         sset->globalFailure("Uncaught unknown exception ");
       }
    }
 }
@@ -2797,9 +3292,10 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
       DebugLog(<<"Unknown message type: " << *msg);
       throw GlobalFailure("Unknown msg type", __FILE__, __LINE__);
    }
-   if (getSequenceSet())
+   boost::shared_ptr<SequenceSet> sset(getSequenceSet());
+   if (sset)
    {
-      getSequenceSet()->enqueue(event);
+      sset->enqueue(event);
    }
    else
    {
@@ -2949,6 +3445,20 @@ condition(TestSipEndPoint::MessageConditionerFn fn, TestSipEndPoint::MessageActi
 }
 
 TestSipEndPoint::MessageAction*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, TestSipEndPoint::MessageAction* action)
+{
+   action->setRawConditioner(fn);
+   return action;
+}
+
+TestSipEndPoint::RawSend*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, TestSipEndPoint::RawSend* raw)
+{
+   raw->setRawConditioner(fn);
+   return raw;
+}
+
+TestSipEndPoint::MessageAction*
 save(boost::shared_ptr<resip::SipMessage>& msgPtr,
      TestSipEndPoint::MessageAction* action)
 {
@@ -2966,6 +3476,13 @@ TestSipEndPoint::MessageExpectAction*
 condition(TestSipEndPoint::MessageConditionerFn fn, TestSipEndPoint::MessageExpectAction* action)
 {
    action->setConditioner(fn);
+   return action;
+}
+
+TestSipEndPoint::MessageExpectAction*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, TestSipEndPoint::MessageExpectAction* action)
+{
+   action->setRawConditioner(fn);
    return action;
 }
 
@@ -3083,6 +3600,31 @@ compose(TestSipEndPoint::MessageConditionerFn fn4,
         TestSipEndPoint::MessageConditionerFn fn1)
 {
    return compose(fn4, compose(fn3, compose(fn2, fn1)));
+}
+
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1)
+{
+   return TestSipEndPoint::ChainRawConditions(fn2, fn1);
+}
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn3,
+        TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1)
+{
+   return rawcompose(fn3, rawcompose(fn2, fn1));
+}
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn4,
+        TestSipEndPoint::RawConditionerFn fn3,
+        TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1)
+{
+   return rawcompose(fn4, rawcompose(fn3, rawcompose(fn2, fn1)));
 }
 
 

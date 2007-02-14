@@ -91,8 +91,16 @@ class DnsStub : public ExternalDnsHandler
       };
 
       DnsStub(const NameserverList& additional = EmptyNameserverList,
-              AfterSocketCreationFuncPtr socketFunc = 0);      
+              AfterSocketCreationFuncPtr socketFunc = 0);
       ~DnsStub();
+
+      // call this method before you create SipStack if you'd like to change the
+      // default DNS lookup timeout and number of retries.
+      static void setDnsTimeoutAndTries(int timeoutInSec, int tries)
+      {
+         mDnsTimeout = timeoutInSec;
+         mDnsTries = tries;
+      }
 
       void setResultTransform(ResultTransform*);
       void removeResultTransform();
@@ -373,6 +381,9 @@ class DnsStub : public ExternalDnsHandler
       ListenerMap mListenerMap;
 
       std::vector<Data> mEnumSuffixes; // where to do enum lookups
+
+      static int mDnsTimeout; // in seconds
+      static int mDnsTries;
 };
 
 typedef DnsStub::Protocol Protocol;

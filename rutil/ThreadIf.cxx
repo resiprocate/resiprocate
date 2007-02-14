@@ -43,9 +43,6 @@ threadWrapper( void* threadParm )
    ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
 
    assert( t );
-//#if defined(WIN32) // No longer required since Random will now initialize once per thread
-//   srand(unsigned(time(0)) ^ unsigned(GetCurrentThreadId()) ^ unsigned(GetCurrentProcessId()));
-//#endif
    t->thread();
 #if defined(WIN32)
 #ifdef _WIN32_WCE
@@ -163,6 +160,19 @@ ThreadIf::join()
 
    mId = 0;
 }
+
+void
+ThreadIf::detach()
+{
+#if !defined(WIN32)
+   pthread_detach(mId);
+#else
+   CloseHandle(mThread);
+   mThread = 0;
+#endif
+   mId = 0;
+}
+
 #if !defined(WIN32)
 ThreadIf::Id
 ThreadIf::selfId()

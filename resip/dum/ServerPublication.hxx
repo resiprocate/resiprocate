@@ -44,8 +44,8 @@ class ServerPublication : public BaseUsage
       const Data mEventType;
       const Data mDocumentKey;
       Helper::ContentsSecAttrs mLastBody;
-      int mTimerSeq;
-      int mExpires;
+      unsigned int mTimerSeq;
+      UInt32 mExpires;
 };
 
 }

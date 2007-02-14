@@ -25,14 +25,13 @@
 
 #ifdef WIN32
 // !cj! TODO would be nice to remove this 
-#  pragma warning(disable : 4996)
-#  include <errno.h>
-#  include <winsock2.h>
-#  include <io.h>
+#  ifndef __GNUC__
+#    pragma warning(disable : 4996)
+#  endif
+#define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
-#  include <winbase.h>
+#undef WIN32_LEAN_AND_MEAN
 #  include <errno.h>
-#  include <winsock2.h>
 #  include <io.h>
 #ifdef UNDER_CE
 #include "wince/WceCompat.hxx"
@@ -84,8 +83,12 @@ namespace resip
 {
 
 #if defined(WIN32) || defined(__QNX__)
+#ifndef strcasecmp
 #  define strcasecmp(a,b)    stricmp(a,b)
+#endif
+#ifndef strncasecmp
 #  define strncasecmp(a,b,c) strnicmp(a,b,c)
+#endif
 #endif
 
 #if defined(__QNX__) || defined(__sun) || defined(WIN32)

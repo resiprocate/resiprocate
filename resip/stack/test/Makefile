@@ -5,7 +5,12 @@ CONTRIB = ../../../contrib
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIP RUTIL ARES OPENSSL PTHREAD POPT
+ifeq ($(USE_DTLS), yes)
+PACKAGES += DTLS_SHIM 
+TESTPROGRAMS += testshim.cxx
+endif
+
+PACKAGES += RESIP RUTIL ARES OPENSSL PTHREAD POPT OPENSIGCOMP
 
 ifeq ($(USE_SSL), yes)
 TESTPROGRAMS += makeSelfCert.cxx \
@@ -13,8 +18,11 @@ TESTPROGRAMS += makeSelfCert.cxx \
 		testTls.cxx 
 endif
 
+
 TESTPROGRAMS += \
-SipTortureTests.cxx \
+testIdentity.cxx \
+testEmptyHfv.cxx \
+RFC4475TortureTests.cxx \
 limpc.cxx \
 test503Generator.cxx \
 testAppTimer.cxx \
@@ -44,6 +52,7 @@ testResponses.cxx \
 testRlmi.cxx \
 testSdp.cxx \
 testSelect.cxx \
+testSelectInterruptor.cxx \
 testServer.cxx \
 testSipFrag.cxx \
 testSipMessage.cxx \

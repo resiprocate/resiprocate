@@ -60,6 +60,27 @@ main(int argc, char** argv)
       Pidf pc(&hfv, type);
       assert(pc.getNumTuples() == 1);
    }
+
+   //Test namespace support
+   {
+
+      Data txt ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" CRLF
+                  "<pr:presence xmlns:pr=\"urn:ietf:params:xml:ns:pidf\">" CRLF
+                  "    <pr:tuple>" CRLF
+                  "       <pr:status>" CRLF
+                  "           <pr:basic>open</pr:basic>" CRLF
+                  "           <pr:contact priority=\"0\">sip:jason_AT_example.com@london.gloo.net</pr:contact>" CRLF
+                  "           <pr:note>test</pr:note>" CRLF
+                  "        </pr:status>" CRLF
+                  "    </pr:tuple>" CRLF
+                  "</pr:presence>");
+
+      HeaderFieldValue hfv(txt.data(), txt.size());
+      Mime type("application", "pidf+xml");
+      Pidf pc(&hfv, type);
+      pc.checkParsed();
+      assert(pc.getNumTuples() == 1);
+   }
    {
       // http://www.imppwg.org/ml-archive/IMPP-WG/200204/msg00094.html
 
@@ -74,7 +95,7 @@ main(int argc, char** argv)
                      "            <im:im>busy</im:im>" CRLF
                      "            <myex:location>home</myex:location>" CRLF
                      "        </status>" CRLF
-                     "        <contact priority=\"2\">im:someone@mobilecarrier.net</contact>" CRLF
+                     "        <contact priority=\"0.2\">im:someone@mobilecarrier.net</contact>" CRLF
                      "        <note xml:lang=\"en\">Don't Disturb Please!</note>" CRLF
                      "        <note xml:lang=\"fr\">Ne dérangez pas, s'il vous plait</note>" CRLF
                      "        <timestamp>2001-10-27T16:49:29Z</timestamp>" CRLF
@@ -83,7 +104,7 @@ main(int argc, char** argv)
                      "        <status>" CRLF
                      "            <basic>open</basic>" CRLF
                      "        </status>" CRLF
-                     "        <contact priority=\"1\">mailto:someone@exapmle.com</contact>" CRLF
+                     "        <contact priority=\"0.1\">mailto:someone@example.com</contact>" CRLF
                      "    </tuple>" CRLF
                      "    <note xml:lang=\"en\">I'll be in Tokyo next week</note>" CRLF
                      "</presence>");
@@ -100,7 +121,11 @@ main(int argc, char** argv)
       assert(pc.getTuples()[0].attributes["display"] == "displayed");
       assert(pc.getTuples()[0].status);
       assert(pc.getTuples()[0].contact == "im:someone@mobilecarrier.net");
-      assert(pc.getTuples()[0].contactPriority == 2);
+#ifndef RESIP_FIXED_POINT
+      assert(pc.getTuples()[0].contactPriority == 0.2);
+#else
+      assert(pc.getTuples()[0].contactPriority == 200);
+#endif
       assert(pc.getTuples()[0].note == "Ne dérangez pas, s'il vous plait");
       assert(pc.getTuples()[0].timeStamp == "2001-10-27T16:49:29Z");
 
@@ -121,7 +146,7 @@ main(int argc, char** argv)
                       "            <im:im>busy</im:im>" CRLF
                       "            <myex:location>home</myex:location>" CRLF
                       "        </status>" CRLF
-                      "        <contact priority=\"2\">im:someone@mobilecarrier.net</contact>" CRLF
+                      "        <contact priority=\"0.2\">im:someone@mobilecarrier.net</contact>" CRLF
                       "        <note xml:lang=\"en\">Don't Disturb Please!</note>" CRLF
                       "        <note xml:lang=\"fr\">Ne dérangez pas, s'il vous plait</note>" CRLF
                       "        <timestamp>2001-10-27T16:49:29Z</timestamp>" CRLF
@@ -130,7 +155,7 @@ main(int argc, char** argv)
                       "        <status>" CRLF
                       "            <basic>open</basic>" CRLF
                       "        </status>" CRLF
-                      "        <contact priority=\"1\">mailto:someone@exapmle.com</contact>" CRLF
+                      "        <contact priority=\"0.1\">mailto:someone@exapmle.com</contact>" CRLF
                       "    </tuple>" CRLF
                       "    <note xml:lang=\"en\">I'll be in Tokyo next week</note>" CRLF
                       "</presence>");
@@ -151,7 +176,7 @@ main(int argc, char** argv)
                       "            <im:im>busy</im:im>" CRLF
                       "            <myex:location>home</myex:location>" CRLF
                       "        </status>" CRLF
-                      "        <contact priority=\"4\">im:someone@mobilecarrier.net</contact>" CRLF
+                      "        <contact priority=\"0.4\">im:someone@mobilecarrier.net</contact>" CRLF
                       "        <note xml:lang=\"en\">Don't Disturb Please!</note>" CRLF
                       "        <note xml:lang=\"fr\">Ne dérangez pas, s'il vous plait</note>" CRLF
                       "        <timestamp>2002-10-27T16:49:29Z</timestamp>" CRLF
@@ -160,7 +185,7 @@ main(int argc, char** argv)
                       "        <status>" CRLF
                       "            <basic>open</basic>" CRLF
                       "        </status>" CRLF
-                      "        <contact priority=\"1\">mailto:someone@exapmle.com</contact>" CRLF
+                      "        <contact priority=\"0.1\">mailto:someone@exapmle.com</contact>" CRLF
                       "    </tuple>" CRLF
                       "    <note xml:lang=\"en\">I'll be in Tokyo next week</note>" CRLF
                       "</presence>");
@@ -180,7 +205,11 @@ main(int argc, char** argv)
       assert(n->getTuples()[0].attributes["display"] == "displayed");
       assert(n->getTuples()[0].status);
       assert(n->getTuples()[0].contact == "im:someone@mobilecarrier.net");
-      assert(n->getTuples()[0].contactPriority == 2);
+#ifndef RESIP_FIXED_POINT
+      assert(n->getTuples()[0].contactPriority == 0.2);
+#else
+      assert(n->getTuples()[0].contactPriority == 200);
+#endif
       assert(n->getTuples()[0].note == "Ne dérangez pas, s'il vous plait");
       assert(n->getTuples()[0].timeStamp == "2001-10-27T16:49:29Z");
 
@@ -193,7 +222,11 @@ main(int argc, char** argv)
       assert(n->getTuples()[2].attributes["display"] == "displayed");
       assert(n->getTuples()[2].status);
       assert(n->getTuples()[2].contact == "im:someone@mobilecarrier.net");
-      assert(n->getTuples()[2].contactPriority == 4);
+#ifndef RESIP_FIXED_POINT
+      assert(n->getTuples()[2].contactPriority == 0.4);
+#else
+      assert(n->getTuples()[2].contactPriority == 400);
+#endif
       assert(n->getTuples()[2].note == "Ne dérangez pas, s'il vous plait");
       assert(n->getTuples()[2].timeStamp == "2002-10-27T16:49:29Z");
 
@@ -208,7 +241,7 @@ main(int argc, char** argv)
       tuple.status = true;
       tuple.id = "test id";
       tuple.contact = Data::from(aor);
-      tuple.contactPriority = 0.0;
+      tuple.contactPriority = (int)0;
       tuple.note = "Away";
       tuple.attributes["displayname"] = "displayName";
       tuple.attributes["status"] = "1";

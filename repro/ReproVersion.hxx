@@ -1,9 +1,29 @@
 #if !defined(REPROVERSION_HXX)
 #define REPROVERSION_HXX 
 
-extern const char* ReproVersion;
-extern const char* ReproBuildStamp;
+namespace repro 
+{
+  class VersionUtils
+  {
+  public:
+    static const VersionUtils & instance();
+    const std::string  & displayVersion() const;
+    const std::string  & buildStamp() const;
+    const std::string  & scmRevision() const;
+    const std::string  & releaseVersion() const;
+    const std::string  & buildHost() const;
+  private:
+    VersionUtils();
+    virtual ~VersionUtils();
+    std::string mBuildHost;
+    std::string mReleaseVersion;
+    std::string mScmRevision;
+    std::string mDisplayVersion;
+    std::string mBuildStamp;
+    static VersionUtils * sVU;
 
+  };
+};
 #endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -6,7 +6,7 @@
 #include "MockTestCase.h"
 
 
-class TestDecoratorTest : public CppUnit::TestFixture
+class TestDecoratorTest : public CPPUNIT_NS::TestFixture
 {
   CPPUNIT_TEST_SUITE( TestDecoratorTest );
   CPPUNIT_TEST( testCountTestCases );
@@ -31,7 +31,7 @@ private:
 
 private:
   MockTestCase *m_test;
-  CppUnit::TestDecorator *m_decorator;
+  CPPUNIT_NS::TestDecorator *m_decorator;
 };
 
 

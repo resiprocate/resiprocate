@@ -27,16 +27,16 @@ public:
    */
   virtual ~MostRecentTests();
 
-  void setTestToRun( CppUnit::Test *test );
-  CppUnit::Test *testToRun();
+  void setTestToRun( CPPUNIT_NS::Test *test );
+  CPPUNIT_NS::Test *testToRun();
 
   int testCount();
   QString testNameAt( int index );
-  CppUnit::Test *testAt( int index );
+  CPPUNIT_NS::Test *testAt( int index );
 
 signals:
   void listChanged();
-  void testToRunChanged( CppUnit::Test *testToRun );
+  void testToRunChanged( CPPUNIT_NS::Test *testToRun );
 
 public slots:
   void selectTestToRun( int index );
@@ -49,7 +49,7 @@ private:
   void operator =( const MostRecentTests &copy );
 
 private:
-  QList<CppUnit::Test> m_tests;
+  QList<CPPUNIT_NS::Test> m_tests;
 };
 
 

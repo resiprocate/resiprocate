@@ -218,7 +218,6 @@ WebAdmin::buildPage( const Data& uri,
       }
 #endif
 
-      assert( !dbA1.empty() );
       if ( !dbA1.empty() )
       {
          MD5Stream a1;
@@ -241,11 +240,10 @@ WebAdmin::buildPage( const Data& uri,
             return;
          }
       }
-      else
+      else //No A1, so we must assume this user does not exist.
       {
-         // !cj! TODO - fix this one up 
-         ErrLog( << "user " << pUser << " failed creation of inital account" );
-         assert(0);
+         setPage( "User does not exist.", pageNumber,401 );
+         return;         
       }
    }
       

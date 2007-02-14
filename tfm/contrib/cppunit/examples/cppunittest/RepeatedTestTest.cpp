@@ -4,7 +4,7 @@
 #include <cppunit/TestResult.h>
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION( RepeatedTestTest,
-                                       CppUnitTest::extensionSuiteName() );
+                                       extensionSuiteName() );
 
 
 RepeatedTestTest::RepeatedTestTest() :
@@ -22,7 +22,7 @@ void
 RepeatedTestTest::setUp()
 {
   m_test = new RunCountTest();
-  m_repeatedTest = new CppUnit::RepeatedTest( m_test, m_repeatCount );
+  m_repeatedTest = new CPPUNIT_NS::RepeatedTest( m_test, m_repeatCount );
 }
 
 
@@ -30,14 +30,13 @@ void
 RepeatedTestTest::tearDown()
 {
   delete m_repeatedTest;
-  delete m_test;
 }
 
 
 void 
 RepeatedTestTest::testRun()
 {
-  CppUnit::TestResult result;
+  CPPUNIT_NS::TestResult result;
   m_repeatedTest->run( &result );
 
   CPPUNIT_ASSERT_EQUAL( 17, m_test->m_runCount );

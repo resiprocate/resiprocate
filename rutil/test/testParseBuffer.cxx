@@ -399,18 +399,22 @@ main(int argc, char** argv)
       assert(pb.integer() == -17);
    }
 
+#ifndef WIN32
    {
       char buf[] = "2890844526";
       ParseBuffer pb(buf, strlen(buf));   
       assert(pb.unsignedInteger() == 2890844526UL);
    }
+#endif
 
+#ifndef RESIP_FIXED_POINT
    {
       char buf[] = "17.71";
       ParseBuffer pb(buf, strlen(buf));   
       float val = pb.floatVal();
       assert(val > 17.70 && val < 17.72);
    }
+#endif
 
    {
       char buf[] = "token another token";

@@ -58,7 +58,13 @@ endif
 ifeq ($(ARCH),i386)
 	CXXFLAGS += -march=i386
 endif
-
+ifeq ($(ARCH),x86_64)
+	CXXFLAGS += -march=x86-64
+ifeq ($(BUILD_SHARED_LIBS),yes)
+	CXXFLAGS += -fPIC
+	CFLAGS   += -fPIC
+endif
+endif
 #       LDFLAGS += -frepo
 #	CXXFLAGS += -D_REENTRANT -frepo
 	CXXFLAGS += -D_REENTRANT
@@ -125,13 +131,28 @@ ifeq ($(OSTYPE),Darwin)
 
     CXXFLAGS += -D_REENTRANT
     CFLAGS   += -D_REENTRANT
-
+    LDFLAGS  += -framework CoreFoundation -framework SystemConfiguration 
     INCDIRS += /sw/include /opt/local/include
     LIBDIRS += /sw/lib /opt/local/lib
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1
 
+endif
+
+
+############################ MinGW ##################################
+ifeq ($(OSTYPE),MinGW)
+    CXXFLAGS    += -D_WIN32_WINNT=0x0501
+    CFLAGS      += -D_WIN32_WINNT=0x0501
+    LDFLAGS     += -mconsole
+    LDLIBS_LAST += -lws2_32 -lIphlpapi
+
+#    We probably want to add these and remove the -lIphlpapi flag
+#    from above at some point. See rutil/WinCompat.cxx for details.
+
+#    CXXFLAGS    += -DNO_IPHLPAPI
+#    CFLAGS      += -DNO_IPHLPAPI
 endif
 
 

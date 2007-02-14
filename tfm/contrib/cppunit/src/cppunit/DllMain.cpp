@@ -3,6 +3,7 @@
 #define NOUSER
 #define NOKERNEL
 #define NOSOUND
+#define BLENDFUNCTION void    // for mingw & gcc
 
 #include <windows.h>
 

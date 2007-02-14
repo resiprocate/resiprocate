@@ -1037,7 +1037,7 @@ ServerInviteSession::startRetransmit1xxTimer()
    mCurrentRetransmit1xx = mDialog.mDialogSet.getUserProfile()->get1xxRetransmissionTime();  
    if(mCurrentRetransmit1xx > 0)
    {	
-      int seq = m1xx->header(h_CSeq).sequence();
+      unsigned int seq = m1xx->header(h_CSeq).sequence();
       mDum.addTimer(DumTimeout::Retransmit1xx, mCurrentRetransmit1xx, getBaseHandle(), seq);
    }
 }

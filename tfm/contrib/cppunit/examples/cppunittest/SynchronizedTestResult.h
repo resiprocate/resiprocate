@@ -4,7 +4,7 @@
 #include <cppunit/TestResultCollector.h>
 
 
-class SynchronizedTestResult : public CppUnit::TestResultCollector
+class SynchronizedTestResult : public CPPUNIT_NS::TestResultCollector
 {
 public:
 
@@ -16,7 +16,7 @@ public:
     virtual void unlocked() {}
   };
 
-  class ObservedSynchronizationObject : public CppUnit::SynchronizedObject::SynchronizationObject
+  class ObservedSynchronizationObject : public CPPUNIT_NS::SynchronizedObject::SynchronizationObject
   {
   public:
     ObservedSynchronizationObject( SynchronizationObjectListener *listener ) :

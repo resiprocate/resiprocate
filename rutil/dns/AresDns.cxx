@@ -4,10 +4,14 @@
 
 #include "rutil/dns/AresDns.hxx"
 #include "rutil/GenericIPAddress.hxx"
-#include "rutil/WinLeakCheck.hxx"
 
 #include "ares.h"
 #include "ares_dns.h"
+#include "ares_private.h"
+
+#include "rutil/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 #if !defined(USE_ARES)
 #error Must have ARES
@@ -21,9 +25,13 @@
 
 using namespace resip;
 
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
+
 int 
 AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
-              AfterSocketCreationFuncPtr socketfunc)   
+              AfterSocketCreationFuncPtr socketfunc,
+              int timeout,
+              int tries)   
 {
 #ifdef USE_IPV6
    int requiredCap = ARES_CAP_IPV6;
@@ -81,6 +89,22 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
    }
    else
    {
+      if (timeout > 0)
+      {
+         mChannel->timeout = timeout;
+      }
+
+      if (tries > 0)
+      {
+         mChannel->tries = tries;
+      }
+
+      DebugLog(<< "number of name servers found " << mChannel->nservers);
+      for (int i = 0; i < mChannel->nservers; ++i)
+      {
+         DebugLog(<< "name server " << DnsUtil::inet_ntop(mChannel->servers[i].addr));
+      }
+
       return Success;      
    }
 }

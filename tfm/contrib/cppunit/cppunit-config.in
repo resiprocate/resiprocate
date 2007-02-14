@@ -90,7 +90,7 @@ if test "$echo_libs" = "yes"; then
       if test @libdir@ != /usr/lib ; then
             my_linker_flags="-L@libdir@"
       fi
-      echo ${my_linker_flags} -lcppunit
+      echo ${my_linker_flags} -lcppunit @LIBADD_DL@
 fi      
 
 

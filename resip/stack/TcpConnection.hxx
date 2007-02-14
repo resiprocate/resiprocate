@@ -11,12 +11,13 @@ class Tuple;
 class TcpConnection : public Connection
 {
    public:
-      TcpConnection( const Tuple& who, Socket fd );
+      TcpConnection( const Tuple& who, Socket fd, Compression &compression);
       
       int read( char* buf, const int count );
       int write( const char* buf, const int count );
       virtual bool hasDataToRead(); // has data that can be read 
       virtual bool isGood(); // has valid connection
+      virtual bool isWritable();
       Data peerName();      
 };
  
