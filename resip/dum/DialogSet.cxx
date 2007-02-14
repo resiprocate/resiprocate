@@ -54,7 +54,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
 
 // UAS 
 DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
-   mMergeKey(request),
+   mMergeKey(request, dum.getMasterProfile()->checkReqUriInMergeDetectionEnabled()),
    mDialogs(),
    mCreator(0),
    mId(request),
@@ -72,9 +72,12 @@ DialogSet::DialogSet(const SipMessage& request, DialogUsageManager& dum) :
    assert(request.isRequest());
    assert(request.isExternal());
    mDum.mMergedRequests.insert(mMergeKey);
-   assert(mDum.mCancelMap.count(request.getTransactionId()) == 0);
    if (request.header(h_RequestLine).method() == INVITE)
    {
+      if(mDum.mCancelMap.count(request.getTransactionId()) != 0)
+      {
+         WarningLog ( << "An endpoint is using the same tid in multiple INVITE requests, ability to match CANCEL requests correctly may be comprimised, tid=" << request.getTransactionId() );
+      }
       mCancelKey = request.getTransactionId();
       mDum.mCancelMap[mCancelKey] = this;
    }
@@ -422,12 +425,12 @@ DialogSet::dispatch(const SipMessage& msg)
       }
       else
       {
-         DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << msg);
+         DebugLog (<< "Found matching dialog " << *dialog << " for " << endl << endl << msg);
       }
    }
    else
    {
-      StackLog (<< "No matching dialog for " << endl << msg);
+      StackLog (<< "No matching dialog for " << endl << endl << msg);
    }
    
    if (msg.isRequest())
@@ -692,11 +695,28 @@ DialogSet::dispatch(const SipMessage& msg)
 
       if (msg.isResponse())
       {
-         int code = msg.header(h_StatusLine).statusCode();
-         
-         if (!msg.exists(h_Contacts) && code > 100 && code < 200)
+         if( mCreator )
          {
-            InfoLog ( << "Cannot create a dialog, no Contact in 180." );
+            SharedPtr<SipMessage> lastRequest(mCreator->getLastRequest());
+            if( 0 != lastRequest.get() && !(lastRequest->header(h_CSeq) == msg.header(h_CSeq)))
+            {
+               InfoLog(<< "Cannot create a dialog, cseq does not match initial dialog request (illegal mid-dialog fork? see 3261 14.1).");
+               return;
+            }
+         }
+         else
+         {
+            ErrLog(<< "Can’t create a dialog, on a UAS response.");
+            return;
+         }
+
+         int code = msg.header(h_StatusLine).statusCode();
+
+         if (code > 100 && code < 200 && 
+             (!msg.exists(h_Contacts) ||
+              !msg.exists(h_To) || !msg.header(h_To).exists(p_tag)))
+         {
+            InfoLog ( << "Cannot create a dialog, no Contact or To tag in 1xx." );
             if (mDum.mDialogSetHandler)
             {
                mDum.mDialogSetHandler->onNonDialogCreatingProvisional(mAppDialogSet->getHandle(), msg);
@@ -711,7 +731,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
       }
 
-      DebugLog ( << "Creating a new Dialog from msg: " << msg);
+	  DebugLog ( << "mState == " << mState << " Creating a new Dialog from msg: " << std::endl << std::endl <<msg);
       try
       {
          // !jf! This could throw due to bad header in msg, should we catch and rethrow
@@ -749,7 +769,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
 
       assert(mState != WaitingToEnd);
-      DebugLog ( << "### Calling CreateAppDialog ### " << msg);
+	  DebugLog ( << "### Calling CreateAppDialog ###: " << std::endl << std::endl <<msg);
       AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
       dialog->mAppDialog = appDialog;
       appDialog->mDialog = dialog;
@@ -779,7 +799,7 @@ DialogSet::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 Dialog*
 DialogSet::findDialog(const DialogId id)
 {
-   DebugLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
+   StackLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
 
    DialogMap::iterator i = mDialogs.find(id);
    if (i == mDialogs.end())

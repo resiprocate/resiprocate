@@ -18,7 +18,7 @@
 #include "rutil/WinLeakCheck.hxx"
 
 // Remove warning about 'this' use in initiator list
-#if defined(WIN32)
+#if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 ) // using this in base member initializer list
 #endif
 
@@ -32,14 +32,15 @@ RequestContext::RequestContext(Proxy& proxy,
                                ProcessorChain& requestP,
                                ProcessorChain& responseP,
                                ProcessorChain& targetP) :
+   mHaveSentFinalResponse(false),
    mOriginalRequest(0),
    mCurrentEvent(0),
+   mAck200ToRetransmit(0),
    mRequestProcessorChain(requestP),
    mResponseProcessorChain(responseP),
    mTargetProcessorChain(targetP),
    mTransactionCount(1),
    mProxy(proxy),
-   mHaveSentFinalResponse(false),
    mTargetConnectionId(0),
    mResponseContext(*this),
    mTCSerial(0),
@@ -58,6 +59,8 @@ RequestContext::~RequestContext()
    }
    delete mCurrentEvent;
    mCurrentEvent = 0;
+   delete mAck200ToRetransmit;
+   mAck200ToRetransmit=0;
 }
 
 
@@ -81,6 +84,7 @@ RequestContext::process(resip::TransactionTerminated& msg)
 void
 RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 {
+   bool original = false;
    DebugLog (<< "process(SipMessage) " << *this);
 
    if (mCurrentEvent != mOriginalRequest)
@@ -94,26 +98,164 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
    { 
       assert(sip);
       mOriginalRequest=sip;
+      original = true;
 	  
 	  // RFC 3261 Section 16.4
-      fixStrictRouterDamage();
-      removeTopRouteIfSelf();
+      try
+      {
+         fixStrictRouterDamage();
+         removeTopRouteIfSelf();
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         InfoLog(<<"Parse failure Exception caught: " << e);
+         resip::SipMessage response;
+         Helper::makeResponse(response, *mOriginalRequest,400); 
+         response.header(h_StatusLine).reason()="Malformed header-field-value: " + e.getMessage();
+         sendResponse(response);
+         return;
+      }
+      catch(resip::BaseException& e)
+      {
+         ErrLog(<<"Exception caught: " << e);
+         resip::SipMessage response;
+         Helper::makeResponse(response, *mOriginalRequest,500); 
+         response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
+         sendResponse(response);
+         return;
+      }
    }
 
    Processor::processor_action_t ret=Processor::Continue;
    // if it's a CANCEL I need to call processCancel here 
    if (sip->isRequest())
    {
-      if (sip->header(h_RequestLine).method() == CANCEL)
+      DebugLog(<<"Got a request.");
+      // !bwc! Totally different handling for ACK.
+      if(sip->method()==ACK)
+      {
+         DebugLog(<<"This request is an ACK.");
+         // !bwc! This takes care of ACK/200 and stray ACK failure
+         // (ie, the ACK has its own transaction)
+         if(mOriginalRequest->method() == ACK)
+         {
+            DebugLog(<<"This ACK has its own tid.");
+
+            try
+            {
+               // !slg! look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
+               if((!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
+                   getProxy().isMyUri(sip->header(h_RequestLine).uri()))
+               {
+                  // !bwc! Someone sent an ACK with us in the Request-Uri, and no
+                  // Route headers (after we have removed ourself). We will never perform 
+                  // location service or retargeting on an ACK, and we shouldn't send 
+                  // it to ourselves.  So, just drop the thing.
+                  InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");            
+               }
+               // Note: mTopRoute is only populated if RemoteTopRouteIfSelf successfully removes the top route.
+               else if(!mTopRoute.uri().host().empty() || getProxy().isMyUri(sip->header(h_From).uri()))
+               {
+                  // Top most route is us, or From header uri is ours.  Note:  The From check is 
+                  // required to interoperate with endpoints that configure outbound proxy 
+                  // settings, and do not place the outbound proxy in a Route header.
+                  mResponseContext.cancelAllClientTransactions();
+                  forwardAck200(*mOriginalRequest);
+               }
+               else
+               {
+                  // !slg! Someone is using us to relay an ACK, but we are not the 
+                  // top-most route and the host in From isn't ours. Refusing to do so.
+                  InfoLog(<<"Top most route or From header are not ours.  We do not allow relaying ACKs.  Dropping it...");            
+               }
+            }
+            catch(resip::ParseBuffer::Exception&)
+            {
+               InfoLog(<<"Parse error processing ACK. Dropping it...");            
+            }
+
+            if(original)  // Only queue Ack200Done if this is the original request
+            {
+               DebugLog(<<"Posting Ack200DoneMessage");
+               // !bwc! This needs to have a timer attached to it. (We need to
+               // wait until all potential retransmissions of the ACK/200 have
+               // stopped. However, we must be mindful that we may receive a new,
+               // non-ACK transaction with the same tid during this time, and make
+               // sure we don't explode violently when this happens.)
+               mProxy.postMS(
+                  std::auto_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
+                  64*resip::Timer::T1);
+            }
+         }
+         else //This takes care of ACK/failure and malformed ACK/200
+         {
+            // !bwc! The stack should not be forwarding ACK/failure to the TU,
+            // nor should we be getting a bad ACK/200. (There is code further
+            // up that makes bad ACK/200 look like a new transaction, like it
+            // is supposed to be.)
+            // TODO Remove this code block entirely.
+            
+            DebugLog(<<"This ACK has the same tid as the original INVITE.");
+            DebugLog(<<"The reponse we sent back was a " 
+                  << mResponseContext.mBestResponse.header(h_StatusLine).statusCode());
+            // !bwc! Since this is not an ACK transaction, the stack will let
+            // us know when we need to clean up.
+            if(!mHaveSentFinalResponse)
+            {
+               // !bwc! Whoa, something went wrong here. We got an ACK, but we
+               // haven't sent back a final response. The stack shouldn't have
+               // allowed this through!
+               ErrLog(<<"Got an ACK, but haven't sent a final response. "
+                           "What happened here?");
+            }
+            else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() / 100 == 2)
+            {
+               InfoLog(<<"Got an ACK within an INVITE transaction, but our "
+                        "response was a 2xx. Someone didn't change their tid "
+                        "like they were supposed to...");
+               if(
+                  (
+                     sip->exists(h_Routes) && 
+                     !sip->header(h_Routes).empty()
+                  ) 
+                  ||
+                  (
+                     !getProxy().isMyUri(sip->header(h_RequestLine).uri()) && 
+                     (sip->header(h_From).isWellFormed() && getProxy().isMyUri(sip->header(h_From).uri())) 
+                  )
+                  )
+               {
+                  forwardAck200(*sip);
+               }
+            }
+            
+         }
+         
+         return;
+      }
+      
+      if (sip->method() == CANCEL)
       {
          mResponseContext.processCancel(*sip);
       }
       else
       {
-         ret = mRequestProcessorChain.process(*this);
+         try
+         {
+            ret = mRequestProcessorChain.process(*this);
+         }
+         catch(resip::BaseException& e)
+         {
+            SipMessage response;
+            Helper::makeResponse(response,*mOriginalRequest,500);
+            response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
+            ErrLog(<<"Exception caught: " << e);
+            sendResponse(response);
+         }
       }
       
-      if(ret!=Processor::WaitingForEvent)
+
+      if(ret!=Processor::WaitingForEvent && !mHaveSentFinalResponse)
       {
          // if target list is empty return a 480
          if (!mResponseContext.hasTargets())
@@ -124,7 +266,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                      << mOriginalRequest->header(h_RequestLine).uri() 
                      << " send 480");
             Helper::makeResponse(response, *mOriginalRequest, 480); 
-            mResponseContext.mForwardedFinalResponse=true;
             sendResponse(response);
          }
          else
@@ -133,7 +274,29 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             << mResponseContext.mCandidateTransactionMap.size() 
             << " candidates -> continue");
             
-            ret = mTargetProcessorChain.process(*this);
+            try
+            {
+               ret = mTargetProcessorChain.process(*this);
+            }
+            catch(resip::BaseException& e)
+            {
+               if(mResponseContext.hasActiveTransactions())
+               {
+                  // !bwc! Whoops. We may have just forwarded garbage upstream.
+                  // TODO is it appropriate to try to CANCEL here?
+                  ErrLog(<<"Server error caught after"
+                                 " request was forwarded. Exception was: "<<e);
+               }
+               else
+               {
+                  mResponseContext.clearCandidateTransactions();
+                  SipMessage response;
+                  Helper::makeResponse(response,*mOriginalRequest,500);
+                  response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
+                  ErrLog(<<"Exception caught: " << e);
+                  sendResponse(response);
+               }            
+            }
 
             if(ret != Processor::WaitingForEvent &&
                !mHaveSentFinalResponse && 
@@ -149,7 +312,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                            << "Sending a 500 response for this request:" 
                            << mOriginalRequest->header(h_RequestLine).uri() );
                   Helper::makeResponse(response, *mOriginalRequest, 500); 
-                  mResponseContext.mForwardedFinalResponse=true;
                   sendResponse(response);
                }
                else
@@ -158,7 +320,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   << " appears to have added Targets, but all of these Targets"
                   << " are already Terminated. Further, there are no candidate"
                   << " Targets. (Bad monkey?)");
-
                   // Send best response
                   mResponseContext.forwardBestResponse();
                }
@@ -172,7 +333,21 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       // Call handle Response if its a response
       
       Processor::processor_action_t ret = Processor::Continue;
-      ret = mResponseProcessorChain.process(*this);
+      try
+      {
+         ret = mResponseProcessorChain.process(*this);
+      }
+      catch(resip::ParseBuffer::Exception& e)
+      {
+         InfoLog(<<"Garbage in response; dropping message. " << e);
+         delete sip;
+         return;
+      }
+      catch(resip::BaseException& e)
+      {
+         ErrLog(<<"Exception thrown in response processor chain: " << e);
+         //!bwc! TODO what do we do here? Continue processing? Give up?
+      }
 
       // TODO
       // this is temporarily not allowed.  Allowing async requests in the
@@ -194,6 +369,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             if(mResponseContext.hasCandidateTransactions())
             {
                resip::SipMessage response;
+               Helper::makeResponse(response, *mOriginalRequest, 500); 
                // The last active transaction has ended, and the response processors
                // did not start any of the pending transactions.
                // Send a 500 response.
@@ -202,8 +378,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                        << " remaining. (Bad baboon?)"
                        << "Sending a 500 response for this request:" 
                        << mOriginalRequest->header(h_RequestLine).uri() );
-               Helper::makeResponse(response, *mOriginalRequest, 500); 
-               mResponseContext.mForwardedFinalResponse=true;
                sendResponse(response);
             }
             else
@@ -216,8 +390,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                mResponseContext.forwardBestResponse();
             }
          }
-         
-         return;
       }
    }
 }
@@ -228,20 +400,18 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 {
    DebugLog (<< "process(ApplicationMessage) " << *app);
 
-
    if (mCurrentEvent != mOriginalRequest)
    {
       delete mCurrentEvent;
    }
    mCurrentEvent = app.release();
 
-
    Ack200DoneMessage* ackDone = dynamic_cast<Ack200DoneMessage*>(mCurrentEvent);
    if (ackDone)
-     {
-       delete this;
-       return;
-     }
+   {
+      delete this;
+      return;
+   }
 
    TimerCMessage* tc = dynamic_cast<TimerCMessage*>(mCurrentEvent);
 
@@ -255,31 +425,39 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
       return;
    }
 
-
-
    ChainTraverser* ct=dynamic_cast<ChainTraverser*>(mCurrentEvent);
    
    if(ct)
    {
       Processor::ChainType type = ct->chainType();
       Processor::processor_action_t ret=Processor::Continue;
-      
+
       switch(type)
       {
          case Processor::REQUEST_CHAIN:
-            ret = mRequestProcessorChain.process(*this);
-            
-            if(ret != Processor::WaitingForEvent)
+            try
+            {
+               ret = mRequestProcessorChain.process(*this);
+            }
+            catch(resip::BaseException& e)
+            {
+               resip::SipMessage response;
+               Helper::makeResponse(response,*mOriginalRequest,500);
+               response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
+               ErrLog(<<"Exception caught: " << e);
+               sendResponse(response);            
+            }
+
+            if(ret != Processor::WaitingForEvent && !mHaveSentFinalResponse)
             {
                if (!mResponseContext.hasTargets())
                {
                   // make 480, send, dispose of memory
                   resip::SipMessage response;
+                  Helper::makeResponse(response, *mOriginalRequest, 480); 
                   InfoLog (<< *this << ": no targets for " 
                            << mOriginalRequest->header(h_RequestLine).uri() 
                            << " send 480");
-                  Helper::makeResponse(response, *mOriginalRequest, 480); 
-                  mResponseContext.mForwardedFinalResponse=true;
                   sendResponse(response);
                }
                else
@@ -287,8 +465,30 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                   InfoLog (<< *this << " there are " 
                   << mResponseContext.mCandidateTransactionMap.size() 
                   << " candidates -> continue");
-                  
-                  ret = mTargetProcessorChain.process(*this);
+
+                  try
+                  {
+                     ret = mTargetProcessorChain.process(*this);
+                  }
+                  catch(resip::BaseException& e)
+                  {
+                     if(mResponseContext.hasActiveTransactions())
+                     {
+                        // !bwc! Whoops. We may have just forwarded garbage upstream.
+                        // TODO is it appropriate to try to CANCEL here?
+                        ErrLog(<<"Server error caught after"
+                                       " request was forwarded. Exception was: "<<e);
+                     }
+                     else
+                     {
+                        mResponseContext.clearCandidateTransactions();
+                        resip::SipMessage response;
+                        Helper::makeResponse(response,*mOriginalRequest,500);
+                        response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
+                        ErrLog(<<"Exception caught: " << e);
+                        sendResponse(response);
+                     }            
+                  }
 
                   if(ret != Processor::WaitingForEvent &&
                      !mHaveSentFinalResponse && 
@@ -297,15 +497,14 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                      if(mResponseContext.hasCandidateTransactions())
                      {
                         resip::SipMessage response;
+                        Helper::makeResponse(response, *mOriginalRequest, 500); 
                         // Someone forgot to start any of the targets they just added.
                         // Send a 500 response
                         ErrLog( << "In RequestContext, request and target processor"
-                                << " chains have run, and we have some Candidate Targets,"
-                                << " but no active Targets. (Bad baboon?)"
-                                << "Sending a 500 response for this request:" 
-                                << mOriginalRequest->header(h_RequestLine).uri() );
-                        Helper::makeResponse(response, *mOriginalRequest, 500); 
-                        mResponseContext.mForwardedFinalResponse=true;
+                                 << " chains have run, and we have some Candidate Targets,"
+                                 << " but no active Targets. (Bad baboon?)"
+                                 << "Sending a 500 response for this request:" 
+                                 << mOriginalRequest->header(h_RequestLine).uri() );
                         sendResponse(response);
                      }
                      else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() != 408)
@@ -319,23 +518,20 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                         mResponseContext.forwardBestResponse();
                      }
                   }
-
                }
             }
-            
-
             break;
-         
+
          case Processor::RESPONSE_CHAIN:
             ret = mResponseProcessorChain.process(*this);
-            
+
             mTargetProcessorChain.process(*this);
             break;
-            
+
          case Processor::TARGET_CHAIN:
             ret = mTargetProcessorChain.process(*this);
             break;
-      
+
          default:
             ErrLog(<<"RequestContext " << getTransactionId() << " got a "
                      << "ProcessorMessage addressed to a non existent chain "
@@ -344,7 +540,20 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
    }
 }
 
+void
+RequestContext::forwardAck200(const resip::SipMessage& ack)
+{
+   if(!mAck200ToRetransmit)
+   {
+      mAck200ToRetransmit = new SipMessage(ack);
+      mAck200ToRetransmit->header(h_MaxForwards).value()--;
+      Helper::processStrictRoute(*mAck200ToRetransmit);
+      
+      mAck200ToRetransmit->header(h_Vias).push_front(Via());
+   }
 
+   mProxy.send(*mAck200ToRetransmit);
+}
 
 resip::SipMessage& 
 RequestContext::getOriginalRequest()
@@ -358,10 +567,18 @@ RequestContext::getOriginalRequest() const
    return *mOriginalRequest;
 }
 
-const resip::Data&
+resip::Data
 RequestContext::getTransactionId() const
 {
-   return mOriginalRequest->getTransactionId();
+   if(mOriginalRequest->mIsBadAck200)
+   {
+      static Data ack("ack");
+      return mOriginalRequest->getTransactionId()+ack;
+   }
+   else
+   {
+      return mOriginalRequest->getTransactionId();
+   }
 }
 
 resip::Message* 
@@ -413,28 +630,31 @@ RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,in
    mProxy.postMS(msg,seconds);
 }
 
-
 void
 RequestContext::sendResponse(const SipMessage& msg)
 {
    assert (msg.isResponse());
+   
 
-   // We can't respond to an ACK request - so just drop it and generate an Ack200DoneMessage so the request contexts
+   // We can't respond to an ACK request - so just drop it and generate an Ack200DoneMessage so the request context
    // gets cleaned up properly
-   if(mOriginalRequest->header(h_RequestLine).method() == ACK)
+   if(mOriginalRequest->method() == ACK)
    {
-      DebugLog(<<"Posting Ack200DoneMessage");
-      static Data ack("ack");
-      mProxy.post(new Ack200DoneMessage(getTransactionId()+ack));
+      ErrLog(<<"Posting Ack200DoneMessage: due to sendResponse(). This is probably a bug.");
+      mProxy.post(new Ack200DoneMessage(getTransactionId()));
    }
    else
    {
+      //!bwc! Provisionals are not final responses, and CANCEL/200 is not a final
+      //response in this context.
+      if (msg.header(h_StatusLine).statusCode()>199 && msg.method()!=CANCEL)
+      {
+         DebugLog(<<"Sending final response.");
+         mHaveSentFinalResponse=true;
+      }
       mProxy.send(msg);
    }
-   if (msg.header(h_StatusLine).statusCode()>199)
-   {
-      mHaveSentFinalResponse=true;
-   }
+   
 }
 
 //      This function assumes that if ;lr shows up in the

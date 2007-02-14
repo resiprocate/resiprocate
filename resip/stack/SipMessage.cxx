@@ -25,8 +25,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+bool SipMessage::checkContentLength=true;
+
 SipMessage::SipMessage(const Transport* fromWire)
-   : mIsExternal(fromWire != 0),
+   : mIsBadAck200(false),
+      mIsExternal(fromWire != 0),
      mTransport(fromWire),
      mStartLine(0),
      mContentsHfv(0),
@@ -34,6 +37,7 @@ SipMessage::SipMessage(const Transport* fromWire)
      mRFC2543TransactionId(),
      mRequest(false),
      mResponse(false),
+     mInvalid(false),
      mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0),
      mTlsDomain(Data::Empty)
@@ -72,6 +76,7 @@ SipMessage::operator=(const SipMessage& rhs)
    {
       this->cleanUp();
 
+      mIsBadAck200 = rhs.mIsBadAck200;
       mIsExternal = rhs.mIsExternal;
       mTransport = rhs.mTransport;
       mSource = rhs.mSource;
@@ -82,6 +87,8 @@ SipMessage::operator=(const SipMessage& rhs)
       mRFC2543TransactionId = rhs.mRFC2543TransactionId;
       mRequest = rhs.mRequest;
       mResponse = rhs.mResponse;
+      mInvalid = rhs.mInvalid;
+      mReason = rhs.mReason;
       mForceTarget = 0;
       mTlsDomain = rhs.mTlsDomain;
       
@@ -239,6 +246,62 @@ SipMessage::make(const Data& data,  bool isExternal)
    return msg;
 }
 
+void
+SipMessage::parseAllHeaders()
+{
+   for (int i = 0; i < Headers::MAX_HEADERS; i++)
+   {
+      ParserContainerBase* pc=0;
+      if(mHeaders[i])
+      {
+         ensureHeaders((Headers::Type)i,!Headers::isMulti((Headers::Type)i));
+         if(!(pc=mHeaders[i]->getParserContainer()))
+         {
+            pc = HeaderBase::getInstance((Headers::Type)i)->makeContainer(mHeaders[i]);
+            mHeaders[i]->setParserContainer(pc);
+         }
+      
+         pc->parseAll();
+      }
+   }
+
+   for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
+        i != mUnknownHeaders.end(); i++)
+   {
+      ParserContainerBase* scs=0;
+      if(!(scs=i->second->getParserContainer()))
+      {
+         scs=new ParserContainer<StringCategory>(i->second,Headers::RESIP_DO_NOT_USE);
+         i->second->setParserContainer(scs);
+      }
+      
+      scs->parseAll();
+   }
+   
+   assert(mStartLine);
+   ParserContainerBase* slc = 0;
+
+   if(!(slc=mStartLine->getParserContainer()))
+   {
+      if(mRequest)
+      {
+         slc=new ParserContainer<RequestLine>(mStartLine,Headers::NONE);
+      }
+      else if(mResponse)
+      {
+         slc=new ParserContainer<StatusLine>(mStartLine,Headers::NONE);
+      }
+      else
+      {
+         assert(0);
+      }
+      mStartLine->setParserContainer(slc);
+   }
+
+   slc->parseAll();
+   
+   getContents();
+}
 
 const Data& 
 SipMessage::getTransactionId() const
@@ -369,7 +432,8 @@ SipMessage::compute2543TransactionHash() const
 const Data&
 SipMessage::getRFC2543TransactionId() const
 {
-   if(!( exists(h_Vias) && header(h_Vias).front().exists(p_branch) &&
+   if(!( exists(h_Vias) && !header(h_Vias).empty() && 
+         header(h_Vias).front().exists(p_branch) &&
          header(h_Vias).front().param(p_branch).hasMagicCookie() ) )
    {
       if (mRFC2543TransactionId.empty())
@@ -462,6 +526,32 @@ SipMessage::isResponse() const
    return mResponse;
 }
 
+resip::MethodTypes
+SipMessage::method() const
+{
+   resip::MethodTypes res=UNKNOWN;
+   try
+   {
+      if(isRequest())
+      {
+         res=header(h_RequestLine).getMethod();
+      }
+      else if(isResponse())
+      {
+         res=header(h_CSeq).method();
+      }
+      else
+      {
+         assert(0);
+      }
+   }
+   catch(resip::ParseBuffer::Exception&)
+   {
+   }
+   
+   return res;
+}
+
 std::ostream&
 SipMessage::encodeBrief(std::ostream& str) const
 {
@@ -516,10 +606,17 @@ SipMessage::encodeBrief(std::ostream& str) const
       str << header(h_CSeq).unknownMethodName();
    }
 
-   if (exists(h_Contacts) && !header(h_Contacts).empty())
+   try
    {
-      str << contact;
-      str << header(h_Contacts).front().uri().getAor();
+      if (exists(h_Contacts) && !header(h_Contacts).empty())
+      {
+         str << contact;
+         str << header(h_Contacts).front().uri().getAor();
+      }
+   }
+   catch(resip::ParseBuffer::Exception&)
+   {
+      str << " MALFORMED CONTACT ";
    }
    
    str << slash;
@@ -730,9 +827,64 @@ SipMessage::setStartLine(const char* st, int len)
 }
 
 void 
-SipMessage::setBody(const char* start, int len)
+SipMessage::setBody(const char* start, UInt32 len)
 {
-   mContentsHfv = new HeaderFieldValue(start, len);
+   if(checkContentLength)
+   {
+      if(exists(h_ContentLength))
+      {
+         try
+         {
+            header(h_ContentLength).checkParsed();
+         }
+         catch(resip::ParseBuffer::Exception& e)
+         {
+            if(mInvalid)
+            {
+               mReason+=",";
+            }
+
+            mInvalid=true; 
+            mReason+="Malformed Content-Length";
+            InfoLog(<< "Malformed Content-Length. Ignoring. " << e);
+            header(h_ContentLength).value()=len;
+         }
+         
+         UInt32 contentLength=header(h_ContentLength).value();
+         
+         if(len > contentLength)
+         {
+            InfoLog(<< (len-contentLength) << " extra bytes after body. Ignoring these bytes.");
+         }
+         else if(len < contentLength)
+         {
+            InfoLog(<< "Content Length is "<< (contentLength-len) << " bytes larger than body!"
+                     << " (We are supposed to 400 this) ");
+
+            if(mInvalid)
+            {
+               mReason+=",";
+            }
+
+            mInvalid=true; 
+            mReason+="Bad Content-Length (larger than datagram)";
+            header(h_ContentLength).value()=len;
+            contentLength=len;
+                     
+         }
+         
+         mContentsHfv = new HeaderFieldValue(start,contentLength);
+      }
+      else
+      {
+         InfoLog(<< "Message has a body, but no Content-Length header.");
+         mContentsHfv = new HeaderFieldValue(start,len);
+      }
+   }
+   else
+   {
+      mContentsHfv = new HeaderFieldValue(start,len);
+   }
 }
 
 void
@@ -954,6 +1106,17 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
       }
       if (len)
       {
+         if(mHeaders[header]->size()==1 && !(Headers::isMulti(header)))
+         {
+            if(mInvalid)
+            {
+               mReason+=",";
+            }
+            mInvalid=true;
+            mReason+="Multiple values in single-value header ";
+            mReason += Headers::getHeaderName(header);
+            return;
+         }
          mHeaders[header]->push_back(new HeaderFieldValue(start, len));
       }
    }
@@ -988,6 +1151,12 @@ Data&
 SipMessage::getEncoded() 
 {
    return mEncoded;
+}
+
+Data&
+SipMessage::getCompartmentId() 
+{
+   return mCompartmentId;
 }
 
 RequestLine& 
@@ -1193,6 +1362,8 @@ defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
 defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
 defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03");
+defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
+defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
 defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
 defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
@@ -1226,13 +1397,13 @@ defineHeader(Subject, "Subject", StringCategory, "RFC 3261");
 defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
 defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
-defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
+defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
+defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
+defineHeader(MinExpires, "Min-Expires", Uint32Category, "RFC 3261");
+defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
-defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
+defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 
 defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
 defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
@@ -1370,6 +1541,8 @@ SipMessage::mergeUri(const Uri& source)
       h_ProxyRequires.merge(*this, source.embedded());
       h_Requires.merge(*this, source.embedded());
       h_Unsupporteds.merge(*this, source.embedded());
+      h_AnswerMode.merge(*this, source.embedded());
+      h_PrivAnswerMode.merge(*this, source.embedded());
 
       h_RSeq.merge(*this, source.embedded());
       h_RAck.merge(*this, source.embedded());

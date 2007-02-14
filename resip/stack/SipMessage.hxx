@@ -54,6 +54,9 @@ class SipMessage : public TransactionMessage
       virtual ~SipMessage();
 
       static SipMessage* make(const Data& buffer, bool isExternal = false);
+      void parseAllHeaders();
+      
+      static bool checkContentLength;
 
       class Exception : public BaseException
       {
@@ -91,7 +94,12 @@ class SipMessage : public TransactionMessage
 
       bool isRequest() const;
       bool isResponse() const;
-
+      bool isInvalid() const{return mInvalid;}
+      
+      resip::MethodTypes method() const;
+      
+      const resip::Data& getReason() const{return mReason;}
+      
       const RequestLine& 
       header(const RequestLineType& l) const;
 
@@ -142,6 +150,8 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
       defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
       defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03");
+      defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
+      defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
       defineMultiHeader(Accept, "Accept", Mime, "RFC 3261");
       defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
@@ -175,13 +185,13 @@ class SipMessage : public TransactionMessage
       defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261");
       defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261");
 
-      defineHeader(ContentLength, "Content-Length", IntegerCategory, "RFC 3261");
-      defineHeader(MaxForwards, "Max-Forwards", IntegerCategory, "RFC 3261");
-      defineHeader(MinExpires, "Min-Expires", IntegerCategory, "RFC 3261");
-      defineHeader(RSeq, "RSeq", IntegerCategory, "RFC 3261");
+      defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261");
+      defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261");
+      defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261");
+      defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3261");
 
 // !dlb! this one is not quite right -- can have (comment) after field value
-      defineHeader(RetryAfter, "Retry-After", IntegerCategory, "RFC 3261");
+      defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 
       defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261");
       defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028");
@@ -226,7 +236,7 @@ class SipMessage : public TransactionMessage
       // transport interface
       void setStartLine(const char* start, int len); 
 
-      void setBody(const char* start, int len); 
+      void setBody(const char* start, UInt32 len); 
       
       // add HeaderFieldValue given enum, header name, pointer start, content length
       void addHeader(Headers::Type header,
@@ -249,9 +259,15 @@ class SipMessage : public TransactionMessage
 
       void addBuffer(char* buf);
 
-      // returns the encoded buffer which was encoded by resolve()
-      // should only be called by the TransportSelector
+      // returns the encoded buffer which was encoded by
+      // TransportSelector::transmit()
+      // !!! should only be called by the TransportSelector !!!
       Data& getEncoded();
+
+      // returns the compartment ID which was computed by
+      // TransportSelector::transmit()
+      // !!! should only be called by the TransportSelector !!!
+      Data& getCompartmentId();
 
       UInt64 getCreatedTimeMicroSec() {return mCreatedTime;}
 
@@ -276,6 +292,8 @@ class SipMessage : public TransactionMessage
 
       void addOutboundDecorator(MessageDecorator *md){mOutboundDecorators.push_back(md);}
       void callOutboundDecorators(const Tuple &src, const Tuple &dest);
+
+      bool mIsBadAck200;
 
    protected:
       void cleanUp();
@@ -330,7 +348,11 @@ class SipMessage : public TransactionMessage
       mutable bool mRequest;
       mutable bool mResponse;
 
+      bool mInvalid;
+      resip::Data mReason;
+      
       Data mEncoded; // to be retransmitted
+      Data mCompartmentId; // for retransmissions
       UInt64 mCreatedTime;
 
       // used when next element is a strict router OR 

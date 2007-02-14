@@ -3,14 +3,15 @@
 
 #include <cppunit/extensions/TestFactory.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
   class Test;
 
   /*! \brief TestFactory for TestFixture that implements a static suite() method.
    * \see AutoRegisterSuite.
    */
-  template<typename TestCaseType>
+  template<class TestCaseType>
   class TestSuiteFactory : public TestFactory
   {
   public:
@@ -20,6 +21,7 @@ namespace CppUnit {
     }
   };
 
-}  // namespace CppUnit
+
+CPPUNIT_NS_END
 
 #endif  // CPPUNIT_EXTENSIONS_TESTSUITEFACTORY_H

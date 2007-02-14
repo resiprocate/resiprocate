@@ -46,14 +46,14 @@ ParserCategory* ExpiresCategory::clone() const
 }
 
 
-int& 
+UInt32& 
 ExpiresCategory::value() 
 {
    checkParsed(); 
    return mValue;
 }
 
-int
+UInt32
 ExpiresCategory::value() const 
 {
    checkParsed(); 
@@ -67,7 +67,7 @@ ExpiresCategory::parse(ParseBuffer& pb)
    const char *p = pb.position();
    if (!pb.eof() && isdigit(*p))
    {
-     mValue = pb.integer();
+     mValue = pb.uInt32();
    }
    else
    {

@@ -24,12 +24,37 @@ ifeq ($(OSTYPE),Solaris)
 PTHREAD_LDFLAGS := --thread
 endif
 
+# This is a bit dodgy: MinGW doesn't provide pthreads. Applications
+# are expected to use Windows threading constructs. So, to get
+# things to work, we need to completely undefine any PTHREAD
+# constructs under MinGW.
+ifeq ($(OSTYPE),MinGW)
+PTHREAD_LIBNAME :=
+PTHREAD_LDFLAGS :=
+endif
+
 ifeq ($(USE_SSL),yes)
 OPENSSL_LIBNAME := ssl crypto
 OPENSSL_LDFLAGS :=
-OPENSSL_INCLUDEDIRS := /usr/kerberos/include/
+OPENSSL_INCLUDEDIRS := 
 OPENSSL_LIBDIRS :=
 OPENSSL_DEFINES += USE_SSL
+
+ifeq ($(OSTYPE),MinGW)
+    MINGW_OPENSSL_DIR    := /c/openssl
+    OPENSSL_LIBNAME      := eay32
+    OPENSSL_INCLUDEDIRS  := $(MINGW_OPENSSL_DIR)/include
+    OPENSSL_LIBDIRS      := $(MINGW_OPENSSL_DIR)/lib/MinGW
+    OPENSSL_LDLIBS_LAST  := $(MINGW_OPENSSL_DIR)/lib/MinGW/ssleay32.a
+endif
+
+endif
+
+ifeq ($(USE_SIGCOMP),yes)
+    OPENSIGCOMP_LIBNAME     := opensigcomp
+    OPENSIGCOMP_LIBDIRS     := $(SIGCOMP_BASEDIR)/lib
+    OPENSIGCOMP_INCLUDEDIRS := $(SIGCOMP_BASEDIR)/include
+    OPENSIGCOMP_DEFINES     := USE_SIGCOMP USE_POSIX_LOCKING
 endif
 
 ifeq ($(USE_DTLS),yes)
@@ -39,6 +64,20 @@ endif
 # This is useful if you are not using openssl in the normal location 
 #OPENSSL_LDLIBS_LAST := /usr/local/ssl/lib/libssl.a /usr/local/ssl/lib/libcrypto.a
 #OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
+
+ifeq ($(USE_DTLS),yes)
+DTLS_WRAPPER_INCLUDEDIRS := $(ROOT)/dtls_wrapper
+DTLS_WRAPPER_LIBDIRS := $(ROOT)/dtls_wrapper/obj.$(TARGET_NAME)
+DTLS_WRAPPER_LIBNAME := dtls_wrapper
+
+DTLS_WRAPPER_DEPENDS := $(ROOT)/dtls_wrapper/obj.$(TARGET_NAME)/libdtls_wrapper.$(LIBSUFFIX)
+$(DTLS_WRAPPER_DEPENDS): 
+	cd $(ROOT)/dtls_wrapper; $(MAKE)
+
+OPENSSL_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/openssl/include
+OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl
+OPENSSL_LIBNAME = ssl crypto
+endif
 
 ifeq ($(USE_MYSQL),yes)
 MYSQL_LIBNAME :=  mysqlclient z m
@@ -73,13 +112,41 @@ DB4CXX_LIBNAME := db_cxx
 endif
 
 ifeq ($(OSTYPE),Darwin)
+# Darwin ports uses these directors, fink does not 
 DB4CXX_LIBDIRS += /opt/local/lib/db42
-# falling through for values of DB42_LIBNAME and DB4CXX_LIBNAME
+DB4CXX_INCLUDEDIRS += /opt/local/include
+DB42_LIBNAME := db-4.2
+DB4CXX_LIBNAME := db_cxx-4.2
+endif
+
+ifeq ($(OSTYPE),MinGW)
+MINGW_BDB_DIR       := $(ROOT)/contrib/db/build_win32
+DB42_INCLUDEDIRS    := $(MINGW_BDB_DIR)
+DB42_LIBDIRS        := $(MINGW_BDB_DIR)
+DB42_LIBNAME        := db-4.2
+DB42_DEPENDS        := $(MINGW_BDB_DIR)/lib$(DB42_LIBNAME).a
+DB4CXX_INCLUDEDIRS  := $(DB42_INCLUDEDIRS)
+DB4CXX_LIBDIRS      := $(DB42_LIBDIRS)
+DB4CXX_LIBNAME      := $(DB42_LIBNAME)
+DB4CXX_DEPENDS      := $(DB42_DEPENDS)
+$(MINGW_BDB_DIR)/%.a:
+	$(MAKE) -C $(MINGW_BDB_DIR) -f Makefile.MinGW $*.a
 endif
 
 ifndef DB42_LIBNAME
 DB42_LIBNAME := db-4.2
 DB4CXX_LIBNAME := db_cxx-4.2
+endif
+
+ifeq ($(OSTYPE),MinGW)
+    MINGW_PCRE_DIR    := $(ROOT)/contrib/pcre
+    PCRE_INCLUDEDIRS  := $(MINGW_PCRE_DIR)
+    PCRE_LIBDIRS      := $(MINGW_PCRE_DIR)
+    PCRE_LIBNAME      := pcreposix pcre
+    PCRE_DEPENDS      := $(MINGW_PCRE_DIR)/libpcreposix.a \
+                         $(MINGW_PCRE_DIR)/libpcre.a
+$(MINGW_PCRE_DIR)/%.a:
+	$(MAKE) -C $(MINGW_PCRE_DIR) -f Makefile.MinGW $*.a
 endif
 
 ifeq ($(USE_CURL),yes)
@@ -128,8 +195,21 @@ DEFINES += USE_IPV6
 endif
 
 ifeq ($(USE_POPT),yes)
-POPT_DEFINES := HAVE_POPT_H
-POPT_LIBNAME := popt
+  POPT_DEFINES := HAVE_POPT_H
+  POPT_LIBNAME := popt
+  ifeq ($(OSTYPE),MinGW)
+    MINGW_POPT_DIR    := $(ROOT)/contrib/popt/win32
+    POPT_INCLUDEDIRS  := $(MINGW_POPT_DIR)/include
+    POPT_LIBDIRS      := $(MINGW_POPT_DIR)/lib
+  endif
+endif
+
+ifeq ($(RESIP_FIXED_POINT),yes)
+DEFINES += RESIP_FIXED_POINT
+endif
+
+ifeq ($(PEDANTIC_STACK),yes)
+DEFINES += PEDANTIC_STACK
 endif
 
 TFMLIBS_INCLUDEDIRS := $(ROOT)/tfm/contrib/Netxx-0.3.2/include $(ROOT)/tfm/contrib $(ROOT)/tfm/contrib/cppunit/include
@@ -138,6 +218,13 @@ TFMLIBS_LIBNAME :=  Netxx boost_regex cppunit
 
 ifeq ($(OSTYPE),NetBSD)
 TFMLIBS_INCLUDEDIRS += /usr/pkg/include/boost-1_31
+endif
+
+ifeq ($(OSTYPE),MinGW)
+  MINGW_BOOST_DIR     := /c/Boost
+  TFMLIBS_INCLUDEDIRS += $(MINGW_BOOST_DIR)/include/boost-1_33_1
+  TFMLIBS_LIBNAME     := $(patsubst boost_regex, , $(TFMLIBS_LIBNAME))
+  TFMLIBS_LDLIBS_LAST := $(MINGW_BOOST_DIR)/lib/libboost_regex-mgw-s.lib
 endif
 
 ifndef SIPXBASE
@@ -149,8 +236,4 @@ SIPX_LIBDIRS := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.li
 SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack sipXport
 SIPX_DEFINES := __pingtel_on_posix__
 
-
-
-
-
-
+BOOSTSER_LIBNAME = boost_serialization boost_wserialization

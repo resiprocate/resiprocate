@@ -21,7 +21,8 @@ SequenceSet::SequenceSet()
      mFileName(),
      mLineNumber(0),
      mExplanation(),
-     mReset(false)
+     mReset(false),
+     mHandle(this)
 {}
 
 SequenceSet::~SequenceSet()
@@ -52,6 +53,7 @@ SequenceSet::clear()
       {
          delete *i;
       }
+      mSequences.clear();      
    }
 }
      
@@ -139,7 +141,7 @@ SequenceSet::preLoop()
       try
       {
          // recursively set the sequence set on all end points
-         (*i)->setSequenceSet(this);
+         (*i)->setSequenceSet(getHandle());
          // let it throw out to CPP
          (*i)->start();
       }
@@ -176,13 +178,14 @@ void
 SequenceSet::postLoop()
 {
    //usleep(1000); //!dcm! -- this causes better performance, but it shouldn't be necessary
- 
-   for (list<SequenceClass*>::const_iterator i = mSequences.begin();
-        i != mSequences.end(); i++)
-   {
-      // recursively unset the sequence set on all end points
-      (*i)->setSequenceSet(0);
-   }
+
+// .dcm. weak_ptr in endpoints now 
+//    for (list<SequenceClass*>::const_iterator i = mSequences.begin();
+//         i != mSequences.end(); i++)
+//    {
+//       // recursively unset the sequence set on all end points
+//       (*i)->setSequenceSet(0);
+//    }
 
    DebugLog(<< "after exec loop: " << !mFailed);
 }
@@ -253,8 +256,11 @@ SequenceSet::handle(shared_ptr<Event> event)
          str << endl;
       }
       ErrLog (<< "Sequence timed out: " << errorMessage);
-      throw TestEndPoint::AssertException(errorMessage, __FILE__, __LINE__);
       globalFailure(errorMessage);
+      //.dcm. globalFailure will caused all future events to be discarded; in
+      //any case, throwing was making globalFailure dead code, casuing tiemouts
+      //to show up as errors.
+//      throw TestEndPoint::AssertException(errorMessage, __FILE__, __LINE__);
       return;
    }
          
@@ -349,7 +355,6 @@ SequenceSet::handleEvent(shared_ptr<Event> event)
 // scripting interface
 //------------------------------------------------------------------------------
 
-#include "SequenceSetDefns.hxx"
 
 std::ostream&
 operator<<(std::ostream& str, const SequenceSet& sset)

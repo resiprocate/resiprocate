@@ -3,6 +3,9 @@
 
 BUILD 	=	build
 -include $(BUILD)/Makefile.conf
+-include $(BUILD)/Makefile.all
+
+stack: repro dum tests
 
 all: repro dum tests tfm
 
@@ -24,6 +27,7 @@ repro: dum
 tests: resiprocate 
 	cd resip/stack/test; $(MAKE)
 	cd rutil/test; $(MAKE)	
+
 check: tests
 	cd resip/stack/test && ./runtests.sh
 	cd rutil/test && ./runtests.sh	
@@ -55,20 +59,22 @@ configure_netxx: tfm/contrib/Netxx-0.3.2/Makefile
 tfm/contrib/Netxx-0.3.2/Makefile:
 	cd tfm/contrib/Netxx-0.3.2 && perl configure.pl --contrib --disable-examples ${NETXX_USE_SHARED_LIBS}
 
+ifeq ($(OSTYPE),MinGW)
+netxx:
+	$(MAKE) -C tfm/contrib/Netxx-0.3.2 -f Makefile.MinGW
+else
 netxx: configure_netxx
 	cd tfm/contrib/Netxx-0.3.2 && $(MAKE)
+endif
 
 configure_cppunit: tfm/contrib/cppunit/Makefile
 
-tfm/contrib/cppunit/Makefile.in: tfm/contrib/cppunit/Makefile.in.clean
-	cp  $< $@
         
-tfm/contrib/cppunit/Makefile: tfm/contrib/cppunit/Makefile.in
+tfm/contrib/cppunit/Makefile:
 	cd tfm/contrib/cppunit && ./configure ${CPPUNIT_USE_SHARED_LIBS}
 
 cppunit: configure_cppunit
 	cd tfm/contrib/cppunit && $(MAKE)
-configure_ares: contrib/ares/Makefile
 
 # If we are building ares under Resiprocate, ares needs to know the
 # Resiprocate install directory.  It is passed in via the ARES_PREFIX
@@ -123,7 +129,8 @@ distclean: cleancontrib cleanpkg
 # past.  (As far as I know, installing ares is needed only when
 # resiprocateLib is used as part of sipX, and the sipX Makefiles
 # invoke the install-ares target directly.)
-install: install-rutil install-resip install-dum install-repro
+# !bwc! We need ares if we are installing shared libraries.
+install: install-ares install-rutil install-resip install-dum
 
 install-ares:
 	cd contrib/ares; $(MAKE) install
@@ -201,6 +208,11 @@ cleanpkg:
 	rm -f repro-*.tar.gz repro-*.tar.gz.md5 repro-*.rpm
 	rm -rf rpm repro-$(REPRO_VERSION)
 
-.PHONY : resiprocate tests contrib ares dtls
-.PHONY : install install-ares install-rutil install-resip install-repro install-dum
-.PHONY : SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
+# If the make configuration isn't there, create a default one.
+$(BUILD)/Makefile.conf:
+	./configure -y
+
+.PHONY: resiprocate tests contrib ares dtls
+.PHONY: install install-ares install-rutil install-resip install-repro install-dum
+.PHONY: SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
+.PHONY: repro dum tests tfm tfmcontrib contrib rutil check presSvr

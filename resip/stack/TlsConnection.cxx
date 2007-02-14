@@ -24,8 +24,9 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, 
-                              bool server, Data domain,  SecurityTypes::SSLType sslType ) :
-   Connection(tuple, fd),
+                              bool server, Data domain,  SecurityTypes::SSLType sslType ,
+                              Compression &compression) :
+   Connection(tuple, fd, compression),
    mServer(server),
    mSecurity(security),
    mSslType( sslType ),
@@ -103,7 +104,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    
    SSL_set_bio( mSsl, mBio, mBio );
 
-   mState = mServer ? Accepting : Connecting;
+   mTlsState = mServer ? Accepting : Connecting;
 
 #endif // USE_SSL   
 }
@@ -118,7 +119,7 @@ TlsConnection::~TlsConnection()
 
 
 const char*
-TlsConnection::fromState(TlsConnection::State s)
+TlsConnection::fromState(TlsConnection::TlsState s)
 {
    switch(s)
    {
@@ -131,31 +132,31 @@ TlsConnection::fromState(TlsConnection::State s)
    return "????";
 }
 
-TlsConnection::State
+TlsConnection::TlsState
 TlsConnection::checkState()
 {
 #if defined(USE_SSL)
-   //DebugLog(<<"state is " << fromState(mState));
+   //DebugLog(<<"state is " << fromTlsState(mTlsState));
 
-   if (mState == Up || mState == Broken)
+   if (mTlsState == Up || mTlsState == Broken)
    {
-      return mState;
+      return mTlsState;
    }
    
    int ok=0;
    
    ERR_clear_error();
    
-   if (mState != Handshaking)
+   if (mTlsState != Handshaking)
    {
-      if (mState == Accepting)
+      if (mTlsState == Accepting)
       {
          ok = SSL_accept(mSsl);
       }
       else
       {
          ok = SSL_connect(mSsl);
-         //StackLog( << "TLS SSL_connect - state = " << fromState(mState) );
+         //StackLog( << "TLS SSL_connect - state = " << fromTlsState(mTlsState) );
       }
 
       if ( ok <= 0 )
@@ -164,24 +165,24 @@ TlsConnection::checkState()
          char buf[256];
          ERR_error_string_n(err,buf,sizeof(buf));
 //          StackLog( << "TLS error in " 
-//                    << (char*)( (mState == Accepting) ? (char*)"accept" : (char*)"connect" )
+//                    << (char*)( (mTlsState == Accepting) ? (char*)"accept" : (char*)"connect" )
 //                    << " ok=" << ok << " err=" << err << " " << buf );
           
          switch (err)
          {
             case SSL_ERROR_WANT_READ:
                //StackLog( << "TLS connection want read" );
-               return mState;
+               return mTlsState;
             case SSL_ERROR_WANT_WRITE:
                //StackLog( << "TLS connection want write" );
-               return mState;
+               return mTlsState;
             case SSL_ERROR_WANT_CONNECT:
                //StackLog( << "TLS connection want connect" );
-               return mState;
+               return mTlsState;
 #if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
             case SSL_ERROR_WANT_ACCEPT:
                //StackLog( << "TLS connection want accept" );
-               return mState;
+               return mTlsState;
 #endif
          }
 	   
@@ -236,16 +237,16 @@ TlsConnection::checkState()
                      << code << " file=" << file << " line=" << line );
          }
          
-         mState = Broken;
+         mTlsState = Broken;
          mBio = 0;
          //.dcm. -- may not be correct
          mFailureReason = TransportFailure::CertValidationFailure;
          ErrLog (<< "Couldn't TLS connect");
-         return mState;
+         return mTlsState;
       }
       
       InfoLog( << "TLS connected" ); 
-      mState = Handshaking;
+      mTlsState = Handshaking;
    }
 
    InfoLog( << "TLS handshake starting" ); 
@@ -262,17 +263,17 @@ TlsConnection::checkState()
       {
          case SSL_ERROR_WANT_READ:
             StackLog( << "TLS handshake want read" );
-            return mState;
+            return mTlsState;
          case SSL_ERROR_WANT_WRITE:
             StackLog( << "TLS handshake want write" );
-            return mState;
+            return mTlsState;
          default:
             ErrLog( << "TLS handshake failed "
                     << "ok=" << ok << " err=" << err << " " << buf );
             mBio = NULL;
-            mState = Broken;
+            mTlsState = Broken;
             mFailureReason = TransportFailure::CertValidationFailure;         
-            return mState;
+            return mTlsState;
       }
    }
 
@@ -293,22 +294,23 @@ TlsConnection::checkState()
       }
       if(!matches)
       {
-         mState = Broken;
+         mTlsState = Broken;
          mBio = 0;
          ErrLog (<< "Certificate name mismatch: trying to connect to <" 
                  << who().getTargetDomain()
                  << "> remote cert domain(s) are <" 
                  << getPeerNamesData() << ">" );
          mFailureReason = TransportFailure::CertNameMismatch;         
-         return mState;
+         return mTlsState;
       }
    }
 
    InfoLog( << "TLS handshake done for peer " << getPeerNamesData()); 
-   mState = Up;
-
+   mTlsState = Up;
+   ensureWritable();
+   
 #endif // USE_SSL   
-   return mState;
+   return mTlsState;
 }
 
       
@@ -410,6 +412,7 @@ TlsConnection::write( const char* buf, int count )
       case Up:
          break;
       default:
+         DebugLog( << "Tried to Tls write - but connection is not Up"  );
          return 0;
          break;
    }
@@ -506,6 +509,17 @@ TlsConnection::isGood() // has data that can be read
    return true;
 }
 
+bool 
+TlsConnection::isWritable() 
+{
+#if defined(USE_SSL)
+   if (checkState() == Up && isGood())
+   {
+      return true;
+   }
+#endif 
+   return false;
+}
 
 const std::list<Data>&
 TlsConnection::getPeerNames() const
@@ -635,7 +649,7 @@ TlsConnection::computePeerName()
          int l = uri->length;
          unsigned char* dat = uri->data;
          Data name(dat,l);
-         InfoLog(<< "subjectAltName of TLS seesion cert contains <" << name << ">" );
+         InfoLog(<< "subjectAltName of TLS session cert contains <" << name << ">" );
          
          mPeerNames.push_back(name);
       }

@@ -4,11 +4,19 @@ BUILD = ../build
 include $(BUILD)/Makefile.pre
 
 CODE_SUBDIRS = predicates repro
-PACKAGES += 	REPRO DUM RESIP RUTIL TFMLIBS OPENSSL ARES DB4CXX PTHREAD POPT 
+
+ifneq ($(DB_HEADERS),/usr/include)
+CXXFLAGS += -I$(DB_HEADERS)
+endif
+PACKAGES += REPRO DB4CXX DUM RESIP RUTIL TFMLIBS OPENSSL ARES PTHREAD POPT OPENSIGCOMP
+ifeq ($(OSTYPE),MinGW)
+PACKAGES += PCRE
+endif
+
 TESTPROGRAMS = 	sanityTests.cxx 
 TARGET_LIBRARY = libtfm
 
-CXXFLAGS += -I../ -Icontrib -I/usr/local/include/boost-1_33
+CXXFLAGS += -I.. -Icontrib -I/usr/local/include/boost-1_33 -I/usr/local/include/boost-1_33_1
 
 SRC = ActionBase.cxx \
 	AsciiGraphic.cxx \
@@ -41,7 +49,6 @@ SRC = ActionBase.cxx \
 	TransportDriver.cxx \
 	\
 	predicates/ExpectUtils.cxx \
-	predicates/NotifyContents.cxx \
 	predicates/SubscribeExpired.cxx \
 	predicates/SubscribeExpires.cxx \
 	\

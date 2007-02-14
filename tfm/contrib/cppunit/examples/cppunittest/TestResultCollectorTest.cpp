@@ -4,7 +4,7 @@
 
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION( TestResultCollectorTest,
-                                       CppUnitTest::coreSuiteName() );
+                                       coreSuiteName() );
 
 
 TestResultCollectorTest::TestResultCollectorTest()
@@ -22,10 +22,10 @@ TestResultCollectorTest::setUp()
 {
   m_lockCount = 0;
   m_unlockCount = 0;
-  m_result = new CppUnit::TestResultCollector();
+  m_result = new CPPUNIT_NS::TestResultCollector();
   m_synchronizedResult = new SynchronizedTestResult( this );  
-  m_test = new CppUnit::TestCase();
-  m_test2 = new CppUnit::TestCase();
+  m_test = new CPPUNIT_NS::TestCase();
+  m_test2 = new CPPUNIT_NS::TestCase();
 }
 
 
@@ -49,16 +49,16 @@ TestResultCollectorTest::testConstructor()
 void 
 TestResultCollectorTest::testAddTwoErrors()
 {
-  std::string errorMessage1( "First Error" );
-  std::string errorMessage2( "Second Error" );
+  CPPUNIT_NS::Message errorMessage1( "First Error" );
+  CPPUNIT_NS::Message errorMessage2( "Second Error" );
   {
-    CppUnit::TestFailure failure1( m_test, 
-                                   new CppUnit::Exception( errorMessage1 ),
+    CPPUNIT_NS::TestFailure failure1( m_test, 
+                                   new CPPUNIT_NS::Exception( errorMessage1 ),
                                    true );
     m_result->addFailure( failure1 );
 
-    CppUnit::TestFailure failure2( m_test2, 
-                                   new CppUnit::Exception( errorMessage2 ),
+    CPPUNIT_NS::TestFailure failure2( m_test2, 
+                                   new CPPUNIT_NS::Exception( errorMessage2 ),
                                    true );
     m_result->addFailure( failure2 );
   } // ensure that the test result duplicate the failures.
@@ -78,16 +78,16 @@ TestResultCollectorTest::testAddTwoErrors()
 void 
 TestResultCollectorTest::testAddTwoFailures()
 {
-  std::string errorMessage1( "First Failure" );
-  std::string errorMessage2( "Second Failure" );
+  CPPUNIT_NS::Message errorMessage1( "First Failure" );
+  CPPUNIT_NS::Message errorMessage2( "Second Failure" );
   {
-    CppUnit::TestFailure failure1( m_test, 
-                                   new CppUnit::Exception( errorMessage1 ),
+    CPPUNIT_NS::TestFailure failure1( m_test, 
+                                   new CPPUNIT_NS::Exception( errorMessage1 ),
                                    false );
     m_result->addFailure( failure1 );
 
-    CppUnit::TestFailure failure2( m_test2, 
-                                   new CppUnit::Exception( errorMessage2 ),
+    CPPUNIT_NS::TestFailure failure2( m_test2, 
+                                   new CPPUNIT_NS::Exception( errorMessage2 ),
                                    false );
     m_result->addFailure( failure2 );
   } // ensure that the test result duplicate the failures.
@@ -147,7 +147,7 @@ TestResultCollectorTest::testWasSuccessfulWithErrorsAndFailures()
 
 
 void 
-TestResultCollectorTest::testWasSuccessfulWithSucessfulTest()
+TestResultCollectorTest::testWasSuccessfulWithSuccessfulTest()
 {
   m_result->startTest( m_test );
   m_result->endTest( m_test );
@@ -227,13 +227,13 @@ TestResultCollectorTest::checkResult( int failures,
 
 
 void
-TestResultCollectorTest::checkFailure( CppUnit::TestFailure *failure,
-                                       std::string expectedMessage,
-                                       CppUnit::Test *expectedTest,
+TestResultCollectorTest::checkFailure( CPPUNIT_NS::TestFailure *failure,
+                                       CPPUNIT_NS::Message expectedMessage,
+                                       CPPUNIT_NS::Test *expectedTest,
                                        bool expectedIsError )
 {
-  std::string actualMessage( failure->thrownException()->what() );
-  CPPUNIT_ASSERT_EQUAL( expectedMessage, actualMessage );
+  CPPUNIT_NS::Message actualMessage( failure->thrownException()->message() );
+  CPPUNIT_ASSERT( expectedMessage == actualMessage );
   CPPUNIT_ASSERT_EQUAL( expectedTest, failure->failedTest() );
   CPPUNIT_ASSERT_EQUAL( expectedIsError, failure->isError() );
 }
@@ -286,12 +286,12 @@ TestResultCollectorTest::addError( std::string message )
 
 void 
 TestResultCollectorTest::addFailure( std::string message, 
-                                     CppUnit::Test *failedTest, 
+                                     CPPUNIT_NS::Test *failedTest, 
                                      bool isError,
-                                     CppUnit::TestResultCollector *result )
+                                     CPPUNIT_NS::TestResultCollector *result )
 {
-  CppUnit::TestFailure failure( failedTest, 
-                                new CppUnit::Exception( message ), 
+  CPPUNIT_NS::TestFailure failure( failedTest, 
+                                new CPPUNIT_NS::Exception( CPPUNIT_NS::Message( message ) ), 
                                 isError );
   result->addFailure( failure );
 }

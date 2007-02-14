@@ -20,6 +20,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 #define CRLF "\r\n"
+#define RESIP_COOKIE "-d8754z-"
 
 //vis -o to make binary bodies text
 
@@ -34,7 +35,7 @@ main(int argc, char** argv)
       "From: \"Kit LDAP\"<sip:6309790007@ahenc1.ascc.lucent.com>;tag=64505823\r\n"
       "Call-ID: 7574556ad424b15c@aW5zcDc1MDAudW5pY29uLWludGwuY29t\r\n"
       "CSeq: 1 PUBLISH\r\n"
-      "Via: SIP/2.0/UDP 67.184.22.204:33001;received=67.184.22.204;branch=z9hG4bK-d87543-861ee62db418b378-1--d87543-\r\n"
+      "Via: SIP/2.0/UDP 67.184.22.204:33001;received=67.184.22.204;branch=z9hG4bK" RESIP_COOKIE "861ee62db418b378-1-" RESIP_COOKIE "\r\n"
       "Server: Lucent SIPTRANS 1.2\r\n"
       "WWW-Authenticate: Digest realm=\"aP3nFt10ziWg41Su4s8\", \r\n"
       "   nonce=\"d6cb083cced5583c140c5f99eb81feda\", algorithm=MD5, qop=\"auth\", \r\n"
@@ -763,7 +764,7 @@ main(int argc, char** argv)
 
    {
      char * txt = ("SIP/2.0 489 Bad Event" CRLF
-                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                    "CSeq: 1 SUBSCRIBE" CRLF
                    "Allow-Events: " CRLF
                    "Call-ID:  f354ce714fb8a95c" CRLF
@@ -780,7 +781,7 @@ main(int argc, char** argv)
      assert(Data::from(response->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(wire)");
      
      char * txt2 = ("SIP/2.0 489 Bad Event" CRLF
-                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                     "CSeq: 1 SUBSCRIBE" CRLF
                     "Call-ID:  f354ce714fb8a95c" CRLF
                     "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
@@ -794,7 +795,7 @@ main(int argc, char** argv)
      assert(r2->header(h_AllowEvents).size() == 0);
 
      char * txt3 =("SIP/2.0 489 Bad Event" CRLF
-                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                    "CSeq: 1 SUBSCRIBE" CRLF
                    "Call-ID:  f354ce714fb8a95c" CRLF
                    "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
@@ -812,7 +813,7 @@ main(int argc, char** argv)
      assert(Data::from(r3->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(tu)");
 
      char * txt4 = ("SIP/2.0 489 Bad Event" CRLF
-                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                     "CSeq: 1 SUBSCRIBE" CRLF
                     "Call-ID:  f354ce714fb8a95c" CRLF
                     "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
@@ -833,7 +834,7 @@ main(int argc, char** argv)
 
 
      char * txt5 = ("SIP/2.0 489 Bad Event" CRLF
-                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-d87543-899769382-1--d87543-" CRLF
+                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                     "CSeq: 1 SUBSCRIBE" CRLF
                     "Call-ID:  f354ce714fb8a95c" CRLF
                     "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
@@ -853,7 +854,7 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-11111-1-client_data-d87543-;stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "11111-1-client_data-" RESIP_COOKIE ";stid=489573115\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
                    "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
@@ -881,8 +882,8 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-563465-1--d87543-;stid=489573115\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-d87543-489573115-1--d87543-;received=192.168.2.220\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "563465-1--" RESIP_COOKIE ";stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK" RESIP_COOKIE "489573115-1--" RESIP_COOKIE ";received=192.168.2.220\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
                    "Proxy-Authorization: Digest username=\"Alice\",realm=\"atlanta.com\",nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\",response=\"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY\"\r\n"
@@ -906,8 +907,8 @@ main(int argc, char** argv)
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK-d87543-21312-1--d87543-;stid=489573115\r\n"
-                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK-d87543-489573115-1--d87543-;received=192.168.2.220\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "21312-1--" RESIP_COOKIE ";stid=489573115\r\n"
+                   "Via: SIP/2.0/UDP whistler.gloo.net:5068;branch=z9hG4bK" RESIP_COOKIE "489573115-1--" RESIP_COOKIE ";received=192.168.2.220\r\n"
                    "Call-ID: 643f2f06\r\n"
                    "CSeq: 1 INVITE\r\n"
                    "Record-Route: <sip:proxy@whistler.gloo.net:5061;lr>\r\n"
@@ -930,7 +931,7 @@ main(int argc, char** argv)
                    "To: prolab<sip:5000@host2.sipdragon.sipit.net>;tag=7c3f0cc1-13c5-3e5a380d-1ac5827-618f""\r\n"
                    "Call-ID: 9e9017c-7c3f0cc1-13c4-3e5a380c-1ac5646-3700@193.12.63.124""\r\n"
                    "CSeq: 1 INVITE""\r\n"
-                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK-d87543--3e5a380c-1ac5646-adf-d87543-1-1""\r\n"
+                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK" RESIP_COOKIE "-3e5a380c-1ac5646-adf" RESIP_COOKIE "1-1""\r\n"
                    "Via: SIP/2.0/UDP 193.12.63.124:5060;received=193.12.63.124;branch=z9hG4bK-3e5a380c-1ac5646-adf""\r\n"
                    "Contact: <sip:5000@193.12.63.124:5061>""\r\n"
                    "Record-Route: <sip:proxy@host2.sipdragon.sipit.net:5060;lr>""\r\n"
@@ -952,7 +953,7 @@ main(int argc, char** argv)
                    "To: prolab<sip:5000@host2.sipdragon.sipit.net>;tag=7c3f0cc1-13c5-3e5a380d-1ac5827-618f\r\n"
                    "Call-ID: 9e9017c-7c3f0cc1-13c4-3e5a380c-1ac5646-3700@193.12.63.124\r\n"
                    "CSeq: 1 INVITE\r\n"
-                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK-d87543--3e5a380c-1ac5646-adf-d87543-1-1\r\n"
+                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK" RESIP_COOKIE "-3e5a380c-1ac5646-adf" RESIP_COOKIE "1-1\r\n"
                    "Via: SIP/2.0/UDP 193.12.63.124:5060;received=193.12.63.124;branch=z9hG4bK-3e5a380c-1ac5646-adf\r\n"
                    "Contact: <sip:5000@193.12.63.124:5061>\r\n"
                    "Record-Route: <sip:proxy@host2.sipdragon.sipit.net:5060;lr>\r\n"
@@ -974,7 +975,7 @@ main(int argc, char** argv)
                    "To: prolab<sip:5000@host2.sipdragon.sipit.net>;tag=7c3f0cc1-13c5-3e5a380d-1ac5827-618f""\r\n"
                    "Call-ID: 9e9017c-7c3f0cc1-13c4-3e5a380c-1ac5646-3700@193.12.63.124""\r\n"
                    "CSeq: 1 INVITE""\r\n"
-                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK-d87543--3e5a380c-1ac5646-adf-d87543-1-1""\r\n"
+                   "Via: SIP/2.0/UDP host2.sipdragon.sipit.net;received=193.12.62.209;branch=z9hG4bK" RESIP_COOKIE "-3e5a380c-1ac5646-adf" RESIP_COOKIE "1-1""\r\n"
                    "Via: SIP/2.0/UDP 193.12.63.124:5060;received=193.12.63.124;branch=z9hG4bK-3e5a380c-1ac5646-adf""\r\n"
                    "Contact: <sip:5000@193.12.63.124:5061>""\r\n"
                    "Record-Route: <sip:proxy@host2.sipdragon.sipit.net:5060;lr>""\r\n"
@@ -1972,15 +1973,28 @@ main(int argc, char** argv)
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       assert(message->header(h_SecurityClients).front().value() == "ipsec-ike");
       assert(message->header(h_SecurityClients).front().param(p_dAlg) == "md5");
-      assert(message->header(h_SecurityClients).front().param(p_q) == 0.1f);
+      assert(message->header(h_SecurityClients).front().param(p_q) == 100);
+#ifndef RESIP_FIXED_POINT
+      assert(message->header(h_SecurityClients).front().param(p_q) == double(0.1));
+      assert(message->header(h_SecurityClients).front().param(p_q) == 0.1);
+      assert(message->header(h_SecurityClients).front().param(p_q) == float(0.1));
+#endif
 
       assert(message->header(h_SecurityServers).front().value() == "tls");
       assert(message->header(h_SecurityServers).front().param(p_dQop) == "verify");
+#ifndef RESIP_FIXED_POINT
+      assert(message->header(h_SecurityServers).front().param(p_q) == double(0.2));
       assert(message->header(h_SecurityServers).front().param(p_q) == 0.2f);
+#endif
+      assert(message->header(h_SecurityServers).front().param(p_q) == 200);
 
       assert(message->header(h_SecurityVerifies).front().value() == "tls");
       assert(message->header(h_SecurityVerifies).front().param(p_dVer) == "0000000000000000000000000000abcd");
+#ifndef RESIP_FIXED_POINT
+      assert(message->header(h_SecurityVerifies).front().param(p_q) == double(0.2));
       assert(message->header(h_SecurityVerifies).front().param(p_q) == 0.2f);
+#endif
+      assert(message->header(h_SecurityVerifies).front().param(p_q) == 200);
 
       assert(message->exists(h_AllowEvents) == false);
    }
@@ -2015,20 +2029,20 @@ main(int argc, char** argv)
          Token sec;
          sec.value() = "ipsec-ike";
          sec.param(p_dAlg) = "md5";
-         sec.param(p_q) = 0.1f;
+         sec.param(p_q) = 100;
          message->header(h_SecurityClients).push_back(sec);
       }
       {
          Token sec;
          sec.value() = "tls";
-         sec.param(p_q) = 0.2f;
+         sec.param(p_q) = 200;
          sec.param(p_dQop) = "verify";
          message->header(h_SecurityServers).push_back(sec);
       }
       {
          Token sec;
          sec.value() = "tls";
-         sec.param(p_q) = 0.2f;
+         sec.param(p_q) = 200;
          sec.param(p_dVer) = "0000000000000000000000000000abcd";
          message->header(h_SecurityVerifies).push_back(sec);
       }

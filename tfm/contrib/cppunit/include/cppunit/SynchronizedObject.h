@@ -4,8 +4,8 @@
 #include <cppunit/Portability.h>
 
 
-namespace CppUnit
-{
+CPPUNIT_NS_BEGIN
+
 
 /*! \brief Base class for synchronized object.
  *
@@ -75,8 +75,6 @@ private:
 };
 
 
-
-} //  namespace CppUnit
-
+CPPUNIT_NS_END
 
 #endif  // CPPUNIT_SYNCHRONIZEDOBJECT_H

@@ -22,6 +22,15 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 #define HANDLE_CHARACTER_ESCAPING //undef for old behaviour
 
+// Set to true only after the tables are initialised
+bool Uri::mEncodingReady = false;
+// class static variables listing the default characters not to encode
+// in user and password strings respectively
+Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
+Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
+Uri::EncodingTable Uri::mUriEncodingUserTable;
+Uri::EncodingTable Uri::mUriEncodingPasswordTable;
+
 Uri::Uri() 
    : ParserCategory(),
      mScheme(Data::Share, Symbols::DefaultSipScheme),
@@ -384,8 +393,8 @@ Uri::operator==(const Uri& other) const
             case ParameterTypes::ttl:
             {
                if (!(otherParam &&
-                     (dynamic_cast<IntegerParameter*>(*it)->value() ==
-                      dynamic_cast<IntegerParameter*>(otherParam)->value())))
+                     (dynamic_cast<UInt32Parameter*>(*it)->value() ==
+                      dynamic_cast<UInt32Parameter*>(otherParam)->value())))
                {
                   return false;
                }
@@ -460,8 +469,8 @@ Uri::operator==(const Uri& other) const
             case ParameterTypes::ttl:
             {
                if (!(param &&
-                     (dynamic_cast<IntegerParameter*>(*it)->value() == 
-                      dynamic_cast<IntegerParameter*>(param)->value())))
+                     (dynamic_cast<UInt32Parameter*>(*it)->value() == 
+                      dynamic_cast<UInt32Parameter*>(param)->value())))
                {
                   return false;
                }
@@ -629,12 +638,12 @@ Uri::GreaterQ::operator()(const Uri& lhs, const Uri& rhs) const
 
    if (lhs.exists(p_q))
    {
-      return lhs.param(p_q) > 1.0;
+      return lhs.param(p_q) > 1000;  // > 1.0
    }
 
    if (rhs.exists(p_q))
    {
-      return rhs.param(p_q) < 1.0;
+      return rhs.param(p_q) < 1000;  // < 1.0
    }
 
    return false;
@@ -793,7 +802,14 @@ Uri::parse(ParseBuffer& pb)
       start = pb.skipChar();
       pb.skipToChar(']');
       pb.data(mHost, start);
-      DnsUtil::canonicalizeIpV6Address(mHost);
+      if(DnsUtil::isIpV6Address(mHost))
+      {
+         DnsUtil::canonicalizeIpV6Address(mHost);
+      }
+      else
+      {
+         // !bwc! Should the parse fail here, or do we just shrug it off?
+      }
       pb.skipChar();
    }
    else
@@ -830,72 +846,84 @@ Uri::clone() const
    return new Uri(*this);
 }
 
-inline bool //.dcm. replace with lookup array
-shoudEscapeUserChar(char c)
+void Uri::setUriUserEncoding(char c, bool encode) 
 {
-   if ( (c >= 'a' && c <= 'z') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= '0' && c <= '9'))
+   if(c < 0)
    {
-      return false;      
+      ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
+      return;
    }
-   switch(c)
-   {
-      //mark
-      case '-':
-      case '_':
-      case '.':
-      case '!':
-      case '~':
-      case '*':
-      case '\'':
-      case '(':
-      case ')':
-         //user unreserved
-      case '&':
-      case '=':
-      case '+':
-      case '$':
-      case ',':
-         case ';':
-      case '?':
-      case '/':
-         return false;
-      default:
-         return true;
-   }
+
+   mUriEncodingUserTable[c] = encode; 
 }
 
-inline bool //.dcm. replace with lookup array
-shouldEscapePasswordChar(char c)
+void Uri::setUriPasswordEncoding(char c, bool encode)
 {
-   if ( (c >= 'a' && c <= 'z') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= '0' && c <= '9'))
+   if(c < 0)
    {
-      return false;      
+      ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
+      return;
    }
-   switch(c)
+
+   mUriEncodingPasswordTable[c] = encode;
+}
+
+void Uri::initialiseEncodingTables() {
+
+   // set all bits
+   mUriEncodingUserTable.set();
+   mUriEncodingPasswordTable.set();
+
+   for(Data::size_type i = 0; i < mUriNonEncodingUserChars.size(); i++) 
    {
-      //mark
-      case '-':
-      case '_':
-      case '.':
-      case '!':
-      case '~':
-      case '*':
-      case '\'':
-      case '(':
-      case ')':
-         //password unreserved
-      case '&':
-      case '=':
-      case '+':
-      case '$':
-         return false;
-      default:
-         return true;
+      char& c = mUriNonEncodingUserChars.at(i);
+      if(c >= 0)
+      {
+         mUriEncodingUserTable[c] = false;
+      }
    }
+   for(Data::size_type i = 0; i < mUriNonEncodingPasswordChars.size(); i++) 
+   {
+      char& c = mUriNonEncodingPasswordChars.at(i);
+      if(c >= 0)
+      {
+         mUriEncodingPasswordTable[c] = false; 
+      }
+   }
+
+   mEncodingReady = true;
+}
+
+inline bool 
+Uri::shouldEscapeUserChar(char c)
+{
+   if(!mEncodingReady)
+   {
+      initialiseEncodingTables();
+   }
+
+   if(c < 0)
+   {
+      return false;
+   }
+
+   return mUriEncodingUserTable[c];
+}
+
+inline bool 
+Uri::shouldEscapePasswordChar(char c)
+{
+   if(!mEncodingReady)
+   {
+      initialiseEncodingTables();
+   }
+
+   if(c < 0)
+   {
+      return false;
+   }
+
+   return mUriEncodingPasswordTable[c];
 }
  
 // should not encode user parameters unless its a tel?
@@ -906,7 +934,7 @@ Uri::encodeParsed(std::ostream& str) const
    if (!mUser.empty())
    {
 #ifdef HANDLE_CHARACTER_ESCAPING
-      mUser.escapeToStream(str, shoudEscapeUserChar); 
+      mUser.escapeToStream(str, shouldEscapeUserChar); 
 #else
       str << mUser;
 #endif

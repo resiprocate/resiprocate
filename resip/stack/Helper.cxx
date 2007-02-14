@@ -42,6 +42,76 @@ const int Helper::tagSize = 4;
 // (e.g. proxies) want to share the same secret
 Helper::NonceHelperPtr Helper::mNonceHelperPtr;
 
+void Helper::integer2hex(char* _d, unsigned int _s, bool _l)
+{
+   int i;
+   unsigned char j;
+   int k = 0;
+   char* s;
+
+   _s = htonl(_s);
+   s = (char*)&_s;
+
+   for (i = 0; i < 4; i++) 
+   {
+      j = (s[i] >> 4) & 0xf;
+      if (j <= 9) 
+      {
+         if(_l || j != 0 || k != 0)
+         {
+            _d[k++] = (j + '0');
+         }
+      }
+      else 
+      {
+         _d[k++] = (j + 'a' - 10);
+      }
+
+      j = s[i] & 0xf;
+      if (j <= 9) 
+      {
+         if(_l || j != 0 || k != 0)
+         {
+            _d[k++] = (j + '0');
+         }
+      }
+      else 
+      {
+         _d[k++] = (j + 'a' - 10);
+      }
+   }
+}
+
+unsigned int Helper::hex2integer(const char* _s)
+{
+   unsigned int i, res = 0;
+
+   for(i = 0; i < 8; i++) 
+   {
+      if ((_s[i] >= '0') && (_s[i] <= '9')) 
+      {
+         res *= 16;
+         res += _s[i] - '0';
+      }
+      else if ((_s[i] >= 'a') && (_s[i] <= 'f')) 
+      {
+         res *= 16;
+         res += _s[i] - 'a' + 10;
+      } 
+      else if ((_s[i] >= 'A') && (_s[i] <= 'F')) 
+      {
+         res *= 16;
+         res += _s[i] - 'A' + 10;
+      }
+      else 
+      {
+         return res;
+      }
+   }
+
+   return res;
+}
+
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
@@ -316,14 +386,25 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_Warnings).push_back(warn);
    }
 
-   // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
-   // No totag for failure responses or 100s   
-   if (!response.header(h_To).exists(p_tag) && responseCode > 100)   
-   {   
-      response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);   
+   try
+   {
+      // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
+      // No totag for failure responses or 100s   
+      if (!response.header(h_To).exists(p_tag) && responseCode > 100)   
+      {   
+         response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);   
+      }
    } 
-    
+   catch(resip::ParseBuffer::Exception&)
+   {
+      // !bwc! Can't add to-tag since To is malformed. Oh well, we tried.
+   }
+   
+   
+   // !bwc! This will only throw if the topmost Via is malformed, and that 
+   // should have been caught at the transport level.
    response.setRFC2543TransactionId(request.getRFC2543TransactionId());
+   
    //response.header(h_ContentLength).value() = 0;
    
    if (responseCode >= 180 && responseCode < 300 && request.exists(h_RecordRoutes))
@@ -331,7 +412,12 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_RecordRoutes) = request.header(h_RecordRoutes);
    }
 
-   if (responseCode/100 == 2 && !response.exists(h_Contacts))
+   // !bwc! If CSeq is malformed, basicCheck would have already attempted to
+   // parse it, meaning we won't throw here (we never try to parse the same
+   // thing twice, see LazyParser::checkParsed())
+   if (responseCode/100 == 2 &&
+         !response.exists(h_Contacts) &&
+         !(response.header(h_CSeq).method()==CANCEL) )
    {
       // in general, this should not create a Contact header since only requests
       // that create a dialog (or REGISTER requests) should produce a response with
@@ -368,7 +454,10 @@ Helper::makeResponse(const SipMessage& request,
                      const Data& hostname, 
                      const Data& warning)
 {
-   SipMessage* response = new SipMessage;
+   // !bwc! Exception safety. Catch/rethrow is dicey because we can't rethrow
+   // resip::BaseException, since it is abstract.
+   std::auto_ptr<SipMessage> response(new SipMessage);
+
    makeResponse(*response, request, responseCode, reason, hostname, warning);
 
    // in general, this should not create a Contact header since only requests
@@ -376,7 +465,7 @@ Helper::makeResponse(const SipMessage& request,
    // a contact(s). 
    response->header(h_Contacts).clear();
    response->header(h_Contacts).push_back(myContact);
-   return response;
+   return response.release();
 }
 
 
@@ -387,9 +476,12 @@ Helper::makeResponse(const SipMessage& request,
                      const Data& hostname, 
                      const Data& warning)
 {
-   SipMessage* response = new SipMessage;
+   // !bwc! Exception safety. Catch/rethrow is dicey because we can't rethrow
+   // resip::BaseException, since it is abstract.
+   std::auto_ptr<SipMessage> response(new SipMessage);
+   
    makeResponse(*response, request, responseCode, reason, hostname, warning);
-   return response;
+   return response.release();
 }
 
 void   
@@ -533,10 +625,26 @@ Helper::computeUniqueBranch()
 Data
 Helper::computeCallId()
 {
-   static Data hostname = DnsUtil::getLocalHostName().md5().base64encode(true);
-   return Random::getRandomHex(8) + hostname;
+   static Data hostname = DnsUtil::getLocalHostName();
+   Data hostAndSalt(hostname + Random::getRandomHex(16));
+#ifndef USE_SSL // !bwc! None of this is neccessary if we're using openssl
+#if defined(__linux__) || defined(__APPLE__)
+   pid_t pid = getpid();
+   hostAndSalt.append((char*)&pid,sizeof(pid));
+#endif
+#ifdef __APPLE__
+   pthread_t thread = pthread_self();
+   hostAndSalt.append((char*)&thread,sizeof(thread));
+#endif
+#ifdef WIN32
+   DWORD proccessId = ::GetCurrentProcessId();
+   DWORD threadId = ::GetCurrentThreadId();
+   hostAndSalt.append((char*)&proccessId,sizeof(proccessId));
+   hostAndSalt.append((char*)&threadId,sizeof(threadId));
+#endif
+#endif // of USE_SSL
+   return hostAndSalt.md5().base64encode(true);
 }
-
 
 Data
 Helper::computeTag(int numBytes)
@@ -636,22 +744,44 @@ std::pair<Helper::AuthResult,Data>
 Helper::advancedAuthenticateRequest(const SipMessage& request, 
                                     const Data& realm,
                                     const Data& a1,
-                                    int expiresDelta)
+                                    int expiresDelta,
+                                    bool proxyAuthorization)
 {
    Data username;
    DebugLog(<< "Authenticating: realm=" << realm << " expires=" << expiresDelta);
    //DebugLog(<< request);
    
-   if (request.exists(h_ProxyAuthorizations))
+   const ParserContainer<Auth>* auths = 0;
+   if(proxyAuthorization)
    {
-      const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
-      for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
+      if(request.exists(h_ProxyAuthorizations))
+      {
+         auths = &request.header(h_ProxyAuthorizations);
+      }
+   }
+   else
+   {
+      if(request.exists(h_Authorizations))
+      {
+         auths = &request.header(h_Authorizations);
+      }
+   }
+
+   if (auths)
+   {
+      for (ParserContainer<Auth>::const_iterator i = auths->begin(); i != auths->end(); i++)
       {
          if (i->exists(p_realm) && 
              i->exists(p_nonce) &&
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
+            static Data digest("digest");
+            if(!isEqualNoCase(i->scheme(),digest))
+            {
+               DebugLog(<< "Scheme must be Digest");
+               continue;
+            }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
@@ -787,6 +917,12 @@ Helper::authenticateRequest(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
+            static Data digest("digest");
+            if(!isEqualNoCase(i->scheme(),digest))
+            {
+               DebugLog(<< "Scheme must be Digest");
+               continue;
+            }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
@@ -913,6 +1049,12 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
              i->exists(p_response) &&
              i->param(p_realm) == realm)
          {
+            static Data digest("digest");
+            if(!isEqualNoCase(i->scheme(),digest))
+            {
+               DebugLog(<< "Scheme must be Digest");
+               continue;
+            }
             /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
@@ -1055,6 +1197,12 @@ Helper::make405(const SipMessage& request,
 SipMessage*
 Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool useAuth, bool stale)
 {
+   return makeChallenge(request, realm, useAuth, stale, true);
+}
+
+SipMessage*
+Helper::makeChallenge(const SipMessage& request, const Data& realm, bool useAuth, bool stale, bool proxy)
+{
    Auth auth;
    auth.scheme() = "Digest";
    Data timestamp(Timer::getTimeMs()/1000);
@@ -1069,8 +1217,17 @@ Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool us
    {
       auth.param(p_stale) = "true";
    }
-   SipMessage *response = Helper::makeResponse(request, 407);
-   response->header(h_ProxyAuthenticates).push_back(auth);
+   SipMessage *response;
+   if(proxy)
+   {
+      response = Helper::makeResponse(request, 407);
+      response->header(h_ProxyAuthenticates).push_back(auth);
+   }
+   else
+   {
+      response = Helper::makeResponse(request, 401);
+      response->header(h_WWWAuthenticates).push_back(auth);
+   }
    return response;
 }
 
@@ -1359,7 +1516,7 @@ Helper::processStrictRoute(SipMessage& request)
 }
 
 int
-Helper::getPortForReply(SipMessage& request)
+Helper::getPortForReply(SipMessage& request, bool returnDefault)
 {
    assert(request.isRequest());
    int port = -1;
@@ -1372,7 +1529,19 @@ Helper::getPortForReply(SipMessage& request)
       port = request.header(h_Vias).front().sentPort();
       if (port <= 0 || port > 65535) 
       {
-         port = Symbols::DefaultSipPort;
+         if(!returnDefault)
+         {
+            port=0;
+         }
+         else if(request.header(h_Vias).front().transport() == Symbols::TLS ||
+            request.header(h_Vias).front().transport() == Symbols::DTLS)
+         {
+            port = Symbols::DefaultSipsPort;
+         }
+         else
+         {
+            port = Symbols::DefaultSipPort;
+         }
       }
    }
    assert(port != -1);
@@ -1386,7 +1555,7 @@ Helper::fromAor(const Data& aor, const Data& scheme)
 }
 
 bool
-Helper::validateMessage(const SipMessage& message)
+Helper::validateMessage(const SipMessage& message,resip::Data* reason)
 {
    if (!message.exists(h_To) || 
        !message.exists(h_From) || 
@@ -1397,10 +1566,33 @@ Helper::validateMessage(const SipMessage& message)
    {
       InfoLog(<< "Missing mandatory header fields (To, From, CSeq, Call-Id or Via)");
       DebugLog(<< message);
+      if(reason) *reason="Missing mandatory header field";
       return false;
    }
    else
    {
+      try
+      {
+         message.header(h_CSeq).checkParsed();
+      }
+      catch(ParseBuffer::Exception&)
+      {
+         InfoLog(<<"Malformed CSeq header");
+         if(reason) *reason="Malformed CSeq header";
+         return false;
+      }
+      
+      try
+      {
+         message.header(h_Vias).front().checkParsed();
+      }
+      catch(ParseBuffer::Exception& e)
+      {
+         InfoLog(<<"Malformed topmost Via header: " << e);
+         if(reason) *reason="Malformed topmost Via header";
+         return false;
+      }
+      
       if (message.isRequest())
       {
          try
@@ -1409,10 +1601,32 @@ Helper::validateMessage(const SipMessage& message)
          }
          catch(ParseBuffer::Exception& e)
          {
-            InfoLog(<< "Illegal request lineL " << e);
+            InfoLog(<< "Illegal request line " << e);
+            if(reason) *reason="Malformed Request Line";
+            return false;            
+         }
+         
+         if(message.header(h_RequestLine).method()!=message.header(h_CSeq).method())
+         {
+            InfoLog(<< "Method mismatch btw Request Line and CSeq");
+            if(reason) *reason="Method mismatch btw Request Line and CSeq";
+            return false;
+         }
+      }
+      else
+      {
+         try
+         {
+            message.header(h_StatusLine).checkParsed();
+         }
+         catch(ParseBuffer::Exception& e)
+         {
+            InfoLog(<< "Malformed status line " << e);
+            if(reason) *reason="Malformed status line";
             return false;            
          }
       }
+      
       return true;
    }
 }
@@ -1823,7 +2037,7 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
       }
    }
 
-   DebugLog(<< "No sdp" << endl);
+   //DebugLog(<< "No sdp" << endl);
    return empty;
 }
 

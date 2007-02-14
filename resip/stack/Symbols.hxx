@@ -95,6 +95,9 @@ class Symbols
       static const char* C100rel;
       static const char* Replaces;
       static const char* Timer;
+      static const char* NoReferSub;
+      static const char* AnswerMode;
+      static const char* TargetDialog;
       static const char* Undefined;
 
       static const char* Pending;

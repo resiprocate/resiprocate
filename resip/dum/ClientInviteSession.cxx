@@ -27,7 +27,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          DialogUsageManager::EncryptionLevel level,
                                          ServerSubscriptionHandle serverSub) :
    InviteSession(dum, dialog),
-   mLastReceivedRSeq(-1),
+   mLastReceivedRSeq(0),
    mStaleCallTimerSeq(1),
    mCancelledTimerSeq(1),
    mServerSub(serverSub)
@@ -475,8 +475,8 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
       else
       {
          // store state about the provisional if reliable, so we can detect retransmissions
-         int rseq = msg.header(h_RSeq).value();
-         if ( (mLastReceivedRSeq == -1) || (rseq == mLastReceivedRSeq+1))
+         unsigned int rseq = (unsigned int)msg.header(h_RSeq).value();
+         if ( (mLastReceivedRSeq == 0) || (rseq == mLastReceivedRSeq+1))
          {
             startStaleCallTimer();
             mLastReceivedRSeq = rseq;
@@ -539,7 +539,7 @@ void
 ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
 {
    if ( isReliable(msg) &&
-        (mLastReceivedRSeq == -1 || msg.header(h_RSeq).value() == mLastReceivedRSeq+1))
+        (mLastReceivedRSeq == 0 || (unsigned int)msg.header(h_RSeq).value() == mLastReceivedRSeq+1))
    {
       SharedPtr<SipMessage> prack(new SipMessage);
       mDialog.makeRequest(*prack, PRACK);
@@ -576,7 +576,7 @@ ClientInviteSession::isNextProvisional(const SipMessage& msg)
 bool
 ClientInviteSession::isRetransmission(const SipMessage& msg)
 {
-   if ( mLastReceivedRSeq == -1 ||
+   if ( mLastReceivedRSeq == 0 ||
         msg.header(h_RSeq).value() <= mLastReceivedRSeq)
    {
       return false;
@@ -705,6 +705,10 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -801,6 +805,10 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -846,6 +854,10 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          break;
       }
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -890,6 +902,10 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
+         break;
+
+      case OnBye:
+         dispatchBye(msg);
          break;
 
       default:
@@ -948,6 +964,10 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          handler->onFailure(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
+         break;
+
+      case OnBye:
+         dispatchBye(msg);
          break;
 
       default:
@@ -1023,6 +1043,10 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -1084,6 +1108,10 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          mDum.destroy(this);
          break;
 
+      case OnBye:
+         dispatchBye(msg);
+         break;
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -1140,6 +1168,10 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
          mCancelledTimerSeq++;
          break;
       }
+
+      case OnBye:
+         dispatchBye(msg);
+         break;
 
       default:
          break;

@@ -20,6 +20,12 @@
 class TestProxy;
 class TestSipEndPoint;
 class TestUser;
+// vk
+enum messageType {
+     textPlain    = 0 ,
+     messageCpim  = 1
+};
+// end - vk
 
 namespace resip
 {
@@ -121,6 +127,10 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       ( boost::shared_ptr<resip::SipMessage> msg) > 
       MessageConditionerFn;
 
+      typedef boost::function<resip::Data 
+      ( const resip::Data& ) > 
+      RawConditionerFn;
+
       class IdentityMessageConditioner
       {
          public:
@@ -128,6 +138,14 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       static IdentityMessageConditioner identity;
 
+      class IdentityRawConditioner
+      {
+         public:
+            resip::Data operator()( const resip::Data& );
+      };
+      static IdentityRawConditioner raw_identity;
+
+      
       class ChainConditions
       {
          public:
@@ -137,6 +155,17 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
          private:
             MessageConditionerFn mFn1;
             MessageConditionerFn mFn2;
+      };
+
+      class ChainRawConditions
+      {
+         public:
+            ChainRawConditions(RawConditionerFn fn1, RawConditionerFn fn2);
+            resip::Data operator()( const resip::Data& );
+
+         private:
+            RawConditionerFn mFn1;
+            RawConditionerFn mFn2;
       };
 
       class SaveMessage
@@ -154,6 +183,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             MessageAction(TestSipEndPoint& from, const resip::Uri& to);
             virtual void operator()();
             void setConditioner(MessageConditionerFn conditioner);
+            void setRawConditioner(RawConditionerFn conditioner);
             virtual boost::shared_ptr<resip::SipMessage> go() = 0;
 
          protected:
@@ -161,6 +191,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             resip::Uri mTo;
             boost::shared_ptr<resip::SipMessage> mMsg;
             MessageConditionerFn mConditioner;
+            RawConditionerFn mRawConditioner;
       };
 
       class Invite : public MessageAction
@@ -206,6 +237,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             RawSend(TestSipEndPoint* from, 
                     const resip::Uri& to, 
                     const resip::Data& rawText);
+            void setRawConditioner(RawConditionerFn conditioner);
             virtual void operator()();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
@@ -217,6 +249,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             TestSipEndPoint& mEndPoint;
             resip::NameAddr mTo;
             resip::Data mRawText;
+            RawConditionerFn mRawConditioner;
+            
       };
       friend class RawSend;
       RawSend* rawSend(const TestSipEndPoint* endPoint, const resip::Data& rawText);
@@ -278,10 +312,17 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
       Request* message(const TestSipEndPoint* endPoint, const resip::Data& text);
       Request* message(const TestUser& endPoint, const resip::Data& text);
+      // vk
+      Request* message(const resip::NameAddr& target, const resip::Data& text, const messageType contentType = textPlain);
+      // end - vk
 
       //create message that do not require exsistance of other endpoint
       Request* message(const resip::Uri& target, const resip::Data& text);
       Request* message(const resip::Uri& target, const boost::shared_ptr<resip::Contents>& contents);
+
+      // vk
+      Request* options(const resip::Uri& target);
+      // end - vk
       
       class Retransmit : public ExpectAction
       {
@@ -320,11 +361,13 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage>) = 0;
             void setConditioner(MessageConditionerFn conditioner);
+            void setRawConditioner(RawConditionerFn conditioner);
 
          protected:
             TestSipEndPoint& mEndPoint;
             boost::shared_ptr<resip::SipMessage> mMsg;
             MessageConditionerFn mConditioner;
+            RawConditionerFn mRawConditioner;
       };
 
       class Send300 : public MessageExpectAction
@@ -337,6 +380,109 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             TestSipEndPoint& mEndpoint;
       };
       MessageExpectAction* send300(std::set<resip::NameAddr> alternates);
+
+      // vk
+      class Send301 : public MessageExpectAction
+      {
+         public:
+            explicit Send301(TestSipEndPoint& endpoint, std::set<resip::NameAddr> alternates);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            std::set<resip::NameAddr> mAlternates;
+            TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* send301(std::set<resip::NameAddr> alternates);
+
+      class Send400 : public MessageExpectAction
+      {
+         public:
+            explicit Send400(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send400();
+
+      class Send407 : public MessageExpectAction
+      {
+         public:
+            explicit Send407(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send407();
+
+      class Send408 : public MessageExpectAction
+      {
+         public:
+            explicit Send408(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send408();
+
+      class Send410 : public MessageExpectAction
+      {
+         public:
+            explicit Send410(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send410();
+
+      class Send482 : public MessageExpectAction
+      {
+         public:
+            explicit Send482(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send482();
+
+
+      class Send483 : public MessageExpectAction
+      {
+         public:
+            explicit Send483(TestSipEndPoint & endPoint);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            TestSipEndPoint& mEndPoint;
+
+      };
+      MessageExpectAction* send483();
+
+      class Send500WithRetryAfter : public MessageExpectAction
+      {
+         public:
+            explicit Send500WithRetryAfter(TestSipEndPoint& endpoint, int retryAfter);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            int mRetryAfter;
+            TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* send500WithRetryAfter(int retryAfter);
+
+      class Send503WithRetryAfter : public MessageExpectAction
+      {
+         public:
+            explicit Send503WithRetryAfter(TestSipEndPoint& endpoint, int retryAfter);
+            virtual boost::shared_ptr<resip::SipMessage>
+            go(boost::shared_ptr<resip::SipMessage> msg);
+            int mRetryAfter;
+            TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* send503WithRetryAfter(int retryAfter);
+
+      // end - vk
 
       class Send302 : public MessageExpectAction
       {
@@ -403,7 +549,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             Send423Or200ToPublish(TestSipEndPoint& endPoint, int minExpres);
             virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
             TestSipEndPoint& mEndPoint;
-            int mMinExpires;
+            UInt32 mMinExpires;
       };
       MessageExpectAction* send423Or200ToPublish(int minExpires);
 
@@ -444,8 +590,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             boost::shared_ptr<resip::Contents> mContents;
             resip::Data mEventPackage;
             resip::Data mSubscriptionState;
-            int mExpires;
-            int mMinExpires;
+            UInt32 mExpires;
+            UInt32 mMinExpires;
             bool mFirstNotify;
       };
       MessageExpectAction* notify(boost::shared_ptr<resip::Contents> contents, const resip::Data& eventPackage, const resip::Data& subscriptionState, int expires, int minExpires, bool firstNotify=false);
@@ -462,6 +608,25 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       MessageExpectAction* answer();
       MessageExpectAction* answer(const boost::shared_ptr<resip::SdpContents>& sdp);
+
+      class AnswerTo : public MessageAction
+      {
+         public:
+            AnswerTo(
+               TestSipEndPoint& from,
+               const boost::shared_ptr<resip::SipMessage>&msg,
+               boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual resip::Data toString() const;
+         private:
+            virtual boost::shared_ptr<resip::SipMessage> go();
+            const boost::shared_ptr<resip::SipMessage>& mMsg;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
+      // need the ability to delay the answer to an INVITE: outside of the expect-action. i.e. In the Branch's end action (And(...)-action)
+      // or a new sequence action perhaps.
+      MessageAction* answerTo(
+         const boost::shared_ptr<resip::SipMessage>& msg,
+         boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
 
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ring, 180);
       MessageExpectAction* ring();
@@ -521,6 +686,11 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send202, 202);
       MessageExpectAction* send202();
 
+      // vk
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send200, 200);
+      MessageExpectAction* send200();
+      // end - vk
+
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send100, 100);
       MessageExpectAction* send100();
 
@@ -533,8 +703,21 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send513, 513);
       MessageExpectAction* send513();
 
+      // vk
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send501, 501);
+      MessageExpectAction* send501();
+
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send502, 502);
+      MessageExpectAction* send502();
+      // end- vk
+
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send504, 504);
       MessageExpectAction* send504();
+
+      // vk
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send506, 506);
+      MessageExpectAction* send506();
+      // end - vk
 
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send600, 600);
       MessageExpectAction* send600();
@@ -562,6 +745,30 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       };
       MessageExpectAction* ack();
       MessageExpectAction* ack(const boost::shared_ptr<resip::SdpContents>& sdp);
+
+      class AckNewTid : public MessageExpectAction
+      {
+         public:
+            explicit AckNewTid(TestSipEndPoint& endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
+      MessageExpectAction* ackNewTid();
+      MessageExpectAction* ackNewTid(const boost::shared_ptr<resip::SdpContents>& sdp);
+
+      class AckOldTid : public MessageExpectAction
+      {
+         public:
+            explicit AckOldTid(TestSipEndPoint& endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
+      MessageExpectAction* ackOldTid();
+      MessageExpectAction* ackOldTid(const boost::shared_ptr<resip::SdpContents>& sdp);
 
       EXPECT_FUNCTOR(TestSipEndPoint, AckReferred);
       MessageExpectAction* ackReferred();
@@ -762,7 +969,10 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       const resip::Uri& getUri() const;
       resip::Data getAddressOfRecordString() const;
       
-      virtual void send(boost::shared_ptr<resip::SipMessage>& sipMessage);
+      // !bwc! If rawData is specified, do all target resolution steps
+      // based on sipMessage, but put the bits in rawData on the wire.
+      virtual void send(boost::shared_ptr<resip::SipMessage>& sipMessage,
+                        RawConditionerFn rawCondition=raw_identity);
       
       // !dlb! need to shove the interface through MessageAction
       void storeSentSubscribe(const boost::shared_ptr<resip::SipMessage>& subscribe);
@@ -833,6 +1043,7 @@ enum {SIP_100 = 100,
       SIP_183 = 183,
       SIP_200 = 200,
       SIP_202 = 202,
+      SIP_301 = 301, // vk
       SIP_302 = 302,
       SIP_400 = 400,
       SIP_402 = 402,
@@ -879,6 +1090,14 @@ condition(TestSipEndPoint::MessageConditionerFn fn,
           TestSipEndPoint::MessageAction* action);
 
 TestSipEndPoint::MessageAction*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, 
+          TestSipEndPoint::MessageAction* action);
+
+TestSipEndPoint::RawSend*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, 
+          TestSipEndPoint::RawSend* action);
+
+TestSipEndPoint::MessageAction*
 save(boost::shared_ptr<resip::SipMessage>& msgPtr, 
      TestSipEndPoint::MessageAction* action);
 
@@ -888,6 +1107,10 @@ operator<=(boost::shared_ptr<resip::SipMessage>& msgPtr,
 
 TestSipEndPoint::MessageExpectAction*
 condition(TestSipEndPoint::MessageConditionerFn fn, 
+          TestSipEndPoint::MessageExpectAction* action);
+
+TestSipEndPoint::MessageExpectAction*
+rawcondition(TestSipEndPoint::RawConditionerFn fn, 
           TestSipEndPoint::MessageExpectAction* action);
 
 TestSipEndPoint::MessageExpectAction*
@@ -919,6 +1142,22 @@ compose(TestSipEndPoint::MessageConditionerFn fn4,
         TestSipEndPoint::MessageConditionerFn fn3,
         TestSipEndPoint::MessageConditionerFn fn2,
         TestSipEndPoint::MessageConditionerFn fn1);
+
+// syntactic sugar for composing conditions
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1);
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn3,
+        TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1);
+
+TestSipEndPoint::RawConditionerFn
+rawcompose(TestSipEndPoint::RawConditionerFn fn4,
+        TestSipEndPoint::RawConditionerFn fn3,
+        TestSipEndPoint::RawConditionerFn fn2,
+        TestSipEndPoint::RawConditionerFn fn1);
 
 #endif // TestSipEndPoint_hxx
 

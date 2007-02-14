@@ -10,8 +10,9 @@
 #endif
 
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
 
+#if 0
 /*! \brief Marker class indicating that no exception is expected by TestCaller.
  * This class is an implementation detail. You should never use this class directly.
  */
@@ -27,19 +28,19 @@ private:
  *
  * This class is an implementation detail. You should never use this class directly.
  */
-template<typename ExceptionType>
+template<class ExceptionType>
 struct ExpectedExceptionTraits
 {
   static void expectedException()
   {
 #if CPPUNIT_USE_TYPEINFO_NAME
-	  std::string message( "Expected exception of type " );
-	  message += TypeInfoHelper::getClassName( typeid( ExceptionType ) );
-	  message += ", but got none";
+    throw Exception( Message(
+                         "expected exception not thrown",
+                         "Expected exception type: " + 
+                           TypeInfoHelper::getClassName( typeid( ExceptionType ) ) ) );
 #else
-    std::string message( "Expected exception but got none" );
+    throw Exception( "expected exception not thrown" );
 #endif
-	  throw Exception( message );
   }
 };
 
@@ -58,6 +59,7 @@ struct ExpectedExceptionTraits<NoExceptionExpected>
 };
 
 
+#endif
 
 //*** FIXME: rework this when class Fixture is implemented. ***//
 
@@ -98,8 +100,7 @@ struct ExpectedExceptionTraits<NoExceptionExpected>
  * \see TestCase
  */
 
-template <typename Fixture,  
-	  typename ExpectedException = NoExceptionExpected>
+template <class Fixture>
 class TestCaller : public TestCase
 { 
   typedef void (Fixture::*TestMethod)();
@@ -159,17 +160,16 @@ public:
       delete m_fixture;
   }
 
-protected:
   void runTest()
   { 
-	  try {
+//	  try {
 	    (m_fixture->*m_test)();
-	  }
-	  catch ( ExpectedException & ) {
-	    return;
-	  }
+//	  }
+//	  catch ( ExpectedException & ) {
+//	    return;
+//	  }
 
-  	ExpectedExceptionTraits<ExpectedException>::expectedException();
+//  	ExpectedExceptionTraits<ExpectedException>::expectedException();
   }  
 
   void setUp()
@@ -199,6 +199,6 @@ private:
 
 
 
-} // namespace CppUnit
+CPPUNIT_NS_END
 
 #endif // CPPUNIT_TESTCALLER_H

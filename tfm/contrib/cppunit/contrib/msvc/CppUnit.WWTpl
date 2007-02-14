@@ -122,7 +122,7 @@ Parent class name: <input type=text id=parentclassname size=40><br>
 !!Set hasparentclass 1
 !!Else
 !!If @@isunittest@@
-!!Set parentclassname CppUnit::TestCase
+!!Set parentclassname CppUnit::TestFixture
 !!Set hasparentclass 1
 !!Endif
 !!Endif

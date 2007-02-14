@@ -1,24 +1,16 @@
 #include <cppunit/extensions/RepeatedTest.h>
 #include <cppunit/TestResult.h>
 
-namespace CppUnit {
-
+CPPUNIT_NS_BEGIN
 
 
 // Counts the number of test cases that will be run by this test.
 int
 RepeatedTest::countTestCases() const
 { 
-  return TestDecorator::countTestCases () * m_timesRepeat; 
+  return TestDecorator::countTestCases() * m_timesRepeat; 
 }
 
-
-// Returns the name of the test instance. 
-std::string 
-RepeatedTest::toString() const
-{ 
-  return TestDecorator::toString () + " (repeated)"; 
-}
 
 // Runs a repeated test
 void 
@@ -34,4 +26,4 @@ RepeatedTest::run( TestResult *result )
 }
 
 
-} // namespace TestAssert
+CPPUNIT_NS_END

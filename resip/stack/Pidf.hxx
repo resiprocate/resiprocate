@@ -8,6 +8,7 @@
 #include "rutil/HashMap.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
+#include "resip/stack/QValue.hxx"
 
 namespace resip
 {
@@ -42,7 +43,7 @@ class Pidf : public Contents
             bool status;
             Data id;
             Data contact;
-            float contactPriority;
+            QValue contactPriority;
             Data note;
             Data timeStamp;
             HashMap<Data, Data> attributes;

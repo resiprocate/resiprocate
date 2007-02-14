@@ -13,6 +13,7 @@ TestFailureListViewItem::TestFailureListViewItem(
     QListViewItem( parent ),
     _failure( failure )
 {
+	setMultiLinesEnabled (true);
 }
 
 

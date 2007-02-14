@@ -18,11 +18,13 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 
-ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog, const SipMessage& request)
+ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
+                                       const SipMessage& request, UInt32 defaultSubExpiration)
    : BaseSubscription(dum, dialog, request),
      mOnNewSubscriptionCalled(mEventType == "refer"),  // don't call onNewSubscription for Refer subscriptions
      mEnded(false),
      mExpires(0),
+     mDefaultExpires(defaultSubExpiration),
      mRefreshing(false),
      mHaveQueuedRefresh(false),
      mQueuedRefreshInterval(-1),
@@ -121,10 +123,19 @@ ClientSubscription::processResponse(const SipMessage& msg)
    assert(handler);
 
    mRefreshing = false;
-   // !jf! might get an expiration in the 202 but not in the NOTIFY - we're going
-   // to ignore this case
+
    if (msg.header(h_StatusLine).statusCode() >= 200 && msg.header(h_StatusLine).statusCode() <300)
    {
+      if (msg.exists(h_Expires))
+      {
+         // grab the expires from the 2xx in case there is not one on the NOTIFY .mjf.
+         UInt32 expires = msg.header(h_Expires).value();
+         UInt32 lastExpires = mLastRequest->header(h_Expires).value();
+         if (expires < lastExpires)
+         {
+            mLastRequest->header(h_Expires).value() = expires;
+         }
+      }
       sendQueuedRefreshRequest();
    }
    else if (msg.header(h_StatusLine).statusCode() == 481 &&
@@ -234,7 +245,7 @@ ClientSubscription::processNextNotify()
    unsigned long refreshInterval = 0;
    if (!qn->outOfOrder())
    {
-      int expires = 0;
+      UInt32 expires = 0;
       //default to 3600 seconds so non-compliant endpoints don't result in leaked usages
       if (qn->notify().exists(h_SubscriptionState) && qn->notify().header(h_SubscriptionState).exists(p_expires))
       {
@@ -243,6 +254,16 @@ ClientSubscription::processNextNotify()
       else if (mLastRequest->exists(h_Expires))
       {
          expires = mLastRequest->header(h_Expires).value();
+      }
+      else if (mDefaultExpires)
+      {
+         /* if we haven't gotten an expires value from:
+            1. the subscription state from this notify
+            2. the last request
+            then use the default expires (meaning it came from the 2xx in response
+            to the initial SUBSCRIBE). .mjf.
+          */
+         expires = mDefaultExpires;
       }
       else
       {
@@ -389,7 +410,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 }
 
 void
-ClientSubscription::requestRefresh(int expires)
+ClientSubscription::requestRefresh(UInt32 expires)
 {
    if (!mEnded)
    {
@@ -433,7 +454,12 @@ void
 ClientSubscription::acceptUpdate(int statusCode)
 {
    assert(!mQueuedNotifies.empty());
-   //std::auto_ptr<QueuedNotify> qn(mQueuedNotifies.front());
+   if (mQueuedNotifies.empty())
+   {
+      InfoLog(<< "No queued notify to accept");
+      return;
+   }
+
    QueuedNotify* qn = mQueuedNotifies.front();
    mQueuedNotifies.pop_front();
    mDustbin.push_back(qn);
@@ -465,6 +491,12 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    assert(handler);   
    assert(!mQueuedNotifies.empty());
+   if (mQueuedNotifies.empty())
+   {
+      InfoLog(<< "No queued notify to reject");
+      return;
+   }
+
    QueuedNotify* qn = mQueuedNotifies.front();
    mQueuedNotifies.pop_front();
    mDustbin.push_back(qn);

@@ -13,51 +13,56 @@
 /*! \class TestRunnerModel
  * \brief This class represents a model for the test runner.
  */
-class AFX_CLASS_EXPORT TestRunnerModel
+class TestRunnerModel
 {
 public:
+  static const CString settingKey;
+  static const CString settingMainDialogKey;
+  static const CString settingBrowseDialogKey;
+
   struct Settings
   {
     bool autorunOnLaunch;
-    RECT dlgBounds;	
     int  col_1; // 1st column width in list view
     int  col_2; // 2nd column width in list view
     int  col_3; // 3rd column width in list view
     int  col_4; // 4th column width in list view  
   };
 
-  typedef std::deque<CppUnit::Test *> History;
+  typedef std::deque<CPPUNIT_NS::Test *> History;
 
   /*! Constructs a TestRunnerModel object.
    */
-  TestRunnerModel( CppUnit::Test *rootTest );
+  TestRunnerModel( CPPUNIT_NS::Test *rootTest );
 
   /*! Destructor.
    */
   virtual ~TestRunnerModel();
 
-  virtual void setRootTest( CppUnit::Test *rootTest );
+  virtual void setRootTest( CPPUNIT_NS::Test *rootTest );
 
   void loadSettings(Settings & s);
   void saveSettings(const Settings & s);
 
   const History &history() const;
-  void selectHistoryTest( CppUnit::Test *test );
-  CppUnit::Test *selectedTest() const;
+  void selectHistoryTest( CPPUNIT_NS::Test *test );
+  CPPUNIT_NS::Test *selectedTest() const;
 
-  CppUnit::Test *rootTest();
+  CPPUNIT_NS::Test *rootTest();
 
 protected:
   void loadHistory();
   CString loadHistoryEntry( int idx );
-  CppUnit::Test *findTestByName( CString name ) const;
-  CppUnit::Test *findTestByNameFor( const CString &name, 
-                                    CppUnit::Test *test ) const;
+  CPPUNIT_NS::Test *findTestByName( CString name ) const;
+  CPPUNIT_NS::Test *findTestByNameFor( const CString &name, 
+                                    CPPUNIT_NS::Test *test ) const;
 
   void saveHistoryEntry( int idx, 
                          CString testName );
 
   CString getHistoryEntryName( int idx ) const;
+
+  static std::string toAnsiString( const CString &text );
 
 private:
   /// Prevents the use of the copy constructor.
@@ -66,10 +71,10 @@ private:
   /// Prevents the use of the copy operator.
   TestRunnerModel &operator =( const TestRunnerModel &copy );
 
-private:
+protected:
   History m_history;
 
-  CppUnit::Test *m_rootTest;
+  CPPUNIT_NS::Test *m_rootTest;
 };
 
 

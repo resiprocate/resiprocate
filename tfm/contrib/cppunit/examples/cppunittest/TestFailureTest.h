@@ -4,7 +4,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 
-class TestFailureTest : public CppUnit::TestFixture
+class TestFailureTest : public CPPUNIT_NS::TestFixture
 {
   CPPUNIT_TEST_SUITE( TestFailureTest );
   CPPUNIT_TEST( testConstructorAndGetters );
@@ -24,11 +24,11 @@ public:
   void exceptionDestroyed();
 
 private:
-  class ObservedException : public CppUnit::Exception
+  class ObservedException : public CPPUNIT_NS::Exception
   {
   public:
     ObservedException( TestFailureTest *listener ) : 
-        CppUnit::Exception( "ObservedException" ),
+        CPPUNIT_NS::Exception( CPPUNIT_NS::Message("ObservedException" ) ),
         m_listener( listener )
     {
     }
@@ -44,8 +44,8 @@ private:
 
   TestFailureTest( const TestFailureTest &copy );
   void operator =( const TestFailureTest &copy );
-  void checkTestFailure( CppUnit::Test *test, 
-                         CppUnit::Exception *error,
+  void checkTestFailure( CPPUNIT_NS::Test *test, 
+                         CPPUNIT_NS::Exception *error,
                          bool isError );
 
 private:

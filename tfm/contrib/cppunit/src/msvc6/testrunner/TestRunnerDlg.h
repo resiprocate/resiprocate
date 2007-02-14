@@ -37,6 +37,7 @@
 #include "ActiveTest.h"
 #include "MsDevCallerListCtrl.h"
 #include "TestRunnerModel.h"
+#include "DynamicWindow/cdxCDynamicDialog.h"
 
 class ProgressBar;
 class TestRunnerModel;
@@ -45,29 +46,33 @@ class TestRunnerModel;
 /////////////////////////////////////////////////////////////////////////////
 // TestRunnerDlg dialog
 
-class AFX_EXT_CLASS TestRunnerDlg : public CDialog,
-                                    public CppUnit::TestListener
+class TestRunnerDlg : public cdxCDynamicDialog,
+                      public CPPUNIT_NS::TestListener
 {
 public:
   TestRunnerDlg( TestRunnerModel *model,
-                int nDialogResourceId = -1,
+                int nDialogResourceId,
                 CWnd* pParent = NULL);
-  ~TestRunnerDlg();
+  TestRunnerDlg( TestRunnerModel *model,
+                const TCHAR* szDialogResourceId = NULL,
+                CWnd* pParent = NULL);
+  virtual ~TestRunnerDlg();
 
   // overrided from TestListener;
-  void startTest( CppUnit::Test *test );
-  void addFailure( const CppUnit::TestFailure &failure );
-  void endTest( CppUnit::Test *test );
+  void startTest( CPPUNIT_NS::Test *test );
+  void addFailure( const CPPUNIT_NS::TestFailure &failure );
+  void endTest( CPPUNIT_NS::Test *test );
 
   // IDD is not use, it is just there for the wizard.
   //{{AFX_DATA(TestRunnerDlg)
-  enum { IDD = IDD_DIALOG_TESTRUNNER };
-	MsDevCallerListCtrl	m_listCtrl;
-  CButton	m_buttonClose;
-  CButton	m_buttonStop;
-  CButton	m_buttonRun;
-  BOOL	m_bAutorunAtStartup;
-  //}}AFX_DATA
+	CEdit	m_details;
+  MsDevCallerListCtrl m_listCtrl;
+  CButton m_buttonClose;
+  CButton m_buttonStop;
+  CButton m_buttonRun;
+  CButton m_buttonBrowse;
+  BOOL m_bAutorunAtStartup;
+	//}}AFX_DATA
 
   //{{AFX_VIRTUAL(TestRunnerDlg)
 public:
@@ -83,21 +88,21 @@ protected:
   afx_msg void OnRun();
   afx_msg void OnStop();
   virtual void OnOK();
-  afx_msg void OnSelchangeComboTest();
-  afx_msg void OnPaint();
   afx_msg void OnBrowseTest();
   afx_msg void OnQuitApplication();
   afx_msg void OnClose();
-  afx_msg void OnSize(UINT nType, int cx, int cy);
-  //}}AFX_MSG
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnSelectedFailureChange(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnSelectTestInHistoryCombo();
+	//}}AFX_MSG
   DECLARE_MESSAGE_MAP()
 
-  typedef std::vector<CppUnit::Test *> Tests;
+  typedef std::vector<CPPUNIT_NS::Test *> Tests;
   ProgressBar *m_testsProgress;
-  CppUnit::Test *m_selectedTest;
+  CPPUNIT_NS::Test *m_selectedTest;
   ActiveTest *m_activeTest;
-  CppUnit::TestResult *m_testObserver;
-  CppUnit::TestResultCollector *m_result;
+  CPPUNIT_NS::TestResult *m_testObserver;
+  CPPUNIT_NS::TestResultCollector *m_result;
   int m_testsRun;
   int m_errors;
   int m_failures;
@@ -108,6 +113,7 @@ protected:
   bool m_bIsRunning;
   TestRunnerModel *m_model;
   CImageList m_errorListBitmap;
+  CFont m_fixedSizeFont;
 
   enum ErrorTypeBitmaps
   {
@@ -115,7 +121,7 @@ protected:
     errorTypeError
   };
 
-  void addListEntry( const CppUnit::TestFailure &failure );
+  void addListEntry( const CPPUNIT_NS::TestFailure &failure );
   void beIdle();
   void beRunning();
   void beRunDisabled();
@@ -123,13 +129,13 @@ protected:
   void freeState();
   void updateCountsDisplay();
   void setupHistoryCombo();
-  CppUnit::Test *findTestByName( std::string name ) const;
-  CppUnit::Test *findTestByNameFor( const std::string &name, 
-                                    CppUnit::Test *test ) const;
-  void addNewTestToHistory( CppUnit::Test *test );
-  void addTestToHistoryCombo( CppUnit::Test *test, 
+  CPPUNIT_NS::Test *findTestByName( std::string name ) const;
+  CPPUNIT_NS::Test *findTestByNameFor( const std::string &name, 
+                                    CPPUNIT_NS::Test *test ) const;
+  void addNewTestToHistory( CPPUNIT_NS::Test *test );
+  void addTestToHistoryCombo( CPPUNIT_NS::Test *test, 
                               int idx =-1 );
-  void removeTestFromHistory( CppUnit::Test *test );
+  void removeTestFromHistory( CPPUNIT_NS::Test *test );
   CComboBox *getHistoryCombo();
   void updateSelectedItem();
   void saveHistory();
@@ -137,33 +143,24 @@ protected:
   void saveSettings();
   TestRunnerModel &model();
   void updateHistoryCombo();
-
-  void updateTopButtonPosition( unsigned int buttonId,
-                                int xButtonLeft,
-                                int xButtonRight );
-  void updateBottomButtonPosition( unsigned int buttonId,
-                                   int xButtonLeft,
-                                   int xButtonRight,
-                                   int yButtonBottom );
-
-  // layout management
-  void updateLayoutInfo();
+  void displayFailureDetailsFor( unsigned int failureIndex );
 
   CRect getItemWindowRect( unsigned int itemId );
-  CRect getDialogBounds();
-  void updateListPosition( int xButtonLeft );
+  CRect getItemClientRect( unsigned int itemId );
+
+  //CRect getDialogBounds();
+
+  virtual void initializeLayout();
+  void updateListColumnSize();
+  void initializeFixedSizeFont();
+
 
 private:
-
-  int m_margin;
-
-  /// distance from bottom of ListView
-  int m_listViewDelta;
-
-  /// distance from timing edit box
-  int m_editDelta;
-
   TestRunnerModel::Settings m_settings;
+
+  /// do all initialization, that is usually done in the constructor, so that the
+  /// code is not duplicated in the two constructors
+  void TestRunnerDlg::init(TestRunnerModel *model);
 };
 
 

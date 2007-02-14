@@ -5,7 +5,7 @@
 #include "MockTestListener.h"
 
 
-class OrthodoxTest : public CppUnit::TestFixture
+class OrthodoxTest : public CPPUNIT_NS::TestFixture
 {
   CPPUNIT_TEST_SUITE( OrthodoxTest );
   CPPUNIT_TEST( testValue );
@@ -169,7 +169,7 @@ private:
   void operator =( const OrthodoxTest &copy );
 
 private:
-  CppUnit::TestResult *m_result;
+  CPPUNIT_NS::TestResult *m_result;
   MockTestListener *m_testListener;
 };
 

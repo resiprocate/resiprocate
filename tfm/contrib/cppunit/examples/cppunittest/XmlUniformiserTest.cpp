@@ -1,11 +1,10 @@
-#include <cppunit/NotEqualException.h>
 #include <stdlib.h>
 #include "UnitTestToolSuite.h"
 #include "XmlUniformiserTest.h"
 #include "XmlUniformiser.h"
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION( XmlUniformiserTest, 
-                                       CppUnitTest::unitTestToolSuiteName() );
+                                       unitTestToolSuiteName() );
 
 
 XmlUniformiserTest::XmlUniformiserTest()
@@ -98,7 +97,7 @@ void
 XmlUniformiserTest::testElementWithContent()
 {
   check( "<Element>\nContent\n</Element>\n",
-         "<Element>Content\n</Element>" );
+         "<Element>Content</Element>" );
 }
 
 
@@ -127,26 +126,12 @@ XmlUniformiserTest::testSkipComment()
 
 
 void 
-XmlUniformiserTest::testAssertXmlEqualFail()
+XmlUniformiserTest::testAssertXmlEqual()
 {
-  try
-  {
-    CPPUNITTEST_ASSERT_XML_EQUAL( "<Test>", "<Tes>" );
-    CPPUNIT_FAIL( "CppUnit::NotEqualException expected" );
-  }
-  catch ( CppUnit::NotEqualException &e )
-  {
-    CPPUNIT_ASSERT_EQUAL( e.expectedValue(), std::string("<Test>" ) );
-    CPPUNIT_ASSERT_EQUAL( e.actualValue(), std::string("<Tes>" ) );
-    CPPUNIT_ASSERT( !e.additionalMessage().empty() );
-    CPPUNIT_ASSERT( e.sourceLine().isValid() );
-  }
-}
-
-void 
-XmlUniformiserTest::testAssertXmlEqualPass()
-{
-  CPPUNITTEST_ASSERT_XML_EQUAL( "<Test>", "<Test>" );
+  CPPUNIT_ASSERT_ASSERTION_FAIL( 
+     CPPUNITTEST_ASSERT_XML_EQUAL( "<Test>", "<Tes>" ) );
+  CPPUNIT_ASSERT_ASSERTION_PASS( 
+     CPPUNITTEST_ASSERT_XML_EQUAL( "<Test>", "<Test>" ) );
 }
 
 
@@ -154,6 +139,6 @@ void
 XmlUniformiserTest::check( const std::string &xml, 
                            const std::string &expectedStrippedXml )
 {
-  std::string actual = CppUnitTest::XmlUniformiser( xml ).stripped();
+  std::string actual = XmlUniformiser( xml ).stripped();
   CPPUNIT_ASSERT_EQUAL( expectedStrippedXml, actual );
 }

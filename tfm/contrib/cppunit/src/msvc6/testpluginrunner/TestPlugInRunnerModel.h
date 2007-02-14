@@ -27,12 +27,18 @@ public:
   void setPlugIn( TestPlugIn *plugIn );
 
   void reloadPlugIn();
+
+public: // overridden from TestRunnerModel
+  void setRootTest( CPPUNIT_NS::Test *rootTest );
+
 private:
   /// Prevents the use of the copy constructor.
   TestPlugInRunnerModel( const TestPlugInRunnerModel &copy );
 
   /// Prevents the use of the copy operator.
   void operator =( const TestPlugInRunnerModel &copy );
+
+  void freeRootTest();
 
 private:
   TestPlugIn *m_plugIn;

@@ -55,8 +55,8 @@ TestRunnerDlg::setModel( TestRunnerModel *model,
            _recentTests, SLOT( selectTestToRun(int) ) );
 
   // refresh the test report counters when a test is selected
-  connect( _recentTests, SIGNAL( testToRunChanged(CppUnit::Test *) ),
-           _model, SLOT( resetTestReportCounterFor(CppUnit::Test *) ) );
+  connect( _recentTests, SIGNAL( testToRunChanged(CPPUNIT_NS::Test *) ),
+           _model, SLOT( resetTestReportCounterFor(CPPUNIT_NS::Test *) ) );
 
   // refresh progress bar
   connect( _model, SIGNAL( numberOfTestCaseChanged(int) ),
@@ -89,7 +89,7 @@ TestRunnerDlg::setModel( TestRunnerModel *model,
            SLOT( showFailureDetailAt(QListViewItem*) ) );
 
   // disable button when running test
-  connect( _model, SIGNAL( testRunStarted( CppUnit::Test *, CppUnit::TestResult *) ),
+  connect( _model, SIGNAL( testRunStarted( CPPUNIT_NS::Test *, CPPUNIT_NS::TestResult *) ),
            SLOT( beRunningTest() ) );
 
   // enable button when finished running test
@@ -122,7 +122,7 @@ TestRunnerDlg::browseForTest()
 void 
 TestRunnerDlg::runTest()
 {
-  CppUnit::Test *testToRun = _recentTests->testToRun();
+  CPPUNIT_NS::Test *testToRun = _recentTests->testToRun();
   if ( testToRun == NULL )
     return;
   _model->runTest( testToRun );
@@ -185,8 +185,9 @@ TestRunnerDlg::reportFailure( TestFailureInfo *failure )
   std::string failedtestName = failure->failedTestName().c_str();
   item->setText( indexTestName, QString::fromLatin1( failedtestName.c_str() ) );
 
-  CppUnit::Exception *thrownException = failure->thrownException();
-  item->setText( indexMessage, thrownException->what() );
+  CPPUNIT_NS::Exception *thrownException = failure->thrownException();
+//2.0  item->setText( indexMessage, thrownException->what() );
+  item->setText( indexMessage, QString(thrownException->what()).stripWhiteSpace() );
   item->setText( indexFilename, failure->sourceLine().fileName().c_str() );
   item->setText( indexLineNumber,
                  QString::number( failure->sourceLine().lineNumber() ) );

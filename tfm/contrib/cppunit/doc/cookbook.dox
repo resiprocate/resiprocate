@@ -103,7 +103,7 @@ public:
 
 bool operator ==( const Complex &a, const Complex &b )
 { 
-  return eq( a.real, b.real )  &&  eq( a.imaginary, b.imaginary ); 
+  return a.real == b.real  &&  a.imaginary == b.imaginary; 
 }
 \endcode
 
@@ -129,7 +129,7 @@ Here is how we do it:
 class ComplexNumberTest : public CppUnit::TestFixture {
 private:
   Complex *m_10_1, *m_1_1, *m_11_2;
-protected:
+public:
   void setUp()
   {
     m_10_1 = new Complex( 10, 1 );
@@ -147,7 +147,7 @@ protected:
 \endcode
 
 Once we have this fixture, we can add the complex 
-addition test case any any others that we need 
+addition test case and any others that we need 
 over the course of our development.
 
 
@@ -166,7 +166,7 @@ Here is our test case class with a few extra case methods:
 class ComplexNumberTest : public CppUnit::TestFixture  {
 private:
   Complex *m_10_1, *m_1_1, *m_11_2;
-protected:
+public:
   void setUp()
   {
     m_10_1 = new Complex( 10, 1 );
@@ -364,7 +364,7 @@ The rest of the fixture is left unchanged:
 \code
 private:
   Complex *m_10_1, *m_1_1, *m_11_2;
-protected:
+public:
   void setUp()
   {
     m_10_1 = new Complex( 10, 1 );
@@ -441,7 +441,7 @@ To register the ComplexNumber suite, in the .cpp file, you add:
 \code
 #include <cppunit/extensions/HelperMacros.h>
 
-CPPUNIT_TEST_SUITE_REGISTRATION( ComplexNumber );
+CPPUNIT_TEST_SUITE_REGISTRATION( ComplexNumberTest );
 \endcode
 
 Behind the scene, a static variable type of 
@@ -503,15 +503,15 @@ int main( int argc, char **argv)
   CppUnit::TextUi::TestRunner runner;
   CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
   runner.addTest( registry.makeTest() );
-  bool wasSucessful = runner.run( "", false );
-  return wasSucessful;
+  bool wasSuccessful = runner.run( "", false );
+  return !wasSuccessful;
 }
 \endcode
 
 Now, you need to run your application after compilation.
 
 With Visual C++, this is done in <em>Project Settings/Post-Build step</em>, 
-by adding the following command: <tt>$(TargetPath)</tt>. It is expanded to 
+by adding the following command: <tt>"$(TargetPath)"</tt>. It is expanded to 
 the application executable path. Look up the project 
 <tt>examples/cppunittest/CppUnitTestMain.dsp</tt> which
 use that technic.

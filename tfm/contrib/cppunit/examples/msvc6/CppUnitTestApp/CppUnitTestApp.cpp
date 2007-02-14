@@ -6,7 +6,6 @@
 #include "CppUnitTestAppDlg.h"
 #include <cppunit/ui/mfc/TestRunner.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunittest/CppUnitTestSuite.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -53,10 +52,14 @@ CppUnitTestApp::InitInstance()
 	//  the specific initialization routines you do not need.
 
 #ifdef _AFXDLL
+# if _MSC_VER < 1300   // vc6
 	Enable3dControls();			// Call this when using MFC in a shared DLL
+# endif
 #else
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
+
+  SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
   RunTests();        
 
@@ -70,9 +73,9 @@ CppUnitTestApp::InitInstance()
 void 
 CppUnitTestApp::RunTests()
 {
-  CppUnit::MfcUi::TestRunner runner;
+  CPPUNIT_NS::MfcUi::TestRunner runner;
 
-  runner.addTest( CppUnitTest::suite() );
+  runner.addTest( CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest() );
 
   runner.run();
 }

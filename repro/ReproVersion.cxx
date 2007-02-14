@@ -1,20 +1,118 @@
+
 /*
- * It is expected that the compilation environment will set two compilation
- * switches to define strings for REPRO_VERSION and REPRO_BUILDSTAMP
- * and that this file will be recompiled on every build so that they are updated.
- */
+** Build system provides these.
+** VERSION comes from a file and is the 'marketing' version
+**          of repro (major.minor)
+** BUILD_REV is the subversion svnversion output (lightly formatted)
+**           (ends in M if there are local modifications)
+** RELEASE_VERSION
+*/
 
-#ifndef REPRO_VERSION
-#  define REPRO_VERSION "(unknown version)"
+#include <string>
+
+#if defined(TESTDRIVER)
+#include <iostream>
 #endif
 
-#ifndef REPRO_BUILDSTAMP
-#  define REPRO_BUILDSTAMP "(unknown build)"
+#include "repro/ReproVersion.hxx"
+#include "repro/reproInfo.hxx"
+#if !defined(REPRO_BUILD_REV)
+# define REPRO_BUILD_REV "000000"
 #endif
 
-const char* ReproVersion=REPRO_VERSION;
-const char* ReproBuildStamp=REPRO_BUILDSTAMP;
+#if !defined(REPRO_BUILD_HOST)
+# define REPRO_BUILD_HOST "unknown.invalid"
+#endif
 
+#if !defined(REPRO_RELEASE_VERSION)
+# define REPRO_RELEASE_VERSION "0.0"
+#endif
+
+#if !defined(REPRO_NAME)
+# define REPRO_NAME "Repro"
+#endif
+
+
+
+namespace repro
+{
+   VersionUtils::VersionUtils():
+      mBuildHost(REPRO_BUILD_HOST),
+      mReleaseVersion(REPRO_RELEASE_VERSION),
+      mScmRevision(REPRO_BUILD_REV),
+      mDisplayVersion(REPRO_NAME),
+      mBuildStamp(REPRO_BUILD_REV)
+   {
+      mDisplayVersion += ' ';
+      mDisplayVersion += mReleaseVersion;
+      mDisplayVersion += '/';
+
+      mBuildStamp += '@';
+      mBuildStamp += mBuildHost;
+
+      mDisplayVersion += mBuildStamp;
+   }
+
+   VersionUtils* VersionUtils::sVU = 0;
+
+   const VersionUtils&
+   VersionUtils::instance()
+   {
+      if (sVU == 0)
+      {
+	 sVU = new VersionUtils;
+      }
+      return *sVU;
+   }
+
+   VersionUtils::~VersionUtils() {};
+
+   const std::string&
+   VersionUtils::buildStamp() const
+   {
+      return  mBuildStamp;
+   }
+   
+   const std::string&
+   VersionUtils::releaseVersion() const
+   {
+      return mReleaseVersion;
+   }
+
+
+   const std::string&
+   VersionUtils::buildHost() const
+   {
+      return mBuildHost;
+   }
+
+   const std::string&
+   VersionUtils::displayVersion() const
+   {
+      return mDisplayVersion;
+   }
+
+   const std::string&
+   VersionUtils::scmRevision() const
+   {
+      return mScmRevision;
+   }
+
+};
+
+
+#if defined(TESTDRIVER)
+int main()
+{
+#define T(x) std::cout << #x << " = " << repro::VersionUtils::instance().x() << std::endl;
+   T(displayVersion);
+   T(buildStamp);
+   T(scmRevision);
+   T(releaseVersion);
+   T(buildHost);
+   return 0;
+}
+#endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

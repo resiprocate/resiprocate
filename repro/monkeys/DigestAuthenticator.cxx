@@ -13,6 +13,7 @@
 #include "repro/Dispatcher.hxx"
 #include "repro/UserAuthGrabber.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -50,8 +51,8 @@ DigestAuthenticator::process(repro::RequestContext &rc)
    
    if (sipMessage)
    {
-      if (sipMessage->header(h_RequestLine).method() == ACK ||
-            sipMessage->header(h_RequestLine).method() == BYE)
+      if (sipMessage->method() == ACK ||
+            sipMessage->method() == BYE)
       {
          return Continue;
       }
@@ -78,6 +79,15 @@ DigestAuthenticator::process(repro::RequestContext &rc)
       //
       // Note that other monkeys can still challenge the request later if needed 
       // for other reasons (for example, the StaticRoute monkey)
+      if(!sipMessage->header(h_From).isWellFormed() ||
+         sipMessage->header(h_From).isAllContacts() )
+      {
+         InfoLog(<<"Malformed From header: cannot get realm to challenge with. Rejecting.");
+         rc.sendResponse(*auto_ptr<SipMessage>
+                         (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
+         return SkipAllChains;         
+      }
+      
       if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
       {
          if (!rc.fromTrustedNode())
@@ -135,7 +145,16 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                }
             }
 */            
-                        
+            if(!sipMessage->header(h_From).isWellFormed() ||
+               sipMessage->header(h_From).isAllContacts())
+            {
+               InfoLog(<<"From header is malformed in"
+                              " digest response.");
+               rc.sendResponse(*auto_ptr<SipMessage>
+                               (Helper::makeResponse(*sipMessage, 400, "Malformed From header")));
+               return SkipAllChains;               
+            }
+            
             if (authorizedForThisIdentity(user, realm, sipMessage->header(h_From).uri()))
             {
                rc.setDigestIdentity(user);
@@ -194,12 +213,30 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                {
                   static Data http("http://");
                   static Data post(":" + Data(mHttpPort) + "/cert?domain=");
-                  sipMessage->header(h_Identity).value() = Data::Empty;
-                  sipMessage->header(h_IdentityInfo).uri() = http 
-                     + DnsUtil::getLocalHostName() 
-                     + post + realm;
-                  InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
-                  InfoLog (<< *sipMessage);
+                  // !bwc! Leave pre-existing Identity headers alone.
+                  if(!sipMessage->exists(h_Identity))
+                  {
+                     sipMessage->header(h_Identity).value() = Data::Empty;
+                     if(sipMessage->exists(h_IdentityInfo))
+                     {
+                        InfoLog(<<"Somebody sent us a"
+                              " request with an Identity-Info, but no Identity"
+                              " header. Removing it.");
+                        if(!sipMessage->header(h_IdentityInfo).isWellFormed())
+                        {
+                           InfoLog(<<"...and this "
+                              "Identity-Info header was malformed!");
+                        }
+
+                        sipMessage->remove(h_IdentityInfo);
+                     }
+                     
+                     sipMessage->header(h_IdentityInfo).uri() = http 
+                        + DnsUtil::getLocalHostName() 
+                        + post + realm;
+                     InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
+
+                  }
                }
 #endif
             }
@@ -254,7 +291,6 @@ DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
    SipMessage *challenge = Helper::makeProxyChallenge(sipMessage, realm, 
                                                       true /*auth-int*/, stale);
    rc.sendResponse(*challenge);
-
    delete challenge;
 }
 
@@ -293,6 +329,14 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
       UserInfoMessage* async = new UserInfoMessage(*this, rc.getTransactionId(), &(rc.getProxy()));
       async->user()=user;
       async->realm()=realm;
+      if(sipMessage->header(h_From).isWellFormed())
+      {
+         async->domain()=sipMessage->header(h_From).uri().host();
+      }
+      else
+      {
+         async->domain()=realm;
+      }
       mAuthRequestDispatcher->post(std::auto_ptr<ApplicationMessage>(async));
       return WaitingForEvent;
    }
@@ -309,12 +353,10 @@ DigestAuthenticator::getRealm(RequestContext &rc)
    Data realm;
 
    Proxy &proxy = rc.getProxy();
-   Message *message = rc.getCurrentEvent();
-   SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
-   assert(sipMessage);
+   SipMessage& sipMessage = rc.getOriginalRequest();
 
    // (1) Check Preferred Identity
-   if (sipMessage->exists(h_PPreferredIdentities))
+   if (sipMessage.exists(h_PPreferredIdentities))
    {
       // !abr! Add this when we get a chance
       // find the fist sip or sips P-Preferred-Identity header
@@ -328,19 +370,21 @@ DigestAuthenticator::getRealm(RequestContext &rc)
    }
 
    // (2) Check From domain
-   if (proxy.isMyDomain(sipMessage->header(h_From).uri().host()))
+   if (proxy.isMyDomain(sipMessage.header(h_From).uri().host()))
    {
-      return sipMessage->header(h_From).uri().host();
+      return sipMessage.header(h_From).uri().host();
    }
 
    // (3) Check Top Route Header
-   if (sipMessage->exists(h_Routes))
+   if (sipMessage.exists(h_Routes) &&
+         sipMessage.header(h_Routes).size()!=0 &&
+         sipMessage.header(h_Routes).front().isWellFormed())
    {
       // !abr! Add this when we get a chance
    }
 
    // (4) Punt: Use Request URI
-   return sipMessage->header(h_RequestLine).uri().host();
+   return sipMessage.header(h_RequestLine).uri().host();
 }
 
 void

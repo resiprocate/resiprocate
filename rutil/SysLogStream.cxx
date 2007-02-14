@@ -5,7 +5,7 @@ using resip::SysLogStream;
 using resip::SysLogBuf;
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
-#if defined(WIN32)
+#if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
 

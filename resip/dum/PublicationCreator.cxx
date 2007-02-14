@@ -8,7 +8,7 @@ PublicationCreator::PublicationCreator(DialogUsageManager& dum,
                                        SharedPtr<UserProfile> userProfile,
                                        const Contents& body, 
                                        const Data& eventType, 
-                                       unsigned expireSeconds )
+                                       UInt32 expireSeconds )
    : BaseCreator(dum, userProfile)
 {
    makeInitialRequest(target, PUBLISH);

@@ -12,6 +12,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+HINSTANCE g_testRunnerResource;
+
 /////////////////////////////////////////////////////////////////////////////
 // TestPlugInRunnerApp
 
@@ -50,26 +52,24 @@ BOOL TestPlugInRunnerApp::InitInstance()
 	//  the specific initialization routines you do not need.
 
 #ifdef _AFXDLL
+# if _MSC_VER < 1300   // vc6
 	Enable3dControls();			// Call this when using MFC in a shared DLL
+# endif
 #else
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
 
+  g_testRunnerResource = AfxGetResourceHandle();
+
+  SetRegistryKey(_T("CppUnit Test Plug-In Runner"));
+
+  {
   TestPlugInRunnerModel model;
 	TestPlugInRunnerDlg dlg( &model );
 	m_pMainWnd = &dlg;
-	int nResponse = dlg.DoModal();
-	if (nResponse == IDOK)
-	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with OK
-	}
-	else if (nResponse == IDCANCEL)
-	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with Cancel
-	}
+	dlg.DoModal();
 
+  }
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.
 	return FALSE;

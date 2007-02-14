@@ -1,15 +1,11 @@
 #include "XmlUniformiser.h"
 
-namespace CppUnitTest
-{
-
-
 
 int 
 notEqualIndex( std::string expectedXml,
                std::string actualXml )
 {
-  int index = 0;
+  unsigned int index = 0;
   while ( index < actualXml.length()  &&  
           index < expectedXml.length()  &&
           actualXml[index] == expectedXml[index] )
@@ -23,7 +19,7 @@ notEqualIndex( std::string expectedXml,
 void 
 checkXmlEqual( std::string expectedXml,
                std::string actualXml,
-               CppUnit::SourceLine sourceLine )
+               CPPUNIT_NS::SourceLine sourceLine )
 {
   std::string expected = XmlUniformiser( expectedXml ).stripped();
   std::string actual = XmlUniformiser( actualXml ).stripped();
@@ -32,14 +28,14 @@ checkXmlEqual( std::string expectedXml,
     return;
 
   int index = notEqualIndex( expected, actual );
-  CppUnit::OStringStream message;
+  CPPUNIT_NS::OStringStream message;
   message  <<  "differ at index: "  <<  index  << "\n"
            <<  "expected: "  <<  expected.substr(index) << "\n"
            <<  "but was : "  <<  actual.substr( index );
-  ::CppUnit::Asserter::failNotEqual( expected,
-                                     actual,
-                                     sourceLine,
-                                     message.str() );
+  CPPUNIT_NS::Asserter::failNotEqual( expected,
+                                      actual,
+                                      sourceLine,
+                                      message.str() );
 }
 
 
@@ -165,10 +161,13 @@ XmlUniformiser::copyElementAttributes()
 {
   do
   {
+    bool hadSpace = isSpace();
     skipSpaces();
     if ( startsWith( ">" ) )
       break;
-    m_stripped += ' ';
+
+    if ( hadSpace )
+      m_stripped += ' ';
 
     copyAttributeName();
     skipSpaces();
@@ -223,7 +222,15 @@ XmlUniformiser::copyElementContent()
 {
   while ( isValidIndex()  &&  !startsWith( "<" ) )
     copyNext();
+  removeTrailingSpaces();
 }
 
 
-}  // namespace CppUnitTest
+void 
+XmlUniformiser::removeTrailingSpaces()
+{
+  int index = m_stripped.length();
+  while ( index-1 > 0  &&  isSpace( m_stripped[index-1] ) )
+    --index;
+  m_stripped.resize( index );
+}

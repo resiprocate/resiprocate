@@ -9,9 +9,10 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TestResult.h>
 #include "MockTestListener.h"
+#include <stdexcept>
 
 
-class TestCaseTest : public CppUnit::TestFixture
+class TestCaseTest : public CPPUNIT_NS::TestFixture
 {
   CPPUNIT_TEST_SUITE( TestCaseTest );
   CPPUNIT_TEST( testSetUpFailure );
@@ -19,11 +20,12 @@ class TestCaseTest : public CppUnit::TestFixture
   CPPUNIT_TEST( testTearDownFailure );
   CPPUNIT_TEST( testFailAll );
   CPPUNIT_TEST( testNoFailure );
-  CPPUNIT_TEST( testDefaultRun );
   CPPUNIT_TEST( testTwoRun );
   CPPUNIT_TEST( testCountTestCases );
   CPPUNIT_TEST( testDefaultConstructor );
   CPPUNIT_TEST( testConstructorWithName );
+  CPPUNIT_TEST( testGetChildTestCount );
+  CPPUNIT_TEST_EXCEPTION( testGetChildTestAtThrow, std::out_of_range );
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -31,15 +33,14 @@ public:
 
   virtual ~TestCaseTest();
 
-  virtual void setUp();
-  virtual void tearDown();
+  void setUp();
+  void tearDown();
 
   void testSetUpFailure();
   void testRunTestFailure();
   void testTearDownFailure();
   void testFailAll();
   void testNoFailure();
-  void testDefaultRun();
   void testTwoRun();
 
   void testCountTestCases();
@@ -47,6 +48,8 @@ public:
   void testDefaultConstructor();
   void testConstructorWithName();
 
+  void testGetChildTestCount();
+  void testGetChildTestAtThrow();
 
 private:
   TestCaseTest( const TestCaseTest &copy );
@@ -59,10 +62,10 @@ private:
   void checkResult( int failures,
                     int errors,
                     int testsRun,
-                    CppUnit::TestResult *result );
+                    CPPUNIT_NS::TestResult *result );
 */
 private:
-  CppUnit::TestResult *m_result;
+  CPPUNIT_NS::TestResult *m_result;
   MockTestListener *m_testListener;
 };
 

@@ -18,6 +18,11 @@
 #include "resip/stack/SecurityTypes.hxx"
 class TestTransportSelector;
 
+namespace osc
+{
+  class Stack;
+}
+
 namespace resip
 {
 
@@ -27,6 +32,7 @@ class TransactionMessage;
 class SipMessage;
 class TransactionController;
 class Security;
+class Compression;
 
 /**
   TransportSelector has two distinct roles.  The first is transmit on the best
@@ -42,7 +48,7 @@ on Transport add.
 class TransportSelector 
 {
    public:
-      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub);
+      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
       virtual ~TransportSelector();
       /**
 	    @retval true	Some transport in the transport list has data to send
@@ -91,9 +97,10 @@ class TransportSelector
       static Tuple getFirstInterface(bool is_v4, TransportType type);
 
    private:
-      Transport* findTransport(const Tuple& src);
-      Transport* findTlsTransport(const Data& domain);
-      Transport* findDtlsTransport(const Data& domain);
+      Connection* findConnection(const Tuple& dest);
+      Transport* findTransportBySource(Tuple& src);
+      Transport* findTransportByDest(SipMessage* msg, Tuple& dest);
+      Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
       Tuple determineSourceInterface(SipMessage* msg, const Tuple& dest) const;
 
       DnsInterface mDns;
@@ -116,10 +123,54 @@ class TransportSelector
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
       AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
-      // domain name -> Transport
-      typedef std::map<Data, Transport*> TlsTransportMap ;
-      TlsTransportMap mTlsTransports;     
-      TlsTransportMap mDtlsTransports;
+      class TlsTransportKey
+      {
+         public:
+            TlsTransportKey(const resip::Data& domain, resip::TransportType type, resip::IpVersion version)
+               :mDomain(domain),
+               mType(type),
+               mVersion(version)
+            {}
+            
+            TlsTransportKey(const TlsTransportKey& orig)
+            {
+               mDomain=orig.mDomain;
+               mType=orig.mType;
+               mVersion=orig.mVersion;
+            }
+            
+            ~TlsTransportKey(){}
+            bool operator<(const TlsTransportKey& rhs) const
+            {
+               if(mDomain < rhs.mDomain)
+               {
+                  return true;
+               }
+               else if(mDomain == rhs.mDomain)
+               {
+                  if(mType < rhs.mType)
+                  {
+                     return true;
+                  }
+                  else if(mType == rhs.mType)
+                  {
+                     return mVersion < rhs.mVersion;
+                  }
+               }
+               return false;
+            }
+            
+            resip::Data mDomain;
+            resip::TransportType mType;
+            resip::IpVersion mVersion;
+         
+         private:
+            TlsTransportKey();
+      };
+      
+      typedef std::map<TlsTransportKey, Transport*> TlsTransportMap ;
+      
+      TlsTransportMap mTlsTransports;
 
       typedef std::vector<Transport*> TransportList;
       TransportList mSharedProcessTransports;
@@ -132,6 +183,10 @@ class TransportSelector
       // An AF_UNSPEC addr_in for rapid unconnect
       GenericIPAddress mUnspecified;
       GenericIPAddress mUnspecified6;
+
+      /// SigComp configuration object
+      Compression &mCompression;
+      osc::Stack  *mSigcompStack;
 
       friend class TestTransportSelector;
       friend class SipStack; // for debug only

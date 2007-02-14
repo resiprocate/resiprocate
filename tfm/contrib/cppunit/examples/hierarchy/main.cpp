@@ -1,29 +1,23 @@
-#include "cppunit/TextTestResult.h"
-#include "cppunit/TestSuite.h"
+#include <cppunit/ui/text/TestRunner.h>
 
 #include "BoardGame.h"
 #include "Chess.h"
-
 #include "BoardGameTest.h"
 #include "ChessTest.h"
-
-
-#include <vector>
-#include <iostream>
 
 
 
 int 
 main(int argc, char** argv)
 {
-  CppUnit::TestSuite suite;
+  CPPUNIT_NS::TextUi::TestRunner runner;
 
-  suite.addTest( BoardGameTest<BoardGame>::suite() );
-  suite.addTest( ChessTest<Chess>::suite() );
+  runner.addTest( BoardGameTest<BoardGame>::suite() );
+  runner.addTest( ChessTest<Chess>::suite() );
 
-  CppUnit::TextTestResult res;
+  bool wasSucessful = runner.run();
 
-  suite.run( &res );
-  std::cout << res << std::endl;
+  // should be:
+  //  return wasSuccessful ? 0 : 1;
   return 0;
 }

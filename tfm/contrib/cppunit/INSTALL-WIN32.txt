@@ -5,12 +5,14 @@ At the current time, the only supported WIN32 platform is
 Microsoft Visual C++. You must have VC++ 6.0 at least.
 
 Quick Steps to compile & run a sample using the GUI TestRunner:
-- Open examples/examples.dsw in VC++ (contains all the samples)
+- Open examples/examples.dsw in VC++ (contains all the samples).
+  VC7 will ask you if you want to convert, anwser 'yes to all'.
 - Make HostApp the Active project
 - Compile
-- in VC++, Tools/Customize.../Add-ins and macro files/Browse...
-- select the file lib/TestRunnerDSPlugIn.dll and press ok to register
-  the add-ins (double-click on failure = open file in VC++).
+- For Visual Studio 6 only:
+   - in VC++, Tools/Customize.../Add-ins and macro files/Browse...
+   - select the file lib/TestRunnerDSPlugIn.dll and press ok to register
+     the add-ins (double-click on failure = open file in VC++).
 - Run the project
 
 
@@ -24,12 +26,16 @@ to write unit tests.
 
 * cppunit_dll(cppunit_dll.dll/lib) : same as above, but build as a DLL.
 
+* DllPlugInTester(DllPlugInTester.exe) : test plug-in runner executable.
+Use this to test DLL in your post-build step, or debug them.
+
 * TestRunner (testrunner.dll) : a MFC extension DLL to run and browser unit 
 tests from a GUI.
 
-* DSPlugIn (lib/TestRunnerDSPlugIn.dll) : a VC++ add-in used by 
+* DSPlugIn (lib/TestRunnerDSPlugIn.dll) : a VC++ 6.0 add-in used by 
 testrunner.dll. If you double-click on a failure in the MFC TestRunner,
 a running instance of VC++ will open the file and highlight the line.
+This add-ins is not required for Visual Studio 7.
 
 * TestPlugInRunner : (Warning: experimental) a VC++ 
 application to run test plug-in. A test plug-in is a DLL that publish a 
@@ -56,8 +62,8 @@ it in a 'cleaner' way. That sample has not been updated for a long time).
 * HostApp : a sample using the MFC TestRunner demonstrating different test
 failure. Also demonstrates the MFC Unicode TestRunner.
 
-* TestPlugIn : a sample demonstrating how to write a TestPlugIn for the
-TestPlugInRunner (experimental).
+* Money : an example that come along with the Money article of the 
+documentation. Probably what you want to look at if you are a newbie.
 
 
 Configuration:
@@ -69,8 +75,6 @@ CppUnit and TestRunner comes with 3 configurations.
 * Debug (d): Debug Multithreaded DLL, debug mode
 * Unicode Release (u): Unicode Multihtreaded DLL, release mode
 * Unicode Debug (ud): Unicode Debug Multithreaded DLL, debug mode
-* Debug Crossplatform (cd): Debug Multithreaded DLL, suite name for
-test cases are not extracted from the class name using type_info.
 
 For CppUnit, when building as dll, "dll" is appended to the 'suffix'.
 
@@ -83,7 +87,6 @@ Building:
 ---------
 
 * Open the src/CppUnitLibraries.dsw workspace in VC++.
-* Make TestPlugInRunner the active project.
 * In the 'Build' menu, select 'Batch Build...'
 * In the batch build dialog, select all projects and press the build button.
 * The resulting libraries can be found in the lib/ directory.
@@ -128,28 +131,42 @@ against the associated import library and define the pre-processor symbol
 CPPUNIT_DLL in your project.
 
 
+Tools:
+------
+
+CppUnit provides a generic test runner for test plug-in: DllPlugInTester.
+It can be found in the lib/ directory. It requires cppunit*_dll.dll
+
+lib/:
+DllPlugInTester_dll.exe  : test plug-in runner, "Multithreaded DLL", cppunit_dll.dll
+DllPlugInTesterd_dll.exe : test plug-in runner, "Debug Multithreaded DLL", cppunitd_dll.dll
+DllPlugInTester.exe  : test plug-in runner, "Multithreaded DLL", static link cppunit.lib
+DllPlugInTesterd.exe : test plug-in runner, "Debug Multithreaded DLL", static link cppunitd.lib
+
+Notes that the DllPlugInTester(d).exe version of this tools does not allow
+to use the automatic test registration that comes along with test plug-in.
+You probably don't want to use them unless you really know what you are doing.
+
+
 Using CppUnit:
 --------------
 
 * Writing unit tests:
   To write unit tests, you need to link against cppunitXX.lib, where
-  XX is the chosen configuration suffix letters. You must
-  enable RTTI (Project Settings/C++/C++ Language) in your project.
+  XX is the chosen configuration suffix letters. 
   CppUnit include directory must be in the include search path.
   You can do that by adding the include directory in 
   Project Settings/C++/Preprocessor/Additional include directories,
   or Tools/Options/Directories/Include.
 
   Quick steps:
-  - enable RTTI
   - link lib/cppunitXX.lib
   - include/ must be in the include search path
 
 * Using the TestRunner GUI:
   To use the test runner GUI you need to link against testrunnerXX.lib
   and cppunitXX.lib, where XX is the chosen configuration suffix 
-  letters. You must enable RTTI (Project Settings/C++/C++ Language) in 
-  your project. testrunner.dll must be in the path when your program is
+  letters. testrunner.dll must be in the path when your program is
   run (the Debug/Release directory, your project dsp directory, or
   in a directory specified in the PATH environment variable).
   One of the easiest way to do that is to either add a post-build
@@ -163,7 +180,6 @@ Using CppUnit:
   test" settings are different for each application.
 
   Quick steps:
-  - enable RTTI
   - link lib/cppunitXX.lib and lib/testrunnerXX.lib
   - include/ must be in the include search path
   - lib/testrunnerXX.dll must be available to run your project
@@ -183,3 +199,7 @@ defined in include/msvc6/testrunner/TestPlugInInterface.h.
 See examples/msvc6/TestPlugIn/TestPlugInInterfaceImpl.* for an example.
 Be warned, that runner is still experimental and have not been tested
 much.
+  
+  If you did a batch build, run TestPlugInRunnerd.exe and choose dll
+  examples/cppunittest/DebugPlugIn/CppUnitTestPlugInd.dll, or
+  examples/simple/DebugPlugIn/simple_plugind.dll to test it out.

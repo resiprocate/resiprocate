@@ -3,6 +3,21 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "ClockerPlugIn"=.\ClockerPlugIn\ClockerPlugIn.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name cppunit_dll
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "CppUnitTestApp"=.\msvc6\CppUnitTestApp\CppUnitTestApp.dsp - Package Owner=<4>
 
 Package=<5>
@@ -36,7 +51,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "DSPlugIn"=..\src\msvc6\DSPlugIn\DSPlugIn.dsp - Package Owner=<4>
+Project: "CppUnitTestPlugIn"=.\cppunittest\CppUnitTestPlugIn.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -44,6 +59,51 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name cppunit_dll
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "DllPlugInTester"=..\src\DllPlugInTester\DllPlugInTester.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name cppunit_dll
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "DllPlugInTesterTest"=..\src\DllPlugInTester\DllPlugInTesterTest.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "DumperPlugIn"=.\DumperPlugIn\DumperPlugIn.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name cppunit_dll
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -63,18 +123,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "TestPlugIn"=.\msvc6\TestPlugIn\TestPlugIn.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "TestPlugInRunner"=..\src\msvc6\testpluginrunner\TestPlugInRunner.dsp - Package Owner=<4>
 
 Package=<5>
@@ -83,6 +131,9 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name cppunit_dll
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -97,9 +148,6 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name cppunit
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name DSPlugIn
     End Project Dependency
 }}}
 
@@ -139,6 +187,54 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name cppunit
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "money"=.\money\money.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name cppunit
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "simple"=.\simple\simple.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name cppunit
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "simple_plugin"=.\SIMPLE\simple_plugin.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name cppunit_dll
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name DllPlugInTester
     End Project Dependency
 }}}
 

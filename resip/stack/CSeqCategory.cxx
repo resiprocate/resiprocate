@@ -20,14 +20,14 @@ using namespace std;
 // CSeqCategory:
 //====================
 CSeqCategory::CSeqCategory(HeaderFieldValue* hfv, Headers::Type type)
-   : ParserCategory(hfv, type), mMethod(UNKNOWN), mSequence(-1) 
+   : ParserCategory(hfv, type), mMethod(UNKNOWN), mSequence(0) 
 {}
 
 CSeqCategory::CSeqCategory() 
    : ParserCategory(), 
      mMethod(UNKNOWN), 
      mUnknownMethodName(getMethodName(UNKNOWN)),
-     mSequence(-1) 
+     mSequence(0) 
 {}
 
 CSeqCategory::CSeqCategory(const CSeqCategory& rhs)
@@ -107,14 +107,14 @@ CSeqCategory::unknownMethodName() const
    return mUnknownMethodName;
 }
 
-int& 
+unsigned int& 
 CSeqCategory::sequence()
 {
    checkParsed(); 
    return mSequence;
 }
 
-int 
+unsigned int 
 CSeqCategory::sequence() const
 {
    checkParsed(); 
@@ -137,7 +137,7 @@ void
 CSeqCategory::parse(ParseBuffer& pb)
 {
    pb.skipWhitespace();
-   mSequence = pb.integer();
+   mSequence = pb.uInt32();
 
    const char* anchorPtr = pb.skipWhitespace();
    pb.skipNonWhitespace(); // .dcm. maybe pass an arg that says throw if you

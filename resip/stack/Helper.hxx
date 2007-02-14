@@ -51,6 +51,33 @@ class Helper
          return resipMax(T(0), resipMin(T(secs-5), T(9*secs/10)));
       }
 
+      /** 
+          Converts an interger in a character string containing the
+          hexidecimal representation of the integer.  Note:  The 
+          string buffer provided should be at least 8 characters long.
+          This function will NOT NULL terminate the string.
+
+          @param _d     A pointer to the character buffer to write
+                        the hex string
+
+          @param _s     The integer value to convert.
+
+          @param _l     Boolean flag to include leading 0 zeros or 
+                        not.
+      */
+      static void integer2hex(char* _d, unsigned int _s, bool _l = true);
+
+      /** 
+          Converts a character string containing a hexidecimal value
+          into an unsigned int.  Note:  Parsing stops after the first
+          non-hex character, or after 8 characters have been processed.
+
+          @param _s     A pointer to the character buffer to convert.
+
+          @returns      The integer value of the coverted hex string.
+      */
+      static unsigned int hex2integer(const char* _s);
+
       /**
            Used to jitter the expires in a SUBSCRIBE or REGISTER expires header
 
@@ -368,13 +395,22 @@ class Helper
                 advancedAuthenticateRequest(const SipMessage& request, 
                                             const Data& realm,
                                             const Data& a1,
-                                            int expiresDelta = 0);
+                                            int expiresDelta = 0,
+                                            bool proxyAuthorization = true);
       
       // create a 407 response with Proxy-Authenticate header filled in
       static SipMessage* makeProxyChallenge(const SipMessage& request, 
                                             const Data& realm,
                                             bool useAuth = true,
                                             bool stale = false);
+
+      // create a 401 or 407 response with Proxy-Authenticate or Authenticate header 
+      // filled in
+      static SipMessage* makeChallenge(const SipMessage& request, 
+                                       const Data& realm,
+                                       bool useAuth = true,
+                                       bool stale = false,
+                                       bool proxy = false);
 
       static bool algorithmAndQopSupported(const Auth& challenge);
       
@@ -423,14 +459,19 @@ class Helper
 
       static void processStrictRoute(SipMessage& request);
 
-      // renamed to make more explicit that this is the port that we should reply too
+      // renamed to make more explicit that this is the port that we should reply to
       // given that we are following SIP rules WRT rport etc.
-      static int getPortForReply(SipMessage& request);
+      // !bwc! If returnDefault is false, this function will return 0 if there
+      // is _no_ port specified in the Via (anywhere).
+      static int getPortForReply(SipMessage& request,bool returnDefault=true);
 
       static Uri fromAor(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 
       // Do basic checks to validate a received message off the wire
-      static bool validateMessage(const SipMessage& message);
+      // If the basic check fails, and reason is non-null, reason will be set
+      // to the reason the check failed. This function does not take ownership
+      // of reason.
+      static bool validateMessage(const SipMessage& message,resip::Data* reason=0);
 
       // GRUU support -- reversibly and opaquely combine instance id and aor
       static Data gruuUserPart(const Data& instanceId,

@@ -2,12 +2,11 @@
 #include <cppunit/TestResultCollector.h>
 
 
-namespace CppUnit
-{
+CPPUNIT_NS_BEGIN
 
 
 TestResultCollector::TestResultCollector( SynchronizationObject *syncObject )
-    : TestSucessListener( syncObject )
+    : TestSuccessListener( syncObject )
 {
   reset();
 }
@@ -15,21 +14,29 @@ TestResultCollector::TestResultCollector( SynchronizationObject *syncObject )
 
 TestResultCollector::~TestResultCollector()
 {
+  freeFailures();
+}
+
+
+void 
+TestResultCollector::freeFailures()
+{
   TestFailures::iterator itFailure = m_failures.begin();
   while ( itFailure != m_failures.end() )
     delete *itFailure++;
+  m_failures.clear();
 }
 
 
 void 
 TestResultCollector::reset()
 {
-  TestSucessListener::reset();
+  TestSuccessListener::reset();
 
   ExclusiveZone zone( m_syncObject ); 
+  freeFailures();
   m_testErrors = 0;
   m_tests.clear();
-  m_failures.clear();
 }
 
 
@@ -44,7 +51,7 @@ TestResultCollector::startTest( Test *test )
 void 
 TestResultCollector::addFailure( const TestFailure &failure )
 {
-  TestSucessListener::addFailure( failure );
+  TestSuccessListener::addFailure( failure );
 
   ExclusiveZone zone( m_syncObject ); 
   if ( failure.isError() )
@@ -106,5 +113,5 @@ TestResultCollector::tests() const
 }
 
 
-} //  namespace CppUnit
+CPPUNIT_NS_END
 

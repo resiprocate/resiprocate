@@ -18,14 +18,14 @@ class TestListViewItem : public QListViewItem
 public:
   /*! Constructs a TestListViewItem object.
    */
-  TestListViewItem( CppUnit::Test *test,
+  TestListViewItem( CPPUNIT_NS::Test *test,
                     QListViewItem *parent );
 
   /*! Destructor.
    */
   virtual ~TestListViewItem();
 
-  CppUnit::Test *test() const;
+  CPPUNIT_NS::Test *test() const;
 
 private:
   /// Prevents the use of the copy constructor.
@@ -35,13 +35,8 @@ private:
   void operator =( const TestListViewItem &copy );
 
 private:
-  CppUnit::Test *_test;
+  CPPUNIT_NS::Test *_test;
 };
-
-
-
-// Inlines methods for TestListViewItem:
-// -------------------------------------
 
 
 

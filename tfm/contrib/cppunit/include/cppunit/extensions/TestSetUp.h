@@ -3,12 +3,14 @@
 
 #include <cppunit/extensions/TestDecorator.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 class Test;
 class TestResult;
 
-
+/*! \brief Decorates a test by providing a specific setUp() and tearDown().
+ */
 class CPPUNIT_API TestSetUp : public TestDecorator 
 {
 public:
@@ -26,7 +28,7 @@ private:
 };
 
 
-} //  namespace CppUnit
+CPPUNIT_NS_END
 
 #endif // CPPUNIT_EXTENSIONS_TESTSETUP_H
 

@@ -50,12 +50,16 @@ class ThreadIf
       // joins to the thread running thread()
       void join();
 
+      // guarantees resources consumed by thread are released when thread terminates
+      // after this join can no-longer be used
+      void detach();
+
       // request the thread running thread() to return, by setting  mShutdown
-      void shutdown();
+      virtual void shutdown();
 
       //waits for waitMs, or stops waiting and returns true if shutdown was
       //called
-      bool waitForShutdown(int ms) const;
+      virtual bool waitForShutdown(int ms) const;
 
       // returns true if the thread has been asked to shutdown or not running
       bool isShutdown() const;

@@ -1,34 +1,15 @@
-#include <cppunit/extensions/TestFactoryRegistry.h>
-#include "CppUnitTestSuite.h"
+#include <cppunit/config/SourcePrefix.h>
+#include <cppunit/extensions/HelperMacros.h>
 #include "CoreSuite.h"
 #include "HelperSuite.h"
 #include "ExtensionSuite.h"
 #include "OutputSuite.h"
+#include "ToolsSuite.h"
 #include "UnitTestToolSuite.h"
 
-
-namespace CppUnitTest
-{
-
-CppUnit::Test *
-suite()
-{
-  CppUnit::TestFactoryRegistry &registry = 
-                      CppUnit::TestFactoryRegistry::getRegistry();
-
-  registry.registerFactory( 
-      &CppUnit::TestFactoryRegistry::getRegistry( coreSuiteName() ) );
-  registry.registerFactory( 
-      &CppUnit::TestFactoryRegistry::getRegistry( extensionSuiteName() ) );
-  registry.registerFactory( 
-      &CppUnit::TestFactoryRegistry::getRegistry( helperSuiteName() ) );
-  registry.registerFactory( 
-      &CppUnit::TestFactoryRegistry::getRegistry( outputSuiteName() ) );
-  registry.registerFactory( 
-      &CppUnit::TestFactoryRegistry::getRegistry( unitTestToolSuiteName() ) );
-
-  return registry.makeTest();
-}
-
-
-}  // namespace CppUnitTest
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT( coreSuiteName() );
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT( extensionSuiteName() );
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT( helperSuiteName() );
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT( outputSuiteName() );
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT( toolsSuiteName() );
+CPPUNIT_REGISTRY_ADD_TO_DEFAULT( unitTestToolSuiteName() );

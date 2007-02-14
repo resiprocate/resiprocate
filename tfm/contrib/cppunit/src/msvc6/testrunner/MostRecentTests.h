@@ -25,11 +25,11 @@ public:
    */
   virtual ~MostRecentTests();
 
-  void setLastTestRun( CppUnit::Test *test );
-  CppUnit::Test *lastTestRun() const;
+  void setLastTestRun( CPPUNIT_NS::Test *test );
+  CPPUNIT_NS::Test *lastTestRun() const;
 
   int getRunCount() const;
-  CppUnit::Test *getTestAt( int indexTest ) const;
+  CPPUNIT_NS::Test *getTestAt( int indexTest ) const;
   std::string getTestNameAt( int indexTest ) const;
 
 
@@ -41,16 +41,10 @@ private:
   void operator =( const MostRecentTests &copy );
 
 private:
-  typedef std::pair<std::string, CppUnit::Test *> TestRun;
+  typedef std::pair<std::string, CPPUNIT_NS::Test *> TestRun;
   typedef std::deque<TestRun> TestRuns;
   TestRuns m_runs;
 };
-
-
-
-// Inlines methods for MostRecentTests:
-// ------------------------------------
-
 
 
 #endif  // MOSTRECENTTESTS_H

@@ -6,10 +6,14 @@ libcppunitinclude_HEADERS = \
 	HelperMacros.h \
 	Orthodox.h \
 	RepeatedTest.h \
+	ExceptionTestCaseDecorator.h \
+	TestCaseDecorator.h \
 	TestDecorator.h \
 	TestFactoryRegistry.h \
+	TestFixtureFactory.h \
+	TestNamer.h \
 	TestSetUp.h \
-	TestSuiteBuilder.h \
+	TestSuiteBuilderContext.h \
 	TestSuiteFactory.h \
 	TypeInfoHelper.h
 

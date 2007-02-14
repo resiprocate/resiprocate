@@ -23,7 +23,7 @@
 #include "rutil/WinLeakCheck.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
-#if defined(WIN32)
+#if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 ) // using this in base member initializer list
 #pragma warning( disable : 4800 ) // forcing value to bool (performance warning)
 #endif
@@ -201,6 +201,7 @@ InviteSession::isConnected() const
       case ReceivedUpdate:
       case ReceivedReinvite:
       case ReceivedReinviteNoOffer:
+      case ReceivedReinviteSentOffer:
       case Answered:
       case WaitingToOffer:
       case WaitingToRequestOffer:
@@ -236,6 +237,10 @@ InviteSession::isAccepted() const
    {
       case UAS_Start:
       case UAS_Offer:
+      case UAS_OfferReliable:
+      case UAS_NoOffer:
+      case UAS_NoOfferReliable:
+      case UAS_ProvidedOffer:
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyOffer:
       case UAS_EarlyProvidedOffer:
@@ -360,11 +365,9 @@ InviteSession::provideOffer(const SdpContents& offer,
          send(mInvite200);
          startRetransmit200Timer();
          break;
-         
-         
-      // ?slg? Can we handle all of the states listed in isConnected() ???
+                  
       default:
-         WarningLog (<< "Can't provideOffer when not in Connected state");
+         WarningLog (<< "Incorrect state to provideOffer: " << toData(mState));
          throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
    }
 }
@@ -418,8 +421,8 @@ InviteSession::provideAnswer(const SdpContents& answer)
          break;
 
       default:
-         WarningLog (<< "Can't provideAnswer when not in Connected state");
-         throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
+         WarningLog (<< "Incorrect state to provideAnswer: " << toData(mState));
+         throw DialogUsage::Exception("Can't provide an answer", __FILE__,__LINE__);
    }
 }
 
@@ -543,14 +546,12 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 {
    if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
-      // !jf! add interface to Dialog
-      //mDialog.setLocalContact(localUri);
-      provideOffer(*mCurrentLocalSdp);
+      mDialog.mLocalContact = localUri;
+      sessionRefresh();
    }
    else
    {
       WarningLog (<< "Can't targetRefresh before Connected");
-      assert(0);
       throw UsageUseException("targetRefresh not allowed in this context", __FILE__, __LINE__);
    }
 }
@@ -575,7 +576,7 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
-         refer->header(h_Supporteds).push_back(Token("norefersub"));
+         refer->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
       }
 
       send(refer);
@@ -621,7 +622,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
-         refer->header(h_Supporteds).push_back(Token("norefersub"));
+         refer->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
       }
 
       send(refer);
@@ -940,7 +941,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
 
       case OnUpdate:
       {
-         // ?slg? no sdp in update - just responsd immediately (likely session timer) - do we need a callback?
+         // ?slg? no sdp in update - just respond immediately (likely session timer) - do we need a callback?
          SharedPtr<SipMessage> response(new SipMessage);
          *mLastRemoteSessionModification = msg;
          mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
@@ -1286,12 +1287,20 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
 		 handler->onAnswer(getSessionHandle(), msg, *sdp);		 
          break;         
       case OnAck:
-         transition(Connected);
-         mProposedLocalSdp.reset();
-         mProposedEncryptionLevel = DialogUsageManager::None;
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-		 //!dcm! -- should this be onIllegalNegotiation?
-		 handler->onOfferRejected(getSessionHandle(), &msg);
+         if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
+         {
+            InfoLog(<< "dropped stale ACK");
+         }
+         else
+         {
+            InfoLog(<< "Got Ack with no answer");
+            transition(Connected);
+            mProposedLocalSdp.reset();
+            mProposedEncryptionLevel = DialogUsageManager::None;
+            mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+            //!dcm! -- should this be onIllegalNegotiation?
+            handler->onOfferRejected(getSessionHandle(), &msg);
+         }
          break;
       default:
          dispatchOthers(msg);
@@ -1458,9 +1467,18 @@ InviteSession::dispatchTerminated(const SipMessage& msg)
 
    if (msg.isRequest())
    {
-      SharedPtr<SipMessage> response(new SipMessage);
-      mDialog.makeResponse(*response, msg, 481);
-      send(response);
+      if (BYE == msg.header(h_CSeq).method())
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+      }
+      else
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 481);
+         send(response);
+      }
 
       // !jf! means the peer sent BYE while we are waiting for response to BYE
       //mDum.destroy(this);
@@ -1680,7 +1698,7 @@ void
 InviteSession::startRetransmit200Timer()
 {
    mCurrentRetransmit200 = Timer::T1;
-   int seq = mLastRemoteSessionModification->header(h_CSeq).sequence();
+   unsigned int seq = mLastRemoteSessionModification->header(h_CSeq).sequence();
    mDum.addTimerMs(DumTimeout::Retransmit200, mCurrentRetransmit200, getBaseHandle(), seq);
    mDum.addTimerMs(DumTimeout::WaitForAck, Timer::TH, getBaseHandle(), seq);
 }
@@ -1695,7 +1713,7 @@ InviteSession::startRetransmit200Timer()
 void
 InviteSession::start491Timer()
 {
-   int seq = mLastLocalSessionModification->header(h_CSeq).sequence();
+   unsigned int seq = mLastLocalSessionModification->header(h_CSeq).sequence();
 
    if (dynamic_cast<ClientInviteSession*>(this))
    {
@@ -1802,7 +1820,7 @@ InviteSession::startSessionTimer()
       else
       {
          // Start Session-Expiration Timer to mSessionInterval - BYE should be sent a minimum of 32 and one third of the SessionInterval, seconds before the session expires (recommended by RFC4028)
-         mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin(32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq);
+         mDum.addTimer(DumTimeout::SessionExpiration, mSessionInterval - resipMin((UInt32)32,mSessionInterval/3), getBaseHandle(), ++mSessionTimerSeq);
       }
    }
    else  // Session Interval less than 90 - consider timers disabled
@@ -1815,6 +1833,12 @@ void
 InviteSession::handleSessionTimerResponse(const SipMessage& msg)
 {
    assert(msg.header(h_CSeq).method() == INVITE || msg.header(h_CSeq).method() == UPDATE);
+
+   // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
+   if (msg.exists(h_PAssertedIdentities))
+   {
+       mPeerPAssertedIdentities = msg.header(h_PAssertedIdentities);
+   }
 
    // If session timers are locally supported then handle response
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
@@ -1859,6 +1883,12 @@ void
 InviteSession::handleSessionTimerRequest(SipMessage &response, const SipMessage& request)
 {
    assert(request.header(h_CSeq).method() == INVITE || request.header(h_CSeq).method() == UPDATE);
+
+   // Allow Re-Invites and Updates to update the Peer P-Asserted-Identity
+   if (request.exists(h_PAssertedIdentities))
+   {
+       mPeerPAssertedIdentities = request.header(h_PAssertedIdentities);
+   }
 
    // If session timers are locally supported then add necessary headers to response
    if(mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::Timer)))
@@ -2412,7 +2442,7 @@ InviteSession::acceptReferNoSub(int statusCode)
    SharedPtr<SipMessage> response(new SipMessage);
    mDialog.makeResponse(*response, mLastReferNoSubRequest, statusCode);
    response->header(h_ReferSub).value() = "false";
-   //response->header(h_Supporteds).push_back(Token("norefersub"));
+   //response->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
    
    send(response);
 } 

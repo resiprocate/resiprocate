@@ -165,10 +165,8 @@ Timer::getSystemTime()
     assert( sizeof(UInt64) == 64/8 );
     UInt64 time=0;
 #if defined(WIN32)  
-    SYSTEMTIME t;
-    GetSystemTime( &t );
     FILETIME ft;
-    SystemTimeToFileTime( &t, &ft);
+    GetSystemTimeAsFileTime( &ft);
     ULARGE_INTEGER li;
     li.LowPart = ft.dwLowDateTime;
     li.HighPart = ft.dwHighDateTime;
@@ -215,7 +213,7 @@ UInt64
 Timer::getForever()
 {
     assert( sizeof(UInt64) == 8 );
-#ifdef WIN32
+#if defined(WIN32) && !defined(__GNUC__)
     return 18446744073709551615ui64;
 #else
     return 18446744073709551615ULL;

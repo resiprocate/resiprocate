@@ -3,7 +3,8 @@
 
 #include <cppunit/Portability.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 class Test;
 
@@ -20,6 +21,7 @@ public:
   virtual Test* makeTest() = 0;
 };
 
-}  // namespace CppUnit
+
+CPPUNIT_NS_END
 
 #endif  // CPPUNIT_EXTENSIONS_TESTFACTORY_H

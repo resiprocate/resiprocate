@@ -35,15 +35,15 @@ class DumTimeout : public ApplicationMessage
       } Type;
       static const unsigned long StaleCallTimeout;
 
-      DumTimeout(Type type, unsigned long duration, BaseUsageHandle target,  int seq, int aseq = -1);
+      DumTimeout(Type type, unsigned long duration, BaseUsageHandle target, unsigned int seq, unsigned int aseq = 0);
       DumTimeout(const DumTimeout&);      
       ~DumTimeout();
 
       Message* clone() const;
       
       Type type() const;
-      int seq() const;
-      int secondarySeq() const;
+      unsigned int seq() const;
+      unsigned int secondarySeq() const;
 
       BaseUsageHandle getBaseUsage() const;
 
@@ -56,8 +56,8 @@ class DumTimeout : public ApplicationMessage
       Type mType;
       unsigned long mDuration;
       BaseUsageHandle mUsageHandle;
-      int mSeq;
-      int mSecondarySeq;
+      unsigned int mSeq;
+      unsigned int mSecondarySeq;
 
 };
 

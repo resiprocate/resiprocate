@@ -1,5 +1,3 @@
-
-
 #ifndef CPPUNIT_ACTIVETEST_H
 #define CPPUNIT_ACTIVETEST_H
 
@@ -26,45 +24,23 @@
  *
  */
 
-class ActiveTest : public CppUnit::TestDecorator
+class ActiveTest : public CPPUNIT_NS::TestDecorator
 {
 public:
-                    ActiveTest (CppUnit::Test *test);
-                    ~ActiveTest ();
+  ActiveTest( CPPUNIT_NS::Test *test );
+  ~ActiveTest();
 
-    void            run (CppUnit::TestResult *result);
+  void run( CPPUNIT_NS::TestResult *result );
 
 protected:
-    HANDLE          m_threadHandle;
-    CEvent          m_runCompleted;
-    CppUnit::TestResult      *m_currentTestResult;
+  HANDLE m_threadHandle;
+  CEvent m_runCompleted;
+  CPPUNIT_NS::TestResult *m_currentTestResult;
 
-    void            run ();
-    void            setTestResult (CppUnit::TestResult *result);
-    static UINT     threadFunction (LPVOID thisInstance);
-
-
+  void run();
+  void setTestResult( CPPUNIT_NS::TestResult *result );
+  static UINT threadFunction( LPVOID thisInstance );
 };
-
-
-// Construct the active test
-inline ActiveTest::ActiveTest (CppUnit::Test *test)
-: TestDecorator (test), m_runCompleted () 
-{ m_currentTestResult = NULL; m_threadHandle = INVALID_HANDLE_VALUE; }
-
-
-// Pend until the test has completed
-inline ActiveTest::~ActiveTest ()
-{ CSingleLock (&m_runCompleted, TRUE); }
-
-
-// Set the test result that we are to run
-inline void ActiveTest::setTestResult (CppUnit::TestResult *result)
-{ m_currentTestResult = result; }
-
-// Run our test result
-inline void ActiveTest::run ()
-{ TestDecorator::run (m_currentTestResult); }
 
 #endif
 

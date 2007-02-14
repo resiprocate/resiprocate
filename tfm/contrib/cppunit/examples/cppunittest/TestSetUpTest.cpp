@@ -1,9 +1,11 @@
 #include "ExtensionSuite.h"
 #include "TestSetUpTest.h"
 #include <cppunit/TestResult.h>
+#include "MockTestCase.h"
+
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION( TestSetUpTest,
-                                       CppUnitTest::extensionSuiteName() );
+                                       extensionSuiteName() );
 
 
 TestSetUpTest::TestSetUpTest()
@@ -31,11 +33,15 @@ TestSetUpTest::tearDown()
 void 
 TestSetUpTest::testRun()
 {
-  CppUnit::TestResult result;
-  CppUnit::TestCase test;
-  MockSetUp setUpTest( &test );
+  CPPUNIT_NS::TestResult result;
+  MockTestCase *test = new MockTestCase( "TestSetUpTest" );
+  test->setExpectedSetUpCall();
+  test->setExpectedRunTestCall();
+  test->setExpectedTearDownCall();
+  MockSetUp setUpTest( test );
   
   setUpTest.run( &result );
 
   setUpTest.verify();
+  test->verify();
 }

@@ -161,7 +161,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    if (NULL != pErrCert)
       X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
 
-   sprintf(cBuf2,"depth=%d %s\n",iDepth,cBuf1);
+   sprintf(cBuf2,", depth=%d %s\n",iDepth,cBuf1);
    if(!iInCode)
       ErrLog(<< "Error when verifying server's chain of certificates: " << X509_verify_cert_error_string(pInStore->error) << cBuf2 );
  
@@ -387,15 +387,12 @@ BaseSecurity::addCertPEM (PEMType type,
       ErrLog(<< "Could not create BIO buffer from '" << certPEM << "'");
       throw Exception("Could not create BIO buffer", __FILE__,__LINE__);
    }
-   try
+   cert = PEM_read_bio_X509(in,0,0,0);
+   if (cert == NULL)
    {
-      BIO_set_close(in, BIO_NOCLOSE);
-      cert = PEM_read_bio_X509(in,0,0,0);
-   }
-   catch(...)
-   {
-      BIO_free(in); 
-      throw;
+	   ErrLog( << "Could not load X509 cert from '" << certPEM << "'" );
+	   BIO_free(in); 
+	   throw Exception("Could not load X509 cert from BIO buffer", __FILE__,__LINE__);
    }
    
    addCertX509(type,name,cert,write);
@@ -551,7 +548,9 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
       ErrLog(<< "Could encode certificate of '" << key << "' to DER form");
       throw BaseSecurity::Exception("Could encode certificate to DER form", __FILE__,__LINE__);
    }
-   return   Data(Data::Take, (char*)buffer, len);
+   Data certDER((char*)buffer, len);
+   OPENSSL_free(buffer);
+   return certDER;
 }
 
 
@@ -659,7 +658,6 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
    
    try
    {
-      BIO_set_close(in, BIO_NOCLOSE);
 
       EVP_PKEY* privateKey;
       if (d2i_PKCS8PrivateKey_bio(in, &privateKey, 0, passPhrase) == 0)
@@ -707,7 +705,6 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
             passPhrase = const_cast<char*>(iter->second.c_str());
          }
       }
-      BIO_set_close(in, BIO_NOCLOSE);
       
       EVP_PKEY* privateKey=0;
       if ( ( privateKey = PEM_read_bio_PrivateKey(in, NULL, 0, passPhrase)) == NULL)
@@ -1280,11 +1277,11 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    assert(sizeof(int)==4);
    ASN1_INTEGER_set(X509_get_serialNumber(cert),serial);
    
-   ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_UTF8, 
+   ret = X509_NAME_add_entry_by_txt( subject, "O",  MBSTRING_ASC, 
                                      (unsigned char *) domain.data(), domain.size(), 
                                      -1, 0);
    assert(ret);
-   ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_UTF8, 
+   ret = X509_NAME_add_entry_by_txt( subject, "CN", MBSTRING_ASC, 
                                      (unsigned char *) aor.data(), aor.size(), 
                                      -1, 0);
    assert(ret);
@@ -1312,7 +1309,7 @@ BaseSecurity::generateUserCert (const Data& pAor, int expireDays, int keyLen )
    static char CA_FALSE[] = "CA:FALSE";
    ext = X509V3_EXT_conf_nid(NULL, NULL, NID_basic_constraints, CA_FALSE);
    ret = X509_add_ext( cert, ext, -1);
-   assert(ret);  
+   assert(ret);
    X509_EXTENSION_free(ext);
    
    // TODO add extensions NID_subject_key_identifier and NID_authority_key_identifier
@@ -1558,7 +1555,7 @@ BaseSecurity::computeIdentity( const Data& signerDomain, const Data& in ) const
 
    if (mDomainPrivateKeys.count(signerDomain) == 0)
    {
-      ErrLog( << "No private key for " << signerDomain );
+      InfoLog( << "No private key for " << signerDomain );
       throw Exception("Missing private key when computing identity",__FILE__,__LINE__);
    }
 
@@ -2480,6 +2477,12 @@ EVP_PKEY*
 BaseSecurity::getDomainKey(  const Data& domain )
 {
    return mDomainPrivateKeys.count(domain) ? mDomainPrivateKeys[domain] : 0;
+}
+
+EVP_PKEY*
+BaseSecurity::getUserPrivateKey( const Data& aor )
+{
+   return mUserPrivateKeys.count(aor) ? mUserPrivateKeys[aor] : 0;
 }
 
 #endif

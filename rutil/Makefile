@@ -5,7 +5,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += ARES PTHREAD OPENSSL
 
-CXXFLAGS += -I../
+CXXFLAGS += -I..
 CODE_SUBDIRS = dns stun
 TARGET_LIBRARY = librutil
 TESTPROGRAMS =
@@ -32,7 +32,6 @@ SRC = \
 	RWMutex.cxx \
 	Random.cxx \
 	RecursiveMutex.cxx \
-	SelectInterruptor.cxx \
 	SHA1Stream.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
@@ -40,6 +39,7 @@ SRC = \
 	SysLogStream.cxx \
 	ThreadIf.cxx \
 	Timer.cxx \
+	TransportType.cxx \
 	vmd5.cxx \
 	\
 	dns/AresDns.cxx \
@@ -59,5 +59,8 @@ SRC = \
 	stun/Stun.cxx \
 	stun/Udp.cxx
 
+ifeq ($(OSTYPE),MinGW)
+    SRC += WinCompat.cxx
+endif
 
 include $(BUILD)/Makefile.post

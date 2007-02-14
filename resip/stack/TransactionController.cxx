@@ -15,7 +15,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSACTION
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined (__GNUC__)
 #pragma warning( disable : 4355 ) // using this in base member initializer list 
 #endif
 
@@ -27,14 +27,17 @@ TransactionController::TransactionController(SipStack& stack) :
    mDiscardStrayResponses(true),
    mStateMacFifo(),
    mTuSelector(stack.mTuSelector),
-   mTransportSelector(mStateMacFifo, stack.getSecurity(), stack.getDnsStub()),
+   mTransportSelector(mStateMacFifo,
+                      stack.getSecurity(),
+                      stack.getDnsStub(),
+                      stack.getCompression()),
    mTimers(mStateMacFifo),
    mShuttingDown(false),
    mStatsManager(stack.mStatsManager)
 {
 }
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( default : 4355 )
 #endif
 

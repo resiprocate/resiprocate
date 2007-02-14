@@ -558,7 +558,7 @@ main (int argc, char** argv)
       dumUas->send(regMessage);
    }
    {
-      SharedPtr<SipMessage> regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAS(Registration)"));
+      SharedPtr<SipMessage> regMessage = dumUac->makeRegistration(uacAor, new testAppDialogSet(*dumUac, "UAC(Registration)"));
       cout << "Sending register for Uac: " << endl << regMessage << endl;
       dumUac->send(regMessage);
    }

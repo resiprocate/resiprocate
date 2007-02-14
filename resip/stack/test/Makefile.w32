@@ -2,7 +2,7 @@
 
 CFLAGS=/Od /I "../../" /I "../../../" /I "../../../contrib/OpenSSL/include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "USE_ARES" /D "USE_IPV6" /D "USE_SSL" /D "_MBCS" /Gm /EHsc /RTC1 /MDd /GS /GR /W3 /c /Wp64 /Zi /TP
 RESIPLIBS=..\..\..\rutil\SSL-Debug\rutil.lib ..\SSL-Debug\resiprocate.lib
-LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /PDB:"Debug/test.pdb" /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib Iphlpapi.lib Dnsapi.lib crypt32.lib "..\..\..\contrib\openssl\lib\vc\libeay32.lib" "..\..\..\contrib\openssl\lib\vc\ssleay32.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
+LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /PDB:"test.pdb" /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib Iphlpapi.lib Dnsapi.lib crypt32.lib "..\..\..\contrib\openssl\lib\vc\libeay32.lib" "..\..\..\contrib\openssl\lib\vc\ssleay32.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
 
 all: \
 	testSupport.obj \
@@ -17,9 +17,11 @@ all: \
 	testDigestAuthentication.obj testDigestAuthentication.exe \
 	testDigestAuthentication2.obj testDigestAuthentication2.exe \
 	testDns.obj testDns.exe \
+        testDnsStub.obj testDnsStub.exe \
 #	testDtlsTransport.obj testDtlsTransport.exe \
 	testEmbedded.obj testEmbedded.exe \
 	testEmptyHeader.obj testEmptyHeader.exe \
+        testEmptyHfv.obj testEmptyHfv.exe \
 	testExternalLogger.obj testExternalLogger.exe \
 	testFlowId.obj testFlowId.exe \
 	testIM.obj testIM.exe \
@@ -37,6 +39,7 @@ all: \
 	testSdp.obj testSdp.exe \
         testSecurity.obj testSecurity.exe \
 	testSelect.obj testSelect.exe \
+	testSelectInterruptor.obj testSelectInterruptor.exe \
 	testServer.obj testServer.exe \
 	testSipFrag.obj testSipFrag.exe \
 	testSipMessage.obj testSipMessage.exe \
@@ -52,6 +55,7 @@ all: \
 	testUdp.obj testUdp.exe \
 	testUri.obj testUri.exe \
 	testXMLCursor.obj testXMLCursor.exe \
+	RFC4475TortureTests.obj RFC4475TortureTests.exe \
 	run
 
 
@@ -68,11 +72,13 @@ run:
 	testApplicationSip.exe
 	testConnectionBase.exe
         testDns.exe
+        testDnsStub.exe
 	testCorruption.exe
 	testDigestAuthentication.exe
 #	testDigestAuthentication2.exe
 	testEmbedded.exe
 	testEmptyHeader.exe
+        testEmptyHfv.exe
 	testExternalLogger.exe
 #	testFlowId.exe
 	testIM.exe
@@ -88,6 +94,7 @@ run:
 	testRlmi.exe
 	testSdp.exe
         testSecurity.exe
+	testSelectInterruptor.exe
 	testSipFrag.exe
 	testSipMessage.exe
 	testSipMessageMemory.exe
@@ -99,6 +106,7 @@ run:
 #	testUdp.exe
 	testUri.exe
 	testXmlCursor.exe
+	RFC4475TortureTests.exe
 
 clean:
 	@del *.exe

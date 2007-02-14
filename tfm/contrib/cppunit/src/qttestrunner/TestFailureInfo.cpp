@@ -8,10 +8,10 @@
 #include <cppunit/Exception.h>
 
 
-TestFailureInfo::TestFailureInfo( CppUnit::Test *failedTest, 
-                                  CppUnit::Exception *thrownException,
+TestFailureInfo::TestFailureInfo( CPPUNIT_NS::Test *failedTest, 
+                                  CPPUNIT_NS::Exception *thrownException,
                                   bool isError ) : 
-    CppUnit::TestFailure( failedTest, thrownException->clone(), isError )
+    CPPUNIT_NS::TestFailure( failedTest, thrownException->clone(), isError )
 {
 }
 

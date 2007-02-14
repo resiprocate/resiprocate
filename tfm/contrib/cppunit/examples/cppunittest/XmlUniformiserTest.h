@@ -7,7 +7,7 @@
 /*! \class XmlUniformiserTest
  * \brief Unit test for XmlUniformiser.
  */
-class XmlUniformiserTest : public CppUnit::TestFixture
+class XmlUniformiserTest : public CPPUNIT_NS::TestFixture
 {
   CPPUNIT_TEST_SUITE( XmlUniformiserTest );
   CPPUNIT_TEST( testEmpty );
@@ -21,8 +21,7 @@ class XmlUniformiserTest : public CppUnit::TestFixture
   CPPUNIT_TEST( testSkipComment );
   CPPUNIT_TEST( testElementWithContent );
   CPPUNIT_TEST( testElementsHierarchyWithContents );
-  CPPUNIT_TEST( testAssertXmlEqualFail );
-  CPPUNIT_TEST( testAssertXmlEqualPass );
+  CPPUNIT_TEST( testAssertXmlEqual );
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -48,8 +47,7 @@ public:
   void testElementWithContent();
   void testElementsHierarchyWithContents();
 
-  void testAssertXmlEqualFail();
-  void testAssertXmlEqualPass();
+  void testAssertXmlEqual();
 
 private:
   void check( const std::string &xml, 

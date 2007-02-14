@@ -396,7 +396,7 @@ Log::setServiceLevel(int service, Level l)
 {
    Lock lock(_mutex);
    Log::mServiceToLevel[service] = l;
-#if defined(WIN32) || defined(TARGET_OS_MAC)
+#ifndef LOG_ENABLE_THREAD_SETTING
    assert(0);
 #else
    set<pthread_t>& threads = Log::mServiceToThreads[service];
@@ -424,11 +424,19 @@ Log::Guard::Guard(resip::Log::Level level,
    mData(Data::Borrow, mBuffer, sizeof(mBuffer)),
    mStream(mData.clear())
 {
-   Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
-   mStream << resip::Log::delim;
-   mStream.flush();
-   
-   mHeaderLength = mData.size();
+	
+   if (resip::Log::_type != resip::Log::OnlyExternalNoHeaders)
+   {
+      Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
+      mStream << resip::Log::delim;
+      mStream.flush();
+
+      mHeaderLength = mData.size();
+   }
+   else
+   {
+      mHeaderLength = 0;
+   }
 }
 
 Log::Guard::~Guard()
@@ -459,7 +467,12 @@ Log::Guard::~Guard()
       mData += "\r\n";
       resip::GenericLogImpl::OutputToWin32DebugWindow(mData);
    }
-   else
+   else if(resip::Log::_type == resip::Log::OnlyExternal ||
+	   resip::Log::_type == resip::Log::OnlyExternalNoHeaders) 
+   {
+      return;
+   }
+   else 
    {
       // endl is magic in syslog -- so put it here
       resip::GenericLogImpl::Instance() << mData << std::endl;

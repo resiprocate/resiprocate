@@ -52,6 +52,11 @@ public:
                   int nFormat = LVCFMT_LEFT,
                   int nSubItemNo =-1 );
 
+  /*! Gets the sub item index of the next column.
+   * \return Sub item index of the next column, starting with 0.
+   */
+  int GetNextColumnIndex() const;
+
 private:
   /*! Associated list control.
    */

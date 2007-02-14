@@ -1,7 +1,7 @@
 #include "resip/stack/InterruptableStackThread.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "rutil/SelectInterruptor.hxx"
+#include "resip/stack/SelectInterruptor.hxx"
 #include "rutil/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
@@ -45,7 +45,14 @@ InterruptableStackThread::thread()
          InfoLog (<< "Unhandled exception: " << e);
       }
    }
-   WarningLog (<< "Shutting down stack thread");
+   InfoLog (<< "Shutting down stack thread");
+}
+
+void
+InterruptableStackThread::shutdown()
+{
+   ThreadIf::shutdown();
+   mSelectInterruptor.interrupt();
 }
 
 void

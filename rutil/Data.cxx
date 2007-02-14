@@ -13,6 +13,10 @@
 #include "rutil/Coders.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#ifdef WIN32
+#include "Winsock2.h"
+#endif
+
 using namespace resip;
 using namespace std;
 
@@ -452,6 +456,7 @@ Data::Data(unsigned long value)
    }
 }
 
+#ifndef RESIP_FIXED_POINT
 static const int DoubleMaxSize = MaxLongSize + Data::MaxDigitPrecision;
 Data::Data(double value, 
            Data::DoubleDigitPrecision precision)
@@ -538,6 +543,7 @@ Data::Data(double value,
 
    assert(mBuf[mSize] == 0);
 }
+#endif
 
 Data::Data(unsigned int value)
    : mSize(0),
@@ -1049,7 +1055,7 @@ Data::md5() const
 Data 
 Data::escaped() const
 { 
-   Data ret((int)floor(1.1*size()), Data::Preallocate);
+   Data ret((int)((size()*11)/10), Data::Preallocate);
 
    const char* p = data();
    for (size_type i=0; i < size(); ++i)
@@ -1093,7 +1099,7 @@ Data::escaped() const
 Data 
 Data::charEncoded() const
 { 
-   Data ret((int)floor(1.1*size()), Data::Preallocate);
+   Data ret((int)((size()*11)/10), Data::Preallocate);
 
    const char* p = data();
    for (size_type i=0; i < size(); ++i)
@@ -1621,6 +1627,7 @@ Data::convertSize() const
    return val;
 }
 
+#ifndef RESIP_FIXED_POINT
 double 
 Data::convertDouble() const
 {
@@ -1633,12 +1640,12 @@ Data::convertDouble() const
    {
       if (!isspace(*p))
       {
-	 goto sign_char;
+         goto sign_char;
       }
    }
    return val;
-  sign_char:
-   
+sign_char:
+
    if (*p == '-')
    {
       s = -1;
@@ -1653,18 +1660,18 @@ Data::convertDouble() const
    {
       if (*p == '.')
       {
-	 goto decimals;
+         goto decimals;
       }
       if (!isdigit(*p))
       {
-	 return s*val;
+         return s*val;
       }
       val *= 10;
       val += (*p) - '0';
    }
    return s*val;
 
-  decimals:
+decimals:
    ++p;
    long d = 0;
    double div = 1.0;
@@ -1672,7 +1679,7 @@ Data::convertDouble() const
    {
       if (!isdigit(*p)) 
       {
-	 break;
+         break;
       }
       d *= 10;
       d += *p - '0';
@@ -1680,6 +1687,7 @@ Data::convertDouble() const
    }
    return s*(val + d/div);
 }
+#endif
 
 bool
 Data::prefix(const Data& pre) const
@@ -1837,7 +1845,7 @@ static const unsigned char randomPermutation[256] =
 };
 
 size_t
-Data::rawHash(const char* c, size_t size)
+Data::rawHash(const unsigned char* c, size_t size)
 {
    // 4 byte Pearson's hash
    // essentially random hashing
@@ -1853,7 +1861,7 @@ Data::rawHash(const char* c, size_t size)
    bytes[2] = randomPermutation[2];
    bytes[3] = randomPermutation[3];
 
-   const char* end = c + size;
+   const unsigned char* end = c + size;
    for ( ; c != end; ++c)
    {
       bytes[0] = randomPermutation[*c ^ bytes[0]];
@@ -1868,8 +1876,9 @@ Data::rawHash(const char* c, size_t size)
 
 // use only for ascii characters!
 size_t 
-Data::rawCaseInsensitiveHash(const char* c, size_t size)
+Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
 {
+
    union 
    {
          size_t st;
@@ -1881,10 +1890,10 @@ Data::rawCaseInsensitiveHash(const char* c, size_t size)
    bytes[2] = randomPermutation[2];
    bytes[3] = randomPermutation[3];
 
-   const char* end = c + size;
+   const unsigned char* end = c + size;
    for ( ; c != end; ++c)
    {
-      char cc = tolower(*c); 
+      unsigned char cc = tolower(*c);
       bytes[0] = randomPermutation[cc ^ bytes[0]];
       bytes[1] = randomPermutation[cc ^ bytes[1]];
       bytes[2] = randomPermutation[cc ^ bytes[2]];
@@ -1911,13 +1920,13 @@ bits(size_t v)
 size_t
 Data::hash() const
 {
-   return rawHash(this->data(), this->size());
+   return rawHash((const unsigned char*)(this->data()), this->size());
 }
 
 size_t
 Data::caseInsensitivehash() const
 {
-   return rawCaseInsensitiveHash(this->data(), this->size());
+   return rawCaseInsensitiveHash((const unsigned char*)(this->data()), this->size());
 }
 
 HashValueImp(resip::Data, data.hash());

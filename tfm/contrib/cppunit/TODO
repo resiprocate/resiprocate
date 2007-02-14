@@ -1,23 +1,19 @@
+* Bugs:
+Asserter::makeNotEqualMessage() strip the shortDescription of the additional message.
+
 * CppUnit:
-  - Unicode support
-  - STL orthodox template for container elements.
-  - CompilerOutputter support for gcc error format:
-	g++ -DHAVE_CONFIG_H -I. -I. -I../../config -I../../include -I../../include -g -O2 -c TextOutputter.cpp -Wp,-MD,.deps/TextOutputter.TPlo  -fPIC -DPIC
-	TextOutputter.cpp:5: cppunit/TextOutputter.h: No such file or directory
+  - STL concept checker.
+  - Memory leak tracking: setUp/tearDown should be leak safe if no failure occured.
+
+* UnitTest
+  - add tests for XmlOutputter::setStyleSheet (current assertion macro strip <?...> when
+    testing )
 
 * VC++ TestRunner:
-  - Make it possible to specify the registry path where settings are stored.
-    Current method use the path defined in the CWinApp. This does not work
-    for console application
-  - Add "details" field to show detail of the selected failed test:
-    - suite and test name,
-    - failure message. If possible separate "was" and "expected" in the
-      forthcoming assertEquals() to make comparison easier,
-    - source file location. 
+  - Modify MfcUi::TestRunner to expose TestResult (which allow specific TestListener
+    for global initialization).
+  - Update MfcTestRunner to use TestPath to store test in the registry
     
-* BugFix: CompilerOutputter::wrap(), bug when wrapping empty line in the middle 
-of a text (they disappear).    
-
 * Documentation:
 	CookBook:
 	- how to create simple test cases (with CppUnit namespace)
@@ -26,7 +22,7 @@ of a text (they disappear).
 	  - advanced assertions with the CPPUNIT_ASSERT_MESSAGE
 	- Helper Macros for convenience
 	- Creating a suite
-	- Composing a suite from more suits (i.e. compose tests for n modules to
+	- Composing a suite from more suites (i.e. compose tests for n modules to
 	  form a big test for the whole program)
 	- customizing output using an user defined TestListener
 	  - how to write the TestListener (subclass of TestListener)
@@ -36,3 +32,4 @@ of a text (they disappear).
 	- other custmization stuff I haven't understood yet
 
 	CppUnit: architecture overview.
+

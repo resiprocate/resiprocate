@@ -2,7 +2,7 @@
 #define TESTBROWSER_H
 
 #include <cppunit/Test.h>
-#include "TestBrowserDlg.h"
+#include "testbrowserdlg.h"
 
 class QListViewItem;
 
@@ -14,19 +14,19 @@ public:
   TestBrowser( QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0 );
   ~TestBrowser();
 
-  void setRootTest( CppUnit::Test *rootTest );
+  void setRootTest( CPPUNIT_NS::Test *rootTest );
 
-  CppUnit::Test *selectedTest();
+  CPPUNIT_NS::Test *selectedTest();
 
 protected slots:
   void accept();
 
 private:
-  void insertItemFor( CppUnit::Test *test,
-                       QListViewItem *parentItem );
+  void insertItemFor( CPPUNIT_NS::Test *test,
+                      QListViewItem *parentItem );
 
 private:
-  CppUnit::Test *_selectedTest;
+  CPPUNIT_NS::Test *_selectedTest;
 };
 
 #endif // TESTBROWSER_H

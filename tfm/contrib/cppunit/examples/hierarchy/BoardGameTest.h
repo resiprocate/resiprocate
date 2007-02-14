@@ -2,9 +2,10 @@
 #define __BOARDGAMETEST_H__
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/portability/Stream.h>
 
-template<typename GAMECLASS> 
-class BoardGameTest : public CppUnit::TestFixture 
+template<class GAMECLASS> 
+class BoardGameTest : public CPPUNIT_NS::TestFixture 
 {
   CPPUNIT_TEST_SUITE( BoardGameTest );
   CPPUNIT_TEST( testReset );
@@ -25,23 +26,23 @@ public:
   
   void setUp() 
   { 
-    m_game = new GAMECLASS; 
+    this->m_game = new GAMECLASS; 
   }
   
   void tearDown()
   { 
-    delete m_game; 
+    delete this->m_game; 
   }
   
   void testReset() 
   { 
-    CPPUNIT_ASSERT( m_game->reset() );
+    CPPUNIT_ASSERT( this->m_game->reset() );
   }
 
   void testResetShouldFail() 
   { 
-    std::cout << "The following test fails, this is intended:" << std::endl;
-    CPPUNIT_ASSERT( !m_game->reset() );
+    CPPUNIT_NS::stdCOut() << "The following test fails, this is intended:" << "\n";
+    CPPUNIT_ASSERT( !this->m_game->reset() );
   }
 };
 

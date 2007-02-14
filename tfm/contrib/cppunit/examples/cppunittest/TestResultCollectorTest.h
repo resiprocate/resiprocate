@@ -6,7 +6,7 @@
 #include "SynchronizedTestResult.h"
 
 
-class TestResultCollectorTest : public CppUnit::TestFixture,
+class TestResultCollectorTest : public CPPUNIT_NS::TestFixture,
                        public SynchronizedTestResult::SynchronizationObjectListener
 {
   CPPUNIT_TEST_SUITE( TestResultCollectorTest );
@@ -17,7 +17,7 @@ class TestResultCollectorTest : public CppUnit::TestFixture,
   CPPUNIT_TEST( testWasSuccessfulWithErrors );
   CPPUNIT_TEST( testWasSuccessfulWithFailures );
   CPPUNIT_TEST( testWasSuccessfulWithErrorsAndFailures );
-  CPPUNIT_TEST( testWasSuccessfulWithSucessfulTest );
+  CPPUNIT_TEST( testWasSuccessfulWithSuccessfulTest );
   CPPUNIT_TEST( testSynchronizationAddFailure );
   CPPUNIT_TEST( testSynchronizationStartTest );
   CPPUNIT_TEST( testSynchronizationRunTests );
@@ -44,7 +44,7 @@ public:
   void testWasSuccessfulWithErrors();
   void testWasSuccessfulWithFailures();
   void testWasSuccessfulWithErrorsAndFailures();
-  void testWasSuccessfulWithSucessfulTest();
+  void testWasSuccessfulWithSuccessfulTest();
 
   void testSynchronizationAddFailure();
   void testSynchronizationStartTest();
@@ -66,9 +66,9 @@ private:
                     int errors,
                     int testsRun );
 
-  void checkFailure( CppUnit::TestFailure *failure,
-                     std::string expectedMessage,
-                     CppUnit::Test *expectedTest,
+  void checkFailure( CPPUNIT_NS::TestFailure *failure,
+                     CPPUNIT_NS::Message expectedMessage,
+                     CPPUNIT_NS::Test *expectedTest,
                      bool expectedIsError );
 
   void checkWasSuccessful( bool shouldBeSuccessful );
@@ -78,15 +78,15 @@ private:
   void addFailure( std::string message );
   void addError( std::string message );
   void addFailure( std::string message, 
-                   CppUnit::Test *failedTest, 
+                   CPPUNIT_NS::Test *failedTest, 
                    bool isError,
-                   CppUnit::TestResultCollector *result );
+                   CPPUNIT_NS::TestResultCollector *result );
 
 private:
-  CppUnit::TestResultCollector *m_result;
+  CPPUNIT_NS::TestResultCollector *m_result;
   SynchronizedTestResult *m_synchronizedResult;  
-  CppUnit::Test *m_test;
-  CppUnit::Test *m_test2;
+  CPPUNIT_NS::Test *m_test;
+  CPPUNIT_NS::Test *m_test2;
   int m_lockCount;
   int m_unlockCount;
 };

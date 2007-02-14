@@ -40,13 +40,15 @@ using namespace std;
 DnsStub::DnsResourceRecordsByPtr DnsStub::Query::Empty;
 
 DnsStub::NameserverList DnsStub::EmptyNameserverList;
+int DnsStub::mDnsTimeout = 0;
+int DnsStub::mDnsTries = 0;
 
 DnsStub::DnsStub(const NameserverList& additional,
                  AfterSocketCreationFuncPtr socketFunc) :
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::createExternalDns())
 {
-   int retCode = mDnsProvider->init(additional, socketFunc);
+   int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries);
    if (retCode != ExternalDns::Success)
    {
       if (retCode == ExternalDns::BuildMismatch)
@@ -498,7 +500,15 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
 
    char* name = 0;
    int len = 0;
-   ares_expand_name(aptr, abuf, alen, &name, &len);
+
+   if (ARES_SUCCESS != ares_expand_name(aptr, abuf, alen, &name, &len))
+   {
+      ErrLog(<< "Failed DNS preparse"  << endl);
+      mResultConverter->notifyUser(mTarget, ARES_EFORMERR, "Failed DNS preparse", Empty, mSink); 
+      bGotAnswers = false;
+      return;
+   }
+
    targetToQuery = name;
    aptr += len;
 

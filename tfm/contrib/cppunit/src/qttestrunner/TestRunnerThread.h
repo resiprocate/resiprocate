@@ -21,8 +21,8 @@ class TestRunnerThread : public QThread
 public:
   /*! Constructs a TestRunnerThread object.
    */
-  TestRunnerThread( CppUnit::Test *testToRun,
-                    CppUnit::TestResult *result,
+  TestRunnerThread( CPPUNIT_NS::Test *testToRun,
+                    CPPUNIT_NS::TestResult *result,
                     QObject *eventTarget,
                     TestRunnerThreadFinishedEvent *finishedEvent );
 
@@ -39,8 +39,8 @@ private:
   void run();
 
 private:
- CppUnit::Test *_testToRun;
- CppUnit::TestResult *_result;
+ CPPUNIT_NS::Test *_testToRun;
+ CPPUNIT_NS::TestResult *_result;
  QObject *_eventTarget;
  TestRunnerThreadFinishedEvent *_finishedEvent;
 };

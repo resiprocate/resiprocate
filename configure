@@ -6,12 +6,12 @@ for PERL in /usr/bin/perl \
             /usr/pkg/bin/perl \
             /usr/athena/bin/perl \
             `which perl`
-{
+do
   if [ -x $PERL ]
   then
     break
   fi
-}
+done
 
 if [ ! -x $PERL ]
 then
@@ -30,12 +30,18 @@ USE_DISTCC := no
 USE_CCACHE := no
 USE_DTLS := no
 USE_SSL := yes
+USE_SIGCOMP := no
+SIGCOMP_BASEDIR:= /usr/local
 USE_POPT := yes
 USE_CURL := no
 USE_GOOGLE_MALLOC := no
 USE_GOOGLE_CPUPERF := no
 USE_IPV6 := no
-INSTALL_PREFIX := /usr/local" > build/Makefile.conf
+DB_HEADERS := /usr/include/db4
+RESIP_FIXED_POINT := no
+PEDANTIC_STACK := no
+INSTALL_PREFIX := /usr/local
+ARES_PREFIX := /usr/local " > build/Makefile.conf
     exit
   fi
   echo "*** Leaving build/Makefile.conf unmodified"
@@ -43,7 +49,7 @@ INSTALL_PREFIX := /usr/local" > build/Makefile.conf
 fi
 
 exec $PERL -wx $0 $@
-
+echo <<__END__
 #!perl
 
 ######################################################################
@@ -153,6 +159,20 @@ $uname = `uname`;
     flag        => 'ssl',
   },
   {
+    name        => "USE_SIGCOMP",
+    description => "Do you want to include SigComp support?",
+    default     => &sigcompInstalled,
+    validate    => [@yesno],
+    flag        => 'sigcomp',
+  },
+  {
+    name        => "SIGCOMP_BASEDIR",
+    description => "What is the base directory Open SigComp is installed in?",
+    default     => "/usr/local",
+    predicate   => "\$config{USE_SIGCOMP} eq 'yes'",
+    option      => 'with-sigcomp-basedir',
+  },
+  {
     name        => "USE_POPT",
     description => "Use popt to read commandline options?",
     default     => "yes",
@@ -188,10 +208,36 @@ $uname = `uname`;
     flag        => 'ipv6',
   },
   {
+    name        => "DB_HEADERS",
+    description => "Where is db_cxx.h?",
+    default     => "/usr/include/db4",
+    option      => "db4-headers",
+  },
+  {
+    name	=> "RESIP_FIXED_POINT",
+    description => "Compile with no floating point functions?",
+    default	=> "no",
+    validate	=> [@yesno],
+    flag	=> 'resip-fixed-point',
+  },
+  {
+    name	=> "PEDANTIC_STACK",
+    description => "Force stack to fully parse every message it receives?",
+    default	=> "no",
+    validate	=> [@yesno],
+    flag	=> 'pedantic-stack',
+  },
+  {
     name        => "INSTALL_PREFIX",
     description => "Where should the libraries be installed?",
     default     => "/usr/local",
     option      => "prefix",
+  },
+  {
+    name        => "ARES_PREFIX",
+    description => "Where should ares be installed?",
+    default     => "/usr/local",
+    option      => "ares-prefix",
   },
 );
 
@@ -403,6 +449,15 @@ sub detectToolchain
 sub detectDistcc
 {
   if ($ENV{DISTCC_HOSTS})
+  {
+    return "yes";
+  }
+  "no";
+}
+
+sub sigcompInstalled
+{
+  if (-e "/usr/local/lib/libopensigcomp.a")
   {
     return "yes";
   }

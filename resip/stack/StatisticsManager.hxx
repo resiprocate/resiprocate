@@ -4,6 +4,7 @@
 #include "rutil/Timer.hxx"
 #include "rutil/Data.hxx"
 #include "resip/stack/StatisticsMessage.hxx"
+#include "resip/stack/StatisticsHandler.hxx"
 
 namespace resip
 {
@@ -32,6 +33,11 @@ class StatisticsManager : public StatisticsMessage::Payload
       void process();
       // not stricly thread-safe; needs to be called through the fifo somehow
       void setInterval(unsigned long intvSecs);
+	  
+      void setExternalStatsHandler(ExternalStatsHandler *handler)
+      {
+         mExternalHandler = handler;
+      }
 
    private:
       friend class TransactionState;
@@ -43,6 +49,8 @@ class StatisticsManager : public StatisticsMessage::Payload
       SipStack& mStack;
       UInt64 mInterval;
       UInt64 mNextPoll;
+
+      ExternalStatsHandler *mExternalHandler;
 };
 
 }

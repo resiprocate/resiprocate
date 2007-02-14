@@ -1,6 +1,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
+#include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/ServerRegistration.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
@@ -58,11 +59,11 @@ ServerRegistration::accept(SipMessage& ok)
       continue;
     }
     contact.uri() = i->uri;
-    contact.param(p_expires) = int(i->expires - now);
+    contact.param(p_expires) = UInt32(i->expires - now);
     ok.header(h_Contacts).push_back(contact);
     if(i->useQ)
     {
-      ok.header(h_Contacts).back().param(p_q)=i->q;
+      ok.header(h_Contacts).back().param(p_q)=(int)i->q;
     }
   }
 
@@ -111,6 +112,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     if (!handler || !database)
     {
+      // !bwc! This is a server error; why are we sending a 4xx?
        DebugLog( << "No handler or DB - sending 405" );
        
        SharedPtr<SipMessage> failure(new SipMessage);
@@ -120,11 +122,26 @@ ServerRegistration::dispatch(const SipMessage& msg)
        return;
     }
 
-    mAor = msg.header(h_To).uri();
+    mAor = msg.header(h_To).uri().getAorAsUri();
+
+   // Checks to see whether this scheme is valid, and supported.
+   if( !( (mAor.scheme()=="sip" || mAor.scheme()=="sips") 
+            && mDum.getMasterProfile()->isSchemeSupported(mAor.scheme()) ) )
+   {
+       DebugLog( << "Bad scheme in Aor" );
+       
+       SharedPtr<SipMessage> failure(new SipMessage);
+       mDum.makeResponse(*failure, msg, 400);
+       failure->header(h_StatusLine).reason() = "Bad/unsupported scheme in To: " + mAor.scheme();
+       mDum.send(failure);
+       delete(this);
+       return;
+   }
+   
 
     database->lockRecord(mAor);
 
-    int globalExpires = 0;
+    UInt32 globalExpires = 0;
 
     if (msg.exists(h_Expires))
     {
@@ -132,7 +149,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
     }
     else
     {
-      globalExpires = 3600;
+       globalExpires = 3600;
     }
 
     mOriginalContacts = database->getContacts(mAor);
@@ -146,7 +163,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
     ParserContainer<NameAddr>::iterator i;
-    int expires;
+    UInt32 expires;
     time_t now;
     time(&now);
 
@@ -154,7 +171,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
     {
       if (i->exists(p_expires))
       {
-        expires = i->param(p_expires);
+         expires = i->param(p_expires);
       }
       else
       {
@@ -179,8 +196,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
         return;
       }
 
-      static ExtensionParameter p_cid("cid");
-      i->uri().param(p_cid) = Data(msg.getSource().connectionId);
+      unsigned int cid = msg.getSource().connectionId;
       
       // Check to see if this is a removal.
       if (expires == 0)
@@ -195,14 +211,14 @@ ServerRegistration::dispatch(const SipMessage& msg)
       else
       {
         RegistrationPersistenceManager::update_status_t status;
-        InfoLog (<< "Adding " << mAor << " -> " << i->uri());
+        InfoLog (<< "Adding " << mAor << " -> " << *i  );
         if(i->exists(p_q))
         {
-            status = database->updateContact(mAor, i->uri(), now + expires,i->param(p_q));
+            status = database->updateContact(mAor, i->uri(), now + expires,cid,i->param(p_q).getValue());
         }
         else
         {
-            status = database->updateContact(mAor, i->uri(), now + expires);
+            status = database->updateContact(mAor, i->uri(), now + expires,cid);
          }
         if (status == RegistrationPersistenceManager::CONTACT_CREATED)
         {

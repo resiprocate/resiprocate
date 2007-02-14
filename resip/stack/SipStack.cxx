@@ -34,7 +34,7 @@
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
 #endif
 
@@ -46,7 +46,8 @@ SipStack::SipStack(Security* pSecurity,
                    const DnsStub::NameserverList& additional,
                    AsyncProcessHandler* handler, 
                    bool stateless,
-                   AfterSocketCreationFuncPtr socketFunc
+                   AfterSocketCreationFuncPtr socketFunc,
+                   Compression *compression
    ) : 
 #ifdef USE_SSL
    mSecurity( pSecurity ? pSecurity : new Security()),
@@ -54,6 +55,7 @@ SipStack::SipStack(Security* pSecurity,
    mSecurity(0),
 #endif
    mDnsStub(new DnsStub(additional, socketFunc)),
+   mCompression(compression ? compression : new Compression(Compression::NONE)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
            TransactionController::MaxTUFifoSize),
@@ -82,6 +84,7 @@ SipStack::~SipStack()
 #ifdef USE_SSL
    delete mSecurity;
 #endif
+   delete mCompression;
    delete mDnsStub;
 }
 
@@ -119,10 +122,10 @@ SipStack::addTransport( TransportType protocol,
       switch (protocol)
       {
          case UDP:
-            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc);
+            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression);
             break;
          case TCP:
-            transport = new TcpTransport(stateMacFifo, port, version, ipInterface);
+            transport = new TcpTransport(stateMacFifo, port, version, ipInterface, *mCompression);
             break;
          case TLS:
 #if defined( USE_SSL )
@@ -132,7 +135,8 @@ SipStack::addTransport( TransportType protocol,
                                          ipInterface,
                                          *mSecurity,
                                          sipDomainname,
-                                         sslType);
+                                         sslType, 
+                                         *mCompression);
 #else
             CritLog (<< "TLS not supported in this stack. You don't have openssl");
             assert(0);
@@ -145,7 +149,8 @@ SipStack::addTransport( TransportType protocol,
                                           version, // !jf! stun
                                           ipInterface,
                                           *mSecurity,
-                                          sipDomainname);
+                                          sipDomainname,
+                                          *mCompression);
 #else
             CritLog (<< "DTLS not supported in this stack.");
             assert(0);
@@ -172,11 +177,12 @@ SipStack::addTransport( TransportType protocol,
 void 
 SipStack::addTransport( std::auto_ptr<Transport> transport)
 {
-   //.dcm. once addTransport starts throwing, ned to back out alias
+   //.dcm. once addTransport starts throwing, need to back out alias
    if (!transport->interfaceName().empty()) 
    {
       addAlias(transport->interfaceName(), transport->port());
    }
+   mPorts.insert(transport->port());
    mTransactionController.transportSelector().addTransport(transport);
 }
 
@@ -256,6 +262,12 @@ SipStack::isMyDomain(const Data& domain, int port) const
 {
    return (mDomains.count(domain + ":" + 
                           Data(port == 0 ? Symbols::DefaultSipPort : port)) != 0);
+}
+
+bool
+SipStack::isMyPort(int port) const
+{
+   return mPorts.count(port) != 0;
 }
 
 const Uri&
@@ -373,6 +385,7 @@ SipStack::checkAsyncProcessHandler()
    }
 }
 
+
 void
 SipStack::post(const ApplicationMessage& message)
 {
@@ -404,6 +417,30 @@ SipStack::postMS(const ApplicationMessage& message, unsigned int ms,
    checkAsyncProcessHandler();
 }
 
+void 
+SipStack::post(std::auto_ptr<ApplicationMessage> message, 
+               unsigned int secondsLater,
+               TransactionUser* tu)
+{
+   postMS(message, secondsLater*1000, tu);
+}
+
+
+void 
+SipStack::postMS( std::auto_ptr<ApplicationMessage> message, 
+                  unsigned int ms,
+                  TransactionUser* tu)
+{
+   assert(!mShuttingDown);
+   if (tu) message->setTransactionUser(tu);
+   Lock lock(mAppTimerMutex);
+   mAppTimers.add(Timer(ms, message.release()));
+   //.dcm. timer update rather than process cycle...optimize by checking if sooner
+   //than current timeTillNextProcess?
+   checkAsyncProcessHandler();
+}
+
+
 bool
 SipStack::hasMessage() const
 {
@@ -420,8 +457,8 @@ SipStack::receive()
       // we should only ever have SIP messages on the TU Fifo
       // unless we've registered for termination messages. 
       Message* msg = mTUFifo.getNext();
-      SipMessage* sip=0;
-      if ((sip=dynamic_cast<SipMessage*>(msg)))
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      if (sip)
       {
          DebugLog (<< "RECV: " << sip->brief());
          return sip;

@@ -10,7 +10,7 @@
  */
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION( TestCaseTest,
-                                       CppUnitTest::coreSuiteName() );
+                                       coreSuiteName() );
 
 
 TestCaseTest::TestCaseTest()
@@ -27,7 +27,7 @@ void
 TestCaseTest::setUp()
 {
   m_testListener = new MockTestListener( "mock-testlistener" );
-  m_result = new CppUnit::TestResult();
+  m_result = new CPPUNIT_NS::TestResult();
   m_result->addListener( m_testListener );
 }
 
@@ -107,7 +107,7 @@ TestCaseTest::checkFailure( bool failSetUp,
 void 
 TestCaseTest::testCountTestCases()
 {
-  CppUnit::TestCase test;
+  CPPUNIT_NS::TestCase test;
   CPPUNIT_ASSERT_EQUAL( 1, test.countTestCases() );
 }
 
@@ -115,7 +115,7 @@ TestCaseTest::testCountTestCases()
 void 
 TestCaseTest::testDefaultConstructor()
 {
-  CppUnit::TestCase test;
+  CPPUNIT_NS::TestCase test;
   CPPUNIT_ASSERT_EQUAL( std::string(""), test.getName() );
 }
 
@@ -124,21 +124,8 @@ void
 TestCaseTest::testConstructorWithName()
 {
   std::string testName( "TestName" );
-  CppUnit::TestCase test( testName );
+  CPPUNIT_NS::TestCase test( testName );
   CPPUNIT_ASSERT_EQUAL( testName, test.getName() );
-}
-
-
-void 
-TestCaseTest::testDefaultRun()
-{
-  MockTestCase test( "mocktest" );
-  test.setExpectedSetUpCall();
-  test.setExpectedRunTestCall();
-  test.setExpectedTearDownCall();
-
-  std::auto_ptr<CppUnit::TestResult> result( test.run() );
-  test.verify();
 }
 
 
@@ -155,4 +142,20 @@ TestCaseTest::testTwoRun()
   test1.run( m_result );
 
   m_testListener->verify();
+}
+
+
+void 
+TestCaseTest::testGetChildTestCount()
+{
+  CPPUNIT_NS::TestCase test( "test" );
+  CPPUNIT_ASSERT_EQUAL( 0, test.getChildTestCount() );
+}
+
+
+void 
+TestCaseTest::testGetChildTestAtThrow()
+{
+  CPPUNIT_NS::TestCase test( "test" );
+  test.getChildTestAt( 0 );
 }

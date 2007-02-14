@@ -24,54 +24,68 @@ using namespace std;
 static bool invokeOpenSSLInit = OpenSSLInit::init(); //.dcm. - only in hxx
 Mutex* OpenSSLInit::mMutexes;
 
-static bool openSSLInitInvoked = false;
-
 bool
 OpenSSLInit::init()
 {
-   
-	if (!openSSLInitInvoked)
-	{
-       cerr << "OpenSSLInit::init() invoked" << endl;
-       
-		openSSLInitInvoked = true;
-		//#if defined(THREADS)
-		int locks = CRYPTO_num_locks();
-//		ErrLog(<< "Creating " << locks << " locks for OpenSSL");
-		//for(int i=0; i < locks; i++)
-		//{
-		//	OpenSSLInit::mMutexes.push_back(new Mutex());
-		//}
-		mMutexes = new Mutex[locks];
-		CRYPTO_set_locking_callback(OpenSSLInit::lockingFunction);
+	static OpenSSLInit instance;
+	return true;
+}
+
+OpenSSLInit::OpenSSLInit()
+{
+	//cerr << "OpenSSLInit::init() invoked" << endl;
+
+	//#if defined(THREADS)
+	int locks = CRYPTO_num_locks();
+	//		ErrLog(<< "Creating " << locks << " locks for OpenSSL");
+	//for(int i=0; i < locks; i++)
+	//{
+	//	OpenSSLInit::mMutexes.push_back(new Mutex());
+	//}
+	mMutexes = new Mutex[locks];
+	CRYPTO_set_locking_callback(OpenSSLInit::lockingFunction);
 #if !defined(WIN32) && defined(PTHREADS)
-		CRYPTO_set_id_callback(OpenSSLInit::threadIdFunction);
+	CRYPTO_set_id_callback(OpenSSLInit::threadIdFunction);
 #endif
 
 #if 0 //?dcm? -- not used by OpenSSL yet?
-		CRYPTO_set_dynlock_create_callback(OpenSSLInit::dynCreateFunction);
-		CRYPTO_set_dynlock_destroy_callback(OpenSSLInit::dynDestroyFunction);
-		CRYPTO_set_dynlock_lock_callback(OpenSSLInit::dynLockFunction);
+	CRYPTO_set_dynlock_create_callback(OpenSSLInit::dynCreateFunction);
+	CRYPTO_set_dynlock_destroy_callback(OpenSSLInit::dynDestroyFunction);
+	CRYPTO_set_dynlock_lock_callback(OpenSSLInit::dynLockFunction);
 #endif
-		//#endif
+	//#endif
 
-        
-        SSL_library_init();
-        SSL_load_error_strings();
-        OpenSSL_add_all_algorithms();
-        assert(EVP_des_ede3_cbc());
-    }
-   return true;
+#if 1
+	CRYPTO_malloc_debug_init();
+	CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
+	CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
+#endif
+
+	SSL_library_init();
+	SSL_load_error_strings();
+	OpenSSL_add_all_algorithms();
+	assert(EVP_des_ede3_cbc());
 }
 
-//.dcm. -- should prob. cleanup in a static guard object...prob. doesn't matter
-// Clean up data allocated during OpenSSL_add_all_algorithms
-//   EVP_cleanup();       
+OpenSSLInit::~OpenSSLInit()
+{
+	// Clean up data allocated during SSL_load_error_strings
+	ERR_free_strings();
 
-// Clean up data allocated during SSL_load_error_strings
-//   ERR_free_strings();
+	// free thread error queue
+	ERR_remove_state(0);
 
+	CRYPTO_cleanup_all_ex_data();
 
+	// Clean up data allocated during OpenSSL_add_all_algorithms
+	EVP_cleanup();
+
+#if 1
+	CRYPTO_mem_leaks_fp(stderr);
+#endif
+
+	delete [] mMutexes;
+}
 
 void
 OpenSSLInit::lockingFunction(int mode, int n, const char* file, int line)

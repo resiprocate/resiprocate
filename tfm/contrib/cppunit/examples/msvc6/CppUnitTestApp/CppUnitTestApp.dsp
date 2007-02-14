@@ -43,7 +43,8 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /GR /GX /O2 /I "../../../include" /I "../.." /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /D "CPPUNIT_USE_TYPEINFO" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GR /GX /Zd /O2 /I "../../../include" /I "../.." /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /D "CPPUNIT_USE_TYPEINFO" /FD /c
+# SUBTRACT CPP /YX /Yc /Yu
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x40c /d "NDEBUG" /d "_AFXDLL"
@@ -54,6 +55,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
 # ADD LINK32 ../../../Lib/cppunit.lib ../../../Lib/testrunner.lib /nologo /subsystem:windows /machine:I386
+# SUBTRACT LINK32 /incremental:yes
 
 !ELSEIF  "$(CFG)" == "CppUnitTestApp - Win32 Debug"
 
@@ -69,7 +71,8 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "../../../include" /I "../.." /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /D "CPPUNIT_USE_TYPEINFO" /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /Zi /Od /I "../../../include" /I "../.." /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /D "CPPUNIT_USE_TYPEINFO" /FD /GZ /c
+# SUBTRACT CPP /YX /Yc /Yu
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x40c /d "_DEBUG" /d "_AFXDLL"
@@ -79,7 +82,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ../../../Lib/cppunitd.lib ../../../Lib/testrunnerd.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 ../../../Lib/cppunitd.lib ../../../Lib/testrunnerd.lib /nologo /subsystem:windows /incremental:no /debug /machine:I386 /pdbtype:sept
 
 !ENDIF 
 
@@ -164,11 +167,6 @@ InputName=testrunner
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\lib\testrunnercd.dll
-# PROP Exclude_From_Build 1
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\lib\testrunnerd.dll
 
 !IF  "$(CFG)" == "CppUnitTestApp - Win32 Release"
@@ -223,6 +221,14 @@ SOURCE=..\..\cppunittest\ExceptionTest.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\cppunittest\ExceptionTestCaseDecoratorTest.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\ExceptionTestCaseDecoratorTest.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\cppunittest\ExtensionSuite.h
 # End Source File
 # Begin Source File
@@ -244,6 +250,22 @@ SOURCE=..\..\cppunittest\HelperSuite.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\cppunittest\MessageTest.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\MessageTest.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\MockFunctor.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\MockProtector.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\cppunittest\MockTestCase.cpp
 # SUBTRACT CPP /YX /Yc /Yu
 # End Source File
@@ -259,15 +281,6 @@ SOURCE=..\..\cppunittest\MockTestListener.cpp
 # Begin Source File
 
 SOURCE=..\..\cppunittest\MockTestListener.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\cppunittest\NotEqualExceptionTest.cpp
-# SUBTRACT CPP /YX /Yc /Yu
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\cppunittest\NotEqualExceptionTest.h
 # End Source File
 # Begin Source File
 
@@ -290,6 +303,14 @@ SOURCE=..\..\cppunittest\RepeatedTestTest.cpp
 # Begin Source File
 
 SOURCE=..\..\cppunittest\RepeatedTestTest.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\StringToolsTest.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\StringToolsTest.h
 # End Source File
 # Begin Source File
 
@@ -351,6 +372,15 @@ SOURCE=..\..\cppunittest\TestFailureTest.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\cppunittest\TestPathTest.cpp
+# SUBTRACT CPP /YX /Yc /Yu
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\TestPathTest.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\cppunittest\TestResultCollectorTest.cpp
 # SUBTRACT CPP /YX /Yc /Yu
 # End Source File
@@ -387,6 +417,19 @@ SOURCE=..\..\cppunittest\TestSuiteTest.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\cppunittest\TestTest.cpp
+# SUBTRACT CPP /YX /Yc /Yu
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\TestTest.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\ToolsSuite.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\cppunittest\TrackedTestCase.cpp
 # SUBTRACT CPP /YX /Yc /Yu
 # End Source File
@@ -397,6 +440,14 @@ SOURCE=..\..\cppunittest\TrackedTestCase.h
 # Begin Source File
 
 SOURCE=..\..\cppunittest\UnitTestToolSuite.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\XmlElementTest.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\cppunittest\XmlElementTest.h
 # End Source File
 # Begin Source File
 

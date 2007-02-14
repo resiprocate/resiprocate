@@ -77,8 +77,8 @@ class ConnectionManager
       ConnectionLruList* mLRUHead;
       //<<---------------------------------
 
-      ConnectionId mConnectionIdGenerator;
-
+      static ConnectionId theConnectionIdGenerator;
+      static resip::Mutex theCidMutex;
       friend class TcpBaseTransport;
 };
 

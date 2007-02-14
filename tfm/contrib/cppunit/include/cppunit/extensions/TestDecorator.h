@@ -4,7 +4,8 @@
 #include <cppunit/Portability.h>
 #include <cppunit/Test.h>
 
-namespace CppUnit {
+CPPUNIT_NS_BEGIN
+
 
 class TestResult;
 
@@ -17,50 +18,32 @@ class TestResult;
  *
  * Does not assume ownership of the test it decorates
  */ 
-class CPPUNIT_API TestDecorator : public Test 
+class CPPUNIT_API TestDecorator : public Test
 {
 public:
-    TestDecorator   (Test *test);
-    ~TestDecorator  ();
+  TestDecorator( Test *test );
+  ~TestDecorator();
 
-    void        run             (TestResult *result);
-    int         countTestCases  () const;
-    std::string getName         () const;
-    std::string toString        () const;
+  int countTestCases() const;
+
+  std::string getName() const;
+
+  void run( TestResult *result );
+
+  int getChildTestCount() const;
 
 protected:
-    Test        *m_test;
+  Test *doGetChildTestAt( int index ) const;
+
+  Test *m_test;
 
 private:
-    TestDecorator( const TestDecorator &);
-    void operator =( const TestDecorator & );
+  TestDecorator( const TestDecorator &);
+  void operator =( const TestDecorator & );
 };
 
 
-inline TestDecorator::TestDecorator (Test *test)
-{ m_test = test; }
-
-
-inline TestDecorator::~TestDecorator ()
-{}
-
-
-inline int TestDecorator::countTestCases () const
-{ return m_test->countTestCases (); }
-
-
-inline void TestDecorator::run (TestResult *result)
-{ m_test->run (result); }
-
-
-inline std::string TestDecorator::toString () const
-{ return m_test->toString (); }
-
-
-inline std::string TestDecorator::getName () const
-{ return m_test->getName(); }
-
-} // namespace CppUnit
+CPPUNIT_NS_END
 
 #endif
 

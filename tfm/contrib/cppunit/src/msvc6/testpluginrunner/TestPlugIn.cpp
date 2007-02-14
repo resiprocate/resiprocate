@@ -7,13 +7,20 @@
 #include "StdAfx.h"
 #include "TestPlugIn.h"
 #include <cppunit/TestCase.h>
+#include <cppunit/plugin/DynamicLibraryManagerException.h>
+#include <cppunit/extensions/TestFactoryRegistry.h>
 #include "TestPlugInException.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
 
 
 TestPlugIn::TestPlugIn( const std::string fileName ) :
-    m_fileName( fileName ),
-    m_dllHandle( NULL ),
-    m_interfaceFunction( NULL )
+    m_fileName( fileName )
 {
   m_copyFileName = m_fileName + "-hotrunner";
 }
@@ -21,29 +28,19 @@ TestPlugIn::TestPlugIn( const std::string fileName ) :
 
 TestPlugIn::~TestPlugIn()
 {
-  releaseDll();
   deleteDllCopy();
-}
-
-
-void 
-TestPlugIn::releaseDll()
-{
-  if ( m_dllHandle != NULL )
-    ::FreeLibrary( m_dllHandle );
-  m_dllHandle = NULL;
-  m_interfaceFunction = NULL;
 }
 
 
 void 
 TestPlugIn::deleteDllCopy()
 {
+  m_manager.unload( m_copyFileName );
   ::DeleteFile( m_copyFileName.c_str() );
 }
 
 
-class NullTest : public CppUnit::TestCase
+class NullTest : public CPPUNIT_NS::TestCase
 {
 public:
   NullTest( std::string name ) : TestCase( name ) 
@@ -61,31 +58,20 @@ public:
 };
 
 
-CppUnit::Test *
+CPPUNIT_NS::Test *
 TestPlugIn::makeTest()
 {
   reloadDll();
-  TestPlugInInterface *theInterface = (*m_interfaceFunction)();
-
-  try
-  {
-    return theInterface->makeTest();
-  }
-  catch ( ... )
-  {
-    throw TestPlugInException( "Failed to make test using GetTestPlugInInterface", 
-                               TestPlugInException::failedToMakeTest );
-  }
+  return CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest();
 }
 
 
 void 
 TestPlugIn::reloadDll()
 {
-  releaseDll();
+  m_manager.unload( m_copyFileName );
   makeDllCopy();
   loadDll();
-  getDllInterface();
 }
 
 
@@ -103,20 +89,13 @@ TestPlugIn::makeDllCopy()
 void 
 TestPlugIn::loadDll()
 {
-  m_dllHandle = ::LoadLibrary( m_copyFileName.c_str() );
-  if ( m_dllHandle == NULL )
-    throw TestPlugInException( "Failed to load DLL " + m_copyFileName, 
+  try
+  {
+    m_manager.load( m_copyFileName );
+  }
+  catch ( CPPUNIT_NS::DynamicLibraryManagerException &e )
+  {
+    throw TestPlugInException( e.what(), 
                                TestPlugInException::failedToLoadDll );
-}
-
-
-void
-TestPlugIn::getDllInterface()
-{
-  m_interfaceFunction = (GetTestPlugInInterfaceFunction )
-      ::GetProcAddress( m_dllHandle, "GetTestPlugInInterface" );
-  if ( m_interfaceFunction == NULL )
-    throw TestPlugInException( "Failed to locate function GetTestPlugInInterface "
-                               " in DLL " + m_fileName, 
-                               TestPlugInException::failedToGetInterfaceFunction );
+  }
 }

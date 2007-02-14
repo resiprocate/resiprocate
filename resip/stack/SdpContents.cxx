@@ -3,6 +3,7 @@
 #endif
 
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/DataStream.hxx"
 #include "resip/stack/Symbols.hxx"
@@ -29,7 +30,7 @@ const char* NetworkType[] = {"???", "IP4", "IP6"};
 static const Data rtpmap("rtpmap");
 static const Data fmtp("fmtp");
 
-// RF C2327 6. page 9
+// RFC2327 6. page 9
 // "parsers should be tolerant and accept records terminated with a single
 // newline character"
 void skipEol(ParseBuffer& pb)
@@ -296,10 +297,10 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
    pb.data(mUser, anchor);
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mSessionId = pb.unsignedLongLong();
+   mSessionId = pb.uInt64();
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
-   mVersion = pb.unsignedLongLong();
+   mVersion = pb.uInt64();
 
    pb.skipChar(Symbols::SPACE[0]);
    pb.skipChar('I');
@@ -549,7 +550,7 @@ SdpContents::Session::Connection::parse(ParseBuffer& pb)
    pb.data(mAddress, anchor);
 
    mTTL = 0;
-   if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
+   if (mAddrType == IP4 && !pb.eof() && *pb.position() == Symbols::SLASH[0])
    {
       pb.skipChar();
       mTTL = pb.integer();
@@ -660,9 +661,9 @@ SdpContents::Session::Time::parse(ParseBuffer& pb)
    pb.skipChar('t');
    pb.skipChar(Symbols::EQUALS[0]);
 
-   mStart = pb.integer();
+   mStart = pb.uInt32();
    pb.skipChar(Symbols::SPACE[0]);
-   mStop = pb.integer();
+   mStop = pb.uInt32();
 
    skipEol(pb);
 
@@ -1067,6 +1068,7 @@ SdpContents::Session::encode(ostream& s) const
 
    if (!mUri.host().empty())
    {
+      s << "u=";
       mUri.encode(s);
       s << Symbols::CRLF;
    }
@@ -1323,6 +1325,8 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
       mConnections.back().parse(pb);
       if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
+         // Note:  we only get here if there was a /<number of addresses> 
+         //        parameter following the connection address. 
          pb.skipChar();
          int num = pb.integer();
 
@@ -1331,22 +1335,36 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
          int i = addr.size() - 1;
          for (; i; i--)
          {
-            if (addr[i] == '.')
+            if (addr[i] == '.' || addr[i] == ':') // ipv4 or ipv6
             {
                break;
             }
          }
 
-         if (addr[i] == '.')
+         if (addr[i] == '.')  // add a number of ipv4 connections
          {
-            Data before(addr.data(), i);
+            Data before(addr.data(), i+1);
             ParseBuffer subpb(addr.data()+i+1, addr.size()-i-1);
             int after = subpb.integer();
 
-            for (int i = 0; i < num-1; i++)
+            for (int i = 1; i < num; i++)
             {
                addConnection(con);
                mConnections.back().mAddress = before + Data(after+i);
+            }
+         }
+         if (addr[i] == ':') // add a number of ipv6 connections
+         {
+            Data before(addr.data(), i+1);
+            int after = Helper::hex2integer(addr.data()+i+1);
+            char hexstring[9];
+
+            for (int i = 1; i < num; i++)
+            {
+               addConnection(con);
+               memset(hexstring, 0, sizeof(hexstring));
+               Helper::integer2hex(hexstring, after+i, false /* supress leading zeros */);
+               mConnections.back().mAddress = before + Data(hexstring);
             }
          }
 
@@ -1497,7 +1515,9 @@ const list<SdpContents::Session::Connection>
 SdpContents::Session::Medium::getConnections() const
 {
    list<Connection> connections = const_cast<Medium*>(this)->getMediumConnections();
-   if (mSession)
+   // If there are connections specified at the medium level, then check if a session level
+   // connection is present - if so then return it
+   if (connections.empty() && mSession && !mSession->connection().getAddress().empty())
    {
       connections.push_back(mSession->connection());
    }
@@ -1669,11 +1689,13 @@ SdpContents::Session::Medium::findTelephoneEventPayloadType() const
 
 Codec::Codec(const Data& name,
              unsigned long rate,
-             const Data& parameters)
+             const Data& parameters,
+             const Data& encodingParameters)
    : mName(name),
      mRate(rate),
      mPayloadType(-1),
-     mParameters(parameters)
+     mParameters(parameters),
+     mEncodingParameters(encodingParameters)
 {
 }
 
@@ -1681,15 +1703,15 @@ Codec::Codec(const Codec& rhs)
    : mName(rhs.mName),
      mRate(rhs.mRate),
      mPayloadType(rhs.mPayloadType),
-     mParameters(rhs.mParameters)
+     mParameters(rhs.mParameters),
+     mEncodingParameters(rhs.mEncodingParameters)
 {
 }
 
 Codec::Codec(const Data& name, int payloadType, int rate)
    : mName(name),
      mRate(rate),
-     mPayloadType(payloadType),
-     mParameters()
+     mPayloadType(payloadType)
 {
 }
 
@@ -1702,6 +1724,7 @@ Codec::operator=(const Codec& rhs)
       mRate = rhs.mRate;
       mPayloadType = rhs.mPayloadType;
       mParameters = rhs.mParameters;
+      mEncodingParameters = rhs.mEncodingParameters;
    }
    return *this;
 }
@@ -1716,6 +1739,13 @@ Codec::parse(ParseBuffer& pb,
    pb.data(mName, anchor);
    pb.skipChar(Symbols::SLASH[0]);
    mRate = pb.integer();
+   pb.skipToChar(Symbols::SLASH[0]);
+   if(!pb.eof() && *pb.position() == Symbols::SLASH[0])
+   {
+      anchor = pb.skipChar(Symbols::SLASH[0]);
+      pb.skipToEnd();
+      pb.data(mEncodingParameters, anchor);
+   }
    mPayloadType = payloadType;
 
    // get parameters if they exist
@@ -1795,7 +1825,7 @@ Codec::CodecMap& Codec::getStaticCodecs()
 bool
 resip::operator==(const Codec& lhs, const Codec& rhs)
 {
-   return (isEqualNoCase(lhs.mName, rhs.mName) && lhs.mRate == rhs.mRate);
+   return (isEqualNoCase(lhs.mName, rhs.mName) && lhs.mRate == rhs.mRate && lhs.mEncodingParameters == rhs.mEncodingParameters);
 }
 
 ostream&
@@ -1804,6 +1834,11 @@ resip::operator<<(ostream& str, const Codec& codec)
    str << codec.mName;
    str << Symbols::SLASH[0];
    str << codec.mRate;
+   if(!codec.mEncodingParameters.empty())
+   {
+      str << Symbols::SLASH[0];
+      str << codec.mEncodingParameters;
+   }
    return str;
 }
 

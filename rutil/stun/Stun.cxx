@@ -216,7 +216,7 @@ stunParseMessage( char* buf, unsigned int bufLen, StunMessage& msg, bool verbose
    char* body = buf + sizeof(StunMsgHdr);
    unsigned int size = msg.msgHdr.msgLength;
 	
-   clog << "bytes after header = " << size << endl;
+   if (verbose) clog << "bytes after header = " << size << endl;
 	
    while ( size > 0 )
    {
@@ -802,7 +802,7 @@ stunRand()
       UInt64 tick;
 		
 #if defined(WIN32) 
-#ifndef UNDER_CE
+#if !defined(UNDER_CE) && !defined(__GNUC__)
       volatile unsigned int lowtick=0,hightick=0;
       __asm
          {

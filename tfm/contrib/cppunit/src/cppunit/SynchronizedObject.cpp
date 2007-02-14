@@ -1,10 +1,7 @@
 #include <cppunit/SynchronizedObject.h>
 
 
-namespace CppUnit
-{
-
-
+CPPUNIT_NS_BEGIN
 
 
 SynchronizedObject::SynchronizedObject( SynchronizationObject *syncObject )
@@ -31,5 +28,5 @@ SynchronizedObject::setSynchronizationObject( SynchronizationObject *syncObject 
 }
 
 
-} //  namespace CppUnit
+CPPUNIT_NS_END
 

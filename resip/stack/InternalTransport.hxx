@@ -11,6 +11,7 @@
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/SendData.hxx"
+#include "resip/stack/Compression.hxx"
 
 namespace resip
 {
@@ -28,7 +29,8 @@ class InternalTransport : public Transport
                         int portNum, 
                         IpVersion version,
                         const Data& interfaceObj,
-                        AfterSocketCreationFuncPtr socketFunc = 0);
+                        AfterSocketCreationFuncPtr socketFunc = 0,
+                        Compression &compression = Compression::Disabled);
 
       virtual ~InternalTransport();
 
@@ -47,7 +49,7 @@ class InternalTransport : public Transport
       virtual unsigned int getFifoSize() const;      
    protected:
       friend class SipStack;
-      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid);
+      virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId);
 
       Socket mFd; // this is a unix file descriptor or a windows SOCKET
       Fifo<SendData> mTxFifo; // owned by the transport

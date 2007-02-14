@@ -17,7 +17,7 @@ public:
 };
 
 
-class TrackedTestCase : public CppUnit::TestCase
+class TrackedTestCase : public CPPUNIT_NS::TestCase
 {
 public:
   TrackedTestCase();

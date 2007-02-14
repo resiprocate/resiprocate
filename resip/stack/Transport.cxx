@@ -8,10 +8,9 @@
 #include <sys/sockio.h>
 #endif
 
-#include "rutil/compat.hxx"
+#include "rutil/Socket.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/Socket.hxx"
 #include "rutil/ParseBuffer.hxx"
 
 #include "resip/stack/ConnectionTerminated.hxx"
@@ -34,12 +33,14 @@ Transport::Exception::Exception(const Data& msg, const Data& file, const int lin
 Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      const GenericIPAddress& address,
                      const Data& tlsDomain,
-                     AfterSocketCreationFuncPtr socketFunc) :
+                     AfterSocketCreationFuncPtr socketFunc,
+                     Compression &compression) :
    mTuple(address),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
-   mSocketFunc(socketFunc)
+   mSocketFunc(socketFunc),
+   mCompression(compression)
 {
    mInterface = Tuple::inet_ntop(mTuple);
 }
@@ -49,13 +50,15 @@ Transport::Transport(Fifo<TransactionMessage>& rxFifo,
                      IpVersion version,
                      const Data& intfc,
                      const Data& tlsDomain,
-                     AfterSocketCreationFuncPtr socketFunc) :
+                     AfterSocketCreationFuncPtr socketFunc,
+                     Compression &compression) :
    mInterface(intfc),
    mTuple(intfc, portNum, version),
    mStateMachineFifo(rxFifo),
    mShuttingDown(false),
    mTlsDomain(tlsDomain),
-   mSocketFunc(socketFunc)
+   mSocketFunc(socketFunc),
+   mCompression(compression)
 {
 }
 
@@ -204,11 +207,11 @@ Transport::fail(const Data& tid, TransportFailure::FailureReason reason)
 
 /// @todo unify w/ tramsit
 void 
-Transport::send( const Tuple& dest, const Data& d, const Data& tid)
+Transport::send( const Tuple& dest, const Data& d, const Data& tid, const Data &sigcompId)
 {
    assert(dest.getPort() != -1);
    DebugLog (<< "Adding message to tx buffer to: " << dest); // << " " << d.escaped());
-   transmit(dest, d, tid); 
+   transmit(dest, d, tid, sigcompId); 
 }
 
 void
@@ -234,7 +237,32 @@ Transport::makeFailedResponse(const SipMessage& msg,
   assert(!encoded.empty());
 
   InfoLog(<<"Sending response directly to " << dest << " : " << errMsg->brief() );
-  transmit(dest, encoded, Data::Empty);
+
+  // Calculate compartment ID for outbound message
+  Data remoteSigcompId;
+  if (mCompression.isEnabled())
+  {
+    Via &topVia(errMsg->header(h_Vias).front());
+
+    if(topVia.exists(p_comp) && topVia.param(p_comp) == "sigcomp")
+    {
+      if (topVia.exists(p_sigcompId))
+      {
+        remoteSigcompId = topVia.param(p_sigcompId);
+      }
+      else
+      {
+        // XXX rohc-sigcomp-sip-03 says "sent-by",
+        // but this should probably be "received" if present,
+        // and "sent-by" otherwise.
+        // XXX Also, the spec is ambiguous about whether
+        // to include the port in this identifier.
+        remoteSigcompId = topVia.sentHost();
+      }
+    }
+  }
+
+  transmit(dest, encoded, Data::Empty, remoteSigcompId);
 }
 
 
@@ -257,42 +285,36 @@ Transport::stampReceived(SipMessage* message)
       }
    }
    DebugLog (<< "incoming from: " << message->getSource());
-   StackLog (<< endl << *message);
+   StackLog (<< endl << endl << *message);
 }
 
 
 bool
 Transport::basicCheck(const SipMessage& msg)
 {
+   resip::Data reason;
    if (msg.isExternal())
    {
       try
       {
-         try
+         if (!Helper::validateMessage(msg,&reason))
          {
-            if (!Helper::validateMessage(msg))
+            InfoLog(<<"Message Failed basicCheck :" << msg.brief());
+            if (msg.isRequest() && msg.method()!=ACK )
             {
-               InfoLog(<<"Message Failed basicCheck :" << msg.brief());
-               if (msg.isRequest())
-               {
-                  // this is VERY low-level b/c we don't have a transaction...
-                  // here we make a response to warn the offending party.
-                  makeFailedResponse(msg);
-               }
-               return false;
-            }
-            else if (mShuttingDown && msg.isRequest())
-            {
-               InfoLog (<< "Server has been shutdown, reject message with 503");
                // this is VERY low-level b/c we don't have a transaction...
                // here we make a response to warn the offending party.
-               makeFailedResponse(msg, 503, "Server has been shutdown");
+               makeFailedResponse(msg,400,reason.c_str());
             }
+            return false;
          }
-         catch (ParseBuffer::Exception& e)
+         else if (mShuttingDown && msg.isRequest() && msg.method() != ACK)
          {
-            InfoLog (<< "Parse exception in basic check: " << e);
-            makeFailedResponse(msg);
+            InfoLog (<< "Server has been shutdown, reject message with 503");
+            // this is VERY low-level b/c we don't have a transaction...
+            // here we make a response to warn the offending party.
+            makeFailedResponse(msg, 503, "Server has been shutdown");
+            return false;
          }
       }
       catch (BaseException& e)

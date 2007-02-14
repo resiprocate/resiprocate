@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /GR /GX /O2 /I "../../include" /I "../TestRunner" /I "..\..\..\include" /I "..\..\..\include\msvc6" /I "..\TestRunner" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_AFXDLL" /D "CPPUNIT_SUBCLASSING_TESTRUNNERDLG_BUILD" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GR /GX /Zd /O2 /I "../../include" /I "../TestRunner" /I "..\..\..\include" /I "..\..\..\include\msvc6" /I "..\TestRunner" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_AFXDLL" /D "CPPUNIT_SUBCLASSING_TESTRUNNERDLG_BUILD" /D "CPPUNIT_DLL" /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x40c /d "NDEBUG" /d "_AFXDLL"
@@ -53,7 +53,15 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 ../../../lib/cppunit.lib ../../../lib/testrunner.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 cppunit_dll.lib winmm.lib /nologo /subsystem:windows /machine:I386 /libpath:"../../../lib/"
+# SUBTRACT LINK32 /incremental:yes
+# Begin Special Build Tool
+TargetPath=.\Release\TestPlugInRunner.exe
+TargetName=TestPlugInRunner
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copying target to lib/
+PostBuild_Cmds=copy "$(TargetPath)" ..\..\..\lib\$(TargetName).exe
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "TestPlugInRunner - Win32 Debug"
 
@@ -69,7 +77,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\include" /I "..\..\..\include\msvc6" /I "..\TestRunner" /D "_DEBUG" /D "CPPUNIT_TESTPLUGINRUNNER_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_AFXDLL" /D "CPPUNIT_SUBCLASSING_TESTRUNNERDLG_BUILD" /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /Zi /Od /I "..\..\..\include" /I "..\..\..\include\msvc6" /I "..\TestRunner" /D "_DEBUG" /D "CPPUNIT_TESTPLUGINRUNNER_BUILD" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_AFXDLL" /D "CPPUNIT_SUBCLASSING_TESTRUNNERDLG_BUILD" /D "CPPUNIT_DLL" /Yu"stdafx.h" /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x40c /d "_DEBUG" /d "_AFXDLL"
@@ -79,7 +87,14 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ../../../lib/cppunitd.lib ../../../lib/testrunnerd.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 cppunitd_dll.lib winmm.lib /nologo /subsystem:windows /incremental:no /debug /machine:I386 /out:"Debug/TestPlugInRunnerd.exe" /pdbtype:sept /libpath:"../../../lib/"
+# Begin Special Build Tool
+TargetPath=.\Debug\TestPlugInRunnerd.exe
+TargetName=TestPlugInRunnerd
+SOURCE="$(InputPath)"
+PostBuild_Desc=Copying target to lib/
+PostBuild_Cmds=copy "$(TargetPath)" ..\..\..\lib\$(TargetName).exe
+# End Special Build Tool
 
 !ENDIF 
 
@@ -90,6 +105,10 @@ LINK32=link.exe
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\res\errortype.bmp
+# End Source File
 # Begin Source File
 
 SOURCE=.\res\ico00001.ico
@@ -105,6 +124,10 @@ SOURCE=..\testrunner\res\ico00002.ico
 # Begin Source File
 
 SOURCE=..\testrunner\res\idr_test.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\test_type.bmp
 # End Source File
 # Begin Source File
 
@@ -201,16 +224,17 @@ SOURCE=.\TestPlugInRunnerModel.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\..\..\lib\testrunner.dll
+SOURCE=..\..\..\lib\cppunit_dll.dll
 
 !IF  "$(CFG)" == "TestPlugInRunner - Win32 Release"
 
-# Begin Custom Build - Updating DLL: $(InputPath)
+# Begin Custom Build - Updating $(InputPath)
 IntDir=.\Release
-InputPath=..\..\..\lib\testrunner.dll
+InputPath=..\..\..\lib\cppunit_dll.dll
+InputName=cppunit_dll
 
-"$(IntDir)\testrunner.dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(InputPath) $(IntDir)\testrunner.dll
+"$(IntDir)\$(InputName).dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy $(InputPath) $(IntDir)\$(InputName).dll
 
 # End Custom Build
 
@@ -223,31 +247,223 @@ InputPath=..\..\..\lib\testrunner.dll
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\lib\testrunnercd.dll
+SOURCE=..\..\..\lib\cppunitd_dll.dll
+
+!IF  "$(CFG)" == "TestPlugInRunner - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "TestPlugInRunner - Win32 Debug"
+
+# Begin Custom Build - Updating $(InputPath)
+IntDir=.\Debug
+InputPath=..\..\..\lib\cppunitd_dll.dll
+InputName=cppunitd_dll
+
+"$(IntDir)\$(InputName).dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy $(InputPath) $(IntDir)\$(InputName).dll
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\lib\testrunner.dll
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\lib\testrunnerd.dll
-
-!IF  "$(CFG)" == "TestPlugInRunner - Win32 Release"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "TestPlugInRunner - Win32 Debug"
-
-# Begin Custom Build - Updating DLL: $(InputPath)
-IntDir=.\Debug
-InputPath=..\..\..\lib\testrunnerd.dll
-
-"$(IntDir)\testrunnerd.dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(InputPath) $(IntDir)\testrunnerd.dll
-
-# End Custom Build
-
-!ENDIF 
-
 # End Source File
+# End Group
+# Begin Group "TestRunner-Was-In-Dll"
+
+# PROP Default_Filter ""
+# Begin Group "UserInterface"
+
+# PROP Default_Filter ""
+# Begin Group "DynamicWindow"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicBar.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicBar.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicControlsManager.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicControlsManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicDialog.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicDialog.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicFormView.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicFormView.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicPropSheet.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicPropSheet.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicWnd.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicWnd.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicWndEx.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCDynamicWndEx.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCSizeIconCtrl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\cdxCSizeIconCtrl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\SizeCBar.cpp
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\DynamicWindow\SizeCBar.h
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=..\testrunner\ListCtrlFormatter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\ListCtrlFormatter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\ListCtrlSetter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\ListCtrlSetter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\MsDevCallerListCtrl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\MsDevCallerListCtrl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\ProgressBar.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\ProgressBar.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\ResourceLoaders.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\ResourceLoaders.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\TestRunnerDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\TestRunnerDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\TreeHierarchyDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\TreeHierarchyDlg.h
+# End Source File
+# End Group
+# Begin Group "Components"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\testrunner\ActiveTest.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\ActiveTest.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\MfcSynchronizationObject.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\TestRunnerModel.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\TestRunnerModel.h
+# End Source File
+# End Group
+# Begin Group "NewFiles"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\testrunner\MostRecentTests.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\testrunner\MostRecentTests.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\include\msvc6\DSPlugin\TestRunnerDSPluginVC6_i.c
+# SUBTRACT CPP /YX /Yc /Yu
+# End Source File
+# End Group
 # End Group
 # Begin Source File
 

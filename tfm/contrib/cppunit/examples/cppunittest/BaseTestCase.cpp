@@ -1,3 +1,4 @@
+#include <cppunit/config/SourcePrefix.h>
 #include "BaseTestCase.h"
 
 

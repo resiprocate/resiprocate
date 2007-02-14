@@ -1,6 +1,7 @@
 #include <signal.h>
 #include "resip/stack/MessageFilterRule.hxx"
 #include "resip/stack/Security.hxx"
+#include "resip/stack/Compression.hxx"
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/StackThread.hxx"
@@ -156,12 +157,18 @@ main(int argc, char** argv)
    { FindMemoryLeaks fml;
 #endif
 
+   Security* security = 0;
+   Compression* compression = 0;
+
 #ifdef USE_SSL
-   Security* security = new Security(args.mCertPath);
-   SipStack stack(security);
-#else
-   SipStack stack;
+   security = new Security(args.mCertPath);
 #endif
+
+#ifdef USE_SIGCOMP
+   compression = new Compression(Compression::DEFLATE);
+#endif
+
+   SipStack stack(security,DnsStub::EmptyNameserverList,0,false,0,compression);
 
    std::vector<Data> enumSuffixes;
    if (!args.mEnumSuffix.empty())
@@ -427,11 +434,15 @@ main(int argc, char** argv)
 
       // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
       resip::MessageFilterRule::MethodList methodList;
+      resip::MessageFilterRule::EventList eventList;
       methodList.push_back(resip::SUBSCRIBE);
       methodList.push_back(resip::PUBLISH);
+      eventList.push_back(resip::Symbols::Credential);
+      eventList.push_back(resip::Symbols::Certificate);
       ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
                                            resip::MessageFilterRule::Any,
-                                           methodList) );
+                                           methodList,
+                                           eventList));
 #endif
    }
 

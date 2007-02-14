@@ -61,3 +61,10 @@ ListCtrlFormatter::AddColumn( UINT nIdStringHeading,
   VERIFY( strHeading.LoadString( nIdStringHeading ) );
   AddColumn( strHeading, nWidth, nFormat, nSubItemNo );
 }
+
+
+int
+ListCtrlFormatter::GetNextColumnIndex() const
+{
+  return m_nColNo;
+}

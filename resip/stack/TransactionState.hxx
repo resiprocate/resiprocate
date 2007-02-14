@@ -88,8 +88,18 @@ class TransactionState : public DnsHandler
       void terminateClientTransaction(const Data& tid); 
       void terminateServerTransaction(const Data& tid); 
       const Data& tid(SipMessage* sip) const;
-      
+
+      void startServerNonInviteTimerTrying(SipMessage& sip, Data& tid);
+
       static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine, const Data& tid);
+      
+      /**
+         Attempts to responds to a malformed non-ACK request.
+         @param badReq MUST be a non-ACK request. This function will assert
+            if otherwise.
+         @return true iff a response was successfully sent.
+      **/
+      static bool handleBadRequest(const resip::SipMessage& badReq,TransactionController& controller);
       
       TransactionController& mController;
       
@@ -113,7 +123,8 @@ class TransactionState : public DnsHandler
       Tuple mResponseTarget; // used to reply to requests
 
       Data mId;
-      Data mToTag; // for failure responses on ServerInviteTransaction 
+      bool mAckIsValid;
+      bool mWaitingForDnsResult;
       TransactionUser* mTransactionUser;
       TransportFailure::FailureReason mFailureReason;      
 

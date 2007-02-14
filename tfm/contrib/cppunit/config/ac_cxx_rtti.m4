@@ -3,7 +3,7 @@ dnl
 dnl If the compiler supports Run-Time Type Identification (typeinfo
 dnl header and typeid keyword), define HAVE_RTTI.
 dnl
-dnl @version $Id: ac_cxx_rtti.m4,v 1.1 2003/08/12 07:00:28 jason Exp $
+dnl @version $Id: ac_cxx_rtti.m4,v 1.1 2001/06/02 22:29:52 smr99 Exp $
 dnl @author Luc Maisonobe
 dnl
 AC_DEFUN([AC_CXX_RTTI],

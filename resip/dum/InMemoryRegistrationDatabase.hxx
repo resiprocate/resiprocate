@@ -21,7 +21,13 @@ namespace resip
 class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
 {
    public:
-      InMemoryRegistrationDatabase();
+
+      /**
+       * @param checkExpiry if set, then the methods aorIsRegistered() and
+       *                    getContacts() will check that contacts are
+       *                    not expired before returning an answer.
+       */
+      InMemoryRegistrationDatabase(bool checkExpiry = false);
       virtual ~InMemoryRegistrationDatabase();
       
       virtual void addAor(const Uri& aor, ContactRecordList contacts = ContactRecordList());
@@ -31,13 +37,19 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       virtual void lockRecord(const Uri& aor);
       virtual void unlockRecord(const Uri& aor);
       
-      virtual update_status_t updateContact(const Uri& aor, const Uri& contact, time_t expires,float q=-1);
+      virtual update_status_t updateContact(const Uri& aor, 
+                                             const Uri& contact, 
+                                             time_t expires,
+                                             unsigned int cid=0,
+                                             short q=-1);
       virtual void removeContact(const Uri& aor, const Uri& contact);
       
       virtual ContactRecordList getContacts(const Uri& aor);
+      virtual void getContacts(const Uri& aor,ContactRecordList& container);
    
       /// return all the AOR is the DB 
       virtual UriList getAors();
+      virtual void getAors(UriList& container);
       
    private:
       typedef std::map<Uri,ContactRecordList *> database_map_t;
@@ -47,6 +59,17 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       std::set<Uri> mLockedRecords;
       Mutex mLockedRecordsMutex;
       Condition mRecordUnlocked;
+
+      bool mCheckExpiry;
+
+   protected:
+      /**
+       * Find aor in mDatabase
+       * Before returning the iterator pointing to aor,
+       * delete all expired contacts
+       */
+      database_map_t::iterator findNotExpired(const Uri& aor);
+
 };
 
 }

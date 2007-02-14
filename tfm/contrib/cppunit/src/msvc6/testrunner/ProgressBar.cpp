@@ -1,17 +1,40 @@
 #include "stdafx.h"
 #include "ProgressBar.h"
 
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-// Construct a ProgressBar
-ProgressBar::ProgressBar( CWnd *baseWindow, 
-                          CRect &bounds ) :
-    m_baseWindow( baseWindow ), 
-    m_bounds( bounds ), 
-    m_error( false ),
-    m_total( 0 ), 
-    m_progress( 0 ), 
-    m_progressX( 0 )
+ProgressBar::ProgressBar()
+    : m_error( false )
+    , m_total( 0 )
+    , m_progress( 0 ) 
+    , m_progressX( 0 )
 {
+}
+
+
+ProgressBar::~ProgressBar()
+{
+}
+
+
+BEGIN_MESSAGE_MAP(ProgressBar, CWnd)
+	//{{AFX_MSG_MAP(ProgressBar)
+	ON_WM_PAINT()
+	ON_WM_SIZE()
+	ON_WM_ERASEBKGND()
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+
+void 
+ProgressBar::OnPaint() 
+{
+	CPaintDC dc(this); // device context for painting
+  paint( dc );
 }
 
 
@@ -29,14 +52,14 @@ void
 ProgressBar::paintBackground( CDC &dc )
 {
   CBrush brshBackground;
-  CPen penGray( PS_SOLID, 1, RGB (128, 128, 128) );
-  CPen penWhite( PS_SOLID, 1, RGB (255, 255, 255) );
+  CPen penShade( PS_SOLID, 1, GetSysColor(COLOR_3DSHADOW) );
+  CPen penLight( PS_SOLID, 1, GetSysColor(COLOR_3DHILIGHT) );
 
   VERIFY( brshBackground.CreateSolidBrush( ::GetSysColor (COLOR_BTNFACE) ) );
 
   dc.FillRect( m_bounds, &brshBackground );
   
-  CPen *pOldPen = dc.SelectObject( &penGray );
+  CPen *pOldPen = dc.SelectObject( &penShade );
   int xRight = m_bounds.left + m_bounds.Width() -1;
   int yBottom = m_bounds.top + m_bounds.Height() -1;
   {
@@ -47,7 +70,7 @@ ProgressBar::paintBackground( CDC &dc )
     dc.LineTo( m_bounds.left, yBottom );
   }
 
-  dc.SelectObject( &penWhite );
+  dc.SelectObject( &penLight );
   {
     dc.MoveTo( xRight, m_bounds.top );
     dc.LineTo( xRight, yBottom );
@@ -82,11 +105,12 @@ ProgressBar::paintStatus( CDC &dc )
 
 // Paint the current step
 void 
-ProgressBar::paintStep (int startX, int endX)
+ProgressBar::paintStep( int startX, 
+                        int endX )
 {
-  // kludge: painting the whole region on each step
-  m_baseWindow->RedrawWindow( m_bounds );
-  m_baseWindow->UpdateWindow( );
+  CRect redrawBounds( m_bounds.left + startX-1, m_bounds.top, 
+                      m_bounds.left + endX, m_bounds.bottom );
+  RedrawWindow( redrawBounds );
 }
 
 
@@ -96,17 +120,6 @@ ProgressBar::start( int total )
 {
   m_total = total;
   reset ();
-}
-
-
-// Set the width of the progress bar, scale the  and invalidate the base window
-void 
-ProgressBar::setWidth( int width )
-{
-  m_baseWindow->InvalidateRect( m_bounds ); // invalidate before
-  m_bounds.right = m_bounds.left + width;
-  m_progressX = scale( m_progress );
-  m_baseWindow->InvalidateRect( m_bounds ); // and invalidate after
 }
 
 
@@ -132,7 +145,7 @@ ProgressBar::step( bool successful )
 
 // Map from steps to display units
 int 
-ProgressBar::scale (int value)
+ProgressBar::scale( int value )
 {
   if ( m_total > 0 )
       return max( 1, value * (m_bounds.Width() - 1) / m_total );
@@ -149,6 +162,24 @@ ProgressBar::reset()
   m_progress = 0;
   m_error = false;
 
-  m_baseWindow->RedrawWindow( m_bounds );
-  m_baseWindow->UpdateWindow( );
+  RedrawWindow( m_bounds );
+  UpdateWindow( );
+}
+
+
+void 
+ProgressBar::OnSize(UINT nType, int cx, int cy) 
+{
+	CWnd::OnSize(nType, cx, cy);
+
+  GetClientRect( &m_bounds );
+  m_progressX = scale (m_progress);
+  Invalidate();
+}
+
+
+BOOL 
+ProgressBar::OnEraseBkgnd( CDC *pDC )
+{
+  return FALSE;
 }

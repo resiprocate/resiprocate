@@ -18,6 +18,7 @@ class Message;
 class TlsConnection;
 class ConnectionManager;
 class Connection;
+class Compression;
 
 /// three intrusive list types for in-place reference
 typedef IntrusiveListElement<Connection*> ConnectionLruList;
@@ -36,7 +37,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
 
    public:
-      Connection(const Tuple& who, Socket socket);
+      Connection(const Tuple& who, Socket socket, Compression &compression);
       virtual ~Connection();
       
       ConnectionId getId() const;
@@ -46,12 +47,16 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       virtual bool hasDataToRead();
       /// has valid connection
       virtual bool isGood(); 
+      virtual bool isWritable();
 
       /// queue data to write and add this to writable list
       void requestWrite(SendData* sendData);
 
       /// send some or all of a queued data; remove from writable if completely written
       void performWrite();
+
+      /// ensure that we are on the writeable list if required
+      void ensureWritable();
 
       /** move data from the connection to the buffer; move this to front of
           least recently used list. when the message is complete, send to fifo.
@@ -72,8 +77,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
 
    private:
       ConnectionManager& getConnectionManager() const;
-
-      void remove(); // called by ConnectionManager
+      bool mInWritable;
 
       /// no value semantics
       Connection(const Connection&);

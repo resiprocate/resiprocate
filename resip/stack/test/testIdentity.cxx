@@ -1,4 +1,3 @@
-
 #include <cassert>
 #include <fstream>
 #include <ostream>
@@ -46,58 +45,9 @@ main(int argc, char* argv[])
 
    assert( security );
 
-#if 0
-   Data in1("sip:alice@atlanta.example.com"
-            "|sip:bob@biloxi.example.org"
-            "|a84b4c76e66710"
-            "|314159 INVITE"
-            //":314159 INVITE"
-            "|Thu, 21 Feb 2002 13:02:03 GMT"
-            "|sip:alice@pc33.atlanta.example.com"
-            "|v=0\r\n"
-            "o=UserA 2890844526 2890844526 IN IP4 pc33.atlanta.example.com\r\n"
-            "s=Session SDP\r\n"
-            "c=IN IP4 pc33.atlanta.example.com\r\n"
-            "t=0 0\r\n"
-            "m=audio 49172 RTP/AVP 0\r\n"
-            "a=rtpmap:0 PCMU/8000\r\n");
-
-   Data in2("sip:bob@biloxi.example.org"
-            "|sip:alice@atlanta.example.com"
-            "|a84b4c76e66710"
-            "|231 BYE"
-            "|Thu, 21 Feb 2002 14:19:51 GMT"
-            "|"
-            "|" 
-            //"|\r\n" 
-      );
-
-   Data& in=in1;
-   
-   ofstream strm("identity-in", std::ios_base::trunc);
-   strm.write( in.data(), in.size() );
-   strm.flush();
-   
-   Data res = security->computeIdentity( Data("atlanta.example.com"), in );
-
-   ErrLog( << "input is encoded " << in.charEncoded()  );
-   ErrLog( << "input is hex " << in.hex() );
-   ErrLog( << "input is  " << in );
-   ErrLog( << "identity is " << res  );
-
-   if (true)
    {
-      bool c  = security->checkIdentity( Data("atlanta.example.com"), in , res );
-      
-      if ( !c )
-      {
-         ErrLog( << "Identity check failed" << res  );
-         return -1;
-      }
-   }
-#endif
-   
-   {
+        ErrLog( << "\n\nStarting test one" );
+
       Data txt1 = 
          "INVITE sip:bob@biloxi.exmple.org SIP/2.0\r\n"
          "Via: SIP/2.0/TLS pc33.atlanta.example.com;branch=z9hG4bKnashds8\r\n"
@@ -137,6 +87,8 @@ main(int argc, char* argv[])
    }
 
    {
+        ErrLog( << "\n\nStarting test two" );
+
       Data txt2 = 
          "BYE sip:alice@pc33.atlanta.example.com SIP/2.0\r\n"
          "Via: SIP/2.0/TLS 192.0.2.4;branch=z9hG4bKnashds10\r\n"
@@ -147,10 +99,64 @@ main(int argc, char* argv[])
          "Call-ID: a84b4c76e66710\r\n"
          "CSeq: 231 BYE\r\n"
          "Content-Length: 0\r\n"
-         "\r\n";
+         "\r\n"
+         ;
       
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
       
+      try
+      {
+         const Data& domain = msg->header(h_From).uri().host();
+
+         Data identString = msg->getCanonicalIdentityString();
+         
+         msg->header(h_Identity).value() = security->computeIdentity( domain, identString );
+      }
+      catch (Security::Exception& e)
+      {
+         ErrLog (<< "Couldn't add identity header: " << e);
+         msg->remove(h_Identity);
+      }
+      
+      ErrLog( << "BYE base64 identity is " <<  msg->header(h_Identity).value() );
+}
+
+
+
+   {
+        ErrLog( << "\n\nStarting test three - conect iden - invite(2) " );
+
+      Data txt1 =
+
+"INVITE sip:Carol@ua2.example.com SIP/2.0\r\n"
+"Via: SIP/2.0/TLS proxy.example.com;branch=z9hG4bK776asdhds\r\n"
+"Via: SIP/2.0/TLS ua1.example.com;branch=z9hG4bKnashds8;received=192.0.2.1\r\n"
+"To: Bob <sip:bob@example.com>\r\n"
+"From: Alice <sip:alice@example.com>;tag=13adc987\r\n"
+"Call-ID: 12345600@ua1.example.com\r\n"
+"CSeq: 1 INVITE\r\n"
+"Max-Forwards: 69\r\n"
+"Date: Thu, 21 Feb 2002 13:02:03 GMT\r\n"
+"Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE\r\n"
+"Supported: from-change\r\n"
+"Contact: <sip:alice@ua1.example.com>\r\n"
+"Record-Route: <sip:proxy.example.com;lr>\r\n"
+"Identity-Info: <https://example.com/example.cer>;alg=rsa-sha1\r\n"
+"Content-Type: application/sdp\r\n"
+"Content-Length: 154\r\n"
+"\r\n"
+"v=0\r\n"
+"o=UserA 2890844526 2890844526 IN IP4 ua1.example.com\r\n"
+"s=Session SDP\r\n"
+"c=IN IP4 ua1.example.com\r\n"
+"t=0 0\r\n"
+"m=audio 49172 RTP/AVP 0\r\n"
+"a=rtpmap:0 PCMU/8000\r\n"
+         ;
+      
+     
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt1));
+
       try
       {
          const Data& domain = msg->header(h_From).uri().host();
@@ -163,8 +169,95 @@ main(int argc, char* argv[])
          msg->remove(h_Identity);
       }
       
-      ErrLog( << "BYE base64 identity is " <<  msg->header(h_Identity).value() );
+      ErrLog( << "base64 identity is " <<  msg->header(h_Identity).value() );
+   }
+
+
+
+
+   {
+        ErrLog( << "\n\nStarting test four - connected-id update(8) " );
+
+      Data txt2 =
+
+"UPDATE sip:Alice@ua1.example.com SIP/2.0\r\n"
+"Via: SIP/2.0/TLS proxy.example.com;branch=z9hG4bK776asdhdu\r\n"
+"Via: SIP/2.0/TLS ua2.example.com;branch=z9hG4bKnashdt1;received=192.0.2.3\r\n"
+"From: Carol <sip:Carol@example.com>;tag=2ge46ab5\r\n"
+"To: Alice <sip:Alice@example.com>;tag=13adc987\r\n"
+"Call-ID: 12345600@ua1.example.com\r\n"
+"CSeq: 2 UPDATE\r\n"
+"Max-Forwards: 69\r\n"
+"Date: Thu, 21 Feb 2002 13:02:15 GMT\r\n"
+"Contact: <sip:Carol@ua2.example.com>\r\n"
+"Identity-Info: <https://example.com/cert>;alg=rsa-sha1\r\n"
+"Content-Length: 0\r\n"
+"\r\n"
+         ;
+      
+            
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
+      
+      try
+      {
+         const Data& domain = msg->header(h_From).uri().host();
+
+         Data identString = msg->getCanonicalIdentityString();
+         
+         msg->header(h_Identity).value() = security->computeIdentity( domain, identString );
+      }
+      catch (Security::Exception& e)
+      {
+         ErrLog (<< "Couldn't add identity header: " << e);
+         msg->remove(h_Identity);
+      }
+      
+      ErrLog( << "base64 identity is " <<  msg->header(h_Identity).value() );
 }
+
+
+
+
+   {
+        ErrLog( << "\n\nStarting test five - connected-id reinvite 6  " );
+
+      Data txt2 = 
+
+"INVITE sip:alice@ua1.example.com SIP/2.0\r\n"
+"Via: SIP/2.0/TLS b2bua.example.com;branch=z9hG4bKnashdxy\r\n"
+"From: Carol <sip:Carol@example.com>;tag=2ge46ab5\r\n"
+"To: Alice <sip:Alice@example.com>;tag=13adc987\r\n"
+"Call-ID: 12345600@ua1.example.com\r\n"
+"CSeq: 3 INVITE\r\n"
+"Max-Forwards: 70\r\n"
+"Date: Thu, 21 Feb 2002 13:03:20 GMT\r\n"
+"Contact: <sip:xyz@b2bua.example.com>\r\n"
+"Identity-Info: <https://example.com/cert>;alg=rsa-sha1\r\n"
+"Content-Length: 0\r\n"
+         "\r\n";
+      
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt2));
+      
+      try
+      {
+         const Data& domain = msg->header(h_From).uri().host();
+
+         Data identString = msg->getCanonicalIdentityString();
+         
+         msg->header(h_Identity).value() = security->computeIdentity( domain, identString );
+      }
+      catch (Security::Exception& e)
+      {
+         ErrLog (<< "Couldn't add identity header: " << e);
+         msg->remove(h_Identity);
+      }
+       ErrLog( << "base64 identity is " <<  msg->header(h_Identity).value() );
+}     
+   
+
+
+
+
 
 #endif // use_ssl 
 

@@ -15,29 +15,41 @@ using namespace resip;
 
 LazyParser::LazyParser(HeaderFieldValue* headerFieldValue)
    : mHeaderField(headerFieldValue),
-      mIsMine(false),
-      mIsParsed(mHeaderField->mField == 0) //although this has a hfv it is
-                                           //parsed, as the hfv has no content
+      mState(mHeaderField->mField == 0 ? EMPTY : NOT_PARSED),
+      mIsMine(false)
 {
 }
   
 LazyParser::LazyParser()
    : mHeaderField(0),
-     mIsMine(true),
-     mIsParsed(true)
+      mState(EMPTY),
+     mIsMine(true)
 {
 }
 
 LazyParser::LazyParser(const LazyParser& rhs)
    : mHeaderField(0),
-     mIsMine(true),
-     mIsParsed(rhs.mIsParsed)
+      mState(rhs.mState),
+     mIsMine(true)
 {
-   if (!mIsParsed && rhs.mHeaderField)
+   if (rhs.mState==NOT_PARSED && rhs.mHeaderField)
    {
       mHeaderField = new HeaderFieldValue(*rhs.mHeaderField);
    }
 }
+
+LazyParser::LazyParser(const LazyParser& rhs,HeaderFieldValue::CopyPaddingEnum e)
+   :  mHeaderField(0),
+      mState(rhs.mState),
+      mIsMine(true)
+{
+   if (rhs.mState==NOT_PARSED && rhs.mHeaderField)
+   {
+      mHeaderField = new HeaderFieldValue(*rhs.mHeaderField,e);
+   }
+
+}
+
 
 LazyParser::~LazyParser()
 {
@@ -52,8 +64,8 @@ LazyParser::operator=(const LazyParser& rhs)
    if (this != &rhs)
    {
       clear();
-      mIsParsed = rhs.mIsParsed;
-      if (rhs.mIsParsed)
+      mState = rhs.mState;
+      if (rhs.mState!=NOT_PARSED)
       {
          mHeaderField = 0;
          mIsMine = false;
@@ -70,14 +82,31 @@ LazyParser::operator=(const LazyParser& rhs)
 void
 LazyParser::checkParsed() const
 {
-   if (!mIsParsed)
+   if (mState==NOT_PARSED)
    {
       LazyParser* ncThis = const_cast<LazyParser*>(this);
-      ncThis->mIsParsed = true;
+      // !bwc! We assume the worst, and if the parse succeeds, we update.
+      ncThis->mState = MALFORMED;
       assert(mHeaderField);
       ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength, errorContext());
       ncThis->parse(pb);
+      // !bwc! If we get this far without throwing, the parse has succeeded.
+      ncThis->mState = WELL_FORMED;
    }
+}
+
+bool
+LazyParser::isWellFormed() const
+{
+   try
+   {
+      checkParsed();
+   }
+   catch(resip::ParseBuffer::Exception&)
+   {
+   }
+   
+   return (mState!=MALFORMED);
 }
 
 void

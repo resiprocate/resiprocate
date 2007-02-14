@@ -17,7 +17,8 @@ StatisticsManager::StatisticsManager(SipStack& stack, unsigned long intervalSecs
    : StatisticsMessage::Payload(),
      mStack(stack),
      mInterval(intervalSecs*1000),
-     mNextPoll(Timer::getTimeMs() + mInterval)
+     mNextPoll(Timer::getTimeMs() + mInterval),
+     mExternalHandler(NULL)
 {}
 
 void 
@@ -37,11 +38,22 @@ StatisticsManager::poll()
    activeClientTransactions = mStack.mTransactionController.getNumClientTransactions();
    activeServerTransactions = mStack.mTransactionController.getNumServerTransactions();   
 
-   static StatisticsMessage::AtomicPayload appStats;
+   StatisticsMessage::AtomicPayload appStats;
    appStats.loadIn(*this);
 
-   // let the app do what it wants with it
-   mStack.post(StatisticsMessage(appStats));
+   bool postToStack = true;
+   StatisticsMessage msg(appStats);
+
+   if( mExternalHandler )
+   {
+      postToStack = (*mExternalHandler)(msg);
+   }
+
+   if( postToStack )
+   {
+      // let the app do what it wants with it
+      mStack.post(msg);
+   }
 }
 
 void 

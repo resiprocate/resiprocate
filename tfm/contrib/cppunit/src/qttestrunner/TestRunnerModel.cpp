@@ -12,7 +12,7 @@
 #include "TestRunnerThreadFinishedEvent.h"
 
 
-TestRunnerModel::TestRunnerModel( CppUnit::Test *rootTest ) :
+TestRunnerModel::TestRunnerModel( CPPUNIT_NS::Test *rootTest ) :
     _rootTest( rootTest ),
     _runnerThread( NULL ),
     _result( NULL )
@@ -26,7 +26,7 @@ TestRunnerModel::~TestRunnerModel()
 }
 
 
-CppUnit::Test *
+CPPUNIT_NS::Test *
 TestRunnerModel::rootTest()
 {
   return _rootTest;
@@ -34,7 +34,7 @@ TestRunnerModel::rootTest()
 
 
 void 
-TestRunnerModel::resetTestReportCounterFor( CppUnit::Test *testToRun )
+TestRunnerModel::resetTestReportCounterFor( CPPUNIT_NS::Test *testToRun )
 {
   if ( isTestRunning() )
     return;
@@ -87,7 +87,7 @@ TestRunnerModel::failureAt( int index )
 
 
 void 
-TestRunnerModel::runTest( CppUnit::Test *testToRun )
+TestRunnerModel::runTest( CPPUNIT_NS::Test *testToRun )
 {
   if ( isTestRunning() )
     return;
@@ -97,7 +97,7 @@ TestRunnerModel::runTest( CppUnit::Test *testToRun )
   {
     LockGuard guard( _lock );
     delete _result;
-    _result = new CppUnit::TestResult();
+    _result = new CPPUNIT_NS::TestResult();
     _result->addListener( this );
   }
 
@@ -137,14 +137,14 @@ TestRunnerModel::stopRunningTest()
 
 // Called from the TestRunnerThread.
 void 
-TestRunnerModel::startTest( CppUnit::Test *test )
+TestRunnerModel::startTest( CPPUNIT_NS::Test * /*test*/ )
 {
 }
 
 
 // Called from the TestRunnerThread.
 void 
-TestRunnerModel::addFailure( const CppUnit::TestFailure &failure )
+TestRunnerModel::addFailure( const CPPUNIT_NS::TestFailure &failure )
 {
   addFailureInfo( new TestFailureInfo( failure.failedTest(), 
                                        failure.thrownException(),
@@ -154,7 +154,7 @@ TestRunnerModel::addFailure( const CppUnit::TestFailure &failure )
 
 // Called from the TestRunnerThread.
 void 
-TestRunnerModel::endTest( CppUnit::Test *test )
+TestRunnerModel::endTest( CPPUNIT_NS::Test * /*test*/ )
 {
   int numberOfTestCaseRun;
   {

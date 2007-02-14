@@ -8,7 +8,7 @@ if test "x$enable_doxygen" = xno; then
         enable_doc=no
 else 
         AC_PATH_PROG(DOXYGEN, doxygen, , $PATH)
-        if test x$DOXYGEN = x; then
+        if test "x$DOXYGEN" = x; then
                 if test "x$enable_doxygen" = xyes; then
                         AC_MSG_ERROR([could not find doxygen])
                 fi

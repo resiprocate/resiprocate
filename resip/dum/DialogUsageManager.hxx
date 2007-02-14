@@ -181,18 +181,22 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //OnReadyToSend callback.  Probably will change it's own callback/handler soon
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
                                                        const SdpContents* initialOffer, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, const SharedPtr<UserProfile>& userProfile, 
+                                                       const SdpContents* initialOffer, AppDialogSet* appDs = 0);
       SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, ServerSubscriptionHandle, 
+                                                       const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeInviteSessionFromRefer(const SipMessage& refer, const SharedPtr<UserProfile>& userProfile, ServerSubscriptionHandle, 
                                                        const SdpContents* initialOffer, EncryptionLevel level, const SdpContents* alternative, AppDialogSet* = 0);
       
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 
-                                             int subscriptionTime, AppDialogSet* = 0);
+                                             UInt32 subscriptionTime, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const Data& eventType, 
-                                             int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
+                                             UInt32 subscriptionTime, int refreshInterval, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, AppDialogSet* = 0);
-      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, int subscriptionTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, UInt32 subscriptionTime, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeSubscription(const NameAddr& target, const Data& eventType, 
-                                             int subscriptionTime, int refreshInterval, AppDialogSet* = 0);
+                                             UInt32 subscriptionTime, int refreshInterval, AppDialogSet* = 0);
 
       //unsolicited refer
       SharedPtr<SipMessage> makeRefer(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const H_ReferTo::Type& referTo, AppDialogSet* = 0);
@@ -202,18 +206,18 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                                             const SharedPtr<UserProfile>& userProfile, 
                                             const Contents& body, 
                                             const Data& eventType, 
-                                            unsigned expiresSeconds, 
+                                            UInt32 expiresSeconds, 
                                             AppDialogSet* = 0);
       SharedPtr<SipMessage> makePublication(const NameAddr& target, 
                                             const Contents& body, 
                                             const Data& eventType, 
-                                            unsigned expiresSeconds, 
+                                            UInt32 expiresSeconds, 
                                             AppDialogSet* = 0);
 
       SharedPtr<SipMessage> makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, AppDialogSet* = 0);
-      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, int registrationTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, UInt32 registrationTime, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeRegistration(const NameAddr& target, AppDialogSet* = 0);
-      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, int registrationTime, AppDialogSet* = 0);
+      SharedPtr<SipMessage> makeRegistration(const NameAddr& target, UInt32 registrationTime, AppDialogSet* = 0);
 
       SharedPtr<SipMessage> makeOutOfDialogRequest(const NameAddr& target, const SharedPtr<UserProfile>& userProfile, const MethodTypes meth, AppDialogSet* = 0);
       SharedPtr<SipMessage> makeOutOfDialogRequest(const NameAddr& target, const MethodTypes meth, AppDialogSet* = 0);
@@ -227,7 +231,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
-      bool process();
+      bool process();  // non-blocking
+      bool process(int timeoutMs);   // Specify -1 for infinte timeout
 
       InviteSessionHandle findInviteSession(DialogId id);
       //if the handle is inValid, int represents the errorcode
@@ -375,14 +380,14 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void addTimer(DumTimeout::Type type,
                     unsigned long durationSeconds,
                     BaseUsageHandle target, 
-                    int seq, 
-                    int altseq=-1);
+                    unsigned int seq, 
+                    unsigned int altseq=0);
 
       void addTimerMs(DumTimeout::Type type,
                       unsigned long duration,
                       BaseUsageHandle target, 
-                      int seq, 
-                      int altseq=-1);
+                      unsigned int seq, 
+                      unsigned int altseq=0);
 
       Dialog& findOrCreateDialog(const SipMessage* msg);
       Dialog* findDialog(const DialogId& id);

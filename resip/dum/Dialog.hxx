@@ -132,13 +132,16 @@ class Dialog
       
       //variants
       NameAddr mLocalContact;
-      unsigned long mLocalCSeq;
-      unsigned long mRemoteCSeq;
+      unsigned int mLocalCSeq;
+      unsigned int mRemoteCSeq;
       NameAddr mRemoteTarget;
       NameAddr mLocalNameAddr;
       NameAddr mRemoteNameAddr;
       CallID mCallId;
       
+      // used to capture the 2xx expiration value for the initial subscription response
+      UInt32 mDefaultSubExpiration;
+
       // store until we get a response (non-401/407)
       // !jf! this shouldn't be necessary
       // !dcm! -- no longer used for subscriptions, INVITE will take more thought/work

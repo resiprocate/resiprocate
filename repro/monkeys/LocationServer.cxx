@@ -4,6 +4,7 @@
 
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/ExtensionParameter.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/QValueTarget.hxx"
@@ -24,77 +25,72 @@ LocationServer::process(RequestContext& context)
    DebugLog(<< "Monkey handling request: " << *this << "; reqcontext = " << context);
 
    const resip::Uri& inputUri
-    = context.getOriginalRequest().header(h_RequestLine).uri();
+      = context.getOriginalRequest().header(h_RequestLine).uri();
 
-  //!RjS! This doesn't look exception safe - need guards
-  mStore.lockRecord(inputUri);
-  
-  if (true) // TODO fix mStore.aorExists(inputUri))
-  {  
-	 RegistrationPersistenceManager::ContactRecordList contacts = mStore.getContacts(inputUri);
+   //!RjS! This doesn't look exception safe - need guards
+   mStore.lockRecord(inputUri);
 
-     mStore.unlockRecord(inputUri);
+   if (true) // TODO fix mStore.aorExists(inputUri))
+   {  
+      RegistrationPersistenceManager::ContactRecordList contacts = mStore.getContacts(inputUri);
 
-      std::list<Target*> qbatch;
-      std::list<Target*> noqbatch;
-     for ( RegistrationPersistenceManager::ContactRecordList::iterator i  = contacts.begin()
-             ; i != contacts.end()    ; ++i)
-     {
-	    RegistrationPersistenceManager::ContactRecord contact = *i;
-        if (contact.expires>=time(NULL))
-        {
-           InfoLog (<< *this << " adding target " << contact.uri);
-           if(contact.useQ)
-           {
-               qbatch.push_back(new QValueTarget(contact.uri,contact.q));
-           }
-           else
-           {
-               noqbatch.push_back(new QValueTarget(contact.uri,1.0));   
-           }
-        }
-        else
-        {
+      mStore.unlockRecord(inputUri);
+
+      std::list<Target*> batch;
+      for ( RegistrationPersistenceManager::ContactRecordList::iterator i  = contacts.begin()
+            ; i != contacts.end()    ; ++i)
+      {
+         RegistrationPersistenceManager::ContactRecord contact = *i;
+         if (contact.expires>=time(NULL))
+         {
+            if(contact.cid != 0)
+            {
+               static ExtensionParameter p_cid("cid");
+               contact.uri.param(p_cid)=resip::Data(contact.cid);
+            }
+            InfoLog (<< *this << " adding target " << contact.uri);
+            if(contact.useQ)
+            {
+               batch.push_back(new QValueTarget(contact.uri,contact.q));
+            }
+            else
+            {
+               batch.push_back(new QValueTarget(contact.uri,1.0));   
+            }
+         }
+         else
+         {
             // remove expired contact 
             mStore.removeContact(inputUri, contact.uri);
-        }
-     }
+         }
+      }
 
-      
-     if(!qbatch.empty())
-     {
-         qbatch.sort(Target::targetPtrCompare);
-        context.getResponseContext().addTargetBatch(qbatch);
+      if(!batch.empty())
+      {
+         batch.sort(Target::targetPtrCompare);
+         context.getResponseContext().addTargetBatch(batch);
          //ResponseContext should be consuming the vector
-        assert(qbatch.empty());
-     }
-     
-     if(!noqbatch.empty())
-     {
-        context.getResponseContext().addTargetBatch(noqbatch);
-        //ResponseContext should be consuming the vector
-        assert(noqbatch.empty());
-     }
-     
+         assert(batch.empty());
+      }
    }
    else
    {
       mStore.unlockRecord(inputUri);
-	  
-	  // make 404, send, dispose of memory 
-	  resip::SipMessage response;
-	  Helper::makeResponse(response, context.getOriginalRequest(), 404); 
-	  context.sendResponse(response);
-	  return Processor::SkipThisChain;
+
+      // make 404, send, dispose of memory 
+      resip::SipMessage response;
+      Helper::makeResponse(response, context.getOriginalRequest(), 404); 
+      context.sendResponse(response);
+      return Processor::SkipThisChain;
    }
-   
+
    return Processor::Continue;
 }
 
 void
 LocationServer::dump(std::ostream &os) const
 {
-  os << "LocationServer monkey" << std::endl;
+   os << "LocationServer monkey" << std::endl;
 }
 
 

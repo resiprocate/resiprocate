@@ -26,10 +26,10 @@ class RAckCategory : public ParserCategory
       MethodTypes method() const;
       Data& unknownMethodName();
       const Data& unknownMethodName() const;
-      int& rSequence();
-      int rSequence() const;
-      int& cSequence();
-      int cSequence() const;
+      unsigned int& rSequence();
+      unsigned int rSequence() const;
+      unsigned int& cSequence();
+      unsigned int cSequence() const;
 
       bool operator==(const RAckCategory& rhs) const;
 
@@ -40,8 +40,8 @@ class RAckCategory : public ParserCategory
    private:
       mutable MethodTypes mMethod;
       mutable Data mUnknownMethodName;
-      mutable int mRSequence;
-      mutable int mCSequence;
+      mutable unsigned int mRSequence;
+      mutable unsigned int mCSequence;
 };
  
 }

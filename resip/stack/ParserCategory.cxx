@@ -197,16 +197,20 @@ ParserCategory::parseParameters(ParseBuffer& pb)
          pb.skipChar();
          const char* keyStart = pb.skipWhitespace();
          const char* keyEnd = pb.skipToOneOf(" \t\r\n;=?>");  //!dlb! @ here?
-         ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
-         if (type == ParameterTypes::UNKNOWN)
+
+         if((int)(keyEnd-keyStart) != 0)
          {
-            mUnknownParameters.push_back(new UnknownParameter(keyStart, 
-                                                              int((keyEnd - keyStart)), pb, " \t\r\n;?>"));
-         }
-         else
-         {
-            // invoke the particular factory
-            mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n;?>"));
+            ParameterTypes::Type type = ParameterTypes::getType(keyStart, (keyEnd - keyStart));
+            if (type == ParameterTypes::UNKNOWN)
+            {
+               mUnknownParameters.push_back(new UnknownParameter(keyStart, 
+                                                                 int((keyEnd - keyStart)), pb, " \t\r\n;?>"));
+            }
+            else
+            {
+               // invoke the particular factory
+               mParameters.push_back(ParameterTypes::ParameterFactories[type](type, pb, " \t\r\n;?>"));
+            }
          }
       }
       else
@@ -427,7 +431,7 @@ defineParam(actor, "actor", QuotedDataParameter, "callee-caps"); // principal|ms
 defineParam(text, "text", ExistsParameter, "callee-caps");
 defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"); //list
 defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
-defineParam(FlowId, "+sip.flowId", IntegerParameter, "outbound");
+defineParam(FlowId, "+sip.flowId", UInt32Parameter, "outbound");
 defineParam(gruu, "gruu", QuotedDataParameter, "gruu");
 
 defineParam(accessType, "access-type", DataParameter, "RFC 2046");
@@ -442,9 +446,9 @@ defineParam(dQop, "d-qop", DataParameter, "RFC ????");
 defineParam(dVer, "d-ver", QuotedDataParameter, "RFC ????");
 defineParam(directory, "directory", DataParameter, "RFC 2046");
 defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
-defineParam(duration, "duration", IntegerParameter, "RFC ????");
-defineParam(expiration, "expiration", IntegerParameter, "RFC 2046");
-defineParam(expires, "expires", IntegerParameter, "RFC ????");
+defineParam(duration, "duration", UInt32Parameter, "RFC ????");
+defineParam(expiration, "expiration", QuotedDataParameter, "RFC 2046");
+defineParam(expires, "expires", UInt32Parameter, "RFC ????");
 
 defineParam(filename, "filename", DataParameter, "RFC ????");
 defineParam(fromTag, "from-tag", DataParameter, "RFC ????");
@@ -462,13 +466,13 @@ defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
 defineParam(permission, "permission", DataParameter, "RFC 2046");
 defineParam(protocol, "protocol", QuotedDataParameter, "RFC 1847");
 defineParam(purpose, "purpose", DataParameter, "RFC ????");
-defineParam(q, "q", FloatParameter, "RFC 3261");
+defineParam(q, "q", QValueParameter, "RFC 3261");
 
 defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
 defineParam(reason, "reason", DataParameter, "RFC ????");
 defineParam(received, "received", DataParameter, "RFC ????");
 defineParam(response, "response", QuotedDataParameter, "RFC ????");
-defineParam(retryAfter, "retry-after", IntegerParameter, "RFC ????");
+defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC ????");
 defineParam(rinstance, "rinstance", DataParameter, "");
 defineParam(rport, "rport", RportParameter, "RFC ????");
 defineParam(server, "server", DataParameter, "RFC 2046");
@@ -479,7 +483,7 @@ defineParam(stale, "stale", DataParameter, "RFC ????");
 defineParam(tag, "tag", DataParameter, "RFC ????");
 defineParam(toTag, "to-tag", DataParameter, "RFC ????");
 defineParam(transport, "transport", DataParameter, "RFC ????");
-defineParam(ttl, "ttl", IntegerParameter, "RFC ????");
+defineParam(ttl, "ttl", UInt32Parameter, "RFC ????");
 defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(user, "user", DataParameter, "RFC ????");
 defineParam(username, "username", DataParameter, "RFC ????");
@@ -490,7 +494,7 @@ defineParam(profileType, "profile-type", DataParameter, "draft-ietf-sipping-conf
 defineParam(vendor, "vendor", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(model, "model", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(version, "version", DataParameter, "draft-ietf-sipping-config-framework");
-defineParam(effectiveBy, "effective-by", IntegerParameter, "draft-ietf-sipping-config-framework");
+defineParam(effectiveBy, "effective-by", UInt32Parameter, "draft-ietf-sipping-config-framework");
 defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework");
@@ -498,6 +502,9 @@ defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-conf
 defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
 
 defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
+defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
+
+defineParam(addTransport, "addTransport", ExistsParameter, "");
 
 Data
 ParserCategory::commutativeParameterHash() const

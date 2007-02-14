@@ -1,95 +1,84 @@
+#include <cppunit/config/SourcePrefix.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
+#include <cppunit/portability/CppUnitMap.h>
 #include <cppunit/TestSuite.h>
-#include <set>
+#include <assert.h>
 
 
-#if CPPUNIT_USE_TYPEINFO_NAME
-#  include "cppunit/extensions/TypeInfoHelper.h"
-#endif
+CPPUNIT_NS_BEGIN
 
-
-namespace CppUnit {
-
-/** (Implementation) This class manages all the TestFactoryRegistry.
- *
- * Responsible for the life-cycle of the TestFactoryRegistry.
- * 
- * TestFactory registry must call wasDestroyed() to indicate that
- * a given TestRegistry was destroyed, and needDestroy() to
- * know if a given TestFactory need to be destroyed (was not already
- * destroyed by another TestFactoryRegistry).
+/*! \brief (INTERNAL) List of all TestFactoryRegistry.
  */
-class NamedRegistries
+class TestFactoryRegistryList
 {
-public:
-  ~NamedRegistries();
-
-  static NamedRegistries &getInstance();
-
-  TestFactoryRegistry &getRegistry( std::string name );
-
-  void wasDestroyed( TestFactory *factory );
-
-  bool needDestroy( TestFactory *factory );
-
 private:
-  typedef std::map<std::string, TestFactoryRegistry *> Registries;
+  typedef CppUnitMap<std::string, TestFactoryRegistry *, std::less<std::string> > Registries;
   Registries m_registries;
 
-  typedef std::set<TestFactory *> Factories;
-  Factories m_factoriesToDestroy;
-  Factories m_destroyedFactories;
+  enum State {
+    doNotChange =0,
+    notCreated,
+    exist,
+    destroyed
+  };
+
+  static State stateFlag( State newState = doNotChange )
+  {
+    static State state = notCreated;
+    if ( newState != doNotChange )
+      state = newState;
+    return state;
+  }
+
+  static TestFactoryRegistryList *getInstance()
+  {
+    static TestFactoryRegistryList list;
+    return &list;
+  }
+
+  TestFactoryRegistry *getInternalRegistry( const std::string &name )
+  {
+    Registries::const_iterator foundIt = m_registries.find( name );
+    if ( foundIt == m_registries.end() )
+    {
+      TestFactoryRegistry *factory = new TestFactoryRegistry( name );
+      m_registries.insert( std::pair<const std::string, TestFactoryRegistry*>( name, factory ) );
+      return factory;
+    }
+    return (*foundIt).second;
+  }
+
+public:
+  TestFactoryRegistryList()
+  {
+    stateFlag( exist );
+  }
+
+  ~TestFactoryRegistryList()
+  {
+    for ( Registries::iterator it = m_registries.begin(); it != m_registries.end(); ++it )
+      delete (*it).second;
+
+    stateFlag( destroyed );
+  }
+
+  static TestFactoryRegistry *getRegistry( const std::string &name )
+  {
+    // If the following assertion failed, then TestFactoryRegistry::getRegistry() 
+    // was called during static variable destruction without checking the registry 
+    // validity beforehand using TestFactoryRegistry::isValid() beforehand.
+    assert( isValid() );
+    if ( !isValid() )         // release mode
+      return NULL;            // => force CRASH
+
+    return getInstance()->getInternalRegistry( name );
+  }
+
+  static bool isValid()
+  {
+    return stateFlag() != destroyed;
+  }
 };
-
-
-NamedRegistries::~NamedRegistries()
-{
-  Registries::iterator it = m_registries.begin();
-  while ( it != m_registries.end() )
-  {
-    TestFactoryRegistry *registry = (it++)->second;
-    if ( needDestroy( registry ) )
-      delete registry;
-  }
-}
-
-
-NamedRegistries &
-NamedRegistries::getInstance()
-{
-  static NamedRegistries namedRegistries;
-  return namedRegistries;
-}
-
-
-TestFactoryRegistry &
-NamedRegistries::getRegistry( std::string name )
-{
-  Registries::const_iterator foundIt = m_registries.find( name );
-  if ( foundIt == m_registries.end() )
-  {
-    TestFactoryRegistry *factory = new TestFactoryRegistry( name );
-    m_registries.insert( std::make_pair( name, factory ) );
-    m_factoriesToDestroy.insert( factory );
-    return *factory;
-  }
-  return *foundIt->second;
-}
-
-
-void 
-NamedRegistries::wasDestroyed( TestFactory *factory )
-{
-  m_factoriesToDestroy.erase( factory );
-  m_destroyedFactories.insert( factory );
-}
-
-
-bool 
-NamedRegistries::needDestroy( TestFactory *factory )
-{
-  return m_destroyedFactories.count( factory ) == 0;
-}
 
 
 
@@ -101,33 +90,13 @@ TestFactoryRegistry::TestFactoryRegistry( std::string name ) :
 
 TestFactoryRegistry::~TestFactoryRegistry()
 {
-  // The wasDestroyed() and needDestroy() is used to prevent
-  // a double destruction of a factory registry.
-  // registerFactory( "All Tests", getRegistry( "Unit Tests" ) );
-  // => the TestFactoryRegistry "Unit Tests" is owned by both
-  // the "All Tests" registry and the NamedRegistries...
-  NamedRegistries::getInstance().wasDestroyed( this );
-
-  for ( Factories::iterator it = m_factories.begin(); it != m_factories.end(); ++it )
-  {
-    TestFactory *factory = it->second;
-    if ( NamedRegistries::getInstance().needDestroy( factory ) )
-      delete factory;
-  }
-}
-
-
-TestFactoryRegistry &
-TestFactoryRegistry::getRegistry()
-{
-  return getRegistry( "All Tests" );
 }
 
 
 TestFactoryRegistry &
 TestFactoryRegistry::getRegistry( const std::string &name )
 {
-  return NamedRegistries::getInstance().getRegistry( name );
+  return *TestFactoryRegistryList::getRegistry( name );
 }
 
 
@@ -135,19 +104,28 @@ void
 TestFactoryRegistry::registerFactory( const std::string &name,
                                       TestFactory *factory )
 {
-  m_factories[name] = factory;
+  registerFactory( factory );
 }
 
 
 void 
 TestFactoryRegistry::registerFactory( TestFactory *factory )
 {
-    static int serialNumber = 1;
+  m_factories.insert( factory );
+}
 
-    OStringStream ost;
-    ost << "@Dummy@" << serialNumber++;
 
-    registerFactory( ost.str(), factory );
+void 
+TestFactoryRegistry::unregisterFactory( TestFactory *factory )
+{
+  m_factories.erase( factory );
+}
+
+
+void 
+TestFactoryRegistry::addRegistry( const std::string &name )
+{
+  registerFactory( &getRegistry( name ) );
 }
 
 
@@ -167,10 +145,17 @@ TestFactoryRegistry::addTestToSuite( TestSuite *suite )
         it != m_factories.end(); 
         ++it )
   {
-    TestFactory *factory = (*it).second;
+    TestFactory *factory = *it;
     suite->addTest( factory->makeTest() );
   }
 }
 
 
-}  // namespace CppUnit
+bool 
+TestFactoryRegistry::isValid()
+{
+  return TestFactoryRegistryList::isValid();
+}
+
+
+CPPUNIT_NS_END

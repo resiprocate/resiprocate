@@ -92,7 +92,7 @@ ClientRegistration::tryModification(ClientRegistration::State state)
 }
 
 void
-ClientRegistration::addBinding(const NameAddr& contact, int registrationTime)
+ClientRegistration::addBinding(const NameAddr& contact, UInt32 registrationTime)
 {
    SharedPtr<SipMessage> next = tryModification(Adding);
    mMyContacts.push_back(contact);
@@ -221,7 +221,7 @@ void ClientRegistration::stopRegistering()
 }
 
 void
-ClientRegistration::requestRefresh(int expires)
+ClientRegistration::requestRefresh(UInt32 expires)
 {
     // Set flag so that handlers get called for success/failure
     mUserRefresh = true;
@@ -229,7 +229,7 @@ ClientRegistration::requestRefresh(int expires)
 }
 
 void
-ClientRegistration::internalRequestRefresh(int expires)
+ClientRegistration::internalRequestRefresh(UInt32 expires)
 {
    InfoLog (<< "requesting refresh of " << *this);
    
@@ -256,13 +256,13 @@ ClientRegistration::allContacts()
    return mAllContacts;
 }
 
-int
+UInt32
 ClientRegistration::whenExpires() const
 {
 // !cj! - TODO - I'm supisious these time are getting confused on what units they are in 
    UInt64 now = Timer::getTimeMs() / 1000;
    UInt64 ret = mExpires - now;
-   return (int)ret;
+   return (UInt32)ret;
 }
 
 void
@@ -320,34 +320,33 @@ ClientRegistration::dispatch(const SipMessage& msg)
             if (msg.exists(h_ServiceRoutes))
             {
                InfoLog(<< "Updating service route: " << Inserter(msg.header(h_ServiceRoutes)));
-			   getUserProfile()->setServiceRoute(msg.header(h_ServiceRoutes));
+               getUserProfile()->setServiceRoute(msg.header(h_ServiceRoutes));
             }
             else
             {
-               InfoLog(<< "Clearing service route (" << Inserter(getUserProfile()->getServiceRoute()) << ")");
+               DebugLog(<< "Clearing service route (" << Inserter(getUserProfile()->getServiceRoute()) << ")");
                getUserProfile()->setServiceRoute(NameAddrs());
             }
          }
          catch(BaseException &e)
          {
             InfoLog(<< "Error Parsing Service Route:" << e);
-         }
-         
+         }    
 
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
+         // make timers to re-register
+         UInt32 expiry = UINT_MAX;
          if (msg.exists(h_Contacts))
          {
             mAllContacts = msg.header(h_Contacts);
 
-            // make timers to re-register
-            int expiry = INT_MAX;
             //!dcm! -- should do set intersection with my bindings and walk that
             //small size, n^2, don't care
             if (mDialogSet.getUserProfile()->getRinstanceEnabled())
             {
-               int fallbackExpiry = INT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
+               UInt32 fallbackExpiry = UINT_MAX;  // Used if no contacts found with our rinstance - this can happen if proxies do not echo back the rinstance property correctly
                for (NameAddrs::iterator itMy = mMyContacts.begin(); itMy != mMyContacts.end(); itMy++)
                {
                   for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); it != msg.header(h_Contacts).end(); it++)
@@ -362,11 +361,11 @@ ClientRegistration::dispatch(const SipMessage& msg)
                            if (it->uri().exists(p_rinstance) && 
                                it->uri().param(p_rinstance) == itMy->uri().param(p_rinstance))
                            {
-                              expiry = resipMin(it->param(p_expires), expiry);
+                              expiry = resipMin((UInt32)it->param(p_expires), expiry);
                            }
                            else
                            {
-                              fallbackExpiry = resipMin(it->param(p_expires), fallbackExpiry);
+                              fallbackExpiry = resipMin((UInt32)it->param(p_expires), fallbackExpiry);
                            }
                         }
                      }
@@ -375,7 +374,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                         DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
                      }
                   }
-                  if(expiry == INT_MAX)  // if we didn't find a contact with our rinstance, then use the fallbackExpiry
+                  if(expiry == UINT_MAX)  // if we didn't find a contact with our rinstance, then use the fallbackExpiry
                   {
                      expiry = fallbackExpiry;
                   }
@@ -392,7 +391,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                   {
                      try
                      {
-                        expiry = resipMin(it->param(p_expires), expiry);
+                        expiry = resipMin((UInt32)it->param(p_expires), expiry);
                      }
                      catch(ParseBuffer::Exception& e)
                      {
@@ -400,24 +399,24 @@ ClientRegistration::dispatch(const SipMessage& msg)
                      }
                   }
                }
-            }
-            
-            if (expiry == INT_MAX)
+            }            
+         }
+
+         if (expiry == UINT_MAX)
+         {
+            if (msg.exists(h_Expires))
             {
-               if (msg.exists(h_Expires))
-               {
-                  expiry = msg.header(h_Expires).value();
-               }
+               expiry = msg.header(h_Expires).value();
             }
-            if (expiry != INT_MAX)
-            {
-               int exp = Helper::aBitSmallerThan(expiry);
-               mExpires = exp + Timer::getTimeMs() / 1000;
-               mDum.addTimer(DumTimeout::Registration,
-                             exp,
-                             getBaseHandle(),
-                             ++mTimerSeq);
-            }
+         }
+         if (expiry != UINT_MAX)
+         {
+            int exp = Helper::aBitSmallerThan(expiry);
+            mExpires = exp + Timer::getTimeMs() / 1000;
+            mDum.addTimer(DumTimeout::Registration,
+                          exp,
+                          getBaseHandle(),
+                          ++mTimerSeq);
          }
 
          switch (mState)
@@ -472,7 +471,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          {
             if (code == 423) // interval too short
             {
-               int maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
+               UInt32 maxRegistrationTime = mDialogSet.getUserProfile()->getDefaultMaxRegistrationTime();
                if (msg.exists(h_MinExpires) && 
                    (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {
@@ -496,6 +495,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                
                   mLastRequest->header(h_CSeq).sequence()++;
                   send(mLastRequest);
+                  mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
                   return;
                }
                else
@@ -518,12 +518,14 @@ ClientRegistration::dispatch(const SipMessage& msg)
                                 retry, 
                                 getBaseHandle(),
                                 ++mTimerSeq);       
+                  mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
                   return;
                }
             }
          }
          
          mDum.mClientRegistrationHandler->onFailure(getHandle(), msg);
+         mUserRefresh = true;  // Reset this flag, so that the onSuccess callback will be called if we are successful when re-trying
 
          // Retry if Profile setting is set
          if (mDialogSet.getUserProfile()->getDefaultRegistrationRetryTime() > 0 &&

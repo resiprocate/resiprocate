@@ -98,7 +98,7 @@ main(int argc, char* argv[])
 
        Uri s6("sip:bob@example.com");
        s6.host();
-       s6.param(p_q) = 1;
+       s6.param(p_q) = 1000;  // 1.0
 
        Uri s7("sip:testproxy.example.com");
 	   assert (s7.user().empty());
@@ -651,6 +651,21 @@ main(int argc, char* argv[])
        assert(Data::from(addr.uri()) == "sip:user@domain.com?Call-Info=%3csip:192.168.0.1%3e%3banswer-after=0");
        //cout << "CallInfo:  " << addr.uri().embedded().header(h_CallInfos).front() << endl;
        assert(Data::from(addr.uri().embedded().header(h_CallInfos).front()) == "<sip:192.168.0.1>;answer-after=0");
+   }
+
+   // URI containing special character #
+   // technically, # is meant to be encoded, but some systems (Asterisk,
+   // some Cisco gear) seem to send this un-encoded
+   // Some carriers insert # between a phone number and a billing prefix
+   {
+      Uri uri = Uri("sip:1234#00442031111111@lvdx.com");
+      //cout << "Encoded correctly: " << uri << endl;
+      assert(Data::from(uri) == "sip:1234%2300442031111111@lvdx.com");
+
+      Uri::setUriUserEncoding('#', false);
+      uri = Uri("sip:1234#00442031111111@lvdx.com");
+      //cout << "Non Encoded # for compatibility: " << uri << endl;
+      assert(Data::from(uri) == "sip:1234#00442031111111@lvdx.com");
    }
 
    cerr << endl << "All OK" << endl;
