@@ -210,7 +210,7 @@ $uname = `uname`;
   {
     name        => "DB_HEADERS",
     description => "Where is db_cxx.h?",
-    default     => "/usr/include/db4",
+    default     => &findDb4,
     option      => "db4-headers",
   },
   {
@@ -462,5 +462,27 @@ sub sigcompInstalled
     return "yes";
   }
   "no";
+}
+
+sub findDb4
+{
+  my (@candidates) = 
+  (
+    '/usr/include/db4',
+    '/opt/local/include/db4',
+    '/include/db4',
+    '/usr/local/include/db4',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/db_cxx.h")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
 }
 __END__
