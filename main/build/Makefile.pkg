@@ -113,10 +113,17 @@ endif
 
 ifeq ($(OSTYPE),Darwin)
 # Darwin ports uses these directors, fink does not 
-DB4CXX_LIBDIRS += /opt/local/lib/db42
-DB4CXX_INCLUDEDIRS += /opt/local/include
-DB42_LIBNAME := db-4.2
-DB4CXX_LIBNAME := db_cxx-4.2
+  ifneq ($(wildcard /opt/local/lib/libdb-4.3.*),)
+    DB4CXX_LIBDIRS += /opt/local/lib
+    DB4CXX_INCLUDEDIRS += /opt/local/include
+    DB42_LIBNAME := db-4.3
+    DB4CXX_LIBNAME := db_cxx-4.3
+  else
+    DB4CXX_LIBDIRS += /opt/local/lib/db42
+    DB4CXX_INCLUDEDIRS += /opt/local/include
+    DB42_LIBNAME := db-4.2
+    DB4CXX_LIBNAME := db_cxx-4.2
+  endif
 endif
 
 ifeq ($(OSTYPE),MinGW)
