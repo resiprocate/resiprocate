@@ -28,7 +28,7 @@
 
 ===Bug fixes===
 *fixed a bug where non-standard settings to Uri encoding tables, if made _before_ initialization, would be lost when initialization occurred.
-*fixed a bug in SdpContents where a "u==" was not being encoded
+*fixed a bug in SdpContents where a "u=" was not being encoded
 *fixed handling of bad ACK/200 (ie, ACK/200 with same tid as original INVITE), previous code did not work reliably.
 *removed a default param in SipStack::addTransport that would cause an assertion if used
 *compensated for a reentrancy issue with random() on SMP systems, when openssl wasn't built in, in Helper::computeCallId()
@@ -37,6 +37,15 @@
 *fixed bug where the TransportSelector would automatically fill in the wrong end of the Record-Route stack.
 *disable DTLS test-case if USE_DTLS wasn't defined.
 *fixed openssl memory deallocation issue
+*in SDP parsing, don't read TTL if connection address is IPV6
+*in SDP parsing, fixes for ipv6 multicast ranges in connection line
+* fix to medium::getConnections, so that it will not return session
+  level connections, if a media level connections are present
+*added ability to retrieve/set encodingParameters from rtpmap line
+  for audio codecs this represents number of channels
+  ie: a=rtpmap: 0 pcmu/8000/2   (where 2 is the encodingParameters)
+*fixed escaping of headers embedded in SIP URIs
+*fixed a compiler warning in SipStack.cxx
 
 ==DUM==
 ===New features===
@@ -47,6 +56,9 @@
 *fixed a bug where InviteSession would send BYE/481 if we _received_ a BYE while a BYE we _sent_ was pending. (Both sides send BYE, race-condition) Now sends a BYE/200.
 *only 2xx responses to the original request can effect the route-set
 *ClientInviteSession can now handle BYE gracefully in any situation
+*fixed a bug where a bad in-dialog response (modified to-tag) would prompt a dialog creation, and cause a crash.
+*fixed an erroneous log statement for stray responses.
+
 
 ==repro==
 ===New features===
@@ -54,6 +66,7 @@
 
 ===Bug fixes===
 *if certServer is enabled, only PUBLISH and SUBSCRIBE with certificate or credential event types will be passed to dum.
+*fixed a bug where a Record-Route could be inserted with a scheme that did not match the scheme of topmost Route header, if present
 
 ==tfm==
 ===New features===
