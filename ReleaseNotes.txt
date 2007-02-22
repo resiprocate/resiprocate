@@ -24,7 +24,7 @@
 
 ==stack==
 ===New features===
-*SIGCOMP support
+*SIGCOMP (RFC 3320) support
 *new non-INVITE transaction behavior with respect to 100 Trying (see RFC 4320)
 *wrote LazyParser::isWellFormed() This allows exception-safe checking of whether header-field-values are well-formed or not
 *changed handling of bad ACK/200 (ie, ACK/200 with same tid as original INVITE), previous code did not work reliably (a feature because this is an act of protocol repair)
