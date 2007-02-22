@@ -848,6 +848,13 @@ Uri::clone() const
 
 void Uri::setUriUserEncoding(char c, bool encode) 
 {
+   if(!mEncodingReady)
+   {
+      // if we don't init first, the changes we make will be lost when
+      // init is invoked
+      initialiseEncodingTables();
+   }
+
    if(c < 0)
    {
       ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
@@ -859,6 +866,13 @@ void Uri::setUriUserEncoding(char c, bool encode)
 
 void Uri::setUriPasswordEncoding(char c, bool encode)
 {
+   if(!mEncodingReady)
+   {
+      // if we don't init first, the changes we make will be lost when
+      // init is invoked
+      initialiseEncodingTables();
+   }
+
    if(c < 0)
    {
       ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);

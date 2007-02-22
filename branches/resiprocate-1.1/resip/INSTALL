@@ -13,12 +13,15 @@ Configure Options:
 Notes: 
 - all binaries and object files will be placed in a subdirectory of the directory containing the source files.  
 - a symbolic link is made to any target executables in the directory where the main is
-- If you configure --with-shared-libs, it will only build shared libraries so you will need to set LD_LIBRARY_PATH.
+- If you configure --with-shared-libs, it will only build shared libraries so you will need to set LD_LIBRARY_PATH. (DYLD_LIBRARY_PATH under OS X)
 e.g.  BASH example on linux with debug libraries
 export LD_LIBRARY_PATH=$(RESIP_PATH)/lib.debug.Linux.i686 
 
 e.g. tcsh example on linux with optimized libraries
 setenv LD_LIBRARY_PATH $(RESIP_PATH)/lib.opt.Linux.i686 
+
+e.g. BASH example on an Intel Macintosh running OS X
+export DYLD_LIBRARY_PATH=$(RESIP_PATH)/obj.debug.Darwin.i386
 
 To build with optimization level -O3: 
 % make CODE_OPTIMIZE=3
