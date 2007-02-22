@@ -400,7 +400,11 @@ Helper::makeResponse(SipMessage& response,
       // !bwc! Can't add to-tag since To is malformed. Oh well, we tried.
    }
    
+   
+   // !bwc! This will only throw if the topmost Via is malformed, and that 
+   // should have been caught at the transport level.
    response.setRFC2543TransactionId(request.getRFC2543TransactionId());
+   
    //response.header(h_ContentLength).value() = 0;
    
    if (responseCode >= 180 && responseCode < 300 && request.exists(h_RecordRoutes))

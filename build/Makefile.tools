@@ -31,7 +31,14 @@ ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
 
 CC		= gcc
 CXX		= g++
-MKSHLIB		:= $(CC) -fPIC -shared 
+MKSHLIB		:= $(CC) -fPIC
+
+ifeq ($(OSTYPE),Darwin)
+  MKSHLIB		+= -dynamiclib -undefined dynamic_lookup
+else
+  MKSHLIB		+= -shared 
+endif
+
 DEP		:= $(CXX) 
 LINKER		:= $(CXX) 
 RANLIB		= ranlib
