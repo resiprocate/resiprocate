@@ -397,11 +397,11 @@ Helper::makeResponse(SipMessage& response,
    } 
    catch(resip::ParseBuffer::Exception&)
    {
-      // !bwc! Can't add to-tag since To is malformed. Oh well, we tried.
+      // .bwc. Can't add to-tag since To is malformed. Oh well, we tried.
    }
    
    
-   // !bwc! This will only throw if the topmost Via is malformed, and that 
+   // .bwc. This will only throw if the topmost Via is malformed, and that 
    // should have been caught at the transport level.
    response.setRFC2543TransactionId(request.getRFC2543TransactionId());
    
@@ -412,7 +412,7 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_RecordRoutes) = request.header(h_RecordRoutes);
    }
 
-   // !bwc! If CSeq is malformed, basicCheck would have already attempted to
+   // .bwc. If CSeq is malformed, basicCheck would have already attempted to
    // parse it, meaning we won't throw here (we never try to parse the same
    // thing twice, see LazyParser::checkParsed())
    if (responseCode/100 == 2 &&
@@ -454,7 +454,7 @@ Helper::makeResponse(const SipMessage& request,
                      const Data& hostname, 
                      const Data& warning)
 {
-   // !bwc! Exception safety. Catch/rethrow is dicey because we can't rethrow
+   // .bwc. Exception safety. Catch/rethrow is dicey because we can't rethrow
    // resip::BaseException, since it is abstract.
    std::auto_ptr<SipMessage> response(new SipMessage);
 
@@ -476,7 +476,7 @@ Helper::makeResponse(const SipMessage& request,
                      const Data& hostname, 
                      const Data& warning)
 {
-   // !bwc! Exception safety. Catch/rethrow is dicey because we can't rethrow
+   // .bwc. Exception safety. Catch/rethrow is dicey because we can't rethrow
    // resip::BaseException, since it is abstract.
    std::auto_ptr<SipMessage> response(new SipMessage);
    
@@ -627,7 +627,7 @@ Helper::computeCallId()
 {
    static Data hostname = DnsUtil::getLocalHostName();
    Data hostAndSalt(hostname + Random::getRandomHex(16));
-#ifndef USE_SSL // !bwc! None of this is neccessary if we're using openssl
+#ifndef USE_SSL // .bwc. None of this is neccessary if we're using openssl
 #if defined(__linux__) || defined(__APPLE__)
    pid_t pid = getpid();
    hostAndSalt.append((char*)&pid,sizeof(pid));

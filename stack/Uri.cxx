@@ -808,7 +808,7 @@ Uri::parse(ParseBuffer& pb)
       }
       else
       {
-         // !bwc! Should the parse fail here, or do we just shrug it off?
+         // ?bwc? Should the parse fail here, or do we just shrug it off?
       }
       pb.skipChar();
    }
