@@ -213,7 +213,7 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                {
                   static Data http("http://");
                   static Data post(":" + Data(mHttpPort) + "/cert?domain=");
-                  // !bwc! Leave pre-existing Identity headers alone.
+                  // .bwc. Leave pre-existing Identity headers alone.
                   if(!sipMessage->exists(h_Identity))
                   {
                      sipMessage->header(h_Identity).value() = Data::Empty;
