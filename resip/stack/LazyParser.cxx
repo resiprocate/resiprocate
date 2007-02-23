@@ -85,12 +85,12 @@ LazyParser::checkParsed() const
    if (mState==NOT_PARSED)
    {
       LazyParser* ncThis = const_cast<LazyParser*>(this);
-      // !bwc! We assume the worst, and if the parse succeeds, we update.
+      // .bwc. We assume the worst, and if the parse succeeds, we update.
       ncThis->mState = MALFORMED;
       assert(mHeaderField);
       ParseBuffer pb(mHeaderField->mField, mHeaderField->mFieldLength, errorContext());
       ncThis->parse(pb);
-      // !bwc! If we get this far without throwing, the parse has succeeded.
+      // .bwc. If we get this far without throwing, the parse has succeeded.
       ncThis->mState = WELL_FORMED;
    }
 }

@@ -158,7 +158,7 @@ class TestDnsHandler : public DnsHandler
          
          int result=1;
 
-         // !bwc! Please forgive me for my use of permutation-group-foo.
+         // .bwc. Please forgive me for my use of permutation-group-foo.
          for(int i=mPermutation.size();i>0;--i)
          {
             int foundAt=0;
@@ -409,13 +409,13 @@ main(int argc, const char** argv)
          {
             if(n==0 && s==0)
             {
-               // !bwc! This is just user.test.resiprocate.org, which we have already done.
+               // .bwc. This is just user.test.resiprocate.org, which we have already done.
                continue;
             }
             
             if(n==1 && s==2)
             {
-               // !bwc! broken NAPTR and missing SRV is equivalent to OK NAPTR
+               // .bwc. broken NAPTR and missing SRV is equivalent to OK NAPTR
                // and missing SRV (n==0 and s==2). The former is not provisioned
                // in the DNS zone, but the latter is, so we have already taken 
                // care of this case.
@@ -433,15 +433,15 @@ main(int argc, const char** argv)
             unsigned int port=0;
             TransportType type=UNKNOWN_TRANSPORT;
 
-            // !bwc! Choose expected destination.
+            // .bwc. Choose expected destination.
             if(uri.exists(p_transport))
             {
-               // !bwc! Transport is explicitly specified; no NAPTR query
+               // .bwc. Transport is explicitly specified; no NAPTR query
                // will be made. State of NAPTR is irrelevant.
                
                if(uri.port()!=0)
                {
-                  // !bwc! Port is explicitly specified. No SRV query will
+                  // .bwc. Port is explicitly specified. No SRV query will
                   // be made. This will be a bare A record lookup.
                   port=uri.port();
                   type=toTransportType(uri.param(p_transport));
@@ -453,7 +453,7 @@ main(int argc, const char** argv)
                }
                else
                {
-                  // !bwc! Port is not explicitly specified. SRV query will
+                  // .bwc. Port is not explicitly specified. SRV query will
                   // be attempted.
                   
                   if(s==0)
@@ -672,7 +672,7 @@ main(int argc, const char** argv)
                }
                else
                {
-                  // !bwc! If we get UNKNOWN_TRANSPORT from the block of
+                  // .bwc. If we get UNKNOWN_TRANSPORT from the block of
                   // code above, it means we will try all three. (Yes, this
                   // is hackish. At least I documented it.)
                   assert(port%2==0);
@@ -696,7 +696,7 @@ main(int argc, const char** argv)
       }
    }
 
-   // !bwc! Resolves uris from command line, if they are present.
+   // .bwc. Resolves uris from command line, if they are present.
    while (argc > 1 && args && *args != 0)
    {
       Uri uri;
@@ -724,7 +724,7 @@ main(int argc, const char** argv)
       argc--;
    }
 
-   // !bwc! Wait for outstanding queries to finish.
+   // .bwc. Wait for outstanding queries to finish.
    int count = queries.size();
    while (count>0)
    {
@@ -763,7 +763,7 @@ main(int argc, const char** argv)
    ipAddrToNum[Tuple("127.0.0.3",5060,V4,TCP)]=2;
    ipAddrToNum[Tuple("127.0.0.4",5060,V4,TCP)]=3;
 
-   // !bwc! Test load-leveling.
+   // .bwc. Test load-leveling.
    for(int numSRV=2;numSRV<5;++numSRV)
    {
       resip::Data hostname("loadlevel");
@@ -786,7 +786,7 @@ main(int argc, const char** argv)
          dns.lookup(res, uri);
          if(i%20==0)
          {
-            // !bwc! Let things have some time to cache, so we don't hammer the
+            // .bwc. Let things have some time to cache, so we don't hammer the
             // DNS to death. (Odds are good that we have hit every NAPTR at
             // least once by now)
             sleep(2);
@@ -794,7 +794,7 @@ main(int argc, const char** argv)
          }
       }
       
-      // !bwc! first index is the order (1st=0, 2nd=1, etc), and second index
+      // .bwc. first index is the order (1st=0, 2nd=1, etc), and second index
       // is the last tuple in the IP address (127.0.0.1 is 0, 127.0.0.2 is 1)
       // The value stored is the number of times this combination was encountered.
       int table[numSRV][numSRV];
@@ -857,7 +857,7 @@ main(int argc, const char** argv)
    }
 
 
-   // !bwc! Test blacklisting
+   // .bwc. Test blacklisting
    {
       Tuple toBlacklist("127.0.0.1",5060,V4,TCP);
       Tuple ok2("127.0.0.2",5060,V4,TCP);
@@ -887,7 +887,7 @@ main(int argc, const char** argv)
       cerr << rf << "Looking up" << ub << endl;
       dns.lookup(res, uri);
       
-      // !bwc! Give this query plenty of time.
+      // .bwc. Give this query plenty of time.
       sleep(2);
       
       // This removes the Tuple toBlacklist
@@ -906,7 +906,7 @@ main(int argc, const char** argv)
          dns.lookup(res, uri);
       }
       
-      // !bwc! Wait for blacklist to expire.
+      // .bwc. Wait for blacklist to expire.
       sleep(16);
       
       // Put the blacklisted Tuple back.

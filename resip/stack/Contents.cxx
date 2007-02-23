@@ -148,7 +148,7 @@ Contents::createContents(const Mime& contentType,
 
    if(contentType.subType()=="sipfrag"||contentType.subType()=="external-body")
    {
-      // !bwc! The parser for sipfrag requires padding at the end of the hfv.
+      // .bwc. The parser for sipfrag requires padding at the end of the hfv.
       HeaderFieldValue* temp = hfv;
       hfv = new HeaderFieldValue(*temp,HeaderFieldValue::CopyPadding);
       delete temp;
