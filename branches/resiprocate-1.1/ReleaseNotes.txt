@@ -88,6 +88,7 @@
 *fixed an erroneous log statement for stray responses
 *fixed some error logs in InviteSession related to bad state in provideOffer
 *removed an assert in InviteSession::targetRefresh
+*use consistent method for determining chalenge realm; fixes issue where challenge realm was hardcoded to requestUri host after stale nonce was received
 
 ==repro==
 ===New features===
