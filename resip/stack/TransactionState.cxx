@@ -90,7 +90,7 @@ TransactionState::handleBadRequest(const resip::SipMessage& badReq, TransactionC
       }
       else
       {
-         // !bwc! Should we put together a TransactionState here so we can
+         // ?bwc? Should we put together a TransactionState here so we can
          // send a 400 to the TU?
          // TODO if we send the error to the TU, don't delete the error
          delete error;
@@ -146,7 +146,7 @@ TransactionState::process(TransactionController& controller)
       }
    }
    
-   // !bwc! We can't do anything without a tid here. Check this first.
+   // .bwc. We can't do anything without a tid here. Check this first.
    Data tid;   
    try
    {
@@ -163,13 +163,13 @@ TransactionState::process(TransactionController& controller)
    
    if(sip)
    {
-      // !bwc! Should this come after checking for error conditions?
+      // ?bwc? Should this come after checking for error conditions?
       if(controller.mStack.statisticsManagerEnabled() && sip->isExternal())
       {
          controller.mStatsManager.received(sip);
       }
       
-      // !bwc! Check for error conditions we can respond to.
+      // .bwc. Check for error conditions we can respond to.
       if(sip->isRequest() && sip->method() != ACK)
       {
          if(sip->isExternal() && controller.isTUOverloaded())
@@ -219,7 +219,7 @@ TransactionState::process(TransactionController& controller)
    if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
    else state = controller.mServerTransactionMap.find(tid);
    
-   // !bwc! This code ensures that the transaction state-machine can recover
+   // .bwc. This code ensures that the transaction state-machine can recover
    // from ACK/200 with the same tid as the original INVITE. This problem is
    // stupidly common. 
    if (state && sip && sip->isExternal() && sip->isRequest() && sip->method() == ACK)
@@ -233,7 +233,7 @@ TransactionState::process(TransactionController& controller)
                      "original INVITE. This is bad behavior, and should be "
                      "corrected in the client.");
          sip->mIsBadAck200=true;
-         // !bwc! This is a new stateless transaction, despite its tid.
+         // .bwc. This is a new stateless transaction, despite its tid.
          state=0;
       }
    }
@@ -324,7 +324,7 @@ TransactionState::process(TransactionController& controller)
                state->mMsgToRetransmit = state->make100(sip);
                state->mResponseTarget = sip->getSource(); // UACs source address
 
-               // !bwc! If port is already specified in mResponseTarget, we
+               // .bwc. If port is already specified in mResponseTarget, we
                // will only override it if a port is specified in the Via.
                // If mResponseTarget does _not_ have a port specified, and
                // neither does the Via, we go with the default.
@@ -334,7 +334,7 @@ TransactionState::process(TransactionController& controller)
                }
                else
                {
-                  // !bwc! Do not use the default port if no port is in the Via
+                  // .bwc. Do not use the default port if no port is in the Via
                   unsigned short port=Helper::getPortForReply(*sip,false);
                   if(port!=0)
                   {
@@ -1353,7 +1353,7 @@ TransactionState::processServerStale(TransactionMessage* msg)
    }
    else if (sip && isRequest(sip) && sip->method() == ACK)
    {
-      // !bwc! We should never fall into this block. There is code in process
+      // .bwc. We should never fall into this block. There is code in process
       // that should prevent it.
       assert(isFromWire(msg));
       InfoLog (<< "Passing ACK directly to TU: " << sip->brief());
@@ -1429,7 +1429,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
    assert(failure);
    assert(mState!=Bogus);
 
-   // !bwc! We should only try multiple dns results if we are originating a
+   // .bwc. We should only try multiple dns results if we are originating a
    // request. Additionally, there are (potential) cases where it would not
    // be appropriate to fail over even then.
    bool shouldFailover=false;
@@ -1451,7 +1451,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
    {
       if(mState==Completed || mState==Terminated)
       {
-         // !bwc! Perhaps the attempted transmission of the ACK failed here.
+         // .bwc. Perhaps the attempted transmission of the ACK failed here.
          // (assuming this transaction got a failure response; not sure what
          // might have happened if this is not the case)
          // In any case, we should not try sending the INVITE anywhere else.
@@ -1464,9 +1464,10 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
       {
          if(mState==Proceeding)
          {
-            // !bwc! We need to revert our state back to Calling, since we are
+            // .bwc. We need to revert our state back to Calling, since we are
             // going to be sending the INVITE to a new endpoint entirely.
 
+            // !bwc!
             // An interesting consequence occurs if our failover ultimately
             // sends to the same instance of a resip stack; we increment the 
             // transport sequence in our branch parameter, but any resip-based
@@ -1483,8 +1484,8 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
 
    if(mDnsResult)
    {
-      // !bwc! Blacklist for 32s
-      // TODO make this duration configurable.
+      // .bwc. Blacklist for 32s
+      // !bwc! TODO make this duration configurable.
       mDnsResult->blacklistLast(Timer::getTimeMs()+32000);
    }
    
@@ -1583,7 +1584,7 @@ TransactionState::handle(DnsResult* result)
    // got a DNS response, so send the current message
    StackLog (<< *this << " got DNS result: " << *result);
    
-   // !bwc! Were we expecting something from mDnsResult?
+   // .bwc. Were we expecting something from mDnsResult?
    if (mWaitingForDnsResult) 
    {
       assert(mDnsResult);
@@ -1778,7 +1779,7 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       }
       else
       {
-         // !bwc! While the resolver was attempting to find a target, another
+         // .bwc. While the resolver was attempting to find a target, another
          // request came down from the TU. This could be a bug in the TU, or 
          // could be a retransmission of an ACK/200. Either way, we cannot
          // expect to ever be able to send this request (nowhere to store it
@@ -1803,7 +1804,7 @@ TransactionState::sendToTU(TransactionMessage* msg) const
       {
          case 503:
             // blacklist last target.
-            // !bwc! If there is no Retry-After, we do not blacklist
+            // .bwc. If there is no Retry-After, we do not blacklist
             // (see RFC 3261 sec 21.5.4 para 1)
             if(sipMsg->exists(resip::h_RetryAfter))
             {
@@ -1824,7 +1825,7 @@ TransactionState::sendToTU(TransactionMessage* msg) const
             if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only blacklist if internally generated and we haven't received any responses yet
             {
                // blacklist last target.
-               // !bwc! How long do we blacklist this for? Probably should make
+               // ?bwc? How long do we blacklist this for? Probably should make
                // this configurable. TODO
                mDnsResult->blacklistLast(resip::Timer::getTimeMs() + 32000);
             }

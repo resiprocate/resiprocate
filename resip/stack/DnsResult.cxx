@@ -378,7 +378,7 @@ DnsResult::lookupInternal(const Uri& uri)
             }
             else
             {
-               // !bwc! Numeric result is blacklisted. Oh well.
+               // .bwc. Numeric result is blacklisted. Oh well.
                assert(mResults.empty());
                transition(Available);
                DebugLog(<< "Numeric result, but this result is currently blacklisted: " << tuple);
@@ -556,7 +556,7 @@ DnsResult::retrieveSRV()
    
    if(!mHaveChosenTransport)
    {
-      // !bwc! We have not chosen a transport yet; this happens when we fail
+      // .bwc. We have not chosen a transport yet; this happens when we fail
       // to find a NAPTR record, and the transport is not specified in the uri.
       // In this contingency, we manufacture best-guess SRV queries for each
       // transport we support, and try one transport at a time. This
@@ -565,7 +565,7 @@ DnsResult::retrieveSRV()
    }
    else
    {
-      // !bwc! We chose our transport before we started looking up SRVs.
+      // .bwc. We chose our transport before we started looking up SRVs.
       // All SRVs must match. 
       
       transport=mTransport;
@@ -591,7 +591,7 @@ DnsResult::retrieveSRV()
    }
    else
    {
-      // !bwc! All of the remaining SRVs (at this priority/type) have a weight
+      // .bwc. All of the remaining SRVs (at this priority/type) have a weight
       // of 0. The best we can do here is pick arbitrarily. In this case, we 
       // will end up picking the first.
       // (selected will be less than the weight of the first SRV, causing the
@@ -626,7 +626,7 @@ DnsResult::retrieveSRV()
       int nextPriority=mSRVResults.begin()->priority;
       TransportType nextTransport=mSRVResults.begin()->transport;
       
-      // !bwc! If we have finished traversing a priority value/transport type,
+      // .bwc. If we have finished traversing a priority value/transport type,
       // we reset the cumulative weight to 0, to prompt its recalculation.
       if(priority!=nextPriority || transport!=nextTransport)
       {
@@ -847,7 +847,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
             }
          }
 #else
-         // !bwc! If this A query failed, don't give up if there are more SRVs!
+         // .bwc. If this A query failed, don't give up if there are more SRVs!
          if(mSRVResults.empty())
          {
             transition(Finished);
@@ -969,7 +969,7 @@ void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
          
          if(!mHaveChosenTransport || srv.transport==mTransport)
          {
-            // !bwc! If we have not committed to a given transport, or we have 
+            // .bwc. If we have not committed to a given transport, or we have 
             // committed to a given transport which this SRV matches, we will
             // add this SRV. We do not add SRVs that do not match a transport
             // we have committed to.

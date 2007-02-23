@@ -112,7 +112,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     if (!handler || !database)
     {
-      // !bwc! This is a server error; why are we sending a 4xx?
+      // ?bwc? This is a server error; why are we sending a 4xx?
        DebugLog( << "No handler or DB - sending 405" );
        
        SharedPtr<SipMessage> failure(new SipMessage);
