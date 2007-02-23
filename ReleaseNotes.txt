@@ -17,7 +17,7 @@
 ===New features===
 *DNS resolver will now pay attention to host entries in the NetInfoManager (OS X)
 *removed ATL dependencies (Windows)
-*allow the various tagging written by the logging system to be turned off
+*allow the tagging written by the logging system to be turned off
 
 ===Bug fixes===
 *fixed bug where DNS resolver would assert when attempting to do a query with no network connectivity (on OS X)
@@ -38,7 +38,7 @@
 
 ===Bug fixes===
 *fixed a bug where a TU sending multiple requests with the same tid (ie, ACK/200) could cause an assertion in the stack, if DNS resolution had not yet been completed
-*Fixing a bug that could corrupt a TransactionMap::iterator if the same tid was added multiple times. Also fixed another bug that was causing this bug to exhibit
+*fixed a bug that could corrupt a TransactionMap::iterator if the same tid was added multiple times. Also fixed another bug that was causing this bug to exhibit
 *fixed bug where lower-order bits of IPV6 addresses were chopped off (Windows)
 *fixed a bug in SdpContents where a "u=" was not being encoded
 *fixed bug where the TransportSelector would automatically fill in the wrong end of the Record-Route stack
@@ -47,13 +47,13 @@
 **DNS logic now pays attention to what transport types the stack supports when choosing targets (won't choose a TCP target if we don't have a TCP transport, for example)
 **fixed an assert bug that could be triggered by the 3263 DNS logic if the stack was not running any UDP transports
 **blacklists are now done on a Tuple+hostname basis, instead of a DNS-path basis.
-**fixed a bug where failure in an A lookup would cause us to no pursue  but we have more SRV records to pursue, do not give up
+**fixed a bug where failure in an A lookup could cause us to not pursue additional SRV records
 **fixed a bug where NAPTRs were being selected incorrectly for sips uris
-**blacklists actually have a duration that can be set now (ie, we can pay attention to the value of Retry-After now)
+**blacklists actually have a duration that can be set now (ie, we pay attention to the value of Retry-After now)
 **stack no longer breaks spec by blacklisting on 408, 500, 600, or 503 without Retry-After
 *fixed openssl memory deallocation issue
 *when sending responses, only use default port if no port is specified in either rport or elsewhere in topmost Via
-*fixed a bug where non-standard settings to Uri encoding tables, if made _before_ initialization, would be lost when initialization occurred.
+*fixed a bug where non-standard settings to Uri encoding tables, if made _before_ initialization, would be lost when initialization occurred
 *removed a default param in SipStack::addTransport that would cause an assertion if used
 *compensated for a reentrancy issue with random() on SMP systems, when openssl wasn't built in, in Helper::computeCallId()
 *disable DTLS test-case if USE_DTLS wasn't defined
@@ -69,8 +69,8 @@
 ==DUM==
 ===New features===
 *allow configuration of whether the request-uri should be used in merged-request detection (B2BUAs and gateways need to do this)
-*allow re-INVITES and UPDATEs to update the Peer P-Asserted-Identity
 *allow UPDATE to be used for a target refresh
+*allow re-INVITES and UPDATEs to update the Peer P-Asserted-Identity
 
 ===Bug fixes===
 *fixed bug where reception of a REFER could cause a crash if no clientsubscriptionmanager is present
@@ -79,21 +79,21 @@
 *fixed bug where sending a PUBLISH while a previous PUBLISH (for the same state) was pending would cause an empty PUBLISH to be sent
 *do not create dialog state on a 180 response with no to-tag
 *fixed two cases where the absence of an Expires header would be interpreted as an Expires of 0 (in ClientPublication)
+*fix to make sure onSuccess is called after a timed retry on registration failure
+*fixed a bug where mime type accessors in MasterProfile were using the subscript operator on the underlying map, potentially creating useless empty entries in the map that shouldn't be there
+*ensure onSuccess callback is called after a successful registration following an onFailure or onRequestRetry (in ClientRegistration)
+*added some missing states to isAccepted() (in InviteSession.cxx)
 *fixed a bug where InviteSession would send BYE/481 if we _received_ a BYE while a BYE we _sent_ was pending. (Both sides send BYE, race-condition) Now sends a BYE/200
 *ClientInviteSession can now handle BYE gracefully in any situation
 *fixed an erroneous log statement for stray responses
 *fixed some error logs in InviteSession related to bad state in provideOffer
-*fix to make sure onSuccess is called after a timed retry on registration failure
 *removed an assert in InviteSession::targetRefresh
-*fixed a bug where mime type accessors in MasterProfile were using the subscript operator on the underlying map, potentially creating useless empty entries in the map that shouldn't be there
-*ensure onSuccess callback is called after a successful registration following an onFailure or onRequestRetry (in ClientRegistration)
-*added some missing states to isAccepted() (in InviteSession.cxx)
 
 ==repro==
 ===New features===
 *lots of hardening against garbage in sip messages (fixed a lot of leaks that could be triggered by bad sip requests)
 *Changed the handling of ACKs completely; they no longer follow the same code path as other requests (nothing will cause us to perform location service of any kind on an ACK now)
-*stopped using the cid Uri-parameter hack for telling the stack what connection to send a request on
+*stopped using the cid Uri-parameter hack for telling the stack what connection to send a request on (no more "cid=" in the request Uri; "cid=" may appear in Route-type headers however)
 *updated .vcproj (Windows)
 
 ===Bug fixes===
@@ -101,7 +101,6 @@
 *fixed a bug where a Record-Route could be inserted with a scheme that did not match the scheme of topmost Route header, if present
 *improved the code that determines whether we are responsible for a given Request-Uri (could run into problems while running on a non-standard port)
 *retransmissions of ACK/200 all use the same tid now, also only a single Ack200Done message will be posted now
-*cid=0 will not be placed in contacts registered over UDP
 *fixed repro problem where cert server defaults to on, and cannot be disabled
 *fixed an issue where repro would reject registrations that contain unknown Accept header values, if the cert server was enabled and MasterProfile validateAccept was enabled.
 
