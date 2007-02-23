@@ -110,7 +110,7 @@ Proxy::thread()
                   // check the MaxForwards isn't too low
                   if (!sip->exists(h_MaxForwards))
                   {
-                     // !bwc! Add Max-Forwards header if not found.
+                     // .bwc. Add Max-Forwards header if not found.
                      sip->header(h_MaxForwards).value()=20;
                   }
                   
@@ -125,8 +125,8 @@ Proxy::thread()
                      continue;                     
                   }
                   
-                  // !bwc! Unacceptable values for Max-Forwards
-                  // TODO make this ceiling configurable
+                  // .bwc. Unacceptable values for Max-Forwards
+                  // !bwc! TODO make this ceiling configurable
                   if(sip->header(h_MaxForwards).value() > 255)
                   {
                      sip->header(h_MaxForwards).value()=20;                     
@@ -169,7 +169,7 @@ Proxy::thread()
                         }
                         catch(resip::BaseException& e)
                         {
-                           // !bwc! Some sort of unhandled error in process.
+                           // .bwc. Some sort of unhandled error in process.
                            // This is very bad; we cannot form a response 
                            // at this point because we do not know
                            // whether the original request still exists.
@@ -182,7 +182,7 @@ Proxy::thread()
                   {
                      Data tid = sip->getTransactionId();
 
-                     // !bwc! This is going to be treated as a new transaction.
+                     // .bwc. This is going to be treated as a new transaction.
                      // The stack is maintaining no state whatsoever for this.
                      // We should treat this exactly like a new transaction.
                      if(sip->mIsBadAck200)
@@ -195,7 +195,7 @@ Proxy::thread()
 
                      HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(tid);
                      
-                     // !bwc! This might be an ACK/200, or a stray ACK/failure
+                     // .bwc. This might be an ACK/200, or a stray ACK/failure
                      if(i == mServerRequestContexts.end())
                      {
                         context = new RequestContext(*this, 
@@ -204,7 +204,7 @@ Proxy::thread()
                                                      mTargetProcessorChain);
                         mServerRequestContexts[tid] = context;
                      }
-                     else // !bwc! ACK/failure
+                     else // .bwc. ACK/failure
                      {
                         context = i->second;
                      }
@@ -218,7 +218,7 @@ Proxy::thread()
                      }
                      catch(resip::BaseException& e)
                      {
-                        // !bwc! Some sort of unhandled error in process.
+                        // .bwc. Some sort of unhandled error in process.
                         ErrLog(<<"Uncaught exception in process on an ACK request: " << e
                                        << std::endl << "This has a high probability of leaking memory!");
                      }
@@ -244,7 +244,7 @@ Proxy::thread()
                         }
                         catch(resip::BaseException& e)
                         {
-                           // !bwc! Some sort of unhandled error in process.
+                           // .bwc. Some sort of unhandled error in process.
                            // This is very bad; we cannot form a response 
                            // at this point because we do not know
                            // whether the original request still exists.
@@ -272,7 +272,7 @@ Proxy::thread()
                      }
                      catch(resip::BaseException& e)
                      {
-                        // !bwc! Some sort of unhandled error in process.
+                        // .bwc. Some sort of unhandled error in process.
                         ErrLog(<<"Uncaught exception in process on a response: " << e);
                      }
                   }
