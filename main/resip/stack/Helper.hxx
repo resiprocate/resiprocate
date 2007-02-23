@@ -461,7 +461,7 @@ class Helper
 
       // renamed to make more explicit that this is the port that we should reply to
       // given that we are following SIP rules WRT rport etc.
-      // !bwc! If returnDefault is false, this function will return 0 if there
+      // .bwc. If returnDefault is false, this function will return 0 if there
       // is _no_ port specified in the Via (anywhere).
       static int getPortForReply(SipMessage& request,bool returnDefault=true);
 
