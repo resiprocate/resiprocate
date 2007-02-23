@@ -174,7 +174,7 @@ Via::parse(ParseBuffer& pb)
    }
    else
    {
-      // !bwc! If we hit whitespace, we have the host.
+      // .bwc. If we hit whitespace, we have the host.
       pb.skipToOneOf(";: \t\r\n");
       pb.data(mSentHost, startMark);
    }
