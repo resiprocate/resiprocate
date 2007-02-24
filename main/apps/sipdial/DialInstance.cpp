@@ -155,7 +155,7 @@ Data DialInstance::processNumber(const Data& verboseNumber)
          num.append(&c, 1);
          break;
       case '+':
-         assert(i != 0);   // FIXME - better error handling needed
+         assert(i == 0);   // FIXME - better error handling needed
          num.append(&c, 1);
          break;
       case '.':
