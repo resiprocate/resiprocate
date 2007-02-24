@@ -14,7 +14,7 @@ to handle sip: and tel: URIs
 
 for scheme in tel sip;
 do
-  gconftool-2 -t string -s /desktop/gnome/url-handlers/$scheme/command "/usr/local/bin/sipdial %s"
+  gconftool-2 -t string -s /desktop/gnome/url-handlers/$scheme/command "/usr/local/bin/sipdialer %s"
   gconftool-2 -s /desktop/gnome/url-handlers/$scheme/needs_terminal false -t bool
   gconftool-2 -t bool -s /desktop/gnome/url-handlers/$scheme/enabled true
 done
