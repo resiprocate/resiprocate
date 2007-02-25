@@ -63,12 +63,12 @@ Connection::performWrite()
    const Data& data = mOutstandingSends.front()->data;
    if (data.size())
    {
-      DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
+      StackLog (<< "Sending " << data.size() - mSendPos << " bytes");
       int nBytes = write(data.data() + mSendPos,data.size() - mSendPos);
       if (nBytes < 0)
       {
          //fail(data.transactionId);
-         InfoLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
+         ErrLog(<< "Write failed on socket: " << this->getSocket() << ", closing connection");
          delete this;
       }
       else

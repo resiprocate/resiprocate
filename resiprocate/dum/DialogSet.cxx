@@ -512,7 +512,7 @@ DialogSet::dispatch(const SipMessage& msg)
 
          default:
             // !jf! move this to DialogUsageManager
-            DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg: " << msg );
+            DebugLog ( << "In DialogSet::dispatch, default(ServerOutOfDialogRequest), msg:\n" << msg );
             // only can be one ServerOutOfDialogReq at a time
             assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
