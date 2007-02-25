@@ -158,25 +158,25 @@ TlsConnection::checkState()
          int err = SSL_get_error(mSsl,ok);
          char buf[256];
          ERR_error_string_n(err,buf,sizeof(buf));
-         DebugLog( << "TLS error in " 
-                   << (char*)( (mState == Accepting) ? (char*)"accept" : (char*)"connect" )
+         StackLog( << "TLS error in " 
+                   << ( (mState == Accepting) ? "accept" : "connect" )
                    << " ok=" << ok << " err=" << err << " " << buf );
           
          switch (err)
          {
-            case SSL_ERROR_WANT_READ:
-               DebugLog( << "TLS connection want read" );
-               return mState;
-            case SSL_ERROR_WANT_WRITE:
-               DebugLog( << "TLS connection want write" );
-               return mState;
-            case SSL_ERROR_WANT_CONNECT:
-               DebugLog( << "TLS connection want connect" );
-               return mState;
+         case SSL_ERROR_WANT_READ:
+            StackLog( << "TLS connection want read" );
+            return mState;
+         case SSL_ERROR_WANT_WRITE:
+            StackLog( << "TLS connection want write" );
+            return mState;
+         case SSL_ERROR_WANT_CONNECT:
+            StackLog( << "TLS connection want connect" );
+            return mState;
 #if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
-            case SSL_ERROR_WANT_ACCEPT:
-               DebugLog( << "TLS connection want accept" );
-               return mState;
+         case SSL_ERROR_WANT_ACCEPT:
+            StackLog( << "TLS connection want accept" );
+            return mState;
 #endif
          }
 	   
@@ -281,6 +281,8 @@ TlsConnection::checkState()
             ErrLog (<< "Certificate name mismatch ");
             return mState;
          }
+         X509_free(cert); 
+         cert=NULL;
       }
       else
       {
@@ -293,8 +295,6 @@ TlsConnection::checkState()
             return mState;
          }
       }
-      X509_free(cert); 
-      cert=NULL;
    }
 
    InfoLog( << "TLS handshake done" ); 
@@ -455,7 +455,7 @@ TlsConnection::hasDataToRead() // has data that can be read
    int p = SSL_pending(mSsl);
    //DebugLog(<<"hasDataToRead(): "<<p);
    return (p>0);
-#else // USE_SSL
+#else // not USE_SSL
    return false;
 #endif 
 }
