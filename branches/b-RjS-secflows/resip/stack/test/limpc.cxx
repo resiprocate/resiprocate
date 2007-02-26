@@ -771,11 +771,16 @@ myMain(int argc, char* argv[])
    try
    {
       char cert_dir[ 1024 ] ;
-      char *home_dir = getenv( "HOME" ) ;
-
       cert_dir[ 0 ] = '\0' ;
+
+/*
+      char *home_dir = getenv( "HOME" ) ;
       ::strcat( cert_dir, home_dir ) ;
       ::strcat( cert_dir, "/.sipCerts/" ) ;
+*/
+      char *home_dir = getenv( "PWD" ) ;
+      ::strcat( cert_dir, home_dir ) ;
+      ::strcat( cert_dir, "/sipCerts/" ) ;
 
       security = new Security( cert_dir ) ;
 
