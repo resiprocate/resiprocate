@@ -7,7 +7,7 @@ BUILD 	=	build
 
 stack: repro dum tests
 
-all: repro dum tests tfm
+all: repro dum tests tfm apps
 
 tfm: tfmcontrib
 	cd tfm; $(MAKE)
@@ -34,6 +34,10 @@ check: tests
 
 presSvr: resiprocate
 	cd presSvr; $(MAKE)
+
+apps: dum
+	cd apps; $(MAKE)
+	
 
 ifeq (${BUILD_SHARED_LIBS},no)
    NETXX_USE_SHARED_LIBS=--disable-shared
@@ -102,7 +106,7 @@ contrib: ares
 ###########################################################################
 # Various clean targets
 CLEANDIRS := resip/stack resip/dum resip/stack/test presSvr repro rutil \
-             rutil/test tfm
+             rutil/test tfm apps
 
 cleancontrib:
 	-$(MAKE) -C contrib/ares distclean
