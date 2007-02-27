@@ -617,8 +617,7 @@ main(int arc, char** argv)
       for (int i = 0; i < ParameterTypes::MAX_PARAMETER; i++)
       {
          if (i != ParameterTypes::qopOptions &&
-             i != ParameterTypes::qop &&
-             i != ParameterTypes::qopFactory)
+             i != ParameterTypes::qop )
          {
 	    
             TR _tr( Data("Checking hash of: ") +  Data(ParameterTypes::ParameterNames[i]));
@@ -629,7 +628,6 @@ main(int arc, char** argv)
 
       assert(ParameterTypes::ParameterNames[ParameterTypes::qop] == "qop");
       assert(ParameterTypes::ParameterNames[ParameterTypes::qopOptions] == "qop");
-      assert(ParameterTypes::getType("qop", 3) == ParameterTypes::qopFactory);
    }
    
    {
@@ -1244,6 +1242,126 @@ main(int arc, char** argv)
       cerr << s.str() << endl;
       
       assert(s.str() == "realm=\"66.100.107.120\",username=\"1234\",nonce=\"1011235448\",uri=\"sip:66.100.107.120\",algorithm=MD5,response=\"8a5165b024fda362ed9c1e29a7af0ef2\"");
+   }
+   
+   {
+      TR _tr("Testing qop stuff");
+      char* authenticationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, qop=\"auth,auth-int\"";
+      char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\", qop=auth";
+      HeaderFieldValue authenHfv(authenticationString, strlen(authenticationString));
+      HeaderFieldValue authorHfv(authorizationString, strlen(authorizationString));
+      
+      Auth wwwAuthen(&authenHfv, Headers::WWWAuthenticate);
+      Auth pAuthen(&authenHfv, Headers::ProxyAuthenticate);
+      Auth authInfo(&authorHfv, Headers::AuthenticationInfo);
+      Auth pAuthor(&authorHfv, Headers::ProxyAuthorization);
+      Auth author(&authorHfv, Headers::Authorization);
+
+      assert(wwwAuthen.exists(p_qopOptions));
+      assert(!wwwAuthen.exists(p_qop));
+      assert(wwwAuthen.param(p_qopOptions)=="auth,auth-int");
+      
+      assert(pAuthen.exists(p_qopOptions));
+      assert(!pAuthen.exists(p_qop));
+      assert(pAuthen.param(p_qopOptions)=="auth,auth-int");
+      
+      assert(!authInfo.exists(p_qopOptions));
+      assert(authInfo.exists(p_qop));
+      assert(authInfo.param(p_qop)=="auth");
+      
+      assert(!pAuthor.exists(p_qopOptions));
+      assert(pAuthor.exists(p_qop));
+      assert(pAuthor.param(p_qop)=="auth");
+      
+      assert(!author.exists(p_qopOptions));
+      assert(author.exists(p_qop));
+      assert(author.param(p_qop)=="auth");
+      
+      {
+         Data encoded;
+         {
+            oDataStream str(encoded);
+            wwwAuthen.encode(str);
+         }
+         assert(encoded.find("qop=auth")==Data::npos);
+         assert(encoded.find("qop=\"auth,auth-int\"")!=Data::npos);
+         assert(encoded.find("qop=\"auth\"")==Data::npos);
+         assert(encoded.find("qop=auth,auth-int")==Data::npos);
+      }
+      
+      {
+         Data encoded;
+         {
+            oDataStream str(encoded);
+            pAuthen.encode(str);
+         }
+         assert(encoded.find("qop=auth")==Data::npos);
+         assert(encoded.find("qop=\"auth,auth-int\"")!=Data::npos);
+         assert(encoded.find("qop=\"auth\"")==Data::npos);
+         assert(encoded.find("qop=auth,auth-int")==Data::npos);
+      }
+      
+      {
+         Data encoded;
+         {
+            oDataStream str(encoded);
+            authInfo.encode(str);
+         }
+         assert(encoded.find("qop=auth")!=Data::npos);
+         assert(encoded.find("qop=\"auth,auth-int\"")==Data::npos);
+         assert(encoded.find("qop=\"auth\"")==Data::npos);
+         assert(encoded.find("qop=auth,auth-int")==Data::npos);
+      }
+      
+      {
+         Data encoded;
+         {
+            oDataStream str(encoded);
+            pAuthor.encode(str);
+         }
+         assert(encoded.find("qop=auth")!=Data::npos);
+         assert(encoded.find("qop=\"auth,auth-int\"")==Data::npos);
+         assert(encoded.find("qop=\"auth\"")==Data::npos);
+         assert(encoded.find("qop=auth,auth-int")==Data::npos);
+      }
+      
+      {
+         Data encoded;
+         {
+            oDataStream str(encoded);
+            author.encode(str);
+         }
+         assert(encoded.find("qop=auth")!=Data::npos);
+         assert(encoded.find("qop=\"auth,auth-int\"")==Data::npos);
+         assert(encoded.find("qop=\"auth\"")==Data::npos);
+         assert(encoded.find("qop=auth,auth-int")==Data::npos);
+      }
+      
+      Auth emptyAuthor;
+      Auth emptyAuthen;
+      
+      emptyAuthor.param(p_qop)="auth";
+      emptyAuthen.param(p_qopOptions)="auth";
+      
+      {
+         Data encoded;
+         {
+            oDataStream str(encoded);
+            emptyAuthor.encode(str);
+         }
+         assert(encoded.find("qop=auth")!=Data::npos);
+         assert(encoded.find("qop=\"auth\"")==Data::npos);
+      }
+      
+      {
+         Data encoded;
+         {
+            oDataStream str(encoded);
+            emptyAuthen.encode(str);
+         }
+         assert(encoded.find("qop=auth")==Data::npos);
+         assert(encoded.find("qop=\"auth\"")!=Data::npos);
+      }
    }
 
    {
