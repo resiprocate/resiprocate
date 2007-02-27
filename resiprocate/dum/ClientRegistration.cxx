@@ -231,7 +231,8 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    if (mState == Removing)
    {
       WarningLog (<< "Already removing a binding");
-      throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
+      //throw UsageUseException("Can't remove binding when already removing registration bindings", __FILE__,__LINE__);
+      return;
    }
    SipMessage& next = tryModification(Removing);
 
