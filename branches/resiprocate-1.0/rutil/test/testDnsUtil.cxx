@@ -92,6 +92,14 @@ main(int argc, char* argv[])
       cerr << "!! " << addr << endl;
       assert(!DnsUtil::isIpV6Address(addr));
    }
+   
+   {
+      Data addr(":zzz");
+      if(DnsUtil::isIpV6Address(addr))
+      {
+         DnsUtil::canonicalizeIpV6Address(addr);
+      }
+   }
 
    cerr << "All OK" << endl;
 }
