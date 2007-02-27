@@ -273,6 +273,16 @@ main(int arc, char** argv)
       cerr << n1.uri().user() << endl;
    }
 
+#ifdef USE_IPV6
+   {
+      TR _tr("Test cleverly malformed V6 addr in Uri");
+      char* buf="sip:foo@[:x]";
+      HeaderFieldValue hfv(buf, strlen(buf));
+      NameAddr nameaddr(&hfv, Headers::UNKNOWN);
+      assert(!nameaddr.isWellFormed());
+   }
+#endif
+   
    {
       TR _tr("Test empty NameAddr");
       NameAddr n1;
@@ -658,6 +668,24 @@ main(int arc, char** argv)
       assert(via.sentHost() == "a.b.c.com");
       assert(via.param(p_maddr) == "1.2.3.4");
    }
+
+#ifdef USE_IPV6
+   {
+      TR _tr( "Via assert bug with malformed IPV6 addr [boom]" );
+      char* viaString = "SIP/2.0/UDP [boom]:5060;branch=z9hG4bKblah";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv, Headers::UNKNOWN);
+      assert(!via.isWellFormed());
+   }
+
+   {
+      TR _tr( "Via assert bug with malformed IPV6 addr [:z]" );
+      char* viaString = "SIP/2.0/UDP [:z]:5060;branch=z9hG4bKblah";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv, Headers::UNKNOWN);
+      assert(!via.isWellFormed());
+   }
+#endif
 
    {
       TR _tr("Test poorly formed DataParameter by construction");
