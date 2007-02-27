@@ -274,6 +274,16 @@ main(int arc, char** argv)
       cerr << n1.uri().user() << endl;
    }
 
+#ifdef USE_IPV6
+   {
+      TR _tr("Test cleverly malformed V6 addr in Uri");
+      char* buf="sip:foo@[:x]";
+      HeaderFieldValue hfv(buf, strlen(buf));
+      NameAddr nameaddr(&hfv, Headers::UNKNOWN);
+      assert(!nameaddr.isWellFormed());
+   }
+#endif
+   
    {
       TR _tr("Test empty NameAddr");
       NameAddr n1;
