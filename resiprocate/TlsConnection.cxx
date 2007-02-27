@@ -24,7 +24,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security, 
-                              bool server, Data domain,  SecurityTypes::SSLType sslType ) :
+                              bool server, Data domain,  SecurityTypes::SSLType sslType) :
    Connection(tuple, fd),
    mServer(server),
    mSecurity(security),
@@ -32,10 +32,12 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    mDomain(domain)
 {
 #if defined(USE_SSL)
-   DebugLog (<< "Creating TLS connection " << tuple << " on " << fd);
+   InfoLog (<< "Creating TLS connection for domain " 
+            << mDomain 
+            << " " << tuple 
+            << " on " << fd);
 
    mSsl = NULL;
-   mPeerName = Data::Empty;
    mBio= NULL;
   
    if (mServer)
@@ -64,7 +66,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
       ctx = mSecurity->getTlsCtx();
    }   
    assert(ctx);
-
+   
    mSsl = SSL_new(ctx);
    assert(mSsl);
 
@@ -96,25 +98,27 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
       }
    }
    
-   mBio = BIO_new_socket(fd, 0/*close flag*/);
+   mBio = BIO_new_socket(fd,0/*close flag*/);
    assert( mBio );
    
    SSL_set_bio( mSsl, mBio, mBio );
 
-   mState = mServer ? Accepting : Connecting;
+   mTlsState = mServer ? Accepting : Connecting;
 
 #endif // USE_SSL   
 }
 
 TlsConnection::~TlsConnection()
 {
+#if defined(USE_SSL)
    SSL_shutdown(mSsl);
    SSL_free(mSsl);
+#endif // USE_SSL   
 }
 
 
 const char*
-TlsConnection::fromState(TlsConnection::State s)
+TlsConnection::fromState(TlsConnection::TlsState s)
 {
    switch(s)
    {
@@ -127,30 +131,31 @@ TlsConnection::fromState(TlsConnection::State s)
    return "????";
 }
 
-TlsConnection::State
+TlsConnection::TlsState
 TlsConnection::checkState()
 {
 #if defined(USE_SSL)
-   //DebugLog(<<"state is " << fromState(mState));
+   //DebugLog(<<"state is " << fromTlsState(mTlsState));
 
-   if (mState == Up || mState == Broken)
+   if (mTlsState == Up || mTlsState == Broken)
    {
-      return mState;
+      return mTlsState;
    }
    
    int ok=0;
    
    ERR_clear_error();
    
-   if (mState != Handshaking)
+   if (mTlsState != Handshaking)
    {
-      if (mState == Accepting)
+      if (mTlsState == Accepting)
       {
          ok = SSL_accept(mSsl);
       }
       else
       {
          ok = SSL_connect(mSsl);
+         //StackLog( << "TLS SSL_connect - state = " << fromTlsState(mTlsState) );
       }
 
       if ( ok <= 0 )
@@ -159,24 +164,24 @@ TlsConnection::checkState()
          char buf[256];
          ERR_error_string_n(err,buf,sizeof(buf));
          StackLog( << "TLS error in " 
-                   << ( (mState == Accepting) ? "accept" : "connect" )
+                   << ( (mTlsState == Accepting) ? "accept" : "connect" )
                    << " ok=" << ok << " err=" << err << " " << buf );
           
          switch (err)
          {
-         case SSL_ERROR_WANT_READ:
-            StackLog( << "TLS connection want read" );
-            return mState;
-         case SSL_ERROR_WANT_WRITE:
-            StackLog( << "TLS connection want write" );
-            return mState;
-         case SSL_ERROR_WANT_CONNECT:
-            StackLog( << "TLS connection want connect" );
-            return mState;
+            case SSL_ERROR_WANT_READ:
+               StackLog( << "TLS connection want read" );
+               return mTlsState;
+            case SSL_ERROR_WANT_WRITE:
+               StackLog( << "TLS connection want write" );
+               return mTlsState;
+            case SSL_ERROR_WANT_CONNECT:
+               StackLog( << "TLS connection want connect" );
+               return mTlsState;
 #if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
-         case SSL_ERROR_WANT_ACCEPT:
-            StackLog( << "TLS connection want accept" );
-            return mState;
+            case SSL_ERROR_WANT_ACCEPT:
+               StackLog( << "TLS connection want accept" );
+               return mTlsState;
 #endif
          }
 	   
@@ -227,18 +232,20 @@ TlsConnection::checkState()
             char buf[256];
             ERR_error_string_n(code,buf,sizeof(buf));
             ErrLog( << buf  );
-            InfoLog( << "Error code = " 
+            ErrLog( << "Error code = " 
                      << code << " file=" << file << " line=" << line );
          }
          
-         mState = Broken;
+         mTlsState = Broken;
          mBio = 0;
+         //.dcm. -- may not be correct
+         //mFailureReason = TransportFailure::CertValidationFailure;
          ErrLog (<< "Couldn't TLS connect");
-         return mState;
+         return mTlsState;
       }
       
       InfoLog( << "TLS connected" ); 
-      mState = Handshaking;
+      mTlsState = Handshaking;
    }
 
    InfoLog( << "TLS handshake starting" ); 
@@ -254,20 +261,21 @@ TlsConnection::checkState()
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
-            DebugLog( << "TLS handshake want read" );
-            return mState;
+            StackLog( << "TLS handshake want read" );
+            return mTlsState;
          case SSL_ERROR_WANT_WRITE:
-            DebugLog( << "TLS handshake want write" );
-            return mState;
+            StackLog( << "TLS handshake want write" );
+            return mTlsState;
          default:
             ErrLog( << "TLS handshake failed "
                     << "ok=" << ok << " err=" << err << " " << buf );
             mBio = NULL;
-            mState = Broken;
-            return mState;
+            mTlsState = Broken;
+            //mFailureReason = TransportFailure::CertValidationFailure;         
+            return mTlsState;
       }
    }
-
+#if 1
    //post-connection verification: check that certificate name matches domain name
    if (mSecurity->requireServerAuthentication())
    {
@@ -276,10 +284,11 @@ TlsConnection::checkState()
       {
          if (!mSecurity->compareCertName(cert, who().getTargetDomain()))
          {
-            mState = Broken;
+            mTlsState = Broken;
             mBio = 0;
             ErrLog (<< "Certificate name mismatch ");
-            return mState;
+            X509_free(cert); 
+            return mTlsState;
          }
          X509_free(cert); 
          cert=NULL;
@@ -290,21 +299,47 @@ TlsConnection::checkState()
          if (!mServer)
          {
             ErrLog(<< "No server certificate in TLS connection" );
-            mState = Broken;
+            mTlsState = Broken;
             mBio = 0;
-            return mState;
+            return mTlsState;
          }
       }
    }
-
-   InfoLog( << "TLS handshake done" ); 
-   mState = Up;
-
+#endif
    // force peer name to get checked and perhaps cert loaded
    computePeerName();
-
+#if 0
+   //post-connection verification: check that certificate name matches domain name
+   if (!mServer)
+   {
+      bool matches = false;
+      for(std::list<Data>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+      {
+         if(isEqualNoCase(*it, who().getTargetDomain()))
+         {
+             matches=true;
+             break;
+         }
+      }
+      if(!matches)
+      {
+         mTlsState = Broken;
+         mBio = 0;
+         ErrLog (<< "Certificate name mismatch: trying to connect to <" 
+                 << who().getTargetDomain()
+                 << "> remote cert domain(s) are <" 
+                 << getPeerNamesData() << ">" );
+         //mFailureReason = TransportFailure::CertNameMismatch;         
+         return mTlsState;
+      }
+   }
+#endif
+   InfoLog( << "TLS handshake done for peer " << getPeerNamesData()); 
+   mTlsState = Up;
+   //ensureWritable();
+   
 #endif // USE_SSL   
-   return mState;
+   return mTlsState;
 }
 
       
@@ -337,9 +372,29 @@ TlsConnection::read(char* buf, int count )
    {
       return -1;
    }
-   
+
    int bytesRead = SSL_read(mSsl,buf,count);
-   if (bytesRead <= 0 )
+   StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, bytesRead) << "]");
+
+   if (bytesRead > 0 && SSL_pending(mSsl))
+   {
+      int restBytes = SSL_pending(mSsl);
+      char* buffer = getWriteBufferForExtraBytes(restBytes);
+      StackLog(<< "reading remaining buffered bytes");
+      restBytes = SSL_read(mSsl, buffer, SSL_pending(mSsl));
+      StackLog(<< "SSL_read returned  " << restBytes << " bytes [" << Data(Data::Borrow, buffer, restBytes) << "]");
+
+      if (restBytes>0)
+      {
+         bytesRead += restBytes;
+      }
+      else
+      {
+         bytesRead = restBytes;
+      }
+   }
+
+   if (bytesRead <= 0)
    {
       int err = SSL_get_error(mSsl,bytesRead);
       switch (err)
@@ -386,6 +441,7 @@ TlsConnection::write( const char* buf, int count )
       case Up:
          break;
       default:
+         DebugLog( << "Tried to Tls write - but connection is not Up"  );
          return 0;
          break;
    }
@@ -435,7 +491,9 @@ TlsConnection::write( const char* buf, int count )
       }
    }
 
-   StackLog( << "Did TLS write"  );
+   Data monkey(Data::Borrow, buf, count);
+
+   StackLog( << "Did TLS write " << ret << " " << count << " " << "[[" << monkey << "]]" );
 
    return ret;
 #endif // USE_SSL
@@ -453,9 +511,9 @@ TlsConnection::hasDataToRead() // has data that can be read
    }
 
    int p = SSL_pending(mSsl);
-   //DebugLog(<<"hasDataToRead(): "<<p);
+   //DebugLog(<<"hasDataToRead(): " <<p);
    return (p>0);
-#else // not USE_SSL
+#else // USE_SSL
    return false;
 #endif 
 }
@@ -480,16 +538,50 @@ TlsConnection::isGood() // has data that can be read
    return true;
 }
 
+bool 
+TlsConnection::isWritable() 
+{
+#if defined(USE_SSL)
+   if (checkState() == Up && isGood())
+   {
+      return true;
+   }
+#endif 
+   return false;
+}
+
+const std::list<Data>&
+TlsConnection::getPeerNames() const
+{
+   return mPeerNames;
+}
+
+Data
+TlsConnection::getPeerNamesData() const
+{
+   Data peerNamesString;
+   for(std::list<Data>::const_iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+   {
+      if(it == mPeerNames.begin())
+      {
+         peerNamesString += *it;
+      }
+      else
+      {
+         peerNamesString += ", " + *it;
+      }
+   }
+   return peerNamesString;
+}
+
+
 void
 TlsConnection::computePeerName()
 {
 #if defined(USE_SSL)
+   Data commonName;
+
    assert(mSsl);
-   
-   if (checkState() != Up)
-   {
-      return;
-   }
 
    if (!mBio)
    {
@@ -513,9 +605,15 @@ TlsConnection::computePeerName()
       return;
    }
 
-   // TODO - check that this certificate is valid 
+   // check that this certificate is valid 
+   if (X509_V_OK != SSL_get_verify_result(mSsl))
+   {
+      DebugLog(<< "Peer certificate in TLS connection is not valid" );
+      X509_free(cert); cert=NULL;
+      return;
+   }
 
-   // look at the Common Name to fine the peerName of the cert 
+   // look at the Common Name to find the peerName of the cert 
    X509_NAME* subject = X509_get_subject_name(cert);
    assert(subject);
    int i =-1;
@@ -542,7 +640,7 @@ TlsConnection::computePeerName()
       
       DebugLog( << "Found common name in cert of " << name );
       
-      mPeerName = name;
+      commonName = name;
    }
 
 #if 0  // junk code to print certificates extentions for debugging 
@@ -580,9 +678,9 @@ TlsConnection::computePeerName()
          int l = uri->length;
          unsigned char* dat = uri->data;
          Data name(dat,l);
-         InfoLog(<< "subjectAltName of TLS seesion cert contains <" << name << ">" );
+         InfoLog(<< "subjectAltName of TLS session cert contains <" << name << ">" );
          
-         mPeerName = name;
+         mPeerNames.push_back(name);
       }
           
       if (gen->type == GEN_EMAIL)
@@ -597,18 +695,26 @@ TlsConnection::computePeerName()
    }
    sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
 
-   // add the certificate to the Security store
-   assert( mPeerName != Data::Empty );
-   if ( !mSecurity->hasDomainCert( mPeerName ) )
+   // If there are no peer names from the subjectAltName, then use the commonName
+   if(mPeerNames.empty())
    {
-      unsigned char* buf = NULL;
-      int len = i2d_X509( cert, &buf );
-      Data derCert( buf, len );
-      mSecurity->addDomainCertDER(mPeerName,derCert);
-      OPENSSL_free(buf); buf=NULL;
+       mPeerNames.push_back(commonName);
    }
 
-   X509_free(cert); cert=NULL;
+   // add the certificate to the Security store
+   unsigned char* buf = NULL;
+   int len = i2d_X509( cert, &buf );
+   Data derCert( buf, len );
+   for(std::list<Data>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+   {
+      if ( !mSecurity->hasDomainCert( *it ) )
+      {
+         mSecurity->addDomainCertDER(*it,derCert);
+      }
+   }
+   OPENSSL_free(buf);// buf=NULL;
+
+   X509_free(cert); //cert=NULL;
 #endif // USE_SSL
 }
 

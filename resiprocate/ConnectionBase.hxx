@@ -57,7 +57,8 @@ class RESIP_API ConnectionBase
       State getCurrentState() const { return mState; }
       void preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo);
       std::pair<char*, size_t> getWriteBuffer();
-	 
+      char* getWriteBufferForExtraBytes(int extraBytes);
+
       // for avoiding copies in external transports--not used in core resip
       void setBuffer(char* bytes, int count);
 

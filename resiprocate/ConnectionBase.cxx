@@ -261,8 +261,20 @@ ConnectionBase::getWriteBuffer()
    }
    return std::make_pair(mBuffer + mBufferPos, mBufferSize - mBufferPos);
 }
-            
-void 
+
+char*
+ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
+{
+   char* buffer = new char[mBufferSize + extraBytes + 5];
+   memcpy(buffer, mBuffer, mBufferSize);
+   delete [] mBuffer;
+   mBuffer = buffer;
+   buffer += mBufferSize;
+   mBufferSize += extraBytes;
+   return buffer;
+}
+
+            void 
 ConnectionBase::setBuffer(char* bytes, int count)
 {
    mBuffer = bytes;
