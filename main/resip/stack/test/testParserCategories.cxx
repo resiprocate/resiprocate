@@ -660,6 +660,24 @@ main(int arc, char** argv)
       assert(via.param(p_maddr) == "1.2.3.4");
    }
 
+#ifdef USE_IPV6
+   {
+      TR _tr( "Via assert bug with malformed IPV6 addr [boom]" );
+      char* viaString = "SIP/2.0/UDP [boom]:5060;branch=z9hG4bKblah";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv, Headers::UNKNOWN);
+      assert(!via.isWellFormed());
+   }
+
+   {
+      TR _tr( "Via assert bug with malformed IPV6 addr [:z]" );
+      char* viaString = "SIP/2.0/UDP [:z]:5060;branch=z9hG4bKblah";
+      HeaderFieldValue hfv(viaString, strlen(viaString));
+      Via via(&hfv, Headers::UNKNOWN);
+      assert(!via.isWellFormed());
+   }
+#endif
+
    {
       TR _tr("Test poorly formed DataParameter by construction");
 
