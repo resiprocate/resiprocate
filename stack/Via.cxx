@@ -169,7 +169,20 @@ Via::parse(ParseBuffer& pb)
       startMark = pb.skipChar();
       pb.skipToChar(']');
       pb.data(mSentHost, startMark);
-      DnsUtil::canonicalizeIpV6Address(mSentHost);
+      // .bwc. We do not save this canonicalization, since we weren't doing so
+      // before. This may change soon.
+      Data canonicalizedHost=DnsUtil::canonicalizeIpV6Address(mSentHost);
+      if(canonicalizedHost.empty())
+      {
+         // ?bwc? So the V6 addy is garbage. I think the parse should fail at 
+         // this point, but most of the code assumes that it will fail by 
+         // throwing a ParseBuffer::Exception. We are not a ParseBuffer, so this
+         // is a little ugly. Oh well.
+         throw ParseBuffer::Exception("Unparsable V6 address (note, this might"
+                                    " be unparsable because IPV6 support is not"
+                                    " enabled)","Via",__FILE__,
+                                       __LINE__);
+      }
       pb.skipChar();
    }
    else
