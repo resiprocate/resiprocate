@@ -111,32 +111,10 @@ defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-conf
 defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
 
 defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
+defineParam(qop,"qop",DataParameter,"RFC3261");
+defineParam(qopOptions,"qop",DataParameter,"RFC3261");
 
 defineParam(addTransport, "addTransport", ExistsParameter, "");
-
-// SPECIAL-CASE
-ParameterTypes::Type
-Qop_Options_Param::getTypeNum() const {return ParameterTypes::qopOptions;}
-Qop_Options_Param::Qop_Options_Param()
-{
-   ParameterTypes::ParameterNames[ParameterTypes::qopOptions] = "qop";
-}
-Qop_Options_Param resip::p_qopOptions;
-
-ParameterTypes::Type
-qop_Param::getTypeNum() const {return ParameterTypes::qop;}
-qop_Param:: qop_Param()
-{
-   ParameterTypes::ParameterNames[ParameterTypes::qop] = "qop";
-}
-qop_Param resip::p_qop;
-
-Qop_Factory_Param::Qop_Factory_Param()
-{
-   ParameterTypes::ParameterFactories[ParameterTypes::qopFactory] = Type::decode;
-   ParameterTypes::ParameterNames[ParameterTypes::qopFactory] = "qop";
-}
-Qop_Factory_Param resip::p_qopFactory;
 
 #include "resip/stack/ParameterHash.hxx"
 

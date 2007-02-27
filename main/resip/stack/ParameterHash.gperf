@@ -59,7 +59,7 @@ stale, ParameterTypes::stale
 username, ParameterTypes::username
 early-only, ParameterTypes::earlyOnly
 refresher, ParameterTypes::refresher
-qop, ParameterTypes::qopFactory
+qop, ParameterTypes::qop
 uri, ParameterTypes::uri
 retry-after, ParameterTypes::retryAfter
 reason, ParameterTypes::reason
