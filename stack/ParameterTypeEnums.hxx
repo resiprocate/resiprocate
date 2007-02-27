@@ -111,11 +111,8 @@ class ParameterTypes
 
          defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05"),
 
-         // NOTE: Do not copy these elsewhere, they are special case
-         // !dlb! please insert an explanation of why (above)
-         defineParam(qop, "qopFactory", SPECIAL, "RFC 3261"),
-         defineParam(qopOptions, "", IGNORE, "RFC 3261"),
-         defineParam(qopFactory, "", IGNORE, "RFC 3261"),
+         defineParam(qop, "qop", DataParameter, "RFC 3261"),
+         defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
 
          defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip"),
 

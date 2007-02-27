@@ -41,14 +41,14 @@ class Auth : public ParserCategory
       defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
       defineParam(nc, "nc", DataParameter, "RFC ????");
       defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
-      defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
+      defineParam(qop, "qop", DataParameter, "RFC ????");
+      defineParam(qopOptions, "qop-options", DataParameter, "RFC ????");
       defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
       defineParam(response, "response", QuotedDataParameter, "RFC ????");
       defineParam(stale, "stale", DataParameter, "RFC ????");
       defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
       defineParam(username, "username", QuotedDataParameter, "RFC ????");
 
-      Qop_Options_Param::DType& param(const Qop_Options_Param& paramType) const;
    private:
       mutable Data mScheme;
 };
