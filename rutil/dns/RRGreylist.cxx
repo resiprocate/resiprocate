@@ -147,7 +147,7 @@ void RRGreylist::Transform::add(const Data& result)
 {
    if(!mGreylist.empty())
    {
-      for(std::vector<ResultWithExpiry>::iterator i=mGreylist.begin();
+      for(Greylist::iterator i=mGreylist.begin();
             i!=mGreylist.end();++i)
       {
          if(isEqualNoCase(i->result,result))
@@ -168,13 +168,13 @@ void RRGreylist::Transform::add(const Data& result)
 bool
 RRGreylist::Transform::transform(RRVector& src)
 {
-   time_t now=Timer::getTimeMs();
+   refresh();
    RRVector::iterator i;
    RRVector greylisted;
    RRVector notGreylisted;
    for(i=src.begin();i!=src.end();++i)
    {
-      if(isGreylisted(*i,now))
+      if(isGreylisted(*i))
       {
          greylisted.push_back(*i);
       }
@@ -198,22 +198,33 @@ RRGreylist::Transform::transform(RRVector& src)
    return mGreylist.empty();
 }
 
+void 
+RRGreylist::Transform::refresh()
+{
+   time_t now = Timer::getTimeMs();
+   for(Greylist::iterator j=mGreylist.begin();j!=mGreylist.end();)
+   {
+      if(j->expiry <= now)
+      {
+         Greylist::iterator temp=j;
+         ++j;
+         mGreylist.erase(temp);
+      }
+      else
+      {
+         ++j;
+      }
+   }
+}
+
 bool
-RRGreylist::Transform::isGreylisted(DnsResourceRecord* rr, time_t now)
+RRGreylist::Transform::isGreylisted(DnsResourceRecord* rr)
 {
    for(Greylist::iterator j=mGreylist.begin();j!=mGreylist.end();++j)
    {
       if(rr->isSameValue(j->result))
       {
-         if(j->expiry > now)
-         {
-            return true;
-         }
-         else
-         {
-            mGreylist.erase(j);
-            break;
-         }
+         return true;
       }
    }
    
