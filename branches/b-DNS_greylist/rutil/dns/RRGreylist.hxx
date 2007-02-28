@@ -45,10 +45,9 @@ class RRGreylist : public DnsStub::ResultTransform
             void refresh();
 
          protected:
-            typedef std::vector<ResultWithExpiry> Greylist;
+            typedef std::list<ResultWithExpiry> Greylist;
             Greylist mGreylist; // ip for a/aaaa, target host for srv, and replacement for naptr.
-            // .bwc. Has side-effect of removing expired greylist entries.
-            bool isGreylisted(DnsResourceRecord* rr,time_t now);
+            bool isGreylisted(DnsResourceRecord* rr);
       };
 
       class MapKey
