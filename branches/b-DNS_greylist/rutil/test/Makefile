@@ -22,6 +22,7 @@ TESTPROGRAMS += \
 	testMD5Stream.cxx \
 	testParseBuffer.cxx \
 	testRandomHex.cxx \
+	testRRGreylist.cxx \
 	testSHA1Stream.cxx \
 	testThreadIf.cxx \
 
