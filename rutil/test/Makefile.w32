@@ -18,6 +18,7 @@ all: \
 	testLogger.obj testLogger.exe \
 	testMD5Stream.obj testMD5Stream.exe \
 	testRandomHex.obj testRandomHex.exe \
+	testRRGreylist.obj testRRGreylist.exe \
 	testSHA1Stream.obj testSHA1Stream.exe \
 	testSharedPtr.obj testSharedPtr.exe \
 	testThreadIf.obj testThreadIf.exe \
