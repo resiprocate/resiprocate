@@ -2512,9 +2512,11 @@ hÎÿ®<½+ÿuİÕdY=ÖG(òb ÷éAt3
    
    tassert(v->exists(resip::p_branch));
    tassert(v->param(resip::p_branch).hasMagicCookie());
-   // !bwc! This branch parameter has resip-specific tokens in it. The "d87543"
-   // is a resip cookie, and the "1" is a transport sequence.
-   tassert(v->param(resip::p_branch).getTransactionId()=="4dade06d0bdb11ee");
+   // !bwc! This branch parameter has old resip-specific tokens in it. The 
+   // "d87543" used to be the resip cookie, but the resip cookie has since 
+   // changed. So, the whole branch param is taken as the transaction id.
+   tassert(v->param(resip::p_branch).getTransactionId()==
+                                 "-d87543-4dade06d0bdb11ee-1--d87543-");
    tassert(v->param(resip::p_branch).clientData().empty());
    
    tassert(v->exists(resip::p_rport));
