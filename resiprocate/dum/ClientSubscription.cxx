@@ -244,7 +244,20 @@ ClientSubscription::processResponse(const SipMessage& msg)
          << mDialog.mRemoteTarget);
       if ( !(msg.exists(h_Expires) && msg.header(h_Expires).value() == 0))
       {
-         sendNewSubscription();
+         try
+         {
+            sendNewSubscription();
+         }
+         catch (...)
+         {
+            if (msg.header(h_Contacts).size())
+               ErrLog(<< "Failed to create new subscription for: " << msg.header(h_Contacts).front().uri());
+            else
+               ErrLog(<< "Failed to create new subscription for: [unknown]");
+            handler->onTerminated(getHandle(), msg);
+            delete this;
+            throw;
+         }
       }
       handler->onTerminated(getHandle(), msg);
       delete this;

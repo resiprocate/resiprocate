@@ -441,7 +441,7 @@ TlsConnection::write( const char* buf, int count )
       case Up:
          break;
       default:
-         DebugLog( << "Tried to Tls write - but connection is not Up"  );
+         StackLog( << "Tried to Tls write - but connection is not Up"  );
          return 0;
          break;
    }
