@@ -159,6 +159,13 @@ $uname = `uname`;
     flag        => 'ssl',
   },
   {
+    name        => "SSL_LOCATION",
+    description => "Where is OpenSSL? (leave blank to use installed copy)",
+    default     => "",
+    predicate   => "\$config{USE_SSL} eq 'yes'",
+    option      => 'with-ssl-location',
+  },
+  {
     name        => "USE_SIGCOMP",
     description => "Do you want to include SigComp support?",
     default     => &sigcompInstalled,

@@ -34,19 +34,26 @@ PTHREAD_LDFLAGS :=
 endif
 
 ifeq ($(USE_SSL),yes)
-OPENSSL_LIBNAME := ssl crypto
-OPENSSL_LDFLAGS :=
-OPENSSL_INCLUDEDIRS := 
-OPENSSL_LIBDIRS :=
-OPENSSL_DEFINES += USE_SSL
+  OPENSSL_LIBNAME := ssl crypto
+  OPENSSL_LDFLAGS :=
+  OPENSSL_INCLUDEDIRS := 
+  OPENSSL_LIBDIRS :=
+  OPENSSL_DEFINES += USE_SSL
 
-ifeq ($(OSTYPE),MinGW)
-    MINGW_OPENSSL_DIR    := /c/openssl
-    OPENSSL_LIBNAME      := eay32
-    OPENSSL_INCLUDEDIRS  := $(MINGW_OPENSSL_DIR)/include
-    OPENSSL_LIBDIRS      := $(MINGW_OPENSSL_DIR)/lib/MinGW
-    OPENSSL_LDLIBS_LAST  := $(MINGW_OPENSSL_DIR)/lib/MinGW/ssleay32.a
-endif
+  ifeq ($(OSTYPE),MinGW)
+      MINGW_OPENSSL_DIR    := /c/openssl
+      OPENSSL_LIBNAME      := eay32
+      OPENSSL_INCLUDEDIRS  := $(MINGW_OPENSSL_DIR)/include
+      OPENSSL_LIBDIRS      := $(MINGW_OPENSSL_DIR)/lib/MinGW
+      OPENSSL_LDLIBS_LAST  := $(MINGW_OPENSSL_DIR)/lib/MinGW/ssleay32.a
+  endif
+
+  ifneq ($(SSL_LOCATION),)
+    OPENSSL_LIBNAME :=
+    OPENSSL_INCLUDEDIRS := $(SSL_LOCATION)/include
+    OPENSSL_LDLIBS_LAST := $(SSL_LOCATION)/libssl.a
+    OPENSSL_LDLIBS_LAST += $(SSL_LOCATION)/libcrypto.a
+  endif
 
 endif
 
