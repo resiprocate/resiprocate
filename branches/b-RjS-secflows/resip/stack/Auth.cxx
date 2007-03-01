@@ -117,6 +117,25 @@ Auth::parseAuthParameters(ParseBuffer& pb)
                                                            int((keyEnd - keyStart)), pb, 
                                                            " \t\r\n,"));
       }
+      else if(type==ParameterTypes::qop)
+      {
+         DataParameter* qop = 0;
+         switch(mHeaderType)
+         {
+            case Headers::ProxyAuthenticate:
+            case Headers::WWWAuthenticate:
+               qop = new DataParameter(ParameterTypes::qopOptions,pb," \t\r\n,");
+               qop->setQuoted(true);
+               break;
+            case Headers::ProxyAuthorization:
+            case Headers::Authorization:
+            case Headers::AuthenticationInfo:
+            default:
+               qop = new DataParameter(ParameterTypes::qop,pb," \t\r\n,");
+               qop->setQuoted(false);
+         }
+         mParameters.push_back(qop);
+      }
       else
       {
          // invoke the particular factory
@@ -193,26 +212,67 @@ defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
 defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
 defineParam(nc, "nc", DataParameter, "RFC ????");
 defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
-defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
+
+DataParameter::Type&
+Auth::param(const qop_Param& paramType)
+{
+   checkParsed();
+   DataParameter* p = static_cast<DataParameter*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new DataParameter(ParameterTypes::qop);
+      p->setQuoted(false);
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+const DataParameter::Type&
+Auth::param(const qop_Param& paramType) const
+{
+   checkParsed();
+   DataParameter* p = static_cast<DataParameter*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      InfoLog(<< "Missing parameter " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);
+      DebugLog(<< *this);
+      throw Exception("Missing parameter", __FILE__, __LINE__);
+   }
+   return p->value();
+}
+
+DataParameter::Type&
+Auth::param(const qopOptions_Param& paramType)
+{
+   checkParsed();
+   DataParameter* p = static_cast<DataParameter*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      p = new DataParameter(ParameterTypes::qopOptions);
+      p->setQuoted(true);
+      mParameters.push_back(p);
+   }
+   return p->value();
+}
+const DataParameter::Type&
+Auth::param(const qopOptions_Param& paramType) const
+{
+   checkParsed();
+   DataParameter* p = static_cast<DataParameter*>(getParameterByEnum(paramType.getTypeNum()));
+   if (!p)
+   {
+      InfoLog(<< "Missing parameter " << ParameterTypes::ParameterNames[paramType.getTypeNum()]);
+      DebugLog(<< *this);
+      throw Exception("Missing parameter", __FILE__, __LINE__);
+   }
+   return p->value();
+}
+
 defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
 defineParam(response, "response", QuotedDataParameter, "RFC ????");
 defineParam(stale, "stale", DataParameter, "RFC ????");
 defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(username, "username", DataParameter, "RFC ????");
 
-
-Qop_Options_Param::DType&
-Auth::param(const Qop_Options_Param& paramType) const
-{
-   checkParsed();
-   Qop_Options_Param::Type* p = static_cast<Qop_Options_Param::Type*>(getParameterByEnum(paramType.getTypeNum()));
-   if (!p)
-   {
-      p = new Qop_Options_Param::Type(paramType.getTypeNum());
-      mParameters.push_back(p);
-   }
-   return p->value();
-}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

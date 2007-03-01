@@ -192,14 +192,7 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
    {
       InfoLog (<< "Nonce expired for " << userAuth->getUser());
 
-      SharedPtr<SipMessage> challenge(Helper::makeChallenge(*requestWithAuth,
-                                                            requestWithAuth->header(h_RequestLine).uri().host(),
-                                                            useAuthInt(),
-                                                            true,
-                                                            proxyAuthenticationMode()));
-
-      InfoLog (<< "Sending challenge to " << requestWithAuth->brief());
-      mDum.send(challenge);
+      issueChallenge(requestWithAuth);
       delete requestWithAuth;
       return 0;
    }
