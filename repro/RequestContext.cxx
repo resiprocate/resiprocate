@@ -131,11 +131,11 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
    if (sip->isRequest())
    {
       DebugLog(<<"Got a request.");
-      // !bwc! Totally different handling for ACK.
+      // .bwc. Totally different handling for ACK.
       if(sip->method()==ACK)
       {
          DebugLog(<<"This request is an ACK.");
-         // !bwc! This takes care of ACK/200 and stray ACK failure
+         // .bwc. This takes care of ACK/200 and stray ACK failure
          // (ie, the ACK has its own transaction)
          if(mOriginalRequest->method() == ACK)
          {
@@ -147,7 +147,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                if((!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
                    getProxy().isMyUri(sip->header(h_RequestLine).uri()))
                {
-                  // !bwc! Someone sent an ACK with us in the Request-Uri, and no
+                  // .bwc. Someone sent an ACK with us in the Request-Uri, and no
                   // Route headers (after we have removed ourself). We will never perform 
                   // location service or retargeting on an ACK, and we shouldn't send 
                   // it to ourselves.  So, just drop the thing.
@@ -177,7 +177,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             if(original)  // Only queue Ack200Done if this is the original request
             {
                DebugLog(<<"Posting Ack200DoneMessage");
-               // !bwc! This needs to have a timer attached to it. (We need to
+               // .bwc. This needs to have a timer attached to it. (We need to
                // wait until all potential retransmissions of the ACK/200 have
                // stopped. However, we must be mindful that we may receive a new,
                // non-ACK transaction with the same tid during this time, and make
@@ -189,7 +189,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          }
          else //This takes care of ACK/failure and malformed ACK/200
          {
-            // !bwc! The stack should not be forwarding ACK/failure to the TU,
+            // .bwc. The stack should not be forwarding ACK/failure to the TU,
             // nor should we be getting a bad ACK/200. (There is code further
             // up that makes bad ACK/200 look like a new transaction, like it
             // is supposed to be.)
@@ -198,11 +198,11 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             DebugLog(<<"This ACK has the same tid as the original INVITE.");
             DebugLog(<<"The reponse we sent back was a " 
                   << mResponseContext.mBestResponse.header(h_StatusLine).statusCode());
-            // !bwc! Since this is not an ACK transaction, the stack will let
+            // .bwc. Since this is not an ACK transaction, the stack will let
             // us know when we need to clean up.
             if(!mHaveSentFinalResponse)
             {
-               // !bwc! Whoa, something went wrong here. We got an ACK, but we
+               // .bwc. Whoa, something went wrong here. We got an ACK, but we
                // haven't sent back a final response. The stack shouldn't have
                // allowed this through!
                ErrLog(<<"Got an ACK, but haven't sent a final response. "
@@ -282,7 +282,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             {
                if(mResponseContext.hasActiveTransactions())
                {
-                  // !bwc! Whoops. We may have just forwarded garbage upstream.
+                  // .bwc. Whoops. We may have just forwarded garbage upstream.
                   // TODO is it appropriate to try to CANCEL here?
                   ErrLog(<<"Server error caught after"
                                  " request was forwarded. Exception was: "<<e);
@@ -346,7 +346,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       catch(resip::BaseException& e)
       {
          ErrLog(<<"Exception thrown in response processor chain: " << e);
-         //!bwc! TODO what do we do here? Continue processing? Give up?
+         // ?bwc? TODO what do we do here? Continue processing? Give up?
       }
 
       // TODO
@@ -474,8 +474,8 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                   {
                      if(mResponseContext.hasActiveTransactions())
                      {
-                        // !bwc! Whoops. We may have just forwarded garbage upstream.
-                        // TODO is it appropriate to try to CANCEL here?
+                        // .bwc. Whoops. We may have just forwarded garbage upstream.
+                        // ?bwc? TODO is it appropriate to try to CANCEL here?
                         ErrLog(<<"Server error caught after"
                                        " request was forwarded. Exception was: "<<e);
                      }
@@ -645,7 +645,7 @@ RequestContext::sendResponse(const SipMessage& msg)
    }
    else
    {
-      //!bwc! Provisionals are not final responses, and CANCEL/200 is not a final
+      // .bwc. Provisionals are not final responses, and CANCEL/200 is not a final
       //response in this context.
       if (msg.header(h_StatusLine).statusCode()>199 && msg.method()!=CANCEL)
       {

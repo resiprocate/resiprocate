@@ -154,8 +154,6 @@ class ParserCategory : public LazyParser
 
       defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
 
-      defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
-
       defineParam(addTransport, "addTransport", ExistsParameter, "");
       defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
 

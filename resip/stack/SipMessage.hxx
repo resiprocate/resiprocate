@@ -113,6 +113,7 @@ class SipMessage : public TransactionMessage
       header(const StatusLineType& l);
 
       bool exists(const HeaderBase& headerType) const;
+      bool empty(const HeaderBase& headerType) const;
       void remove(const HeaderBase& headerType);
 
 #define defineHeader(_header, _name, _type, _rfc)                       \

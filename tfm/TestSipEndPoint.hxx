@@ -969,7 +969,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       const resip::Uri& getUri() const;
       resip::Data getAddressOfRecordString() const;
       
-      // !bwc! If rawData is specified, do all target resolution steps
+      // .bwc. If rawData is specified, do all target resolution steps
       // based on sipMessage, but put the bits in rawData on the wire.
       virtual void send(boost::shared_ptr<resip::SipMessage>& sipMessage,
                         RawConditionerFn rawCondition=raw_identity);
