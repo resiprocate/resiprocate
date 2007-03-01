@@ -250,7 +250,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
          }
          catch (...)
          {
-            if (msg.header(h_Contacts).size())
+            if (msg.exists(h_Contacts) && msg.header(h_Contacts).size())
                ErrLog(<< "Failed to create new subscription for: " << msg.header(h_Contacts).front().uri());
             else
                ErrLog(<< "Failed to create new subscription for: [unknown]");
