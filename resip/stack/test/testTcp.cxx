@@ -233,13 +233,13 @@ main(int argc, char* argv[])
       Data badContentLength2("999999999999999999999999999999");
             
       int oscillator=0;
-      // !bwc! Send one at a time for maximum potential damage.
+      // .bwc. Send one at a time for maximum potential damage.
       Data encoded;
       {
          DataStream strm(encoded);
          SipMessage* next = garbage.front();
          garbage.pop_front();
-         // !bwc! encodeSipFrag doesn't encode Content-Length if there is no
+         // .bwc. encodeSipFrag doesn't encode Content-Length if there is no
          // body; allowing us to add a bad one without conflicting.
          next->encodeSipFrag(strm);
          outstanding++;
@@ -262,7 +262,7 @@ main(int argc, char* argv[])
       }
       catch(std::exception& e)
       {
-         // !bwc! Do nothing substantive, since the stack thread doesn't
+         // .bwc. Do nothing substantive, since the stack thread doesn't
       }
       sender->process(fdset);
       
@@ -271,7 +271,7 @@ main(int argc, char* argv[])
       {
          msg = rxFifo.getNext();
          SipMessage* received = dynamic_cast<SipMessage*>(msg);
-         // !bwc! These are all unrecoverable garbage, we should not get
+         // .bwc. These are all unrecoverable garbage, we should not get
          // any sip traffic on this fifo.
          assert(!received);
          delete msg;

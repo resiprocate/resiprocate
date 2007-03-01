@@ -1278,6 +1278,12 @@ SipMessage::exists(const HeaderBase& headerType) const
    return mHeaders[headerType.getTypeNum()] != 0;
 };
 
+bool
+SipMessage::empty(const HeaderBase& headerType) const
+{
+   return !mHeaders[headerType.getTypeNum()] || mHeaders[headerType.getTypeNum()]->parsedEmpty();
+}
+
 void
 SipMessage::remove(const HeaderBase& headerType)
 {
