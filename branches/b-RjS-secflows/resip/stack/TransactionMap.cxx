@@ -42,7 +42,7 @@ TransactionMap::add(const Data& tid, TransactionState* state  )
    {
       if (i->second != state)
       {
-         // !bwc! ~TransactionState will remove itself from the map.
+         // .bwc. ~TransactionState will remove itself from the map.
          delete i->second;
          //DebugLog (<< "Replacing TMAP[" << tid << "] = " << state << " : " << *state);
          mMap[tid] = state;
