@@ -279,6 +279,7 @@ ClientPublication::send(SipMessage& request)
 {
    if (mWaitingForResponse)
    {
+      DebugLog(<< "Waiting For Pending Publish now, pending message:\n" << request);
       mPendingPublish = true;
    }
    else
