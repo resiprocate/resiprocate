@@ -38,7 +38,7 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
       mProposedLocalSdp = auto_ptr<Contents>(initialOffer->clone());
       mProposedEncryptionLevel = level;
    }
-   mLastLocalSessionModification = request;
+   *mLastLocalSessionModification = *request;  // Copy message, so that modifications to mLastLocalSessionModification don't effect creator->getLastRequest
 
    mState=UAC_Start;
 }
