@@ -1142,6 +1142,43 @@ void DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
       if (sipMsg)
       {
          tid = sipMsg->getTransactionId();
+         bool garbage=false;
+         Data reason;
+
+         if(!sipMsg->header(h_From).isWellFormed())
+         {
+            garbage=true;
+            reason.append("Malformed From, ",16);
+         }
+
+         if(!sipMsg->header(h_To).isWellFormed())
+         {
+            garbage=true;
+            reason.append("Malformed To, ",14);
+         }
+
+         if(!sipMsg->header(h_CallId).isWellFormed())
+         {
+            garbage=true;
+            reason.append("Malformed Call-Id, ",19);
+         }
+         
+         if(garbage)
+         {
+            if(sipMsg->isRequest() && !sipMsg->method()==ACK)
+            {
+               // .bwc. Either we need to trim the last comma off, or make this 
+               // a proper sentence fragment. This is more fun.
+               reason.append("fix your code!",14);
+               SipMessage failure;
+               makeResponse(failure, *sipMsg, 400, reason);
+               sendResponse(failure);
+            }
+            
+            // .bwc. Only forge a response when appropriate, but return in any 
+            // case.
+            return;
+         }
       }
       
       DumFeatureMessage* featureMsg = dynamic_cast<DumFeatureMessage*>(msg.get());
@@ -1345,10 +1382,11 @@ DialogUsageManager::validateContent(const SipMessage& request)
    // RFC3261 - 8.2.3
    // Don't need to validate content headers if they are specified as optional in the content-disposition
    if (!(request.exists(h_ContentDisposition) &&
-	     request.header(h_ContentDisposition).exists(p_handling) &&
-	     isEqualNoCase(request.header(h_ContentDisposition).param(p_handling), Symbols::Optional)))
+         request.header(h_ContentDisposition).isWellFormed() &&
+        request.header(h_ContentDisposition).exists(p_handling) &&
+        isEqualNoCase(request.header(h_ContentDisposition).param(p_handling), Symbols::Optional)))
    {
-	  if (request.exists(h_ContentType) && !getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), request.header(h_ContentType)))
+     if (request.exists(h_ContentType) && !getMasterProfile()->isMimeTypeSupported(request.header(h_RequestLine).method(), request.header(h_ContentType)))
       {
          InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentType) << " for " << request.brief());
 
@@ -1360,7 +1398,7 @@ DialogUsageManager::validateContent(const SipMessage& request)
          return false;
       }
 
-	  if (request.exists(h_ContentEncoding) && !getMasterProfile()->isContentEncodingSupported(request.header(h_ContentEncoding)))
+     if (request.exists(h_ContentEncoding) && !getMasterProfile()->isContentEncodingSupported(request.header(h_ContentEncoding)))
       {
          InfoLog (<< "Received an unsupported mime type: " << request.header(h_ContentEncoding) << " for " << request.brief());
          SipMessage failure;
