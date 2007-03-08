@@ -27,6 +27,10 @@ ServerAuthManager::~ServerAuthManager()
    InfoLog(<< "~ServerAuthManager:  " << mMessages.size() << " messages in memory when destroying.");
 }
 
+// !bwc! We absolutely, positively, MUST NOT throw here. This is because in
+// DialogUsageManager::process(), we do not know if a DumFeature has taken
+// ownership of msg until we get a return. If we throw, the ownership of msg
+// is unknown. This is unacceptable.
 DumFeature::ProcessingResult 
 ServerAuthManager::process(Message* msg)
 {
