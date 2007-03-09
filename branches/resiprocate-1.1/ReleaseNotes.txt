@@ -123,8 +123,11 @@
 
 ===Bug fixes===
 
-= Release Notes v 1.0.2 =
+= Release Notes v 1.0.3 =
 
+*fixed a bug where malformed IPV6 addresses in sip uris or vias could cause the stack to assert
+
+= Release Notes v 1.0.2 =
 
 * Fixed a bug in the SRV load-leveling logic that could cause the stack to crash.
 * Fixed race-conditions in DUM that could cause a crash if a client reused transaction ids rapidly.
