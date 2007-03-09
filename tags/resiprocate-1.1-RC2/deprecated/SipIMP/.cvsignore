@@ -1,0 +1,10 @@
+Debug
+Release
+*.suo
+*.ncb
+*~
+SSL-Release
+SSL-Debug
+Debug
+Release
+*.aps
