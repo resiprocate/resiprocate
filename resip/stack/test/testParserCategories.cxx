@@ -279,7 +279,14 @@ main(int arc, char** argv)
       char* buf="sip:foo@[:x]";
       HeaderFieldValue hfv(buf, strlen(buf));
       NameAddr nameaddr(&hfv, Headers::UNKNOWN);
-      assert(!nameaddr.isWellFormed());
+      try
+      {
+         nameaddr.uri().checkParsed();
+         assert(0);
+      }
+      catch(ParseBuffer::Exception&)
+      {
+      }
    }
 #endif
    
@@ -675,7 +682,14 @@ main(int arc, char** argv)
       char* viaString = "SIP/2.0/UDP [boom]:5060;branch=z9hG4bKblah";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
-      assert(!via.isWellFormed());
+      try
+      {
+         via.checkParsed();
+         assert(0);
+      }
+      catch(ParseBuffer::Exception&)
+      {
+      }
    }
 
    {
@@ -683,7 +697,14 @@ main(int arc, char** argv)
       char* viaString = "SIP/2.0/UDP [:z]:5060;branch=z9hG4bKblah";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
-      assert(!via.isWellFormed());
+      try
+      {
+         via.checkParsed();
+         assert(0);
+      }
+      catch(ParseBuffer::Exception&)
+      {
+      }
    }
 #endif
 
