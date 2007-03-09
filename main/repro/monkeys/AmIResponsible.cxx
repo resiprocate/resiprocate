@@ -59,8 +59,9 @@ AmIResponsible::process(RequestContext& context)
          
          // !rwm! TODO check some kind of relay list here
          // for now, just see if the sender claims to be from one of our domains
-         // send a 403 if not on the list         
-         if (!context.getProxy().isMyUri(request.header(h_From).uri()))
+         // send a 403 if not on the list      
+         // .slg. Allow trusted nodes to relay
+         if (!context.fromTrustedNode() && !context.getProxy().isMyUri(request.header(h_From).uri()))
          {
             // make 403, send, dispose of memory
             InfoLog (<< *this << ": will not relay to " << uri << " from " 
@@ -91,7 +92,7 @@ AmIResponsible::process(RequestContext& context)
                return Processor::SkipThisChain;
             }
 
-            if (!context.getProxy().isMyUri(request.header(h_From).uri()))
+            if (!context.fromTrustedNode() && !context.getProxy().isMyUri(request.header(h_From).uri()))
             {
                // make 403, send, dispose of memory
                resip::SipMessage response;
