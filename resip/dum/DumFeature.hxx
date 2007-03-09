@@ -35,6 +35,10 @@ class DumFeature
          ChainDoneAndEventTaken = ChainDoneBit | EventTakenBit
       };
       
+      // !bwc! We absolutely, positively, MUST NOT throw here. This is because 
+      // in DialogUsageManager::process(), we do not know if a DumFeature has 
+      // taken ownership of msg until we get a return. If we throw, the 
+      // ownership of msg is unknown. This is unacceptable.
       virtual ProcessingResult process(Message* msg) = 0;
       virtual void postCommand(std::auto_ptr<Message> message);
 
