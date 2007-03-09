@@ -790,7 +790,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          }
 
          // Fix the Referred-By header if no host specified.
-         if (msg->exists(h_ReferredBy))
+         // If malformed, leave it alone.
+         if (msg->exists(h_ReferredBy) 
+               && msg->header(h_ReferredBy).isWellFormed())
          {
             if (msg->header(h_ReferredBy).uri().host().empty())
             {
@@ -799,7 +801,15 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
          }
 
-         if (msg->exists(h_RecordRoutes) && !msg->header(h_RecordRoutes).empty())
+         // .bwc. Only try fiddling with this is if the Record-Route is well-
+         // formed. If the topmost Record-Route is malformed, we have no idea
+         // whether it came from something the TU synthesized or from the wire.
+         // We shouldn't touch it. Frankly, I take issue with the method we have
+         // chosen to signal to the stack that we want it to fill out various
+         // header-field-values. 
+         if (msg->exists(h_RecordRoutes) 
+               && !msg->header(h_RecordRoutes).empty() 
+               && msg->header(h_RecordRoutes).front().isWellFormed())
          {
             NameAddr& rr = msg->header(h_RecordRoutes).front();
             if (rr.uri().host().empty())

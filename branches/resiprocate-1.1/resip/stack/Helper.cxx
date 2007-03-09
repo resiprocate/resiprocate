@@ -1557,12 +1557,12 @@ Helper::fromAor(const Data& aor, const Data& scheme)
 bool
 Helper::validateMessage(const SipMessage& message,resip::Data* reason)
 {
-   if (!message.exists(h_To) || 
-       !message.exists(h_From) || 
-       !message.exists(h_CSeq) || 
-       !message.exists(h_CallId) || 
-       !message.exists(h_Vias) ||
-       message.header(h_Vias).empty())
+   if (message.empty(h_To) || 
+       message.empty(h_From) || 
+       message.empty(h_CSeq) || 
+       message.empty(h_CallId) || 
+       message.empty(h_Vias) ||
+       message.empty(h_Vias))
    {
       InfoLog(<< "Missing mandatory header fields (To, From, CSeq, Call-Id or Via)");
       DebugLog(<< message);
