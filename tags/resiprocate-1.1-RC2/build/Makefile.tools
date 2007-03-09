@@ -1,0 +1,257 @@
+# $Id: Makefile.tools,v 1.12 2004/02/07 20:52:29 jason Exp $
+
+######################################################################
+#                     Default tool names/locations
+######################################################################
+
+# this makefile defines what tools are named (and possibly where they
+# are located) for different toolchains.
+
+# possible values for VOCAL_TOOLCHAIN_TYPE are
+
+#     gnu      -- the gcc compiler
+#     gnu3      -- the gcc 3.0 compiler, when named gcc3
+#     armcross   -- the ARM crosscompiler for 
+#     sunpro   -- Sun's Forte C++ compiler
+#     intel   --  intel's icc compiler for linux
+#     msgnu    -- Microsoft's Visual C++ compiler , but using GNU make
+#                 instead of project files.
+
+# This is for when you have a different toolchain (e.g. different
+# compiler, different linker) that you need to add special arguments
+# for.  There are some architectural flags here, but try to keep them
+# elsewhere if they apply to ALL compilers for a platform
+# (e.g. big-endianness vs. little-endianness).
+
+
+##############################  GNU toolchain  ##############################
+
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
+
+CC		= gcc
+CXX		= g++
+MKSHLIB		:= $(CC) -fPIC
+
+ifeq ($(OSTYPE),Darwin)
+  MKSHLIB		+= -dynamiclib -undefined dynamic_lookup
+else
+  MKSHLIB		+= -shared 
+endif
+
+DEP		:= $(CXX) 
+LINKER		:= $(CXX) 
+RANLIB		= ranlib
+AR		= ar
+ARFLAGS		= rv
+DFLAGS		= -MM
+DMANGLE		=
+INSTALL		= install
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+CFLAGS		+= -Wall
+CXXFLAGS	+= -Wall
+DFLAG_INTEGRATED = -MMD
+DEBUG_FLAG	= -g 
+COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
+OPTFLAGS 	= -O3 -ffast-math -funroll-all-loops #-fomit-frame-pointer 
+MAKE_SEPARATE_DEPENDENCY = 1
+
+endif
+
+##############################  INTEL COMPILER toolchain  ##############################
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),intel)
+AR              = ar
+ARFLAGS         = rv
+MKSHLIB		:= $(CC) -shared 
+CC              = /opt/intel/compiler70/ia32/bin/icc
+CXX             = /opt/intel/compiler70/ia32/bin/icc
+DEP             = /opt/intel/compiler70/ia32/bin/icc -E
+DFLAGS          = -M
+DMANGLE         =
+INSTALL         = install
+LINKER          = /opt/intel/compiler70/ia32/bin/icc
+LNDIR           = $(shell pwd)/$(ROOT)/build/lndir.sh
+
+CFLAGS          += -w1
+CXXFLAGS        += -w1
+OPTFLAGS 	+= -O3 -xW -tpp7 -ipo -ipo_obj
+
+DEBUG_FLAG      = -g
+#LDLIBS_LAST    += -Wl, -Wl,-Bdynamic
+RANLIB		= ranlib
+
+COMPILE_SMALL_FLAG = -Os -fno-inline
+
+endif
+
+####################################### GNU ARM cross-compiler for ipaq linux and sharp zaurus ############################
+
+
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),armcross)
+ifndef VOCAL_CROSS_ROOT
+VOCAL_CROSS_ROOT = /skiff/local/bin
+endif
+ifndef CROSS_PLATFORM
+CROSS_PLATFORM = arm-linux
+endif
+
+CC		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-gcc
+CXX		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-g++
+MKSHLIB		:= $(CC) -fPIC -shared 
+DEP		:= $(CXX) 
+LINKER		:= $(CXX) 
+AR		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ar
+ARFLAGS		= rv
+DFLAGS		= -MM
+DMANGLE		=
+INSTALL		= install
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+CFLAGS		+= -Wall -fPIC
+CXXFLAGS	+= -Wall -fPIC
+DEBUG_FLAG	= -g
+COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
+LD_STATIC       = -Wl,-Bstatic
+LD_DYNAMIC      = -Wl,-Bdynamic
+ARCH		= arm
+CONFIGURE_ARGS	= --target=$(CROSS_PLATFORM) --host=i686-linux
+DFLAG_INTEGRATED = -MMD
+RANLIB		= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ranlib
+
+Z = $(shell $(CC) -v 2>&1 | perl -ne 'if(/version ([0-9\.]+)/ && ($$1 eq "2.96" || int($$1) > 2) ) {print "1\n";}')
+ifneq ($(Z),1)
+MAKE_SEPARATE_DEPENDENCY = 1
+endif
+endif
+
+##############################  SunPro toolchain ##############################
+
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),sunpro)
+
+#MKSHLIB		= CC -xarch=v9 -G
+MKSHLIB		= CC -G
+#AR		= CC -o
+AR		= /usr/ccs/bin/ar
+ARFLAGS		= rv
+CC		= cc
+CXX		= CC 
+DEP		= CC -xM
+#DMANGLE		= | perl $(TOOLS)/hacksol | grep -v /opt/SUNWspro
+DFLAGS		= 
+INSTALL		= install
+LINKER		= CC
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+RANLIB		= ranlib
+
+DEBUG_FLAG	= -g
+
+MAKE_SEPARATE_DEPENDENCY = 1
+
+LD_STATIC       = -Bstatic
+LD_DYNAMIC      = -Bdynamic
+
+endif
+
+
+############################## microsoft toolchain ##############################
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),msgnu)
+
+AR		= CC -xar -o
+ARFLAGS		=
+CC		= CL.EXE -I "C:/Program Files/Microsoft Visual Studio/VC98/Include" -I "C:/Program Files/Microsoft Visual Studio/VC98/Include" -I "../contrib/win32/mingw/include" -GX -TC -DWIN32 -DVOCAL_TOOLCHAIN_MSGNU -I "../contrib/win32/regex"
+CXX		= CL.EXE -I "C:/Program Files/Microsoft Visual Studio/VC98/Include" -I "C:/Program Files/Microsoft Visual Studio/VC98/Include" -I "../contrib/win32/mingw/include" -GX -TP -DWIN32 -DVOCAL_TOOLCHAIN_MSGNU -I "../contrib/win32/regex"
+DEP		= g++ -E
+DMANGLE		= 
+DFLAGS		= -M
+INSTALL		= install
+LINKER		= CC
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+
+DEBUG_FLAG	= -Zi
+
+LD_STATIC       = -Bstatic
+LD_DYNAMIC      = -Bdynamic
+RANLIB		= ranlib
+
+endif
+
+############################## distcc/ccache ##############################
+
+ifeq ($(USE_DISTCC),yes)
+
+  ifdef DISTCC_HOSTS
+  export DISTCC_HOSTS
+  endif
+
+  CC := $(DISTCC) $(CC)
+  CXX := $(DISTCC) $(CXX)
+
+endif
+
+ifeq ($(USE_CCACHE),yes)
+
+  ifdef CCACHE_DIR
+  export CCACHE_DIR
+  endif
+
+  ifdef CCACHE_UMASK
+  export CCACHE_UMASK
+  endif
+
+  CC := $(CCACHE) $(CC)
+  CXX := $(CCACHE) $(CXX)
+
+endif
+
+##############################################################################
+# 
+# The Vovida Software License, Version 1.0 
+# Copyright (c) 2000-2007 Vovida Networks, Inc.  All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 
+# 3. The names "VOCAL", "Vovida Open Communication Application Library",
+#    and "Vovida Open Communication Application Library (VOCAL)" must
+#    not be used to endorse or promote products derived from this
+#    software without prior written permission. For written
+#    permission, please contact vocal@vovida.org.
+# 
+# 4. Products derived from this software may not be called "VOCAL", nor
+#    may "VOCAL" appear in their name, without prior written
+#    permission of Vovida Networks, Inc.
+# 
+# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+# NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+# NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+# IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+# DAMAGE.
+# 
+# ====================================================================
+# 
+# This software consists of voluntary contributions made by Vovida
+# Networks, Inc. and many individuals on behalf of Vovida Networks,
+# Inc.  For more information on Vovida Networks, Inc., please see
+# <http://www.vovida.org/>.
+# 
+##############################################################################
