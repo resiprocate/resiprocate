@@ -1,11 +1,17 @@
 = Release Notes v 1.1 =
 
+==General==
+
+===New features===
+*updated license blocks
+*sipdial, a very simple dialer demo
 
 ==Build System==
 ===New features===
 *shared library support for OS X
 *location of db4 headers is now configurable (only matters when building repro/tfm)
 *ares install path can now be configured
+*added ability to specify a particular copy of OpenSSL to use
 
 ===Bug fixes===
 *fixed shared library build on x86_64
@@ -39,9 +45,12 @@
 ===Bug fixes===
 *fixed a bug where a TU sending multiple requests with the same tid (ie, ACK/200) could cause an assertion in the stack, if DNS resolution had not yet been completed
 *fixed a bug that could corrupt a TransactionMap::iterator if the same tid was added multiple times. Also fixed another bug that was causing this bug to exhibit
+*fixed a bug where malformed IPV6 addresses in sip uris or vias could cause the stack to assert
 *fixed bug where lower-order bits of IPV6 addresses were chopped off (Windows)
 *fixed a bug in SdpContents where a "u=" was not being encoded
 *fixed bug where the TransportSelector would automatically fill in the wrong end of the Record-Route stack
+*hardened the stack against garbage Referred-By and Record-Route headers
+*stack now checks whether required header-field-values are not the empty-string
 *fixed a bug that was causing CPU spin while establishing a TLS client connection
 *major fixes to the RFC 3263 DNS logic
 **DNS logic now pays attention to what transport types the stack supports when choosing targets (won't choose a TCP target if we don't have a TCP transport, for example)
@@ -75,6 +84,7 @@
 ===Bug fixes===
 *fixed bug where reception of a REFER could cause a crash if no clientsubscriptionmanager is present
 *fixed a bug where a bad in-dialog response (modified to-tag) would prompt a dialog creation, and cause a crash
+*fixed various memory leaks caused by garbage from the wire
 *only 2xx responses to the original request can effect the route-set
 *fixed bug where sending a PUBLISH while a previous PUBLISH (for the same state) was pending would cause an empty PUBLISH to be sent
 *do not create dialog state on a 180 response with no to-tag

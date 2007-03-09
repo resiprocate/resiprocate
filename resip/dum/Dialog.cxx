@@ -222,8 +222,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       DebugLog ( << "mLocalNameAddr: " << mLocalNameAddr );
       DebugLog ( << "mLocalContact: " << mLocalContact );
       DebugLog ( << "mRemoteTarget: " << mRemoteTarget );
-
-
    }
    mDialogSet.addDialog(this);
    DebugLog ( <<"Dialog::Dialog " << mId);
@@ -563,7 +561,7 @@ Dialog::dispatch(const SipMessage& msg)
       int code = response.header(h_StatusLine).statusCode();
       // If this is a 200 response to the initial request, then store the routeset (if present)
       BaseCreator* creator = mDialogSet.getCreator();
-      if (creator && (creator->getLastRequest()->header(h_CSeq).sequence() == response.header(h_CSeq).sequence()) && code >=200 && code < 300)
+      if (creator && (creator->getLastRequest()->header(h_CSeq) == response.header(h_CSeq)) && code >=200 && code < 300)
       {
          if (response.exists(h_RecordRoutes))
          {

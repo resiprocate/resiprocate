@@ -153,7 +153,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   // it to ourselves.  So, just drop the thing.
                   InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");            
                }
-               // Note: mTopRoute is only populated if RemoteTopRouteIfSelf successfully removes the top route.
+               // Note: mTopRoute is only populated if RemoveTopRouteIfSelf successfully removes the top route.
                else if(!mTopRoute.uri().host().empty() || getProxy().isMyUri(sip->header(h_From).uri()))
                {
                   // Top most route is us, or From header uri is ours.  Note:  The From check is 

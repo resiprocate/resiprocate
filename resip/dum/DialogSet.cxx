@@ -241,6 +241,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
          {
             if (mDum.mClientAuthManager->handle(*getUserProfile().get(), *getCreator()->getLastRequest(), msg))
             {
+               // Note:  ClientAuthManager->handle will end up incrementing the CSeq sequence of getLastRequest
                DebugLog( << "about to re-send request with digest credentials" );
                StackLog( << getCreator()->getLastRequest() );
                
@@ -278,6 +279,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                // Change interval to min from 422 response
                getCreator()->getLastRequest()->header(h_SessionExpires).value() = msg.header(h_MinSE).value();
                getCreator()->getLastRequest()->header(h_MinSE).value() = msg.header(h_MinSE).value();
+               getCreator()->getLastRequest()->header(h_CSeq).sequence()++;
 
                InfoLog( << "about to re-send request with new session expiration time" );
                DebugLog( << getCreator()->getLastRequest() );
