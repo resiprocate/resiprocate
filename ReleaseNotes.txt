@@ -1,213 +1,192 @@
-Version 1.0.2
+= Release Notes v 1.0.3 =
 
-Fixed a bug in the SRV load-leveling logic that could cause the stack to crash.
-Fixed race-conditions in DUM that could cause a crash if a client reused transaction ids rapidly.
+*fixed a bug where malformed IPV6 addresses in sip uris or vias could cause the stack to assert
 
-Version 1.0.1
+= Release Notes v 1.0.2 =
 
-Fixed a bug that would cause the stack to crash if it received a request with a single empty Via header.
+* Fixed a bug in the SRV load-leveling logic that could cause the stack to crash.
+* Fixed race-conditions in DUM that could cause a crash if a client reused transaction ids rapidly.
 
-Version 1.0
+= Release Notes v 1.0.1 =
 
-Overall project changes:
-The resiprocate/os directory has been broken into two separate directories: rutil, and resip/stack. DUM now lives in resip/dum. repro no longer resides within the resiprocate directory.
+* Fixed a bug that would cause the stack to crash if it received a request with a single empty Via header.
 
-rutil consists of non-sip specific utility classes.
-resip/stack consists of everything else that used to reside in resiprocate/os.
+= Release Notes v 1.0 =
 
+== General Changes ==
+=== Overall project changes ===
 
+* The resiprocate/os directory has been broken into two separate directories: rutil, and resip/stack.
+* DUM now lives in resip/dum. repro no longer resides within the resiprocate directory.
+** rutil consists of non-sip specific utility classes.
+** resip/stack consists of everything else that used to reside in resiprocate/os.
+== Build System==
+=== New Features ===
+* interactive configure script
+* implemented RESIP_FIXED_POINT compilation flag
+* added a PEDANTIC_STACK build flag that causes the stack to fully parse all incoming messages, and 400 if it finds garbage.
+* added support for stdext::hash_map for Visual Studio .NET 2003 builds
+* build system now handles absence of gperf gracefully
 
-New features in build system:
-- interactive configure script
-- implemented RESIP_FIXED_POINT compilation flag
-- added a PEDANTIC_STACK build flag that causes the stack to fully parse all incoming messages, and 400 if it finds garbage.
-- added support for stdext::hash_map for Visual Studio .NET 2003 builds
-- build system now handles absence of gperf gracefully
+=== Bug fixes ===
+* changes so that build with openSSL 0.98 works
+* VS.NET project files - changed all C-Runtime libraries to use Multithreaded DLL - consistent with sipX projects
+* various OS X build fixes
+* fixed clean and distclean build system targets
+* header files are no longer installed with mode 755 (is 644 now)
+* ares is now installed (using shared libraries required its presence)
 
-Bug fixes in build system:
-- changes so that build with openSSL 0.98 works
-- VS.NET project files - changed all C-Runtime libraries to use
-Multithreaded DLL - consistent with sipX projects
-- various OS X build fixes
-- fixed clean and distclean build system targets
-- header files are no longer installed with mode 755 (is 644 now)
-- ares is now installed (using shared libraries required its presence)
+== rutil ==
+=== New features ===
+* synchronous A-record lookup in DnsUtil
+* added Data::replace
 
-New features in rutil:
-- synchronous A-record lookup in DnsUtil
-- added Data::replace
+=== Bug fixes ===
+* fixed initialization of OpenSSL
+* use SO_REUSEADDR for windows sockets
+* fix to remove race condition in AbstractFifo::getNext(int ms)
+* many openSSL memory leak fixes
+* Fixed Data::hash for non-plaintext.
+* Fixed a memory corruption bug in oDataStream.
+* fixes to Data::find
+* fixes to conversion methods in Data
+* fixed static initialization bug in Log.cxx where we were exhausting pthread_keys
+* fixed a memory leak in DnsStub
+* removed a dependency on resip/stack (moved SelectInterruptor to resip/stack)
+* OpenSSLInit no longer writes stuff to std::cerr (bypassing the logging system)
 
-Bug fixes in rutil:
-- fixed initialization of OpenSSL
-- use SO_REUSEADDR for windows sockets
-- fix to remove race condition in AbstractFifo::getNext(int ms)
-- many openSSL memory leak fixes
-- Fixed Data::hash for non-plaintext.
-- Fixed a memory corruption bug in oDataStream.
-- fixes to Data::find
-- fixes to conversion methods in Data
-- fixed static initialization bug in Log.cxx where we were exhausting pthread_keys
-- fixed a memory leak in DnsStub
-- removed a dependency on resip/stack (moved SelectInterruptor to resip/stack)
-- OpenSSLInit no longer writes stuff to std::cerr (bypassing the logging system)
+== Stack ==
+=== New Features ===
+* allow StatisticsManager to be disabled at runtime
+* added a MasterProfile setting (allowBadRegistrationsEnabled) to allow DUM to accept Registrations that have a To: tag
+* added getTlsPeerName method to SipMessage
+* added clearDnsCache to SipStack (thread safe)
+* added logDnsCache to SipStack (thread safe) - outputs DNS Cache to WarningLog for debugging
+* modified TLS client domain name check to look through all possible peer names
+* support for namespaces in pidf documents
+* STUN client support (in UdpTransport class)
+* Added capability for adding a MessageDecorator through a dum profile
+* s/mime encryption for SDP and IM
+* lots of new documentation
+* added Identity strength accessor to SecurityAttributes
+* runtime detection of ares/resip USE_IPV6 mismatch
+* ENUM support
+* support for privacy as per rfc3325
+* support for service-route (IMS)
+* added a mechanism to register for a callback just before a SipMessage is sent on the wire
 
-New features in stack:
-- allow StatisticsManager to be disabled at runtime
-- added a MasterProfile setting (allowBadRegistrationsEnabled) to allow
-DUM to accept Registrations that have a To: tag
-- added getTlsPeerName method to SipMessage
-- added clearDnsCache to SipStack (thread safe)
-- added logDnsCache to SipStack (thread safe) - outputs DNS Cache to
-WarningLog for debugging
-  - modified TLS client domain name check to look through all possible
-peer names
-- support for namespaces in pidf documents
-- STUN client support (in UdpTransport class)
-- Added capability for adding a MessageDecorator through a dum profile
-- s/mime encryption for SDP and IM
-- lots of new documentation
-- added Identity strength accessor to SecurityAttributes
-- runtime detection of ares/resip USE_IPV6 mismatch
-- enum support
-- support for privacy as per rfc3325
-- support for service-route (IMS)
-- added a mechanism to register for a callback just before a SipMessage is sent on the wire
+=== Bug fixes ===
+* fixed initialization of array that determines whether headers should be comma encoded
+* fixed many transactionstate memory leaks
+* fix to SdpContents for duplicate fmtp attributes
+* fix submitted by Justin Matthews for potential invalid pointer access of mDnsResult
+* remove trailing spaces from non-quoted display name (NameAddr)
+* fix memory leak of SecurityAttributes
+* SdpContents: fixed bug in Session::Time operator=
+* some time_t use fixes so that we compatible with VS.NET 2005's default definition of time_t - which is a 64-bit integer
+* fixed UInt64 conversion for nonce stuff - digest auth was failing 
+* fixed many transport memory leaks - the biggest one is with receiving CRLF keep alives on UDP transports
+* made domain name cert check for Client SSL connection non-case sensitive
+* fix for computeTag to use passed in size
+* fix for CSeqCategory and RAckCategory to use unsigned integers for sequence numbers
+* fix for Tuple IPV6 hash on linux platforms
+* changed ExpiresCategory.cxx to be an UInt32 so that Expires parameter can handle up to 2^32-1 as in RFC
+* Fixed a few assert/memory leak bugs in TransactionState caused by method mismatches between Request Line and CSeq.
+* Fixed numerous memory leaks in TransactionState that couold be caused by certain malformed headers.
+* TransactionState no longer 503s ACK when overloaded
+* Major fixes to connection management in the stack (including memory corruption bugs)
+* Fixed issue where we were sending TLS over the wrong IP version when we had TLS transports on both versions open.
+* Fixed many integral-value overflow bugs.
+* Fixed a few other parser bugs (for q-value, senthost in Via, branch parameter in Via)
+* implemented auto_ptr version of SipStack::send() and SipStack::sendTo()
+* implemented auto_ptr based SipStack::post() and postMs()
+* Fixed handling of stray CANCELs
+* made codec comparison case insensitive (findFirstMatchingCodec function)
+* modified stunTest to use nonblocking socket and selectable timeout
+* Added some missing closesocket calls to the rutil\STUN functions (note that stun has since been moved to resip/stack)
+* removed the static "done" check in Security::Initialize(), it caused a bug when the object was instantiated a second time
+* Corrected the Codec constructor for telephone-event and frf-dialed-event constants. A payload type of 8000 was used. (Not wrong but usually 101 is used. 8000 rather is the bandwidth)
+* Added two more codec constants. (G723 and GSM)
+* removed the bogus sleep stuff from stunSendTest
+* fixed parse bug in Phone::parse
+* fixed a bad free in Security
+* fixed SipFrag memory corruption issue
+* fixed nonce generation
+* fixed a memory leak in Security
+* fixed array overflow bug in SecurityAttributes
+* fixed a per-key/cert leak in Security
+* fixed a memory leak caused by malformed Content-Length over a stream-based transport (TCP or TLS)
+* support for short version of event (o)
 
-Bug fixes in stack:
-- fixed initialization of array that determines whether headers should be comma encoded
-- fixed many transactionstate memory leaks
-- fix to SdpContents for duplicate fmtp attributes
-- fix submitted by Justin Matthews for potential invalid pointer access
-of mDnsResult
-- remove trailing spaces from non-quoted display name (NameAddr)
-- fix memory leak of SecurityAttributes
-- SdpContents: fixed bug in Session::Time operator=
-- some time_t use fixes so that we compatible with VS.NET 2005's default
-definition of time_t - which is a 64-bit integer
-- fixed UInt64 conversion for nonce stuff - digest auth was failing 
-- fixed many transport memory leaks - the biggest one is with receiving
-CRLF keep alives on UDP transports
-- made domain name cert check for Client SSL connection non-case
-sensitive
-- fix for computeTag to use passed in size
-- fix for CSeqCategory and RAckCategory to use unsigned integers for
-sequence numbers
-- fix for Tuple IPV6 hash on linux platforms
-- changed ExpiresCategory.cxx to be an UInt32 so that Expires parameter
-can handle up to 2^32-1 as in RFC
-- Fixed a few assert/memory leak bugs in TransactionState caused by method mismatches between Request Line and CSeq.
-- Fixed numerous memory leaks in TransactionState that couold be caused by certain malformed headers.
-- TransactionState no longer 503s ACK when overloaded
-- Major fixes to connection management in the stack (including memory corruption bugs)
-- Fixed issue where we were sending TLS over the wrong IP version when we had TLS transports on both versions open.
-- Fixed many integral-value overflow bugs.
-- Fixed a few other parser bugs (for q-value, senthost in Via, branch parameter in Via)
-- implemented auto_ptr version of SipStack::send() and SipStack::sendTo()
-- implemented auto_ptr based SipStack::post() and postMs()
-- Fixed handling of stray CANCELs
-- made codec comparison case insensitive (findFirstMatchingCodec function)
-- modified stunTest to use nonblocking socket and selectable timeout
-- Added some missing closesocket calls to the rutil\STUN functions (note that stun has since been moved to resip/stack)
-- removed the static "done" check in Security::Initialize(), it caused a bug when the object was instantiated a second time
-- Corrected the Codec constructor for telephone-event and frf-dialed-event constants. A payload type of 8000 was used. (Not wrong but usually 101 is used. 8000 rather is the bandwidth)
-- Added two more codec constants. (G723 and GSM)
-- removed the bogus sleep stuff from stunSendTest
-- fixed parse bug in Phone::parse
-- fixed a bad free in Security
-- fixed SipFrag memory corruption issue
-- fixed nonce generation
-- fixed a memory leak in Security
-- fixed array overflow bug in SecurityAttributes
-- fixed a per-key/cert leak in Security
-- fixed a memory leak caused by malformed Content-Length over a stream-based transport (TCP or TLS)
-- support for short version of event (o)
-
-
-
-New Features in DUM:
-- allow Initial invite without an offer (dum)
-- added support for sending and receiving MESSAGE requests in an Invite
-Session
-- added support for re-invite with no offer
-- allow contents to be sent in acceptNit (InviteSession)
-- added onConnectedConfirmed callback for ACK (without answer) on
-initial invite
-- add rinstance parameter to registration contacts so that we
-  can tell which contacts from the 200 response are ours (dum)
-- added profile reset method (dum)
-- added ability to get peer capabilities from InviteSession
-- added store of all peer names presented in a certificate's
-subjectAltName list
-  - if no subjectAltName, then commonName is used
-- implemented command pattern/target based feature handling in dum
-- support for Allowed-Events header in DUM
-- added new signature for makeInviteSessionFromRefer - that allows specifying the User Profile to use. (this is required when creating an Invite Session from a refer with no-subscription)
+== DUM == 
+=== New Features ===
+* allow Initial invite without an offer (dum)
+* added support for sending and receiving MESSAGE requests in an Invite Session
+* added support for re-invite with no offer
+* allow contents to be sent in acceptNit (InviteSession)
+* added onConnectedConfirmed callback for ACK (without answer) on initial invite
+* add rinstance parameter to registration contacts so that we can tell which contacts from the 200 response are ours (dum)
+* added profile reset method (dum)
+* added ability to get peer capabilities from InviteSession
+* added store of all peer names presented in a certificate's subjectAltName list
+** if no subjectAltName, then commonName is used
+* implemented command pattern/target based feature handling in dum
+* support for Allowed-Events header in DUM
+* added new signature for makeInviteSessionFromRefer - that allows specifying the User Profile to use. (this is required when creating an Invite Session from a refer with no-subscription)
 
 
-Bug fixes in DUM:
-- fix for shutdown assertions if outstanding invite sessions
-- fix for receiving stray dialog/dialogset matching messages during
-delayed destruction
-- fix for ending() a registration while in the process of retrying
-- ensure all 4xx responses to invites are handled correctly in dum
-- fix for dialogset destruction bug - cleaned up redirect logic used to
-destroy dialog, but keep dialogset around
-- change ClientSubscription.cxx and ServerSubscription.cxx to send all
-messages via the Dialog::send interface, instead of the
-DialogUsageManager::send interface.  This allows requests to be tracked
-by the Dialog - so that it can correctly respond to Digest challenges.
-- fixes to dum states for initiating a BYE while waiting for an ACK
-- dum fix for setting correct reason text for NIT responses
-- many misc. fixes to InviteSession state machine
-- ServerPublication: fix for uninitialized mExpires in onInitial
-callback
-- fix for early SDP in provisional's (dum)
-- allow additional provisionals in EarlyProvidedAnswer state (dum)
-- ServerAuthManager - do not challenge ACKS or CANCELs
-- make subscription state checks non-case sensitive
-- corrected some missing sets of mProposedRemoteSdp
-- fixed Glare state handling in dispatchGlare
-- fixed mProposedLocalSdp memory leaks auto_ptr::release change to
-auto_ptr::reset
-- fix for getLocalSdp and getRemoteSdp if values are not yet set
-- 2xx retransmission is now detected and handled properly - no more
-incorrect handler callbacks (dum)
-- fix issue with receiving 2xx retrans when dialog is destroying -
-reported by Justin Matthews
-- fixed MessageWaitingContents encoder attributes
-- be resilient to implementations that send sdp in 200/Update event
-though we didn't send an offer (ie. Cisco 7960)
-- InviteSession: separate mLastSessionRefresh into
-mLastLocalSessionRefresh and mLastRemoteSessionRefresh fixes bug where
-remote message headers could get used in outbound requests
-- fix for calling end on a client SUBSCRIBE (or PUBLISH) dialog before
-any response is received
-- ClientRegistration - use Expires header if no Contacts are present
-- modified dum so that expiration values use UInt32 instead of int for
-storage
-- fixed initialization of AppDialogSet::mIsReUsed
-- ServerAuthManager no longer challenges ACK
-- InviteSession now handles re-invites with late offer
-- fixed bug where DUM was ignoring Expires in SUBSCRIBE/2xx
-- fixed uninitialized SharedPtr in DialogSet
+=== Bug fixes ===
+* fix for shutdown assertions if outstanding invite sessions
+* fix for receiving stray dialog/dialogset matching messages during delayed destruction
+* fix for ending() a registration while in the process of retrying
+* ensure all 4xx responses to invites are handled correctly in dum
+* fix for dialogset destruction bug - cleaned up redirect logic used to destroy dialog, but keep dialogset around
+* change ClientSubscription.cxx and ServerSubscription.cxx to send all messages via the Dialog::send interface, instead of the DialogUsageManager::send interface.  This allows requests to be tracked by the Dialog - so that it can correctly respond to Digest challenges.
+* fixes to dum states for initiating a BYE while waiting for an ACK
+* dum fix for setting correct reason text for NIT responses
+* many misc. fixes to InviteSession state machine
+* ServerPublication: fix for uninitialized mExpires in onInitial callback
+* fix for early SDP in provisional's (dum)
+* allow additional provisionals in EarlyProvidedAnswer state (dum)
+* ServerAuthManager - do not challenge ACKS or CANCELs
+* make subscription state checks non-case sensitive
+* corrected some missing sets of mProposedRemoteSdp
+* fixed Glare state handling in dispatchGlare
+* fixed mProposedLocalSdp memory leaks auto_ptr::release change to auto_ptr::reset
+* fix for getLocalSdp and getRemoteSdp if values are not yet set
+* 2xx retransmission is now detected and handled properly - no more incorrect handler callbacks (dum)
+* fix issue with receiving 2xx retrans when dialog is destroying - reported by Justin Matthews
+* fixed MessageWaitingContents encoder attributes
+* be resilient to implementations that send sdp in 200/Update event though we didn't send an offer (ie. Cisco 7960)
+* InviteSession: separate mLastSessionRefresh into mLastLocalSessionRefresh and mLastRemoteSessionRefresh fixes bug where remote message headers could get used in outbound requests
+* fix for calling end on a client SUBSCRIBE (or PUBLISH) dialog before any response is received
+* ClientRegistration - use Expires header if no Contacts are present
+* modified dum so that expiration values use UInt32 instead of int for storage
+* fixed initialization of AppDialogSet::mIsReUsed
+* ServerAuthManager no longer challenges ACK
+* InviteSession now handles re-invites with late offer
+* fixed bug where DUM was ignoring Expires in SUBSCRIBE/2xx
+* fixed uninitialized SharedPtr in DialogSet
 
-New features in repro:
-- Framework for better control of forking in repro.
-- Many improvements to Processor architecture in repro (with respect to asynchronous work), with helper classes for easily setting up thread-banks for async tasks.
-- Support for Q-Value based forking in repro.
-- Implemented Timer C in repro.
-- added recursive redirect support to repro
-- support for ACL in repro
-- rpm build for repro
+== Repro ==
+=== New features ===
+* Framework for better control of forking in repro.
+* Many improvements to Processor architecture in repro (with respect to asynchronous work), with helper classes for easily setting up thread-banks for async tasks.
+* Support for Q-Value based forking in repro.
+* Implemented Timer C in repro.
+* added recursive redirect support to repro
+* support for ACL in repro
+* rpm build for repro
 
-Bug fixes in repro:
-- Fixed an assert bug in repro's WebAdmin that would allow an unprivileged user to cause an assert.
-- repro no longer will forward 503s
-- fixed a stl::vector<>::front call to a (potentially) empty container
-- repro no longer challenges ACK or BYE
-- fixed numerous memory leaks in repro
-- major assert sweep of repro
+=== Bug fixes ===
+* Fixed an assert bug in repro's WebAdmin that would allow an unprivileged user to cause an assert.
+* repro no longer will forward 503s
+* fixed a stl::vector<>::front call to a (potentially) empty container
+* repro no longer challenges ACK or BYE
+* fixed numerous memory leaks in repro
+* major assert sweep of repro
 
 
-tfm: 
-- a functor-driven test-framework, and lots of test-cases for repro.
+== TFM ==
+
+* a functor-driven test-framework, and lots of test-cases for repro.
