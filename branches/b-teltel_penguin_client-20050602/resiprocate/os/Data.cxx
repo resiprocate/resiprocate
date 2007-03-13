@@ -1134,9 +1134,9 @@ void
 Data::resize(size_type newCapacity, 
              bool copy)
 {
-   if (mMine == Take)
+   if (mMine == Take && newCapacity <= mCapacity) // !nash! resize only grows
    {
-      assert(newCapacity > mCapacity);
+      return;
    }
 
    char *oldBuf = mBuf;
