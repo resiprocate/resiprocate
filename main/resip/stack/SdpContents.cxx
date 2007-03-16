@@ -1825,7 +1825,11 @@ Codec::CodecMap& Codec::getStaticCodecs()
 bool
 resip::operator==(const Codec& lhs, const Codec& rhs)
 {
-   return (isEqualNoCase(lhs.mName, rhs.mName) && lhs.mRate == rhs.mRate && lhs.mEncodingParameters == rhs.mEncodingParameters);
+   static Data defaultEncodingParameters(Data("1"));  // Default for audio streams (1-Channel)
+   return (isEqualNoCase(lhs.mName, rhs.mName) && lhs.mRate == rhs.mRate && 
+           (lhs.mEncodingParameters == rhs.mEncodingParameters ||
+            (lhs.mEncodingParameters.empty() && rhs.mEncodingParameters == defaultEncodingParameters) ||
+            (lhs.mEncodingParameters == defaultEncodingParameters && rhs.mEncodingParameters.empty())));
 }
 
 ostream&
