@@ -54,9 +54,11 @@ main(int argc, char* argv[])
        SdpContents sdp(&hfv, type);
       
        assert(sdp.session().media().size() == 1);
+       resip::SdpContents::Session::Codec testCodec("PCMU", 8000, "", "1");
        for (std::list<resip::SdpContents::Session::Medium>::const_iterator i = sdp.session().media().begin(); i != sdp.session().media().end(); i++)
        {
           const std::list<resip::SdpContents::Session::Codec> &codecs = i->codecs();
+          assert(testCodec == codecs.front());
        }
 
        //assert(sdp.session.getAttributes().count == 2);
