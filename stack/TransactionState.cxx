@@ -79,7 +79,7 @@ TransactionState::handleBadRequest(const resip::SipMessage& badReq, TransactionC
    try
    {
       SipMessage* error = Helper::makeResponse(badReq,400);
-      error->header(h_StatusLine).reason()+="(" + error->getReason() + ")";
+      error->header(h_StatusLine).reason()+="(" + badReq.getReason() + ")";
       Tuple target(badReq.getSource());
 
       if(badReq.isExternal())
