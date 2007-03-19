@@ -72,13 +72,6 @@ class DnsStub : public ExternalDnsHandler
             virtual void transform(const Data& target, int rrType, DnsResourceRecordsByPtr& src) = 0;
       };
 
-      class BlacklistListener
-      {
-         public:
-            virtual ~BlacklistListener() {}
-            virtual void onBlacklisted(int rrType, const Data& target)= 0;
-      };
-
       class DnsStubException : public BaseException
       {
          public:
@@ -104,8 +97,6 @@ class DnsStub : public ExternalDnsHandler
 
       void setResultTransform(ResultTransform*);
       void removeResultTransform();
-      void registerBlacklistListener(int rrType, BlacklistListener*);
-      void unregisterBlacklistListener(int rrType, BlacklistListener*);
       void setEnumSuffixes(const std::vector<Data>& suffixes);
       const std::vector<Data>& getEnumSuffixes() const;
       void clearDnsCache();
@@ -124,19 +115,6 @@ class DnsStub : public ExternalDnsHandler
       template<class QueryType> void lookup(const Data& target, int protocol, DnsResultSink* sink)
       {
          QueryCommand<QueryType>* command = new QueryCommand<QueryType>(target, protocol, sink, *this);
-         mCommandFifo.add(command);
-      }
-
-      // targets in targetsToBlacklist should be one of the following values
-      // for a specific RR type:
-      //
-      //    A/AAAA: IPs in dotted form;
-      //    SRV: target:port;
-      //    NAPTR: replacement.
-      //
-      void blacklist(const Data& target, int rrType, const int proto, const DataArr& targetsToBlacklist)
-      {
-         BlacklistingCommand* command = new BlacklistingCommand(target, rrType, proto, *this, targetsToBlacklist);
          mCommandFifo.add(command);
       }
 
@@ -241,9 +219,6 @@ class DnsStub : public ExternalDnsHandler
       };
 
 
-      void doBlacklisting(const Data& target, int rrType, 
-                          int protocol, const DataArr& targetsToBlacklist);
-
       template<class QueryType>
       class QueryCommand : public Command
       {
@@ -270,34 +245,6 @@ class DnsStub : public ExternalDnsHandler
             int mProto;
             DnsResultSink* mSink;
             DnsStub& mStub;
-      };
-
-      class BlacklistingCommand : public Command
-      {
-         public:
-            BlacklistingCommand(const Data& target,
-                                int rrType,
-                                int proto,
-                                DnsStub& stub,
-                                const DataArr& targetToBlacklist)
-               : mTarget(target),
-                 mRRType(rrType),
-                 mProto(proto),
-                 mStub(stub),
-                 mTargetsToBlacklist(targetToBlacklist)
-            {}             
-            ~BlacklistingCommand() {}
-            void execute()
-            {
-               mStub.doBlacklisting(mTarget, mRRType, mProto, mTargetsToBlacklist);
-            }
-
-         private:
-            Data mTarget;
-            int mRRType;
-            int mProto;
-            DnsStub& mStub;
-            DataArr mTargetsToBlacklist;
       };
 
       void doSetEnumSuffixes(const std::vector<Data>& suffixes);
@@ -375,10 +322,6 @@ class DnsStub : public ExternalDnsHandler
       ResultTransform* mTransform;
       ExternalDns* mDnsProvider;
       std::set<Query*> mQueries;
-
-      typedef std::list<BlacklistListener*> Listeners;
-      typedef std::map<int, Listeners> ListenerMap;
-      ListenerMap mListenerMap;
 
       std::vector<Data> mEnumSuffixes; // where to do enum lookups
 
