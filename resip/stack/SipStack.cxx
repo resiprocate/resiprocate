@@ -563,15 +563,15 @@ SipStack::unregisterTransactionUser(TransactionUser& tu)
 }
 
 void
-SipStack::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+SipStack::registerMarkListener(MarkListener* listener)
 {
-   mTransactionController.registerBlacklistListener(rrType, listener);
+   mTransactionController.registerMarkListener(listener);
 }
 
 void
-SipStack::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+SipStack::unregisterMarkListener(MarkListener* listener)
 {
-   mTransactionController.unregisterBlacklistListener(rrType, listener);
+   mTransactionController.unregisterMarkListener(listener);
 }
 
 DnsStub&

@@ -48,8 +48,8 @@ class TransactionController
       unsigned int getTimerQueueSize() const;
       //void setStatisticsInterval(unsigned long seconds) const;
 
-      void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
-      void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void registerMarkListener(MarkListener* listener);
+      void unregisterMarkListener(MarkListener* listener);
 
    private:
       TransactionController(const TransactionController& rhs);
