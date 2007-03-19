@@ -474,7 +474,7 @@ ClientSubscription::send(SharedPtr<SipMessage> msg)
 
    if (!mEnded)
    {
-      if (!mQueuedNotifies.empty())
+      if (!mQueuedNotifies.empty() && msg->isResponse())
       {
          mDum.addTimer(DumTimeout::SendNextNotify, 
                        0, 
