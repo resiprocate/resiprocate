@@ -1854,6 +1854,7 @@ const Codec Codec::GSM_8000("GSM", 3, 8000);
 
 const Codec Codec::TelephoneEvent("telephone-event", 101, 8000);
 const Codec Codec::FrfDialedDigit("frf-dialed-event",102, 8000);
+const Codec Codec::CN("CN", 13, 8000);
 
 bool Codec::sStaticCodecsCreated = false;
 std::auto_ptr<Codec::CodecMap> Codec::sStaticCodecs;
