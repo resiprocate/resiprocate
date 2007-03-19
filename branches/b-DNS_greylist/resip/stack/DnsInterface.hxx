@@ -10,6 +10,7 @@
 #include "rutil/BaseException.hxx"
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/dns/RRVip.hxx"
+#include "resip/stack/TupleMarkManager.hxx"
 
 namespace resip
 {
@@ -88,8 +89,7 @@ class DnsInterface
 
       //void lookupRecords(const Data& target, unsigned short type, DnsRawSink* sink);
       //virtual void handleDnsRaw(ExternalDnsRawResult);
-      void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
-      void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      TupleMarkManager& getMarkManager(){return mMarkManager;}
 
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
@@ -106,6 +106,7 @@ class DnsInterface
 
       DnsStub& mDnsStub;
       RRVip mVip;
+      TupleMarkManager mMarkManager;
 };
 
 }

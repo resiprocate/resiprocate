@@ -51,7 +51,6 @@ SRC = \
 	dns/DnsStub.cxx \
 	dns/ExternalDnsFactory.cxx \
 	dns/RRCache.cxx \
-	dns/RRGreylist.cxx \
 	dns/RRList.cxx \
 	dns/RRVip.cxx \
 	dns/QueryTypes.cxx \
