@@ -80,6 +80,7 @@ class SdpContents : public Contents
                   static const Codec GSM_8000;
                   static const Codec TelephoneEvent;
                   static const Codec FrfDialedDigit;
+                  static const Codec CN;
 
                   typedef HashMap<int, Codec> CodecMap;
                   // "static" payload types as defined in RFC 3551.
@@ -388,6 +389,7 @@ class SdpContents : public Contents
                   const std::list<Connection> getConnections() const;
                   // does not include session connections
                   const std::list<Connection>& getMediumConnections() const {return mConnections;}
+                  std::list<Connection>& getMediumConnections() {return mConnections;}
                   const Encryption& getEncryption() const {return mEncryption;}
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}

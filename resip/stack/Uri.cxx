@@ -1089,6 +1089,17 @@ Uri::encodeEmbeddedHeaders(std::ostream& str) const
    return str;
 }
 
+Data 
+Uri::toString() const
+{
+   Data out;
+   {
+      oDataStream dataStream(out);
+      this->encodeParsed(dataStream);
+   }
+   return out;
+}
+
 HashValueImp(resip::Uri, resip::Data::from(data).hash());
 
 /* ====================================================================
