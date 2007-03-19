@@ -41,8 +41,7 @@ class RRList : public IntrusiveListElement<RRList*>
              int ttl);
       
       void update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl);
-      Records records(const int protocol, bool& allBlacklisted);
-      void blacklist(const int protocol, const DataArr& targetsToBlacklist);
+      Records records(const int protocol);
 
       const Data& key() const { return mKey; }
       int status() const { return mStatus; }
@@ -72,8 +71,6 @@ class RRList : public IntrusiveListElement<RRList*>
 
       RecordItr find(const Data&);
       void clear();
-      bool isBlacklisted(RecordItem&, int protocol);
-      void blacklist(RecordItem&, int protocol);
 };
 
 }
