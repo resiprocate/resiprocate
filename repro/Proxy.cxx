@@ -425,20 +425,7 @@ Proxy::isMyUri(const Uri& uri)
       //       repro are running on the same machine, and they are using the same port but on 
       //       different transports types or interfaces.  In this case we cannot tell, by looking
       //       at a requestUri or From header if the uri is ours or the UA's, and things will break.
-      if(uri.port() == 0)
-      {
-         if(uri.scheme() == Symbols::Sips || 
-            (uri.exists(p_transport) && (uri.param(p_transport) == Symbols::TLS ||
-                                         uri.param(p_transport) == Symbols::DTLS)))
-         {
-            ret = mStack.isMyPort(Symbols::DefaultSipsPort);
-         }
-         else
-         {
-            ret = mStack.isMyPort(Symbols::DefaultSipPort);
-         }
-      }
-      else
+      if(uri.port() != 0)
       {
          ret = mStack.isMyPort(uri.port());
       }
