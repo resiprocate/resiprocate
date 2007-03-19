@@ -20,6 +20,7 @@
       typedef _type Type;                                   \
       typedef _type::Type DType;                            \
       virtual ParameterTypes::Type getTypeNum() const;      \
+      virtual const char* name() const { return _name; }    \
       _enum##_Param();                                      \
    };                                                       \
    extern _enum##_Param p_##_enum
@@ -32,6 +33,7 @@ class ParamBase
    public:
       virtual ~ParamBase() {}
       virtual ParameterTypes::Type getTypeNum() const = 0;
+      virtual const char* name() const = 0;
 };
 
 defineParam(data, "data", ExistsParameter, "RFC 3840");
@@ -104,6 +106,7 @@ defineParam(transport, "transport", DataParameter, "RFC 3261");
 defineParam(ttl, "ttl", UInt32Parameter, "RFC ????");
 defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(user, "user", DataParameter, "RFC ????");
+defineParam(extension, "ext", DataParameter, "RFC ????");
 defineParam(username, "username", QuotedDataParameter, "RFC 3261");
 defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
 defineParam(refresher, "refresher", DataParameter, "RFC 4028");

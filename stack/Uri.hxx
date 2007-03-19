@@ -49,6 +49,8 @@ class Uri : public ParserCategory
       Data& password() {checkParsed(); return mPassword;}
       const Data& password() const {checkParsed(); return mPassword;}
 
+      Data toString() const;
+
       /** Returns true if the uri can be converted into a string that can be
           used as an enum lookup */
       bool isEnumSearchable() const;
