@@ -24,6 +24,8 @@
 #include "resip/stack/DnsInterface.hxx"
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/TupleMarkManager.hxx"
+#include "resip/stack/MarkListener.hxx"
 #include "rutil/dns/RRVip.hxx"
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/dns/DnsHandler.hxx"
@@ -200,6 +202,56 @@ class VipListener : public RRVip::Listener
    }
 };
 */
+
+class TestMarkListener : public MarkListener
+{
+   public:
+      TestMarkListener(const resip::Tuple& listenFor) 
+         : mTuple(listenFor),
+         mGotOkCallback(false),
+         mGotGreylistCallback(false), 
+         mGotBlacklistCallback(false)
+      {}
+      virtual ~TestMarkListener(){}
+      
+      virtual void onMark(const Tuple& tuple, TupleMarkManager::MarkType mark)
+      {
+         if(mTuple == tuple)
+         {
+            switch(mark)
+            {
+               case TupleMarkManager::OK:
+                  mGotOkCallback=true;
+                  break;
+               case TupleMarkManager::GREY:
+                  mGotGreylistCallback=true;
+                  break;
+               case TupleMarkManager::BLACK:
+                  mGotBlacklistCallback=true;
+                  break;
+               default:
+                  ;
+            }
+         }
+      }
+      
+      bool gotOkCallback() const {return mGotOkCallback;}
+      bool gotGreylistCallback() const {return mGotGreylistCallback;}
+      bool gotBlacklistCallback() const {return mGotBlacklistCallback;}
+      
+      void resetAll()
+      {
+         mGotOkCallback=false;
+         mGotGreylistCallback=false;
+         mGotBlacklistCallback=false;
+      }
+   private:
+      Tuple mTuple;
+      bool mGotOkCallback;
+      bool mGotGreylistCallback;
+      bool mGotBlacklistCallback;
+      
+};
 	
 class TestDns : public DnsInterface, public ThreadIf
 {
@@ -268,7 +320,7 @@ main(int argc, const char** argv)
    initNetwork();
    DnsStub* stub = new DnsStub;
    TestDns dns(*stub);
-   dns.run();   
+   dns.run();
    cerr << "Starting" << endl;   
    std::list<Query> queries;
 #if defined(HAVE_POPT_H)
@@ -877,6 +929,9 @@ main(int argc, const char** argv)
       uri.scheme()="sip";
       uri.host()="loadlevel4.test.resiprocate.org";
       
+      TestMarkListener* listener = new TestMarkListener(toBlacklist);
+      dns.getMarkManager().registerMarkListener(listener);
+      
       Query query;                        
       query.handler = new TestDnsHandler(expected,blacklist,uri);
       query.uri = uri;
@@ -889,6 +944,9 @@ main(int argc, const char** argv)
       
       // .bwc. Give this query plenty of time.
       sleep(2);
+      
+      assert(listener->gotBlacklistCallback());
+      listener->resetAll();
       
       // This removes the Tuple toBlacklist
       expected.pop_back();
@@ -955,7 +1013,10 @@ main(int argc, const char** argv)
       }
    
       assert(queries.empty());
-
+      assert(listener->gotOkCallback());
+      listener->resetAll();
+      dns.getMarkManager().unregisterMarkListener(listener);
+      delete listener;
    }
 
    
