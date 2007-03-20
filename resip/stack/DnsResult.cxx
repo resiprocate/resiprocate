@@ -126,7 +126,7 @@ DnsResult::blacklistLast(UInt64 expiry)
       assert(mLastReturnedPath.size()<=3);
       Item top = mLastReturnedPath.back();
    
-      mInterface.getMarkManager().mark(mLastResult,expiry,TupleMarkManager::GREY);
+      mInterface.getMarkManager().mark(mLastResult,expiry,TupleMarkManager::BLACK);
    
       DebugLog( << "Remove vip " << top.domain << "(" << top.rrType << ")");
       mVip.removeVip(top.domain, top.rrType);
