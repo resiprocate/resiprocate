@@ -18,8 +18,10 @@ class ServerInviteSession: public InviteSession
       /** send a 3xx */
       void redirect(const NameAddrs& contacts, int code=302);
 
-      /** send a 1xx - provisional response */
-      void provisional(int code=180);
+      /** send a 1xx - provisional response.  If you set earlyFlag to true, and have provided
+          an answer, then DUM will attach the answer SDP to the provisional response, as an 
+          early media indication */
+      void provisional(int code=180, bool earlyFlag=true);
       
       /** Called to set the offer that will be used in the next message that
           sends an offer. If possible, this will synchronously send the
@@ -79,7 +81,7 @@ class ServerInviteSession: public InviteSession
       // utilities
       void startRetransmit1xxTimer();
       void sendAccept(int code, Contents* sdp); // sends 2xxI
-      void sendProvisional(int code);
+      void sendProvisional(int code, bool earlyFlag);
       void sendUpdate(const SdpContents& sdp);
 
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
