@@ -1722,9 +1722,19 @@ DialogUsageManager::processPublish(const SipMessage& request)
          etag = Random::getCryptoRandom(8);
       }
 
-      ServerPublication* sp = new ServerPublication(*this, etag, request);
-      mServerPublications[etag] = sp;
-      sp->dispatch(request);
+      if (request.getContents())
+      {
+         ServerPublication* sp = new ServerPublication(*this, etag, request);
+         mServerPublications[etag] = sp;
+         sp->dispatch(request);
+      }
+      else
+      {
+         // per 3903 (sec 6.5), a PUB w/ no SIPIfMatch must have contents. .mjf.
+         SharedPtr<SipMessage> response(new SipMessage);
+         makeResponse(*response, request, 400);
+         send(response);
+      }
    }
 }
 
