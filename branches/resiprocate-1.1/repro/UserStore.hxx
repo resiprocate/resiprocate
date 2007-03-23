@@ -27,14 +27,14 @@ class UserStore
       virtual ~UserStore();
       
       void requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& domain,
+                                const resip::Data& realm,
                                 const resip::Data& transactionToken,
                                 resip::TransactionUser& transactionUser ) const;
 
       AbstractDb::UserRecord getUserInfo( const Key& key ) const;
 
       resip::Data getUserAuthInfo( const resip::Data& user,
-                                   const resip::Data& domain ) const;
+                                   const resip::Data& realm ) const;
       
       void addUser( const resip::Data& user, 
                     const resip::Data& domain, 

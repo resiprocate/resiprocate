@@ -4,6 +4,7 @@
 #include "rutil/Data.hxx"
 
 #include "repro/AbstractDb.hxx"
+#include <map>
 
 
 namespace repro
@@ -12,16 +13,16 @@ namespace repro
 class ConfigStore
 {
    public:
-      typedef std::vector<resip::Data> DataList;
+      typedef std::map<resip::Data,AbstractDb::ConfigRecord> ConfigData;
       
       ConfigStore(AbstractDb& db);
       ~ConfigStore();
       
       void addDomain(const resip::Data& domain,
-                     const int tlsPort );
+                     const int tlsPort);
       
-      DataList getDomains() const;
-      int      getTlsPort(const resip::Data& domain) const;
+      const ConfigData& getConfigs() const;
+      int          getTlsPort(const resip::Data& domain) const;
       
       void eraseDomain(const resip::Data& domain);
       
@@ -29,6 +30,7 @@ class ConfigStore
       AbstractDb& mDb;  
 
       AbstractDb::Key buildKey(const resip::Data& domain) const;
+      ConfigData mCachedConfigData;
 };
 
  }

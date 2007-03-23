@@ -79,15 +79,15 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
       }
    }
 
-   ConfigStore::DataList dList = store.mConfigStore.getDomains();
-   for (  ConfigStore::DataList::const_iterator i=dList.begin(); 
+   const ConfigStore::ConfigData& dList = store.mConfigStore.getConfigs();
+   for (  ConfigStore::ConfigData::const_iterator i=dList.begin(); 
            i != dList.end(); ++i)
    {
-      InfoLog (<< "Adding domain " << *i << " from config");
-      tu.addDomain( *i );
+      InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
+      tu.addDomain( i->second.mDomain );
       if ( realm.empty() )
       {
-         realm = *i;
+         realm = i->second.mDomain;
       }
    }
 
