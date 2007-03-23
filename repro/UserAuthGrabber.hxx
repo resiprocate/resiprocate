@@ -29,7 +29,7 @@ class UserAuthGrabber : public Worker
          {
             AbstractDb::UserRecord rec=
                mUserStore.getUserInfo(uinf->user()+"@"+uinf->realm());
-            if(rec.user==uinf->user() && rec.domain==uinf->realm())
+            if(rec.user==uinf->user() && rec.realm==uinf->realm())
             {
                uinf->mRec=rec;
             }

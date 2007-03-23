@@ -536,6 +536,12 @@ endlocal
 				RelativePath=".\TimerCMessage.hxx">
 			</File>
 			<File
+				RelativePath=".\UserAuthGrabber.hxx">
+			</File>
+			<File
+				RelativePath=".\UserInfoMessage.hxx">
+			</File>
+			<File
 				RelativePath=".\UserStore.hxx">
 			</File>
 			<File

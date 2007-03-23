@@ -1335,26 +1335,26 @@ Data::xmlCharDataEncode(std::ostream& s) const
    {
       unsigned char c = *p;
 
-	  switch(c)
-	  {
-	  case '&':
-		  s << "&amp;";
-		  break;
-	  case '<':
-		  s << "&lt;";
-		  break;
-	  case '>':
-		  s << "&gt;";
-		  break;
-	  case '\'':
-		  s << "&apos;";
-		  break;
-	  case '\"':
-		  s << "&quot;";
-		  break;
-	  default:
+      switch(c)
+      {
+      case '&':
+         s << "&amp;";
+         break;
+      case '<':
+         s << "&lt;";
+         break;
+      case '>':
+         s << "&gt;";
+         break;
+      case '\'':
+         s << "&apos;";
+         break;
+      case '\"':
+         s << "&quot;";
+         break;
+      default:
          s << c;
-	  }
+      }
    }
 
    return s;
@@ -1369,45 +1369,45 @@ Data::xmlCharDataDecode(std::ostream& s) const
       unsigned char c = *p;
       if (c == '&')
       {
-		 // look for amp;
-		 if(i+4 < size() && 
-			*(p+1) == 'a' && *(p+2) == 'm' && *(p+3) == 'p' && *(p+4) == ';')
-	     {
+         // look for amp;
+         if(i+4 < size() && 
+            *(p+1) == 'a' && *(p+2) == 'm' && *(p+3) == 'p' && *(p+4) == ';')
+         {
             s << '&';
             p += 4;
-		 }
+         }
          // look for lt;
-		 else if(i+3 < size() && 
-                 *(p+1) == 'l' && *(p+2) == 't' && *(p+3) == ';')
-		 {
-		    s << '<';
-			p += 3;
+         else if(i+3 < size() && 
+            *(p+1) == 'l' && *(p+2) == 't' && *(p+3) == ';')
+         {
+            s << '<';
+            p += 3;
          }
          // look for gt;
-		 else if(i+3 < size() &&
-                 *(p+1) == 'g' && *(p+2) == 't' && *(p+3) == ';')
+         else if(i+3 < size() &&
+            *(p+1) == 'g' && *(p+2) == 't' && *(p+3) == ';')
          {
-		    s << '>';
+            s << '>';
             p += 3;
          }
          // look for apos;
          else if(i+5 < size() && 
-                 *(p+1) == 'a' && *(p+2) == 'p' && *(p+3) == 'o' && *(p+4) == 's' && *(p+5) == ';')
+            *(p+1) == 'a' && *(p+2) == 'p' && *(p+3) == 'o' && *(p+4) == 's' && *(p+5) == ';')
          {
             s << '\'';
             p += 5;
          }
          // look for quot;
          else if(i+5 < size() && 
-		         *(p+1) == 'q' && *(p+2) == 'u' && *(p+3) == 'o' && *(p+4) == 't' && *(p+5) == ';')
+            *(p+1) == 'q' && *(p+2) == 'u' && *(p+3) == 'o' && *(p+4) == 't' && *(p+5) == ';')
          {
             s << '\"';
-			p += 5;
-   		 }
+            p += 5;
+         }
          else // if no conversion found - just leave characters in data
-		 {
+         {
             s << c;
-		 }
+         }
       }
       else
       {
@@ -1440,10 +1440,10 @@ Data::hex() const
    for (size_type i=0; i < mSize; ++i)
    {
       unsigned char temp = *p++;
-	   
+
       int hi = (temp & 0xf0)>>4;
       int low = (temp & 0xf);
-      
+
       *r++ = hexmap[hi];
       *r++ = hexmap[low];
    }
@@ -1497,12 +1497,12 @@ Data::convertInt() const
    {
       if (!isspace(*p))
       {
-	 goto sign_char;
+         goto sign_char;
       }
    }
    return val;
-  sign_char:
-   
+sign_char:
+
    if (*p == '-')
    {
       s = -1;
@@ -1512,12 +1512,12 @@ Data::convertInt() const
    {
       ++p;
    }
-   
+
    for(; p != end; ++p)
    {
       if (!isdigit(*p))
       {
-	 break;
+         break;
       }
       val *= 10;
       val += (*p) - '0';
@@ -1536,22 +1536,22 @@ Data::convertUnsignedLong() const
    {
       if (!isspace(*p))
       {
-	 goto sign_char;
+         goto sign_char;
       }
    }
    return val;
-  sign_char:
+sign_char:
 
    if (*p == '+')
    {
       ++p;
    }
-   
+
    for(; p != end; ++p)
    {
       if (!isdigit(*p))
       {
-	 break;
+         break;
       }
       val *= 10;
       val += (*p) - '0';
@@ -1570,22 +1570,22 @@ Data::convertUInt64() const
    {
       if (!isspace(*p))
       {
-	 goto sign_char;
+         goto sign_char;
       }
    }
    return val;
-  sign_char:
+sign_char:
 
    if (*p == '+')
    {
       ++p;
    }
-   
+
    for(; p != end; ++p)
    {
       if (!isdigit(*p))
       {
-	 break;
+         break;
       }
       val *= 10;
       val += (*p) - '0';
@@ -1604,22 +1604,22 @@ Data::convertSize() const
    {
       if (!isspace(*p))
       {
-	 goto sign_char;
+         goto sign_char;
       }
    }
    return val;
-  sign_char:
+sign_char:
 
    if (*p == '+')
    {
       ++p;
    }
-   
+
    for(; p != end; ++p)
    {
       if (!isdigit(*p))
       {
-	 break;
+         break;
       }
       val *= 10;
       val += (*p) - '0';
