@@ -500,8 +500,8 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "        </thead>" << endl <<
       "        <tbody>" << endl;
    
-   ConfigStore::ConfigData configs = mStore.mConfigStore.getConfigs();
-   for ( ConfigStore::ConfigData::iterator i = configs.begin();
+   const ConfigStore::ConfigData& configs = mStore.mConfigStore.getConfigs();
+   for ( ConfigStore::ConfigData::const_iterator i = configs.begin();
         i != configs.end(); i++ )
    {
       s << 
@@ -629,11 +629,9 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
          "  <td align=\"left\" valign=\"middle\"><select name=\"domain\">" << endl
          ; 
          
-         // for each domain, add an option in the pulldown
-         
-         ConfigStore::ConfigData list = mStore.mConfigStore.getConfigs();
-
-         for ( ConfigStore::ConfigData::iterator i = list.begin();
+         // for each domain, add an option in the pulldown         
+         const ConfigStore::ConfigData& list = mStore.mConfigStore.getConfigs();
+         for ( ConfigStore::ConfigData::const_iterator i = list.begin();
               i != list.end(); i++ )
          {
             s << "            <option";
@@ -787,11 +785,9 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
          "  <td align=\"left\" valign=\"middle\"><select name=\"domain\">" << endl
          ; 
       
-      // for each domain, add an option in the pulldown
-      
-      ConfigStore::ConfigData list = mStore.mConfigStore.getConfigs();
-      
-      for ( ConfigStore::ConfigData::iterator i = list.begin();
+      // for each domain, add an option in the pulldown      
+      const ConfigStore::ConfigData& list = mStore.mConfigStore.getConfigs();      
+      for ( ConfigStore::ConfigData::const_iterator i = list.begin();
             i != list.end(); i++ )
       {
          s << "            <option";
