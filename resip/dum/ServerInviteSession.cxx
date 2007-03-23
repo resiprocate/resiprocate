@@ -86,7 +86,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 }
 
 void 
-ServerInviteSession::provisional(int code)
+ServerInviteSession::provisional(int code, bool earlyFlag)
 {
    InfoLog (<< toData(mState) << ": provisional(" << code << ")");
 
@@ -94,30 +94,30 @@ ServerInviteSession::provisional(int code)
    {
       case UAS_Offer:
          transition(UAS_EarlyOffer);
-         sendProvisional(code);
+         sendProvisional(code, earlyFlag);
          break;
 
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyProvidedAnswer:
          transition(UAS_EarlyProvidedAnswer);
-         sendProvisional(code);
+         sendProvisional(code, earlyFlag);
          break;
 
       case UAS_ProvidedOffer:
       case UAS_EarlyProvidedOffer:
          transition(UAS_EarlyProvidedOffer);
-         sendProvisional(code);
+         sendProvisional(code, earlyFlag);
          break;
          
       case UAS_EarlyOffer:
          transition(UAS_EarlyOffer);
-         sendProvisional(code);
+         sendProvisional(code, earlyFlag);
          break;
          
       case UAS_NoOffer:
       case UAS_EarlyNoOffer:
          transition(UAS_EarlyNoOffer);
-         sendProvisional(code);
+         sendProvisional(code, earlyFlag);
          break;
          
 
@@ -1043,14 +1043,14 @@ ServerInviteSession::startRetransmit1xxTimer()
 }
 
 void
-ServerInviteSession::sendProvisional(int code)
+ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 {
    mDialog.makeResponse(*m1xx, mFirstRequest, code);
    switch (mState)
    {
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyProvidedAnswer:
-         if (mCurrentLocalSdp.get()) // early media
+         if (earlyFlag && mCurrentLocalSdp.get()) // early media
          {
             setSdp(*m1xx, mCurrentLocalSdp.get());
          }
