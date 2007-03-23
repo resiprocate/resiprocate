@@ -79,7 +79,7 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
       }
    }
 
-   ConfigStore::ConfigData dList = store.mConfigStore.getConfigs();
+   const ConfigStore::ConfigData& dList = store.mConfigStore.getConfigs();
    for (  ConfigStore::ConfigData::const_iterator i=dList.begin(); 
            i != dList.end(); ++i)
    {
