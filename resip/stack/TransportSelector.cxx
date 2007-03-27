@@ -137,9 +137,8 @@ TransportSelector::isFinished() const
 
 
 void
-TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
+TransportSelector::addTransport(std::auto_ptr<Transport> transport)
 {
-   Transport* transport = tAuto.release();   
    mDns.addTransportType(transport->transport(), transport->ipVersion());
    switch (transport->transport())
    {
@@ -160,13 +159,13 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
          if (transport->interfaceName().empty() ||
              transport->hasSpecificContact() )
          {
-            mAnyInterfaceTransports[key] = transport;
-            mAnyPortAnyInterfaceTransports[key] = transport;
+            mAnyInterfaceTransports[key] = transport.get();
+            mAnyPortAnyInterfaceTransports[key] = transport.get();
          }
          else
          {
-            mExactTransports[key] = transport;
-            mAnyPortTransports[key] = transport;
+            mExactTransports[key] = transport.get();
+            mAnyPortTransports[key] = transport.get();
          }
       }
       break;
@@ -174,7 +173,7 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
       case DTLS:
       {
          TlsTransportKey key(transport->tlsDomain(),transport->transport(),transport->ipVersion());
-         mTlsTransports[key]=transport;
+         mTlsTransports[key]=transport.get();
       }
          break;
       default:
@@ -184,11 +183,11 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
 
    if (transport->shareStackProcessAndSelect())
    {
-      mSharedProcessTransports.push_back(transport);
+      mSharedProcessTransports.push_back(transport.release());
    }
    else
    {
-      mHasOwnProcessTransports.push_back(transport);
+      mHasOwnProcessTransports.push_back(transport.release());
       transport->startOwnProcessing();
    }
 }
