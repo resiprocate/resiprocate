@@ -170,12 +170,11 @@ SipStack::addTransport( TransportType protocol,
       throw;
    }
    addTransport(std::auto_ptr<Transport>(transport));   
-
-   return (Transport*)transport;
+   return transport;
 }
 
 void 
-SipStack::addTransport( std::auto_ptr<Transport> transport)
+SipStack::addTransport(std::auto_ptr<Transport> transport)
 {
    //.dcm. once addTransport starts throwing, need to back out alias
    if (!transport->interfaceName().empty()) 

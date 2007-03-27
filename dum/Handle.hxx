@@ -91,7 +91,11 @@ class Handle
          return mId == other.mId;
       }
       
-
+      // !nash! to be able to use Handle in Set or Map container
+      bool operator<(const Handle<T>& other) const
+      {
+         return mId < other.mId;
+      }
    protected:
       Handle(HandleManager& ham, Handled* handled) : mHam(&ham), mId(mHam->create(this)) 
       {
