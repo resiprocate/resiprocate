@@ -317,7 +317,13 @@ BaseSecurity::addCertDER (PEMType type,
    assert( !certDER.empty() );
 
    X509* cert = 0;
-   const unsigned char* in = (const unsigned char*)certDER.data();
+
+#if (OPENSSL_VERSION_NUMBER < 0x0090800fL )
+   unsigned char* in = (unsigned char*)certDER.data();
+#else
+   unsigned const char* in = (unsigned const char*)certDER.data();
+#endif
+
    if (d2i_X509(&cert,&in,certDER.size()) == 0)
    {
       ErrLog(<< "Could not read DER certificate from " << certDER );
