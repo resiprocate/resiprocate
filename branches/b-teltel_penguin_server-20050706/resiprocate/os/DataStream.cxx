@@ -43,7 +43,7 @@ DataBuffer::overflow(int c)
 {
    // sync, but reallocate
    size_t len = pptr() - pbase();
-   if (len > 0)
+   if (len >= 0)
    {
       size_t pos = gptr() - eback();  // remember the get position
 
