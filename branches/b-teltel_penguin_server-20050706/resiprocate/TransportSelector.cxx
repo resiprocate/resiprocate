@@ -630,10 +630,10 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
 #endif
          }
-         
 
          Data& encoded = msg->getEncoded();
          encoded.clear();
+         encoded.reserve(1500);
          DataStream encodeStream(encoded);
          msg->encode(encodeStream);
          encodeStream.flush();
