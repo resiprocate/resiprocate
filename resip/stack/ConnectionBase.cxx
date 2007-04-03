@@ -109,6 +109,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             StackLog(<<"Throwing away incoming firewall keep-alive");
             mBufferPos += 4;
             bytesRead -= 4;
+            onDoubleCRLF();
             if (bytesRead)
             {
                goto start;
