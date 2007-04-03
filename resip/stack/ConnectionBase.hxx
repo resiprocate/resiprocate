@@ -82,6 +82,7 @@ class ConnectionBase
       ConnectionBase(const Connection&);
       ConnectionBase& operator=(const Connection&);
    protected:
+      virtual void onDoubleCRLF(){}
       Transport* mTransport;
       Tuple mWho;
       TransportFailure::FailureReason mFailureReason;      

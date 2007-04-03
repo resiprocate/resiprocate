@@ -49,8 +49,7 @@ ServerRegistration::accept(SipMessage& ok)
   contacts = database->getContacts(mAor);
   database->unlockRecord(mAor);
 
-  time_t now;
-  time(&now);
+  UInt64 now=Timer::getTimeMs();
 
   NameAddr contact;
   for (i = contacts.begin(); i != contacts.end(); i++)
@@ -215,50 +214,52 @@ ServerRegistration::dispatch(const SipMessage& msg)
       // our connection to the edge proxy fails, the flow from the edge-proxy to
       // the endpoint is still good, so we should not discard the registration.
       bool haveDirectFlow=true;
-      try
-      {
-         if(supportsOutbound && msg.exists(h_Paths))
-         {
-            for(NameAddrs::const_iterator i = msg.header(h_Paths).begin();
-                  i!=msg.header(h_Paths).end();++i)
-            {
-               haveDirectFlow=false;
-               if(!i->exists(p_ob))
-               {
-                  supportsOutbound=false;
-                  break;
-               }
-            }
-            rec.mSipPath=msg.header(h_Paths);
-         }
-         else if(msg.header(h_Vias).size() > 1)
-         {
-            // !bwc! If there are no path-headers, but there is more than one
-            // Via, this REGISTER has passed through an edge proxy that doesn't
-            // support outbound. We will not be able to reach the UA.
-            supportsOutbound=false;
-         }
-      }
-      catch(resip::ParseBuffer::Exception& e)
-      {
-         supportsOutbound=false;
-      }
-      
-      if(supportsOutbound && i->exists(p_Instance) && i->exists(p_regid))
+      if(supportsOutbound)
       {
          try
          {
-            rec.mInstance=i->param(p_Instance);
-            rec.mRegId=i->param(p_regid);
-            rec.mReceivedFrom.onlyUseExistingConnection=haveDirectFlow;
+            if(msg.exists(h_Paths) 
+               && !msg.header(h_Paths).empty())
+            {
+               haveDirectFlow=false;
+               if(!msg.header(h_Paths).back().exists(p_ob))
+               {
+                  supportsOutbound=false;
+               }
+               rec.mSipPath=msg.header(h_Paths);
+            }
+            else if(msg.header(h_Vias).size() > 1 
+                     || !i->exists(p_Instance) 
+                     || !i->exists(p_regid) )
+            {
+               supportsOutbound=false;
+            }
          }
          catch(resip::ParseBuffer::Exception& e)
          {
             supportsOutbound=false;
          }
       }
-
+      
+      if(i->exists(p_Instance))
+      {
+         rec.mInstance=i->param(p_Instance);
+      }
+      
       rec.mLastUpdated=now;
+
+      // .bwc. The outbound processing
+      if(supportsOutbound)
+      {
+         rec.mRegId=i->param(p_regid);
+         rec.mReceivedFrom.onlyUseExistingConnection=haveDirectFlow;
+      }
+      else
+      {
+         rec.mRegId=0;
+         rec.mReceivedFrom.onlyUseExistingConnection=false;
+      }
+
       
       // Check to see if this is a removal.
       if (expires == 0)

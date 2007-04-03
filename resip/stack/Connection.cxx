@@ -205,6 +205,14 @@ Connection::read(Fifo<TransactionMessage>& fifo)
    return bytesRead;
 }
 
+void
+Connection::onDoubleCRLF()
+{
+   // !bwc! TODO might need to make this more efficient.
+   // ?bwc? We don't need a sigcomp id, do we?
+   requestWrite(new SendData(mWho,Symbols::CRLF,Data::Empty,Data::Empty));
+}
+
 bool 
 Connection::hasDataToRead()
 {
