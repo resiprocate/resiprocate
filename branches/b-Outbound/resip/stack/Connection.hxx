@@ -74,6 +74,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       virtual int read(char* /* buffer */, const int /* count */) { return 0; }
       /// pure virtual, but need concrete Connection for book-ends of lists
       virtual int write(const char* /* buffer */, const int /* count */) { return 0; }
+      virtual void onDoubleCRLF();
 
 
    private:
