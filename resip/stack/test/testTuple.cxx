@@ -53,13 +53,13 @@ main()
       resip::Data token6;
       resip::Data tokenloopback;
       
-      Tuple::binaryToken(t1,token1);
-      Tuple::binaryToken(t2,token2);
-      Tuple::binaryToken(t3,token3);
-      Tuple::binaryToken(t4,token4);
-      Tuple::binaryToken(t5,token5);
-      Tuple::binaryToken(t6,token6);
-      Tuple::binaryToken(loopback,tokenloopback);
+      Tuple::writeBinaryToken(t1,token1);
+      Tuple::writeBinaryToken(t2,token2);
+      Tuple::writeBinaryToken(t3,token3);
+      Tuple::writeBinaryToken(t4,token4);
+      Tuple::writeBinaryToken(t5,token5);
+      Tuple::writeBinaryToken(t6,token6);
+      Tuple::writeBinaryToken(loopback,tokenloopback);
             
       Tuple t1prime=Tuple::makeTuple(token1);
       Tuple t2prime=Tuple::makeTuple(token2);
@@ -118,13 +118,13 @@ main()
       resip::Data token6;
       resip::Data tokenloopback;
       
-      Tuple::binaryToken(t1,token1);
-      Tuple::binaryToken(t2,token2);
-      Tuple::binaryToken(t3,token3);
-      Tuple::binaryToken(t4,token4);
-      Tuple::binaryToken(t5,token5);
-      Tuple::binaryToken(t6,token6);
-      Tuple::binaryToken(loopback,tokenloopback);
+      Tuple::writeBinaryToken(t1,token1);
+      Tuple::writeBinaryToken(t2,token2);
+      Tuple::writeBinaryToken(t3,token3);
+      Tuple::writeBinaryToken(t4,token4);
+      Tuple::writeBinaryToken(t5,token5);
+      Tuple::writeBinaryToken(t6,token6);
+      Tuple::writeBinaryToken(loopback,tokenloopback);
             
       Tuple t1prime=Tuple::makeTuple(token1);
       Tuple t2prime=Tuple::makeTuple(token2);
