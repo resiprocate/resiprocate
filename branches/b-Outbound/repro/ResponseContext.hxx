@@ -257,6 +257,8 @@ class ResponseContext
       bool mSecure;
 
       void forwardBestResponse();
+
+      void massageRoute(resip::NameAddr& rt, bool doFidStuff);
       
       friend class RequestContext;
       friend std::ostream& operator<<(std::ostream& strm, const repro::ResponseContext& rc);

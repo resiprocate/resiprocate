@@ -204,7 +204,7 @@ Tuple::Tuple(const struct sockaddr& addr,
 }
 
 void
-Tuple::binaryToken(const resip::Tuple& tuple,resip::Data& container)
+Tuple::writeBinaryToken(const resip::Tuple& tuple,resip::Data& container)
 {
    UInt32 rawToken[6];
    bzero(&rawToken, 24);
