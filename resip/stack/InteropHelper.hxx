@@ -14,13 +14,15 @@ class InteropHelper
    public:
       static int getOutboundVersion() {return theOutboundVersion;}
       static void setOutboundVersion(int version) {theOutboundVersion=version;}
-      
+      static bool getOutboundSupported() {return isOutboundSupported;}
+      static void setOutboundSupported(bool supported) {isOutboundSupported=supported;}
       
    private:
       InteropHelper();
       ~InteropHelper();
       
       static int theOutboundVersion;
+      static bool isOutboundSupported;
 };
 }
 
