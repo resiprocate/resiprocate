@@ -79,15 +79,15 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
       }
    }
 
-   ConfigStore::DataList dList = store.mConfigStore.getDomains();
-   for (  ConfigStore::DataList::const_iterator i=dList.begin(); 
+   const ConfigStore::ConfigData& dList = store.mConfigStore.getConfigs();
+   for (  ConfigStore::ConfigData::const_iterator i=dList.begin(); 
            i != dList.end(); ++i)
    {
-      InfoLog (<< "Adding domain " << *i << " from config");
-      tu.addDomain( *i );
+      InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
+      tu.addDomain( i->second.mDomain );
       if ( realm.empty() )
       {
-         realm = *i;
+         realm = i->second.mDomain;
       }
    }
 
@@ -436,11 +436,15 @@ main(int argc, char** argv)
 
       // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
       resip::MessageFilterRule::MethodList methodList;
+      resip::MessageFilterRule::EventList eventList;
       methodList.push_back(resip::SUBSCRIBE);
       methodList.push_back(resip::PUBLISH);
+      eventList.push_back(resip::Symbols::Credential);
+      eventList.push_back(resip::Symbols::Certificate);
       ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
                                            resip::MessageFilterRule::Any,
-                                           methodList) );
+                                           methodList,
+                                           eventList));
 #endif
    }
 

@@ -365,11 +365,9 @@ InviteSession::provideOffer(const SdpContents& offer,
          send(mInvite200);
          startRetransmit200Timer();
          break;
-         
-         
-      // ?slg? Can we handle all of the states listed in isConnected() ???
+                  
       default:
-         WarningLog (<< "Can't provideOffer when not in Connected state");
+         WarningLog (<< "Incorrect state to provideOffer: " << toData(mState));
          throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
    }
 }
@@ -423,8 +421,8 @@ InviteSession::provideAnswer(const SdpContents& answer)
          break;
 
       default:
-         WarningLog (<< "Can't provideAnswer when not in Connected state");
-         throw DialogUsage::Exception("Can't provide an offer", __FILE__,__LINE__);
+         WarningLog (<< "Incorrect state to provideAnswer: " << toData(mState));
+         throw DialogUsage::Exception("Can't provide an answer", __FILE__,__LINE__);
    }
 }
 
@@ -1469,9 +1467,18 @@ InviteSession::dispatchTerminated(const SipMessage& msg)
 
    if (msg.isRequest())
    {
-      SharedPtr<SipMessage> response(new SipMessage);
-      mDialog.makeResponse(*response, msg, 481);
-      send(response);
+      if (BYE == msg.header(h_CSeq).method())
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+      }
+      else
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 481);
+         send(response);
+      }
 
       // !jf! means the peer sent BYE while we are waiting for response to BYE
       //mDum.destroy(this);

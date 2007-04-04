@@ -802,13 +802,19 @@ Uri::parse(ParseBuffer& pb)
       start = pb.skipChar();
       pb.skipToChar(']');
       pb.data(mHost, start);
-      if(DnsUtil::isIpV6Address(mHost))
+      // .bwc. We do not save this canonicalization, since we weren't doing so
+      // before. This may change soon.
+      Data canonicalizedHost=DnsUtil::canonicalizeIpV6Address(mHost);
+      if(canonicalizedHost.empty())
       {
-         DnsUtil::canonicalizeIpV6Address(mHost);
-      }
-      else
-      {
-         // !bwc! Should the parse fail here, or do we just shrug it off?
+         // ?bwc? So the V6 addy is garbage. I think the parse should fail at 
+         // this point, but most of the code assumes that it will fail by 
+         // throwing a ParseBuffer::Exception. We are not a ParseBuffer, so this
+         // is a little ugly. Oh well. Does anyone disagree?
+         throw ParseBuffer::Exception("Unparsable V6 address (note, this might"
+                                    " be unparsable because IPV6 support is not"
+                                    " enabled)","Uri",__FILE__,
+                                       __LINE__);
       }
       pb.skipChar();
    }
@@ -848,6 +854,13 @@ Uri::clone() const
 
 void Uri::setUriUserEncoding(char c, bool encode) 
 {
+   if(!mEncodingReady)
+   {
+      // if we don't init first, the changes we make will be lost when
+      // init is invoked
+      initialiseEncodingTables();
+   }
+
    if(c < 0)
    {
       ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
@@ -859,6 +872,13 @@ void Uri::setUriUserEncoding(char c, bool encode)
 
 void Uri::setUriPasswordEncoding(char c, bool encode)
 {
+   if(!mEncodingReady)
+   {
+      // if we don't init first, the changes we make will be lost when
+      // init is invoked
+      initialiseEncodingTables();
+   }
+
    if(c < 0)
    {
       ErrLog(<< "unable to change encoding for character '" << c << "', table size = " << URI_ENCODING_TABLE_SIZE);
@@ -1067,6 +1087,17 @@ Uri::encodeEmbeddedHeaders(std::ostream& str) const
       str << mEmbeddedHeadersText;
    }
    return str;
+}
+
+Data 
+Uri::toString() const
+{
+   Data out;
+   {
+      oDataStream dataStream(out);
+      this->encodeParsed(dataStream);
+   }
+   return out;
 }
 
 HashValueImp(resip::Uri, resip::Data::from(data).hash());

@@ -3,6 +3,7 @@
 #endif
 
 #include "resip/stack/SdpContents.hxx"
+#include "resip/stack/Helper.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/DataStream.hxx"
 #include "resip/stack/Symbols.hxx"
@@ -549,7 +550,7 @@ SdpContents::Session::Connection::parse(ParseBuffer& pb)
    pb.data(mAddress, anchor);
 
    mTTL = 0;
-   if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
+   if (mAddrType == IP4 && !pb.eof() && *pb.position() == Symbols::SLASH[0])
    {
       pb.skipChar();
       mTTL = pb.integer();
@@ -1067,6 +1068,7 @@ SdpContents::Session::encode(ostream& s) const
 
    if (!mUri.host().empty())
    {
+      s << "u=";
       mUri.encode(s);
       s << Symbols::CRLF;
    }
@@ -1323,6 +1325,8 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
       mConnections.back().parse(pb);
       if (!pb.eof() && *pb.position() == Symbols::SLASH[0])
       {
+         // Note:  we only get here if there was a /<number of addresses> 
+         //        parameter following the connection address. 
          pb.skipChar();
          int num = pb.integer();
 
@@ -1331,22 +1335,36 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
          int i = addr.size() - 1;
          for (; i; i--)
          {
-            if (addr[i] == '.')
+            if (addr[i] == '.' || addr[i] == ':') // ipv4 or ipv6
             {
                break;
             }
          }
 
-         if (addr[i] == '.')
+         if (addr[i] == '.')  // add a number of ipv4 connections
          {
-            Data before(addr.data(), i);
+            Data before(addr.data(), i+1);
             ParseBuffer subpb(addr.data()+i+1, addr.size()-i-1);
             int after = subpb.integer();
 
-            for (int i = 0; i < num-1; i++)
+            for (int i = 1; i < num; i++)
             {
                addConnection(con);
                mConnections.back().mAddress = before + Data(after+i);
+            }
+         }
+         if (addr[i] == ':') // add a number of ipv6 connections
+         {
+            Data before(addr.data(), i+1);
+            int after = Helper::hex2integer(addr.data()+i+1);
+            char hexstring[9];
+
+            for (int i = 1; i < num; i++)
+            {
+               addConnection(con);
+               memset(hexstring, 0, sizeof(hexstring));
+               Helper::integer2hex(hexstring, after+i, false /* supress leading zeros */);
+               mConnections.back().mAddress = before + Data(hexstring);
             }
          }
 
@@ -1497,7 +1515,9 @@ const list<SdpContents::Session::Connection>
 SdpContents::Session::Medium::getConnections() const
 {
    list<Connection> connections = const_cast<Medium*>(this)->getMediumConnections();
-   if (mSession)
+   // If there are connections specified at the medium level, then check if a session level
+   // connection is present - if so then return it
+   if (connections.empty() && mSession && !mSession->connection().getAddress().empty())
    {
       connections.push_back(mSession->connection());
    }
@@ -1669,11 +1689,13 @@ SdpContents::Session::Medium::findTelephoneEventPayloadType() const
 
 Codec::Codec(const Data& name,
              unsigned long rate,
-             const Data& parameters)
+             const Data& parameters,
+             const Data& encodingParameters)
    : mName(name),
      mRate(rate),
      mPayloadType(-1),
-     mParameters(parameters)
+     mParameters(parameters),
+     mEncodingParameters(encodingParameters)
 {
 }
 
@@ -1681,15 +1703,15 @@ Codec::Codec(const Codec& rhs)
    : mName(rhs.mName),
      mRate(rhs.mRate),
      mPayloadType(rhs.mPayloadType),
-     mParameters(rhs.mParameters)
+     mParameters(rhs.mParameters),
+     mEncodingParameters(rhs.mEncodingParameters)
 {
 }
 
 Codec::Codec(const Data& name, int payloadType, int rate)
    : mName(name),
      mRate(rate),
-     mPayloadType(payloadType),
-     mParameters()
+     mPayloadType(payloadType)
 {
 }
 
@@ -1702,6 +1724,7 @@ Codec::operator=(const Codec& rhs)
       mRate = rhs.mRate;
       mPayloadType = rhs.mPayloadType;
       mParameters = rhs.mParameters;
+      mEncodingParameters = rhs.mEncodingParameters;
    }
    return *this;
 }
@@ -1716,6 +1739,13 @@ Codec::parse(ParseBuffer& pb,
    pb.data(mName, anchor);
    pb.skipChar(Symbols::SLASH[0]);
    mRate = pb.integer();
+   pb.skipToChar(Symbols::SLASH[0]);
+   if(!pb.eof() && *pb.position() == Symbols::SLASH[0])
+   {
+      anchor = pb.skipChar(Symbols::SLASH[0]);
+      pb.skipToEnd();
+      pb.data(mEncodingParameters, anchor);
+   }
    mPayloadType = payloadType;
 
    // get parameters if they exist
@@ -1795,7 +1825,11 @@ Codec::CodecMap& Codec::getStaticCodecs()
 bool
 resip::operator==(const Codec& lhs, const Codec& rhs)
 {
-   return (isEqualNoCase(lhs.mName, rhs.mName) && lhs.mRate == rhs.mRate);
+   static Data defaultEncodingParameters(Data("1"));  // Default for audio streams (1-Channel)
+   return (isEqualNoCase(lhs.mName, rhs.mName) && lhs.mRate == rhs.mRate && 
+           (lhs.mEncodingParameters == rhs.mEncodingParameters ||
+            (lhs.mEncodingParameters.empty() && rhs.mEncodingParameters == defaultEncodingParameters) ||
+            (lhs.mEncodingParameters == defaultEncodingParameters && rhs.mEncodingParameters.empty())));
 }
 
 ostream&
@@ -1804,6 +1838,11 @@ resip::operator<<(ostream& str, const Codec& codec)
    str << codec.mName;
    str << Symbols::SLASH[0];
    str << codec.mRate;
+   if(!codec.mEncodingParameters.empty())
+   {
+      str << Symbols::SLASH[0];
+      str << codec.mEncodingParameters;
+   }
    return str;
 }
 
@@ -1815,6 +1854,7 @@ const Codec Codec::GSM_8000("GSM", 3, 8000);
 
 const Codec Codec::TelephoneEvent("telephone-event", 101, 8000);
 const Codec Codec::FrfDialedDigit("frf-dialed-event",102, 8000);
+const Codec Codec::CN("CN", 13, 8000);
 
 bool Codec::sStaticCodecsCreated = false;
 std::auto_ptr<Codec::CodecMap> Codec::sStaticCodecs;

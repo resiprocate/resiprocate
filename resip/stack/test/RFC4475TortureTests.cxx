@@ -690,7 +690,7 @@ a=rtpmap:31 LPC
    tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
    tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
-   // !bwc! Is it appropriate to use a one-size-fits-all approach to unescaping
+   // ?bwc? Is it appropriate to use a one-size-fits-all approach to unescaping
    // parsed components? ('@' is not legal in a userpart, but the internal
    // representation contains it)
    // What is the best approach: all (unescape everything that is printable),
@@ -726,7 +726,7 @@ a=rtpmap:31 LPC
    tassert(msg->header(resip::h_From).displayName().empty());
    tassert(!(msg->header(resip::h_From).isAllContacts()));
    tassert(msg->header(resip::h_From).uri().scheme()=="sip");
-   // !bwc! ' ' is not legal in a userpart, but the internal
+   // ?bwc? ' ' is not legal in a userpart, but the internal
    // representation contains it. Is this appropriate?
    tassert(msg->header(resip::h_From).uri().user()=="I%20have%20spaces");
    tassert_reset();
@@ -810,7 +810,7 @@ a=rtpmap:31 LPC
    tassert(msg->header(resip::h_Contacts).begin()->uri().numKnownParams()==0);
    tassert(msg->header(resip::h_Contacts).begin()->uri().numUnknownParams()==2);
 
-   // !bwc! These params have escaped stuff in them; is it mandatory that we
+   // ?bwc? These params have escaped stuff in them; is it mandatory that we
    // treat escaped and unescaped versions of the same parameter as identical?
    
    resip::ExtensionParameter p_wonky1("%6C%72");
@@ -1926,7 +1926,7 @@ a=rtpmap:31 LPC
 
    //Content-Length: 0
    tassert(msg->exists(resip::h_ContentLength));
-   // !bwc! We configured SipMessage to take the Content-Length seriously
+   // .bwc. We configured SipMessage to take the Content-Length seriously
    tassert(msg->header(resip::h_ContentLength).value()==0);
    tassert(msg->header(resip::h_ContentLength).numKnownParams()==0);
    tassert(msg->header(resip::h_ContentLength).numUnknownParams()==0);
@@ -2011,7 +2011,7 @@ l: 0
    tassert(msg->header(resip::h_RequestLine).numKnownParams()==0);
    tassert(msg->header(resip::h_RequestLine).numUnknownParams()==0);
    tassert(msg->header(resip::h_RequestLine).uri().scheme()=="sip");
-   // !bwc! Need to determine how escaped stuff should be represented internally
+   // ?bwc? Need to determine how escaped stuff should be represented internally
    tassert(msg->header(resip::h_RequestLine).uri().user()=="user;par=u%40example.net");
    tassert_reset();
    tassert(msg->header(resip::h_RequestLine).uri().password().empty());
@@ -2512,9 +2512,11 @@ hÎÿ®<½+ÿuİÕdY=ÖG(òb ÷éAt3
    
    tassert(v->exists(resip::p_branch));
    tassert(v->param(resip::p_branch).hasMagicCookie());
-   // !bwc! This branch parameter has resip-specific tokens in it. The "d87543"
-   // is a resip cookie, and the "1" is a transport sequence.
-   tassert(v->param(resip::p_branch).getTransactionId()=="4dade06d0bdb11ee");
+   // .bwc. This branch parameter has old resip-specific tokens in it. The 
+   // "d87543" used to be the resip cookie, but the resip cookie has since 
+   // changed. So, the whole branch param is taken as the transaction id.
+   tassert(v->param(resip::p_branch).getTransactionId()==
+                                 "-d87543-4dade06d0bdb11ee-1--d87543-");
    tassert(v->param(resip::p_branch).clientData().empty());
    
    tassert(v->exists(resip::p_rport));
@@ -2615,7 +2617,7 @@ hÎÿ®<½+ÿuİÕdY=ÖG(òb ÷éAt3
    tassert(msg->header(resip::h_CSeq).numKnownParams()==0);
    tassert(msg->header(resip::h_CSeq).numUnknownParams()==0);
 
-   // !bwc! There appears to be some controversy over how this particular
+   // .bwc. There appears to be some controversy over how this particular
    // header should be implemented...
    //Content-Transfer-Encoding: binary
    tassert(msg->exists(resip::h_ContentTransferEncoding));

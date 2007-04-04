@@ -70,6 +70,7 @@ class Tuple
       // convert from a tuple to a sockaddr structure
       const sockaddr& getSockaddr() const { return mSockaddr; }
       sockaddr& getMutableSockaddr() { return mSockaddr; }
+      void setSockaddr(const GenericIPAddress &);
 
       TransportType getType() const { return mTransportType; }
       void setType(TransportType type) { mTransportType = type ;}

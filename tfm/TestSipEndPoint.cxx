@@ -15,6 +15,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
+#include "rutil/DnsUtil.hxx"
 
 #include "tfm/DialogSet.hxx"
 #include "tfm/PortAllocator.hxx"
@@ -108,16 +109,18 @@ TestSipEndPoint::TestSipEndPoint(const Uri& contactUrl,
    DebugLog(<< "TestSipEndPoint::TestSipEndPoint contact: " << mContact);
    if (hasStack)
    {
+      resip::IpVersion version = (DnsUtil::isIpV6Address(interfaceObj) ? V6 : V4);
+
       if (!contactUrl.exists(p_transport) ||
           (contactUrl.param(p_transport) == Tuple::toData(UDP)))
       {
          //CerrLog(<< "transport is UDP " << interfaceObj);
-         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), V4, StunDisabled, interfaceObj);
+         mTransport = new UdpTransport(mIncoming, mContact.uri().port(), version, StunDisabled, interfaceObj);
       }
       else if (contactUrl.param(p_transport) == Tuple::toData(TCP))
       {
          //CerrLog(<< "transport is TCP " << interfaceObj);
-         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), V4, interfaceObj);
+         mTransport = new TcpTransport(mIncoming, mContact.uri().port(), version, interfaceObj);
       }
 /*
       else if (contactUrl.param(p_transport) == Tuple::toData(Transport::TLS))
@@ -1119,9 +1122,26 @@ TestSipEndPoint::Subscribe::operator()()
 }
 
 void 
-TestSipEndPoint::Subscribe::operator()(boost::shared_ptr<Event> event) 
+TestSipEndPoint::Subscribe::operator()(boost::shared_ptr<Event> event)
 {
-   go(); 
+   if (! mEndPoint.getDialog())
+   {
+      // subscribe creating a dialog from an incoming request, as opposed to the normal 1xx, 2xx response to INVITE.
+      // The test we want to achieve is:
+      // --INV-->, <--SUB--, <--1xx--, <--2xx--, --ACK-->, --200(SUB)-->, etc...
+      SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
+      if (sipEvent)
+      {
+         shared_ptr<SipMessage> request = sipEvent->getMessage();
+         if (request && request->isRequest())
+         {
+            // Create the dialog by making a dummy response.
+            shared_ptr<SipMessage> dummy = mEndPoint.makeResponse(*request, 180);
+         }
+      }
+   }
+
+   go();
 }
 
 void
@@ -1837,9 +1857,9 @@ TestSipEndPoint::Send200ToRegister::go(boost::shared_ptr<resip::SipMessage> msg)
 
    // check whether we need to remove bindings
    bool bExpires = false;
-   if( msg->header(h_Contacts).front().param(p_expires) == 0 )
+   if( msg->header(h_Contacts).front().exists(p_expires) && msg->header(h_Contacts).front().param(p_expires) == 0 )
       bExpires = true;
-   if( msg->header(h_Expires).value() == 0 )
+   if( ! bExpires && msg->exists(h_Expires) && msg->header(h_Expires).value() == 0 )
       bExpires = true;
 
    if( !bExpires )
@@ -1854,7 +1874,10 @@ TestSipEndPoint::Send200ToRegister::go(boost::shared_ptr<resip::SipMessage> msg)
    // add rport and received to via
    if( mUseContact )
    {
-      response->header(h_Vias).front().param(p_received) = mContact.uri().host();
+      if (! mContact.uri().host().empty())
+         response->header(h_Vias).front().param(p_received) = mContact.uri().host();
+      else
+         response->header(h_Vias).front().remove(p_received);
       response->header(h_Vias).front().param(p_rport).port() = mContact.uri().port();
    }
 
@@ -1997,6 +2020,47 @@ TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::answer(const boost::shared_ptr<resip::SdpContents>& sdp)
 {
    return new Answer(*this, sdp);
+}
+
+TestSipEndPoint::AnswerTo::AnswerTo(
+   TestSipEndPoint& endPoint,
+   const boost::shared_ptr<resip::SipMessage>& msg,
+   boost::shared_ptr<resip::SdpContents> sdp
+) :
+   MessageAction(endPoint, Uri()),
+   mMsg(msg),
+   mSdp(sdp)
+{}
+
+boost::shared_ptr<SipMessage>
+TestSipEndPoint::AnswerTo::go()
+{
+   boost::shared_ptr<resip::SipMessage> invite;
+   invite = mEndPoint.getReceivedInvite(mMsg->header(resip::h_CallId));
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*invite, 200);
+   const resip::SdpContents* sdp;
+   if( mSdp.get() )
+      sdp = dynamic_cast<const resip::SdpContents*>(mSdp.get());
+   else
+      sdp = dynamic_cast<const resip::SdpContents*>(invite->getContents());
+   response->setContents(sdp);
+   return response;
+}
+
+resip::Data
+TestSipEndPoint::AnswerTo::toString() const
+{
+   return mEndPoint.getName() + ".answer()";
+}
+
+
+TestSipEndPoint::MessageAction*
+TestSipEndPoint::answerTo(
+   const boost::shared_ptr<resip::SipMessage>& invite,
+   boost::shared_ptr<resip::SdpContents> sdp
+)
+{
+   return new AnswerTo(*this, invite, sdp);
 }
 
 TestSipEndPoint::MessageExpectAction* 

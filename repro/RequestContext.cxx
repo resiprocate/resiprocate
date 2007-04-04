@@ -35,6 +35,7 @@ RequestContext::RequestContext(Proxy& proxy,
    mHaveSentFinalResponse(false),
    mOriginalRequest(0),
    mCurrentEvent(0),
+   mAck200ToRetransmit(0),
    mRequestProcessorChain(requestP),
    mResponseProcessorChain(responseP),
    mTargetProcessorChain(targetP),
@@ -57,6 +58,8 @@ RequestContext::~RequestContext()
    }
    delete mCurrentEvent;
    mCurrentEvent = 0;
+   delete mAck200ToRetransmit;
+   mAck200ToRetransmit=0;
 }
 
 
@@ -80,6 +83,7 @@ RequestContext::process(resip::TransactionTerminated& msg)
 void
 RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 {
+   bool original = false;
    DebugLog (<< "process(SipMessage) " << *this);
 
    if (mCurrentEvent != mOriginalRequest)
@@ -93,6 +97,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
    { 
       assert(sip);
       mOriginalRequest=sip;
+      original = true;
 	  
 	  // RFC 3261 Section 16.4
       try
@@ -107,6 +112,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          Helper::makeResponse(response, *mOriginalRequest,400); 
          response.header(h_StatusLine).reason()="Malformed header-field-value: " + e.getMessage();
          sendResponse(response);
+         return;
       }
       catch(resip::BaseException& e)
       {
@@ -115,6 +121,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          Helper::makeResponse(response, *mOriginalRequest,500); 
          response.header(h_StatusLine).reason()="Server error: " + e.getMessage();
          sendResponse(response);
+         return;
       }
    }
 
@@ -123,66 +130,78 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
    if (sip->isRequest())
    {
       DebugLog(<<"Got a request.");
-      // !bwc! Totally different handling for ACK.
+      // .bwc. Totally different handling for ACK.
       if(sip->method()==ACK)
       {
          DebugLog(<<"This request is an ACK.");
-         // !bwc! This takes care of ACK/200 and stray ACK failure
+         // .bwc. This takes care of ACK/200 and stray ACK failure
          // (ie, the ACK has its own transaction)
          if(mOriginalRequest->method() == ACK)
          {
             DebugLog(<<"This ACK has its own tid.");
-            if(sip->exists(h_Routes) && !sip->header(h_Routes).empty())
+
+            try
             {
-               mResponseContext.cancelAllClientTransactions();
-               addTarget(NameAddr(sip->header(h_RequestLine).uri()),true);
-            }
-            else if(!getProxy().isMyUri(sip->header(h_RequestLine).uri()))
-            {
-               try
+               // !slg! look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
+               if((!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
+                   getProxy().isMyUri(sip->header(h_RequestLine).uri()))
                {
-                  if (getProxy().isMyUri(sip->header(h_From).uri()))
-                  {
-                     mResponseContext.cancelAllClientTransactions();
-                     addTarget(NameAddr(sip->header(h_RequestLine).uri()),true);
-                  }
-                  else
-                  {
-                     // !bwc! Someone is using us to relay an ACK, but host in
-                     // From isn't ours, host in request-uri isn't ours, and no
-                     // Route headers. Refusing to do so.
-                  }
+                  // .bwc. Someone sent an ACK with us in the Request-Uri, and no
+                  // Route headers (after we have removed ourself). We will never perform 
+                  // location service or retargeting on an ACK, and we shouldn't send 
+                  // it to ourselves.  So, just drop the thing.
+                  InfoLog(<<"Stray ACK aimed at us that routes back to us. Dropping it...");            
                }
-               catch(resip::ParseBuffer::Exception&)
+               // Note: mTopRoute is only populated if RemoveTopRouteIfSelf successfully removes the top route.
+               else if(!mTopRoute.uri().host().empty() || getProxy().isMyUri(sip->header(h_From).uri()))
                {
-                  // !bwc! Someone is trying to get us to relay an ACK, but
-                  // can't get a host out of From to authorize the relay.
+                  // Top most route is us, or From header uri is ours.  Note:  The From check is 
+                  // required to interoperate with endpoints that configure outbound proxy 
+                  // settings, and do not place the outbound proxy in a Route header.
+                  mResponseContext.cancelAllClientTransactions();
+                  forwardAck200(*mOriginalRequest);
+               }
+               else
+               {
+                  // !slg! Someone is using us to relay an ACK, but we are not the 
+                  // top-most route and the host in From isn't ours. Refusing to do so.
+                  InfoLog(<<"Top most route or From header are not ours.  We do not allow relaying ACKs.  Dropping it...");            
                }
             }
-            else
+            catch(resip::ParseBuffer::Exception&)
             {
-               // !bwc! Someone sent an ACK with us in the Request-Uri, and no
-               // Route headers. We will never perform location service or
-               // retargeting on an ACK, and we shouldn't send it to ourselves.
-               // So, just drop the thing.
-               InfoLog(<<"Stray ACK aimed at us. Dropping it...");            
+               InfoLog(<<"Parse error processing ACK. Dropping it...");            
             }
 
-            DebugLog(<<"Posting Ack200DoneMessage");
-            mProxy.post(new Ack200DoneMessage(getTransactionId()));
-         
-
+            if(original)  // Only queue Ack200Done if this is the original request
+            {
+               DebugLog(<<"Posting Ack200DoneMessage");
+               // .bwc. This needs to have a timer attached to it. (We need to
+               // wait until all potential retransmissions of the ACK/200 have
+               // stopped. However, we must be mindful that we may receive a new,
+               // non-ACK transaction with the same tid during this time, and make
+               // sure we don't explode violently when this happens.)
+               mProxy.postMS(
+                  std::auto_ptr<ApplicationMessage>(new Ack200DoneMessage(getTransactionId())),
+                  64*resip::Timer::T1);
+            }
          }
          else //This takes care of ACK/failure and malformed ACK/200
          {
+            // .bwc. The stack should not be forwarding ACK/failure to the TU,
+            // nor should we be getting a bad ACK/200. (There is code further
+            // up that makes bad ACK/200 look like a new transaction, like it
+            // is supposed to be.)
+            // TODO Remove this code block entirely.
+            
             DebugLog(<<"This ACK has the same tid as the original INVITE.");
             DebugLog(<<"The reponse we sent back was a " 
                   << mResponseContext.mBestResponse.header(h_StatusLine).statusCode());
-            // !bwc! Since this is not an ACK transaction, the stack will let
+            // .bwc. Since this is not an ACK transaction, the stack will let
             // us know when we need to clean up.
             if(!mHaveSentFinalResponse)
             {
-               // !bwc! Whoa, something went wrong here. We got an ACK, but we
+               // .bwc. Whoa, something went wrong here. We got an ACK, but we
                // haven't sent back a final response. The stack shouldn't have
                // allowed this through!
                ErrLog(<<"Got an ACK, but haven't sent a final response. "
@@ -190,9 +209,6 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             }
             else if(mResponseContext.mBestResponse.header(h_StatusLine).statusCode() / 100 == 2)
             {
-               // !bwc! Ugh. Some bozo didn't change the transaction id for
-               // the ACK/200.
-               
                InfoLog(<<"Got an ACK within an INVITE transaction, but our "
                         "response was a 2xx. Someone didn't change their tid "
                         "like they were supposed to...");
@@ -208,7 +224,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   )
                   )
                {
-                  forwardAck(*sip);
+                  forwardAck200(*sip);
                }
             }
             
@@ -265,7 +281,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
             {
                if(mResponseContext.hasActiveTransactions())
                {
-                  // !bwc! Whoops. We may have just forwarded garbage upstream.
+                  // .bwc. Whoops. We may have just forwarded garbage upstream.
                   // TODO is it appropriate to try to CANCEL here?
                   ErrLog(<<"Server error caught after"
                                  " request was forwarded. Exception was: "<<e);
@@ -329,7 +345,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       catch(resip::BaseException& e)
       {
          ErrLog(<<"Exception thrown in response processor chain: " << e);
-         //!bwc! TODO what do we do here? Continue processing? Give up?
+         // ?bwc? TODO what do we do here? Continue processing? Give up?
       }
 
       // TODO
@@ -457,8 +473,8 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
                   {
                      if(mResponseContext.hasActiveTransactions())
                      {
-                        // !bwc! Whoops. We may have just forwarded garbage upstream.
-                        // TODO is it appropriate to try to CANCEL here?
+                        // .bwc. Whoops. We may have just forwarded garbage upstream.
+                        // ?bwc? TODO is it appropriate to try to CANCEL here?
                         ErrLog(<<"Server error caught after"
                                        " request was forwarded. Exception was: "<<e);
                      }
@@ -524,15 +540,18 @@ RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 }
 
 void
-RequestContext::forwardAck(const resip::SipMessage& ack)
+RequestContext::forwardAck200(const resip::SipMessage& ack)
 {
-   resip::SipMessage toSend(ack);
-   toSend.header(h_MaxForwards).value()--;
-   Helper::processStrictRoute(toSend);
-   
-   toSend.header(h_Vias).push_front(Via());
+   if(!mAck200ToRetransmit)
+   {
+      mAck200ToRetransmit = new SipMessage(ack);
+      mAck200ToRetransmit->header(h_MaxForwards).value()--;
+      Helper::processStrictRoute(*mAck200ToRetransmit);
+      
+      mAck200ToRetransmit->header(h_Vias).push_front(Via());
+   }
 
-   mProxy.send(toSend);
+   mProxy.send(*mAck200ToRetransmit);
 }
 
 resip::SipMessage& 
@@ -550,7 +569,7 @@ RequestContext::getOriginalRequest() const
 resip::Data
 RequestContext::getTransactionId() const
 {
-   if(mOriginalRequest->method()==ACK)
+   if(mOriginalRequest->mIsBadAck200)
    {
       static Data ack("ack");
       return mOriginalRequest->getTransactionId()+ack;
@@ -625,7 +644,7 @@ RequestContext::sendResponse(const SipMessage& msg)
    }
    else
    {
-      //!bwc! Provisionals are not final responses, and CANCEL/200 is not a final
+      // .bwc. Provisionals are not final responses, and CANCEL/200 is not a final
       //response in this context.
       if (msg.header(h_StatusLine).statusCode()>199 && msg.method()!=CANCEL)
       {

@@ -64,6 +64,12 @@ PURIFY = purify
 PURIFY5 = /usr/pure/purify-5.3-solaris2/purify
 QUANTIFY = quantify
 
+ifeq ($(OSTYPE),Darwin)
+SHARED_EXTENSION := dylib
+else
+SHARED_EXTENSION := so
+endif
+
 # this section adds the appropriate flags, headers, etc. for packages.
 # See the Makefile.pkg for further information about how packages work.
 
@@ -83,7 +89,7 @@ DEPEND_FILES += $(foreach pkg,$(PACKAGES), $($(pkg)_DEPENDS))
 DEPEND_TARGETS += $(foreach pkg,$(PACKAGES), $($(pkg)_TARGETS))
 
 ifeq ($(BUILD_SHARED_LIBS),yes)
-.dependlibs: $(patsubst %.a,%.so,$(DEPEND_FILES))
+.dependlibs: $(patsubst %.a,%.$(SHARED_EXTENSION),$(DEPEND_FILES))
 else
 .dependlibs: $(DEPEND_FILES)
 endif
@@ -111,7 +117,7 @@ TESTPROGRAM_OBJS = $(patsubst %.cpp,$(OBJ)/%.o,$(patsubst %.c,$(OBJ)/%.o,$(patsu
 HWOBJS = $(patsubst %.cpp,$(OBJ)/%.o,$(patsubst %.c,$(OBJ)/%.o,$(patsubst %.cxx,$(OBJ)/%.o,$(HWSRC))))
 DEPENDENCIES = $(patsubst %.cpp,$(OBJ)/%.d,$(patsubst %.c,$(OBJ)/%.d,$(patsubst %.cxx,$(OBJ)/%.d,$(ALLSRC))))
 
-SHARED_LIB = $(patsubst %,$(OBJ)/%.so,$(strip $(TARGET_LIBRARY)))
+SHARED_LIB = $(patsubst %,$(OBJ)/%.$(SHARED_EXTENSION),$(strip $(TARGET_LIBRARY)))
 STATIC_LIB = $(patsubst %,$(OBJ)/%.a,$(strip $(TARGET_LIBRARY)))
 
 ifeq ($(BUILD_SHARED_LIBS),yes)
@@ -169,7 +175,7 @@ clean:
 	-rm -f *.rpo core core.* *~ \#* .make* *.a *.d *.S
 	-rm -rf html
 	-rm -f obj.*/*.rpo
-	-rm -f obj.*/*.so 
+	-rm -f obj.*/*.$(SHARED_EXTENSION) 
 	-rm -f obj.*/*.[oda] 
 	-rm -f obj.*/*/*.[oda] 
 	-rm -f bin.*/*
@@ -230,8 +236,7 @@ endif
 # build executables
 $(BIN)/%: $(OBJ)/%.o $(OBJS)  $(EXTRAS)  .dependlibs
 	$(LINKER) $(LDFLAGS) -o $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS)
-	-@ test -f $(patsubst $(BIN)/%,%,$@) && /bin/rm -f $(patsubst $(BIN)/%,%,$@)
-	-@ test -h $(patsubst $(BIN)/%,%,$@) || ln -s $@ $(patsubst $(BIN)/%,%,$@)
+	-@/bin/rm -f $(patsubst $(BIN)/%,%,$@) && ln -s $@ $(patsubst $(BIN)/%,%,$@)
 
 # these rules build dependency files in the cases that need them.
 
@@ -288,11 +293,11 @@ $(OBJ)/$(strip $(TARGET_LIBRARY)).a: $(OBJS) $(OTHERLIBS)
 #	$(LINKER) $(LDFLAGS) -o dummy $@ $(DATESTAMP) $(patsubst %.dependlibs,%, $^) $(LDLIBS) $(OTHERLIBS)
 
 
-$(OBJ)/$(strip $(TARGET_LIBRARY)).so: $(OBJS) $(OTHERLIBS)
+$(OBJ)/$(strip $(TARGET_LIBRARY)).$(SHARED_EXTENSION): $(OBJS) $(OTHERLIBS)
 	-@ test -f $@ && /bin/rm $@
 	$(MKSHLIB) -o $@ $^
 	-@ mkdir -p $(ROOT)/lib.$(TARGET_NAME)
-	@ test -h $(ROOT)/lib.$(TARGET_NAME)/$(strip $(TARGET_LIBRARY)).so || ln -s $(shell pwd)/$@ $(ROOT)/lib.$(TARGET_NAME)
+	@ test -h $(ROOT)/lib.$(TARGET_NAME)/$(strip $(TARGET_LIBRARY)).$(SHARED_EXTENSION) || ln -s $(shell pwd)/$@ $(ROOT)/lib.$(TARGET_NAME)
 endif
 
 ifdef TARGET_BINARY

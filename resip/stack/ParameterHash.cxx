@@ -287,7 +287,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
 #line 12 "ParameterHash.gperf"
       {"mobility", ParameterTypes::mobility},
 #line 63 "ParameterHash.gperf"
-      {"qop", ParameterTypes::qopFactory},
+      {"qop", ParameterTypes::qop},
 #line 94 "ParameterHash.gperf"
       {"sigcomp-id", ParameterTypes::sigcompId},
 #line 83 "ParameterHash.gperf"

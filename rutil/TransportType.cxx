@@ -1,4 +1,5 @@
 #include "rutil/TransportType.hxx"
+#include <string>
 
 namespace resip
 {
