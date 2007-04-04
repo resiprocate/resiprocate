@@ -89,7 +89,7 @@ class Tuple
       static TransportType toTransport( const Data& );
       static const Data& toData( TransportType );
       static Data inet_ntop(const Tuple& tuple);
-      static void binaryToken(const Tuple& tuple,Data& container);
+      static void writeBinaryToken(const Tuple& tuple,Data& container);
       static Tuple makeTuple(const Data& binaryToken);
 
       GenericIPAddress toGenericIPAddress() const;

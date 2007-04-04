@@ -502,15 +502,28 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       assert(target->status() == Target::Candidate);
 
       SipMessage request(mRequestContext.getOriginalRequest());
-
+      if(!mRequestContext.mTopRoute.uri().user().empty())
+      {
+         // .bwc. Flow token?
+         try
+         {
+            Data binaryFlowToken=mRequestContext.mTopRoute.uri().user().base64decode();
+            
+            // .bwc. TODO Decryption will happen here later.
+            request.setDestination(Tuple::makeTuple(binaryFlowToken));
+         }
+         catch(resip::BaseException& e)
+         {
+            // .bwc. Not a flow token. Oh well.
+            DebugLog(<< "Bad flow token: " 
+                     << mRequestContext.mTopRoute.uri().user() 
+                     << " exception was " << e);
+         }
+      }
       request.header(h_RequestLine).uri() = target->uri(); 
 
       // !bwc! Proxy checks whether this is valid, and rejects if not.
       request.header(h_MaxForwards).value()--;
-      
-      static ExtensionParameter p_fid("fid");
-      static ExtensionParameter p_fid1("fid1");
-      static ExtensionParameter p_fid2("fid2");
       
       bool inDialog=false;
       
@@ -529,50 +542,30 @@ ResponseContext::beginClientTransaction(repro::Target* target)
            (request.method() == INVITE ||
             request.method() == SUBSCRIBE ) )
       {
-         NameAddr rt(mRequestContext.mProxy.getRecordRoute());
-         // !bwc! Let's not record-route with a tel uri or something, shall we?
-         // If the topmost route header is malformed, we can get along without.
-         // (We are going to be popping it off in a moment anyway)
-         if (request.exists(h_Routes) && 
-               request.header(h_Routes).size() != 0 && 
-               request.header(h_Routes).front().isWellFormed() &&
-               (request.header(h_Routes).front().uri().scheme() == "sip" ||
-               request.header(h_Routes).front().uri().scheme() == "sips" ) )
-         {
-            rt.uri().scheme() == request.header(h_Routes).front().uri().scheme();
-         }
-         else if(request.header(h_RequestLine).uri().scheme() == "sip" ||
-                  request.header(h_RequestLine).uri().scheme() == "sips")
-         {
-            rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
-         }
-         
-         // !bwc! This Via is well-formed, since we grabbed the tid from it.
-         const Data& sentTransport = request.header(h_Vias).front().transport();
-         if (sentTransport != Symbols::UDP)
-         {
-            if(!rt.uri().exists(p_transport))
-            {
-               rt.uri().param(p_transport) = sentTransport;
-            }
-            
-            if (mRequestContext.getOriginalRequest().getSource().mFlowKey != 0)
-            {
-               rt.uri().param(p_fid1) = Data(mRequestContext.getOriginalRequest().getSource().mFlowKey);
-            }
-            
-            if (request.header(h_RequestLine).uri().exists(p_fid))
-            {
-               rt.uri().param(p_fid2) = request.header(h_RequestLine).uri().param(p_fid);
-            }
-            InfoLog (<< "Added Record-Route: " << rt);
-         }
-
+         resip::NameAddr rt(mRequestContext.mProxy.getRecordRoute());
+         massageRoute(rt,true);
          // !jf! By not specifying host in Record-Route, the TransportSelector
          //will fill it in. 
          if (!mRequestContext.mProxy.getRecordRoute().uri().host().empty())
          {
             request.header(h_RecordRoutes).push_front(rt);
+         }
+      }
+      else if(request.method()==REGISTER)
+      {
+         bool outboundEnabled=true;
+
+         // .bwc. Edge-proxy stuff for outbound.
+         if(request.header(h_Vias).size() == 1 && outboundEnabled)
+         {
+            resip::NameAddr rt(mRequestContext.mProxy.getRecordRoute());
+            massageRoute(rt,false);
+            resip::Data binaryFlowToken;
+            Tuple::writeBinaryToken(request.getSource(),binaryFlowToken);
+            
+            // !bwc! TODO encrypt this binary token to self.
+            rt.uri().user()=binaryFlowToken.base64encode();
+            rt.param(p_ob);
          }
       }
       
@@ -615,6 +608,59 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       target->status() = Target::Trying;
 }
 
+void
+ResponseContext::massageRoute(NameAddr& rt, bool fid)
+{
+   SipMessage& request = mRequestContext.getOriginalRequest();
+   
+   // .bwc. The user field is only used to convey flow tokens.
+   rt.uri().user().clear();
+   // .bwc. Let's not record-route with a tel uri or something, shall we?
+   // If the topmost route header is malformed, we can get along without.
+   // (We are going to be popping it off in a moment anyway)
+   if (request.exists(h_Routes) && 
+         request.header(h_Routes).size() != 0 && 
+         request.header(h_Routes).front().isWellFormed() &&
+         (request.header(h_Routes).front().uri().scheme() == "sip" ||
+         request.header(h_Routes).front().uri().scheme() == "sips" ) )
+   {
+      rt.uri().scheme() == request.header(h_Routes).front().uri().scheme();
+   }
+   else if(request.header(h_RequestLine).uri().scheme() == "sip" ||
+            request.header(h_RequestLine).uri().scheme() == "sips")
+   {
+      rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
+   }
+   
+   // !bwc! This Via is well-formed, since we grabbed the tid from it.
+   const Data& sentTransport = request.header(h_Vias).front().transport();
+   if (sentTransport != Symbols::UDP)
+   {
+      if(!rt.uri().exists(p_transport))
+      {
+         rt.uri().param(p_transport) = sentTransport;
+      }
+      
+      if(fid)
+      {
+         static ExtensionParameter p_fid("fid");
+         static ExtensionParameter p_fid1("fid1");
+         static ExtensionParameter p_fid2("fid2");
+      
+         if (request.getSource().mFlowKey != 0)
+         {
+            rt.uri().param(p_fid1) = Data(request.getSource().mFlowKey);
+         }
+         
+         if (request.header(h_RequestLine).uri().exists(p_fid))
+         {
+            rt.uri().param(p_fid2) = request.header(h_RequestLine).uri().param(p_fid);
+         }
+      }
+      InfoLog (<< "Added Record-Route: " << rt);
+   }
+
+}
 
 void 
 ResponseContext::sendRequest(const resip::SipMessage& request)
