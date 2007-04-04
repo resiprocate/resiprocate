@@ -193,6 +193,11 @@ Tuple::Tuple(const struct sockaddr& addr,
 void
 Tuple::writeBinaryToken(const resip::Tuple& tuple,resip::Data& container)
 {
+   // .bwc. Maybe should just write the raw sockaddr into a buffer, and tack
+   // on the flowid and onlyUseExistingConnection flag. Would require 10 extra
+   // bytes for V6, and 14 extra bytes for V4. 
+   // V6: sin6_len(1), sin6_flowinfo(4), flowId(4), onlyUseExistingConnection(1)
+   // V4: sin_family(2 instead of 1), sin_zero(8), flowId(4), onlyUseExistingConnection(1)
    UInt32 rawToken[6];
    bzero(&rawToken, 24);
 
