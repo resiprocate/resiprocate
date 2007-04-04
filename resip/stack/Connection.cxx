@@ -6,6 +6,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/Connection.hxx"
 #include "resip/stack/ConnectionManager.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Security.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
@@ -210,7 +211,10 @@ Connection::onDoubleCRLF()
 {
    // !bwc! TODO might need to make this more efficient.
    // ?bwc? We don't need a sigcomp id, do we?
-   requestWrite(new SendData(mWho,Symbols::CRLF,Data::Empty,Data::Empty));
+   if(InteropHelper::getOutboundVersion()==8)
+   {
+      requestWrite(new SendData(mWho,Symbols::CRLF,Data::Empty,Data::Empty));
+   }
 }
 
 bool 
@@ -230,7 +234,6 @@ Connection::isWritable()
 {
    return true;
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -281,4 +284,3 @@ Connection::isWritable()
  * <http://www.vovida.org/>.
  *
  */
-
