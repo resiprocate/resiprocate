@@ -52,7 +52,7 @@ class SdpContents : public Contents
             {
                public:
                   Codec() : mName(), mRate(0), mPayloadType(-1) {}
-                  Codec(const Data& name, unsigned long rate, const Data& parameters = Data::Empty);
+                  Codec(const Data& name, unsigned long rate, const Data& parameters = Data::Empty, const Data& encodingParameters = Data::Empty);
                   Codec(const Data& name, int payloadType, int rate=8000);
                   Codec(const Codec& rhs);
                   Codec& operator=(const Codec& codec);
@@ -70,6 +70,9 @@ class SdpContents : public Contents
                   const Data& parameters() const {return mParameters;}
                   Data& parameters() {return mParameters;}
 
+                  const Data& encodingParameters() const {return mEncodingParameters;}
+                  Data& encodingParameters() {return mEncodingParameters;}
+
                   static const Codec ULaw_8000;
                   static const Codec ALaw_8000;
                   static const Codec G729_8000;
@@ -77,6 +80,7 @@ class SdpContents : public Contents
                   static const Codec GSM_8000;
                   static const Codec TelephoneEvent;
                   static const Codec FrfDialedDigit;
+                  static const Codec CN;
 
                   typedef HashMap<int, Codec> CodecMap;
                   // "static" payload types as defined in RFC 3551.
@@ -89,7 +93,8 @@ class SdpContents : public Contents
                   Data mName;
                   unsigned long mRate;
                   int mPayloadType;
-                  Data mParameters;
+                  Data mParameters;  // Format parameters
+                  Data mEncodingParameters;
 
                   static std::auto_ptr<CodecMap> sStaticCodecs;
                   static bool sStaticCodecsCreated;
@@ -384,6 +389,7 @@ class SdpContents : public Contents
                   const std::list<Connection> getConnections() const;
                   // does not include session connections
                   const std::list<Connection>& getMediumConnections() const {return mConnections;}
+                  std::list<Connection>& getMediumConnections() {return mConnections;}
                   const Encryption& getEncryption() const {return mEncryption;}
                   const Encryption& encryption() const {return mEncryption;}
                   Encryption& encryption() {return mEncryption;}

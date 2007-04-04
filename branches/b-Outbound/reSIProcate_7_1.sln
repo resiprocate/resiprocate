@@ -62,7 +62,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "contrib\ares\ares_7
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "ReproSetup", "repro\WinSetup\Setup.vdproj", "{02954DA6-5079-4717-BC3D-B3ACA815CFED}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "ReproSetup", "repro\WinSetup\Setup.vdproj", "{D531ED96-F2C7-40A5-BFA6-A205E6F1F807}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
@@ -162,14 +162,14 @@ Global
 		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Debug.Build.0 = Debug|Win32
 		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Release.ActiveCfg = Release|Win32
 		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Release.Build.0 = Release|Win32
-		{02954DA6-5079-4717-BC3D-B3ACA815CFED}.Debug.ActiveCfg = Debug
-		{02954DA6-5079-4717-BC3D-B3ACA815CFED}.Debug.Build.0 = Debug
-		{02954DA6-5079-4717-BC3D-B3ACA815CFED}.Release.ActiveCfg = Release
-		{02954DA6-5079-4717-BC3D-B3ACA815CFED}.Release.Build.0 = Release
-		{02954DA6-5079-4717-BC3D-B3ACA815CFED}.SSL-Debug.ActiveCfg = Debug
-		{02954DA6-5079-4717-BC3D-B3ACA815CFED}.SSL-Debug.Build.0 = Debug
-		{02954DA6-5079-4717-BC3D-B3ACA815CFED}.SSL-Release.ActiveCfg = Release
-		{02954DA6-5079-4717-BC3D-B3ACA815CFED}.SSL-Release.Build.0 = Release
+		{D531ED96-F2C7-40A5-BFA6-A205E6F1F807}.Debug.ActiveCfg = Debug
+		{D531ED96-F2C7-40A5-BFA6-A205E6F1F807}.Debug.Build.0 = Debug
+		{D531ED96-F2C7-40A5-BFA6-A205E6F1F807}.Release.ActiveCfg = Release
+		{D531ED96-F2C7-40A5-BFA6-A205E6F1F807}.Release.Build.0 = Release
+		{D531ED96-F2C7-40A5-BFA6-A205E6F1F807}.SSL-Debug.ActiveCfg = Debug
+		{D531ED96-F2C7-40A5-BFA6-A205E6F1F807}.SSL-Debug.Build.0 = Debug
+		{D531ED96-F2C7-40A5-BFA6-A205E6F1F807}.SSL-Release.ActiveCfg = Release
+		{D531ED96-F2C7-40A5-BFA6-A205E6F1F807}.SSL-Release.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

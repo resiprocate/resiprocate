@@ -73,7 +73,7 @@ ClientPublication::dispatch(const SipMessage& msg)
 
       if (code < 300)
       {
-         if (mPublish->header(h_Expires).value() == 0)
+         if (mPublish->exists(h_Expires) && mPublish->header(h_Expires).value() == 0)
          {
             handler->onRemove(getHandle(), msg);
             delete this;
@@ -82,7 +82,10 @@ ClientPublication::dispatch(const SipMessage& msg)
          else if (msg.exists(h_SIPETag) && msg.exists(h_Expires))
          {
             mPublish->header(h_SIPIfMatch) = msg.header(h_SIPETag);
-            mPublish->releaseContents();
+            if(!mPendingPublish)
+            {
+               mPublish->releaseContents();           
+            }
             mDum.addTimer(DumTimeout::Publication, 
                           Helper::aBitSmallerThan(msg.header(h_Expires).value()), 
                           getBaseHandle(),
@@ -195,7 +198,7 @@ ClientPublication::dispatch(const DumTimeout& timer)
 void
 ClientPublication::refresh(unsigned int expiration)
 {
-   if (expiration == 0)
+   if (expiration == 0 && mPublish->exists(h_Expires))
    {
       expiration = mPublish->header(h_Expires).value();
    }

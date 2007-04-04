@@ -2880,7 +2880,7 @@ class TestHolder : public Fixture
       Seq
       (
          enlai->registerUser(60,contacts),
-         enlai->expect(REGISTER/401,from(proxy),WaitForResponse,enlai->digestRespond()),
+         enlai->expect(REGISTER/407,from(proxy),WaitForResponse,enlai->digestRespond()),
          enlai->expect(REGISTER/200,from(proxy),WaitForResponse,enlai->noAction()),
          WaitForEndOfSeq
       );
@@ -4832,22 +4832,34 @@ class TestHolder : public Fixture
              WaitForEndOfSeq);
          ExecuteSequences();
 
-         Seq(derek->info(jason),
-             derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
-             jason->expect(INFO, from(derek), 1000, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
-             jason->expect(INFO, from(derek), 4800, jason->noAction()),
+         Seq
+         (
+            derek->info(jason),
+            derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
+            jason->expect(INFO, from(derek), 1000, jason->noAction()),
+            jason->expect(INFO, from(derek), 4800, jason->noAction()),
+            And
+            (
+               Sub
+               (
+                  jason->expect(INFO, from(derek), 4800, jason->noAction()),
+                  jason->expect(INFO, from(derek), 4800, jason->noAction()),
+                  jason->expect(INFO, from(derek), 4800, jason->noAction()),
+                  jason->expect(INFO, from(derek), 4800, jason->noAction()),
+                  jason->expect(INFO, from(derek), 4800, jason->noAction()),
+                  jason->expect(INFO, from(derek), 4800, jason->noAction()),
+                  jason->expect(INFO, from(derek), 4800, jason->noAction()),
+                  jason->expect(INFO, from(derek), 4800, jason->noAction()),
+                  jason->expect(INFO, from(derek), 4800, jason->noAction())
+               ),
+               Sub
+               (
+                  derek->expect(INFO/100, from(proxy), 500, derek->noAction())
+               )
+            ),
              // note: 408 to NIT are not forwarded by repro
              //derek->expect(INFO/408, from(proxy), 4800, jason->noAction()),
-             WaitForEndOfSeq);
+             32000);// Wait extra long for blacklist to expire
          ExecuteSequences();
       }
       
@@ -4855,19 +4867,19 @@ class TestHolder : public Fixture
       {
          WarningLog(<<"*!testNonInviteServerRetransmission!*");
 
-         Seq(jason->registerUser(60, jason->getDefaultContacts()),
-             jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
-             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+         Seq(david->registerUser(60, david->getDefaultContacts()),
+             david->expect(REGISTER/407, from(proxy), WaitForResponse, david->digestRespond()),
+             david->expect(REGISTER/200, from(proxy), WaitForResponse, david->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
 
          boost::shared_ptr<SipMessage> infoMsg;
-         Seq(save(infoMsg, derek->info(jason)),
+         Seq(save(infoMsg, derek->info(david)),
              derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
-             jason->expect(INFO, from(derek), 1000, jason->noAction()),
-             jason->expect(INFO, from(derek), 1000, jason->ok()),
-             derek->expect(INFO/200, from(jason), 1000, derek->retransmit(infoMsg)),
-             derek->expect(INFO/200, from(jason), 1000, derek->noAction()),
+             david->expect(INFO, from(derek), 1000, david->noAction()),
+             david->expect(INFO, from(derek), 1000, david->ok()),
+             derek->expect(INFO/200, from(david), 1000, derek->retransmit(infoMsg)),
+             derek->expect(INFO/200, from(david), 1000, derek->noAction()),
              WaitForEndOfSeq);
          ExecuteSequences();
       }

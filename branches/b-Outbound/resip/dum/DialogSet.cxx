@@ -241,6 +241,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
          {
             if (mDum.mClientAuthManager->handle(*getUserProfile().get(), *getCreator()->getLastRequest(), msg))
             {
+               // Note:  ClientAuthManager->handle will end up incrementing the CSeq sequence of getLastRequest
                DebugLog( << "about to re-send request with digest credentials" );
                StackLog( << getCreator()->getLastRequest() );
                
@@ -278,6 +279,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                // Change interval to min from 422 response
                getCreator()->getLastRequest()->header(h_SessionExpires).value() = msg.header(h_MinSE).value();
                getCreator()->getLastRequest()->header(h_MinSE).value() = msg.header(h_MinSE).value();
+               getCreator()->getLastRequest()->header(h_CSeq).sequence()++;
 
                InfoLog( << "about to re-send request with new session expiration time" );
                DebugLog( << getCreator()->getLastRequest() );
@@ -695,11 +697,28 @@ DialogSet::dispatch(const SipMessage& msg)
 
       if (msg.isResponse())
       {
-         int code = msg.header(h_StatusLine).statusCode();
-         
-         if (!msg.exists(h_Contacts) && code > 100 && code < 200)
+         if( mCreator )
          {
-            InfoLog ( << "Cannot create a dialog, no Contact in 180." );
+            SharedPtr<SipMessage> lastRequest(mCreator->getLastRequest());
+            if( 0 != lastRequest.get() && !(lastRequest->header(h_CSeq) == msg.header(h_CSeq)))
+            {
+               InfoLog(<< "Cannot create a dialog, cseq does not match initial dialog request (illegal mid-dialog fork? see 3261 14.1).");
+               return;
+            }
+         }
+         else
+         {
+            ErrLog(<< "Can’t create a dialog, on a UAS response.");
+            return;
+         }
+
+         int code = msg.header(h_StatusLine).statusCode();
+
+         if (code > 100 && code < 200 && 
+             (!msg.exists(h_Contacts) ||
+              !msg.exists(h_To) || !msg.header(h_To).exists(p_tag)))
+         {
+            InfoLog ( << "Cannot create a dialog, no Contact or To tag in 1xx." );
             if (mDum.mDialogSetHandler)
             {
                mDum.mDialogSetHandler->onNonDialogCreatingProvisional(mAppDialogSet->getHandle(), msg);

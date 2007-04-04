@@ -17,6 +17,12 @@ using namespace std;
 ConfigStore::ConfigStore(AbstractDb& db):
    mDb(db)
 {  
+   AbstractDb::ConfigRecordList input = mDb.getAllConfigs();
+   for (AbstractDb::ConfigRecordList::const_iterator it = input.begin();
+        it != input.end(); it++)
+   {
+      mCachedConfigData[it->mDomain] = *it;
+   }
 }
 
 
@@ -36,50 +42,24 @@ ConfigStore::addDomain(const resip::Data& domain,
    rec.mTlsPort = tlsPort;
    
    mDb.addConfig( buildKey(domain), rec );
+   mCachedConfigData[domain] = rec;
 }
 
-      
-/*AbstractDb::ConfigRecordList 
+
+const ConfigStore::ConfigData& 
 ConfigStore::getConfigs() const
-{ 
-   return mDb.getAllConfigs();
-}
-*/
-
-ConfigStore::DataList 
-ConfigStore::getDomains() const
 {  
-   AbstractDb::ConfigRecordList input = mDb.getAllConfigs();
-   
-   DataList result;
-   result.reserve( input.size() );
-   
-   for (AbstractDb::ConfigRecordList::const_iterator it = input.begin();
-        it != input.end(); it++)
-   {
-      result.push_back(it->mDomain);
-   }
-   return result;   
+   return mCachedConfigData;
 }
 
 
 int      
 ConfigStore::getTlsPort(const resip::Data& domain) const
 { 
-   // this is a really lame way to implement - shoudl cache all the config data 
-
-   AbstractDb::ConfigRecordList input = mDb.getAllConfigs();
-   
-   DataList result;
-   result.reserve( input.size() );
-   
-   for (AbstractDb::ConfigRecordList::const_iterator it = input.begin();
-        it != input.end(); it++)
+   ConfigData::const_iterator it = mCachedConfigData.find(domain);
+   if(it != mCachedConfigData.end())
    {
-      if ( it->mDomain == domain )
-      {
-         return it->mTlsPort;
-      }
+      return it->second.mTlsPort;
    }
    
    return 0; 
@@ -90,6 +70,7 @@ void
 ConfigStore::eraseDomain(const resip::Data& domain)
 {  
    mDb.eraseConfig( buildKey(domain) );
+   mCachedConfigData.erase(domain);
 }
 
 

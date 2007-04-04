@@ -11,6 +11,7 @@
 #endif
 
 #include <iostream>
+#include <iomanip>
 #include <list>
 
 #include "rutil/Lock.hxx"
@@ -27,6 +28,7 @@
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/dns/DnsHandler.hxx"
 
+#include "resip/stack/test/tassert.h"
 using namespace std;
 
 
@@ -49,7 +51,32 @@ namespace resip
 class TestDnsHandler : public DnsHandler
 {
    public:
-      TestDnsHandler() : mComplete(false) {}
+      TestDnsHandler() 
+      : mComplete(false),
+         mCheckExpectedResults(false),
+         mPermutationNumber(0)
+      {}
+      
+      TestDnsHandler(const std::vector<Tuple>& expectedResults, 
+                     const resip::Uri& uri) 
+      : mComplete(false),
+         mExpectedResults(expectedResults),
+         mCheckExpectedResults(true),
+         mUri(uri),
+         mPermutationNumber(0)
+      {}
+      
+      TestDnsHandler(const std::vector<Tuple>& expectedResults, 
+                     const std::set<Tuple>& resultsToBlacklist,
+                     const resip::Uri& uri) 
+      : mComplete(false),
+         mExpectedResults(expectedResults),
+         mCheckExpectedResults(true),
+         mUri(uri),
+         mPermutationNumber(0),
+         mResultsToBlacklist(resultsToBlacklist)
+      {}
+      
       void handle(DnsResult* result)
       {
          
@@ -61,12 +88,21 @@ class TestDnsHandler : public DnsHandler
             Tuple tuple = result->next();
             results.push_back(tuple);
             std::cout << gf << result->target() << " -> " << tuple << ub <<  std::endl;
+            if(mResultsToBlacklist.count(tuple)!=0)
+            {
+               result->blacklistLast(Timer::getTimeMs()+15000);
+            }
          }
          if (type != DnsResult::Pending)
          {
             mComplete = true;
-         }         
+            if(mCheckExpectedResults)
+            {
+               checkExpectedResults();
+            }
+         }
       }
+
       void rewriteRequest(const Uri& rewrite)
       {
          std::cout << "Rewriting uri (enum) to " << rewrite << std::endl;
@@ -79,11 +115,80 @@ class TestDnsHandler : public DnsHandler
          return mComplete;
       }
 
+      void checkExpectedResults()
+      {
+         std::cout << "Input Uri was " << mUri << endl;
+         tassert(mExpectedResults.size() == results.size());
+         tassert_reset();
+         std::cout << "Expected " << mExpectedResults.size() << ", got " << results.size() << endl;
+         std::vector<Tuple>::const_iterator e;
+         std::vector<Tuple>::const_iterator o;
+         
+         for(e=mExpectedResults.begin();e!=mExpectedResults.end();++e)
+         {
+            int p=0;
+            std::cout << "Looking for " << *e << endl;
+            bool found=false;
+            for(o=results.begin();(o!=results.end() && !found);++o)
+            {
+               ++p;
+               if(*e==*o)
+               {
+                  found=true;
+                  std::cout << *o << " matched!" << endl;
+                  mPermutation.push_back(p);
+               }
+               else
+               {
+                  std::cout << *o << " didn't match." << endl;
+               }
+            }
+            
+            tassert(found);
+            tassert_reset();
+         }            
+      }
+
+      int getPermutationNumber()
+      {
+         if(mPermutationNumber!=0)
+         {
+            return mPermutationNumber;
+         }
+         
+         int result=1;
+
+         // .bwc. Please forgive me for my use of permutation-group-foo.
+         for(int i=mPermutation.size();i>0;--i)
+         {
+            int foundAt=0;
+            for(std::list<int>::iterator j=mPermutation.begin();j!=mPermutation.end();++j)
+            {
+               ++foundAt;
+               if(*j==i)
+               {
+                  result*=((foundAt-i)%i+1);
+                  mPermutation.erase(j);
+                  j=mPermutation.end();
+               }
+            }
+         }
+         
+         mPermutationNumber=result;
+         return result;
+      }
+
       std::vector<Tuple> results;
 
    private:
       bool mComplete;
+      std::vector<Tuple> mExpectedResults;
+      bool mCheckExpectedResults;
       Mutex mutex;
+      Uri mUri;
+      std::list<int> mPermutation;
+      int mPermutationNumber;
+      std::set<resip::Tuple> mResultsToBlacklist;
 };
 
 /*
@@ -164,7 +269,6 @@ main(int argc, const char** argv)
    DnsStub* stub = new DnsStub;
    TestDns dns(*stub);
    dns.run();   
-   Uri uri;
    cerr << "Starting" << endl;   
    std::list<Query> queries;
 #if defined(HAVE_POPT_H)
@@ -177,15 +281,101 @@ main(int argc, const char** argv)
    enumSuffixes.push_back(enumSuffix);
    stub->setEnumSuffixes(enumSuffixes);
 
-   // default query: sip:yahoo.com
-   if (argc == 1)
-   {
+   resip::Data uris[16]={
+      "sip:127.0.0.1:5070;transport=udp",
+      "sips:127.0.0.1:5071;transport=tls",
+      "sip:127.0.0.1;transport=udp",
+      "sips:127.0.0.1;transport=tls",
+      "sip:user.test.resiprocate.org:5070;transport=udp",
+      "sips:user.test.resiprocate.org:5071;transport=tls",
+      "sip:user.test.resiprocate.org;transport=udp",
+      "sips:user.test.resiprocate.org;transport=tls",
+      "sip:127.0.0.1:5070",
+      "sips:127.0.0.1:5071",
+      "sip:127.0.0.1",
+      "sips:127.0.0.1",
+      "sip:user.test.resiprocate.org:5070",
+      "sips:user.test.resiprocate.org:5071",
+      "sip:user-tcp.test.resiprocate.org",
+      "sips:user-tcp.test.resiprocate.org"
+   };
+   
+   
+   int expectedPorts[16][3]={
+      {5070,0,0},
+      {5071,0,0},
+      {5060,0,0},
+      {5061,0,0},
+      {5070,0,0},
+      {5071,0,0},
+      {5060,5070,5080},
+      {5061,5071,5081},
+      {5070,0,0},
+      {5071,0,0},
+      {5060,0,0},
+      {5061,0,0},
+      {5070,0,0},
+      {5071,0,0},
+      {5060,5070,5080},
+      {5061,5071,5081}
+   };
+   
+   TransportType expectedTransports[16][3]={
+      {UDP,UDP,UDP},
+      {TLS,TLS,TLS},
+      {UDP, UDP, UDP},
+      {TLS,TLS,TLS},
+      {UDP, UDP, UDP},
+      {TLS,TLS,TLS},
+      {UDP, UDP, UDP},
+      {TLS,TLS,TLS},
+      {UDP, UDP, UDP},
+      {TLS,TLS,TLS},
+      {UDP, UDP, UDP},
+      {TLS,TLS,TLS},
+      {UDP, UDP, UDP},
+      {TLS,TLS,TLS},
+      {TCP, TCP, TCP},
+      {TLS,TLS,TLS}  
+   };
+   
+   resip::Data subUris[8]={
+      "sip:<hostname>:5080;transport=TCP",
+      "sips:<hostname>:5081;transport=TLS",
+      "sip:<hostname>;transport=TCP",
+      "sips:<hostname>;transport=TLS",
+      "sip:<hostname>:5080",
+      "sips:<hostname>:5081",
+      "sip:<hostname>",
+      "sips:<hostname>"
+   };
+
+   resip::Data ipAddr("127.0.0.1");
+
+   Uri uri;
+
+   for(int i=0; i< 16;++i)
+   {      
       Query query;
-      query.handler = new TestDnsHandler;
+      std::vector<Tuple> expected;
+      
+      for(int j=0;j<3;++j)
+      {
+         if(expectedPorts[i][j]==0)
+         {
+            break;
+         }
+         
+         expected.push_back(Tuple(ipAddr,expectedPorts[i][j],V4,expectedTransports[i][j]));
+      }
+      
       
       //query.listener = new VipListener;
-      cerr << "Creating Uri" << endl;       
-      uri = Uri("sip:yahoo.com");
+      cerr << "Creating Uri " << uris[i] << endl;       
+      uri = Uri(uris[i]);
+
+      query.handler = new TestDnsHandler(expected,uri);
+
       query.uri = uri;
       cerr << "Creating DnsResult" << endl;      
       DnsResult* res = dns.createDnsResult(query.handler);
@@ -195,9 +385,321 @@ main(int argc, const char** argv)
 
       dns.lookup(res, uri);
    }
+   
+   resip::Data NAPTRstrings[3]={
+      "",
+      "-brokenNAPTR",
+      "-noNAPTR"
+   };
+   
+   resip::Data SRVstrings[3]={
+      "",
+      "-brokenSRV",
+      "-noSRV"
+   };
+   
+   
+   for(int i=0;i<8;++i)
+   {
+      
+      
+      for(int n=0;n<3;++n)
+      {
+         for(int s=0;s<3;++s)
+         {
+            if(n==0 && s==0)
+            {
+               // .bwc. This is just user.test.resiprocate.org, which we have already done.
+               continue;
+            }
+            
+            if(n==1 && s==2)
+            {
+               // .bwc. broken NAPTR and missing SRV is equivalent to OK NAPTR
+               // and missing SRV (n==0 and s==2). The former is not provisioned
+               // in the DNS zone, but the latter is, so we have already taken 
+               // care of this case.
+               continue;
+            }
+            
+            
+            resip::Data hostname(resip::Data("user")+NAPTRstrings[n]+SRVstrings[s]+resip::Data(".test.resiprocate.org"));
+            resip::Data target=subUris[i];
+            target.replace("<hostname>",hostname);
+            
+            //query.listener = new VipListener;
+            cerr << "Creating Uri " << target << endl;       
+            uri = Uri(target);
+            unsigned int port=0;
+            TransportType type=UNKNOWN_TRANSPORT;
 
+            // .bwc. Choose expected destination.
+            if(uri.exists(p_transport))
+            {
+               // .bwc. Transport is explicitly specified; no NAPTR query
+               // will be made. State of NAPTR is irrelevant.
+               
+               if(uri.port()!=0)
+               {
+                  // .bwc. Port is explicitly specified. No SRV query will
+                  // be made. This will be a bare A record lookup.
+                  port=uri.port();
+                  type=toTransportType(uri.param(p_transport));
+                  if(uri.scheme()=="sips" && type!=TLS)
+                  {
+                     // What is the resolver supposed to do in this case?
+                     assert(0);
+                  }
+               }
+               else
+               {
+                  // .bwc. Port is not explicitly specified. SRV query will
+                  // be attempted.
+                  
+                  if(s==0)
+                  {
+                     // SRV ok. Will land on 127.0.0.1:507[01] on specified
+                     // transport.
+                     type=toTransportType(uri.param(p_transport));
+                     if(type==TLS)
+                     {
+                        port=5071;
+                     }
+                     else
+                     {
+                        port=5070;
+                     }
+                  }
+                  else if(s==1)
+                  {
+                     // SRV broken. (Exists, so will be followed into space)
+                     // Leave port as 0, since no results will come of this.
+                  }
+                  else
+                  {
+                     // SRV missing. DNS fill fail over to A record lookup.
+                     type=toTransportType(uri.param(p_transport));
+                     if(type==TLS)
+                     {
+                        port=5061;
+                     }
+                     else
+                     {
+                        port=5060;
+                     }
+                  }
+               }
+            }
+            else
+            {
+               // transport is not specified
+               
+               if(uri.port()!=0)
+               {
+                  // Port is specified, so we need to make an A query. We choose
+                  // UDP if scheme is sip, and TLS if scheme is sips.
+                  port=uri.port();
+                  
+                  if(uri.scheme()=="sip")
+                  {
+                     type=UDP;
+                  }
+                  else if(uri.scheme()=="sips")
+                  {
+                     type=TLS;
+                  }
+                  else
+                  {
+                     assert(0);
+                  }
+               }
+               else
+               {
+                  // Port is not specified, and neither is transport. Full
+                  // NAPTR lookup.
+                  
+                  if(n==0)
+                  {
+                     // NAPTR ok.
+                     if(s==0)
+                     {
+                        // SRV ok. We know what we're getting at this point.
+
+                        if(uri.scheme()=="sips")
+                        {
+                           type=TLS;
+                        }
+                        else if(uri.scheme()=="sip")
+                        {
+                           type=TCP;
+                        }
+                        else
+                        {
+                           assert(0);
+                        }
+                     
+                        if(type==TLS)
+                        {
+                           port=5071;
+                        }
+                        else
+                        {
+                           port=5070;
+                        }
+                     }
+                     else if(s==1)
+                     {
+                        // SRV broken. We fail.
+                     }
+                     else
+                     {
+                        // SRV missing. Do A lookup, default the port.
+                        // (We have already chosen transport)
+
+                        if(uri.scheme()=="sips")
+                        {
+                           type=TLS;
+                        }
+                        else if(uri.scheme()=="sip")
+                        {
+                           type=UDP;
+                        }
+                        else
+                        {
+                           assert(0);
+                        }
+
+                        if(type==TLS)
+                        {
+                           port=5061;
+                        }
+                        else
+                        {
+                           port=5060;
+                        }
+                     }
+                  }
+                  else if(n==1)
+                  {
+                     // NAPTR is broken. This is the same situation as
+                     // missing SRVs.
+                     if(uri.scheme()=="sips")
+                     {
+                        type=TLS;
+                     }
+                     else if(uri.scheme()=="sip")
+                     {
+                        type=UDP;
+                     }
+                     else
+                     {
+                        assert(0);
+                     }
+
+                     if(type==TLS)
+                     {
+                        port=5061;
+                     }
+                     else
+                     {
+                        port=5060;
+                     }
+                  }
+                  else
+                  {
+                     // NAPTR is missing. Next we try SRV.
+                     
+                     if(uri.scheme()=="sips")
+                     {
+                        type=TLS;
+                     }
+                     
+                     if(s==0)
+                     {
+                        // SRV ok.
+                        if(type==TLS)
+                        {
+                           port=5071;
+                        }
+                        else
+                        {
+                           port=5070;
+                        }
+                     }
+                     else if(s==1)
+                     {
+                        // SRV broken. We are hosed.
+                     }
+                     else
+                     {
+                        // SRVs missing. Fail over to A records.
+                        if(uri.scheme()=="sips")
+                        {
+                           type=TLS;
+                        }
+                        else if(uri.scheme()=="sip")
+                        {
+                           type=UDP;
+                        }
+                        else
+                        {
+                           assert(0);
+                        }
+
+                        if(type==TLS)
+                        {
+                           port=5061;
+                        }
+                        else
+                        {
+                           port=5060;
+                        }
+                        
+                     }
+                  }
+               }
+            }
+
+
+            Query query;
+            std::vector<Tuple> expected;
+            
+            if(port)
+            {
+               if(type!=UNKNOWN_TRANSPORT)
+               {
+                  expected.push_back(Tuple(ipAddr,port,V4,type));
+               }
+               else
+               {
+                  // .bwc. If we get UNKNOWN_TRANSPORT from the block of
+                  // code above, it means we will try all three. (Yes, this
+                  // is hackish. At least I documented it.)
+                  assert(port%2==0);
+                  expected.push_back(Tuple(ipAddr,port,V4,UDP));
+                  expected.push_back(Tuple(ipAddr,port,V4,TCP));
+                  expected.push_back(Tuple(ipAddr,port+1,V4,TLS));
+               }
+            }
+            
+            query.handler = new TestDnsHandler(expected,uri);
+            query.uri = uri;
+            cerr << "Creating DnsResult" << endl;      
+            DnsResult* res = dns.createDnsResult(query.handler);
+            query.result = res;      
+            queries.push_back(query);
+            cerr << rf << "Looking up" << ub << endl;
+
+            dns.lookup(res, uri);
+            
+         }
+      }
+   }
+
+   // .bwc. Resolves uris from command line, if they are present.
    while (argc > 1 && args && *args != 0)
    {
+      Uri uri;
       Query query;
       query.handler = new TestDnsHandler;
       //query.listener = new VipListener;
@@ -222,35 +724,241 @@ main(int argc, const char** argv)
       argc--;
    }
 
+   // .bwc. Wait for outstanding queries to finish.
    int count = queries.size();
    while (count>0)
    {
-      for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
+      for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); )
       {
          if ((*it).handler->complete())
          {
+            cerr << rf << "DNS results for " << (*it).uri << ub << endl;
+            for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
+            {
+               cerr << rf << (*i) << ub << endl;
+            }
+            
             --count;
+            (*it).result->destroy();
+            delete (*it).handler;
+
+            std::list<Query>::iterator temp = it;
+            ++it;
+            queries.erase(temp);
+         }
+         else
+         {
+            ++it;
          }
       }
       sleep(1);
    }
 
-   for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
+   assert(queries.empty());
+   assert(!dns.requiresProcess());
+
+   std::map<resip::Tuple,int> ipAddrToNum;
+   ipAddrToNum[Tuple("127.0.0.1",5060,V4,TCP)]=0;
+   ipAddrToNum[Tuple("127.0.0.2",5060,V4,TCP)]=1;
+   ipAddrToNum[Tuple("127.0.0.3",5060,V4,TCP)]=2;
+   ipAddrToNum[Tuple("127.0.0.4",5060,V4,TCP)]=3;
+
+   // .bwc. Test load-leveling.
+   for(int numSRV=2;numSRV<5;++numSRV)
    {
-      cerr << rf << "DNS results for " << (*it).uri << ub << endl;
-      for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
+      resip::Data hostname("loadlevel");
+      hostname+=Data::from(numSRV)+".test.resiprocate.org";
+      
+      Uri uri;
+      uri.host()=hostname;
+      uri.scheme()="sip";
+      
+      for(int i=0; i<1000;++i)
       {
-         cerr << rf << (*i) << ub << endl;
+         Query query;                        
+         query.handler = new TestDnsHandler();
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri);
+         if(i%20==0)
+         {
+            // .bwc. Let things have some time to cache, so we don't hammer the
+            // DNS to death. (Odds are good that we have hit every NAPTR at
+            // least once by now)
+            sleep(2);
+            RRCache::instance()->logCache();
+         }
       }
+      
+      // .bwc. first index is the order (1st=0, 2nd=1, etc), and second index
+      // is the last tuple in the IP address (127.0.0.1 is 0, 127.0.0.2 is 1)
+      // The value stored is the number of times this combination was encountered.
+      int table[numSRV][numSRV];
+      
+      for(int i=0;i<numSRV;++i)
+      {
+         for(int j=0;j<numSRV;++j)
+         {
+            table[i][j]=0;
+         }
+      }
+      
+      int count = queries.size();
+      while (count>0)
+      {
+         for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); )
+         {
+            if ((*it).handler->complete())
+            {
+               cerr << rf << "DNS results for " << (*it).uri << ub << endl;
+               assert(it->handler->results.size()==numSRV);
+               
+                for(int i=0;i<numSRV;++i)
+               {
+                  assert(ipAddrToNum[it->handler->results[i]] >=0);
+                  assert(ipAddrToNum[it->handler->results[i]] <numSRV);
+                  ++table[i][ipAddrToNum[it->handler->results[i]]];
+                  cerr << rf << it->handler->results[i] << ub << endl;
+               }
+                              
+               --count;
+               (*it).result->destroy();
+               delete (*it).handler;
+
+               std::list<Query>::iterator temp = it;
+               ++it;
+               queries.erase(temp);
+            }
+            else
+            {
+               ++it;
+            }
+         }
+         sleep(1);
+      }
+      
+      assert(queries.empty());
+      assert(!dns.requiresProcess());
+      
+      std::cout << "Tabulated results:" << std::endl;
+      for(int i=0;i<numSRV;++i)
+      {
+         for(int j=0;j<numSRV;++j)
+         {
+            std::cout << table[i][j] << std::setw(6);
+         }
+         std::cout << std::endl;
+      }
+      
    }
 
-   for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); ++it)
+
+   // .bwc. Test blacklisting
    {
-      (*it).result->destroy();
-      delete (*it).handler;
-      //delete (*it).listener;
+      Tuple toBlacklist("127.0.0.1",5060,V4,TCP);
+      Tuple ok2("127.0.0.2",5060,V4,TCP);
+      Tuple ok3("127.0.0.3",5060,V4,TCP);
+      Tuple ok4("127.0.0.4",5060,V4,TCP);
+      
+      std::vector<Tuple> expected;
+      expected.push_back(ok2);
+      expected.push_back(ok3);
+      expected.push_back(ok4);
+      expected.push_back(toBlacklist);
+      
+      std::set<Tuple> blacklist;
+      blacklist.insert(toBlacklist);
+      
+      Uri uri;
+      uri.scheme()="sip";
+      uri.host()="loadlevel4.test.resiprocate.org";
+      
+      Query query;                        
+      query.handler = new TestDnsHandler(expected,blacklist,uri);
+      query.uri = uri;
+      cerr << "Creating DnsResult" << endl;      
+      DnsResult* res = dns.createDnsResult(query.handler);
+      query.result = res;      
+      queries.push_back(query);
+      cerr << rf << "Looking up" << ub << endl;
+      dns.lookup(res, uri);
+      
+      // .bwc. Give this query plenty of time.
+      sleep(2);
+      
+      // This removes the Tuple toBlacklist
+      expected.pop_back();
+      
+      for(int i=0;i<20;++i)
+      {
+         Query query;                        
+         query.handler = new TestDnsHandler(expected,uri);
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri);
+      }
+      
+      // .bwc. Wait for blacklist to expire.
+      sleep(16);
+      
+      // Put the blacklisted Tuple back.
+      expected.push_back(toBlacklist);
+      
+      for(int i=0;i<20;++i)
+      {
+         Query query;                        
+         query.handler = new TestDnsHandler(expected,uri);
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri);
+      }
+      
+      int count = queries.size();
+      while (count>0)
+      {
+         for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); )
+         {
+            if ((*it).handler->complete())
+            {
+               cerr << rf << "DNS results for " << (*it).uri << ub << endl;
+               for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
+               {
+                  cerr << rf << (*i) << ub << endl;
+               }
+               
+               --count;
+               (*it).result->destroy();
+               delete (*it).handler;
+   
+               std::list<Query>::iterator temp = it;
+               ++it;
+               queries.erase(temp);
+            }
+            else
+            {
+               ++it;
+            }
+         }
+         sleep(1);
+      }
+   
+      assert(queries.empty());
+
    }
 
+   
    dns.shutdown();
    dns.join();
 

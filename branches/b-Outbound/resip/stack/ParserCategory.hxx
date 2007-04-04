@@ -140,6 +140,7 @@ class ParserCategory : public LazyParser
       defineParam(ttl, "ttl", UInt32Parameter, "RFC ????");
       defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
       defineParam(user, "user", DataParameter, "RFC ????");
+      defineParam(extension, "ext", DataParameter, "RFC ????");
       defineParam(username, "username", DataParameter, "RFC ????");
       defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
       defineParam(refresher, "refresher", DataParameter, "RFC 4028");
@@ -154,8 +155,6 @@ class ParserCategory : public LazyParser
       defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework");
 
       defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
-
-      defineParam(qop, "qop", <SPECIAL-CASE>, "RFC ????");
 
       defineParam(addTransport, "addTransport", ExistsParameter, "");
       defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");

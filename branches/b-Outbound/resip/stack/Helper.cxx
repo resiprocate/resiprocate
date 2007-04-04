@@ -42,6 +42,76 @@ const int Helper::tagSize = 4;
 // (e.g. proxies) want to share the same secret
 Helper::NonceHelperPtr Helper::mNonceHelperPtr;
 
+void Helper::integer2hex(char* _d, unsigned int _s, bool _l)
+{
+   int i;
+   unsigned char j;
+   int k = 0;
+   char* s;
+
+   _s = htonl(_s);
+   s = (char*)&_s;
+
+   for (i = 0; i < 4; i++) 
+   {
+      j = (s[i] >> 4) & 0xf;
+      if (j <= 9) 
+      {
+         if(_l || j != 0 || k != 0)
+         {
+            _d[k++] = (j + '0');
+         }
+      }
+      else 
+      {
+         _d[k++] = (j + 'a' - 10);
+      }
+
+      j = s[i] & 0xf;
+      if (j <= 9) 
+      {
+         if(_l || j != 0 || k != 0)
+         {
+            _d[k++] = (j + '0');
+         }
+      }
+      else 
+      {
+         _d[k++] = (j + 'a' - 10);
+      }
+   }
+}
+
+unsigned int Helper::hex2integer(const char* _s)
+{
+   unsigned int i, res = 0;
+
+   for(i = 0; i < 8; i++) 
+   {
+      if ((_s[i] >= '0') && (_s[i] <= '9')) 
+      {
+         res *= 16;
+         res += _s[i] - '0';
+      }
+      else if ((_s[i] >= 'a') && (_s[i] <= 'f')) 
+      {
+         res *= 16;
+         res += _s[i] - 'a' + 10;
+      } 
+      else if ((_s[i] >= 'A') && (_s[i] <= 'F')) 
+      {
+         res *= 16;
+         res += _s[i] - 'A' + 10;
+      }
+      else 
+      {
+         return res;
+      }
+   }
+
+   return res;
+}
+
 SipMessage*
 Helper::makeRequest(const NameAddr& target, const NameAddr& from, const NameAddr& contact, MethodTypes method)
 {
@@ -327,10 +397,14 @@ Helper::makeResponse(SipMessage& response,
    } 
    catch(resip::ParseBuffer::Exception&)
    {
-      // !bwc! Can't add to-tag since To is malformed. Oh well, we tried.
+      // .bwc. Can't add to-tag since To is malformed. Oh well, we tried.
    }
    
+   
+   // .bwc. This will only throw if the topmost Via is malformed, and that 
+   // should have been caught at the transport level.
    response.setRFC2543TransactionId(request.getRFC2543TransactionId());
+   
    //response.header(h_ContentLength).value() = 0;
    
    if (responseCode >= 180 && responseCode < 300 && request.exists(h_RecordRoutes))
@@ -338,7 +412,7 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_RecordRoutes) = request.header(h_RecordRoutes);
    }
 
-   // !bwc! If CSeq is malformed, basicCheck would have already attempted to
+   // .bwc. If CSeq is malformed, basicCheck would have already attempted to
    // parse it, meaning we won't throw here (we never try to parse the same
    // thing twice, see LazyParser::checkParsed())
    if (responseCode/100 == 2 &&
@@ -380,7 +454,7 @@ Helper::makeResponse(const SipMessage& request,
                      const Data& hostname, 
                      const Data& warning)
 {
-   // !bwc! Exception safety. Catch/rethrow is dicey because we can't rethrow
+   // .bwc. Exception safety. Catch/rethrow is dicey because we can't rethrow
    // resip::BaseException, since it is abstract.
    std::auto_ptr<SipMessage> response(new SipMessage);
 
@@ -402,7 +476,7 @@ Helper::makeResponse(const SipMessage& request,
                      const Data& hostname, 
                      const Data& warning)
 {
-   // !bwc! Exception safety. Catch/rethrow is dicey because we can't rethrow
+   // .bwc. Exception safety. Catch/rethrow is dicey because we can't rethrow
    // resip::BaseException, since it is abstract.
    std::auto_ptr<SipMessage> response(new SipMessage);
    
@@ -552,7 +626,23 @@ Data
 Helper::computeCallId()
 {
    static Data hostname = DnsUtil::getLocalHostName();
-   Data hostAndSalt(hostname + Random::getRandomHex(8));
+   Data hostAndSalt(hostname + Random::getRandomHex(16));
+#ifndef USE_SSL // .bwc. None of this is neccessary if we're using openssl
+#if defined(__linux__) || defined(__APPLE__)
+   pid_t pid = getpid();
+   hostAndSalt.append((char*)&pid,sizeof(pid));
+#endif
+#ifdef __APPLE__
+   pthread_t thread = pthread_self();
+   hostAndSalt.append((char*)&thread,sizeof(thread));
+#endif
+#ifdef WIN32
+   DWORD proccessId = ::GetCurrentProcessId();
+   DWORD threadId = ::GetCurrentThreadId();
+   hostAndSalt.append((char*)&proccessId,sizeof(proccessId));
+   hostAndSalt.append((char*)&threadId,sizeof(threadId));
+#endif
+#endif // of USE_SSL
    return hostAndSalt.md5().base64encode(true);
 }
 
@@ -1467,12 +1557,12 @@ Helper::fromAor(const Data& aor, const Data& scheme)
 bool
 Helper::validateMessage(const SipMessage& message,resip::Data* reason)
 {
-   if (!message.exists(h_To) || 
-       !message.exists(h_From) || 
-       !message.exists(h_CSeq) || 
-       !message.exists(h_CallId) || 
-       !message.exists(h_Vias) ||
-       message.header(h_Vias).empty())
+   if (message.empty(h_To) || 
+       message.empty(h_From) || 
+       message.empty(h_CSeq) || 
+       message.empty(h_CallId) || 
+       message.empty(h_Vias) ||
+       message.empty(h_Vias))
    {
       InfoLog(<< "Missing mandatory header fields (To, From, CSeq, Call-Id or Via)");
       DebugLog(<< message);
@@ -1947,7 +2037,7 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
       }
    }
 
-   DebugLog(<< "No sdp" << endl);
+   //DebugLog(<< "No sdp" << endl);
    return empty;
 }
 

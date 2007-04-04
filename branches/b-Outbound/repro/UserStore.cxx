@@ -33,24 +33,24 @@ UserStore::~UserStore()
 
 void 
 UserStore::requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& domain,
+                                const resip::Data& realm,
                                 const resip::Data& transactionToken,
                                 resip::TransactionUser& transactionUser ) const
 {
    // TODO - this should put a message on a local queue then a thread should
    // read that and then do the stuff in the rest of this fucntion
    
-   resip::Data a1 = getUserAuthInfo(user, domain);
+   resip::Data a1 = getUserAuthInfo(user, realm);
    
    UserAuthInfo* msg=0;
 
    if(a1.empty())
    {
-      msg = new UserAuthInfo(user,domain,UserAuthInfo::UserUnknown,transactionToken);
+      msg = new UserAuthInfo(user,realm,UserAuthInfo::UserUnknown,transactionToken);
    }
    else
    {
-      msg = new UserAuthInfo(user,domain,a1,transactionToken);
+      msg = new UserAuthInfo(user,realm,a1,transactionToken);
    }
    transactionUser.post( msg );
 }
@@ -65,9 +65,9 @@ UserStore::getUserInfo( const Key& key ) const
 
 Data 
 UserStore::getUserAuthInfo(  const resip::Data& user, 
-                             const resip::Data& domain ) const
+                             const resip::Data& realm ) const
 {
-   Key key =  buildKey(user, domain);
+   Key key =  buildKey(user, realm);
    return mDb.getUserAuthInfo( key );
 }
 

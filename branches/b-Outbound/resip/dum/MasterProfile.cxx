@@ -106,8 +106,12 @@ MasterProfile::getUnsupportedOptionsTags(const Tokens& requiresOptionTags)
    Tokens tokens;
    for (Tokens::const_iterator i=requiresOptionTags.begin(); i != requiresOptionTags.end(); ++i)
    {
+      if (!i->isWellFormed())
+      {
+         tokens.push_back(Token("malformedTag"));
+      }
       // if this option is not supported
-      if (!mSupportedOptionTags.find(*i))
+      else if (!mSupportedOptionTags.find(*i))
       {
          tokens.push_back(*i);
       }
@@ -135,8 +139,32 @@ MasterProfile::addSupportedMimeType(const MethodTypes& method, const Mime& mimeT
 }
 
 bool 
+MasterProfile::removeSupportedMimeType(const MethodTypes& method, const Mime& mimeType)
+{
+   std::map<MethodTypes, Mimes>::iterator foundMethod = mSupportedMimeTypes.find(method);
+   if (foundMethod != mSupportedMimeTypes.end())
+   {
+      for (Mimes::iterator i = foundMethod->second.begin();
+         i != foundMethod->second.end(); ++i)
+      {
+         if (mimeType.isEqual(*i))
+         {
+            foundMethod->second.erase(i);
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+bool 
 MasterProfile::isMimeTypeSupported(const MethodTypes& method, const Mime& mimeType)
 {
+   if(!mimeType.isWellFormed())
+   {
+      return false;
+   }
+   
    std::map<MethodTypes, Mimes>::iterator found = mSupportedMimeTypes.find(method); 
    if (found != mSupportedMimeTypes.end()) 
    { 
@@ -181,7 +209,7 @@ MasterProfile::addSupportedEncoding(const Token& encoding)
 bool 
 MasterProfile::isContentEncodingSupported(const Token& encoding) const
 {
-   return mSupportedEncodings.find(encoding);
+   return encoding.isWellFormed() && mSupportedEncodings.find(encoding);
 }
 
 Tokens 
@@ -207,7 +235,7 @@ MasterProfile::isLanguageSupported(const Tokens& langs) const
 {
    for (Tokens::const_iterator i=langs.begin(); i != langs.end(); ++i)
    {
-      if (mSupportedLanguages.find(*i) == false)
+      if (!i->isWellFormed() || mSupportedLanguages.find(*i) == false)
       {
          return false;
       }
@@ -238,7 +266,7 @@ MasterProfile::isEventAllowed(const Tokens& events) const
 {
    for (Tokens::const_iterator i=events.begin(); i != events.end(); ++i)
    {
-      if (mAllowedEvents.find(*i) == false)
+      if (!i->isWellFormed() || mAllowedEvents.find(*i) == false)
       {
          return false;
       }
