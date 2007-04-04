@@ -3,7 +3,7 @@
 namespace resip
 {
 int InteropHelper::theOutboundVersion=8;
-
+bool InteropHelper::isOutboundSupported=true;
 }
 
 /* ====================================================================

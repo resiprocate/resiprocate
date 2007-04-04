@@ -211,7 +211,7 @@ Connection::onDoubleCRLF()
 {
    // !bwc! TODO might need to make this more efficient.
    // ?bwc? We don't need a sigcomp id, do we?
-   if(InteropHelper::getOutboundVersion()==8)
+   if(InteropHelper::getOutboundVersion()<7)
    {
       requestWrite(new SendData(mWho,Symbols::CRLF,Data::Empty,Data::Empty));
    }

@@ -695,6 +695,15 @@ RequestContext::removeTopRouteIfSelf()
       mTopRoute = mOriginalRequest->header(h_Routes).front();
 
       mOriginalRequest->header(h_Routes).pop_front();
+
+      if(!mOriginalRequest->header(h_Routes).empty()
+           &&  mProxy.isMyUri(mOriginalRequest->header(h_Routes).front().uri()))
+      {
+         // .bwc. Do double-record routing logic
+         mTopRoute = mOriginalRequest->header(h_Routes).front();
+   
+         mOriginalRequest->header(h_Routes).pop_front();
+      }
    }
 }
 
