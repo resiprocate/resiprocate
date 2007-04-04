@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "resip/stack/ExtensionParameter.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
@@ -501,7 +502,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       // target in an invalid state, it is a bug.
       assert(target->status() == Target::Candidate);
 
-      SipMessage request(mRequestContext.getOriginalRequest());
+      SipMessage& orig=mRequestContext.getOriginalRequest();
+      SipMessage request(orig);
+      
       if(!mRequestContext.mTopRoute.uri().user().empty())
       {
          // .bwc. Flow token?
@@ -540,43 +543,69 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       // Record-Route addition only for new dialogs
       if ( !inDialog &&  // only for dialog-creating request
            (request.method() == INVITE ||
-            request.method() == SUBSCRIBE ) )
+            request.method() == SUBSCRIBE))
       {
          resip::NameAddr rt(mRequestContext.mProxy.getRecordRoute());
-         massageRoute(rt,true);
+         massageRoute(rt);
          // !jf! By not specifying host in Record-Route, the TransportSelector
-         //will fill it in. 
-         if (!mRequestContext.mProxy.getRecordRoute().uri().host().empty())
+         //will fill it in.
+
+         if(resip::InteropHelper::getOutboundSupported()
+            && !request.empty(h_Contacts)
+            && request.header(h_Vias).size() == 1
+            && request.header(h_Contacts).front().exists(p_regid) 
+            && request.header(h_Contacts).front().exists(p_Instance))
          {
-            request.header(h_RecordRoutes).push_front(rt);
+            // .bwc. If the endpoint has an outbound connection with us 
+            // (evidenced by the fact that the Contact has outbound goo in it,
+            // and we are the first hop), we record the flow information in
+            // the Record-Route. Otherwise, we store NO transport info, since
+            // doing so breaks all kinds of stuff (target refresh, 
+            // non-record-routing proxies between us and the endpoint, etc)
+            resip::Data binaryFlowToken;
+            Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
+            
+            // !bwc! TODO encrypt this binary token to self.
+            rt.uri().user()=binaryFlowToken.base64encode();
          }
+         
+         request.header(h_RecordRoutes).push_front(rt);
+
+         // .bwc. Arrange to add the second Record-Route header.
+         request.addOutboundDecorator(this);
+         InfoLog (<< "Added Record-Route: " << rt);
       }
       else if(request.method()==REGISTER)
       {
-         bool outboundEnabled=true;
-
          // .bwc. Edge-proxy stuff for outbound.
-         if(request.header(h_Vias).size() == 1 && outboundEnabled)
+         if(request.header(h_Vias).size() == 1 
+            && resip::InteropHelper::getOutboundSupported()
+            && !request.empty(h_Contacts)
+            && request.header(h_Contacts).front().exists(p_regid))
          {
             resip::NameAddr rt(mRequestContext.mProxy.getRecordRoute());
-            massageRoute(rt,false);
+            massageRoute(rt);
             resip::Data binaryFlowToken;
-            Tuple::writeBinaryToken(request.getSource(),binaryFlowToken);
+            Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
             
             // !bwc! TODO encrypt this binary token to self.
             rt.uri().user()=binaryFlowToken.base64encode();
             rt.param(p_ob);
+            request.header(h_Paths).push_front(rt);
+            InfoLog (<< "Added Path: " << rt);
+            request.header(h_Supporteds).push_back(Token("path"));
          }
       }
       
-      Tuple dest=target->rec().mReceivedFrom;
-      
-      if(!target->rec().mInstance.empty())
+      if(!target->rec().mInstance.empty() && target->rec().mRegId)
       {
-         dest.onlyUseExistingConnection=true;
+         // .bwc. We only override the destination if we are sending to an
+         // outbound contact. If this is not an outbound contact, but the
+         // endpoint has given us a Contact with the correct ip-address and 
+         // port, we might be able to find the connection they formed when they
+         // registered earlier, but that will happen down in TransportSelector.
+         request.setDestination(target->rec().mReceivedFrom);
       }
-      
-      request.setDestination(dest);
 
       DebugLog(<<"Set tuple dest: " << request.getDestination());
 
@@ -609,7 +638,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 }
 
 void
-ResponseContext::massageRoute(NameAddr& rt, bool fid)
+ResponseContext::massageRoute(NameAddr& rt)
 {
    SipMessage& request = mRequestContext.getOriginalRequest();
    
@@ -640,26 +669,59 @@ ResponseContext::massageRoute(NameAddr& rt, bool fid)
       {
          rt.uri().param(p_transport) = sentTransport;
       }
-      
-      if(fid)
-      {
-         static ExtensionParameter p_fid("fid");
-         static ExtensionParameter p_fid1("fid1");
-         static ExtensionParameter p_fid2("fid2");
-      
-         if (request.getSource().mFlowKey != 0)
-         {
-            rt.uri().param(p_fid1) = Data(request.getSource().mFlowKey);
-         }
-         
-         if (request.header(h_RequestLine).uri().exists(p_fid))
-         {
-            rt.uri().param(p_fid2) = request.header(h_RequestLine).uri().param(p_fid);
-         }
-      }
-      InfoLog (<< "Added Record-Route: " << rt);
    }
 
+}
+
+void
+ResponseContext::decorateMessage(resip::SipMessage &request,
+                                 const resip::Tuple &source,
+                                 const resip::Tuple &destination)
+{
+   DebugLog(<<"ResponseContext::decorateMessage called.");
+   NameAddr rt(mRequestContext.mProxy.getRecordRoute());
+   // !jf! could put unique id for this instance of the proxy in user portion
+
+   // !bwc! If topmost Route is malformed, we can get by without.
+   if (request.exists(h_Routes) && 
+         request.header(h_Routes).size() != 0 &&
+         request.header(h_Routes).front().isWellFormed())
+   {
+      rt.uri().scheme() == request.header(h_Routes).front().uri().scheme();
+   }
+   else
+   {
+      rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
+   }
+
+   if(destination.onlyUseExistingConnection)
+   {
+      resip::Data binaryFlowToken;
+      Tuple::writeBinaryToken(destination,binaryFlowToken);
+      
+      // !bwc! TODO encrypt this binary token to self.
+      rt.uri().user()=binaryFlowToken.base64encode();
+   }
+   
+   // This pushes the Record-Route that represents the interface from
+   // which the request is being sent
+   //
+   // !abr! If this duplicates the previous Record-Route, we shouldn't
+   //       add it. Adding doesn't hurt anything, but it's unnecessary.
+   // !bwc! Actually, it can hurt things. If we go into a spiral, we might
+   //       get more Route headers than we have Max-Forwards. When the ACK
+   //       comes through, it might not get to the destination.
+   if (!rt.uri().host().empty())
+   {
+      // !bwc! If topmost Record-Route is malformed, we ignore it.
+      if(request.header(h_RecordRoutes).empty() ||
+         !request.header(h_RecordRoutes).front().isWellFormed() ||
+         rt.uri() != request.header(h_RecordRoutes).front().uri())
+      {
+         request.header(h_RecordRoutes).push_front(rt);
+         InfoLog (<< "Added outbound Record-Route: " << rt);
+      }
+   }
 }
 
 void 
