@@ -1,6 +1,7 @@
 #include "repro/monkeys/OutboundTargetHandler.hxx"
 
 #include "rutil/Logger.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
@@ -46,7 +47,17 @@ OutboundTargetHandler::process(RequestContext & rc)
          
          if(i!=map.end())
          {
-            if(sip->header(resip::h_StatusLine).responseCode()==430 && !i->second.empty())
+            unsigned int flowDeadCode;
+            if(resip::InteropHelper::getOutboundVersion() > 4)
+            {
+               flowDeadCode=430;
+            }
+            else
+            {
+               flowDeadCode=410;
+            }
+            
+            if(sip->header(resip::h_StatusLine).responseCode()==flowDeadCode && !i->second.empty())
             {
                if(i->second.front()==tid)
                {

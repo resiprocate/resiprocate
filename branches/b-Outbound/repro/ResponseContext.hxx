@@ -10,6 +10,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Via.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/MessageDecorator.hxx"
 
 #include "repro/Target.hxx"
 
@@ -23,7 +24,7 @@ namespace repro
 
 class RequestContext;
 
-class ResponseContext
+class ResponseContext : public resip::MessageDecorator
 {
    public:
       class CompareStatus  : public std::binary_function<const resip::SipMessage&, const resip::SipMessage&, bool>  
@@ -258,7 +259,11 @@ class ResponseContext
 
       void forwardBestResponse();
 
-      void massageRoute(resip::NameAddr& rt, bool doFidStuff);
+      virtual void decorateMessage(resip::SipMessage &msg,
+                                   const resip::Tuple &source, 
+                                   const resip::Tuple &destination);
+
+      void massageRoute(resip::NameAddr& rt);
       
       friend class RequestContext;
       friend std::ostream& operator<<(std::ostream& strm, const repro::ResponseContext& rc);
