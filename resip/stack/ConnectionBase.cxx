@@ -201,11 +201,11 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             {
                WarningLog(<<"Malformed Content-Length in connection-based transport"
                            ". Not much we can do to fix this.  " << e);
-               // !bwc! Bad Content-Length. We are hosed.
+               // .bwc. Bad Content-Length. We are hosed.
                delete mMessage;
                mMessage = 0;
                mBuffer = 0;
-               // !bwc! mMessage just took ownership of mBuffer, so we don't
+               // .bwc. mMessage just took ownership of mBuffer, so we don't
                // delete it here. We do zero it though, for completeness.
                //.jacob. Shouldn't the state also be set here?
                delete this;
@@ -283,7 +283,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          {
             WarningLog(<<"Malformed Content-Length in connection-based transport"
                         ". Not much we can do to fix this. " << e);
-            // !bwc! Bad Content-Length. We are hosed.
+            // .bwc. Bad Content-Length. We are hosed.
             delete [] mBuffer;
             mBuffer = 0;
             delete mMessage;

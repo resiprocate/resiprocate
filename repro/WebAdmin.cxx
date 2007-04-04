@@ -500,15 +500,15 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "        </thead>" << endl <<
       "        <tbody>" << endl;
    
-   ConfigStore::DataList list = mStore.mConfigStore.getDomains();
-   for ( ConfigStore::DataList::iterator i = list.begin();
-        i != list.end(); i++ )
+   const ConfigStore::ConfigData& configs = mStore.mConfigStore.getConfigs();
+   for ( ConfigStore::ConfigData::const_iterator i = configs.begin();
+        i != configs.end(); i++ )
    {
       s << 
          "          <tr>" << endl <<
-         "            <td>" << *i << "</td>" << endl <<
-         "            <td align=\"center\">" << mStore.mConfigStore.getTlsPort( *i ) << "</td>" << endl <<
-         "            <td><input type=\"checkbox\" name=\"remove." << *i << "\"/></td>" << endl <<
+         "            <td>" << i->second.mDomain << "</td>" << endl <<
+         "            <td align=\"center\">" << i->second.mTlsPort << "</td>" << endl <<
+         "            <td><input type=\"checkbox\" name=\"remove." << i->second.mDomain << "\"/></td>" << endl <<
          "          </tr>" << endl;
    }
    
@@ -629,11 +629,9 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
          "  <td align=\"left\" valign=\"middle\"><select name=\"domain\">" << endl
          ; 
          
-         // for each domain, add an option in the pulldown
-         
-      ConfigStore::DataList list = mStore.mConfigStore.getDomains();
-
-         for ( ConfigStore::DataList::iterator i = list.begin();
+         // for each domain, add an option in the pulldown         
+         const ConfigStore::ConfigData& list = mStore.mConfigStore.getConfigs();
+         for ( ConfigStore::ConfigData::const_iterator i = list.begin();
               i != list.end(); i++ )
          {
             s << "            <option";
@@ -643,7 +641,7 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
             //    s << " selected=\"true\""; 
             // }
             
-            s << ">" << *i << "</option>" << endl;
+            s << ">" << i->second.mDomain << "</option>" << endl;
          }
 
          s <<
@@ -812,21 +810,19 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
          "  <td align=\"left\" valign=\"middle\"><select name=\"domain\">" << endl
          ; 
       
-      // for each domain, add an option in the pulldown
-      
-      ConfigStore::DataList list = mStore.mConfigStore.getDomains();
-      
-      for ( ConfigStore::DataList::iterator i = list.begin();
+      // for each domain, add an option in the pulldown      
+      const ConfigStore::ConfigData& list = mStore.mConfigStore.getConfigs();      
+      for ( ConfigStore::ConfigData::const_iterator i = list.begin();
             i != list.end(); i++ )
       {
          s << "            <option";
          
-         if ( *i == rec.domain)
+         if ( i->second.mDomain == rec.domain)
          {
             s << " selected=\"true\""; 
          }
          
-         s << ">" << *i << "</option>" << endl;
+         s << ">" << i->second.mDomain << "</option>" << endl;
       }
       
       s <<

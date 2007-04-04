@@ -88,16 +88,14 @@ class SipStack
 
          @param protocol              TCP, UDP, TLS, DTLS, etc.
 
-         @param port                  Specifies which port to bind to.  See sipDomainname
-                                      parameter for more info.
+         @param port                  Specifies which port to bind to.
 
          @param version               Protocol Version:  V4 or V6
 
          @param ipInterface           Specifies which ethernet interface to bind to. If set to 
                                       Data::Empty, bind to all interfaces.
 
-         @param sipDomainname         For TLS only, if port = 0, use DNS to lookup the port number 
-                                      for the specified domain. Only allow messages to 
+         @param sipDomainname         Only allow messages to 
                                       be sent as the specified domain.  For default case, 
                                       you can pass in domainname = DnsUtil::getLocalDomainName().
 
@@ -108,7 +106,7 @@ class SipStack
          @param sslType               Version of the TLS specification to use:  SSLv23 or TLSv1
       */      
       Transport* addTransport( TransportType protocol,
-                         int port=0, 
+                         int port, 
                          IpVersion version=V4,
                          StunSetting stun=StunDisabled,
                          const Data& ipInterface = Data::Empty, 
@@ -156,6 +154,14 @@ class SipStack
       */
       bool isMyDomain(const Data& domain, int port) const;
       
+      /**
+          Returns true if port is handled by this stack.  Convenience for
+          Transaction Users. 
+
+          @param port     Port number to check.        
+      */
+      bool isMyPort(int port) const;
+
       /** 
           Get one of the names for this host (calls through to gethostbyname) and
           is not threadsafe.
@@ -504,6 +510,10 @@ class SipStack
       /** store all domains that this stack is responsible for. Controlled by
           addAlias and addTransport interfaces and checks can be made with isMyDomain() */
       std::set<Data> mDomains;
+
+      /** store all ports that this stack is lisenting on.  Controlled by addTransport
+          and checks can be made with isMyPort() */
+      std::set<int> mPorts;
 
       bool mShuttingDown;
       volatile bool mStatisticsManagerEnabled;
