@@ -75,7 +75,7 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       }
       if (request.exists(h_RecordRoutes))
       {
-         mRouteSet = request.header(h_RecordRoutes); // !jf! is this right order
+         mRouteSet = request.header(h_RecordRoutes); 
       }
 
       switch (request.header(h_CSeq).method())
@@ -172,12 +172,27 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                {
                   const NameAddr& contact = response.header(h_Contacts).front();
                   if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
-                      isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
+                     isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                   {
-                     BaseCreator* creator = mDialogSet.getCreator();
-                     assert(creator);// !jf! throw or something here
-                     assert(creator->getLastRequest()->exists(h_Contacts));
-                     assert(!creator->getLastRequest()->header(h_Contacts).empty());
+                     BaseCreator* creator = mDialogSet.getCreator();					 
+
+                     if( 0 == creator )
+                     {
+                        ErrLog(<< "BaseCreator is null for DialogSet");
+                        ErrLog(<< response);
+                        throw Exception("BaseCreator is null for DialogSet", __FILE__, __LINE__);
+                     }
+
+                     SharedPtr<SipMessage> lastRequest(creator->getLastRequest());
+
+                     if( 0 == lastRequest.get() ||
+                        !lastRequest->exists(h_Contacts) ||
+                        lastRequest->header(h_Contacts).empty())
+                     {
+                        InfoLog(<< "lastRequest does not contain a valid contact");						
+                        InfoLog(<< response);
+                        throw Exception("lastRequest does not contain a valid contact.", __FILE__, __LINE__);
+                     }
                      mLocalContact = creator->getLastRequest()->header(h_Contacts).front();
                      mRemoteTarget = contact;
                   }
@@ -207,8 +222,6 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
       DebugLog ( << "mLocalNameAddr: " << mLocalNameAddr );
       DebugLog ( << "mLocalContact: " << mLocalContact );
       DebugLog ( << "mRemoteTarget: " << mRemoteTarget );
-
-
    }
    mDialogSet.addDialog(this);
    DebugLog ( <<"Dialog::Dialog " << mId);
@@ -474,45 +487,46 @@ Dialog::dispatch(const SipMessage& msg)
          }
          break;
          case NOTIFY:
-         {
-            ClientSubscription* client = findMatchingClientSub(request);
-            if (client)
             {
-               client->dispatch(request);
-            }
-            else
-            {
-               BaseCreator* creator = mDialogSet.getCreator();
-               if (creator && (creator->getLastRequest()->header(h_RequestLine).method() == SUBSCRIBE ||
-                               creator->getLastRequest()->header(h_RequestLine).method() == REFER))  
+               ClientSubscription* client = findMatchingClientSub(request);
+               if (client)
                {
-                  DebugLog (<< "Making subscription (from creator) request: " << *creator->getLastRequest());
-                  ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
-                  mClientSubscriptions.push_back(sub);
-                  sub->dispatch(request);
+                  client->dispatch(request);
                }
                else
                {
-		           if (mInviteSession != 0 && (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer"))
-                   {
-	                  DebugLog (<< "Making subscription from NOTIFY: " << msg);
-                      ClientSubscription* sub = makeClientSubscription(msg);
-                      mClientSubscriptions.push_back(sub);
-			          ClientSubscriptionHandle client = sub->getHandle();
-                      mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);				      
-                      mInviteSession->mSentRefer = false;
-                      sub->dispatch(request);
-				   }
-				   else
-				   {
-                      SharedPtr<SipMessage> response(new SipMessage);
-                      makeResponse(*response, msg, 406);
-                      send(response);
-				   }
-			   }
+                  BaseCreator* creator = mDialogSet.getCreator();
+                  if (creator && (creator->getLastRequest()->header(h_RequestLine).method() == SUBSCRIBE ||
+                     creator->getLastRequest()->header(h_RequestLine).method() == REFER))  
+                  {
+                     DebugLog (<< "Making subscription (from creator) request: " << *creator->getLastRequest());
+                     ClientSubscription* sub = makeClientSubscription(*creator->getLastRequest());
+                     mClientSubscriptions.push_back(sub);
+                     sub->dispatch(request);
+                  }
+                  else
+                  {
+                     if (mInviteSession != 0 && (!msg.exists(h_Event) || msg.header(h_Event).value() == "refer") && 
+                         mDum.getClientSubscriptionHandler("refer")!=0) 
+                     {
+                        DebugLog (<< "Making subscription from NOTIFY: " << msg);
+                        ClientSubscription* sub = makeClientSubscription(msg);
+                        mClientSubscriptions.push_back(sub);
+                        ClientSubscriptionHandle client = sub->getHandle();
+                        mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);				      
+                        mInviteSession->mSentRefer = false;
+                        sub->dispatch(request);
+                     }
+                     else
+                     {
+                        SharedPtr<SipMessage> response(new SipMessage);
+                        makeResponse(*response, msg, 406);
+                        send(response);
+                     }
+                  }
+               }
             }
-         }
-         break;
+            break;
         default:
            assert(0);
            return;
@@ -542,14 +556,12 @@ Dialog::dispatch(const SipMessage& msg)
          mRequests.erase(r);
          if (handledByAuth) return;
       }
-      else
-      {
-         InfoLog( << "Dialog::dispatch, ignoring stray response: " << msg.brief() );
-      }
       
       const SipMessage& response = msg;
       int code = response.header(h_StatusLine).statusCode();
-      if (code >=200 && code < 300)
+      // If this is a 200 response to the initial request, then store the routeset (if present)
+      BaseCreator* creator = mDialogSet.getCreator();
+      if (creator && (creator->getLastRequest()->header(h_CSeq) == response.header(h_CSeq)) && code >=200 && code < 300)
       {
          if (response.exists(h_RecordRoutes))
          {
@@ -1030,7 +1042,7 @@ Dialog::onForkAccepted()
 
 void Dialog::possiblyDie()
 {
-   // !slg! Note:  dialogs should really stick around for 32s, in order to ensure that all 2xx retransmissions get 481 correctly
+   // !slg! Note:  dialogs should really stick around for 32s, in order to ensure that all 2xx retransmissions get Ack'd, then BYE'd correctly
    if (!mDestroying)
    {
       if (mClientSubscriptions.empty() &&

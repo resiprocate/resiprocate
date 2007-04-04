@@ -350,7 +350,7 @@ ResponseContext::cancelClientTransaction(const resip::Data& tid)
 Target* 
 ResponseContext::getTarget(const resip::Data& tid) const
 {
-   // !bwc! This tid is most likely to be found in either the Candidate targets,
+   // .bwc. This tid is most likely to be found in either the Candidate targets,
    // or the Active targets.
    TransactionMap::const_iterator pend = mCandidateTransactionMap.find(tid);
    if(pend != mCandidateTransactionMap.end())
@@ -438,7 +438,7 @@ ResponseContext::isTerminated(const resip::Data& tid) const
 void 
 ResponseContext::removeClientTransaction(const resip::Data& transactionId)
 {
-   // !bwc! This tid will most likely be found in the map of terminated
+   // .bwc. This tid will most likely be found in the map of terminated
    // transactions, under normal circumstances.
    // NOTE: This does not remove the corresponding entry in mTargetList.
    // This is the intended behavior, because the same target should not
@@ -497,7 +497,7 @@ ResponseContext::isDuplicate(const repro::Target* target) const
 void
 ResponseContext::beginClientTransaction(repro::Target* target)
 {
-      // !bwc! This is a private function, and if anything calls this with a
+      // .bwc. This is a private function, and if anything calls this with a
       // target in an invalid state, it is a bug.
       assert(target->status() == Target::Candidate);
 
@@ -522,7 +522,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       }
       request.header(h_RequestLine).uri() = target->uri(); 
 
-      // !bwc! Proxy checks whether this is valid, and rejects if not.
+      // .bwc. Proxy checks whether this is valid, and rejects if not.
       request.header(h_MaxForwards).value()--;
       
       bool inDialog=false;
@@ -533,7 +533,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       }
       catch(resip::ParseBuffer::Exception&)
       {
-         // !bwc! Do we ignore this and just say this is a dialog-creating
+         // ?bwc? Do we ignore this and just say this is a dialog-creating
          // request?
       }
       
@@ -624,7 +624,7 @@ ResponseContext::massageRoute(NameAddr& rt, bool fid)
          (request.header(h_Routes).front().uri().scheme() == "sip" ||
          request.header(h_Routes).front().uri().scheme() == "sips" ) )
    {
-      rt.uri().scheme() == request.header(h_Routes).front().uri().scheme();
+      rt.uri().scheme() = request.header(h_Routes).front().uri().scheme();
    }
    else if(request.header(h_RequestLine).uri().scheme() == "sip" ||
             request.header(h_RequestLine).uri().scheme() == "sips")
@@ -742,7 +742,7 @@ ResponseContext::processResponse(SipMessage& response)
       else if (response.header(h_StatusLine).statusCode() > 199)
       {
          InfoLog( << "Received final response, but can't forward as there are no more Vias: " << response.brief() );
-         // !bwc! Treat as server error.
+         // .bwc. Treat as server error.
          terminateClientTransaction(mCurrentResponseTid);
          return;
       }
@@ -758,7 +758,7 @@ ResponseContext::processResponse(SipMessage& response)
 
       if(!via.isWellFormed())
       {
-         // !bwc! Garbage via. Unrecoverable. Ignore if provisional, terminate
+         // .bwc. Garbage via. Unrecoverable. Ignore if provisional, terminate
          // transaction if not.
          DebugLog(<<"Some endpoint has corrupted one of our Vias"
             " in their response. (Via is malformed) This is not fixable.");
@@ -899,7 +899,7 @@ ResponseContext::processResponse(SipMessage& response)
 
                   if(mBestResponse.header(h_StatusLine).statusCode()/100!=3)
                   {
-                     // !bwc! Do not merge contacts in 3xx with contacts from a
+                     // .bwc. Do not merge contacts in 3xx with contacts from a
                      // previous 4xx or 5xx
                      mBestResponse.header(h_Contacts).clear();
                   }
@@ -907,7 +907,7 @@ ResponseContext::processResponse(SipMessage& response)
                   for (NameAddrs::iterator i=response.header(h_Contacts).begin(); 
                        i != response.header(h_Contacts).end(); ++i)
                   {
-                     // TODO !bwc! if we are going to be checking whether
+                     // TODO ?bwc? if we are going to be checking whether
                      // this is "*", we should see if it is well-formed
                      // first. If we shouldn't be doing any checks on
                      // the contacts, we should simply remove all of this
@@ -915,14 +915,14 @@ ResponseContext::processResponse(SipMessage& response)
 
                      if(!i->isWellFormed() || i->isAllContacts())
                      {
-                        // !bwc! Garbage contact; ignore it.
+                        // .bwc. Garbage contact; ignore it.
                         continue;
                      }
                      
                      mBestResponse.header(h_Contacts).push_back(*i);
                   }
 
-                  // !bwc! it is possible for this code to end up with a 300
+                  // ?bwc? it is possible for this code to end up with a 300
                   // with no Contacts in it (because they were all malformed)
                   // Is this acceptable? Also, is 300 the code we want here?
                   mBestResponse.header(h_StatusLine).statusCode() = 300;

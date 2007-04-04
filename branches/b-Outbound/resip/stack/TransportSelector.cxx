@@ -142,7 +142,7 @@ TransportSelector::isFinished() const
 
 
 void
-TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
+TransportSelector::addTransport(std::auto_ptr<Transport> tAuto)
 {
    Transport* transport = tAuto.release();   
    mDns.addTransportType(transport->transport(), transport->ipVersion());
@@ -181,10 +181,12 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
       case UDP:
       case TCP:
       {
-         assert(mExactTransports.find(tuple) == mExactTransports.end() &&
-                mAnyInterfaceTransports.find(tuple) == mAnyInterfaceTransports.end());
+         Tuple key(transport->interfaceName(), transport->port(), 
+                   transport->ipVersion(), transport->transport());
+         assert(mExactTransports.find(key) == mExactTransports.end() &&
+                mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
 
-         DebugLog (<< "Adding transport: " << tuple);
+         DebugLog (<< "Adding transport: " << key);
          
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
@@ -192,13 +194,13 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
          if (transport->interfaceName().empty() ||
              transport->hasSpecificContact() )
          {
-            mAnyInterfaceTransports[tuple] = transport;
-            mAnyPortAnyInterfaceTransports[tuple] = transport;
+            mAnyInterfaceTransports[key] = transport;
+            mAnyPortAnyInterfaceTransports[key] = transport;
          }
          else
          {
-            mExactTransports[tuple] = transport;
-            mAnyPortTransports[tuple] = transport;
+            mExactTransports[key] = transport;
+            mAnyPortTransports[key] = transport;
          }
       }
       break;
@@ -426,7 +428,8 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
 #if defined(WIN32) && !defined(NO_IPHLPAPI)
       try
       {
-         source.getMutableSockaddr() = WinCompat::determineSourceInterface(target.toGenericIPAddress()).address;
+         GenericIPAddress addr = WinCompat::determineSourceInterface(target.toGenericIPAddress());
+         source.setSockaddr(addr);
       }
       catch (WinCompat::Exception&)
       {
@@ -574,7 +577,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       // (imagine a synthetic message...)
 
       Tuple source;
-      // !bwc! We need 3 things here:
+      // .bwc. We need 3 things here:
       // 1) A Transport* to call send() on.
       // 2) A complete Tuple to pass in this call (target).
       // 3) A host, port, and protocol for filling out the topmost via, and
@@ -607,12 +610,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          transport = findTransportByDest(msg,target);
          
-         // !bwc! Here we use transport to find source.
+         // .bwc. Here we use transport to find source.
          if(transport)
          {
             source = transport->getTuple();
 
-            //!bwc! If the transport has an ambiguous interface, we need to
+            // .bwc. If the transport has an ambiguous interface, we need to
             //look a little closer.
             if(source.isAnyInterface())
             {
@@ -633,13 +636,13 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                source.setPort(transport->port());
             }
          }
-         // !bwc! Here we use source to find transport.
+         // .bwc. Here we use source to find transport.
          else
          {
             source = determineSourceInterface(msg, target);
             transport = findTransportBySource(source);
             
-            // !bwc! determineSourceInterface doesn't give us a port
+            // .bwc. determineSourceInterface doesn't give us a port
             if(transport)
             {
                source.setPort(transport->port());
@@ -648,7 +651,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                   
          target.transport=transport;
          
-         // !bwc! Topmost Via is only filled out in the request case. Also, if
+         // .bwc. Topmost Via is only filled out in the request case. Also, if
          // we don't have a transport at this point, we're going to fail,
          // so don't bother doing the work.
          if(target.transport)
@@ -729,7 +732,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          
          source = target.transport->getTuple();
 
-         //!bwc! If the transport has an ambiguous interface, we need to
+         // .bwc. If the transport has an ambiguous interface, we need to
          //look a little closer.
          if(source.isAnyInterface())
          {
@@ -772,7 +775,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          assert(0);
       }
 
-      // !bwc! At this point, source, target.transport, and target should be
+      // .bwc. At this point, source, target.transport, and target should be
       // _fully_ specified.
 
       if (target.transport)
@@ -834,7 +837,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          }
 
          // Fix the Referred-By header if no host specified.
-         if (msg->exists(h_ReferredBy))
+         // If malformed, leave it alone.
+         if (msg->exists(h_ReferredBy) 
+               && msg->header(h_ReferredBy).isWellFormed())
          {
             if (msg->header(h_ReferredBy).uri().host().empty())
             {
@@ -843,9 +848,17 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
          }
 
-         if (msg->exists(h_RecordRoutes) && !msg->header(h_RecordRoutes).empty())
+         // .bwc. Only try fiddling with this is if the Record-Route is well-
+         // formed. If the topmost Record-Route is malformed, we have no idea
+         // whether it came from something the TU synthesized or from the wire.
+         // We shouldn't touch it. Frankly, I take issue with the method we have
+         // chosen to signal to the stack that we want it to fill out various
+         // header-field-values. 
+         if (msg->exists(h_RecordRoutes) 
+               && !msg->header(h_RecordRoutes).empty() 
+               && msg->header(h_RecordRoutes).front().isWellFormed())
          {
-            NameAddr& rr = msg->header(h_RecordRoutes).back();
+            NameAddr& rr = msg->header(h_RecordRoutes).front();
             if (rr.uri().host().empty())
             {
                rr.uri().host() = Tuple::inet_ntop(source);
@@ -1000,8 +1013,8 @@ TransportSelector::connectionAlive(const Tuple& target) const
 const Connection*
 TransportSelector::findConnection(const Tuple& target) const
 {
-   // !bwc! If we can find a match in the ConnectionManager, we can
-   // determine what Transport this needs to be sent on. This may also let
+   // .bwc. If we can find a match in the ConnectionManager, we can get
+   //determine what Tranport this needs to be sent on. This may also let
    // us know immediately what our source needs to be.
    if(target.getType()==TCP || target.getType()==TLS)
    {
@@ -1043,11 +1056,11 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
       }
       else if(target.getType()==TCP || target.getType()==TLS)
       {
-         // !bwc! We might find a match by the cid, or maybe using the
+         // .bwc. We might find a match by the cid, or maybe using the
          // tuple itself.
          const Connection* conn = findConnection(target);
          
-         if(conn) // !bwc! Woohoo! Home free!
+         if(conn) // .bwc. Woohoo! Home free!
          {
             return conn->transport();
          }
@@ -1060,12 +1073,12 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
       }
             
    }
-   else // !bwc! Easy as pie.
+   else // .bwc. Easy as pie.
    {
       return target.transport;
    }
 
-   // !bwc! No luck here. Maybe findTransportBySource will end up working.
+   // .bwc. No luck here. Maybe findTransportBySource will end up working.
    return 0; 
 }
 

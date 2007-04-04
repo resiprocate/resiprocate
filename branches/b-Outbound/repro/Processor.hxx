@@ -29,7 +29,7 @@ class Processor
          SkipThisChain,
          SkipAllChains
       }
-         processor_action_t;
+      processor_action_t;
 
       virtual processor_action_t process(RequestContext &)=0;
       virtual void dump(std::ostream &os) const = 0;
@@ -46,8 +46,6 @@ class Processor
    protected:
       std::vector<short> mAddress;
       Processor::ChainType mType;
-      
-      
 };
 
 std::ostream &operator<<(std::ostream &os, const repro::Processor &rp);

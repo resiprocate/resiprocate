@@ -20,6 +20,7 @@
       typedef _type Type;                                   \
       typedef _type::Type DType;                            \
       virtual ParameterTypes::Type getTypeNum() const;      \
+      virtual const char* name() const { return _name; }    \
       _enum##_Param();                                      \
    };                                                       \
    extern _enum##_Param p_##_enum
@@ -32,6 +33,7 @@ class ParamBase
    public:
       virtual ~ParamBase() {}
       virtual ParameterTypes::Type getTypeNum() const = 0;
+      virtual const char* name() const = 0;
 };
 
 defineParam(data, "data", ExistsParameter, "RFC 3840");
@@ -105,6 +107,7 @@ defineParam(transport, "transport", DataParameter, "RFC 3261");
 defineParam(ttl, "ttl", UInt32Parameter, "RFC ????");
 defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
 defineParam(user, "user", DataParameter, "RFC ????");
+defineParam(extension, "ext", DataParameter, "RFC ????");
 defineParam(username, "username", QuotedDataParameter, "RFC 3261");
 defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
 defineParam(refresher, "refresher", DataParameter, "RFC 4028");
@@ -121,38 +124,12 @@ defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-conf
 defineParam(url, "url", QuotedDataParameter, "RFC 4483");
 
 defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
+defineParam(qop,"qop",DataParameter,"RFC3261");
+defineParam(qopOptions,"qop",DataParameter,"RFC3261");
 
 // Internal use only
 defineParam(addTransport, "addTransport", ExistsParameter, "RESIP INTERNAL");
 
-// SPECIAL-CASE
-class Qop_Options_Param : public ParamBase
-{
-   public:
-      typedef QuotedDataParameter Type;
-      typedef QuotedDataParameter::Type DType;
-      virtual ParameterTypes::Type getTypeNum() const;
-      Qop_Options_Param();
-};
-extern Qop_Options_Param p_qopOptions;
-
-class qop_Param : public ParamBase
-{
-   public:
-      typedef DataParameter Type;
-      typedef DataParameter::Type DType;
-      virtual ParameterTypes::Type getTypeNum() const;
-      qop_Param();
-};
-extern qop_Param p_qop;
-
-class Qop_Factory_Param
-{
-   public:
-      typedef QopParameter Type;
-      Qop_Factory_Param();
-};
-extern Qop_Factory_Param p_qopFactory;
 }
 
 #undef defineParam

@@ -1,10 +1,6 @@
 #include <Winsock2.h>
 #include <Iphlpapi.h>
 
-#ifndef __MINGW32__
-#include <atlbase.h>
-#endif
-
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/WinCompat.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -13,6 +9,27 @@
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+
+
+static char* ConvertLPWSTRToLPSTR(LPWSTR lpwszStrIn)
+{
+   LPSTR pszOut = NULL;
+   if (lpwszStrIn != NULL)
+   {
+      int nInputStrLen = wcslen (lpwszStrIn);
+
+      // Double NULL Termination
+      int nOutputStrLen = WideCharToMultiByte (CP_ACP, 0, lpwszStrIn, nInputStrLen, NULL, 0, 0, 0) + 2;
+      pszOut = new char [nOutputStrLen];
+
+      if (pszOut)
+      {
+         memset (pszOut, 0x00, nOutputStrLen);
+         WideCharToMultiByte(CP_ACP, 0, lpwszStrIn, nInputStrLen, pszOut, nOutputStrLen, 0, 0);
+      }
+   }
+   return pszOut;
+}
 
 using namespace resip;
 
@@ -231,13 +248,23 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
              {
                 if (AI->FirstUnicastAddress->Address.lpSockaddr->sa_family != saddr->sa_family)
                    continue;
-                if ((saddr->sa_family == AF_INET6 && AI->Ipv6IfIndex == dwBestIfIndex) ||
-                   (saddr->sa_family == AF_INET && AI->IfIndex == dwBestIfIndex))
+                if (saddr->sa_family == AF_INET && AI->IfIndex == dwBestIfIndex)
                 {
                    GenericIPAddress ipaddress(*AI->FirstUnicastAddress->Address.lpSockaddr);
                    LocalFree(pAdapterAddresses);
                    return(ipaddress);
                 }
+#ifdef USE_IPV6
+                else if (saddr->sa_family == AF_INET6 && AI->Ipv6IfIndex == dwBestIfIndex)
+                {
+                   // explicitly cast to sockaddr_in6, to use that version of GenericIPAddress' ctor. If we don't, then compiler
+                   // defaults to ctor for sockaddr_in (at least under Win32), which will truncate the lower-bits of the IPv6 address.
+                   const struct sockaddr_in6* psa = reinterpret_cast<const struct sockaddr_in6*>(AI->FirstUnicastAddress->Address.lpSockaddr);
+                   GenericIPAddress ipaddress(*psa);
+                   LocalFree(pAdapterAddresses);
+                   return(ipaddress);
+                }
+#endif
             } 
          }
       }
@@ -452,19 +479,15 @@ WinCompat::getInterfaces(const Data& matching)
       else 
       {
          IP_ADAPTER_ADDRESSES *AI;
-#ifndef __MINGW32__
-         USES_CONVERSION;
-#endif
          int i;
          for (i = 0, AI = pAdapterAddresses; AI != NULL; AI = AI->Next, i++) 
          {
             if (AI->FirstUnicastAddress != NULL) 
             {
-#ifdef __MINGW32__
-               Data name(AI->AdapterName); 
-#else
-               Data name(W2A(AI->FriendlyName));
-#endif
+               LPSTR pszSimpleCharStringFromLPWSTR = ConvertLPWSTRToLPSTR(AI->FriendlyName);
+               Data name(pszSimpleCharStringFromLPWSTR);
+               delete [] pszSimpleCharStringFromLPWSTR;
+
                if(matching == Data::Empty || name == matching)
                {
                   results.push_back(std::make_pair(name, DnsUtil::inet_ntop(*AI->FirstUnicastAddress->Address.lpSockaddr)));
