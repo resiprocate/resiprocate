@@ -18,6 +18,7 @@ SRC = \
 	ExpiresCategory.cxx \
 	GenericUri.cxx \
 	IntegerCategory.cxx \
+	InteropHelper.cxx \
 	UInt32Category.cxx \
 	Mime.cxx \
 	NameAddr.cxx \

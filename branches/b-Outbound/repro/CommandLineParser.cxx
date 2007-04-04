@@ -10,6 +10,7 @@
 #include "repro/ReproVersion.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/ParseException.hxx"
 
 using namespace resip;
@@ -62,6 +63,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int timerC=180;
    
    char* adminPassword = "";
+   int outboundVersion=8;
 
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -116,6 +118,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"timer-C",          0,    POPT_ARG_INT,                                &timerC,          0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",     'a',   POPT_ARG_STRING,                            &adminPassword,     0, "set web administrator password", ""},
+      {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "8"},
       {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
@@ -193,6 +196,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    }
 
    mAdminPassword = adminPassword;
+   
+   InteropHelper::setOutboundVersion(outboundVersion);
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);
