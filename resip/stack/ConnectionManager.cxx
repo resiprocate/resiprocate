@@ -61,6 +61,11 @@ ConnectionManager::findConnection(const Tuple& addr)
       {
          DebugLog(<<"fd " << addr.mFlowKey << " does not exist.");
       }
+
+      if(addr.onlyUseExistingConnection)
+      {
+         return 0;
+      }
    }
    
    AddrMap::iterator i = mAddrMap.find(addr);
