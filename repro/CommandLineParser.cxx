@@ -23,7 +23,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* logType = "cout";
    char* logLevel = "INFO";
    char* tlsDomain = 0;
-   char* recordRoute = 0;
+   int recordRoute = 0;
+   char* recordRouteUri = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
 #if defined(USE_SSL)
@@ -79,7 +80,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    0, "specify uri to use as Record-Route", "sip:example.com"},
+      {"enable-record-route",     0,  POPT_ARG_NONE,                            &recordRoute,    0, "enable record-routing by default (proxy will still record-route in cases where it is forced to by standards)", 0},
+      {"record-route-uri",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -148,11 +150,19 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       mTlsDomain = tlsDomain;
    }
 
-   mShouldRecordRoute = false;
-   if (recordRoute) 
+   mShouldRecordRoute = recordRoute;
+   if (recordRouteUri) 
    {
-      mShouldRecordRoute = true;
-      mRecordRoute = toUri(recordRoute, "Record-Route");
+      mRecordRoute = toUri(recordRouteUri, "Record-Route");
+      // .bwc. You must give a fully specified hostname for the record-route.
+      // Furthermore, you should ensure that this uri will allow a 
+      // 3263-compliant sender to know what transports this proxy supports, and 
+      // how to reach it over any of these transports. (ie, set up your full
+      // NAPTR->SRV->A or AAAA DNS zone for this uri) For senders that don't
+      // support 3263 (ie, they just assume that a proxy supports a given 
+      // ip-version and protocol, and do A or AAAA lookups), this won't work all 
+      // the time. This is their fault, not yours.
+      assert(!mRecordRoute.host().empty());
    }
    
    mUdpPort = udpPort;
@@ -198,6 +208,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mAdminPassword = adminPassword;
    
    InteropHelper::setOutboundVersion(outboundVersion);
+   InteropHelper::setOutboundSupported(outboundVersion ? true : false);
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);
