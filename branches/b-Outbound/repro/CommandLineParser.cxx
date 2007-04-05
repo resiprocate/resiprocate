@@ -64,6 +64,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int timerC=180;
    
    char* adminPassword = "";
+   int outboundDisabled=0;
    int outboundVersion=8;
 
 #ifdef WIN32
@@ -120,6 +121,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"timer-C",          0,    POPT_ARG_INT,                                &timerC,          0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",     'a',   POPT_ARG_STRING,                            &adminPassword,     0, "set web administrator password", ""},
+      {"disable-outbound",     0,   POPT_ARG_NONE,                            &outboundDisabled,     0, "disable outbound support (draft-ietf-sip-outbound)", 0},
       {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "8"},
       {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
@@ -208,7 +210,14 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mAdminPassword = adminPassword;
    
    InteropHelper::setOutboundVersion(outboundVersion);
-   InteropHelper::setOutboundSupported(outboundVersion ? true : false);
+   InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
+   
+   if(InteropHelper::getOutboundSupported() && !recordRouteUri)
+   {
+      CritLog(<< "In order for outbound support to work, you MUST specify a "
+                  "Record-Route URI. Launching without...");
+      InteropHelper::setOutboundSupported(false);
+   }
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);
