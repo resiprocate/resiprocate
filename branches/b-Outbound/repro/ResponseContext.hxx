@@ -24,7 +24,7 @@ namespace repro
 
 class RequestContext;
 
-class ResponseContext : public resip::MessageDecorator
+class ResponseContext
 {
    public:
       class CompareStatus  : public std::binary_function<const resip::SipMessage&, const resip::SipMessage&, bool>  
@@ -259,12 +259,6 @@ class ResponseContext : public resip::MessageDecorator
 
       void forwardBestResponse();
 
-      virtual void decorateMessage(resip::SipMessage &msg,
-                                   const resip::Tuple &source, 
-                                   const resip::Tuple &destination);
-
-      void massageRoute(resip::NameAddr& rt);
-      
       friend class RequestContext;
       friend std::ostream& operator<<(std::ostream& strm, const repro::ResponseContext& rc);
 };
