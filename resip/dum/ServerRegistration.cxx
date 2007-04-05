@@ -202,7 +202,6 @@ ServerRegistration::dispatch(const SipMessage& msg)
       
       rec.mContact=*i;
       rec.mRegExpires=expires+now;
-      rec.mReceivedFrom=msg.getSource();
       
       // !bwc! If, in the end, this is true, it means all necessary conditions
       // for outbound support have been met.
@@ -252,14 +251,26 @@ ServerRegistration::dispatch(const SipMessage& msg)
       if(supportsOutbound)
       {
          rec.mRegId=i->param(p_regid);
-         rec.mReceivedFrom.onlyUseExistingConnection=haveDirectFlow;
+         if(haveDirectFlow)
+         {
+            // .bwc. We NEVER record the source if outbound is not being used.
+            // There is nothing we can do with this info in the non-outbound
+            // case that doesn't flagrantly violate spec (yet).
+            // (Example: If we remember this info with the intent of sending
+            // incoming stuff to this source directly, we end up being forced
+            // to record-route with a flow token to give in-dialog stuff a
+            // chance of working. Once we have record-routed, we have set this
+            // decision in stone for the rest of the dialog, preventing target
+            // refresh requests from working. If record-route was mutable, 
+            // maybe it would be okay to do this, but until this is officially
+            // allowed, we shouldn't touch it.)
+            rec.mReceivedFrom=msg.getSource();
+            
+            // .bwc. In the outbound case, we should fail if the connection is
+            // gone. No recovery should be attempted by the server.
+            rec.mReceivedFrom.onlyUseExistingConnection=true;
+         }
       }
-      else
-      {
-         rec.mRegId=0;
-         rec.mReceivedFrom.onlyUseExistingConnection=false;
-      }
-
       
       // Check to see if this is a removal.
       if (expires == 0)

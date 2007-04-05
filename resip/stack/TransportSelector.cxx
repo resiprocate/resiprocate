@@ -610,8 +610,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          transport = findTransportByDest(msg,target);
          
-         // .bwc. Here we use transport to find source.
-         if(transport)
+         if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
+         {
+            // .bwc. Connection info was specified, and use of this connection 
+            // was mandatory, but connection is no longer around. We fail.
+         }
+         else if (transport)// .bwc. Here we use transport to find source.
          {
             source = transport->getTuple();
 
@@ -1063,6 +1067,11 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
          if(conn) // .bwc. Woohoo! Home free!
          {
             return conn->transport();
+         }
+         else if(target.onlyUseExistingConnection)
+         {
+            // .bwc. Connection no longer exists, so we fail.
+            return 0;
          }
       }
       
