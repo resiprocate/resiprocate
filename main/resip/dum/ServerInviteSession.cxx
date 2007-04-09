@@ -8,6 +8,7 @@
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/UsageUseException.hxx"
 #include "resip/dum/DumHelper.hxx"
+#include "resip/dum/DumCommand.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -86,6 +87,38 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 }
 
 void 
+ServerInviteSession::redirectCommand(const NameAddrs& contacts, int code)
+{
+   class ServerInviteSessionRedirectCommand : public DumCommandAdapter
+   {
+   public:
+      ServerInviteSessionRedirectCommand(ServerInviteSession& serverInviteSession, const NameAddrs& contacts, int code)
+         : mServerInviteSession(serverInviteSession),
+           mContacts(contacts),
+           mCode(code)
+      {
+
+      }
+
+      virtual void executeCommand()
+      {
+         mServerInviteSession.redirect(mContacts, mCode);
+      }
+
+      virtual std::ostream& encodeBrief(std::ostream& strm) const
+      {
+         return strm << "ServerInviteSessionRedirectCommand";
+      }
+   private:
+      ServerInviteSession& mServerInviteSession;
+      NameAddrs mContacts;
+      int mCode;
+   };
+
+   mDum.post(new ServerInviteSessionRedirectCommand(*this, contacts, code));
+}
+
+void 
 ServerInviteSession::provisional(int code, bool earlyFlag)
 {
    InfoLog (<< toData(mState) << ": provisional(" << code << ")");
@@ -144,6 +177,35 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
          assert(0);
          break;
    }
+}
+
+class ServerInviteSessionProvisionalCommand : public DumCommandAdapter
+{
+public:
+   ServerInviteSessionProvisionalCommand(ServerInviteSession& serverInviteSession, int statusCode)
+      : mServerInviteSession(serverInviteSession),
+        mStatusCode(statusCode)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mServerInviteSession.provisional(mStatusCode);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ServerInviteSessionProvisionalCommand";
+   }
+private:
+   ServerInviteSession& mServerInviteSession;
+   int mStatusCode;
+};
+
+void 
+ServerInviteSession::provisionalCommand(int statusCode)
+{
+   mDum.post(new ServerInviteSessionProvisionalCommand(*this, statusCode));
 }
 
 void
@@ -217,11 +279,57 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
    }
 }
 
+//class ServerInviteSessionProvideOfferCommand : public DumCommandAdapter
+//{
+//public:
+//   ServerInviteSessionProvideOfferCommand(ServerInviteSession& serverInviteSession, 
+//      const SdpContents& offer,
+//      DialogUsageManager::EncryptionLevel level, 
+//      const SdpContents* alternative)
+//      : mServerInviteSession(serverInviteSession),
+//        mOffer(offer),
+//        mLevel(level),
+//        mAlternative(alternative?alternative->clone():NULL)
+//   {
+//
+//   }
+//
+//   virtual void executeCommand()
+//   {
+//      mServerInviteSession.provideOfferCommand(mOffer, mLevel, mAlternative.get());
+//   }
+//
+//   virtual std::ostream& encodeBrief(std::ostream& strm) const
+//   {
+//      return strm << "ServerInviteSessionProvideOfferCommand";
+//   }
+//private:
+//   ServerInviteSession& mServerInviteSession;
+//   SdpContents mOffer;
+//   DialogUsageManager::EncryptionLevel mLevel;
+//   std::auto_ptr<SdpContents> mAlternative;
+//};
+//
+//void
+//ServerInviteSession::provideOfferCommand(const SdpContents& offer,
+//                                         DialogUsageManager::EncryptionLevel level, 
+//                                         const SdpContents* alternative)
+//{
+//   mDum.post(new ServerInviteSessionProvideOfferCommand(*this, offer, level, alternative));
+//}
+
 void 
 ServerInviteSession::provideOffer(const SdpContents& offer)
 {
    this->provideOffer(offer, mCurrentEncryptionLevel, 0);
 }
+
+//void 
+//ServerInviteSession::provideOfferCommand(const SdpContents& offer)
+//{
+//   mDum.post(new ServerInviteSessionProvideOfferCommand(*this, offer, mCurrentEncryptionLevel, 0));
+//}
+
 
 void
 ServerInviteSession::requestOffer()
@@ -307,11 +415,40 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
    }
 }
 
-void
-ServerInviteSession::end()
-{
-   end(NotSpecified);
-}
+//class ServerInviteSessionProvideAnswerCommand : public DumCommandAdapter
+//{
+//public:
+//   ServerInviteSessionProvideAnswerCommand(ServerInviteSession& serverInviteSession, const SdpContents& answer)
+//      : mServerInviteSession(serverInviteSession),
+//        mAnswer(new SdpContents(answer))
+//   {
+//   }
+//
+//   virtual void executeCommand()
+//   {
+//      mServerInviteSession.provideAnswer(*mAnswer);
+//   }
+//
+//   virtual std::ostream& encodeBrief(std::ostream& strm) const
+//   {
+//      return strm << "ServerInviteSessionProvideAnswerCommand";
+//   }
+//private:
+//   ServerInviteSession& mServerInviteSession;
+//   std::auto_ptr<SdpContents> mAnswer;
+//};
+//
+//void 
+//ServerInviteSession::provideAnswerCommand(const SdpContents& answer)
+//{
+//   mDum.post(new ServerInviteSessionProvideAnswerCommand(*this, answer));
+//}
+
+//void
+//ServerInviteSession::end()
+//{
+//   end(NotSpecified);
+//}
 
 void 
 ServerInviteSession::end(EndReason reason)
@@ -437,6 +574,37 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
    }
 }
 
+//class ServerInviteRejectCommand : public DumCommandAdapter
+//{
+//public:
+//   ServerInviteRejectCommand(ServerInviteSession& serverInviteSession, int code, WarningCategory* warning)
+//      : mServerInviteSession(serverInviteSession),
+//        mCode(code),
+//        mWarning(warning?new WarningCategory(*warning):0)
+//   {
+//   }
+//
+//   virtual void executeCommand()
+//   {
+//      mServerInviteSession.reject(mCode, mWarning.get());
+//   }
+//
+//   virtual std::ostream& encodeBrief(std::ostream& strm) const
+//   {
+//      return strm << "ServerInviteRejectCommand";
+//   }
+//private:
+//   ServerInviteSession& mServerInviteSession;
+//   int mCode;
+//   std::auto_ptr<WarningCategory> mWarning;
+//};
+
+//void 
+//ServerInviteSession::rejectCommand(int code, WarningCategory *warning)
+//{
+//   mDum.post(new ServerInviteRejectCommand(*this, code, warning));
+//}
+
 void 
 ServerInviteSession::accept(int code)
 {
@@ -509,6 +677,35 @@ ServerInviteSession::accept(int code)
          assert(0);
          break;
    }
+}
+
+class ServerInviteSessionAcceptCommand : public DumCommandAdapter
+{
+public:
+   ServerInviteSessionAcceptCommand(ServerInviteSession& serverInviteSession, int statusCode)
+      : mServerInviteSession(serverInviteSession),
+        mStatusCode(statusCode)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mServerInviteSession.accept(mStatusCode);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ServerInviteSessionAcceptCommand";
+   }
+private:
+   ServerInviteSession& mServerInviteSession;
+   int mStatusCode;
+};
+
+void 
+ServerInviteSession::acceptCommand(int statusCode)
+{
+   mDum.post(new ServerInviteSessionAcceptCommand(*this, statusCode));
 }
 
 void 
@@ -859,7 +1056,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Ack);
          if(!isTerminated())  // onAnswer callback may call end() or reject()
          {
             handler->onConnected(getSessionHandle(), msg);

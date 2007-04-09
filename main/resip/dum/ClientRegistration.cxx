@@ -214,7 +214,37 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
    }
 }
 
-void ClientRegistration::stopRegistering()
+class ClientRegistrationRemoveMyBindings : public DumCommandAdapter
+{
+public:
+   ClientRegistrationRemoveMyBindings(ClientRegistration& clientRegistration, bool stopRegisteringWhenDone)
+      : mClientRegistration(clientRegistration),
+        mStopRegisteringWhenDone(stopRegisteringWhenDone)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mClientRegistration.removeMyBindings(mStopRegisteringWhenDone);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientRegistrationRemoveMyBindings";
+   }
+private:
+   ClientRegistration& mClientRegistration;
+   bool mStopRegisteringWhenDone;
+};
+
+void
+ClientRegistration::removeMyBindingsCommand(bool stopRegisteringWhenDone)
+{
+   mDum.post(new ClientRegistrationRemoveMyBindings(*this, stopRegisteringWhenDone));
+}
+
+void 
+ClientRegistration::stopRegistering()
 {
    //timers aren't a concern, as DUM checks for Handle validity before firing.
    delete this;
@@ -269,6 +299,34 @@ void
 ClientRegistration::end()
 {
    removeMyBindings(true);
+}
+
+class ClientRegistrationEndCommand : public DumCommandAdapter
+{
+public:
+   ClientRegistrationEndCommand(ClientRegistration& clientRegistration)
+      : mClientRegistration(clientRegistration)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mClientRegistration.end();
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientRegistrationEndCommand";
+   }
+private:
+   ClientRegistration& mClientRegistration;
+};
+
+void
+ClientRegistration::endCommand()
+{
+   mDum.post(new ClientRegistrationEndCommand(*this));
 }
 
 std::ostream& 

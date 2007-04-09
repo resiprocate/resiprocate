@@ -32,10 +32,38 @@ ServerPagerMessage::~ServerPagerMessage()
    mDialogSet.mServerPagerMessage = 0;
 }
 
+
 void
 ServerPagerMessage::end()
 {
    delete this;
+}
+
+void ServerPagerMessage::endCommand()
+{
+   class ServerPagerMessageEndCommand : public DumCommandAdapter
+   {
+   public:
+      ServerPagerMessageEndCommand(ServerPagerMessage& serverPagerMessage)
+         : mServerPagerMessage(serverPagerMessage)
+      {
+
+      }
+
+      virtual void executeCommand()
+      {
+         mServerPagerMessage.end();
+      }
+
+      virtual std::ostream& encodeBrief(std::ostream& strm) const
+      {
+         return strm << "ServerPagerMessageEndCommand";
+      }
+   private:
+      ServerPagerMessage& mServerPagerMessage;
+   };
+
+   mDum.post(new ServerPagerMessageEndCommand(*this));
 }
 
 void 
@@ -77,12 +105,70 @@ ServerPagerMessage::accept(int statusCode)
    return mResponse;
 }
 
+class ServerPagerMessageAcceptCommand : public DumCommandAdapter
+{
+public:
+   ServerPagerMessageAcceptCommand(ServerPagerMessage& serverPagerMessage, int statusCode)
+      : mServerPagerMessage(serverPagerMessage),
+        mStatusCode(statusCode)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mServerPagerMessage.accept(mStatusCode);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ServerPagerMessageAcceptCommand";
+   }
+private:
+   ServerPagerMessage& mServerPagerMessage;
+   int mStatusCode;
+};
+
+void
+ServerPagerMessage::acceptCommand(int statusCode)
+{   
+   mDum.post(new ServerPagerMessageAcceptCommand(*this, statusCode));
+}
+
 SharedPtr<SipMessage>
 ServerPagerMessage::reject(int statusCode)
 {
    //!dcm! -- should any responses include a contact?
    mDum.makeResponse(*mResponse, mRequest, statusCode);
    return mResponse;
+}
+
+class ServerPagerMessageRejectCommand : public DumCommandAdapter
+{
+public:
+   ServerPagerMessageRejectCommand(ServerPagerMessage& serverPagerMessage, int statusCode)
+      : mServerPagerMessage(serverPagerMessage),
+        mStatusCode(statusCode)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mServerPagerMessage.reject(mStatusCode);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ServerPagerMessageRejectCommand";
+   }
+private:
+   ServerPagerMessage& mServerPagerMessage;
+   int mStatusCode;
+};
+
+void
+ServerPagerMessage::rejectCommand(int statusCode)
+{
+   mDum.post(new ServerPagerMessageRejectCommand(*this, statusCode));
 }
 
 

@@ -49,7 +49,7 @@ class InviteSession : public DialogUsage
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end(EndReason reason);
-      virtual void end();      
+      virtual void end(); // reason == NotSpecified ; same as above
 
       /** Rejects an offer at the SIP level.  Can also be used to 
           send a 488 to a reINVITE or UPDATE */
@@ -86,6 +86,26 @@ class InviteSession : public DialogUsage
 
       /** rejects an INFO or MESSAGE request with an error status code */
       virtual void rejectNIT(int statusCode = 488);
+
+      /**
+       * Provide asynchronous method access by using command
+       */
+      virtual void provideOfferCommand(const SdpContents& offer);
+      virtual void provideOfferCommand(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
+      virtual void provideAnswerCommand(const SdpContents& answer);
+      /** Asynchronously makes the specific dialog end. Will send a BYE (not a CANCEL) */
+      virtual void endCommand(EndReason reason = NotSpecified);
+      /** Asynchronously rejects an offer at the SIP level.  Can also be used to 
+          send a 488 to a reINVITE or UPDATE */
+      virtual void rejectCommand(int statusCode, WarningCategory *warning = 0);
+      virtual void referCommand(const NameAddr& referTo, bool referSub = true);
+      virtual void referCommand(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
+      virtual void infoCommand(const Contents& contents);
+      virtual void messageCommand(const Contents& contents);
+      /** Asynchronously accepts an INFO or MESSAGE request with a 2xx and an optional contents */
+      virtual void acceptNITCommand(int statusCode = 200, const Contents * contents = 0);
+      /** Asynchronously rejects an INFO or MESSAGE request with an error status code */
+      virtual void rejectNITCommand(int statusCode = 488);
 
       virtual void acceptReferNoSub(int statusCode = 200);
       virtual void rejectReferNoSub(int responseCode);
