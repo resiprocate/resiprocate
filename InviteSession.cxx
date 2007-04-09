@@ -373,9 +373,72 @@ InviteSession::provideOffer(const SdpContents& offer,
 }
 
 void
+InviteSession::provideOfferCommand(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative)
+{
+   class InviteSessionProvideOfferCommand : public DumCommandAdapter
+   {
+   public:
+      InviteSessionProvideOfferCommand(InviteSession& inviteSession, 
+         const SdpContents& offer, 
+         DialogUsageManager::EncryptionLevel level, 
+         const SdpContents* alternative)
+         : mInviteSession(inviteSession),
+         mOffer(offer)
+      {
+      }
+
+      virtual void executeCommand()
+      {
+         mInviteSession.provideOffer(mOffer, mLevel, mAlternative.get());
+      }
+
+      virtual std::ostream& encodeBrief(std::ostream& strm) const
+      {
+         return strm << "InviteSessionProvideOfferCommand";
+      }
+   private:
+      InviteSession& mInviteSession;
+      SdpContents mOffer;
+      DialogUsageManager::EncryptionLevel mLevel;
+      std::auto_ptr<const SdpContents> mAlternative;
+   };
+
+   mDum.post(new InviteSessionProvideOfferCommand(*this, offer, level, alternative));
+}
+
+void
 InviteSession::provideOffer(const SdpContents& offer)
 {
    return provideOffer(offer, mCurrentEncryptionLevel, 0);
+}
+
+void
+InviteSession::provideOfferCommand(const SdpContents& offer)
+{
+   class InviteSessionProvideOfferCommand : public DumCommandAdapter
+   {
+   public:
+      InviteSessionProvideOfferCommand(InviteSession& inviteSession, const SdpContents& offer)
+         : mInviteSession(inviteSession),
+         mOffer(offer)
+      {
+      }
+
+      virtual void executeCommand()
+      {
+         mInviteSession.provideOffer(mOffer);
+      }
+
+      virtual std::ostream& encodeBrief(std::ostream& strm) const
+      {
+         return strm << "InviteSessionProvideOfferCommand";
+      }
+   private:
+      InviteSession& mInviteSession;
+      SdpContents mOffer;
+   };
+
+   mDum.post(new InviteSessionProvideOfferCommand(*this, offer));
 }
 
 void
@@ -424,6 +487,35 @@ InviteSession::provideAnswer(const SdpContents& answer)
          WarningLog (<< "Incorrect state to provideAnswer: " << toData(mState));
          throw DialogUsage::Exception("Can't provide an answer", __FILE__,__LINE__);
    }
+}
+
+class InviteSessionProvideAnswerCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionProvideAnswerCommand(InviteSession& inviteSession, const SdpContents& answer)
+      : mInviteSession(inviteSession),
+        mAnswer(answer)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.provideOffer(mAnswer);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionProvideAnswerCommand";
+   }
+private:
+   InviteSession& mInviteSession;
+   SdpContents mAnswer;
+};
+
+void
+InviteSession::provideAnswerCommand(const SdpContents& answer)
+{
+   mDum.post(new InviteSessionProvideAnswerCommand(*this, answer));
 }
 
 void
@@ -513,6 +605,35 @@ InviteSession::end(EndReason reason)
    }
 }
 
+class InviteSessionEndCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionEndCommand(InviteSession& inviteSession, InviteSession::EndReason reason)
+      : mInviteSession(inviteSession),
+        mReason(reason)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.end(mReason);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionEndCommand";
+   }
+private:
+   InviteSession& mInviteSession;
+   InviteSession::EndReason mReason;
+};
+
+void
+InviteSession::endCommand(EndReason reason)
+{
+   mDum.post(new InviteSessionEndCommand(*this, reason));
+}
+
 void
 InviteSession::reject(int statusCode, WarningCategory *warning)
 {
@@ -539,6 +660,37 @@ InviteSession::reject(int statusCode, WarningCategory *warning)
          assert(0);
          break;
    }
+}
+
+class InviteSessionRejectCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionRejectCommand(InviteSession& inviteSession, int code, WarningCategory* warning)
+      : mInviteSession(inviteSession),
+        mCode(code),
+        mWarning(warning?new WarningCategory(*warning):0)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.reject(mCode, mWarning.get());
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionRejectCommand";
+   }
+private:
+   InviteSession& mInviteSession;
+   int mCode;
+   std::auto_ptr<WarningCategory> mWarning;
+};
+
+void
+InviteSession::rejectCommand(int code, WarningCategory *warning)
+{
+   mDum.post(new InviteSessionRejectCommand(*this, code, warning));
 }
 
 void
@@ -590,6 +742,39 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
 }
 
 void
+InviteSession::referCommand(const NameAddr& referTo, bool referSub)
+{
+   class InviteSessionReferCommand : public DumCommandAdapter
+   {
+   public:
+      InviteSessionReferCommand(InviteSession& inviteSession, const NameAddr& referTo, bool referSub)
+         : mInviteSession(inviteSession),
+           mReferTo(referTo),
+           mReferSub(referSub)
+      {
+
+      }
+
+      virtual void executeCommand()
+      {
+         mInviteSession.referCommand(mReferTo, mReferSub);
+      }
+
+      virtual std::ostream& encodeBrief(std::ostream& strm) const
+      {
+         return strm << "InviteSessionReferCommand";
+      }
+
+   private:
+      InviteSession& mInviteSession;
+      NameAddr mReferTo;
+      bool mReferSub;
+   };
+
+   mDum.post(new InviteSessionReferCommand(*this, referTo, referSub));
+}
+
+void
 InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
 {
    if (!sessionToReplace.isValid())
@@ -636,6 +821,41 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
 }
 
 void
+InviteSession::referCommand(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
+{
+   class InviteSessionReferCommand : public DumCommandAdapter
+   {
+   public:
+      InviteSessionReferCommand(InviteSession& inviteSession, const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
+         : mInviteSession(inviteSession),
+           mReferTo(referTo),
+           mSessionToReplace(sessionToReplace),
+           mReferSub(referSub)
+      {
+
+      }
+
+      virtual void executeCommand()
+      {
+         mInviteSession.referCommand(mReferTo, mSessionToReplace, mReferSub);
+      }
+
+      virtual std::ostream& encodeBrief(std::ostream& strm) const
+      {
+         return strm << "InviteSessionReferCommand";
+      }
+
+   private:
+      InviteSession& mInviteSession;
+      InviteSessionHandle mSessionToReplace;
+      NameAddr mReferTo;
+      bool mReferSub;
+   };
+
+   mDum.post(new InviteSessionReferCommand(*this, referTo, sessionToReplace, referSub));
+}
+
+void
 InviteSession::info(const Contents& contents)
 {
    if (mNitState == NitComplete)
@@ -662,6 +882,35 @@ InviteSession::info(const Contents& contents)
       throw UsageUseException("Cannot start a non-invite transaction until the previous one has completed",
                               __FILE__, __LINE__);
    }
+}
+
+class InviteSessionInfoCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionInfoCommand(InviteSession& inviteSession, const Contents& contents)
+      : mInviteSession(inviteSession),
+        mContents(contents.clone())
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.info(*mContents);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionInfoCommand";
+   }
+private:
+   InviteSession& mInviteSession;
+   std::auto_ptr<Contents> mContents;
+};
+
+void
+InviteSession::infoCommand(const Contents& contents)
+{
+   mDum.post(new InviteSessionInfoCommand(*this, contents));
 }
 
 void
@@ -692,6 +941,36 @@ InviteSession::message(const Contents& contents)
       throw UsageUseException("Cannot start a non-invite transaction until the previous one has completed",
                               __FILE__, __LINE__);
    }
+}
+
+class InviteSessionMessageCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionMessageCommand(InviteSession& inviteSession, const Contents& contents)
+      : mInviteSession(inviteSession),
+        mContents(contents.clone())
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.message(*mContents);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionMessageCommand";
+   }
+private:
+   InviteSession& mInviteSession;
+   std::auto_ptr<Contents> mContents;
+};
+
+
+void
+InviteSession::messageCommand(const Contents& contents)
+{
+   mDum.post(new InviteSessionMessageCommand(*this, contents));
 }
 
 void
@@ -958,6 +1237,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
 
       case OnAck:
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+         handler->onAckReceived(getSessionHandle(), msg);
          break;
 
       default:
@@ -996,7 +1276,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             setCurrentLocalSdp(msg);
             mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
          }
          else if(mProposedLocalSdp.get()) 
          {
@@ -1104,7 +1384,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          }
          else
          {
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
          }
          
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
@@ -1284,7 +1564,7 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-		 handler->onAnswer(getSessionHandle(), msg, *sdp);		 
+         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Ack);		 
          break;         
       case OnAck:
          if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
@@ -1654,6 +1934,38 @@ InviteSession::acceptNIT(int statusCode, const Contents * contents)
    send(mLastNitResponse);   
 } 
 
+class InviteSessionAcceptNITCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionAcceptNITCommand(InviteSession& inviteSession, int statusCode, const Contents* contents)
+      : mInviteSession(inviteSession),
+        mStatusCode(statusCode),
+        mContents(contents?contents->clone():0)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.acceptNITCommand(mStatusCode, mContents.get());
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionAcceptNITCommand";
+   }
+private:
+   InviteSession& mInviteSession;
+   int mStatusCode;
+   std::auto_ptr<Contents> mContents;
+};
+
+void
+InviteSession::acceptNITCommand(int statusCode, const Contents* contents)
+{
+   mDum.post(new InviteSessionAcceptNITCommand(*this, statusCode, contents));
+} 
+
 void
 InviteSession::rejectNIT(int statusCode)
 {
@@ -1665,6 +1977,35 @@ InviteSession::rejectNIT(int statusCode)
    mLastNitResponse->releaseContents();
    Helper::getResponseCodeReason(statusCode, mLastNitResponse->header(h_StatusLine).reason());
    send(mLastNitResponse);
+}
+
+class InviteSessionRejectNITCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionRejectNITCommand(InviteSession& inviteSession, int statusCode)
+      : mInviteSession(inviteSession),
+      mStatusCode(statusCode)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.rejectNITCommand(mStatusCode);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionRejectNITCommand";
+   }
+private:
+   InviteSession& mInviteSession;
+   int mStatusCode;
+};
+
+void
+InviteSession::rejectNITCommand(int statusCode)
+{
+   mDum.post(new InviteSessionRejectNITCommand(*this, statusCode));
 }
 
 void
