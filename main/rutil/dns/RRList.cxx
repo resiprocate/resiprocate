@@ -94,44 +94,16 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
    mAbsoluteExpiry += Timer::getTimeMs()/1000;
 }
 
-RRList::Records RRList::records(const int protocol, bool& allBlacklisted)
+RRList::Records RRList::records(const int protocol)
 {
    Records records;
-   allBlacklisted = false;
    if (mRecords.empty()) return records;
 
    for (std::vector<RecordItem>::iterator it = mRecords.begin(); it != mRecords.end(); ++it)
    {
-      if (!isBlacklisted(*it, protocol))
-      {
-         records.push_back((*it).record);
-      }
-   }
-   if (records.empty())
-   {
-      // every record is blacklisted.
-      // two options:
-      //    1. reset the states and return all the records.
-      //    2. get caller to remove the cache and requery.
-      // Option 2 is used in this implementation.
-      allBlacklisted = true;
+      records.push_back((*it).record);
    }
    return records;
-}
-
-void RRList::blacklist(const int protocol,
-                       const DataArr& targets)
-{
-   if (protocol == Protocol::Reserved) return;
-
-   for (DataArr::const_iterator it = targets.begin(); it != targets.end(); ++it)
-   {
-      RecordItr recordItr = find(*it);
-      if (recordItr != mRecords.end())
-      {
-         blacklist(*recordItr, protocol);
-      }
-   }
 }
 
 RRList::RecordItr RRList::find(const Data& value)
@@ -153,41 +125,6 @@ void RRList::clear()
       delete (*it).record;
    }
    mRecords.clear();
-}
-
-bool RRList::isBlacklisted(RecordItem& item, int protocol)
-{
-   if (protocol == Protocol::Reserved) return false;
-
-   vector<int>::iterator it;
-   for (it = item.blacklistedProtocols.begin(); it != item.blacklistedProtocols.end(); ++it)
-   {
-      if (protocol == *it)
-      {
-         break;
-      }
-   }
-
-   return item.blacklistedProtocols.end()!=it;
-}
-
-void RRList::blacklist(RecordItem& item, int protocol)
-{
-   if (Protocol::Reserved == protocol) return;
-
-   vector<int>::iterator it;
-   for (it = item.blacklistedProtocols.begin(); it != item.blacklistedProtocols.end(); ++it)
-   {
-      if (protocol == *it)
-      {
-         break;
-      }
-   }
-
-   if (item.blacklistedProtocols.end() == it)
-   {
-      item.blacklistedProtocols.push_back(protocol);
-   }
 }
 
 void RRList::log()
@@ -250,32 +187,6 @@ void RRList::log()
          break;
       }
       
-      if((*it).blacklistedProtocols.size() > 0)
-      {
-          strm << " **blacklisted for protocols=";
-          for(std::vector<int>::iterator it2 = (*it).blacklistedProtocols.begin(); 
-              it2 != (*it).blacklistedProtocols.end(); it2++)
-          {
-              switch((*it2))
-              {
-              case Protocol::Sip:
-                strm << "SIP ";
-                break;
-              case Protocol::Stun:
-                strm << "STUN ";
-                break;
-              case Protocol::Http:
-                strm << "HTTP ";
-                break;
-              case Protocol::Enum:
-                strm << "ENUM ";
-                break;
-              default:
-                strm << "UNKNOWN(" << (*it2) << ") ";
-                break;
-              }
-          }
-      }
       strm.flush();
       WarningLog( << buffer);
    }

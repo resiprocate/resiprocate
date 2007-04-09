@@ -42,6 +42,7 @@
 #include "rutil/dns/DnsNaptrRecord.hxx"
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/DnsInterface.hxx"
+#include "resip/stack/TupleMarkManager.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -121,7 +122,33 @@ DnsResult::blacklistLast(UInt64 expiry)
 {
    if(mHaveReturnedResults)
    {
-      blacklistLastReturnedResult(expiry);
+      assert(!mLastReturnedPath.empty());
+      assert(mLastReturnedPath.size()<=3);
+      Item top = mLastReturnedPath.back();
+   
+      mInterface.getMarkManager().mark(mLastResult,expiry,TupleMarkManager::BLACK);
+   
+      DebugLog( << "Remove vip " << top.domain << "(" << top.rrType << ")");
+      mVip.removeVip(top.domain, top.rrType);
+      return true;
+   }
+   
+   return false;
+}
+
+bool
+DnsResult::greylistLast(UInt64 expiry)
+{
+   if(mHaveReturnedResults)
+   {
+      assert(!mLastReturnedPath.empty());
+      assert(mLastReturnedPath.size()<=3);
+      Item top = mLastReturnedPath.back();
+   
+      mInterface.getMarkManager().mark(mLastResult,expiry,TupleMarkManager::GREY);
+   
+      DebugLog( << "Remove vip " << top.domain << "(" << top.rrType << ")");
+      mVip.removeVip(top.domain, top.rrType);
       return true;
    }
    
@@ -230,7 +257,8 @@ DnsResult::lookupInternal(const Uri& uri)
          mPort = getDefaultPort(mTransport, uri.port());
          Tuple tuple(mTarget, mPort, mTransport, mTarget);
 
-         if(!DnsResult::blacklisted(tuple))
+         // ?bwc? If this is greylisted, what can we do? This is the only result
+         if(!(mInterface.getMarkManager().getMarkType(tuple)==TupleMarkManager::BLACK))
          {
             DebugLog (<< "Found immediate result: " << tuple);
             mResults.push_back(tuple);
@@ -323,7 +351,7 @@ DnsResult::lookupInternal(const Uri& uri)
    {
       if (isNumeric || uri.port() != 0)
       {
-         bool foundTuple=false;
+         TupleMarkManager::MarkType mark=TupleMarkManager::BLACK;
          Tuple tuple;
          
          if(isNumeric)
@@ -336,40 +364,40 @@ DnsResult::lookupInternal(const Uri& uri)
                   mTransport=TLS;
                   mPort = getDefaultPort(mTransport,uri.port());
                   tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-                  foundTuple=!DnsResult::blacklisted(tuple);
+                  mark=mInterface.getMarkManager().getMarkType(tuple);
                }
             }
             else
             {
-               if(!foundTuple && (mInterface.isSupported(UDP, V4) ||
+               if(mark!=TupleMarkManager::OK && (mInterface.isSupported(UDP, V4) ||
                                     mInterface.isSupported(UDP, V6)))
                {
                   mTransport=UDP;
                   mPort = getDefaultPort(mTransport,uri.port());
                   tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-                  foundTuple=!DnsResult::blacklisted(tuple);
+                  mark=mInterface.getMarkManager().getMarkType(tuple);
                }
                
-               if(!foundTuple && (mInterface.isSupported(TCP, V4) ||
+               if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TCP, V4) ||
                                     mInterface.isSupported(TCP, V6)))
                {
                   mTransport=TCP;
                   mPort = getDefaultPort(mTransport,uri.port());
                   tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-                  foundTuple=!DnsResult::blacklisted(tuple);
+                  mark=mInterface.getMarkManager().getMarkType(tuple);
                }
                
-               if(!foundTuple && (mInterface.isSupported(TLS, V4) ||
+               if(mark!=TupleMarkManager::OK && (mInterface.isSupported(TLS, V4) ||
                                     mInterface.isSupported(TLS, V6)))
                {
                   mTransport=TLS;
                   mPort = getDefaultPort(mTransport,uri.port());
                   tuple=Tuple(mTarget,mPort,mTransport,mTarget);
-                  foundTuple=!DnsResult::blacklisted(tuple);
+                  mark=mInterface.getMarkManager().getMarkType(tuple);
                }
             }
             
-            if(foundTuple)
+            if(mark==TupleMarkManager::OK || mark==TupleMarkManager::GREY)
             {
                mHaveChosenTransport=true;
                mResults.push_back(tuple);
@@ -764,18 +792,35 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 
    if (result.status == 0)
    {
+      std::vector<Tuple> greylistedTuples;
       for (vector<DnsHostRecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          in_addr addr;
          addr.s_addr = (*it).addr().s_addr;
          Tuple tuple(addr, mPort, mTransport, mTarget);
          
-         if(!DnsResult::blacklisted(tuple))
+         switch(mInterface.getMarkManager().getMarkType(tuple))
          {
-            StackLog (<< "Adding " << tuple << " to result set");
-            mResults.push_back(tuple);
+            case TupleMarkManager::OK:
+               StackLog (<< "Adding " << tuple << " to result set");
+               mResults.push_back(tuple);
+               break;
+            case TupleMarkManager::GREY:
+               greylistedTuples.push_back(tuple);
+               break;
+            case TupleMarkManager::BLACK:
+            default:
+               ;// .bwc. Do nothing.
          }
       
+      }
+      
+      // .bwc. Greylisted tuples come last, but are prioritized as normal among
+      // one-another.
+      for(std::vector<Tuple>::iterator i = greylistedTuples.begin();
+            i != greylistedTuples.end(); ++i)
+      {
+         mResults.push_back(*i);
       }
    }
    else
@@ -820,8 +865,10 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
      	              SOCKADDR_IN *pSockAddrIn = (SOCKADDR_IN *)pQueryResult->lpcsaBuffer[i].RemoteAddr.lpSockaddr;
                       Tuple tuple(pSockAddrIn->sin_addr, mPort, mTransport, mTarget);
                       
-                      if(!DnsResult::blacklisted(tuple))
+                      if(mInterface.getMarkManager().getMarkType(tuple)!=TupleMarkManager::BLACK)
                       {
+                        // .bwc. This is the only result we have, so it doesn't
+                        // matter if it is greylisted.
                         StackLog (<< "Adding (WIN) " << tuple << " to result set");
                         mResults.push_back(tuple);
                         transition(Available);
@@ -889,16 +936,33 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 
    if (result.status == 0)
    {
+      std::vector<Tuple> greylistedTuples;
       for (vector<DnsAAAARecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          Tuple tuple((*it).v6Address(), mPort, mTransport, mTarget);
          
-         if(!DnsResult::blacklisted(tuple))
+         switch(mInterface.getMarkManager().getMarkType(tuple))
          {
-            StackLog (<< "Adding " << tuple << " to result set");
-            mResults.push_back(tuple);
+            case TupleMarkManager::OK:
+               StackLog (<< "Adding " << tuple << " to result set");
+               mResults.push_back(tuple);
+               break;
+            case TupleMarkManager::GREY:
+               greylistedTuples.push_back(tuple);
+               break;
+            case TupleMarkManager::BLACK:
+            default:
+               ;// .bwc. Do nothing.
          }
       
+      }
+      
+      // .bwc. Greylisted tuples come last, but are prioritized as normal among
+      // one-another.
+      for(std::vector<Tuple>::iterator i = greylistedTuples.begin();
+            i != greylistedTuples.end(); ++i)
+      {
+         mResults.push_back(*i);
       }
    }
    else
@@ -1256,104 +1320,6 @@ void DnsResult::clearCurrPath()
    {
       mCurrentPath.pop_back();
    }
-}
-
-void DnsResult::blacklistLastReturnedResult(UInt64 expiry)
-{
-   assert(!mLastReturnedPath.empty());
-   assert(mLastReturnedPath.size()<=3);
-   Item top = mLastReturnedPath.back();
-
-   DnsResult::blacklist(mLastResult,expiry);
-
-   DebugLog( << "Remove vip " << top.domain << "(" << top.rrType << ")");
-   mVip.removeVip(top.domain, top.rrType);
-}
-
-DnsResult::Blacklist DnsResult::theBlacklist;
-resip::Mutex DnsResult::theBlacklistMutex;
-
-DnsResult::BlacklistEntry::BlacklistEntry()
-{}
-
-DnsResult::BlacklistEntry::BlacklistEntry(const Tuple& tuple, UInt64 expiry)
-{
-   mTuple=tuple;
-   mExpiry=expiry;
-}
-
-DnsResult::BlacklistEntry::BlacklistEntry(const DnsResult::BlacklistEntry& orig)
-{
-   mTuple=orig.mTuple;
-   mExpiry=orig.mExpiry;
-}
-
-DnsResult::BlacklistEntry::~BlacklistEntry()
-{}
-
-bool 
-DnsResult::BlacklistEntry::operator<(const DnsResult::BlacklistEntry& rhs) const
-{
-   if(mTuple < rhs.mTuple)
-   {
-      return true;
-   }
-   else if(rhs.mTuple < mTuple)
-   {
-      return false;
-   }
-   
-   return mTuple.getTargetDomain() < rhs.mTuple.getTargetDomain();
-}
-
-bool 
-DnsResult::BlacklistEntry::operator>(const DnsResult::BlacklistEntry& rhs) const
-{
-   if(rhs.mTuple < mTuple)
-   {
-      return true;
-   }
-   else if(mTuple < rhs.mTuple)
-   {
-      return false;
-   }
-   
-   return mTuple.getTargetDomain() > rhs.mTuple.getTargetDomain();
-}
-
-bool 
-DnsResult::BlacklistEntry::operator==(const DnsResult::BlacklistEntry& rhs) const
-{
-   return (mTuple==rhs.mTuple && mTuple.getTargetDomain()==rhs.mTuple.getTargetDomain());
-}
-
-bool DnsResult::blacklisted(const Tuple& tuple)
-{
-   BlacklistEntry entry(tuple,0);
-   resip::Lock g(DnsResult::theBlacklistMutex);
-   Blacklist::iterator i=DnsResult::theBlacklist.find(entry);
-   
-   if(i!=DnsResult::theBlacklist.end())
-   {
-      UInt64 now=Timer::getTimeMs();
-      if(i->mExpiry > now)
-      {
-         return true;
-      }
-      else
-      {
-         DnsResult::theBlacklist.erase(i);
-      }
-   }
-   
-   return false;
-}
-
-void DnsResult::blacklist(const Tuple& tuple,UInt64 expiry)
-{
-   BlacklistEntry entry(tuple,expiry);
-   resip::Lock g(DnsResult::theBlacklistMutex);
-   DnsResult::theBlacklist.insert(entry);
 }
 
 std::ostream& 
