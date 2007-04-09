@@ -162,11 +162,11 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
    }
 }
 
-void
-ClientInviteSession::end()
-{
-   end(NotSpecified);
-}
+//void
+//ClientInviteSession::end()
+//{
+//   end(NotSpecified);
+//}
 
 void
 ClientInviteSession::end(EndReason reason)
@@ -397,7 +397,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
   {
      WarningLog (<< "Caught: " << e);
      mDum.mInviteSessionHandler->onFailure(getHandle(), msg);
-     end(); 
+     end(NotSpecified); 
   }
 }
 
@@ -462,7 +462,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    {
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       handler->onFailure(getHandle(), msg);
-      end();
+      end(NotSpecified);
    }
    else if (isReliable(msg))
    {
@@ -470,7 +470,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
       {
          InfoLog (<< "Failure:  No RSeq in 1xx: " << msg.brief());
          handler->onFailure(getHandle(), msg);
-         end();
+         end(NotSpecified);
       }
       else
       {
@@ -520,7 +520,7 @@ ClientInviteSession::handleOffer (const SipMessage& msg, const SdpContents& sdp)
 }
 
 void
-ClientInviteSession::handleAnswer (const SipMessage& msg, const SdpContents& sdp)
+ClientInviteSession::handleAnswer(const SipMessage& msg, const SdpContents& sdp)
 {
    //mCurrentLocalSdp = mProposedLocalSdp;
    setCurrentLocalSdp(msg);
@@ -529,7 +529,7 @@ ClientInviteSession::handleAnswer (const SipMessage& msg, const SdpContents& sdp
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    handleProvisional(msg);
-   handler->onAnswer(getSessionHandle(), msg, sdp);
+   handler->onAnswer(getSessionHandle(), msg, sdp, InviteSessionHandler::FirstInvite);
 
    sendPrackIfNeeded(msg);
 }
@@ -672,7 +672,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onNewSession(getHandle(), Answer, msg);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
             if(!isTerminated())  // onAnswer callback may call end() or reject()
             {
                handler->onConnected(getHandle(), msg);
@@ -773,7 +773,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
             handler->onConnected(getHandle(), msg);

@@ -25,6 +25,8 @@
 #include "resip/dum/DumException.hxx"
 #include "resip/dum/DumShutdownHandler.hxx"
 #include "resip/dum/DumFeatureMessage.hxx"
+#include "resip/dum/ExternalMessageBase.hxx"
+#include "resip/dum/ExternalMessageHandler.hxx"
 #include "resip/dum/InviteSessionCreator.hxx"
 #include "resip/dum/InviteSessionHandler.hxx"
 #include "resip/dum/KeepAliveManager.hxx"
@@ -53,6 +55,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
+#include "rutil/RWMutex.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Timer.hxx"
 
@@ -418,6 +421,34 @@ DialogUsageManager::setServerPagerMessageHandler(ServerPagerMessageHandler* hand
 {
    mServerPagerMessageHandler = handler;
 }
+
+void
+DialogUsageManager::addExternalMessageHandler(ExternalMessageHandler* handler)
+{
+   std::vector<ExternalMessageHandler*>::iterator found = std::find(mExternalMessageHandlers.begin(), mExternalMessageHandlers.end(), handler);
+   if (found == mExternalMessageHandlers.end())
+   {
+      mExternalMessageHandlers.push_back(handler);
+   }
+}
+
+void 
+DialogUsageManager::removeExternalMessageHandler(ExternalMessageHandler* handler)
+{
+   std::vector<ExternalMessageHandler*>::iterator found = std::find(mExternalMessageHandlers.begin(), mExternalMessageHandlers.end(), handler);
+   if (found != mExternalMessageHandlers.end())
+   {
+      mExternalMessageHandlers.erase(found);
+   }
+}
+
+void 
+DialogUsageManager::clearExternalMessageHandler()
+{
+   std::vector<ExternalMessageHandler*> empty;
+   empty.swap(mExternalMessageHandlers);
+}
+
 
 DialogSet*
 DialogUsageManager::makeUacDialogSet(BaseCreator* creator, AppDialogSet* appDs)
@@ -1064,76 +1095,112 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       return;
    }
 
-   TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
-   if (tuMsg)
    {
-      InfoLog (<< "TU unregistered ");
-      assert(mShutdownState == RemovingTransactionUser);
-      assert(tuMsg->type() == TransactionUserMessage::TransactionUserRemoved);
-      mShutdownState = Shutdown;
-      if (mDumShutdownHandler)
+      TransactionUserMessage* tuMsg = dynamic_cast<TransactionUserMessage*>(msg.get());
+      if (tuMsg)
       {
-         mDumShutdownHandler->onDumCanBeDeleted();
-         mDumShutdownHandler = 0; // prevent mDumShutdownHandler getting called more than once
-      }
-      return;
-   }
-   
-   DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
-   if (destroyUsage)
-   {
-      //DebugLog(<< "Destroying usage" );
-      destroyUsage->destroy();
-      return;
-   }
-
-   DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
-   if (dumMsg)
-   {
-      //DebugLog(<< "Timeout Message" );
-      if (!dumMsg->getBaseUsage().isValid())
-      {
+         InfoLog (<< "TU unregistered ");
+         assert(mShutdownState == RemovingTransactionUser);
+         assert(tuMsg->type() == TransactionUserMessage::TransactionUserRemoved);
+         mShutdownState = Shutdown;
+         if (mDumShutdownHandler)
+         {
+            mDumShutdownHandler->onDumCanBeDeleted();
+            mDumShutdownHandler = 0; // prevent mDumShutdownHandler getting called more than once
+         }
          return;
       }
-      
-      dumMsg->getBaseUsage()->dispatch(*dumMsg);
-      return;
-   }
-
-   KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
-   if (keepAliveMsg)
-   {
-      //DebugLog(<< "Keep Alive Message" );
-      if (mKeepAliveManager.get())
-      {
-         mKeepAliveManager->process(*keepAliveMsg);
-      }
-      return;      
-   }
-
-   ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg.get());
-   if (terminated)
-   {
-      DebugLog(<< "connection terminated message");
-      if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
-      {
-         msg.release();
-      }
-      return;
    }
    
-   DumCommand* command = dynamic_cast<DumCommand*>(msg.get());
-   if (command)
    {
-      //DebugLog(<< "DumCommand" );
-      command->executeCommand();
-      return;      
+      DestroyUsage* destroyUsage = dynamic_cast<DestroyUsage*>(msg.get());
+      if (destroyUsage)
+      {
+         //DebugLog(<< "Destroying usage" );
+         destroyUsage->destroy();
+         return;
+      }
+   }
+
+   {
+      DumTimeout* dumMsg = dynamic_cast<DumTimeout*>(msg.get());
+      if (dumMsg)
+      {
+         //DebugLog(<< "Timeout Message" );
+         if (!dumMsg->getBaseUsage().isValid())
+         {
+            return;
+         }
+         dumMsg->getBaseUsage()->dispatch(*dumMsg);
+         return;
+      }
+   }
+
+   {
+      KeepAliveTimeout* keepAliveMsg = dynamic_cast<KeepAliveTimeout*>(msg.get());
+      if (keepAliveMsg)
+      {
+         //DebugLog(<< "Keep Alive Message" );
+         if (mKeepAliveManager.get())
+         {
+            mKeepAliveManager->process(*keepAliveMsg);
+         }
+         return;      
+      }
+   }
+
+   {
+      ConnectionTerminated* terminated = dynamic_cast<ConnectionTerminated*>(msg.get());
+      if (terminated)
+      {
+         DebugLog(<< "connection terminated message");
+         if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
+         {
+            msg.release();
+         }
+         return;
+      }
+   }
+
+   {
+      DumCommand* command = dynamic_cast<DumCommand*>(msg.get());
+      if (command)
+      {
+         //DebugLog(<< "DumCommand" );
+         command->executeCommand();
+         return;      
+      }
+   }
+
+   {
+      ExternalMessageBase* externalMessage = dynamic_cast<ExternalMessageBase*>(msg.get());
+      if (externalMessage)
+      {
+         processExternalMessage(externalMessage);
+         return;
+      }
    }
 
    incomingProcess(msg);
 }
 
-void DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
+void
+DialogUsageManager::processExternalMessage(ExternalMessageBase* externalMessage)
+{
+   bool handled = false;
+   for(std::vector<ExternalMessageHandler*>::iterator i = mExternalMessageHandlers.begin(); 
+      i != mExternalMessageHandlers.end(); ++i)
+   {
+      (*i)->onMessage(externalMessage, handled);
+      if (handled)
+      {
+         break;
+      }
+   }
+}
+
+void 
+DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
 {
    //call or create feature chain if appropriate
    Data tid = Data::Empty;
@@ -1291,30 +1358,54 @@ void DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
    }
 }
 
+bool 
+DialogUsageManager::hasEvents() const
+{
+   return mFifo.messageAvailable();
+}
+
 // return true if there is more to do
 bool 
-DialogUsageManager::process()
+DialogUsageManager::process(resip::RWMutex* mutex)
 {
    if (mFifo.messageAvailable())
    {
-      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+      if (mutex)
+      {
+         resip::Lock lock(*mutex); 
+         internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+      }
+      else
+      {
+         internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+      }
    }
    return mFifo.messageAvailable();
 }
 
 bool 
-DialogUsageManager::process(int timeoutMs)
+DialogUsageManager::process(int timeoutMs, resip::RWMutex* mutex)
 {
+   std::auto_ptr<Message> message;
+
    if(timeoutMs == -1)
    {
-      internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+      message.reset(mFifo.getNext());
    }
    else
    {
-      std::auto_ptr<Message> msg(mFifo.getNext(timeoutMs));
-      if (msg.get())
+      message.reset(mFifo.getNext(timeoutMs));
+   }
+   if (message.get())
+   {
+      if (mutex)
       {
-         internalProcess(msg);
+         resip::Lock lock(*mutex); 
+         internalProcess(message);
+      }
+      else
+      {
+         internalProcess(message);
       }
    }
    return mFifo.messageAvailable();

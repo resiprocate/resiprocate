@@ -63,6 +63,11 @@ class HttpGetMessage;
 
 class ConnectionTerminated;
 
+class RWMutex;
+
+class ExternalMessageBase;
+class ExternalMessageHandler;
+
 class DialogUsageManager : public HandleManager, public TransactionUser
 {
    public:
@@ -159,6 +164,12 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void setClientPagerMessageHandler(ClientPagerMessageHandler*);
       void setServerPagerMessageHandler(ServerPagerMessageHandler*);
 
+      /// Add/Remove External Message Handler
+      /// do following op when processing thread in not running
+      void addExternalMessageHandler(ExternalMessageHandler* handler);
+      void removeExternalMessageHandler(ExternalMessageHandler* handler);
+      void clearExternalMessageHandler();
+
       /// Sets a manager to handle storage of registration state
       void setRegistrationPersistenceManager(RegistrationPersistenceManager*);
 
@@ -230,9 +241,10 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       //void send(SipMessage& request, EncryptionLevel level);
       
       // give dum an opportunity to handle its events. If process() returns true
-      // there are more events to process. 
-      bool process();  // non-blocking
-      bool process(int timeoutMs);   // Specify -1 for infinte timeout
+      // there are more events to process.
+      bool hasEvents() const;
+      bool process(RWMutex* mutex = NULL);  // non-blocking
+      bool process(int timeoutMs, RWMutex* mutex = NULL);   // Specify -1 for infinte timeout
 
       InviteSessionHandle findInviteSession(DialogId id);
       //if the handle is inValid, int represents the errorcode
@@ -416,6 +428,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       void incomingProcess(std::auto_ptr<Message> msg);
       void outgoingProcess(std::auto_ptr<Message> msg);
+      void processExternalMessage(ExternalMessageBase* externalMessage);
 
       // For delayed delete of a Usage
       void destroy(const BaseUsage* usage);
@@ -460,6 +473,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       ClientPagerMessageHandler* mClientPagerMessageHandler;
       ServerPagerMessageHandler* mServerPagerMessageHandler;
+      std::vector<ExternalMessageHandler*> mExternalMessageHandlers;
 
       std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 

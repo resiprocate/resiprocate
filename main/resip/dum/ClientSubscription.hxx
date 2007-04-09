@@ -21,12 +21,20 @@ class ClientSubscription: public BaseSubscription
       ClientSubscriptionHandle getHandle();
       
       //.dcm. no adornment for ease of use, can add if there is a use case
-      
       void acceptUpdate(int statusCode = 200);
       void rejectUpdate(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
-      
       void requestRefresh(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call end() instead)
       virtual void end();
+      
+      /**
+       * Provide asynchronous method access by using command
+       */
+      void acceptUpdateCommand(int statusCode = 200);
+      void rejectUpdateCommand(int statusCode = 400, const Data& reasonPhrase = Data::Empty);
+      void requestRefreshCommand(UInt32 expires = 0);  // 0 defaults to using original expires value (to remove call endCommand() instead)
+      virtual void endCommand();
+
+
       virtual std::ostream& dump(std::ostream& strm) const;
 
    protected:
