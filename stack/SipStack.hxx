@@ -417,7 +417,7 @@ class SipStack
           @param BlackListListener Class implementing the onBlacklisted callback 
                                    event sink defined in BlackListListener
       */
-      void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void registerMarkListener(MarkListener*);
 
       /**
           Removed a registered BlacklistListener handler from the DNS Interface
@@ -428,7 +428,7 @@ class SipStack
           @param BlackListListener Pointer to the class implementing the 
                                    BlackListListener event sink
       */
-      void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void unregisterMarkListener(MarkListener*);
 
       DnsStub& getDnsStub() const;
 
