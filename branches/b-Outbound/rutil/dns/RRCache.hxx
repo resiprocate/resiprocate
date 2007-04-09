@@ -39,7 +39,6 @@ class RRCache
                     const int status,
                     RROverlay overlay);
       bool lookup(const Data& target, int type, int proto, Result& records, int& status);
-      void blacklist(const Data& target, int rrType, int protocol, const DataArr& targetsToBlacklist);
       void clearCache();
       void logCache();
 

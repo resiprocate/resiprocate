@@ -90,8 +90,8 @@ class TransportSelector
       unsigned int getTimeTillNextProcessMS();
       Fifo<TransactionMessage>& stateMacFifo() { return mStateMacFifo; }
 
-      void registerBlacklistListener(int rrType, DnsStub::BlacklistListener*);
-      void unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener*);
+      void registerMarkListener(MarkListener* listener);
+      void unregisterMarkListener(MarkListener* listener);
       void setEnumSuffixes(const std::vector<Data>& suffixes);
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);
