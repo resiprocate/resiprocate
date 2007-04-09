@@ -40,16 +40,28 @@ class ServerInviteSession: public InviteSession
       virtual void provideAnswer(const SdpContents& answer);
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
-      virtual void end(EndReason reason);
-      virtual void end();
+      virtual void end(EndReason reason/* = NotSpecified*/);
+      //virtual void end();
 
       /** Rejects an offer at the SIP level. So this can send a 488 to a
           reINVITE or UPDATE */
       virtual void reject(int statusCode, WarningCategory *warning = 0);
 
       /** accept an initial invite (2xx) - this is only applicable to the UAS */
-      virtual void accept(int statusCode=200);
-            
+      void accept(int statusCode=200);
+
+      /**
+       * Provide asynchronous method access by using command
+       */
+      void redirectCommand(const NameAddrs& contacts, int code=302);
+      void provisionalCommand(int code=180);
+      void acceptCommand(int statusCode=200);
+      // !nash! following are provided by InviteSession
+      //virtual void provideOfferCommand(const SdpContents& offer);
+      //virtual void provideOfferCommand(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative);
+      //virtual void provideAnswerCommand(const SdpContents& answer);
+      //virtual void rejectCommand(int statusCode, WarningCategory *warning = 0);
+
    private:
       friend class Dialog;
 
