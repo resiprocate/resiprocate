@@ -2,6 +2,7 @@
 #define REPRO_CONFIGSTORE_HXX
 
 #include "rutil/Data.hxx"
+#include "rutil/RWMutex.hxx"
 
 #include "repro/AbstractDb.hxx"
 #include <map>
@@ -22,7 +23,7 @@ class ConfigStore
                      const int tlsPort);
       
       const ConfigData& getConfigs() const;
-      int          getTlsPort(const resip::Data& domain) const;
+      int   getTlsPort(const resip::Data& domain);
       
       void eraseDomain(const resip::Data& domain);
       
@@ -30,6 +31,7 @@ class ConfigStore
       AbstractDb& mDb;  
 
       AbstractDb::Key buildKey(const resip::Data& domain) const;
+      resip::RWMutex mMutex;
       ConfigData mCachedConfigData;
 };
 
