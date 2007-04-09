@@ -2,6 +2,7 @@
 #define REPRO_ACLSTORE_HXX
 
 #include "rutil/Data.hxx"
+#include "rutil/RWMutex.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "repro/AbstractDb.hxx"
 
@@ -74,6 +75,7 @@ class AclStore
       bool findTlsPeerNameKey(const Key& key); // move cursor to key
       bool findAddressKey(const Key& key); // move cursor to key
 
+      resip::RWMutex mMutex;
       TlsPeerNameList mTlsPeerNameList;
       TlsPeerNameList::iterator mTlsPeerNameCursor;
       AddressList mAddressList;
