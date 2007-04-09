@@ -24,6 +24,8 @@
 #include "resip/stack/DnsInterface.hxx"
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "resip/stack/TupleMarkManager.hxx"
+#include "resip/stack/MarkListener.hxx"
 #include "rutil/dns/RRVip.hxx"
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/dns/DnsHandler.hxx"
@@ -68,13 +70,15 @@ class TestDnsHandler : public DnsHandler
       
       TestDnsHandler(const std::vector<Tuple>& expectedResults, 
                      const std::set<Tuple>& resultsToBlacklist,
+                     const std::set<Tuple>& resultsToGreylist,
                      const resip::Uri& uri) 
       : mComplete(false),
          mExpectedResults(expectedResults),
          mCheckExpectedResults(true),
          mUri(uri),
          mPermutationNumber(0),
-         mResultsToBlacklist(resultsToBlacklist)
+         mResultsToBlacklist(resultsToBlacklist),
+         mResultsToGreylist(resultsToGreylist)
       {}
       
       void handle(DnsResult* result)
@@ -88,6 +92,11 @@ class TestDnsHandler : public DnsHandler
             Tuple tuple = result->next();
             results.push_back(tuple);
             std::cout << gf << result->target() << " -> " << tuple << ub <<  std::endl;
+            if(mResultsToGreylist.count(tuple)!=0)
+            {
+               result->greylistLast(Timer::getTimeMs()+15000);
+            }
+
             if(mResultsToBlacklist.count(tuple)!=0)
             {
                result->blacklistLast(Timer::getTimeMs()+15000);
@@ -189,6 +198,7 @@ class TestDnsHandler : public DnsHandler
       std::list<int> mPermutation;
       int mPermutationNumber;
       std::set<resip::Tuple> mResultsToBlacklist;
+      std::set<resip::Tuple> mResultsToGreylist;
 };
 
 /*
@@ -200,6 +210,56 @@ class VipListener : public RRVip::Listener
    }
 };
 */
+
+class TestMarkListener : public MarkListener
+{
+   public:
+      TestMarkListener(const resip::Tuple& listenFor) 
+         : mTuple(listenFor),
+         mGotOkCallback(false),
+         mGotGreylistCallback(false), 
+         mGotBlacklistCallback(false)
+      {}
+      virtual ~TestMarkListener(){}
+      
+      virtual void onMark(const Tuple& tuple, TupleMarkManager::MarkType mark)
+      {
+         if(mTuple == tuple)
+         {
+            switch(mark)
+            {
+               case TupleMarkManager::OK:
+                  mGotOkCallback=true;
+                  break;
+               case TupleMarkManager::GREY:
+                  mGotGreylistCallback=true;
+                  break;
+               case TupleMarkManager::BLACK:
+                  mGotBlacklistCallback=true;
+                  break;
+               default:
+                  ;
+            }
+         }
+      }
+      
+      bool gotOkCallback() const {return mGotOkCallback;}
+      bool gotGreylistCallback() const {return mGotGreylistCallback;}
+      bool gotBlacklistCallback() const {return mGotBlacklistCallback;}
+      
+      void resetAll()
+      {
+         mGotOkCallback=false;
+         mGotGreylistCallback=false;
+         mGotBlacklistCallback=false;
+      }
+   private:
+      Tuple mTuple;
+      bool mGotOkCallback;
+      bool mGotGreylistCallback;
+      bool mGotBlacklistCallback;
+      
+};
 	
 class TestDns : public DnsInterface, public ThreadIf
 {
@@ -268,7 +328,7 @@ main(int argc, const char** argv)
    initNetwork();
    DnsStub* stub = new DnsStub;
    TestDns dns(*stub);
-   dns.run();   
+   dns.run();
    cerr << "Starting" << endl;   
    std::list<Query> queries;
 #if defined(HAVE_POPT_H)
@@ -858,6 +918,7 @@ main(int argc, const char** argv)
 
 
    // .bwc. Test blacklisting
+   std::cout << "Testing blacklisting." << std::endl;
    {
       Tuple toBlacklist("127.0.0.1",5060,V4,TCP);
       Tuple ok2("127.0.0.2",5060,V4,TCP);
@@ -872,13 +933,17 @@ main(int argc, const char** argv)
       
       std::set<Tuple> blacklist;
       blacklist.insert(toBlacklist);
+      std::set<Tuple> greylist;
       
       Uri uri;
       uri.scheme()="sip";
       uri.host()="loadlevel4.test.resiprocate.org";
       
+      TestMarkListener* listener = new TestMarkListener(toBlacklist);
+      dns.getMarkManager().registerMarkListener(listener);
+      
       Query query;                        
-      query.handler = new TestDnsHandler(expected,blacklist,uri);
+      query.handler = new TestDnsHandler(expected,blacklist,greylist,uri);
       query.uri = uri;
       cerr << "Creating DnsResult" << endl;      
       DnsResult* res = dns.createDnsResult(query.handler);
@@ -889,6 +954,9 @@ main(int argc, const char** argv)
       
       // .bwc. Give this query plenty of time.
       sleep(2);
+      
+      assert(listener->gotBlacklistCallback());
+      listener->resetAll();
       
       // This removes the Tuple toBlacklist
       expected.pop_back();
@@ -955,9 +1023,138 @@ main(int argc, const char** argv)
       }
    
       assert(queries.empty());
-
+      assert(listener->gotOkCallback());
+      listener->resetAll();
+      dns.getMarkManager().unregisterMarkListener(listener);
+      delete listener;
    }
 
+   // .bwc. Test greylisting
+   std::cout << "Testing greylisting." << std::endl;
+   {
+      Tuple toGreylist("127.0.0.1",5060,V4,TCP);
+      Tuple ok2("127.0.0.2",5060,V4,TCP);
+      Tuple ok3("127.0.0.3",5060,V4,TCP);
+      Tuple ok4("127.0.0.4",5060,V4,TCP);
+      
+      std::vector<Tuple> expected;
+      expected.push_back(ok2);
+      expected.push_back(ok3);
+      expected.push_back(ok4);
+      expected.push_back(toGreylist);
+      
+      std::set<Tuple> blacklist;
+      std::set<Tuple> greylist;
+      greylist.insert(toGreylist);
+      
+      Uri uri;
+      uri.scheme()="sip";
+      uri.host()="loadlevel4.test.resiprocate.org";
+      
+      TestMarkListener* listener = new TestMarkListener(toGreylist);
+      dns.getMarkManager().registerMarkListener(listener);
+      
+      {
+         Query query;                        
+         query.handler = new TestDnsHandler(expected,blacklist,greylist,uri);
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri);
+      }
+
+      // .bwc. Give this query plenty of time.
+      sleep(2);
+      
+      assert(listener->gotGreylistCallback());
+      listener->resetAll();
+      
+      std::cout << toGreylist << " was greylisted." << std::endl;
+      
+      for(int i=0;i<20;++i)
+      {
+         Query query;                        
+         query.handler = new TestDnsHandler(expected,uri);
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri);
+      }
+      
+      // .bwc. Wait for greylist to expire.
+
+      sleep(16);
+      {
+         Query query;                        
+         query.handler = new TestDnsHandler(expected,blacklist,greylist,uri);
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri);
+      }
+
+      // .bwc. Give this query plenty of time.
+      sleep(2);
+      
+      assert(listener->gotOkCallback());
+      listener->resetAll();
+      std::cout << "greylist on " << toGreylist << " has expired." << std::endl;
+      
+      for(int i=0;i<20;++i)
+      {
+         Query query;                        
+         query.handler = new TestDnsHandler(expected,uri);
+         query.uri = uri;
+         cerr << "Creating DnsResult" << endl;      
+         DnsResult* res = dns.createDnsResult(query.handler);
+         query.result = res;      
+         queries.push_back(query);
+         cerr << rf << "Looking up" << ub << endl;
+         dns.lookup(res, uri);
+      }
+      
+      int count = queries.size();
+      while (count>0)
+      {
+         for (std::list<Query>::iterator it = queries.begin(); it != queries.end(); )
+         {
+            if ((*it).handler->complete())
+            {
+               cerr << rf << "DNS results for " << (*it).uri << ub << endl;
+               for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
+               {
+                  cerr << rf << (*i) << ub << endl;
+               }
+               
+               --count;
+               (*it).result->destroy();
+               delete (*it).handler;
+   
+               std::list<Query>::iterator temp = it;
+               ++it;
+               queries.erase(temp);
+            }
+            else
+            {
+               ++it;
+            }
+         }
+         sleep(1);
+      }
+   
+      assert(queries.empty());
+      dns.getMarkManager().unregisterMarkListener(listener);
+      delete listener;
+   }
    
    dns.shutdown();
    dns.join();
