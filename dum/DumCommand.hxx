@@ -13,6 +13,22 @@ class DumCommand : public ApplicationMessage
       virtual void executeCommand() = 0;
 };
 
+class DumCommandAdapter : public DumCommand
+{
+public:
+   virtual ~DumCommandAdapter() {}
+
+   virtual Message* clone() const
+   {
+      assert(false);
+      return NULL;
+   }
+
+   virtual std::ostream& encode(std::ostream& strm) const
+   {
+      return encodeBrief(strm);
+   }
+};
 }
 
 #endif
