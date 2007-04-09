@@ -279,25 +279,6 @@ DnsStub::removeQuery(Query* query)
    }
 }
 
-void DnsStub::doBlacklisting(const Data& target,
-                             int rrType, 
-                             int protocol, 
-                             const DataArr& targetsToBlacklist)
-{
-   RRCache::instance()->blacklist(target, rrType, protocol, targetsToBlacklist);
-   ListenerMap::iterator it = mListenerMap.find(rrType);
-   if (it != mListenerMap.end())
-   {
-      for (DataArr::const_iterator itB = targetsToBlacklist.begin(); itB != targetsToBlacklist.end(); ++itB)
-      {  
-         for (Listeners::iterator itL = (*it).second.begin(); itL != (*it).second.end(); ++itL)
-         {
-            (*itL)->onBlacklisted(rrType, *itB);
-         }
-      }
-   }
-}
-
 void DnsStub::setResultTransform(ResultTransform* transform)
 {
    mTransform = transform;
@@ -306,41 +287,6 @@ void DnsStub::setResultTransform(ResultTransform* transform)
 void DnsStub::removeResultTransform()
 {
    mTransform = 0;
-}
-
-void DnsStub::registerBlacklistListener(int rrType, BlacklistListener* listener)
-{
-   ListenerMap::iterator it = mListenerMap.find(rrType);
-   if (it == mListenerMap.end())
-   {
-      Listeners lst;
-      lst.push_back(listener);
-      mListenerMap.insert(ListenerMap::value_type(rrType, lst));
-   }
-   else
-   {
-      for (Listeners::iterator itr = it->second.begin(); itr != it->second.end(); ++itr)
-      {
-         if ((*itr) == listener) return;
-      }
-      it->second.push_back(listener);
-   }
-}
-
-void DnsStub::unregisterBlacklistListener(int rrType, BlacklistListener* listener)
-{
-   ListenerMap::iterator it = mListenerMap.find(rrType);
-   if (it != mListenerMap.end())
-   {
-      for (Listeners::iterator itr = it->second.begin(); itr != it->second.end(); ++itr)
-      {
-         if ((*itr) == listener)
-         {
-            it->second.erase(itr);
-            break;
-         }
-      }
-   }
 }
 
 DnsStub::Query::Query(DnsStub& stub, ResultTransform* transform, ResultConverter* resultConv, 

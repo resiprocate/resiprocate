@@ -1484,9 +1484,9 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
 
    if(mDnsResult)
    {
-      // .bwc. Blacklist for 32s
+      // .bwc. Greylist for 32s
       // !bwc! TODO make this duration configurable.
-      mDnsResult->blacklistLast(Timer::getTimeMs()+32000);
+      mDnsResult->greylistLast(Timer::getTimeMs()+32000);
    }
    
    
@@ -1817,18 +1817,18 @@ TransactionState::sendToTU(TransactionMessage* msg) const
                }
                catch(resip::ParseBuffer::Exception&)
                {
-                  mDnsResult->blacklistLast(resip::Timer::getTimeMs()+32000);
+                  mDnsResult->greylistLast(resip::Timer::getTimeMs()+32000);
                }
             }
             
             break;
          case 408:
-            if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only blacklist if internally generated and we haven't received any responses yet
+            if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only greylist if internally generated and we haven't received any responses yet
             {
-               // blacklist last target.
-               // ?bwc? How long do we blacklist this for? Probably should make
+               // greylist last target.
+               // ?bwc? How long do we greylist this for? Probably should make
                // this configurable. TODO
-               mDnsResult->blacklistLast(resip::Timer::getTimeMs() + 32000);
+               mDnsResult->greylistLast(resip::Timer::getTimeMs() + 32000);
             }
 
             break;
