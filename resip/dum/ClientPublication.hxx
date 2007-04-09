@@ -14,13 +14,20 @@ class ClientPublication : public NonDialogUsage
       typedef Handle<ClientPublication> ClientPublicationHandle;
       ClientPublicationHandle getHandle();
       const Data& getEventType() { return mEventType; }
+      const Contents* getContents() const { return mDocument; }
 
       //0 means the last value of Expires will be used.
       void refresh(unsigned int expiration=0);
       void update(const Contents* body);
-      const Contents* getContents() const { return mDocument; }
-
       virtual void end();
+
+      /**
+       * Provide asynchronous method access by using command
+       */
+      void updateCommand(const Contents* body);
+      void refreshCommand(unsigned int expiration=0);
+      virtual void endCommand();
+
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 

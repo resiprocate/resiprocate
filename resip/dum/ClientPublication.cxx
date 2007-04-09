@@ -50,6 +50,34 @@ ClientPublication::end()
    send(mPublish);
 }
 
+class ClientPublicationEndCommand : public DumCommandAdapter
+{
+public:
+   ClientPublicationEndCommand(ClientPublication& clientPublication)
+      : mClientPublication(clientPublication)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mClientPublication.end();
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientPublicationEndCommand";
+   }
+private:
+   ClientPublication& mClientPublication;
+};
+
+void
+ClientPublication::endCommand()
+{
+   mDum.post(new ClientPublicationEndCommand(*this));
+}
+
 void 
 ClientPublication::dispatch(const SipMessage& msg)
 {
@@ -206,6 +234,37 @@ ClientPublication::refresh(unsigned int expiration)
    send(mPublish);
 }
 
+class ClientPublicationRefreshCommand : public DumCommandAdapter
+{
+public:
+   ClientPublicationRefreshCommand(ClientPublication& clientPublication, unsigned int expiration)
+      : mClientPublication(clientPublication),
+        mExpiration(expiration)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mClientPublication.refresh(mExpiration);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientPublicationRefreshCommand";
+   }
+
+private:
+   ClientPublication& mClientPublication;
+   unsigned int mExpiration;
+};
+
+void
+ClientPublication::refreshCommand(unsigned int expiration)
+{
+   mDum.post(new ClientPublicationRefreshCommand(*this, expiration));
+}
+
 void
 ClientPublication::update(const Contents* body)
 {
@@ -227,6 +286,37 @@ ClientPublication::update(const Contents* body)
    mPublish->header(h_CSeq).sequence()++;
    mPublish->setContents(mDocument);
    send(mPublish);
+}
+
+class ClientPublicationUpdateCommand : public DumCommandAdapter
+{
+public:
+   ClientPublicationUpdateCommand(ClientPublication& clientPublication, const Contents* body)
+      : mClientPublication(clientPublication),
+      mBody(body?body->clone():0)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mClientPublication.update(mBody.get());
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientPublicationUpdateCommand";
+   }
+
+private:
+   ClientPublication& mClientPublication;
+   std::auto_ptr<Contents> mBody;
+};
+
+void
+ClientPublication::updateCommand(const Contents* body)
+{
+   mDum.post(new ClientPublicationUpdateCommand(*this, body));
 }
 
 void 

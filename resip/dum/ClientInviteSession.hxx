@@ -34,8 +34,8 @@ class ClientInviteSession : public InviteSession
       virtual void provideAnswer (const SdpContents& answer);
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
-      virtual void end(EndReason reason);
-      virtual void end();
+      virtual void end(EndReason reason/* = NotSpecified*/);
+      //virtual void end();
 
       /** Rejects an offer at the SIP level.  For a UAC in an early dialog 
           this typically only makes sense, when rejecting an UPDATE request
