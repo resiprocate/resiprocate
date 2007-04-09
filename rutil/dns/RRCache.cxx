@@ -155,36 +155,12 @@ bool RRCache::lookup(const Data& target,
       }
       else
       {
-         bool allBlacklisted = false;
-         records = (*it)->records(protocol, allBlacklisted);
-         if (allBlacklisted)
-         {
-            assert(records.empty());
-            (*it)->remove();
-            delete *it;
-            mRRSet.erase(it);
-            return false;
-         }
-         else
-         {
-            status = (*it)->status();
-            touch(*it);
-            return true;
-         }
+         records = (*it)->records(protocol);
+         status = (*it)->status();
+         touch(*it);
+         return true;
       }
    }
-}
-
-void RRCache::blacklist(const Data& target, 
-                        int type,
-                        int protocol,
-                        const DataArr& targetsToBlacklist)
-{
-   RRList* key = new RRList(target, type);
-   RRSet::iterator it = mRRSet.find(key);
-   delete key;
-   if (it == mRRSet.end()) return;
-   (*it)->blacklist(protocol, targetsToBlacklist);
 }
 
 void 
