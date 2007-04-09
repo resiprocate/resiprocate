@@ -372,38 +372,38 @@ InviteSession::provideOffer(const SdpContents& offer,
    }
 }
 
+class InviteSessionProvideOfferExCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionProvideOfferExCommand(InviteSession& inviteSession, 
+      const SdpContents& offer, 
+      DialogUsageManager::EncryptionLevel level, 
+      const SdpContents* alternative)
+      : mInviteSession(inviteSession),
+      mOffer(offer)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.provideOffer(mOffer, mLevel, mAlternative.get());
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionProvideOfferExCommand";
+   }
+private:
+   InviteSession& mInviteSession;
+   SdpContents mOffer;
+   DialogUsageManager::EncryptionLevel mLevel;
+   std::auto_ptr<const SdpContents> mAlternative;
+};
+
 void
 InviteSession::provideOfferCommand(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative)
 {
-   class InviteSessionProvideOfferCommand : public DumCommandAdapter
-   {
-   public:
-      InviteSessionProvideOfferCommand(InviteSession& inviteSession, 
-         const SdpContents& offer, 
-         DialogUsageManager::EncryptionLevel level, 
-         const SdpContents* alternative)
-         : mInviteSession(inviteSession),
-         mOffer(offer)
-      {
-      }
-
-      virtual void executeCommand()
-      {
-         mInviteSession.provideOffer(mOffer, mLevel, mAlternative.get());
-      }
-
-      virtual std::ostream& encodeBrief(std::ostream& strm) const
-      {
-         return strm << "InviteSessionProvideOfferCommand";
-      }
-   private:
-      InviteSession& mInviteSession;
-      SdpContents mOffer;
-      DialogUsageManager::EncryptionLevel mLevel;
-      std::auto_ptr<const SdpContents> mAlternative;
-   };
-
-   mDum.post(new InviteSessionProvideOfferCommand(*this, offer, level, alternative));
+   mDum.post(new InviteSessionProvideOfferExCommand(*this, offer, level, alternative));
 }
 
 void
@@ -412,32 +412,32 @@ InviteSession::provideOffer(const SdpContents& offer)
    return provideOffer(offer, mCurrentEncryptionLevel, 0);
 }
 
+class InviteSessionProvideOfferCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionProvideOfferCommand(InviteSession& inviteSession, const SdpContents& offer)
+      : mInviteSession(inviteSession),
+      mOffer(offer)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.provideOffer(mOffer);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionProvideOfferCommand";
+   }
+private:
+   InviteSession& mInviteSession;
+   SdpContents mOffer;
+};
+
 void
 InviteSession::provideOfferCommand(const SdpContents& offer)
 {
-   class InviteSessionProvideOfferCommand : public DumCommandAdapter
-   {
-   public:
-      InviteSessionProvideOfferCommand(InviteSession& inviteSession, const SdpContents& offer)
-         : mInviteSession(inviteSession),
-         mOffer(offer)
-      {
-      }
-
-      virtual void executeCommand()
-      {
-         mInviteSession.provideOffer(mOffer);
-      }
-
-      virtual std::ostream& encodeBrief(std::ostream& strm) const
-      {
-         return strm << "InviteSessionProvideOfferCommand";
-      }
-   private:
-      InviteSession& mInviteSession;
-      SdpContents mOffer;
-   };
-
    mDum.post(new InviteSessionProvideOfferCommand(*this, offer));
 }
 
@@ -741,36 +741,36 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
    }
 }
 
+class InviteSessionReferCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionReferCommand(InviteSession& inviteSession, const NameAddr& referTo, bool referSub)
+      : mInviteSession(inviteSession),
+      mReferTo(referTo),
+      mReferSub(referSub)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.referCommand(mReferTo, mReferSub);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionReferCommand";
+   }
+
+private:
+   InviteSession& mInviteSession;
+   NameAddr mReferTo;
+   bool mReferSub;
+};
+
 void
 InviteSession::referCommand(const NameAddr& referTo, bool referSub)
 {
-   class InviteSessionReferCommand : public DumCommandAdapter
-   {
-   public:
-      InviteSessionReferCommand(InviteSession& inviteSession, const NameAddr& referTo, bool referSub)
-         : mInviteSession(inviteSession),
-           mReferTo(referTo),
-           mReferSub(referSub)
-      {
-
-      }
-
-      virtual void executeCommand()
-      {
-         mInviteSession.referCommand(mReferTo, mReferSub);
-      }
-
-      virtual std::ostream& encodeBrief(std::ostream& strm) const
-      {
-         return strm << "InviteSessionReferCommand";
-      }
-
-   private:
-      InviteSession& mInviteSession;
-      NameAddr mReferTo;
-      bool mReferSub;
-   };
-
    mDum.post(new InviteSessionReferCommand(*this, referTo, referSub));
 }
 
@@ -820,39 +820,39 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
    }
 }
 
+class InviteSessionReferExCommand : public DumCommandAdapter
+{
+public:
+   InviteSessionReferExCommand(InviteSession& inviteSession, const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
+      : mInviteSession(inviteSession),
+      mReferTo(referTo),
+      mSessionToReplace(sessionToReplace),
+      mReferSub(referSub)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mInviteSession.referCommand(mReferTo, mSessionToReplace, mReferSub);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "InviteSessionReferExCommand";
+   }
+
+private:
+   InviteSession& mInviteSession;
+   InviteSessionHandle mSessionToReplace;
+   NameAddr mReferTo;
+   bool mReferSub;
+};
+
 void
 InviteSession::referCommand(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
 {
-   class InviteSessionReferCommand : public DumCommandAdapter
-   {
-   public:
-      InviteSessionReferCommand(InviteSession& inviteSession, const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
-         : mInviteSession(inviteSession),
-           mReferTo(referTo),
-           mSessionToReplace(sessionToReplace),
-           mReferSub(referSub)
-      {
-
-      }
-
-      virtual void executeCommand()
-      {
-         mInviteSession.referCommand(mReferTo, mSessionToReplace, mReferSub);
-      }
-
-      virtual std::ostream& encodeBrief(std::ostream& strm) const
-      {
-         return strm << "InviteSessionReferCommand";
-      }
-
-   private:
-      InviteSession& mInviteSession;
-      InviteSessionHandle mSessionToReplace;
-      NameAddr mReferTo;
-      bool mReferSub;
-   };
-
-   mDum.post(new InviteSessionReferCommand(*this, referTo, sessionToReplace, referSub));
+   mDum.post(new InviteSessionReferExCommand(*this, referTo, sessionToReplace, referSub));
 }
 
 void
