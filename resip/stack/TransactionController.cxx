@@ -150,14 +150,14 @@ TransactionController::getTimerQueueSize() const
 }
 
 void
-TransactionController::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* l)
+TransactionController::registerMarkListener(MarkListener* listener)
 {
-   mTransportSelector.registerBlacklistListener(rrType, l);
+   mTransportSelector.registerMarkListener(listener);
 }
 
-void TransactionController::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* l)
+void TransactionController::unregisterMarkListener(MarkListener* listener)
 {
-   mTransportSelector.unregisterBlacklistListener(rrType, l);
+   mTransportSelector.unregisterMarkListener(listener);
 }
 
 

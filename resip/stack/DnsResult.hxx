@@ -67,6 +67,17 @@ class DnsResult : public DnsResultSink
       bool blacklistLast(UInt64 expiry);
       
       /*!
+         Greylist the last returned result until the specified time (ms)
+         Greylisting a tuple effectively de-prioritizes it, so it will not be
+         tried if there are any non-grey or blacklisted tuples left to try.
+         
+         @param expiry The absolute expiry, in ms, of this blacklist.
+         @return true iff the last result could be greylisted
+         @note This is a no-op if no results have been returned.
+      */
+      bool greylistLast(UInt64 expiry);
+      
+      /*!
          Tries to load the next tuple. If Available is returned, the tuple may
          be accessed using current(). 
          
@@ -269,40 +280,8 @@ class DnsResult : public DnsResultSink
       bool mHaveReturnedResults;
 
       void clearCurrPath();
-      void blacklistLastReturnedResult(UInt64 expiry);
-
+      
       Tuple mLastResult;
-      
-   private:
-      
-      class BlacklistEntry
-      {
-         public:
-            BlacklistEntry();
-            BlacklistEntry(const Tuple& tuple, UInt64 expiry);
-            BlacklistEntry(const BlacklistEntry& orig);
-            ~BlacklistEntry();
-            bool operator<(const BlacklistEntry& rhs) const;
-            bool operator>(const BlacklistEntry& rhs) const;
-            bool operator==(const BlacklistEntry& rhs) const;
-            
-            Tuple mTuple;
-            UInt64 mExpiry;
-      };
-      
-      typedef std::set<BlacklistEntry> Blacklist;
-
-      /*!
-         @author bwc 
-         @todo Make less evil (implement a singleton pattern or something).
-      */
-      static Blacklist theBlacklist;
-      static resip::Mutex theBlacklistMutex;
-      
-      static bool blacklisted(const Tuple& tuple);
-      
-      static void blacklist(const Tuple& tuple,UInt64 expiry);
-
 };
 
 std::ostream& operator<<(std::ostream& strm, const DnsResult&);
