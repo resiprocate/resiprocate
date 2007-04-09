@@ -120,6 +120,41 @@ ClientPagerMessage::page(std::auto_ptr<Contents> contents,
     }
 }
 
+class ClientPagerMessagePageCommand : public DumCommandAdapter
+{
+public:
+   ClientPagerMessagePageCommand(ClientPagerMessage& clientPagerMessage, 
+      std::auto_ptr<Contents> contents,
+      DialogUsageManager::EncryptionLevel level)
+      : mClientPagerMessage(clientPagerMessage),
+        mContents(contents),
+        mLevel(level)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mClientPagerMessage.page(mContents, mLevel);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientPagerMessagePageCommand";
+   }
+private:
+   ClientPagerMessage& mClientPagerMessage;
+   std::auto_ptr<Contents> mContents;
+   DialogUsageManager::EncryptionLevel mLevel;
+};
+
+void
+ClientPagerMessage::pageCommand(std::auto_ptr<Contents> contents,
+                                DialogUsageManager::EncryptionLevel level)
+{
+   mDum.post(new ClientPagerMessagePageCommand(*this, contents, level));
+}
+
 void
 ClientPagerMessage::dispatch(const SipMessage& msg)
 {
@@ -181,6 +216,34 @@ ClientPagerMessage::end()
       mEnded = true;
       mDum.destroy(this);
    }
+}
+
+class ClientPagerMessageEndCommand : public DumCommandAdapter
+{
+public:
+   ClientPagerMessageEndCommand(ClientPagerMessage& clientPagerMessage)
+      : mClientPagerMessage(clientPagerMessage)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mClientPagerMessage.end();
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientPagerMessageEndCommand";
+   }
+private:
+   ClientPagerMessage& mClientPagerMessage;
+};
+
+void
+ClientPagerMessage::endCommand()
+{
+   mDum.post(new ClientPagerMessageEndCommand(*this));
 }
 
 size_t
