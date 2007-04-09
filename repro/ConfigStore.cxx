@@ -1,6 +1,7 @@
 
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/Lock.hxx"
 #include "resip/stack/Uri.hxx"
 
 #include "repro/ConfigStore.hxx"
@@ -42,20 +43,27 @@ ConfigStore::addDomain(const resip::Data& domain,
    rec.mTlsPort = tlsPort;
    
    mDb.addConfig( buildKey(domain), rec );
-   mCachedConfigData[domain] = rec;
+   {
+      Lock lock(mMutex, VOCAL_WRITELOCK);
+      mCachedConfigData[domain] = rec;
+   }
 }
 
 
 const ConfigStore::ConfigData& 
 ConfigStore::getConfigs() const
-{  
+{
+   // LOCKING NOTE:  From an API perspective this method dangerous, but we know that the WebAdmin Thread is currently
+   //                the only thread requiring a WRITE lock and is the only thread calling this function, so
+   //                locking is not required
    return mCachedConfigData;
 }
 
 
 int      
-ConfigStore::getTlsPort(const resip::Data& domain) const
+ConfigStore::getTlsPort(const resip::Data& domain)
 { 
+   Lock lock(mMutex, VOCAL_READLOCK);
    ConfigData::const_iterator it = mCachedConfigData.find(domain);
    if(it != mCachedConfigData.end())
    {
@@ -70,7 +78,10 @@ void
 ConfigStore::eraseDomain(const resip::Data& domain)
 {  
    mDb.eraseConfig( buildKey(domain) );
-   mCachedConfigData.erase(domain);
+   {
+      Lock lock(mMutex, VOCAL_WRITELOCK);
+      mCachedConfigData.erase(domain);
+   }
 }
 
 

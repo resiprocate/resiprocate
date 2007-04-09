@@ -19,6 +19,11 @@ InviteSessionHandler::terminate(ClientInviteSessionHandle h)
    h->getAppDialogSet()->end();
 }
 
+void
+InviteSessionHandler::onAckReceived(InviteSessionHandle, const SipMessage& msg)
+{
+}
+
 void 
 InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle)
 {
