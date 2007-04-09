@@ -436,6 +436,35 @@ ClientSubscription::requestRefresh(UInt32 expires)
    }
 }
 
+class ClientSubscriptionRefreshCommand : public DumCommandAdapter
+{
+public:
+   ClientSubscriptionRefreshCommand(ClientSubscription& clientSubscription, UInt32 expires)
+      : mClientSubscription(clientSubscription),
+        mExpires(expires)
+   {
+
+   }
+   virtual void executeCommand()
+   {
+      mClientSubscription.requestRefresh(mExpires);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientSubscriptionRefreshCommand";
+   }
+private:
+   ClientSubscription& mClientSubscription;
+   UInt32 mExpires;
+};
+
+void
+ClientSubscription::requestRefreshCommand(UInt32 expires)
+{
+   mDum.post(new ClientSubscriptionRefreshCommand(*this, expires));
+}
+
 void
 ClientSubscription::end()
 {
@@ -448,6 +477,34 @@ ClientSubscription::end()
       mEnded = true;
       send(mLastRequest);
    }
+}
+
+class ClientSubscriptionEndCommand : public DumCommandAdapter
+{
+public:
+   ClientSubscriptionEndCommand(ClientSubscription& clientSubscription)
+      :mClientSubscription(clientSubscription)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mClientSubscription.end();
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientSubscriptionEndCommand";
+   }
+private:
+   ClientSubscription& mClientSubscription;
+};
+
+void
+ClientSubscription::endCommand()
+{
+   mDum.post(new ClientSubscriptionEndCommand(*this));
 }
 
 void 
@@ -465,6 +522,36 @@ ClientSubscription::acceptUpdate(int statusCode)
    mDustbin.push_back(qn);
    mDialog.makeResponse(*mLastResponse, qn->notify(), statusCode);
    send(mLastResponse);
+}
+
+class ClientSubscriptionAcceptUpdateCommand : public DumCommandAdapter
+{
+public:
+   ClientSubscriptionAcceptUpdateCommand(ClientSubscription& clientSubscription, int statusCode)
+      : mClientSubscription(clientSubscription),
+        mStatusCode(statusCode)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mClientSubscription.acceptUpdate(mStatusCode);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientSubscriptionAcceptUpdateCommand";
+   }
+private:
+   ClientSubscription& mClientSubscription;
+   int mStatusCode;
+};
+
+void 
+ClientSubscription::acceptUpdateCommand(int statusCode)
+{
+   mDum.post(new ClientSubscriptionAcceptUpdateCommand(*this, statusCode));
 }
 
 void 
@@ -525,6 +612,37 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
          delete this;
          break;
    }
+}
+
+class ClientSubscriptionRejectUpdateCommand : public DumCommandAdapter
+{
+public:
+   ClientSubscriptionRejectUpdateCommand(ClientSubscription& clientSubscription, int statusCode, const Data& reasonPhrase)
+      : mClientSubscription(clientSubscription),
+        mStatusCode(statusCode),
+        mReasonPhrase(reasonPhrase)
+   {
+   }
+
+   virtual void executeCommand()
+   {
+      mClientSubscription.rejectUpdate(mStatusCode, mReasonPhrase);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ClientSubscriptionRejectUpdateCommand";
+   }
+private:
+   ClientSubscription& mClientSubscription;
+   int mStatusCode;
+   Data mReasonPhrase;
+};
+
+void 
+ClientSubscription::rejectUpdateCommand(int statusCode, const Data& reasonPhrase)
+{
+   mDum.post(new ClientSubscriptionRejectUpdateCommand(*this, statusCode, reasonPhrase));
 }
 
 void ClientSubscription::dialogDestroyed(const SipMessage& msg)

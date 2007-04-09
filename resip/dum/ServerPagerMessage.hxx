@@ -17,6 +17,14 @@ class ServerPagerMessage : public NonDialogUsage
       SharedPtr<SipMessage> reject(int statusCode);
 
       virtual void end();
+
+      /**
+       * Provide asynchronous method access by using command
+       */
+      void acceptCommand(int statusCode = 200);
+      void rejectCommand(int statusCode);
+      void endCommand();
+
       virtual void send(SharedPtr<SipMessage> msg);
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
