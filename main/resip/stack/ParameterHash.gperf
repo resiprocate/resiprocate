@@ -29,6 +29,7 @@ gruu, ParameterTypes::gruu
 name, ParameterTypes::name
 transport, ParameterTypes::transport
 user, ParameterTypes::user
+ext, ParameterTypes::extension
 method, ParameterTypes::method
 ttl, ParameterTypes::ttl
 maddr, ParameterTypes::maddr
