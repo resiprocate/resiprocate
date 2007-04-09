@@ -528,6 +528,12 @@
 				RelativePath=".\EventDispatcher.hxx">
 			</File>
 			<File
+				RelativePath=".\ExternalMessageBase.hxx">
+			</File>
+			<File
+				RelativePath=".\ExternalMessageHandler.hxx">
+			</File>
+			<File
 				RelativePath=".\ExternalTimer.hxx">
 			</File>
 			<File
