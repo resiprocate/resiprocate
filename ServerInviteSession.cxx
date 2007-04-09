@@ -86,35 +86,35 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
    }
 }
 
+class ServerInviteSessionRedirectCommand : public DumCommandAdapter
+{
+public:
+   ServerInviteSessionRedirectCommand(ServerInviteSession& serverInviteSession, const NameAddrs& contacts, int code)
+      : mServerInviteSession(serverInviteSession),
+      mContacts(contacts),
+      mCode(code)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mServerInviteSession.redirect(mContacts, mCode);
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ServerInviteSessionRedirectCommand";
+   }
+private:
+   ServerInviteSession& mServerInviteSession;
+   NameAddrs mContacts;
+   int mCode;
+};
+
 void 
 ServerInviteSession::redirectCommand(const NameAddrs& contacts, int code)
 {
-   class ServerInviteSessionRedirectCommand : public DumCommandAdapter
-   {
-   public:
-      ServerInviteSessionRedirectCommand(ServerInviteSession& serverInviteSession, const NameAddrs& contacts, int code)
-         : mServerInviteSession(serverInviteSession),
-           mContacts(contacts),
-           mCode(code)
-      {
-
-      }
-
-      virtual void executeCommand()
-      {
-         mServerInviteSession.redirect(mContacts, mCode);
-      }
-
-      virtual std::ostream& encodeBrief(std::ostream& strm) const
-      {
-         return strm << "ServerInviteSessionRedirectCommand";
-      }
-   private:
-      ServerInviteSession& mServerInviteSession;
-      NameAddrs mContacts;
-      int mCode;
-   };
-
    mDum.post(new ServerInviteSessionRedirectCommand(*this, contacts, code));
 }
 
