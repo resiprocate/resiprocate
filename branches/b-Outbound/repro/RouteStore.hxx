@@ -10,6 +10,7 @@
 #include <list>
 
 #include "rutil/Data.hxx"
+#include "rutil/RWMutex.hxx"
 #include "resip/stack/Uri.hxx"
 
 #include "repro/AbstractDb.hxx"
@@ -76,6 +77,7 @@ class RouteStore
             AbstractDb::RouteRecord routeRecord;
       };
       
+      resip::RWMutex mMutex;
       typedef std::list<RouteOp> RouteOpList;
       RouteOpList mRouteOperators; 
       RouteOpList::iterator mCursor;

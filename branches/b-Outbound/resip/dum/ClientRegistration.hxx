@@ -39,6 +39,7 @@ class ClientRegistration: public NonDialogUsage
           when complete */
       void removeMyBindings(bool stopRegisteringWhenDone=false);
 
+
       /** Request a manual refresh of the registration.  If 0 then default to using original 
           expires value (to remove use removeXXX() instead) */
       void requestRefresh(UInt32 expires = 0);  
@@ -57,6 +58,13 @@ class ClientRegistration: public NonDialogUsage
       
       /** Calls removeMyBindings and ends usage when complete */
       virtual void end();
+
+      /**
+       * Provide asynchronous method access by using command
+       */
+      void removeMyBindingsCommand(bool stopRegisteringWhenDone=false);
+      virtual void endCommand();
+
 
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
