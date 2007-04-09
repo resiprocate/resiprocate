@@ -114,6 +114,7 @@ SRC = \
 	TlsTransport.cxx \
 	TlsTransport.cxx \
 	Tuple.cxx \
+	TupleMarkManager.cxx \
 	TransactionController.cxx \
 	MessageFilterRule.cxx \
 	TransactionUser.cxx \

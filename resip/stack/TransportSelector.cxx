@@ -1263,7 +1263,7 @@ TransportSelector::getTimeTillNextProcessMS()
 {
    if (mDns.requiresProcess())
    {
-      return 50;      
+      return 50;
    }
    else
    {
@@ -1272,14 +1272,14 @@ TransportSelector::getTimeTillNextProcessMS()
 }
 
 void
-TransportSelector::registerBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+TransportSelector::registerMarkListener(MarkListener* listener)
 {
-   mDns.registerBlacklistListener(rrType, listener);
+   mDns.getMarkManager().registerMarkListener(listener);
 }
 
-void TransportSelector::unregisterBlacklistListener(int rrType, DnsStub::BlacklistListener* listener)
+void TransportSelector::unregisterMarkListener(MarkListener* listener)
 {
-   mDns.unregisterBlacklistListener(rrType, listener);
+   mDns.getMarkManager().unregisterMarkListener(listener);
 }
 
 
