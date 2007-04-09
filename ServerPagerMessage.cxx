@@ -39,30 +39,30 @@ ServerPagerMessage::end()
    delete this;
 }
 
+class ServerPagerMessageEndCommand : public DumCommandAdapter
+{
+public:
+   ServerPagerMessageEndCommand(ServerPagerMessage& serverPagerMessage)
+      : mServerPagerMessage(serverPagerMessage)
+   {
+
+   }
+
+   virtual void executeCommand()
+   {
+      mServerPagerMessage.end();
+   }
+
+   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   {
+      return strm << "ServerPagerMessageEndCommand";
+   }
+private:
+   ServerPagerMessage& mServerPagerMessage;
+};
+
 void ServerPagerMessage::endCommand()
 {
-   class ServerPagerMessageEndCommand : public DumCommandAdapter
-   {
-   public:
-      ServerPagerMessageEndCommand(ServerPagerMessage& serverPagerMessage)
-         : mServerPagerMessage(serverPagerMessage)
-      {
-
-      }
-
-      virtual void executeCommand()
-      {
-         mServerPagerMessage.end();
-      }
-
-      virtual std::ostream& encodeBrief(std::ostream& strm) const
-      {
-         return strm << "ServerPagerMessageEndCommand";
-      }
-   private:
-      ServerPagerMessage& mServerPagerMessage;
-   };
-
    mDum.post(new ServerPagerMessageEndCommand(*this));
 }
 
