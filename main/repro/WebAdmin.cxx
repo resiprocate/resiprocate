@@ -581,7 +581,16 @@ WebAdmin::buildAddRouteSubPage(DataStream& s)
       "</tr>" << endl << 
 
       "</table>" << endl << 
-      "</form>" << endl;
+      "</form>" << endl <<
+
+      "<pre>" << endl <<
+      "Static routes use (POSIX-standard) regular expression to match" << endl <<
+      "and rewrite SIP URIs.  The following is an example of sending" << endl <<
+      "all requests that consist of only digits in the userpart of the" << endl <<
+      "SIP URI to a gateway:" << endl << endl <<
+      "   URI:         ^sip:([0-9]+)@example\\.com" << endl <<
+      "   Destination: sip:$1@gateway.example.com" << endl <<
+      "</pre>" << endl;
 }
 
 
