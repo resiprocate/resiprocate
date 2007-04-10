@@ -19,9 +19,11 @@ class InteropHelper
       
       // .bwc. If this is enabled, we will record-route with flow tokens 
       // whenever possible. This will make things work with endpoints that don't
-      // use NAT traversal tricks. The downside is that this will keep target-
-      // refreshes from working, and is liable to rope other proxies into
-      // dialogs even when they didn't record-route.
+      // use NAT traversal tricks. However, this will break several things:
+      // 1) Target-refreshes won't work.
+      // 2) Proxies that do not record-route may be implicitly included in the
+      //    route-set by this proxy, because a flow token may point to them.
+      // 3) Third-party registrations won't work.
       static bool getRRTokenHackEnabled(){return useRRTokenHack;}
       static void setRRTokenHackEnabled(bool enabled) {useRRTokenHack=enabled;}
       
