@@ -12,6 +12,7 @@
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -456,8 +457,10 @@ Proxy::decorateMessage(resip::SipMessage &request,
    DebugLog(<<"Proxy::decorateMessage called.");
    NameAddr rt;
    
-   if(destination.onlyUseExistingConnection)
+   if(destination.onlyUseExistingConnection 
+      || resip::InteropHelper::getRRTokenHackEnabled())
    {
+      rt=getRecordRoute();
       // .bwc. If our target has an outbound flow to us, we need to put a flow
       // token in a Record-Route.
       Helper::massageRoute(request,rt);
@@ -484,7 +487,7 @@ Proxy::decorateMessage(resip::SipMessage &request,
    // gets defined if we need to double-record-route. (ie, the source or the
    // target had an outbound flow to us). The only way these could end up the
    // same is if the target and source were the same entity.
-   if (!rt.uri().scheme().empty())
+   if (!rt.uri().host().empty())
    {
       request.header(h_RecordRoutes).push_front(rt);
       InfoLog (<< "Added outbound Record-Route: " << rt);
