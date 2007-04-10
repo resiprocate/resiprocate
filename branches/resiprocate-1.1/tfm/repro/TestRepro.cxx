@@ -203,3 +203,10 @@ TestRepro::deleteRoute(const resip::Data& matchingPattern,
 {
    mStore.mRouteStore.eraseRoute(method, event, matchingPattern);
 }
+
+bool
+TestRepro::addTrustedHost(const resip::Data& host, resip::TransportType transport, short port)
+{
+   return mStore.mAclStore.addAcl(host, port, static_cast<const short&>(transport));
+}
+
