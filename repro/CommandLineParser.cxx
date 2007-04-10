@@ -213,7 +213,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    InteropHelper::setOutboundVersion(outboundVersion);
    InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
-   InteropHelper::setRRTokenHackEnabled(rrTokenHackEnabled ? true : false);
+   InteropHelper::setRRTokenHackEnabled((rrTokenHackEnabled==0) ? false : true);
    
    if((InteropHelper::getOutboundSupported() 
          || InteropHelper::getRRTokenHackEnabled()
