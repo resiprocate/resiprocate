@@ -213,6 +213,7 @@ Connection::onDoubleCRLF()
    // ?bwc? We don't need a sigcomp id, do we?
    if(InteropHelper::getOutboundVersion()<7)
    {
+      DebugLog(<<"Sending response CRLF (aka pong).");
       requestWrite(new SendData(mWho,Symbols::CRLF,Data::Empty,Data::Empty));
    }
 }

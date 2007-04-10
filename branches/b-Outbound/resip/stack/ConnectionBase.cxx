@@ -107,6 +107,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          if (strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
          {
             StackLog(<<"Throwing away incoming firewall keep-alive");
+            DebugLog(<< "Got incoming double-CRLF keepalive (aka ping).");
             mBufferPos += 4;
             bytesRead -= 4;
             onDoubleCRLF();
