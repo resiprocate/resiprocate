@@ -15,6 +15,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+bool RouteStore::RouteOp::operator<(const RouteOp& rhs) const
+{
+   return routeRecord.mOrder < rhs.routeRecord.mOrder;
+}
+
 
 RouteStore::RouteStore(AbstractDb& db):
    mDb(db)
@@ -44,7 +49,7 @@ RouteStore::RouteStore(AbstractDb& db):
         }
       }
 
-      mRouteOperators.push_back( route ); 
+      mRouteOperators.insert( route );
 
       key = mDb.nextRouteKey();
    } 
@@ -105,7 +110,7 @@ RouteStore::addRoute(const resip::Data& method,
 
    {
       Lock lock(mMutex, VOCAL_WRITELOCK);
-      mRouteOperators.push_back( route ); 
+      mRouteOperators.insert( route );
    }
 
    mDb.addRoute( key , route.routeRecord );
