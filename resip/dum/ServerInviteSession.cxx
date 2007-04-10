@@ -444,11 +444,11 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
 //   mDum.post(new ServerInviteSessionProvideAnswerCommand(*this, answer));
 //}
 
-//void
-//ServerInviteSession::end()
-//{
-//   end(NotSpecified);
-//}
+void
+ServerInviteSession::end()
+{
+   end(NotSpecified);
+}
 
 void 
 ServerInviteSession::end(EndReason reason)
