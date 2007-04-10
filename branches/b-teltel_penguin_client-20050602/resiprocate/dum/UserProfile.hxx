@@ -19,7 +19,7 @@ class DUM_API UserProfile : public Profile
       UserProfile(Profile *baseProfile = 0);
       
       virtual void setDefaultFrom(const NameAddr& from);
-      virtual NameAddr& getDefaultFrom();
+      virtual const NameAddr& getDefaultFrom() const;
 
       // !cj! - this GRUU stuff looks very suspect
       virtual void addGruu(const Data& aor, const NameAddr& contact);
