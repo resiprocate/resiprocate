@@ -20,8 +20,8 @@ UserProfile::setDefaultFrom(const NameAddr& from)
    mDefaultFrom = from;
 }
 
-NameAddr& 
-UserProfile::getDefaultFrom()
+const NameAddr& 
+UserProfile::getDefaultFrom() const
 {
    return mDefaultFrom;
 }
