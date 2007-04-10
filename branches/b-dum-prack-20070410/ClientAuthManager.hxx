@@ -19,8 +19,13 @@ class ClientAuthManager
       ClientAuthManager();
       virtual ~ClientAuthManager() {}
 
-      // return true if request is authorized
+      // For any response received by the UAC, handle will be
+      // called. origRequest is the request that generated the 401/407.
+      // return true if the challenge can be handled with an updated request. 
+      // This will increment the CSeq on origRequest
       virtual bool handle(UserProfile& userProfile, SipMessage& origRequest, const SipMessage& response);
+
+      //
       virtual void addAuthentication(SipMessage& origRequest);
       
    private:
@@ -86,14 +91,6 @@ class ClientAuthManager
 
       typedef std::map<DialogSetId, AuthState> AttemptedAuthMap;
       AttemptedAuthMap mAttemptedAuths;      
-//       bool handleAuthHeader(UserProfile& userProfile,
-//                             const Auth& auth, 
-//                             AttemptedAuthMap::iterator authState, 
-//                             SipMessage& origRequest, 
-//                             const SipMessage& response, 
-//                             bool proxy);      
-      
-
 };
  
 }

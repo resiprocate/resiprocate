@@ -24,21 +24,22 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
    {
       assert( response.isResponse() );
       assert( origRequest.isRequest() );
-
+      
       DialogSetId id(origRequest);
 
-      // is this a 401 or 407  
       const int& code = response.header(h_StatusLine).statusCode();
-      if (code < 180)
+      if (code < 101 || code >= 500)
       {
          return false;
       }
-      else if (! (  code == 401 || code == 407 ))
+      else if (! (  code == 401 || code == 407 )) // challenge success
       {
          AttemptedAuthMap::iterator it = mAttemptedAuths.find(id);     
          if (it != mAttemptedAuths.end())
          {
             DebugLog (<< "ClientAuthManager::handle: transitioning " << id << "to cached");         
+
+            // cache the result
             it->second.authSucceeded();
          }      
          return false;
@@ -51,6 +52,9 @@ ClientAuthManager::handle(UserProfile& userProfile, SipMessage& origRequest, con
       }
    
       AuthState& authState = mAttemptedAuths[id];
+
+      // based on the UserProfile and the challenge, store credentials in the
+      // AuthState associated with this DialogSet if the algorithm is supported
       if (authState.handleChallenge(userProfile, response))
       {
          assert(origRequest.header(h_Vias).size() == 1);

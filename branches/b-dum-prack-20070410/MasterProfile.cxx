@@ -132,6 +132,18 @@ MasterProfile::clearSupportedOptionTags()
    mSupportedOptionTags.clear();
 }
 
+void
+MasterProfile::setReliableProvisionalMode(ReliableProvisionalMode mode)
+{
+   mReliableProvisionalMode = mode;
+}
+
+MasterProfile::ReliableProvisionalMode
+MasterProfile::getReliableProvisionalMode() const
+{
+   return mReliableProvisionalMode;
+}
+
 void 
 MasterProfile::addSupportedMimeType(const MethodTypes& method, const Mime& mimeType)
 {
