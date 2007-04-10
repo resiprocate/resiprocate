@@ -48,7 +48,7 @@ LocationServer::process(RequestContext& context)
          if (contact.mRegExpires - time(NULL) >= 0)
          {
             InfoLog (<< *this << " adding target " << contact.mContact);
-            if(contact.mInstance.empty())
+            if(contact.mInstance.empty() || contact.mRegId==0)
             {
                QValueTarget* target = new QValueTarget(contact);
                batch.push_back(target);
@@ -58,11 +58,9 @@ LocationServer::process(RequestContext& context)
             {
                // !bwc! If we have an outbound target with 
                // onlyUseExistingConnection=false, this means that we do not
-               // have a direct flow to the endpoint, but there is an edge-proxy
-               // in the path that does. So, if we still have a connection to
-               // that edge-proxy, we will use it, but if we do not, we will
-               // send anyway using the normal method of DNS lookup. (ie, if no
-               // direct connection, we do not need the flow to still be alive)
+               // have a direct connection to the endpoint (some edge-proxy 
+               // does). Normally, this means we will ignore mReceivedFrom, but
+               // this can be configured to still use mReceivedFrom.
                Target* target = new Target(contact);
                target->mPriorityMetric=contact.mLastUpdated;
                outboundBatch[contact.mInstance].push_back(target);

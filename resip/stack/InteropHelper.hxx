@@ -16,6 +16,8 @@ class InteropHelper
       static void setOutboundVersion(int version) {theOutboundVersion=version;}
       static bool getOutboundSupported() {return isOutboundSupported;}
       static void setOutboundSupported(bool supported) {isOutboundSupported=supported;}
+      static bool getRRTokenHackEnabled(){return useRRTokenHack;}
+      static void setRRTokenHackEnabled(bool enabled) {useRRTokenHack=enabled;}
       
    private:
       InteropHelper();
@@ -23,6 +25,7 @@ class InteropHelper
       
       static int theOutboundVersion;
       static bool isOutboundSupported;
+      static bool useRRTokenHack;
 };
 }
 
