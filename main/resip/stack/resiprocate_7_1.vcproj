@@ -537,6 +537,9 @@
 				RelativePath=".\Tuple.cxx">
 			</File>
 			<File
+				RelativePath=".\TupleMarkManager.cxx">
+			</File>
+			<File
 				RelativePath=".\TuSelector.cxx">
 			</File>
 			<File
@@ -719,6 +722,9 @@
 			</File>
 			<File
 				RelativePath=".\LazyParser.hxx">
+			</File>
+			<File
+				RelativePath=".\MarkListener.hxx">
 			</File>
 			<File
 				RelativePath=".\Message.hxx">
@@ -941,6 +947,9 @@
 			</File>
 			<File
 				RelativePath=".\Tuple.hxx">
+			</File>
+			<File
+				RelativePath=".\TupleMarkManager.hxx">
 			</File>
 			<File
 				RelativePath=".\TuSelector.hxx">
