@@ -206,8 +206,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
       
       // !bwc! If, in the end, this is true, it means all necessary conditions
       // for outbound support have been met.
-      // TODO allow outbound support to be disabled
-      bool supportsOutbound=true;
+      bool supportsOutbound=InteropHelper::getOutboundSupported();
       
       // !bwc! We only store flow information if we have a direct flow to the
       // endpoint. We do not create a flow if there is an edge-proxy, because if
