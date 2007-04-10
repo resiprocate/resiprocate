@@ -1,4 +1,5 @@
 #include "resip/stack/ExtensionParameter.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"
@@ -270,6 +271,18 @@ ServerRegistration::dispatch(const SipMessage& msg)
             // gone. No recovery should be attempted by the server.
             rec.mReceivedFrom.onlyUseExistingConnection=true;
          }
+      }
+      else if(InteropHelper::getRRTokenHackEnabled())
+      {
+         // .bwc. If we are going to do the broken thing, and record-route with
+         // flow-tokens every time, we enable it here. Keep in mind, this will
+         // either break target-refreshes (if we have a direct connection to the
+         // endpoint), or we have a good chance of inadvertently including a 
+         // proxy that didn't record-route in the dialog.
+         // !bwc! TODO remove this once mid-dialog connection reuse is handled
+         // by most endpoints.
+         rec.mReceivedFrom=msg.getSource();
+         rec.mReceivedFrom.onlyUseExistingConnection=false;
       }
       
       // Check to see if this is a removal.
