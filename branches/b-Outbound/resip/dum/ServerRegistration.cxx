@@ -55,13 +55,14 @@ ServerRegistration::accept(SipMessage& ok)
   NameAddr contact;
   for (i = contacts.begin(); i != contacts.end(); i++)
   {
-    if (i->mRegExpires <= now)
+    if (i->mRegExpires - now <= 0)
     {
       database->removeContact(mAor,*i);
       continue;
     }
     contact = i->mContact;
-    contact.param(p_expires) = UInt32(i->mRegExpires - now);
+   // .bwc. p_expires is in seconds.
+    contact.param(p_expires) = UInt32( ((i->mRegExpires - now)/1000) );
     ok.header(h_Contacts).push_back(contact);
   }
   
@@ -168,8 +169,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
     ParserContainer<NameAddr>::iterator i;
-    time_t now;
-    time(&now);
+    UInt64 now=Timer::getTimeMs();
 
     for(i = contactList.begin(); i != contactList.end(); i++)
     {
@@ -202,7 +202,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
       }
       
       rec.mContact=*i;
-      rec.mRegExpires=expires+now;
+      rec.mRegExpires=((UInt64)expires)*1000+now;
       
       // !bwc! If, in the end, this is true, it means all necessary conditions
       // for outbound support have been met.
