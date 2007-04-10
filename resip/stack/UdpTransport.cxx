@@ -43,6 +43,7 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
+   mTuple.mFlowKey=mFd;
    bind();
 #ifdef USE_SIGCOMP
    if (mCompression.isEnabled())
