@@ -550,7 +550,13 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             request.method() == SUBSCRIBE))
       {
          resip::NameAddr rt;
-         if(resip::InteropHelper::getRRTokenHackEnabled())
+         if(resip::InteropHelper::getRRTokenHackEnabled()
+            && ( orig.empty(h_RecordRoutes) 
+                  || !orig.header(h_RecordRoutes).front().isWellFormed()
+                  || !mRequestContext.mProxy.isMyUri(
+                              orig.header(h_RecordRoutes).front().uri())
+               )
+            )
          {
             // .bwc. Right now, there is no defined way for an endpoint to 
             // communicate that it is using outbound when originating a request
@@ -564,6 +570,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             // didn't record-route.
             // !bwc! TODO replace this condition with one that determines 
             // whether the source is using outbound
+            // ?bwc? Once we can make this determination, will the check keep us
+            // from gratuitously Record-Routing in a spiral?
             
             rt=mRequestContext.mProxy.getRecordRoute();
             resip::Helper::massageRoute(request,rt);
@@ -573,18 +581,23 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             // !bwc! TODO encrypt this binary token to self.
             rt.uri().user()=binaryFlowToken.base64encode();
          }
-         else if(target->rec().mReceivedFrom.mFlowKey 
-                  || mRequestContext.mProxy.getRecordRouteEnabled())
+         else if((
+                     target->rec().mRegId != 0
+                     || mRequestContext.mProxy.getRecordRouteEnabled()
+                  ) // .bwc. Don't RR if we're sending to self
+                  && !mRequestContext.mProxy.isMyUri(target->uri())
+               )
          {
             // .bwc. If our target has an outbound flow with us, we need to make
             // sure we double-record-route. This means we need to put a trivial
             // record-route in for the source. Or, we could just record-route
-            // because we're configured to.
+            // because we're configured to. (This will be overridden if we're
+            // sending to ourself)
             rt=mRequestContext.mProxy.getRecordRoute();
             resip::Helper::massageRoute(request,rt);
          }
 
-         if(!rt.uri().scheme().empty())
+         if(!rt.uri().host().empty())
          {
             request.header(h_RecordRoutes).push_front(rt);
             InfoLog (<< "Added Record-Route: " << rt);
