@@ -1464,6 +1464,174 @@ class TestHolder : public Fixture
       ExecuteSequences();  
    }
    
+   void
+   testInviteUDPToTCPCallerHangsUp()
+   {
+      WarningLog(<<"*!testInviteUDPToTCPCallerHangsUp!*");
+      Seq
+      (
+         jasonTcp->registerUser(60, jasonTcp->getDefaultContacts()),
+         jasonTcp->expect(REGISTER/407,from(proxy),1000,jasonTcp->digestRespond()),
+         jasonTcp->expect(REGISTER/200,from(proxy),1000,new CheckContacts(jasonTcp->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         derek->invite(*jasonTcp),
+         optional(derek->expect(INVITE/100,from(proxy),1000,derek->noAction())),
+         derek->expect(INVITE/407,from(proxy),1000,chain(derek->ack(),derek->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(derek->expect(INVITE/100,from(proxy),1000,derek->noAction()))
+            ),
+            Sub
+            (
+               jasonTcp->expect(INVITE,contact(derek),1000,chain(jasonTcp->ring(),jasonTcp->answer())),
+               derek->expect(INVITE/180,contact(jasonTcp),1000,derek->noAction()),
+               derek->expect(INVITE/200,contact(jasonTcp),1000,derek->ack()),
+               jasonTcp->expect(ACK,from(proxy),1000,chain(jasonTcp->pause(1000),derek->bye())),
+               jasonTcp->expect(BYE,from(proxy),2000,jasonTcp->ok()),
+               derek->expect(BYE/200,contact(jasonTcp),1000,derek->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+   }
+
+   void
+   testInviteUDPToTCPCalleeHangsUp()
+   {
+      WarningLog(<<"*!testInviteUDPToTCPCalleeHangsUp!*");
+      Seq
+      (
+         jasonTcp->registerUser(60, jasonTcp->getDefaultContacts()),
+         jasonTcp->expect(REGISTER/407,from(proxy),1000,jasonTcp->digestRespond()),
+         jasonTcp->expect(REGISTER/200,from(proxy),1000,new CheckContacts(jasonTcp->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         derek->invite(*jasonTcp),
+         optional(derek->expect(INVITE/100,from(proxy),1000,derek->noAction())),
+         derek->expect(INVITE/407,from(proxy),1000,chain(derek->ack(),derek->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(derek->expect(INVITE/100,from(proxy),1000,derek->noAction()))
+            ),
+            Sub
+            (
+               jasonTcp->expect(INVITE,contact(derek),1000,chain(jasonTcp->ring(),jasonTcp->answer())),
+               derek->expect(INVITE/180,contact(jasonTcp),1000,derek->noAction()),
+               derek->expect(INVITE/200,contact(jasonTcp),1000,derek->ack()),
+               jasonTcp->expect(ACK,from(proxy),1000,chain(jasonTcp->pause(1000),jasonTcp->bye())),
+               derek->expect(BYE,from(proxy),2000,derek->ok()),
+               jasonTcp->expect(BYE/200,contact(derek),1000,jasonTcp->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+   }
+
+   void
+   testInviteTCPToUDPCallerHangsUp()
+   {
+      WarningLog(<<"*!testInviteTCPToUDPCallerHangsUp!*");
+      Seq
+      (
+         derek->registerUser(60, derek->getDefaultContacts()),
+         derek->expect(REGISTER/407,from(proxy),1000,derek->digestRespond()),
+         derek->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derek->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jasonTcp->invite(*derek),
+         optional(jasonTcp->expect(INVITE/100,from(proxy),1000,jasonTcp->noAction())),
+         jasonTcp->expect(INVITE/407,from(proxy),1000,chain(jasonTcp->ack(),jasonTcp->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jasonTcp->expect(INVITE/100,from(proxy),1000,derek->noAction()))
+            ),
+            Sub
+            (
+               derek->expect(INVITE,contact(jasonTcp),1000,chain(derek->ring(),derek->answer())),
+               jasonTcp->expect(INVITE/180,contact(derek),1000,jasonTcp->noAction()),
+               jasonTcp->expect(INVITE/200,contact(derek),1000,jasonTcp->ack()),
+               derek->expect(ACK,from(proxy),1000,chain(derek->pause(1000),jasonTcp->bye())),
+               derek->expect(BYE,from(proxy),2000,derek->ok()),
+               jasonTcp->expect(BYE/200,contact(derek),1000,jasonTcp->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+   }
+   
+   void
+   testInviteTCPToUDPCalleeHangsUp()
+   {
+      WarningLog(<<"*!testInviteTCPToUDPCalleeHangsUp!*");
+      Seq
+      (
+         derek->registerUser(60, derek->getDefaultContacts()),
+         derek->expect(REGISTER/407,from(proxy),1000,derek->digestRespond()),
+         derek->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derek->getDefaultContacts(),60)),
+         WaitForEndOfSeq
+      );
+      
+      ExecuteSequences();
+      
+      Seq
+      (
+         jasonTcp->invite(*derek),
+         optional(jasonTcp->expect(INVITE/100,from(proxy),1000,jasonTcp->noAction())),
+         jasonTcp->expect(INVITE/407,from(proxy),1000,chain(jasonTcp->ack(),jasonTcp->digestRespond())),
+         And
+         (
+            Sub
+            (
+               optional(jasonTcp->expect(INVITE/100,from(proxy),1000,derek->noAction()))
+            ),
+            Sub
+            (
+               derek->expect(INVITE,contact(jasonTcp),1000,chain(derek->ring(),derek->answer())),
+               jasonTcp->expect(INVITE/180,contact(derek),1000,jasonTcp->noAction()),
+               jasonTcp->expect(INVITE/200,contact(derek),1000,jasonTcp->ack()),
+               derek->expect(ACK,from(proxy),1000,chain(derek->pause(1000),derek->bye())),
+               jasonTcp->expect(BYE,from(proxy),2000,jasonTcp->ok()),
+               derek->expect(BYE/200,contact(jasonTcp),1000,derek->noAction())
+            )
+         ),
+         WaitForEndOfSeq
+         
+      );
+      
+      ExecuteSequences();
+   }
+
    void testInviteRecursiveRedirect()
    {
       WarningLog(<<"*!testInviteRecursiveRedirect!*");
@@ -6221,6 +6389,14 @@ class MyTestCase
          TEST(testInvite603Response);
          TEST(testInviteServerSpams180);
          TEST(testInviteBogusAuth);
+
+         // Double record-routing tests
+         TEST(testInviteUDPToTCPCallerHangsUp);
+         TEST(testInviteUDPToTCPCalleeHangsUp);
+         TEST(testInviteTCPToUDPCallerHangsUp);
+         TEST(testInviteTCPToUDPCalleeHangsUp);
+
+
          BUGTEST(testInviteRecursiveRedirect);
          TEST(testInvite407Dropped);
          //TEST(testInviteAck407Dropped); //tfm is bungling this one
