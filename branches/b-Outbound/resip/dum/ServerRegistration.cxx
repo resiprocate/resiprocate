@@ -55,7 +55,7 @@ ServerRegistration::accept(SipMessage& ok)
   NameAddr contact;
   for (i = contacts.begin(); i != contacts.end(); i++)
   {
-    if (i->mRegExpires - now <= 0)
+    if (i->mRegExpires <= now)
     {
       database->removeContact(mAor,*i);
       continue;
