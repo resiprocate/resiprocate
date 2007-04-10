@@ -505,8 +505,11 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       SipMessage& orig=mRequestContext.getOriginalRequest();
       SipMessage request(orig);
       
-      if(!mRequestContext.mTopRoute.uri().user().empty() &&
-         resip::InteropHelper::getOutboundSupported())
+      if(!mRequestContext.mTopRoute.uri().user().empty() && 
+         (
+            resip::InteropHelper::getOutboundSupported() || 
+            resip::InteropHelper::getRRTokenHackEnabled() 
+         ))
       {
          // .bwc. Flow token? (for outbound ONLY)
          try
@@ -547,17 +550,20 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             request.method() == SUBSCRIBE))
       {
          resip::NameAddr rt;
-         if(resip::InteropHelper::getOutboundSupported()
-               && request.header(h_Vias).size() == 1
-               && !request.empty(h_Contacts)
-               && request.header(h_Contacts).front().isWellFormed()
-               && request.header(h_Contacts).front().exists(p_regid) 
-               && request.header(h_Contacts).front().exists(p_Instance))
+         if(resip::InteropHelper::getRRTokenHackEnabled())
          {
-            // .bwc. If the source has an outbound connection with us 
-            // (evidenced by the fact that the Contact has outbound goo in it,
-            // and we are the first hop), we record the flow information in
-            // the Record-Route.
+            // .bwc. Right now, there is no defined way for an endpoint to 
+            // communicate that it is using outbound when originating a request
+            // (other than REGISTER, of course). This means that the proxy does
+            // not know when it needs to record-route with a flow-token, which
+            // leaves it up to the endpoint to ensure that whatever is in the
+            // Contact header will cause the existing connection to be reused.
+            // However, a lot (most) endpoints don't know how to do this yet, so
+            // this is the (horribly broken) workaround. This will break target-
+            // refreshes, and potentially include proxies in the dialog that 
+            // didn't record-route.
+            // !bwc! TODO replace this condition with one that determines 
+            // whether the source is using outbound
             
             rt=mRequestContext.mProxy.getRecordRoute();
             resip::Helper::massageRoute(request,rt);
@@ -609,7 +615,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
          }
       }
       
-      if(!target->rec().mReceivedFrom.mFlowKey)
+      if(target->rec().mReceivedFrom.mFlowKey)
       {
          // .bwc. We only override the destination if we are sending to an
          // outbound contact. If this is not an outbound contact, but the
