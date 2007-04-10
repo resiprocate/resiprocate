@@ -16,6 +16,12 @@ class InteropHelper
       static void setOutboundVersion(int version) {theOutboundVersion=version;}
       static bool getOutboundSupported() {return isOutboundSupported;}
       static void setOutboundSupported(bool supported) {isOutboundSupported=supported;}
+      
+      // .bwc. If this is enabled, we will record-route with flow tokens 
+      // whenever possible. This will make things work with endpoints that don't
+      // use NAT traversal tricks. The downside is that this will keep target-
+      // refreshes from working, and is liable to rope other proxies into
+      // dialogs even when they didn't record-route.
       static bool getRRTokenHackEnabled(){return useRRTokenHack;}
       static void setRRTokenHackEnabled(bool enabled) {useRRTokenHack=enabled;}
       
