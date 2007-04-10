@@ -265,10 +265,10 @@ ServerRegistration::dispatch(const SipMessage& msg)
             // maybe it would be okay to do this, but until this is officially
             // allowed, we shouldn't touch it.)
             rec.mReceivedFrom=msg.getSource();
-            
             // .bwc. In the outbound case, we should fail if the connection is
             // gone. No recovery should be attempted by the server.
             rec.mReceivedFrom.onlyUseExistingConnection=true;
+            DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
          }
       }
       else if(InteropHelper::getRRTokenHackEnabled())
@@ -282,6 +282,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
          // by most endpoints.
          rec.mReceivedFrom=msg.getSource();
          rec.mReceivedFrom.onlyUseExistingConnection=false;
+         DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
       }
       
       // Check to see if this is a removal.
@@ -298,6 +299,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
       {
         RegistrationPersistenceManager::update_status_t status;
         InfoLog (<< "Adding " << mAor << " -> " << *i  );
+        DebugLog(<< "Contact has tuple " << rec.mReceivedFrom);
          status = database->updateContact(mAor, rec);
         if (status == RegistrationPersistenceManager::CONTACT_CREATED)
         {
