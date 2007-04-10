@@ -4,6 +4,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "resip/stack/ParseException.hxx"
+#include "resip/stack/InteropHelper.hxx"
 
 using namespace resip;
 using namespace std;
@@ -39,6 +40,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* certPath = 0;
    Data basePath(getenv("HOME"));
 
+   int outboundDisabled=0;
+   int outboundVersion=8;
+   int rrTokenHackEnabled=0;
+
    struct poptOption table[] = {
       {"log-type",     'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",    'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
@@ -66,13 +71,21 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
       {"pass-phrase",   'k',  POPT_ARG_STRING, &passPhrase,  0, "pass phrase for private key", 0},
       {"cert-path",      0,   POPT_ARG_STRING, &certPath,  0, "path for certificates (default ~/.sipCerts)", 0},
+      {"disable-outbound",     0,   POPT_ARG_NONE,                            &outboundDisabled,     0, "disable outbound support (draft-ietf-sip-outbound)", 0},
+      {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "8"},
+      {"enable-flow-tokens",     0,   POPT_ARG_NONE,                            &rrTokenHackEnabled,     0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
       
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
-   poptGetNextOpt(context);
+   if (poptGetNextOpt(context) < -1)
+   {
+      cerr << "Bad command line argument entered" << endl;
+      poptPrintHelp(context, stderr, 0);
+      exit(-1);
+   }
    
    mLogType = logType;
    mLogLevel = logLevel;
@@ -106,6 +119,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    if (passPhrase) mPassPhrase = passPhrase;
    if (certPath) mCertPath = certPath;
    else mCertPath = basePath + "/.sipCerts";
+
+   InteropHelper::setOutboundVersion(outboundVersion);
+   InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
+   InteropHelper::setRRTokenHackEnabled((rrTokenHackEnabled==0) ? false : true);
    
    // pubList for publish targets
 

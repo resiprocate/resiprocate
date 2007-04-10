@@ -47,7 +47,8 @@ LocationServer::process(RequestContext& context)
          resip::ContactInstanceRecord contact = *i;
          if (contact.mRegExpires - time(NULL) >= 0)
          {
-            InfoLog (<< *this << " adding target " << contact.mContact);
+            InfoLog (<< *this << " adding target " << contact.mContact <<
+                  " with tuple " << contact.mReceivedFrom);
             if(contact.mInstance.empty() || contact.mRegId==0)
             {
                QValueTarget* target = new QValueTarget(contact);
