@@ -49,7 +49,7 @@ class InviteSession : public DialogUsage
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end(EndReason reason);
-      virtual void end(); // reason == NotSpecified ; same as above
+      virtual void end(); // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
 
       /** Rejects an offer at the SIP level.  Can also be used to 
           send a 488 to a reINVITE or UPDATE */
