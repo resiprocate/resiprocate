@@ -254,6 +254,7 @@ UdpTransport::process(FdSet& fdset)
          
          if (ok)
          {
+            DebugLog(<<"Got UDP STUN keepalive. Sending response...");
             char* response = new char[STUN_MAX_MESSAGE_SIZE];
             int rlen = stunEncodeMessage( resp, 
                                           response, 
