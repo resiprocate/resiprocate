@@ -162,11 +162,11 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
    }
 }
 
-//void
-//ClientInviteSession::end()
-//{
-//   end(NotSpecified);
-//}
+void
+ClientInviteSession::end()
+{
+   end(NotSpecified);
+}
 
 void
 ClientInviteSession::end(EndReason reason)
