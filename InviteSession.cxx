@@ -237,7 +237,6 @@ InviteSession::isAccepted() const
    {
       case UAS_Start:
       case UAS_Offer:
-      case UAS_OfferReliable:
       case UAS_NoOffer:
       case UAS_NoOfferReliable:
       case UAS_ProvidedOffer:
@@ -246,9 +245,9 @@ InviteSession::isAccepted() const
       case UAS_EarlyProvidedOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyNoOffer:
-      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
-      case UAS_EarlyReliable:
+      case UAS_NegotiatedReliable:
          return false;
       default:
          return true;
@@ -2372,16 +2371,16 @@ InviteSession::toData(State state)
 
       case UAS_Start:
          return "UAS_Start";
-      case UAS_OfferReliable:
-         return "UAS_OfferReliable";
+      case UAS_ReceivedOfferReliable:
+         return "UAS_ReceivedOfferReliable";
       case UAS_NoOfferReliable:
          return "UAS_NoOfferReliable";
       case UAS_FirstSentOfferReliable:
          return "UAS_FirstSentOfferReliable";
-      case UAS_FirstEarlyReliable:
-         return "UAS_FirstEarlyReliable";
-      case UAS_EarlyReliable:
-         return "UAS_EarlyReliable";
+      case UAS_FirstSentAnswerReliable:
+         return "UAS_FirstSentAnswerReliable";
+      case UAS_NegotiatedReliable:
+         return "UAS_NegotiatedReliable";
       case UAS_SentUpdate:
          return "UAS_SentUpdate";
       case UAS_SentUpdateAccepted:
@@ -2413,8 +2412,9 @@ bool
 InviteSession::isReliable(const SipMessage& msg)
 {
    // Ensure supported both locally and remotely
-   return msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)) &&
-          mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::C100rel));
+   return ( (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)) ||
+             msg.exists(h_Requires)   && msg.header(h_Requires).find(Token(Symbols::C100rel)) ) &&
+            mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::C100rel)) );
 }
 
 std::auto_ptr<SdpContents>
@@ -2657,9 +2657,9 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    {
       return On422Update;
    }
-   else if (method == UPDATE && code == 489)
+   else if (method == UPDATE && code == 488)
    {
-      return On489Update;
+      return On488Update;
    }
    else if (method == UPDATE && code == 491)
    {

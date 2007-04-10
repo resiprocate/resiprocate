@@ -40,6 +40,16 @@ class MasterProfile : public UserProfile
       virtual Tokens getSupportedOptionTags() const;
       virtual void clearSupportedOptionTags(void);
 
+      // Note only supported as UAC (10/29/2006)
+      typedef enum
+      {
+         Never,
+         Required,
+         IfRequested
+      } ReliableProvisionalMode;
+      virtual void setReliableProvisionalMode(ReliableProvisionalMode mode);
+      virtual ReliableProvisionalMode getReliableProvisionalMode() const;
+
       /// Default is application/sdp for INVITE, OPTIONS, PRACK and UPDATE Methods
       virtual void addSupportedMimeType(const MethodTypes& method, const Mime& mimeType);      
       virtual bool removeSupportedMimeType(const MethodTypes& method, const Mime& mimeType);      
@@ -113,6 +123,7 @@ class MasterProfile : public UserProfile
       bool mValidateAcceptEnabled;
       bool mAllowBadRegistrationEnabled;    
       bool mCheckReqUriInMergeDetectionEnabled;
+      ReliableProvisionalMode mReliableProvisionalMode;
 };
    
 }
