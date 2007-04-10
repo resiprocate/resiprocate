@@ -66,6 +66,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* adminPassword = "";
    int outboundDisabled=0;
    int outboundVersion=8;
+   int rrTokenHackEnabled=0;
 
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -123,6 +124,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"admin-password",     'a',   POPT_ARG_STRING,                            &adminPassword,     0, "set web administrator password", ""},
       {"disable-outbound",     0,   POPT_ARG_NONE,                            &outboundDisabled,     0, "disable outbound support (draft-ietf-sip-outbound)", 0},
       {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "8"},
+      {"enable-flow-tokens",     0,   POPT_ARG_NONE,                            &rrTokenHackEnabled,     0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
       {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
@@ -211,12 +213,18 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    InteropHelper::setOutboundVersion(outboundVersion);
    InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
+   InteropHelper::setRRTokenHackEnabled(rrTokenHackEnabled ? true : false);
    
-   if(InteropHelper::getOutboundSupported() && !recordRouteUri)
+   if((InteropHelper::getOutboundSupported() 
+         || InteropHelper::getRRTokenHackEnabled()
+      )
+      && !recordRouteUri)
    {
-      CritLog(<< "In order for outbound support to work, you MUST specify a "
-                  "Record-Route URI. Launching without...");
+      CritLog(<< "In order for outbound support (or the Record-Route flow-token"
+      " hack) to work, you MUST specify a Record-Route URI. Launching "
+      "without...");
       InteropHelper::setOutboundSupported(false);
+      InteropHelper::setRRTokenHackEnabled(false);
    }
 
 #ifdef HAVE_POPT_H
