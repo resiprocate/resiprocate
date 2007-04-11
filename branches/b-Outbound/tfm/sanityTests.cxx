@@ -6510,7 +6510,7 @@ int main(int argc, char** argv)
       resip::Timer::T100 = 0;
       
       TestHolder::createStatic();
-      Fixture::initialize(argc, argv);
+      Fixture::initialize(args);
       
       CppUnit::TextTestRunner runner;
 

@@ -23,7 +23,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* logType = "cout";
    char* logLevel = "INFO";
    char* tlsDomain = 0;
-   int recordRoute = 0;
+   int forceRecordRoute = 0;
    char* recordRouteUri = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
@@ -82,7 +82,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"enable-record-route",     0,  POPT_ARG_NONE,                            &recordRoute,    0, "enable record-routing by default (proxy will still record-route in cases where it is forced to by standards)", 0},
+      {"force-record-route",     0,  POPT_ARG_NONE,                            &forceRecordRoute,    0, "force record-routing", 0},
       {"record-route-uri",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
@@ -154,7 +154,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       mTlsDomain = tlsDomain;
    }
 
-   mShouldRecordRoute = recordRoute;
+   mForceRecordRoute = (forceRecordRoute!=0);
    if (recordRouteUri) 
    {
       mRecordRoute = toUri(recordRouteUri, "Record-Route");
@@ -217,14 +217,16 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    if((InteropHelper::getOutboundSupported() 
          || InteropHelper::getRRTokenHackEnabled()
+         || mForceRecordRoute
       )
       && !recordRouteUri)
    {
-      CritLog(<< "In order for outbound support (or the Record-Route flow-token"
-      " hack) to work, you MUST specify a Record-Route URI. Launching "
+      CritLog(<< "In order for outbound support, the Record-Route flow-token"
+      " hack, or force-record-route to work, you MUST specify a Record-Route URI. Launching "
       "without...");
       InteropHelper::setOutboundSupported(false);
       InteropHelper::setRRTokenHackEnabled(false);
+      mForceRecordRoute=false;
    }
 
 #ifdef HAVE_POPT_H
