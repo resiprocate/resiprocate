@@ -92,7 +92,7 @@ MYSQL_DEFINES += USE_MYSQL
 endif
 
 ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
-ARES_LIBDIRS := $(ROOT)/contrib/ares
+ARES_LIBDIRS := $(ROOT)/contrib/ares-build.$(OS_ARCH)
 ARES_LIBNAME := ares
 ARES_DEFINES := 
 
