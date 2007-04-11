@@ -70,7 +70,7 @@ $non_interactive = 0;
 $uname = `uname`;
 
 @yesno = ('yes','no');
-@toolchains = ('gnu','intel','armcross','sunpro','msgnu');
+@toolchains = ('gnu','intel','sunpro','msgnu', 'gnu-cross');
 @compiletypes = ('debug','nodebug','opt','gopt','prof','small');
 
 ######################################################################
