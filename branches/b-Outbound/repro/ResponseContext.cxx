@@ -599,8 +599,8 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,Target* target)
    resip::Data inboundFlowToken=getInboundFlowToken();
    bool needsOutboundFlowToken=outboundFlowTokenNeeded(target);
 
-   // .bwc. If we have a flow-token we need to insert, we need to double record-
-   // route. Also, we might record-route if we are configured to do so.
+   // .bwc. If we have a flow-token we need to insert, we need to record-route.
+   // Also, we might record-route if we are configured to do so.
    if( !inboundFlowToken.empty() 
       || needsOutboundFlowToken 
       || mRequestContext.mProxy.getRecordRouteEnabled() )
@@ -612,10 +612,10 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,Target* target)
       InfoLog (<< "Added Record-Route: " << rt);
    }
 
-   // .bwc. We only double record-route if the inbound and outbound 
-   // Record-Routes are different, and we are not sending to ourself.
+   // .bwc. We only double record-route if we are putting in a flow-token, and 
+   // we are not sending to ourself.
    // (if we are configured to always record-route, we will have already record-
-   // routed once above)
+   // routed once above, no sense in putting a second, identical RR in.)
    // !bwc! TODO some logic or config to allow double record-routing in other
    // circumstances (on transport switch, for instance)
    if(!sendingToSelf(target) 

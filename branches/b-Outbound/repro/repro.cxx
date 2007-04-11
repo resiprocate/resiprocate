@@ -370,7 +370,7 @@ main(int argc, char** argv)
 
    Proxy proxy(stack, 
                args.mRecordRoute, 
-               args.mShouldRecordRoute,
+               args.mForceRecordRoute,
                requestProcessors, 
                responseProcessors, 
                targetProcessors, 
