@@ -63,7 +63,7 @@ static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Da
 }
 
 void
-Fixture::initialize(int argc, char** argv)
+Fixture::initialize(CommandLineParser& args)
 {
 #if 0
    proxy = new TestProxy("proxy",
@@ -72,7 +72,7 @@ Fixture::initialize(int argc, char** argv)
 #else
    // enable for TLS testing
    //security = new resip::Security(getenv("PWD"));
-   proxy = new TestRepro("proxy", "localhost", 5060, Data::Empty, security);
+   proxy = new TestRepro("proxy", "localhost", 5060,Data::Empty,args.mForceRecordRoute, security);
    jason = makeReproUser(*proxy, "jason", "localhost", security);
    jason1 = makeReproUser(*proxy, "jason", "localhost", security);
    jason2 = makeReproUser(*proxy, "jason", "localhost", security);

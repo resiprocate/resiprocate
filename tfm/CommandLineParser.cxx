@@ -43,6 +43,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int outboundDisabled=0;
    int outboundVersion=8;
    int rrTokenHackEnabled=0;
+   int forceRecordRoute = 0;
 
    struct poptOption table[] = {
       {"log-type",     'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
@@ -74,7 +75,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-outbound",     0,   POPT_ARG_NONE,                            &outboundDisabled,     0, "disable outbound support (draft-ietf-sip-outbound)", 0},
       {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "8"},
       {"enable-flow-tokens",     0,   POPT_ARG_NONE,                            &rrTokenHackEnabled,     0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
-      
+      {"force-record-route",     0,  POPT_ARG_NONE,                            &forceRecordRoute,    0, "force record-routing", 0},
       POPT_AUTOHELP
       { NULL, 0, 0, NULL, 0 }
    };
@@ -123,7 +124,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    InteropHelper::setOutboundVersion(outboundVersion);
    InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
    InteropHelper::setRRTokenHackEnabled((rrTokenHackEnabled==0) ? false : true);
-   
+   mForceRecordRoute = (forceRecordRoute!=0);
+
    // pubList for publish targets
 
    // Free the option parsing context.

@@ -299,9 +299,9 @@ TestSipEndPoint::send(shared_ptr<SipMessage>& msg, RawConditionerFn func)
    else
    {
       // send it over the transport
+      uri.param(p_transport)=resip::toData(mTransport->transport());
       Resolver r(uri);
       assert (!r.mNextHops.empty());
-      
       mTransport->send(r.mNextHops.front(), toWrite, "bogus");
    }
 }

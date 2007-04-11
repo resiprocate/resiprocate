@@ -104,6 +104,7 @@ TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
                      int port, 
                      const resip::Data& nwInterface,
+                     bool forceRecordRoute,
                      Security* security) : 
    TestProxy(name, host, port, nwInterface),
    mStack(security),
@@ -116,7 +117,7 @@ TestRepro::TestRepro(const resip::Data& name,
    mRegData(),
    mProxy(mStack, 
           makeUri(host, port),
-          true, //<- Enable record-route
+          forceRecordRoute, //<- Enable record-route
           makeRequestProcessorChain(mRequestProcessors, mStore, mRegData,&mStack),
           makeResponseProcessorChain(mResponseProcessors),
           makeTargetProcessorChain(mTargetProcessors),
