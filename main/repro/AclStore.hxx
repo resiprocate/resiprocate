@@ -1,6 +1,7 @@
 #if !defined(REPRO_ACLSTORE_HXX)
 #define REPRO_ACLSTORE_HXX
 
+#include <list>
 #include "rutil/Data.hxx"
 #include "rutil/RWMutex.hxx"
 #include "resip/stack/Tuple.hxx"
