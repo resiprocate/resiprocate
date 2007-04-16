@@ -605,7 +605,7 @@ ResponseContext::sendRequest(const resip::SipMessage& request)
    if (request.method() == ACK)
    {
      DebugLog(<<"Posting Ack200DoneMessage");
-     mRequestContext.getProxy().post(new Ack200DoneMessage(mRequestContext.getTransactionId()));
+     mRequestContext.getProxy().post(SharedPtr<Message>(new Ack200DoneMessage(mRequestContext.getTransactionId())));
    }
 
    mRequestContext.mProxy.send(request);

@@ -5,6 +5,7 @@
 #include "rutil/dns/DnsHandler.hxx"
 #include "resip/stack/Transport.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -55,14 +56,14 @@ class TransactionState : public DnsHandler
       void rewriteRequest(const Uri& rewrite);
       void handle(DnsResult*);
 
-      void processStateless(TransactionMessage* msg);
-      void processClientNonInvite(TransactionMessage* msg);
-      void processClientInvite(TransactionMessage* msg);
-      void processServerNonInvite(TransactionMessage* msg);
-      void processServerInvite(TransactionMessage* msg);
-      void processClientStale(TransactionMessage* msg);
-      void processServerStale(TransactionMessage* msg);
-      void processTransportFailure(TransactionMessage* failure);
+      void processStateless(SharedPtr<TransactionMessage> msg);
+      void processClientNonInvite(SharedPtr<TransactionMessage> msg);
+      void processClientInvite(SharedPtr<TransactionMessage> msg);
+      void processServerNonInvite(SharedPtr<TransactionMessage> msg);
+      void processServerInvite(SharedPtr<TransactionMessage> msg);
+      void processClientStale(SharedPtr<TransactionMessage> msg);
+      void processServerStale(SharedPtr<TransactionMessage> msg);
+      void processTransportFailure(SharedPtr<TransactionMessage> failure);
       void processNoDnsResults();
       void processReliability(TransportType type);
       
@@ -81,8 +82,8 @@ class TransactionState : public DnsHandler
       bool isSentUnreliable(TransactionMessage* msg) const;
       bool isReliabilityIndication(TransactionMessage* msg) const;
       bool isSentIndication(TransactionMessage* msg) const;
-      void sendToTU(TransactionMessage* msg) const;
-      static void sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg);
+      void sendToTU(SharedPtr<TransactionMessage> msg) const;
+      static void sendToTU(TransactionUser* tu, TransactionController& controller, SharedPtr<TransactionMessage> msg);
       void sendToWire(TransactionMessage* msg, bool retransmit=false);
       SipMessage* make100(SipMessage* request) const;
       void terminateClientTransaction(const Data& tid); 
@@ -91,7 +92,7 @@ class TransactionState : public DnsHandler
 
       void startServerNonInviteTimerTrying(SipMessage& sip, Data& tid);
 
-      static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine, const Data& tid);
+      static std::auto_ptr<TransactionState> makeCancelTransaction(TransactionState* tran, Machine machine, const Data& tid);
       
       /**
          Attempts to responds to a malformed non-ACK request.
@@ -112,7 +113,7 @@ class TransactionState : public DnsHandler
       bool mIsReliable;
 
       // !rk! The contract for this variable needs to be defined.
-      SipMessage* mMsgToRetransmit;
+      SharedPtr<SipMessage> mMsgToRetransmit;
 
       // Handle to the dns results queried by the TransportSelector
       DnsResult* mDnsResult;

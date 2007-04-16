@@ -6,6 +6,7 @@
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Fifo.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -20,7 +21,7 @@ class TuSelector
       TuSelector(TimeLimitFifo<Message>& fallBackFifo);
       ~TuSelector();
       
-      void add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
+      void add(SharedPtr<Message> msg, TimeLimitFifo<Message>::DepthUsage usage);
       void add(ConnectionTerminated* term);
       
       unsigned int size() const;      

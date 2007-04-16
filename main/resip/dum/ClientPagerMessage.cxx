@@ -152,7 +152,7 @@ void
 ClientPagerMessage::pageCommand(std::auto_ptr<Contents> contents,
                                 DialogUsageManager::EncryptionLevel level)
 {
-   mDum.post(new ClientPagerMessagePageCommand(*this, contents, level));
+   mDum.post(SharedPtr<Message>(new ClientPagerMessagePageCommand(*this, contents, level)));
 }
 
 void
@@ -243,7 +243,7 @@ private:
 void
 ClientPagerMessage::endCommand()
 {
-   mDum.post(new ClientPagerMessageEndCommand(*this));
+   mDum.post(SharedPtr<Message>(new ClientPagerMessageEndCommand(*this)));
 }
 
 size_t

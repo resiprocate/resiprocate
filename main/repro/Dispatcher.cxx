@@ -41,10 +41,12 @@ Dispatcher::~Dispatcher()
 
    mWorkerThreads.clear();
 
-   while(!mFifo.empty())
-   {
-      delete mFifo.getNext();
-   }
+   // !nash! let smart_ptr delete it
+   //while(!mFifo.empty())
+   //{
+   //   delete mFifo.getNext();
+   //}
+   mFifo.clear();
    
    delete mWorkerPrototype;
    
@@ -56,7 +58,7 @@ Dispatcher::post(std::auto_ptr<resip::ApplicationMessage> work)
    resip::ReadLock r(mMutex);
    if(mAcceptingWork)
    {
-      mFifo.add(work.release(),
+      mFifo.add(resip::SharedPtr<resip::ApplicationMessage>(work.release()),
                   resip::TimeLimitFifo<resip::ApplicationMessage>::InternalElement);
       return true;
    }

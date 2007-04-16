@@ -8,6 +8,7 @@
 #include "rutil/Fifo.hxx"
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Timer.hxx"
+#include "rutil/SharedPtr.hxx"
 
 // .dlb. 
 // to do: timer wheel for transaction-bound timers and a heap for
@@ -59,7 +60,7 @@ class BaseTimeLimitTimerQueue : public BaseTimerQueue
       void add(const Timer& timer);
       virtual void process();
    protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage)=0;      
+      virtual void addToFifo(SharedPtr<Message>, TimeLimitFifo<Message>::DepthUsage)=0;      
 };
 
 
@@ -68,7 +69,7 @@ class TimeLimitTimerQueue : public BaseTimeLimitTimerQueue
    public:
       TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo);
    protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
+      virtual void addToFifo(SharedPtr<Message>, TimeLimitFifo<Message>::DepthUsage);      
    private:
       TimeLimitFifo<Message>& mFifo;
 };
@@ -79,7 +80,7 @@ class TuSelectorTimerQueue : public BaseTimeLimitTimerQueue
    public:
       TuSelectorTimerQueue(TuSelector& sel);
    protected:
-      virtual void addToFifo(Message*, TimeLimitFifo<Message>::DepthUsage);      
+      virtual void addToFifo(SharedPtr<Message>, TimeLimitFifo<Message>::DepthUsage);      
    private:
       TuSelector& mFifoSelector;
 };
