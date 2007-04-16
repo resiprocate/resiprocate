@@ -66,9 +66,9 @@ void EncryptionManager::setRemoteCertStore(std::auto_ptr<RemoteCertStore> store)
    //mRemoteCertStore = store;
 }
 
-DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
+DumFeature::ProcessingResult EncryptionManager::process(SharedPtr<Message> msg)
 {
-   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+   SharedPtr<SipMessage> sipMsg(msg, dynamic_cast_tag());
 
    if (sipMsg)
    {
@@ -90,7 +90,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       }
    }
 
-   OutgoingEvent* event = dynamic_cast<OutgoingEvent*>(msg);
+   SharedPtr<OutgoingEvent> event(msg, dynamic_cast_tag());
    if (event)
    {
       if (!event->message()->getContents())
@@ -162,7 +162,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
    }
 
    // Todo: change CertMessage to DumFeatureMessage.
-   CertMessage* certMsg = dynamic_cast<CertMessage*>(msg);
+   SharedPtr<CertMessage> certMsg(msg, dynamic_cast_tag());
    if (certMsg)
    {
       EncryptionManager::Result result = processCertMessage(certMsg);
@@ -172,7 +172,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
       }
       else
       {
-         delete msg;
+         // delete msg; // !nash! let smart_ptr delete it
          return DumFeature::EventTaken;
       }
    }
@@ -180,7 +180,7 @@ DumFeature::ProcessingResult EncryptionManager::process(Message* msg)
    return DumFeature::FeatureDone;
 }
 
-EncryptionManager::Result EncryptionManager::processCertMessage(CertMessage* message)
+EncryptionManager::Result EncryptionManager::processCertMessage(SharedPtr<CertMessage> message)
 {
    InfoLog( << "Received a cert message: " << *message << endl);
    Result ret = Pending;
@@ -268,7 +268,7 @@ Contents* EncryptionManager::signAndEncrypt(SharedPtr<SipMessage> msg,
    return contents;
 }
 
-bool EncryptionManager::decrypt(SipMessage* msg)
+bool EncryptionManager::decrypt(SharedPtr<SipMessage> msg)
 {
    Decrypt* request = new Decrypt(mDum, mRemoteCertStore.get(), msg, *this);
    bool ret = true;
@@ -340,7 +340,7 @@ EncryptionManager::Request::~Request()
 
 void EncryptionManager::Request::response415()
 {
-   SipMessage* response = Helper::makeResponse(*mMsgToEncrypt, 415);
+   SharedPtr<SipMessage> response(Helper::makeResponse(*mMsgToEncrypt, 415));
    mDum.post(response);
    InfoLog(<< "Generated 415" << endl);
 }
@@ -433,9 +433,9 @@ EncryptionManager::Result EncryptionManager::Sign::received(bool success,
          MultipartSignedContents* msc = mDum.getSecurity()->sign(aor, mMsgToEncrypt->getContents());
          mMsgToEncrypt->setContents(auto_ptr<Contents>(msc));
          DumHelper::setEncryptionPerformed(*mMsgToEncrypt);
-         OutgoingEvent* event = new OutgoingEvent(mMsgToEncrypt);
+         SharedPtr<OutgoingEvent> event(new OutgoingEvent(mMsgToEncrypt));
          //mTaken = false;
-         mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));
+         mDum.post(SharedPtr<Message>(new TargetCommand(mDum.dumOutgoingTarget(), event)));
          result = Complete;
       }
    }
@@ -528,9 +528,9 @@ EncryptionManager::Result EncryptionManager::Encrypt::received(bool success,
       Pkcs7Contents* encrypted = mDum.getSecurity()->encrypt(mMsgToEncrypt->getContents(), aor);
       mMsgToEncrypt->setContents(auto_ptr<Contents>(encrypted));
       DumHelper::setEncryptionPerformed(*mMsgToEncrypt);
-      OutgoingEvent* event = new OutgoingEvent(mMsgToEncrypt);
+      SharedPtr<OutgoingEvent> event(new OutgoingEvent(mMsgToEncrypt));
       //mTaken = false;
-      mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));      
+      mDum.post(SharedPtr<Message>(new TargetCommand(mDum.dumOutgoingTarget(), event)));
    }
    else
    {
@@ -636,9 +636,9 @@ EncryptionManager::Result EncryptionManager::SignAndEncrypt::received(bool succe
          Contents* contents = doWork();
          mMsgToEncrypt->setContents(auto_ptr<Contents>(contents));
          DumHelper::setEncryptionPerformed(*mMsgToEncrypt);
-         OutgoingEvent* event = new OutgoingEvent(mMsgToEncrypt);
+         SharedPtr<OutgoingEvent> event(new OutgoingEvent(mMsgToEncrypt));
          //mTaken = false;
-         mDum.post(new TargetCommand(mDum.dumOutgoingTarget(), auto_ptr<Message>(event)));
+         mDum.post(SharedPtr<Message>(new TargetCommand(mDum.dumOutgoingTarget(), event)));
          result = Complete;
       }
    }
@@ -683,7 +683,7 @@ Contents* EncryptionManager::SignAndEncrypt::doWork()
 
 EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
                                     RemoteCertStore* store, 
-                                    SipMessage* msg,
+                                    SharedPtr<SipMessage> msg,
                                     DumFeature& feature)
    : Request(dum, store, SharedPtr<SipMessage>(), feature),
      mIsEncrypted(false),
@@ -704,10 +704,11 @@ EncryptionManager::Decrypt::Decrypt(DialogUsageManager& dum,
 
 EncryptionManager::Decrypt::~Decrypt()
 {
-   if (mMessageTaken)
-   {
-      delete mMsgToDecrypt;
-   }
+   // !nash! let smart_ptr delete it
+   //if (mMessageTaken)
+   //{
+   //   delete mMsgToDecrypt;
+   //}
 }
 
 bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
@@ -778,7 +779,7 @@ bool EncryptionManager::Decrypt::decrypt(Helper::ContentsSecAttrs& csa)
       }
    }
 
-   csa = getContents(mMsgToDecrypt, *mDum.getSecurity(), noDecryptionKey);
+   csa = getContents(mMsgToDecrypt.get(), *mDum.getSecurity(), noDecryptionKey);
    return true;
 }
 
@@ -841,7 +842,7 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
    if (Complete == result)
    {
       Helper::ContentsSecAttrs csa;
-      csa = getContents(mMsgToDecrypt, *mDum.getSecurity(), 
+      csa = getContents(mMsgToDecrypt.get(), *mDum.getSecurity(), 
                         (!mDum.getSecurity()->hasUserCert(mDecryptor) || !mDum.getSecurity()->hasUserPrivateKey(mDecryptor)));
 
 
@@ -870,7 +871,7 @@ EncryptionManager::Result EncryptionManager::Decrypt::received(bool success,
       // Todo: make CertMessage DumFeatureMessage and get rid of DumDecrypted.
       // Currently the message will not be processed by 
       // any features in the chain after EncryptionManager.
-      DumDecrypted* decrypted = new DumDecrypted(*mMsgToDecrypt);
+      SharedPtr<DumDecrypted> decrypted(new DumDecrypted(*mMsgToDecrypt));
       mDum.post(decrypted);
    }
 

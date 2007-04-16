@@ -92,11 +92,11 @@ main(int argc, char* argv[])
       stack->process(fdset);
       needToProcessSend = false;
 
-      Message* msg = stack->receive();
+      SharedPtr<Message> msg = stack->receive();
 
       if (msg)
       {
-         SipMessage* received = dynamic_cast<SipMessage*>(msg);
+         SharedPtr<SipMessage> received(msg, dynamic_cast_tag());
          if (received)
          {
            --count;

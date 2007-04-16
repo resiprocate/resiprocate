@@ -113,7 +113,7 @@ main(int argc, char* argv[])
          assert(0);
       }
       
-      SipMessage* request = receiver.receive();
+      SharedPtr<SipMessage> request = receiver.receive();
       static NameAddr contact;
 
       if (request)
@@ -139,7 +139,7 @@ main(int argc, char* argv[])
                assert(0);
             }
          }
-         delete request;
+         //delete request;
       }
    }      
    

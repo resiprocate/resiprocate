@@ -20,9 +20,9 @@ class FixMissingContact : public DumFeature
       {
       }
       
-      virtual ProcessingResult process(Message* msg)
+      virtual ProcessingResult process(SharedPtr<Message> msg)
       {
-         SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+         SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
 
          if (sip)
          {
@@ -67,9 +67,9 @@ class OverrideContact : public DumFeature
       {
       }
       
-      virtual ProcessingResult process(Message* msg)
+      virtual ProcessingResult process(SharedPtr<Message> msg)
       {
-         OutgoingEvent* og = dynamic_cast<OutgoingEvent*>(msg);
+         SharedPtr<OutgoingEvent> og(msg, dynamic_cast_tag());
          if (og)
          {
             SharedPtr<SipMessage> sip = og->message();

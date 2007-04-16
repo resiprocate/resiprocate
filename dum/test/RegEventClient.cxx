@@ -89,7 +89,7 @@ RegEventClient::run()
 void
 RegEventClient::watchAor(const resip::Uri& aor)
 {
-   AddAor* add = new AddAor(*this, aor);
+   SharedPtr<AddAor> add(new AddAor(*this, aor));
    mDum.post(add);
 }
  
