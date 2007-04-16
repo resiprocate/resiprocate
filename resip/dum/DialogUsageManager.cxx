@@ -830,11 +830,11 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
 
    DebugLog (<< "SEND: " << std::endl << std::endl << *msg);
 
-   OutgoingEvent* event = new OutgoingEvent(msg);
-   outgoingProcess(auto_ptr<Message>(event));
+   SharedPtr<OutgoingEvent> event(new OutgoingEvent(msg));
+   outgoingProcess(event);
 }
 
-void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
+void DialogUsageManager::outgoingProcess(SharedPtr<Message> message)
 {
    Data tid = Data::Empty;
    {
@@ -854,7 +854,7 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
 
    if (tid == Data::Empty && mOutgoingMessageInterceptor.get())
    {
-      mOutgoingMessageInterceptor->process(message.get());
+      mOutgoingMessageInterceptor->process(message);
       return;
    }
    else if (tid != Data::Empty && !mOutgoingFeatureList.empty())
@@ -873,7 +873,7 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
          }
       }
       
-      DumFeatureChain::ProcessingResult res = it->second->process(message.get());
+      DumFeatureChain::ProcessingResult res = it->second->process(message);
       
       if (res & DumFeatureChain::ChainDoneBit)
       {
@@ -883,7 +883,7 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
 
       if (res & DumFeatureChain::EventTakenBit)
       {
-         message.release();
+         // message.release(); // !nash! let smart_ptr handle it
          return;
       }
    }
@@ -980,7 +980,7 @@ DialogUsageManager::destroy(const BaseUsage* usage)
 {
    if (mShutdownState != Destroying)
    {
-      post(new DestroyUsage(usage->mHandle));
+      post(SharedPtr<Message>(new DestroyUsage(usage->mHandle)));
    }
    else
    {
@@ -993,7 +993,7 @@ DialogUsageManager::destroy(DialogSet* dset)
 {
    if (mShutdownState != Destroying)
    {
-      post(new DestroyUsage(dset));
+      post(SharedPtr<Message>(new DestroyUsage(dset)));
    }
    else
    {
@@ -1006,7 +1006,7 @@ DialogUsageManager::destroy(Dialog* d)
 {
    if (mShutdownState != Destroying)
    {
-      post(new DestroyUsage(d));
+      post(SharedPtr<Message>(new DestroyUsage(d)));
    }
    else
    {
@@ -1087,7 +1087,7 @@ DialogUsageManager::findInviteSession(CallId replaces)
 }
 
 void
-DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
+DialogUsageManager::internalProcess(SharedPtr<Message> msg)
 {
    // After a Stack ShutdownMessage has been received, don't do anything else in dum
    if (mShutdownState == Shutdown)
@@ -1154,9 +1154,9 @@ DialogUsageManager::internalProcess(std::auto_ptr<Message> msg)
       if (terminated)
       {
          DebugLog(<< "connection terminated message");
-         if (mConnectionTerminatedEventDispatcher.dispatch(msg.get()))
+         if (mConnectionTerminatedEventDispatcher.dispatch(msg))
          {
-            msg.release();
+            //msg.release(); // !nash! let smart_ptr delete it
          }
          return;
       }
@@ -1200,7 +1200,7 @@ DialogUsageManager::processExternalMessage(ExternalMessageBase* externalMessage)
 }
 
 void 
-DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
+DialogUsageManager::incomingProcess(SharedPtr<Message> msg)
 {
    //call or create feature chain if appropriate
    Data tid = Data::Empty;
@@ -1272,7 +1272,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
          }
       }
       
-      DumFeatureChain::ProcessingResult res = it->second->process(msg.get());
+      DumFeatureChain::ProcessingResult res = it->second->process(msg);
       
       if (res & DumFeatureChain::ChainDoneBit)
       {
@@ -1283,7 +1283,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
  
       if (res & DumFeatureChain::EventTakenBit)
       {
-         msg.release();
+         // msg.release(); // // !nash! let smart_ptr handle it
          //DebugLog(<< "event taken");
          return;
       }
@@ -1373,11 +1373,11 @@ DialogUsageManager::process(resip::RWMutex* mutex)
       if (mutex)
       {
          resip::Lock lock(*mutex); 
-         internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+         internalProcess(mFifo.getNext());
       }
       else
       {
-         internalProcess(std::auto_ptr<Message>(mFifo.getNext()));
+         internalProcess(mFifo.getNext());
       }
    }
    return mFifo.messageAvailable();
@@ -1386,15 +1386,15 @@ DialogUsageManager::process(resip::RWMutex* mutex)
 bool 
 DialogUsageManager::process(int timeoutMs, resip::RWMutex* mutex)
 {
-   std::auto_ptr<Message> message;
+   SharedPtr<Message> message;
 
    if(timeoutMs == -1)
    {
-      message.reset(mFifo.getNext());
+      message = mFifo.getNext();
    }
    else
    {
-      message.reset(mFifo.getNext(timeoutMs));
+      message = mFifo.getNext(timeoutMs);
    }
    if (message.get())
    {

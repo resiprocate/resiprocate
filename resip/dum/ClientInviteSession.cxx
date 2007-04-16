@@ -647,13 +647,13 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case On2xxOffer:
          transition(UAC_Answered);
          handleFinalResponse(msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          if(!isTerminated())  
          {
-            handler->onOffer(getSessionHandle(), msg, *sdp);
+            handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
             if(!isTerminated())  
             {
                handler->onConnected(getHandle(), msg);  
@@ -668,11 +668,11 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          //mCurrentLocalSdp = mProposedLocalSdp;
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         mCurrentRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), Answer, msg);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
-            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
+            handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp, InviteSessionHandler::FirstInvite);
             if(!isTerminated())  // onAnswer callback may call end() or reject()
             {
                handler->onConnected(getHandle(), msg);
@@ -756,9 +756,9 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
          assert(mProposedLocalSdp.get() == 0);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
 
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
          if(!isTerminated())  
          {
             handler->onConnected(getHandle(), msg);   
@@ -772,8 +772,8 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          //mCurrentLocalSdp = mProposedLocalSdp;
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
+         mCurrentRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+         handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp, InviteSessionHandler::FirstInvite);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
             handler->onConnected(getHandle(), msg);
@@ -1090,8 +1090,8 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case OnUpdateOffer:
          transition(UAC_ReceivedUpdateEarly);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
          break;
 
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure

@@ -7,7 +7,7 @@ using namespace std;
 
 
 TargetCommand::TargetCommand(Target& target,
-                             auto_ptr<Message> message)
+                             SharedPtr<Message> message)
    : mTarget(target),
      mMessage(message)
 {

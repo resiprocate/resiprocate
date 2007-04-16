@@ -71,7 +71,7 @@ TransactionController::process(FdSet& fdset)
 // shutdown message?
    {
       //!dcm! -- send to all?
-      mTuSelector.add(new ShutdownMessage, TimeLimitFifo<Message>::InternalElement);
+      mTuSelector.add(SharedPtr<ShutdownMessage>(new ShutdownMessage), TimeLimitFifo<Message>::InternalElement);
    }
    else
    {

@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include "rutil/AbstractFifo.hxx"
+#include "rutil/SharedPtr.hxx"
 #include <iostream>
 #if defined( WIN32 )
 #include <time.h>
@@ -22,12 +23,12 @@ class TimeLimitFifo : public AbstractFifo
       class Timestamped
       {
          public:
-            Timestamped(Msg* msg, time_t n)
+            Timestamped(SharedPtr<Msg> msg, time_t n)
                : mMsg(msg),
                  mTime(n)
             {}
 
-            Msg* mMsg;
+            SharedPtr<Msg> mMsg;
             time_t mTime;
       };
 
@@ -35,31 +36,31 @@ class TimeLimitFifo : public AbstractFifo
       typedef enum {EnforceTimeDepth, IgnoreTimeDepth, InternalElement} DepthUsage;
 
       /// After it runs out of the lesser of these limits it will start to refuse messages
-	  TimeLimitFifo(unsigned int maxDurationSecs,
-                    unsigned int maxSize);
+      TimeLimitFifo(unsigned int maxDurationSecs,
+                      unsigned int maxSize);
 
       virtual ~TimeLimitFifo();
       
       /// Add a message to the fifo.
       /// return true iff succeeds
-	  /// @param Msg* 'Message pointer'
+      /// @param SharedPtr<T> 'Message shared pointer'
       /// @param DepthUsage : (Needs work...)
       ///    EnforceTimeDepth -- external (non ACK) requests
       ///    IgnoreTimeDepth -- external reponse and ACK
       ///    InternalElement -- internal messages (timers, application postbacks..); use reserved queue space
       ///
-	  ///    +------------------------------------------------------+
-	  ///    |                                |          |          |
-	  ///    +------------------------------------------------------+
-	  ///    <-----enforce------------------->
-	  ///    <---------------ignoreTimeDepth------------>
-	  ///    <--------------------- internalElement---------------->
-	  ///
-	  ///    enforce will drop things that exceed the queue 
-	  ///    ignore will go past that limit to the extent of the queue (eg. 
-	  ///    internal will basically not drop anything
-	  ///
-	  bool add(Msg* msg, DepthUsage usage);
+	   ///    +------------------------------------------------------+
+	   ///    |                                |          |          |
+	   ///    +------------------------------------------------------+
+	   ///    <-----enforce------------------->
+	   ///    <---------------ignoreTimeDepth------------>
+	   ///    <--------------------- internalElement---------------->
+	   ///
+	   ///    enforce will drop things that exceed the queue 
+	   ///    ignore will go past that limit to the extent of the queue (eg. 
+	   ///    internal will basically not drop anything
+	   ///
+      bool add(SharedPtr<Msg> msg, DepthUsage usage);
 
       /** Returns the first message available. It will wait if no
        *  messages are available. If a signal interrupts the wait,
@@ -67,8 +68,8 @@ class TimeLimitFifo : public AbstractFifo
        *  via getNext. If you need to detect a signal, use block
        *  prior to calling getNext.
        **/
-      Msg* getNext();
-      Msg* getNext(int ms);
+      SharedPtr<Msg> getNext();
+      SharedPtr<Msg> getNext(int ms);
       
       /// Return the time depth of the queue. Zero if no depth.
       virtual time_t timeDepth() const;
@@ -109,7 +110,7 @@ TimeLimitFifo<Msg>::~TimeLimitFifo()
 
 template <class Msg>
 bool
-TimeLimitFifo<Msg>::add(Msg* msg,
+TimeLimitFifo<Msg>::add(SharedPtr<Msg> msg,
                         DepthUsage usage)
 {
    Lock lock(mMutex); (void)lock;
@@ -118,7 +119,7 @@ TimeLimitFifo<Msg>::add(Msg* msg,
    {
       time_t n = time(0);
       mFifo.push_back(new Timestamped(msg, n));
-      mSize++;
+      ++mSize;
       mCondition.signal();
       return true;
    }
@@ -138,7 +139,7 @@ TimeLimitFifo<Msg>::wouldAccept(DepthUsage usage) const
 }
 
 template <class Msg>
-Msg*
+SharedPtr<Msg>
 TimeLimitFifo<Msg>::getNext()
 {
    std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext()));
@@ -146,7 +147,7 @@ TimeLimitFifo<Msg>::getNext()
 }
 
 template <class Msg>
-Msg*
+SharedPtr<Msg>
 TimeLimitFifo<Msg>::getNext(int ms)
 {
    std::auto_ptr<Timestamped> tm(static_cast<Timestamped*>(AbstractFifo::getNext(ms)));
@@ -156,7 +157,7 @@ TimeLimitFifo<Msg>::getNext(int ms)
    }
    else
    {
-      return 0;
+      return SharedPtr<Msg>();
    }
 }
 
@@ -170,9 +171,9 @@ TimeLimitFifo<Msg>::timeDepthInternal() const
    return time(0) - tm->mTime;
 }   
 
-template <class Msg>
+template <class T>
 bool
-TimeLimitFifo<Msg>::wouldAcceptInteral(DepthUsage usage) const
+TimeLimitFifo<T>::wouldAcceptInteral(DepthUsage usage) const
 {
    if ((mMaxSize != 0 &&
         mSize >= mMaxSize))
@@ -232,7 +233,7 @@ TimeLimitFifo<Msg>::clear()
    while (!mFifo.empty())
    {
       Timestamped* tm = static_cast<Timestamped*>(mFifo.front());
-      delete tm->mMsg;
+      // delete tm->mMsg;
       delete tm;
 
       mFifo.pop_front();

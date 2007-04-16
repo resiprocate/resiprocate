@@ -121,11 +121,12 @@ SipStack::addTransport( TransportType protocol,
    {
       switch (protocol)
       {
-         case UDP:
-            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression);
-            break;
          case TCP:
             transport = new TcpTransport(stateMacFifo, port, version, ipInterface, *mCompression);
+            break;
+         case UDP:
+            assert(mSocketFunc==NULL);
+            transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression);
             break;
          case TLS:
 #if defined( USE_SSL )
@@ -389,8 +390,8 @@ void
 SipStack::post(const ApplicationMessage& message)
 {
    assert(!mShuttingDown);
-   Message* toPost = message.clone();
-   //mTUFifo.add(toPost, TimeLimitFifo<Message>::InternalElement);
+   SharedPtr<Message> toPost(message.clone());
+   //mTUFifo.add(toPost, TimeLimitFifo<SharedPtr<Message> >::InternalElement);
    mTuSelector.add(toPost, TimeLimitFifo<Message>::InternalElement);
 }
 
@@ -446,7 +447,7 @@ SipStack::hasMessage() const
    return mTUFifo.messageAvailable();
 }
 
-SipMessage* 
+SharedPtr<SipMessage> 
 SipStack::receive()
 {
    // Check to see if a message is available and if it is return the 
@@ -455,8 +456,8 @@ SipStack::receive()
    {
       // we should only ever have SIP messages on the TU Fifo
       // unless we've registered for termination messages. 
-      Message* msg = mTUFifo.getNext();
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      SharedPtr<Message> msg(mTUFifo.getNext());
+      SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
       if (sip)
       {
          DebugLog (<< "RECV: " << sip->brief());
@@ -466,17 +467,17 @@ SipStack::receive()
       {
          // assert(0); // !CJ! removed the assert - happens 1 minute after
          // stack starts up
-         delete msg;
-         return 0;
+         // delete msg; // !nash! let smart_ptr delete it
+         return SharedPtr<SipMessage>();
       }
    }
    else
    {
-      return 0;
+      return SharedPtr<SipMessage>();
    }
 }
 
-Message*
+SharedPtr<Message>
 SipStack::receiveAny()
 {
    // Check to see if a message is available and if it is return the 
@@ -484,8 +485,8 @@ SipStack::receiveAny()
    if (mTUFifo.messageAvailable())
    {
       // application messages can flow through
-      Message* msg = mTUFifo.getNext();
-      SipMessage* sip=dynamic_cast<SipMessage*>(msg);
+      SharedPtr<Message> msg(mTUFifo.getNext());
+      SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
       if (sip)
       {
          DebugLog (<< "RECV: " << sip->brief());
@@ -494,7 +495,7 @@ SipStack::receiveAny()
    }
    else
    {
-      return 0;
+      return SharedPtr<Message>();
    }
 }
 
