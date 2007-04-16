@@ -18,16 +18,18 @@ IdentityHandler::IdentityHandler(DialogUsageManager& dum, TargetCommand::Target&
 
 IdentityHandler::~IdentityHandler()
 {
-   for (RequiresCerts::iterator it = mRequiresCerts.begin(); it != mRequiresCerts.end(); ++it)
-   {
-      delete it->second;
-   }
+   // !nash! let smart_ptr delete it
+   //for (RequiresCerts::iterator it = mRequiresCerts.begin(); it != mRequiresCerts.end(); ++it)
+   //{
+   //   delete it->second;
+   //}
+   mRequiresCerts.clear();
 }
 
 DumFeature::ProcessingResult 
-IdentityHandler::process(Message* msg)
+IdentityHandler::process(SharedPtr<Message> msg)
 {
-   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+   SharedPtr<SipMessage> sipMsg(msg, dynamic_cast_tag());
    if (sipMsg)
    {
       if (queueForIdentityCheck(sipMsg))
@@ -40,7 +42,7 @@ IdentityHandler::process(Message* msg)
       }
    }
    
-   HttpGetMessage* httpMsg = dynamic_cast<HttpGetMessage*>(msg);
+   SharedPtr<HttpGetMessage> httpMsg(msg, dynamic_cast_tag());
    if (httpMsg)
    {
       processIdentityCheckResponse(*httpMsg);         
@@ -51,7 +53,7 @@ IdentityHandler::process(Message* msg)
 }
 
 bool
-IdentityHandler::queueForIdentityCheck(SipMessage* sipMsg)
+IdentityHandler::queueForIdentityCheck(SharedPtr<SipMessage> sipMsg)
 {
 #if defined(USE_SSL)
    if (sipMsg->exists(h_Identity) &&
@@ -105,7 +107,7 @@ IdentityHandler::processIdentityCheckResponse(const HttpGetMessage& msg)
    if (it != mRequiresCerts.end())
    {
       mDum.getSecurity()->checkAndSetIdentity( *it->second, msg.getBodyData() );
-      postCommand(auto_ptr<Message>(it->second));
+      postCommand(it->second);
       mRequiresCerts.erase(it);
    }
 #endif

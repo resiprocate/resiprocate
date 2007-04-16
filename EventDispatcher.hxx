@@ -7,6 +7,7 @@
 #include "resip/dum/Postable.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/Lock.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -19,12 +20,12 @@ class EventDispatcher
       {
       }
 
-      bool dispatch(Message* msg)
+      bool dispatch(SharedPtr<Message> msg)
       {
          Lock lock(mMutex);
          bool ret = false;
          
-         E* event = dynamic_cast<E*>(msg);
+         SharedPtr<E > event(msg, dynamic_cast_tag());
          if (event)
          {
             if(mListeners.size() > 0)
@@ -40,7 +41,7 @@ class EventDispatcher
                   else
                   {
                      ++counter;
-                     (*it)->post(msg->clone());
+                     (*it)->post(SharedPtr<Message>(msg->clone()));
                   }
                }
             }         

@@ -16,7 +16,7 @@ DumFeature::~DumFeature()
 {
 }   
 
-void DumFeature::postCommand(std::auto_ptr<Message> message)
+void DumFeature::postCommand(SharedPtr<Message> message)
 {
-   mDum.post(new TargetCommand(mTarget, message));
+   mDum.post(SharedPtr<Message>(new TargetCommand(mTarget, message)));
 }
