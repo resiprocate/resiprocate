@@ -8,6 +8,7 @@
 #include "resip/dum/DumTimeout.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/dum/PublicationHandler.hxx"
+#include "rutil/SharedPtr.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -75,7 +76,7 @@ private:
 void
 ClientPublication::endCommand()
 {
-   mDum.post(new ClientPublicationEndCommand(*this));
+   mDum.post(SharedPtr<Message>(new ClientPublicationEndCommand(*this)));
 }
 
 void 
@@ -262,7 +263,7 @@ private:
 void
 ClientPublication::refreshCommand(unsigned int expiration)
 {
-   mDum.post(new ClientPublicationRefreshCommand(*this, expiration));
+   mDum.post(SharedPtr<Message>(new ClientPublicationRefreshCommand(*this, expiration)));
 }
 
 void
@@ -316,7 +317,7 @@ private:
 void
 ClientPublication::updateCommand(const Contents* body)
 {
-   mDum.post(new ClientPublicationUpdateCommand(*this, body));
+   mDum.post(SharedPtr<Message>(new ClientPublicationUpdateCommand(*this, body)));
 }
 
 void 

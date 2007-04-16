@@ -52,7 +52,7 @@ main(int argc, char* argv[])
    try
    {
       SipStack sipStack;
-      SipMessage* msg=NULL;
+      SharedPtr<SipMessage> msg;
 
       InfoLog ( << "Try to send a message" );
 	      

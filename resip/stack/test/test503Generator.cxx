@@ -36,7 +36,7 @@ main(int argc, char* argv[])
       stack.buildFdSet(fdset);
       fdset.selectMilliSeconds(1000); 
       stack.process(fdset);
-      SipMessage* msg = stack.receive();
+      SharedPtr<SipMessage> msg = stack.receive();
       if (msg && msg->isRequest())
       {
          SipMessage* resp = Helper::makeResponse(*msg, 503);
@@ -44,7 +44,7 @@ main(int argc, char* argv[])
          InfoLog( << "Generated 503 to: " << msg->brief());
          delete resp;
       }
-      delete msg;
+      //delete msg;
    }
 
 }

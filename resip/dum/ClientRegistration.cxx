@@ -14,6 +14,7 @@
 #include "rutil/Random.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/SharedPtr.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -240,7 +241,7 @@ private:
 void
 ClientRegistration::removeMyBindingsCommand(bool stopRegisteringWhenDone)
 {
-   mDum.post(new ClientRegistrationRemoveMyBindings(*this, stopRegisteringWhenDone));
+   mDum.post(SharedPtr<Message>(new ClientRegistrationRemoveMyBindings(*this, stopRegisteringWhenDone)));
 }
 
 void 
@@ -326,7 +327,7 @@ private:
 void
 ClientRegistration::endCommand()
 {
-   mDum.post(new ClientRegistrationEndCommand(*this));
+   mDum.post(SharedPtr<Message>(new ClientRegistrationEndCommand(*this)));
 }
 
 std::ostream& 

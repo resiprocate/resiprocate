@@ -1,9 +1,16 @@
 #if !defined(RESIP_TIMER_HXX)
 #define RESIP_TIMER_HXX 
      
-#include "rutil/Data.hxx"
-#include "rutil/HeapInstanceCounter.hxx"
 #include <iostream>
+
+#include "resip/stack/Message.hxx"
+
+#include "rutil/SharedPtr.hxx"
+
+#include "rutil/Data.hxx"
+
+#include "rutil/HeapInstanceCounter.hxx"
+
 
 namespace resip
 {
@@ -52,7 +59,7 @@ class Timer
       Id getId() const { return mId; }
       Type getType() const { return mType; }
       // return the message to queue, possibly null
-      Message* getMessage() const { return mMessage;}
+      const SharedPtr<Message> getMessage() const { return mMessage;}
 
       static void setupTimeOffsets(); // initialize
       static UInt64 getTimeMicroSec(); // get a 64 bit time
@@ -89,7 +96,7 @@ class Timer
       Type mType;
       Data mTransactionId;
       unsigned long mDuration; // duration of time in ms 
-      Message* mMessage; // message to queue on timeout
+      SharedPtr<Message> mMessage; // message to queue on timeout
 
       static unsigned long mTimerCount; // counter to genreate unique timers ids 
 

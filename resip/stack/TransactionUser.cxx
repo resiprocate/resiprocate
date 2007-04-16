@@ -36,13 +36,13 @@ TransactionUser::~TransactionUser()
 }
 
 void 
-TransactionUser::post(Message* msg)
+TransactionUser::post(SharedPtr<Message> msg)
 {
   mFifo.add(msg, TimeLimitFifo<Message>::InternalElement);
 }
 
 void 
-TransactionUser::postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
+TransactionUser::postToTransactionUser(SharedPtr<Message> msg, TimeLimitFifo<Message>::DepthUsage usage)
 {
    mFifo.add(msg, usage);
    //DebugLog (<< "TransactionUser::postToTransactionUser " << msg->brief() << " &=" << &mFifo << " size=" << mFifo.size());
