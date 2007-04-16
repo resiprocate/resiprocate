@@ -2,6 +2,7 @@
 #define RESIP_TARGETCOMMAND_HXX
 
 #include "resip/dum/DumCommand.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
@@ -18,13 +19,13 @@ class TargetCommand : public DumCommand
             {
             }
             virtual ~Target()=0;
-            virtual void post(std::auto_ptr<Message>)=0;
+            virtual void post(SharedPtr<Message>)=0;
 
          protected:
             DialogUsageManager& mDum;
       };
 
-      TargetCommand(Target& target, std::auto_ptr<Message> message);
+      TargetCommand(Target& target, SharedPtr<Message> message);
       TargetCommand(const TargetCommand&);
       void executeCommand();
 
@@ -35,7 +36,7 @@ class TargetCommand : public DumCommand
       
    private:
       Target& mTarget;
-      mutable std::auto_ptr<Message> mMessage;
+      mutable SharedPtr<Message> mMessage;
 };
 
 }
