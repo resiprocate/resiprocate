@@ -287,7 +287,6 @@ class DnsResult : public DnsResultSink
 std::ostream& operator<<(std::ostream& strm, const DnsResult&);
 std::ostream& operator<<(std::ostream& strm, const DnsResult::SRV&);
 std::ostream& operator<<(std::ostream& strm, const DnsResult::NAPTR&);
-
 }
 
 #endif

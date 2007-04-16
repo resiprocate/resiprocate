@@ -277,19 +277,52 @@ TlsConnection::checkState()
       }
    }
 
+#if 0
+   //post-connection verification: check that certificate name matches domain name
+   if (mSecurity->requireServerAuthentication())
+   {
+      X509* cert = SSL_get_peer_certificate(mSsl);
+      if (cert)
+      {
+         if (!mSecurity->compareCertName(cert, who().getTargetDomain()))
+         {
+            mTlsState = Broken;
+            mBio = 0;
+            ErrLog (<< "Certificate name mismatch ");
+            X509_free(cert); 
+            return mTlsState;
+         }
+         X509_free(cert); 
+         cert=NULL;
+      }
+      else
+      {
+         //!dcm! -- add 'require mutual tls' logic here
+         if (!mServer)
+         {
+            ErrLog(<< "No server certificate in TLS connection" );
+            mTlsState = Broken;
+            mBio = 0;
+            return mTlsState;
+         }
+      }
+   }
+   // force peer name to get checked and perhaps cert loaded
+   computePeerName();
+#else
    // force peer name to get checked and perhaps cert loaded
    computePeerName();
 
    //post-connection verification: check that certificate name matches domain name
-   if (!mServer)
+   if (!mServer && mSecurity->requireServerAuthentication())
    {
       bool matches = false;
       for(std::list<Data>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
       {
          if(isEqualNoCase(*it, who().getTargetDomain()))
          {
-             matches=true;
-             break;
+            matches=true;
+            break;
          }
       }
       if(!matches)
@@ -297,14 +330,14 @@ TlsConnection::checkState()
          mTlsState = Broken;
          mBio = 0;
          ErrLog (<< "Certificate name mismatch: trying to connect to <" 
-                 << who().getTargetDomain()
-                 << "> remote cert domain(s) are <" 
-                 << getPeerNamesData() << ">" );
+            << who().getTargetDomain()
+            << "> remote cert domain(s) are <" 
+            << getPeerNamesData() << ">" );
          mFailureReason = TransportFailure::CertNameMismatch;         
          return mTlsState;
       }
    }
-
+#endif
    InfoLog( << "TLS handshake done for peer " << getPeerNamesData()); 
    mTlsState = Up;
    ensureWritable();

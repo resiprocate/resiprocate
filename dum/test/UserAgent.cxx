@@ -227,7 +227,7 @@ UserAgent::onRedirected(ClientInviteSessionHandle, const SipMessage& msg)
 }
 
 void
-UserAgent::onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&)
+UserAgent::onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&, InviteSessionHandler::AnswerReason)
 {
 }
 

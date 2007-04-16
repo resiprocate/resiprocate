@@ -17,7 +17,7 @@ class GuardFeature : public DumFeature
          : DumFeature(dum, target)
       {}
 
-      virtual ProcessingResult process(Message* msg)
+      virtual ProcessingResult process(SharedPtr<Message> msg)
       {
          return DumFeature::FeatureDone;
       }
@@ -35,7 +35,7 @@ DumFeatureChain::DumFeatureChain(DialogUsageManager& dum,
    }
 }
 
-DumFeatureChain::ProcessingResult DumFeatureChain::process(Message* msg)
+DumFeatureChain::ProcessingResult DumFeatureChain::process(SharedPtr<Message> msg)
 {
    FeatureList::iterator feat = mFeatures.begin();
    vector<bool>::iterator active = mActiveFeatures.begin();
@@ -67,7 +67,7 @@ DumFeatureChain::ProcessingResult DumFeatureChain::process(Message* msg)
 
          if (pres & DumFeature::EventDoneBit)
          {
-            delete msg;
+            //delete msg; // !nash! let smart_ptr delete it
             int bits = pres;
             bits ^= DumFeature::EventDoneBit;
             bits |= DumFeature::EventTaken;

@@ -72,12 +72,12 @@ class Client : public ThreadIf
             assert (err != -1);
             mStack.process(fdset);
             
-            SipMessage* received = mStack.receive();
+            SharedPtr<SipMessage> received = mStack.receive();
             if (received)
             {
                InfoLog (<< "Client received: " << received->brief());
                
-               auto_ptr<SipMessage> forDel(received);
+               //auto_ptr<SipMessage> forDel(received);
                if ( (received->isResponse()) )
                {
                   if ( received->header(h_StatusLine).responseCode() == 200 )
@@ -141,10 +141,10 @@ class Server : public ThreadIf
             assert (err != -1);
             mStack.process(fdset);
             
-            SipMessage* received = mStack.receive();
+            SharedPtr<SipMessage> received = mStack.receive();
             if (received)
             {
-               auto_ptr<SipMessage> forDel(received);
+               //auto_ptr<SipMessage> forDel(received);
                InfoLog ( << "Server recieved: " << received->brief());
                MethodTypes meth = received->header(h_RequestLine).getMethod();
                if ( meth == INVITE )
