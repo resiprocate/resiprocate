@@ -40,18 +40,22 @@
 #include "rutil/dns/QueryTypes.hxx"
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/dns/DnsNaptrRecord.hxx"
+//#include "rutil/Timer.hxx"
+
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/DnsInterface.hxx"
 #include "resip/stack/TupleMarkManager.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Uri.hxx"
+
 #include "rutil/WinLeakCheck.hxx"
 
-#include "rutil/Timer.hxx"
+
 
 #if !defined(USE_ARES)
 #warning "ARES is required"
 #endif
+
 
 using namespace resip;
 using namespace std;

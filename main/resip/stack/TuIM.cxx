@@ -1150,22 +1150,22 @@ TuIM::process()
    // TODO - go and clean out any subscrption to us that have expired
 
    // check for any messages from the sip stack 
-   SipMessage* msg( mStack->receive() );
+   SharedPtr<SipMessage> msg( mStack->receive() );
    if ( msg )
    {
       DebugLog ( << "got message: " << *msg);
    
       if ( msg->isResponse() )
       { 
-         processResponse( msg );
+         processResponse( msg.get() );
       }
       
       if ( msg->isRequest() )
       {
-         processRequest( msg );
+         processRequest( msg.get() );
       }
 
-      delete msg; msg=0;
+      // delete msg; msg=0; // !nash! let smart_ptr delete it
    }
 }
 

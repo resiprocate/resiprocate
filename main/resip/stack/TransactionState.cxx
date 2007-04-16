@@ -42,7 +42,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mState(s),
    mIsCancel(false),
    mIsReliable(true), // !jf! 
-   mMsgToRetransmit(0),
+   //mMsgToRetransmit(0),
    mDnsResult(0),
    mId(id),
    mAckIsValid(false),
@@ -54,11 +54,11 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
 }
 
 
-TransactionState* 
+std::auto_ptr<TransactionState> 
 TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine, const Data& tid)
 {
-   TransactionState* cancel = new TransactionState(tr->mController, machine, Trying, 
-                                                   tid, tr->mTransactionUser);
+   std::auto_ptr<TransactionState> cancel(
+      new TransactionState(tr->mController, machine, Trying, tid, tr->mTransactionUser));
    // !jf! don't set this since it will be set by TransactionState::processReliability()
    //cancel->mIsReliable = tr->mIsReliable;  
    cancel->mResponseTarget = tr->mResponseTarget;
@@ -117,8 +117,9 @@ TransactionState::~TransactionState()
    //StackLog (<< "Deleting TransactionState " << mId << " : " << this);
    erase(mId);
    
-   delete mMsgToRetransmit;
-   mMsgToRetransmit = 0;
+   // !nash! let smart_ptr delete it
+   //delete mMsgToRetransmit;
+   //mMsgToRetransmit = 0;
 
    mState = Bogus;
 }
@@ -126,22 +127,23 @@ TransactionState::~TransactionState()
 void
 TransactionState::process(TransactionController& controller)
 {
-   TransactionMessage* message = controller.mStateMacFifo.getNext();
+   SharedPtr<TransactionMessage> message(controller.mStateMacFifo.getNext());
    {
-      KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message);
+      SharedPtr<KeepAliveMessage> keepAlive(message, dynamic_cast_tag());
+      //KeepAliveMessage* keepAlive = dynamic_cast<KeepAliveMessage*>(message.get());
       if (keepAlive)
       {
          StackLog ( << "Sending keep alive to: " << keepAlive->getDestination());      
-         controller.mTransportSelector.transmit(keepAlive, keepAlive->getDestination());
-         delete keepAlive;
+         controller.mTransportSelector.transmit(keepAlive.get(), keepAlive->getDestination());
+         // delete keepAlive; // !nash! let smart_ptr delete it
          return;      
       }
 
-      ConnectionTerminated* term = dynamic_cast<ConnectionTerminated*>(message);
+      SharedPtr<ConnectionTerminated> term(message, dynamic_cast_tag());
       if (term)
       {
-         controller.mTuSelector.add(term);
-         delete term;
+         controller.mTuSelector.add(term.get());
+         // delete term; // !nash! let smart_ptr delete it
          return;
       }
    }
@@ -155,18 +157,18 @@ TransactionState::process(TransactionController& controller)
    catch(SipMessage::Exception&)
    {
       DebugLog( << "TransactionState::process dropping message with invalid tid " << message->brief());
-      delete message;
+      // delete message; // !nash! let smart_ptr delete it
       return;
    }
    
-   SipMessage* sip = dynamic_cast<SipMessage*>(message);
+   SharedPtr<SipMessage> sip(message, dynamic_cast_tag());
    
    if(sip)
    {
       // ?bwc? Should this come after checking for error conditions?
       if(controller.mStack.statisticsManagerEnabled() && sip->isExternal())
       {
-         controller.mStatsManager.received(sip);
+         controller.mStatsManager.received(sip.get());
       }
       
       // .bwc. Check for error conditions we can respond to.
@@ -174,20 +176,20 @@ TransactionState::process(TransactionController& controller)
       {
          if(sip->isExternal() && controller.isTUOverloaded())
          {
-            SipMessage* tryLater = Helper::makeResponse(*sip, 503);
+            std::auto_ptr<SipMessage> tryLater(Helper::makeResponse(*sip, 503));
             tryLater->header(h_RetryAfter).value() = 32 + (Random::getRandom() % 32);
             tryLater->header(h_RetryAfter).comment() = "Server busy TRANS";
             Tuple target(sip->getSource());
-            delete sip;
-            controller.mTransportSelector.transmit(tryLater, target);
-            delete tryLater;
+            // delete sip; // !nash! let smart_ptr delete it
+            controller.mTransportSelector.transmit(tryLater.get(), target);
+            // delete tryLater; // !nash! let auto_ptr delete it
             return;
          }
          
          if(sip->isInvalid())
          {
             handleBadRequest(*sip,controller);
-            delete sip;
+            // delete sip; // !nash! let smart_ptr delete it
             return;
          }         
       }
@@ -216,8 +218,10 @@ TransactionState::process(TransactionController& controller)
    }
       
    TransactionState* state = 0;
-   if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
-   else state = controller.mServerTransactionMap.find(tid);
+   if (message->isClientTransaction()) 
+      state = controller.mClientTransactionMap.find(tid);
+   else 
+      state = controller.mServerTransactionMap.find(tid);
    
    // .bwc. This code ensures that the transaction state-machine can recover
    // from ACK/200 with the same tid as the original INVITE. This problem is
@@ -249,7 +253,10 @@ TransactionState::process(TransactionController& controller)
             break;
          case ClientInvite:
             // ACK from TU will be Stateless
-            assert (!(state->isFromTU(sip) &&  sip->isRequest() && sip->method() == ACK));
+            assert(sip);
+            assert (!state->isFromTU(sip.get()));
+            assert (!(sip->isRequest()));
+            assert (!(sip->method() == ACK));
             state->processClientInvite(message);
             break;
          case ServerNonInvite:
@@ -289,11 +296,11 @@ TransactionState::process(TransactionController& controller)
                // If none of the TUs liked the request because of the Request-
                // Uri scheme, we should be returning a 416, for example.
                InfoLog( << "No TU found for message: " << sip->brief());               
-               SipMessage* noMatch = Helper::makeResponse(*sip, 500);
+               std::auto_ptr<SipMessage> noMatch(Helper::makeResponse(*sip, 500));
                Tuple target(sip->getSource());
-               delete sip;
-               controller.mTransportSelector.transmit(noMatch, target);
-               delete noMatch;
+               // delete sip; // !nash! let smart_ptr delete it
+               controller.mTransportSelector.transmit(noMatch.get(), target);
+               // delete noMatch; // !nash! let auto_ptr delete it
                return;
             }
             else
@@ -320,17 +327,17 @@ TransactionState::process(TransactionController& controller)
             if (sip->method() == INVITE)
             {
                // !rk! This might be needlessly created.  Design issue.
-               TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid, tu);
-               state->mMsgToRetransmit = state->make100(sip);
-               state->mResponseTarget = sip->getSource(); // UACs source address
+               std::auto_ptr<TransactionState> state2(new TransactionState(controller, ServerInvite, Trying, tid, tu));
+               state2->mMsgToRetransmit = SharedPtr<SipMessage>(state->make100(sip.get()));
+               state2->mResponseTarget = sip->getSource(); // UACs source address
 
                // .bwc. If port is already specified in mResponseTarget, we
                // will only override it if a port is specified in the Via.
                // If mResponseTarget does _not_ have a port specified, and
                // neither does the Via, we go with the default.
-               if(state->mResponseTarget.getPort()==0)
+               if(state2->mResponseTarget.getPort()==0)
                {
-                  state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
+                  state2->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                }
                else
                {
@@ -338,23 +345,26 @@ TransactionState::process(TransactionController& controller)
                   unsigned short port=Helper::getPortForReply(*sip,false);
                   if(port!=0)
                   {
-                     state->mResponseTarget.setPort(port);
+                     state2->mResponseTarget.setPort(port);
                   }
                }
 
-               state->mIsReliable = state->mResponseTarget.transport->isReliable();
-               state->add(tid);
+               state2->mIsReliable = state2->mResponseTarget.transport->isReliable();
+               state2->add(tid);
                
                if (Timer::T100 == 0)
                {
-                  state->sendToWire(state->mMsgToRetransmit); // will get deleted when this is deleted
-                  state->mState = Proceeding;
+                  state2->sendToWire(state2->mMsgToRetransmit.get()); // will get deleted when this is deleted
+                  state2->mState = Proceeding;
                }
                else
                {
                   //StackLog(<<" adding T100 timer (INV)");
                   controller.mTimers.add(Timer::TimerTrying, tid, Timer::T100);
                }
+               // !nash! it's not easy to follow where TransactionState got delete and ownership got taken elsewhere
+               //        should review it, or possible memory leak?
+               state2.release(); 
             }
             else if (sip->method() == CANCEL)
             {
@@ -364,29 +374,34 @@ TransactionState::process(TransactionController& controller)
                {
                   InfoLog (<< "No matching INVITE for incoming (from wire) CANCEL to uas");
                   //was TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 481));
-                  SipMessage* response = Helper::makeResponse(*sip, 481);
+                  std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip, 481));
                   Tuple target(sip->getSource());
-                  controller.mTransportSelector.transmit(response, target);
-                  delete sip;
-                  delete response;
+                  controller.mTransportSelector.transmit(response.get(), target);
+                  // delete sip; // !nash! let smart_ptr delete it
+                  // delete response; // !nash! let auto_ptr delete it
                   return;
                }
                else
                {
                   assert(matchingInvite);
-                  state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite, tid);
+                  // !nash! it's not easy to follow where TransactionState object got delete and ownership got taken elsewhere
+                  //        should review it, or possible memory leak?
+                  state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite, tid).release();
                   state->startServerNonInviteTimerTrying(*sip,tid);
                }
             }
             else if (sip->method() != ACK)
             {
-               TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid, tu);
-               state->mResponseTarget = sip->getSource();
+               std::auto_ptr<TransactionState> state2(new TransactionState(controller, ServerNonInvite,Trying, tid, tu));
+               state2->mResponseTarget = sip->getSource();
                // since we don't want to reply to the source port unless rport present 
-               state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
-               state->add(tid);
-               state->mIsReliable = state->mResponseTarget.transport->isReliable();
-               state->startServerNonInviteTimerTrying(*sip,tid);
+               state2->mResponseTarget.setPort(Helper::getPortForReply(*sip));
+               state2->add(tid);
+               state2->mIsReliable = state2->mResponseTarget.transport->isReliable();
+               state2->startServerNonInviteTimerTrying(*sip,tid);
+               // !nash! it's not easy to follow where TransactionState object got delete and ownership got taken elsewhere
+               //        should review it, or possible memory leak?
+               state2.release(); 
             }
             
             // Incoming ACK just gets passed to the TU
@@ -397,17 +412,23 @@ TransactionState::process(TransactionController& controller)
          {
             if (sip->method() == INVITE)
             {
-               TransactionState* state = new TransactionState(controller, ClientInvite, Calling, tid, tu);
-               state->add(state->mId);
-               state->processClientInvite(sip);
+               std::auto_ptr<TransactionState> state2(new TransactionState(controller, ClientInvite, Calling, tid, tu));
+               state2->add(state->mId);
+               state2->processClientInvite(sip);
+               // !nash! it's not easy to follow where TransactionState object got delete and ownership got taken elsewhere
+               //        should review it, or possible memory leak?
+               state2.release(); 
             }
             else if (sip->method() == ACK)
             {
                //TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(StatelessIdCounter++));
-               TransactionState* state = new TransactionState(controller, Stateless, Calling, tid, tu);
-               state->add(state->mId);
-               state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
-               state->processStateless(sip);
+               std::auto_ptr<TransactionState> state2(new TransactionState(controller, Stateless, Calling, tid, tu));
+               state2->add(state->mId);
+               state2->mController.mTimers.add(Timer::TimerStateless, state2->mId, Timer::TS );
+               state2->processStateless(sip);
+               // !nash! it's not easy to follow where TransactionState object got delete and ownership got taken elsewhere
+               //        should review it, or possible memory leak?
+               state2.release(); 
             }
             else if (sip->method() == CANCEL)
             {
@@ -415,8 +436,8 @@ TransactionState::process(TransactionController& controller)
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
-                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip,481));
-                  delete sip;
+                  TransactionState::sendToTU(tu, controller, SharedPtr<SipMessage>(Helper::makeResponse(*sip,481)));
+                  // delete sip; // !nash! let smart_ptr delete it
                }
                else if (matchingInvite->mState == Calling) // CANCEL before 1xx received
                {
@@ -430,23 +451,25 @@ TransactionState::process(TransactionController& controller)
                   // The CANCEL was received before the INVITE was sent
                   // This can happen in odd cases. Too common to assert.
                   // Be graceful.
-                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 200));
-                  matchingInvite->sendToTU(Helper::makeResponse(*matchingInvite->mMsgToRetransmit, 487));
+                  TransactionState::sendToTU(tu, controller, SharedPtr<SipMessage>(Helper::makeResponse(*sip, 200)));
+                  matchingInvite->sendToTU(SharedPtr<SipMessage>(Helper::makeResponse(*matchingInvite->mMsgToRetransmit, 487)));
 
+                  // !nash! deleted matchingInvite, but how about controller.mClientTransactionMap?
                   delete matchingInvite;
-                  delete sip;
-
+                  // delete sip; // !nash! let smart_ptr delete it
                }
                else if (matchingInvite->mState == Completed)
                {
                   // A final response was already seen for this INVITE transaction
-                  matchingInvite->sendToTU(Helper::makeResponse(*sip, 200));
-                  delete sip;
+                  matchingInvite->sendToTU(SharedPtr<SipMessage>(Helper::makeResponse(*sip, 200)));
+                  // delete sip; // !nash! let smart_ptr delete it
                }
                else
                {
                   assert(matchingInvite);
-                  state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite, tid);
+                  // !nash! it's not easy to follow where TransactionState object got delete and ownership got taken elsewhere
+                  //        should review it, or possible memory leak?
+                  state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite, tid).release();
                   //state->processReliability(matchingInvite->mTarget.getType());  // !slg! Not needed - timer started in makeCancelTransaction
                   state->processClientNonInvite(sip);
                   
@@ -456,10 +479,13 @@ TransactionState::process(TransactionController& controller)
             }
             else 
             {
-               TransactionState* state = new TransactionState(controller, ClientNonInvite, 
-                                                              Trying, tid, tu);
-               state->add(tid);
-               state->processClientNonInvite(sip);
+               std::auto_ptr<TransactionState> state2(
+                  new TransactionState(controller, ClientNonInvite, Trying, tid, tu));
+               state2->add(tid);
+               state2->processClientNonInvite(sip);
+               // !nash! it's not easy to follow where TransactionState object got delete or ownership got taken elsewhere
+               //        should review it, or possible memory leak?
+               state2.release(); 
             }
          }
       }
@@ -468,17 +494,19 @@ TransactionState::process(TransactionController& controller)
          if (controller.mDiscardStrayResponses)
          {
             InfoLog (<< "discarding stray response: " << sip->brief());
-            delete message;
+            // delete message; // !nash! let smart_ptr delete it
          }
          else
          {
             StackLog (<< "forwarding stateless response: " << sip->brief());
-            TransactionState* state = 
-               new TransactionState(controller, Stateless, Calling, 
-                                    Data(StatelessIdCounter++), tu);
-            state->add(state->mId);
-            state->mController.mTimers.add(Timer::TimerStateless, state->mId, Timer::TS );
-            state->processStateless(sip);
+            std::auto_ptr<TransactionState> state2(new TransactionState(
+               controller, Stateless, Calling, Data(StatelessIdCounter++), tu));
+            state2->add(state2->mId);
+            state2->mController.mTimers.add(Timer::TimerStateless, state2->mId, Timer::TS );
+            state2->processStateless(sip);
+            // !nash! it's not easy to follow where TransactionState object got delete or ownership got taken elsewhere
+            //        should review it, or possible memory leak?
+            state2.release(); 
          }
       }
       else // wasn't a request or a response
@@ -489,7 +517,7 @@ TransactionState::process(TransactionController& controller)
    else // timer or other non-sip msg
    {
       //StackLog (<< "discarding non-sip message: " << message->brief());
-      delete message;
+      // delete message; // !nash! let smart_ptr delete it
    }
 }
 
@@ -503,45 +531,44 @@ TransactionState::startServerNonInviteTimerTrying(SipMessage& sip, Data& tid)
       duration = Timer::T1;
       while(duration*2<Timer::T2) duration = duration * 2;
    }
-   mMsgToRetransmit = make100(&sip);  // Store for use when timer expires
+   mMsgToRetransmit = SharedPtr<SipMessage>(make100(&sip));  // Store for use when timer expires
    mController.mTimers.add(Timer::TimerTrying, tid, duration );  // Start trying timer so that we can send 100 to NITs as recommened in RFC4320
 }
 
 void
-TransactionState::processStateless(TransactionMessage* message)
+TransactionState::processStateless(SharedPtr<TransactionMessage> message)
 {
    // for ACK messages from the TU, there is no transaction, send it directly
    // to the wire // rfc3261 17.1 Client Transaction
-   SipMessage* sip = dynamic_cast<SipMessage*>(message);
+   SharedPtr<SipMessage> sip(message, dynamic_cast_tag());
    StackLog (<< "TransactionState::processStateless: " << message->brief());
    
    // !jf! There is a leak for Stateless transactions associated with ACK to 200
-   if (isFromTU(message))
+   if (isFromTU(message.get()))
    {
-      delete mMsgToRetransmit;
+      //delete mMsgToRetransmit;
       mMsgToRetransmit = sip;
-      sendToWire(sip);
+      sendToWire(sip.get());
    }
-   else if (isFromWire(message))
+   else if (isFromWire(message.get()))
    {
       InfoLog (<< "Received message from wire on a stateless transaction");
       StackLog (<< *message);
       //assert(0);
       sendToTU(sip);
    }
-   else if (isTransportError(message))
+   else if (isTransportError(message.get()))
    {
       processTransportFailure(message);
-      
-      delete message;
-      delete this;
+      // delete message; // !nash! let smart_ptr delete it
+      delete this; 
    }
-   else if (isTimer(message))
+   else if (isTimer(message.get()))
    {
-      TimerMessage* timer = dynamic_cast<TimerMessage*>(message);
+      SharedPtr<TimerMessage> timer(message, dynamic_cast_tag());
       if (timer->getType() == Timer::TimerStateless)
       {
-         delete message;
+         // delete message; // !nash! let smart_ptr delete it
          delete this;
       }
    }
@@ -552,26 +579,26 @@ TransactionState::processStateless(TransactionMessage* message)
 }
 
 void
-TransactionState::processClientNonInvite(TransactionMessage* msg)
+TransactionState::processClientNonInvite(SharedPtr<TransactionMessage> msg)
 { 
    StackLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
 
-   assert(!isInvite(msg));
+   assert(!isInvite(msg.get()));
 
-   if (isRequest(msg) && isFromTU(msg))
+   if (isRequest(msg.get()) && isFromTU(msg.get()))
    {
       //StackLog (<< "received new non-invite request");
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-      delete mMsgToRetransmit;
+      SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
+      // delete mMsgToRetransmit; // !nash! let smart_ptr delete it
       mMsgToRetransmit = sip;
       mController.mTimers.add(Timer::TimerF, mId, Timer::TF);
-      sendToWire(sip);  // don't delete
+      sendToWire(sip.get());  // don't delete
    }
-   else if (isResponse(msg) && isFromWire(msg)) // from the wire
+   else if (isResponse(msg.get()) && isFromWire(msg.get())) // from the wire
    {
       //StackLog (<< "received response from wire");
 
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
       int code = sip->header(h_StatusLine).responseCode();
       if (code >= 100 && code < 200) // 1XX
       {
@@ -589,7 +616,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
          else
          {
             // ignore
-            delete msg;
+            //delete msg; // !nash! let smart_ptr delete it
          }
       }
       else if (code >= 200)
@@ -601,7 +628,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
          }
          else if (mState == Completed)
          {
-            delete msg;
+            //delete msg; // !nash! let smart_ptr delete it
          }
          
          if (mIsReliable)
@@ -616,27 +643,28 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
          }
       }
    }
-   else if (isTimer(msg))
+   else if (isTimer(msg.get()))
    {
       //StackLog (<< "received timer in client non-invite transaction");
-
-      TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
+      SharedPtr<TimerMessage> timer(msg, dynamic_cast_tag());
       switch (timer->getType())
       {
          case Timer::TimerE1:
             if (mState == Trying)
             {
                unsigned long d = timer->getDuration();
-               if (d < Timer::T2) d *= 2;
+               if (d < Timer::T2) 
+                  d *= 2;
                mController.mTimers.add(Timer::TimerE1, mId, d);
                StackLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
-               sendToWire(mMsgToRetransmit, true);
-               delete msg;
+               sendToWire(mMsgToRetransmit.get(), true);
+               //delete msg; // !nash! let smart_ptr delete it
+               msg.reset();
             }
             else
             {
                // ignore
-               delete msg;
+               //delete msg; // !nash! let smart_ptr delete it
             }
             break;
 
@@ -645,67 +673,67 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
             {
                mController.mTimers.add(Timer::TimerE2, mId, Timer::T2);
                StackLog (<< "Retransmitting: " << mMsgToRetransmit->brief());
-               sendToWire(mMsgToRetransmit, true);
-               delete msg;
+               sendToWire(mMsgToRetransmit.get(), true);
+               //delete msg; // !nash! let smart_ptr delete it
             }
             else 
             {
                // ignore
-               delete msg;
+               //delete msg; // !nash! let smart_ptr delete it
             }
             break;
 
          case Timer::TimerF:
             if (mState == Trying || mState == Proceeding)
             {
-               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               sendToTU(SharedPtr<SipMessage>(Helper::makeResponse(*mMsgToRetransmit, 408)));
                terminateClientTransaction(mId);
                delete this;
             }
             
-            delete msg;
+            //delete msg; // !nash! let smart_ptr delete it
             break;
 
          case Timer::TimerK:
             terminateClientTransaction(mId);
-            delete msg;
+            //delete msg; // !nash! let smart_ptr delete it
             delete this;
             break;
 
          default:
             //InfoLog (<< "Ignoring timer: " << *msg);
-            delete msg;
+            //delete msg; // !nash! let smart_ptr delete it
             break;
       }
    }
-   else if (isTransportError(msg))
+   else if (isTransportError(msg.get()))
    {
       processTransportFailure(msg);
-      delete msg;
+      //delete msg; // !nash! let smart_ptr delete it
    }
    else
    {
       //StackLog (<< "TransactionState::processClientNonInvite: message unhandled");
-      delete msg;
+      //delete msg; // !nash! let smart_ptr delete it
    }
 }
 
 void
-TransactionState::processClientInvite(TransactionMessage* msg)
+TransactionState::processClientInvite(SharedPtr<TransactionMessage> msg)
 {
    StackLog(<< "TransactionState::processClientInvite: " << msg->brief() << " " << *this);
-   if (isRequest(msg) && isFromTU(msg))
+   if (isRequest(msg.get()) && isFromTU(msg.get()))
    {
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
       switch (sip->method())
       {
          // Received INVITE request from TU="Transaction User", Start Timer B which controls
          // transaction timeouts. 
          case INVITE:
-            delete mMsgToRetransmit; 
+            // delete mMsgToRetransmit; // !nash! let smart_ptr delete it
             mMsgToRetransmit = sip;
             mController.mTimers.add(Timer::TimerB, mId, Timer::TB);
-            sendToWire(msg); // don't delete msg
+            sendToWire(msg.get()); // don't delete msg
             break;
             
          case CANCEL:
@@ -713,13 +741,13 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             break;
 
          default:
-            delete msg;
+            //delete msg; // !nash! let smart_ptr delete it
             break;
       }
    }
-   else if (isResponse(msg) && isFromWire(msg))
+   else if (isResponse(msg.get()) && isFromWire(msg.get()))
    {
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
       int code = sip->header(h_StatusLine).responseCode();
       switch (sip->method())
       {
@@ -740,7 +768,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                }
                else
                {
-                  delete msg;
+                  //delete msg; // !nash! let smart_ptr delete it
                }
             }
 
@@ -769,14 +797,14 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                   // Stack MUST pass the received response up to the TU, and the client
                   // transaction MUST generate an ACK request, even if the transport is
                   // reliable
-                  SipMessage* invite = mMsgToRetransmit;
-                  mMsgToRetransmit = Helper::makeFailureAck(*invite, *sip);
-                  delete invite;
+                  SharedPtr<SipMessage> invite = mMsgToRetransmit;
+                  mMsgToRetransmit = SharedPtr<SipMessage>(Helper::makeFailureAck(*invite, *sip));
+                  // delete invite; // !nash! let smart_ptr delete it
                   
                   // want to use the same transport as was selected for Invite
                   assert(mTarget.getType() != UNKNOWN_TRANSPORT);
 
-                  sendToWire(mMsgToRetransmit);
+                  sendToWire(mMsgToRetransmit.get());
                   sendToTU(msg); // don't delete msg
                   terminateClientTransaction(mId);
                   delete this;
@@ -791,11 +819,10 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      // take care of re-Transmission of ACK 
                      mState = Completed;
                      mController.mTimers.add(Timer::TimerD, mId, Timer::TD );
-                     SipMessage* ack;
-                     ack = Helper::makeFailureAck(*mMsgToRetransmit, *sip);
-                     delete mMsgToRetransmit;
+                     SharedPtr<SipMessage> ack(Helper::makeFailureAck(*mMsgToRetransmit, *sip));
+                     // delete mMsgToRetransmit; // !nash! let smart_ptr delete it
                      mMsgToRetransmit = ack; 
-                     sendToWire(ack);
+                     sendToWire(ack.get());
                      sendToTU(msg); // don't delete msg
                   }
                   else if (mState == Completed)
@@ -805,8 +832,8 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                      // cause the ACK to be re-passed to the transport
                      // layer for retransmission.
                      assert (mMsgToRetransmit->method() == ACK);
-                     sendToWire(mMsgToRetransmit, true);
-                     delete msg;
+                     sendToWire(mMsgToRetransmit.get(), true);
+                     // delete msg; // !nash! let smart_ptr delete it
                   }
                   else
                   {
@@ -826,16 +853,16 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             break;
 
          default:
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             break;
       }
    }
-   else if (isTimer(msg))
+   else if (isTimer(msg.get()))
    {
       /* Handle Transaction Timers , Retransmission Timers which were set and Handle
          Cancellation of Timers for Re-transmissions here */
 
-      TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
+      SharedPtr<TimerMessage> timer(msg, dynamic_cast_tag());
       StackLog (<< "timer fired: " << *timer);
       
       switch (timer->getType())
@@ -848,24 +875,24 @@ TransactionState::processClientInvite(TransactionMessage* msg)
 
                mController.mTimers.add(Timer::TimerA, mId, d);
                InfoLog (<< "Retransmitting INVITE: " << mMsgToRetransmit->brief());
-               sendToWire(mMsgToRetransmit, true);
+               sendToWire(mMsgToRetransmit.get(), true);
             }
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             break;
 
          case Timer::TimerB:
             if (mState == Calling)
             {
-               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               sendToTU(SharedPtr<SipMessage>(Helper::makeResponse(*mMsgToRetransmit, 408)));
                terminateClientTransaction(mId);
                delete this;
             }
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             break;
 
          case Timer::TimerD:
             terminateClientTransaction(mId);
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             delete this;
             break;
 
@@ -876,47 +903,47 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             {
                assert(mMsgToRetransmit && mMsgToRetransmit->method() == INVITE);
                InfoLog(<<"Making 408 for canceled invite that received no response: "<< mMsgToRetransmit->brief());
-               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               sendToTU(SharedPtr<SipMessage>(Helper::makeResponse(*mMsgToRetransmit, 408)));
                terminateClientTransaction(msg->getTransactionId());
                delete this;
             }
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             break;
 
          default:
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             break;
       }
    }
-   else if (isTransportError(msg))
+   else if (isTransportError(msg.get()))
    {
       processTransportFailure(msg);
-      delete msg;
+      // delete msg; // !nash! let smart_ptr delete it
    }
    else
    {
       //StackLog ( << "TransactionState::processClientInvite: message unhandled");
-      delete msg;
+      // delete msg; // !nash! let smart_ptr delete it
    }
 }
 
 
 void
-TransactionState::processServerNonInvite(TransactionMessage* msg)
+TransactionState::processServerNonInvite(SharedPtr<TransactionMessage> msg)
 {
    StackLog (<< "TransactionState::processServerNonInvite: " << msg->brief());
 
-   if (isRequest(msg) && !isInvite(msg) && isFromWire(msg)) // retransmission from the wire
+   if (isRequest(msg.get()) && !isInvite(msg.get()) && isFromWire(msg.get())) // retransmission from the wire
    {
       if (mState == Trying)
       {
          // ignore
-         delete msg;
+         // delete msg; // !nash! let smart_ptr delete it
       }
       else if (mState == Proceeding || mState == Completed)
       {
-         sendToWire(mMsgToRetransmit, true);
-         delete msg;
+         sendToWire(mMsgToRetransmit.get(), true);
+         // delete msg; // !nash! let smart_ptr delete it
       }
       else
       {
@@ -927,32 +954,32 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
          return;
       }
    }
-   else if (isResponse(msg) && isFromTU(msg))
+   else if (isResponse(msg.get()) && isFromTU(msg.get()))
    {
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
       int code = sip->header(h_StatusLine).responseCode();
       if (code >= 100 && code < 200) // 1XX
       {
          if (mState == Trying || mState == Proceeding)
          {
-            delete mMsgToRetransmit;
+            // delete mMsgToRetransmit; // !nash! let smart_ptr delete it
             mMsgToRetransmit = sip;
             mState = Proceeding;
-            sendToWire(sip); // don't delete msg
+            sendToWire(sip.get()); // don't delete msg
          }
          else
          {
             // ignore
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
          }
       }
       else if (code >= 200 && code <= 699)
       {
          if (mIsReliable)
          {
-            delete mMsgToRetransmit;
+            // delete mMsgToRetransmit; // !nash! let smart_ptr delete it
             mMsgToRetransmit = sip;
-            sendToWire(sip); // don't delete msg
+            sendToWire(sip.get()); // don't delete msg
             terminateServerTransaction(mId);
             delete this;
          }
@@ -962,14 +989,14 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
             {
                mState = Completed;
                mController.mTimers.add(Timer::TimerJ, mId, 64*Timer::T1 );
-               delete mMsgToRetransmit;
+               // delete mMsgToRetransmit; // !nash! let smart_ptr delete it
                mMsgToRetransmit = sip;
-               sendToWire(sip); // don't delete msg
+               sendToWire(sip.get()); // don't delete msg
             }
             else if (mState == Completed)
             {
                // ignore
-               delete msg;               
+               // delete msg; // !nash! let smart_ptr delete it
             }
             else
             {
@@ -984,13 +1011,12 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
       else
       {
          // ignore
-         delete msg;               
+         // delete msg; // !nash! let smart_ptr delete it
       }
    }
-   else if (isTimer(msg))
+   else if (isTimer(msg.get()))
    {
-      TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
-      assert(timer);
+      SharedPtr<TimerMessage> timer(msg, dynamic_cast_tag());
       switch (timer->getType())
       {
          case Timer::TimerJ:
@@ -999,44 +1025,44 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
                terminateServerTransaction(mId);
                delete this;
             }
-            delete msg;
+            // delete msg; // // !nash! let smart_ptr delete it
             break;
 
          case Timer::TimerTrying:
             if (mState == Trying)
             {
                // Timer E has reached T2 - send a 100 as recommended by RFC4320 NIT-Problem-Actions
-               sendToWire(mMsgToRetransmit);
+               sendToWire(mMsgToRetransmit.get());
                mState = Proceeding;
             }
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             break;
 
          default:
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             break;
       }
    }
-   else if (isTransportError(msg))
+   else if (isTransportError(msg.get()))
    {
       processTransportFailure(msg);
-      delete msg;
+      // delete msg; // !nash! let smart_ptr delete it
    }
    else
    {
       //StackLog (<< "TransactionState::processServerNonInvite: message unhandled");
-      delete msg;
+      // delete msg; // !nash! let smart_ptr delete it
    }
 }
 
 
 void
-TransactionState::processServerInvite(TransactionMessage* msg)
+TransactionState::processServerInvite(SharedPtr<TransactionMessage> msg)
 {
    StackLog (<< "TransactionState::processServerInvite: " << msg->brief());
-   if (isRequest(msg) && isFromWire(msg))
+   if (isRequest(msg.get()) && isFromWire(msg.get()))
    {
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
       switch (sip->method())
       {
          case INVITE:
@@ -1052,15 +1078,15 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                //StackLog (<< "Received invite from wire - forwarding to TU state=" << mState);
                if (!mMsgToRetransmit)
                {
-                  mMsgToRetransmit = make100(sip);
+                  mMsgToRetransmit = SharedPtr<SipMessage>(make100(sip.get()));
                }
-               delete msg;
-               sendToWire(mMsgToRetransmit);
+               // delete msg; // !nash! let smart_ptr delete it
+               sendToWire(mMsgToRetransmit.get());
             }
             else
             {
                //StackLog (<< "Received invite from wire - ignoring state=" << mState);
-               delete msg;
+               // delete msg; // !nash! let smart_ptr delete it
             }
             break;
             
@@ -1077,20 +1103,20 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                   //StackLog (<< "Received ACK in Completed (reliable) - delete transaction");
                   terminateServerTransaction(mId);
                   delete this; 
-                  delete msg;
+                  // delete msg; // !nash! let smart_ptr delete it
                }
                else
                {
                   //StackLog (<< "Received ACK in Completed (unreliable) - confirmed, start Timer I");
                   mState = Confirmed;
                   mController.mTimers.add(Timer::TimerI, mId, Timer::T4 );
-                  delete msg;
+                  // delete msg; // !nash! let smart_ptr delete it
                }
             }
             else
             {
                //StackLog (<< "Ignore ACK not in Completed state");
-               delete msg;
+               // delete msg; // !nash! let smart_ptr delete it
             }
             break;
 
@@ -1100,13 +1126,13 @@ TransactionState::processServerInvite(TransactionMessage* msg)
 
          default:
             //StackLog (<< "Received unexpected request. Ignoring message");
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             break;
       }
    }
-   else if (isResponse(msg, 100, 699) && isFromTU(msg))
+   else if (isResponse(msg.get(), 100, 699) && isFromTU(msg.get()))
    {
-      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
       int code = sip->header(h_StatusLine).responseCode();
       switch (sip->method())
       {
@@ -1116,15 +1142,15 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                if (mState == Trying || mState == Proceeding)
                {
                   //StackLog (<< "Received 100 in Trying or Proceeding. Send over wire");
-                  delete mMsgToRetransmit; // may be replacing the 100
+                  // delete mMsgToRetransmit; // may be replacing the 100 // !nash! let smart_ptr delete it
                   mMsgToRetransmit = sip;
                   mState = Proceeding;
-                  sendToWire(msg); // don't delete msg
+                  sendToWire(msg.get()); // don't delete msg
                }
                else
                {
                   //StackLog (<< "Ignoring 100 - not in Trying or Proceeding.");
-                  delete msg;
+                  // delete msg; // !nash! let smart_ptr delete it
                }
             }
             else if (code > 100 && code < 200)
@@ -1132,15 +1158,15 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                if (mState == Trying || mState == Proceeding)
                {
                   //StackLog (<< "Received 1xx in Trying or Proceeding. Send over wire");
-                  delete mMsgToRetransmit; // may be replacing the 100
+                  // delete mMsgToRetransmit; // may be replacing the 100 // !nash! let smart_ptr delete it
                   mMsgToRetransmit = sip;
                   mState = Proceeding;
-                  sendToWire(msg); // don't delete msg
+                  sendToWire(msg.get()); // don't delete msg
                }
                else
                {
                   //StackLog (<< "Received 100 when not in Trying State. Ignoring");
-                  delete msg;
+                  // delete msg; // !nash! let smart_ptr delete it
                }
             }
             else if (code >= 200 && code < 300)
@@ -1149,19 +1175,19 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                {
                   StackLog (<< "Received 2xx when in Trying or Proceeding State of server invite transaction");
                   StackLog (<< *this);
-                  sendToWire(msg);
+                  sendToWire(msg.get());
                   
                   // Keep the StaleServer transaction around, so we can keep the
                   // source Tuple that the request was received on. 
                   //terminateServerTransaction(mId);
                   mMachine = ServerStale;
                   mController.mTimers.add(Timer::TimerStaleServer, mId, Timer::TS );
-                  delete msg;
+                  // delete msg; // !nash! let smart_ptr delete it
                }
                else
                {
                   //StackLog (<< "Received 2xx when not in Trying or Proceeding State. Ignoring");
-                  delete msg;
+                  // delete msg; // !nash! let smart_ptr delete it
                }
             }
             else if (code >= 300)
@@ -1180,7 +1206,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                {
                   mAckIsValid=true;
                   StackLog (<< "Received failed response in Trying or Proceeding. Start Timer H, move to completed." << *this);
-                  delete mMsgToRetransmit; 
+                  // delete mMsgToRetransmit;  // !nash! let smart_ptr delete it
                   mMsgToRetransmit = sip; 
                   mState = Completed;                     
                   mController.mTimers.add(Timer::TimerH, mId, Timer::TH );
@@ -1188,18 +1214,18 @@ TransactionState::processServerInvite(TransactionMessage* msg)
                   {
                      mController.mTimers.add(Timer::TimerG, mId, Timer::T1 );
                   }
-                  sendToWire(msg); // don't delete msg
+                  sendToWire(msg.get()); // don't delete msg
                }
                else
                {
                   //StackLog (<< "Received Final response when not in Trying or Proceeding State. Ignoring");
-                  delete msg;
+                  // delete msg; // !nash! let smart_ptr delete it
                }
             }
             else
             {
                //StackLog (<< "Received Invalid response line. Ignoring");
-               delete msg;
+               // delete msg; // !nash! let smart_ptr delete it
             }
             break;
             
@@ -1209,20 +1235,20 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             
          default:
             //StackLog (<< "Received response to non invite or cancel. Ignoring");
-            delete msg;
+            // delete msg; // !nash! let smart_ptr delete it
             break;
       }
    }
-   else if (isTimer(msg))
+   else if (isTimer(msg.get()))
    {
-      TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
+      SharedPtr<TimerMessage> timer(msg, dynamic_cast_tag());
       switch (timer->getType())
       {
          case Timer::TimerG:
             if (mState == Completed)
             {
                StackLog (<< "TimerG fired. retransmit, and re-add TimerG");
-               sendToWire(mMsgToRetransmit, true);
+               sendToWire(mMsgToRetransmit.get(), true);
                mController.mTimers.add(Timer::TimerG, mId, resipMin(Timer::T2, timer->getDuration()*2) );  //  TimerG is supposed to double - up until a max of T2 RFC3261 17.2.1
             }
             break;
@@ -1251,7 +1277,7 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             if (mState == Trying)
             {
                //StackLog (<< "TimerTrying fired. Send a 100");
-               sendToWire(mMsgToRetransmit); // will get deleted when this is deleted
+               sendToWire(mMsgToRetransmit.get()); // will get deleted when this is deleted
                mState = Proceeding;
             }
             else
@@ -1265,52 +1291,52 @@ TransactionState::processServerInvite(TransactionMessage* msg)
             assert(0); // programming error if any other timer fires
             break;
       }
-      delete timer;
+      // delete timer; // !nash! let smart_ptr delete it
    }
-   else if (isTransportError(msg))
+   else if (isTransportError(msg.get()))
    {
       processTransportFailure(msg);
-      delete msg;
+      //delete msg; // !nash! let smart_ptr delete it
    }
    else
    {
       //StackLog (<< "TransactionState::processServerInvite: message unhandled");
-      delete msg;
+      //delete msg; // !nash! let smart_ptr delete it
    }
 }
 
 
 void
-TransactionState::processClientStale(TransactionMessage* msg)
+TransactionState::processClientStale(SharedPtr<TransactionMessage> msg)
 {
    StackLog (<< "TransactionState::processClientStale: " << msg->brief());
 
-   if (isTimer(msg))
+   if (isTimer(msg.get()))
    {
-      TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
+      SharedPtr<TimerMessage> timer(msg, dynamic_cast_tag());
       if (timer->getType() == Timer::TimerStaleClient)
       {
          terminateClientTransaction(mId);
          delete this;
-         delete msg;
+         //delete msg; // !nash! let smart_ptr delete it
       }
       else
       {
-         delete msg;
+         //delete msg; // !nash! let smart_ptr delete it
       }
    }
-   else if (isTransportError(msg))
+   else if (isTransportError(msg.get()))
    {
       WarningLog (<< "Got a transport error in Stale Client state");
       StackLog (<< *this);
       processTransportFailure(msg);
-      delete msg;
+      // delete msg; // !nash! let smart_ptr delete it
    }
    else
    {
-      if(isResponse(msg, 200, 299))
+      if(isResponse(msg.get(), 200, 299))
       {
-         assert(isFromWire(msg));
+         assert(isFromWire(msg.get()));
          sendToTU(msg);
       }
       else
@@ -1319,58 +1345,58 @@ TransactionState::processClientStale(TransactionMessage* msg)
          // misbehaving. For instance, sending a 487/INVITE after already
          // sending a 200/INVITE. In this case, discard the response
          StackLog (<< "Discarding extra response: " << *msg);
-         delete msg;
+         // delete msg; // !nash! let smart_ptr delete it
       }
    }
 }
 
 void
-TransactionState::processServerStale(TransactionMessage* msg)
+TransactionState::processServerStale(SharedPtr<TransactionMessage> msg)
 {
    StackLog (<< "TransactionState::processServerStale: " << msg->brief());
 
-   SipMessage* sip = dynamic_cast<SipMessage*>(msg);
-   if (isTimer(msg))
+   SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
+   if (isTimer(msg.get()))
    {
-      TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
+      SharedPtr<TimerMessage> timer(msg, dynamic_cast_tag());
       if (timer->getType() == Timer::TimerStaleServer)
       {
-         delete msg;
+         // delete msg; // !nash! let smart_ptr delete it
          terminateServerTransaction(mId);
          delete this;
       }
       else
       {
-         delete msg;
+         // delete msg; // !nash! let smart_ptr delete it
       }
    }
-   else if (isTransportError(msg))
+   else if (isTransportError(msg.get()))
    {
       WarningLog (<< "Got a transport error in Stale Server state");
       StackLog (<< *this);
       processTransportFailure(msg);
-      delete msg;
+      // delete msg; // !nash! let smart_ptr delete it
    }
-   else if (sip && isRequest(sip) && sip->method() == ACK)
+   else if (sip && isRequest(sip.get()) && sip->method() == ACK)
    {
       // .bwc. We should never fall into this block. There is code in process
       // that should prevent it.
-      assert(isFromWire(msg));
+      assert(isFromWire(msg.get()));
       InfoLog (<< "Passing ACK directly to TU: " << sip->brief());
       sendToTU(msg);
    }
-   else if (sip && isRequest(sip) && sip->method() == INVITE)
+   else if (sip && isRequest(sip.get()) && sip->method() == INVITE)
    {
       // this can happen when an upstream UAC never received the 200 and
       // retransmits the INVITE when using unreliable transport
       // Drop the INVITE since the 200 will get retransmitted by the downstream UAS
       StackLog (<< "Dropping retransmitted INVITE in stale server transaction" << sip->brief());
-      delete msg;
+      // delete msg; // !nash! let smart_ptr delete it
    }
-   else if (isResponse(msg) && isFromTU(msg))
+   else if (isResponse(msg.get()) && isFromTU(msg.get()))
    {
-      sendToWire(msg); 
-      delete msg;
+      sendToWire(msg.get()); 
+      // delete msg; // !nash! let smart_ptr delete it
    }
    else
    {
@@ -1379,7 +1405,7 @@ TransactionState::processServerStale(TransactionMessage* msg)
       {
          ErrLog(<<sip->brief());
       }
-      delete msg;
+      // delete msg; // !nash! let smart_ptr delete it
    }
 }
 
@@ -1389,7 +1415,7 @@ TransactionState::processNoDnsResults()
 {
    InfoLog (<< "Ran out of dns entries for " << mDnsResult->target() << ". Send 503");
    assert(mDnsResult->available() == DnsResult::Finished);
-   SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
+   SharedPtr<SipMessage> response(Helper::makeResponse(*mMsgToRetransmit, 503));
    WarningCategory warning;
    warning.hostname() = DnsUtil::getLocalHostName();
    warning.code() = 499;
@@ -1423,9 +1449,9 @@ TransactionState::processNoDnsResults()
 }
 
 void
-TransactionState::processTransportFailure(TransactionMessage* msg)
+TransactionState::processTransportFailure(SharedPtr<TransactionMessage> msg)
 {
-   TransportFailure* failure = dynamic_cast<TransportFailure*>(msg);
+   SharedPtr<TransportFailure> failure(msg, dynamic_cast_tag());
    assert(failure);
    assert(mState!=Bogus);
 
@@ -1484,9 +1510,9 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
 
    if(mDnsResult)
    {
-      // .bwc. Greylist for 32s
+      // .bwc. Blacklist for 32s
       // !bwc! TODO make this duration configurable.
-      mDnsResult->greylistLast(Timer::getTimeMs()+32000);
+      mDnsResult->blacklistLast(Timer::getTimeMs()+32000);
    }
    
    
@@ -1509,7 +1535,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
          // try other transports in the case of transport error as the
          // CANCEL MUST be sent to the same IP/PORT as the orig. INVITE.
          //?dcm? insepct failure enum?
-         SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
+         SharedPtr<SipMessage> response(Helper::makeResponse(*mMsgToRetransmit, 503));
          WarningCategory warning;
          warning.hostname() = DnsUtil::getLocalHostName();
          warning.code() = 499;
@@ -1529,7 +1555,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
                mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
                mTarget = mDnsResult->next();
                processReliability(mTarget.getType());
-               sendToWire(mMsgToRetransmit);
+               sendToWire(mMsgToRetransmit.get());
                break;
             
             case DnsResult::Pending:
@@ -1594,7 +1620,7 @@ TransactionState::handle(DnsResult* result)
             mWaitingForDnsResult=false;
             mTarget = mDnsResult->next();
             processReliability(mTarget.getType());
-            mController.mTransportSelector.transmit(mMsgToRetransmit, mTarget);
+            mController.mTransportSelector.transmit(mMsgToRetransmit.get(), mTarget);
             break;
             
          case DnsResult::Finished:
@@ -1794,9 +1820,9 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
 }
 
 void
-TransactionState::sendToTU(TransactionMessage* msg) const
+TransactionState::sendToTU(SharedPtr<TransactionMessage> msg) const
 {
-   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
+   SharedPtr<SipMessage> sipMsg(msg, dynamic_cast_tag());
    if (sipMsg && sipMsg->isResponse() && mDnsResult)
    {
       // whitelisting rules.
@@ -1816,18 +1842,18 @@ TransactionState::sendToTU(TransactionMessage* msg) const
                }
                catch(resip::ParseBuffer::Exception&)
                {
-                  mDnsResult->greylistLast(resip::Timer::getTimeMs()+32000);
+                  mDnsResult->blacklistLast(resip::Timer::getTimeMs()+32000);
                }
             }
             
             break;
          case 408:
-            if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only greylist if internally generated and we haven't received any responses yet
+            if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only blacklist if internally generated and we haven't received any responses yet
             {
-               // greylist last target.
-               // ?bwc? How long do we greylist this for? Probably should make
+               // blacklist last target.
+               // ?bwc? How long do we blacklist this for? Probably should make
                // this configurable. TODO
-               mDnsResult->greylistLast(resip::Timer::getTimeMs() + 32000);
+               mDnsResult->blacklistLast(resip::Timer::getTimeMs() + 32000);
             }
 
             break;
@@ -1840,8 +1866,9 @@ TransactionState::sendToTU(TransactionMessage* msg) const
    TransactionState::sendToTU(mTransactionUser, mController, msg);
 }
 
+// static
 void
-TransactionState::sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg) 
+TransactionState::sendToTU(TransactionUser* tu, TransactionController& controller, SharedPtr<TransactionMessage> msg) 
 {
    if (!tu)
    {
@@ -1961,7 +1988,7 @@ TransactionState::terminateClientTransaction(const Data& tid)
        mTransactionUser->isRegisteredForTransactionTermination())
    {
       //StackLog (<< "Terminate client transaction " << tid);
-      sendToTU(new TransactionTerminated(tid, true, mTransactionUser));
+      sendToTU(SharedPtr<TransactionTerminated>(new TransactionTerminated(tid, true, mTransactionUser)));
    }
 }
 
@@ -1973,7 +2000,7 @@ TransactionState::terminateServerTransaction(const Data& tid)
        mTransactionUser->isRegisteredForTransactionTermination())
    {
       //StackLog (<< "Terminate server transaction " << tid);
-      sendToTU(new TransactionTerminated(tid, false, mTransactionUser));
+      sendToTU(SharedPtr<TransactionTerminated>(new TransactionTerminated(tid, false, mTransactionUser)));
    }
 }
 

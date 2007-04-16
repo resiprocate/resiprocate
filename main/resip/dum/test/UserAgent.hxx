@@ -43,7 +43,7 @@ class UserAgent : public CommandLineParser,
       virtual void onStaleCallTimeout(ClientInviteSessionHandle);
       virtual void onTerminated(InviteSessionHandle h, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg);
       virtual void onRedirected(ClientInviteSessionHandle, const SipMessage& msg);
-      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&);
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents&, InviteSessionHandler::AnswerReason);
       virtual void onOffer(InviteSessionHandle handle, const SipMessage& msg, const SdpContents& offer);
       virtual void onOfferRequired(InviteSessionHandle, const SipMessage& msg);
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage* msg);

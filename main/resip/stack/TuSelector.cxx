@@ -49,7 +49,7 @@ TuSelector::process()
 }
 
 void
-TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
+TuSelector::add(SharedPtr<Message> msg, TimeLimitFifo<Message>::DepthUsage usage)
 {
    if (msg->hasTransactionUser())
    {
@@ -59,18 +59,18 @@ TuSelector::add(Message* msg, TimeLimitFifo<Message>::DepthUsage usage)
       }
       else
       {
-         delete msg;
+         // delete msg; // !nash! let smart_ptr delete it
       }
    }
    else
    {
-      StatisticsMessage* stats = dynamic_cast<StatisticsMessage*>(msg);
+      SharedPtr<StatisticsMessage> stats(msg, dynamic_cast_tag());
       if (stats)
       {
          InfoLog(<< "Stats message " );
          stats->loadOut(mStatsPayload);
          stats->logStats(RESIPROCATE_SUBSYSTEM, mStatsPayload);
-         delete msg;
+         // delete msg; // !nash! let smart_ptr delete it
       }
       else
       {
@@ -88,7 +88,7 @@ TuSelector::add(ConnectionTerminated* term)
    {
       if (!it->shuttingDown && it->tu->isRegisteredForConnectionTermination())
       {
-         it->tu->post(term->clone());
+         it->tu->post(SharedPtr<Message>(term->clone()));
       }
    }
 }
@@ -186,7 +186,7 @@ TuSelector::remove(TransactionUser* tu)
    {
       if (it->tu == tu)
       {
-         TransactionUserMessage* done = new TransactionUserMessage(TransactionUserMessage::TransactionUserRemoved, tu);
+         SharedPtr<TransactionUserMessage> done(new TransactionUserMessage(TransactionUserMessage::TransactionUserRemoved, tu));
          tu->post(done);
          mTuList.erase(it);
          return;
