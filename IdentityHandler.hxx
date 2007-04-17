@@ -2,7 +2,6 @@
 #define RESIP_IdentityHandler_HXX
 
 #include "resip/dum/DumFeature.hxx"
-#include "rutil/SharedPtr.hxx"
 #include <map>
 
 namespace resip
@@ -17,13 +16,13 @@ class IdentityHandler : public DumFeature
       IdentityHandler(DialogUsageManager& dum, TargetCommand::Target& target); 
       ~IdentityHandler();
       
-      virtual ProcessingResult process(SharedPtr<Message> msg);
+      virtual ProcessingResult process(Message* msg);
 
    private:
       void processIdentityCheckResponse(const HttpGetMessage& msg);      
-      bool queueForIdentityCheck(SharedPtr<SipMessage> sipMsg);
+      bool queueForIdentityCheck(SipMessage* sipMsg);
 
-      typedef std::map<Data, SharedPtr<SipMessage> > RequiresCerts;
+      typedef std::map<Data, SipMessage*> RequiresCerts;
       RequiresCerts mRequiresCerts;
 };
 

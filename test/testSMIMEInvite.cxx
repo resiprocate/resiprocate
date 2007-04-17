@@ -177,8 +177,7 @@ class TestSMIMEInviteHandler : public TestClientRegistrationHandler,
       
       virtual void onAnswer(InviteSessionHandle,
                             const SipMessage& msg,
-                            const SdpContents& sdp,
-                            InviteSessionHandler::AnswerReason reason)
+                            const SdpContents& sdp)
       {
          InfoLog( << "InviteSessionHandler::onAnswer");
          InfoLog( << "Client received SDP: " << sdp );

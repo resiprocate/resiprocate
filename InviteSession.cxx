@@ -21,7 +21,6 @@
 #include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "rutil/SharedPtr.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)
@@ -111,19 +110,6 @@ InviteSession::getRemoteSdp() const
    if(mCurrentRemoteSdp.get())
    {
       return *mCurrentRemoteSdp;
-   }
-   else
-   {
-      return SdpContents::Empty;
-   }
-}
-
-const SdpContents&
-InviteSession::getProposedRemoteSdp() const
-{
-   if(mProposedRemoteSdp.get())
-   {
-      return *mProposedRemoteSdp;
    }
    else
    {
@@ -417,7 +403,7 @@ private:
 void
 InviteSession::provideOfferCommand(const SdpContents& offer, DialogUsageManager::EncryptionLevel level, const SdpContents* alternative)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionProvideOfferExCommand(*this, offer, level, alternative)));
+   mDum.post(new InviteSessionProvideOfferExCommand(*this, offer, level, alternative));
 }
 
 void
@@ -452,7 +438,7 @@ private:
 void
 InviteSession::provideOfferCommand(const SdpContents& offer)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionProvideOfferCommand(*this, offer)));
+   mDum.post(new InviteSessionProvideOfferCommand(*this, offer));
 }
 
 void
@@ -529,7 +515,7 @@ private:
 void
 InviteSession::provideAnswerCommand(const SdpContents& answer)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionProvideAnswerCommand(*this, answer)));
+   mDum.post(new InviteSessionProvideAnswerCommand(*this, answer));
 }
 
 void
@@ -645,7 +631,7 @@ private:
 void
 InviteSession::endCommand(EndReason reason)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionEndCommand(*this, reason)));
+   mDum.post(new InviteSessionEndCommand(*this, reason));
 }
 
 void
@@ -704,7 +690,7 @@ private:
 void
 InviteSession::rejectCommand(int code, WarningCategory *warning)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionRejectCommand(*this, code, warning)));
+   mDum.post(new InviteSessionRejectCommand(*this, code, warning));
 }
 
 void
@@ -785,7 +771,7 @@ private:
 void
 InviteSession::referCommand(const NameAddr& referTo, bool referSub)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionReferCommand(*this, referTo, referSub)));
+   mDum.post(new InviteSessionReferCommand(*this, referTo, referSub));
 }
 
 void
@@ -866,7 +852,7 @@ private:
 void
 InviteSession::referCommand(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionReferExCommand(*this, referTo, sessionToReplace, referSub)));
+   mDum.post(new InviteSessionReferExCommand(*this, referTo, sessionToReplace, referSub));
 }
 
 void
@@ -924,7 +910,7 @@ private:
 void
 InviteSession::infoCommand(const Contents& contents)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionInfoCommand(*this, contents)));
+   mDum.post(new InviteSessionInfoCommand(*this, contents));
 }
 
 void
@@ -984,7 +970,7 @@ private:
 void
 InviteSession::messageCommand(const Contents& contents)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionMessageCommand(*this, contents)));
+   mDum.post(new InviteSessionMessageCommand(*this, contents));
 }
 
 void
@@ -1206,10 +1192,10 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          *mLastRemoteSessionModification = msg;
          transition(ReceivedReinvite);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
 
          //handler->onDialogModified(getSessionHandle(), Offer, msg);
-         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
 
       case On2xx:
@@ -1228,8 +1214,8 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          //  See rfc3311 5.2, 4th paragraph.
          *mLastRemoteSessionModification = msg;
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
-         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
 
       case OnUpdate:
@@ -1289,8 +1275,8 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          {
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             setCurrentLocalSdp(msg);
-            mCurrentRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
-            handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp, InviteSessionHandler::Reinvite);
+            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
          }
          else if(mProposedLocalSdp.get()) 
          {
@@ -1392,8 +1378,8 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
             if (changed)
             {
-               mCurrentRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
-               handler->onRemoteSdpChanged(getSessionHandle(), msg, *mCurrentRemoteSdp);
+               mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+               handler->onRemoteSdpChanged(getSessionHandle(), msg, *sdp);
             }
          }
          else
@@ -1491,8 +1477,8 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          handleSessionTimerResponse(msg);
          // mLastSessionModification = msg;   // ?slg? why are we storing 200's?
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
-         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onOffer(getSessionHandle(), msg, *sdp);
 
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
          // the ACK when a 200I is received? If yes, then I need to store all
@@ -1575,10 +1561,10 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
       case OnAckAnswer:
          transition(Connected);
          setCurrentLocalSdp(msg);
-         mCurrentRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp, InviteSessionHandler::Ack);		 
+         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Ack);		 
          break;         
       case OnAck:
          if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
@@ -1977,7 +1963,7 @@ private:
 void
 InviteSession::acceptNITCommand(int statusCode, const Contents* contents)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionAcceptNITCommand(*this, statusCode, contents)));
+   mDum.post(new InviteSessionAcceptNITCommand(*this, statusCode, contents));
 } 
 
 void
@@ -2019,7 +2005,7 @@ private:
 void
 InviteSession::rejectNITCommand(int statusCode)
 {
-   mDum.post(SharedPtr<Message>(new InviteSessionRejectNITCommand(*this, statusCode)));
+   mDum.post(new InviteSessionRejectNITCommand(*this, statusCode));
 }
 
 void

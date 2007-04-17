@@ -32,9 +32,9 @@ ServerAuthManager::~ServerAuthManager()
 // ownership of msg until we get a return. If we throw, the ownership of msg
 // is unknown. This is unacceptable.
 DumFeature::ProcessingResult 
-ServerAuthManager::process(SharedPtr<Message> msg)
+ServerAuthManager::process(Message* msg)
 {
-   SharedPtr<SipMessage> sipMsg(msg, dynamic_cast_tag());
+   SipMessage* sipMsg = dynamic_cast<SipMessage*>(msg);
 
    if (sipMsg)
    {
@@ -58,13 +58,13 @@ ServerAuthManager::process(SharedPtr<Message> msg)
       }
    }
 
-   SharedPtr<ChallengeInfo> challengeInfo(msg, dynamic_cast_tag());
+   ChallengeInfo* challengeInfo = dynamic_cast<ChallengeInfo*>(msg);
    if(challengeInfo)
    {
       InfoLog(<< "ServerAuth got ChallengeInfo " << challengeInfo->brief());
       MessageMap::iterator it = mMessages.find(challengeInfo->getTransactionId());
       assert(it != mMessages.end());
-      SharedPtr<SipMessage> sipMsg = it->second;
+      SipMessage* sipMsg = it->second;
       mMessages.erase(it);
 
       if(challengeInfo->isFailed()) 
@@ -80,29 +80,29 @@ ServerAuthManager::process(SharedPtr<Message> msg)
 
       if(challengeInfo->isChallengeRequired()) 
       {
-        issueChallenge(sipMsg.get());  
+        issueChallenge(sipMsg);  
         InfoLog(<< "ServerAuth challenged request (after async) " << sipMsg->brief());
         return DumFeature::ChainDoneAndEventDone;
       } 
       else 
       {
         // challenge is not required, re-instate original message
-        postCommand(sipMsg);
+        postCommand(auto_ptr<Message>(sipMsg));
         return FeatureDoneAndEventDone;
       }
    }
 
-   SharedPtr<UserAuthInfo> userAuth(msg, dynamic_cast_tag());
+   UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg);
    if (userAuth)
    {
       //InfoLog(<< "Got UserAuthInfo");
-      SharedPtr<UserAuthInfo> userAuth(msg, dynamic_cast_tag());
+      UserAuthInfo* userAuth = dynamic_cast<UserAuthInfo*>(msg);
       if (userAuth)
       {
-         SharedPtr<Message> result = handleUserAuthInfo(userAuth.get());
+         Message* result = handleUserAuthInfo(userAuth);
          if (result)
          {
-            postCommand(result);
+            postCommand(auto_ptr<Message>(result));
             return FeatureDoneAndEventDone;
          }
          else
@@ -115,14 +115,14 @@ ServerAuthManager::process(SharedPtr<Message> msg)
    return FeatureDone;   
 }
 
-SharedPtr<SipMessage>
+SipMessage*
 ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
 {
    assert(userAuth);
 
    MessageMap::iterator it = mMessages.find(userAuth->getTransactionId());
    assert(it != mMessages.end());
-   SharedPtr<SipMessage> requestWithAuth = it->second;
+   SipMessage* requestWithAuth = it->second;
    mMessages.erase(it);
 
    InfoLog( << "Checking for auth result in realm=" << userAuth->getRealm() 
@@ -136,8 +136,8 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       Helper::makeResponse(*response, *requestWithAuth, 404, "User unknown.");
       mDum.send(response);
       onAuthFailure(BadCredentials, *requestWithAuth);
-      // delete requestWithAuth; // !nash! let smart_ptr delete it
-      return SharedPtr<SipMessage>();
+      delete requestWithAuth;
+      return 0;
    }
 
    if (userAuth->getMode() == UserAuthInfo::Error)
@@ -147,8 +147,8 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       Helper::makeResponse(*response, *requestWithAuth, 503, "Server Error.");
       mDum.send(response);
       onAuthFailure(Error, *requestWithAuth);
-      // delete requestWithAuth; // !nash! let smart_ptr delete it
-      return SharedPtr<SipMessage>();
+      delete requestWithAuth;
+      return 0;
    }
 
    bool stale = false;
@@ -180,8 +180,8 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
             Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid nonce");
             mDum.send(response);
             onAuthFailure(InvalidRequest, *requestWithAuth);
-            // delete requestWithAuth; // !nash! let smart_ptr delete it
-            return SharedPtr<SipMessage>();
+            delete requestWithAuth;
+            return 0;
             break;
          }
          case Helper::Expired:
@@ -196,9 +196,9 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
    {
       InfoLog (<< "Nonce expired for " << userAuth->getUser());
 
-      issueChallenge(requestWithAuth.get());
-      // delete requestWithAuth; // !nash! let smart_ptr delete it
-      return SharedPtr<SipMessage>();
+      issueChallenge(requestWithAuth);
+      delete requestWithAuth;
+      return 0;
    }
 
    if(digestAccepted)
@@ -220,8 +220,8 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
          Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid user name provided");
          mDum.send(response);
          onAuthFailure(InvalidRequest, *requestWithAuth);
-         // delete requestWithAuth; // !nash! let smart_ptr delete it
-         return SharedPtr<SipMessage>();
+         delete requestWithAuth;
+         return 0;
       }
    } 
    else 
@@ -236,8 +236,8 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
       Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid password provided");
       mDum.send(response);
       onAuthFailure(BadCredentials, *requestWithAuth);
-      // delete requestWithAuth; // !nash! let smart_ptr delete it
-      return SharedPtr<SipMessage>();
+      delete requestWithAuth;
+      return 0;
    }
 }
 
@@ -290,7 +290,7 @@ ServerAuthManager::isMyRealm(const Data& realm)
 
 // return true if request has been consumed 
 ServerAuthManager::Result
-ServerAuthManager::handle(SharedPtr<SipMessage> sipMsg)
+ServerAuthManager::handle(SipMessage* sipMsg)
 {
    //InfoLog( << "trying to do auth" );
    if (sipMsg->isRequest() && 
@@ -351,7 +351,7 @@ ServerAuthManager::handle(SharedPtr<SipMessage> sipMsg)
 }
 
 ServerAuthManager::Result
-ServerAuthManager::issueChallengeIfRequired(SharedPtr<SipMessage> sipMsg) 
+ServerAuthManager::issueChallengeIfRequired(SipMessage *sipMsg) 
 {
    // Is challenge required for this message
    AsyncBool required = requiresChallenge(*sipMsg);
@@ -364,7 +364,7 @@ ServerAuthManager::issueChallengeIfRequired(SharedPtr<SipMessage> sipMsg)
         return RequestedInfo;
      case True:
      default:
-        issueChallenge(sipMsg.get());
+        issueChallenge(sipMsg);
         return Challenged;
    }
 }
