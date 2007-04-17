@@ -29,7 +29,7 @@ bool SipMessage::checkContentLength=true;
 
 SipMessage::SipMessage(const Transport* fromWire)
    : mIsBadAck200(false),
-     mIsExternal(fromWire != 0),
+      mIsExternal(fromWire != 0),
      mTransport(fromWire),
      mStartLine(0),
      mContentsHfv(0),

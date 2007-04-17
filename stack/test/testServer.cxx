@@ -55,10 +55,10 @@ class Server : public ThreadIf
             assert (err != -1);
             mStack.process(fdset);
             
-            SharedPtr<SipMessage> received = mStack.receive();
+            SipMessage* received = mStack.receive();
             if (received)
             {
-               //auto_ptr<SipMessage> forDel(received);
+               auto_ptr<SipMessage> forDel(received);
                MethodTypes meth = received->header(h_RequestLine).getMethod();
                ErrLog ( << "Server received: " << getMethodName(meth));
                if ( meth == INVITE )

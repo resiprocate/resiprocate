@@ -2,7 +2,6 @@
 
 #include "resip/stack/Helper.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/ClientSubscription.hxx"
@@ -463,7 +462,7 @@ private:
 void
 ClientSubscription::requestRefreshCommand(UInt32 expires)
 {
-   mDum.post(SharedPtr<Message>(new ClientSubscriptionRefreshCommand(*this, expires)));
+   mDum.post(new ClientSubscriptionRefreshCommand(*this, expires));
 }
 
 void
@@ -505,7 +504,7 @@ private:
 void
 ClientSubscription::endCommand()
 {
-   mDum.post(SharedPtr<Message>(new ClientSubscriptionEndCommand(*this)));
+   mDum.post(new ClientSubscriptionEndCommand(*this));
 }
 
 void 
@@ -552,7 +551,7 @@ private:
 void 
 ClientSubscription::acceptUpdateCommand(int statusCode)
 {
-   mDum.post(SharedPtr<Message>(new ClientSubscriptionAcceptUpdateCommand(*this, statusCode)));
+   mDum.post(new ClientSubscriptionAcceptUpdateCommand(*this, statusCode));
 }
 
 void 
@@ -643,7 +642,7 @@ private:
 void 
 ClientSubscription::rejectUpdateCommand(int statusCode, const Data& reasonPhrase)
 {
-   mDum.post(SharedPtr<Message>(new ClientSubscriptionRejectUpdateCommand(*this, statusCode, reasonPhrase)));
+   mDum.post(new ClientSubscriptionRejectUpdateCommand(*this, statusCode, reasonPhrase));
 }
 
 void ClientSubscription::dialogDestroyed(const SipMessage& msg)

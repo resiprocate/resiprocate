@@ -30,7 +30,7 @@ class DumFeatureChain
 
       DumFeatureChain(DialogUsageManager& dum, const FeatureList& features, TargetCommand::Target& target);
      
-      ProcessingResult process(SharedPtr<Message> msg);      
+      ProcessingResult process(Message* msg);      
 
    private:       
       // std::bit_vector mActiveFeatures;  //vector<bool> is the correct way on most platforms
