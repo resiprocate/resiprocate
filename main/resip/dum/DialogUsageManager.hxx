@@ -300,8 +300,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       TargetCommand::Target& dumOutgoingTarget();
 
       //exposed so DumThread variants can be written
-      SharedPtr<Message> getNext(int ms) { return mFifo.getNext(ms); }
-      void internalProcess(SharedPtr<Message> msg);
+      Message* getNext(int ms) { return mFifo.getNext(ms); }
+      void internalProcess(std::auto_ptr<Message> msg);
       bool messageAvailable(void) { return mFifo.messageAvailable(); }
 
       void applyToAllClientSubscriptions(ClientSubscriptionFunctor*);
@@ -357,7 +357,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             {
             }
 
-            virtual void post(SharedPtr<Message> msg)
+            virtual void post(std::auto_ptr<Message> msg)
             {
                mDum.incomingProcess(msg);
             }
@@ -370,7 +370,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
             {
             }
 
-            virtual void post(SharedPtr<Message> msg)
+            virtual void post(std::auto_ptr<Message> msg)
             {
                mDum.outgoingProcess(msg);
             }
@@ -426,8 +426,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       bool queueForIdentityCheck(SipMessage* msg);
       void processIdentityCheckResponse(const HttpGetMessage& msg);
 
-      void incomingProcess(SharedPtr<Message> msg);
-      void outgoingProcess(SharedPtr<Message> msg);
+      void incomingProcess(std::auto_ptr<Message> msg);
+      void outgoingProcess(std::auto_ptr<Message> msg);
       void processExternalMessage(ExternalMessageBase* externalMessage);
 
       // For delayed delete of a Usage

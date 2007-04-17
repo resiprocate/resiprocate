@@ -1,8 +1,6 @@
 #ifndef RESIP_Postable_hxx
 #define RESIP_Postable_hxx
 
-#include "rutil/SharedPtr.hxx"
-
 namespace resip
 {
 
@@ -10,7 +8,7 @@ class Postable
 {
    public:
       virtual ~Postable(){}
-      virtual void post(SharedPtr<Message>)=0;
+      virtual void post(Message*)=0;
 };
 
 }

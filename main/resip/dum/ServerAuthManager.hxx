@@ -29,17 +29,17 @@ class ServerAuthManager : public DumFeature
       ServerAuthManager(DialogUsageManager& dum, TargetCommand::Target& target);
       virtual ~ServerAuthManager();
 
-      virtual ProcessingResult process(SharedPtr<Message> msg);      
+      virtual ProcessingResult process(Message* msg);      
       
       // can return Authorized, Rejected or Skipped
       //Result handleUserAuthInfo(Message* msg);
 
       // returns the SipMessage that was authorized if succeeded or returns 0 if
       // rejected. 
-      virtual SharedPtr<SipMessage> handleUserAuthInfo(UserAuthInfo* auth);
+      virtual SipMessage* handleUserAuthInfo(UserAuthInfo* auth);
 
       // can return Challenged, RequestedCredentials, Rejected, Skipped
-      virtual Result handle(SharedPtr<SipMessage> sipMsg);
+      virtual Result handle(SipMessage* sipMsg);
       
    protected:
 
@@ -68,7 +68,7 @@ class ServerAuthManager : public DumFeature
       virtual bool useAuthInt() const;
       virtual bool proxyAuthenticationMode() const;
       
-      typedef std::map<Data, SharedPtr<SipMessage> > MessageMap;
+      typedef std::map<Data, SipMessage*> MessageMap;
       MessageMap mMessages;
 
       /// should return true if the request must be challenged
@@ -91,7 +91,7 @@ class ServerAuthManager : public DumFeature
       //  b) returns `Skipped' if no challenge necessary
       //  c) waits asynchronously to find out if challenge required,
       //      and returns `RequestedInfo'
-      Result issueChallengeIfRequired(SharedPtr<SipMessage> sipMsg);
+      Result issueChallengeIfRequired(SipMessage *sipMsg);
 
       // sends a 407 challenge to the UAC who sent sipMsg
       void issueChallenge(SipMessage *sipMsg);

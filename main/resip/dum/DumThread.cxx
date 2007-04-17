@@ -1,7 +1,6 @@
 #include "resip/dum/DumThread.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/SharedPtr.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -19,7 +18,7 @@ DumThread::thread()
    {
       try
       {
-         SharedPtr<Message> msg(mDum.mFifo.getNext(1000));  // Only need to wake up to see if we are shutdown
+         std::auto_ptr<Message> msg(mDum.mFifo.getNext(1000));  // Only need to wake up to see if we are shutdown
          if (msg.get())
          {
             mDum.internalProcess(msg);

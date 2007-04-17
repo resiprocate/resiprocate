@@ -107,7 +107,8 @@ Timer::Timer(unsigned long tms, Timer::Type type, const Data& transactionId) :
     mId(++mTimerCount),
     mType(type),
     mTransactionId(transactionId),
-    mDuration(tms)
+    mDuration(tms),
+    mMessage(0)
 {
 }
 
@@ -125,7 +126,8 @@ Timer::Timer(unsigned long tms, Message* message)
 Timer::Timer(unsigned long tms) :
     mWhen(tms + getTimeMs()),
     mId(0),
-    mDuration(tms)
+    mDuration(tms),
+    mMessage(0)
 {
 }
 

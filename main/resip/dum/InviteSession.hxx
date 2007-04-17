@@ -115,7 +115,6 @@ class InviteSession : public DialogUsage
       const NameAddr& peerAddr() const;
       const SdpContents& getLocalSdp() const;
       const SdpContents& getRemoteSdp() const;
-      const SdpContents& getProposedRemoteSdp() const;
       const Data& getDialogId() const;
       
       bool isConnected() const;

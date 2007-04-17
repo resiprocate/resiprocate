@@ -13,7 +13,6 @@
 #include "resip/stack/StatisticsManager.hxx"
 #include "resip/stack/TuSelector.hxx"
 #include "rutil/dns/DnsStub.hxx"
-#include "rutil/SharedPtr.hxx"
 
 namespace resip 
 {
@@ -346,7 +345,7 @@ class SipStack
 
           @returns pointer to received SipMessage, 0 if nothing there.
       */
-      SharedPtr<SipMessage> receive(); 
+      SipMessage* receive(); 
 
       /** 
           Retrieve a Message off the old TuFifo.  Caller now owns the memory.  Returns 
@@ -363,7 +362,7 @@ class SipStack
                    TransactionTerminated*, TimerMessage*, SipMessage* or derived 
                    ApplicationMessage* 
       */
-      SharedPtr<Message> receiveAny(); 
+      Message* receiveAny(); 
 
       /**  
           Build the FD set to use in a select to find out when process must be
