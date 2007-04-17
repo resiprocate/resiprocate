@@ -7,7 +7,6 @@
 #include "resip/dum/PagerMessageHandler.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "rutil/SharedPtr.hxx"
 
 using namespace resip;
 
@@ -64,7 +63,7 @@ private:
 
 void ServerPagerMessage::endCommand()
 {
-   mDum.post(SharedPtr<Message>(new ServerPagerMessageEndCommand(*this)));
+   mDum.post(new ServerPagerMessageEndCommand(*this));
 }
 
 void 
@@ -132,7 +131,7 @@ private:
 void
 ServerPagerMessage::acceptCommand(int statusCode)
 {   
-   mDum.post(SharedPtr<Message>(new ServerPagerMessageAcceptCommand(*this, statusCode)));
+   mDum.post(new ServerPagerMessageAcceptCommand(*this, statusCode));
 }
 
 SharedPtr<SipMessage>
@@ -169,7 +168,7 @@ private:
 void
 ServerPagerMessage::rejectCommand(int statusCode)
 {
-   mDum.post(SharedPtr<Message>(new ServerPagerMessageRejectCommand(*this, statusCode)));
+   mDum.post(new ServerPagerMessageRejectCommand(*this, statusCode));
 }
 
 
