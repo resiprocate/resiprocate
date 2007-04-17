@@ -41,7 +41,7 @@ UserStore::requestUserAuthInfo( const resip::Data& user,
    // read that and then do the stuff in the rest of this fucntion
    
    resip::Data a1 = getUserAuthInfo(user, realm);
-   SharedPtr<UserAuthInfo> msg(new UserAuthInfo(user,realm,a1,transactionToken));
+   UserAuthInfo* msg = new UserAuthInfo(user,realm,a1,transactionToken);
    transactionUser.post( msg );
 }
 

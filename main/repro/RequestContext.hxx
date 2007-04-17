@@ -31,8 +31,8 @@ class RequestContext
       virtual ~RequestContext();
 
       void process(resip::TransactionTerminated& msg);
-      void process(resip::SharedPtr<resip::SipMessage> sip);
-      void process(resip::SharedPtr<resip::ApplicationMessage> app);
+      void process(std::auto_ptr<resip::SipMessage> sip);
+      void process(std::auto_ptr<resip::ApplicationMessage> app);
       
       /// Returns the SipMessage associated with the server transaction
       resip::SipMessage& getOriginalRequest();
@@ -71,9 +71,9 @@ class RequestContext
       
       bool mHaveSentFinalResponse;
    private:
-      resip::SharedPtr<resip::SipMessage>  mOriginalRequest;
-      resip::SharedPtr<resip::Message>  mCurrentEvent;
-      resip::SharedPtr<resip::SipMessage> mAck200ToRetransmit;
+      resip::SipMessage*  mOriginalRequest;
+      resip::Message*  mCurrentEvent;
+      resip::SipMessage* mAck200ToRetransmit;
       ProcessorChain& mRequestProcessorChain; // monkeys
       ProcessorChain& mResponseProcessorChain; // lemurs
       ProcessorChain& mTargetProcessorChain; // baboons

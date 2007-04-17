@@ -139,7 +139,7 @@ DnsResult*
 DnsInterface::createDnsResult(DnsHandler* handler)
 {
    DnsResult* result = new DnsResult(*this, mDnsStub, mVip, handler);
-   ++mActiveQueryCount;  
+   mActiveQueryCount++;  
    return result;
 }
 
