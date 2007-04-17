@@ -1533,6 +1533,8 @@ Helper::massageRoute(const SipMessage& request, NameAddr& rt)
    {
       rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
    }
+   
+   rt.uri().param(p_lr);
 }
 
 int
