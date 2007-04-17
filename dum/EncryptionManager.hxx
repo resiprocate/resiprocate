@@ -31,7 +31,7 @@ class EncryptionManager : public DumFeature
       EncryptionManager(DialogUsageManager& dum, TargetCommand::Target& target);
       virtual ~EncryptionManager();
       void setRemoteCertStore(std::auto_ptr<RemoteCertStore> store);
-      virtual DumFeature::ProcessingResult process(SharedPtr<Message> msg);
+      virtual DumFeature::ProcessingResult process(Message* msg);
 
    private:
 
@@ -41,11 +41,11 @@ class EncryptionManager : public DumFeature
          Complete
       } Result;
 
-      EncryptionManager::Result processCertMessage(SharedPtr<CertMessage> cert);
+      EncryptionManager::Result processCertMessage(CertMessage* cert);
       Contents* sign(SharedPtr<SipMessage> msg, const Data& senderAor, bool* noCerts);
       Contents* encrypt(SharedPtr<SipMessage> msg, const Data& recipientAor, bool* noCerts);
       Contents* signAndEncrypt(SharedPtr<SipMessage> msg, const Data& senderAor, const Data& recipientAor, bool* noCerts);
-      bool decrypt(SharedPtr<SipMessage> msg);
+      bool decrypt(SipMessage* msg);
 
       class Request
       {
@@ -111,7 +111,7 @@ class EncryptionManager : public DumFeature
       class Decrypt : public Request
       {
          public:
-            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, SharedPtr<SipMessage> msg, DumFeature& feature);
+            Decrypt(DialogUsageManager& dum, RemoteCertStore* store, SipMessage* msg, DumFeature& feature);
             virtual ~Decrypt();
             Result received(bool success, MessageId::Type type, const Data& aor, const Data& data);
             bool decrypt(Helper::ContentsSecAttrs& csa);
@@ -134,7 +134,7 @@ class EncryptionManager : public DumFeature
             Data mOriginalMsgContents;
             Mime mOriginalMsgContentsType;
             bool mIsEncrypted; // the whole body is encrypted in original message.
-            SharedPtr<SipMessage> mMsgToDecrypt; // original messge.
+            SipMessage* mMsgToDecrypt; // original messge.
             bool mMessageTaken;
  };
 

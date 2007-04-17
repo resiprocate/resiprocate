@@ -12,7 +12,6 @@
 #include "rutil/Logger.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "rutil/SharedPtr.hxx"
 
 using namespace resip;
 
@@ -116,7 +115,7 @@ private:
 void 
 ServerInviteSession::redirectCommand(const NameAddrs& contacts, int code)
 {
-   mDum.post(SharedPtr<Message>(new ServerInviteSessionRedirectCommand(*this, contacts, code)));
+   mDum.post(new ServerInviteSessionRedirectCommand(*this, contacts, code));
 }
 
 void 
@@ -206,7 +205,7 @@ private:
 void 
 ServerInviteSession::provisionalCommand(int statusCode)
 {
-   mDum.post(SharedPtr<Message>(new ServerInviteSessionProvisionalCommand(*this, statusCode)));
+   mDum.post(new ServerInviteSessionProvisionalCommand(*this, statusCode));
 }
 
 void
@@ -706,7 +705,7 @@ private:
 void 
 ServerInviteSession::acceptCommand(int statusCode)
 {
-   mDum.post(SharedPtr<Message>(new ServerInviteSessionAcceptCommand(*this, statusCode)));
+   mDum.post(new ServerInviteSessionAcceptCommand(*this, statusCode));
 }
 
 void 
@@ -811,12 +810,12 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       case OnInviteOffer:
          *mLastRemoteSessionModification = msg;
          transition(UAS_Offer);
-         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          handler->onNewSession(getHandle(), Offer, msg);
          if(!isTerminated())  
          {
-            handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
+            handler->onOffer(getSessionHandle(), msg, *sdp);
          }
          break;
       case OnInvite:
@@ -831,12 +830,12 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       case OnInviteReliableOffer:
          *mLastRemoteSessionModification = msg;
          transition(UAS_OfferReliable);
-         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          handler->onNewSession(getHandle(), Offer, msg);
          if(!isTerminated())  
          {
-            handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
+            handler->onOffer(getSessionHandle(), msg, *sdp);
          }
          break;
       case OnInviteReliable:
@@ -1056,8 +1055,8 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          transition(Connected);
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mCurrentRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp, InviteSessionHandler::Ack);
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Ack);
          if(!isTerminated())  // onAnswer callback may call end() or reject()
          {
             handler->onConnected(getSessionHandle(), msg);

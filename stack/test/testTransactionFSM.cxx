@@ -142,7 +142,7 @@ processTimeouts(int arg)
     {
 	return;
     }
-    SharedPtr<SipMessage> message;
+    SipMessage* message = 0;
 
 
 #if defined(UGLY) || 1
@@ -158,7 +158,7 @@ processTimeouts(int arg)
     // First go through the "wire" data
     while (fakeTxFifo.messageAvailable())
     {
-	message = SharedPtr<SipMessage>(fakeTxFifo.getNext());
+	message = fakeTxFifo.getNext();
 	for (list<WaitNode*>::iterator i = WaitQueue.begin();
 	     i != WaitQueue.end();
 	     /* don't increment */)
@@ -168,6 +168,8 @@ processTimeouts(int arg)
 		if ((*i)->mMethod == message->header(h_RequestLine).getMethod())
 		{
 		    // We matched something we expected.
+		    delete message;
+		    message = 0;
 		    delete *i;
 		    WaitQueue.erase(i++);
 		    break;
@@ -183,6 +185,8 @@ processTimeouts(int arg)
 		    message->header(h_StatusLine).responseCode())
 		{
 		    // We matched something we expected.
+		    delete message;
+		    message = 0;
 		    delete *i;
 		    WaitQueue.erase(i++);
 		    break;
@@ -206,6 +210,7 @@ processTimeouts(int arg)
 	{
 	    DebugLog( << "Success: expected message seen at the transport");
 	}
+	delete message;
     }
 
     // Now go through the data at the TU.
@@ -221,6 +226,8 @@ processTimeouts(int arg)
 		    message->header(h_RequestLine).getMethod())
 		{
 		    // We matched something we expected.
+		    delete message;
+		    message = 0;
 		    delete *i;
 		    WaitQueue.erase(i++);
 		    break;
@@ -236,6 +243,8 @@ processTimeouts(int arg)
 		    message->header(h_StatusLine).responseCode())
 		{
 		    // We matched something we expected.
+		    delete message;
+		    message = 0;
 		    delete *i;
 		    WaitQueue.erase(i++);
 		    break;
@@ -254,6 +263,7 @@ processTimeouts(int arg)
 	{
 	    DebugLog( << "Warning: unexpected message seen at the TU: "
 		      << *message);
+	    delete message;
 	}
 	else
 	{
