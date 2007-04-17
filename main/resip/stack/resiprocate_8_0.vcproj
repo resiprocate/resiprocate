@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="resiprocate"
 	ProjectGUID="{2A8BE839-6466-4001-B224-8F1C3168D04A}"
+	RootNamespace="resiprocate"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -642,6 +643,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\StatelessHandler.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\StatisticsHandler.cxx"
 				>
 			</File>
@@ -1180,6 +1185,10 @@
 			</File>
 			<File
 				RelativePath=".\StackThread.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StatelessHandler.hxx"
 				>
 			</File>
 			<File
