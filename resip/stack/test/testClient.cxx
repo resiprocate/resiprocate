@@ -46,12 +46,12 @@ class Client
       {
          mStack.process(fdset);
          
-         SharedPtr<SipMessage> received = mStack.receive();
+         SipMessage* received = mStack.receive();
          if (received)
          {
             InfoLog (<< "Client received: " << received->brief());
             
-            //auto_ptr<SipMessage> forDel(received);
+            auto_ptr<SipMessage> forDel(received);
             if ( (received->isResponse()) )
             {
                if ( received->header(h_StatusLine).responseCode() == 200 )

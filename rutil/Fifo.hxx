@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include "rutil/AbstractFifo.hxx"
-#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {

@@ -34,13 +34,14 @@ void *poller(void *arg)
       stack1->buildFdSet(fdset);
       fdset.selectMilliSeconds(100);
       stack1->process(fdset);
-      SharedPtr<SipMessage> msg = stack1->receive();
+      SipMessage *msg = stack1->receive();
       if (msg)
         {
 	  cerr << "Got a message" << endl;
 	  SipMessage *resp = Helper::makeResponse(*msg,604);
 	  stack1->send(*resp);
 	  delete resp;
+	  delete msg;
         }
       else
 	{

@@ -95,7 +95,7 @@ void Consumer::thread()
     {
        if (mFifo.messageAvailable())
        {
-          mFifo.getNext(100);
+          delete mFifo.getNext(100);
        }
        else
        {
@@ -129,7 +129,7 @@ void Producer::thread()
    {
       if (mFifo.wouldAccept(TimeLimitFifo<Foo>::EnforceTimeDepth))
       {
-         mFifo.add(SharedPtr<Foo>(new Foo(Data(n))), TimeLimitFifo<Foo>::EnforceTimeDepth);
+         mFifo.add(new Foo(Data(n)), TimeLimitFifo<Foo>::EnforceTimeDepth);
       }
       else
       {
@@ -184,7 +184,7 @@ main()
       assert(tlf.size() == 0);
       assert(tlf.timeDepth() == 0);
 
-      c = tlf.add(SharedPtr<Foo>(new Foo("first")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlf.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
 
 #ifdef VERBOSE
@@ -208,7 +208,7 @@ main()
       assert(tlf.size() == 1);
       assert(tlf.timeDepth() > 1);
 
-      tlf.getNext();
+      delete tlf.getNext();
 
       assert(tlf.empty());
       assert(tlf.size() == 0);
@@ -218,24 +218,25 @@ main()
       cerr << __LINE__ << endl;
 #endif
 
-      c = tlf.add(SharedPtr<Foo>(new Foo("first")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlf.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
       sleepMS(3000);
-      c = tlf.add(SharedPtr<Foo>(new Foo("second")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlf.add(new Foo("second"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
       sleepMS(3000);
-      c = tlf.add(SharedPtr<Foo>(new Foo("nope")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlf.add(new Foo("nope"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(!c);
-      c = tlf.add(SharedPtr<Foo>(new Foo("yep")), TimeLimitFifo<Foo>::IgnoreTimeDepth);
+      c = tlf.add(new Foo("yep"), TimeLimitFifo<Foo>::IgnoreTimeDepth);
       assert(c);
-      c = tlf.add(SharedPtr<Foo>(new Foo("internal")), TimeLimitFifo<Foo>::InternalElement);
+      c = tlf.add(new Foo("internal"), TimeLimitFifo<Foo>::InternalElement);
       assert(c);
 
       cerr << __LINE__ << endl;
 
-      SharedPtr<Foo> fp = tlf.getNext();
+      Foo* fp = tlf.getNext();
       assert(fp->mVal == "first");
-      c = tlf.add(SharedPtr<Foo>(new Foo("third")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      delete fp;
+      c = tlf.add(new Foo("third"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
    }
 
@@ -249,17 +250,18 @@ main()
       assert(tlfNS.size() == 0);
       assert(tlfNS.timeDepth() == 0);
 
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("first")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlfNS.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
       sleepMS(3000);
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("second")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlfNS.add(new Foo("second"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
       sleepMS(3000);
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("nope")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlfNS.add(new Foo("nope"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(!c);
-      SharedPtr<Foo> fp = tlfNS.getNext();
+      Foo* fp = tlfNS.getNext();
       assert(fp->mVal == "first");
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("third")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      delete fp;
+      c = tlfNS.add(new Foo("third"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
    }
 
@@ -273,26 +275,25 @@ main()
 
       for (int i = 0; i < 100; ++i)
       {
-         c = tlfNS.add(SharedPtr<Foo>(new Foo(Data("element") + Data(i))), TimeLimitFifo<Foo>::EnforceTimeDepth);
+         c = tlfNS.add(new Foo(Data("element") + Data(i)), TimeLimitFifo<Foo>::EnforceTimeDepth);
          assert(c);
       }
 
       sleepMS(6000);
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("nope")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlfNS.add(new Foo("nope"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(!c);
 
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("yep")), TimeLimitFifo<Foo>::IgnoreTimeDepth);
+      c = tlfNS.add(new Foo("yep"), TimeLimitFifo<Foo>::IgnoreTimeDepth);
       assert(c);
 
       assert(tlfNS.size() == 101);
 
-      // !nash! let smart_ptr delete it
       while (!tlfNS.empty())
       {
-      	tlfNS.getNext();
+         delete tlfNS.getNext();
       }
 
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("first")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlfNS.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
    }
 
@@ -308,31 +309,30 @@ main()
 
       for (int i = 0; i < 8; ++i)
       {
-         c = tlfNS.add(SharedPtr<Foo>(new Foo(Data("element") + Data(i))), TimeLimitFifo<Foo>::EnforceTimeDepth);
+         c = tlfNS.add(new Foo(Data("element") + Data(i)), TimeLimitFifo<Foo>::EnforceTimeDepth);
          assert(c);
       }
 
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("nope")), TimeLimitFifo<Foo>::IgnoreTimeDepth);
+      c = tlfNS.add(new Foo("nope"), TimeLimitFifo<Foo>::IgnoreTimeDepth);
       assert(!c);
 
       assert(tlfNS.size() == 8);
  
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("yep")), TimeLimitFifo<Foo>::InternalElement);
+      c = tlfNS.add(new Foo("yep"), TimeLimitFifo<Foo>::InternalElement);
       assert(c);
 
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("yepAgain")), TimeLimitFifo<Foo>::InternalElement);
+      c = tlfNS.add(new Foo("yepAgain"), TimeLimitFifo<Foo>::InternalElement);
       assert(c);
 
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("hard nope!")), TimeLimitFifo<Foo>::InternalElement);
+      c = tlfNS.add(new Foo("hard nope!"), TimeLimitFifo<Foo>::InternalElement);
       assert(!c);
 
-      // !nash! let smart_ptr delet it
       while (!tlfNS.empty())
       {
-         tlfNS.getNext();
+         delete tlfNS.getNext();
       }
 
-      c = tlfNS.add(SharedPtr<Foo>(new Foo("first")), TimeLimitFifo<Foo>::EnforceTimeDepth);
+      c = tlfNS.add(new Foo("first"), TimeLimitFifo<Foo>::EnforceTimeDepth);
       assert(c);
    }
 
@@ -349,7 +349,7 @@ main()
 
       for (int i = 0; i < 100; ++i)
       {
-         c = tlfNS.add(SharedPtr<Foo>(new Foo(Data("element") + Data(i))), TimeLimitFifo<Foo>::EnforceTimeDepth);
+         c = tlfNS.add(new Foo(Data("element") + Data(i)), TimeLimitFifo<Foo>::EnforceTimeDepth);
          assert(c);
          sleepMS(1000);
       }

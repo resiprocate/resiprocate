@@ -200,8 +200,8 @@ class BaseSecurity
 class Security : public BaseSecurity
 {
    public:
-      Security(const Data& pathToCerts, const CipherList& = ExportableSuite, bool serverAuthentication = true);
-      Security(const CipherList& = ExportableSuite, bool serverAuthentication = true);
+      Security(const Data& pathToCerts, const CipherList& = ExportableSuite);
+      Security(const CipherList& = ExportableSuite);
 
       virtual void preload();
 
@@ -209,11 +209,8 @@ class Security : public BaseSecurity
       virtual void onWritePEM(const Data& name, PEMType type, const Data& buffer) const;
       virtual void onRemovePEM(const Data& name, PEMType type) const;
 
-      bool requireServerAuthentication() const { return mServerAuthentication; }
-
    private:
       Data mPath;
-      bool mServerAuthentication;
 };
 
 }

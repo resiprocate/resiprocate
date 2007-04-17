@@ -75,7 +75,7 @@ Proxy::thread()
 
    while (!isShutdown())
    {
-      SharedPtr<Message> msg;
+      Message* msg=0;
       //DebugLog (<< "TransactionUser::postToTransactionUser " << " &=" << &mFifo << " size=" << mFifo.size());
 
       try
@@ -84,9 +84,9 @@ Proxy::thread()
          {
             DebugLog (<< "Got: " << *msg);
          
-            SharedPtr<SipMessage> sip(msg, dynamic_cast_tag());
-            SharedPtr<ApplicationMessage> app(msg, dynamic_cast_tag());
-            SharedPtr<TransactionTerminated> term(msg, dynamic_cast_tag());
+            SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+            ApplicationMessage* app = dynamic_cast<ApplicationMessage*>(msg);
+            TransactionTerminated* term = dynamic_cast<TransactionTerminated*>(msg);
          
             if (sip)
             {
@@ -101,7 +101,7 @@ Proxy::thread()
                       !sip->exists(h_CSeq)     )
                   {
                      // skip this message and move on to the next one
-                     //delete sip;
+                     delete sip;
                      continue;  
                   }
 
@@ -121,7 +121,7 @@ Proxy::thread()
                      std::auto_ptr<SipMessage> response(Helper::makeResponse(*sip,400));
                      response->header(h_StatusLine).reason()="Malformed Max-Forwards";
                      mStack.send(*response,this);
-                     //delete sip;
+                     delete sip;
                      continue;                     
                   }
                   
@@ -144,7 +144,7 @@ Proxy::thread()
                         mStack.send(*response, this);                        
                      }
                      // in either case get rid of the request and process the next one
-                     //delete sip;
+                     delete sip;
                      continue;
                   }
 
@@ -159,13 +159,13 @@ Proxy::thread()
                         SipMessage response;
                         Helper::makeResponse(response,*sip,481);
                         mStack.send(response,this);
-                        //delete sip;
+                        delete sip;
                      }
                      else
                      {
                         try
                         {
-                           i->second->process(sip);
+                           i->second->process(std::auto_ptr<resip::SipMessage>(sip));
                         }
                         catch(resip::BaseException& e)
                         {
@@ -214,7 +214,7 @@ Proxy::thread()
                      // RequestContext 
                      try
                      {
-                        context->process(sip);
+                        context->process(std::auto_ptr<resip::SipMessage>(sip));
                      }
                      catch(resip::BaseException& e)
                      {
@@ -240,7 +240,7 @@ Proxy::thread()
                         DebugLog (<< "RequestContexts: " << Inserter(mServerRequestContexts));
                         try
                         {
-                           context->process(sip);
+                           context->process(std::auto_ptr<resip::SipMessage>(sip));
                         }
                         catch(resip::BaseException& e)
                         {
@@ -268,7 +268,7 @@ Proxy::thread()
                   {
                      try
                      {
-                        i->second->process(sip);
+                        i->second->process(std::auto_ptr<resip::SipMessage>(sip));
                      }
                      catch(resip::BaseException& e)
                      {
@@ -280,7 +280,7 @@ Proxy::thread()
                   {
                      // throw away stray responses
                      InfoLog (<< "Unmatched response (stray?) : " << endl << *msg);
-                     // delete sip; // !nash! let smart_ptr delete it
+                     delete sip;  
                   }
                }
             }
@@ -296,10 +296,10 @@ Proxy::thread()
                   // so that we have one peice of code doing dispatch to Monkeys
                   // (the intent is that Monkeys may eventually handle non-SIP
                   //  application messages).
-                  bool eraseThisTid =  (dynamic_cast<Ack200DoneMessage*>(app.get())!=0);
+                  bool eraseThisTid =  (dynamic_cast<Ack200DoneMessage*>(app)!=0);
                   try
                   {
-                     i->second->process(app);
+                     i->second->process(std::auto_ptr<resip::ApplicationMessage>(app));
                   }
                   catch(resip::BaseException& e)
                   {
@@ -314,7 +314,7 @@ Proxy::thread()
                else
                {
                   InfoLog (<< "No matching request context...ignoring " << *app);
-                  // delete app; // !nash! let smart_ptr delete it
+                  delete app;
                }
             }
             else if (term)
@@ -351,7 +351,7 @@ Proxy::thread()
                      mServerRequestContexts.erase(i);
                   }
                }
-               // delete term; // !nash! let smart_ptr delete it
+               delete term;
             }
          }
       }

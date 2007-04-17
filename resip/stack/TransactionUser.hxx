@@ -5,7 +5,6 @@
 #include <set>
 #include "rutil/TimeLimitFifo.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/SharedPtr.hxx"
 #include "resip/stack/Message.hxx"
 #include "resip/stack/MessageFilterRule.hxx"
 
@@ -17,7 +16,7 @@ class SipMessage;
 class TransactionUser
 {
    public:
-      void post(SharedPtr<Message> message);
+      void post(Message *);
       bool isMyDomain(const Data& domain) const;
       void addDomain(const Data& domain);
 
@@ -52,7 +51,7 @@ class TransactionUser
       TimeLimitFifo<Message> mFifo;
 
    private:      
-      void postToTransactionUser(SharedPtr<Message> msg, TimeLimitFifo<Message>::DepthUsage usage);
+      void postToTransactionUser(Message* msg, TimeLimitFifo<Message>::DepthUsage usage);
       unsigned int size() const;
       bool wouldAccept(TimeLimitFifo<Message>::DepthUsage usage) const;
 
