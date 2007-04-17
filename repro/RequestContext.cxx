@@ -33,9 +33,9 @@ RequestContext::RequestContext(Proxy& proxy,
                                ProcessorChain& responseP,
                                ProcessorChain& targetP) :
    mHaveSentFinalResponse(false),
-   //mOriginalRequest(0),
-   //mCurrentEvent(0),
-   //mAck200ToRetransmit(0),
+   mOriginalRequest(0),
+   mCurrentEvent(0),
+   mAck200ToRetransmit(0),
    mRequestProcessorChain(requestP),
    mResponseProcessorChain(responseP),
    mTargetProcessorChain(targetP),
@@ -52,15 +52,15 @@ RequestContext::RequestContext(Proxy& proxy,
 RequestContext::~RequestContext()
 {
    DebugLog (<< "RequestContext::~RequestContext() " << this);
-   //if (mOriginalRequest != mCurrentEvent)
-   //{
-   //   delete mOriginalRequest;
-   //   mOriginalRequest = 0;
-   //}
-   //delete mCurrentEvent;
-   //mCurrentEvent = 0;
-   //delete mAck200ToRetransmit;
-   //mAck200ToRetransmit=0;
+   if (mOriginalRequest != mCurrentEvent)
+   {
+      delete mOriginalRequest;
+      mOriginalRequest = 0;
+   }
+   delete mCurrentEvent;
+   mCurrentEvent = 0;
+   delete mAck200ToRetransmit;
+   mAck200ToRetransmit=0;
 }
 
 
@@ -82,22 +82,22 @@ RequestContext::process(resip::TransactionTerminated& msg)
 }
 
 void
-RequestContext::process(resip::SharedPtr<resip::SipMessage> sipMessage)
+RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 {
    bool original = false;
    DebugLog (<< "process(SipMessage) " << *this);
 
-   //if (mCurrentEvent != mOriginalRequest)
-   //{
-   //   delete mCurrentEvent;
-   //}
-   mCurrentEvent = sipMessage;
+   if (mCurrentEvent != mOriginalRequest)
+   {
+      delete mCurrentEvent;
+   }
+   mCurrentEvent = sipMessage.release();
    
-   SharedPtr<SipMessage> sip(mCurrentEvent, dynamic_cast_tag());
+   SipMessage* sip = dynamic_cast<SipMessage*>(mCurrentEvent);
    if (!mOriginalRequest) 
    { 
       assert(sip);
-      mOriginalRequest = sip;
+      mOriginalRequest=sip;
       original = true;
 	  
 	  // RFC 3261 Section 16.4
@@ -340,7 +340,7 @@ RequestContext::process(resip::SharedPtr<resip::SipMessage> sipMessage)
       catch(resip::ParseBuffer::Exception& e)
       {
          InfoLog(<<"Garbage in response; dropping message. " << e);
-         //delete sip;
+         delete sip;
          return;
       }
       catch(resip::BaseException& e)
@@ -396,24 +396,24 @@ RequestContext::process(resip::SharedPtr<resip::SipMessage> sipMessage)
 
 
 void
-RequestContext::process(resip::SharedPtr<ApplicationMessage> app)
+RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 {
    DebugLog (<< "process(ApplicationMessage) " << *app);
 
    if (mCurrentEvent != mOriginalRequest)
    {
-      // delete mCurrentEvent; // !nash! let smart_ptr delete it
+      delete mCurrentEvent;
    }
-   mCurrentEvent = app;
+   mCurrentEvent = app.release();
 
-   resip::SharedPtr<Ack200DoneMessage> ackDone(mCurrentEvent, dynamic_cast_tag());
+   Ack200DoneMessage* ackDone = dynamic_cast<Ack200DoneMessage*>(mCurrentEvent);
    if (ackDone)
    {
       delete this;
       return;
    }
 
-   resip::SharedPtr<TimerCMessage> tc(mCurrentEvent, dynamic_cast_tag());
+   TimerCMessage* tc = dynamic_cast<TimerCMessage*>(mCurrentEvent);
 
    if(tc)
    {
@@ -425,7 +425,8 @@ RequestContext::process(resip::SharedPtr<ApplicationMessage> app)
       return;
    }
 
-   resip::SharedPtr<ChainTraverser> ct(mCurrentEvent, dynamic_cast_tag());
+   ChainTraverser* ct=dynamic_cast<ChainTraverser*>(mCurrentEvent);
+   
    if(ct)
    {
       Processor::ChainType type = ct->chainType();
@@ -544,7 +545,7 @@ RequestContext::forwardAck200(const resip::SipMessage& ack)
 {
    if(!mAck200ToRetransmit)
    {
-      mAck200ToRetransmit = SharedPtr<SipMessage>(new SipMessage(ack));
+      mAck200ToRetransmit = new SipMessage(ack);
       mAck200ToRetransmit->header(h_MaxForwards).value()--;
       Helper::processStrictRoute(*mAck200ToRetransmit);
       
@@ -583,13 +584,13 @@ RequestContext::getTransactionId() const
 resip::Message* 
 RequestContext::getCurrentEvent()
 {
-   return mCurrentEvent.get();
+   return mCurrentEvent;
 }
 
 const resip::Message* 
 RequestContext::getCurrentEvent() const
 {
-   return mCurrentEvent.get();
+   return mCurrentEvent;
 }
 
 void 
@@ -640,7 +641,7 @@ RequestContext::sendResponse(const SipMessage& msg)
    if(mOriginalRequest->method() == ACK)
    {
       ErrLog(<<"Posting Ack200DoneMessage: due to sendResponse(). This is probably a bug.");
-      mProxy.post(SharedPtr<Message>(new Ack200DoneMessage(getTransactionId())));
+      mProxy.post(new Ack200DoneMessage(getTransactionId()));
    }
    else
    {

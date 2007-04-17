@@ -146,7 +146,7 @@ main(int argc, char* argv[])
       receiver.process(fdset);
       sender.process(fdset);
       
-      SharedPtr<SipMessage> request = receiver.receive();
+      SipMessage* request = receiver.receive();
       static NameAddr contact;
 
       if (request)
@@ -181,10 +181,10 @@ main(int argc, char* argv[])
                assert(0);
                break;
          }
-         // delete request; // !nash! let smart_ptr delete it
+         delete request;
       }
       
-      SharedPtr<SipMessage> response = sender.receive();
+      SipMessage* response = sender.receive();
       if (response)
       {
          assert(response->isResponse());
@@ -221,7 +221,7 @@ main(int argc, char* argv[])
                break;
          }
          
-         // delete response; // !nash! let smart_ptr delete it
+         delete response;
       }
    }
    InfoLog (<< "Finished " << count << " runs");

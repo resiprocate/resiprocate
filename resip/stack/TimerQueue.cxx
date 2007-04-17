@@ -13,7 +13,6 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "rutil/SharedPtr.hxx"
 
 using namespace resip;
 using namespace std;
@@ -38,14 +37,13 @@ BaseTimerQueue::~BaseTimerQueue()
 {
    //xkd-2004-11-4
    // delete the message associated with the timer
-   //for (std::multiset<Timer>::iterator i = mTimers.begin(); i !=  mTimers.end(); ++i)
-   //{
-   //   if (i->getMessage())
-   //   {
-   //      delete i->getMessage();
-   //   }
-   //}
-   mTimers.clear(); // !nash! used smart_ptr to free up message
+   for (std::multiset<Timer>::iterator i = mTimers.begin(); i !=  mTimers.end(); ++i)
+   {
+      if (i->getMessage())
+      {
+         delete i->getMessage();
+      }
+   }
 }
 
 unsigned int
@@ -161,7 +159,7 @@ TimeLimitTimerQueue::TimeLimitTimerQueue(TimeLimitFifo<Message>& fifo) : mFifo(f
 {}
 
 void
-TimeLimitTimerQueue::addToFifo(SharedPtr<Message> msg, TimeLimitFifo<Message>::DepthUsage d)
+TimeLimitTimerQueue::addToFifo(Message*msg, TimeLimitFifo<Message>::DepthUsage d)
 {
    mFifo.add(msg, d);
 }
@@ -170,7 +168,7 @@ TuSelectorTimerQueue::TuSelectorTimerQueue(TuSelector& sel) : mFifoSelector(sel)
 {}
 
 void
-TuSelectorTimerQueue::addToFifo(SharedPtr<Message> msg, TimeLimitFifo<Message>::DepthUsage d)
+TuSelectorTimerQueue::addToFifo(Message*msg, TimeLimitFifo<Message>::DepthUsage d)
 {
    mFifoSelector.add(msg, d);
 }
@@ -190,7 +188,7 @@ DtlsTimerQueue::process()
       std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
       for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
       {
-          mFifo.add( (DtlsMessage *)i->getMessage().get() ) ;
+          mFifo.add( (DtlsMessage *)i->getMessage() ) ;
       }
       mTimers.erase( mTimers.begin(), end );
    }

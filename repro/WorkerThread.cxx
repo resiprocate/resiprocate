@@ -27,13 +27,13 @@ WorkerThread::~WorkerThread()
 void
 WorkerThread::thread()
 {
-   resip::SharedPtr<resip::ApplicationMessage> msg;
+   resip::ApplicationMessage* msg;
    
    while(mWorker && !isShutdown())
    {
       if( (msg=mFifo.getNext(100)) != 0 )
       {
-         mWorker->process(msg.get());
+         mWorker->process(msg);
 
          if(mStack)
          {
@@ -45,7 +45,7 @@ WorkerThread::thread()
             ErrLog(<<"Stack pointer not set!");
          }
 
-         //delete msg;
+         delete msg;
       }
    }
 }

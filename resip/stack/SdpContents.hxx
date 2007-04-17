@@ -506,8 +506,7 @@ class SdpContents : public Contents
       SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes);
       ~SdpContents();
 
-      // !nash! there is no need for overriding copy ctor as every members gets copied
-      //SdpContents(const SdpContents& rhs);
+      SdpContents(const SdpContents& rhs);
       SdpContents& operator=(const SdpContents& rhs);
 
       virtual Contents* clone() const;

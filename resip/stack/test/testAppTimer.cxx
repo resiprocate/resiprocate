@@ -75,11 +75,11 @@ main(int argc, char** argv)
    timer.process();
    assert(f.size() == 1);
 
-   SharedPtr<Message> msg = f.getNext();
+   Message* msg = f.getNext();
 
    cerr << *msg << endl;
 
-   //delete msg;
+   delete msg;
    return 0;
 }
 
