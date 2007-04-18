@@ -32,15 +32,9 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/ParseBuffer.hxx"
 #include "rutil/Random.hxx"
-#include "rutil/compat.hxx"
-#include "rutil/WinLeakCheck.hxx"
 #include "rutil/dns/DnsHandler.hxx"
 #include "rutil/dns/QueryTypes.hxx"
-#include "rutil/dns/DnsStub.hxx"
-#include "rutil/dns/DnsNaptrRecord.hxx"
-//#include "rutil/Timer.hxx"
 
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/DnsInterface.hxx"
@@ -50,12 +44,9 @@
 
 #include "rutil/WinLeakCheck.hxx"
 
-
-
 #if !defined(USE_ARES)
 #warning "ARES is required"
 #endif
-
 
 using namespace resip;
 using namespace std;
