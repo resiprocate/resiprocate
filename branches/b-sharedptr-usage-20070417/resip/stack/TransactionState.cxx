@@ -413,7 +413,7 @@ TransactionState::process(TransactionController& controller)
             if (sip->method() == INVITE)
             {
                std::auto_ptr<TransactionState> state2(new TransactionState(controller, ClientInvite, Calling, tid, tu));
-               state2->add(state->mId);
+               state2->add(state2->mId);
                state2->processClientInvite(sip);
                // !nash! it's not easy to follow where TransactionState object got delete and ownership got taken elsewhere
                //        should review it, or possible memory leak?
@@ -423,7 +423,7 @@ TransactionState::process(TransactionController& controller)
             {
                //TransactionState* state = new TransactionState(controller, Stateless, Calling, Data(StatelessIdCounter++));
                std::auto_ptr<TransactionState> state2(new TransactionState(controller, Stateless, Calling, tid, tu));
-               state2->add(state->mId);
+               state2->add(state2->mId);
                state2->mController.mTimers.add(Timer::TimerStateless, state2->mId, Timer::TS );
                state2->processStateless(sip);
                // !nash! it's not easy to follow where TransactionState object got delete and ownership got taken elsewhere
