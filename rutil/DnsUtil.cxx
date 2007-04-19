@@ -1,5 +1,7 @@
-
-#if !defined(WIN32) && !defined (__sun__)
+#if !defined(WIN32)
+#if defined(__SUNPRO_CC) || defined (__sun__)
+#define BSD_COMP /* !rk! needed to enable SIOCGIFCONF */
+#endif
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -335,7 +337,7 @@ DnsUtil::getInterfaces(const Data& matching)
 {
    std::list<std::pair<Data,Data> > results;
 
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined (__sun__)
+#if !defined(WIN32)
 
    struct ifconf ifc;
 
