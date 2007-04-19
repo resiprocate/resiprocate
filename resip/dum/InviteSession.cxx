@@ -3,6 +3,7 @@
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/InviteSession.hxx"
@@ -21,6 +22,7 @@
 #include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/SharedPtr.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)
@@ -110,6 +112,19 @@ InviteSession::getRemoteSdp() const
    if(mCurrentRemoteSdp.get())
    {
       return *mCurrentRemoteSdp;
+   }
+   else
+   {
+      return SdpContents::Empty;
+   }
+}
+
+const SdpContents&
+InviteSession::getProposedRemoteSdp() const
+{
+   if(mProposedRemoteSdp.get())
+   {
+      return *mProposedRemoteSdp;
    }
    else
    {
@@ -521,7 +536,22 @@ InviteSession::provideAnswerCommand(const SdpContents& answer)
 void
 InviteSession::end()
 {
-   end(NotSpecified);
+   if (isConnected())
+   {
+      end(NotSpecified);
+   }
+   //else
+   //{
+   //   AppDialogSetHandle appDialogSetHandle = getAppDialogSet();
+   //   if (appDialogSetHandle.isValid())
+   //   {
+   //      appDialogSetHandle->end();
+   //   }
+   //   else
+   //   {
+   //      assert(!"Has no mean of ending an Invite Session");
+   //   }
+   //}
 }
 
 void
@@ -1192,10 +1222,10 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          *mLastRemoteSessionModification = msg;
          transition(ReceivedReinvite);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
 
          //handler->onDialogModified(getSessionHandle(), Offer, msg);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
          break;
 
       case On2xx:
@@ -1214,8 +1244,8 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          //  See rfc3311 5.2, 4th paragraph.
          *mLastRemoteSessionModification = msg;
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
          break;
 
       case OnUpdate:
@@ -1275,8 +1305,8 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          {
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             setCurrentLocalSdp(msg);
-            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
+            mCurrentRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+            handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp, InviteSessionHandler::Reinvite);
          }
          else if(mProposedLocalSdp.get()) 
          {
@@ -1378,8 +1408,8 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
             if (changed)
             {
-               mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-               handler->onRemoteSdpChanged(getSessionHandle(), msg, *sdp);
+               mCurrentRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+               handler->onRemoteSdpChanged(getSessionHandle(), msg, *mCurrentRemoteSdp);
             }
          }
          else
@@ -1477,8 +1507,8 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          handleSessionTimerResponse(msg);
          // mLastSessionModification = msg;   // ?slg? why are we storing 200's?
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         mProposedRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
+         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
 
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
          // the ACK when a 200I is received? If yes, then I need to store all
@@ -1561,10 +1591,10 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
       case OnAckAnswer:
          transition(Connected);
          setCurrentLocalSdp(msg);
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         mCurrentRemoteSdp = sdp; // !nash! don't clone, simply hand over the ownership - InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Ack);		 
+         handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp, InviteSessionHandler::Ack);		 
          break;         
       case OnAck:
          if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
