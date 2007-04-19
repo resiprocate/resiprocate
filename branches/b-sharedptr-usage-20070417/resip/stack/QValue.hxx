@@ -71,7 +71,7 @@ namespace resip
       QValue& operator=(const double rhs) { setValue(doubleToInt(rhs*1000.0)); return (*this); }			
 #endif		
       void setValue(int val) { mValue = (val<0) || (val>1000) ? 1000 : val; }
-      void setValue(const Data& data) { ParseBuffer pb(data); mValue = pb.qVal(); }
+      void setValue(const Data& data) { ParseBuffer pb(const_cast<Data&>(data)); mValue = pb.qVal(); }
       int getValue() const { return mValue; }
       const Data& getData() const;
       std::ostream& encode(std::ostream& stream) const;

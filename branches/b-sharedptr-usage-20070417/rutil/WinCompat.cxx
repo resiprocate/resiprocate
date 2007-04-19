@@ -389,7 +389,7 @@ WinCompat::determineSourceInterface(const GenericIPAddress& destination)
 
    if(destination.isVersion6())
    {
-      return  determineSourceInterfaceWithIPv6(destination);
+      return determineSourceInterfaceWithIPv6(destination);
    }
    else
    {
