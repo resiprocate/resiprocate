@@ -110,7 +110,7 @@ Log::initialize(Type type, Level level, const Data& appName,
    }
    mExternalLogger = externalLogger;
 
-   ParseBuffer pb(appName);
+   ParseBuffer pb(const_cast<Data&>(appName));
    pb.skipToEnd();
 #ifdef _WIN32
    pb.skipBackToChar('\\');

@@ -17,7 +17,7 @@ FlowId::FlowId(const Tuple& t) :
 FlowId::FlowId(const Data& d)
 {
 //   ParseBuffer pb(d.base64decode());
-   ParseBuffer pb(d);
+   ParseBuffer pb(const_cast<Data&>(d));
 
    const char* anchor = pb.position();
    pb.skipToChar(':');
