@@ -3,7 +3,6 @@
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
-#include "resip/dum/AppDialogSet.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/InviteSession.hxx"
@@ -22,7 +21,6 @@
 #include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
 #include "rutil/WinLeakCheck.hxx"
-#include "rutil/SharedPtr.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)
@@ -536,22 +534,7 @@ InviteSession::provideAnswerCommand(const SdpContents& answer)
 void
 InviteSession::end()
 {
-   if (isConnected())
-   {
-      end(NotSpecified);
-   }
-   //else
-   //{
-   //   AppDialogSetHandle appDialogSetHandle = getAppDialogSet();
-   //   if (appDialogSetHandle.isValid())
-   //   {
-   //      appDialogSetHandle->end();
-   //   }
-   //   else
-   //   {
-   //      assert(!"Has no mean of ending an Invite Session");
-   //   }
-   //}
+   end(NotSpecified);
 }
 
 void
