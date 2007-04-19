@@ -14,7 +14,7 @@ Aor::Aor()
 
 Aor::Aor(const Data& value)
 {
-   ParseBuffer pb(value);
+   ParseBuffer pb(const_cast<Data&>(value));
    
    pb.skipWhitespace();
    const char* start = pb.position();

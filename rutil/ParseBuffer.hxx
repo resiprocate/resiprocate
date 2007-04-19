@@ -14,7 +14,7 @@ class ParseBuffer
       ParseBuffer(const char* buff, unsigned int len, 
                   const Data& errorContext = Data::Empty);
 
-      explicit ParseBuffer(const Data& data,
+      explicit ParseBuffer(Data& data,
                            const Data& errorContext = Data::Empty);
 
       ParseBuffer(const ParseBuffer& other);

@@ -253,10 +253,7 @@ TransactionState::process(TransactionController& controller)
             break;
          case ClientInvite:
             // ACK from TU will be Stateless
-            assert(sip);
-            assert (!state->isFromTU(sip.get()));
-            assert (!(sip->isRequest()));
-            assert (!(sip->method() == ACK));
+            assert (!(state->isFromTU(sip.get()) && sip->isRequest() && sip->method() == ACK));
             state->processClientInvite(message);
             break;
          case ServerNonInvite:

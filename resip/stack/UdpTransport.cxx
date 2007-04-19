@@ -183,35 +183,50 @@ UdpTransport::process(FdSet& fdset)
          return;
       }
 
-      //handle incoming CRLFCRLF keep-alive packets
-      if (len == 4 &&
-          strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
+      //handle incoming CRLFCRLF keep-alive packets or 4 bytes (zero filled) UDP NAT Ping
+      if (len == 4 )
       {
-         delete[] buffer;
-         buffer = 0;
-         StackLog(<<"Throwing away incoming firewall keep-alive");
-         return;
+         const unsigned long NAT_PING = 0;
+         //handle incoming CRLFCRLF keep-alive packets
+         if (strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
+         {
+            delete[] buffer;
+            buffer = 0;
+            StackLog(<<"Throwing away incoming firewall keep-alive");
+            return;
+         }
+         // !nash! add this to support UDP NAT Ping
+         else if(memcpy(buffer, &NAT_PING, len) == 0)
+         {
+            delete[] buffer;
+            buffer = 0;
+            int count = sendto(mFd, 
+               Symbols::CRLF, 2,  
+               0, // flags
+               &(tuple.getMutableSockaddr()), tuple.length());
+            return;
+         }
       }
 
       // this must be a STUN response (or garbage)
       if (buffer[0] == 1 && buffer[1] == 1 && ipVersion() == V4)
       {
          resip::Lock lock(myMutex);
-	     StunMessage resp;
-	     memset(&resp, 0, sizeof(StunMessage));
-		
-	     if (stunParseMessage(buffer, len, resp, false))
-		 {
-			 in_addr sin_addr;
+         StunMessage resp;
+         memset(&resp, 0, sizeof(StunMessage));
+
+         if (stunParseMessage(buffer, len, resp, false))
+         {
+            in_addr sin_addr;
 #if defined(WIN32)
-			 sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
+            sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
 #else
-			 sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
+            sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
 #endif
-			 mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
-			 mStunSuccess = true;
-		 }
-		 return;
+            mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
+            mStunSuccess = true;
+         }
+         return;
 	  }
 
       // this must be a STUN request (or garbage)

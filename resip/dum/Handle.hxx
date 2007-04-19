@@ -86,7 +86,7 @@ class Handle
          return notValid;
       }
       
-      bool operator==(const Handle<T>& other)
+      bool operator==(const Handle<T>& other) const
       {
          return mId == other.mId;
       }

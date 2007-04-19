@@ -34,7 +34,7 @@ DnsNaptrRecord::RegExp::RegExp(const Data& data)
 {
    if (data.size() > 1)
    {
-      ParseBuffer pb(data, "DnsNaptrRecord::RegExp parser");
+      ParseBuffer pb(const_cast<Data&>(data), "DnsNaptrRecord::RegExp parser");
 
       const char delim = data[0];
       const char* start = pb.skipChar(delim);
