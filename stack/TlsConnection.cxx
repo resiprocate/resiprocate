@@ -644,13 +644,10 @@ TlsConnection::computePeerName()
 
       if (gen->type == GEN_DNS)
       {
-         ASN1_IA5STRING* uri = gen->d.uniformResourceIdentifier;
-         int l = uri->length;
-         unsigned char* dat = uri->data;
-         Data name(dat,l);
-         InfoLog(<< "subjectAltName of TLS session cert contains <" << name << ">" );
-         
-         mPeerNames.push_back(name);
+         ASN1_IA5STRING* asn = gen->d.dNSName;
+         Data dns(asn->data, asn->length);
+         mPeerNames.push_back(dns);
+         InfoLog(<< "subjectAltName of TLS session cert contains DNS <" << dns << ">" );
       }
           
       if (gen->type == GEN_EMAIL)
@@ -660,7 +657,17 @@ TlsConnection::computePeerName()
           
       if(gen->type == GEN_URI) 
       {
-         DebugLog(<< "subjectAltName of cert has GEN_URI type" );
+         ASN1_IA5STRING* asn = gen->d.uniformResourceIdentifier;
+         Uri uri(Data(asn->data, asn->length));
+         try
+         {
+             mPeerNames.push_back(uri.host());
+             InfoLog(<< "subjectAltName of TLS session cert contains URI <" << uri << ">" );
+         }
+         catch (...)
+         {
+             InfoLog(<< "subjectAltName of TLS session cert contains unparseable URI");
+         }
       }
    }
    sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
