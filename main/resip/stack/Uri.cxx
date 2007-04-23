@@ -761,9 +761,7 @@ Uri::parse(ParseBuffer& pb)
       pb.data(mUser, anchor);
       if (!pb.eof() && *pb.position() == Symbols::SEMI_COLON[0])
       {
-         anchor = pb.skipChar();
-         pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::RA_QUOTE);
-         pb.data(mUserParameters, anchor);
+         parseParameters(pb);
       }
       return;
    }
