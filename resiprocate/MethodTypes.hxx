@@ -32,6 +32,8 @@ typedef enum
    defineMethod(PUBLISH, "PUBLISH", "RFC draft"),
    defineMethod(SERVICE, "SERVICE", "!RFC"),
    defineMethod(UPDATE, "UPDATE", "RFC 3311"),
+
+   defineMethod(CONF, "CONF", "RFC draft, SIP Extension for Multiparty Conferencing"),
    MAX_METHODS
 } MethodTypes;
 

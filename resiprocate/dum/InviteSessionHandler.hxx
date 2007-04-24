@@ -47,7 +47,7 @@ class DUM_API InviteSessionHandler
          Ended,          // ended by the application
          GeneralFailure, // ended due to a failure
          Cancelled,      // ended by the application via Cancel
-         InviteFailure,  // invite failure
+         //InviteFailure,  // invite failure
       } TerminatedReason;
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
