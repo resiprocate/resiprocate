@@ -685,14 +685,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          transition(Terminated);
          handler->onNewSession(getHandle(), None, msg);
          handler->onFailure(getHandle(), msg);
-         if (event == OnInviteFailure)
-         {
-            handler->onTerminated(getSessionHandle(), InviteSessionHandler::InviteFailure, &msg);
-         }
-         else
-         {
-            handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         }
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
          mDum.destroy(this);
          break;
 
@@ -785,12 +778,6 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 
       case OnInviteFailure:
       case On422Invite:
-         InfoLog (<< "Failure:  error response: " << msg.brief());
-         transition(Terminated);
-         handler->onFailure(getHandle(), msg);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::InviteFailure, &msg);
-         mDum.destroy(this);
-         break;
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure      
       case OnGeneralFailure:
          InfoLog (<< "Failure:  error response: " << msg.brief());
