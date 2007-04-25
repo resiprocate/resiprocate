@@ -128,14 +128,23 @@ UdpTransport::process(FdSet& fdset)
       //handle incoming CRLFCRLF keep-alive packets or 4 bytes (zero filled) UDP NAT Ping
       if (len == 4)
       {
-         const unsigned long NAT_PING = 0;
-         // !nash! add this to support UDP NAT Ping
          if (strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
          {
             StackLog(<<"Throwing away incoming firewall keep-alive");
             return;
          }
-         else if(memcpy(buffer, &NAT_PING, len) == 0)
+         //const unsigned long NAT_PING = 0;
+         //unsigned long bufferValue = *((unsigned long*)buffer); // !nash! strange!! the bufferValue is not zero when value1~4 are zero
+         //unsigned char value1 = buffer[0];
+         //unsigned char value2 = buffer[1];
+         //unsigned char value3 = buffer[2];
+         //unsigned char value4 = buffer[3];
+         //unsigned long bufferValue = value1 << 24 + value2 << 16 + value3 << 8 + value4;
+         // !nash! add this to support UDP NAT Ping
+         if(buffer[0] == 0 && 
+            buffer[1] == 0 &&
+            buffer[2] == 0 &&
+            buffer[3] == 0)
          {
             int count = sendto(mFd, 
                Symbols::CRLF, 2,  
