@@ -10,8 +10,9 @@ class SysLogBuf : public std::streambuf
 {
    public:
       SysLogBuf();
+      SysLogBuf(int facility, int level);
       virtual ~SysLogBuf();
-      
+
       int sync ();
       int overflow (int ch);
 
@@ -22,6 +23,8 @@ class SysLogBuf : public std::streambuf
    private:
       enum { Size=4095 }; 
       char buffer[Size+1];
+      int mFacility;
+      int mLevel;
 };
  
 }

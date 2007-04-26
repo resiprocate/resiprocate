@@ -11,6 +11,7 @@ class SysLogStream : private SysLogBuf, public std::ostream
 {
    public:
       SysLogStream();
+      SysLogStream(int facility, int level);
       virtual ~SysLogStream();
 
    private:
