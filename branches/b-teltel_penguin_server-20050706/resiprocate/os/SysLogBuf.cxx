@@ -7,14 +7,27 @@
 
 using resip::SysLogBuf;
 
-SysLogBuf::SysLogBuf ()
+SysLogBuf::SysLogBuf()
+   : mFacility(LOG_LOCAL6),
+     mLevel(LOG_DEBUG)
 {
 #if !defined(WIN32)
-   setp(buffer,buffer+Size);
-   openlog (0, LOG_NDELAY, LOG_LOCAL6);
+   setp(buffer, buffer+Size);
+   openlog(0, LOG_NDELAY, mFacility);
 #endif
 }
       
+SysLogBuf::SysLogBuf(int facility, int level)
+   : mFacility(facility),
+     mLevel(level)
+{
+#if !defined(WIN32)
+   setp(buffer, buffer+Size);
+   openlog(0, LOG_NDELAY, mFacility);
+#endif
+ 
+}
+
 SysLogBuf::~SysLogBuf()
 {
 }
@@ -24,14 +37,14 @@ SysLogBuf::sync()
 {
 #if !defined(WIN32)
    *(pptr()) = 0;
-   syslog (LOG_LOCAL6 | LOG_DEBUG, pbase());
+   syslog (mFacility | mLevel, pbase());
    setp(buffer, buffer+Size);
 #else
    assert(0);
 #endif
    return 0;
 }
-     
+
 int 
 SysLogBuf::overflow (int c)
 {
