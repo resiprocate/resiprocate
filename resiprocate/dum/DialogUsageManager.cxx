@@ -1091,7 +1091,7 @@ DialogUsageManager::hasEvents() const
 
 // return false if there is nothing to do at the moment
 bool 
-DialogUsageManager::process(bool block, resip::RWMutex* mutex)   // !polo! blocking process() so dum can be put to thread.
+DialogUsageManager::process(bool block, resip::Lockable* mutex)   // !polo! blocking process() so dum can be put to thread.
 {
    bool hasNext = false;
    std::auto_ptr<Message> msg;
