@@ -202,7 +202,7 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
       
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process. 
-      bool process(bool block = false, resip::RWMutex* mutex = NULL);
+      bool process(bool block = false, resip::Lockable* mutex = NULL);
 
       // hasEvents
       bool hasEvents() const;
