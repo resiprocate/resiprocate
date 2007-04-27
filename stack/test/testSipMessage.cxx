@@ -2094,6 +2094,49 @@ main(int argc, char** argv)
       assert(msg->exists(UnknownHeaderType("Foobie-Blech")));
       assert(msg->header(UnknownHeaderType("Foobie-Blech")).empty());
    }
+   
+   {
+      Data txt("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
+               "Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8\r\n"
+               "To: Bob <sip:bob@biloxi.com>\r\n"
+               "From: Alice <sip:alice@atlanta.com>;tag=1928301774\r\n"
+               "Call-ID: a84b4c76e66710\r\n"
+               "CSeq: 314159 INVITE\r\n"
+               "Max-Forwards: 70\r\n"
+               "Accept: \r\n"
+               "Foobie-Blech: \r\n"
+               "Contact: <sip:alice@pc33.atlanta.com>\r\n"
+               "Content-Type: application/sdp\r\n"
+               "Content-Length: 150\r\n"
+               "FooBarBaz: yetmorestuff\r\n"
+               "FooBar: morestuff\r\n"
+               "Foo: stuff\r\n"
+               "\r\n"
+               "v=0\r\n"
+               "o=alice 53655765 2353687637 IN IP4 pc33.atlanta.com\r\n"
+               "s=-\r\n"
+               "c=IN IP4 pc33.atlanta.com\r\n"
+               "t=0 0\r\n"
+               "m=audio 3456 RTP/AVP 0 1 3 99\r\n"
+               "a=rtpmap:0 PCMU/8000\r\n");
+
+      auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt.c_str()));
+
+      assert(msg->exists(h_Accepts));
+      assert(msg->header(h_Accepts).empty());
+      
+      assert(msg->exists(UnknownHeaderType("Foobie-Blech")));
+      assert(msg->header(UnknownHeaderType("Foobie-Blech")).empty());
+
+      assert(msg->exists(UnknownHeaderType("Foo")));
+      assert(msg->header(UnknownHeaderType("Foo")).size()==1);
+
+      assert(msg->exists(UnknownHeaderType("FooBar")));
+      assert(msg->header(UnknownHeaderType("FooBar")).size()==1);
+
+      assert(msg->exists(UnknownHeaderType("FooBarBaz")));
+      assert(msg->header(UnknownHeaderType("FooBarBaz")).size()==1);
+   }
 
    cerr << "\nTEST OK" << endl;
    return 0;
