@@ -53,8 +53,17 @@ ResponseContext::~ResponseContext()
    mCandidateTransactionMap.clear();
 }
 
+resip::Data
+ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately, bool addToFirstBatch)
+{
+   InfoLog (<< "Adding candidate " << addr);
+   repro::Target target(addr);
+   addTarget(target, beginImmediately, addToFirstBatch);
+   return target.tid();
+}
+
 bool
-ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
+ResponseContext::addTarget(repro::Target& target, bool beginImmediately, bool addToFirstBatch)
 {
    if(mRequestContext.mHaveSentFinalResponse)
    {
@@ -90,9 +99,16 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
    {
       if(target.mShouldAutoProcess)
       {
-         std::list<resip::Data> queue;
-         queue.push_back(target.tid());
-         mTransactionQueueCollection.push_back(queue);
+         if(addToFirstBatch && !mTransactionQueueCollection.empty())
+         {
+            mTransactionQueueCollection.front().push_back(target.tid());
+         }
+         else
+         {
+            std::list<resip::Data> queue;
+            queue.push_back(target.tid());
+            mTransactionQueueCollection.push_back(queue);
+         }
       }
 
       mCandidateTransactionMap[target.tid()]=target.clone();
@@ -103,7 +119,8 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
 
 bool
 ResponseContext::addTargetBatch(std::list<Target*>& targets,
-                                 bool highPriority)
+                                 bool highPriority,
+                                 bool addToFirstBatch)
 {
    std::list<resip::Data> queue;
    Target* target=0;
@@ -144,13 +161,27 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
 
    targets.clear();
    
-   if(highPriority)
+   if(addToFirstBatch)
    {
-      mTransactionQueueCollection.push_front(queue);
+      if(!mTransactionQueueCollection.empty())
+      {
+         mTransactionQueueCollection.front().merge(queue);
+      }
+      else
+      {
+         mTransactionQueueCollection.push_back(queue);
+      }
    }
    else
    {
-      mTransactionQueueCollection.push_back(queue);
+      if(highPriority)
+      {
+         mTransactionQueueCollection.push_front(queue);
+      }
+      else
+      {
+         mTransactionQueueCollection.push_back(queue);
+      }
    }
    
    return true;

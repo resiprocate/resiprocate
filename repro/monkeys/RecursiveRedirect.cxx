@@ -38,7 +38,7 @@ RecursiveRedirect::process(RequestContext& context)
       {
          if(i->isWellFormed() && !i->isAllContacts())
          {
-            context.addTarget(*i);
+            context.getResponseContext().addTarget(*i);
          }
       }
       return Processor::SkipAllChains;

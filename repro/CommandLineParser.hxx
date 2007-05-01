@@ -47,6 +47,7 @@ class CommandLineParser
       int mMsBetweenForkGroups;
       int mMsBeforeCancel;
       bool mAllowBadReg;
+      bool mParallelForkStaticRoutes;
       int mTimerC;
       Data mAdminPassword;
 };

@@ -6,6 +6,7 @@
 #include "resip/stack/Helper.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/QValueTarget.hxx"
 
 #include "rutil/Logger.hxx"
 #include "repro/RouteStore.hxx"
@@ -19,9 +20,10 @@ using namespace repro;
 using namespace std;
 
 
-StaticRoute::StaticRoute(RouteStore& store, bool noChallenge) :
+StaticRoute::StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes) :
    mRouteStore(store),
-   mNoChallenge(noChallenge)
+   mNoChallenge(noChallenge),
+   mParallelForkStaticRoutes(parallelForkStaticRoutes)
 {}
 
 
@@ -76,9 +78,13 @@ StaticRoute::process(RequestContext& context)
       for ( RouteStore::UriList::const_iterator i = targets.begin();
             i != targets.end(); i++ )
       {
-         InfoLog(<< "Adding target " << *i );
          //Targets are only added after authentication
-         context.addTarget(NameAddr(*i));
+         InfoLog(<< "Adding target " << *i );
+         // .slg. adding StaticRoutes as QValueTargets allows them to be processed before the QValueTargets
+         //       added in the LocationServer monkey - since all QValueTargets are processed before simple Targets
+         QValueTarget target(NameAddr(*i), 1.0);
+         context.getResponseContext().addTarget(target, false /* beginImmediately */, mParallelForkStaticRoutes /* addToFirstBatch */);
+         //context.addTarget(NameAddr(*i));
       }
 
    }

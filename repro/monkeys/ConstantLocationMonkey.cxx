@@ -28,11 +28,11 @@ ConstantLocationMonkey::process(RequestContext& context)
 
   if (context.getOriginalRequest().header(h_RequestLine).uri().user() == "inner")
   {
-     context.addTarget(NameAddr("<sip:inner@72.29.230.162>"));
+     context.getResponseContext().addTarget(NameAddr("<sip:inner@72.29.230.162>"));
   }
   else if (context.getOriginalRequest().header(h_RequestLine).uri().user() == "outer")
   {
-     context.addTarget(NameAddr("<sip:101@sipedge.sipit.net>"));     
+     context.getResponseContext().addTarget(NameAddr("<sip:101@sipedge.sipit.net>"));     
   }
   
   return Processor::Continue;
