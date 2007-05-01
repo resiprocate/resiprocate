@@ -605,16 +605,6 @@ RequestContext::getDigestIdentity() const
    return mDigestIdentity;
 }
 
-resip::Data
-RequestContext::addTarget(const NameAddr& addr, bool beginImmediately)
-{
-   InfoLog (<< "Adding candidate " << addr);
-   repro::Target target(addr);
-   mResponseContext.addTarget(target,beginImmediately);
-   return target.tid();
-}
-
-
 void
 RequestContext::updateTimerC()
 {

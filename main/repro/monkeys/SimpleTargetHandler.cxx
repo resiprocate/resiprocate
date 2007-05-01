@@ -18,6 +18,7 @@ Processor::processor_action_t
 SimpleTargetHandler::process(RequestContext &rc)
 {
    ResponseContext& rsp=rc.getResponseContext();
+   
    std::list<std::list<resip::Data> >& tidBank=
       rsp.mTransactionQueueCollection;
       

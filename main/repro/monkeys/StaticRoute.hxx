@@ -10,7 +10,7 @@ class RouteStore;
 class StaticRoute: public Processor
 {
    public:
-      StaticRoute(RouteStore& store, bool noChallenge);
+      StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes);
       virtual ~StaticRoute();
       
       virtual processor_action_t process(RequestContext &);
@@ -19,6 +19,7 @@ class StaticRoute: public Processor
    private:
       RouteStore& mRouteStore;
       bool mNoChallenge;
+      bool mParallelForkStaticRoutes;
       void challengeRequest(repro::RequestContext &rc, resip::Data &realm);
 };
 
