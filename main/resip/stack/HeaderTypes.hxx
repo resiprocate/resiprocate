@@ -125,7 +125,8 @@ class Headers
          defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03"),
          defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01"),
          defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01"),
-         
+         defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"),
+
          defineMultiHeader(RESIP_DO_NOT_USE, "ShouldNotSeeThis", StringCategory, "N/A"),
          MAX_HEADERS,
          NONE
