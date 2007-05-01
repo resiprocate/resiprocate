@@ -308,7 +308,7 @@ main(int argc, char** argv)
      
       if (args.mRouteSet.empty())
       {
-         StaticRoute* sr = new StaticRoute(store.mRouteStore, args.mNoChallenge);
+         StaticRoute* sr = new StaticRoute(store.mRouteStore, args.mNoChallenge, args.mParallelForkStaticRoutes);
          locators->addProcessor(std::auto_ptr<Processor>(sr));
       }
       else
@@ -323,7 +323,7 @@ main(int argc, char** argv)
          locators->addProcessor(std::auto_ptr<Processor>(sr));
       }
       
-      LocationServer* ls = new LocationServer(regData);
+      LocationServer* ls = new LocationServer(regData, args.mParallelForkStaticRoutes);
       locators->addProcessor(std::auto_ptr<Processor>(ls));
  
       requestProcessors.addProcessor(auto_ptr<Processor>(locators));      
