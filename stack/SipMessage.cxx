@@ -1433,6 +1433,7 @@ defineHeader(Date, "Date", DateCategory, "RFC 3261");
 defineMultiHeader(Warning, "Warning", WarningCategory, "RFC 3261");
 defineMultiHeader(Via, "Via", Via, "RFC 3261");
 defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
+defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04");
 
 #endif
 

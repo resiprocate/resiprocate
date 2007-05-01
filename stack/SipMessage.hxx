@@ -178,6 +178,7 @@ class SipMessage : public TransactionMessage
       defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
       defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
       defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
+      defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04");
 
       defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?");
       defineHeader(Organization, "Organization", StringCategory, "RFC 3261");
