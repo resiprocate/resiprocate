@@ -248,7 +248,7 @@ main(int argc, char** argv)
 #endif
    if (!db)
    {
-      db = new BerkeleyDb;
+      db = new BerkeleyDb(args.mDbPath);
       if (!static_cast<BerkeleyDb*>(db)->isSane())
       {
         CritLog(<<"Failed to open configuration database");

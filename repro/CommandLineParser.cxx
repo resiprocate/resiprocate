@@ -38,6 +38,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* routeSet = 0;
    char certPathBuf[256];
    char* certPath = certPathBuf;
+   char* dbPath = 0;
    int noChallenge = false;
    int noWebChallenge = false;
    
@@ -79,6 +80,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
+      {"db-path",           0,   POPT_ARG_STRING,                            &dbPath,       0, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    0, "specify uri to use as Record-Route", "sip:example.com"},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
@@ -91,9 +93,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"dtls",               0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &dtlsPort,       0, "add DTLS transport on specified port", "0"},
       {"enable-cert-server", 0,  POPT_ARG_NONE,                              &certServer,     0, "run a cert server", 0},
 #ifdef WIN32
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path for certificates (default: c:\\sipCerts)", 0},
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: c:\\sipCerts)", 0},
 #else
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path for certificates (default: ~/.sipCerts)", 0},
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: ~/.sipCerts)", 0},
 #endif
 #endif
       {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       0, "enable IPV6", 0},
@@ -185,6 +187,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    if (mySqlServer) 
    {
       mMySqlServer = Data(mySqlServer);
+   }
+
+   if (dbPath)
+   {
+      mDbPath = Data(dbPath);
    }
    
    if(timerC >0)
