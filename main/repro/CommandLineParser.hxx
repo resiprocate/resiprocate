@@ -31,6 +31,7 @@ class CommandLineParser
       std::vector<Data> mInterfaces;
       std::vector<Data> mRouteSet;
       Data mCertPath;
+      Data mDbPath;
       bool mNoChallenge;
       bool mNoWebChallenge;
       bool mNoRegistrar;
