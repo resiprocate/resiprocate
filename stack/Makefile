@@ -146,7 +146,7 @@ code: .firstrun
 
 # rule for case sensitive sorts of hash
 MethodHash.cxx: MethodHash.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< >  $@
+	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@ || echo "gperf not installed, touching $@" && touch $@
 
 # rule for insensitive clods
 #${SRC}: ${@:%.cxx=%.gperf} -- more portable?
@@ -155,7 +155,8 @@ MethodHash.cxx: MethodHash.gperf
 	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
 	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' | \
 	sed -e 's/\*str ==/tolower(*str) ==/' | \
-	sed -e 's/\!strncmp/\!strncasecmp/'  > $@
+	sed -e 's/\!strncmp/\!strncasecmp/' > $@ || \
+	echo "gperf not installed, touching $@" && touch $@
 
 include $(BUILD)/Makefile.post
 INSTALL_INCDIR := $(DESTDIR)$(INSTALL_PREFIX)/include/resip/stack
