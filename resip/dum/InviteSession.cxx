@@ -838,8 +838,8 @@ class InviteSessionReferExCommand : public DumCommandAdapter
 public:
    InviteSessionReferExCommand(InviteSession& inviteSession, const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
       : mInviteSession(inviteSession),
-      mReferTo(referTo),
       mSessionToReplace(sessionToReplace),
+      mReferTo(referTo),
       mReferSub(referSub)
    {
 
