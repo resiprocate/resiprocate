@@ -736,8 +736,9 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
       SharedPtr<SipMessage> refer(new SipMessage());
       mDialog.makeRequest(*refer, REFER);
       refer->header(h_ReferTo) = referTo;
-      refer->header(h_ReferredBy) = mDialog.mLocalContact; // 
-                                                           // !slg! is it ok to do this - should it be an option?
+      refer->header(h_ReferredBy) = myAddr();
+
+      // !slg! is it ok to do this - should it be an option?
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
@@ -808,7 +809,8 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       mDialog.makeRequest(*refer, REFER);
 
       refer->header(h_ReferTo) = referTo;
-      refer->header(h_ReferredBy) = mDialog.mLocalContact; // ?slg? is it ok to do this - should it be an option?
+      refer->header(h_ReferredBy) = myAddr();
+      
       CallId replaces;
       DialogId id = sessionToReplace->mDialog.getId();
       replaces.value() = id.getCallId();
