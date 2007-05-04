@@ -529,7 +529,7 @@ ClientInviteSession::handleAnswer(const SipMessage& msg, const SdpContents& sdp)
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    handleProvisional(msg);
-   handler->onAnswer(getSessionHandle(), msg, sdp, InviteSessionHandler::FirstInvite);
+   handler->onAnswer(getSessionHandle(), msg, sdp);
 
    sendPrackIfNeeded(msg);
 }
@@ -672,7 +672,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onNewSession(getHandle(), Answer, msg);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
-            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
             if(!isTerminated())  // onAnswer callback may call end() or reject()
             {
                handler->onConnected(getHandle(), msg);
@@ -773,7 +773,8 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
             handler->onConnected(getHandle(), msg);
