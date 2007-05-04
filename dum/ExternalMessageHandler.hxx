@@ -3,12 +3,16 @@
 
 namespace resip
 {
-   class ExternalMessageBase;
-   class ExternalMessageHandler
-   {
+class ExternalMessageBase;
+class ExternalMessageHandler
+{
    public:
+      virtual ~ExternalMessageHandler() 
+      {
+      };
+         
       virtual void onMessage(ExternalMessageBase* externalMessage, bool& handled)=0;
-   };
+};
 }
 
 #endif

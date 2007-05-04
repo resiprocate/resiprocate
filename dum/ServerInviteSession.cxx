@@ -1056,7 +1056,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Ack);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
          if(!isTerminated())  // onAnswer callback may call end() or reject()
          {
             handler->onConnected(getSessionHandle(), msg);
