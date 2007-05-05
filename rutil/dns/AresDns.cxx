@@ -42,6 +42,7 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
    int cap = ares_capabilities(requiredCap);
    if (cap != requiredCap)
    {
+      ErrLog (<< "Build mismatch (ipv4/ipv6) problem in ares library"); // !dcm!
       return BuildMismatch;      
    }
    
@@ -85,6 +86,7 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
    
    if (status != ARES_SUCCESS)
    {
+      ErrLog (<< "Failed to initialize DNS library (status=" << status << ")");
       return status;
    }
    else
@@ -99,10 +101,10 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
          mChannel->tries = tries;
       }
 
-      DebugLog(<< "number of name servers found " << mChannel->nservers);
+      InfoLog(<< "DNS initialization: found  " << mChannel->nservers << " name servers");
       for (int i = 0; i < mChannel->nservers; ++i)
       {
-         DebugLog(<< "name server " << DnsUtil::inet_ntop(mChannel->servers[i].addr));
+         InfoLog(<< " name server: " << DnsUtil::inet_ntop(mChannel->servers[i].addr));
       }
 
       return Success;      

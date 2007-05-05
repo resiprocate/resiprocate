@@ -21,6 +21,7 @@ class DnsAAAARecord : public DnsResourceRecord
       const struct in6_addr& v6Address() const { return mAddr; }
       virtual const Data& name() const { return mName; }
       virtual bool isSameValue(const Data& value) const;
+      ostream& operator<<(ostream& strm) const;
       
    private:
       struct in6_addr mAddr;

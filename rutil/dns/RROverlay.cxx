@@ -28,7 +28,14 @@ using namespace std;
 // alen - length of abuf.
 RROverlay::RROverlay(const unsigned char *aptr,
                      const unsigned char *abuf,
-                     int alen)
+                     int alen) : 
+   mData(0),
+   mMsg(0),
+   mMsgLen(0),
+   mDataLen(0),
+   mNameLen(0),
+   mTTL(0),
+   mType(-1)
 {
    char *name;
    int len = 0;

@@ -31,21 +31,51 @@ class DNSResult
       int status;
       Data msg;
       std::vector<T> records;
+      std::ostream& dump(std::ostream& strm) const
+      {
+         if (status == 0)
+         {
+            for (typename std::vector<T>::const_iterator i=records.begin(); i != records.end(); ++i)
+            {
+               i->dump(strm);
+            }
+         }
+         else
+         {
+            strm << domain << " lookup failed: " << msg;
+         }
+
+         return strm;
+      }
 };
+
+template<class T>
+std::ostream& operator<<(std::ostream& strm, const DNSResult<T>& r)
+{
+   r.dump(strm);
+   return strm;
+}
 
 class DnsResultSink
 {
    public:
       virtual ~DnsResultSink() {}
       virtual void onDnsResult(const DNSResult<DnsHostRecord>&) = 0;
+      virtual void onLogDnsResult(const DNSResult<DnsHostRecord>&);
 
 #ifdef USE_IPV6
       virtual void onDnsResult(const DNSResult<DnsAAAARecord>&) = 0;
+      virtual void onLogDnsResult(const DNSResult<DnsAAAARecord>&);
 #endif
 
       virtual void onDnsResult(const DNSResult<DnsSrvRecord>&) = 0;
+      virtual void onLogDnsResult(const DNSResult<DnsSrvRecord>&);
+
       virtual void onDnsResult(const DNSResult<DnsNaptrRecord>&) = 0;
+      virtual void onLogDnsResult(const DNSResult<DnsNaptrRecord>&);
+
       virtual void onDnsResult(const DNSResult<DnsCnameRecord>&) = 0;
+      virtual void onLogDnsResult(const DNSResult<DnsCnameRecord>&);
 };
 
 class DnsRawSink
@@ -159,6 +189,7 @@ class DnsStub : public ExternalDnsHandler
                result.domain = target;
                result.status = status;
                result.msg = msg;
+               sink->onLogDnsResult(result);
                sink->onDnsResult(result);
             }
       };

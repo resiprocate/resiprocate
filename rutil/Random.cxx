@@ -76,7 +76,6 @@ Random::initialize()
          strm.flush();
          unsigned int seed = buffer.hash();
 
-         //InfoLog( << "srand() called with seed=" << seed << " for thread " << GetCurrentThreadId());
          srand(seed);
          mIsInitialized = true;
 
