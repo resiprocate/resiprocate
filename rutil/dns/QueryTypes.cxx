@@ -1,16 +1,16 @@
-#if defined(HAVE_CONFIG_H)
-#include "rutil/config.hxx"
-#endif
-
 #include "QueryTypes.hxx"
 
 using namespace resip;
 
-#define defineQueryType(_name, _type, _rrType)                    \
-unsigned short RR_##_name::getRRType()                          \
-{                                                                    \
-   return _rrType;                                                   \
-}                                                                    \
+#define defineQueryType(_name, _type, _rrType)  \
+   Data RR_##_name::getRRTypeName()             \
+{                                               \
+   return #_name;                               \
+}                                               \
+unsigned short RR_##_name::getRRType()          \
+{                                               \
+   return _rrType;                              \
+}                                               \
 RR_##_name resip::q_##_name
 
 defineQueryType(A, DnsHostRecord, 1);

@@ -1,6 +1,8 @@
 #ifndef RESIP_DNS_HOST_RECORD
 #define RESIP_DNS_HOST_RECORD
 
+#include <iosfwd>
+
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
@@ -23,6 +25,7 @@ class DnsHostRecord : public DnsResourceRecord
       in_addr addr() const { return mAddr; }
       const Data& name() const { return mName; }
       bool isSameValue(const Data& value) const;
+      std::ostream& dump(std::ostream& strm) const;
       
    private:
       in_addr mAddr;
