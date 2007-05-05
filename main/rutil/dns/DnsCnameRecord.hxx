@@ -32,6 +32,7 @@ class DnsCnameRecord : public DnsResourceRecord
       const Data& cname() const { return mCname; }
       const Data& name() const { return mName; }
       bool isSameValue(const Data&) const;
+      std::ostream& dump(std::ostream& strm) const;
       
    private:
       Data mCname;

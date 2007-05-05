@@ -150,7 +150,7 @@ ThreadIf::join()
       int r = pthread_join( mId , &stat );
       if ( r != 0 )
       {
-         InfoLog( << "pthread_join() returned " << r );
+         WarningLog( << "Internal error: pthread_join() returned " << r );
          assert(0);
          // TODO
       }

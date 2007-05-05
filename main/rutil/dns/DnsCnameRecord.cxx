@@ -47,3 +47,10 @@ bool DnsCnameRecord::isSameValue(const Data& value) const
 {
    return mCname==value;
 }
+
+std::ostream&
+DnsCnameRecord::dump(std::ostream& strm) const
+{
+   strm << mName << " (CNAME) --> " << mCname;
+   return strm;
+}
