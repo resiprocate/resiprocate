@@ -1275,7 +1275,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             setCurrentLocalSdp(msg);
             mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
          }
          else if(mProposedLocalSdp.get()) 
          {
@@ -1383,7 +1383,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          }
          else
          {
-            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
          }
          
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
@@ -1563,7 +1563,7 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Ack);		 
+         handler->onAnswer(getSessionHandle(), msg, *sdp);		 
          break;         
       case OnAck:
          if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
@@ -2411,10 +2411,21 @@ InviteSession::transition(State target)
 bool
 InviteSession::isReliable(const SipMessage& msg)
 {
-   // Ensure supported both locally and remotely
-   return ( (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)) ||
-             msg.exists(h_Requires)   && msg.header(h_Requires).find(Token(Symbols::C100rel)) ) &&
-            mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::C100rel)) );
+   if(msg.method() != INVITE)
+   {
+      return false;
+   }
+   if(msg.isRequest())
+   {
+      return mDum.getMasterProfile()->getUasReliableProvisionalMode() > MasterProfile::Never
+         && (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)) 
+             || msg.exists(h_Requires)   && msg.header(h_Requires).find(Token(Symbols::C100rel)));
+   }
+   else
+   {
+      return (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel))) 
+         || (msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel)));
+   }
 }
 
 std::auto_ptr<SdpContents>
@@ -2493,6 +2504,11 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
 {
    MethodTypes method = msg.header(h_CSeq).method();
    int code = msg.isResponse() ? msg.header(h_StatusLine).statusCode() : 0;
+   
+   //.dcm. Treat an invite as reliable if UAS 100rel support is enabled. For
+   //responses, reiable provisionals should only be received if the invite was
+   //sent reliably.  Spurious reliable provisional respnoses are dropped outside
+   //the state machine.
    bool reliable = isReliable(msg);
    bool sentOffer = mProposedLocalSdp.get();
 
@@ -2529,7 +2545,7 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
          }
       }
    }
-   else if (method == INVITE && code > 100 && code < 200)   // !kh! 100 is handled by transaction layer.
+   else if (method == INVITE && code > 100 && code < 200)
    {
       if (reliable)
       {
