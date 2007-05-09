@@ -966,11 +966,26 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
          && code >= 200 && code < 300)
       {
          // Check if we should add our capabilites to the invite success response
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) response.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) response.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) response.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AllowEvents)) response.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
-         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) response.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) 
+         {
+            response.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+         }
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) 
+         {
+            response.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+         }
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) 
+         {
+            response.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+         }
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AllowEvents)) 
+         {
+            response.header(h_AllowEvents) = mDum.getMasterProfile()->getAllowedEvents();
+         }
+         if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) 
+         {
+            response.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+         }
       }
    }
    else
