@@ -352,6 +352,11 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 {
   try
   {
+     if (discardMessage(msg))
+     {
+        return;
+     }
+
      sendSipFrag(msg);
      switch(mState)
      {
@@ -456,15 +461,20 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    assert(msg.header(h_StatusLine).statusCode() > 100);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   
+   //.dcm. Kept the following checks here rather than discardMessage as the
+   // state machine can be affected(termination).
 
-   // must match
+   // !dcm! should we really end the InviteSession or should be discard the 1xx instead?
    if (msg.header(h_CSeq).sequence() != mLastLocalSessionModification->header(h_CSeq).sequence())
    {
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       handler->onFailure(getHandle(), msg);
       end(NotSpecified);
    }
-   else if (mDum.getMasterProfile()->getReliableProvisionalMode() == MasterProfile::Required)
+   //!dcm! this should never happen, the invite will have 100rel in the
+   //required header.  Keep for interop?
+   else if (mDum.getMasterProfile()->getUacReliableProvisionalMode() == MasterProfile::Required)
    {
       if (!msg.exists(h_RSeq))
       {
@@ -475,26 +485,8 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
       }
    }
 
-   if (msg.exists(h_RSeq))
-   {
-      // store state about the provisional if reliable, so we can detect retransmissions
-      unsigned int rseq = (unsigned int)msg.header(h_RSeq).value();
-      if ( (mLastReceivedRSeq == 0) || (rseq == mLastReceivedRSeq+1))
-      {
-         startStaleCallTimer();
-         InfoLog (<< "Got a reliable 1xx with rseq = " << rseq);
-         handler->onProvisional(getHandle(), msg);
-      }
-      else
-      {
-         InfoLog (<< "Got an out of order reliable 1xx with rseq = " << rseq << " dropping");
-      }
-   }
-   else
-   {
-      startStaleCallTimer();
-      handler->onProvisional(getHandle(), msg);
-   }
+   startStaleCallTimer();
+   handler->onProvisional(getHandle(), msg);
 }
 
 void
@@ -530,7 +522,7 @@ ClientInviteSession::handleAnswer(const SipMessage& msg, const SdpContents& sdp)
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    handleProvisional(msg);
-   handler->onAnswer(getSessionHandle(), msg, sdp, InviteSessionHandler::FirstInvite);
+   handler->onAnswer(getSessionHandle(), msg, sdp);
 
    sendPrackIfNeeded(msg);
 }
@@ -545,6 +537,7 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
    
    bool reliable = msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel));
    UInt32 rseq = msg.exists(h_RSeq) ? msg.header(h_RSeq).value() : 0;
+   //.dcm. TODO duplicate check, remove.
    if (reliable && mLastReceivedRSeq == 0 || rseq == mLastReceivedRSeq + 1)
    {
       SharedPtr<SipMessage> prack(new SipMessage);
@@ -619,8 +612,11 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          break;
 
       case On1xxEarly:
-         // !jf! Assumed that if UAS supports 100rel, the first 1xx must contain an
-         // offer or an answer.
+         //!dcm! according to draft-ietf-sipping-offeranswer there can be a non
+         // reliable 1xx followed by a reliable 1xx.  Also, the intial 1xx
+         // doesn't have to have an offer. However, DUM will only generate
+         // reliabled 1xx responses when 100rel is available.
+
          transition(UAC_Early);
          mEarlyMedia = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), None, msg);
@@ -680,7 +676,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          handler->onNewSession(getHandle(), Answer, msg);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
-            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
             if(!isTerminated())  // onAnswer callback may call end() or reject()
             {
                handler->onConnected(getHandle(), msg);
@@ -781,7 +777,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::FirstInvite);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
             handler->onConnected(getHandle(), msg);
@@ -1075,6 +1071,10 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case On1xx:
+         //!dcm! retransmissions of a reliable provisional response are
+         //discarded, so any flavour or on1xx must be handled...this logic
+         //should prob. move into a guard as it will slice across many states.
+      case On1xxOffer:
          handleProvisional(msg);
          sendPrackIfNeeded(msg);
          break;
@@ -1174,7 +1174,6 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
       case On422Invite:
       case On487Invite:
       case On489Invite:
-      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -1281,6 +1280,33 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
    }
 }
 
+//pre state-machine logic to discard 100rel retransmissions/out of order messages.
+//Other early discard logic or interop(protocol repair) logic should go here.
+bool 
+ClientInviteSession::discardMessage(const SipMessage& msg)
+{
+   int code = msg.isResponse() ? msg.header(h_StatusLine).statusCode() : 0;
+   if (msg.method() == INVITE && code > 100 && code < 200)
+   {
+      if (msg.exists(h_RSeq))
+      {
+         // store state about the provisional if reliable, so we can detect retransmissions
+         unsigned int rseq = (unsigned int) msg.header(h_RSeq).value();
+         if (rseq == mLastReceivedRSeq)
+         {
+            DebugLog(<< "Discarding reliable 1xx retranmission with rseq " << rseq);
+            return true;
+         }
+         else if (mLastReceivedRSeq != 0 && rseq > mLastReceivedRSeq + 1)
+         {
+            DebugLog(<< "Discarding out of order reliable 1xx with rseq " << rseq);
+            return true;
+         }
+      }
+   }
+   return false;
+}
+   
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *

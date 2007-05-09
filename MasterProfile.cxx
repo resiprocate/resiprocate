@@ -16,7 +16,9 @@ MasterProfile::MasterProfile() :
    mValidateContentLanguageEnabled(false),
    mValidateAcceptEnabled(false),
    mAllowBadRegistrationEnabled(false),
-   mCheckReqUriInMergeDetectionEnabled(false)
+   mCheckReqUriInMergeDetectionEnabled(false),
+   mUacReliableProvisionalMode(Never),
+   mUasReliableProvisionalMode(Never)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -97,6 +99,11 @@ MasterProfile::clearSupportedMethods()
 void 
 MasterProfile::addSupportedOptionTag(const Token& tag)
 {
+   if (tag == Token(Symbols::C100rel))
+   {
+      //use enablePrackUas and enablePrackUac
+      assert(0);
+   }
    mSupportedOptionTags.push_back(tag);
 }
 
@@ -109,6 +116,10 @@ MasterProfile::getUnsupportedOptionsTags(const Tokens& requiresOptionTags)
       if (!i->isWellFormed())
       {
          tokens.push_back(Token("malformedTag"));
+      }
+      else if (*i == Token(Symbols::C100rel) && mUasReliableProvisionalMode == Never)
+      {
+         tokens.push_back(*i);
       }
       // if this option is not supported
       else if (!mSupportedOptionTags.find(*i))
@@ -133,15 +144,27 @@ MasterProfile::clearSupportedOptionTags()
 }
 
 void
-MasterProfile::setReliableProvisionalMode(ReliableProvisionalMode mode)
+MasterProfile::setUacReliableProvisionalMode(ReliableProvisionalMode mode)
 {
-   mReliableProvisionalMode = mode;
+   mUacReliableProvisionalMode = mode;
+}
+
+void
+MasterProfile::setUasReliableProvisionalMode(ReliableProvisionalMode mode)
+{
+   mUasReliableProvisionalMode = mode;
 }
 
 MasterProfile::ReliableProvisionalMode
-MasterProfile::getReliableProvisionalMode() const
+MasterProfile::getUacReliableProvisionalMode() const
 {
-   return mReliableProvisionalMode;
+   return mUacReliableProvisionalMode;
+}
+
+MasterProfile::ReliableProvisionalMode
+MasterProfile::getUasReliableProvisionalMode() const
+{
+   return mUasReliableProvisionalMode;
 }
 
 void 
