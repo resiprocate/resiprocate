@@ -157,7 +157,7 @@ TestSipEndPoint::clean()
       delete (*it);
    }
    mDialogs.clear();
-
+   mLastMessage.reset();
 #ifdef RTP_ON
    delete mRtpSession;
    mRtpSession = 0;
@@ -338,6 +338,21 @@ void TestSipEndPoint::storeReceivedInvite(const shared_ptr<SipMessage>& invite)
    mInvitesReceived.push_back(invite);
 }
 
+
+void TestSipEndPoint::storeReceivedUpdate(const shared_ptr<SipMessage>& update)
+{
+   for(UpdateList::iterator it = mUpdatesReceived.begin();
+       it != mUpdatesReceived.end(); it++)
+   {
+      if ( (*it)->header(h_CallId) == update->header(h_CallId))
+      {
+         (*it) = update;
+         return;
+      }
+   }
+   mUpdatesReceived.push_back(update);
+}
+
 shared_ptr<SipMessage> 
 TestSipEndPoint::getSentInvite(const CallId& callId)
 {
@@ -359,6 +374,21 @@ TestSipEndPoint::getReceivedInvite(const CallId& callId)
 {
    for(InviteList::iterator it = mInvitesReceived.begin();
        it != mInvitesReceived.end(); it++)
+   {
+      if ( (*it)->header(h_CallId) == callId)
+      {
+         return *it;
+      }
+   }
+   return shared_ptr<SipMessage>();
+}  
+
+ 
+shared_ptr<SipMessage> 
+TestSipEndPoint::getReceivedUpdate(const CallId& callId)
+{
+   for(UpdateList::iterator it = mUpdatesReceived.begin();
+       it != mUpdatesReceived.end(); it++)
    {
       if ( (*it)->header(h_CallId) == callId)
       {
@@ -1417,17 +1447,19 @@ TestSipEndPoint::MessageExpectAction::MessageExpectAction(TestSipEndPoint& from)
 
 void
 TestSipEndPoint::MessageExpectAction::operator()(boost::shared_ptr<Event> event)
-{ 
+{
    SipEvent* sipEvent = dynamic_cast<SipEvent*>(event.get());
 
-   if (!sipEvent)
+   if (!sipEvent && !mEndPoint.mLastMessage)
    {
+      //!dcm! use last message received if available--may want to have an option
+      //to turn off this facility
       ErrLog(<< "a TestSipEndPoint action requires a SipEvent!");
       throw AssertException("requires a SipEvent", __FILE__, __LINE__);
    }
    
-   boost::shared_ptr<resip::SipMessage> msg = sipEvent->getMessage();
-   
+   boost::shared_ptr<resip::SipMessage> msg = sipEvent ? sipEvent->getMessage() : mEndPoint.mLastMessage;
+      
    mMsg = go(msg); 
    mConditioner(mMsg);  
    if (mMsg != 0)
@@ -2020,6 +2052,42 @@ TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::answer(const boost::shared_ptr<resip::SdpContents>& sdp)
 {
    return new Answer(*this, sdp);
+}
+
+
+TestSipEndPoint::AnswerUpdate::AnswerUpdate(TestSipEndPoint & endPoint, const boost::shared_ptr<resip::SdpContents> sdp)
+   : MessageExpectAction(endPoint),
+     mEndPoint(endPoint),
+     mSdp(sdp)
+{
+}
+
+boost::shared_ptr<resip::SipMessage>                                
+TestSipEndPoint::AnswerUpdate::go(boost::shared_ptr<resip::SipMessage> msg)                                
+{                                                                           
+   boost::shared_ptr<resip::SipMessage> update;                         
+   update = mEndPoint.getReceivedUpdate(msg->header(resip::h_CallId));  
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*update, 200);
+   
+   const resip::SdpContents* sdp=0;
+   if( mSdp.get() )
+   {
+      sdp = dynamic_cast<const resip::SdpContents*>(mSdp.get());
+      response->setContents(sdp);
+   }
+   return response;
+}                                                                           
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::answerUpdate()
+{
+   return new AnswerUpdate(*this);
+}
+
+TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::answerUpdate(const boost::shared_ptr<resip::SdpContents>& sdp)
+{
+   return new AnswerUpdate(*this, sdp);
 }
 
 TestSipEndPoint::AnswerTo::AnswerTo(
@@ -3168,6 +3236,7 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
    shared_ptr<SipEvent> sipEvent = shared_dynamic_cast<SipEvent>(event);
    assert(sipEvent);
    shared_ptr<SipMessage> msg = sipEvent->getMessage();
+   mLastMessage = msg;
    
    DebugLog(<< getContact() << " is handling: " << *msg);
    if (msg->isResponse())
@@ -3249,6 +3318,18 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
       if (msg->header(h_RequestLine).getMethod() == INVITE)
       {
          storeReceivedInvite(msg);
+         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
+         if (dialog != 0)
+         {
+            if (dialog->targetRefreshRequest(*msg) != 0)
+            {
+               throw GlobalFailure("Target refresh failed", __FILE__, __LINE__);
+            }
+         }
+      }
+      if (msg->header(h_RequestLine).getMethod() == UPDATE)
+      {
+         storeReceivedUpdate(msg);
          DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
          if (dialog != 0)
          {
@@ -3492,6 +3573,56 @@ save(boost::shared_ptr<resip::SipMessage>& msgPtr,
 {
    TestSipEndPoint::SaveMessage saver(msgPtr);
    return condition(saver, action);
+}
+
+OptionTagConditioner::OptionTagConditioner(const resip::Tokens& tags, Location loc) :
+   mTags(tags),
+   mLocation(loc)
+{}
+
+boost::shared_ptr<resip::SipMessage> 
+OptionTagConditioner::operator()(boost::shared_ptr<resip::SipMessage> msg)
+{
+   switch(mLocation)
+   {
+      case Supported:
+         copy(mTags.begin(), mTags.end(), back_insert_iterator<Tokens>(msg->header(h_Supporteds)));
+         break;
+      case Required:
+         copy(mTags.begin(), mTags.end(), back_insert_iterator<Tokens>(msg->header(h_Requires)));
+         break;
+      default:
+         assert(0);
+   }
+   return msg;
+}
+
+TestSipEndPoint::MessageAction*
+addSupported(const resip::Tokens& tokens, TestSipEndPoint::MessageAction* action)
+{
+   return condition(OptionTagConditioner(tokens, OptionTagConditioner::Supported), action);
+}
+
+TestSipEndPoint::MessageAction*
+addSupported(const resip::Data& tag, TestSipEndPoint::MessageAction* action)
+{
+   resip::Tokens t;
+   t.push_back(resip::Token(tag));
+   return condition(OptionTagConditioner(t, OptionTagConditioner::Supported), action);
+}
+
+TestSipEndPoint::MessageAction*
+addRequired(const resip::Tokens& tokens, TestSipEndPoint::MessageAction* action)
+{
+   return condition(OptionTagConditioner(tokens, OptionTagConditioner::Required), action);
+}
+
+TestSipEndPoint::MessageAction*
+addRequired(const resip::Data& tag, TestSipEndPoint::MessageAction* action)
+{
+   resip::Tokens t;
+   t.push_back(resip::Token(tag));
+   return condition(OptionTagConditioner(t, OptionTagConditioner::Required), action);
 }
 
 TestSipEndPoint::MessageExpectAction*
