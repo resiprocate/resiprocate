@@ -60,8 +60,10 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
          break;
       case MasterProfile::Supported:
          getLastRequest()->header(h_Supporteds).push_back(Token(Symbols::C100rel));
+         break;
       case MasterProfile::Required:
          getLastRequest()->header(h_Requires).push_back(Token(Symbols::C100rel));
+         break;
       default:
          assert(0);
    }
