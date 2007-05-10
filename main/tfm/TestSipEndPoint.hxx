@@ -609,6 +609,21 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       MessageExpectAction* answer();
       MessageExpectAction* answer(const boost::shared_ptr<resip::SdpContents>& sdp);
 
+
+      class AnswerUpdate : public MessageExpectAction 
+      { 
+         public:
+            explicit AnswerUpdate(TestSipEndPoint & endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            virtual boost::shared_ptr<resip::SipMessage>                                
+            go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
+      MessageExpectAction* answerUpdate();
+      MessageExpectAction* answerUpdate(const boost::shared_ptr<resip::SdpContents>& sdp);
+
+
       class AnswerTo : public MessageAction
       {
          public:
@@ -980,9 +995,14 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
    protected:
       void storeSentInvite(const boost::shared_ptr<resip::SipMessage>& invite);
       void storeReceivedInvite(const boost::shared_ptr<resip::SipMessage>& invite);
+
+      void storeSentUpdate(const boost::shared_ptr<resip::SipMessage>& update);
+      void storeReceivedUpdate(const boost::shared_ptr<resip::SipMessage>& update);
       
       boost::shared_ptr<resip::SipMessage> getSentInvite(const resip::CallId& callId);
       boost::shared_ptr<resip::SipMessage> getReceivedInvite(const resip::CallId& callId);
+
+      boost::shared_ptr<resip::SipMessage> getReceivedUpdate(const resip::CallId& callId);
 
       //void storeSentSubscribe(const boost::shared_ptr<resip::SipMessage>& subscribe);
       void storeReceivedSubscribe(const boost::shared_ptr<resip::SipMessage>& subscribe);
@@ -1011,6 +1031,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       resip::Security* mSecurity;
       
       typedef std::list< boost::shared_ptr<resip::SipMessage> > InviteList;
+      typedef std::list< boost::shared_ptr<resip::SipMessage> > UpdateList;
+      
       typedef std::list< boost::shared_ptr<resip::SipMessage> > ReceivedSubscribeList;
       typedef std::list< boost::shared_ptr<resip::SipMessage> > ReceivedPublishList;
       typedef std::list<DialogSet> SentSubscribeList;
@@ -1020,10 +1042,17 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
    protected:
       InviteList mInvitesSent;
       InviteList mInvitesReceived;
+
+      UpdateList mUpdatesSent;
+      UpdateList mUpdatesReceived;
       
    public: // !dlb! hack
       DialogList mDialogs;
       SentSubscribeList mSubscribesSent;
+      //!dcm! allow MessageExpectAction to use the last message received if the
+      //!available event is not a SipEvent
+      boost::shared_ptr<resip::SipMessage> mLastMessage;
+      
    protected:
       
       ReceivedSubscribeList mSubscribesReceived;
@@ -1100,6 +1129,34 @@ rawcondition(TestSipEndPoint::RawConditionerFn fn,
 TestSipEndPoint::MessageAction*
 save(boost::shared_ptr<resip::SipMessage>& msgPtr, 
      TestSipEndPoint::MessageAction* action);
+
+class OptionTagConditioner
+{
+   public:
+      typedef enum 
+      {
+         Supported, 
+         Required
+      } Location;
+         
+      OptionTagConditioner(const resip::Tokens& tags, Location loc);
+      boost::shared_ptr<resip::SipMessage> operator()(boost::shared_ptr<resip::SipMessage> msg);
+   private:
+      resip::Tokens mTags;
+      Location mLocation;
+};
+
+TestSipEndPoint::MessageAction*
+addSupported(const resip::Tokens& tokens, TestSipEndPoint::MessageAction* action);
+
+TestSipEndPoint::MessageAction*
+addSupported(const resip::Data& tag, TestSipEndPoint::MessageAction* action);
+
+TestSipEndPoint::MessageAction*
+addRequired(const resip::Tokens& tokens, TestSipEndPoint::MessageAction* action);
+
+TestSipEndPoint::MessageAction*
+addRequired(const resip::Tokens& tag, TestSipEndPoint::MessageAction* action);
 
 TestSipEndPoint::MessageAction*
 operator<=(boost::shared_ptr<resip::SipMessage>& msgPtr, 
