@@ -934,6 +934,11 @@ TestSipEndPoint::MessageAction::operator()()
    }
 }
 
+void
+TestSipEndPoint::MessageAction::operator()(boost::shared_ptr<Event> event)
+{
+   Action::operator()(event);
+}
 
 TestSipEndPoint::Invite::Invite(TestSipEndPoint* from, 
                                 const resip::Uri& to, 
@@ -1118,8 +1123,7 @@ TestSipEndPoint::rawSend(const Uri& target, const resip::Data& rawText)
 }
 
 TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, const Uri& to, const Token& eventPackage)
-   : mEndPoint(*from),
-     mTo(to),
+   : MessageAction(*from, to),
      mEventPackage(eventPackage),
      mAccept(),
      mContents( boost::shared_ptr<resip::Contents>())
@@ -1131,8 +1135,7 @@ TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from,
                                       const Token& eventPackage,
                                       const Mime& accept,
                                       boost::shared_ptr<resip::Contents> contents)
-   : mEndPoint(*from),
-     mTo(to),
+   : MessageAction(*from, to),
      mEventPackage(eventPackage),
      mAccept(accept),
      mContents(contents)
@@ -1145,13 +1148,7 @@ TestSipEndPoint::Subscribe::toString() const
    return mEndPoint.getName() + ".subscribe()";
 }
 
-void 
-TestSipEndPoint::Subscribe::operator()() 
-{
-   go(); 
-}
-
-void 
+void
 TestSipEndPoint::Subscribe::operator()(boost::shared_ptr<Event> event)
 {
    if (! mEndPoint.getDialog())
@@ -1170,15 +1167,14 @@ TestSipEndPoint::Subscribe::operator()(boost::shared_ptr<Event> event)
          }
       }
    }
-
-   go();
+   MessageAction::operator()(event);
 }
 
-void
+boost::shared_ptr<resip::SipMessage>
 TestSipEndPoint::Subscribe::go()
 {
    shared_ptr<SipMessage> subscribe;
-   
+
    DeprecatedDialog* dialog = mEndPoint.getDialog();
    if (dialog)
    {
@@ -1186,8 +1182,8 @@ TestSipEndPoint::Subscribe::go()
    }
    else
    {
-      subscribe = shared_ptr<SipMessage>(Helper::makeRequest(NameAddr(mTo), 
-                                                             NameAddr(mEndPoint.getAddressOfRecord()), 
+      subscribe = shared_ptr<SipMessage>(Helper::makeRequest(NameAddr(mTo),
+                                                             NameAddr(mEndPoint.getAddressOfRecord()),
                                                              mEndPoint.getContact(),
                                                              SUBSCRIBE));
    }
@@ -1197,10 +1193,11 @@ TestSipEndPoint::Subscribe::go()
       subscribe->header(h_Accepts).push_front(mAccept);
    if( mContents.get() )
       subscribe->setContents(mContents.get());
-   
+
    mEndPoint.storeSentSubscribe(subscribe);
    DebugLog(<< "sending SUBSCRIBE " << subscribe->brief());
-   mEndPoint.send(subscribe);
+
+   return subscribe;
 }
 
 TestSipEndPoint::Subscribe* 
