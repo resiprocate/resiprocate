@@ -182,6 +182,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
          public:
             MessageAction(TestSipEndPoint& from, const resip::Uri& to);
             virtual void operator()();
+            virtual void operator()(boost::shared_ptr<Event> event);
             void setConditioner(MessageConditionerFn conditioner);
             void setRawConditioner(RawConditionerFn conditioner);
             virtual boost::shared_ptr<resip::SipMessage> go() = 0;
@@ -257,19 +258,18 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       RawSend* rawSend(const TestUser& endPoint, const resip::Data& rawText);
       RawSend* rawSend(const resip::Uri& target, const resip::Data& rawText);
 
-      class Subscribe : public Action
+      class Subscribe : public MessageAction
       {
          public:
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage);
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, const resip::Mime& accept, boost::shared_ptr<resip::Contents> contents = boost::shared_ptr<resip::Contents>());
-            virtual void operator()();
+
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
+
          private:
-            void go();
-            
-            TestSipEndPoint & mEndPoint;
-            resip::Uri mTo;
+            virtual boost::shared_ptr<resip::SipMessage> go();
+
             resip::Token mEventPackage;
             resip::Mime mAccept;
             boost::shared_ptr<resip::Contents> mContents;
