@@ -2,19 +2,19 @@
 
 using namespace resip;
 
-const Subsystem Subsystem::APP("RESIP:APP");
-const Subsystem Subsystem::CONTENTS("RESIP:CONTENTS");
-const Subsystem Subsystem::DNS("RESIP:DNS");
-const Subsystem Subsystem::DUM("RESIP:DUM");
-const Subsystem Subsystem::PRESENCE("RESIP:PRESENCE");
-const Subsystem Subsystem::SDP("RESIP:SDP");
-const Subsystem Subsystem::SIP("RESIP");    // SIP Stack / Parser
-const Subsystem Subsystem::TEST("RESIP:TEST");
-const Subsystem Subsystem::TRANSACTION("RESIP:TRANSACTION");
-const Subsystem Subsystem::TRANSPORT("RESIP:TRANSPORT");
-const Subsystem Subsystem::STATS("RESIP:STATS");
-const Subsystem Subsystem::REPRO("REPRO:APP");
-const Subsystem Subsystem::NONE("UNDEFINED");
+Subsystem Subsystem::APP("RESIP:APP");
+Subsystem Subsystem::CONTENTS("RESIP:CONTENTS");
+Subsystem Subsystem::DNS("RESIP:DNS");
+Subsystem Subsystem::DUM("RESIP:DUM");
+Subsystem Subsystem::PRESENCE("RESIP:PRESENCE");
+Subsystem Subsystem::SDP("RESIP:SDP");
+Subsystem Subsystem::SIP("RESIP");    // SIP Stack / Parser
+Subsystem Subsystem::TEST("RESIP:TEST");
+Subsystem Subsystem::TRANSACTION("RESIP:TRANSACTION");
+Subsystem Subsystem::TRANSPORT("RESIP:TRANSPORT");
+Subsystem Subsystem::STATS("RESIP:STATS");
+Subsystem Subsystem::REPRO("REPRO:APP");
+Subsystem Subsystem::NONE("UNDEFINED");
 
 const Data& Subsystem::getSubsystem() const
 {
