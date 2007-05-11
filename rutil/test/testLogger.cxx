@@ -4,6 +4,8 @@
 #include "rutil/ThreadIf.hxx"
 #include "rutil/Timer.hxx"
 
+#include "TestSubsystemLogLevel.hxx"
+
 #ifdef WIN32
 #define usleep(x) Sleep(x/1000)
 #define sleep(x) Sleep(x*1000)
@@ -74,6 +76,15 @@ main(int argc, char* argv[])
    CritLog(<< "logging before initializing is ok");
    
    Log::initialize(Log::Cout, Log::Info, argv[0]);
+
+   InfoLog(<<"Subsystem level for TEST subsystem, not level set, global is info.");
+   Noisy::outputLogMessages();
+   Log::setLevel(Log::Debug, Subsystem::TEST);
+   InfoLog(<<"Subsystem level for TEST subsystem, TEST set to Debug, global is info.");
+   Noisy::outputLogMessages();
+   Log::setLevel(Log::Crit, Subsystem::TEST);
+   InfoLog(<<"Subsystem level for TEST subsystem, TEST set to Crit, global is info.");
+   Noisy::outputLogMessages();
 
    DebugLog(<<"This should not appear.");
    InfoLog(<<"This should appear.");
