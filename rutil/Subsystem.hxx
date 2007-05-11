@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "rutil/Data.hxx"
+#include "rutil/Log.hxx"
 
 namespace resip
 {
@@ -11,28 +12,30 @@ class Subsystem
 {
    public:
       // Add new systems below
-      static const Subsystem APP;
-      static const Subsystem CONTENTS;
-      static const Subsystem DNS;
-      static const Subsystem DUM;
-      static const Subsystem NONE; // default subsystem
-      static const Subsystem PRESENCE; 
-      static const Subsystem SDP;
-      static const Subsystem SIP;    // SIP Stack / Parser
-      static const Subsystem TEST;   
-      static const Subsystem TRANSACTION;
-      static const Subsystem TRANSPORT;
-      static const Subsystem STATS;
-      static const Subsystem REPRO;
+      static Subsystem APP;
+      static Subsystem CONTENTS;
+      static Subsystem DNS;
+      static Subsystem DUM;
+      static Subsystem NONE; // default subsystem
+      static Subsystem PRESENCE; 
+      static Subsystem SDP;
+      static Subsystem SIP;    // SIP Stack / Parser
+      static Subsystem TEST;   
+      static Subsystem TRANSACTION;
+      static Subsystem TRANSPORT;
+      static Subsystem STATS;
+      static Subsystem REPRO;
       
       const Data& getSubsystem() const;
-
+      Log::Level getLevel() const { return mLevel; }
+      void setLevel(Log::Level level) { mLevel = level; }
    protected:
-      explicit Subsystem(const char* rhs) : mSubsystem(rhs) {};
-      explicit Subsystem(const Data& rhs) : mSubsystem(rhs) {};
+      explicit Subsystem(const char* rhs) : mSubsystem(rhs), mLevel(Log::None) {};
+      explicit Subsystem(const Data& rhs) : mSubsystem(rhs), mLevel(Log::None) {};
       Subsystem& operator=(const Data& rhs);
 
       Data mSubsystem;
+      Log::Level mLevel;
 
       friend std::ostream& operator<<(std::ostream& strm, const Subsystem& ss);
 };
