@@ -155,18 +155,20 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
 
          DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection 
                    << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
-         if (bytesRead == -1)
-         {
-            DebugLog (<< "Closing connection bytesRead=" << bytesRead);
-            delete currConnection;
-         }
-         else if (bytesRead > 0) 
+         if (bytesRead > 0) 
          {
             currConnection->performRead(bytesRead, mStateMachineFifo);
          }
+         else if (bytesRead == -1)
+         {
+            DebugLog(<< "Closing connection bytesRead=" << bytesRead);
+            delete currConnection;
+         }
          else if ( bytesRead != 0 )
          {
-            assert(0);
+	    ErrLog(<< "encounter special error at " << *currConnection
+                   << " bytesToRead=" << bytesToRead << " read=" << bytesRead);
+	    delete currConnection;
          }
       }
       else if (fdset.hasException(currConnection->getSocket()))
