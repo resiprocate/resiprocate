@@ -248,7 +248,7 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
          break;
 
       default:
-         InviteSession::reject(statusCode);
+         InviteSession::reject(statusCode, warning);
          break;
    }
 }
