@@ -184,7 +184,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          assert(0); // This is overrideen in UAS and UAC specific handlers
       }
 
-      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents& sdp, InviteSessionHandler::AnswerReason reason)
+      virtual void onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContents& sdp)
       {
          cout << name << ": InviteSession-onAnswer(SDP)" << endl;
          //sdp->encode(cout);
@@ -425,7 +425,7 @@ class TestUas : public TestInviteSessionHandler
          is->provideOffer(*sdp);
       }
 
-      virtual void onAnswer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp, InviteSessionHandler::AnswerReason reason)      
+      virtual void onAnswer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
       {
          cout << name << ": InviteSession-onAnswer(SDP)" << endl;
          if(*pHangupAt == 0)
