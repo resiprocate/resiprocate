@@ -40,7 +40,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
    if ( !filePath.empty() )
    {
 #ifdef WIN32
-      filePath += '\';
+      filePath += '\\';
 #else
       filePath += '/';
 #endif
