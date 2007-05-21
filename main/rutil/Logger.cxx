@@ -1,7 +1,7 @@
 #include <fstream>
 #include "rutil/Logger.hxx"
 #include "rutil/ThreadIf.hxx"
-#include "rutil/SubSystem.hxx"
+#include "rutil/Subsystem.hxx"
 #include "rutil/SysLogStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
