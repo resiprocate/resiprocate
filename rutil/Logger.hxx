@@ -5,7 +5,7 @@
 #include "rutil/Lock.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/SubSystem.hxx"
+#include "rutil/Subsystem.hxx"
 
 #ifdef WIN32
 #include <windows.h>
