@@ -294,7 +294,10 @@ main(int argc, char** argv)
 
       if (!args.mNoChallenge)
       {
-         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,&stack,args.mNoIdentityHeaders,args.mHttpPort);
+         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
+                                                           &stack,args.mNoIdentityHeaders,
+                                                           args.mHttpPort,
+                                                           !args.mNoAuthIntChallenge /*useAuthInt*/);
          locators->addProcessor(std::auto_ptr<Processor>(da)); 
       }
 
@@ -308,7 +311,7 @@ main(int argc, char** argv)
      
       if (args.mRouteSet.empty())
       {
-         StaticRoute* sr = new StaticRoute(store.mRouteStore, args.mNoChallenge, args.mParallelForkStaticRoutes);
+         StaticRoute* sr = new StaticRoute(store.mRouteStore, args.mNoChallenge, args.mParallelForkStaticRoutes, !args.mNoAuthIntChallenge /*useAuthInt*/);
          locators->addProcessor(std::auto_ptr<Processor>(sr));
       }
       else
@@ -453,7 +456,8 @@ main(int argc, char** argv)
          SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*dum,
                                                 store.mUserStore,
-                                                store.mAclStore));
+                                                store.mAclStore,
+                                                !args.mNoAuthIntChallenge /*useAuthInt*/));
          dum->setServerAuthManager(uasAuth);
       }
       dum->setMessageFilterRuleList(ruleList);

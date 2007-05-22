@@ -33,6 +33,7 @@ class CommandLineParser
       Data mCertPath;
       Data mDbPath;
       bool mNoChallenge;
+      bool mNoAuthIntChallenge;
       bool mNoWebChallenge;
       bool mNoRegistrar;
       bool mNoIdentityHeaders;
