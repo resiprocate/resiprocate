@@ -20,10 +20,11 @@ using namespace repro;
 using namespace std;
 
 
-StaticRoute::StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes) :
+StaticRoute::StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes, bool useAuthInt) :
    mRouteStore(store),
    mNoChallenge(noChallenge),
-   mParallelForkStaticRoutes(parallelForkStaticRoutes)
+   mParallelForkStaticRoutes(parallelForkStaticRoutes),
+   mUseAuthInt(useAuthInt)
 {}
 
 
@@ -99,7 +100,7 @@ StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
    SipMessage *sipMessage = dynamic_cast<SipMessage*>(message);
    assert(sipMessage);
 
-   SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, true /*auth-int*/, false /*stale*/);
+   SipMessage *challenge = Helper::makeProxyChallenge(*sipMessage, realm, mUseAuthInt /*auth-int*/, false /*stale*/);
    rc.sendResponse(*challenge);
 
    delete challenge;
