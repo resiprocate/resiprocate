@@ -148,6 +148,8 @@ TestSipEndPoint::clean()
 {
    mInvitesSent.clear();
    mInvitesReceived.clear();
+   mUpdatesSent.clear();
+   mUpdatesReceived.clear();
    mSubscribesSent.clear();
    mSubscribesReceived.clear();
    mRequests.clear();
@@ -338,6 +340,24 @@ void TestSipEndPoint::storeReceivedInvite(const shared_ptr<SipMessage>& invite)
    mInvitesReceived.push_back(invite);
 }
 
+
+void TestSipEndPoint::storeSentUpdate(const shared_ptr<SipMessage>& update)
+{
+   assert(update->isRequest());
+   assert(update->header(h_RequestLine).getMethod() == UPDATE);
+   DebugLog (<< "Storing update: " << update->header(h_CallId) << " in " << this);
+   
+   for(UpdateList::iterator it = mUpdatesSent.begin();
+       it != mUpdatesSent.end(); it++)
+   {
+      if ( (*it)->header(h_CallId) == update->header(h_CallId))
+      {
+         (*it) = update;
+         return;
+      }
+   }
+   mUpdatesSent.push_back(update);
+}
 
 void TestSipEndPoint::storeReceivedUpdate(const shared_ptr<SipMessage>& update)
 {
@@ -801,6 +821,95 @@ TestSipEndPoint::reInvite(const Data& user, const boost::shared_ptr<resip::SdpCo
    Uri to;
    to.user() = user;
    return new ReInvite(this, to, true, sdp);
+}
+
+TestSipEndPoint::Update::Update(TestSipEndPoint* from, 
+                                const resip::Uri& to,
+                                bool matchUserOnly,
+                                boost::shared_ptr<resip::SdpContents> sdp)
+   : mEndPoint(*from),
+     mTo(to),
+     mMatchUserOnly(matchUserOnly),
+     mSdp(sdp)
+{
+}
+
+void 
+TestSipEndPoint::Update::operator()() 
+{ 
+   go(); 
+}
+
+void 
+TestSipEndPoint::Update::operator()(boost::shared_ptr<Event> event)
+{
+   go();
+}
+
+void
+TestSipEndPoint::Update::go()
+{
+   DebugLog(<< "Update to: " << mTo);
+   DeprecatedDialog* dialog;
+   if( mMatchUserOnly )
+   {
+      dialog = mEndPoint.getDialog(mTo.uri().user());
+   }
+   
+   else
+   {
+      dialog = mEndPoint.getDialog(mTo);
+   }
+   
+   if (!dialog) 
+   {
+      InfoLog (<< "No matching dialog on " << mEndPoint.getName() << " for " << mTo);
+      throw AssertException(resip::Data("No matching dialog"), __FILE__, __LINE__);
+   }
+      
+   shared_ptr<SipMessage> update(dialog->makeUpdate());
+   if (mSdp.get())
+   {
+      update->setContents(mSdp.get());
+   }
+  
+   DebugLog(<< "TestSipEndPoint::Update: " << *update);
+   mEndPoint.storeSentUpdate(update);
+   mEndPoint.send(update);
+}
+
+resip::Data
+TestSipEndPoint::Update::toString() const
+{
+   return mEndPoint.getName() + ".Update()";
+}
+
+TestSipEndPoint::Update* 
+TestSipEndPoint::update(const TestSipEndPoint& endPoint)
+{
+   return new Update(this, endPoint.getContact().uri()); 
+}
+
+TestSipEndPoint::Update* 
+TestSipEndPoint::update(resip::Uri& url) 
+{
+   return new Update(this, url); 
+}
+
+TestSipEndPoint::Update* 
+TestSipEndPoint::update(const Data& user) 
+{
+   Uri to;
+   to.user() = user;
+   return new Update(this, to, true); 
+}
+
+TestSipEndPoint::Update*
+TestSipEndPoint::update(const Data& user, const boost::shared_ptr<resip::SdpContents>& sdp) 
+{
+   Uri to;
+   to.user() = user;
+   return new Update(this, to, true, sdp);
 }
 
 TestSipEndPoint::InviteReferReplaces::InviteReferReplaces(TestSipEndPoint* from, 
