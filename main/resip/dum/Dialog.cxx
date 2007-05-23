@@ -274,9 +274,18 @@ Dialog::end()
    {
       mInviteSession->end();
    }
-   else
+
+   // End Subscriptions
+   for (list<ClientSubscription*>::iterator it = mClientSubscriptions.begin();
+        it != mClientSubscriptions.end(); it++)
    {
-      //!dcm! -- end subscriptions
+      (*it)->end();
+   }
+
+   for (list<ServerSubscription*>::iterator it2 = mServerSubscriptions.begin();
+        it2 != mServerSubscriptions.end(); it2++)
+   {
+      (*it2)->end();
    }
 }
 
