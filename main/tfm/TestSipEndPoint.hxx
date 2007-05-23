@@ -95,9 +95,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
             virtual void go();
-
          private:
-
             TestSipEndPoint & mEndPoint;
             resip::NameAddr mTo;
             bool mMatchUserOnly;
@@ -109,6 +107,28 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       ReInvite* reInvite(const resip::Data& user);
       ReInvite* reInvite(const resip::Data& user, const boost::shared_ptr<resip::SdpContents>& sdp);
                
+      class Update : public Action
+      {
+         public:
+            Update(TestSipEndPoint* from, const resip::Uri& to, bool matchUserOnly = false, boost::shared_ptr<resip::SdpContents> sdp
+                   = boost::shared_ptr<resip::SdpContents>());
+
+            void operator()();
+            void operator()(boost::shared_ptr<Event> event);
+            void go();
+            resip::Data toString() const;
+         private:
+            TestSipEndPoint & mEndPoint;
+            resip::NameAddr mTo;
+            bool mMatchUserOnly;
+            boost::shared_ptr<resip::SdpContents> mSdp;
+      };
+      friend class Update;
+      Update* update(const TestSipEndPoint& endPoint);
+      Update* update(resip::Uri& url);
+      Update* update(const resip::Data& user);
+      Update* update(const resip::Data& user, const boost::shared_ptr<resip::SdpContents>& sdp);
+
       class InviteReferReplaces : public ExpectAction
       {
          public:
