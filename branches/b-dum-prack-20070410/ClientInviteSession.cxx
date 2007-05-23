@@ -142,13 +142,30 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
          // mLastSessionModification = ack;  // ?slg? is this needed?
          break;
       }
+      case UAC_ReceivedUpdateEarly:
+      {
+         transition(UAC_EarlyWithAnswer); //.dcm. earlyWithAnwer is a strange
+                                          //name...maybe earlyEstablished?
+         //this sequence is repeated in many places...due for refactoring.
+         //see ReceivedUpdate handling in InviteSession.
+         //?dcm? are session timers allowed in the early dialog?
 
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
+         InviteSession::setSdp(*response, answer, 0);
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         InfoLog (<< "Sending " << response->brief());
+         DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
+         send(response);
+         break;
+      }
+        
       case UAC_Start:
       case UAC_Early:
       case UAC_EarlyWithAnswer:
       case UAC_SentUpdateEarly:
       case UAC_SentUpdateConnected:
-      case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
       case UAC_Cancelled:
       case UAC_QueuedUpdate:
@@ -1097,6 +1114,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          break;
 
       case OnUpdateOffer:
+         *mLastRemoteSessionModification = msg;
          transition(UAC_ReceivedUpdateEarly);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
