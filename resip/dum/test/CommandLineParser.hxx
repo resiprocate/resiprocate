@@ -4,43 +4,21 @@
 #include <vector>
 #include "resip/stack/Uri.hxx"
 #include "rutil/Data.hxx"
+#include "UserAgentConfig.hxx"
 
 namespace resip
 {
 
-class CommandLineParser
+class CommandLineParser : public UserAgentConfig
 {
    public:
       CommandLineParser(int argc, char** argv);
+      UserAgentConfig &getUAConfig();      
       static resip::Uri toUri(const char* input, const char* description);
       static std::vector<resip::Uri> toUriVector(const char* input, const char* description);
 
-
-      Data mLogType;
-      Data mLogLevel;
-      bool mEncrypt;
-      bool mSign;
-      bool mGenUserCert;
-      Data mTlsDomain;
-      
-      int mUdpPort;
-      int mTcpPort;
-      int mTlsPort;
-      int mDtlsPort;
-      
-      int mRegisterDuration;
-      bool mNoV4;
-      bool mNoV6;
-      
-      Uri mAor;
-      Data mPassword;
-      
-      Uri mOutboundProxy;
-      Uri mContact;
-      std::vector<Uri> mBuddies;
-      Uri mTarget;
-      Data mPassPhrase;
-      Data mCertPath;
+   private:
+      UserAgentConfig mUAConfig;
 };
  
 }
