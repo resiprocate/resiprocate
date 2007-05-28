@@ -11,6 +11,7 @@ bool FALSE=false;
 #endif
 
 #include "UserAgent.hxx"
+#include "CommandLineParser.hxx"
 #include "resip/stack/Security.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Uri.hxx"
@@ -26,7 +27,8 @@ main(int argc, char* argv[])
 {
    try
    {
-      UserAgent ua(argc, argv);
+      CommandLineParser cp(argc,argv);
+      UserAgent ua(cp.getUAConfig());
       ua.startup();
       
       InfoLog(<< argv[0] << " starting");

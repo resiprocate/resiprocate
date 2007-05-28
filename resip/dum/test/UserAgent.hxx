@@ -15,15 +15,14 @@
 namespace resip
 {
 
-class UserAgent : public CommandLineParser, 
-                  public ClientRegistrationHandler, 
+class UserAgent : public ClientRegistrationHandler, 
                   public ClientSubscriptionHandler, 
                   public ClientPublicationHandler,
                   public OutOfDialogHandler, 
                   public InviteSessionHandler
 {
    public:
-      UserAgent(int argc, char** argv);
+      UserAgent(UserAgentConfig &conf);
       virtual ~UserAgent();
 
       void startup();
@@ -32,6 +31,12 @@ class UserAgent : public CommandLineParser,
       void process();
       
    public:
+      // The name of this UA. Overrideable
+      virtual char *getUaName() const
+      {
+         return "resip-test-ua/1.0";
+      }
+
       // Invite Session Handler /////////////////////////////////////////////////////
       virtual void onNewSession(ClientInviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg);
       virtual void onNewSession(ServerInviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg);
@@ -89,8 +94,9 @@ class UserAgent : public CommandLineParser,
 
    protected:
       void addTransport(TransportType type, int port);
-
+      
    private:
+      UserAgentConfig mConf;
       SharedPtr<MasterProfile> mProfile;
       Security* mSecurity;
       SipStack mStack;
