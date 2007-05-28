@@ -18,11 +18,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
 
-UserAgent::UserAgent(int argc, char** argv) : 
-   CommandLineParser(argc, argv),
+UserAgent::UserAgent(UserAgentConfig &config) :
+   mConf(config),
    mProfile(new MasterProfile),
 #if defined(USE_SSL)
-   mSecurity(new Security(mCertPath)),
+   mSecurity(new Security(mConf.mCertPath)),
    mStack(mSecurity),
 #else
    mSecurity(0),
@@ -31,41 +31,42 @@ UserAgent::UserAgent(int argc, char** argv) :
    mDum(mStack),
    mStackThread(mStack)
 {
-   Log::initialize(mLogType, mLogLevel, argv[0]);
+   Log::initialize(mConf.mLogType, mConf.mLogLevel, mConf.mAppName);
 
 #if defined(USE_SSL)
-   if (mGenUserCert)
+   if (mConf.mGenUserCert)
    {
-      mSecurity->generateUserCert(mAor.getAor());
+      mSecurity->generateUserCert(mConf.mAor.getAor());
    }
 #endif
 
-   addTransport(UDP, mUdpPort);
-   addTransport(TCP, mTcpPort);
+   addTransport(UDP, mConf.mUdpPort);
+   addTransport(TCP, mConf.mTcpPort);
 #if defined(USE_SSL)
-   addTransport(TLS, mTlsPort);
+   addTransport(TLS, mConf.mTlsPort);
 #endif
 #if defined(USED_DTLS)
-   addTransport(DTLS, mDtlsPort);
+   addTransport(DTLS, mConf.mDtlsPort);
 #endif
 
-   mProfile->setDefaultRegistrationTime(mRegisterDuration);
+   mProfile->setDefaultRegistrationTime(mConf.mRegisterDuration);
    mProfile->addSupportedMethod(NOTIFY);
    mProfile->validateAcceptEnabled() = false;
    mProfile->validateContentEnabled() = false;
    mProfile->addSupportedMimeType(NOTIFY, Pidf::getStaticType());
-   mProfile->setDefaultFrom(NameAddr(mAor));
-   mProfile->setDigestCredential(mAor.host(), mAor.user(), mPassword);
+   mProfile->setDefaultFrom(NameAddr(mConf.mAor));
+   mProfile->setDigestCredential(mConf.mAor.host(), mConf.mAor.user(), 
+                                 mConf.mPassword);
    
-   if (!mContact.host().empty())
+   if (!mConf.mContact.host().empty())
    {
-      mProfile->setOverrideHostAndPort(mContact);
+      mProfile->setOverrideHostAndPort(mConf.mContact);
    }
-   if (!mOutboundProxy.host().empty())
+   if (!mConf.mOutboundProxy.host().empty())
    {
-      mProfile->setOutboundProxy(Uri(mOutboundProxy));
+      mProfile->setOutboundProxy(Uri(mConf.mOutboundProxy));
    }
-   mProfile->setUserAgent("limpc/1.0");
+   mProfile->setUserAgent(getUaName());
    
    mDum.setMasterProfile(mProfile);
    mDum.setClientRegistrationHandler(this);
@@ -87,10 +88,10 @@ UserAgent::~UserAgent()
 void
 UserAgent::startup()
 {
-   if (mRegisterDuration)
+   if (mConf.mRegisterDuration)
    {
-      InfoLog (<< "register for " << mAor);
-      mDum.send(mDum.makeRegistration(NameAddr(mAor)));
+      InfoLog (<< "register for " << mConf.mAor);
+      mDum.send(mDum.makeRegistration(NameAddr(mConf.mAor)));
    }
 
    //for (std::vector<Uri> i = mBuddies.begin(); i != mBuddies.end(); ++i)
@@ -129,15 +130,15 @@ UserAgent::addTransport(TransportType type, int port)
       {
          if (port)
          {
-            if (!mNoV4)
+            if (!mConf.mNoV4)
             {
-               mDum.addTransport(type, port, V4, Data::Empty, mTlsDomain);
+               mDum.addTransport(type, port, V4, Data::Empty, mConf.mTlsDomain);
                return;
             }
 
-            if (!mNoV6)
+            if (!mConf.mNoV6)
             {
-               mDum.addTransport(type, port, V6, Data::Empty, mTlsDomain);
+               mDum.addTransport(type, port, V6, Data::Empty, mConf.mTlsDomain);
                return;
             }
          }
