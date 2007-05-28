@@ -4,11 +4,13 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "resip/stack/ParseException.hxx"
+#include "UserAgentConfig.hxx"
 
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+
 
 CommandLineParser::CommandLineParser(int argc, char** argv)
 {
@@ -73,37 +75,38 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
-
-   mLogType = logType;
-   mLogLevel = logLevel;
-   mEncrypt = encrypt;
-   mSign = sign;
-   mGenUserCert = genUserCert;
-   if (tlsDomain) mTlsDomain = tlsDomain;
-   mUdpPort = udpPort;
-   mTcpPort = tcpPort;
-   mTlsPort = tlsPort;
-   mDtlsPort = dtlsPort;
-   mNoV4 = noV4;
-   mNoV6 = noV6;
+   
+   mUAConfig.mAppName = argv[0];
+   mUAConfig.mLogType = logType;
+   mUAConfig.mLogLevel = logLevel;
+   mUAConfig.mEncrypt = encrypt;
+   mUAConfig.mSign = sign;
+   mUAConfig.mGenUserCert = genUserCert;
+   if (tlsDomain) mUAConfig.mTlsDomain = tlsDomain;
+   mUAConfig.mUdpPort = udpPort;
+   mUAConfig.mTcpPort = tcpPort;
+   mUAConfig.mTlsPort = tlsPort;
+   mUAConfig.mDtlsPort = dtlsPort;
+   mUAConfig.mNoV4 = noV4;
+   mUAConfig.mNoV6 = noV6;
    if (inputAor)
    {
-      mAor = toUri(inputAor, "aor");
+      mUAConfig.mAor = toUri(inputAor, "aor");
    }
    else
    {
-      mAor.user() = "test";
-      mAor.host() = DnsUtil::getLocalHostName();
+      mUAConfig.mAor.user() = "test";
+      mUAConfig.mAor.host() = DnsUtil::getLocalHostName();
    }
    
-   mPassword = password;
-   mOutboundProxy = toUri(inputOutboundProxy, "outbound proxy");
-   mContact = toUri(inputContact, "contact");
-   mBuddies = toUriVector(inputBuddies, "buddies"); // was addList   
-   mTarget = toUri(inputTarget, "target"); // was dest
-   if (passPhrase) mPassPhrase = passPhrase;
-   if (certPath) mCertPath = certPath;
-   else mCertPath = basePath + "/.sipCerts";
+   mUAConfig.mPassword = password;
+   mUAConfig.mOutboundProxy = toUri(inputOutboundProxy, "outbound proxy");
+   mUAConfig.mContact = toUri(inputContact, "contact");
+   mUAConfig.mBuddies = toUriVector(inputBuddies, "buddies"); // was addList   
+   mUAConfig.mTarget = toUri(inputTarget, "target"); // was dest
+   if (passPhrase) mUAConfig.mPassPhrase = passPhrase;
+   if (certPath) mUAConfig.mCertPath = certPath;
+   else mUAConfig.mCertPath = basePath + "/.sipCerts";
    
    // pubList for publish targets
 
@@ -160,7 +163,13 @@ CommandLineParser::toUriVector(const char* input, const char* description)
    }
    return uris;
 }
-   
+
+
+UserAgentConfig &CommandLineParser::getUAConfig()
+{
+   return mUAConfig;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -186,7 +195,7 @@ CommandLineParser::toUriVector(const char* input, const char* description)
  *    permission, please contact vocal@vovida.org.
  *
  * 4. Products derived from this software may not be called "VOCAL", nor
- *    may "VOCAL" appear in their name, without prior written
+ *    ay "VOCAL" appear in their name, without prior written
  *    permission of Vovida Networks, Inc.
  * 
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED

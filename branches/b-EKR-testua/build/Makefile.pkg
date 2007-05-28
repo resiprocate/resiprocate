@@ -13,12 +13,7 @@ else
 LIBSUFFIX := a
 endif
 
-ifneq ($(OSTYPE),FreeBSD)
-PTHREAD_LIBNAME := pthread
-else
 PTHREAD_LDFLAGS := -pthread
-PTHREAD_LIBNAME := c_r
-endif
 
 ifeq ($(OSTYPE),Solaris)
 PTHREAD_LDFLAGS := --thread
@@ -97,8 +92,8 @@ ARES_LIBNAME := ares
 ARES_DEFINES := 
 
 ifeq ($(OSTYPE),FreeBSD)
-DB42_LIBNAME := db4
-DB4CXX_LIBNAME := db4_cxx
+DB42_LIBNAME := db-4.2
+DB4CXX_LIBNAME := db_cxx-4.2
 endif
 
 ifeq ($(OSTYPE),NetBSD)
@@ -211,6 +206,8 @@ endif
 ifeq ($(USE_POPT),yes)
   POPT_DEFINES := HAVE_POPT_H
   POPT_LIBNAME := popt
+  POPT_INCLUDEDIRS := /usr/local/include
+  POPT_LIBDIRS := /usr/local/lib
   ifeq ($(OSTYPE),MinGW)
     MINGW_POPT_DIR    := $(ROOT)/contrib/popt/win32
     POPT_INCLUDEDIRS  := $(MINGW_POPT_DIR)/include

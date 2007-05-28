@@ -11,7 +11,7 @@ TARGET_LIBRARY =
 TESTPROGRAMS += basicRegister.cxx BasicCall.cxx testSMIMEMessage.cxx basicMessage.cxx testSMIMEInvite.cxx
 
 TESTPROGRAMS += limpc.cxx treg.cxx
-SRC = CommandLineParser.cxx UserAgent.cxx
+SRC = CommandLineParser.cxx UserAgent.cxx 
 
 SRC += RegEventClient.cxx
 
