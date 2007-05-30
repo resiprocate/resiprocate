@@ -92,7 +92,6 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
       case UAC_EarlyWithOffer:
       case UAC_Answered:
       case UAC_SentUpdateEarly:
-      case UAC_SentUpdateConnected:
       case UAC_ReceivedUpdateEarly:
       case UAC_Cancelled:
       case UAC_QueuedUpdate:
@@ -165,7 +164,6 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
       case UAC_Early:
       case UAC_EarlyWithAnswer:
       case UAC_SentUpdateEarly:
-      case UAC_SentUpdateConnected:
       case UAC_SentAnswer:
       case UAC_Cancelled:
       case UAC_QueuedUpdate:
@@ -395,8 +393,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
         case UAC_SentUpdateEarly:
            dispatchSentUpdateEarly(msg);
            break;
-        case UAC_SentUpdateConnected:
-           dispatchSentUpdateConnected(msg);
+        case UAC_SentUpdateEarlyGlare:
+           dispatchSentUpdateEarlyGlare(msg);
            break;
         case UAC_ReceivedUpdateEarly:
            dispatchReceivedUpdateEarly(msg);
@@ -454,6 +452,16 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
       transition(Terminated);
       mDum.mInviteSessionHandler->onForkDestroyed(getHandle());
       mDum.destroy(this);
+   }
+   else if (timer.type() == DumTimeout::Glare)
+   {
+      if (mState == UAC_SentUpdateEarlyGlare)
+      {
+         transition(UAC_SentUpdateEarly);
+         InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
+         mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);  // increments CSeq
+         send(mLastLocalSessionModification);
+      }
    }
    else
    {
@@ -1164,7 +1172,7 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          break;
          
       case OnUpdateOffer:
-         transition(UAC_EarlyWithAnswer);
+         transition(UAC_SentUpdateEarly);
          {
             SharedPtr<SipMessage> response(new SipMessage);
             mDialog.makeResponse(*response, msg, 491);
@@ -1173,16 +1181,14 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          break;
          
       case On491Update:
-         transition(UAC_EarlyWithAnswer);
-         // need to start glare timer as per RFC3311 5.3
-         // !jf! 
+         transition(UAC_SentUpdateEarlyGlare);
+         start491Timer();
          break;
 
       case On2xx:
-         transition(UAC_SentUpdateConnected);         
+         transition(SentUpdate);         
          sendAck();
          break;
-         
          
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets
                        // here then it's because the redirect was intentionaly
@@ -1200,43 +1206,48 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          break;
 
       default:
-         // !kh!
-         // should not assert here for peer sent us garbage.
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
 }
 
 void
-ClientInviteSession::dispatchSentUpdateConnected (const SipMessage& msg)
+ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
    switch (toEvent(msg, sdp.get()))
    {
-      case On200Update:
-         transition(Connected);
-         setCurrentLocalSdp(msg);
-         mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
-         break;
-
-      case On488Update:
-         transition(Connected);
+      case OnUpdateOffer:
          handler->onOfferRejected(getSessionHandle(), &msg);
+         //will cause transition to UAC_ReceivedUpdateEarly
+         dispatchEarlyWithAnswer(msg);
          break;
          
-      case On491Update:
-         transition(Connected);
-         // need to start glare timer as per RFC3311 5.3
-         // !jf! 
+      case On2xx:
+         //transition to connected state machine
+         transition(SentUpdateGlare);         
+         sendAck();
+         break;
+         //!dcm! TODO This block below is repeated many, many times...refactor
+         //!into a method. Prob. represents the effective ClientInvite superstate.
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets
+                       // here then it's because the redirect was intentionaly
+                       // not handled and should be treated as an INVITE failure
+      case OnInviteFailure:
+      case OnGeneralFailure:
+      case On422Invite:
+      case On487Invite:
+      case On489Invite:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
+         handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         mDum.destroy(this);
          break;
 
       default:
-         // !kh!
-         // should not assert here for peer sent us garbage.
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }

@@ -171,7 +171,7 @@ class InviteSession : public DialogUsage
          UAC_EarlyWithAnswer,
          UAC_Answered,
          UAC_SentUpdateEarly,
-         UAC_SentUpdateConnected,
+         UAC_SentUpdateEarlyGlare,
          UAC_ReceivedUpdateEarly,
          UAC_SentAnswer,
          UAC_QueuedUpdate,
