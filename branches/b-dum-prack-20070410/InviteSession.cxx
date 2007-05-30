@@ -3,6 +3,7 @@
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/dum/BaseCreator.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/InviteSession.hxx"
@@ -1052,7 +1053,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if (mCurrentRetransmit200)
       {
-         InfoLog (<< "Retransmitting: " << endl << *mInvite200);
+         InfoLog (<< "Retransmitting: " << endl << mInvite200->brief());
          //DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
          send(mInvite200);
          mCurrentRetransmit200 *= 2;
@@ -2358,8 +2359,8 @@ InviteSession::toData(State state)
          return "UAC_Answered";
       case UAC_SentUpdateEarly:
          return "UAC_SentUpdateEarly";
-      case UAC_SentUpdateConnected:
-         return "UAC_SentUpdateConnected";
+      case UAC_SentUpdateEarlyGlare:
+         return "UAC_SentUpdateEarlyGlare";
       case UAC_ReceivedUpdateEarly:
          return "UAC_ReceivedUpdateEarly";
       case UAC_SentAnswer:
@@ -2368,7 +2369,7 @@ InviteSession::toData(State state)
          return "UAC_QueuedUpdate";
       case UAC_Cancelled:
          return "UAC_Cancelled";
-
+         
       case UAS_Start:
          return "UAS_Start";
       case UAS_ReceivedOfferReliable:
@@ -2697,19 +2698,30 @@ void InviteSession::sendAck(const SdpContents *sdp)
    SharedPtr<SipMessage> ack(new SipMessage);
 
    assert(mAcks.count(mLastLocalSessionModification->header(h_CSeq).sequence()) == 0);
+   SharedPtr<SipMessage> source;
+   
+   if (mLastLocalSessionModification->method() == UPDATE)
+   {
+      //.dcm. scary--we could make a special ClientInviteSession variable/sendAck
+      source = mDialog.mDialogSet.getCreator()->getLastRequest();
+   }
+   else
+   {
+      source = mLastLocalSessionModification;
+   }
 
    mDialog.makeRequest(*ack, ACK);
 
    // Copy Authorization, Proxy Authorization headers and CSeq from original Invite
-   if(mLastLocalSessionModification->exists(h_Authorizations))
+   if(source->exists(h_Authorizations))
    {
-      ack->header(h_Authorizations) = mLastLocalSessionModification->header(h_Authorizations);
+      ack->header(h_Authorizations) = source->header(h_Authorizations);
    }
-   if(mLastLocalSessionModification->exists(h_ProxyAuthorizations))
+   if(source->exists(h_ProxyAuthorizations))
    {
-      ack->header(h_ProxyAuthorizations) = mLastLocalSessionModification->header(h_ProxyAuthorizations);
+      ack->header(h_ProxyAuthorizations) = source->header(h_ProxyAuthorizations);
    }
-   ack->header(h_CSeq).sequence() = mLastLocalSessionModification->header(h_CSeq).sequence();
+   ack->header(h_CSeq).sequence() = source->header(h_CSeq).sequence();
 
    if(sdp != 0)
    {
