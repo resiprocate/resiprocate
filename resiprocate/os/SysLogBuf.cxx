@@ -25,7 +25,6 @@ SysLogBuf::SysLogBuf(int facility, int level)
    setp(buffer, buffer+Size);
    openlog(0, LOG_NDELAY, mFacility);
 #endif
- 
 }
 
 SysLogBuf::~SysLogBuf()
@@ -37,7 +36,7 @@ SysLogBuf::sync()
 {
 #if !defined(WIN32)
    *(pptr()) = 0;
-   syslog (mFacility | mLevel, pbase());
+   syslog(mFacility | mLevel, "%s", pbase());
    setp(buffer, buffer+Size);
 #else
    assert(0);
