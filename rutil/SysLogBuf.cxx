@@ -24,7 +24,7 @@ SysLogBuf::sync()
 {
 #if !defined(WIN32)
    *(pptr()) = 0;
-   syslog (LOG_LOCAL6 | LOG_DEBUG, pbase());
+   syslog (LOG_LOCAL6 | LOG_DEBUG, "%s", pbase());
    setp(buffer, buffer+Size);
 #else
    assert(0);
