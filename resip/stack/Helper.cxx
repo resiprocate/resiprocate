@@ -1516,35 +1516,45 @@ Helper::processStrictRoute(SipMessage& request)
 }
 
 int
-Helper::getPortForReply(SipMessage& request, bool returnDefault)
+Helper::getPortForReply(SipMessage& request)
 {
    assert(request.isRequest());
-   int port = -1;
-   if (request.header(h_Vias).front().exists(p_rport))
+   int port = 0;
+   if(request.header(h_Vias).front().transport() == Symbols::TCP ||
+      request.header(h_Vias).front().transport() == Symbols::TLS)
    {
-       port = request.getSource().getPort();
-   }
-   else
-   {
-      port = request.header(h_Vias).front().sentPort();
-      if (port <= 0 || port > 65535) 
+      // 18.2.2 - bullet 1 and 2 
+      port = request.getSource().getPort();
+      if(port == 0) // .slg. not sure if it makes sense for sourcePort to be 0
       {
-         if(!returnDefault)
-         {
-            port=0;
-         }
-         else if(request.header(h_Vias).front().transport() == Symbols::TLS ||
-            request.header(h_Vias).front().transport() == Symbols::DTLS)
-         {
-            port = Symbols::DefaultSipsPort;
-         }
-         else
-         {
-            port = Symbols::DefaultSipPort;
-         }
+         port = request.header(h_Vias).front().sentPort();
       }
    }
-   assert(port != -1);
+   else   // unreliable transport 18.2.2 bullets 3 and 4
+   {
+      if (request.header(h_Vias).front().exists(p_rport))
+      {
+         port = request.getSource().getPort();
+      }
+      else
+      {
+         port = request.header(h_Vias).front().sentPort();
+      }
+   }
+
+   // If we haven't got a valid port yet, then use the default
+   if (port <= 0 || port > 65535) 
+   {
+      if(request.header(h_Vias).front().transport() == Symbols::TLS ||
+         request.header(h_Vias).front().transport() == Symbols::DTLS)
+      {
+         port = Symbols::DefaultSipsPort;
+      }
+      else
+      {
+         port = Symbols::DefaultSipPort;
+      }
+   }
    return port;
 }
 
