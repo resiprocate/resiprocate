@@ -1157,18 +1157,16 @@ ResponseContext::forwardBestResponse()
    }
    
    
-   if(mBestResponse.header(h_StatusLine).statusCode() == 503)
+   if(mBestResponse.header(h_StatusLine).statusCode() == 503 ||
+      (mBestResponse.header(h_StatusLine).statusCode() == 408 &&
+      mBestResponse.method()!=INVITE))
    {
       //See RFC 3261 sec 16.7, page 110, paragraph 2
       mBestResponse.header(h_StatusLine).statusCode() = 480;
-      mRequestContext.sendResponse(mBestResponse);
    }
-   else if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
-            mRequestContext.getOriginalRequest().method() == INVITE)
-   {
-      // don't forward 408 to Non-INVITE Transactions (NITs)
-      mRequestContext.sendResponse(mBestResponse);
-   }
+
+   mRequestContext.sendResponse(mBestResponse);
+
 }   
 
 
