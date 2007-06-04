@@ -141,6 +141,7 @@ ClientRegistration::tryModification(ClientRegistration::State state)
    }
 
    assert(mQueuedState == None);
+   InfoLog(<< "Trying to modify bindings | change state from " << mState << " to [" << state << "]");
    mState = state;
 
    return mLastRequest;

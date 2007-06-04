@@ -207,6 +207,8 @@ class DUM_API DialogUsageManager : public HandleManager, public TransactionUser
       // hasEvents
       bool hasEvents() const;
 
+      bool isShuttingDown() const;
+
       //void buildFdSet(FdSet& fdset);
       // Call this version of process if you want to run the stack in the
       // application's thread
