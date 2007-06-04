@@ -1696,7 +1696,17 @@ DialogUsageManager::getOutOfDialogHandler(const MethodTypes type)
    }
 }
 
-
+bool 
+DialogUsageManager::isShuttingDown() const
+{
+   switch(mShutdownState)
+   {
+   case ShutdownRequested:
+      return true;
+   default:
+      return false;
+   }
+}
 
 
 
