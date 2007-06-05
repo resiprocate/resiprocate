@@ -79,6 +79,7 @@ class DeprecatedDialog
       
       // For creating requests within a dialog
       SipMessage* makeInvite();
+      SipMessage* makeUpdate();
       SipMessage* makeRegister();
       SipMessage* makeSubscribe();
       SipMessage* makeBye();
