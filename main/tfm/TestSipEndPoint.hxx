@@ -718,6 +718,9 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send488, 488);
       MessageExpectAction* send488();
 
+      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send491, 491);
+      MessageExpectAction* send491();
+
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Send202, 202);
       MessageExpectAction* send202();
 
