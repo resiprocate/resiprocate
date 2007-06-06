@@ -130,7 +130,7 @@ DialogSet::~DialogSet()
 
 void DialogSet::possiblyDie()
 {
-   if(mState != Initial &&  // !jf! may not be correct
+   if(mState != Destroying &&
       mDialogs.empty() &&
       mClientOutOfDialogRequests.empty() &&
       !(mClientPublication ||
@@ -140,6 +140,7 @@ void DialogSet::possiblyDie()
         mClientRegistration ||
         mServerRegistration))
    {
+      mState = Destroying;
       mDum.destroy(this);
    }
 }
@@ -229,7 +230,7 @@ DialogSet::empty() const
 bool
 DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 {
-   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd))
+   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd || mState == Destroying))
    {
       //!dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -330,6 +331,7 @@ DialogSet::dispatch(const SipMessage& msg)
                }
                else
                {
+                  mState = Destroying;
                   mDum.destroy(this);
                }
                break;
@@ -381,7 +383,15 @@ DialogSet::dispatch(const SipMessage& msg)
          case INFO:
          case ACK:
          case UPDATE:
-            assert(dialog);
+            if (!dialog)
+            {
+	       SipMessage failure;
+	       mDum.makeResponse(failure, request, 481);
+	       failure.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+	       InfoLog(<< "Rejected request (which was in a dialog) " << request.brief());
+	       mDum.sendResponse(failure);
+               return;
+            }
             break;
             
          case NOTIFY:
@@ -429,7 +439,7 @@ DialogSet::dispatch(const SipMessage& msg)
             assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
             mServerOutOfDialogRequest->dispatch(request);
-   			return;
+	    return;
       }
    }
    else // the message is a response
@@ -623,6 +633,7 @@ DialogSet::dispatch(const SipMessage& msg)
             if(mDialogs.empty() && msg.header(h_StatusLine).statusCode() >= 200)
             {
                // really we should wait around 32s before deleting this
+	       mState = Destroying;
                mDum.destroy(this);
             }
          }
@@ -635,6 +646,7 @@ DialogSet::dispatch(const SipMessage& msg)
             mDum.send(response);
             if(mDialogs.empty())
             {
+               mState = Destroying;
                mDum.destroy(this);
             }
          }
@@ -709,6 +721,7 @@ DialogSet::end()
             // non-dialog creating provisional (e.g. 100), then we need to:
             // Add a new state, if we receive a 200/INV in this state, ACK and
             // then send a BYE and destroy the dialogset. 
+            mState = Destroying;
             mDum.destroy(this);
          }
          else
