@@ -942,7 +942,7 @@ MsgHeaderScanner::scanChunk(char * chunk,
       localTextPropBitMask |= charInfo->textPropBitMask;
      determineTransitionFromCharCategory:
       TransitionInfo *transitionInfo =
-         &(localStateMachine[localState][charCategory]);
+         &(localStateMachine[localState][(size_t)charCategory]);
       TransitionAction transitionAction = transitionInfo->action;
 #if defined(RESIP_MSG_HEADER_SCANNER_DEBUG)  
       printStateTransition(localState, *charPtr, transitionAction);
