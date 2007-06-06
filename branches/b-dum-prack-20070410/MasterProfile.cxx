@@ -31,6 +31,7 @@ MasterProfile::MasterProfile() :
    addSupportedMethod(CANCEL);
    addSupportedMethod(OPTIONS);
    addSupportedMethod(BYE);
+   addSupportedMethod(UPDATE);
    addSupportedScheme(Symbols::Sip);  
 }
 
