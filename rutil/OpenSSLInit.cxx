@@ -62,7 +62,10 @@ OpenSSLInit::~OpenSSLInit()
 	ERR_remove_state(0);// free thread error queue
 	CRYPTO_cleanup_all_ex_data();
 	EVP_cleanup();// Clean up data allocated during OpenSSL_add_all_algorithms
-	CRYPTO_mem_leaks_fp(stderr);
+
+    //!dcm! We know we have a leak; see BaseSecurity::~BaseSecurity for
+    //!details.
+//	CRYPTO_mem_leaks_fp(stderr);
 
 	delete [] mMutexes;
 }
