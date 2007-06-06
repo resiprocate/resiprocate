@@ -1311,10 +1311,9 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          break;
 
       case OnUpdateRejected:
-         // !jf! - callback?
-         mProposedLocalSdp.reset();
-         mProposedEncryptionLevel = DialogUsageManager::None;
          transition(Connected);
+         mProposedLocalSdp.reset();
+         handler->onOfferRejected(getSessionHandle(), &msg);
          break;
 
       case OnGeneralFailure:
@@ -1432,7 +1431,6 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
       case OnInviteFailure:
       case On487Invite:
-      case On489Invite:
          transition(Connected);
          mProposedLocalSdp.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -1526,7 +1524,6 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
 
       case OnInviteFailure:
       case On487Invite:
-      case On489Invite:
          transition(Connected);
          mProposedLocalSdp.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -1799,7 +1796,7 @@ InviteSession::dispatchOthers(const SipMessage& msg)
          // handled in Dialog
          WarningLog (<< "DUM delivered a "
                      << msg.header(h_CSeq).unknownMethodName()
-                     << " to the InviteSession "
+                     << " to the InviteSession in state: " << toData(mState)
                      << endl
                      << msg);
          assert(0);
@@ -2604,10 +2601,6 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    {
       return On487Invite;
    }
-   else if (method == INVITE && code == 489)
-   {
-      return On489Invite;
-   }
    else if (method == INVITE && code == 491)
    {
       return On491Invite;
@@ -2673,10 +2666,6 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    else if (method == UPDATE && code == 422)
    {
       return On422Update;
-   }
-   else if (method == UPDATE && code == 488)
-   {
-      return On488Update;
    }
    else if (method == UPDATE && code == 491)
    {
