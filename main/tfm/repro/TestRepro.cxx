@@ -42,10 +42,10 @@ makeRequestProcessorChain(ProcessorChain& chain,
    AmIResponsible* isme = new AmIResponsible;
    locators->addProcessor(std::auto_ptr<Processor>(isme));
       
-   StaticRoute* sr = new StaticRoute(store.mRouteStore,true);
+   StaticRoute* sr = new StaticRoute(store.mRouteStore,true, true, true);
    locators->addProcessor(std::auto_ptr<Processor>(sr));
  
-   LocationServer* ls = new LocationServer(regData);
+   LocationServer* ls = new LocationServer(regData, true);
    locators->addProcessor(std::auto_ptr<Processor>(ls));
  
    chain.addProcessor(std::auto_ptr<Processor>(locators));
@@ -145,7 +145,7 @@ TestRepro::TestRepro(const resip::Data& name,
                                         methodList) );
    mDum.setMessageFilterRuleList(ruleList);
     
-   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, mStore.mUserStore, mStore.mAclStore ));
+   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, mStore.mUserStore, mStore.mAclStore, true ));
    mDum.setServerAuthManager(authMgr);    
 
    mStack.registerTransactionUser(mProxy);
