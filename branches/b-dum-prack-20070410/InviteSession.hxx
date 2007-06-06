@@ -225,7 +225,6 @@ class InviteSession : public DialogUsage
          On2xxAnswer,
          On422Invite,
          On487Invite,
-         On489Invite,
          On491Invite,
          OnInviteFailure,
          OnAck,
@@ -236,7 +235,6 @@ class InviteSession : public DialogUsage
          OnUpdateOffer,
          OnUpdateRejected,
          On422Update,
-         On488Update,
          On491Update,
          On200Update,
          OnPrack, // UAS
