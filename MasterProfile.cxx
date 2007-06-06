@@ -153,7 +153,9 @@ MasterProfile::setUacReliableProvisionalMode(ReliableProvisionalMode mode)
 void
 MasterProfile::setUasReliableProvisionalMode(ReliableProvisionalMode mode)
 {
-   mUasReliableProvisionalMode = mode;
+   //.dcm. not supported yet
+  assert(0);
+  mUasReliableProvisionalMode = mode;
 }
 
 MasterProfile::ReliableProvisionalMode
