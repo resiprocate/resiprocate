@@ -65,7 +65,8 @@ class DialogSet
          WaitingToEnd,
          ReceivedProvisional,
          Established,
-         Terminating
+         Terminating,
+	 Destroying
       } State;
 
       void possiblyDie();
