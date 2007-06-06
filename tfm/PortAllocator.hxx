@@ -26,6 +26,12 @@ class PortAllocator
 
       static resip::Data getNextLocalIpAddress()
       {
+//.dcm. You can do "sudo ifconfig lo0 alias 127.0.0.2 netmask 255.255.0.0" but
+//we'll need to make it automatic. It also could interfere with other software,
+//such as test apache servers.
+#if defined( __APPLE__ )
+         return "127.0.0.1";
+#endif
          resip::Data buffer;
          {
             resip::DataStream strm(buffer);
