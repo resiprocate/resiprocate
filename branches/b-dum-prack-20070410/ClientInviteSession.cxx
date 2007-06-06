@@ -725,7 +725,6 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -825,8 +824,6 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
-      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -925,7 +922,6 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -987,7 +983,6 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -1064,7 +1059,6 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -1134,7 +1128,6 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -1197,7 +1190,6 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -1239,7 +1231,6 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
