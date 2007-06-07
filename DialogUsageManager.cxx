@@ -1324,6 +1324,11 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
                   DebugLog (<< "Failed required options validation " << *sipMsg);
                   return;
                }
+               if( !validate100RelSuport(*sipMsg) )
+               {
+                  DebugLog (<< "Remote party does not suport 100rel " << *sipMsg);
+                  return;
+               }
                if( getMasterProfile()->validateContentEnabled() && !validateContent(*sipMsg) )
                {
                   DebugLog (<< "Failed content validation " << *sipMsg);
@@ -1464,6 +1469,28 @@ DialogUsageManager::validateRequiredOptions(const SipMessage& request)
 	  }
    }
 
+   return true;
+}
+
+
+bool
+DialogUsageManager::validate100RelSuport(const SipMessage& request)
+{
+   if(request.header(h_RequestLine).getMethod() == INVITE)
+   {
+      if (getMasterProfile()->getUasReliableProvisionalMode() == MasterProfile::Required)
+      {
+         if (!(request.exists(h_Requires) && request.header(h_Requires).find(Token(Symbols::C100rel))
+               || request.exists(h_Supporteds) && request.header(h_Supporteds).find(Token(Symbols::C100rel))))
+         {
+            SipMessage failure;
+            makeResponse(failure, request, 421);
+            failure.header(h_Requires).push_back(Token(Symbols::C100rel));
+            sendResponse(failure);
+            return false;
+         }
+      }
+   }
    return true;
 }
 
