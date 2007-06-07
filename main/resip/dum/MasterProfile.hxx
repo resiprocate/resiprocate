@@ -34,11 +34,24 @@ class MasterProfile : public UserProfile
 
       virtual void clearSupportedMethods(void);
 
-      /// Default is none
+      /// Default is none. Do not use to enable PRACK(100rel) support. 
       virtual void addSupportedOptionTag(const Token& tag);        
       virtual Tokens getUnsupportedOptionsTags(const Tokens& requires); // Returns list of unsupported option tags
       virtual Tokens getSupportedOptionTags() const;
       virtual void clearSupportedOptionTags(void);
+
+      // Note only supported as UAC (10/29/2006)
+      typedef enum
+      {
+         Never,
+         Supported, 
+         Required
+      } ReliableProvisionalMode;
+      virtual void setUacReliableProvisionalMode(ReliableProvisionalMode mode);
+      virtual ReliableProvisionalMode getUacReliableProvisionalMode() const;
+
+      virtual void setUasReliableProvisionalMode(ReliableProvisionalMode mode);
+      virtual ReliableProvisionalMode getUasReliableProvisionalMode() const;
 
       /// Default is application/sdp for INVITE, OPTIONS, PRACK and UPDATE Methods
       virtual void addSupportedMimeType(const MethodTypes& method, const Mime& mimeType);      
@@ -113,6 +126,8 @@ class MasterProfile : public UserProfile
       bool mValidateAcceptEnabled;
       bool mAllowBadRegistrationEnabled;    
       bool mCheckReqUriInMergeDetectionEnabled;
+      ReliableProvisionalMode mUacReliableProvisionalMode;
+      ReliableProvisionalMode mUasReliableProvisionalMode;
 };
    
 }
