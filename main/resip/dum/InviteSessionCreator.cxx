@@ -52,6 +52,21 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
       }
       getLastRequest()->setContents(mInitialOffer);
    }
+   //100rel 
+   switch(mDum.getMasterProfile()->getUacReliableProvisionalMode())
+   {
+      case MasterProfile::Never:
+         //no support, do nothing
+         break;
+      case MasterProfile::Supported:
+         getLastRequest()->header(h_Supporteds).push_back(Token(Symbols::C100rel));
+         break;
+      case MasterProfile::Required:
+         getLastRequest()->header(h_Requires).push_back(Token(Symbols::C100rel));
+         break;
+      default:
+         assert(0);
+   }
 }
 
 InviteSessionCreator::~InviteSessionCreator()

@@ -92,7 +92,6 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
       case UAC_EarlyWithOffer:
       case UAC_Answered:
       case UAC_SentUpdateEarly:
-      case UAC_SentUpdateConnected:
       case UAC_ReceivedUpdateEarly:
       case UAC_Cancelled:
       case UAC_QueuedUpdate:
@@ -142,13 +141,29 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
          // mLastSessionModification = ack;  // ?slg? is this needed?
          break;
       }
+      case UAC_ReceivedUpdateEarly:
+      {
+         transition(UAC_EarlyWithAnswer); //.dcm. earlyWithAnwer is a strange
+                                          //name...maybe earlyEstablished?
+         //this sequence is repeated in many places...due for refactoring.
+         //see ReceivedUpdate handling in InviteSession.
+         //?dcm? are session timers allowed in the early dialog?
 
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
+         InviteSession::setSdp(*response, answer, 0);
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         InfoLog (<< "Sending " << response->brief());
+         DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
+         send(response);
+         break;
+      }
+        
       case UAC_Start:
       case UAC_Early:
       case UAC_EarlyWithAnswer:
       case UAC_SentUpdateEarly:
-      case UAC_SentUpdateConnected:
-      case UAC_ReceivedUpdateEarly:
       case UAC_SentAnswer:
       case UAC_Cancelled:
       case UAC_QueuedUpdate:
@@ -352,6 +367,11 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 {
   try
   {
+     if (discardMessage(msg))
+     {
+        return;
+     }
+
      sendSipFrag(msg);
      switch(mState)
      {
@@ -373,8 +393,8 @@ ClientInviteSession::dispatch(const SipMessage& msg)
         case UAC_SentUpdateEarly:
            dispatchSentUpdateEarly(msg);
            break;
-        case UAC_SentUpdateConnected:
-           dispatchSentUpdateConnected(msg);
+        case UAC_SentUpdateEarlyGlare:
+           dispatchSentUpdateEarlyGlare(msg);
            break;
         case UAC_ReceivedUpdateEarly:
            dispatchReceivedUpdateEarly(msg);
@@ -433,6 +453,16 @@ ClientInviteSession::dispatch(const DumTimeout& timer)
       mDum.mInviteSessionHandler->onForkDestroyed(getHandle());
       mDum.destroy(this);
    }
+   else if (timer.type() == DumTimeout::Glare)
+   {
+      if (mState == UAC_SentUpdateEarlyGlare)
+      {
+         transition(UAC_SentUpdateEarly);
+         InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
+         mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);  // increments CSeq
+         send(mLastLocalSessionModification);
+      }
+   }
    else
    {
       InviteSession::dispatch(timer);
@@ -456,44 +486,32 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    assert(msg.header(h_StatusLine).statusCode() > 100);
 
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   
+   //.dcm. Kept the following checks here rather than discardMessage as the
+   // state machine can be affected(termination).
 
-   // must match
+   // !dcm! should we really end the InviteSession or should be discard the 1xx instead?
    if (msg.header(h_CSeq).sequence() != mLastLocalSessionModification->header(h_CSeq).sequence())
    {
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       handler->onFailure(getHandle(), msg);
       end(NotSpecified);
    }
-   else if (isReliable(msg))
+   //!dcm! this should never happen, the invite will have 100rel in the
+   //required header.  Keep for interop?
+   else if (mDum.getMasterProfile()->getUacReliableProvisionalMode() == MasterProfile::Required)
    {
       if (!msg.exists(h_RSeq))
       {
          InfoLog (<< "Failure:  No RSeq in 1xx: " << msg.brief());
          handler->onFailure(getHandle(), msg);
          end(NotSpecified);
-      }
-      else
-      {
-         // store state about the provisional if reliable, so we can detect retransmissions
-         unsigned int rseq = (unsigned int)msg.header(h_RSeq).value();
-         if ( (mLastReceivedRSeq == 0) || (rseq == mLastReceivedRSeq+1))
-         {
-            startStaleCallTimer();
-            mLastReceivedRSeq = rseq;
-            InfoLog (<< "Got a reliable 1xx with rseq = " << rseq);
-            handler->onProvisional(getHandle(), msg);
-         }
-         else
-         {
-            InfoLog (<< "Got an out of order reliable 1xx with rseq = " << rseq << " dropping");
-         }
+         return;
       }
    }
-   else
-   {
-      startStaleCallTimer();
-      handler->onProvisional(getHandle(), msg);
-   }
+
+   startStaleCallTimer();
+   handler->onProvisional(getHandle(), msg);
 }
 
 void
@@ -538,10 +556,17 @@ ClientInviteSession::handleAnswer(const SipMessage& msg, const SdpContents& sdp)
 void
 ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
 {
-   if ( isReliable(msg) &&
-        (mLastReceivedRSeq == 0 || (unsigned int)msg.header(h_RSeq).value() == mLastReceivedRSeq+1))
+   assert(msg.isResponse());
+   assert(msg.header(h_StatusLine).statusCode() < 200);
+   assert(msg.header(h_StatusLine).statusCode() > 100);
+   
+   bool reliable = msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel));
+   UInt32 rseq = msg.exists(h_RSeq) ? msg.header(h_RSeq).value() : 0;
+   //.dcm. TODO duplicate check, remove.
+   if (reliable && mLastReceivedRSeq == 0 || rseq == mLastReceivedRSeq + 1)
    {
       SharedPtr<SipMessage> prack(new SipMessage);
+      mLastReceivedRSeq = rseq;
       mDialog.makeRequest(*prack, PRACK);
       prack->header(h_RSeq) = msg.header(h_RSeq);
       send(prack);
@@ -599,6 +624,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
    InviteSession::Event event = toEvent(msg, sdp.get());
+
    switch (event)
    {
       case On1xx:
@@ -611,8 +637,11 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          break;
 
       case On1xxEarly:
-         // !jf! Assumed that if UAS supports 100rel, the first 1xx must contain an
-         // offer or an answer.
+         //!dcm! according to draft-ietf-sipping-offeranswer there can be a non
+         // reliable 1xx followed by a reliable 1xx.  Also, the intial 1xx
+         // doesn't have to have an offer. However, DUM will only generate
+         // reliabled 1xx responses when 100rel is available.
+
          transition(UAC_Early);
          mEarlyMedia = InviteSession::makeSdp(*sdp);
          handler->onNewSession(getHandle(), None, msg);
@@ -654,7 +683,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
-            if(!isTerminated())  
+            if(!isTerminated())   //?jf? can this be terminated here but not above? 
             {
                handler->onConnected(getHandle(), msg);  
             }
@@ -696,7 +725,6 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -774,7 +802,6 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
          handler->onAnswer(getSessionHandle(), msg, *sdp);
-         
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
             handler->onConnected(getHandle(), msg);
@@ -797,8 +824,6 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
-      case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
          handler->onFailure(getHandle(), msg);
@@ -821,7 +846,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
 void
 ClientInviteSession::dispatchAnswered (const SipMessage& msg)
 {
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   //InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
    switch (toEvent(msg, sdp.get()))
@@ -845,6 +870,8 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
       // !slg! This probably doesn't even make sense (after a 2xx)
       case OnGeneralFailure:
       case On422Invite:
+         break;
+#if 0 // !jf! don't think this is right
       {
          sendBye();
          InfoLog (<< "Failure:  error response: " << msg.brief());
@@ -854,7 +881,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          mDum.destroy(this);
          break;
       }
-
+#endif
       case OnBye:
          dispatchBye(msg);
          break;
@@ -896,7 +923,6 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -958,7 +984,6 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -1035,7 +1060,6 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -1067,6 +1091,10 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case On1xx:
+         //!dcm! retransmissions of a reliable provisional response are
+         //discarded, so any flavour or on1xx must be handled...this logic
+         //should prob. move into a guard as it will slice across many states.
+      case On1xxOffer:
          handleProvisional(msg);
          sendPrackIfNeeded(msg);
          break;
@@ -1089,6 +1117,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          break;
 
       case OnUpdateOffer:
+         *mLastRemoteSessionModification = msg;
          transition(UAC_ReceivedUpdateEarly);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
@@ -1100,7 +1129,6 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case OnGeneralFailure:
       case On422Invite:
       case On487Invite:
-      case On489Invite:
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
@@ -1124,19 +1152,113 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
 void
 ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
 {
-   assert(0);
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case On200Update:
+         transition(UAC_EarlyWithAnswer);
+         setCurrentLocalSdp(msg);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         break;
+         
+      case OnUpdateOffer:
+         transition(UAC_SentUpdateEarly);
+         {
+            SharedPtr<SipMessage> response(new SipMessage);
+            mDialog.makeResponse(*response, msg, 491);
+            send(response);
+         }
+         break;
+         
+      case On491Update:
+         transition(UAC_SentUpdateEarlyGlare);
+         start491Timer();
+         break;
+
+      case On2xx:
+         transition(SentUpdate);         
+         sendAck();
+         break;
+         
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets
+                       // here then it's because the redirect was intentionaly
+                       // not handled and should be treated as an INVITE failure
+      case OnInviteFailure:
+      case OnGeneralFailure:
+      case On422Invite:
+      case On487Invite:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
+         handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         mDum.destroy(this);
+         break;
+
+      default:
+         WarningLog (<< "Don't know what this is : " << msg);
+         break;
+   }
 }
 
 void
-ClientInviteSession::dispatchSentUpdateConnected (const SipMessage& msg)
+ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 {
-   assert(0);
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnUpdateOffer:
+         handler->onOfferRejected(getSessionHandle(), &msg);
+         //will cause transition to UAC_ReceivedUpdateEarly
+         dispatchEarlyWithAnswer(msg);
+         break;
+         
+      case On2xx:
+         //transition to connected state machine
+         transition(SentUpdateGlare);         
+         sendAck();
+         break;
+         //!dcm! TODO This block below is repeated many, many times...refactor
+         //!into a method. Prob. represents the effective ClientInvite superstate.
+      case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets
+                       // here then it's because the redirect was intentionaly
+                       // not handled and should be treated as an INVITE failure
+      case OnInviteFailure:
+      case OnGeneralFailure:
+      case On422Invite:
+      case On487Invite:
+         InfoLog (<< "Failure:  error response: " << msg.brief());
+         transition(Terminated);
+         handler->onFailure(getHandle(), msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         mDum.destroy(this);
+         break;
+
+      default:
+         WarningLog (<< "Don't know what this is : " << msg);
+         break;
+   }
 }
 
 void
 ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
 {
-   assert(0);
+   //InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      default:
+         // !kh!
+         // should not assert here for peer sent us garbage.
+         WarningLog (<< "Don't know what this is : " << msg);
+         break;
+   }
 }
 
 void
@@ -1179,8 +1301,35 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
    }
 }
 
+//pre state-machine logic to discard 100rel retransmissions/out of order messages.
+//Other early discard logic or interop(protocol repair) logic should go here.
+bool 
+ClientInviteSession::discardMessage(const SipMessage& msg)
+{
+   int code = msg.isResponse() ? msg.header(h_StatusLine).statusCode() : 0;
+   if (msg.method() == INVITE && code > 100 && code < 200)
+   {
+      if (msg.exists(h_RSeq))
+      {
+         // store state about the provisional if reliable, so we can detect retransmissions
+         unsigned int rseq = (unsigned int) msg.header(h_RSeq).value();
+         if (rseq == mLastReceivedRSeq)
+         {
+            DebugLog(<< "Discarding reliable 1xx retranmission with rseq " << rseq);
+            return true;
+         }
+         else if (mLastReceivedRSeq != 0 && rseq > mLastReceivedRSeq + 1)
+         {
+            DebugLog(<< "Discarding out of order reliable 1xx with rseq " << rseq);
+            return true;
+         }
+      }
+   }
+   return false;
+}
+   
 /* ====================================================================
-* The Vovida Software License, Version 1.0
+ * The Vovida Software License, Version 1.0
  *
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  *
