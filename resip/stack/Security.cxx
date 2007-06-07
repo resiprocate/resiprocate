@@ -173,9 +173,7 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
 BaseSecurity::CipherList BaseSecurity::ExportableSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES:aRSA+RC4+MEDIUM:aDSS+RC4+MEDIUM:aRSA+DES:aDSS+DES:aRSA+RC4:aDSS+RC4");
 BaseSecurity::CipherList BaseSecurity::StrongestSuite("!SSLv2:aRSA+AES:aDSS+AES:@STRENGTH:aRSA+3DES:aDSS+3DES");
 
-Security::Security(const CipherList& cipherSuite, bool serverAuthentication) : 
-   BaseSecurity(cipherSuite),
-   mServerAuthentication(serverAuthentication)
+Security::Security(const CipherList& cipherSuite) : BaseSecurity(cipherSuite)
 {
 #ifdef WIN32
    mPath = "C:\\sipCerts\\";
@@ -185,10 +183,9 @@ Security::Security(const CipherList& cipherSuite, bool serverAuthentication) :
 #endif
 }
 
-Security::Security(const Data& directory, const CipherList& cipherSuite, bool serverAuthentication) : 
+Security::Security(const Data& directory, const CipherList& cipherSuite) : 
    BaseSecurity(cipherSuite), 
-   mPath(directory),
-   mServerAuthentication(serverAuthentication)
+   mPath(directory)
 {
    // since the preloader won't work otherwise and VERY difficult to figure
    // out. 
