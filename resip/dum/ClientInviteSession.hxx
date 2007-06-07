@@ -54,7 +54,7 @@ class ClientInviteSession : public InviteSession
       void dispatchEarlyWithAnswer (const SipMessage& msg);
       void dispatchAnswered (const SipMessage& msg);
       void dispatchSentUpdateEarly (const SipMessage& msg);
-      void dispatchSentUpdateConnected (const SipMessage& msg);
+      void dispatchSentUpdateEarlyGlare (const SipMessage& msg);
       void dispatchReceivedUpdateEarly (const SipMessage& msg);
       void dispatchSentAnswer (const SipMessage& msg);
       void dispatchQueuedUpdate (const SipMessage& msg);
@@ -74,6 +74,7 @@ class ClientInviteSession : public InviteSession
       // Called by the DialogSet when it receives a 2xx response
       void onForkAccepted();
 
+      bool discardMessage(const SipMessage& msg);
    private:
       std::auto_ptr<SdpContents> mEarlyMedia;
       void startCancelTimer();
