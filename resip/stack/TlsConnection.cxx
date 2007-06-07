@@ -281,15 +281,15 @@ TlsConnection::checkState()
    computePeerName();
 
    //post-connection verification: check that certificate name matches domain name
-   if (!mServer && mSecurity->requireServerAuthentication())
+   if (!mServer)
    {
       bool matches = false;
       for(std::list<Data>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
       {
          if(isEqualNoCase(*it, who().getTargetDomain()))
          {
-            matches=true;
-            break;
+             matches=true;
+             break;
          }
       }
       if(!matches)
@@ -297,13 +297,14 @@ TlsConnection::checkState()
          mTlsState = Broken;
          mBio = 0;
          ErrLog (<< "Certificate name mismatch: trying to connect to <" 
-            << who().getTargetDomain()
-            << "> remote cert domain(s) are <" 
-            << getPeerNamesData() << ">" );
+                 << who().getTargetDomain()
+                 << "> remote cert domain(s) are <" 
+                 << getPeerNamesData() << ">" );
          mFailureReason = TransportFailure::CertNameMismatch;         
          return mTlsState;
       }
    }
+
    InfoLog( << "TLS handshake done for peer " << getPeerNamesData()); 
    mTlsState = Up;
    ensureWritable();
