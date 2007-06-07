@@ -759,7 +759,8 @@ DialogSet::end()
          break;
       }
       case Terminating:
-         assert(0);
+      case Destroying:
+         DebugLog (<< "DialogSet::end() called on a DialogSet that is already Terminating");
    }
 }
 
