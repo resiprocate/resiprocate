@@ -415,6 +415,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       bool validateContent(const SipMessage& request);
       bool validateAccept(const SipMessage& request);
       bool validateTo(const SipMessage& request);
+      bool validate100RelSuport(const SipMessage& request);
+      
       bool mergeRequest(const SipMessage& request);
 
       void processPublish(const SipMessage& publish);
