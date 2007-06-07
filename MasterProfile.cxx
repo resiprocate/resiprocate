@@ -16,7 +16,9 @@ MasterProfile::MasterProfile() :
    mValidateContentLanguageEnabled(false),
    mValidateAcceptEnabled(false),
    mAllowBadRegistrationEnabled(false),
-   mCheckReqUriInMergeDetectionEnabled(false)
+   mCheckReqUriInMergeDetectionEnabled(false),
+   mUacReliableProvisionalMode(Never),
+   mUasReliableProvisionalMode(Never)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -29,6 +31,7 @@ MasterProfile::MasterProfile() :
    addSupportedMethod(CANCEL);
    addSupportedMethod(OPTIONS);
    addSupportedMethod(BYE);
+   addSupportedMethod(UPDATE);
    addSupportedScheme(Symbols::Sip);  
 }
 
@@ -97,6 +100,11 @@ MasterProfile::clearSupportedMethods()
 void 
 MasterProfile::addSupportedOptionTag(const Token& tag)
 {
+   if (tag == Token(Symbols::C100rel))
+   {
+      //use enablePrackUas and enablePrackUac
+      assert(0);
+   }
    mSupportedOptionTags.push_back(tag);
 }
 
@@ -109,6 +117,10 @@ MasterProfile::getUnsupportedOptionsTags(const Tokens& requiresOptionTags)
       if (!i->isWellFormed())
       {
          tokens.push_back(Token("malformedTag"));
+      }
+      else if (*i == Token(Symbols::C100rel) && mUasReliableProvisionalMode == Never)
+      {
+         tokens.push_back(*i);
       }
       // if this option is not supported
       else if (!mSupportedOptionTags.find(*i))
@@ -130,6 +142,32 @@ void
 MasterProfile::clearSupportedOptionTags()
 {
    mSupportedOptionTags.clear();
+}
+
+void
+MasterProfile::setUacReliableProvisionalMode(ReliableProvisionalMode mode)
+{
+   mUacReliableProvisionalMode = mode;
+}
+
+void
+MasterProfile::setUasReliableProvisionalMode(ReliableProvisionalMode mode)
+{
+   //.dcm. not supported yet
+  assert(0);
+  mUasReliableProvisionalMode = mode;
+}
+
+MasterProfile::ReliableProvisionalMode
+MasterProfile::getUacReliableProvisionalMode() const
+{
+   return mUacReliableProvisionalMode;
+}
+
+MasterProfile::ReliableProvisionalMode
+MasterProfile::getUasReliableProvisionalMode() const
+{
+   return mUasReliableProvisionalMode;
 }
 
 void 
