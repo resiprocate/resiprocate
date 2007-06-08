@@ -1,3 +1,4 @@
+
 #include "resip/stack/SdpContents.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
 #include "resip/dum/Dialog.hxx"
@@ -367,7 +368,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 {
   try
   {
-     if (discardMessage(msg))
+     if (checkRseq(msg))
      {
         return;
      }
@@ -560,13 +561,9 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
    assert(msg.header(h_StatusLine).statusCode() < 200);
    assert(msg.header(h_StatusLine).statusCode() > 100);
    
-   bool reliable = msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel));
-   UInt32 rseq = msg.exists(h_RSeq) ? msg.header(h_RSeq).value() : 0;
-   //.dcm. TODO duplicate check, remove.
-   if (reliable && mLastReceivedRSeq == 0 || rseq == mLastReceivedRSeq + 1)
+   if (isReliable(msg))
    {
       SharedPtr<SipMessage> prack(new SipMessage);
-      mLastReceivedRSeq = rseq;
       mDialog.makeRequest(*prack, PRACK);
       prack->header(h_RSeq) = msg.header(h_RSeq);
       send(prack);
@@ -1303,10 +1300,9 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
    }
 }
 
-//pre state-machine logic to discard 100rel retransmissions/out of order messages.
-//Other early discard logic or interop(protocol repair) logic should go here.
+//true if 180rel should be ignored. Saves rseq as a side effect.
 bool 
-ClientInviteSession::discardMessage(const SipMessage& msg)
+ClientInviteSession::checkRseq(const SipMessage& msg)
 {
    int code = msg.isResponse() ? msg.header(h_StatusLine).statusCode() : 0;
    if (msg.method() == INVITE && code > 100 && code < 200)
@@ -1325,6 +1321,7 @@ ClientInviteSession::discardMessage(const SipMessage& msg)
             DebugLog(<< "Discarding out of order reliable 1xx with rseq " << rseq);
             return true;
          }
+         mLastReceivedRSeq = rseq;
       }
    }
    return false;
