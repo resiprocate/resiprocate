@@ -74,7 +74,7 @@ class ClientInviteSession : public InviteSession
       // Called by the DialogSet when it receives a 2xx response
       void onForkAccepted();
 
-      bool discardMessage(const SipMessage& msg);
+      bool checkRseq(const SipMessage& msg);
    private:
       std::auto_ptr<SdpContents> mEarlyMedia;
       void startCancelTimer();
