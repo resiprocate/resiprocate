@@ -2264,18 +2264,19 @@ TestSipEndPoint::Ring183::Ring183(TestSipEndPoint & endPoint, const boost::share
 boost::shared_ptr<resip::SipMessage>                                
 TestSipEndPoint::Ring183::go(boost::shared_ptr<resip::SipMessage> msg)                                
 {
-   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*msg, 183);
+   boost::shared_ptr<resip::SipMessage> inv = mEndPoint.getReceivedInvite(msg->header(resip::h_CallId));
+   boost::shared_ptr<resip::SipMessage> response = mEndPoint.makeResponse(*inv, 183);
 
    if (mReliable)
    {
-      bool required = msg->exists(h_Requires) && msg->header(h_Requires).find(Token(Symbols::C100rel));
-      bool supported = msg->exists(h_Supporteds) && msg->header(h_Supporteds).find(Token(Symbols::C100rel));
+      bool required = inv->exists(h_Requires) && inv->header(h_Requires).find(Token(Symbols::C100rel));
+      bool supported = inv->exists(h_Supporteds) && inv->header(h_Supporteds).find(Token(Symbols::C100rel));
 
       if ( mReliable && (!required && !supported) )
       {
-         InfoLog (<< "Supported header: " << Inserter(msg->header(h_Supporteds))
+         InfoLog (<< "Supported header: " << Inserter(inv->header(h_Supporteds))
                   << " : " 
-                  << msg->header(h_Supporteds).find(Token(Symbols::C100rel)));
+                  << inv->header(h_Supporteds).find(Token(Symbols::C100rel)));
 
          throw AssertException("Trying to send reliable provisional when UAC doesn't support it",
                                __FILE__, __LINE__);
@@ -2286,11 +2287,11 @@ TestSipEndPoint::Ring183::go(boost::shared_ptr<resip::SipMessage> msg)
                                __FILE__, __LINE__);
       }
 
-      if (mReliable && msg->header(h_RequestLine).method() != INVITE)
-      {
-         throw AssertException("Requesting reliable provisional on non-INVITE method",
-                               __FILE__, __LINE__);
-      }
+//       if (mReliable && msg->header(h_RequestLine).method() != INVITE)
+//       {
+//          throw AssertException("Requesting reliable provisional on non-INVITE method",
+//                                __FILE__, __LINE__);
+//       }
       
       if (mReliable)
       {

@@ -1091,14 +1091,16 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case On1xx:
-         //!dcm! retransmissions of a reliable provisional response are
-         //discarded, so any flavour or on1xx must be handled...this logic
-         //should prob. move into a guard as it will slice across many states.
-      case On1xxOffer:
          handleProvisional(msg);
          sendPrackIfNeeded(msg);
          break;
-
+      case On1xxOffer:
+         if(!isTerminated())  
+         {
+            transition(UAC_EarlyWithOffer);
+            handleOffer(msg, *sdp);
+         }
+         break;
       case On2xx:
          transition(Connected);
          sendAck();
