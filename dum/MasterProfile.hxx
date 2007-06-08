@@ -26,7 +26,7 @@ class MasterProfile : public UserProfile
       virtual bool isSchemeSupported(const Data& scheme) const;
       virtual void clearSupportedSchemes(void);
 
-      /// Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE
+      /// Defaults are: INVITE, ACK, CANCEL, OPTIONS, BYE, UPDATE
       virtual void addSupportedMethod(const MethodTypes& method);   
       virtual bool isMethodSupported(MethodTypes method) const;
       virtual Tokens getAllowedMethods() const;
@@ -40,16 +40,38 @@ class MasterProfile : public UserProfile
       virtual Tokens getSupportedOptionTags() const;
       virtual void clearSupportedOptionTags(void);
 
-      // Note only supported as UAC (10/29/2006)
       typedef enum
       {
          Never,
          Supported, 
          Required
       } ReliableProvisionalMode;
+
+
+      // UAC PRACK support.  UPDATE must be enabled(currently defaults to on, do
+      // not disable w/out disabling UAC PRACK support).
+      //
+      // Flows where an an answer is received in a 180rel and subsequent O/A
+      // exchanges using UPDATE occur in the early dialog
+      // have been tested.  
+      //
+      // A subsequent O/A exchange using 180rel/PRACK is also supported. This is
+      // a really bad idea, as an answer must be generated; the offer cannot be
+      // rejected. UPDATE should always be used for O/A exchanges once the
+      // dialog is established.
+      // Invite/18x(offer)/PRACK(ans) should work but has not been tested.
+      //
+      // Explicit limitations are:
+      // Overlapping reliable provisional responses that contain a body are not
+      // handled.
+      // Offers in a 200(PRACK) are not supported, and anyone who generates them
+      // should be summarily executed.
+
       virtual void setUacReliableProvisionalMode(ReliableProvisionalMode mode);
       virtual ReliableProvisionalMode getUacReliableProvisionalMode() const;
 
+      //Not supported as UAS. Calling setUacReliableProvisionalMode will result
+      //in an assert.
       virtual void setUasReliableProvisionalMode(ReliableProvisionalMode mode);
       virtual ReliableProvisionalMode getUasReliableProvisionalMode() const;
 
