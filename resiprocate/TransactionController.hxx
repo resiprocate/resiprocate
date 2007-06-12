@@ -6,7 +6,6 @@
 #include "resiprocate/TransportSelector.hxx"
 #include "resiprocate/StatelessHandler.hxx"
 #include "resiprocate/TimerQueue.hxx"
-#include "resiprocate/Security.hxx"
 #include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
