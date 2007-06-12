@@ -25,8 +25,10 @@ class DUM_API ClientPagerMessage : public NonDialogUsage
       ClientPagerMessage(DialogUsageManager& dum, DialogSet& dialogSet);
       ClientPagerMessageHandle getHandle();
 
+      typedef std::auto_ptr<std::map<resip::Data, resip::Data> > HeaderNameValueType;
+
       virtual void pageAsync(std::auto_ptr<Contents> contents, 
-         std::auto_ptr< std::map<resip::Data, resip::Data> > extraHeaders = std::auto_ptr< std::map<resip::Data, resip::Data> >());
+         HeaderNameValueType extraHeaders = HeaderNameValueType());
       virtual void endAsync();
       virtual void dispatchAsync(const SipMessage& msg);
       virtual void dispatchAsync(const DumTimeout& timer);
@@ -36,7 +38,7 @@ class DUM_API ClientPagerMessage : public NonDialogUsage
       //I don't know how this would interact with the queuing mechanism.
       //Will come back to re-visit this in the future.
       SipMessage& getMessageRequest();
-      size_t      msgQueued () const;
+      size_t      msgQueued() const;
 
    protected:
       //!kh!

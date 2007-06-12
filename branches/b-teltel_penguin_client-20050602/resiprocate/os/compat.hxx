@@ -16,6 +16,8 @@
 #ifdef _WIN32
 // !cj! TODO would be nice to remove this 
 #pragma warning(disable : 4996)
+#pragma warning(disable : 4049)
+#pragma warning(disable : 4217)
 #endif
  
 #ifndef _WIN32
