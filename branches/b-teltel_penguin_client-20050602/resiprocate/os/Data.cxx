@@ -1728,6 +1728,34 @@ resip::operator<<(ostream& strm, const Data& d)
    }
 }
 
+void Data::swap(Data& other)
+{
+    // !kh! do fast swap if possible
+    if (mMine == Take && mBuf)
+    {
+        if(other.mMine == Take && other.mBuf)
+        {
+            using namespace std;
+            swap(mBuf, other.mBuf);
+            swap(mSize, other.mSize);
+            swap(mCapacity, other.mCapacity);
+
+            return;
+        }
+    }
+
+    // !kh! if the above fails, swap (slowly) anyway
+    Data tmp(other);
+    other = *this;
+    *this = tmp;
+}
+
+void swap(Data& lhs, Data& rhs)
+{
+    lhs.swap(rhs);
+}
+
+
 // random permutation of 0..255
 static const unsigned char randomPermutation[256] = 
 {
