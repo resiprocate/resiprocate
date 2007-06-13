@@ -190,7 +190,10 @@ class RESIP_API Data
       size_t caseInsensitivehash() const;
       
       template<class Predicate> std::ostream& escapeToStream(std::ostream& str, 
-                                                             Predicate shouldEscape) const;            
+                                                             Predicate shouldEscape) const;
+
+      void swap(Data& other);
+    
    private:
       Data(const char* buffer, int length, bool); // deprecated: use // Data(ShareEnum ...)
 
@@ -228,6 +231,8 @@ class RESIP_API Data
       friend class oDataStream;
       friend class DataStream;
 };
+
+void swap(Data& lhs, Data& rhs);
 
 static bool invokeDataInit = Data::init();
 
