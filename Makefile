@@ -119,14 +119,14 @@ cleancontrib:
 	find tfm/contrib/Netxx-0.3.2 -name 'Netxx-config' -exec rm -f '{}' \;
 
 clean: cleanpkg
-	for dir in $(CLEANDIRS); do make -C $$dir clean; done ; true
+	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir clean; done ; true
 
 cleanall: cleancontrib
-	for dir in $(CLEANDIRS); do make -C $$dir cleanall; done ; true
+	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir cleanall; done ; true
 	-$(MAKE) -C contrib/ares distclean
 
 distclean: cleancontrib cleanpkg
-	for dir in $(CLEANDIRS); do make -C $$dir distclean; done ; true
+	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir distclean; done ; true
 	find * -name '*.db' -exec rm -f '{}' \;
 	-rm -Rf .make_prefs
 	-rm -Rf build/Makefile.conf
