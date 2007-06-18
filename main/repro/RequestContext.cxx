@@ -233,6 +233,15 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          
          return;
       }
+      else if(mOriginalRequest->method()==ACK)
+      {
+         SipMessage response;
+         DebugLog(<<"A non-ACK request has had a transaction-id collision with"
+                     " a previous ACK/2xx. ");
+         Helper::makeResponse(response,*sip,400,"Transaction-id collision");
+         mProxy.send(response);
+         return;
+      }
       
       if (sip->method() == CANCEL)
       {
