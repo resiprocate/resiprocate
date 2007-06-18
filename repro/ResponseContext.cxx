@@ -728,16 +728,6 @@ ResponseContext::processResponse(SipMessage& response)
          
          return;
       }
-      
-      if (!via.exists(p_branch) || !via.param(p_branch).hasMagicCookie())
-      {
-         DebugLog(<<"Some endpoint has corrupted one of our Vias"
-            " in their response. (branch param is either missing, or doesn't "
-            "have the magic cookie) We remember our transaction ID, so we can "
-            "repair it.");
-         response.header(h_Vias).front().param(p_branch)=
-            mRequestContext.mOriginalRequest->header(h_Vias).front().param(p_branch);
-      }
    }
    
    InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
