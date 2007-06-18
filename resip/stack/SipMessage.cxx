@@ -589,7 +589,14 @@ SipMessage::encodeBrief(std::ostream& str) const
    if (exists(h_Vias) && !this->header(h_Vias).empty())
    {
       str << tid;
-      str << getTransactionId();
+      try
+      {
+         str << getTransactionId();
+      }
+      catch(SipMessage::Exception&)
+      {
+         str << "BAD-VIA";
+      }
    }
    else
    {
