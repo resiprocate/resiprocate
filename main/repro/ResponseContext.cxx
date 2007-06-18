@@ -775,7 +775,7 @@ ResponseContext::processResponse(SipMessage& response)
             DebugLog(<< "Canceling a transaction with uri: " 
                      << resip::Data::from(target->uri()) << " , to host: " 
                      << target->via().sentHost());
-            target->status() == Target::ReadyToCancel;
+            target->status() = Target::ReadyToCancel;
             cancelClientTransaction(target);
          }
          
