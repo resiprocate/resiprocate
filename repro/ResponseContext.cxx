@@ -767,20 +767,24 @@ ResponseContext::processResponse(SipMessage& response)
    {
       case 1:
          mRequestContext.updateTimerC();
-
+         
+         // .bwc. We need to send CANCEL regardless of whether we have sent
+         // back a final response.
+         if (target->status() == Target::WaitingToCancel)
+         {
+            DebugLog(<< "Canceling a transaction with uri: " 
+                     << resip::Data::from(target->uri()) << " , to host: " 
+                     << target->via().sentHost());
+            target->status() == Target::ReadyToCancel;
+            cancelClientTransaction(target);
+         }
+         
          if  (!mRequestContext.mHaveSentFinalResponse)
          {
-            if (target->status() == Target::WaitingToCancel)
-            {
-               DebugLog(<< "Canceling a transaction with uri: " 
-                        << resip::Data::from(target->uri()) << " , to host: " 
-                        << target->via().sentHost());
-               cancelClientTransaction(target);
-            } 
-            else if (target->status() == Target::Trying)
+            if (target->status() == Target::Trying)
             {
                target->status() = Target::Proceeding;
-            }            
+            }
             
             if (code == 100)
             {
@@ -922,7 +926,7 @@ void
 ResponseContext::cancelClientTransaction(repro::Target* target)
 {
    if (target->status() == Target::Proceeding || 
-         target->status() == Target::WaitingToCancel)
+         target->status() == Target::ReadyToCancel)
    {
       InfoLog (<< "Cancel client transaction: " << target);
       
