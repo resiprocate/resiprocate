@@ -154,6 +154,7 @@ TransactionState::process(TransactionController& controller)
    }
    catch(SipMessage::Exception&)
    {
+      // .bwc This is not our error. Do not ErrLog.
       DebugLog( << "TransactionState::process dropping message with invalid tid " << message->brief());
       delete message;
       return;
@@ -1357,10 +1358,12 @@ TransactionState::processServerStale(TransactionMessage* msg)
    }
    else
    {
-      ErrLog(<<"ServerStale unexpected condition, dropping message.");
+      // .bwc. This can very easily be triggered by a stupid/malicious 
+      // endpoint. This is not an error in our code. Do not ErrLog this.
+      InfoLog(<<"ServerStale unexpected condition, dropping message.");
       if (sip)
       {
-         ErrLog(<<sip->brief());
+         InfoLog(<<sip->brief());
       }
       delete msg;
    }
