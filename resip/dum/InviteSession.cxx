@@ -1291,7 +1291,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
             setCurrentLocalSdp(msg);
 
             mCurrentRemoteSdp = sdp; 
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp);
          }
          else if(mProposedLocalSdp.get()) 
          {
@@ -1577,7 +1577,7 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
 
-         handler->onAnswer(getSessionHandle(), msg, *sdp);
+         handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp);
          break;         
       case OnAck:
          if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
