@@ -197,6 +197,14 @@ class TestHolder : public Fixture
          return result;
       }
 
+      static boost::shared_ptr<SipMessage>
+      makeInvite(boost::shared_ptr<SipMessage> msg)
+      {
+         msg->header(h_RequestLine).method()=INVITE;
+         msg->header(h_CSeq).method()=INVITE;
+         return msg;
+      }
+      
 ///***************************************** tests start here ********************************//
 
 //*****************************Registrar tests********************************//
@@ -5511,6 +5519,31 @@ class TestHolder : public Fixture
       ExecuteSequences();
    }
    
+   
+   void testNonInviteWithInviteCollision()
+   {
+      WarningLog(<<"*!testNonInviteWithInviteCollision!*");
+      
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+
+      boost::shared_ptr<SipMessage> msg;
+      Seq
+      (
+         jason->message(*derek,"Ping"),
+         jason->expect(MESSAGE/407, from(proxy), WaitForResponse, save(msg,jason->digestRespond())),
+         derek->expect(MESSAGE, from(proxy), WaitForCommand, chain(condition(makeInvite,jason->retransmit(msg)),derek->send486())),
+         jason->expect(MESSAGE/486, from(proxy),WaitForResponse,jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+
       void testNonInviteClientRetransmissionsWithRecovery()
       {
          WarningLog(<<"*!testNonInviteClientRetransmissionsWithRecovery!*");
@@ -6905,6 +6938,7 @@ class MyTestCase
          TEST(testNonInvite200then180);
          TEST(testNonInviteSpamRequestBeforeResponse);
          TEST(testNonInviteSpamRequestAfterResponse);
+         TEST(testNonInviteWithInviteCollision);
          TEST(testNonInviteClientRetransmissionsWithRecovery);
          TEST(testNonInviteClientRetransmissionsWithTimeout);
          TEST(testNonInviteServerRetransmission);
