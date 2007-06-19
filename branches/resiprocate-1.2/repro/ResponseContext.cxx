@@ -728,16 +728,6 @@ ResponseContext::processResponse(SipMessage& response)
          
          return;
       }
-      
-      if (!via.exists(p_branch) || !via.param(p_branch).hasMagicCookie())
-      {
-         DebugLog(<<"Some endpoint has corrupted one of our Vias"
-            " in their response. (branch param is either missing, or doesn't "
-            "have the magic cookie) We remember our transaction ID, so we can "
-            "repair it.");
-         response.header(h_Vias).front().param(p_branch)=
-            mRequestContext.mOriginalRequest->header(h_Vias).front().param(p_branch);
-      }
    }
    
    InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
@@ -777,20 +767,24 @@ ResponseContext::processResponse(SipMessage& response)
    {
       case 1:
          mRequestContext.updateTimerC();
-
+         
+         // .bwc. We need to send CANCEL regardless of whether we have sent
+         // back a final response.
+         if (target->status() == Target::WaitingToCancel)
+         {
+            DebugLog(<< "Canceling a transaction with uri: " 
+                     << resip::Data::from(target->uri()) << " , to host: " 
+                     << target->via().sentHost());
+            target->status() = Target::ReadyToCancel;
+            cancelClientTransaction(target);
+         }
+         
          if  (!mRequestContext.mHaveSentFinalResponse)
          {
-            if (target->status() == Target::WaitingToCancel)
-            {
-               DebugLog(<< "Canceling a transaction with uri: " 
-                        << resip::Data::from(target->uri()) << " , to host: " 
-                        << target->via().sentHost());
-               cancelClientTransaction(target);
-            } 
-            else if (target->status() == Target::Trying)
+            if (target->status() == Target::Trying)
             {
                target->status() = Target::Proceeding;
-            }            
+            }
             
             if (code == 100)
             {
@@ -932,7 +926,7 @@ void
 ResponseContext::cancelClientTransaction(repro::Target* target)
 {
    if (target->status() == Target::Proceeding || 
-         target->status() == Target::WaitingToCancel)
+         target->status() == Target::ReadyToCancel)
    {
       InfoLog (<< "Cancel client transaction: " << target);
       

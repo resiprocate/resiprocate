@@ -324,7 +324,9 @@ DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
    int res = DnsUtil::inet_pton(ipV6Address, dst);
    if (res <= 0)
    {
-      WarningLog(<< ipV6Address << " is not a well formed IPV6 address");
+      // .bwc. Until we supply an isIpV6Address that works, this is not an
+      // error on anyone's part but our own. Don't log as a warning/error.
+      InfoLog(<< ipV6Address << " is not a well formed IPV6 address");
       // .bwc. We should not assert in this function, because 
       // DnsUtil::isIpV6Address does not do a full validity check. If we have no
       // way of determining whether a V6 addr is valid before making this call,
