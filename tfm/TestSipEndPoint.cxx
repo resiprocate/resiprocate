@@ -5,6 +5,7 @@
 #include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/CpimContents.hxx" // vk
+#include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
@@ -146,6 +147,7 @@ TestSipEndPoint::~TestSipEndPoint()
 void
 TestSipEndPoint::clean()
 {
+   DebugLog(<< *this << " Clearing out requests.");
    mInvitesSent.clear();
    mInvitesReceived.clear();
    mUpdatesSent.clear();
@@ -188,12 +190,19 @@ TestSipEndPoint::send(shared_ptr<SipMessage>& msg, RawConditionerFn func)
    if (msg->isRequest())
    {
       assert(!msg->header(h_Vias).empty());
-      assert(msg->header(h_Vias).front().exists(p_branch));
-      assert(!msg->header(h_Vias).front().param(p_branch).getTransactionId().empty());
+
+      if( !msg->header(h_Vias).front().exists(p_branch) ||
+         msg->header(h_Vias).front().param(p_branch).getTransactionId().empty())
+      {
+         // .bwc. Hide 2543 tid in topmost via where receiver won't notice
+         // it. We will see this over in X when responses come back.
+         static ExtensionParameter p_brunch("brunch");
+         msg->header(h_Vias).front().param(p_brunch)=msg->getTransactionId();
+      }
 
       if (msg->header(h_RequestLine).getMethod() != ACK)
       {
-         mRequests[msg->header(h_Vias).front().param(p_branch).getTransactionId()] = msg;
+         mRequests[msg->getTransactionId()] = msg;
       }
       
       //DebugLog (<< "Sending: " << Inserter(mRequests));
@@ -1477,30 +1486,29 @@ TestSipEndPoint::options(const Uri& url)
 }
 // end - vk
 
-TestSipEndPoint::Retransmit::Retransmit(TestSipEndPoint* endPoint, 
+TestSipEndPoint::Retransmit::Retransmit(TestSipEndPoint& endPoint, 
                                         boost::shared_ptr<resip::SipMessage>& msg)
-   : mEndPoint(endPoint),
+   : MessageExpectAction(endPoint),
      mMsgToRetransmit(msg)
 {
 }
 
-void
-TestSipEndPoint::Retransmit::operator()(boost::shared_ptr<Event> event)
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Retransmit::go(boost::shared_ptr<resip::SipMessage>)
 {
-   assert (mMsgToRetransmit != 0);
-   mEndPoint->send(mMsgToRetransmit);
+   return mMsgToRetransmit;
 }
 
 resip::Data
 TestSipEndPoint::Retransmit::toString() const
 {
-   return mEndPoint->getName() + ".retransmit()";
+   return mEndPoint.getName() + ".retransmit()";
 }
 
 TestSipEndPoint::Retransmit* 
 TestSipEndPoint::retransmit(boost::shared_ptr<resip::SipMessage>& msg)
 { 
-   return new Retransmit(this, msg);
+   return new Retransmit(*this, msg);
 }
 
 
@@ -2521,25 +2529,67 @@ TestSipEndPoint::Ack::go(shared_ptr<SipMessage> response)
 {
    assert(response->isResponse());
    int code = response->header(h_StatusLine).responseCode();
-   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(response->header(h_CallId));
-   assert (invite->header(h_RequestLine).getMethod() == INVITE);
+   shared_ptr<SipMessage> invite;
+   try
+   {
+      invite = mEndPoint.getSentInvite(response->header(h_CallId));
+   }
+   catch(...)
+   {
+      if(!mEndPoint.mRequests.empty())
+      {
+         invite = mEndPoint.mRequests.begin()->second;
+      }
+   }
+   
 
    if (code == 200)
    {
-      DebugLog(<< "Constructing ack against 200 using dialog.");
       DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
-      assert (dialog);
-      DebugLog(<< *dialog);
-      // !dlb! should use contact from 200?
-      shared_ptr<SipMessage> ack(dialog->makeAck(*invite));
-      if( mSdp.get() )
-         ack->setContents(mSdp.get());
-      return ack;
+      if(dialog)
+      {
+         DebugLog(<< "Constructing ack against 200 using dialog.");
+         DebugLog(<< *dialog);
+         // !dlb! should use contact from 200?
+         shared_ptr<SipMessage> ack(dialog->makeAck(*invite));
+         if( mSdp.get() )
+            ack->setContents(mSdp.get());
+         return ack;
+      }
+      else
+      {
+         DebugLog(<< "Constructing ack against 200 using Helper.");
+         // Allow garbage ACK (ACK to non-INVITE)
+         MethodTypes method=invite->method();
+         invite->header(h_RequestLine).method()=INVITE;
+         invite->header(h_CSeq).method()=INVITE;
+         shared_ptr<SipMessage> ack(Helper::makeFailureAck(*invite,*response));
+         // Reset tid
+         ack->header(h_Vias).front().param(p_branch).reset();
+         // Reset request-line
+         ack->header(h_RequestLine).uri()=response->header(h_Contacts).front().uri();
+         // Set Routes
+         if(!response->empty(h_RecordRoutes))
+         {
+            ack->header(h_Routes)=response->header(h_RecordRoutes).reverse();
+         }
+         if( mSdp.get() )
+            ack->setContents(mSdp.get());
+         invite->header(h_RequestLine).method()=method;
+         invite->header(h_CSeq).method()=method;
+         return ack;
+      }
    }
    else
    {
       DebugLog(<<"Constructing failure ack.");
+      // Allow garbage ACK (ACK to non-INVITE)
+      MethodTypes method=invite->method();
+      invite->header(h_RequestLine).method()=INVITE;
+      invite->header(h_CSeq).method()=INVITE;
       shared_ptr<SipMessage> ack(Helper::makeFailureAck(*invite, *response));
+      invite->header(h_RequestLine).method()=method;
+      invite->header(h_CSeq).method()=method;
       return ack;
    }
 }
@@ -3035,11 +3085,27 @@ TestSipEndPoint::HasMessageBodyMatch* hasMessageBodyMatch()
 shared_ptr<SipMessage>
 TestSipEndPoint::Cancel::go(shared_ptr<SipMessage> msg)
 {
-   DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId));
-   assert(dialog);
-   shared_ptr<SipMessage> invite = mEndPoint.getSentInvite(msg->header(h_CallId));
-   assert(invite != 0);
-   shared_ptr<SipMessage> cancel(dialog->makeCancel(*invite));
+   shared_ptr<SipMessage> invite;
+   try
+   {
+      invite = mEndPoint.getSentInvite(msg->header(h_CallId));
+   }
+   catch(...)
+   {
+      if(!mEndPoint.mRequests.empty())
+      {
+         invite= mEndPoint.mRequests.begin()->second;
+      }
+   }
+   
+   assert(invite!=0);
+   // Allow for CANCEL to be sent for non-INVITE.
+   MethodTypes method=invite->method();
+   invite->header(h_RequestLine).method()=INVITE;
+   invite->header(h_CSeq).method()=INVITE;
+   shared_ptr<SipMessage> cancel(Helper::makeCancel(*invite));
+   invite->header(h_RequestLine).method()=method;
+   invite->header(h_CSeq).method()=method;
    return cancel;
 }
 
@@ -3353,7 +3419,7 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
    
    DebugLog(<< getContact() << " is handling: " << *msg);
    if (msg->isResponse())
-   {      
+   {
       if (msg->header(h_CSeq).method() == INVITE && 
           msg->header(h_StatusLine).responseCode() > 100 &&
           msg->header(h_StatusLine).responseCode() <= 200)
