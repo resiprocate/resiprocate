@@ -111,8 +111,8 @@ DB4CXX_LIBNAME := db_cxx
 endif
 
 ifeq ($(OSTYPE),SunOS)
-DB4CXX_INCLUDEDIRS := /opt/csw/bdb43/include
-DB4CXX_LIBDIRS := /opt/csw/bdb43/lib
+DB4CXX_INCLUDEDIRS := /opt/csw/bdb4/include
+DB4CXX_LIBDIRS := /opt/csw/bdb44/lib
 DB42_LIBNAME := db
 DB4CXX_LIBNAME := db_cxx
 endif
