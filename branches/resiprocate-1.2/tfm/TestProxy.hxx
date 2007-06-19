@@ -34,6 +34,8 @@ class TestProxy
       virtual void deleteRoute(const resip::Data& matchingPattern, 
                                const resip::Data& method, 
                                const resip::Data& event) {};
+      virtual bool addTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0)  {return false;};
+      virtual void deleteTrustedHost(const resip::Data& host, resip::TransportType transport, short port = 0)  {};
 
       void addSource(const resip::Data& host, int port, resip::TransportType transport);
       void addSource(const Source& source);
