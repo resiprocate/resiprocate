@@ -1486,30 +1486,29 @@ TestSipEndPoint::options(const Uri& url)
 }
 // end - vk
 
-TestSipEndPoint::Retransmit::Retransmit(TestSipEndPoint* endPoint, 
+TestSipEndPoint::Retransmit::Retransmit(TestSipEndPoint& endPoint, 
                                         boost::shared_ptr<resip::SipMessage>& msg)
-   : mEndPoint(endPoint),
+   : MessageExpectAction(endPoint),
      mMsgToRetransmit(msg)
 {
 }
 
-void
-TestSipEndPoint::Retransmit::operator()(boost::shared_ptr<Event> event)
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Retransmit::go(boost::shared_ptr<resip::SipMessage>)
 {
-   assert (mMsgToRetransmit != 0);
-   mEndPoint->send(mMsgToRetransmit);
+   return mMsgToRetransmit;
 }
 
 resip::Data
 TestSipEndPoint::Retransmit::toString() const
 {
-   return mEndPoint->getName() + ".retransmit()";
+   return mEndPoint.getName() + ".retransmit()";
 }
 
 TestSipEndPoint::Retransmit* 
 TestSipEndPoint::retransmit(boost::shared_ptr<resip::SipMessage>& msg)
 { 
-   return new Retransmit(this, msg);
+   return new Retransmit(*this, msg);
 }
 
 
