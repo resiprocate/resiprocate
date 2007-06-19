@@ -737,6 +737,7 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
       mDialog.makeRequest(*refer, REFER);
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = myAddr();
+      refer->header(h_ReferredBy).remove(p_tag);   // tag-param not permitted in rfc3892; not the same as generic-param
 
       // !slg! is it ok to do this - should it be an option?
       if (!referSub)
@@ -810,7 +811,8 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
 
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = myAddr();
-      
+      refer->header(h_ReferredBy).remove(p_tag);
+
       CallId replaces;
       DialogId id = sessionToReplace->mDialog.getId();
       replaces.value() = id.getCallId();
