@@ -53,7 +53,7 @@ class RequestContext
       resip::NameAddr& getTopRoute();
       void setTargetConnection(resip::ConnectionId);
             
-      void sendResponse(const resip::SipMessage& response);
+      void sendResponse(resip::SipMessage& response);
 
       void forwardAck200(const resip::SipMessage& ack);
 
