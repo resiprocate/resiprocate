@@ -344,21 +344,6 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       Request* options(const resip::Uri& target);
       // end - vk
       
-      class Retransmit : public ExpectAction
-      {
-         public:
-            Retransmit(TestSipEndPoint* endPoint, 
-                       boost::shared_ptr<resip::SipMessage>& msg);
-            virtual void operator()(boost::shared_ptr<Event> event);
-            virtual resip::Data toString() const;
-
-         private:
-            TestSipEndPoint* mEndPoint;
-            boost::shared_ptr<resip::SipMessage>& mMsgToRetransmit;
-      };
-      friend class Retransmit;     
-      Retransmit* retransmit(boost::shared_ptr<resip::SipMessage>& msg);
-
       class CloseTransport : public Action
       {
          public:
@@ -389,6 +374,20 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             MessageConditionerFn mConditioner;
             RawConditionerFn mRawConditioner;
       };
+
+      class Retransmit : public MessageExpectAction
+      {
+         public:
+            Retransmit(TestSipEndPoint& endPoint, 
+                       boost::shared_ptr<resip::SipMessage>& msg);
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage>);
+            virtual resip::Data toString() const;
+
+         private:
+            boost::shared_ptr<resip::SipMessage>& mMsgToRetransmit;
+      };
+      friend class Retransmit;     
+      Retransmit* retransmit(boost::shared_ptr<resip::SipMessage>& msg);
 
       class Send300 : public MessageExpectAction
       {
