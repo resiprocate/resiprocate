@@ -1228,6 +1228,141 @@ class TestHolder : public Fixture
       ExecuteSequences();  
    }
 
+   void testInviteCancelBefore1xx()
+   {
+      WarningLog(<<"*!testInviteCancelBefore1xx!*");
+
+      Seq
+      (
+         derek->registerUser(60, derek->getDefaultContacts()),
+         derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+         derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
+         WaitForEndOfSeq
+      );
+      ExecuteSequences();
+      
+      Seq
+      (
+         jason->invite(*derek),
+         optional(jason->expect(INVITE/100,from(proxy),WaitFor100,jason->noAction())),
+         jason->expect(INVITE/407,from(proxy),WaitForResponse,chain(jason->ack(),jason->digestRespond())),
+         And
+         (
+            Sub
+            (
+               jason->expect(INVITE/100,from(proxy),WaitForResponse,jason->cancel()),
+               jason->expect(CANCEL/200,from(proxy),WaitForResponse,jason->noAction())
+            ),
+            Sub
+            (
+               derek->expect(INVITE,contact(jason),WaitForCommand,derek->noAction()),
+               derek->expect(INVITE,contact(jason),700, derek->noAction())
+            )
+         ),
+
+         derek->expect(INVITE,contact(jason),1200, derek->send100()),
+         derek->expect(CANCEL,from(proxy),WaitForCommand,chain(derek->ok(),derek->send487())),
+         And
+         (
+            Sub
+            (
+               derek->expect(ACK, from(proxy),WaitForCommand,derek->noAction())
+            ),
+            Sub
+            (
+               jason->expect(INVITE/487,contact(derek),WaitForResponse,jason->ack())
+            )
+         ),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+   void testInviteCancelBefore1xxNo487()
+   {
+      WarningLog(<<"*!testInviteCancelBefore1xxNo487!*");
+
+      Seq
+      (
+         derek->registerUser(60, derek->getDefaultContacts()),
+         derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+         derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
+         WaitForEndOfSeq
+      );
+      ExecuteSequences();
+      
+      Seq
+      (
+         jason->invite(*derek),
+         optional(jason->expect(INVITE/100,from(proxy),WaitFor100,jason->noAction())),
+         jason->expect(INVITE/407,from(proxy),WaitForResponse,chain(jason->ack(),jason->digestRespond())),
+         And
+         (
+            Sub
+            (
+               jason->expect(INVITE/100,from(proxy),WaitForResponse,jason->cancel()),
+               jason->expect(CANCEL/200,from(proxy),WaitForResponse,jason->noAction())
+            ),
+            Sub
+            (
+               derek->expect(INVITE,contact(jason),WaitForCommand,derek->noAction()),
+               derek->expect(INVITE,contact(jason),700, derek->noAction())
+            )
+         ),
+
+         derek->expect(INVITE,contact(jason),1200, derek->send100()),
+         derek->expect(CANCEL,from(proxy),WaitForCommand,chain(derek->ok(),derek->noAction())),
+         jason->expect(INVITE/408,from(proxy),32000,jason->ack()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+
+   void testInviteCancelBefore1xxNo487or1xx()
+   {
+      WarningLog(<<"*!testInviteCancelBefore1xxNo487or1xx!*");
+
+      Seq
+      (
+         derek->registerUser(60, derek->getDefaultContacts()),
+         derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+         derek->expect(REGISTER/200, from(proxy), WaitForRegistration, derek->noAction()),
+         WaitForEndOfSeq
+      );
+      ExecuteSequences();
+      
+      Seq
+      (
+         jason->invite(*derek),
+         optional(jason->expect(INVITE/100,from(proxy),WaitFor100,jason->noAction())),
+         jason->expect(INVITE/407,from(proxy),WaitForResponse,chain(jason->ack(),jason->digestRespond())),
+         And
+         (
+            Sub
+            (
+               jason->expect(INVITE/100,from(proxy),WaitForResponse,jason->cancel()),
+               jason->expect(CANCEL/200,from(proxy),WaitForResponse,jason->noAction())
+            ),
+            Sub
+            (
+               derek->expect(INVITE,contact(jason),WaitForCommand,derek->noAction()),
+               derek->expect(INVITE,contact(jason),700, derek->noAction())
+            )
+         ),
+
+         derek->expect(INVITE,contact(jason),1100, derek->noAction()),
+         derek->expect(INVITE,contact(jason),2100, derek->noAction()),
+         derek->expect(INVITE,contact(jason),4100, derek->noAction()),
+         derek->expect(INVITE,contact(jason),8100, derek->noAction()),
+         optional(derek->expect(INVITE,contact(jason),16100, derek->noAction())),
+         jason->expect(INVITE/408,from(proxy),32000,jason->ack()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
 
    void testInvite503BeatsCancelClientSide()
    {
@@ -6770,6 +6905,10 @@ class MyTestCase
          TEST(testNonInvite200then180);
          TEST(testNonInviteSpamRequestBeforeResponse);
          TEST(testNonInviteSpamRequestAfterResponse);
+         TEST(testNonInviteClientRetransmissionsWithRecovery);
+         TEST(testNonInviteClientRetransmissionsWithTimeout);
+         TEST(testNonInviteServerRetransmission);
+         TEST(testInfo);
 //Registrar tests
          TEST(testRegisterBasic);
          TEST(testMultiple1);
@@ -6819,6 +6958,9 @@ class MyTestCase
          TEST(testInvite486BeatsCancelClientSide);
          TEST(testInvite503BeatsCancelServerSide);
          TEST(testInvite200BeatsCancelClientSide);
+         TEST(testInviteCancelBefore1xx);
+         TEST(testInviteCancelBefore1xxNo487);
+         TEST(testInviteCancelBefore1xxNo487or1xx);
          TEST(testInviteNotFound);
          TEST(testInvite488Response);
          TEST(testInvite480Response);
@@ -6898,11 +7040,7 @@ class MyTestCase
          TEST(testInviteSeqFork4xxAnd5xx);
          TEST(testInviteSeqFork4xx5xx6xx);
          
-         TEST(testInfo);
          TEST(testInviteClientRetransmitsAfter200);
-         TEST(testNonInviteClientRetransmissionsWithRecovery);
-         TEST(testNonInviteClientRetransmissionsWithTimeout);
-         TEST(testNonInviteServerRetransmission);
          TEST(testBasic302);
          TEST(testInviteNoAnswerCancel);
          TEST(testInviteNotFoundServerRetransmits);
