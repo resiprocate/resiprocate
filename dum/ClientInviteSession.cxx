@@ -630,6 +630,8 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          if(!isTerminated())  
          {
             handleProvisional(msg);
+            sendPrackIfNeeded(msg); //may wish to move emprty PRACK handling
+                                 //outside the state machine            
          }
          break;
 
