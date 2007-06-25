@@ -25,9 +25,7 @@ ConnectionManager::MaxLastUsed = 1000;
 ConnectionManager::ConnectionManager() : 
    mHead(),
    mWriteHead(ConnectionWriteList::makeList(&mHead)),
-   mWriteIter(mWriteHead->begin()),
    mReadHead(ConnectionReadList::makeList(&mHead)),
-   mReadIter(mReadHead->begin()),
    mLRUHead(ConnectionLruList::makeList(&mHead)),
    mConnectionIdGenerator(1) 
 {
@@ -92,11 +90,10 @@ ConnectionManager::addToWritable(Connection* conn)
 }
 
 void
-ConnectionManager::removeFromWritable()
+ConnectionManager::removeFromWritable(Connection* conn)
 {
    assert(!mWriteHead->empty());
-   Connection* current = *mWriteIter;
-   current->ConnectionWriteList::remove();
+   conn->ConnectionWriteList::remove();
 }
 
 void
@@ -166,12 +163,12 @@ void
 ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
 {
    // process the write list
-   mWriteIter = mWriteHead->begin();
-   ConnectionWriteList::iterator writeIterNext = mWriteIter;
-   for (++writeIterNext; mWriteIter != mWriteHead->end();
-	mWriteIter = writeIterNext, ++writeIterNext)
+   ConnectionWriteList::iterator writeIter = mWriteHead->begin();
+   ConnectionWriteList::iterator writeIterNext = writeIter;
+   for (++writeIterNext; writeIter != mWriteHead->end();
+	writeIter = writeIterNext, ++writeIterNext)
    {
-      Connection* currConnection = *mWriteIter;
+      Connection* currConnection = *writeIter;
       if (!currConnection)
 	 continue;
 
@@ -190,12 +187,12 @@ ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
    }
 
    // process the read list
-   mReadIter = mReadHead->begin();
-   ConnectionReadList::iterator readIterNext = mReadIter;
-   for (++readIterNext; mReadIter != mReadHead->end();
-	mReadIter = readIterNext, ++readIterNext)
+   ConnectionReadList::iterator readIter = mReadHead->begin();
+   ConnectionReadList::iterator readIterNext = readIter;
+   for (++readIterNext; readIter != mReadHead->end();
+	readIter = readIterNext, ++readIterNext)
    {
-      Connection* currConnection = *mReadIter; 
+      Connection* currConnection = *readIter; 
       if (!currConnection)
 	 continue;
 

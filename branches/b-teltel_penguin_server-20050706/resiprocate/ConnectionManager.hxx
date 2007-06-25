@@ -27,7 +27,7 @@ class ConnectionManager
 
    private:
       void addToWritable(Connection* conn); // add the specified conn to end
-      void removeFromWritable(); // remove the current mWriteMark
+      void removeFromWritable(Connection* conn); // remove the current mWriteMark
 
       // release excessively old connections (free up file descriptors)
       void gc(UInt64 threshhold = ConnectionManager::MaxLastUsed);
@@ -51,11 +51,7 @@ class ConnectionManager
       Connection mHead;
 
       ConnectionWriteList* mWriteHead;
-      ConnectionWriteList::iterator mWriteIter;
-
       ConnectionReadList* mReadHead;
-      ConnectionReadList::iterator mReadIter;
-
       ConnectionLruList* mLRUHead;
 
       // reset iterators if they've been invalidated
