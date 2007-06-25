@@ -1736,9 +1736,9 @@ void Data::swap(Data& other)
         if(other.mMine == Take && other.mBuf)
         {
             using namespace std;
-            swap(mBuf, other.mBuf);
-            swap(mSize, other.mSize);
-            swap(mCapacity, other.mCapacity);
+            std::swap(mBuf, other.mBuf);
+            std::swap(mSize, other.mSize);
+            std::swap(mCapacity, other.mCapacity);
 
             return;
         }
@@ -1750,7 +1750,7 @@ void Data::swap(Data& other)
     *this = tmp;
 }
 
-void swap(Data& lhs, Data& rhs)
+void resip::swap(Data& lhs, Data& rhs)
 {
     lhs.swap(rhs);
 }
