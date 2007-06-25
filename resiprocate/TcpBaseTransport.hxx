@@ -14,7 +14,7 @@ class TcpBaseTransport : public Transport
    public:
       enum  {MaxFileDescriptors = 100000};
 
-     TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interfaceName );
+      TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interfaceName );
       virtual  ~TcpBaseTransport();
       
       void process(FdSet& fdset);
@@ -27,8 +27,6 @@ class TcpBaseTransport : public Transport
    protected:
       virtual Connection* createConnection(Tuple& who, Socket fd, bool server=false)=0;
       
-      void processSomeWrites(FdSet& fdset);
-      void processSomeReads(FdSet& fdset);
       void processAllWriteRequests(FdSet& fdset);
       void sendFromRoundRobin(FdSet& fdset);
       void processListen(FdSet& fdSet);

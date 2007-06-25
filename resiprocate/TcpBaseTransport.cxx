@@ -114,76 +114,6 @@ TcpBaseTransport::processListen(FdSet& fdset)
 }
 
 void
-TcpBaseTransport::processSomeWrites(FdSet& fdset)
-{
-   // !jf! may want to do a roundrobin later
-   Connection* curr = mConnectionManager.getNextWrite(); 
-   if (curr && fdset.readyToWrite(curr->getSocket()))
-   {
-      //DebugLog (<< "TcpBaseTransport::processSomeWrites() " << curr->getSocket());
-      curr->performWrite();
-   }
-   else if (curr && fdset.hasException(curr->getSocket()))
-   {
-        int errNum = 0;
-        int errNumSize = sizeof(errNum);
-        getsockopt(curr->getSocket(),SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
-        InfoLog (<< "Exception writing to socket " << curr->getSocket() << " code: " << errNum << "; closing connection");
-        delete curr;
-   }
-}
-
-void
-TcpBaseTransport::processSomeReads(FdSet& fdset)
-{
-   Connection* currConnection = mConnectionManager.getNextRead(); 
-   if (currConnection)
-   {
-      if ( fdset.readyToRead(currConnection->getSocket()) ||
-           currConnection->hasDataToRead() )
-      {
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
-         fdset.clear(currConnection->getSocket());
-         assert(!fdset.readyToRead(currConnection->getSocket()));
-         
-         std::pair<char*, size_t> writePair = currConnection->getWriteBuffer();
-         size_t bytesToRead = resipMin(writePair.second, 
-                                       static_cast<size_t>(Connection::ChunkSize));
-         
-         assert(bytesToRead > 0);
-         int bytesRead = currConnection->read(writePair.first, bytesToRead);
-
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection 
-                   << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
-         if (bytesRead > 0) 
-         {
-            currConnection->performRead(bytesRead, mStateMachineFifo);
-         }
-         else if (bytesRead == -1)
-         {
-            DebugLog(<< "Closing connection bytesRead=" << bytesRead);
-            delete currConnection;
-         }
-         else if ( bytesRead != 0 )
-         {
-	    ErrLog(<< "encounter special error at " << *currConnection
-                   << " bytesToRead=" << bytesToRead << " read=" << bytesRead);
-	    delete currConnection;
-         }
-      }
-      else if (fdset.hasException(currConnection->getSocket()))
-      {
-            int errNum = 0;
-            int errNumSize = sizeof(errNum);
-            getsockopt(currConnection->getSocket(),SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
-            InfoLog (<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
-            delete currConnection;
-      }
-   } 
-}
-
-
-void
 TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
 {
    while (mTxFifo.messageAvailable())
@@ -285,8 +215,10 @@ void
 TcpBaseTransport::process(FdSet& fdSet)
 {
    processAllWriteRequests(fdSet);
-   processSomeWrites(fdSet);
-   processSomeReads(fdSet);
+
+   // process the connections in ConnectionManager
+   mConnectionManager.process(fdSet, mStateMachineFifo);
+
    processListen(fdSet);
 }
 

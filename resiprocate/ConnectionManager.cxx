@@ -67,44 +67,6 @@ ConnectionManager::findConnection(const Tuple& addr)
    return 0;
 }
 
-Connection*
-ConnectionManager::getNextRead()
-{
-   if (mReadHead->empty())
-   {
-      return 0;
-   }
-   else 
-   {
-      if (++mReadIter == mReadHead->end())
-      {
-         mReadIter = mReadHead->begin();
-      }
-
-      Connection* ret = *mReadIter;
-      return ret;
-   }
-}
-
-Connection*
-ConnectionManager::getNextWrite()
-{
-   if (mWriteHead->empty())
-   {
-      return 0;
-   }
-   else 
-   {
-      if (++mWriteIter == mWriteHead->end())
-      {
-         mWriteIter = mWriteHead->begin();
-      }
-
-      Connection* ret = *mWriteIter;
-      return ret;
-   }
-}
-
 void
 ConnectionManager::buildFdSet(FdSet& fdset)
 {
@@ -134,13 +96,7 @@ ConnectionManager::removeFromWritable()
 {
    assert(!mWriteHead->empty());
    Connection* current = *mWriteIter;
-   ++mWriteIter;
    current->ConnectionWriteList::remove();
-
-   if (mWriteIter == mWriteHead->end())
-   {
-      mWriteIter = mWriteHead->begin();
-   }
 }
 
 void
@@ -171,10 +127,6 @@ ConnectionManager::removeConnection(Connection* connection)
    connection->ConnectionReadList::remove();
    connection->ConnectionWriteList::remove();
    connection->ConnectionLruList::remove();
-
-   // keep the iterators valid
-   mReadIter = mReadHead->begin();
-   mWriteIter = mWriteHead->begin();
 }
 
 // release excessively old connections (free up file descriptors)
@@ -208,4 +160,83 @@ ConnectionManager::touch(Connection* connection)
 {
    connection->ConnectionLruList::remove();
    mLRUHead->push_back(connection);
+}
+
+void
+ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
+{
+   // process the write list
+   mWriteIter = mWriteHead->begin();
+   ConnectionWriteList::iterator writeIterNext = mWriteIter;
+   for (++writeIterNext; mWriteIter != mWriteHead->end();
+	mWriteIter = writeIterNext, ++writeIterNext)
+   {
+      Connection* currConnection = *mWriteIter;
+      if (!currConnection)
+	 continue;
+
+      if (fdset.readyToWrite(currConnection->getSocket()))
+      {
+	 currConnection->performWrite();
+      }
+      else if (fdset.hasException(currConnection->getSocket()))
+      {
+	 int errNum = 0;
+	 int errNumSize = sizeof(errNum);
+	 getsockopt(currConnection->getSocket(), SOL_SOCKET,SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
+	 InfoLog(<< "Exception writing to socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
+	 delete currConnection;
+      }
+   }
+
+   // process the read list
+   mReadIter = mReadHead->begin();
+   ConnectionReadList::iterator readIterNext = mReadIter;
+   for (++readIterNext; mReadIter != mReadHead->end();
+	mReadIter = readIterNext, ++readIterNext)
+   {
+      Connection* currConnection = *mReadIter; 
+      if (!currConnection)
+	 continue;
+
+      if ( fdset.readyToRead(currConnection->getSocket()) ||
+	   currConnection->hasDataToRead() )
+      {
+	 fdset.clear(currConnection->getSocket());
+	 assert(!fdset.readyToRead(currConnection->getSocket()));
+         
+	 std::pair<char*, size_t> writePair = currConnection->getWriteBuffer();
+	 size_t bytesToRead = resipMin(writePair.second, 
+				       static_cast<size_t>(Connection::ChunkSize));
+         
+	 assert(bytesToRead > 0);
+	 int bytesRead = currConnection->read(writePair.first, bytesToRead);
+
+	 DebugLog (<< "ConnectionManager::process() " << *currConnection 
+		   << " bytesToRead=" << bytesToRead << " read=" << bytesRead);            
+	 if (bytesRead > 0) 
+	 {
+	    currConnection->performRead(bytesRead, fifo);
+	 }
+	 else if (bytesRead == -1)
+	 {
+	    DebugLog(<< "Closing connection bytesRead=" << bytesRead);
+	    delete currConnection;
+	 }
+	 else if ( bytesRead != 0 )
+	 {
+	    ErrLog(<< "encounter special error at " << *currConnection
+		   << " bytesToRead=" << bytesToRead << " read=" << bytesRead);
+	    delete currConnection;
+	 }
+      }
+      else if (fdset.hasException(currConnection->getSocket()))
+      {
+	 int errNum = 0;
+	 int errNumSize = sizeof(errNum);
+	 getsockopt(currConnection->getSocket(), SOL_SOCKET,SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
+	 InfoLog (<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
+	 delete currConnection;
+      }
+   }
 }
