@@ -22,11 +22,9 @@ class ConnectionManager
       // !jf! May want to add an interface that returns a Connection* given a Tuple
       Connection* findConnection(const Tuple& tuple);
 
-      // Return 0 if nothing to do
-      Connection* getNextRead();
-      Connection* getNextWrite();
       void buildFdSet(FdSet& fdset);
-      
+      void process(FdSet& fdset, Fifo<TransactionMessage>& fifo);
+
    private:
       void addToWritable(Connection* conn); // add the specified conn to end
       void removeFromWritable(); // remove the current mWriteMark
