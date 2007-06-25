@@ -260,8 +260,6 @@ Connection::requestWrite(SendData* sendData)
 void
 Connection::performWrite()
 {
-   //assert(hasDataToWrite());
-
    assert(!mOutstandingSends.empty());
    const Data& data = mOutstandingSends.front()->data;
    DebugLog (<< "Sending " << data.size() - mSendPos << " bytes");
@@ -286,7 +284,7 @@ Connection::performWrite()
 
          if (mOutstandingSends.empty())
          {
-            getConnectionManager().removeFromWritable();
+            getConnectionManager().removeFromWritable(this);
          }
       }
    }
