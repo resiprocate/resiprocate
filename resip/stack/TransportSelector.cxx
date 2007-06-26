@@ -188,7 +188,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> transport)
    else
    {
       mHasOwnProcessTransports.push_back(transport.release());
-      transport->startOwnProcessing();
+      mHasOwnProcessTransports.back()->startOwnProcessing();
    }
 }
   
