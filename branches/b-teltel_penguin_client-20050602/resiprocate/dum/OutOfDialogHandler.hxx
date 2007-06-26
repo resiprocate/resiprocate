@@ -1,6 +1,7 @@
 #if !defined(RESIP_OutOfDialogHandler_hxx)
 #define RESIP_OutOfDialogHandler_hxx
 #include "resiprocate/dum/Win32ExportDum.hxx"
+#include "resiprocate/dum/Handles.hxx"
 
 namespace resip
 {
@@ -8,6 +9,7 @@ namespace resip
 /** @file OutOfDialogHandler.hxx
  *   @todo This file is empty
  */
+class SipMessage;
 
 class DUM_API OutOfDialogHandler
 {
