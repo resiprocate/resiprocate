@@ -54,7 +54,7 @@ using namespace std;
 
 static const char* PEM = ".pem";
 
-static const Data 
+static const Data& 
 pemTypePrefixes(  Security::PEMType pType )
 {
    static const Data rootCert("root_cert_");
@@ -227,6 +227,11 @@ Security::preload()
             else if (name.prefix(pemTypePrefixes(RootCert)))
             {
                addRootCertPEM(readIntoData(fileName));
+            }
+            else
+            {
+               InfoLog(<<"No matching PEM type: " << fileName );
+               continue;
             }
          }
          catch (...)
