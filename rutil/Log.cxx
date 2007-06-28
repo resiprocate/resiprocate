@@ -145,6 +145,13 @@ Log::setLevel(Level level)
    mLevel = level; 
 }
 
+void
+Log::setLevel(Level level, Subsystem& s)
+{
+   Lock lock(_mutex);
+   s.setLevel(level); 
+}
+
 const static Data log_("LOG_");
 
 Data
@@ -200,15 +207,16 @@ Log::tags(Log::Level level,
           int line,
           ostream& strm) 
 {
-#if defined( __APPLE__ )
-   strm << mDescriptions[level+1] << Log::delim 
-        << time(0) << Log::delim 
-        << mAppName << Log::delim
-        << subsystem << Log::delim
-        << pfile << ":" << line;
-#else   
    char buffer[256];
    Data ts(Data::Borrow, buffer, sizeof(buffer));
+#if defined( __APPLE__ )
+  strm << mDescriptions[level+1] << Log::delim
+        << timestamp(ts) << Log::delim  
+        << mAppName << Log::delim
+        << subsystem << Log::delim 
+        << pthread_self() << Log::delim
+        << pfile << ":" << line;
+#else   
 #if defined( WIN32 )
    const char* file = pfile + strlen(pfile);
    while (file != pfile &&
@@ -229,10 +237,10 @@ Log::tags(Log::Level level,
 #else
    strm << mDescriptions[level+1] << Log::delim
         << timestamp(ts) << Log::delim  
-        << mHostname << Log::delim  
+//        << mHostname << Log::delim  
         << mAppName << Log::delim
         << subsystem << Log::delim 
-        << mPid << Log::delim
+//        << mPid << Log::delim
         << pthread_self() << Log::delim
         << pfile << ":" << line;
 #endif // #if defined( WIN32 ) 

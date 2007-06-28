@@ -83,7 +83,6 @@ Condition::~Condition ()
 #else
    if (pthread_cond_destroy(&mId) == EBUSY)
    {
-      //WarningLog (<< "Condition variable is busy");
       assert(0);
    }
 #endif

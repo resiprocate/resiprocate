@@ -212,6 +212,7 @@ H_PAssertedIdentitys resip::h_PAssertedIdentities;
 defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
 defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
 defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
+defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04");
 
 //====================
 // String:

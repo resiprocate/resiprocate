@@ -85,8 +85,8 @@ COMPILE_SMALL_FLAG = -Os -fno-inline
 
 endif
 
-####################################### GNU ARM cross-compiler for ipaq linux and sharp zaurus ############################
-
+################### GNU ARM cross-compiler for ipaq linux and sharp zaurus #########
+# THIS IS DEPRECATED -- USE gnu-cross INSTEAD
 
 
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),armcross)
@@ -115,7 +115,44 @@ COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
 LD_STATIC       = -Wl,-Bstatic
 LD_DYNAMIC      = -Wl,-Bdynamic
 ARCH		= arm
-CONFIGURE_ARGS	= --target=$(CROSS_PLATFORM) --host=i686-linux
+CONFIGURE_ARGS	+= --host=$(CROSS_PLATFORM)
+DFLAG_INTEGRATED = -MMD
+RANLIB		= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ranlib
+
+Z = $(shell $(CC) -v 2>&1 | perl -ne 'if(/version ([0-9\.]+)/ && ($$1 eq "2.96" || int($$1) > 2) ) {print "1\n";}')
+ifneq ($(Z),1)
+MAKE_SEPARATE_DEPENDENCY = 1
+endif
+endif
+
+############################# GNU cross-compile ##################
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu-cross)
+ifndef VOCAL_CROSS_ROOT
+VOCAL_CROSS_ROOT = /opt/arm-cross/bin
+endif
+ifndef CROSS_PLATFORM
+CROSS_PLATFORM = arm-unknown-linux-gnu
+endif
+
+CC		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-gcc
+CXX		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-g++
+MKSHLIB		:= $(CC) -fPIC -shared 
+DEP		:= $(CXX) 
+LINKER		:= $(CXX) 
+AR		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ar
+ARFLAGS		= rv
+DFLAGS		= -MM
+DMANGLE		=
+INSTALL		= install
+LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+CFLAGS		+= -Wall -fPIC
+CXXFLAGS	+= -Wall -fPIC
+DEBUG_FLAG	= -g
+COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
+LD_STATIC       = -Wl,-Bstatic
+LD_DYNAMIC      = -Wl,-Bdynamic
+CONFIGURE_ARGS	+= --host=$(CROSS_PLATFORM)
 DFLAG_INTEGRATED = -MMD
 RANLIB		= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ranlib
 

@@ -1,5 +1,7 @@
-
-#if !defined(WIN32) && !defined (__sun__)
+#if !defined(WIN32)
+#if defined(__SUNPRO_CC) || defined (__sun__)
+#define BSD_COMP /* !rk! needed to enable SIOCGIFCONF */
+#endif
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -16,9 +18,8 @@
 #include "rutil/Socket.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
-#ifdef WIN32
+#include "rutil/Inserter.hxx"
 #include "rutil/WinCompat.hxx"
-#endif
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
@@ -84,19 +85,25 @@ DnsUtil::lookupARecords(const Data& host)
             break;
       }
       msg += host;
+
+      DebugLog (<< "DNS lookup of " << host << " resulted in " << msg);
       throw Exception("no dns resolution:" + msg, __FILE__, __LINE__);
    }
    else
    {
       assert(result);
       assert(result->h_length == 4);
-      //DebugLog (<< "DNS lookup of " << host << ": canonical name: " << result->h_name);
       char str[256];
       for (char** pptr = result->h_addr_list; *pptr != 0; pptr++)
       {
          inet_ntop(result->h_addrtype, (u_int32_t*)(*pptr), str, sizeof(str));
          names.push_back(str);
       }
+
+      StackLog (<< "DNS lookup of " << host << ": canonical name: " << result->h_name 
+                << " "
+                << Inserter(names));
+      
       return names;
    }
 }
@@ -128,16 +135,21 @@ DnsUtil::getLocalHostName()
    struct hostent* he;
    if ((he = gethostbyname(buffer)) != 0) 
    {
+      // !jf! this should really use the Data class 
       if (strchr(he->h_name, '.') != 0) 
       {
          strncpy(buffer, he->h_name, sizeof(buffer));
       }
       else 
       {
-         WarningLog( << "local hostname does not contain a domain part");
+         InfoLog( << "local hostname does not contain a domain part " << buffer);
       }
    }
-
+   else
+   {
+      InfoLog (<< "Couldn't determine local hostname. Returning empty string");
+   }
+   
    return Data(buffer);
 }
 
@@ -147,25 +159,29 @@ DnsUtil::getLocalDomainName()
 {
    Data lhn(getLocalHostName());
    size_t dpos = lhn.find(".");
-   if (dpos != Data::npos) {
-     return lhn.substr(dpos+1);
+   if (dpos != Data::npos)
+   {
+      return lhn.substr(dpos+1);
    }
-   else {
+   else
+   {
 #if defined( __APPLE__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__)
-     throw Exception("Could not find domainname in local hostname",__FILE__,__LINE__);
+      throw Exception("Could not find domainname in local hostname",__FILE__,__LINE__);
 #else
-     WarningLog( << "using getdomainname, because of missing domainname");
-     char buffer[MAXHOSTNAMELEN];
-     if (int e = getdomainname(buffer,sizeof(buffer)) == -1)
-     {
-       if ( e != 0 )
-       {
-         int err = getErrno();
-         CritLog(<< "Couldn't find domainname: " << strerror(err));
-         throw Exception(strerror(err), __FILE__,__LINE__);
-       }
-     }
-     return Data(buffer);
+      DebugLog( << "No domain portion in hostname <" << lhn << ">, so using getdomainname");
+      char buffer[MAXHOSTNAMELEN];
+      if (int e = getdomainname(buffer,sizeof(buffer)) == -1)
+      {
+         if ( e != 0 )
+         {
+            int err = getErrno();
+            CritLog(<< "Couldn't find domainname: " << strerror(err));
+            throw Exception(strerror(err), __FILE__,__LINE__);
+         }
+      }
+      DebugLog (<< "Found local domain name " << buffer);
+     
+      return Data(buffer);
 #endif
    }
 }
@@ -178,11 +194,12 @@ DnsUtil::getLocalIpAddress(const Data& myInterface)
 
    if (ifs.empty())
    {
-      ErrLog( << "No interfaces matching "  << myInterface << " were found" );
+      WarningLog( << "No interfaces matching "  << myInterface << " were found" );
       throw Exception("No interfaces matching", __FILE__, __LINE__);
    }
    else
    {
+      InfoLog (<< "Local IP address for " << myInterface << " is " << ifs.begin()->second);
       return ifs.begin()->second;
    }
 }
@@ -307,7 +324,9 @@ DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
    int res = DnsUtil::inet_pton(ipV6Address, dst);
    if (res <= 0)
    {
-      WarningLog(<< ipV6Address << " not well formed IPV6 address");
+      // .bwc. Until we supply an isIpV6Address that works, this is not an
+      // error on anyone's part but our own. Don't log as a warning/error.
+      InfoLog(<< ipV6Address << " is not a well formed IPV6 address");
       // .bwc. We should not assert in this function, because 
       // DnsUtil::isIpV6Address does not do a full validity check. If we have no
       // way of determining whether a V6 addr is valid before making this call,
@@ -335,7 +354,7 @@ DnsUtil::getInterfaces(const Data& matching)
 {
    std::list<std::pair<Data,Data> > results;
 
-#if !defined(WIN32) && !defined(__SUNPRO_CC) && !defined (__sun__)
+#if !defined(WIN32)
 
    struct ifconf ifc;
 

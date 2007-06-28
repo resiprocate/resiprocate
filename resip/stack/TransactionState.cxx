@@ -154,6 +154,7 @@ TransactionState::process(TransactionController& controller)
    }
    catch(SipMessage::Exception&)
    {
+      // .bwc This is not our error. Do not ErrLog.
       DebugLog( << "TransactionState::process dropping message with invalid tid " << message->brief());
       delete message;
       return;
@@ -323,25 +324,8 @@ TransactionState::process(TransactionController& controller)
                TransactionState* state = new TransactionState(controller, ServerInvite, Trying, tid, tu);
                state->mMsgToRetransmit = state->make100(sip);
                state->mResponseTarget = sip->getSource(); // UACs source address
-
-               // .bwc. If port is already specified in mResponseTarget, we
-               // will only override it if a port is specified in the Via.
-               // If mResponseTarget does _not_ have a port specified, and
-               // neither does the Via, we go with the default.
-               if(state->mResponseTarget.getPort()==0)
-               {
-                  state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
-               }
-               else
-               {
-                  // .bwc. Do not use the default port if no port is in the Via
-                  unsigned short port=Helper::getPortForReply(*sip,false);
-                  if(port!=0)
-                  {
-                     state->mResponseTarget.setPort(port);
-                  }
-               }
-
+               // since we don't want to reply to the source port if rport present 
+               state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                state->mIsReliable = isReliable(state->mResponseTarget.getType());
                state->add(tid);
                
@@ -382,7 +366,7 @@ TransactionState::process(TransactionController& controller)
             {
                TransactionState* state = new TransactionState(controller, ServerNonInvite,Trying, tid, tu);
                state->mResponseTarget = sip->getSource();
-               // since we don't want to reply to the source port unless rport present 
+               // since we don't want to reply to the source port if rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                state->add(tid);
                state->mIsReliable = isReliable(state->mResponseTarget.getType());
@@ -1374,10 +1358,12 @@ TransactionState::processServerStale(TransactionMessage* msg)
    }
    else
    {
-      ErrLog(<<"ServerStale unexpected condition, dropping message.");
+      // .bwc. This can very easily be triggered by a stupid/malicious 
+      // endpoint. This is not an error in our code. Do not ErrLog this.
+      InfoLog(<<"ServerStale unexpected condition, dropping message.");
       if (sip)
       {
-         ErrLog(<<sip->brief());
+         InfoLog(<<sip->brief());
       }
       delete msg;
    }

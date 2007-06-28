@@ -92,7 +92,7 @@ LocationServer::process(RequestContext& context)
       if(!batch.empty())
       {
          batch.sort(Target::targetPtrCompare);
-         context.getResponseContext().addTargetBatch(batch);
+         context.getResponseContext().addTargetBatch(batch, false /* high priority */, mParallelForkStaticRoutes /* addToFirstBatch */);
          //ResponseContext should be consuming the vector
          assert(batch.empty());
       }

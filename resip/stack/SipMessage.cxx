@@ -589,7 +589,14 @@ SipMessage::encodeBrief(std::ostream& str) const
    if (exists(h_Vias) && !this->header(h_Vias).empty())
    {
       str << tid;
-      str << getTransactionId();
+      try
+      {
+         str << getTransactionId();
+      }
+      catch(SipMessage::Exception&)
+      {
+         str << "BAD-VIA";
+      }
    }
    else
    {
@@ -1125,7 +1132,8 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
       for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
            i != mUnknownHeaders.end(); i++)
       {
-         if (strncasecmp(i->first.data(), headerName, headerLen) == 0)
+         if (i->first.size() == headerLen &&
+             strncasecmp(i->first.data(), headerName, headerLen) == 0)
          {
             // add to end of list
             if (len)
@@ -1432,6 +1440,7 @@ defineHeader(Date, "Date", DateCategory, "RFC 3261");
 defineMultiHeader(Warning, "Warning", WarningCategory, "RFC 3261");
 defineMultiHeader(Via, "Via", Via, "RFC 3261");
 defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
+defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04");
 
 #endif
 

@@ -13,7 +13,7 @@ class QValueTarget : public Target
 {
    public:
       QValueTarget(const resip::ContactInstanceRecord& rec);
-      
+      QValueTarget(const resip::NameAddr& contact, float q);
       virtual ~QValueTarget();
       
       virtual QValueTarget* clone() const;

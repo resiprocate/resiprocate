@@ -7,7 +7,7 @@
 #include <regex.h>
 #endif
 
-#include <list>
+#include <set>
 
 #include "rutil/Data.hxx"
 #include "rutil/RWMutex.hxx"
@@ -75,10 +75,11 @@ class RouteStore
             Key key;
             regex_t *preq;
             AbstractDb::RouteRecord routeRecord;
+            bool operator<(const RouteOp&) const;
       };
       
       resip::RWMutex mMutex;
-      typedef std::list<RouteOp> RouteOpList;
+      typedef std::multiset<RouteOp> RouteOpList;
       RouteOpList mRouteOperators; 
       RouteOpList::iterator mCursor;
 };

@@ -111,5 +111,6 @@ service-route, Headers::ServiceRoute
 session-expires, Headers::SessionExpires
 min-se, Headers::MinSE
 refer-sub, Headers::ReferSub
+remote-party-id, Headers::RemotePartyId
 %%
 }

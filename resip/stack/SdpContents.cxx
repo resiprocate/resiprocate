@@ -160,11 +160,11 @@ SdpContents::SdpContents(HeaderFieldValue* hfv, const Mime& contentTypes)
 {
 }
 
-SdpContents::SdpContents(const SdpContents& rhs)
-   : Contents(rhs),
-     mSession(rhs.mSession)
-{
-}
+//SdpContents::SdpContents(const SdpContents& rhs)
+//   : Contents(rhs),
+//     mSession(rhs.mSession)
+//{
+//}
 
 SdpContents::~SdpContents()
 {

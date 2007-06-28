@@ -128,7 +128,7 @@ class FdSet
       {
 		  assert( FD_SETSIZE >= 8 );
 #ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
-         assert( fd < FD_SETSIZE ); // redefineing FD_SETSIZE will not work 
+         assert( fd < (int)FD_SETSIZE ); // redefineing FD_SETSIZE will not work 
 #endif
          FD_SET(fd, &read);
          size = ( int(fd+1) > size) ? int(fd+1) : size;
@@ -137,7 +137,7 @@ class FdSet
       void setWrite(Socket fd)
       {
 #ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
-		  assert( fd < FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
+		  assert( fd < (int)FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
 #endif
          FD_SET(fd, &write);
          size = ( int(fd+1) > size) ? int(fd+1) : size;
@@ -146,7 +146,7 @@ class FdSet
       void setExcept(Socket fd)
       {
 #       if !defined(WIN32)
-          assert( fd < FD_SETSIZE );
+          assert( fd < (int)FD_SETSIZE );
 #       endif
 
           FD_SET(fd,&except);

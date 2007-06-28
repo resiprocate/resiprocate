@@ -38,6 +38,8 @@ USE_GOOGLE_MALLOC := no
 USE_GOOGLE_CPUPERF := no
 USE_IPV6 := no
 DB_HEADERS := /usr/include/db4
+POPT_LIBDIR_CONFIG := /usr/lib
+POPT_INCDIR_CONFIG := /usr/include
 RESIP_FIXED_POINT := no
 PEDANTIC_STACK := no
 INSTALL_PREFIX := /usr/local
@@ -70,7 +72,7 @@ $non_interactive = 0;
 $uname = `uname`;
 
 @yesno = ('yes','no');
-@toolchains = ('gnu','intel','armcross','sunpro','msgnu');
+@toolchains = ('gnu','intel','sunpro','msgnu', 'gnu-cross');
 @compiletypes = ('debug','nodebug','opt','gopt','prof','small');
 
 ######################################################################
@@ -219,6 +221,18 @@ $uname = `uname`;
     description => "Where is db_cxx.h?",
     default     => &findDb4,
     option      => "db4-headers",
+  },
+  {
+    name        => "POPT_INCDIR_CONFIG",
+    description => "Where is popt.h?",
+    default     => &findPoptInclude,
+    option      => "popt-headers",
+  },
+  {
+    name        => "POPT_LIBDIR_CONFIG",
+    description => "Where is libpopt?",
+    default     => &findPoptLib,
+    option      => "popt-lib",
   },
   {
     name	=> "RESIP_FIXED_POINT",
@@ -485,6 +499,62 @@ sub findDb4
   foreach $candidate (@candidates)
   {
     if (-e "${candidate}/db_cxx.h")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
+}
+
+sub findPoptInclude
+{
+  if ($uname =~ /MinGW/i)
+  {
+    return "\$\(ROOT\)/contrib/popt/win32/include";
+  }
+
+  my (@candidates) = 
+  (
+    '/usr/include',
+    '/usr/local/include',
+    '/include',
+    '/opt/popt/include',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/popt.h")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
+}
+
+sub findPoptLib
+{
+  if ($uname =~ /MinGW/i)
+  {
+    return "\$\(ROOT\)/contrib/popt/win32/lib";
+  }
+
+  my (@candidates) = 
+  (
+    '/usr/lib',
+    '/usr/local/lib',
+    '/lib',
+    '/opt/popt/lib',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/libpopt.a" ||
+        -e "${candidate}/libpopt.so" ||
+        -e "${candidate}/libpopt.dylib")
     {
       return $candidate;
     }

@@ -257,7 +257,15 @@ Proxy::thread()
                      }
                      else
                      {
-                        ErrLog(<<"Got a new request with an already existing transaction ID. Ignoring. (Is this the stack's fault maybe?)");
+                        InfoLog(<<"Got a new non-ACK request "
+                        "with an already existing transaction ID. This can "
+                        "happen if a new request collides with a previously "
+                        "received ACK/200.");
+                        SipMessage response;
+                        Helper::makeResponse(response,*sip,400,"Transaction-id "
+                                                         "collision");
+                        mStack.send(response,this);
+                        delete sip;
                      }
                   }
                }

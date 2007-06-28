@@ -15,6 +15,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+bool RouteStore::RouteOp::operator<(const RouteOp& rhs) const
+{
+   return routeRecord.mOrder < rhs.routeRecord.mOrder;
+}
+
 
 RouteStore::RouteStore(AbstractDb& db):
    mDb(db)
@@ -44,7 +49,7 @@ RouteStore::RouteStore(AbstractDb& db):
         }
       }
 
-      mRouteOperators.push_back( route ); 
+      mRouteOperators.insert( route );
 
       key = mDb.nextRouteKey();
    } 
@@ -60,7 +65,10 @@ RouteStore::~RouteStore()
       {
          regfree ( i->preq );
          delete i->preq;
-         i->preq = 0;
+
+         // !abr! Can't modify elements in a set
+         // i->preq = 0;
+
       }
    }
    mRouteOperators.clear();
@@ -105,7 +113,7 @@ RouteStore::addRoute(const resip::Data& method,
 
    {
       Lock lock(mMutex, VOCAL_WRITELOCK);
-      mRouteOperators.push_back( route ); 
+      mRouteOperators.insert( route );
    }
 
    mDb.addRoute( key , route.routeRecord );
@@ -164,7 +172,10 @@ RouteStore::eraseRoute(const resip::Data& key )
             {
                regfree ( i->preq );
                delete i->preq;
-               i->preq = 0;
+
+               // !abr! Can't modify elements in a set
+               //i->preq = 0;
+
             }
             mRouteOperators.erase(i);
          }
@@ -328,7 +339,7 @@ RouteStore::process(const resip::Uri& ruri,
                 << " method=" << method 
                 << " event=" << event );
 
-      AbstractDb::RouteRecord& rec = it->routeRecord;
+      const AbstractDb::RouteRecord& rec = it->routeRecord;
       
       if ( !rec.mMethod.empty() )
       {
@@ -347,8 +358,8 @@ RouteStore::process(const resip::Uri& ruri,
             continue;
          }
       }
-      Data& rewrite = rec.mRewriteExpression;
-      Data& match = rec.mMatchingPattern;
+      const Data& rewrite = rec.mRewriteExpression;
+      const Data& match = rec.mMatchingPattern;
       if ( it->preq ) 
       {
          int ret;
