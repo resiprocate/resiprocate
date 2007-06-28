@@ -42,7 +42,7 @@ WorkerThread::thread()
          }
          else
          {
-            ErrLog(<<"Stack pointer not set!");
+            //ErrLog(<<"Stack pointer not set!");
          }
 
          delete msg;

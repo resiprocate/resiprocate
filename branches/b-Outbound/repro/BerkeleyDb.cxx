@@ -21,56 +21,43 @@ using namespace std;
 
 BerkeleyDb::BerkeleyDb()
 {
-   char* dbName="repro";
-   InfoLog( << "Using BerkeleyDb " << dbName );
-   sane = true;
-   
-   assert( MaxTable <= 4 );
-   
-   for (int i=0;i<MaxTable;i++)
-   {
-      mDb[i] = new Db( NULL, 0 );
-      assert( mDb[i] );
-      
-      // if the line bellow seems wrong, you need to check which version 
-      // of db you have - it is likely an very out of date version 
-      // still trying to figure this out so email fluffy if you have 
-      // problems and include your version the DB_VERSION_STRING found 
-      // in your db4/db.h file. 
-      Data fileName( dbName );
-      switch (i)
-      {
-         case UserTable:
-            fileName += "_user.db"; break;
-         case RouteTable:
-            fileName += "_route.db"; break;
-         case AclTable:
-            fileName += "_acl.db"; break;
-         case ConfigTable:
-            fileName += "_config.db"; break;
-         default:
-            assert(0);
-      }
-      
-      int ret =mDb[i]->open(NULL,fileName.c_str(),NULL,DB_BTREE,DB_CREATE,0);
-      //int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
-      
-      if ( ret!=0 )
-      {
-         ErrLog( <<"Could not open user database at " << fileName );
-         sane = false;
-         return;
-      }
-      
-      mDb[i]->cursor(NULL,&mCursor[i],0);
-      assert( mCursor );
-   }
-
+   init(Data::Empty, Data::Empty);
 }
 
-BerkeleyDb::BerkeleyDb( char* dbName )
+
+BerkeleyDb::BerkeleyDb( const Data& dbPath, const Data& dbName )
+{
+   init(dbPath, dbName);
+}
+
+
+void
+BerkeleyDb::init( const Data& dbPath, const Data& dbName )
 { 
-   InfoLog( << "Using BerkeleyDb " << dbName );
+   Data filePath(dbPath);
+
+   // An empty path is how you specify the current working directory as a path
+   if ( !filePath.empty() )
+   {
+#ifdef WIN32
+      filePath += '\\';
+#else
+      filePath += '/';
+#endif
+   }
+
+   if ( dbName.empty() )
+   {
+      DebugLog( << "No BerkeleyDb prefix specified - using default" );
+      filePath += "repro";
+   }
+   else
+   {
+      filePath += dbName;
+   }
+
+   InfoLog( << "Using BerkeleyDb prefixed with " << filePath );
+
    sane = true;
    
    assert( MaxTable <= 4 );
@@ -85,7 +72,7 @@ BerkeleyDb::BerkeleyDb( char* dbName )
       // still trying to figure this out so email fluffy if you have 
       // problems and include your version the DB_VERSION_STRING found 
       // in your db4/db.h file. 
-      Data fileName( dbName );
+      Data fileName( filePath );
       switch (i)
       {
          case UserTable:
@@ -100,7 +87,7 @@ BerkeleyDb::BerkeleyDb( char* dbName )
             assert(0);
       }
       
-	  DebugLog( << "About to open Berkeley DB: " << fileName );
+      DebugLog( << "About to open Berkeley DB: " << fileName );
       int ret =mDb[i]->open(NULL,fileName.c_str(),NULL,DB_BTREE,DB_CREATE,0);
       //int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
       
@@ -110,8 +97,7 @@ BerkeleyDb::BerkeleyDb( char* dbName )
          sane = false;
          return;
       }
-	  DebugLog( << "Opened Berkeley DB: " << fileName );
-
+      DebugLog( << "Opened Berkeley DB: " << fileName );
       
       mDb[i]->cursor(NULL,&mCursor[i],0);
       assert( mCursor );

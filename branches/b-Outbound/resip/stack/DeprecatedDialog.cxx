@@ -467,6 +467,14 @@ DeprecatedDialog::makeInvite()
    return request;
 }
 
+SipMessage*
+DeprecatedDialog::makeUpdate()
+{
+   SipMessage* request = makeRequestInternal(UPDATE);
+   incrementCSeq(*request);
+   DebugLog(<< "DeprecatedDialog::makeUpdate: " << *request);
+   return request;
+}
 
 SipMessage*
 DeprecatedDialog::makeRegister()
@@ -476,7 +484,6 @@ DeprecatedDialog::makeRegister()
    DebugLog(<< "DeprecatedDialog::makeRegister: " << *request);
    return request;
 }
-
 
 SipMessage*
 DeprecatedDialog::makeSubscribe()

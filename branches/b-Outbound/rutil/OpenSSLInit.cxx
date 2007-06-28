@@ -33,15 +33,7 @@ OpenSSLInit::init()
 
 OpenSSLInit::OpenSSLInit()
 {
-	//cerr << "OpenSSLInit::init() invoked" << endl;
-
-	//#if defined(THREADS)
 	int locks = CRYPTO_num_locks();
-	//		ErrLog(<< "Creating " << locks << " locks for OpenSSL");
-	//for(int i=0; i < locks; i++)
-	//{
-	//	OpenSSLInit::mMutexes.push_back(new Mutex());
-	//}
 	mMutexes = new Mutex[locks];
 	CRYPTO_set_locking_callback(OpenSSLInit::lockingFunction);
 #if !defined(WIN32) && defined(PTHREADS)
@@ -53,13 +45,10 @@ OpenSSLInit::OpenSSLInit()
 	CRYPTO_set_dynlock_destroy_callback(OpenSSLInit::dynDestroyFunction);
 	CRYPTO_set_dynlock_lock_callback(OpenSSLInit::dynLockFunction);
 #endif
-	//#endif
 
-#if 1
 	CRYPTO_malloc_debug_init();
 	CRYPTO_set_mem_debug_options(V_CRYPTO_MDEBUG_ALL);
 	CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
-#endif
 
 	SSL_library_init();
 	SSL_load_error_strings();
@@ -69,20 +58,14 @@ OpenSSLInit::OpenSSLInit()
 
 OpenSSLInit::~OpenSSLInit()
 {
-	// Clean up data allocated during SSL_load_error_strings
-	ERR_free_strings();
-
-	// free thread error queue
-	ERR_remove_state(0);
-
+	ERR_free_strings();// Clean up data allocated during SSL_load_error_strings
+	ERR_remove_state(0);// free thread error queue
 	CRYPTO_cleanup_all_ex_data();
+	EVP_cleanup();// Clean up data allocated during OpenSSL_add_all_algorithms
 
-	// Clean up data allocated during OpenSSL_add_all_algorithms
-	EVP_cleanup();
-
-#if 1
-	CRYPTO_mem_leaks_fp(stderr);
-#endif
+    //!dcm! We know we have a leak; see BaseSecurity::~BaseSecurity for
+    //!details.
+//	CRYPTO_mem_leaks_fp(stderr);
 
 	delete [] mMutexes;
 }
@@ -120,7 +103,6 @@ CRYPTO_dynlock_value*
 OpenSSLInit::dynCreateFunction(char* file, int line)
 {
    CRYPTO_dynlock_value* dynLock = new CRYPTO_dynlock_value;
-   ErrLog(<< "OpenSSLInit::dynCreateFunction: " << file << "::" << line << " DynLock: " << dynLock);
    dynLock->mutex = new Mutex;
    return dynLock;   
 }
@@ -128,7 +110,6 @@ OpenSSLInit::dynCreateFunction(char* file, int line)
 void
 OpenSSLInit::dynDestroyFunction(CRYPTO_dynlock_value* dynlock, const char* file, int line)
 {
-   ErrLog(<< "OpenSSLInit::dynDestroyFunction: " << file << "::" << line << " DynLock: " << dynlock);
    delete dynlock->mutex;
    delete dynlock;
 }
@@ -136,7 +117,6 @@ OpenSSLInit::dynDestroyFunction(CRYPTO_dynlock_value* dynlock, const char* file,
 void 
 OpenSSLInit::dynLockFunction(int mode, struct CRYPTO_dynlock_value* dynlock, const char* file, int line)
 {
-   ErrLog(<< "OpenSSLInit::dynlockFunction: " << file << "::" << line << " Lock " << dynlock << " Mode: " << mode);
    if (mode & CRYPTO_LOCK)
    {
       dynlock->mutex->lock();

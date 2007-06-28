@@ -25,9 +25,11 @@ using namespace std;
 DigestAuthenticator::DigestAuthenticator( UserStore& userStore, 
                                           resip::SipStack* stack, 
                                           bool noIdentityHeaders, 
-                                          int httpPort) :
+                                          int httpPort,
+                                          bool useAuthInt) :
             mNoIdentityHeaders(noIdentityHeaders),
-            mHttpPort(httpPort)
+            mHttpPort(httpPort),
+            mUseAuthInt(useAuthInt)
 {
    std::auto_ptr<Worker> grabber(new UserAuthGrabber(userStore));
    mAuthRequestDispatcher= new Dispatcher(grabber,stack);
@@ -289,7 +291,7 @@ DigestAuthenticator::challengeRequest(repro::RequestContext &rc,
    Data realm = getRealm(rc);
 
    SipMessage *challenge = Helper::makeProxyChallenge(sipMessage, realm, 
-                                                      true /*auth-int*/, stale);
+                                                      mUseAuthInt /*auth-int*/, stale);
    rc.sendResponse(*challenge);
    delete challenge;
 }

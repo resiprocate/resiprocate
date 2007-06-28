@@ -77,6 +77,18 @@
 #             directory.
 
 
+# Cross compilation setup -- armcross is deprecated; use gnu-cross instead.
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),armcross)
+ARCH = arm
+OSTYPE = Linux
+endif
+
+ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu-cross)
+ARCH            := $(shell echo '$(CROSS_PLATFORM)' | sed 's/-.*//')
+OSTYPE          := $(shell echo '$(CROSS_PLATFORM)' | cut -f3- -d-)
+endif
+
+# Detect and normalize the OSTYPE
 ifndef OSTYPE
 OSTYPE = $(shell uname)
 endif
@@ -177,10 +189,8 @@ ifeq ("$(OSTYPE)","msys")
 override OSTYPE := MinGW
 endif
 
-ifeq ($(VOCAL_TOOLCHAIN_TYPE),armcross)
-ARCH = arm
-endif
 
+# If we can't figure the architecture out, ask uname
 ifndef ARCH
 ARCH = $(shell uname -m| sed 's/ /_/g')
 endif
@@ -211,3 +221,6 @@ endif
 
 ROOT = $(BUILD)/..
 TOOLS = $(ROOT)/build
+
+show.%:
+	@echo $(*)=$($(*))

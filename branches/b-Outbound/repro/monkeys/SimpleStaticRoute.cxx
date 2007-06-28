@@ -43,7 +43,7 @@ SimpleStaticRoute::process(RequestContext& context)
          replace.push_back(*i);
       }
       request.header(h_Routes) = replace;
-      context.addTarget(NameAddr(uri));
+      context.getResponseContext().addTarget(NameAddr(uri));
       
       InfoLog (<< "New route set is " << Inserter(request.header(h_Routes)));
    }

@@ -54,8 +54,17 @@ ResponseContext::~ResponseContext()
    mCandidateTransactionMap.clear();
 }
 
+resip::Data
+ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately, bool addToFirstBatch)
+{
+   InfoLog (<< "Adding candidate " << addr);
+   repro::Target target(addr);
+   addTarget(target, beginImmediately, addToFirstBatch);
+   return target.tid();
+}
+
 bool
-ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
+ResponseContext::addTarget(repro::Target& target, bool beginImmediately, bool addToFirstBatch)
 {
    if(mRequestContext.mHaveSentFinalResponse)
    {
@@ -91,9 +100,16 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
    {
       if(target.mShouldAutoProcess)
       {
-         std::list<resip::Data> queue;
-         queue.push_back(target.tid());
-         mTransactionQueueCollection.push_back(queue);
+         if(addToFirstBatch && !mTransactionQueueCollection.empty())
+         {
+            mTransactionQueueCollection.front().push_back(target.tid());
+         }
+         else
+         {
+            std::list<resip::Data> queue;
+            queue.push_back(target.tid());
+            mTransactionQueueCollection.push_back(queue);
+         }
       }
 
       mCandidateTransactionMap[target.tid()]=target.clone();
@@ -104,7 +120,8 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately)
 
 bool
 ResponseContext::addTargetBatch(std::list<Target*>& targets,
-                                 bool highPriority)
+                                 bool highPriority,
+                                 bool addToFirstBatch)
 {
    std::list<resip::Data> queue;
    Target* target=0;
@@ -145,13 +162,27 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
 
    targets.clear();
    
-   if(highPriority)
+   if(addToFirstBatch)
    {
-      mTransactionQueueCollection.push_front(queue);
+      if(!mTransactionQueueCollection.empty())
+      {
+         mTransactionQueueCollection.front().merge(queue);
+      }
+      else
+      {
+         mTransactionQueueCollection.push_back(queue);
+      }
    }
    else
    {
-      mTransactionQueueCollection.push_back(queue);
+      if(highPriority)
+      {
+         mTransactionQueueCollection.push_front(queue);
+      }
+      else
+      {
+         mTransactionQueueCollection.push_back(queue);
+      }
    }
    
    return true;
@@ -830,16 +861,6 @@ ResponseContext::processResponse(SipMessage& response)
          
          return;
       }
-      
-      if (!via.exists(p_branch) || !via.param(p_branch).hasMagicCookie())
-      {
-         DebugLog(<<"Some endpoint has corrupted one of our Vias"
-            " in their response. (branch param is either missing, or doesn't "
-            "have the magic cookie) We remember our transaction ID, so we can "
-            "repair it.");
-         response.header(h_Vias).front().param(p_branch)=
-            mRequestContext.mOriginalRequest->header(h_Vias).front().param(p_branch);
-      }
    }
    
    InfoLog (<< "Search for " << mCurrentResponseTid << " in " << Inserter(mActiveTransactionMap));
@@ -879,20 +900,24 @@ ResponseContext::processResponse(SipMessage& response)
    {
       case 1:
          mRequestContext.updateTimerC();
-
+         
+         // .bwc. We need to send CANCEL regardless of whether we have sent
+         // back a final response.
+         if (target->status() == Target::WaitingToCancel)
+         {
+            DebugLog(<< "Canceling a transaction with uri: " 
+                     << resip::Data::from(target->uri()) << " , to host: " 
+                     << target->via().sentHost());
+            target->status() = Target::ReadyToCancel;
+            cancelClientTransaction(target);
+         }
+         
          if  (!mRequestContext.mHaveSentFinalResponse)
          {
-            if (target->status() == Target::WaitingToCancel)
-            {
-               DebugLog(<< "Canceling a transaction with uri: " 
-                        << resip::Data::from(target->uri()) << " , to host: " 
-                        << target->via().sentHost());
-               cancelClientTransaction(target);
-            } 
-            else if (target->status() == Target::Trying)
+            if (target->status() == Target::Trying)
             {
                target->status() = Target::Proceeding;
-            }            
+            }
             
             if (code == 100)
             {
@@ -1034,7 +1059,7 @@ void
 ResponseContext::cancelClientTransaction(repro::Target* target)
 {
    if (target->status() == Target::Proceeding || 
-         target->status() == Target::WaitingToCancel)
+         target->status() == Target::ReadyToCancel)
    {
       InfoLog (<< "Cancel client transaction: " << target);
       
@@ -1259,18 +1284,16 @@ ResponseContext::forwardBestResponse()
    }
    
    
-   if(mBestResponse.header(h_StatusLine).statusCode() == 503)
+   if(mBestResponse.header(h_StatusLine).statusCode() == 503 ||
+      (mBestResponse.header(h_StatusLine).statusCode() == 408 &&
+      mBestResponse.method()!=INVITE))
    {
       //See RFC 3261 sec 16.7, page 110, paragraph 2
       mBestResponse.header(h_StatusLine).statusCode() = 480;
-      mRequestContext.sendResponse(mBestResponse);
    }
-   else if (mBestResponse.header(h_StatusLine).statusCode() != 408 ||
-            mRequestContext.getOriginalRequest().method() == INVITE)
-   {
-      // don't forward 408 to Non-INVITE Transactions (NITs)
-      mRequestContext.sendResponse(mBestResponse);
-   }
+
+   mRequestContext.sendResponse(mBestResponse);
+
 }   
 
 

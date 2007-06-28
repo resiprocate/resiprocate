@@ -24,13 +24,20 @@ TestProxy::TestProxy(const Data& name,
    mProxyUrl.uri().host() = host;
    mProxyUrl.uri().port() = mPort;
 
-   Source s(resip::DnsUtil::getLocalIpAddress(), mPort, UDP);
-   addSource(s);
-   Source s2(resip::DnsUtil::getLocalIpAddress(), mPort, TCP);
-   addSource(s2);
-   Source s3(resip::DnsUtil::getLocalIpAddress(), mPort, TLS);
-   addSource(s2);
-
+   try //throws if only loopback is available
+   {
+      Source s(resip::DnsUtil::getLocalIpAddress(), mPort, UDP);
+      addSource(s);
+      Source s2(resip::DnsUtil::getLocalIpAddress(), mPort, TCP);
+      addSource(s2);
+      Source s3(resip::DnsUtil::getLocalIpAddress(), mPort, TLS);
+      addSource(s2);
+   }
+   catch (resip::DnsUtil::Exception& e)
+   {
+      DebugLog(<<"No external address found:" << e);
+   }
+   
    // .dlb. other ethi
    for (int i = 1; i < 11; ++i)
    {

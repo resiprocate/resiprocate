@@ -25,7 +25,8 @@ class ReproServerAuthManager: public resip::ServerAuthManager
    public:
       ReproServerAuthManager(resip::DialogUsageManager& dum, 
                              UserStore& userDb, 
-                             AclStore& aclDb);
+                             AclStore& aclDb,
+                             bool useAuthInt);
       
       ~ReproServerAuthManager();
       
@@ -44,6 +45,7 @@ class ReproServerAuthManager: public resip::ServerAuthManager
       resip::DialogUsageManager& mDum;
       UserStore& mUserDb;
       AclStore&  mAclDb;
+      bool mUseAuthInt;
 };
 
  

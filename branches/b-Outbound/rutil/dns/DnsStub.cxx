@@ -1,7 +1,3 @@
-#if defined(HAVE_CONFIG_H)
-#include "rutil/config.hxx"
-#endif
-
 //	WINCE -- stl headers have to be defined before standard c headers because of 
 //	MS non-consistent declaration of time_t. we defined _USE_32BIT_TIME_T
 //	in all projects and that solved the issue with beta compiler, however 
@@ -30,6 +26,7 @@
 #include "rutil/dns/DnsStub.hxx"
 #include "rutil/dns/ExternalDns.hxx"
 #include "rutil/dns/ExternalDnsFactory.hxx"
+#include "rutil/dns/QueryTypes.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
@@ -43,6 +40,38 @@ DnsStub::NameserverList DnsStub::EmptyNameserverList;
 int DnsStub::mDnsTimeout = 0;
 int DnsStub::mDnsTries = 0;
 
+void
+DnsResultSink::onLogDnsResult(const DNSResult<DnsHostRecord>& rr)
+{
+   DebugLog (<< rr);
+}
+
+#if defined(USE_IPV6)
+void
+DnsResultSink::onLogDnsResult(const DNSResult<DnsAAAARecord>& rr)
+{
+   DebugLog (<< rr);
+}
+#endif
+
+void
+DnsResultSink::onLogDnsResult(const DNSResult<DnsSrvRecord>& rr)
+{
+   DebugLog (<< rr);
+}
+
+void
+DnsResultSink::onLogDnsResult(const DNSResult<DnsNaptrRecord>& rr)
+{
+   DebugLog (<< rr);
+}
+
+void
+DnsResultSink::onLogDnsResult(const DNSResult<DnsCnameRecord>& rr)
+{
+   DebugLog (<< rr);
+}
+
 DnsStub::DnsStub(const NameserverList& additional,
                  AfterSocketCreationFuncPtr socketFunc) :
    mTransform(0),
@@ -53,15 +82,15 @@ DnsStub::DnsStub(const NameserverList& additional,
    {
       if (retCode == ExternalDns::BuildMismatch)
       {
+         assert(0);
          throw DnsStubException("Library was not build w/ required capabilities(probably USE_IPV6 resip/ares mismatch", 
                                 __FILE__,__LINE__);
       }
       
-      ErrLog (<< "Failed to initialize async dns library");
-      char* errmem = mDnsProvider->errorMessage(retCode);
-      ErrLog (<< errmem);
-      delete errmem;
-      throw DnsStubException("Failed to initialize async dns library", __FILE__,__LINE__);
+      Data err(Data::Take, mDnsProvider->errorMessage(retCode));
+      ErrLog (<< "Failed to initialize async dns library: " << err);
+      
+      throw DnsStubException("Failed to initialize async dns library " + err, __FILE__,__LINE__);
    }
 }
 
@@ -177,11 +206,8 @@ void DnsStub::cacheTTL(const Data& key,
    if (nscount == 0) return;
    vector<RROverlay> soa;
    aptr = createOverlay(abuf, alen, aptr, soa);
-   if (soa.empty())
-   {
-      DebugLog(<< "no TTL to cache");
-      return;
-   }
+   assert (!soa.empty());
+
    RRCache::instance()->cacheTTL(key, rrType, status, soa[0]);
 }
 
@@ -310,11 +336,43 @@ DnsStub::Query::~Query()
    delete mResultConverter; //.dcm. flyweight?
 }
 
+static Data 
+typeToData(int rr)
+{
+   // !dcm! fix this
+   if (rr == RR_A::getRRType())
+   {
+      return RR_A::getRRTypeName();
+   }
+#if defined(USE_IPV6)
+   else if(rr == RR_AAAA::getRRType())
+   {
+      return RR_AAAA::getRRTypeName();
+   }
+#endif
+   else if (rr ==RR_NAPTR::getRRType())
+   {
+      return RR_NAPTR::getRRTypeName();
+   }
+   else if(rr == RR_SRV::getRRType())
+   {
+      return RR_SRV::getRRTypeName();
+   }
+   else if (RR_CNAME::getRRType())
+   {
+      return RR_CNAME::getRRTypeName();
+   }
+   else
+   {
+      return "Unknown";
+   }
+}
 
 void 
 DnsStub::Query::go()
 {
-   StackLog(<< "DnsStub::Query::go: " << mTarget << " type(enum): " << mRRType << " proto: " << mProto);   
+   StackLog(<< "DNS query of:" << mTarget << " " << typeToData(mRRType));
+
    DnsResourceRecordsByPtr records;
    int status = 0;
    bool cached = false;
@@ -339,20 +397,23 @@ DnsStub::Query::go()
 
    if (targetToQuery != mTarget)
    {
+      StackLog(<< mTarget << " mapped to CNAME " << targetToQuery);
       cached = RRCache::instance()->lookup(targetToQuery, mRRType, mProto, records, status);
    }
    
    if (!cached)
    {
+      StackLog (<< mTarget << " not cached. Doing external dns lookup");
       mStub.lookupRecords(targetToQuery, mRRType, this);
    }
-   else
+   else // is cached
    {
       if (mTransform && !records.empty())
       {
          mTransform->transform(targetToQuery, mRRType, records);
       }
       mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), records, mSink); 
+
       mStub.removeQuery(this);
       delete this;
    }
@@ -363,17 +424,35 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
 {
    if (status != 0)
    {
-      if (status == 4 || status == 1) // domain name not found or no answer.
+      switch (status)
       {
-         try
-         {
-            mStub.cacheTTL(mTarget, mRRType, status, abuf, alen);
-         }
-         catch (BaseException& e)
-         {
-            ErrLog(<< e.getMessage() << endl);
-         }
+         case ARES_ENODATA:
+         case ARES_EFORMERR:
+         case ARES_ESERVFAIL:
+         case ARES_ENOTFOUND:
+         case ARES_ENOTIMP:
+         case ARES_EREFUSED:
+            try
+            {
+               mStub.cacheTTL(mTarget, mRRType, status, abuf, alen);
+            }
+            catch (BaseException& e)
+            {
+               // if the response isn't parsable, we might want to consider caching
+               // TTL anyways to delay the query attempt for this record. 
+               ErrLog(<< "Couldn't parse failure response to lookup for " << mTarget);
+               InfoLog(<< e.getMessage());
+            }
+            break;
+
+         default:
+            ErrLog (<< "Unknown error " << mStub.errorMessage(status) << " for " << mTarget);
+            assert(0);
+            break;
       }
+
+      // For other error status values, we may also want to cacheTTL to delay
+      // requeries. Especially if the server refuses. 
       mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), Empty, mSink);
       mReQuery = 0;
       mStub.removeQuery(this);
@@ -395,7 +474,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
       }
       catch (BaseException& e)
       {
-         ErrLog(<< e.getMessage() << endl);
+         ErrLog(<< "Error parsing DNS record for " << mTarget << ": " << e.getMessage());
          mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink); 
          mStub.removeQuery(this);
          delete this;
@@ -419,8 +498,13 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          mReQuery = 0;
          DnsResourceRecordsByPtr result;
          int queryStatus = 0;
+
+         if (mTarget != targetToQuery) DebugLog (<< mTarget << " mapped to " << targetToQuery << " and returned result");
          RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, queryStatus);
-         if (mTransform) mTransform->transform(targetToQuery, mRRType, result);
+         if (mTransform) 
+         {
+            mTransform->transform(targetToQuery, mRRType, result);
+         }
          mResultConverter->notifyUser(mTarget, queryStatus, mStub.errorMessage(queryStatus), result, mSink);
       }
    }
@@ -449,7 +533,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
 
    if (ARES_SUCCESS != ares_expand_name(aptr, abuf, alen, &name, &len))
    {
-      ErrLog(<< "Failed DNS preparse"  << endl);
+      ErrLog(<< "Failed DNS preparse for " << targetToQuery);
       mResultConverter->notifyUser(mTarget, ARES_EFORMERR, "Failed DNS preparse", Empty, mSink); 
       bGotAnswers = false;
       return;
@@ -464,7 +548,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
    }
    catch (BaseException& e)
    {
-      ErrLog(<< e.getMessage() << endl);
+      ErrLog(<< "Failed to cache result for " << targetToQuery << ": " << e.getMessage());
       mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink); 
       bGotAnswers = false;
       return;

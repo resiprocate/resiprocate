@@ -221,6 +221,9 @@
 				RelativePath=".\dns\DnsNaptrRecord.cxx">
 			</File>
 			<File
+				RelativePath=".\dns\DnsResourceRecord.cxx">
+			</File>
+			<File
 				RelativePath=".\dns\DnsSrvRecord.cxx">
 			</File>
 			<File

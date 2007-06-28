@@ -24,6 +24,7 @@ class Target
          Trying, //Transaction has started, no responses yet
          Proceeding, //Transaction has received 1xx
          WaitingToCancel, //Transaction should be cancelled when a 1xx comes in
+         ReadyToCancel, //Transaction mas been marked for cancel, 1xx has come in, but it is not quite cancelled yet.
          Cancelled, //Transaction has been cancelled, but no final response yet
          Terminated, //Transaction has received a final response
          NonExistent //The state of transactions that do not exist

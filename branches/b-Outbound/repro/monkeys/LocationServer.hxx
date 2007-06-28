@@ -9,8 +9,8 @@ namespace repro
   class LocationServer: public Processor
   {
     public:
-      LocationServer(resip::RegistrationPersistenceManager& store)
-       :mStore(store){};
+      LocationServer(resip::RegistrationPersistenceManager& store, bool parallelForkStaticRoutes)
+       :mStore(store),mParallelForkStaticRoutes(parallelForkStaticRoutes){};
 
       virtual ~LocationServer(){};
 
@@ -19,6 +19,7 @@ namespace repro
 
     private:
       resip::RegistrationPersistenceManager& mStore;
+      bool mParallelForkStaticRoutes;
   };
 }
 #endif

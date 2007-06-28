@@ -228,7 +228,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> tAuto)
    else
    {
       mHasOwnProcessTransports.push_back(transport);
-      transport->startOwnProcessing();
+      mHasOwnProcessTransports.back()->startOwnProcessing();
    }
 }
   

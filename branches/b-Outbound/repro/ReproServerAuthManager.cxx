@@ -14,11 +14,13 @@ using namespace repro;
 
 ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
                                                UserStore& userDb,
-                                               AclStore& aclDb):
+                                               AclStore& aclDb,
+                                               bool useAuthInt):
    ServerAuthManager(dum, dum.dumIncomingTarget()),
    mDum(dum),
    mUserDb(userDb),
-   mAclDb(aclDb)
+   mAclDb(aclDb),
+   mUseAuthInt(useAuthInt)
 {
 }
 
@@ -31,7 +33,7 @@ ReproServerAuthManager::~ReproServerAuthManager()
 bool 
 ReproServerAuthManager::useAuthInt() const
 {
-   return true;
+   return mUseAuthInt;
 }
 
 

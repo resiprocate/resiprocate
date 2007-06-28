@@ -47,6 +47,7 @@ SRC = \
 	dns/DnsCnameRecord.cxx \
 	dns/DnsHostRecord.cxx \
 	dns/DnsNaptrRecord.cxx \
+	dns/DnsResourceRecord.cxx \
 	dns/DnsSrvRecord.cxx \
 	dns/DnsStub.cxx \
 	dns/ExternalDnsFactory.cxx \
