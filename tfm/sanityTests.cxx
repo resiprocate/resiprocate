@@ -1060,7 +1060,7 @@ class TestHolder : public Fixture
                   david->expect(INVITE/180, from(derek), WaitFor180, chain(derek->ok(), derek->pause(25), david->cancel())),
                   And(Sub(david->expect(CANCEL/200, from(proxy), WaitForCommand, derek->noAction())),
                       Sub(david->expect(INVITE/200, contact(derek), WaitForCommand, david->ack()),
-                          derek->expect(ACK, from(proxy), WaitForAck, derek->noAction()))))),
+                          derek->expect(ACK, contact(david), WaitForAck, derek->noAction()))))),
           WaitForEndOfTest);    
       
       ExecuteSequences();  
@@ -1584,7 +1584,7 @@ class TestHolder : public Fixture
          derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
          derek->expect(INVITE/180,from(proxy),WaitForResponse,derek->noAction()),
          derek->expect(INVITE/200,from(proxy),WaitForResponse,derek->ack()),
-         jason->expect(ACK,from(proxy),WaitForCommand,jason->noAction()),
+         jason->expect(ACK,contact(derek),WaitForCommand,jason->noAction()),
          WaitForEndOfTest
       );
       
@@ -4050,7 +4050,7 @@ class TestHolder : public Fixture
                ),
                derek->expect(INVITE/180, from(jason1), WaitFor180, derek->noAction()),
                derek->expect(INVITE/200, from(jason1), WaitForCommand, derek->ack()),
-               jason1->expect(ACK, from(proxy), WaitForAck, jason1->noAction())
+               jason1->expect(ACK, contact(derek), WaitForAck, jason1->noAction())
             )
          ),
          WaitForEndOfTest
@@ -4265,7 +4265,7 @@ class TestHolder : public Fixture
                ),
                derek->expect(INVITE/180,from(jason2),WaitForResponse,jason2->ok()),
                derek->expect(INVITE/200,from(jason2),WaitForResponse,derek->ack()),
-               jason2->expect(ACK,from(proxy),WaitForCommand,chain(derek->pause(2000),derek->bye())),
+               jason2->expect(ACK,contact(derek),WaitForCommand,chain(derek->pause(2000),derek->bye())),
                jason2->expect(BYE,contact(derek),WaitForCommand+2000,jason2->ok()),
                derek->expect(BYE/200,contact(jason2),WaitForResponse,derek->noAction())                  
             )
@@ -4334,7 +4334,7 @@ class TestHolder : public Fixture
                ),
                derek->expect(INVITE/180,from(jason2),WaitForResponse,jason2->ok()),
                derek->expect(INVITE/200,from(jason2),WaitForResponse,derek->ack()),
-               jason2->expect(ACK,from(proxy),WaitForCommand,chain(jason2->pause(2000),jason2->bye())),
+               jason2->expect(ACK,contact(derek),WaitForCommand,chain(jason2->pause(2000),jason2->bye())),
                derek->expect(BYE,contact(jason2),WaitForCommand+2000,derek->ok()),
                jason2->expect(BYE/200,contact(derek),WaitForResponse,jason2->noAction())
             )
@@ -4438,7 +4438,7 @@ class TestHolder : public Fixture
 
                david->expect(INVITE/180,contact(jason),WaitForResponse,david->noAction()),
                david->expect(INVITE/200,contact(jason),WaitForResponse,david->ack()),
-               jason->expect(ACK,from(proxy),WaitForResponse,jason->noAction())
+               jason->expect(ACK,contact(david),WaitForResponse,jason->noAction())
             )
          ),
 
@@ -6945,9 +6945,9 @@ class TestHolder : public Fixture
              ),
             derek->expect(INVITE/183, from(proxy), WaitForResponse, chain(derek->pause(5000), jason->answer())),
             derek->expect(INVITE/200, from(proxy), WaitForResponse+5000, derek->ack()),
-            jason->expect(ACK, from(proxy), WaitForResponse, jason->bye(*derek)),
-            derek->expect(BYE, from(proxy), WaitForResponse, derek->ok()),
-            jason->expect(BYE/200, from(proxy), WaitForResponse, derek->noAction()),
+            jason->expect(ACK, contact(derek), WaitForResponse, jason->bye(*derek)),
+            derek->expect(BYE, contact(jason), WaitForResponse, derek->ok()),
+            jason->expect(BYE/200, contact(derek), WaitForResponse, derek->noAction()),
             WaitForEndOfTest);
          ExecuteSequences();
       }
