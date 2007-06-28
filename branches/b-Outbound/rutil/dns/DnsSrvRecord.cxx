@@ -50,3 +50,10 @@ bool DnsSrvRecord::isSameValue(const Data& value) const
 {
    return value == (mTarget + ":" + Data(mPort));
 }
+
+std::ostream&
+DnsSrvRecord::dump(std::ostream& strm) const
+{
+   strm << mName << " (SRV) --> p=" << mPriority << " w=" << mWeight << " " << mTarget << ":" << mPort;
+   return strm;
+}

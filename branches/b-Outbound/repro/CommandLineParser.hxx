@@ -31,7 +31,9 @@ class CommandLineParser
       std::vector<Data> mInterfaces;
       std::vector<Data> mRouteSet;
       Data mCertPath;
+      Data mDbPath;
       bool mNoChallenge;
+      bool mNoAuthIntChallenge;
       bool mNoWebChallenge;
       bool mNoRegistrar;
       bool mNoIdentityHeaders;
@@ -47,6 +49,7 @@ class CommandLineParser
       int mMsBetweenForkGroups;
       int mMsBeforeCancel;
       bool mAllowBadReg;
+      bool mParallelForkStaticRoutes;
       int mTimerC;
       Data mAdminPassword;
 };

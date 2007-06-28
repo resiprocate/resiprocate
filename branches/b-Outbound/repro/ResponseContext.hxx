@@ -44,6 +44,19 @@ class ResponseContext
       /**
          Adds this Target to the collection of Targets.
          
+         @param target The NameAdder used to form the Target to add.
+
+         @param beginImmediately Whether to immediately start a transaction for this target.
+
+         @returns tid of the newly added target
+         
+         @note Targets are not checked for duplicate uris until an attempt is made to begin them.
+      */
+      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=false, bool addToFirstBatch=false);
+
+      /**
+         Adds this Target to the collection of Targets.
+         
          @param target The Target to add.
 
          @param beginImmediately Whether to immediately start a transaction for this target.
@@ -57,8 +70,8 @@ class ResponseContext
          
          @note Targets are not checked for duplicate uris until an attempt is made to begin them.
       */
-      bool addTarget( repro::Target& target, bool beginImmediately=true);
-      
+      bool addTarget( repro::Target& target, bool beginImmediately=false, bool addToFirstBatch=false);
+
       /**
          Adds a batch of Targets. 
          
@@ -81,7 +94,8 @@ class ResponseContext
          result.
       */
       bool addTargetBatch(std::list<Target*>& targets,
-                           bool highPriority=false);
+                           bool highPriority=false,
+                           bool addToFirstBatch=false);
       
       bool addOutboundBatch(std::map<resip::Data, std::list<Target*> > batch);
       

@@ -11,7 +11,6 @@
 
 #include <set>
 
-#include "rutil/Subsystem.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/HashMap.hxx"
 #include <iostream>
@@ -28,6 +27,7 @@ namespace resip
 {
 
 class ExternalLogger;
+class Subsystem;
 
 class Log
 {
@@ -72,35 +72,35 @@ class Log
       
 
       /**
-	 Implementation for logging macros.
-	 Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__) << ... ;
+         Implementation for logging macros.
+         Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__) << ... ;
       */
       class Guard
       {
-	 public:
-	    /** Remember the logging values and be a a stream to receive
-		the log contents. */
-	    Guard(Level level,
-		  const Subsystem& system,
-		  const char* file,
-		  int line);
+         public:
+            /** Remember the logging values and be a a stream to receive
+                the log contents. */
+            Guard(Level level,
+                  const Subsystem& system,
+                  const char* file,
+                  int line);
 
-	    /** Commit logging */
-	    ~Guard();
+            /** Commit logging */
+            ~Guard();
 
-	    std::ostream& asStream() {return mStream;}
-	    operator std::ostream&() {return mStream;}
+            std::ostream& asStream() {return mStream;}
+            operator std::ostream&() {return mStream;}
 	    
-	 private:
-	    resip::Log::Level mLevel;
-	    resip::Subsystem mSubsystem;
-	    resip::Data::size_type mHeaderLength;
-	    const char* mFile;
-	    int mLine;
-	    char mBuffer[128];
-	    Data mData;
-	    oDataStream mStream;
-	    Guard& operator=(const Guard&);
+         private:
+            resip::Log::Level mLevel;
+            const resip::Subsystem& mSubsystem;
+            resip::Data::size_type mHeaderLength;
+            const char* mFile;
+            int mLine;
+            char mBuffer[128];
+            Data mData;
+            oDataStream mStream;
+            Guard& operator=(const Guard&);
       };
 
       class ThreadSetting
@@ -108,7 +108,7 @@ class Log
          public:
             ThreadSetting()
                : service(-1),
-               level(Err)
+                 level(Err)
             {}
 
             ThreadSetting(int serv, Level l)
@@ -165,6 +165,7 @@ class Log
                              ExternalLogger& logger);
 
       static void setLevel(Level level);
+      static void setLevel(Level level, Subsystem& s);
       static Level level() { return mLevel; }
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
@@ -216,7 +217,7 @@ class ExternalLogger
                               const char* file,
                               int line,
                               const Data& message,
-			      const Data& messageWithHeaders) = 0;
+                              const Data& messageWithHeaders) = 0;
 };
 
 }

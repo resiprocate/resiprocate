@@ -75,6 +75,7 @@ class DnsNaptrRecord : public DnsResourceRecord
       const Data& replacement() const { return mReplacement; }
       const Data& name() const { return mName; }
       bool isSameValue(const Data& value) const;
+      std::ostream& dump(std::ostream& strm) const;
       
    private:
       int mOrder;

@@ -21,7 +21,13 @@ QValueTarget::QValueTarget(const resip::ContactInstanceRecord& rec)
       }
    }
 }
-   
+
+QValueTarget::QValueTarget(const resip::NameAddr& contact, float q) :
+   Target(contact)
+{
+   mPriorityMetric=q;
+}
+
 QValueTarget::~QValueTarget(){}
 
 QValueTarget* 

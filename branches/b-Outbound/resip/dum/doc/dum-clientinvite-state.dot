@@ -58,9 +58,9 @@ digraph UAC {
     EarlyWithAnswer -> Assert               [ label = "dum::provideAnswer/assert(0)" ];
 
     SentUpdateEarly -> EarlyWithAnswer      [ label = "on200U/app::onAnswer" ];
-    SentUpdateEarly -> EarlyWithAnswer      [ label = "onUPDATE/489glare" ];
-    SentUpdateEarly -> EarlyWithAnswer      [ label = "on489/glare" ];
-    SentUpdateEarly -> SentUpdateConnected  [ label = "on2xxI/send::ACK" ];
+    SentUpdateEarly -> SentUpdateEarly      [ label = "onUPDATE/send::491" ];
+    SentUpdateEarly -> SentUpdateEarlyGlare      [ label = "on491"/timer::491"  ];
+    SentUpdateEarly -> SentUpdate           [ label = "on2xxI/send::ACK" ]; //from connected state machine
     SentUpdateEarly -> Canceled             [ label = "dum::cancel/timer::cancel" ];
     SentUpdateEarly -> Assert               [ label = "dum::provideAnswer/assert(0)" ];
     SentUpdateEarly -> Assert               [ label = "dum::provideOffer/assert(0)" ];
@@ -68,13 +68,10 @@ digraph UAC {
     SendUpdateEarly -> Terminated           [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     SentUpdateEarly -> Terminated           [ label = "dum::end/send::BYE,app::onTerminated" ];
 
-    SentUpdateConnected -> Connected        [ label = "on200U/app::onAnswer" ];
-    SentUpdateConnected -> Connected        [ label = "on488U/app::onRejected" ];
-    SentUpdateConnected -> Connected        [ label = "on489U/glare" ];
-    SentUpdateConnected -> Assert           [ label = "dum::cancel/assert(0)" ];
-    SentUpdateConnected -> Assert           [ label = "dum::provideAnswer/assert(0)" ];
-    SentUpdateConnected -> Assert           [ label = "dum::provideOffer/assert(0)" ];
-    SentUpdateConnected -> Terminated       [ label = "dum::end/send::BYE,app::onTerminated" ];
+    SentUpdateEarlyGlare -> SentUpdateEarly           [ label = "onTimer491/resend::UPDATE" ]; 
+    SentUpdateEarlyGlare -> ReceivedUpdateEarly       [ label = "onUPDATE/app::onOfferRejected,app::onOffer" ];
+    SentUpdateEarlyGlare -> Terminated                [ label = "dum::end/send::BYE,app::onTerminated" ];
+    SentUpdateEarlyGlare -> SentUpdateGlare           [ label = "on2xxI/send::ACK"];//from connected state machine
 
     ReceivedUpdateEarly -> Terminated       [ label = "onRedirect/app::onRedirected" ];
     ReceivedUpdateEarly -> EarlyWithAnswer  [ label = "dum::provideAnswer/send::200U-answer" ];

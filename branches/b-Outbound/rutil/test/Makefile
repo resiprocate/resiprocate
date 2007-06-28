@@ -7,6 +7,9 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RUTIL ARES OPENSSL PTHREAD POPT
 
+SRC = \
+	TestSubsystemLogLevel.cxx
+
 TESTPROGRAMS += \
 	testCoders.cxx \
 	testCountStream.cxx \

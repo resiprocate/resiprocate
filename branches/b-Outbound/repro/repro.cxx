@@ -248,7 +248,7 @@ main(int argc, char** argv)
 #endif
    if (!db)
    {
-      db = new BerkeleyDb;
+      db = new BerkeleyDb(args.mDbPath);
       if (!static_cast<BerkeleyDb*>(db)->isSane())
       {
         CritLog(<<"Failed to open configuration database");
@@ -291,7 +291,10 @@ main(int argc, char** argv)
 
       if (!args.mNoChallenge)
       {
-         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,&stack,args.mNoIdentityHeaders,args.mHttpPort);
+         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
+                                                           &stack,args.mNoIdentityHeaders,
+                                                           args.mHttpPort,
+                                                           !args.mNoAuthIntChallenge /*useAuthInt*/);
          locators->addProcessor(std::auto_ptr<Processor>(da)); 
       }
 
@@ -305,7 +308,7 @@ main(int argc, char** argv)
      
       if (args.mRouteSet.empty())
       {
-         StaticRoute* sr = new StaticRoute(store.mRouteStore, args.mNoChallenge);
+         StaticRoute* sr = new StaticRoute(store.mRouteStore, args.mNoChallenge, args.mParallelForkStaticRoutes, !args.mNoAuthIntChallenge /*useAuthInt*/);
          locators->addProcessor(std::auto_ptr<Processor>(sr));
       }
       else
@@ -320,7 +323,7 @@ main(int argc, char** argv)
          locators->addProcessor(std::auto_ptr<Processor>(sr));
       }
       
-      LocationServer* ls = new LocationServer(regData);
+      LocationServer* ls = new LocationServer(regData, args.mParallelForkStaticRoutes);
       locators->addProcessor(std::auto_ptr<Processor>(ls));
  
       requestProcessors.addProcessor(auto_ptr<Processor>(locators));      
@@ -456,7 +459,8 @@ main(int argc, char** argv)
          SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*dum,
                                                 store.mUserStore,
-                                                store.mAclStore));
+                                                store.mAclStore,
+                                                !args.mNoAuthIntChallenge /*useAuthInt*/));
          dum->setServerAuthManager(uasAuth);
       }
       dum->setMessageFilterRuleList(ruleList);

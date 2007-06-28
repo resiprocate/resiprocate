@@ -4,6 +4,8 @@
 BUILD 	=	build
 -include $(BUILD)/Makefile.conf
 -include $(BUILD)/Makefile.all
+-include $(BUILD)/Makefile.tools
+-include $(BUILD)/Makefile.osarch
 
 stack: repro dum tests
 
@@ -75,7 +77,7 @@ configure_cppunit: tfm/contrib/cppunit/Makefile
 
         
 tfm/contrib/cppunit/Makefile:
-	cd tfm/contrib/cppunit && ./configure ${CPPUNIT_USE_SHARED_LIBS}
+	cd tfm/contrib/cppunit && ./configure ${CPPUNIT_USE_SHARED_LIBS} ${CONFIGURE_ARGS}
 
 cppunit: configure_cppunit
 	cd tfm/contrib/cppunit && $(MAKE)
@@ -83,13 +85,15 @@ cppunit: configure_cppunit
 # If we are building ares under Resiprocate, ares needs to know the
 # Resiprocate install directory.  It is passed in via the ARES_PREFIX
 # make variable.
-contrib/ares/Makefile:
-	cd contrib/ares && ./configure ${ARES_IPV6} ${ARES_PREFIX_ARG}
+contrib/ares-build.$(OS_ARCH)/Makefile:
+	mkdir -p contrib/ares-build.$(OS_ARCH)
+	cd contrib/ares-build.$(OS_ARCH) && \
+	  ../ares/configure ${ARES_IPV6} ${ARES_PREFIX_ARG} ${CONFIGURE_ARGS}
 
-configure_ares: contrib/ares/Makefile
+configure_ares: contrib/ares-build.$(OS_ARCH)/Makefile
 
 ares: configure_ares
-	cd contrib/ares && $(MAKE)
+	cd contrib/ares-build.$(OS_ARCH) && $(MAKE)
 
 contrib/dtls/Makefile:
 	cd contrib/dtls && ./config
@@ -109,20 +113,20 @@ CLEANDIRS := resip/stack resip/dum resip/stack/test presSvr repro rutil \
              rutil/test tfm apps
 
 cleancontrib:
-	-$(MAKE) -C contrib/ares distclean
+	-rm -Rf contrib/ares-build.*
 	-$(MAKE) -C tfm/contrib/cppunit distclean
 	-$(MAKE) -C tfm/contrib/Netxx-0.3.2 realclean
 	find tfm/contrib/Netxx-0.3.2 -name 'Netxx-config' -exec rm -f '{}' \;
 
 clean: cleanpkg
-	for dir in $(CLEANDIRS); do make -C $$dir clean; done ; true
+	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir clean; done ; true
 
 cleanall: cleancontrib
-	for dir in $(CLEANDIRS); do make -C $$dir cleanall; done ; true
+	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir cleanall; done ; true
 	-$(MAKE) -C contrib/ares distclean
 
 distclean: cleancontrib cleanpkg
-	for dir in $(CLEANDIRS); do make -C $$dir distclean; done ; true
+	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir distclean; done ; true
 	find * -name '*.db' -exec rm -f '{}' \;
 	-rm -Rf .make_prefs
 	-rm -Rf build/Makefile.conf
@@ -137,7 +141,7 @@ distclean: cleancontrib cleanpkg
 install: install-ares install-rutil install-resip install-dum
 
 install-ares:
-	cd contrib/ares; $(MAKE) install
+	cd contrib/ares-build.$(OS_ARCH); $(MAKE) install
 
 install-rutil:
 	cd rutil; $(MAKE) install

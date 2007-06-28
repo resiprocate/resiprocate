@@ -1,6 +1,7 @@
 #include <fstream>
 #include "rutil/Logger.hxx"
 #include "rutil/ThreadIf.hxx"
+#include "rutil/Subsystem.hxx"
 #include "rutil/SysLogStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -60,9 +61,16 @@ GenericLogImpl::reset()
 }
 
 bool
-GenericLogImpl::isLogging(Log::Level level)
+GenericLogImpl::isLogging(Log::Level level, const resip::Subsystem& sub)
 {
-   return (level <= Log::mLevel);
+   if (sub.getLevel() != Log::None)
+   {
+      return level <= sub.getLevel();
+   }
+   else
+   {
+      return (level <= Log::mLevel);
+   }
 }
 
 void
@@ -81,11 +89,12 @@ GenericLogImpl::OutputToWin32DebugWindow(const Data& result)
 }
 
 bool
-genericLogCheckLevel(resip::Log::Level level)
+genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub)
 {
+   //?dcm? should we just remove threadsetting? Does it still work?
    const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting();
-   return ((setting && level <= setting->level) ||
-	   (!setting && resip::GenericLogImpl::isLogging(level)));
+   return ((setting && resip::GenericLogImpl::isLogging(setting->level, sub) ||
+            (!setting && resip::GenericLogImpl::isLogging(level, sub))));
 }
 
 /* ====================================================================

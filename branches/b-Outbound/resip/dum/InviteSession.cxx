@@ -3,6 +3,7 @@
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/dum/BaseCreator.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/InviteSession.hxx"
@@ -110,6 +111,19 @@ InviteSession::getRemoteSdp() const
    if(mCurrentRemoteSdp.get())
    {
       return *mCurrentRemoteSdp;
+   }
+   else
+   {
+      return SdpContents::Empty;
+   }
+}
+
+const SdpContents&
+InviteSession::getProposedRemoteSdp() const
+{
+   if(mProposedRemoteSdp.get())
+   {
+      return *mProposedRemoteSdp;
    }
    else
    {
@@ -237,7 +251,6 @@ InviteSession::isAccepted() const
    {
       case UAS_Start:
       case UAS_Offer:
-      case UAS_OfferReliable:
       case UAS_NoOffer:
       case UAS_NoOfferReliable:
       case UAS_ProvidedOffer:
@@ -246,9 +259,9 @@ InviteSession::isAccepted() const
       case UAS_EarlyProvidedOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyNoOffer:
-      case UAS_FirstEarlyReliable:
+      case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
-      case UAS_EarlyReliable:
+      case UAS_NegotiatedReliable:
          return false;
       default:
          return true;
@@ -723,8 +736,10 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
       SharedPtr<SipMessage> refer(new SipMessage());
       mDialog.makeRequest(*refer, REFER);
       refer->header(h_ReferTo) = referTo;
-      refer->header(h_ReferredBy) = mDialog.mLocalContact; // 
-                                                           // !slg! is it ok to do this - should it be an option?
+      refer->header(h_ReferredBy) = myAddr();
+      refer->header(h_ReferredBy).remove(p_tag);   // tag-param not permitted in rfc3892; not the same as generic-param
+
+      // !slg! is it ok to do this - should it be an option?
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
@@ -795,7 +810,9 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       mDialog.makeRequest(*refer, REFER);
 
       refer->header(h_ReferTo) = referTo;
-      refer->header(h_ReferredBy) = mDialog.mLocalContact; // ?slg? is it ok to do this - should it be an option?
+      refer->header(h_ReferredBy) = myAddr();
+      refer->header(h_ReferredBy).remove(p_tag);
+
       CallId replaces;
       DialogId id = sessionToReplace->mDialog.getId();
       replaces.value() = id.getCallId();
@@ -825,11 +842,10 @@ class InviteSessionReferExCommand : public DumCommandAdapter
 public:
    InviteSessionReferExCommand(InviteSession& inviteSession, const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub)
       : mInviteSession(inviteSession),
-      mReferTo(referTo),
       mSessionToReplace(sessionToReplace),
+      mReferTo(referTo),
       mReferSub(referSub)
    {
-
    }
 
    virtual void executeCommand()
@@ -1053,7 +1069,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    {
       if (mCurrentRetransmit200)
       {
-         InfoLog (<< "Retransmitting: " << endl << *mInvite200);
+         InfoLog (<< "Retransmitting: " << endl << mInvite200->brief());
          //DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
          send(mInvite200);
          mCurrentRetransmit200 *= 2;
@@ -1192,10 +1208,10 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          *mLastRemoteSessionModification = msg;
          transition(ReceivedReinvite);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mProposedRemoteSdp = sdp; 
 
          //handler->onDialogModified(getSessionHandle(), Offer, msg);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
          break;
 
       case On2xx:
@@ -1214,8 +1230,8 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          //  See rfc3311 5.2, 4th paragraph.
          *mLastRemoteSessionModification = msg;
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         mProposedRemoteSdp = sdp; 
+         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
          break;
 
       case OnUpdate:
@@ -1275,8 +1291,9 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          {
             mCurrentEncryptionLevel = getEncryptionLevel(msg);
             setCurrentLocalSdp(msg);
-            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
+
+            mCurrentRemoteSdp = sdp; 
+            handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp);
          }
          else if(mProposedLocalSdp.get()) 
          {
@@ -1311,10 +1328,9 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
          break;
 
       case OnUpdateRejected:
-         // !jf! - callback?
-         mProposedLocalSdp.reset();
-         mProposedEncryptionLevel = DialogUsageManager::None;
          transition(Connected);
+         mProposedLocalSdp.reset();
+         handler->onOfferRejected(getSessionHandle(), &msg);
          break;
 
       case OnGeneralFailure:
@@ -1378,13 +1394,13 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
             if (changed)
             {
-               mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-               handler->onRemoteSdpChanged(getSessionHandle(), msg, *sdp);
+               mCurrentRemoteSdp = sdp; 
+               handler->onRemoteSdpChanged(getSessionHandle(), msg, *mCurrentRemoteSdp);
             }
          }
          else
          {
-            handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Reinvite);
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
          }
          
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
@@ -1432,7 +1448,6 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
       case OnInviteFailure:
       case On487Invite:
-      case On489Invite:
          transition(Connected);
          mProposedLocalSdp.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -1477,8 +1492,8 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          handleSessionTimerResponse(msg);
          // mLastSessionModification = msg;   // ?slg? why are we storing 200's?
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onOffer(getSessionHandle(), msg, *sdp);
+         mProposedRemoteSdp = sdp; 
+         handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
 
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
          // the ACK when a 200I is received? If yes, then I need to store all
@@ -1526,7 +1541,6 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
 
       case OnInviteFailure:
       case On487Invite:
-      case On489Invite:
          transition(Connected);
          mProposedLocalSdp.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -1561,10 +1575,11 @@ InviteSession::dispatchReceivedReinviteSentOffer(const SipMessage& msg)
       case OnAckAnswer:
          transition(Connected);
          setCurrentLocalSdp(msg);
-         mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+         mCurrentRemoteSdp = sdp; 
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         handler->onAnswer(getSessionHandle(), msg, *sdp, InviteSessionHandler::Ack);		 
+
+         handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp);
          break;         
       case OnAck:
          if (mLastRemoteSessionModification->header(h_CSeq).sequence() > msg.header(h_CSeq).sequence())
@@ -1799,7 +1814,7 @@ InviteSession::dispatchOthers(const SipMessage& msg)
          // handled in Dialog
          WarningLog (<< "DUM delivered a "
                      << msg.header(h_CSeq).unknownMethodName()
-                     << " to the InviteSession "
+                     << " to the InviteSession in state: " << toData(mState)
                      << endl
                      << msg);
          assert(0);
@@ -2359,8 +2374,8 @@ InviteSession::toData(State state)
          return "UAC_Answered";
       case UAC_SentUpdateEarly:
          return "UAC_SentUpdateEarly";
-      case UAC_SentUpdateConnected:
-         return "UAC_SentUpdateConnected";
+      case UAC_SentUpdateEarlyGlare:
+         return "UAC_SentUpdateEarlyGlare";
       case UAC_ReceivedUpdateEarly:
          return "UAC_ReceivedUpdateEarly";
       case UAC_SentAnswer:
@@ -2369,19 +2384,19 @@ InviteSession::toData(State state)
          return "UAC_QueuedUpdate";
       case UAC_Cancelled:
          return "UAC_Cancelled";
-
+         
       case UAS_Start:
          return "UAS_Start";
-      case UAS_OfferReliable:
-         return "UAS_OfferReliable";
+      case UAS_ReceivedOfferReliable:
+         return "UAS_ReceivedOfferReliable";
       case UAS_NoOfferReliable:
          return "UAS_NoOfferReliable";
       case UAS_FirstSentOfferReliable:
          return "UAS_FirstSentOfferReliable";
-      case UAS_FirstEarlyReliable:
-         return "UAS_FirstEarlyReliable";
-      case UAS_EarlyReliable:
-         return "UAS_EarlyReliable";
+      case UAS_FirstSentAnswerReliable:
+         return "UAS_FirstSentAnswerReliable";
+      case UAS_NegotiatedReliable:
+         return "UAS_NegotiatedReliable";
       case UAS_SentUpdate:
          return "UAS_SentUpdate";
       case UAS_SentUpdateAccepted:
@@ -2412,9 +2427,21 @@ InviteSession::transition(State target)
 bool
 InviteSession::isReliable(const SipMessage& msg)
 {
-   // Ensure supported both locally and remotely
-   return msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)) &&
-          mDum.getMasterProfile()->getSupportedOptionTags().find(Token(Symbols::C100rel));
+   if(msg.method() != INVITE)
+   {
+      return false;
+   }
+   if(msg.isRequest())
+   {
+      return mDum.getMasterProfile()->getUasReliableProvisionalMode() > MasterProfile::Never
+         && (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel)) 
+             || msg.exists(h_Requires)   && msg.header(h_Requires).find(Token(Symbols::C100rel)));
+   }
+   else
+   {
+      return (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel))) 
+         || (msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel)));
+   }
 }
 
 std::auto_ptr<SdpContents>
@@ -2493,6 +2520,11 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
 {
    MethodTypes method = msg.header(h_CSeq).method();
    int code = msg.isResponse() ? msg.header(h_StatusLine).statusCode() : 0;
+   
+   //.dcm. Treat an invite as reliable if UAS 100rel support is enabled. For
+   //responses, reiable provisionals should only be received if the invite was
+   //sent reliably.  Spurious reliable provisional respnoses are dropped outside
+   //the state machine.
    bool reliable = isReliable(msg);
    bool sentOffer = mProposedLocalSdp.get();
 
@@ -2529,7 +2561,7 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
          }
       }
    }
-   else if (method == INVITE && code > 100 && code < 200)   // !kh! 100 is handled by transaction layer.
+   else if (method == INVITE && code > 100 && code < 200)
    {
       if (reliable)
       {
@@ -2586,10 +2618,6 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    else if (method == INVITE && code == 487)
    {
       return On487Invite;
-   }
-   else if (method == INVITE && code == 489)
-   {
-      return On489Invite;
    }
    else if (method == INVITE && code == 491)
    {
@@ -2657,10 +2685,6 @@ InviteSession::toEvent(const SipMessage& msg, const SdpContents* sdp)
    {
       return On422Update;
    }
-   else if (method == UPDATE && code == 489)
-   {
-      return On489Update;
-   }
    else if (method == UPDATE && code == 491)
    {
       return On491Update;
@@ -2681,19 +2705,30 @@ void InviteSession::sendAck(const SdpContents *sdp)
    SharedPtr<SipMessage> ack(new SipMessage);
 
    assert(mAcks.count(mLastLocalSessionModification->header(h_CSeq).sequence()) == 0);
+   SharedPtr<SipMessage> source;
+   
+   if (mLastLocalSessionModification->method() == UPDATE)
+   {
+      //.dcm. scary--we could make a special ClientInviteSession variable/sendAck
+      source = mDialog.mDialogSet.getCreator()->getLastRequest();
+   }
+   else
+   {
+      source = mLastLocalSessionModification;
+   }
 
    mDialog.makeRequest(*ack, ACK);
 
    // Copy Authorization, Proxy Authorization headers and CSeq from original Invite
-   if(mLastLocalSessionModification->exists(h_Authorizations))
+   if(source->exists(h_Authorizations))
    {
-      ack->header(h_Authorizations) = mLastLocalSessionModification->header(h_Authorizations);
+      ack->header(h_Authorizations) = source->header(h_Authorizations);
    }
-   if(mLastLocalSessionModification->exists(h_ProxyAuthorizations))
+   if(source->exists(h_ProxyAuthorizations))
    {
-      ack->header(h_ProxyAuthorizations) = mLastLocalSessionModification->header(h_ProxyAuthorizations);
+      ack->header(h_ProxyAuthorizations) = source->header(h_ProxyAuthorizations);
    }
-   ack->header(h_CSeq).sequence() = mLastLocalSessionModification->header(h_CSeq).sequence();
+   ack->header(h_CSeq).sequence() = source->header(h_CSeq).sequence();
 
    if(sdp != 0)
    {
