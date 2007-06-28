@@ -596,7 +596,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 
       DebugLog(<<"Set tuple dest: " << request.getDestination());
 
-      // !bwc! Path header addition.
+      // .bwc. Path header addition.
       request.header(h_Routes).append(target->rec().mSipPath);
             
       // !jf! unleash the baboons here
@@ -663,48 +663,28 @@ ResponseContext::getInboundFlowToken()
    resip::Data flowToken=resip::Data::Empty;
    resip::SipMessage& orig=mRequestContext.getOriginalRequest();
    
-   if(InteropHelper::getOutboundSupported() 
-      && !mRequestContext.mTopRoute.uri().user().empty())
+   if(InteropHelper::getOutboundSupported() && 
+      orig.header(h_Contacts).front().uri().exists(p_ob) &&
+      orig.header(h_Vias).size()==1)
    {
-      // .bwc. If we get a flow token in a route header that points to the
-      // source, we take this as an indication that the source has an outbound
-      // flow with us, and we should use this flow token to route stuff back to
-      // the source.
-      try
-      {
-         if( Tuple::makeTuple(mRequestContext.mTopRoute.uri().user()) ==
-            mRequestContext.getOriginalRequest().getSource())
-         {
-            flowToken = mRequestContext.mTopRoute.uri().user();
-         }
-      }
-      catch(resip::BaseException&)
-      {
-         DebugLog(<< "Malformed flow token in Route header: " 
-                  <<mRequestContext.mTopRoute<< " (or not a flow-token at all)."
-                  " How did this get here?");
-      }
+      // This arrived over an outbound flow (or so the endpoint claims)
+      // (See outbound-09 Sec 4.3 para 3)
+      resip::Data binaryFlowToken;
+      Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
+      // !bwc! TODO encrypt to self
+      flowToken = binaryFlowToken.base64encode();
    }
    else if(resip::InteropHelper::getRRTokenHackEnabled()
       && !selfAlreadyRecordRouted() )
    {
-      // .bwc. Right now, there is no defined way for an endpoint to 
-      // communicate that it is using outbound when originating a request
-      // (other than REGISTER, of course). This means that the proxy does
-      // not know when it needs to record-route with a flow-token, which
-      // leaves it up to the endpoint to ensure that whatever is in the
-      // Contact header will cause the existing connection to be reused.
-      // However, a lot (most) endpoints don't know how to do this yet, so
-      // this is the (horribly broken) workaround. This will break target-
-      // refreshes, and potentially include proxies in the dialog that 
-      // didn't record-route.
-      // !bwc! TODO replace this condition with one that determines 
-      // whether the source is using outbound
-      // ?bwc? Once we can make this determination, will the check keep us
-      // from gratuitously Record-Routing in a spiral?
-      
+      // !bwc! TODO remove this when flow-token hack is no longer needed.
+      // Poor-man's outbound. Shouldn't be our default behavior, because it
+      // breaks target-refreshes (once a flow-token is in the Route-Set, the 
+      // flow-token cannot be changed, and will override any update to the 
+      // Contact)
       resip::Data binaryFlowToken;
       Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
+      // !bwc! TODO encrypt to self
       flowToken = binaryFlowToken.base64encode();
    }
    
@@ -728,6 +708,10 @@ ResponseContext::outboundFlowTokenNeeded(Target* target)
    else if(resip::InteropHelper::getRRTokenHackEnabled())
    {
       // !bwc! TODO remove this when flow-token hack is no longer needed.
+      // Poor-man's outbound. Shouldn't be our default behavior, because it
+      // breaks target-refreshes (once a flow-token is in the Route-Set, the 
+      // flow-token cannot be changed, and will override any update to the 
+      // Contact)
       return true;
    }
    
