@@ -34,6 +34,7 @@ class RR_##_name                                                        \
       enum {SupportsCName = _supportsCName};                            \
       static unsigned short getRRType();                                \
       typedef _type Type;                                               \
+      static Data getRRTypeName();                                          \
 };                                                                      \
 extern RR_##_name q_##_name
 

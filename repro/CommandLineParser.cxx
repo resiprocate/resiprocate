@@ -40,7 +40,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* routeSet = 0;
    char certPathBuf[256];
    char* certPath = certPathBuf;
+   char* dbPath = 0;
    int noChallenge = false;
+   int noAuthIntChallenge = false;
    int noWebChallenge = false;
    
    int noRegistrar = false;
@@ -60,6 +62,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    char* enumSuffix = 0;
    int allowBadReg = 0;
+   int parallelForkStaticRoutes = 0;
    int showVersion = 0;
    int timerC=180;
    
@@ -67,6 +70,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int outboundDisabled=0;
    int outboundVersion=8;
    int rrTokenHackEnabled=0;
+
 
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -84,6 +88,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
       {"force-record-route",     0,  POPT_ARG_NONE,                            &forceRecordRoute,    0, "force record-routing", 0},
       {"record-route-uri",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
+      {"db-path",           0,   POPT_ARG_STRING,                            &dbPath,       0, "path to databases", 0},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -95,14 +100,15 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"dtls",               0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &dtlsPort,       0, "add DTLS transport on specified port", "0"},
       {"enable-cert-server", 0,  POPT_ARG_NONE,                              &certServer,     0, "run a cert server", 0},
 #ifdef WIN32
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path for certificates (default: c:\\sipCerts)", 0},
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: c:\\sipCerts)", 0},
 #else
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path for certificates (default: ~/.sipCerts)", 0},
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: ~/.sipCerts)", 0},
 #endif
 #endif
       {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       0, "enable IPV6", 0},
       {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      0, "disable IPV4", 0},
       {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    0, "disable DIGEST challenges", 0},
+      {"disable-auth-int",  0,   POPT_ARG_NONE,                              &noAuthIntChallenge,0, "disable auth-int DIGEST challenges", 0},
       {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    0, "disable registrar", 0},
       {"disable-identity",  0,   POPT_ARG_NONE,                              &noIdentityHeaders, 0, "disable adding identity headers", 0},
@@ -112,12 +118,12 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   0, "name of request chain (default: default)", 0},
       {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", "5080"},
       {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
-      {"q-value",0,   POPT_ARG_NONE,                              &doQValue, 0, "Enable sequential q-value processing", 0},
-      {"q-value-behavior",0,   POPT_ARG_STRING,                              &forkBehavior, 0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
-      {"q-value-cancel-btw-fork-groups",0,   POPT_ARG_NONE,                              &cancelBetweenForkGroups, 0, "Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.", 0},
-      {"q-value-wait-for-terminate-btw-fork-groups",0,   POPT_ARG_NONE,                              &waitForTerminate, 0, "Whether to wait for parallel fork groups to terminate before starting new fork-groups.", 0},
-      {"q-value-ms-between-fork-groups",0,   POPT_ARG_INT,                              &msBetweenForkGroups, 0, "msec to wait before starting new groups of parallel forks", 0},
-      {"q-value-ms-before-cancel",0,   POPT_ARG_INT,                              &msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
+      {"q-value",           0,   POPT_ARG_NONE,                              &doQValue,       0, "Enable sequential q-value processing", 0},
+      {"q-value-behavior",  0,   POPT_ARG_STRING,                              &forkBehavior,   0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
+      {"q-value-cancel-btw-fork-groups",0,POPT_ARG_NONE,                     &cancelBetweenForkGroups, 0, "Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.", 0},
+      {"q-value-wait-for-terminate-btw-fork-groups",0,POPT_ARG_NONE,         &waitForTerminate, 0, "Whether to wait for parallel fork groups to terminate before starting new fork-groups.", 0},
+      {"q-value-ms-between-fork-groups",0,POPT_ARG_INT,                      &msBetweenForkGroups, 0, "msec to wait before starting new groups of parallel forks", 0},
+      {"q-value-ms-before-cancel",0,   POPT_ARG_INT,                         &msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
       {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"timer-C",          0,    POPT_ARG_INT,                                &timerC,          0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
@@ -126,6 +132,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "8"},
       {"enable-flow-tokens",     0,   POPT_ARG_NONE,                            &rrTokenHackEnabled,     0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
       {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number and exit", 0},
+      {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "paralled fork to all matching static routes and (first batch) registrations", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -180,6 +187,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mRouteSet = toVector(routeSet, "routeSet"); 
    mCertPath = certPath;
    mNoChallenge = noChallenge != 0;
+   mNoAuthIntChallenge = noAuthIntChallenge != 0;
    mNoWebChallenge = noWebChallenge != 0;
    mNoRegistrar = noRegistrar != 0 ;
    mNoIdentityHeaders = noIdentityHeaders != 0;
@@ -193,11 +201,17 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mMsBetweenForkGroups=msBetweenForkGroups;
    mMsBeforeCancel=msBeforeCancel;
    mAllowBadReg = allowBadReg?true:false;
+   mParallelForkStaticRoutes = parallelForkStaticRoutes?true:false;
    if (enumSuffix) mEnumSuffix = enumSuffix;
    
    if (mySqlServer) 
    {
       mMySqlServer = Data(mySqlServer);
+   }
+
+   if (dbPath)
+   {
+      mDbPath = Data(dbPath);
    }
    
    if(timerC >0)

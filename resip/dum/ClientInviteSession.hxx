@@ -34,8 +34,8 @@ class ClientInviteSession : public InviteSession
       virtual void provideAnswer (const SdpContents& answer);
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
-      virtual void end(EndReason reason/* = NotSpecified*/);
-      //virtual void end();
+      virtual void end(EndReason reason);
+      virtual void end();
 
       /** Rejects an offer at the SIP level.  For a UAC in an early dialog 
           this typically only makes sense, when rejecting an UPDATE request
@@ -54,7 +54,7 @@ class ClientInviteSession : public InviteSession
       void dispatchEarlyWithAnswer (const SipMessage& msg);
       void dispatchAnswered (const SipMessage& msg);
       void dispatchSentUpdateEarly (const SipMessage& msg);
-      void dispatchSentUpdateConnected (const SipMessage& msg);
+      void dispatchSentUpdateEarlyGlare (const SipMessage& msg);
       void dispatchReceivedUpdateEarly (const SipMessage& msg);
       void dispatchSentAnswer (const SipMessage& msg);
       void dispatchQueuedUpdate (const SipMessage& msg);
@@ -74,6 +74,7 @@ class ClientInviteSession : public InviteSession
       // Called by the DialogSet when it receives a 2xx response
       void onForkAccepted();
 
+      bool checkRseq(const SipMessage& msg);
    private:
       std::auto_ptr<SdpContents> mEarlyMedia;
       void startCancelTimer();

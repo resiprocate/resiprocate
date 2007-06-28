@@ -4,7 +4,6 @@
 
 //#define USE_LOCAL_DNS 
 #ifdef USE_LOCAL_DNS
-#include <map>
 #include "rutil/dns/LocalDns.hxx"
 #else
 #include "rutil/dns/AresDns.hxx"
@@ -20,6 +19,7 @@ ExternalDns*
 ExternalDnsFactory::createExternalDns()
 {
 #ifdef USE_LOCAL_DNS
+   InfoLog (<< "Using Local DNS instead of Ares. Should only be used for tests.");
    return new LocalDns();
 #else
    return new AresDns();

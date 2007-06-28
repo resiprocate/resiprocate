@@ -104,7 +104,7 @@ AmIResponsible::process(RequestContext& context)
             }
          }*/
          
-         context.addTarget(NameAddr(request.header(h_RequestLine).uri()));
+         context.getResponseContext().addTarget(NameAddr(request.header(h_RequestLine).uri()));
          InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
          // skip the rest of the monkeys
          return Processor::SkipThisChain;	

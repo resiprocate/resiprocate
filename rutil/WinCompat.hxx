@@ -1,6 +1,7 @@
 #if !defined(resip_WinCompat_hxx)
 #define resip_WinCompat_hxx
 
+#if defined(WIN32)
 #include <Iphlpapi.h>
 #include <list>
 
@@ -66,4 +67,5 @@ class WinCompat
 
 }
 
+#endif // WIN32
 #endif

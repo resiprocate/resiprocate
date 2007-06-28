@@ -604,16 +604,6 @@ RequestContext::getDigestIdentity() const
    return mDigestIdentity;
 }
 
-resip::Data
-RequestContext::addTarget(const NameAddr& addr, bool beginImmediately)
-{
-   InfoLog (<< "Adding candidate " << addr);
-   repro::Target target(addr);
-   mResponseContext.addTarget(target,beginImmediately);
-   return target.tid();
-}
-
-
 void
 RequestContext::updateTimerC()
 {
@@ -630,7 +620,7 @@ RequestContext::postTimedMessage(std::auto_ptr<resip::ApplicationMessage> msg,in
 }
 
 void
-RequestContext::sendResponse(const SipMessage& msg)
+RequestContext::sendResponse(SipMessage& msg)
 {
    assert (msg.isResponse());
    
@@ -644,6 +634,44 @@ RequestContext::sendResponse(const SipMessage& msg)
    }
    else
    {
+      DebugLog(<< "tid of orig req: " << mOriginalRequest->getTransactionId());
+      resip::Data tid;
+      try
+      {
+         tid=msg.getTransactionId();
+      }
+      catch(SipMessage::Exception&)
+      {
+         InfoLog(<< "Bad tid in response. Trying to replace with 2543 tid "
+                  "from orig request.");
+         tid=mOriginalRequest->getRFC2543TransactionId();
+         // .bwc. If the original request didn't have a proper transaction-
+         // id, the response will not either. We need to set the tid in the 
+         // response in order to make sure that this response hits the 
+         // correct transaction down in the stack.
+         msg.setRFC2543TransactionId(tid);
+      }
+      
+      if(tid!=mOriginalRequest->getTransactionId())
+      {
+         InfoLog(<<"Someone messed with the Via stack in a response. This "
+                        "is not only bad behavior, but potentially malicious. "
+                        "Response came from: " << msg.getSource() <<
+                        " Request came from: " << 
+                        mOriginalRequest->getSource() << 
+                        " Via after modification (in response): " <<
+                        msg.header(h_Vias).front() <<
+                        " Via before modification (in orig request): " <<
+                        mOriginalRequest->header(h_Vias).front());
+         // .bwc. Compensate for malicous/broken UAS fiddling with Via stack.
+         msg.header(h_Vias).front()=mOriginalRequest->header(h_Vias).front();
+      }
+
+      DebugLog(<<"Ensuring orig tid matches tid of response: " <<
+               msg.getTransactionId() << " == " <<
+               mOriginalRequest->getTransactionId());
+      assert(msg.getTransactionId()==mOriginalRequest->getTransactionId());
+      
       // .bwc. Provisionals are not final responses, and CANCEL/200 is not a final
       //response in this context.
       if (msg.header(h_StatusLine).statusCode()>199 && msg.method()!=CANCEL)

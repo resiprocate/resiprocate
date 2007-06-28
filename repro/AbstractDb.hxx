@@ -40,7 +40,7 @@ class AbstractDb
             resip::Data mMatchingPattern;
             resip::Data mRewriteExpression;
             short mOrder;
-            bool mLocalUserOnly;
+            //bool mLocalUserOnly;
       };
 
       class AclRecord

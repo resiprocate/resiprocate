@@ -45,6 +45,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int rrTokenHackEnabled=0;
    int forceRecordRoute = 0;
 
+   //!dcm! TODO - ability to set subsystem specfic log levels--prob. want a
+   //!group options for everything in stack.  
    struct poptOption table[] = {
       {"log-type",     'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",    'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},

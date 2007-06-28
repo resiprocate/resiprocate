@@ -51,12 +51,8 @@ class RequestContext
       ResponseContext& getResponseContext();
       
       resip::NameAddr& getTopRoute();
-      
-      //Will return the tid of the new target, since this creates the instance 
-      //of class Target for the user. (see ResponseContext::addTarget())
-      resip::Data addTarget(const resip::NameAddr& target, bool beginImmediately=false);
-      
-      void sendResponse(const resip::SipMessage& response);
+            
+      void sendResponse(resip::SipMessage& response);
 
       void forwardAck200(const resip::SipMessage& ack);
 

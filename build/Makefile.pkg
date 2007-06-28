@@ -13,11 +13,10 @@ else
 LIBSUFFIX := a
 endif
 
-ifneq ($(OSTYPE),FreeBSD)
-PTHREAD_LIBNAME := pthread
+ifeq ($(OSTYPE),FreeBSD)
+  PTHREAD_LDFLAGS := -pthread
 else
-PTHREAD_LDFLAGS := -pthread
-PTHREAD_LIBNAME := c_r
+  PTHREAD_LIBNAME := pthread
 endif
 
 ifeq ($(OSTYPE),Solaris)
@@ -92,13 +91,13 @@ MYSQL_DEFINES += USE_MYSQL
 endif
 
 ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
-ARES_LIBDIRS := $(ROOT)/contrib/ares
+ARES_LIBDIRS := $(ROOT)/contrib/ares-build.$(OS_ARCH)
 ARES_LIBNAME := ares
 ARES_DEFINES := 
 
 ifeq ($(OSTYPE),FreeBSD)
-DB42_LIBNAME := db4
-DB4CXX_LIBNAME := db4_cxx
+  DB42_LIBNAME := db-4.2
+  DB4CXX_LIBNAME := db_cxx-4.2
 endif
 
 ifeq ($(OSTYPE),NetBSD)
@@ -112,8 +111,8 @@ DB4CXX_LIBNAME := db_cxx
 endif
 
 ifeq ($(OSTYPE),SunOS)
-DB4CXX_INCLUDEDIRS := /opt/csw/bdb43/include
-DB4CXX_LIBDIRS := /opt/csw/bdb43/lib
+DB4CXX_INCLUDEDIRS := /opt/csw/bdb4/include
+DB4CXX_LIBDIRS := /opt/csw/bdb44/lib
 DB42_LIBNAME := db
 DB4CXX_LIBNAME := db_cxx
 endif
@@ -211,10 +210,11 @@ endif
 ifeq ($(USE_POPT),yes)
   POPT_DEFINES := HAVE_POPT_H
   POPT_LIBNAME := popt
-  ifeq ($(OSTYPE),MinGW)
-    MINGW_POPT_DIR    := $(ROOT)/contrib/popt/win32
-    POPT_INCLUDEDIRS  := $(MINGW_POPT_DIR)/include
-    POPT_LIBDIRS      := $(MINGW_POPT_DIR)/lib
+  ifneq ($(POPT_INCDIR_CONFIG),)
+    POPT_INCLUDEDIRS := $(POPT_INCDIR_CONFIG)
+  endif
+  ifneq ($(POPT_LIBDIR_CONFIG),)
+    POPT_LIBDIRS := $(POPT_LIBDIR_CONFIG)
   endif
 endif
 

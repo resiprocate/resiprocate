@@ -49,7 +49,7 @@ class InviteSession : public DialogUsage
 
       /** Makes the specific dialog end. Will send a BYE (not a CANCEL) */
       virtual void end(EndReason reason);
-      virtual void end(); // reason == NotSpecified ; same as above
+      virtual void end(); // reason == NotSpecified ; same as above - required for BaseUsage pure virtual
 
       /** Rejects an offer at the SIP level.  Can also be used to 
           send a 488 to a reINVITE or UPDATE */
@@ -115,6 +115,7 @@ class InviteSession : public DialogUsage
       const NameAddr& peerAddr() const;
       const SdpContents& getLocalSdp() const;
       const SdpContents& getRemoteSdp() const;
+      const SdpContents& getProposedRemoteSdp() const;
       const Data& getDialogId() const;
       
       bool isConnected() const;
@@ -171,7 +172,7 @@ class InviteSession : public DialogUsage
          UAC_EarlyWithAnswer,
          UAC_Answered,
          UAC_SentUpdateEarly,
-         UAC_SentUpdateConnected,
+         UAC_SentUpdateEarlyGlare,
          UAC_ReceivedUpdateEarly,
          UAC_SentAnswer,
          UAC_QueuedUpdate,
@@ -192,11 +193,11 @@ class InviteSession : public DialogUsage
          UAS_WaitingToRequestOffer, 
 
          UAS_AcceptedWaitingAnswer, 
-         UAS_OfferReliable,
+         UAS_ReceivedOfferReliable,
          UAS_NoOfferReliable,
          UAS_FirstSentOfferReliable,
-         UAS_FirstEarlyReliable,
-         UAS_EarlyReliable,
+         UAS_FirstSentAnswerReliable,
+         UAS_NegotiatedReliable,
          UAS_SentUpdate,
          UAS_SentUpdateAccepted,
          UAS_ReceivedUpdate,
@@ -225,7 +226,6 @@ class InviteSession : public DialogUsage
          On2xxAnswer,
          On422Invite,
          On487Invite,
-         On489Invite,
          On491Invite,
          OnInviteFailure,
          OnAck,
@@ -237,7 +237,6 @@ class InviteSession : public DialogUsage
          OnUpdateRejected,
          On422Update,
          On491Update,
-         On489Update,
          On200Update,
          OnPrack, // UAS
          On200Prack, // UAC

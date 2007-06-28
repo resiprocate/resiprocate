@@ -5,6 +5,7 @@
 #include "rutil/Lock.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/Subsystem.hxx"
 
 #ifdef WIN32
 #include <windows.h>
@@ -50,18 +51,18 @@ GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Err, args_)
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Crit, args_)
 
 bool
-genericLogCheckLevel(resip::Log::Level level);
+genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub);
 
 // do/while allows a {} block in an expression
-#define GenericLog(system_, level_, args_)                                               \
-do                                                                                       \
-{                                                                                        \
-   if (genericLogCheckLevel(level_))                                                     \
-   {                                                                                     \
-      resip::Log::Guard _resip_log_guard(level_, system_, __FILE__, __LINE__);           \
-      _resip_log_guard.asStream()  args_;                                                           \
-   }                                                                                     \
-} while (false)
+#define GenericLog(system_, level_, args_)                              \
+   do                                                                   \
+   {                                                                    \
+      if (genericLogCheckLevel(level_, system_))                        \
+      {                                                                 \
+         resip::Log::Guard _resip_log_guard(level_, system_, __FILE__, __LINE__); \
+         _resip_log_guard.asStream()  args_;                            \
+      }                                                                 \
+   } while (false)
 
 #ifdef NO_DEBUG
 // Suppress debug logging at compile time
@@ -78,7 +79,7 @@ class GenericLogImpl :  public Log
 {
    public:
       static std::ostream& Instance();
-      static bool isLogging(Log::Level level) ;
+      static bool isLogging(Log::Level level, const Subsystem&);
       static unsigned int MaxLineCount;
       static void OutputToWin32DebugWindow(const Data& result);      
       static void reset(); //removes mLogger
