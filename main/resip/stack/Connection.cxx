@@ -134,7 +134,7 @@ Connection::performWrite()
          if (mOutstandingSends.empty())
          {
             assert(mInWritable);
-            getConnectionManager().removeFromWritable();
+            getConnectionManager().removeFromWritable(this);
             mInWritable = false;
          }
       }

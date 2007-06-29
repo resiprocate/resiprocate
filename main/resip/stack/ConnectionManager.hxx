@@ -30,22 +30,13 @@ class ConnectionManager
       Connection* findConnection(const Tuple& tuple);
       const Connection* findConnection(const Tuple& tuple) const;
 
-      /**
-         return the next Connection that is ready to read.
-         return 0 if nothing to do.
-      */
-      Connection* getNextRead(FdSet &fdset);
-      /**
-         return the next Connection that has recently called addToWritable (is
-         in the write list).
-       */
-      Connection* getNextWrite();
       /// populate the fdset againt the read and write lists
       void buildFdSet(FdSet& fdset);
-      
+      void process(FdSet& fdset, Fifo<TransactionMessage>& fifo);
+
    private:
-      void addToWritable(Connection* conn); ///< add the specified conn to end
-      void removeFromWritable(); ///< remove the current mWriteMark
+      void addToWritable(Connection* conn); // add the specified conn to end
+      void removeFromWritable(Connection* conn); // remove the current mWriteMark
 
       /// release excessively old connections (free up file descriptors)
       void gc(UInt64 threshhold);
@@ -67,12 +58,8 @@ class ConnectionManager
 
       /// ready to write list
       ConnectionWriteList* mWriteHead;
-      ConnectionWriteList::iterator mWriteIter;
-
       /// ready to read list
       ConnectionReadList* mReadHead;
-      ConnectionReadList::iterator mReadIter;
-
       /// least recently used list
       ConnectionLruList* mLRUHead;
       //<<---------------------------------
