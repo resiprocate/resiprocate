@@ -681,6 +681,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       MessageExpectAction* ring183();
       MessageExpectAction* ring183(const boost::shared_ptr<resip::SdpContents>& sdp);
       MessageExpectAction* reliableProvisional(const boost::shared_ptr<resip::SdpContents>& sdp, int rseq);
+      MessageExpectAction* reliableProvisional(int rseq);
       
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ok, 200);
       MessageExpectAction* ok();
