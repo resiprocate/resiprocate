@@ -111,57 +111,6 @@ TcpBaseTransport::processListen(FdSet& fdset)
       createConnection(tuple, sock, true);
    }
 }
-/// @todo  only inspects the first element in ConnectionManager::getNextWrite(lame) 
-void
-TcpBaseTransport::processSomeWrites(FdSet& fdset)
-{
-   Connection* curr = mConnectionManager.getNextWrite(); 
-   if (curr && fdset.readyToWrite(curr->getSocket()))
-   {
-      //DebugLog (<< "TcpBaseTransport::processSomeWrites() " << curr->getSocket());
-      curr->performWrite();
-   }
-   else if (curr && fdset.hasException(curr->getSocket()))
-   {
-        int errNum = 0;
-        int errNumSize = sizeof(errNum);
-        getsockopt(curr->getSocket(),SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
-        InfoLog (<< "Exception writing to socket " << curr->getSocket() << " code: " << errNum << "; closing connection");
-        delete curr;
-   }
-}
-
-void
-TcpBaseTransport::processSomeReads(FdSet& fdset)
-{
-   Connection* currConnection = mConnectionManager.getNextRead(fdset); 
-   if (currConnection)
-   {
-      if ( fdset.readyToRead(currConnection->getSocket()) ||
-           currConnection->hasDataToRead() )
-      {
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
-         fdset.clear(currConnection->getSocket());
-
-         int bytesRead = currConnection->read(mStateMachineFifo);
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " << " read=" << bytesRead);            
-         if (bytesRead < 0)
-         {
-            DebugLog (<< "Closing connection bytesRead=" << bytesRead);
-            delete currConnection;
-         }
-      }
-      else if (fdset.hasException(currConnection->getSocket()))
-      {
-            int errNum = 0;
-            int errNumSize = sizeof(errNum);
-            getsockopt(currConnection->getSocket(),SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
-            InfoLog (<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
-            delete currConnection;
-      }
-   } 
-}
-
 
 void
 TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
@@ -265,12 +214,11 @@ void
 TcpBaseTransport::process(FdSet& fdSet)
 {
    processAllWriteRequests(fdSet);
-   if(fdSet.numReady > 0)
-   {
-      processSomeWrites(fdSet);
-      processSomeReads(fdSet);
-      processListen(fdSet);
-   }
+
+   // process the connections in ConnectionManager
+   mConnectionManager.process(fdSet, mStateMachineFifo);
+
+   processListen(fdSet);
 }
 
 
