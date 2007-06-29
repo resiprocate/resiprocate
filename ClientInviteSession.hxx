@@ -81,7 +81,7 @@ class ClientInviteSession : public InviteSession
       void startStaleCallTimer();
       void sendSipFrag(const SipMessage& response);
 
-      unsigned int mLastReceivedRSeq;
+      RAckCategory mRelRespInfo;
       unsigned int mStaleCallTimerSeq;
       unsigned int mCancelledTimerSeq;      
       ServerSubscriptionHandle mServerSub;
