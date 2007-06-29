@@ -1088,11 +1088,11 @@ main(int argc, const char** argv)
       }
       
       // .bwc. Wait for greylist to expire.
-
       sleep(16);
+
       {
          Query query;                        
-         query.handler = new TestDnsHandler(expected,blacklist,greylist,uri);
+         query.handler = new TestDnsHandler(expected,uri);
          query.uri = uri;
          cerr << "Creating DnsResult" << endl;      
          DnsResult* res = dns.createDnsResult(query.handler);
