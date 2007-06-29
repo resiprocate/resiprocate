@@ -2339,6 +2339,17 @@ TestSipEndPoint::reliableProvisional(const boost::shared_ptr<resip::SdpContents>
 }
 
 TestSipEndPoint::MessageExpectAction* 
+TestSipEndPoint::reliableProvisional(int rseq)
+{
+   if (rseq <= 0)
+   {
+      throw AssertException("RSEQ value must be greater than 0",
+                            __FILE__, __LINE__);
+   }
+   return new Ring183(*this, boost::shared_ptr<resip::SdpContents>(), rseq);
+}
+
+TestSipEndPoint::MessageExpectAction* 
 TestSipEndPoint::ok()
 {
    return new Ok(*this);
