@@ -419,7 +419,7 @@ TlsConnection::hasDataToRead() // has data that can be read
    //DebugLog(<<"hasDataToRead(): "<<p);
    return (p>0);
 #else // USE_SSL
-   return -1;
+   return false;
 #endif 
 }
 
