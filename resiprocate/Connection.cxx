@@ -250,10 +250,23 @@ Connection::requestWrite(SendData* sendData)
 
    if (mOutstandingSends.empty())
    {
-      getConnectionManager().addToWritable(this);
+      // is good to write
+      if ( isGood() )
+      {
+	 getConnectionManager().addToWritable(this);
+      }
    }
 
    mOutstandingSends.push_back(sendData);
+}
+
+void
+Connection::ensureWritable()
+{
+   if (!mOutstandingSends.empty())
+   {
+      getConnectionManager().addToWritable(this);
+   }
 }
 
 void
