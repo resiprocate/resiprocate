@@ -47,10 +47,10 @@ class Connection : public ConnectionLruList, public ConnectionReadList, public C
       Socket getSocket() const {return mSocket;}
 
       virtual bool hasDataToRead(); // has data that can be read 
-      virtual bool isGood(); // has valid connection
-
-      //bool hasDataToWrite() const;
+      virtual bool isGood(); // is good to read/write
+ 
       void requestWrite(SendData* sendData);
+      void ensureWritable();
 
       void performRead(int bytesRead, Fifo<TransactionMessage>& fifo);
       void performWrite();
