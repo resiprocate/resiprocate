@@ -266,6 +266,9 @@ TlsConnection::checkState()
    mState = Up;
    
    computePeerName(); // force peer name to get checked and perhaps cert loaded
+
+   ensureWritable();
+
 #endif // USE_SSL   
    return mState;
 }
@@ -296,11 +299,6 @@ TlsConnection::read(char* buf, int count )
       return 0;
    }
       
-   if ( !isGood() )
-   {
-      return -1;
-   }
-   
    int bytesRead = SSL_read(mSsl,buf,count);
    if (bytesRead <= 0 )
    {
@@ -425,21 +423,21 @@ TlsConnection::hasDataToRead() // has data that can be read
 
 
 bool 
-TlsConnection::isGood() // has data that can be read 
+TlsConnection::isGood()
 {
 #if defined(USE_SSL)
-   if ( mBio == 0 )
+   if ( mState != Up )
    {
       return false;
    }
 
    int mode = SSL_get_shutdown(mSsl);
-   if ( mode != 0 ) 
+   if ( mode != 0 )
    {
       return false;
    }
 
-#endif       
+#endif
    return true;
 }
 
