@@ -246,15 +246,14 @@ Connection::performRead(int bytesRead, Fifo<TransactionMessage>& fifo)
 void
 Connection::requestWrite(SendData* sendData)
 {
-    assert(mWho.transport);
+   assert(mWho.transport);
 
-    if (mOutstandingSends.empty())
+   if (mOutstandingSends.empty())
    {
       getConnectionManager().addToWritable(this);
    }
 
    mOutstandingSends.push_back(sendData);
-   
 }
 
 void
