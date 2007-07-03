@@ -123,13 +123,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       
       // this will check by connectionId first, then by address
       Connection* conn = mConnectionManager.findConnection(data->destination);
-      if ( conn )
-      {
-         assert( conn->transport() );
-      }
-      
-      //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
-      
+
       // There is no connection yet, so make a client connection
       if (conn == 0)
       {
