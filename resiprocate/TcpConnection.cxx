@@ -107,5 +107,3 @@ TcpConnection::isGood()
 {
    return true;
 }
-
-
