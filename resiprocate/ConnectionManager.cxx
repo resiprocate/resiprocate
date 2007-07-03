@@ -175,17 +175,19 @@ ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
       if (!currConnection)
 	 continue;
 
-      if (fdset.readyToWrite(currConnection->getSocket()))
-      {
-	 currConnection->performWrite();
-      }
-      else if (fdset.hasException(currConnection->getSocket()))
+      if (fdset.hasException(currConnection->getSocket()))
       {
 	 int errNum = 0;
 	 int errNumSize = sizeof(errNum);
 	 getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
 	 InfoLog(<< "Exception writing to socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
 	 delete currConnection;
+	 continue;
+      }
+
+      if (fdset.readyToWrite(currConnection->getSocket()))
+      {
+	 currConnection->performWrite();
       }
    }
 
@@ -202,11 +204,19 @@ ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
       if (!currConnection)
 	 continue;
 
+      if (fdset.hasException(currConnection->getSocket()))
+      {
+	 int errNum = 0;
+	 int errNumSize = sizeof(errNum);
+	 getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
+	 InfoLog (<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
+	 delete currConnection;
+	 continue;
+      }
+
       if ( fdset.readyToRead(currConnection->getSocket()) ||
 	   currConnection->hasDataToRead() )
       {
-	 fdset.clear(currConnection->getSocket());
-         
 	 std::pair<char*, size_t> writePair = currConnection->getWriteBuffer();
 	 size_t bytesToRead = resipMin(writePair.second, 
 				       static_cast<size_t>(Connection::ChunkSize));
@@ -231,14 +241,6 @@ ConnectionManager::process(FdSet& fdset, Fifo<TransactionMessage>& fifo)
 		   << " bytesToRead=" << bytesToRead << " read=" << bytesRead);
 	    delete currConnection;
 	 }
-      }
-      else if (fdset.hasException(currConnection->getSocket()))
-      {
-	 int errNum = 0;
-	 int errNumSize = sizeof(errNum);
-	 getsockopt(currConnection->getSocket(), SOL_SOCKET, SO_ERROR, (char *)&errNum, (socklen_t *)&errNumSize);
-	 InfoLog (<< "Exception reading from socket " << currConnection->getSocket() << " code: " << errNum << "; closing connection");
-	 delete currConnection;
       }
    }
 }
