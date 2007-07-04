@@ -734,7 +734,6 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
       << realm
       << Symbols::COLON
       << password;
-   //a1.flush();  // .slg. Not needed getHex now calls flush()
  
    return makeResponseMD5WithA1(a1.getHex(), method, digestUri, nonce, qop, 
                                 cnonce, cnonceCount, entity);
