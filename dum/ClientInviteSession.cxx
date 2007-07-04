@@ -866,7 +866,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          // too late
          break;
 
-      // !slg! This probably doesn't even make sense (after a 2xx)
+      // .slg. This doesn't really make sense (after a 2xx)
       case OnGeneralFailure:
       case On422Invite:
          break;
