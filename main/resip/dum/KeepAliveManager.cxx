@@ -35,7 +35,7 @@ void KeepAliveManager::add(const Tuple& target, int keepAliveInterval)
       (*it).second.refCount++;
       if(keepAliveInterval < (*it).second.keepAliveInterval)
       {
-          (*it).second.keepAliveInterval = keepAliveInterval;  // !slg! only allow value to be shortened???  What if 2 different profiles with different keepAliveTime settings are sharing this network association?
+          (*it).second.keepAliveInterval = keepAliveInterval;  // ?slg? only allow value to be shortened???  What if 2 different profiles with different keepAliveTime settings are sharing this network association?
       }
       DebugLog(<< "Association added for " << target);
    }
