@@ -736,10 +736,9 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
       SharedPtr<SipMessage> refer(new SipMessage());
       mDialog.makeRequest(*refer, REFER);
       refer->header(h_ReferTo) = referTo;
-      refer->header(h_ReferredBy) = myAddr();
+      refer->header(h_ReferredBy) = myAddr(); 
       refer->header(h_ReferredBy).remove(p_tag);   // tag-param not permitted in rfc3892; not the same as generic-param
 
-      // !slg! is it ok to do this - should it be an option?
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
@@ -1372,7 +1371,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case On2xxAnswer:
-      case On2xxOffer:  // !slg! doesn't really make sense
+      case On2xxOffer:  // .slg. doesn't really make sense
       {
          transition(Connected);
          handleSessionTimerResponse(msg);
@@ -1485,7 +1484,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          // Some UA's send a 100 response to a ReInvite - just ignore it
          break;
 
-      case On2xxAnswer:  // !slg! doesn't really make sense
+      case On2xxAnswer:  // .slg. doesn't really make sense
       case On2xxOffer:
       {
          transition(SentReinviteAnswered);

@@ -17,8 +17,6 @@ class DumTimeout : public ApplicationMessage
          SessionRefresh,
          Registration,
          RegistrationRetry,
-         Provisional1,  // ?slg? not used - remove?
-         Provisional2,  // ?slg? not used - remove?
          Publication,
          Retransmit200,
          Retransmit1xx,

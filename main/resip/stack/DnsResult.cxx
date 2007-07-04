@@ -564,10 +564,6 @@ DnsResult::primeResults()
    }
 
    // Either we are finished or there are results primed
-   //assert(mType == Finished ||        // !slg! handle() might end up destroying the DnsResult - so we can't safely do this assert
-   //       mType == Pending || 
-   //       (mType == Available && !mResults.empty())
-   //   );
 }
 
 // implement the selection algorithm from rfc2782 (SRV records)
