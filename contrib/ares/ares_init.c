@@ -40,13 +40,14 @@
 #include <io.h>
 #include <Windns.h>
 #endif
+
+#include "ares.h"
+#include "ares_private.h"
+
 #if defined(__APPLE__) || defined(__MACH__)
 #define __CF_USE_FRAMEWORK_INCLUDES__
 #include <SystemConfiguration/SystemConfiguration.h>
 #endif
-
-#include "ares.h"
-#include "ares_private.h"
 
 static int init_by_options(ares_channel channel, struct ares_options *options,
 			   int optmask);
