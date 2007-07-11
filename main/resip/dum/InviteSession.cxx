@@ -992,7 +992,7 @@ void
 InviteSession::dispatch(const SipMessage& msg)
 {
    // Look for 2xx retransmissions - resend ACK and filter out of state machine
-   if(msg.header(h_CSeq).method() == INVITE && msg.isResponse() && msg.header(h_StatusLine).statusCode() / 200 == 1)
+   if(msg.header(h_CSeq).method() == INVITE && msg.isResponse() && msg.header(h_StatusLine).statusCode() / 100 == 2)
    {
       AckMap::iterator i = mAcks.find(msg.header(h_CSeq).sequence());
       if (i != mAcks.end())
