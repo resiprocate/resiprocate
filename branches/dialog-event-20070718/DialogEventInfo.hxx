@@ -1,36 +1,65 @@
-#if !defined(RESIP_DialogEventHandler_HXX)
-#define RESIP_DialogEventHandler_HXX
+#if !defined(RESIP_DialogEventInfo_hxx)
+#define RESIP_DialogEventInfo_hxx
 
 namespace resip
 {
 
-class DialogEventHandler
-{
-   public:   
-      //?dcm? move to InviteSession, fix existing TerminateReason? Seems reasonable...
-      enum TerminateReason
-      {
-         Error,
-         Timeout, 
-         Replaced,
-         LocalBye,
-         RemoteBye,
-         Cancelled,
-         Rejected
-      };
-      virtual ~DialogEventHandler() {}
-      virtual void onTrying(const DialogEventInfo& info, const SipMessage& intialInvite)=0;
-      virtual void onProceeding(const DialogEventInfo& info)=0;
-      virtual void onEarly(const DialogEventInfo& info)=0;
-      //add conv. accessor for sdp.  Include INV/200?
-      virtual void onConfirmed(const DialogEventInfo& info)=0; 
-      virtual void onTerminated(const DialogEventInfo& info, TerminateReason)=0;
-};
-      
 
-}
+//As uac, one is created for DialogSet; given to first dialog, new instances are
+//generated for each fork.  As uas, created at the same time as a Dialog.
+class DialogEventInfo
+{
+      enum Direction 
+      {
+         Initiator,
+         Recipient
+      };
+      
+      //based on DialogEventId
+      bool operator==(const DialogEventInfo& rhs) const;
+      bool operator!=(const DialogEventInfo& rhs) const;
+      bool operator<(const DialogEventInfo& rhs) const;
+         
+      const Data& getDialogEventId;
+      
+      const Data& getCallId();
+      const Data& getLocalTag();
+      bool hasRemoteTag();
+      const Data& getRemoteTag();
+      
+      bool hasRefferedBy() const;
+      const NameAddr& getRefferredBy() const;
+      
+      const NameAddr& getLocalIdentity() const;
+      const NameAddr& getRemoteIdentity() const;
+      const Uri& getLocalTarget() const;
+      //has... below only applicable when direction is outgoing
+      bool hasRouteSet() const;
+      const NameAddrs& getRouteSet() const;
+      bool hasRemoteTarget() const;
+      const Uri& getRemoteTarget() const;
+   private:
+      Data DialogEventId; //unique for all Dialogs at this ua...may hash local +
+                          //callid, all 3 tags for forks.  Or could cycles an
+                          //integer...hash memory location+salt at cons time(might be easiest).
+      Data mDialogEventId;
+      DialogId mDialogId;
+      Direction mDirection;
+      //ID of the dialog this dialog replaced.
+      std::auto_ptr<DialogId> mReplacesId;
+      InviteSessionHandle mInviteSession;
+
+      NameAddr mReferredBy;
+//could back-point to dialog for this information to save space
+      NameAddrs mRouteSet; 
+      NameAddr mLocalIdentity;
+      NameAddr mRemoteIdentity;
+      Uri mLocalTarget;
+      Uri mRemoteTarget;
+};
 
 #endif
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
