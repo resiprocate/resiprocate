@@ -24,6 +24,8 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            IpVersion version,
                            const Data& pinterface) 
                            : InternalTransport(fifo, portNum, version, pinterface)
+                           , mBufferVec(MaxBufferSize + 1)
+                           , mBuffer(0)
 {
    InfoLog (<< "Creating UDP transport host=" << pinterface 
       << " port=" << portNum
@@ -32,6 +34,7 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
    bind();
+   mBuffer = &(*mBufferVec.begin());
 }
 
 UdpTransport::~UdpTransport()
@@ -89,15 +92,14 @@ UdpTransport::process(FdSet& fdset)
       // something about MSG_PEEK|MSG_TRUNC in Stevens..
       // .dlb. RFC3261 18.1.1 MUST accept 65K datagrams. would have to attempt to
       // adjust the UDP buffer as well...
-      char* buffer = new char[MaxBufferSize + 5];
 
       // !jf! how do we tell if it discarded bytes 
       // !ah! we use the len-1 trick :-(
       Tuple tuple(mTuple);
       socklen_t slen = tuple.length();
       int len = recvfrom( mFd,
-         buffer,
-         MaxBufferSize,
+         mBuffer,
+         MaxBufferSize + 1,
          0 /*flags */,
          &tuple.getMutableSockaddr(), 
          &slen);
@@ -112,23 +114,19 @@ UdpTransport::process(FdSet& fdset)
 
       if (len == 0 || len == SOCKET_ERROR)
       {
-         delete[] buffer; 
-         //buffer=0;
          return;
       }
 
-      if (len+1 >= MaxBufferSize)
+      if (len > MaxBufferSize)
       {
          InfoLog(<<"Datagram exceeded max length "<<MaxBufferSize);
-         delete [] buffer; 
-         //buffer=0;
          return;
       }
 
       //handle incoming CRLFCRLF keep-alive packets or 4 bytes (zero filled) UDP NAT Ping
       if (len == 4)
       {
-         if (strncmp(buffer, Symbols::CRLFCRLF, len) == 0)
+         if (strncmp(mBuffer, Symbols::CRLFCRLF, len) == 0)
          {
             StackLog(<<"Throwing away incoming firewall keep-alive");
             return;
@@ -141,10 +139,10 @@ UdpTransport::process(FdSet& fdset)
          //unsigned char value4 = buffer[3];
          //unsigned long bufferValue = value1 << 24 + value2 << 16 + value3 << 8 + value4;
          // !nash! add this to support UDP NAT Ping
-         if(buffer[0] == 0 && 
-            buffer[1] == 0 &&
-            buffer[2] == 0 &&
-            buffer[3] == 0)
+         if(mBuffer[0] == 0 && 
+            mBuffer[1] == 0 &&
+            mBuffer[2] == 0 &&
+            mBuffer[3] == 0)
          {
             int count = sendto(mFd, 
                Symbols::CRLF, 2,  
@@ -154,7 +152,6 @@ UdpTransport::process(FdSet& fdset)
          }
       }
 
-      buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
 
       //DebugLog ( << "UDP Rcv : " << len << " b" );
       //DebugLog ( << Data(buffer, len).escaped().c_str());
@@ -170,11 +167,14 @@ UdpTransport::process(FdSet& fdset)
 
       // Save all the info where this message came from
       tuple.transport = this;
+      char* buffer = new char[len + 1];
+      ::memcpy(buffer, mBuffer, len);
+      buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors
       message->setSource(tuple);   
       //DebugLog (<< "Received from: " << tuple);
 
       // Tell the SipMessage about this datagram buffer.
-      message->addBuffer(buffer);
+      message->addBuffer(buffer); // take over buffer memory
 
 
       mMsgHeaderScanner.prepareForMessage(message.get());
@@ -186,7 +186,8 @@ UdpTransport::process(FdSet& fdset)
          MsgHeaderScanner::scrEnd)
       {
          StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
-         StackLog(<< Data(buffer, len));
+         //StackLog(<< Data(buffer, len));
+         StackLog(<< buffer);
          return;
       }
 
