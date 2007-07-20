@@ -6,6 +6,8 @@
 #include "resiprocate/os/HeapInstanceCounter.hxx"
 #include "resiprocate/os/Win32Export.hxx"
 
+#include <vector>
+
 namespace resip
 {
 
@@ -27,10 +29,13 @@ class RESIP_API UdpTransport : public InternalTransport
       TransportType transport() const { return UDP; }
       virtual void buildFdSet( FdSet& fdset) const;
 
-      static const int MaxBufferSize = 8192;
+      static const int MaxBufferSize = 0xffff; // 65K
 
    private:
       MsgHeaderScanner mMsgHeaderScanner;
+
+      std::vector<char> mBufferVec;
+      char* mBuffer;
 };
 
 }
