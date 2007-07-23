@@ -20,7 +20,7 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum,
 
    if (userProfile->getRinstanceEnabled())
    {
-      mLastRequest->header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
+      mLastRequest->header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // .slg. poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
    }
 
    if (userProfile->getMethodsParamEnabled())

@@ -8,7 +8,7 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 UserAuthInfo::UserAuthInfo(const Data& user,
                            const Data& realm,

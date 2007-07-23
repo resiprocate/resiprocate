@@ -430,7 +430,7 @@ Proxy::isMyUri(const Uri& uri)
    if(ret) 
    {
       // check if we are listening on the specified port
-      // !slg! this is not perfect, but it will allow us to operate in most environments
+      // .slg. this is not perfect, but it will allow us to operate in most environments
       //       where the repro proxy and a UA are running on the same machine.
       //       Note:  There is a scenario that we cannot correctly handle - when a UA and 
       //       repro are running on the same machine, and they are using the same port but on 

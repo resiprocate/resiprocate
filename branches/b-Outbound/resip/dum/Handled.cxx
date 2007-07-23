@@ -3,7 +3,7 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 
 using namespace resip;
