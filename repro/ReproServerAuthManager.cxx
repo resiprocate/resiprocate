@@ -6,7 +6,7 @@
 #include "repro/UserStore.hxx"
 #include "repro/AclStore.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;

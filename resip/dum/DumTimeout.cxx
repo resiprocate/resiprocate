@@ -78,12 +78,6 @@ DumTimeout::encode(std::ostream& strm) const
       case RegistrationRetry:
          strm <<"RegistrationRetry";
          break;
-      case Provisional1:
-         strm <<"Provisional1";
-         break;
-      case Provisional2:
-         strm <<"Provisional2";
-         break;
       case Publication:
          strm <<"Publication";
          break;

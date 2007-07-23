@@ -99,7 +99,7 @@ ClientRegistration::addBinding(const NameAddr& contact, UInt32 registrationTime)
 
    if(mDialogSet.getUserProfile()->getRinstanceEnabled())
    {
-      mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
+      mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // .slg. poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
    }
 
    next->header(h_Contacts) = mMyContacts;
