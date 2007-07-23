@@ -1791,20 +1791,14 @@ TransactionState::sendToTU(TransactionMessage* msg) const
             // blacklist last target.
             // .bwc. If there is no Retry-After, we do not blacklist
             // (see RFC 3261 sec 21.5.4 para 1)
-            if(sipMsg->exists(resip::h_RetryAfter))
+            if(sipMsg->exists(resip::h_RetryAfter) && 
+               sipMsg->header(resip::h_RetryAfter).isWellFormed())
             {
-               try
-               {
-                  unsigned int relativeExpiry= sipMsg->header(resip::h_RetryAfter).value();
-                  
-                  mDnsResult->blacklistLast(resip::Timer::getTimeMs()+relativeExpiry*1000);
-               }
-               catch(resip::ParseBuffer::Exception&)
-               {
-                  mDnsResult->greylistLast(resip::Timer::getTimeMs()+32000);
-               }
+               unsigned int relativeExpiry= sipMsg->header(resip::h_RetryAfter).value();
+               
+               mDnsResult->blacklistLast(resip::Timer::getTimeMs()+relativeExpiry*1000);
             }
-            
+         
             break;
          case 408:
             if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only greylist if internally generated and we haven't received any responses yet
