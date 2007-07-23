@@ -597,8 +597,11 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       DebugLog(<<"Set tuple dest: " << request.getDestination());
 
       // .bwc. Path header addition.
-      request.header(h_Routes).append(target->rec().mSipPath);
-            
+      if(!target->rec().mSipPath.empty())
+      {
+         request.header(h_Routes).append(target->rec().mSipPath);
+      }
+
       // !jf! unleash the baboons here
       // a baboon might adorn the message, record call logs or CDRs, might
       // insert loose routes on the way to the next hop
