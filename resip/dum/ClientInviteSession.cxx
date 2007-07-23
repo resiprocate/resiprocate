@@ -28,7 +28,6 @@ ClientInviteSession::ClientInviteSession(DialogUsageManager& dum,
                                          DialogUsageManager::EncryptionLevel level,
                                          ServerSubscriptionHandle serverSub) :
    InviteSession(dum, dialog),
-   mLastReceivedRSeq(0),
    mStaleCallTimerSeq(1),
    mCancelledTimerSeq(1),
    mServerSub(serverSub)
@@ -565,7 +564,7 @@ ClientInviteSession::sendPrackIfNeeded(const SipMessage& msg)
    {
       SharedPtr<SipMessage> prack(new SipMessage);
       mDialog.makeRequest(*prack, PRACK);
-      prack->header(h_RSeq) = msg.header(h_RSeq);
+      prack->header(h_RAck) = mRelRespInfo;
       send(prack);
    }
 }
@@ -578,7 +577,8 @@ ClientInviteSession::sendPrack(const SdpContents& sdp)
 {
    SharedPtr<SipMessage> prack(new SipMessage);
    mDialog.makeRequest(*prack, PRACK);
-   prack->header(h_RSeq).value() = mLastReceivedRSeq;
+   prack->header(h_RAck)= mRelRespInfo;
+   
    InviteSession::setSdp(*prack, sdp);
 
    //  Remember last session modification.
@@ -866,7 +866,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          // too late
          break;
 
-      // !slg! This probably doesn't even make sense (after a 2xx)
+      // .slg. This doesn't really make sense (after a 2xx)
       case OnGeneralFailure:
       case On422Invite:
          break;
@@ -1275,6 +1275,8 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case On487Invite:
       case OnRedirect:
       case On422Invite:
+      case On491Invite:
+      case OnInviteFailure:
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);
          mDum.destroy(this);
@@ -1313,17 +1315,21 @@ ClientInviteSession::checkRseq(const SipMessage& msg)
       {
          // store state about the provisional if reliable, so we can detect retransmissions
          unsigned int rseq = (unsigned int) msg.header(h_RSeq).value();
-         if (rseq == mLastReceivedRSeq)
+         unsigned int lastRseq = (unsigned int) mRelRespInfo.rSequence();
+         
+         if (rseq == lastRseq)
          {
             DebugLog(<< "Discarding reliable 1xx retranmission with rseq " << rseq);
             return true;
          }
-         else if (mLastReceivedRSeq != 0 && rseq > mLastReceivedRSeq + 1)
+         else if (lastRseq != 0 && rseq > lastRseq + 1)
          {
             DebugLog(<< "Discarding out of order reliable 1xx with rseq " << rseq);
             return true;
          }
-         mLastReceivedRSeq = rseq;
+         mRelRespInfo.rSequence() = rseq;
+         mRelRespInfo.cSequence() = msg.header(h_CSeq).sequence();
+         mRelRespInfo.method() = msg.header(h_CSeq).method();
       }
    }
    return false;

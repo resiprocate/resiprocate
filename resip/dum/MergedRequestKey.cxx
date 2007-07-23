@@ -6,7 +6,8 @@ using namespace resip;
 
 const MergedRequestKey MergedRequestKey::Empty;
 
-MergedRequestKey::MergedRequestKey()
+MergedRequestKey::MergedRequestKey():
+   mCheckRequestUri(true)
 {
 }
 

@@ -378,7 +378,7 @@ DialogSet::dispatch(const SipMessage& msg)
                   mDum.destroy(this);
                }
                break;
-               // ?slg? shouldn't we handle register, ood and refer there too?
+               // ?slg? shouldn't we handle register, ood and refer here too?
             default:
                mState = Destroying;
                mDum.destroy(this);

@@ -22,7 +22,7 @@ Processor::~Processor()
 void
 Processor::pushAddress(const std::vector<short>& address)
 {
-   for(std::vector<short>::const_reverse_iterator i=address.rbegin();i!=address.rend();++i)
+   for(std::vector<short>::const_iterator i=address.begin();i!=address.end();++i)
    {
       mAddress.push_back(*i);
    }
