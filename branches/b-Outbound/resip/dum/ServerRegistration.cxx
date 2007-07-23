@@ -200,36 +200,50 @@ ServerRegistration::dispatch(const SipMessage& msg)
         handler->onRemoveAll(getHandle(), msg);
         return;
       }
-      
+
       rec.mContact=*i;
       rec.mRegExpires=((UInt64)expires)*1000+now;
-      
-      // !bwc! If, in the end, this is true, it means all necessary conditions
+
+      if(i->exists(p_Instance))
+      {
+         rec.mInstance=i->param(p_Instance);
+      }
+
+      if(!msg.empty(h_Paths))
+      {
+         rec.mSipPath=msg.header(h_Paths);
+      }
+
+      rec.mLastUpdated=now;
+
+      // .bwc. If, in the end, this is true, it means all necessary conditions
       // for outbound support have been met.
       bool supportsOutbound=InteropHelper::getOutboundSupported();
-      
-      // !bwc! We only store flow information if we have a direct flow to the
+
+      // .bwc. We only store flow information if we have a direct flow to the
       // endpoint. We do not create a flow if there is an edge-proxy, because if
       // our connection to the edge proxy fails, the flow from the edge-proxy to
       // the endpoint is still good, so we should not discard the registration.
       bool haveDirectFlow=true;
+
       if(supportsOutbound)
       {
          try
          {
-            if(msg.exists(h_Paths) 
-               && !msg.header(h_Paths).empty())
+            if(!i->exists(p_Instance) || !i->exists(p_regid))
+            {
+               supportsOutbound=false;
+            }
+
+            if(!msg.empty(h_Paths))
             {
                haveDirectFlow=false;
                if(!msg.header(h_Paths).back().exists(p_ob))
                {
                   supportsOutbound=false;
                }
-               rec.mSipPath=msg.header(h_Paths);
             }
-            else if(msg.header(h_Vias).size() > 1 
-                     || !i->exists(p_Instance) 
-                     || !i->exists(p_regid) )
+            else if(msg.header(h_Vias).size() > 1)
             {
                supportsOutbound=false;
             }
@@ -239,13 +253,6 @@ ServerRegistration::dispatch(const SipMessage& msg)
             supportsOutbound=false;
          }
       }
-      
-      if(i->exists(p_Instance))
-      {
-         rec.mInstance=i->param(p_Instance);
-      }
-      
-      rec.mLastUpdated=now;
 
       // .bwc. The outbound processing
       if(supportsOutbound)
