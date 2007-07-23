@@ -556,6 +556,15 @@ DnsResult::primeResults()
       // don't call primeResults since we need to wait for the response to
       // AAAA/A query first
    }
+   else if(!mGreylistedTuples.empty())
+   {
+      for(std::vector<Tuple>::iterator i = mGreylistedTuples.begin(); i != mGreylistedTuples.end(); ++i)
+      {
+         mResults.push_back(*i);
+      }
+      mGreylistedTuples.clear();
+      transition(Available);
+   }
    else
    {
       bool changed = (mType == Pending);
@@ -564,10 +573,6 @@ DnsResult::primeResults()
    }
 
    // Either we are finished or there are results primed
-   //assert(mType == Finished ||        // !slg! handle() might end up destroying the DnsResult - so we can't safely do this assert
-   //       mType == Pending || 
-   //       (mType == Available && !mResults.empty())
-   //   );
 }
 
 // implement the selection algorithm from rfc2782 (SRV records)
@@ -792,7 +797,6 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
 
    if (result.status == 0)
    {
-      std::vector<Tuple> greylistedTuples;
       for (vector<DnsHostRecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          in_addr addr;
@@ -806,7 +810,8 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
                mResults.push_back(tuple);
                break;
             case TupleMarkManager::GREY:
-               greylistedTuples.push_back(tuple);
+               StackLog(<< "Adding greylisted tuple " << tuple);
+               mGreylistedTuples.push_back(tuple);
                break;
             case TupleMarkManager::BLACK:
             default:
@@ -815,13 +820,6 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
       
       }
       
-      // .bwc. Greylisted tuples come last, but are prioritized as normal among
-      // one-another.
-      for(std::vector<Tuple>::iterator i = greylistedTuples.begin();
-            i != greylistedTuples.end(); ++i)
-      {
-         mResults.push_back(*i);
-      }
    }
    else
    {
@@ -885,8 +883,20 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
          {
             if(mSRVResults.empty())
             {
-               transition(Finished);
-               clearCurrPath();
+               if (mGreylistedTuples.empty())
+               {
+                  transition(Finished);
+                  clearCurrPath();
+               }
+               else
+               {
+                  for(std::vector<Tuple>::iterator i = mGreylistedTuples.begin(); i != mGreylistedTuples.end(); ++i)
+                  {
+                     mResults.push_back(*i);
+                  }
+                  mGreylistedTuples.clear();
+                  transition(Available);
+               }
             }
             else
             {
@@ -897,8 +907,20 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
          // .bwc. If this A query failed, don't give up if there are more SRVs!
          if(mSRVResults.empty())
          {
-            transition(Finished);
-            clearCurrPath();
+            if (mGreylistedTuples.empty())
+            {
+               transition(Finished);
+               clearCurrPath();
+            }
+            else
+            {
+               for(std::vector<Tuple>::iterator i = mGreylistedTuples.begin(); i != mGreylistedTuples.end(); ++i)
+               {
+                  mResults.push_back(*i);
+               }
+               mGreylistedTuples.clear();
+               transition(Available);
+            }
          }
          else
          {
@@ -936,7 +958,6 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 
    if (result.status == 0)
    {
-      std::vector<Tuple> greylistedTuples;
       for (vector<DnsAAAARecord>::const_iterator it = result.records.begin(); it != result.records.end(); ++it)
       {
          Tuple tuple((*it).v6Address(), mPort, mTransport, mTarget);
@@ -948,7 +969,8 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
                mResults.push_back(tuple);
                break;
             case TupleMarkManager::GREY:
-               greylistedTuples.push_back(tuple);
+               StackLog(<< "Adding greylisted tuple " << tuple);
+               mGreylistedTuples.push_back(tuple);
                break;
             case TupleMarkManager::BLACK:
             default:
@@ -957,13 +979,6 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
       
       }
       
-      // .bwc. Greylisted tuples come last, but are prioritized as normal among
-      // one-another.
-      for(std::vector<Tuple>::iterator i = greylistedTuples.begin();
-            i != greylistedTuples.end(); ++i)
-      {
-         mResults.push_back(*i);
-      }
    }
    else
    {

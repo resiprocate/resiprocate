@@ -16,7 +16,7 @@
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::TEST
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 CommandLineParser::CommandLineParser(int argc, char** argv)
 {

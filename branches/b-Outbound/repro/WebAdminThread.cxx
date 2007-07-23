@@ -5,7 +5,7 @@
 #include "repro/WebAdmin.hxx"
 #include "repro/WebAdminThread.hxx"
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 using namespace resip;
 using namespace repro;

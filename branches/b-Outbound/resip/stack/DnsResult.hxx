@@ -116,7 +116,8 @@ class DnsResult : public DnsResultSink
 
       // return the target of associated query
       Data target() const { return mTarget; }
-      
+      unsigned int getSRVResultsSize() const {return mSRVResults.size();}
+
       // Will delete this DnsResult if no pending queries are out there or wait
       // until the pending queries get responses and then delete
       void destroy();
@@ -223,6 +224,7 @@ class DnsResult : public DnsResultSink
       // This is where the current pending (ordered) results are stored. As they
       // are retrieved by calling next(), they are popped from the front of the list
       std::deque<Tuple> mResults;
+      std::vector<Tuple> mGreylistedTuples;
       
       // The best NAPTR record. Only one NAPTR record will be selected
       NAPTR mPreferredNAPTR;

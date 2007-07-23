@@ -431,7 +431,6 @@ TransactionState::process(TransactionController& controller)
                {
                   assert(matchingInvite);
                   state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite, tid);
-                  //state->processReliability(matchingInvite->mTarget.getType());  // !slg! Not needed - timer started in makeCancelTransaction
                   state->processClientNonInvite(sip);
                   
                   // for the INVITE in case we never get a 487

@@ -26,8 +26,8 @@ class UserAgent : public CommandLineParser,
       UserAgent(int argc, char** argv);
       virtual ~UserAgent();
 
-      void startup();
-      void shutdown();
+      virtual void startup();
+      virtual void shutdown();
 
       void process();
       
@@ -90,7 +90,6 @@ class UserAgent : public CommandLineParser,
    protected:
       void addTransport(TransportType type, int port);
 
-   private:
       SharedPtr<MasterProfile> mProfile;
       Security* mSecurity;
       SipStack mStack;
