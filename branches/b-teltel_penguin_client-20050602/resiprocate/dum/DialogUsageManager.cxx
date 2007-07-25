@@ -1100,14 +1100,14 @@ DialogUsageManager::process(bool block, resip::Lockable* mutex)   // !polo! bloc
       if(block)
       {
          msg.reset(mFifo.getNext());
-         hasNext = (mFifo.size() != 0);
       }
       else
       {
-         msg.reset(mFifo.getNext((bool&)hasNext));
+         msg.reset(mFifo.getNext(5));
       }
       if (msg.get())
       {
+         hasNext = (mFifo.size() != 0);
          if (mutex)
          {
             resip::Lock lock(*mutex); 
