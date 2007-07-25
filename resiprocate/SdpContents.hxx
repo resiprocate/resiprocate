@@ -471,7 +471,8 @@ class RESIP_API SdpContents : public Contents
             const Encryption& getEncryption() const {return mEncryption;}
             const Encryption& encryption() const {return mEncryption;}
             Encryption& encryption() {return mEncryption;}
-            const std::list<Medium>& media() const {return mMedia;}
+            typedef std::list<Medium> MediumListType;
+            const MediumListType& media() const {return mMedia;}
             std::list<Medium>& media() {return mMedia;}
 
             void addEmail(const Email& email);
