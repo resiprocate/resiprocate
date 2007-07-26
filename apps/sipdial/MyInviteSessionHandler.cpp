@@ -29,15 +29,15 @@ void MyInviteSessionHandler::onFailure(ClientRegistrationHandle, const SipMessag
 {
 }
 
-void MyInviteSessionHandler::onMessage(resip::Handle<resip::InviteSession>, const resip::SipMessage& msg) 
+void MyInviteSessionHandler::onMessage(InviteSessionHandle, const resip::SipMessage& msg) 
 {
 }
 
-void MyInviteSessionHandler::onMessageSuccess(resip::Handle<resip::InviteSession>, const resip::SipMessage&) 
+void MyInviteSessionHandler::onMessageSuccess(InviteSessionHandle, const resip::SipMessage&) 
 {
 }
 
-void MyInviteSessionHandler::onMessageFailure(resip::Handle<resip::InviteSession>, const resip::SipMessage&) 
+void MyInviteSessionHandler::onMessageFailure(InviteSessionHandle, const resip::SipMessage&) 
 {
 }
 
@@ -94,7 +94,7 @@ void MyInviteSessionHandler::onOfferRequired(InviteSessionHandle, const SipMessa
 {
 }
 
-void MyInviteSessionHandler::onOfferRejected(Handle<InviteSession>, const SipMessage *msg) 
+void MyInviteSessionHandler::onOfferRejected(InviteSessionHandle, const SipMessage *msg) 
 {
 }
 
@@ -120,7 +120,7 @@ void MyInviteSessionHandler::onReferRejected(InviteSessionHandle, const SipMessa
    mDialInstance.onReferFailed();
 }
 
-void MyInviteSessionHandler::onReferNoSub(resip::Handle<resip::InviteSession> is, const resip::SipMessage& msg) 
+void MyInviteSessionHandler::onReferNoSub(InviteSessionHandle is, const resip::SipMessage& msg) 
 {
 }
 
