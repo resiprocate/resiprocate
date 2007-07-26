@@ -341,11 +341,6 @@ UserAgent::onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const Si
 // ClientSubscriptionHandler ///////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void
-UserAgent::onRefreshRejected(ClientSubscriptionHandle h, const SipMessage& rejection)
-{
-}
-
-void
 UserAgent::onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder)
 {
 }
