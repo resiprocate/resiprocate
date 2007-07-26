@@ -67,7 +67,6 @@ class UserAgent : public CommandLineParser,
       virtual int onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMessage& msg);
 
       // ClientSubscriptionHandler ///////////////////////////////////////////////////
-      virtual void onRefreshRejected(ClientSubscriptionHandle h, const SipMessage& rejection);
       virtual void onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder);
       virtual void onUpdateActive(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder);
       virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify, bool outOfOrder);
