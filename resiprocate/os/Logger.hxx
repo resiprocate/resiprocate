@@ -5,10 +5,10 @@
 
 #include "resiprocate/os/Log.hxx"
 #include "resiprocate/os/Lock.hxx"
-
-#ifdef WIN32
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/Data.hxx"
+
+#ifdef WIN32
 #include <windows.h>
 #endif 
 
@@ -47,19 +47,6 @@ GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Err, args_)
 #define CritLog(args_) \
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Crit, args_)
 
-#define CHECK_RECURSIVE_LOG
-class AssertOnRecursiveLock
-{
-   public:
-      AssertOnRecursiveLock();
-      void set();
-      ~AssertOnRecursiveLock();
-   private:
-      // no object semantics
-      AssertOnRecursiveLock(const AssertOnRecursiveLock &);
-      const AssertOnRecursiveLock & operator=(const AssertOnRecursiveLock &);
-};
-
 // do/while allows a {} block in an expression
 #define GenericLog(system_, level_, args_)                                      \
 do                                                                              \
@@ -69,12 +56,16 @@ do                                                                              
    {                                                                            \
       if (level_ <= setting->level)                                             \
       {                                                                         \
-         AssertOnRecursiveLock check;                                           \
+         char buffer_[128];                                                     \
+         resip::Data data_(resip::Data::Borrow, buffer_, sizeof(buffer_));      \
+         data_.clear();                                                         \
+         resip::oDataStream stream_(data_);                                     \
+         stream_ args_;                                                         \
+         stream_.flush();                                                       \
          resip::Lock lock(resip::Log::_mutex);                                  \
-         check.set();                                                           \
          resip::Log::tags(level_, system_, __FILE__, __LINE__,                  \
                           resip::GenericLogImpl::Instance()) << DELIM           \
-                          args_ << std::endl;                                   \
+			  << data_ << std::endl;                                \
          if (resip::Log::_type == resip::Log::VSDebugWindow)                    \
          {                                                                      \
             resip::GenericLogImpl::OutputToWin32DebugWindow();                  \
@@ -85,18 +76,19 @@ do                                                                              
    {                                                                            \
       if (resip::GenericLogImpl::isLogging(level_))                             \
       {                                                                         \
-         AssertOnRecursiveLock check;                                           \
+         char buffer_[128];                                                     \
+         resip::Data data_(resip::Data::Borrow, buffer_, sizeof(buffer_));      \
+         data_.clear();                                                         \
+         resip::oDataStream stream_(data_);                                     \
+         stream_ args_;                                                         \
+         stream_.flush();                                                       \
          resip::Lock lock(resip::Log::_mutex);                                  \
-         check.set();                                                           \
-         if (resip::GenericLogImpl::isLogging(level_))                          \
+         resip::Log::tags(level_, system_, __FILE__, __LINE__,                  \
+                          resip::GenericLogImpl::Instance()) << DELIM           \
+                          << data_ << std::endl;                                \
+         if (resip::Log::_type == resip::Log::VSDebugWindow)                    \
          {                                                                      \
-            resip::Log::tags(level_, system_, __FILE__, __LINE__,               \
-                             resip::GenericLogImpl::Instance()) << DELIM        \
-                             args_ << std::endl;                                \
-            if (resip::Log::_type == resip::Log::VSDebugWindow)                 \
-            {                                                                   \
-               resip::GenericLogImpl::OutputToWin32DebugWindow();               \
-            }                                                                   \
+            resip::GenericLogImpl::OutputToWin32DebugWindow();                  \
          }                                                                      \
       }                                                                         \
    }                                                                            \

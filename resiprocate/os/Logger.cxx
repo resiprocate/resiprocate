@@ -16,40 +16,6 @@ Data* GenericLogImpl::mWin32DebugData = 0;
 DataStream* GenericLogImpl::mWin32DebugStream = 0;
 #endif
 
-#ifndef WIN32
-static pthread_t currentThread;
-#endif
-
-AssertOnRecursiveLock::AssertOnRecursiveLock()
-{
-#ifdef CHECK_RECURSIVE_LOG
-#ifdef WIN32
-#else
-   // should be atomic
-   assert(currentThread != ThreadIf::selfId());
-#endif
-#endif
-}
-
-void
-AssertOnRecursiveLock::set()
-{
-#ifdef CHECK_RECURSIVE_LOG
-#ifdef WIN32
-#else
-   currentThread = ThreadIf::selfId();
-#endif
-#endif
-}
-
-AssertOnRecursiveLock::~AssertOnRecursiveLock()
-{
-#ifdef WIN32
-#else
-   currentThread = 0;
-#endif
-}
-
 std::ostream& 
 GenericLogImpl::Instance()
 {
