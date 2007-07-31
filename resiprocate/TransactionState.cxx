@@ -1393,7 +1393,6 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
    if (!sip)
    {
       CritLog(<<"sendToWire: message not a sip message at address " << (void*)msg);
-      assert(sip);
       return;
    }
 
@@ -1447,7 +1446,6 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
    {
       StackLog (<< "sendToWire with no dns result: " << *this);
       assert(sip->isRequest());
-      assert(!mIsCancel);
       mDnsResult = mController.mTransportSelector.createDnsResult(this);
       mController.mTransportSelector.dnsResolve(mDnsResult, sip);
 
@@ -1460,14 +1458,16 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
    else // reuse the last dns tuple
    {
       assert(sip->isRequest());
-      assert(mTarget.getType() != UNKNOWN_TRANSPORT);
-      if (resend)
+      if (mTarget.getType() != UNKNOWN_TRANSPORT)
       {
-         mController.mTransportSelector.retransmit(sip, mTarget);
-      }
-      else
-      {
-         mController.mTransportSelector.transmit(sip, mTarget);
+	 if (resend)
+	 {
+	    mController.mTransportSelector.retransmit(sip, mTarget);
+	 }
+	 else
+	 {
+	    mController.mTransportSelector.transmit(sip, mTarget);
+	 }
       }
    }
 }
