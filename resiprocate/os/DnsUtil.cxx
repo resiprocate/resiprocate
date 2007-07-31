@@ -228,12 +228,11 @@ DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
    int res = DnsUtil::inet_pton(ipV6Address, dst);
    if (res <= 0)
    {
-      WarningLog(<< ipV6Address << " not well formed IPV6 address");
-      assert(0);
+      InfoLog(<< ipV6Address << " not well formed IPV6 address");
+      return Data::Empty;
    }
    return DnsUtil::inet_ntop(dst);
 #else
-   assert(0);
 
    return Data::Empty;
 #endif
