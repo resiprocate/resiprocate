@@ -743,7 +743,13 @@ Uri::parse(ParseBuffer& pb)
       start = pb.skipChar();
       pb.skipToChar(']');
       pb.data(mHost, start);
-      DnsUtil::canonicalizeIpV6Address(mHost);
+      Data canonicalizedHost = DnsUtil::canonicalizeIpV6Address(mHost);
+      if (canonicalizedHost.empty())
+      {
+         throw ParseBuffer::Exception("Unparsable V6 address (note, this might"
+                                      " be unparsable because IPV6 support is not"
+                                      " enabled)", "Uri", __FILE__, __LINE__);
+      }
       pb.skipChar();
    }
    else
