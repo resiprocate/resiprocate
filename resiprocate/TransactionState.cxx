@@ -167,7 +167,7 @@ TransactionState::process(TransactionController& controller)
             state->processServerStale(message);
             break;
          default:
-            CritLog(<<"internal state error");
+            CritLog(<<"internal state error: " << state->mMachine);
             assert(0);
             return;
       }
@@ -389,6 +389,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
    {
       //StackLog (<< "received new non-invite request");
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      delete mMsgToRetransmit;
       mMsgToRetransmit = sip;
       mController.mTimers.add(Timer::TimerF, mId, Timer::TF);
       sendToWire(sip);  // don't delete
@@ -776,6 +777,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
       {
          if (mIsReliable)
          {
+	    delete mMsgToRetransmit;
             mMsgToRetransmit = sip;
             sendToWire(sip); // don't delete msg
             terminateServerTransaction(mId);
@@ -787,6 +789,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
             {
                mState = Completed;
                mController.mTimers.add(Timer::TimerJ, mId, 64*Timer::T1 );
+	       delete mMsgToRetransmit;
                mMsgToRetransmit = sip;
                sendToWire(sip); // don't delete msg
             }
