@@ -77,6 +77,7 @@ extern "C" {
 #define ARES_FLAG_NOSEARCH	(1 << 5)
 #define ARES_FLAG_NOALIASES	(1 << 6)
 #define ARES_FLAG_NOCHECKRESP	(1 << 7)
+#define ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3 (1 << 8) /* when rcode of 3 ('No such name') is recvd */
 
 /* Option mask values */
 #define ARES_OPT_FLAGS		(1 << 0)
@@ -93,7 +94,7 @@ extern "C" {
 
 #define ARES_CAP_IPV6 		(1 << 0)
 
-#ifdef WIN32
+#if defined(WIN32) || defined(sun)
 typedef unsigned char u_int8_t;
 #endif
 

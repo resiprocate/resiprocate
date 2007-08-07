@@ -66,6 +66,8 @@ static char *try_config(char *s, char *opt);
 static const char *try_option(const char *p, const char *q, const char *opt);
 static int ip_addr(const char *s, int len, struct in_addr *addr);
 static void natural_mask(struct apattern *pat);
+static int find_server(struct server_state *servers, int nservers, struct in_addr addr);
+static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* physAddrLen, struct in_addr addr);
 
 static int	inet_pton4(const char *src, u_char *dst);
 #ifdef USE_IPV6
@@ -242,6 +244,7 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
         malloc(options->nservers * sizeof(struct server_state));
      if (!channel->servers && options->nservers != 0)
         return ARES_ENOMEM;
+     memset(channel->servers, '\0', options->nservers * sizeof(struct server_state));
      for (i = 0; i < options->nservers; i++)
      {
 #ifdef USE_IPV6
@@ -531,16 +534,30 @@ static int init_by_defaults(ares_channel channel)
  		       FreeLibrary(hLib);
 			   return ARES_ENOMEM;
 		   }
+           memset(channel->servers, '\0', num * sizeof(struct server_state));
 
 		   channel->nservers = 0;
            pIPAddr = &FixedInfo->DnsServerList;   
            while ( pIPAddr && strlen(pIPAddr->IpAddress.String) > 0)
 		   {
+             struct in_addr addr;
+             addr.s_addr = inet_addr(pIPAddr->IpAddress.String);
+             // append unique only
+             if (find_server(channel->servers, channel->nservers, addr) >= 0)
+                continue;
+
              // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
 #ifdef USE_IPV6			 
 			 channel->servers[ channel->nservers ].family = AF_INET;
 #endif
-	         channel->servers[ channel->nservers ].addr.s_addr = inet_addr(pIPAddr ->IpAddress.String);
+	         channel->servers[channel->nservers].addr = addr;
+             if ((channel->flags & ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3))
+             {
+               get_physical_address(channel->servers[channel->nservers].physical_addr,
+                                    MAX_ADAPTER_ADDRESS_LENGTH,
+                                    &channel->servers[channel->nservers].physical_addr_len,
+                                    addr);
+             }
 			 channel->nservers++;
 
              pIPAddr = pIPAddr ->Next;
@@ -553,6 +570,7 @@ static int init_by_defaults(ares_channel channel)
 		   channel->servers = malloc(sizeof(struct server_state));
 		   if (!channel->servers)
               return ARES_ENOMEM;
+           memset(channel->servers, '\0', sizeof(struct server_state));
 
 #ifdef USE_IPV6			 
            channel->servers[0].family = AF_INET;
@@ -572,7 +590,8 @@ static int init_by_defaults(ares_channel channel)
 		channel->servers = malloc(sizeof(struct server_state));
 		if (!channel->servers)
 			return ARES_ENOMEM;
-			
+        memset(channel->servers, '\0', sizeof(struct server_state));
+
 		// need a way to test here if v4 or v6 is running
 		// if v4 is running...
 		channel->servers[0].addr.s_addr = htonl(INADDR_LOOPBACK);
@@ -691,6 +710,7 @@ static int config_nameserver(struct server_state **servers, int *nservers,
   newserv = realloc(*servers, (*nservers + 1) * sizeof(struct server_state));
   if (!newserv)
     return ARES_ENOMEM;
+  memset(newserv + (*nservers * sizeof(struct server_state)), '\0', sizeof(struct server_state));   // clear *new* memory only
 
 #ifdef USE_IPV6
   newserv[*nservers].family = family;
@@ -880,6 +900,121 @@ static void natural_mask(struct apattern *pat)
   else
     pat->mask.s_addr = htonl(IN_CLASSC_NET);
 }
+
+/*
+ * Finds a V4 addr in list of servers.
+ * return:
+ *  index i of servers whose servers[i].addr == addr
+ *  else -1, failed to find
+ */
+static int find_server(struct server_state *servers, int nservers, struct in_addr addr)
+{
+  int i = 0;
+
+  if (nservers == 0)
+     return -1;
+
+  for (; i < nservers; i++)
+    {
+      if (servers[i].addr.s_addr == addr.s_addr)
+         break;
+    }
+  return (i < nservers ? i : -1);
+}
+
+/*
+ * V4. Get the physical address of the first NIC whose list of DNS servers contain 'addr'.
+ * return: ARES_SUCCESS, etc.
+ */
+static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* physAddrLen, struct in_addr addr)
+{
+#ifdef WIN32
+  DWORD (WINAPI * GetAdaptersAddressesProc)(ULONG, DWORD, VOID *, IP_ADAPTER_ADDRESSES *, ULONG *);
+  HANDLE hLib = 0;
+  DWORD dwRet = ERROR_BUFFER_OVERFLOW;
+  DWORD dwSize = 0;
+  IP_ADAPTER_ADDRESSES *pAdapterAddresses = 0;
+  int rc = ARES_ENOTFOUND;
+
+  memset(physicalAddr, '\0', physicalAddrBufSz);
+  *physAddrLen = 0;
+
+  hLib = LoadLibrary(TEXT("iphlpapi.dll"));
+  if (!hLib)
+    return ARES_ENOTIMP;
+
+  (void*)GetAdaptersAddressesProc = GetProcAddress(hLib, TEXT("GetAdaptersAddresses"));
+  if(!GetAdaptersAddressesProc)
+  {
+    rc = ARES_ENOTIMP;
+    goto cleanup;
+  }
+
+  // Getting buffer size, expects overflow error
+  dwRet = (*GetAdaptersAddressesProc)(AF_UNSPEC, 0, NULL, NULL, &dwSize);
+  assert(dwRet == ERROR_BUFFER_OVERFLOW);
+  if (dwRet == ERROR_BUFFER_OVERFLOW)
+  {
+    pAdapterAddresses = (IP_ADAPTER_ADDRESSES *) LocalAlloc(LMEM_ZEROINIT, dwSize);
+    if (! pAdapterAddresses)
+    {
+      rc = ARES_ENOMEM;
+      goto cleanup;
+    }
+  }
+  else
+  {
+    rc = ARES_ENODATA;
+    goto cleanup;
+  }
+
+  dwRet = (*GetAdaptersAddressesProc)(AF_UNSPEC, 0, NULL, pAdapterAddresses, &dwSize);
+  if (dwRet != ERROR_SUCCESS)
+  {
+    rc = ARES_ENODATA;
+    goto cleanup;
+  }
+
+  {
+    IP_ADAPTER_ADDRESSES * AI = NULL;
+    for (AI = pAdapterAddresses; AI != NULL; AI = AI->Next)
+    {
+      PIP_ADAPTER_DNS_SERVER_ADDRESS dnsServers = AI->FirstDnsServerAddress;
+      // find 'addr' in adapter's list of dns servers.
+      for (; dnsServers; dnsServers = dnsServers->Next)
+      {
+        if (! dnsServers->Address.lpSockaddr)
+          continue;
+
+        if (dnsServers->Address.lpSockaddr->sa_family == AF_INET)
+        {
+          struct sockaddr_in sockAddr = *(struct sockaddr_in*)(dnsServers->Address.lpSockaddr);
+          if (memcmp(&addr, &sockAddr.sin_addr.s_addr, sizeof(struct in_addr)) == 0)
+          {
+            *physAddrLen = AI->PhysicalAddressLength;
+            if (*physAddrLen > physicalAddrBufSz)
+              *physAddrLen = physicalAddrBufSz;
+            memcpy(physicalAddr, &AI->PhysicalAddress[0], *physAddrLen);
+            rc = ARES_SUCCESS;
+            goto cleanup;
+          }
+        }
+      }
+    }
+  }
+  rc = ARES_ENOTFOUND;
+
+cleanup:
+  if (hLib)
+    FreeLibrary(hLib);
+  if (pAdapterAddresses)
+    LocalFree(pAdapterAddresses);
+  return rc;
+#else // WIN32
+  return ARES_ENOTIMP;
+#endif // WIN32
+}
+
 
 #define  NS_INT16SZ   2
 #define  NS_INADDRSZ  4
