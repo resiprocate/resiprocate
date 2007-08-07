@@ -30,6 +30,9 @@
 #ifndef INADDR_NONE
 #define	INADDR_NONE 0xffffffff
 #endif
+#ifndef MAX_ADAPTER_ADDRESS_LENGTH
+#define	MAX_ADAPTER_ADDRESS_LENGTH 8
+#endif
 
 #define PATH_RESOLV_CONF	"/etc/resolv.conf"
 #ifdef ETC_INET
@@ -55,6 +58,9 @@ struct server_state {
   struct in6_addr addr6;
 #endif
   struct in_addr addr;
+  unsigned char physical_addr[MAX_ADAPTER_ADDRESS_LENGTH];
+  int physical_addr_len;
+
   int udp_socket;
   int tcp_socket;
 

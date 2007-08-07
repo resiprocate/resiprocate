@@ -20,7 +20,7 @@ class AresDns : public ExternalDns
       virtual ~AresDns();
 
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
-                       AfterSocketCreationFuncPtr socketfunc, int timeout=0, int tries=0); 
+                       AfterSocketCreationFuncPtr socketfunc, int timeout=0, int tries=0, unsigned int features=0); 
 
       virtual bool requiresProcess();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
