@@ -25,16 +25,21 @@ class UserProfile : public Profile
       virtual void setServiceRoute( const NameAddrs& sRoute);
       virtual NameAddrs& getServiceRoute();
       
-      virtual void setImsAuthUri( const Uri& imsAuthUri)
+      virtual void setImsAuthUser( const Data& userName, const Data& host )
       {
-         mImsAuthUri = imsAuthUri;
+         mImsAuthUserName = userName;
+		 mImsAuthHost = host;
       }
       
-      virtual Uri& getImsAuthUri()
+      virtual Data& getImsAuthUserName()
       {
-         return mImsAuthUri;
+         return mImsAuthUserName;
       }
       
+      virtual Data& getImsAuthHost()
+      {
+         return mImsAuthHost;
+      }
 
       // Returns a UserProfile that will return a UserProfile that can be used
       // to send requests according to RFC 3323 and RFC 3325
@@ -82,7 +87,8 @@ class UserProfile : public Profile
       NameAddr mDefaultFrom;
       Data mInstanceId;
       NameAddrs mServiceRoute;
-      Uri mImsAuthUri;
+      Data mImsAuthUserName;
+      Data mImsAuthHost;
       bool mIsAnonymous;
       
       typedef std::set<DigestCredential> DigestCredentials;
