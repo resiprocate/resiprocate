@@ -662,7 +662,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
 		   << " via " << source << '\n'
-                   << encoded.escaped());
+                   << msg->brief()/* encoded.escaped()*/);
          target.transport->send(target, encoded, msg->getTransactionId());
       }
       else
