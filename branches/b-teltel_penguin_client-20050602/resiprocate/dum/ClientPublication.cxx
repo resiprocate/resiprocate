@@ -211,6 +211,7 @@ ClientPublication::dispatch(const SipMessage& msg)
             InfoLog(<< "Received " << msg.header(h_StatusLine).statusCode() << " to PUBLISH "
                << mPublish.header(h_To) << " : publish in 20 seconds");
 
+            mPublish.setContents(mDocument);
             mDum.addTimer(DumTimeout::Publication, 
                20,
                getBaseHandle(),
