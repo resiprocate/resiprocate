@@ -616,7 +616,6 @@ DialogUsageManager::send(SipMessage& msg)
       msg.header(h_UserAgent).value() = userProfile->getUserAgent();
    }
 
-   DebugLog (<< "SEND:\n" << msg);
    if (msg.isRequest())
    {
       // We may not need to call reset() if makeRequest is always used.
@@ -625,6 +624,7 @@ DialogUsageManager::send(SipMessage& msg)
           msg.exists(h_Vias))
       {
          msg.header(h_Vias).front().param(p_branch).reset();
+         DebugLog(<< "Reset Branch Tid: " << msg.header(h_Vias).front().param(p_branch).getTransactionId());
       }
 
       if (msg.exists(h_Vias))
@@ -1467,8 +1467,6 @@ DialogUsageManager::processRequest(const SipMessage& request)
 void
 DialogUsageManager::processResponse(const SipMessage& response)
 {
-   DebugLog ( << "DialogUsageManager::processResponse:\n" << response);
-
    // !slg! if we do this, then stack may not shutdown if we are waiting for responses that are to tear down usages
    //if (mShutdownState != Running)
    //{
@@ -1482,12 +1480,11 @@ DialogUsageManager::processResponse(const SipMessage& response)
 
       if (ds)
       {
-         DebugLog ( << "DialogUsageManager::processResponse: " << response.brief());
          ds->dispatch(response);
       }
       else
       {
-         InfoLog (<< "Throwing away stray response: " << response.brief());
+         DebugLog (<< "Throwing away stray response: " << response.brief());
       }
    }
 }

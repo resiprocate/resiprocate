@@ -200,6 +200,7 @@ class RESIP_API Data
       // copy if not mine
       void own() const;
       void resize(size_type newSize, bool copy);
+      void initBuffer();
 
       static bool isHex(char c);      
       // Trade off between in-object and heap allocation
