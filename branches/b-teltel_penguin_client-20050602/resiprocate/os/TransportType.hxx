@@ -4,7 +4,7 @@
 namespace resip
 {
 
-typedef enum 
+enum TransportType
 {
    UNKNOWN_TRANSPORT = 0,
    UDP,
@@ -14,13 +14,13 @@ typedef enum
    DCCP,
    DTLS,
    MAX_TRANSPORT
-} TransportType;
+};
 
-typedef enum 
+enum IpVersion
 {
    V4,
    V6
-} IpVersion;
+};
 
 }
 
