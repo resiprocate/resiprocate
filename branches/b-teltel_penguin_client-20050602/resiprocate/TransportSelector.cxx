@@ -35,11 +35,11 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security) :
-   mStateMacFifo(fifo),
-   mSecurity(security),
-   mSocket( INVALID_SOCKET ),
-   mSocket6( INVALID_SOCKET ),
-   mWindowsVersion(WinCompat::getVersion())
+mStateMacFifo(fifo),
+mSecurity(security),
+mSocket( INVALID_SOCKET ),
+mSocket6( INVALID_SOCKET ),
+mWindowsVersion(WinCompat::getVersion())
 {
    memset(&mUnspecified.v4Address, 0, sizeof(sockaddr_in));
    mUnspecified.v4Address.sin_family = AF_UNSPEC;
@@ -110,14 +110,14 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
    mDns.addTransportType(transport->transport(), transport->ipVersion());
    switch (transport->transport())
    {
-      case UDP:
-      case TCP:
+   case UDP:
+   case TCP:
       {
          Tuple key(transport->interfaceName(), transport->port(), 
-                   transport->ipVersion(), transport->transport());
-         
+            transport->ipVersion(), transport->transport());
+
          assert(mExactTransports.find(key) == mExactTransports.end() &&
-                mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
+            mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
 
          //DebugLog (<< "Adding transport: " << key);
 
@@ -136,21 +136,21 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
          }
       }
       break;
-      case TLS:
+   case TLS:
       {
          mTlsTransports[transport->tlsDomain()] = transport;
       }
       break;
 #ifdef USE_DTLS
-      case DTLS:
+   case DTLS:
       {
          mDtlsTransports[transport->tlsDomain()] = transport;
       }
       break;
 #endif
-      default:
-         assert(0);
-         break;
+   default:
+      assert(0);
+      break;
    }
 
    if (transport->shareStackProcessAndSelect())
@@ -163,13 +163,13 @@ TransportSelector::addTransport( std::auto_ptr<Transport> tAuto)
       transport->startOwnProcessing();
    }
 }
-  
+
 void
 TransportSelector::buildFdSet(FdSet& fdset) const
 {
    mDns.buildFdSet(fdset);
    for(TransportList::const_iterator it = mSharedProcessTransports.begin(); 
-       it != mSharedProcessTransports.end(); it++)
+      it != mSharedProcessTransports.end(); it++)
    {
       (*it)->buildFdSet(fdset);
    }
@@ -180,7 +180,7 @@ TransportSelector::process(FdSet& fdset)
 {
    mDns.process(fdset);
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
-       it != mSharedProcessTransports.end(); it++)
+      it != mSharedProcessTransports.end(); it++)
    {
       try
       {
@@ -197,7 +197,7 @@ bool
 TransportSelector::hasDataToSend() const
 {
    for(TransportList::const_iterator it = mSharedProcessTransports.begin();
-       it != mSharedProcessTransports.end(); it++)
+      it != mSharedProcessTransports.end(); it++)
    {
       if ((*it)->hasDataToSend())
       {
@@ -231,7 +231,7 @@ TransportSelector::dnsResolve(DnsResult* result,
       // If this is an ACK we need to fix the tid to reflect that
       if (msg->hasForceTarget())
       {
-          //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
+         //DebugLog(<< "!ah! RESOLVING request with force target : " << msg->getForceTarget() );
          mDns.lookup(result, msg->getForceTarget());
       }
       else if (msg->exists(h_Routes) && !msg->header(h_Routes).empty())
@@ -250,8 +250,8 @@ TransportSelector::dnsResolve(DnsResult* result,
    }
    else if (msg->isResponse())
    {
-       ErrLog(<<"unimplemented response dns");
-       assert(0);
+      ErrLog(<<"unimplemented response dns");
+      assert(0);
    }
    else
    {
@@ -283,9 +283,9 @@ namespace
    }
 
    Tuple
-   getFirstInterface(bool is_v4, TransportType type)
+      getFirstInterface(bool is_v4, TransportType type)
    {
-// !kh! both getaddrinfo() and IPv6 are supported by cygwin, yet.
+      // !kh! both getaddrinfo() and IPv6 are supported by cygwin, yet.
 #if !defined(__CYGWIN__)
       // !kh!
       // 1. Query local hostname.
@@ -352,7 +352,7 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
    assert(!msg->header(h_Vias).empty());
    const Via& via = msg->header(h_Vias).front();
    if (msg->isRequest() && !via.sentHost().empty())
-   // hint provided in sent-by of via by application
+      // hint provided in sent-by of via by application
    {
       return Tuple(via.sentHost(), via.sentPort(), target.ipVersion(), target.getType());
    }
@@ -361,16 +361,16 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       Tuple source(target);
       switch (mWindowsVersion)
       {
-         case WinCompat::NotWindows:
+      case WinCompat::NotWindows:
 
-// Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's if linked in
-//        statically.  If you don't care about Win95/98/Me as your target system - then
-//        you can define NO_IPHLPAPI so that you are not required to link with this
-//        library. (SLG)
-// Note:  WinCompat::determineSourceInterface uses IPHLPAPI and is only required for
-//        Win95/98/Me and to work around personal firewall issues.
+         // Note:  IPHLPAPI has been known to conflict with some thirdparty DLL's if linked in
+         //        statically.  If you don't care about Win95/98/Me as your target system - then
+         //        you can define NO_IPHLPAPI so that you are not required to link with this
+         //        library. (SLG)
+         // Note:  WinCompat::determineSourceInterface uses IPHLPAPI and is only required for
+         //        Win95/98/Me and to work around personal firewall issues.
 #ifdef NO_IPHLPAPI
-         default:
+      default:
 #endif
          {
             // !kh!
@@ -434,16 +434,16 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
             {
 #if defined(USE_IPV6)
 #  if defined(_MSC_VER)
-                  static const bool ipv6_support_not_completed = false;
-                  assert(ipv6_support_not_completed);
+               static const bool ipv6_support_not_completed = false;
+               assert(ipv6_support_not_completed);
 #  else
-                  // !kh! this is compiled out on windows,
-                  // for some reason VC dosen't recognize INADDR6_ANY,
-                  // and I don't have time yet to find out why.
-                  if (source.isAnyInterface())
-                  {
-                     source = getFirstInterface(false, target.getType());
-                  }
+               // !kh! this is compiled out on windows,
+               // for some reason VC dosen't recognize INADDR6_ANY,
+               // and I don't have time yet to find out why.
+               if (source.isAnyInterface())
+               {
+                  source = getFirstInterface(false, target.getType());
+               }
 #  endif
 #else
                assert(0);
@@ -457,15 +457,15 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
             if (target.isV4())
             {
                ret = connect(mSocket,
-                             (struct sockaddr*)&mUnspecified.v4Address,
-                             sizeof(mUnspecified.v4Address));
+                  (struct sockaddr*)&mUnspecified.v4Address,
+                  sizeof(mUnspecified.v4Address));
             }
 #ifdef USE_IPV6
             else
             {
                ret = connect(mSocket6,
-                             (struct sockaddr*)&mUnspecified6.v6Address,
-                             sizeof(mUnspecified6.v6Address));
+                  (struct sockaddr*)&mUnspecified6.v6Address,
+                  sizeof(mUnspecified6.v6Address));
             }
 #else
             else
@@ -488,18 +488,18 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
          }
 
 #ifndef NO_IPHLPAPI
-         default:
-            try
-            {
-               // will not work on ipv6
-               source = WinCompat::determineSourceInterface(target);
-            }
-            catch (WinCompat::Exception&)
-            {
-               ErrLog (<< "Can't find source interface to use");
-               throw Transport::Exception("Can't find source interface", __FILE__, __LINE__);
-            }
-            break;
+      default:
+         try
+         {
+            // will not work on ipv6
+            source = WinCompat::determineSourceInterface(target);
+         }
+         catch (WinCompat::Exception&)
+         {
+            ErrLog (<< "Can't find source interface to use");
+            throw Transport::Exception("Can't find source interface", __FILE__, __LINE__);
+         }
+         break;
 #endif
       }
 
@@ -512,10 +512,10 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       source.setPort(via.sentPort());
 
 
-      DebugLog (<< "Looked up source for destination: " << target
-                << " -> " << source
-                << " sent-by=" << via.sentHost()
-                << " sent-port=" << via.sentPort());
+      StackLog (<< "Looked up source for destination: " << target
+         << " -> " << source
+         << " sent-by=" << via.sentHost()
+         << " sent-port=" << via.sentPort());
 
       return source;
    }
@@ -531,9 +531,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
    try
    {
-     // !ah! You NEED to do this for responses too -- the transport doesn't
-     // !ah! know it's IP addres(es) in all cases, AND it's function of the dest.
-     // (imagine a synthetic message...)
+      // !ah! You NEED to do this for responses too -- the transport doesn't
+      // !ah! know it's IP addres(es) in all cases, AND it's function of the dest.
+      // (imagine a synthetic message...)
 
       Tuple source;
       if (msg->isRequest())
@@ -618,11 +618,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                   contact.uri().host() = DnsUtil::inet_ntop(source);
                   contact.uri().port() = target.transport->port();
 
-		  if (msg->isRequest() && target.transport->transport() != UDP)
-		  {
-		     DebugLog(<< "added transport to Contact");
-		     contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
-		  }
+                  if (msg->isRequest() && target.transport->transport() != UDP)
+                  {
+                     DebugLog(<< "added transport to Contact");
+                     contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+                  }
 
                   DebugLog(<<"!sipit! Populated Contact: " << contact);
                }
@@ -642,7 +642,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                const Data& domain = msg->header(h_From).uri().host();
                msg->header(h_Identity).value() = mSecurity->computeIdentity( domain,
-                                                                             msg->getCanonicalIdentityString());
+                  msg->getCanonicalIdentityString());
             }
             catch (Security::Exception& e)
             {
@@ -661,8 +661,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          assert(!msg->getEncoded().empty());
          DebugLog (<< "Transmitting to " << target
-		   << " via " << source << '\n'
-                   << msg->brief()/* encoded.escaped()*/);
+            << " via " << source << '\n'
+            << msg->brief()/* encoded.escaped()*/);
          target.transport->send(target, encoded, msg->getTransactionId());
       }
       else
@@ -721,19 +721,19 @@ TransportSelector::sumTransportFifoSizes() const
    unsigned int sum = 0;
 
    for (AnyPortTupleMap::const_iterator i = mAnyPortTransports.begin();
-        i != mAnyPortTransports.end(); ++i)
+      i != mAnyPortTransports.end(); ++i)
    {
       sum += i->second->getFifoSize();
    }
 
    for (AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.begin();
-        i != mAnyPortAnyInterfaceTransports.end(); ++i)
+      i != mAnyPortAnyInterfaceTransports.end(); ++i)
    {
       sum += i->second->getFifoSize();
    }
 
    for (TlsTransportMap::const_iterator i = mTlsTransports.begin();
-        i != mTlsTransports.end(); ++i)
+      i != mTlsTransports.end(); ++i)
    {
       sum += i->second->getFifoSize();
    }
@@ -744,7 +744,7 @@ TransportSelector::sumTransportFifoSizes() const
 Transport*
 TransportSelector::findTransport(const Tuple& search)
 {
-   DebugLog(<< "findTransport(" << search << ")");
+   StackLog(<< "findTransport(" << search << ")");
 
    if (search.getPort() != 0)
    {
@@ -753,7 +753,7 @@ TransportSelector::findTransport(const Tuple& search)
          ExactTupleMap::const_iterator i = mExactTransports.find(search);
          if (i != mExactTransports.end())
          {
-            DebugLog(<< "findTransport (exact) => " << *(i->second));
+            StackLog(<< "findTransport (exact) => " << *(i->second));
             return i->second;
          }
       }
@@ -763,7 +763,7 @@ TransportSelector::findTransport(const Tuple& search)
          AnyInterfaceTupleMap::const_iterator i = mAnyInterfaceTransports.find(search);
          if (i != mAnyInterfaceTransports.end())
          {
-            DebugLog(<< "findTransport (any interface) => " << *(i->second));
+            StackLog(<< "findTransport (any interface) => " << *(i->second));
             return i->second;
          }
       }
@@ -775,7 +775,7 @@ TransportSelector::findTransport(const Tuple& search)
          AnyPortTupleMap::const_iterator i = mAnyPortTransports.find(search);
          if (i != mAnyPortTransports.end())
          {
-            DebugLog(<< "findTransport (any port, specific interface) => " << *(i->second));
+            StackLog(<< "findTransport (any port, specific interface) => " << *(i->second));
             return i->second;
          }
       }
@@ -786,16 +786,16 @@ TransportSelector::findTransport(const Tuple& search)
          AnyPortAnyInterfaceTupleMap::const_iterator i = mAnyPortAnyInterfaceTransports.find(search);
          if (i != mAnyPortAnyInterfaceTransports.end())
          {
-            DebugLog(<< "findTransport (any port, any interface) => " << *(i->second));
+            StackLog(<< "findTransport (any port, any interface) => " << *(i->second));
             return i->second;
          }
       }
    }
 
-   DebugLog (<< "Exact interface / Specific port: " << Inserter(mExactTransports));
-   DebugLog (<< "Any interface / Specific port: " << Inserter(mAnyInterfaceTransports));
-   DebugLog (<< "Exact interface / Any port: " << Inserter(mAnyPortTransports));
-   DebugLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
+   StackLog (<< "Exact interface / Specific port: " << Inserter(mExactTransports));
+   StackLog (<< "Any interface / Specific port: " << Inserter(mAnyInterfaceTransports));
+   StackLog (<< "Exact interface / Any port: " << Inserter(mAnyPortTransports));
+   StackLog (<< "Any interface / Any port: " << Inserter(mAnyPortAnyInterfaceTransports));
 
    WarningLog(<< "Can't find matching transport " << search);
    return 0;
@@ -805,21 +805,21 @@ Transport*
 TransportSelector::findTlsTransport(const Data& domainname)
 
 {
-   DebugLog (<< "Searching for TLS transport for domain='" << domainname << "'" << " have " << mTlsTransports.size());
+   StackLog (<< "Searching for TLS transport for domain='" << domainname << "'" << " have " << mTlsTransports.size());
    // If no domainname specified and there is only 1 TLS transport, use it.
    if (domainname == Data::Empty && mTlsTransports.size() == 1)
    {
-      DebugLog (<< "Found default TLS transport for domain=" << mTlsTransports.begin()->first);
+      StackLog (<< "Found default TLS transport for domain=" << mTlsTransports.begin()->first);
       return mTlsTransports.begin()->second;
    }
    else if (mTlsTransports.count(domainname))
    {
-      DebugLog (<< "Found TLS transport for domain=" << mTlsTransports.begin()->first);
+      StackLog (<< "Found TLS transport for domain=" << mTlsTransports.begin()->first);
       return mTlsTransports[domainname];
    }
    else  // don't know which one to use
    {
-      DebugLog (<< "No TLS transport found");
+      StackLog (<< "No TLS transport found");
       return 0;
    }
 }
@@ -829,21 +829,21 @@ Transport*
 TransportSelector::findDtlsTransport(const Data& domainname)
 
 {
-   DebugLog (<< "Searching for DTLS transport for domain='" << domainname << "'");
+   StackLog (<< "Searching for DTLS transport for domain='" << domainname << "'");
    // If no domainname specified and there is only 1 TLS transport, use it.
    if (domainname == Data::Empty && mDtlsTransports.size() == 1)
    {
-      DebugLog (<< "Found default DTLS transport for domain=" << mDtlsTransports.begin()->first);
+      StackLog (<< "Found default DTLS transport for domain=" << mDtlsTransports.begin()->first);
       return (Transport*)mDtlsTransports.begin()->second;
    }
    else if (mDtlsTransports.count(domainname))
    {
-      DebugLog (<< "Found DTLS transport for domain=" << mDtlsTransports.begin()->first);
+      StackLog (<< "Found DTLS transport for domain=" << mDtlsTransports.begin()->first);
       return (Transport*)mDtlsTransports[domainname];
    }
    else  // don't know which one to use
    {
-      DebugLog (<< "No DTLS transport found");
+      StackLog (<< "No DTLS transport found");
       return 0;
    }
 }

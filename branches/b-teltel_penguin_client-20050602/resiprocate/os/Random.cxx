@@ -3,6 +3,7 @@
 #endif
 
 #include <cassert>
+#include <limits>
 
 #ifdef _WIN32
 #include "resiprocate/os/Socket.hxx"
@@ -108,8 +109,10 @@ Random::initialize()
 
 #ifdef WIN32
       srand(seed);
+      srand(rand());
 #else
       srandom(seed);
+      srandom(random());
 #endif
       mIsInitialized = true;
    }
@@ -126,12 +129,22 @@ Random::getRandom()
    assert( mIsInitialized == true );
 #ifdef WIN32
    assert( RAND_MAX == 0x7fff );
+   static Mutex mutex;
+   Lock lock(mutex);
+#if 1
+   double r1 = ((double)rand()/((double)(RAND_MAX) + 1.0));
+   double r2 = ((double)rand()/((double)(RAND_MAX) + 1.0));
+   
+   return (((int)(((double)(std::numeric_limits<unsigned short>::max)()) * r1) + 1) << 16) | 
+      ((int)(((double)(std::numeric_limits<unsigned short>::max)()) * r2) + 1);
+#else
    int r1 = rand();
    int r2 = rand();
 
    int ret = (r1<<16) + r2;
 
    return ret;
+#endif
 #else
    return random(); 
 #endif
@@ -172,18 +185,19 @@ Random::getRandom(unsigned int len)
    {
      initialize();
    }
-   assert( mIsInitialized == true );
+   assert(mIsInitialized == true);
    assert(len < Random::maxLength+1);
    
    union 
    {
-         char cbuf[Random::maxLength+1];
-         unsigned int  ibuf[(Random::maxLength+1)/sizeof(int)];
+      char cbuf[Random::maxLength + 1];
+      unsigned int ibuf[(Random::maxLength)/sizeof(int) + 1];
    };
-   
-   for (unsigned int count=0; count<(len+sizeof(int)-1)/sizeof(int); ++count)
+   ::memset(ibuf, 0, sizeof(ibuf));
+   unsigned int count = (len+sizeof(int)-1)/sizeof(int);
+   for (unsigned int i = 0; i < count; ++i)
    {
-      ibuf[count] = Random::getRandom();
+      ibuf[i] = Random::getRandom();
    }
    return Data(cbuf, len);
 }
@@ -200,11 +214,12 @@ Random::getCryptoRandom(unsigned int len)
    
    union 
    {
-         char cbuf[Random::maxLength+1];
-         unsigned int  ibuf[(Random::maxLength+1)/sizeof(int)];
+      char cbuf[Random::maxLength+1];
+      unsigned int ibuf[(Random::maxLength)/sizeof(int) + 1];
    };
-   
-   for (unsigned int count=0; count<(len+sizeof(int)-1)/sizeof(int); ++count)
+   ::memset(ibuf, 0, sizeof(ibuf));
+   unsigned int count = (len+sizeof(int)-1)/sizeof(int);
+   for (unsigned int i = 0; i < count; ++i)
    {
       ibuf[count] = Random::getCryptoRandom();
    }

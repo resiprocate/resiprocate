@@ -133,7 +133,7 @@ DnsResult::next()
 void
 DnsResult::lookup(const Uri& uri)
 {
-   DebugLog (<< "DnsResult::lookup " << uri);
+   StackLog (<< "DnsResult::lookup " << uri);
    
    //assert(uri.scheme() == Symbols::Sips || uri.scheme() == Symbols::Sip);  
    mSips = (uri.scheme() == Symbols::Sips);
@@ -149,7 +149,7 @@ DnsResult::lookup(const Uri& uri)
       {
          mPort = getDefaultPort(mTransport, uri.port());
          Tuple tuple(mTarget, mPort, mTransport, mTarget);
-         DebugLog (<< "Found immediate result: " << tuple);
+         StackLog (<< "Found immediate result: " << tuple);
          mResults.push_back(tuple);
          transition(Available);
          mHandler->handle(this);         
