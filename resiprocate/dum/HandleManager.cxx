@@ -22,8 +22,6 @@ HandleManager::~HandleManager()
    // handle deference regardless.
    if (!mHandleMap.empty())
    {
-      DebugLog ( << "&&&&&& HandleManager::~HandleManager " );
-      DebugLog ( << Inserter(mHandleMap) );   
       //throw HandleException("Deleting handlemanager that still has Handled objects", __FILE__, __LINE__);
    }
 }
@@ -34,7 +32,7 @@ HandleManager::create(Handled* handled)
    if (!mShuttingDown)
    {
       mHandleMap[++mLastId] = handled;
-      DebugLog (<< "HandleManager::create | Handle id: " << mLastId);
+      StackLog (<< "HandleManager::create | Handle id: " << mLastId);
       return mLastId;
    }
    else
@@ -52,11 +50,11 @@ void HandleManager::shutdownWhenEmpty()
    }
    else
    {
-      DebugLog (<< "Shutdown waiting for all usages to be deleted (" << mHandleMap.size() << ")");
+      StackLog (<< "Shutdown waiting for all usages to be deleted (" << mHandleMap.size() << ")");
 #if 1
       for (HandleMap::iterator i=mHandleMap.begin() ; i != mHandleMap.end(); ++i)
       {
-         DebugLog (<< i->first << " -> " << *(i->second));
+         StackLog (<< i->first << " -> " << *(i->second));
       }
 #endif
    }
@@ -79,7 +77,7 @@ void HandleManager::onAllHandlesDestroyed()
 void
 HandleManager::remove(Handled::Id id)
 {
-   DebugLog (<< "HandleManager::remove | Handle id: " << id);
+   StackLog (<< "HandleManager::remove | Handle id: " << id);
    HandleMap::iterator i = mHandleMap.find(id);
    assert (i != mHandleMap.end());
    mHandleMap.erase(i);
@@ -91,7 +89,7 @@ HandleManager::remove(Handled::Id id)
       }
       else
       {
-         DebugLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");      
+         StackLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");      
       }
    }
 }
@@ -99,10 +97,10 @@ HandleManager::remove(Handled::Id id)
 void
 HandleManager::dumpHandles() const
 {
-   DebugLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");
+   StackLog (<< "Waiting for usages to be deleted (" << mHandleMap.size() << ")");
    for (HandleMap::const_iterator i=mHandleMap.begin() ; i != mHandleMap.end(); ++i)
    {
-      DebugLog (<< i->first << " -> " << *(i->second));
+      StackLog (<< i->first << " -> " << *(i->second));
    }
 }
 
@@ -131,100 +129,51 @@ HandleManager::getHandled(Handled::Id id) const
 
 
 /* ====================================================================
-
  * The Vovida Software License, Version 1.0 
-
  * 
-
  * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
-
  * 
-
  * Redistribution and use in source and binary forms, with or without
-
  * modification, are permitted provided that the following conditions
-
  * are met:
-
  * 
-
  * 1. Redistributions of source code must retain the above copyright
-
  *    notice, this list of conditions and the following disclaimer.
-
  * 
-
  * 2. Redistributions in binary form must reproduce the above copyright
-
  *    notice, this list of conditions and the following disclaimer in
-
  *    the documentation and/or other materials provided with the
-
  *    distribution.
-
  * 
-
  * 3. The names "VOCAL", "Vovida Open Communication Application Library",
-
  *    and "Vovida Open Communication Application Library (VOCAL)" must
-
  *    not be used to endorse or promote products derived from this
-
  *    software without prior written permission. For written
-
  *    permission, please contact vocal@vovida.org.
-
  *
-
  * 4. Products derived from this software may not be called "VOCAL", nor
-
  *    may "VOCAL" appear in their name, without prior written
-
  *    permission of Vovida Networks, Inc.
-
  * 
-
  * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
-
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
-
  * NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
-
  * NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
-
  * IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
-
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
-
  * DAMAGE.
-
  * 
-
  * ====================================================================
-
  * 
-
  * This software consists of voluntary contributions made by Vovida
-
  * Networks, Inc. and many individuals on behalf of Vovida Networks,
-
  * Inc.  For more information on Vovida Networks, Inc., please see
-
  * <http://www.vovida.org/>.
-
  *
-
  */
-
