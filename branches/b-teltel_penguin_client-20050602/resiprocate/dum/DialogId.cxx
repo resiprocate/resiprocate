@@ -47,7 +47,7 @@ DialogId::DialogId(const SipMessage& msg) :
          }
       }
    }
-   DebugLog ( << "DialogId::DialogId: " << *this);   
+   StackLog ( << "DialogId::DialogId: " << *this);   
 }
 
 DialogId::DialogId(const Data& callId, const Data& localTag, const Data& remoteTag) : 

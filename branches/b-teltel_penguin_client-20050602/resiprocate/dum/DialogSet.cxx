@@ -48,7 +48,7 @@ DialogSet::DialogSet(BaseCreator* creator, DialogUsageManager& dum) :
 {
    setUserProfile(&creator->getUserProfile());
    assert(!creator->getLastRequest().isExternal());
-   DebugLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
+   StackLog ( << " ************* Created DialogSet(UAC)  -- " << mId << "*************" );
 }
 
 // UAS 
@@ -732,7 +732,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
 
       assert(mState != WaitingToEnd);
-      DebugLog ( << "### Calling CreateAppDialog ###\n" << msg);
+      StackLog ( << "### Calling CreateAppDialog ###\n" << msg);
       AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
       dialog->mAppDialog = appDialog;
       appDialog->mDialog = dialog;
@@ -762,7 +762,7 @@ DialogSet::findMatchingClientOutOfDialogReq(const SipMessage& msg)
 Dialog*
 DialogSet::findDialog(const DialogId id)
 {
-   DebugLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
+   StackLog (<< "findDialog: " << id << " in " << Inserter(mDialogs));
 
    DialogMap::iterator i = mDialogs.find(id);
    if (i == mDialogs.end())
