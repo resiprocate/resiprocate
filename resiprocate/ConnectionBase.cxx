@@ -26,7 +26,7 @@ ConnectionBase::ConnectionBase()
      mLastUsed(0),
      mState(NewMessage)
 {
-   DebugLog (<< "ConnectionBase::ConnectionBase, no params: " << this);
+   StackLog (<< "ConnectionBase::ConnectionBase, no params: " << this);
 }
 
 ConnectionBase::ConnectionBase(const Tuple& who)
@@ -39,7 +39,7 @@ ConnectionBase::ConnectionBase(const Tuple& who)
      mLastUsed(Timer::getTimeMs()),
      mState(NewMessage)
 {
-   DebugLog (<< "ConnectionBase::ConnectionBase, who: " << mWho << " " << this);
+   StackLog (<< "ConnectionBase::ConnectionBase, who: " << mWho << " " << this);
 }
 
 ConnectionBase::~ConnectionBase()
@@ -66,7 +66,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 {
    assert(mWho.transport);
 
-   DebugLog(<< "In State: " << connectionStates[mState]);
+   StackLog(<< "In State: " << connectionStates[mState]);
    //getConnectionManager().touch(this); -- !dcm!
    
   start:   // If there is an overhang come back here, effectively recursing
@@ -92,7 +92,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          assert(mWho.transport);
          mMessage = new SipMessage(mWho.transport);
          
-         DebugLog(<< "ConnectionBase::process setting source " << mWho);
+         StackLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);
          mMessage->setTlsDomain(mWho.transport->tlsDomain());
          mMsgHeaderScanner.prepareForMessage(mMessage);
@@ -129,7 +129,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             {
                // ...but the chunk is completely processed.
                //.jacob. I've discarded the "assigned" concept.
-               //DebugLog(<< "Data assigned, not fragmented, not complete");
+               //StackLog(<< "Data assigned, not fragmented, not complete");
                mBuffer = new char[ChunkSize + MsgHeaderScanner::MaxNumCharsChunkOverflow];
                mBufferPos = 0;
                mBufferSize = ChunkSize;
@@ -178,7 +178,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                else
                {
                   Transport::stampReceived(mMessage);
-                  DebugLog(<< "##Connection: " << *this << " received:\n" << *mMessage);
+                  StackLog(<< "##Connection: " << *this << " received:\n" << *mMessage);
                   fifo.add(mMessage);
                   mMessage = 0;                  
                }
@@ -202,8 +202,8 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                   mBufferPos = 0;
                   mBufferSize = size;
                   
-                  DebugLog (<< "Extra bytes after message: " << overHang);
-                  DebugLog (<< Data(mBuffer, overHang));
+                  StackLog (<< "Extra bytes after message: " << overHang);
+                  StackLog (<< Data(mBuffer, overHang));
                   
                   bytesRead = overHang;
                   goto start;
@@ -228,7 +228,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             }
             else
             {
-               DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+               StackLog(<< "##Connection: " << *this << " received: " << *mMessage);
 
                Transport::stampReceived(mMessage);
                fifo.add(mMessage);
@@ -253,7 +253,7 @@ ConnectionBase::getWriteBuffer()
          delete [] mBuffer;
       }
 
-      DebugLog (<< "Creating buffer for " << *this);
+      StackLog (<< "Creating buffer for " << *this);
 
       mBuffer = new char [ConnectionBase::ChunkSize + MsgHeaderScanner::MaxNumCharsChunkOverflow];
       mBufferSize = ConnectionBase::ChunkSize;

@@ -157,7 +157,7 @@ void
 Transport::send( const Tuple& dest, const Data& d, const Data& tid)
 {
    assert(dest.getPort() != -1);
-   DebugLog (<< "Adding message to tx buffer to: " << dest); // << " " << d.escaped());
+   StackLog (<< "Adding message to tx buffer to: " << dest); // << " " << d.escaped());
    transmit(dest, d, tid); 
 }
 

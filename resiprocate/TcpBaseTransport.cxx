@@ -69,7 +69,7 @@ TcpBaseTransport::~TcpBaseTransport()
       fail(data->transactionId);
       delete data;
    }
-   DebugLog (<< "Shutting down " << mTuple);
+   StackLog (<< "Shutting down " << mTuple);
    ThreadIf::shutdown();  
    join();
    //mSendRoundRobin.clear(); // clear before we delete the connections
@@ -107,7 +107,7 @@ TcpBaseTransport::processListen(FdSet& fdset)
       makeSocketNonBlocking(sock);
       
       tuple.transport = this;
-      DebugLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
+      StackLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
       createConnection(tuple, sock, true);
    }
 }
@@ -119,7 +119,7 @@ TcpBaseTransport::processSomeWrites(FdSet& fdset)
    Connection* curr = mConnectionManager.getNextWrite(); 
    if (curr && fdset.readyToWrite(curr->getSocket()))
    {
-      //DebugLog (<< "TcpBaseTransport::processSomeWrites() " << curr->getSocket());
+      //StackLog (<< "TcpBaseTransport::processSomeWrites() " << curr->getSocket());
       curr->performWrite();
    }
    else if (curr && fdset.hasException(curr->getSocket()))
@@ -141,15 +141,15 @@ TcpBaseTransport::processSomeReads(FdSet& fdset)
       if ( fdset.readyToRead(currConnection->getSocket()) ||
            currConnection->hasDataToRead() )
       {
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
+         StackLog (<< "TcpBaseTransport::processSomeReads() " << *currConnection);
          fdset.clear(currConnection->getSocket());
 
          int bytesRead = currConnection->read(mStateMachineFifo);
-         DebugLog (<< "TcpBaseTransport::processSomeReads() " 
+         StackLog (<< "TcpBaseTransport::processSomeReads() " 
                    << *currConnection << " read=" << bytesRead);            
          if (bytesRead < 0)
          {
-            DebugLog (<< "Closing connection bytesRead=" << bytesRead);
+            StackLog (<< "Closing connection bytesRead=" << bytesRead);
             delete currConnection;
          }
       }
@@ -171,7 +171,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
    while (mTxFifo.messageAvailable())
    {
       SendData* data = mTxFifo.getNext();
-      DebugLog (<< "Processing write for " << data->destination);
+      StackLog (<< "Processing write for " << data->destination);
       
       // this will check by connectionId first, then by address
       Connection* conn = mConnectionManager.findConnection(data->destination);
@@ -180,7 +180,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          assert( conn->transport() );
       }
       
-      //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
+      //StackLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
       
       // There is no connection yet, so make a client connection
       if (conn == 0)

@@ -86,7 +86,7 @@ mDestroying(false)
       case SUBSCRIBE:
       case REFER:
       case NOTIFY:
-         DebugLog ( << "UAS dialog ID creation, DS: " << ds.getId());
+         StackLog ( << "UAS dialog ID creation, DS: " << ds.getId());
          mId = DialogId(ds.getId(), request.header(h_From).param(p_tag));
          mRemoteNameAddr = request.header(h_From);
          mLocalNameAddr = request.header(h_To);
@@ -121,11 +121,11 @@ mDestroying(false)
       mRemoteCSeq = request.header(h_CSeq).sequence();
       mLocalCSeq = 1;
 
-      DebugLog ( << "************** Created Dialog as UAS **************" );
-      DebugLog ( << "mRemoteNameAddr: " << mRemoteNameAddr );
-      DebugLog ( << "mLocalNameAddr: " << mLocalNameAddr );
-      DebugLog ( << "mLocalContact: " << mLocalContact );
-      DebugLog ( << "mRemoteTarget: " << mRemoteTarget );
+      StackLog ( << "************** Created Dialog as UAS **************" );
+      StackLog ( << "mRemoteNameAddr: " << mRemoteNameAddr );
+      StackLog ( << "mLocalNameAddr: " << mLocalNameAddr );
+      StackLog ( << "mLocalContact: " << mLocalContact );
+      StackLog ( << "mRemoteTarget: " << mRemoteTarget );
    }
    else if (msg.isResponse())
    {
@@ -201,16 +201,16 @@ mDestroying(false)
 
       mLocalCSeq = response.header(h_CSeq).sequence();
       mRemoteCSeq = 0;
-      DebugLog ( << "************** Created Dialog as UAC **************" );
-      DebugLog ( << "mRemoteNameAddr: " << mRemoteNameAddr );
-      DebugLog ( << "mLocalNameAddr: " << mLocalNameAddr );
-      DebugLog ( << "mLocalContact: " << mLocalContact );
-      DebugLog ( << "mRemoteTarget: " << mRemoteTarget );
+      StackLog ( << "************** Created Dialog as UAC **************" );
+      StackLog ( << "mRemoteNameAddr: " << mRemoteNameAddr );
+      StackLog ( << "mLocalNameAddr: " << mLocalNameAddr );
+      StackLog ( << "mLocalContact: " << mLocalContact );
+      StackLog ( << "mRemoteTarget: " << mRemoteTarget );
 
 
    }
    mDialogSet.addDialog(this);
-   DebugLog ( <<"Dialog::Dialog " << mId);
+   StackLog ( <<"Dialog::Dialog " << mId);
 }
 
 Dialog::~Dialog()
