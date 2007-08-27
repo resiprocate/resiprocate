@@ -116,7 +116,7 @@ DialogSet::~DialogSet()
       delete *mClientOutOfDialogRequests.begin();
    }
 
-   DebugLog ( << " ********** DialogSet::~DialogSet: " << mId << "*************" );
+   StackLog ( << " ********** DialogSet::~DialogSet: " << mId << "*************" );
    //!dcm! -- very delicate code, change the order things go horribly wrong
 
    mDum.removeDialogSet(this->getId());

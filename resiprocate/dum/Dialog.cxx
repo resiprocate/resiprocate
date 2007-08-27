@@ -215,9 +215,6 @@ mDestroying(false)
 
 Dialog::~Dialog()
 {
-   DebugLog ( <<"Dialog::~Dialog() ");
-
-
    while (!mClientSubscriptions.empty())
    {
       delete *mClientSubscriptions.begin();
@@ -852,10 +849,14 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
    // If method is INVITE then advertise required headers
    if(method == INVITE || method == UPDATE)
    {
-      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) request.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
-      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) request.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
-      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) request.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
-      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
+      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Allow)) 
+         request.header(h_Allows) = mDum.getMasterProfile()->getAllowedMethods();
+      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptEncoding)) 
+         request.header(h_AcceptEncodings) = mDum.getMasterProfile()->getSupportedEncodings();
+      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::AcceptLanguage)) 
+         request.header(h_AcceptLanguages) = mDum.getMasterProfile()->getSupportedLanguages();
+      if(mDialogSet.getUserProfile()->isAdvertisedCapability(Headers::Supported)) 
+         request.header(h_Supporteds) = mDum.getMasterProfile()->getSupportedOptionTags();
    }
 
    DebugLog ( << "Dialog::makeRequest:\n" << request );

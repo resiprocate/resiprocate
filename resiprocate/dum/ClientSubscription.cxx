@@ -41,28 +41,28 @@ ClientSubscription::getHandle()
 void
 ClientSubscription::acceptUpdateAsync(int statusCode)
 {
-   InfoLog (<< "Accept subscription update Async: " << "(" << statusCode << ")");
+   StackLog (<< "Accept subscription update Async: " << "(" << statusCode << ")");
    mDum.post(new InternalClientSubscriptionMessage_AcceptUpdate(getHandle(), statusCode));
 }
 
 void
 ClientSubscription::rejectUpdateAsync(int statusCode, const Data& reasonPhrase)
 {
-   InfoLog (<< "Reject subscription update Async: " << reasonPhrase << "(" << statusCode << ")");
+   StackLog (<< "Reject subscription update Async: " << reasonPhrase << "(" << statusCode << ")");
    mDum.post(new InternalClientSubscriptionMessage_RejectUpdate(getHandle(), statusCode, reasonPhrase));
 }
 
 void
 ClientSubscription::requestRefreshAsync(int expires)
 {
-   InfoLog (<< "Request to refresh subscription Async: " << mLastRequest.header(h_RequestLine).uri() << "(" << expires << ")");
+   StackLog (<< "Request to refresh subscription Async: " << mLastRequest.header(h_RequestLine).uri() << "(" << expires << ")");
    mDum.post(new InternalClientSubscriptionMessage_Refresh(getHandle(), expires));
 }
 
 void
 ClientSubscription::endAsync()
 {
-   InfoLog (<< "End subscription Async: " << mLastRequest.header(h_RequestLine).uri());
+   StackLog (<< "End subscription Async: " << mLastRequest.header(h_RequestLine).uri());
    mDum.post(new InternalClientSubscriptionMessage_End(getHandle()));
 }
 
@@ -96,7 +96,7 @@ ClientSubscription::processRequest(const SipMessage& msg)
 
    if (!mOnNewSubscriptionCalled && !getAppDialogSet()->isReUsed())
    {
-      InfoLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
+      StackLog (<< "[ClientSubscription] " << mLastRequest.header(h_To));
       mDialog.mRemoteTarget = msg.header(h_Contacts).front();
       handler->onNewSubscription(getHandle(), msg);
       mOnNewSubscriptionCalled = true;
@@ -349,7 +349,6 @@ ClientSubscription::processResponse(const SipMessage& msg)
 void
 ClientSubscription::dispatch(const DumTimeout& timer)
 {
-   DebugLog (<< "ClientSubscription::dispatch(DumTimeout) | mTimerSeq: " << mTimerSeq << " | timer.seq(): " << timer.seq());
    if (timer.seq() == mTimerSeq)
    {
       if (timer.type() == DumTimeout::SubscriptionRetry)
@@ -392,7 +391,6 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 void
 ClientSubscription::requestRefresh(int expires)
 {
-   DebugLog(<< "ClientSubscription::requestRefresh | Ended: " << mEnded << " | Expires: " << expires);
    if (!mEnded)
    {
       mDialog.makeRequest(mLastRequest, SUBSCRIBE);
@@ -412,8 +410,6 @@ ClientSubscription::requestRefresh(int expires)
 void
 ClientSubscription::end()
 {
-   InfoLog (<< "End subscription Sync: " << mLastRequest.header(h_RequestLine).uri());
-
    if (!mEnded)
    {
       mDialog.makeRequest(mLastRequest, SUBSCRIBE);
