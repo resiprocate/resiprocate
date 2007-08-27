@@ -31,12 +31,12 @@ ClientPublication::ClientPublication(DialogUsageManager& dum,
      mTimerSeq(0),
      mDocument(mPublish.releaseContents().release())
 {
-   DebugLog( << "ClientPublication::ClientPublication: " << mId);   
+   StackLog( << "ClientPublication::ClientPublication: " << mId);   
 }
 
 ClientPublication::~ClientPublication()
 {
-   DebugLog( << "ClientPublication::~ClientPublication: " << mId);   
+   StackLog( << "ClientPublication::~ClientPublication: " << mId);   
    mDialogSet.mClientPublication = 0;
    delete mDocument;
 }
@@ -50,35 +50,35 @@ ClientPublication::refreshAsync(unsigned int expiration)
 void
 ClientPublication::updateAsync(std::auto_ptr<Contents> body)
 {
-   InfoLog (<< "Updating presence document (Async): " << mPublish.header(h_To).uri());
+   StackLog (<< "Updating presence document (Async): " << mPublish.header(h_To).uri());
    mDum.post(new InternalClientPublicationMessage_Update(getHandle(), body));
 }
 
 void
 ClientPublication::endAsync()
 {
-   InfoLog (<< "End client publication (Async) to " << mPublish.header(h_RequestLine).uri());
+   StackLog (<< "End client publication (Async) to " << mPublish.header(h_RequestLine).uri());
    mDum.post(new InternalClientPublicationMessage_End(getHandle()));
 }
 
 void
 ClientPublication::dispatchAsync(const SipMessage& msg)
 {
-   InfoLog (<< "Dispatch client publication msg (async)");
+   StackLog (<< "Dispatch client publication msg (async)");
    mDum.post(new InternalClientPublicationMessage_SipMsg(getHandle(), msg));
 }
 
 void
 ClientPublication::dispatchAsync(const DumTimeout& timer)
 {
-   InfoLog (<< "Dispatch client publication timeout msg (async)");
+   StackLog (<< "Dispatch client publication timeout msg (async)");
    mDum.post(new InternalClientPublicationMessage_TimeoutMsg(getHandle(), timer));
 }
 
 void
 ClientPublication::end()
 {
-   InfoLog (<< "End client publication (Sync) to " << mPublish.header(h_RequestLine).uri());
+   StackLog (<< "End client publication (Sync) to " << mPublish.header(h_RequestLine).uri());
    mPublish.header(h_CSeq).sequence()++;
    mPublish.header(h_Expires).value() = 0;
    send(mPublish);

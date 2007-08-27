@@ -43,70 +43,69 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
 
 ClientRegistration::~ClientRegistration()
 {
-   DebugLog ( << "ClientRegistration::~ClientRegistration" );
    mDialogSet.mClientRegistration = 0;
 }
 
 void
 ClientRegistration::addBindingAsync(const NameAddr& contact)
 {
-   InfoLog (<< "Add registration binding (async): " << contact);
+   StackLog (<< "Add registration binding (async): " << contact);
    mDum.post(new InternalClientRegistrationMessage_AddBinding(getHandle(), contact));
 }
 
 void
 ClientRegistration::addBindingAsync(const NameAddr& contact, int registrationTime)
 {
-   InfoLog (<< "Add registration binding (async): " << contact << ": " << registrationTime);
+   StackLog (<< "Add registration binding (async): " << contact << ": " << registrationTime);
    mDum.post(new InternalClientRegistrationMessage_AddBindingWithExpire(getHandle(), contact, registrationTime));
 }
 
 void
 ClientRegistration::removeBindingAsync(const NameAddr& contact)
 {
-   InfoLog (<< "Removing registration binding (async): " << contact);
+   StackLog (<< "Removing registration binding (async): " << contact);
    mDum.post(new InternalClientRegistrationMessage_RemoveBinding(getHandle(), contact));
 }
 
 void
 ClientRegistration::removeAllAsync(bool stopRegisteringWhenDone)
 {
-   InfoLog (<< "Removing all bindings (async)");
+   StackLog (<< "Removing all bindings (async)");
    mDum.post(new InternalClientRegistrationMessage_RemoveAll(getHandle(), stopRegisteringWhenDone));
 }
 
 void
 ClientRegistration::removeMyBindingsAsync(bool stopRegisteringWhenDone)
 {
-   InfoLog (<< "Removing binding (async)");
+   StackLog (<< "Removing binding (async)");
    mDum.post(new InternalClientRegistrationMessage_RemoveMyBindings(getHandle(), stopRegisteringWhenDone));
 }
 
 void
 ClientRegistration::requestRefreshAsync(int expires)
 {
-   InfoLog (<< "Request refresh (async): " << expires);
+   StackLog (<< "Request refresh (async): " << expires);
    mDum.post(new InternalClientRegistrationMessage_Refresh(getHandle(), expires));
 }
 
 void
 ClientRegistration::stopRegisteringAsync() 
 {
-   InfoLog (<< "Stop registering (async)");
+   StackLog (<< "Stop registering (async)");
    mDum.post(new InternalClientRegistrationMessage_StopRegistering(getHandle()));
 }
 
 void
 ClientRegistration::endAsync()
 {
-   InfoLog (<< "End registration (async)");
+   StackLog (<< "End registration (async)");
    mDum.post(new InternalClientRegistrationMessage_End(getHandle()));
 }
 
 void
 ClientRegistration::dispatchAsync(const SipMessage& msg)
 {
-   InfoLog (<< "Dispatch registration msg (async)");
+   StackLog (<< "Dispatch registration msg (async)");
    mDum.post(new InternalClientRegistrationMessage_DispatchSipMsg(getHandle(), msg));
 }
 
@@ -227,7 +226,7 @@ ClientRegistration::removeAll(bool stopRegisteringWhenDone)
 void
 ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 {
-   InfoLog (<< "Removing binding (sync)");
+   StackLog (<< "Removing binding (sync)");
 
    if (mState == Removing)
    {
