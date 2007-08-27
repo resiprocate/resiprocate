@@ -84,16 +84,16 @@ DialogUsageManager::~DialogUsageManager()
 
    if(!mDialogSetMap.empty())
    {
-      InfoLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
+      StackLog(<< "DialogUsageManager::mDialogSetMap has " << mDialogSetMap.size() << " DialogSets");
       DialogSetMap::const_iterator ds = mDialogSetMap.begin();
       for(; ds != mDialogSetMap.end(); ++ds)
       {
-         InfoLog(<< "DialgSetId:" << ds->first);
+         StackLog(<< "DialgSetId:" << ds->first);
          DialogSet::DialogMap::const_iterator   d = ds->second->mDialogs.begin();
          for(; d != ds->second->mDialogs.end(); ++d)
          {
             //const Dialog* p = &(d->second);
-            InfoLog(<<"DialogId:" << d->first << ", " << *d->second);
+            StackLog(<<"DialogId:" << d->first << ", " << *d->second);
          }
       }
    }
@@ -672,7 +672,7 @@ DialogUsageManager::sendUsingOutboundIfAppropriate(UserProfile& userProfile, Sip
    DialogId id(msg);
    if (userProfile.hasOutboundProxy() && !findDialog(id))
    {
-      DebugLog ( << "Using outbound proxy");
+      DebugLog ( << "Using outbound proxy: " << userProfile.getOutboundProxy());
       mStack.sendTo(msg, userProfile.getOutboundProxy().uri(), this);
    }
    else
@@ -688,7 +688,8 @@ DialogUsageManager::end(DialogSetId setid)
    DialogSet* ds = findDialogSet(setid);
    if (ds == 0)
    {
-      throw Exception("Request no longer exists", __FILE__, __LINE__);
+      //throw Exception("Request no longer exists", __FILE__, __LINE__);
+      WarningLog( << "Can't end not found DialogSetId [" << setid << "]");
    }
    else
    {
@@ -699,14 +700,12 @@ DialogUsageManager::end(DialogSetId setid)
 void
 DialogUsageManager::cancelInvite(const DialogSetId& invSessionId)
 {
-   InfoLog(<< "Cancel outgoing INVITE (sync)");
    end(invSessionId);
 }
 
 void
 DialogUsageManager::cancelInviteAsync(const DialogSetId& invSessionId)
 {
-   InfoLog(<< "Post cancel outgoing message (async)");
    post(new InternalDumCancelOutgoingMessage(invSessionId, *this));
 }
 
@@ -719,7 +718,7 @@ DialogUsageManager::destroy(const BaseUsage* usage)
    }
    else
    {
-      InfoLog(<< "DialogUsageManager::destroy() not posting to stack");
+      StackLog(<< "DialogUsageManager::destroy() not posting to stack");
    }
 }
 
@@ -732,7 +731,7 @@ DialogUsageManager::destroy(DialogSet* dset)
    }
    else
    {
-      InfoLog(<< "DialogUsageManager::destroy() not posting to stack");
+      StackLog(<< "DialogUsageManager::destroy() not posting to stack");
    }
 }
 
@@ -745,7 +744,7 @@ DialogUsageManager::destroy(Dialog* d)
    }
    else
    {
-      InfoLog(<< "DialogUsageManager::destroy() not posting to stack");
+      StackLog(<< "DialogUsageManager::destroy() not posting to stack");
    }
 }
 

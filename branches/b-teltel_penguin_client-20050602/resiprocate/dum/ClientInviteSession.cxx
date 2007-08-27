@@ -57,7 +57,7 @@ ClientInviteSession::provideAnswerAsync(std::auto_ptr<SdpContents> answer)
 void
 ClientInviteSession::endAsync()
 {
-   InfoLog(<< "end ClientInviteSession (async).");
+   StackLog(<< "end ClientInviteSession (async).");
    mDum.post(new InternalClientInviteSessionMessage_End(getHandle()));
 }
 
@@ -76,7 +76,7 @@ ClientInviteSession::getEarlyMedia () const
 void
 ClientInviteSession::provideOffer (const SdpContents& offer)
 {
-   InfoLog (<< toData(mState) << ": provideOffer");
+   StackLog (<< toData(mState) << ": provideOffer");
 
    switch(mState)
    {
@@ -125,7 +125,7 @@ ClientInviteSession::provideOffer (const SdpContents& offer)
 void
 ClientInviteSession::provideAnswer (const SdpContents& answer)
 {
-   InfoLog (<< toData(mState) << ": provideAnswer");
+   StackLog (<< toData(mState) << ": provideAnswer");
 
    switch(mState)
    {
@@ -172,7 +172,7 @@ ClientInviteSession::provideAnswer (const SdpContents& answer)
 void
 ClientInviteSession::end()
 {
-   InfoLog (<< toData(mState) << ": end");
+   StackLog (<< toData(mState) << ": end");
 
    switch(mState)
    {
@@ -209,7 +209,7 @@ ClientInviteSession::end()
 void
 ClientInviteSession::reject (int statusCode, WarningCategory *warning)
 {
-   InfoLog (<< toData(mState) << ": reject(" << statusCode << ")");
+   StackLog (<< toData(mState) << ": reject(" << statusCode << ")");
 
    switch(mState)
    {
@@ -302,14 +302,14 @@ ClientInviteSession::onForkAccepted()
 void
 ClientInviteSession::startCancelTimer()
 {
-   InfoLog (<< toData(mState) << ": startCancelTimer");
+   DebugLog (<< toData(mState) << ": startCancelTimer");
    mDum.addTimerMs(DumTimeout::Cancelled, Timer::TH, getBaseHandle(), ++mCancelledTimerSeq);
 }
 
 void
 ClientInviteSession::startStaleCallTimer()
 {
-   InfoLog (<< toData(mState) << ": startStaleCallTimer");
+   DebugLog (<< toData(mState) << ": startStaleCallTimer");
    mDum.addTimer(DumTimeout::StaleCall, mDialog.mDialogSet.getUserProfile()->getDefaultStaleCallTime(), getBaseHandle(), ++mStaleCallTimerSeq);
 }
 
