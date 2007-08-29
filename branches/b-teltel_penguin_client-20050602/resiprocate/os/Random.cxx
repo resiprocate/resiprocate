@@ -2,6 +2,11 @@
 #include "resiprocate/config.hxx"
 #endif
 
+#ifdef _WIN32
+#define _CRT_RAND_S
+#include <stdlib.h>
+#endif 
+
 #include <cassert>
 #include <limits>
 
@@ -36,7 +41,8 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-bool Random::mIsInitialized = false;
+bool Random::sIsInitialized = false;
+Mutex Random::sMutex;
 #if 0
 Random::Init Random::initer;
 #endif
@@ -44,15 +50,18 @@ Random::Init Random::initer;
 void
 Random::initialize()
 {  
-   static Mutex mutex;
-   Lock lock(mutex);
+   Lock lock(sMutex);
 
-   if (!mIsInitialized)
+   if (!sIsInitialized)
    {
       Timer::setupTimeOffsets();
       
       //throwing away first 32 bits
+#ifdef _WIN32
+      unsigned int seed = ::GetTickCount();
+#else
       unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
+#endif
 
 #ifdef _WIN32
       Socket fd = -1;
@@ -114,36 +123,33 @@ Random::initialize()
       srandom(seed);
       srandom(random());
 #endif
-      mIsInitialized = true;
+      sIsInitialized = true;
    }
 }
 
 int
 Random::getRandom()
 {
-   if (!mIsInitialized)
+   if (!sIsInitialized)
    {
      initialize();
    }
    // !dlb! Lock
-   assert( mIsInitialized == true );
+   assert( sIsInitialized == true );
 #ifdef WIN32
    assert( RAND_MAX == 0x7fff );
-   static Mutex mutex;
-   Lock lock(mutex);
 #if 1
+   int r1;
+   rand_s((unsigned int*)&r1);
+   return r1;
+#else
+   Lock lock(sMutex);
    double r1 = ((double)rand()/((double)(RAND_MAX) + 1.0));
    double r2 = ((double)rand()/((double)(RAND_MAX) + 1.0));
-   
+   DebugLog( << "Random1: " << r1 << "|Random2: " << r2);
+
    return (((int)(((double)(std::numeric_limits<unsigned short>::max)()) * r1) + 1) << 16) | 
       ((int)(((double)(std::numeric_limits<unsigned short>::max)()) * r2) + 1);
-#else
-   int r1 = rand();
-   int r2 = rand();
-
-   int ret = (r1<<16) + r2;
-
-   return ret;
 #endif
 #else
    return random(); 
@@ -153,11 +159,11 @@ Random::getRandom()
 int
 Random::getCryptoRandom()
 {
-   if (!mIsInitialized)
+   if (!sIsInitialized)
    {
      initialize();
    }
-   assert( mIsInitialized == true );
+   assert( sIsInitialized == true );
 #if USE_OPENSSL
    int ret;
    int e = RAND_bytes( (unsigned char*)&ret , sizeof(ret) );
@@ -181,11 +187,11 @@ Random::getCryptoRandom()
 Data 
 Random::getRandom(unsigned int len)
 {
-   if (!mIsInitialized)
+   if (!sIsInitialized)
    {
      initialize();
    }
-   assert(mIsInitialized == true);
+   assert(sIsInitialized == true);
    assert(len < Random::maxLength+1);
    
    union 
@@ -205,11 +211,11 @@ Random::getRandom(unsigned int len)
 Data 
 Random::getCryptoRandom(unsigned int len)
 {
-   if (!mIsInitialized)
+   if (!sIsInitialized)
    {
      initialize();
    }
-   assert( mIsInitialized == true );
+   assert( sIsInitialized == true );
    assert(len < Random::maxLength+1);
    
    union 
@@ -229,22 +235,22 @@ Random::getCryptoRandom(unsigned int len)
 Data 
 Random::getRandomHex(unsigned int numBytes)
 {
-   if (!mIsInitialized)
+   if (!sIsInitialized)
    {
      initialize();
    }
-   assert( mIsInitialized == true );
+   assert( sIsInitialized == true );
    return Random::getRandom(numBytes).hex();
 }
 
 Data 
 Random::getCryptoRandomHex(unsigned int numBytes)
 {
-   if (!mIsInitialized)
+   if (!sIsInitialized)
    {
      initialize();
    }
-   assert( mIsInitialized == true );
+   assert( sIsInitialized == true );
    return Random::getCryptoRandom(numBytes).hex();
 }
 
