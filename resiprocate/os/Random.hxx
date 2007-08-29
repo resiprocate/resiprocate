@@ -24,8 +24,8 @@ class RESIP_API Random
       static int  getCryptoRandom();
 	
    private:
-      static bool  mIsInitialized;
-      
+      static bool sIsInitialized;
+      static Mutex sMutex;
 };
  
 }
