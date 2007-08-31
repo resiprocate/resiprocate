@@ -1,6 +1,8 @@
 #if !defined(RESIP_DialogEventHandler_HXX)
 #define RESIP_DialogEventHandler_HXX
 
+#include "resip/dum/DialogEventInfo.hxx"
+
 namespace resip
 {
 
