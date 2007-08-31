@@ -1,6 +1,10 @@
 #if !defined(RESIP_DialogEventInfo_hxx)
 #define RESIP_DialogEventInfo_hxx
 
+#include "resip/stack/NameAddr.hxx"
+#include "resip/dum/DialogId.hxx"
+#include "resip/dum/Handles.hxx"
+
 namespace resip
 {
 
@@ -39,10 +43,9 @@ class DialogEventInfo
       bool hasRemoteTarget() const;
       const Uri& getRemoteTarget() const;
    private:
-      Data DialogEventId; //unique for all Dialogs at this ua...may hash local +
+      Data mDialogEventId; //unique for all Dialogs at this ua...may hash local +
                           //callid, all 3 tags for forks.  Or could cycles an
                           //integer...hash memory location+salt at cons time(might be easiest).
-      Data mDialogEventId;
       DialogId mDialogId;
       Direction mDirection;
       //ID of the dialog this dialog replaced.
@@ -57,6 +60,8 @@ class DialogEventInfo
       Uri mLocalTarget;
       Uri mRemoteTarget;
 };
+
+}
 
 #endif
 
