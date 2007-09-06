@@ -37,10 +37,7 @@ SipMessage::SipMessage(const Transport* fromWire)
      mForceTarget(0),
      mTlsDomain(Data::Empty)
 {
-   for (int i = 0; i < Headers::MAX_HEADERS; i++)
-   {
-      mHeaders[i] = 0;
-   }
+   ::memset(mHeaders, 0, sizeof(HeaderFieldValueList) * Headers::MAX_HEADERS);
 }
 
 SipMessage::SipMessage(const SipMessage& from)
@@ -50,10 +47,7 @@ SipMessage::SipMessage(const SipMessage& from)
      mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0)
 {
-   for (int i = 0; i < Headers::MAX_HEADERS; i++)
-   {
-      mHeaders[i] = 0;
-   }
+   ::memset(mHeaders, 0, sizeof(HeaderFieldValueList) * Headers::MAX_HEADERS);
 
    *this = from;
 }
@@ -166,27 +160,39 @@ SipMessage::cleanUp()
    mForceTarget = 0;
 }
 
-SipMessage*
-SipMessage::make(const Data& data,  bool isExternal)
+std::auto_ptr<SipMessage>
+SipMessage::make(const Data& data, bool isExternal)
+{
+   return SipMessage::make(data.data(), data.size(), isExternal);
+}
+
+std::auto_ptr<SipMessage>
+SipMessage::make(const char* data, bool isExternal)
+{
+   if (data)
+      return SipMessage::make(data, strlen(data), isExternal);
+   else
+      return NULL;
+}
+
+std::auto_ptr<SipMessage>
+SipMessage::make(const char* data, unsigned int len, bool isExternal)
 {
    Transport* external = (Transport*)(0xFFFF);
-   SipMessage* msg = new SipMessage(isExternal ? external : 0);
+   std::auto_ptr<SipMessage> msg(new SipMessage(isExternal ? external : 0));
 
-   size_t len = data.size();
    char *buffer = new char[len + 5];
-
    msg->addBuffer(buffer);
-   memcpy(buffer,data.data(), len);
+   memcpy(buffer,data, len);
+   buffer[len] = 0;
    MsgHeaderScanner msgHeaderScanner;
-   msgHeaderScanner.prepareForMessage(msg);
+   msgHeaderScanner.prepareForMessage(msg.get());
    
    char *unprocessedCharPtr;
    if (msgHeaderScanner.scanChunk(buffer, len, &unprocessedCharPtr) != MsgHeaderScanner::scrEnd)
    {
       DebugLog(<<"Scanner rejecting buffer as unparsable / fragmented.");
       DebugLog(<< data);
-      delete msg; 
-      msg = 0; 
       return 0;
    }
 

@@ -59,7 +59,9 @@ class RESIP_API SipMessage : public TransactionMessage
       
       virtual ~SipMessage();
 
-      static SipMessage* make(const Data& buffer, bool isExternal = false);
+      static std::auto_ptr<SipMessage> make(const Data& data, bool isExternal = false);
+      static std::auto_ptr<SipMessage> make(const char* data, bool isExternal = false);
+      static std::auto_ptr<SipMessage> make(const char* data, unsigned int size, bool isExternal = false);
 
       class Exception : public BaseException
       {
