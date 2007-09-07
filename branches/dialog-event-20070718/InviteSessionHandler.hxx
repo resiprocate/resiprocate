@@ -51,13 +51,25 @@ class InviteSessionHandler
       /// called when an dialog enters the terminated state - this can happen
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response - or the session
       /// times out
-      typedef enum
+      enum TerminatedReason
       {
-         PeerEnded,      // received a BYE or CANCEL from peer
-         Ended,          // ended by the application
-         GeneralFailure, // ended due to a failure
-         Cancelled       // ended by the application via Cancel
-      } TerminatedReason;
+         Error,
+         Timeout, 
+         Replaced,
+         LocalBye,
+         RemoteBye,
+         LocalCancel,
+         RemoteCancel,
+         Rejected //only as UAS, UAC has distinct onFailure callback
+      };
+
+//       typedef enum
+//       {
+//          PeerEnded,      // received a BYE or CANCEL from peer
+//          Ended,          // ended by the application
+//          GeneralFailure, // ended due to a failure
+//          Cancelled       // ended by the application via Cancel
+//       } TerminatedReason;
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
       /// called when a fork that was created through a 1xx never receives a 2xx
