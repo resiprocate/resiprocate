@@ -60,7 +60,8 @@ class InviteSessionHandler
          RemoteBye,
          LocalCancel,
          RemoteCancel,
-         Rejected //only as UAS, UAC has distinct onFailure callback
+         Rejected, //only as UAS, UAC has distinct onFailure callback
+         Referred
       };
 
 //       typedef enum
