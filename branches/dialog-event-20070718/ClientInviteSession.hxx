@@ -76,10 +76,15 @@ class ClientInviteSession : public InviteSession
 
       bool checkRseq(const SipMessage& msg);
    private:
-      std::auto_ptr<SdpContents> mEarlyMedia;
       void startCancelTimer();
       void startStaleCallTimer();
       void sendSipFrag(const SipMessage& response);
+
+      void onConnectedAspect(ClientInviteSessionHandle h, const SipMessage& msg);
+      void onProvisionalAspect(ClientInviteSessionHandle c, const SipMessage& msg);
+      void onFailureAspect(ClientInviteSessionHandle c, const SipMessage& msg);
+
+      std::auto_ptr<SdpContents> mEarlyMedia;
 
       RAckCategory mRelRespInfo;
       unsigned int mStaleCallTimerSeq;
