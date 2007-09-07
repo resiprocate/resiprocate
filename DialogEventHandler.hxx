@@ -9,17 +9,6 @@ namespace resip
 class DialogEventHandler
 {
    public:   
-      //?dcm? move to InviteSession, fix existing TerminateReason? Seems reasonable...
-      enum TerminateReason
-      {
-         Error,
-         Timeout, 
-         Replaced,
-         LocalBye,
-         RemoteBye,
-         Cancelled,
-         Rejected
-      };
       virtual ~DialogEventHandler() {}
       virtual void onTrying(const DialogEventInfo& info, const SipMessage& intialInvite)=0;
       virtual void onProceeding(const DialogEventInfo& info)=0;
