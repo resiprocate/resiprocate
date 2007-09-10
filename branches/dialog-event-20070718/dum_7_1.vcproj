@@ -468,6 +468,15 @@
 				RelativePath=".\Dialog.hxx">
 			</File>
 			<File
+				RelativePath=".\DialogEventHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\DialogEventInfo.hxx">
+			</File>
+			<File
+				RelativePath=".\DialogEventStateManager.hxx">
+			</File>
+			<File
 				RelativePath=".\DialogId.hxx">
 			</File>
 			<File

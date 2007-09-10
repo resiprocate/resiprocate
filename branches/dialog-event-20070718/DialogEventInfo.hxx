@@ -18,12 +18,23 @@ class DialogEventInfo
          Initiator,
          Recipient
       };
+
+      enum State
+      {
+         Trying = 0,
+         Proceeding,
+         Early,
+         Confirmed,
+         Terminated
+      };
       
       //based on DialogEventId
       bool operator==(const DialogEventInfo& rhs) const;
       bool operator!=(const DialogEventInfo& rhs) const;
       bool operator<(const DialogEventInfo& rhs) const;
          
+      const State& getState();
+
       const Data& getDialogEventId;
       
       const Data& getCallId();
@@ -42,7 +53,13 @@ class DialogEventInfo
       const NameAddrs& getRouteSet() const;
       bool hasRemoteTarget() const;
       const Uri& getRemoteTarget() const;
+
+      // cache the first one, then forevermore lookup from InviteSession
+      const SdpContents& getLocalSdp() const;
+      const SdpContents& getRemoteSdp() const;
+
    private:
+      State mState;
       Data mDialogEventId; //unique for all Dialogs at this ua...may hash local +
                           //callid, all 3 tags for forks.  Or could cycles an
                           //integer...hash memory location+salt at cons time(might be easiest).
