@@ -396,10 +396,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                     unsigned int altseq=0);
 
       void addTimerMs(DumTimeout::Type type,
-                      unsigned long duration,
-                      BaseUsageHandle target, 
-                      unsigned int seq, 
-                      unsigned int altseq=0);
+                        unsigned long duration,
+                        BaseUsageHandle target, 
+                        unsigned int seq, 
+                        unsigned int altseq=0,
+                        const Data &transactionId = Data::Empty);
 
       Dialog& findOrCreateDialog(const SipMessage* msg);
       Dialog* findDialog(const DialogId& id);

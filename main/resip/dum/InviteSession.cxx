@@ -994,7 +994,7 @@ InviteSession::dispatch(const SipMessage& msg)
    // Look for 2xx retransmissions - resend ACK and filter out of state machine
    if(msg.header(h_CSeq).method() == INVITE && msg.isResponse() && msg.header(h_StatusLine).statusCode() / 100 == 2)
    {
-      AckMap::iterator i = mAcks.find(msg.header(h_CSeq).sequence());
+      AckMap::iterator i = mAcks.find(msg.getTransactionId());
       if (i != mAcks.end())
       {
          send(i->second);  // resend ACK
@@ -1129,7 +1129,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    }
    else if (timeout.type() == DumTimeout::CanDiscardAck)
    {
-      AckMap::iterator i = mAcks.find(timeout.seq());
+      AckMap::iterator i = mAcks.find(timeout.transactionId());
       if (i != mAcks.end())
       {
          mAcks.erase(i);
@@ -2704,7 +2704,7 @@ void InviteSession::sendAck(const SdpContents *sdp)
 {
    SharedPtr<SipMessage> ack(new SipMessage);
 
-   assert(mAcks.count(mLastLocalSessionModification->header(h_CSeq).sequence()) == 0);
+   assert(mAcks.count(mLastLocalSessionModification->getTransactionId()) == 0);
    SharedPtr<SipMessage> source;
    
    if (mLastLocalSessionModification->method() == UPDATE)
@@ -2734,8 +2734,8 @@ void InviteSession::sendAck(const SdpContents *sdp)
    {
       setSdp(*ack, *sdp);
    }
-   mAcks[ack->header(h_CSeq).sequence()] = ack;
-   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), ack->header(h_CSeq).sequence());
+   mAcks[ack->getTransactionId()] = ack;
+   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), ack->header(h_CSeq).sequence(),0,ack->getTransactionId());
 
    InfoLog (<< "Sending " << ack->brief());
    send(ack);
