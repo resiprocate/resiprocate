@@ -357,9 +357,10 @@ DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
 
 void
 DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
-                               BaseUsageHandle target, unsigned int cseq, unsigned int rseq)
+                               BaseUsageHandle target, unsigned int cseq, unsigned int rseq,
+                               const Data &transactionId /*= Data::Empty*/)
 {
-   DumTimeout t(type, duration, target, cseq, rseq);
+   DumTimeout t(type, duration, target, cseq, rseq, transactionId);
    mStack.postMS(t, duration, this);
 }
 
