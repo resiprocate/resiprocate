@@ -5,12 +5,18 @@
 
 using namespace resip;
 
-DumTimeout::DumTimeout(Type type, unsigned long duration, BaseUsageHandle targetBu, unsigned int seq, unsigned int altSeq)
+DumTimeout::DumTimeout(Type type, 
+					   unsigned long duration, 
+					   BaseUsageHandle targetBu, 
+					   unsigned int seq, 
+					   unsigned int altSeq,
+					   const Data &transactionId)
     : mType(type),
       mDuration(duration),
       mUsageHandle(targetBu),
       mSeq(seq),
-      mSecondarySeq(altSeq)
+      mSecondarySeq(altSeq),
+	   mTransactionId(transactionId)
 {}
 
 DumTimeout::DumTimeout(const DumTimeout& source)
@@ -46,7 +52,13 @@ unsigned int
 DumTimeout::secondarySeq() const
 {
    return mSecondarySeq;
-}      
+}  
+
+const Data & DumTimeout::transactionId() const
+{
+	return mTransactionId;
+}
+
 bool 
 DumTimeout::isClientTransaction() const
 {
