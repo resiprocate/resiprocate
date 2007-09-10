@@ -352,7 +352,7 @@ class InviteSession : public DialogUsage
       EndReason mEndReason;   
 
       // Used to respond to 2xx retransmissions.
-      typedef std::map<int, SharedPtr<SipMessage> > AckMap;
+      typedef HashMap<Data, SharedPtr<SipMessage> > AckMap;
       AckMap mAcks;
       
    private:
