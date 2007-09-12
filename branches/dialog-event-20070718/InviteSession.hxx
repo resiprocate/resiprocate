@@ -135,13 +135,6 @@ class InviteSession : public DialogUsage
       virtual std::ostream& dump(std::ostream& strm) const;
       InviteSessionHandle getSessionHandle();
 
-      typedef enum
-      {
-         None, // means no Offer or Answer (may have SDP)
-         Offer,
-         Answer
-      } OfferAnswerType;
-
    protected:
 
       typedef enum

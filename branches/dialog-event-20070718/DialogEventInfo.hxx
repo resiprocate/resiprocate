@@ -4,6 +4,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "resip/dum/DialogId.hxx"
 #include "resip/dum/Handles.hxx"
+#include "resip/stack/SdpContents.hxx"
 
 namespace resip
 {
@@ -13,6 +14,11 @@ namespace resip
 //generated for each fork.  As uas, created at the same time as a Dialog.
 class DialogEventInfo
 {
+   public:
+      DialogEventInfo();
+      DialogEventInfo(const DialogEventInfo& dialogEventInfo);
+      DialogEventInfo& operator=(const DialogEventInfo& dialogEventInfo);
+
       enum Direction 
       {
          Initiator,
@@ -59,6 +65,8 @@ class DialogEventInfo
       const SdpContents& getRemoteSdp() const;
 
    private:
+      friend class DialogEventStateManager;
+
       State mState;
       Data mDialogEventId; //unique for all Dialogs at this ua...may hash local +
                           //callid, all 3 tags for forks.  Or could cycles an
