@@ -369,6 +369,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DialogEventStateManager.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\DialogId.cxx"
 				>
 			</File>
@@ -660,6 +664,18 @@
 			</File>
 			<File
 				RelativePath=".\Dialog.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\DialogEventHandler.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\DialogEventInfo.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\DialogEventStateManager.hxx"
 				>
 			</File>
 			<File

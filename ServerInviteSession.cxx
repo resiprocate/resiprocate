@@ -812,7 +812,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onNewSession(getHandle(), InviteSessionHandler::Offer, msg);
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
@@ -821,7 +821,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       case OnInvite:
          *mLastRemoteSessionModification = msg;
          transition(UAS_NoOffer);
-         handler->onNewSession(getHandle(), None, msg);
+         handler->onNewSession(getHandle(), InviteSessionHandler::None, msg);
          if(!isTerminated())  
          {
             handler->onOfferRequired(getSessionHandle(), msg);
@@ -832,7 +832,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          transition(UAS_ReceivedOfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onNewSession(getHandle(), InviteSessionHandler::Offer, msg);
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
@@ -841,7 +841,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       case OnInviteReliable:
          *mLastRemoteSessionModification = msg;
          transition(UAS_NoOfferReliable);
-         handler->onNewSession(getHandle(), None, msg);
+         handler->onNewSession(getHandle(), InviteSessionHandler::None, msg);
          if(!isTerminated())  
          {
             handler->onOfferRequired(getSessionHandle(), msg);
