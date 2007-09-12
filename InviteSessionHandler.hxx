@@ -1,7 +1,6 @@
 #if !defined(RESIP_INVITESESSIONHANDLER_HXX)
 #define RESIP_INVITESESSIONHANDLER_HXX
 
-#include "resip/dum/InviteSession.hxx"
 #include "resip/dum/Handles.hxx"
 
 namespace resip
@@ -15,9 +14,17 @@ class InviteSessionHandler
 {
    public:
       virtual ~InviteSessionHandler() {}
+
+      typedef enum
+      {
+         None, // means no Offer or Answer (may have SDP)
+         Offer,
+         Answer
+      } OfferAnswerType;
+
       /// called when an initial INVITE or the intial response to an outoing invite  
-      virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
-      virtual void onNewSession(ServerInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
+      virtual void onNewSession(ClientInviteSessionHandle, InviteSessionHandler::OfferAnswerType oat, const SipMessage& msg)=0;
+      virtual void onNewSession(ServerInviteSessionHandle, InviteSessionHandler::OfferAnswerType oat, const SipMessage& msg)=0;
 
       /// Received a failure response from UAS
       virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)=0;
