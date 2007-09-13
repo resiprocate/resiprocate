@@ -1099,7 +1099,6 @@ Data::c_str() const
       if (mSize <= LocalAllocSize)
       {
          memcpy(const_cast<Data*>(this)->mPreBuffer, mBuf, mSize);
-         const_cast<Data*>(this)->mPreBuffer[mSize] = 0;
          const_cast<Data*>(this)->mBuf = (char*)mPreBuffer;
          const_cast<Data*>(this)->mMine = Borrow;
       }

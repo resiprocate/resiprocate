@@ -37,7 +37,7 @@ SipMessage::SipMessage(const Transport* fromWire)
      mForceTarget(0),
      mTlsDomain(Data::Empty)
 {
-   ::memset(mHeaders, 0, sizeof(HeaderFieldValueList) * Headers::MAX_HEADERS);
+   ::memset(mHeaders, 0, sizeof(HeaderFieldValueList*) * Headers::MAX_HEADERS);
 }
 
 SipMessage::SipMessage(const SipMessage& from)
@@ -47,7 +47,7 @@ SipMessage::SipMessage(const SipMessage& from)
      mCreatedTime(Timer::getTimeMicroSec()),
      mForceTarget(0)
 {
-   ::memset(mHeaders, 0, sizeof(HeaderFieldValueList) * Headers::MAX_HEADERS);
+   ::memset(mHeaders, 0, sizeof(HeaderFieldValueList*) * Headers::MAX_HEADERS);
 
    *this = from;
 }
