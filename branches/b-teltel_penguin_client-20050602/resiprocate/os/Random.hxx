@@ -16,11 +16,13 @@ class RESIP_API Random
       enum {maxLength = 512};
       
       static Data getRandom(unsigned int numBytes);
+      static Data getRandom64(unsigned int numBytes);
       static Data getRandomHex(unsigned int numBytes); // actual length is 2*numBytes
       static Data getCryptoRandom(unsigned int numBytes);
       static Data getCryptoRandomHex(unsigned int numBytes); // actual length is 2*numBytes
 
       static int  getRandom();
+      static Int64 getRandom64();
       static int  getCryptoRandom();
 	
    private:
