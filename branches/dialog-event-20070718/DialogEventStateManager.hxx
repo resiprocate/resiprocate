@@ -26,7 +26,9 @@ public:
    void onEarlyUac(const Dialog& dialog, InviteSessionHandle is);
    void onEarlyUas(const Dialog& dialog, InviteSessionHandle is);
    void onConfirmed(const Dialog& dialog, InviteSessionHandle is);
-   void onTerminated(const Dialog& dialog, InviteSessionHandler::TerminatedReason reason);
+   void onTerminated(const Dialog& dialog, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
+
+   const std::map<DialogId, DialogEventInfo>& getDialogEventInfos() const;
 
 private:
    // !jjg! we'll only have the DialogSetId if we aren't yet in the 'early' state;
@@ -35,7 +37,7 @@ private:
    // !jjg! note that a comparator is NOT needed...  the DialogId will be matched exactly,
    // all of the time.  before the Early state, we will always search for DialogId with
    // remote tag set to Data::Empty
-   std::map<DialogId, Data> mDialogIdToGeneratedId;
+   std::map<DialogId, DialogEventInfo> mDialogIdToEventInfo;
 
    DialogEventHandler* mDialogEventHandler;
 };
