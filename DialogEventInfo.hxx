@@ -16,9 +16,14 @@ class DialogEventInfo
 {
    public:
       DialogEventInfo();
-      DialogEventInfo(const DialogEventInfo& dialogEventInfo);
+      DialogEventInfo(const DialogEventInfo& rhs);
       DialogEventInfo& operator=(const DialogEventInfo& dialogEventInfo);
-
+      
+      //based on DialogEventId
+      bool operator==(const DialogEventInfo& rhs) const;
+      bool operator!=(const DialogEventInfo& rhs) const;
+      bool operator<(const DialogEventInfo& rhs) const;
+         
       enum Direction 
       {
          Initiator,
@@ -33,15 +38,10 @@ class DialogEventInfo
          Confirmed,
          Terminated
       };
-      
-      //based on DialogEventId
-      bool operator==(const DialogEventInfo& rhs) const;
-      bool operator!=(const DialogEventInfo& rhs) const;
-      bool operator<(const DialogEventInfo& rhs) const;
-         
+
       const State& getState();
 
-      const Data& getDialogEventId;
+      const Data& getDialogEventId();
       
       const Data& getCallId();
       const Data& getLocalTag();
@@ -64,6 +64,8 @@ class DialogEventInfo
       const SdpContents& getLocalSdp() const;
       const SdpContents& getRemoteSdp() const;
 
+      UInt64 getDuration() const; // in seconds
+
    private:
       friend class DialogEventStateManager;
 
@@ -77,13 +79,19 @@ class DialogEventInfo
       std::auto_ptr<DialogId> mReplacesId;
       InviteSessionHandle mInviteSession;
 
-      NameAddr mReferredBy;
+      std::auto_ptr<NameAddr> mReferredBy;
+
 //could back-point to dialog for this information to save space
       NameAddrs mRouteSet; 
       NameAddr mLocalIdentity;
       NameAddr mRemoteIdentity;
       Uri mLocalTarget;
-      Uri mRemoteTarget;
+      std::auto_ptr<Uri> mRemoteTarget;
+
+      UInt64 mCreationTime;
+
+      std::auto_ptr<SdpContents> mLocalSdp;
+      std::auto_ptr<SdpContents> mRemoteSdp;
 };
 
 }

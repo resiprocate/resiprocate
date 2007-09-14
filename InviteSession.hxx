@@ -113,8 +113,11 @@ class InviteSession : public DialogUsage
       // Convenience methods for accessing attributes of a dialog. 
       const NameAddr& myAddr() const;
       const NameAddr& peerAddr() const;
+      bool hasLocalSdp() const;
       const SdpContents& getLocalSdp() const;
+      bool hasRemoteSdp() const;
       const SdpContents& getRemoteSdp() const;
+      bool hasProposedRemoteSdp() const;
       const SdpContents& getProposedRemoteSdp() const;
       const Data& getDialogId() const;
       
