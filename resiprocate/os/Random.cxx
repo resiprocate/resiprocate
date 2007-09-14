@@ -37,6 +37,11 @@
 #  include <openssl/err.h>
 #endif
 
+#ifdef _WIN32
+#include <WinBase.h>
+#include <ObjBase.h>
+#endif
+
 using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
@@ -58,7 +63,17 @@ Random::initialize()
       
       //throwing away first 32 bits
 #ifdef _WIN32
-      unsigned int seed = ::GetTickCount();
+      // !polo! - if GUID or rand_s is used, srand() is unnecessary, consider to remove it?
+      LARGE_INTEGER largSeed;
+      unsigned int seed;
+      if(::QueryPerformanceCounter(&largSeed))  // better than GetTickCount().
+      {
+         seed = largSeed.LowPart;
+      }
+      else
+      {
+         seed = ::GetTickCount();
+      }
 #else
       unsigned int seed = static_cast<unsigned int>(Timer::getTimeMs());
 #endif
@@ -138,11 +153,19 @@ Random::getRandom()
    assert( sIsInitialized == true );
 #ifdef WIN32
    assert( RAND_MAX == 0x7fff );
-#if 1
+# if 1
    int r1;
-   rand_s((unsigned int*)&r1);
+   GUID guid;
+   if(::CoCreateGuid(&guid) == S_OK)
+   {
+      r1 = (long)guid.Data1;
+   }
+   else
+   {
+      rand_s((unsigned int*)&r1);
+   }
    return r1;
-#else
+# else
    Lock lock(sMutex);
    double r1 = ((double)rand()/((double)(RAND_MAX) + 1.0));
    double r2 = ((double)rand()/((double)(RAND_MAX) + 1.0));
@@ -150,10 +173,42 @@ Random::getRandom()
 
    return (((int)(((double)(std::numeric_limits<unsigned short>::max)()) * r1) + 1) << 16) | 
       ((int)(((double)(std::numeric_limits<unsigned short>::max)()) * r2) + 1);
-#endif
+# endif
 #else
    return random(); 
 #endif
+}
+
+Int64
+Random::getRandom64()
+{
+   if (!sIsInitialized)
+   {
+      initialize();
+   }
+   Int64 ret;
+   // !dlb! Lock
+   assert( sIsInitialized == true );
+#ifdef WIN32
+   assert( RAND_MAX == 0x7fff );
+   GUID guid;
+   if(::CoCreateGuid(&guid) == S_OK)
+   {
+      ret = (Int64)(*guid.Data4);
+   }
+   else
+   {
+      unsigned int hiInt;
+      rand_s(&hiInt);
+      rand_s((unsigned int*)&ret);
+      ret += Int64(hiInt) << 32;
+   }
+#else
+   ret = random();
+   ret <<= 32;
+   ret += random();
+#endif
+   return ret;
 }
 
 int
@@ -209,6 +264,35 @@ Random::getRandom(unsigned int len)
 }
 
 Data 
+Random::getRandom64(unsigned int len)
+{
+   if(len < 8)
+   {
+      return getRandom(len);
+   }
+
+   if (!sIsInitialized)
+   {
+      initialize();
+   }
+   assert(sIsInitialized == true);
+   assert(len < Random::maxLength+1);
+
+   union 
+   {
+      char cbuf[Random::maxLength + 1];
+      Int64 ibuf[(Random::maxLength)/sizeof(long long) + 1];
+   };
+   ::memset(ibuf, 0, sizeof(ibuf));
+   unsigned int count = (len+sizeof(long long)-1)/sizeof(long long);
+   for (unsigned int i = 0; i < count; ++i)
+   {
+      ibuf[i] = Random::getRandom64();
+   }
+   return Data(cbuf, len);
+}
+
+Data 
 Random::getCryptoRandom(unsigned int len)
 {
    if (!sIsInitialized)
@@ -240,7 +324,7 @@ Random::getRandomHex(unsigned int numBytes)
      initialize();
    }
    assert( sIsInitialized == true );
-   return Random::getRandom(numBytes).hex();
+   return Random::getRandom64(numBytes).hex();
 }
 
 Data 
