@@ -92,6 +92,12 @@ InviteSession::dialogDestroyed(const SipMessage& msg)
    //delete this;   
 }
 
+bool
+InviteSession::hasLocalSdp() const
+{
+   return (mCurrentLocalSdp.get());
+}
+
 const SdpContents&
 InviteSession::getLocalSdp() const
 {
@@ -105,6 +111,12 @@ InviteSession::getLocalSdp() const
    }
 }
 
+bool
+InviteSession::hasRemoteSdp() const
+{
+   return (mCurrentRemoteSdp.get());
+}
+
 const SdpContents&
 InviteSession::getRemoteSdp() const
 {
@@ -116,6 +128,12 @@ InviteSession::getRemoteSdp() const
    {
       return SdpContents::Empty;
    }
+}
+
+bool
+InviteSession::hasProposedRemoteSdp() const
+{
+   return (mProposedRemoteSdp.get());
 }
 
 const SdpContents&
