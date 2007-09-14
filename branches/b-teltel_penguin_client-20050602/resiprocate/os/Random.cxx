@@ -186,7 +186,11 @@ Random::getRandom64()
    {
       initialize();
    }
-   Int64 ret;
+   union
+   {
+      Int64 ret;
+      int   ret2[2];
+   };
    // !dlb! Lock
    assert( sIsInitialized == true );
 #ifdef WIN32
@@ -198,15 +202,12 @@ Random::getRandom64()
    }
    else
    {
-      unsigned int hiInt;
-      rand_s(&hiInt);
-      rand_s((unsigned int*)&ret);
-      ret += Int64(hiInt) << 32;
+      rand_s((unsigned int*)&ret2[0]);
+      rand_s((unsigned int*)&ret2[1]);
    }
 #else
-   ret = random();
-   ret <<= 32;
-   ret += random();
+   ret2[0] = random();
+   ret2[1] = random();
 #endif
    return ret;
 }
