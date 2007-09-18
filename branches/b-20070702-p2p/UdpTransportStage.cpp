@@ -158,7 +158,10 @@ int UdpTransportStage::handleTimer(TimerCallbackEvent * inCallback)
 				delete buffer;		
 			}
 			else
-			{
+			{	
+				cout << "UDP: retransmitting buffer after " << computeTimeElapsed(currentTime, buffer->mTime);
+				cout << buffer->mFlowId << ":" << buffer->mMsgId << ":" << buffer->mSeqNum << ":" << buffer->mLength << endl;
+				
 				if (mOutgoingBuffers.empty())
 				{
 					NetworkRequestEvent * locNetworkRequestEvent = new NetworkRequestEvent(this);
@@ -170,6 +173,10 @@ int UdpTransportStage::handleTimer(TimerCallbackEvent * inCallback)
 				mOutgoingBuffers.push_back(buffer);	
 				iter++;
 			}
+		}
+		else
+		{
+			iter++;
 		}
 	}
 	delete inCallback;	
@@ -215,19 +222,75 @@ int UdpTransportStage::failUdpPeer(UdpPeerInfo * peer)
 void UdpTransportStage::removeRetransmitBuffer(Address inAddress, unsigned int messageId, unsigned int seqNumber)
 {
 	std::vector<TransportBufferInfo *>::iterator iter;
-	for (iter = mRetransmitBuffers.begin(); iter != mRetransmitBuffers.end(); iter++)
+	TransportBufferInfo * buffer = NULL;
+	for (iter = mOutgoingBuffers.begin(); iter != mOutgoingBuffers.end();) 
 	{
 		if(((*iter)->mAddress.sin_port == inAddress.sin_port &&
 			(*iter)->mAddress.sin_addr.s_addr == inAddress.sin_addr.s_addr) &&
 			(*iter)->mMsgId == messageId && 
-			(*iter)->mSeqNum == seqNumber)
+			(*iter)->mSeqNum == seqNumber && 
+			(*iter)->mRetransmit == true)
+		{			
+			if (buffer != NULL)
+			{
+				assert(*iter == buffer);
+			}
+			else
+			{
+				buffer = *iter;
+			}
+			iter = mOutgoingBuffers.erase(iter);
+		}
+		else
 		{
-			TransportBufferInfo * buffer = (*iter);
-			mRetransmitBuffers.erase(iter);
-			delete buffer;
-			return;
+			iter++;
 		}
 	}	
+	
+	for (iter = mRetransmitBuffers.begin(); iter != mRetransmitBuffers.end();)
+	{
+		if(((*iter)->mAddress.sin_port == inAddress.sin_port &&
+			(*iter)->mAddress.sin_addr.s_addr == inAddress.sin_addr.s_addr) &&
+			(*iter)->mMsgId == messageId && 
+			(*iter)->mSeqNum == seqNumber &&
+			(*iter)->mRetransmit == true)
+		{
+			if (buffer != NULL)
+			{
+				assert(*iter == buffer);
+			}
+			else
+			{
+				buffer = *iter;
+			}
+			iter = mRetransmitBuffers.erase(iter);
+		}
+		else
+		{
+			iter++;
+		}
+	}
+	if (buffer == NULL)
+	{
+		/*
+		cout << ">>>>>>>>>>> Buffer not found";
+		cout << messageId << ":" << seqNumber << endl;
+		for (unsigned int i = 0; i < mRetransmitBuffers.size(); i++)
+		{
+			buffer = mRetransmitBuffers[i];
+			cout << "	Remaining retransmit buffer ";
+			cout << buffer->mFlowId << ":" << buffer->mMsgId << ":" << buffer->mSeqNum << ":" << buffer->mLength << endl;
+		}
+		*/
+	}
+	else	
+	{
+		/*
+		cout << "Removed buffer ";
+		cout << buffer->mFlowId << ":" << buffer->mMsgId << ":" << buffer->mSeqNum << ":" << buffer->mLength << endl;
+		*/
+		delete buffer;
+	}
 }
 
 void UdpTransportStage::insertRetransmitBuffer(TransportBufferInfo * buffer)
@@ -305,6 +368,7 @@ UdpTransportStage::TransportBufferInfo * UdpTransportStage::generateAck(Address 
 	TransportBufferInfo * bufferInfo = new TransportBufferInfo();
 	bufferInfo->mBuffer = buffer;
 	bufferInfo->mLength = UDP_ACK_SIZE;
+	bufferInfo->mMsgId = messageId;
 	bufferInfo->mSeqNum = seqNumber;
 	bufferInfo->mRetransmit = false;
 	bufferInfo->mAddress = inAddress;
@@ -324,16 +388,15 @@ int UdpTransportStage::handleReadCallback(NetworkCallbackEvent * inCallback)
 	if ((numBytes=recvfrom(mSocket, buf, UDP_MAX_PKT_SIZE, 0,
 			(struct sockaddr *)&peerAddress, &addressLength)) <= 0) {
 		perror("recvfrom");
-		mPeerAddress = peerAddress;
 		TransportNotification * locNotification = new TransportNotification(this);
 		locNotification->mEventType = TransportNotification::FAILURE;
 		locNotification->mEventId = inCallback->mEventId;
-		locNotification->mAddress = mPeerAddress;
+		locNotification->mAddress = peerAddress;
 		locNotification->mFlowId = mFlowId;
 		auto_ptr<EventInfo> notificationPtr(locNotification);
 		mForwardingStage->handleEvent(notificationPtr);
 		delete inCallback;
-		return NetworkRequestEvent::FAIL;
+		return NetworkRequestEvent::INCOMPLETE;
 	}
 	assert(numBytes >= UDP_HEADER_SIZE);
 	
@@ -370,6 +433,7 @@ int UdpTransportStage::handleReadCallback(NetworkCallbackEvent * inCallback)
 	//This is an ack
 	if (messageType == UDP_ACK_TYPE)
 	{	
+		//cout << "<------- Packet" << messageId << ":" << seqNumber << " is MY OWN ack " << endl;
 		removeRetransmitBuffer(udpPeer->mAddress, messageId, seqNumber);
 		delete inCallback;
 		return NetworkRequestEvent::INCOMPLETE;
@@ -390,9 +454,12 @@ int UdpTransportStage::handleReadCallback(NetworkCallbackEvent * inCallback)
 		}
 		
 		//Send back ack
+		//cout << "----------> We have already acked " << messageId << ":" << seqNumber << endl;
+
 		TransportBufferInfo * buffer = generateAck(peerAddress, messageId, seqNumber);
 		buffer->mFlowId = udpPeer->mFlowId;
 		mOutgoingBuffers.push_back(buffer);
+
 		delete inCallback;
 		return NetworkRequestEvent::INCOMPLETE;
 	}
@@ -400,6 +467,8 @@ int UdpTransportStage::handleReadCallback(NetworkCallbackEvent * inCallback)
 	//At this point, the message is either a header, or a data packet
 	if (messageType == UDP_MESSAGE_LENGTH_TYPE)
 	{
+		//cout << "----------> Is a message length type " << messageId << ":" << seqNumber << endl;
+
 		assert(numBytes == UDP_MESSAGE_LENGTH_HEADER_SIZE);
 		unsigned int messageSize;	
 		memcpy(&messageSize, buf + UDP_MESSAGE_LENGTH_OFFSET, UDP_MESSAGE_LENGTH_SIZE);
@@ -454,6 +523,8 @@ int UdpTransportStage::handleReadCallback(NetworkCallbackEvent * inCallback)
 	}
 	else
 	{
+//		cout << "---------->Is a data type " << messageId << ":" << seqNumber << endl;
+
 		unsigned int dataSize;	
 		memcpy(&dataSize, buf + UDP_DATA_LENGTH_OFFSET, UDP_DATA_LENGTH_SIZE);
 		dataSize = ntohl(dataSize);
@@ -526,6 +597,7 @@ int UdpTransportStage::handleReadCallback(NetworkCallbackEvent * inCallback)
 		mAsyncStage->handleEvent(requestPtr);
 	}
 	mOutgoingBuffers.push_back(buffer);
+
 	return NetworkRequestEvent::INCOMPLETE;
 }
 
@@ -535,29 +607,30 @@ int UdpTransportStage::handleWriteCallback(NetworkCallbackEvent * inCallback)
 	{
 		return NetworkRequestEvent::COMPLETE;
 	}
-
+	
 	TransportBufferInfo * bufferInfo = mOutgoingBuffers.front();
-	ssize_t n = sendto(mSocket, bufferInfo->mBuffer, bufferInfo->mLength, 0,
-			(struct sockaddr *)&bufferInfo->mAddress, sizeof(struct sockaddr));
-	if (n <0) {
+	ssize_t n = sendto(mSocket,  bufferInfo->mBuffer, bufferInfo->mLength, 0,
+			(struct sockaddr *)& bufferInfo->mAddress, sizeof(struct sockaddr));
+	
+	if (n <0) 
+	{
+		cout << "UDP: failed to send to " << ntohs(bufferInfo->mAddress.sin_port) << ":" << bufferInfo->mFlowId << endl;
 		perror("sendto");
 		exit(1);
+	}
+	else
+	{/*
+		if (bufferInfo->mRetransmit)
+			cout << "---------> sent out  " << bufferInfo->mMsgId << ":" << bufferInfo->mSeqNum << ":" << bufferInfo->mLength << endl;
+		else
+			cout << "=========> acked  " << bufferInfo->mMsgId << ":" << bufferInfo->mSeqNum << ":" << bufferInfo->mLength << endl;
+	*/
 	}
 	assert(n == bufferInfo->mLength);
 	mOutgoingBuffers.erase(mOutgoingBuffers.begin());
 	
 	if (bufferInfo->mRetransmit == true)
 	{
-		if (mRetransmitBuffers.empty())
-		{
-			TimerRequestEvent * timer = new TimerRequestEvent(this);
-			timer->mExpireTime.tv_sec = UDP_DEFAULT_TIMEOUT_SECONDS;
-			timer->mExpireTime.tv_usec = 0;
-			timer->mTimerType = TimerRequestEvent::UDP_TIMEOUT;
-			auto_ptr<EventInfo> timerPtr(timer);
-			mAsyncStage->handleEvent(timerPtr);
-		}
-
 		//If we've never retransmitted this before, insert into retransmit queue
 		if (bufferInfo->mSentTimes == 0){
 			insertRetransmitBuffer(bufferInfo);			
@@ -565,6 +638,16 @@ int UdpTransportStage::handleWriteCallback(NetworkCallbackEvent * inCallback)
 		//Update number of times sent, and last sent time
 		bufferInfo->mSentTimes++;
 		gettimeofday(&bufferInfo->mTime, NULL);
+		
+		if (mRetransmitBuffers.size() == 1)
+		{	
+			TimerRequestEvent * timer = new TimerRequestEvent(this);
+			timer->mExpireTime.tv_sec = UDP_DEFAULT_TIMEOUT_SECONDS;
+			timer->mExpireTime.tv_usec = 0;
+			timer->mTimerType = TimerRequestEvent::UDP_TIMEOUT;
+			auto_ptr<EventInfo> timerPtr(timer);
+			mAsyncStage->handleEvent(timerPtr);
+		}
 	}
 	else
 	{
@@ -681,7 +764,7 @@ int UdpTransportStage::handleWriteRequest(TransportWriteRequest * inTransportReq
 		mOutgoingBuffers.push_back(bufferInfo);
 	}
 	delete inTransportRequestEvent;
-			
+	
 	return 0;
 }
 
