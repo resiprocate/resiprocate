@@ -3,6 +3,24 @@
 
 using namespace resip;
 
+//!dcm! -- we can optimize by time and only update what is necessary in the
+//!DialogeventInfo, or by space and only store creation and id in the map.
+
+//?dcm? -- threading/lifetime design: we can have DialogEventInfo point to the
+//right information and not hold state and require the user to be in the dum
+//thread.  This is consistent w/ the dum api; a copy cons could copy the state
+//but would have to be run in the DUM thread; probably unecesssary.
+
+//sounds like the storing approach is easier in the face of working w/ key
+//mismatch.
+
+//the comparator/key of the map must have an ordering so that a key can be
+//contructed which points to the beinning of a dialogSet.  This could be done by
+//no remote tag being always, which might be the existing behaviour, but
+//shouldn't be relied on.
+
+
+
 // we've received an INVITE
 void
 DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
@@ -65,6 +83,7 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
 void
 DialogEventStateManager::onEarlyUac(const Dialog& dialog, InviteSessionHandle is)
 {
+   //replace the entry w/out a remote tag if it exists
    DialogEventInfo eventInfo;
    eventInfo.mDialogId = dialog.getId();
    eventInfo.mDirection = DialogEventInfo::Initiator;
@@ -128,6 +147,7 @@ DialogEventStateManager::onEarlyUas(const Dialog& dialog, InviteSessionHandle is
 void
 DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle is)
 {
+   //replace the entry w/out a remote tag if it exists
    DialogEventInfo eventInfo;
    eventInfo.mDialogId = dialog.getId();
    eventInfo.mInviteSession = is;
@@ -155,6 +175,7 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
       mDialogIdToEventInfo[eventInfo.mDialogId] = eventInfo;
 
       it = mDialogIdToEventInfo.find(DialogId(dialog.getId().getDialogSetId(), Data::Empty));
+      //!dcm! user replace logic from onEarly
       if (it != mDialogIdToEventInfo.end())
       {
          if (it->first.getRemoteTag() == Data::Empty)
@@ -170,6 +191,8 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
 void
 DialogEventStateManager::onTerminated(const Dialog& dialog, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason)
 {
+   //find dialogSet.  All non-confirmed dialogs are destroyed by this event.
+   //Confirmed dialogs are only destroyed by an exact match.
    DialogEventInfo eventInfo;
    eventInfo.mDialogId = dialog.getId();
    //eventInfo.mInviteSession = dialog.getInviteSession(); // !jjg! likely not needed anyways

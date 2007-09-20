@@ -721,6 +721,7 @@ DialogSet::dispatch(const SipMessage& msg)
             InfoLog ( << "Cannot create a dialog, no Contact or To tag in 1xx." );
             if (mDum.mDialogSetHandler)
             {
+               //!dcm!--call manager for dialog event
                mDum.mDialogSetHandler->onNonDialogCreatingProvisional(mAppDialogSet->getHandle(), msg);
             }
             return;         
