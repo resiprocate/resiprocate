@@ -768,7 +768,7 @@ public:
 
    virtual void executeCommand()
    {
-      mInviteSession.referCommand(mReferTo, mReferSub);
+      mInviteSession.refer(mReferTo, mReferSub);
    }
 
    virtual std::ostream& encodeBrief(std::ostream& strm) const
