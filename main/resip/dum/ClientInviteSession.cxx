@@ -216,7 +216,7 @@ ClientInviteSession::end(EndReason reason)
          break;
 
       case Terminated:
-         assert(0);
+         // no-op
          break;
 
       default:
