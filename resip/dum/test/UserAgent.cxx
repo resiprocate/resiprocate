@@ -243,7 +243,11 @@ UserAgent::onOffer(InviteSessionHandle h, const SipMessage& msg, const SdpConten
    h->provideAnswer(*sdp);
    if(msg.isRequest() && msg.method()==INVITE && !h->isConnected())
    {
-      h->accept();
+      ServerInviteSession* uas = dynamic_cast<ServerInviteSession*>(h.get());
+      if(uas)
+      {
+         uas->accept();
+      }
    }
 }
 
