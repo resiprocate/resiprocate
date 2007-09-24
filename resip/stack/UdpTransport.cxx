@@ -197,22 +197,22 @@ UdpTransport::process(FdSet& fdset)
       if (buffer[0] == 1 && buffer[1] == 1 && ipVersion() == V4)
       {
          resip::Lock lock(myMutex);
-	     StunMessage resp;
-	     memset(&resp, 0, sizeof(StunMessage));
-		
-	     if (stunParseMessage(buffer, len, resp, false))
-		 {
-			 in_addr sin_addr;
+         StunMessage resp;
+         memset(&resp, 0, sizeof(StunMessage));
+      
+         if (stunParseMessage(buffer, len, resp, false))
+         {
+            in_addr sin_addr;
 #if defined(WIN32)
-			 sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
+            sin_addr.S_un.S_addr = htonl(resp.mappedAddress.ipv4.addr);
 #else
-			 sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
+            sin_addr.s_addr = htonl(resp.mappedAddress.ipv4.addr);
 #endif
-			 mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
-			 mStunSuccess = true;
-		 }
-		 return;
-	  }
+            mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
+            mStunSuccess = true;
+         }
+         return;
+      }
 
       // this must be a STUN request (or garbage)
       if (buffer[0] == 0 && buffer[1] == 1 && ipVersion() == V4)
@@ -430,8 +430,6 @@ UdpTransport::buildFdSet( FdSet& fdset )
 bool 
 UdpTransport::stunSendTest(const Tuple&  dest)
 {
-   resip::Lock lock(myMutex);
-
    bool changePort=false;
    bool changeIP=false;
 
@@ -440,17 +438,17 @@ UdpTransport::stunSendTest(const Tuple&  dest)
 
    username.sizeValue = 0;
    password.sizeValue = 0;
-	
+
    StunMessage req;
    memset(&req, 0, sizeof(StunMessage));
-	
+
    stunBuildReqSimple(&req, username, changePort , changeIP , 1);
-	
+
    char* buf = new char[STUN_MAX_MESSAGE_SIZE];
    int len = STUN_MAX_MESSAGE_SIZE;
-	
+
    int rlen = stunEncodeMessage(req, buf, len, password, false);
-	
+
    SendData* stunRequest = new SendData(dest, buf, rlen);
    mTxFifo.add(stunRequest);
 
@@ -462,13 +460,13 @@ UdpTransport::stunSendTest(const Tuple&  dest)
 bool
 UdpTransport::stunResult(Tuple& mappedAddress)
 {
-	resip::Lock lock(myMutex);
+   resip::Lock lock(myMutex);
 
-	if (mStunSuccess)
-	{
-		mappedAddress = mStunMappedAddress;
-	}
-	return mStunSuccess;
+   if (mStunSuccess)
+   {
+      mappedAddress = mStunMappedAddress;
+   }
+   return mStunSuccess;
 }
 
 
