@@ -101,6 +101,7 @@ class ClientRegistration: public NonDialogUsage
       State mState;
       bool mEndWhenDone;
       bool mUserRefresh;
+      UInt32 mRegistrationTime;
       UInt64 mExpires;
       State mQueuedState;
       SharedPtr<SipMessage> mQueuedRequest;
