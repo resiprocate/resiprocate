@@ -164,9 +164,11 @@ UserAgent::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferAnswerT
    InfoLog(<< h->myAddr().uri().user() << " INVITE from  " << h->peerAddr().uri().user());
          
    h->provisional(180);
-   SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-   h->provideAnswer(*sdp);
-   h->accept();
+   // .bwc. Er, this doesn't look right. We should provide an answer when we get
+   // the onOffer() callback, not the onNewSession() callback.
+   // SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+   // h->provideAnswer(*sdp);
+   // h->accept();
 
    // might update presence here
 }
@@ -232,44 +234,54 @@ UserAgent::onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContent
 }
 
 void
-UserAgent::onOffer(InviteSessionHandle handle, const SipMessage& msg, const SdpContents& offer)
-{         
+UserAgent::onOffer(InviteSessionHandle h, const SipMessage& msg, const SdpContents& offer)
+{
+   InfoLog(<< h->myAddr().uri().user() << " offer from  " << h->peerAddr().uri().user());
+
+   SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+   h->provideAnswer(*sdp);
 }
 
 void
-UserAgent::onOfferRequired(InviteSessionHandle, const SipMessage& msg)
+UserAgent::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
 {
-   assert(false);
+   InfoLog(<< h->myAddr().uri().user() << " offer requested by  " 
+            << h->peerAddr().uri().user());
+
+   SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+   h->provideOffer(*sdp);
 }
 
 void
-UserAgent::onOfferRejected(InviteSessionHandle, const SipMessage* msg)
+UserAgent::onOfferRejected(InviteSessionHandle h, const SipMessage* msg)
 {
-    assert(0);
+   InfoLog(<< h->myAddr().uri().user() << " offer rejected by  " 
+            << h->peerAddr().uri().user());
 }
 
 void
-UserAgent::onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
+UserAgent::onDialogModified(InviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
 {
-    assert(0);
+   InfoLog(<< h->myAddr().uri().user() << " dialog modified " 
+            << h->peerAddr().uri().user());
 }
 
 void
-UserAgent::onInfo(InviteSessionHandle, const SipMessage& msg)
+UserAgent::onInfo(InviteSessionHandle h, const SipMessage& msg)
 {
-    assert(0);
+   InfoLog(<< h->myAddr().uri().user() << " INFO " 
+            << h->peerAddr().uri().user());
+   h->acceptNIT();
 }
 
 void
 UserAgent::onInfoSuccess(InviteSessionHandle, const SipMessage& msg)
 {
-    assert(0);
 }
 
 void
 UserAgent::onInfoFailure(InviteSessionHandle, const SipMessage& msg)
 {
-    assert(0);
 }
 
 void
@@ -297,8 +309,11 @@ UserAgent::onReferNoSub(InviteSessionHandle, const SipMessage& msg)
 }
 
 void
-UserAgent::onMessage(InviteSessionHandle, const SipMessage& msg)
+UserAgent::onMessage(InviteSessionHandle h, const SipMessage& msg)
 {
+   InfoLog(<< h->myAddr().uri().user() << " MESSAGE " 
+            << h->peerAddr().uri().user());
+   h->acceptNIT();
 }
 
 void
