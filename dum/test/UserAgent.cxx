@@ -10,6 +10,7 @@
 #include "resip/dum/ServerRegistration.hxx"
 #include "resip/dum/ClientPublication.hxx"
 #include "resip/dum/ServerPublication.hxx"
+#include "resip/dum/ServerOutOfDialogReq.hxx"
 
 #include "UserAgent.hxx"
 
@@ -240,6 +241,10 @@ UserAgent::onOffer(InviteSessionHandle h, const SipMessage& msg, const SdpConten
 
    SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
    h->provideAnswer(*sdp);
+   if(msg.isRequest() && msg.method()==INVITE && !h->isConnected())
+   {
+      h->accept();
+   }
 }
 
 void
@@ -427,8 +432,10 @@ UserAgent::onFailure(ClientOutOfDialogReqHandle, const SipMessage& response)
 }
 
 void 
-UserAgent::onReceivedRequest(ServerOutOfDialogReqHandle, const SipMessage& request)
+UserAgent::onReceivedRequest(ServerOutOfDialogReqHandle h, const SipMessage& request)
 {
+   InfoLog(<< request.method() << ": Just respond.");
+   h->send(h->accept());
 }
 
 void
