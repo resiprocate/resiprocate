@@ -416,6 +416,7 @@ TransactionState::process(TransactionController& controller)
                   // Be graceful.
                   TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 200));
                   matchingInvite->sendToTU(Helper::makeResponse(*matchingInvite->mMsgToRetransmit, 487));
+                  matchingInvite->terminateClientTransaction(matchingInvite->mId);
 
                   delete matchingInvite;
                   delete sip;
