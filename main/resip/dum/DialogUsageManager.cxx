@@ -1233,7 +1233,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
          
          if(garbage)
          {
-            if(sipMsg->isRequest() && !sipMsg->method()==ACK)
+            if(sipMsg->isRequest() && sipMsg->method()!=ACK)
             {
                // .bwc. Either we need to trim the last comma off, or make this 
                // a proper sentence fragment. This is more fun.
