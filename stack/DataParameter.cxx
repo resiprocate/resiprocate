@@ -42,6 +42,16 @@ DataParameter::DataParameter(ParameterTypes::Type type,
       pb.skipToOneOf(terminators);
       pb.data(mValue, pos);
    }
+
+   if(mValue.empty())
+   {
+      // .bwc. We can't let this happen, because we throw if we try to encode
+      // when we have an empty value. If that behavior stops, this can be 
+      // removed.
+      throw ParseException("DataParameter c'tor parsed empty param!", 
+                           __FILE__,
+                           __LINE__);
+   }
 }
 
 DataParameter::DataParameter(ParameterTypes::Type type)
