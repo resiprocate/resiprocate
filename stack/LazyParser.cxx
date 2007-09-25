@@ -105,6 +105,12 @@ LazyParser::isWellFormed() const
    catch(resip::ParseBuffer::Exception&)
    {
    }
+   catch(resip::BaseException&)
+   {
+   }
+   catch(...)
+   {
+   }
    
    return (mState!=MALFORMED);
 }
