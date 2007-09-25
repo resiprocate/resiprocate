@@ -16,21 +16,52 @@ bool FALSE=false;
 #include "resip/stack/Uri.hxx"
 #include "rutil/Logger.hxx"
 
+#include <signal.h>
+
 using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+static bool finished = false;
+
+static void
+signalHandler(int signo)
+{
+   std::cerr << "Shutting down" << endl;
+   finished = true;
+}
+
 int
 main(int argc, char* argv[])
 {
+#ifndef _WIN32
+   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
+   {
+      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
+      exit(-1);
+   }
+#endif
+
+   if ( signal( SIGINT, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGINT" << endl;
+      exit( -1 );
+   }
+
+   if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
+   {
+      cerr << "Couldn't install signal handler for SIGTERM" << endl;
+      exit( -1 );
+   }
+
    try
    {
       UserAgent ua(argc, argv);
       ua.startup();
       
       InfoLog(<< argv[0] << " starting");
-      while(1)
+      while(!finished)
       {
          ua.process();
       }
