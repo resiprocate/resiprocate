@@ -165,7 +165,7 @@ WebAdmin::buildPage( const Data& uri,
            pb.data(domain, anchor);
          }
       }
-      catch (ParseBuffer::Exception& )
+      catch (ParseException& )
       {
       }
 

@@ -2,7 +2,7 @@
 #define RESIP_PARSEBUFFER_HXX 
 
 #include "rutil/Data.hxx"
-#include "rutil/BaseException.hxx"
+#include "rutil/ParseException.hxx"
 
 namespace resip
 {
@@ -19,17 +19,12 @@ class ParseBuffer
 
       ParseBuffer(const ParseBuffer& other);
 
-      class Exception : public resip::BaseException
-      {
-         public:
-            Exception(const Data& msg, const Data& context, const Data& file, const int line);
-            ~Exception() throw();
-            const char* name() const;
-            const Data& getContext() const;
-            
-         private:
-            Data mContext;
-      };
+      // .bwc. Backwards-compatibility hack; ParseBuffer::Exception used to be
+      // a full inner class of ParseBuffer, and we also had a separate 
+      // ParseException class that other things used. For consistency, we have
+      // moved everything over to use ParseException, but there is app-code
+      // out there that still expects ParseBuffer::Exception to exist.
+      typedef ParseException Exception;
 
    private:
       class Pointer

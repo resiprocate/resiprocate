@@ -247,7 +247,7 @@ AclStore::addAcl(const resip::Data& tlsPeerNameOrAddress,
          return true;
       }      
    }
-   catch(ParseBuffer::Exception)
+   catch(ParseException&)
    {
    }
    return false;

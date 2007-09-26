@@ -10,7 +10,7 @@
 #include "repro/ReproVersion.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 
 using namespace resip;
 using namespace std;

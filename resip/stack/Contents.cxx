@@ -440,7 +440,7 @@ Contents::preParseHeaders(ParseBuffer& pb)
       }
    }
    }
-   catch (ParseBuffer::Exception & /* e */)
+   catch (ParseException & /* e */)
    {
       ErrLog( << "Some problem parsing contents" );
 #if 0 // TODO CJ REMOVE this if 0 and make this throw
