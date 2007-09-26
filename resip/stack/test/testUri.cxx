@@ -214,7 +214,7 @@ main(int argc, char* argv[])
          Uri("noscheme@foo.com:1202");
          assert(false);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
       }
    }

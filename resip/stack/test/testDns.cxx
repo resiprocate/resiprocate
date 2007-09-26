@@ -776,7 +776,7 @@ main(int argc, const char** argv)
          cerr << rf << "Looking up" << ub << endl;
          dns.lookup(res, uri);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          cerr << "Couldn't parse arg " << *(args-1) << ": " << e.getMessage() << endl;
       }

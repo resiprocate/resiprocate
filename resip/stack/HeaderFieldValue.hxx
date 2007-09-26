@@ -1,7 +1,7 @@
 #if !defined(RESIP_HEADERFIELDVALUE_HXX)
 #define RESIP_HEADERFIELDVALUE_HXX 
 
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 #include "resip/stack/ParameterTypes.hxx"
 
 #include <iosfwd>

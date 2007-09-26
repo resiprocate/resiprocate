@@ -2,6 +2,7 @@
 
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/ParseException.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -878,7 +879,7 @@ ParseBuffer::floatVal()
       }
       return num + mant;
    }
-   catch (Exception&)
+   catch (ParseException&)
    {
       Data msg("Expected a floating point value, got: ");
       msg += Data(s, mPosition - s);
@@ -920,7 +921,7 @@ ParseBuffer::qVal()
       }
       return num;
    }
-   catch (Exception&)
+   catch (ParseException&)
    {
       Data msg("Expected a floating point value, got: ");
       msg += Data(s, mPosition - s);
@@ -1034,26 +1035,7 @@ ParseBuffer::fail(const char* file, unsigned int line, const Data& detail) const
        << escapeAndAnnotate(mBuff, mEnd - mBuff, mPosition);
     ds.flush();
 
-   throw Exception(errmsg, mErrorContext, file, line);
-}
-
-ParseBuffer::Exception::Exception(const Data& msg, const Data& context, const Data& file, const int line)
-   : resip::BaseException(msg, file, line) 
-{}
-
-ParseBuffer::Exception::~Exception() throw() 
-{}
-
-const char* 
-ParseBuffer::Exception::name() const 
-{ 
-   return "ParseBuffer::Exception"; 
-}
-
-const Data& 
-ParseBuffer::Exception::getContext() const
-{
-   return mContext;
+   throw ParseException(errmsg, mErrorContext, file, line);
 }
 
 ParseBuffer::Pointer::Pointer(const ParseBuffer& pb,
@@ -1073,7 +1055,7 @@ ParseBuffer::Pointer::operator*() const
    }
    else
    {
-      throw ParseBuffer::Exception(msg, mPb.getContext(), __FILE__, __LINE__);
+      throw ParseException(msg, mPb.getContext(), __FILE__, __LINE__);
    }
 }
 

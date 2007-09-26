@@ -134,7 +134,7 @@ main(int argc, char** argv)
          {
             pb.skipChars("Here isn't a");
          }
-         catch (ParseBuffer::Exception& e)
+         catch (ParseException& e)
          {
              //std::cerr<< e << std::endl;
              break;
@@ -158,7 +158,7 @@ main(int argc, char** argv)
             pb.skipChars("buff");
             pb.skipChar('g');
          }
-         catch (ParseBuffer::Exception& e)
+         catch (ParseException& e)
          {
              //using namespace std;
              //cerr << e << endl;
@@ -207,7 +207,7 @@ main(int argc, char** argv)
          (void)foo;
          assert(0);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {}
    }
 
@@ -271,7 +271,7 @@ main(int argc, char** argv)
          {
             pb.skipChars("Here isn't a");
          }
-         catch (ParseBuffer::Exception& e)
+         catch (ParseException& e)
          {
             break;
          }
@@ -290,7 +290,7 @@ main(int argc, char** argv)
             pb.skipChars("Here is a ");
             pb.skipChars("buffer");
          }
-         catch (ParseBuffer::Exception& e)
+         catch (ParseException& e)
          {
             break;
          }

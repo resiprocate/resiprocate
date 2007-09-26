@@ -198,7 +198,7 @@ TransactionState::process(TransactionController& controller)
       {
          sip->parseAllHeaders();
       }
-      catch(resip::ParseBuffer::Exception& e)
+      catch(resip::ParseException& e)
       {
          if(sip->isRequest() && sip->method()!=ACK)
          {
