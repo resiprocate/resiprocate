@@ -18,33 +18,43 @@ extern int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind)
 
 using resip::RecursiveMutex;
 
-#if defined( __APPLE__ )  || defined (__INTEL_COMPILER)
+// !abr! I can't find evidence that the Intel C++ Compiler has any issues
+// with the use of recursive mutexes. The need for this exception should
+// be re-verified and documented here.
+
+// .abr. OS X 10.2 is OS_MAJOR_VER 6. Prior to this, OS X did not support
+// recursive mutexes.
+
+#if (defined( __APPLE__ ) && OS_MAJOR_VER < 6) || defined (__INTEL_COMPILER)
 // !cj! need to write apple/intel mutex stuff 
+
+#warning "RecursiveMutex is not available on this platform yet."
+
 namespace resip
 {
 
 RecursiveMutex::RecursiveMutex()
 {
-   //assert(0); 
+   assert(0); 
 }
 
 
 RecursiveMutex::~RecursiveMutex ()
 {
-   //assert(0);
+   assert(0);
 }
 
 
 void
 RecursiveMutex::lock()
 {
-   //assert(0); 
+   assert(0); 
 }
 
 void
 RecursiveMutex::unlock()
 {
-   //assert(0); 
+   assert(0); 
 }
 
 }
