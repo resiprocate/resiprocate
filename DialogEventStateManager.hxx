@@ -28,16 +28,35 @@ public:
    void onConfirmed(const Dialog& dialog, InviteSessionHandle is);
    void onTerminated(const Dialog& dialog, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
 
-   const std::map<DialogId, DialogEventInfo>& getDialogEventInfos() const;
+   // order by DialogSet, such that the following ordering occurs
+   // DialogSetId          remoteTag
+   //     a                  null
+   //     a                   1
+   //     a                   2
+   //     b                   1
+   //     b                   2
+   class DialogIdComparator
+   {
+   public:
+      bool operator()(const DialogId& x, const DialogId& y) const
+      {
+         if (x.getDialogSetId() == y.getDialogSetId())
+         {
+            return (x.getRemoteTag() < y.getRemoteTag());
+         }
+         return (x.getDialogSetId() < y.getDialogSetId());
+      }
+   };
+
+   const std::map<DialogId, DialogEventInfo*, DialogIdComparator>& getDialogEventInfos() const;
+
+private:
+   DialogEventInfo* findOrCreateDialogInfo(const Dialog& dialog);
 
 private:
    // !jjg! we'll only have the DialogSetId if we aren't yet in the 'early' state;
    // once we get to early, we'll remove the DialogSetId in favour of the DialogId
-
-   // !jjg! note that a comparator is NOT needed...  the DialogId will be matched exactly,
-   // all of the time.  before the Early state, we will always search for DialogId with
-   // remote tag set to Data::Empty
-   std::map<DialogId, DialogEventInfo> mDialogIdToEventInfo;
+   std::map<DialogId, DialogEventInfo*, DialogIdComparator> mDialogIdToEventInfo;
 
    DialogEventHandler* mDialogEventHandler;
 };
