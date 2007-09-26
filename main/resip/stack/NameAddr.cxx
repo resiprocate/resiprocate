@@ -3,7 +3,7 @@
 #endif
 
 #include "resip/stack/NameAddr.hxx"
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 #include "resip/stack/UnknownParameter.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
@@ -162,7 +162,10 @@ NameAddr::parse(ParseBuffer& pb)
          pb.skipToChar(Symbols::LA_QUOTE[0]);
          if (pb.eof())
          {
-            throw ParseException("Expected '<'", __FILE__, __LINE__);
+            throw ParseException("Expected '<'", 
+                                 "NameAddr", 
+                                 __FILE__, 
+                                 __LINE__);
          }
          else
          {

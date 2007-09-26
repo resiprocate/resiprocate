@@ -3,7 +3,7 @@
 #endif
 
 #include <cassert>
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 #include "resip/stack/QuotedDataParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"

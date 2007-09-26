@@ -545,7 +545,7 @@ SipMessage::method() const
          assert(0);
       }
    }
-   catch(resip::ParseBuffer::Exception&)
+   catch(resip::ParseException&)
    {
    }
    
@@ -621,7 +621,7 @@ SipMessage::encodeBrief(std::ostream& str) const
          str << header(h_Contacts).front().uri().getAor();
       }
    }
-   catch(resip::ParseBuffer::Exception&)
+   catch(resip::ParseException&)
    {
       str << " MALFORMED CONTACT ";
    }
@@ -844,7 +844,7 @@ SipMessage::setBody(const char* start, UInt32 len)
          {
             header(h_ContentLength).checkParsed();
          }
-         catch(resip::ParseBuffer::Exception& e)
+         catch(resip::ParseException& e)
          {
             if(mInvalid)
             {

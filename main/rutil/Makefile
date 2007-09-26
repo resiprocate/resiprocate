@@ -28,6 +28,7 @@ SRC = \
 	Mutex.cxx \
 	OpenSSLInit.cxx \
 	ParseBuffer.cxx \
+	ParseException.cxx \
 	Poll.cxx \
 	RWMutex.cxx \
 	Random.cxx \

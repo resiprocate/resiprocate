@@ -106,7 +106,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          fixStrictRouterDamage();
          removeTopRouteIfSelf();
       }
-      catch(resip::ParseBuffer::Exception& e)
+      catch(resip::ParseException& e)
       {
          InfoLog(<<"Parse failure Exception caught: " << e);
          resip::SipMessage response;
@@ -169,7 +169,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                   InfoLog(<<"Top most route or From header are not ours.  We do not allow relaying ACKs.  Dropping it...");            
                }
             }
-            catch(resip::ParseBuffer::Exception&)
+            catch(resip::ParseException&)
             {
                InfoLog(<<"Parse error processing ACK. Dropping it...");            
             }
@@ -337,7 +337,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       {
          ret = mResponseProcessorChain.process(*this);
       }
-      catch(resip::ParseBuffer::Exception& e)
+      catch(resip::ParseException& e)
       {
          InfoLog(<<"Garbage in response; dropping message. " << e);
          delete sip;
