@@ -778,6 +778,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case OnAck:
+      case OnAckAnswer:
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
@@ -785,14 +786,16 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          break;
       }
 
-      case OnAckAnswer:
-      {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         sendBye();
-         transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         break;
-      }
+//       .bwc. unsolicited SDP in ACK; it would probably make sense to just
+//       ignore.
+//      case OnAckAnswer:
+//      {
+//         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+//         sendBye();
+//         transition(Terminated);
+//         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+//         break;
+//      }
       
       case OnCancel:
       {
