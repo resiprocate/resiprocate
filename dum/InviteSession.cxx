@@ -1251,6 +1251,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          break;
 
       case OnAck:
+      case OnAckAnswer: // .bwc. Don't drop ACK with SDP!
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          handler->onAckReceived(getSessionHandle(), msg);
          break;
