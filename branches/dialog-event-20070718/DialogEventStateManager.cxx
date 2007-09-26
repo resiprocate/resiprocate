@@ -25,57 +25,59 @@ using namespace resip;
 void
 DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
 {
-   DialogEventInfo eventInfo;
-   eventInfo.mDialogEventId = Random::getVersion4UuidUrn(); // !jjg! is this right?
-   eventInfo.mDialogId = dialog.getId();
-   eventInfo.mDirection = DialogEventInfo::Recipient;
-   eventInfo.mCreationTime = Timer::getTimeSecs();
-   eventInfo.mInviteSession = InviteSessionHandle::NotValid();
-   eventInfo.mRemoteSdp = invite.getContents()->clone();
-   eventInfo.mLocalIdentity = dialog.getLocalNameAddr();
-   eventInfo.mLocalTarget = dialog.getLocalContact().uri();
-   eventInfo.mRemoteIdentity = dialog.getRemoteNameAddr();
-   eventInfo.mRemoteTarget = new Uri(dialog.getRemoteTarget().uri());
-   eventInfo.mRouteSet = dialog.getRouteSet();
-   eventInfo.mState = DialogEventInfo::Trying;
+   DialogEventInfo* eventInfo = new DialogEventInfo();
+   eventInfo->mDialogEventId = Random::getVersion4UuidUrn(); // !jjg! is this right?
+   eventInfo->mDialogId = dialog.getId();
+   eventInfo->mDirection = DialogEventInfo::Recipient;
+   eventInfo->mCreationTime = Timer::getTimeSecs();
+   eventInfo->mInviteSession = InviteSessionHandle::NotValid();
+   eventInfo->mRemoteSdp = invite.getContents()->clone();
+   eventInfo->mLocalIdentity = dialog.getLocalNameAddr();
+   eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+   eventInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
+   eventInfo->mRemoteTarget = new Uri(dialog.getRemoteTarget().uri());
+   eventInfo->mRouteSet = dialog.getRouteSet();
+   eventInfo->mState = DialogEventInfo::Trying;
 
    mDialogIdToEventInfo[dialog.getId()] = eventInfo;
 
-   mDialogEventHandler->onTrying(eventInfo, invite);
+   mDialogEventHandler->onTrying(*eventInfo, invite);
 }
 
 // we've sent an INVITE
 void
 DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& invite)
 {
-   DialogEventInfo eventInfo;
-   eventInfo.mDialogEventId = Random::getVersion4UuidUrn();
-   eventInfo.mDialogId = DialogId(dialogSet.getId(), Data::Empty);
-   eventInfo.mDirection = DialogEventInfo::Initiator;
-   eventInfo.mCreationTime = Timer::getTimeSecs();
-   eventInfo.mInviteSession = InviteSessionHandle::NotValid();
-   eventInfo.mLocalIdentity = invite.header(h_From);
-   eventInfo.mLocalTarget = invite.header(h_Contacts).front().uri();
-   eventInfo.mRemoteIdentity = invite.header(h_To);
-   eventInfo.mLocalSdp = invite.getContents()->clone();
-   eventInfo.mState = DialogEventInfo::Trying;
+   DialogEventInfo* eventInfo = new DialogEventInfo();
+   eventInfo->mDialogEventId = Random::getVersion4UuidUrn();
+   eventInfo->mDialogId = DialogId(dialogSet.getId(), Data::Empty);
+   eventInfo->mDirection = DialogEventInfo::Initiator;
+   eventInfo->mCreationTime = Timer::getTimeSecs();
+   eventInfo->mInviteSession = InviteSessionHandle::NotValid();
+   eventInfo->mLocalIdentity = invite.header(h_From);
+   eventInfo->mLocalTarget = invite.header(h_Contacts).front().uri();
+   eventInfo->mRemoteIdentity = invite.header(h_To);
+   eventInfo->mLocalSdp = invite.getContents()->clone();
+   eventInfo->mState = DialogEventInfo::Trying;
 
-   mDialogIdToEventInfo[eventInfo.mDialogId] = eventInfo;
+   mDialogIdToEventInfo[eventInfo->mDialogId] = eventInfo;
 
-   mDialogEventHandler->onTrying(eventInfo, invite);
+   mDialogEventHandler->onTrying(*eventInfo, invite);
 }
 
 // we've received a 1xx response without a remote tag
 void
 DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMessage& response)
 {
+   // .jjg. if we have INVITE/180 (tag #1)/180 (no tag)
+   // then we'll assume that we can just drop the event
    DialogId fakeId(dialogSet.getId(), Data::Empty);
-   std::map<DialogId, DialogEventInfo>::iterator it = mDialogIdToEventInfo.find(fakeId);
+   std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.find(fakeId);
    if (it != mDialogIdToEventInfo.end())
    {
-      DialogEventInfo& eventInfo = it->second;
-      eventInfo.mState = DialogEventInfo::Proceeding;
-      mDialogEventHandler->onProceeding(eventInfo);
+      DialogEventInfo* eventInfo = it->second;
+      eventInfo->mState = DialogEventInfo::Proceeding;
+      mDialogEventHandler->onProceeding(*eventInfo);
    }
 }
 
@@ -83,175 +85,142 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
 void
 DialogEventStateManager::onEarlyUac(const Dialog& dialog, InviteSessionHandle is)
 {
-   //replace the entry w/out a remote tag if it exists
-   DialogEventInfo eventInfo;
-   eventInfo.mDialogId = dialog.getId();
-   eventInfo.mDirection = DialogEventInfo::Initiator;
-   eventInfo.mInviteSession = is;
-   eventInfo.mLocalIdentity = dialog.getLocalNameAddr();
-   eventInfo.mLocalTarget = dialog.getLocalContact().uri();
-   eventInfo.mRemoteIdentity = dialog.getRemoteNameAddr();
-   eventInfo.mRemoteTarget = new Uri(dialog.getRemoteTarget().uri());
-   eventInfo.mRouteSet = dialog.getRouteSet();
-   eventInfo.mState = DialogEventInfo::Early;
+   DialogEventInfo* eventInfo = findOrCreateDialogInfo(dialog);
 
-   DialogId fakeId(dialog.getId().getDialogSetId(), Data::Empty);
-   std::map<DialogId, DialogEventInfo>::iterator it = mDialogIdToEventInfo.find(fakeId);
+   eventInfo->mState = DialogEventInfo::Early;
+   eventInfo->mRouteSet = dialog.getRouteSet();
+   eventInfo->mInviteSession = is;
 
-   if (it != mDialogIdToEventInfo.end())
-   {
-      eventInfo.mDialogEventId = it->second.mDialogEventId;
-      eventInfo.mCreationTime = it->second.mCreationTime;
-
-      if (it->first.getRemoteTag() == Data::Empty)
-      {
-         // we clear out the original entry if and only if it wasn't a full dialog yet
-         mDialogIdToEventInfo.erase(it);
-      }
-   }
-   else
-   {
-      eventInfo.mDialogEventId = Random::getVersion4UuidUrn();
-      eventInfo.mCreationTime = Timer::getTimeSecs();
-   }
-
-   mDialogIdToEventInfo[eventInfo.mDialogId] = eventInfo;
-   mDialogEventHandler->onEarly(eventInfo);
+   mDialogEventHandler->onEarly(*eventInfo);
 }
 
 // we've sent a 1xx response WITH a local tag
 void
 DialogEventStateManager::onEarlyUas(const Dialog& dialog, InviteSessionHandle is)
 {
-   DialogEventInfo eventInfo;
-   eventInfo.mDialogId = dialog.getId();
-   eventInfo.mDirection = DialogEventInfo::Recipient;
-   eventInfo.mInviteSession = is;
-   eventInfo.mLocalIdentity = dialog.getLocalNameAddr();
-   eventInfo.mLocalTarget = dialog.getLocalContact().uri();
-   eventInfo.mRemoteIdentity = dialog.getRemoteNameAddr();
-   eventInfo.mRemoteTarget = new Uri(dialog.getRemoteTarget().uri());
-   eventInfo.mRouteSet = dialog.getRouteSet();
-   eventInfo.mState = DialogEventInfo::Early;
+   DialogEventInfo* eventInfo = findOrCreateDialogInfo(dialog);
+   eventInfo->mInviteSession = is;
+   eventInfo->mRouteSet = dialog.getRouteSet();
+   eventInfo->mState = DialogEventInfo::Early;
 
-   std::map<DialogId, DialogEventInfo>::iterator it = mDialogIdToEventInfo.find(dialog.getId());
-   if (it != mDialogIdToEventInfo.end())
-   {
-      eventInfo.mDialogEventId = it->second.mDialogEventId;
-      eventInfo.mCreationTime = it->second.mCreationTime;
-      it->second = eventInfo;
-      mDialogEventHandler->onEarly(eventInfo);
-   }
+   mDialogEventHandler->onEarly(*eventInfo);
 }
 
 void
 DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle is)
 {
-   //replace the entry w/out a remote tag if it exists
-   DialogEventInfo eventInfo;
-   eventInfo.mDialogId = dialog.getId();
-   eventInfo.mInviteSession = is;
-   eventInfo.mLocalIdentity = dialog.getLocalNameAddr();
-   eventInfo.mLocalTarget = dialog.getLocalContact().uri();
-   eventInfo.mRemoteIdentity = dialog.getRemoteNameAddr();
-   eventInfo.mRemoteTarget = new Uri(dialog.getRemoteTarget().uri());
-   eventInfo.mRouteSet = dialog.getRouteSet();
-   eventInfo.mState = DialogEventInfo::Confirmed;
+   DialogEventInfo* eventInfo = findOrCreateDialogInfo(dialog);
 
-   std::map<DialogId, DialogEventInfo>::iterator it = mDialogIdToEventInfo.find(dialog.getId());
-   if (it != mDialogIdToEventInfo.end())
-   {
-      eventInfo.mDirection = it->second.mDirection;
-      eventInfo.mDialogEventId = it->second.mDialogEventId;
-      eventInfo.mCreationTime = it->second.mCreationTime;
-      it->second = eventInfo;
-   }
-   else
-   {
-      // we got a 200 with a DIFFERENT remote tag...
-      eventInfo.mDirection = DialogEventInfo::Initiator;
-      eventInfo.mDialogEventId = Random::getVersion4UuidUrn();
-      eventInfo.mCreationTime = Timer::getTimeSecs();
-      mDialogIdToEventInfo[eventInfo.mDialogId] = eventInfo;
+   eventInfo->mInviteSession = is;
+   //eventInfo->mRouteSet = dialog.getRouteSet();
+   eventInfo->mState = DialogEventInfo::Confirmed;
 
-      it = mDialogIdToEventInfo.find(DialogId(dialog.getId().getDialogSetId(), Data::Empty));
-      //!dcm! user replace logic from onEarly
-      if (it != mDialogIdToEventInfo.end())
-      {
-         if (it->first.getRemoteTag() == Data::Empty)
-         {
-            // we clear out the original entry if and only if it wasn't a full dialog yet
-            mDialogIdToEventInfo.erase(it);
-         }
-      }
-   }
-   mDialogEventHandler->onConfirmed(eventInfo);
+   mDialogEventHandler->onConfirmed(*eventInfo);
 }
 
 void
 DialogEventStateManager::onTerminated(const Dialog& dialog, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason)
 {
+   DialogEventInfo* eventInfo = NULL;
+
+   /**
+    * cases:
+    *    1) UAC: INVITE/180 (tag #1)/180 (tag #2)/486 (tag #2)
+    *    2) UAS: INVITE/100/486 (tag #1)
+    *    3) UAS: INVITE/100/180 (tag #1)/486 (tag #1)
+    */
+
    //find dialogSet.  All non-confirmed dialogs are destroyed by this event.
    //Confirmed dialogs are only destroyed by an exact match.
-   DialogEventInfo eventInfo;
-   eventInfo.mDialogId = dialog.getId();
-   //eventInfo.mInviteSession = dialog.getInviteSession(); // !jjg! likely not needed anyways
-                                                           // since no relevant SDP at this point
-   eventInfo.mLocalIdentity = dialog.getLocalNameAddr();
-   eventInfo.mLocalTarget = dialog.getLocalContact().uri();
-   eventInfo.mRemoteIdentity = dialog.getRemoteNameAddr();
-   eventInfo.mRemoteTarget = new Uri(dialog.getRemoteTarget().uri());
-   eventInfo.mRouteSet = dialog.getRouteSet();
-   eventInfo.mState = DialogEventInfo::Terminated;
 
-   if (reason == InviteSessionHandler::Referred)
-   {
-      eventInfo.mReferredBy = new NameAddr(msg.header(h_ReferredBy));
-   }
+   DialogId fakeId(dialog.getId().getDialogSetId(), Data::Empty);
+   std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.lower_bound(fakeId);
 
-   if (reason == InviteSessionHandler::Replaced)
+   while (it != mDialogIdToEventInfo.end() && 
+          it->first.getDialogSetId() == dialog.getId().getDialogSetId())
    {
-      // !jjg! need to check that this is right...
-      eventInfo.mReplacesId = new DialogId(msg.header(h_Replaces).value(), 
-         msg.header(h_Replaces).param(p_toTag),
-         msg.header(h_Replaces).param(p_fromTag));
-   }
+      eventInfo = it->second;
+      eventInfo->mState = DialogEventInfo::Terminated;
 
-   std::map<DialogId, DialogEventInfo>::iterator it = mDialogIdToEventInfo.find(dialog.getId());
-   if (it != mDialogIdToEventInfo.end())
-   {
-      eventInfo.mDirection = it->second.mDirection;
-      eventInfo.mDialogEventId = it->second.mDialogEventId;
-      eventInfo.mCreationTime = it->second.mCreationTime;
-      mDialogIdToEventInfo.erase(it);
-   }
-   else
-   {
-      // we got a 3xx or 4xx with a DIFFERENT remote tag...
-      eventInfo.mDirection = DialogEventInfo::Initiator;
-      eventInfo.mDialogEventId = Random::getVersion4UuidUrn();
-      eventInfo.mCreationTime = Timer::getTimeSecs();
-
-      it = mDialogIdToEventInfo.find(DialogId(dialog.getId().getDialogSetId(), Data::Empty));
-      if (it != mDialogIdToEventInfo.end())
+      if (reason == InviteSessionHandler::Referred)
       {
-         if (it->first.getRemoteTag() == Data::Empty)
-         {
-            // we clear out the original entry if and only if it wasn't a full dialog yet
-            mDialogIdToEventInfo.erase(it);
-         }
+         eventInfo->mReferredBy = new NameAddr(msg.header(h_ReferredBy));
       }
-   }
 
-   mDialogEventHandler->onTerminated(eventInfo, reason);
+      if (reason == InviteSessionHandler::Replaced)
+      {
+         // !jjg! need to check that this is right...
+         eventInfo->mReplacesId = new DialogId(msg.header(h_Replaces).value(), 
+            msg.header(h_Replaces).param(p_toTag),
+            msg.header(h_Replaces).param(p_fromTag));
+      }
+
+      mDialogEventHandler->onTerminated(*eventInfo, reason);
+      delete it->second;
+      mDialogIdToEventInfo.erase(it++);
+   }
 }
 
-const std::map<DialogId, DialogEventInfo>&
+const std::map<DialogId, DialogEventInfo*, DialogEventStateManager::DialogIdComparator>&
 DialogEventStateManager::getDialogEventInfos() const
 {
    return mDialogIdToEventInfo;
 }
 
+DialogEventInfo* 
+DialogEventStateManager::findOrCreateDialogInfo(const Dialog& dialog)
+{
+   DialogEventInfo* eventInfo = NULL;
+
+   /**
+    * cases:
+    *    1) INVITE/180 (no tag)/183 (tag)
+    *    2) INVITE/180 (tag)
+    *    3) INVITE/180 (tag #1)/180 (tag #2)
+    *
+    */
+
+   std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.find(dialog.getId());
+
+   if (it != mDialogIdToEventInfo.end())
+   {
+      return it->second;
+   }
+   else
+   {
+      // either we have a dialog set id with an empty remote tag, or we have other dialog(s) with different
+      // remote tag(s)
+      DialogId fakeId(dialog.getId().getDialogSetId(), Data::Empty);
+      std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.lower_bound(fakeId);
+
+      if (it->first.getRemoteTag() == Data::Empty)
+      {
+         // convert this bad boy into a full on Dialog
+         eventInfo = it->second;
+         mDialogIdToEventInfo.erase(it);
+         eventInfo->mDialogId = dialog.getId();
+      }
+      else
+      {
+         assert(it->first.getDialogSetId() == dialog.getId().getDialogSetId());
+
+         // clone this fellow member dialog, initializing it with a new id and creation time 
+         DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
+         newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
+         newForkInfo->mCreationTime = Timer::getTimeSecs();
+         newForkInfo->mDialogId = dialog.getId();
+         //newForkInfo->mInviteSession = is;
+         newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
+         newForkInfo->mRemoteTarget = new Uri(dialog.getRemoteTarget().uri());
+         newForkInfo->mRouteSet = dialog.getRouteSet();
+         eventInfo = newForkInfo;
+      }
+   }
+
+   mDialogIdToEventInfo[dialog.getId()] = eventInfo;
+
+   return eventInfo;
+}
 
 /* ====================================================================
 * The Vovida Software License, Version 1.0 
