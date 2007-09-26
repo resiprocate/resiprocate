@@ -1175,7 +1175,7 @@ DnsResult::onEnumResult(const DNSResult<DnsNaptrRecord>& result)
             mHandler->rewriteRequest(rewrite);
             lookupInternal(rewrite);
          }
-         catch (ParseBuffer::Exception& /* e */)
+         catch (ParseException& /* e */)
          {
             lookupInternal(mInputUri);
          }

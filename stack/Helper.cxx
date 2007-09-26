@@ -386,21 +386,17 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_Warnings).push_back(warn);
    }
 
-   try
+   if(responseCode > 100 &&
+      response.header(h_To).isWellFormed() &&
+      !response.header(h_To).exists(p_tag))
    {
       // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
       // No totag for failure responses or 100s   
-      if (!response.header(h_To).exists(p_tag) && responseCode > 100)   
-      {   
-         response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);   
-      }
-   } 
-   catch(resip::ParseBuffer::Exception&)
-   {
-      // .bwc. Can't add to-tag since To is malformed. Oh well, we tried.
+      // ?bwc? Should we be generating to-tags for failure responses or not?
+      // The comments say no, but the code says yes. Which is it?
+      response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
    }
-   
-   
+
    // .bwc. This will only throw if the topmost Via is malformed, and that 
    // should have been caught at the transport level.
    response.setRFC2543TransactionId(request.getRFC2543TransactionId());
@@ -1584,7 +1580,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
       {
          message.header(h_CSeq).checkParsed();
       }
-      catch(ParseBuffer::Exception&)
+      catch(ParseException&)
       {
          InfoLog(<<"Malformed CSeq header");
          if(reason) *reason="Malformed CSeq header";
@@ -1595,7 +1591,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
       {
          message.header(h_Vias).front().checkParsed();
       }
-      catch(ParseBuffer::Exception& e)
+      catch(ParseException& e)
       {
          InfoLog(<<"Malformed topmost Via header: " << e);
          if(reason) *reason="Malformed topmost Via header";
@@ -1608,7 +1604,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
          {
             message.header(h_RequestLine).checkParsed();            
          }
-         catch(ParseBuffer::Exception& e)
+         catch(ParseException& e)
          {
             InfoLog(<< "Illegal request line " << e);
             if(reason) *reason="Malformed Request Line";
@@ -1628,7 +1624,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
          {
             message.header(h_StatusLine).checkParsed();
          }
-         catch(ParseBuffer::Exception& e)
+         catch(ParseException& e)
          {
             InfoLog(<< "Malformed status line " << e);
             if(reason) *reason="Malformed status line";
@@ -1961,7 +1957,7 @@ SdpContents* getSdpRecurse(Contents* tree)
          Contents* contents = getSdpRecurse(*it);
          return static_cast<SdpContents*>(contents);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          ErrLog(<< e.name() << endl << e.getMessage());       
       }
@@ -1988,7 +1984,7 @@ SdpContents* getSdpRecurse(Contents* tree)
             }
          }
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          ErrLog(<< e.name() << endl << e.getMessage());
       }
@@ -2016,7 +2012,7 @@ SdpContents* getSdpRecurse(Contents* tree)
             }
          }
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          ErrLog(<< e.name() << endl << e.getMessage());
       }
