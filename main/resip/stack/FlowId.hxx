@@ -11,7 +11,7 @@ class FlowId
    public:
       FlowId(const Tuple& t);
       
-      //can throw a ParseBuffer::Exception, inverse of toData/operator<<
+      //can throw a ParseException, inverse of toData/operator<<
       FlowId(const Data& d);      
 
       //.dcm. -- I suspect we only will need one of these

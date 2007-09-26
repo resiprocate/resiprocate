@@ -6,7 +6,7 @@
 #include "resip/stack/QopParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 #include "resip/stack/DataParameter.hxx"
 #include "resip/stack/QuotedDataParameter.hxx"
 #include "rutil/WinLeakCheck.hxx"

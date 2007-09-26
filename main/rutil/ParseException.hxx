@@ -3,15 +3,24 @@
 
 #include "rutil/BaseException.hxx"
 
+#include "rutil/Data.hxx"
+
 namespace resip
 {
 
 class ParseException : public BaseException
 {
    public:
-      ParseException(const Data& msg, const Data& file, const int line)
-         : BaseException(msg, file, line) {}
-      const char* name() const { return "ParseException"; }
+      ParseException(const Data& msg, 
+                     const Data& context, 
+                     const Data& file, 
+                     const int line);
+      ~ParseException() throw();
+      const char* name() const;
+      const Data& getContext() const;
+
+   private:
+      Data mContext;
 };
  
 }

@@ -216,7 +216,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                // The message header is complete.
                contentLength=mMessage->header(h_ContentLength).value();
             }
-            catch(resip::ParseBuffer::Exception& e)
+            catch(resip::ParseException& e)
             {
                WarningLog(<<"Malformed Content-Length in connection-based transport"
                            ". Not much we can do to fix this.  " << e);
@@ -298,7 +298,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          {
              contentLength = mMessage->header(h_ContentLength).value();
          }
-         catch(resip::ParseBuffer::Exception& e)
+         catch(resip::ParseException& e)
          {
             WarningLog(<<"Malformed Content-Length in connection-based transport"
                         ". Not much we can do to fix this. " << e);

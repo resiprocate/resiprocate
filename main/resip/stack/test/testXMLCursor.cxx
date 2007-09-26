@@ -67,7 +67,7 @@ main()
          assert(xmlc.getTag() == "presence");
          traverse(xmlc);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          cerr << e << endl;
          assert(false);
@@ -97,7 +97,7 @@ main()
          assert(!xmlc.getAttributes().empty());
          assert(!xmlc.nextSibling());
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          cerr << e << endl;
          assert(false);
@@ -122,7 +122,7 @@ main()
          assert(!xmlc.nextSibling());
          assert(false);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
       }
    }

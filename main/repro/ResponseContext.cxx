@@ -530,7 +530,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       {
          inDialog=request.header(h_To).exists(p_tag);
       }
-      catch(resip::ParseBuffer::Exception&)
+      catch(resip::ParseException&)
       {
          // ?bwc? Do we ignore this and just say this is a dialog-creating
          // request?

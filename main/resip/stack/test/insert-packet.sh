@@ -37,7 +37,7 @@ ${quoted}
       {
          (void)message->header(h_From);
       }
-      catch (ParseBuffer::Exception&)
+      catch (ParseException&)
       {
          std::cerr << "uh, failed to parse message: "
 	           << __FILE__ << ':' << __LINE__

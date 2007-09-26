@@ -65,7 +65,7 @@ main(int arc, char** argv)
          NameAddr test("<jason_AT_example.com@10.0.0.1;transport=TCP>");
          assert(false);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          cerr << e << endl;
       }
@@ -698,7 +698,7 @@ main(int arc, char** argv)
          via.sentPort();
          assert(false);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          cerr << "Caught parse exception for Via" << endl;
       }
@@ -718,7 +718,7 @@ main(int arc, char** argv)
          via.exists(p_foobar);
          assert(false);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          cerr << "Caught parse exception for Via" << endl;
       }
@@ -736,7 +736,7 @@ main(int arc, char** argv)
          via.sentPort();
          assert(false);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          cerr << "Caught parse exception for Via " << endl;
       }
@@ -754,7 +754,7 @@ main(int arc, char** argv)
          via.sentPort();
          assert(false);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          cerr << "Caught parse exception for Via " << endl;
       }
@@ -1785,7 +1785,7 @@ main(int arc, char** argv)
          bpcc.getTransactionId();
          assert(false);
       }
-      catch (ParseBuffer::Exception &e)
+      catch (ParseException &e)
       {
       }
    }

@@ -6,7 +6,7 @@
 #include "resip/stack/DataParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -49,6 +49,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
       // when we have an empty value. If that behavior stops, this can be 
       // removed.
       throw ParseException("DataParameter c'tor parsed empty param!", 
+                           "DataParameter",
                            __FILE__,
                            __LINE__);
    }

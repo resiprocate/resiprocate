@@ -439,7 +439,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                            }
                         }
                      }
-                     catch(ParseBuffer::Exception& e)
+                     catch(ParseException& e)
                      {
                         DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
                      }
@@ -463,7 +463,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                      {
                         expiry = resipMin((UInt32)it->param(p_expires), expiry);
                      }
-                     catch(ParseBuffer::Exception& e)
+                     catch(ParseException& e)
                      {
                         DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
                      }

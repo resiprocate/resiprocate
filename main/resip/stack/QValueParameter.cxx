@@ -3,7 +3,7 @@
 #endif
 
 #include "resip/stack/QValueParameter.hxx"
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Logger.hxx"
@@ -23,7 +23,8 @@ QValueParameter::QValueParameter(ParameterTypes::Type type,
    pb.skipWhitespace();
    if (!pb.eof() && *pb.position() != '=')
    {
-      throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
+      throw ParseException("parameter constructor expected '='",
+                           "QValueParameter", __FILE__, __LINE__);
    }
    pb.skipChar();
    pb.skipWhitespace();
