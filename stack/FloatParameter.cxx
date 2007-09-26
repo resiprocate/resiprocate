@@ -3,7 +3,7 @@
 #endif
 
 #include "resip/stack/FloatParameter.hxx"
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Logger.hxx"

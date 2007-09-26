@@ -807,11 +807,8 @@ Uri::parse(ParseBuffer& pb)
       Data canonicalizedHost=DnsUtil::canonicalizeIpV6Address(mHost);
       if(canonicalizedHost.empty())
       {
-         // ?bwc? So the V6 addy is garbage. I think the parse should fail at 
-         // this point, but most of the code assumes that it will fail by 
-         // throwing a ParseBuffer::Exception. We are not a ParseBuffer, so this
-         // is a little ugly. Oh well. Does anyone disagree?
-         throw ParseBuffer::Exception("Unparsable V6 address (note, this might"
+         // .bwc. So the V6 addy is garbage.
+         throw ParseException("Unparsable V6 address (note, this might"
                                     " be unparsable because IPV6 support is not"
                                     " enabled)","Uri",__FILE__,
                                        __LINE__);

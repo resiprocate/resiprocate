@@ -8,7 +8,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/Coders.hxx"
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
