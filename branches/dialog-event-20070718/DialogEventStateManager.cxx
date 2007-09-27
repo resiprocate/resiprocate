@@ -115,6 +115,10 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
    //eventInfo->mRouteSet = dialog.getRouteSet();
    eventInfo->mState = DialogEventInfo::Confirmed;
 
+   // local or remote target might change due to an UPDATE or re-INVITE
+   eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+   eventInfo->mRemoteTarget = new Uri(dialog.getRemoteTarget().uri());
+
    mDialogEventHandler->onConfirmed(*eventInfo);
 }
 
