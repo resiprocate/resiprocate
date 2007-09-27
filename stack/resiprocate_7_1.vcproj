@@ -781,9 +781,6 @@
 				RelativePath=".\ParameterTypes.hxx">
 			</File>
 			<File
-				RelativePath=".\ParseException.hxx">
-			</File>
-			<File
 				RelativePath=".\ParserCategories.hxx">
 			</File>
 			<File
