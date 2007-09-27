@@ -386,6 +386,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ParseException.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Poll.cxx"
 				>
 			</File>
@@ -629,6 +633,10 @@
 			</File>
 			<File
 				RelativePath=".\ParseBuffer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ParseException.hxx"
 				>
 			</File>
 			<File
