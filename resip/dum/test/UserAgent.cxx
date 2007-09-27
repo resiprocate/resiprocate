@@ -257,8 +257,23 @@ UserAgent::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
    InfoLog(<< h->myAddr().uri().user() << " offer requested by  " 
             << h->peerAddr().uri().user());
 
-   SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-   h->provideOffer(*sdp);
+   static Data txt("v=0\r\n"
+                  "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
+                  "s=X-Lite\r\n"
+                  "c=IN IP4 192.168.2.15\r\n"
+                  "t=0 0\r\n"
+                  "m=audio 8000 RTP/AVP 8 3 98 97 101\r\n"
+                  "a=rtpmap:8 pcma/8000\r\n"
+                  "a=rtpmap:3 gsm/8000\r\n"
+                  "a=rtpmap:98 iLBC\r\n"
+                  "a=rtpmap:97 speex/8000\r\n"
+                  "a=rtpmap:101 telephone-event/8000\r\n"
+                  "a=fmtp:101 0-15\r\n");
+
+   static HeaderFieldValue hfv(txt.data(), txt.size());
+   static Mime type("application", "sdp");
+   static SdpContents sdp(&hfv, type);
+   h->provideOffer(sdp);
 }
 
 void
