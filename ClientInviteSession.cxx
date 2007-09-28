@@ -2,6 +2,7 @@
 #include "resip/stack/SdpContents.hxx"
 #include "resip/dum/ClientInviteSession.hxx"
 #include "resip/dum/Dialog.hxx"
+#include "resip/dum/DialogEventStateManager.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/InviteSessionHandler.hxx"
 #include "resip/dum/DumTimeout.hxx"
@@ -1336,21 +1337,22 @@ ClientInviteSession::checkRseq(const SipMessage& msg)
 void 
 ClientInviteSession::onConnectedAspect(ClientInviteSessionHandle c, const SipMessage& msg)
 {
-   //dialog event here
+   mDum.getDialogEventStateManager().onConfirmed(mDialog, getSessionHandle());
    mDum.mInviteSessionHandler->onConnected(c, msg);
 }
 
 void 
 ClientInviteSession::onProvisionalAspect(ClientInviteSessionHandle c, const SipMessage& msg)
 {
-   //dialog event here
+   mDum.getDialogEventStateManager().onEarly(mDialog, getSessionHandle());
    mDum.mInviteSessionHandler->onProvisional(c, msg);
 }
 
 void 
 ClientInviteSession::onFailureAspect(ClientInviteSessionHandle c, const SipMessage& msg)
 {
-   //dialog event here
+   mDum.getDialogEventStateManager().onTerminated(mDialog, msg, 
+                                                  InviteSessionHandler::Rejected);
    mDum.mInviteSessionHandler->onFailure(c, msg);
 }
    

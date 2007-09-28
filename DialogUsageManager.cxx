@@ -20,6 +20,7 @@
 #include "resip/dum/DefaultServerReferHandler.hxx"
 #include "resip/dum/DestroyUsage.hxx"
 #include "resip/dum/Dialog.hxx"
+#include "resip/dum/DialogEventStateManager.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ClientPagerMessage.hxx"
 #include "resip/dum/DumException.hxx"
@@ -520,7 +521,7 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
 {
    SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
    DumHelper::setOutgoingEncryptionLevel(*inv, level);
-
+   getDialogEventStateManager().onTryingUac(*appDs->mDialogSet, *inv);
    return inv;
 }
 
@@ -612,6 +613,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    {
       inv->header(h_Replaces) = referTo.embedded().header(h_Replaces);
    }
+   getDialogEventStateManager().onTryingUac(*appDs->mDialogSet, *inv);
    return inv;
 }
 

@@ -67,7 +67,7 @@ class InviteSessionHandler
          RemoteBye,
          LocalCancel,
          RemoteCancel,
-         Rejected, //only as UAS, UAC has distinct onFailure callback
+         Rejected, //Only as UAS, UAC has distinct onFailure callback
          Referred
       };
 
