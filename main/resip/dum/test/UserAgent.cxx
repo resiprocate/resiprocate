@@ -157,6 +157,10 @@ void
 UserAgent::onNewSession(ClientInviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
 {
    InfoLog(<< h->myAddr().uri().user() << " 180 from  " << h->peerAddr().uri().user());
+
+   // Schedule an end() call; checks handle validity, and whether the Session
+   // is already tearing down (isTerminated() check)
+   mStack.post(std::auto_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
 }
 
 void
@@ -170,6 +174,10 @@ UserAgent::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferAnswerT
    // SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
    // h->provideAnswer(*sdp);
    // h->accept();
+
+   // Schedule an end() call; checks handle validity, and whether the Session
+   // is already tearing down (isTerminated() check)
+   mStack.post(std::auto_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
 
    // might update presence here
 }

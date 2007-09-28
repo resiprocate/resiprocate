@@ -86,6 +86,39 @@ class UserAgent : public CommandLineParser,
       virtual void onReceivedRequest(ServerOutOfDialogReqHandle, const SipMessage& request);
       virtual void onForkDestroyed(ClientInviteSessionHandle);
 
+      class EndInviteSessionCommand : public DumCommand
+      {
+         public:
+            EndInviteSessionCommand(InviteSessionHandle h) : mHandle(h)
+            {}
+
+            virtual void executeCommand()
+            {
+               if(mHandle.isValid() && !mHandle->isTerminated())
+               {
+                  mHandle->end();
+               }
+            }
+
+            virtual Message* clone() const
+            {
+               return new EndInviteSessionCommand(mHandle);
+            }
+
+            virtual std::ostream& encode(std::ostream& str) const
+            {
+               return str << "EndInviteSessionCommand";
+            }
+
+            virtual std::ostream& encodeBrief(std::ostream& str) const
+            {
+               return encode(str);
+            }
+         
+         private:
+            InviteSessionHandle mHandle;
+      };
+
    protected:
       void addTransport(TransportType type, int port);
 
