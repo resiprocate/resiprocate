@@ -448,7 +448,8 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
 
          default:
             ErrLog (<< "Unknown error " << mStub.errorMessage(status) << " for " << mTarget);
-            assert(0);
+            // .bwc. There are a whole bunch more error codes here.
+            // assert(0);
             break;
       }
 
