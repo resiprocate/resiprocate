@@ -67,6 +67,7 @@ class RWMutex;
 
 class ExternalMessageBase;
 class ExternalMessageHandler;
+class DialogEventStateManager;
 
 class DialogUsageManager : public HandleManager, public TransactionUser
 {
@@ -310,6 +311,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       /// Note:  Implementations of Postable must delete the message passed via post
       void registerForConnectionTermination(Postable*);
       void unRegisterForConnectionTermination(Postable*);
+
+      DialogEventStateManager& getDialogEventStateManager();
 
    protected:
       virtual void onAllHandlesDestroyed();      
