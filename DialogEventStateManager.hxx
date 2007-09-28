@@ -16,22 +16,28 @@ namespace resip
  */
 class DialogEventStateManager
 {
-public:
-   DialogEventStateManager();
+   public:
+      DialogEventStateManager();
+      
+      void onTryingUas(Dialog& dialog, const SipMessage& invite);
+      void onTryingUac(DialogSet& dialogSet, const SipMessage& invite);
+      void onProceedingUac(const DialogSet& dialogSet, const SipMessage& response);
+      // !jjg! do we need onProceedingUas? will we ever call it?
 
-   void onTryingUas(Dialog& dialog, const SipMessage& invite);
-   void onTryingUac(DialogSet& dialogSet, const SipMessage& invite);
-   void onProceedingUac(const DialogSet& dialogSet, const SipMessage& response);
-   // !jjg! do we need onProceedingUas? will we ever call it?
-
-   // .jjg. looks like we can have just one onEarly -- same logic
-   //void onEarlyUac(const Dialog& dialog, InviteSessionHandle is);
-   //void onEarlyUas(const Dialog& dialog, InviteSessionHandle is);
-   void onEarly(const Dialog& dialog, InviteSessionHandle is);
-
-   void onConfirmed(const Dialog& dialog, InviteSessionHandle is);
-   void onTerminated(const Dialog& dialog, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
-
+      // .jjg. looks like we can have just one onEarly -- same logic void
+      //onEarlyUac(const Dialog& dialog, InviteSessionHandle is); void
+      //onEarlyUas(const Dialog& dialog, InviteSessionHandle is);
+   //?dcm? how is direction determined when the onEarly is the first use of
+   //this dialog?
+      void onEarly(const Dialog& dialog, InviteSessionHandle is);
+      
+      void onConfirmed(const Dialog& dialog, InviteSessionHandle is);
+      void onTerminated(const Dialog& dialog, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
+      
+      //TODO - implement this
+      void onTerminated(const DialogSet& dialogSet, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
+      
+      
    // order by DialogSet, such that the following ordering occurs
    // DialogSetId          remoteTag
    //     a                  null
