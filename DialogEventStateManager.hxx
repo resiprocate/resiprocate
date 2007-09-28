@@ -23,8 +23,12 @@ public:
    void onTryingUac(DialogSet& dialogSet, const SipMessage& invite);
    void onProceedingUac(const DialogSet& dialogSet, const SipMessage& response);
    // !jjg! do we need onProceedingUas? will we ever call it?
-   void onEarlyUac(const Dialog& dialog, InviteSessionHandle is);
-   void onEarlyUas(const Dialog& dialog, InviteSessionHandle is);
+
+   // .jjg. looks like we can have just one onEarly -- same logic
+   //void onEarlyUac(const Dialog& dialog, InviteSessionHandle is);
+   //void onEarlyUas(const Dialog& dialog, InviteSessionHandle is);
+   void onEarly(const Dialog& dialog, InviteSessionHandle is);
+
    void onConfirmed(const Dialog& dialog, InviteSessionHandle is);
    void onTerminated(const Dialog& dialog, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
 
