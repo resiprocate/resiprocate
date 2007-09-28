@@ -69,21 +69,46 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
 void
 DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMessage& response)
 {
-   // .jjg. if we have INVITE/180 (tag #1)/180 (no tag)
-   // then we'll assume that we can just drop the event
    DialogId fakeId(dialogSet.getId(), Data::Empty);
-   std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.find(fakeId);
+   std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.lower_bound(fakeId);
    if (it != mDialogIdToEventInfo.end())
    {
-      DialogEventInfo* eventInfo = it->second;
-      eventInfo->mState = DialogEventInfo::Proceeding;
-      mDialogEventHandler->onProceeding(*eventInfo);
+      if (it->first.getRemoteTag() == Data::Empty)
+      {
+         // happy day case; no forks yet; e.g INVITE/1xx (no tag)/1xx (no tag)
+         DialogEventInfo* eventInfo = it->second;
+         eventInfo->mState = DialogEventInfo::Proceeding;
+         if (response.exists(h_Contacts))
+         {
+            eventInfo->mRemoteTarget = new Uri(response.header(h_Contacts).front().uri());
+         }
+         mDialogEventHandler->onProceeding(*eventInfo);
+      }
+      else if (it->first.getDialogSetId() == dialogSet.getId())
+      {
+         // forking; e.g. INVITE/180 (tag #1)/180 (no tag)
+         // clone and initialize with a new id and creation time 
+         DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
+         newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
+         newForkInfo->mCreationTime = Timer::getTimeSecs();
+         newForkInfo->mDialogId = DialogId(dialogSet.getId(), Data::Empty);
+         newForkInfo->mRemoteIdentity = response.header(h_To);
+         if (response.exists(h_Contacts))
+         {
+            newForkInfo->mRemoteTarget = new Uri(response.header(h_Contacts).front().uri());
+         }
+         mDialogIdToEventInfo[newForkInfo->mDialogId] = newForkInfo;
+         mDialogEventHandler->onProceeding(*newForkInfo);
+      }
    }
 }
 
-// we've received a 1xx response WITH a remote tag
+// UAC: we've received a 1xx response WITH a remote tag, OR
+//      ?jjg? (uncertain) we've sent an UPDATE? or we've recieved a 200 OK response to an UPDATE?
+// UAS: we've sent a 1xx response WITH a local tag, OR
+//      ?jjg? (uncertain) we've received an UPDATE? or we've sent a 200 OK response to an UPDATE?
 void
-DialogEventStateManager::onEarlyUac(const Dialog& dialog, InviteSessionHandle is)
+DialogEventStateManager::onEarly(const Dialog& dialog, InviteSessionHandle is)
 {
    DialogEventInfo* eventInfo = findOrCreateDialogInfo(dialog);
 
@@ -91,17 +116,9 @@ DialogEventStateManager::onEarlyUac(const Dialog& dialog, InviteSessionHandle is
    eventInfo->mRouteSet = dialog.getRouteSet();
    eventInfo->mInviteSession = is;
 
-   mDialogEventHandler->onEarly(*eventInfo);
-}
-
-// we've sent a 1xx response WITH a local tag
-void
-DialogEventStateManager::onEarlyUas(const Dialog& dialog, InviteSessionHandle is)
-{
-   DialogEventInfo* eventInfo = findOrCreateDialogInfo(dialog);
-   eventInfo->mInviteSession = is;
-   eventInfo->mRouteSet = dialog.getRouteSet();
-   eventInfo->mState = DialogEventInfo::Early;
+   // local or remote target might change due to an UPDATE or re-INVITE
+   eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+   eventInfo->mRemoteTarget = new Uri(dialog.getRemoteTarget().uri());
 
    mDialogEventHandler->onEarly(*eventInfo);
 }
@@ -112,7 +129,8 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
    DialogEventInfo* eventInfo = findOrCreateDialogInfo(dialog);
 
    eventInfo->mInviteSession = is;
-   //eventInfo->mRouteSet = dialog.getRouteSet();
+   eventInfo->mRouteSet = dialog.getRouteSet(); // won't change due to re-INVITEs, but is
+                                                // needed for the Trying --> Confirmed transition
    eventInfo->mState = DialogEventInfo::Confirmed;
 
    // local or remote target might change due to an UPDATE or re-INVITE
