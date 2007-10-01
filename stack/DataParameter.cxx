@@ -43,7 +43,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
       pb.data(mValue, pos);
    }
 
-   if(mValue.empty())
+   if(!mQuoted && mValue.empty())
    {
       // .bwc. We can't let this happen, because we throw if we try to encode
       // when we have an empty value. If that behavior stops, this can be 
