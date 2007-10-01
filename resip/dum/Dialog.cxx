@@ -576,6 +576,11 @@ Dialog::dispatch(const SipMessage& msg)
          {
             mRouteSet = response.header(h_RecordRoutes).reverse();
          }
+         else
+         {
+            // Ensure that if the route-set in the 200 is empty, then we overwrite any existing route-sets
+            mRouteSet.clear();
+         }
       }
 
       // !jf! should this only be for 2xx responses? !jf! Propose no as an
