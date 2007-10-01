@@ -95,9 +95,14 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // IdentityHandler->EncryptionManager chain.
       DialogUsageManager(SipStack& stack, bool createDefaultFeatures=false);
       virtual ~DialogUsageManager();
-            
-      void shutdown(DumShutdownHandler*, unsigned long giveUpSeconds=0);
-      void shutdownIfNoUsages(DumShutdownHandler*, unsigned long giveUpSeconds=0);
+      
+      // !bwc! Maybe add a giveUpSeconds param to these.
+      void shutdown(DumShutdownHandler*);
+
+      // !bwc! This is not properly implemented (has an assert(0) in it). 
+      // I am removing this declaration.
+      // void shutdownIfNoUsages(DumShutdownHandler*);
+
       void forceShutdown(DumShutdownHandler*);
 
       void addTransport( TransportType protocol,
