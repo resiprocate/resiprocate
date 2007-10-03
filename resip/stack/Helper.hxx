@@ -404,6 +404,12 @@ class Helper
                                             bool useAuth = true,
                                             bool stale = false);
 
+      //create a 401 response with WWW-Authenticate header filled in
+      static SipMessage* makeWWWChallenge(const SipMessage& request, 
+                                            const Data& realm,
+                                            bool useAuth = true,
+                                            bool stale = false);
+
       // create a 401 or 407 response with Proxy-Authenticate or Authenticate header 
       // filled in
       static SipMessage* makeChallenge(const SipMessage& request, 
