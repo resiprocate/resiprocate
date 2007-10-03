@@ -393,7 +393,7 @@ main(int argc, char* argv[])
          assert(sdp.session().media().front().codecs().size() == 2);
          assert(false);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          // bad bandwidth
       }

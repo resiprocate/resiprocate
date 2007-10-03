@@ -39,6 +39,7 @@ DnsStub::DnsResourceRecordsByPtr DnsStub::Query::Empty;
 DnsStub::NameserverList DnsStub::EmptyNameserverList;
 int DnsStub::mDnsTimeout = 0;
 int DnsStub::mDnsTries = 0;
+unsigned int DnsStub::mDnsFeatures = 0;
 
 void
 DnsResultSink::onLogDnsResult(const DNSResult<DnsHostRecord>& rr)
@@ -77,7 +78,7 @@ DnsStub::DnsStub(const NameserverList& additional,
    mTransform(0),
    mDnsProvider(ExternalDnsFactory::createExternalDns())
 {
-   int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries);
+   int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries, mDnsFeatures);
    if (retCode != ExternalDns::Success)
    {
       if (retCode == ExternalDns::BuildMismatch)
@@ -447,7 +448,8 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
 
          default:
             ErrLog (<< "Unknown error " << mStub.errorMessage(status) << " for " << mTarget);
-            assert(0);
+            // .bwc. There are a whole bunch more error codes here.
+            // assert(0);
             break;
       }
 

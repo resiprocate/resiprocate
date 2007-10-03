@@ -10,6 +10,7 @@
 #include "resip/dum/ServerRegistration.hxx"
 #include "resip/dum/ClientPublication.hxx"
 #include "resip/dum/ServerPublication.hxx"
+#include "resip/dum/ServerOutOfDialogReq.hxx"
 
 #include "UserAgent.hxx"
 
@@ -156,6 +157,10 @@ void
 UserAgent::onNewSession(ClientInviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
 {
    InfoLog(<< h->myAddr().uri().user() << " 180 from  " << h->peerAddr().uri().user());
+
+   // Schedule an end() call; checks handle validity, and whether the Session
+   // is already tearing down (isTerminated() check)
+   mStack.post(std::auto_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
 }
 
 void
@@ -164,9 +169,15 @@ UserAgent::onNewSession(ServerInviteSessionHandle h, InviteSession::OfferAnswerT
    InfoLog(<< h->myAddr().uri().user() << " INVITE from  " << h->peerAddr().uri().user());
          
    h->provisional(180);
-   SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
-   h->provideAnswer(*sdp);
-   h->accept();
+   // .bwc. Er, this doesn't look right. We should provide an answer when we get
+   // the onOffer() callback, not the onNewSession() callback.
+   // SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+   // h->provideAnswer(*sdp);
+   // h->accept();
+
+   // Schedule an end() call; checks handle validity, and whether the Session
+   // is already tearing down (isTerminated() check)
+   mStack.post(std::auto_ptr<ApplicationMessage>(new EndInviteSessionCommand(h->getSessionHandle())), 60, &mDum);
 
    // might update presence here
 }
@@ -232,44 +243,77 @@ UserAgent::onAnswer(InviteSessionHandle, const SipMessage& msg, const SdpContent
 }
 
 void
-UserAgent::onOffer(InviteSessionHandle handle, const SipMessage& msg, const SdpContents& offer)
-{         
+UserAgent::onOffer(InviteSessionHandle h, const SipMessage& msg, const SdpContents& offer)
+{
+   InfoLog(<< h->myAddr().uri().user() << " offer from  " << h->peerAddr().uri().user());
+
+   SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
+   h->provideAnswer(*sdp);
+   if(msg.isRequest() && msg.method()==INVITE && !h->isConnected())
+   {
+      ServerInviteSession* uas = dynamic_cast<ServerInviteSession*>(h.get());
+      if(uas)
+      {
+         uas->accept();
+      }
+   }
 }
 
 void
-UserAgent::onOfferRequired(InviteSessionHandle, const SipMessage& msg)
+UserAgent::onOfferRequired(InviteSessionHandle h, const SipMessage& msg)
 {
-   assert(false);
+   InfoLog(<< h->myAddr().uri().user() << " offer requested by  " 
+            << h->peerAddr().uri().user());
+
+   static Data txt("v=0\r\n"
+                  "o=1900 369696545 369696545 IN IP4 192.168.2.15\r\n"
+                  "s=X-Lite\r\n"
+                  "c=IN IP4 192.168.2.15\r\n"
+                  "t=0 0\r\n"
+                  "m=audio 8000 RTP/AVP 8 3 98 97 101\r\n"
+                  "a=rtpmap:8 pcma/8000\r\n"
+                  "a=rtpmap:3 gsm/8000\r\n"
+                  "a=rtpmap:98 iLBC\r\n"
+                  "a=rtpmap:97 speex/8000\r\n"
+                  "a=rtpmap:101 telephone-event/8000\r\n"
+                  "a=fmtp:101 0-15\r\n");
+
+   static HeaderFieldValue hfv(txt.data(), txt.size());
+   static Mime type("application", "sdp");
+   static SdpContents sdp(&hfv, type);
+   h->provideOffer(sdp);
 }
 
 void
-UserAgent::onOfferRejected(InviteSessionHandle, const SipMessage* msg)
+UserAgent::onOfferRejected(InviteSessionHandle h, const SipMessage* msg)
 {
-    assert(0);
+   InfoLog(<< h->myAddr().uri().user() << " offer rejected by  " 
+            << h->peerAddr().uri().user());
 }
 
 void
-UserAgent::onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
+UserAgent::onDialogModified(InviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
 {
-    assert(0);
+   InfoLog(<< h->myAddr().uri().user() << " dialog modified " 
+            << h->peerAddr().uri().user());
 }
 
 void
-UserAgent::onInfo(InviteSessionHandle, const SipMessage& msg)
+UserAgent::onInfo(InviteSessionHandle h, const SipMessage& msg)
 {
-    assert(0);
+   InfoLog(<< h->myAddr().uri().user() << " INFO " 
+            << h->peerAddr().uri().user());
+   h->acceptNIT();
 }
 
 void
 UserAgent::onInfoSuccess(InviteSessionHandle, const SipMessage& msg)
 {
-    assert(0);
 }
 
 void
 UserAgent::onInfoFailure(InviteSessionHandle, const SipMessage& msg)
 {
-    assert(0);
 }
 
 void
@@ -297,8 +341,11 @@ UserAgent::onReferNoSub(InviteSessionHandle, const SipMessage& msg)
 }
 
 void
-UserAgent::onMessage(InviteSessionHandle, const SipMessage& msg)
+UserAgent::onMessage(InviteSessionHandle h, const SipMessage& msg)
 {
+   InfoLog(<< h->myAddr().uri().user() << " MESSAGE " 
+            << h->peerAddr().uri().user());
+   h->acceptNIT();
 }
 
 void
@@ -340,11 +387,6 @@ UserAgent::onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const Si
 ////////////////////////////////////////////////////////////////////////////////
 // ClientSubscriptionHandler ///////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-void
-UserAgent::onRefreshRejected(ClientSubscriptionHandle h, const SipMessage& rejection)
-{
-}
-
 void
 UserAgent::onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder)
 {
@@ -417,8 +459,10 @@ UserAgent::onFailure(ClientOutOfDialogReqHandle, const SipMessage& response)
 }
 
 void 
-UserAgent::onReceivedRequest(ServerOutOfDialogReqHandle, const SipMessage& request)
+UserAgent::onReceivedRequest(ServerOutOfDialogReqHandle h, const SipMessage& request)
 {
+   InfoLog(<< request.method() << ": Just respond.");
+   h->send(h->accept());
 }
 
 void

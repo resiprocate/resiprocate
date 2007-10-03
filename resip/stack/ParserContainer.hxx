@@ -24,7 +24,8 @@ class ParserContainer : public ParserContainerBase
          : ParserContainerBase(Headers::UNKNOWN)
       {}
       
-      // private to SipMessage
+      // private to SipMessage (using this carries a high risk of blowing your
+      // feet off)
       ParserContainer(HeaderFieldValueList* hfvs,
                       Headers::Type type = Headers::UNKNOWN)
          : ParserContainerBase(type)

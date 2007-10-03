@@ -17,8 +17,11 @@ DialogSetId::DialogSetId(const SipMessage& msg) :
    {
       if(msg.isResponse())
       {        
-         assert(msg.header(h_From).exists(p_tag));
-         mTag = msg.header(h_From).param(p_tag);
+         if(msg.header(h_From).exists(p_tag))
+         {
+            // .bwc. If no tag, leave mTag empty.
+            mTag = msg.header(h_From).param(p_tag);
+         }
       }
       else //external request; generate to tag if not present
       {

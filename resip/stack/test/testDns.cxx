@@ -776,7 +776,7 @@ main(int argc, const char** argv)
          cerr << rf << "Looking up" << ub << endl;
          dns.lookup(res, uri);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          cerr << "Couldn't parse arg " << *(args-1) << ": " << e.getMessage() << endl;
       }
@@ -1088,11 +1088,11 @@ main(int argc, const char** argv)
       }
       
       // .bwc. Wait for greylist to expire.
-
       sleep(16);
+
       {
          Query query;                        
-         query.handler = new TestDnsHandler(expected,blacklist,greylist,uri);
+         query.handler = new TestDnsHandler(expected,uri);
          query.uri = uri;
          cerr << "Creating DnsResult" << endl;      
          DnsResult* res = dns.createDnsResult(query.handler);

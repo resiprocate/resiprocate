@@ -26,8 +26,8 @@ class UserAgent : public CommandLineParser,
       UserAgent(int argc, char** argv);
       virtual ~UserAgent();
 
-      void startup();
-      void shutdown();
+      virtual void startup();
+      virtual void shutdown();
 
       void process();
       
@@ -67,7 +67,6 @@ class UserAgent : public CommandLineParser,
       virtual int onRequestRetry(ClientRegistrationHandle h, int retryMinimum, const SipMessage& msg);
 
       // ClientSubscriptionHandler ///////////////////////////////////////////////////
-      virtual void onRefreshRejected(ClientSubscriptionHandle h, const SipMessage& rejection);
       virtual void onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder);
       virtual void onUpdateActive(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder);
       virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify, bool outOfOrder);
@@ -87,10 +86,42 @@ class UserAgent : public CommandLineParser,
       virtual void onReceivedRequest(ServerOutOfDialogReqHandle, const SipMessage& request);
       virtual void onForkDestroyed(ClientInviteSessionHandle);
 
+      class EndInviteSessionCommand : public DumCommand
+      {
+         public:
+            EndInviteSessionCommand(InviteSessionHandle h) : mHandle(h)
+            {}
+
+            virtual void executeCommand()
+            {
+               if(mHandle.isValid() && !mHandle->isTerminated())
+               {
+                  mHandle->end();
+               }
+            }
+
+            virtual Message* clone() const
+            {
+               return new EndInviteSessionCommand(mHandle);
+            }
+
+            virtual std::ostream& encode(std::ostream& str) const
+            {
+               return str << "EndInviteSessionCommand";
+            }
+
+            virtual std::ostream& encodeBrief(std::ostream& str) const
+            {
+               return encode(str);
+            }
+         
+         private:
+            InviteSessionHandle mHandle;
+      };
+
    protected:
       void addTransport(TransportType type, int port);
 
-   private:
       SharedPtr<MasterProfile> mProfile;
       Security* mSecurity;
       SipStack mStack;

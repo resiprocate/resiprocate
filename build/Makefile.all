@@ -90,8 +90,18 @@ endif
 
 # Detect and normalize the OSTYPE
 ifndef OSTYPE
-OSTYPE = $(shell uname)
+OSTYPE       := $(shell uname)
+OSVER        := $(shell uname -r)
 endif
+
+OS_MAJOR_VER := $(word 1,$(subst ., ,$(OSVER)) 0 0 0 0)
+OS_MINOR_VER := $(word 2,$(subst ., ,$(OSVER)) 0 0 0 0)
+OS_POINT_VER := $(word 3,$(subst ., ,$(OSVER)) 0 0 0 0)
+OS_PATCH_VER := $(word 4,$(subst ., ,$(OSVER)) 0 0 0 0)
+DEFINES += OS_MAJOR_VER=$(OS_MAJOR_VER) \
+           OS_MINOR_VER=$(OS_MINOR_VER) \
+           OS_POINT_VER=$(OS_POINT_VER) \
+           OS_PATCH_VER=$(OS_PATCH_VER)
 
 ifeq ($(OSTYPE),solaris)
 OSTYPE = SunOS

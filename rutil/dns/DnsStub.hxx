@@ -124,6 +124,7 @@ class DnsStub : public ExternalDnsHandler
          mDnsTimeout = timeoutInSec;
          mDnsTries = tries;
       }
+      static void enableDnsFeatures(unsigned int features)  {mDnsFeatures |= features;} // bit mask of ExternalDns::Features
 
       void setResultTransform(ResultTransform*);
       void removeResultTransform();
@@ -358,6 +359,7 @@ class DnsStub : public ExternalDnsHandler
 
       static int mDnsTimeout; // in seconds
       static int mDnsTries;
+      static unsigned int mDnsFeatures;    // bit mask of ExternalDns::Features
 };
 
 typedef DnsStub::Protocol Protocol;

@@ -106,7 +106,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
          fixStrictRouterDamage();
          removeTopRouteIfSelf();
       }
-      catch(resip::ParseBuffer::Exception& e)
+      catch(resip::ParseException& e)
       {
          InfoLog(<<"Parse failure Exception caught: " << e);
          resip::SipMessage response;
@@ -143,7 +143,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 
             try
             {
-               // !slg! look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
+               // .slg. look at mOriginalRequest for Routes since removeTopRouteIfSelf() is only called on mOriginalRequest
                if((!mOriginalRequest->exists(h_Routes) || mOriginalRequest->header(h_Routes).empty()) &&
                    getProxy().isMyUri(sip->header(h_RequestLine).uri()))
                {
@@ -164,12 +164,12 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
                }
                else
                {
-                  // !slg! Someone is using us to relay an ACK, but we are not the 
+                  // .slg. Someone is using us to relay an ACK, but we are not the 
                   // top-most route and the host in From isn't ours. Refusing to do so.
                   InfoLog(<<"Top most route or From header are not ours.  We do not allow relaying ACKs.  Dropping it...");            
                }
             }
-            catch(resip::ParseBuffer::Exception&)
+            catch(resip::ParseException&)
             {
                InfoLog(<<"Parse error processing ACK. Dropping it...");            
             }
@@ -337,7 +337,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       {
          ret = mResponseProcessorChain.process(*this);
       }
-      catch(resip::ParseBuffer::Exception& e)
+      catch(resip::ParseException& e)
       {
          InfoLog(<<"Garbage in response; dropping message. " << e);
          delete sip;

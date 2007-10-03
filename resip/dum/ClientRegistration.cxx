@@ -34,6 +34,7 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
      mState(mLastRequest->exists(h_Contacts) ? Adding : Querying),
      mEndWhenDone(false),
      mUserRefresh(false),
+      mRegistrationTime(mDialogSet.getUserProfile()->getDefaultRegistrationTime()),
      mExpires(0),
      mQueuedState(None),
      mQueuedRequest(new SipMessage)
@@ -43,6 +44,13 @@ ClientRegistration::ClientRegistration(DialogUsageManager& dum,
    {
       mMyContacts = mLastRequest->header(h_Contacts);
    }
+
+   if(mLastRequest->exists(h_Expires) && 
+      mLastRequest->header(h_Expires).isWellFormed())
+   {
+      mRegistrationTime = mLastRequest->header(h_Expires).value();
+   }
+
    mNetworkAssociation.setDum(&dum);
 }
 
@@ -99,11 +107,12 @@ ClientRegistration::addBinding(const NameAddr& contact, UInt32 registrationTime)
 
    if(mDialogSet.getUserProfile()->getRinstanceEnabled())
    {
-      mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // !slg! poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
+      mMyContacts.back().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // .slg. poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
    }
 
    next->header(h_Contacts) = mMyContacts;
-   next->header(h_Expires).value() = registrationTime;
+   mRegistrationTime = registrationTime;
+   next->header(h_Expires).value() = mRegistrationTime;
    next->header(h_CSeq).sequence()++;
    // caller prefs
 
@@ -127,9 +136,8 @@ ClientRegistration::removeBinding(const NameAddr& contact)
    {
       if (i->uri() == contact.uri())
       {
-         mMyContacts.erase(i);
-
-         next->header(h_Contacts) = mMyContacts;
+         next->header(h_Contacts).clear();
+         next->header(h_Contacts).push_back(*i);
          next->header(h_Expires).value() = 0;
          next->header(h_CSeq).sequence()++;
 
@@ -138,6 +146,7 @@ ClientRegistration::removeBinding(const NameAddr& contact)
             send(next);
          }
 
+         mMyContacts.erase(i);
          return;
       }
    }
@@ -193,15 +202,16 @@ ClientRegistration::removeMyBindings(bool stopRegisteringWhenDone)
 
    SharedPtr<SipMessage> next = tryModification(Removing);
 
-   NameAddrs myContacts = mMyContacts;
+   next->header(h_Contacts) = mMyContacts;
    mMyContacts.clear();
+
+   NameAddrs& myContacts = next->header(h_Contacts);
 
    for (NameAddrs::iterator i=myContacts.begin(); i != myContacts.end(); i++)
    {
       i->param(p_expires) = 0;
    }
 
-   next->header(h_Contacts) = myContacts;
    next->remove(h_Expires);
    next->header(h_CSeq).sequence()++;
 
@@ -266,10 +276,12 @@ ClientRegistration::internalRequestRefresh(UInt32 expires)
    assert (mState == Registered);
    mState = Refreshing;
    mLastRequest->header(h_CSeq).sequence()++;
+   mLastRequest->header(h_Contacts)=mMyContacts;
    if(expires > 0)
    {
-      mLastRequest->header(h_Expires).value() = expires;
+      mRegistrationTime = expires;
    }
+   mLastRequest->header(h_Expires).value()=mRegistrationTime;
 
    send(mLastRequest);
 }
@@ -427,7 +439,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                            }
                         }
                      }
-                     catch(ParseBuffer::Exception& e)
+                     catch(ParseException& e)
                      {
                         DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
                      }
@@ -451,7 +463,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                      {
                         expiry = resipMin((UInt32)it->param(p_expires), expiry);
                      }
-                     catch(ParseBuffer::Exception& e)
+                     catch(ParseException& e)
                      {
                         DebugLog(<< "Ignoring unparsable contact in REG/200: " << e);
                      }
@@ -533,7 +545,8 @@ ClientRegistration::dispatch(const SipMessage& msg)
                if (msg.exists(h_MinExpires) && 
                    (maxRegistrationTime == 0 || msg.header(h_MinExpires).value() < maxRegistrationTime)) // If maxRegistrationTime is enabled, then check it
                {
-                  mLastRequest->header(h_Expires).value() = msg.header(h_MinExpires).value();
+                  mRegistrationTime = msg.header(h_MinExpires).value();
+                  mLastRequest->header(h_Expires).value() = mRegistrationTime;
                   mLastRequest->header(h_CSeq).sequence()++;
                   send(mLastRequest);
                   return;

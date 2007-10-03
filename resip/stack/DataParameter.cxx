@@ -6,7 +6,7 @@
 #include "resip/stack/DataParameter.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "resip/stack/ParseException.hxx"
+#include "rutil/ParseException.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
@@ -41,6 +41,17 @@ DataParameter::DataParameter(ParameterTypes::Type type,
       const char* pos = pb.position();
       pb.skipToOneOf(terminators);
       pb.data(mValue, pos);
+   }
+
+   if(!mQuoted && mValue.empty())
+   {
+      // .bwc. We can't let this happen, because we throw if we try to encode
+      // when we have an empty value. If that behavior stops, this can be 
+      // removed.
+      throw ParseException("DataParameter c'tor parsed empty param!", 
+                           "DataParameter",
+                           __FILE__,
+                           __LINE__);
    }
 }
 

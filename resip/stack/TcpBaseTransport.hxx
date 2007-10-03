@@ -15,7 +15,7 @@ class TcpBaseTransport : public InternalTransport
    public:
       enum  {MaxFileDescriptors = 100000};
 
-     TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interfaceName, Compression &compression);
+      TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interfaceName, Compression &compression);
       virtual  ~TcpBaseTransport();
       
       virtual void process(FdSet& fdset);
@@ -29,12 +29,9 @@ class TcpBaseTransport : public InternalTransport
 
    protected:
       virtual Connection* createConnection(Tuple& who, Socket fd, bool server=false)=0;
-      
-      void processSomeWrites(FdSet& fdset);
-      void processSomeReads(FdSet& fdset);
-      
+
       /** Forms a connection if one doesn't exist, moves requests to the
-      appropriate connection's fifo.
+	  appropriate connection's fifo.
       */
       void processAllWriteRequests(FdSet& fdset);
       void sendFromRoundRobin(FdSet& fdset);

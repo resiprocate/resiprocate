@@ -443,6 +443,9 @@ endlocal
 				RelativePath=".\stateAgents\CertSubscriptionHandler.hxx">
 			</File>
 			<File
+				RelativePath=".\ChainTraverser.hxx">
+			</File>
+			<File
 				RelativePath=".\CommandLineParser.hxx">
 			</File>
 			<File
