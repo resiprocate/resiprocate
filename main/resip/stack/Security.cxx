@@ -451,6 +451,7 @@ BaseSecurity::addCertX509(PEMType type, const Data& key, X509* cert, bool write)
       }
       catch(...)
       {
+         ErrLog(<<"Caught exception: ");
          BIO_free(out);
          throw;
       }
@@ -484,6 +485,7 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
    }
    catch (...)
    {
+      ErrLog(<<"Caught exception: ");
       return   false;
    }
 
@@ -622,6 +624,7 @@ BaseSecurity::addPrivateKeyPKEY(PEMType type,
       }
       catch(...)
       {
+         ErrLog(<<"Caught exception: ");
          BIO_free(bio);
          throw;
       }
@@ -670,6 +673,7 @@ BaseSecurity::addPrivateKeyDER( PEMType type,
    }
    catch(...)
    {
+      ErrLog(<<"Caught exception: ");
       BIO_free(in);
       throw;
    }
@@ -717,6 +721,7 @@ BaseSecurity::addPrivateKeyPEM( PEMType type,
    }
    catch(...)
    {
+      ErrLog(<<"Caught exception: ");
       BIO_free(in);
       throw;
    }
@@ -749,6 +754,7 @@ BaseSecurity::hasPrivateKey( PEMType type,
    }
    catch(...)
    {
+      ErrLog(<<"Caught exception: ");
       return   false;
    }
 
@@ -1741,8 +1747,9 @@ BaseSecurity::checkAndSetIdentity( const SipMessage& msg, const Data& certDer) c
          sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
       }
    }
-   catch (BaseException&)
+   catch (BaseException& e)
    {
+      ErrLog(<<"Caught exception: "<< e);
       sec->setIdentity(msg.header(h_From).uri().getAor());
       sec->setIdentityStrength(SecurityAttributes::FailedIdentity);
    }
@@ -2150,8 +2157,9 @@ BaseSecurity::checkSignature(MultipartSignedContents* multi,
                      InfoLog(<< "choose <" << name << "> signature" );
                  }
                }
-               catch (...)
+               catch (ParseException& e)
                {
+                  ErrLog(<<"Caught exception: "<< e);
                }
             }
          }
