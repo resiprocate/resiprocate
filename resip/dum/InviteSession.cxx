@@ -736,10 +736,9 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
       SharedPtr<SipMessage> refer(new SipMessage());
       mDialog.makeRequest(*refer, REFER);
       refer->header(h_ReferTo) = referTo;
-      refer->header(h_ReferredBy) = myAddr();
+      refer->header(h_ReferredBy) = myAddr(); 
       refer->header(h_ReferredBy).remove(p_tag);   // tag-param not permitted in rfc3892; not the same as generic-param
 
-      // !slg! is it ok to do this - should it be an option?
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
@@ -769,7 +768,7 @@ public:
 
    virtual void executeCommand()
    {
-      mInviteSession.referCommand(mReferTo, mReferSub);
+      mInviteSession.refer(mReferTo, mReferSub);
    }
 
    virtual std::ostream& encodeBrief(std::ostream& strm) const
@@ -993,9 +992,9 @@ void
 InviteSession::dispatch(const SipMessage& msg)
 {
    // Look for 2xx retransmissions - resend ACK and filter out of state machine
-   if(msg.header(h_CSeq).method() == INVITE && msg.isResponse() && msg.header(h_StatusLine).statusCode() / 200 == 1)
+   if(msg.header(h_CSeq).method() == INVITE && msg.isResponse() && msg.header(h_StatusLine).statusCode() / 100 == 2)
    {
-      AckMap::iterator i = mAcks.find(msg.header(h_CSeq).sequence());
+      AckMap::iterator i = mAcks.find(msg.getTransactionId());
       if (i != mAcks.end())
       {
          send(i->second);  // resend ACK
@@ -1130,7 +1129,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
    }
    else if (timeout.type() == DumTimeout::CanDiscardAck)
    {
-      AckMap::iterator i = mAcks.find(timeout.seq());
+      AckMap::iterator i = mAcks.find(timeout.transactionId());
       if (i != mAcks.end())
       {
          mAcks.erase(i);
@@ -1252,6 +1251,7 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          break;
 
       case OnAck:
+      case OnAckAnswer: // .bwc. Don't drop ACK with SDP!
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          handler->onAckReceived(getSessionHandle(), msg);
          break;
@@ -1372,7 +1372,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case On2xxAnswer:
-      case On2xxOffer:  // !slg! doesn't really make sense
+      case On2xxOffer:  // .slg. doesn't really make sense
       {
          transition(Connected);
          handleSessionTimerResponse(msg);
@@ -1485,7 +1485,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          // Some UA's send a 100 response to a ReInvite - just ignore it
          break;
 
-      case On2xxAnswer:  // !slg! doesn't really make sense
+      case On2xxAnswer:  // .slg. doesn't really make sense
       case On2xxOffer:
       {
          transition(SentReinviteAnswered);
@@ -2439,8 +2439,9 @@ InviteSession::isReliable(const SipMessage& msg)
    }
    else
    {
-      return (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel))) 
-         || (msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel)));
+      return mDum.getMasterProfile()->getUacReliableProvisionalMode() > MasterProfile::Never
+         && (msg.exists(h_Supporteds) && msg.header(h_Supporteds).find(Token(Symbols::C100rel))
+             || (msg.exists(h_Requires) && msg.header(h_Requires).find(Token(Symbols::C100rel))));
    }
 }
 
@@ -2704,7 +2705,7 @@ void InviteSession::sendAck(const SdpContents *sdp)
 {
    SharedPtr<SipMessage> ack(new SipMessage);
 
-   assert(mAcks.count(mLastLocalSessionModification->header(h_CSeq).sequence()) == 0);
+   assert(mAcks.count(mLastLocalSessionModification->getTransactionId()) == 0);
    SharedPtr<SipMessage> source;
    
    if (mLastLocalSessionModification->method() == UPDATE)
@@ -2734,8 +2735,8 @@ void InviteSession::sendAck(const SdpContents *sdp)
    {
       setSdp(*ack, *sdp);
    }
-   mAcks[ack->header(h_CSeq).sequence()] = ack;
-   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), ack->header(h_CSeq).sequence());
+   mAcks[ack->getTransactionId()] = ack;
+   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), ack->header(h_CSeq).sequence(),0,ack->getTransactionId());
 
    InfoLog (<< "Sending " << ack->brief());
    send(ack);

@@ -18,6 +18,12 @@ class ExternalDnsHostResult;
 class ExternalDns
 {
    public:
+      enum Features
+      {
+         None = 0,
+         TryServersOfNextNetworkUponRcode3 = 1 << 0   // 'No such name'
+      };
+
       //returns Success, BuildMismatch, otherwise ExternalDns specific 
       //error message can be pulled from errorMessage
       enum InitResult 
@@ -29,8 +35,9 @@ class ExternalDns
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr,
                        int dnsTimeout = 0,
-                       int dnsTries = 0) = 0; 
-                          
+                       int dnsTries = 0,
+                       unsigned int features = 0) = 0; // bit mask of Features
+
       //only call buildFdSet and process if requiresProcess is true.  
       virtual bool requiresProcess() = 0;
 

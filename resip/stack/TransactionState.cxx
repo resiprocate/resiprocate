@@ -198,7 +198,7 @@ TransactionState::process(TransactionController& controller)
       {
          sip->parseAllHeaders();
       }
-      catch(resip::ParseBuffer::Exception& e)
+      catch(resip::ParseException& e)
       {
          if(sip->isRequest() && sip->method()!=ACK)
          {
@@ -416,6 +416,7 @@ TransactionState::process(TransactionController& controller)
                   // Be graceful.
                   TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 200));
                   matchingInvite->sendToTU(Helper::makeResponse(*matchingInvite->mMsgToRetransmit, 487));
+                  matchingInvite->terminateClientTransaction(matchingInvite->mId);
 
                   delete matchingInvite;
                   delete sip;
@@ -431,7 +432,6 @@ TransactionState::process(TransactionController& controller)
                {
                   assert(matchingInvite);
                   state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite, tid);
-                  //state->processReliability(matchingInvite->mTarget.getType());  // !slg! Not needed - timer started in makeCancelTransaction
                   state->processClientNonInvite(sip);
                   
                   // for the INVITE in case we never get a 487
@@ -1792,20 +1792,14 @@ TransactionState::sendToTU(TransactionMessage* msg) const
             // blacklist last target.
             // .bwc. If there is no Retry-After, we do not blacklist
             // (see RFC 3261 sec 21.5.4 para 1)
-            if(sipMsg->exists(resip::h_RetryAfter))
+            if(sipMsg->exists(resip::h_RetryAfter) && 
+               sipMsg->header(resip::h_RetryAfter).isWellFormed())
             {
-               try
-               {
-                  unsigned int relativeExpiry= sipMsg->header(resip::h_RetryAfter).value();
-                  
-                  mDnsResult->blacklistLast(resip::Timer::getTimeMs()+relativeExpiry*1000);
-               }
-               catch(resip::ParseBuffer::Exception&)
-               {
-                  mDnsResult->greylistLast(resip::Timer::getTimeMs()+32000);
-               }
+               unsigned int relativeExpiry= sipMsg->header(resip::h_RetryAfter).value();
+               
+               mDnsResult->blacklistLast(resip::Timer::getTimeMs()+relativeExpiry*1000);
             }
-            
+         
             break;
          case 408:
             if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only greylist if internally generated and we haven't received any responses yet

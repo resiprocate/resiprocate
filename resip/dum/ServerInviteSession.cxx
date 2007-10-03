@@ -279,56 +279,11 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
    }
 }
 
-//class ServerInviteSessionProvideOfferCommand : public DumCommandAdapter
-//{
-//public:
-//   ServerInviteSessionProvideOfferCommand(ServerInviteSession& serverInviteSession, 
-//      const SdpContents& offer,
-//      DialogUsageManager::EncryptionLevel level, 
-//      const SdpContents* alternative)
-//      : mServerInviteSession(serverInviteSession),
-//        mOffer(offer),
-//        mLevel(level),
-//        mAlternative(alternative?alternative->clone():NULL)
-//   {
-//
-//   }
-//
-//   virtual void executeCommand()
-//   {
-//      mServerInviteSession.provideOfferCommand(mOffer, mLevel, mAlternative.get());
-//   }
-//
-//   virtual std::ostream& encodeBrief(std::ostream& strm) const
-//   {
-//      return strm << "ServerInviteSessionProvideOfferCommand";
-//   }
-//private:
-//   ServerInviteSession& mServerInviteSession;
-//   SdpContents mOffer;
-//   DialogUsageManager::EncryptionLevel mLevel;
-//   std::auto_ptr<SdpContents> mAlternative;
-//};
-//
-//void
-//ServerInviteSession::provideOfferCommand(const SdpContents& offer,
-//                                         DialogUsageManager::EncryptionLevel level, 
-//                                         const SdpContents* alternative)
-//{
-//   mDum.post(new ServerInviteSessionProvideOfferCommand(*this, offer, level, alternative));
-//}
-
 void 
 ServerInviteSession::provideOffer(const SdpContents& offer)
 {
    this->provideOffer(offer, mCurrentEncryptionLevel, 0);
 }
-
-//void 
-//ServerInviteSession::provideOfferCommand(const SdpContents& offer)
-//{
-//   mDum.post(new ServerInviteSessionProvideOfferCommand(*this, offer, mCurrentEncryptionLevel, 0));
-//}
 
 
 void
@@ -414,35 +369,6 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          break;
    }
 }
-
-//class ServerInviteSessionProvideAnswerCommand : public DumCommandAdapter
-//{
-//public:
-//   ServerInviteSessionProvideAnswerCommand(ServerInviteSession& serverInviteSession, const SdpContents& answer)
-//      : mServerInviteSession(serverInviteSession),
-//        mAnswer(new SdpContents(answer))
-//   {
-//   }
-//
-//   virtual void executeCommand()
-//   {
-//      mServerInviteSession.provideAnswer(*mAnswer);
-//   }
-//
-//   virtual std::ostream& encodeBrief(std::ostream& strm) const
-//   {
-//      return strm << "ServerInviteSessionProvideAnswerCommand";
-//   }
-//private:
-//   ServerInviteSession& mServerInviteSession;
-//   std::auto_ptr<SdpContents> mAnswer;
-//};
-//
-//void 
-//ServerInviteSession::provideAnswerCommand(const SdpContents& answer)
-//{
-//   mDum.post(new ServerInviteSessionProvideAnswerCommand(*this, answer));
-//}
 
 void
 ServerInviteSession::end()
@@ -573,37 +499,6 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          break;
    }
 }
-
-//class ServerInviteRejectCommand : public DumCommandAdapter
-//{
-//public:
-//   ServerInviteRejectCommand(ServerInviteSession& serverInviteSession, int code, WarningCategory* warning)
-//      : mServerInviteSession(serverInviteSession),
-//        mCode(code),
-//        mWarning(warning?new WarningCategory(*warning):0)
-//   {
-//   }
-//
-//   virtual void executeCommand()
-//   {
-//      mServerInviteSession.reject(mCode, mWarning.get());
-//   }
-//
-//   virtual std::ostream& encodeBrief(std::ostream& strm) const
-//   {
-//      return strm << "ServerInviteRejectCommand";
-//   }
-//private:
-//   ServerInviteSession& mServerInviteSession;
-//   int mCode;
-//   std::auto_ptr<WarningCategory> mWarning;
-//};
-
-//void 
-//ServerInviteSession::rejectCommand(int code, WarningCategory *warning)
-//{
-//   mDum.post(new ServerInviteRejectCommand(*this, code, warning));
-//}
 
 void 
 ServerInviteSession::accept(int code)
@@ -883,6 +778,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
    switch (toEvent(msg, sdp.get()))
    {
       case OnAck:
+      case OnAckAnswer:
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
@@ -890,14 +786,16 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          break;
       }
 
-      case OnAckAnswer:
-      {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         sendBye();
-         transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-         break;
-      }
+//       .bwc. unsolicited SDP in ACK; it would probably make sense to just
+//       ignore.
+//      case OnAckAnswer:
+//      {
+//         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
+//         sendBye();
+//         transition(Terminated);
+//         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+//         break;
+//      }
       
       case OnCancel:
       {

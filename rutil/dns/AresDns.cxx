@@ -31,7 +31,8 @@ int
 AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
               AfterSocketCreationFuncPtr socketfunc,
               int timeout,
-              int tries)   
+              int tries,
+              unsigned int features)
 {
 #ifdef USE_IPV6
    int requiredCap = ARES_CAP_IPV6;
@@ -47,15 +48,23 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
    }
    
    int status;
+   ares_options opt;
+   int optmask = 0;
+
+   memset(&opt, '\0', sizeof(opt));
+   if ((features & ExternalDns::TryServersOfNextNetworkUponRcode3))
+   {
+      optmask |= ARES_OPT_FLAGS;
+      opt.flags |= ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3;
+   }
+
    if (additionalNameservers.empty())
    {
-      status = ares_init_with_socket_function(&mChannel, socketfunc);
+      status = ares_init_options_with_socket_function(&mChannel, &opt, optmask, socketfunc);
    }
    else
    {
-      ares_options opt;
-      int optmask = ARES_OPT_SERVERS;
-      
+      optmask |= ARES_OPT_SERVERS;
       opt.nservers = additionalNameservers.size();
       
 #ifdef USE_IPV6
@@ -82,6 +91,7 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
 #endif
       status = ares_init_options_with_socket_function(&mChannel, &opt, optmask, socketfunc);
       delete [] opt.servers;
+      opt.servers = 0;
    }
    
    if (status != ARES_SUCCESS)

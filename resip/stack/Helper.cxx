@@ -386,21 +386,17 @@ Helper::makeResponse(SipMessage& response,
       response.header(h_Warnings).push_back(warn);
    }
 
-   try
+   if(responseCode > 100 &&
+      response.header(h_To).isWellFormed() &&
+      !response.header(h_To).exists(p_tag))
    {
       // Only generate a To: tag if one doesn't exist.  Think Re-INVITE.   
       // No totag for failure responses or 100s   
-      if (!response.header(h_To).exists(p_tag) && responseCode > 100)   
-      {   
-         response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);   
-      }
-   } 
-   catch(resip::ParseBuffer::Exception&)
-   {
-      // .bwc. Can't add to-tag since To is malformed. Oh well, we tried.
+      // ?bwc? Should we be generating to-tags for failure responses or not?
+      // The comments say no, but the code says yes. Which is it?
+      response.header(h_To).param(p_tag) = Helper::computeTag(Helper::tagSize);
    }
-   
-   
+
    // .bwc. This will only throw if the topmost Via is malformed, and that 
    // should have been caught at the transport level.
    response.setRFC2543TransactionId(request.getRFC2543TransactionId());
@@ -734,7 +730,6 @@ Helper::makeResponseMD5(const Data& username, const Data& password, const Data& 
       << realm
       << Symbols::COLON
       << password;
-   //a1.flush();  // .slg. Not needed getHex now calls flush()
  
    return makeResponseMD5WithA1(a1.getHex(), method, digestUri, nonce, qop, 
                                 cnonce, cnonceCount, entity);
@@ -896,8 +891,6 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
    return make_pair(Failed,username);
 }
 
-// !jf! note that this only authenticates a ProxyAuthenticate header, need to
-// add support for WWWAuthenticate as well!!
 Helper::AuthResult
 Helper::authenticateRequest(const SipMessage& request, 
                             const Data& realm,
@@ -906,128 +899,153 @@ Helper::authenticateRequest(const SipMessage& request,
 {
    DebugLog(<< "Authenticating: realm=" << realm << " expires=" << expiresDelta);
    //DebugLog(<< request);
-   
-   if (request.exists(h_ProxyAuthorizations))
+
+   // !bwc! Somewhat inefficient. Maybe optimize later.
+   ParserContainer<Auth> auths;
+
+   if(request.exists(h_ProxyAuthorizations))
    {
-      const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
-      for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
-      {
-         if (i->exists(p_realm) && 
-             i->exists(p_nonce) &&
-             i->exists(p_response) &&
-             i->param(p_realm) == realm)
-         {
-            static Data digest("digest");
-            if(!isEqualNoCase(i->scheme(),digest))
-            {
-               DebugLog(<< "Scheme must be Digest");
-               continue;
-            }
-            /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
-            if (!pb.eof() && !isdigit(*pb.position()))
-            {
-               DebugLog(<< "Invalid nonce; expected timestamp.");
-               return BadlyFormed;
-            }
-            const char* anchor = pb.position();
-            pb.skipToChar(Symbols::COLON[0]);
+      auths.append(request.header(h_ProxyAuthorizations));
+   }
+   
+   if(request.exists(h_Authorizations))
+   {
+      auths.append(request.header(h_Authorizations));
+   }
 
-            if (pb.eof())
-            {
-               DebugLog(<< "Invalid nonce; expected timestamp terminator.");
-               return BadlyFormed;
-            }
+   if(auths.empty())
+   {
+      DebugLog (<< "No authentication headers. Failing request.");
+      return Failed;
+   }
 
-            Data then;
-            pb.data(then, anchor); */
- 
-            NonceHelper::Nonce x_nonce = getNonceHelper()->parseNonce(i->param(p_nonce));
-            if(x_nonce.getCreationTime() == 0)
-               return BadlyFormed;
-
-
-            if (expiresDelta > 0)
-            {
-               UInt64 now = Timer::getTimeMs()/1000;
-               if (x_nonce.getCreationTime() + expiresDelta < now)
-               {
-                  DebugLog(<< "Nonce has expired.");
-                  return Expired;
-               }
-            }
-
-   	        Data then(x_nonce.getCreationTime());
-            if (i->param(p_nonce) != makeNonce(request, then))
-            {
-               InfoLog(<< "Not my nonce.");
-               return Failed;
-            }
+   // ?bwc? Why is const_iterator& operator=(const iterator& rhs)
+   // not working properly?
+   //ParserContainer<Auth>::const_iterator i = auths.begin();
+   
+   ParserContainer<Auth>::iterator i = auths.begin();
          
-            InfoLog (<< " username=" << (i->param(p_username))
-                     << " password=" << password
-                     << " realm=" << realm
-                     << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
-                     << " uri=" << i->param(p_uri)
-                     << " nonce=" << i->param(p_nonce));
-            
-            if (i->exists(p_qop))
-            {
-               if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
-               {
-                  if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
-                  {
-                     if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
-                                                               password,
-                                                               realm, 
-                                                               getMethodName(request.header(h_RequestLine).getMethod()),
-                                                               i->param(p_uri),
-                                                               i->param(p_nonce),
-                                                               i->param(p_qop),
-                                                               i->param(p_cnonce),
-                                                               i->param(p_nc)),
-                                                               request.getContents())
-                     {
-                        return Authenticated;
-                     }
-                     else
-                     {
-                        return Failed;
-                     }
-                  }
-               }
-               else
-               {
-                  InfoLog (<< "Unsupported qop=" << i->param(p_qop));
-                  return Failed;
-               }
-            }
-            else if(i->exists(p_uri))
-            {
-            
-               if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
-                                                               password,
-                                                               realm, 
-                                                               getMethodName(request.header(h_RequestLine).getMethod()),
-                                                               i->param(p_uri),
-                                                               i->param(p_nonce)))
-               {
-                  return Authenticated;
-               }
-               else
-               {
-                  return Failed;
-               }
-            }
-         }
-         else
+   for (; i != auths.end(); i++)
+   {
+      if (i->exists(p_realm) && 
+          i->exists(p_nonce) &&
+          i->exists(p_response) &&
+          i->param(p_realm) == realm)
+      {
+         static Data digest("digest");
+         if(!isEqualNoCase(i->scheme(),digest))
          {
+            DebugLog(<< "Scheme must be Digest");
+            continue;
+         }
+         /*
+         ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+         if (!pb.eof() && !isdigit(*pb.position()))
+         {
+            DebugLog(<< "Invalid nonce; expected timestamp.");
             return BadlyFormed;
          }
+         const char* anchor = pb.position();
+         pb.skipToChar(Symbols::COLON[0]);
+
+         if (pb.eof())
+         {
+            DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+            return BadlyFormed;
+         }
+
+         Data then;
+         pb.data(then, anchor);
+         */
+         NonceHelper::Nonce x_nonce = getNonceHelper()->parseNonce(i->param(p_nonce));
+         if(x_nonce.getCreationTime() == 0)
+            return BadlyFormed;
+
+
+         
+         
+         
+         if (expiresDelta > 0)
+         {
+            UInt64 now = Timer::getTimeMs()/1000;
+            if (x_nonce.getCreationTime() + expiresDelta < now)
+            {
+               DebugLog(<< "Nonce has expired.");
+               return Expired;
+            }
+         }
+
+         Data then(x_nonce.getCreationTime());
+         if (i->param(p_nonce) != makeNonce(request, then))
+         {
+            InfoLog(<< "Not my nonce.");
+            return Failed;
+         }
+      
+         InfoLog (<< " username=" << (i->param(p_username))
+                  << " password=" << password
+                  << " realm=" << realm
+                  << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
+                  << " uri=" << i->param(p_uri)
+                  << " nonce=" << i->param(p_nonce));
+         
+         if (i->exists(p_qop))
+         {
+            if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
+            {
+               if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
+               {
+                  if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
+                                                            password,
+                                                            realm, 
+                                                            getMethodName(request.header(h_RequestLine).getMethod()),
+                                                            i->param(p_uri),
+                                                            i->param(p_nonce),
+                                                            i->param(p_qop),
+                                                            i->param(p_cnonce),
+                                                            i->param(p_nc)),
+                                                            request.getContents())
+                  {
+                     return Authenticated;
+                  }
+                  else
+                  {
+                     return Failed;
+                  }
+               }
+            }
+            else
+            {
+               InfoLog (<< "Unsupported qop=" << i->param(p_qop));
+               return Failed;
+            }
+         }
+         else if(i->exists(p_uri))
+         {
+         
+            if (i->param(p_response) == makeResponseMD5(i->param(p_username), 
+                                                            password,
+                                                            realm, 
+                                                            getMethodName(request.header(h_RequestLine).getMethod()),
+                                                            i->param(p_uri),
+                                                            i->param(p_nonce)))
+            {
+               return Authenticated;
+            }
+            else
+            {
+               return Failed;
+            }
+         }
       }
-      return BadlyFormed;
+      else
+      {
+         return BadlyFormed;
+      }
    }
-   DebugLog (<< "No authentication headers. Failing request.");
-   return Failed;
+
+   return BadlyFormed;
+
 }
 
 Helper::AuthResult
@@ -1038,122 +1056,148 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
 {
    DebugLog(<< "Authenticating with HA1: realm=" << realm << " expires=" << expiresDelta);
    //DebugLog(<< request);
+
+   // !bwc! Somewhat inefficient. Maybe optimize later.
+   ParserContainer<Auth> auths;
    
-   if (request.exists(h_ProxyAuthorizations))
+   if(request.exists(h_ProxyAuthorizations))
    {
-      const ParserContainer<Auth>& auths = request.header(h_ProxyAuthorizations);
-      for (ParserContainer<Auth>::const_iterator i = auths.begin(); i != auths.end(); i++)
+      auths.append(request.header(h_ProxyAuthorizations));
+   }
+   
+   if(request.exists(h_Authorizations))
+   {
+      auths.append(request.header(h_Authorizations));
+   }
+
+   if(auths.empty())
+   {
+      DebugLog (<< "No authentication headers. Failing request.");
+      return Failed;
+   }
+
+   // ?bwc? Why is const_iterator& operator=(const iterator& rhs)
+   // not working properly?
+   //ParserContainer<Auth>::const_iterator i = auths.begin();
+   
+   ParserContainer<Auth>::iterator i = auths.begin();
+      
+   for (;i != auths.end(); i++) 
+   {
+      if (i->exists(p_realm) && 
+          i->exists(p_nonce) &&
+          i->exists(p_response) &&
+          i->param(p_realm) == realm)
       {
-         if (i->exists(p_realm) && 
-             i->exists(p_nonce) &&
-             i->exists(p_response) &&
-             i->param(p_realm) == realm)
+         static Data digest("digest");
+         if(!isEqualNoCase(i->scheme(),digest))
          {
-            static Data digest("digest");
-            if(!isEqualNoCase(i->scheme(),digest))
-            {
-               DebugLog(<< "Scheme must be Digest");
-               continue;
-            }
-            /* ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
-            if (!pb.eof() && !isdigit(*pb.position()))
-            {
-               DebugLog(<< "Invalid nonce; expected timestamp.");
-               return BadlyFormed;
-            }
-            const char* anchor = pb.position();
-            pb.skipToChar(Symbols::COLON[0]);
-
-            if (pb.eof())
-            {
-               DebugLog(<< "Invalid nonce; expected timestamp terminator.");
-               return BadlyFormed;
-            }
-
-            Data then;
-            pb.data(then, anchor); */
-            NonceHelper::Nonce x_nonce = getNonceHelper()->parseNonce(i->param(p_nonce));
-            if(x_nonce.getCreationTime() == 0)
-               return BadlyFormed;
-
-
-            if (expiresDelta > 0)
-            {
-               UInt64 now = Timer::getTimeMs()/1000;
-               if (x_nonce.getCreationTime() + expiresDelta < now)
-               {
-                  DebugLog(<< "Nonce has expired.");
-                  return Expired;
-               }
-            }
-
-	        Data then(x_nonce.getCreationTime());
-            if (i->param(p_nonce) != makeNonce(request, then))
-            {
-               InfoLog(<< "Not my nonce.");
-               return Failed;
-            }
-         
-            InfoLog (<< " username=" << (i->param(p_username))
-                     << " H(A1)=" << hA1
-                     << " realm=" << realm
-                     << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
-                     << " uri=" << i->param(p_uri)
-                     << " nonce=" << i->param(p_nonce));
-            
-            if (i->exists(p_qop))
-            {
-               if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
-               {
-                  if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
-                  {
-                     if (i->param(p_response) == makeResponseMD5WithA1(hA1, 
-                                                                     getMethodName(request.header(h_RequestLine).getMethod()),
-                                                                     i->param(p_uri),
-                                                                     i->param(p_nonce),
-                                                                     i->param(p_qop),
-                                                                     i->param(p_cnonce),
-                                                                     i->param(p_nc),
-                                                                     request.getContents()))
-                     {
-                        return Authenticated;
-                     }
-                     else
-                     {
-                        return Failed;
-                     }
-                  }
-               }
-               else
-               {
-                  InfoLog (<< "Unsupported qop=" << i->param(p_qop));
-                  return Failed;
-               }
-            }
-            else if(i->exists(p_uri))
-            {
-               if (i->param(p_response) == makeResponseMD5WithA1(hA1,
-                                                                     getMethodName(request.header(h_RequestLine).getMethod()),
-                                                                     i->param(p_uri),
-                                                                     i->param(p_nonce)))
-               {
-                  return Authenticated;
-               }
-               else
-               {
-                  return Failed;
-               }
-            }
+            DebugLog(<< "Scheme must be Digest");
+            continue;
          }
-         else
+         /*
+         ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
+         if (!pb.eof() && !isdigit(*pb.position()))
          {
+            DebugLog(<< "Invalid nonce; expected timestamp.");
             return BadlyFormed;
          }
+         const char* anchor = pb.position();
+         pb.skipToChar(Symbols::COLON[0]);
+
+         if (pb.eof())
+         {
+            DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+            return BadlyFormed;
+         }
+
+         Data then;
+         pb.data(then, anchor);
+         */
+
+         NonceHelper::Nonce x_nonce = getNonceHelper()->parseNonce(i->param(p_nonce));
+         if(x_nonce.getCreationTime() == 0)
+            return BadlyFormed;
+
+
+
+         if (expiresDelta > 0)
+         {
+            UInt64 now = Timer::getTimeMs()/1000;
+            if (x_nonce.getCreationTime() + expiresDelta < now)
+            {
+               DebugLog(<< "Nonce has expired.");
+               return Expired;
+            }
+         }
+
+         Data then(x_nonce.getCreationTime());
+
+         if (i->param(p_nonce) != makeNonce(request, then))
+         {
+            InfoLog(<< "Not my nonce.");
+            return Failed;
+         }
+      
+         InfoLog (<< " username=" << (i->param(p_username))
+                  << " H(A1)=" << hA1
+                  << " realm=" << realm
+                  << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
+                  << " uri=" << i->param(p_uri)
+                  << " nonce=" << i->param(p_nonce));
+         
+         if (i->exists(p_qop))
+         {
+            if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
+            {
+               if(i->exists(p_uri) && i->exists(p_cnonce) && i->exists(p_nc))
+               {
+                  if (i->param(p_response) == makeResponseMD5WithA1(hA1, 
+                                                                  getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                  i->param(p_uri),
+                                                                  i->param(p_nonce),
+                                                                  i->param(p_qop),
+                                                                  i->param(p_cnonce),
+                                                                  i->param(p_nc),
+                                                                  request.getContents()))
+                  {
+                     return Authenticated;
+                  }
+                  else
+                  {
+                     return Failed;
+                  }
+               }
+            }
+            else
+            {
+               InfoLog (<< "Unsupported qop=" << i->param(p_qop));
+               return Failed;
+            }
+         }
+         else if(i->exists(p_uri))
+         {
+            if (i->param(p_response) == makeResponseMD5WithA1(hA1,
+                                                                  getMethodName(request.header(h_RequestLine).getMethod()),
+                                                                  i->param(p_uri),
+                                                                  i->param(p_nonce)))
+            {
+               return Authenticated;
+            }
+            else
+            {
+               return Failed;
+            }
+         }
       }
-      return BadlyFormed;
+      else
+      {
+         return BadlyFormed;
+      }
    }
-   DebugLog (<< "No authentication headers. Failing request.");
-   return Failed;
+
+   return BadlyFormed;
+
 }
 
 SipMessage*
@@ -1197,7 +1241,13 @@ Helper::make405(const SipMessage& request,
 SipMessage*
 Helper::makeProxyChallenge(const SipMessage& request, const Data& realm, bool useAuth, bool stale)
 {
-   return makeChallenge(request, realm, useAuth, stale, true);
+   return makeChallenge(request,realm,useAuth,stale,true);
+}
+
+SipMessage*
+Helper::makeWWWChallenge(const SipMessage& request, const Data& realm, bool useAuth, bool stale)
+{
+   return makeChallenge(request,realm,useAuth,stale,false);
 }
 
 SipMessage*
@@ -1326,9 +1376,10 @@ Helper::qopOption(const Auth& challenge)
       Symbols::authInt,
       Symbols::auth
    };
-
+   static size_t pTokenSize=sizeof(preferredTokens)/sizeof(*preferredTokens);
+   
    bool found = false;
-   size_t index = 0;
+   size_t index = pTokenSize;
    if (challenge.exists(p_qopOptions) && !challenge.param(p_qopOptions).empty())
    {
       ParseBuffer pb(challenge.param(p_qopOptions).data(), challenge.param(p_qopOptions).size());
@@ -1336,16 +1387,16 @@ Helper::qopOption(const Auth& challenge)
       {
          const char* anchor = pb.skipWhitespace();
          pb.skipToChar(Symbols::COMMA[0]);
-         if (!pb.eof())
-            pb.skipChar();
          Data q;
          pb.data(q, anchor);
-         for (size_t i=0; i < sizeof(preferredTokens)/sizeof(*preferredTokens); i++) 
+         if (!pb.eof())
+            pb.skipChar();
+         for (size_t i=0; i < pTokenSize; i++) 
          {
             if (q == preferredTokens[i]) 
             {
                // found a preferred token; is it higher priority?
-               if (!found || i < index) 
+               if (i < index) 
                {
                   found = true;
                   index = i;
@@ -1585,7 +1636,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
       {
          message.header(h_CSeq).checkParsed();
       }
-      catch(ParseBuffer::Exception&)
+      catch(ParseException&)
       {
          InfoLog(<<"Malformed CSeq header");
          if(reason) *reason="Malformed CSeq header";
@@ -1596,7 +1647,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
       {
          message.header(h_Vias).front().checkParsed();
       }
-      catch(ParseBuffer::Exception& e)
+      catch(ParseException& e)
       {
          InfoLog(<<"Malformed topmost Via header: " << e);
          if(reason) *reason="Malformed topmost Via header";
@@ -1609,7 +1660,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
          {
             message.header(h_RequestLine).checkParsed();            
          }
-         catch(ParseBuffer::Exception& e)
+         catch(ParseException& e)
          {
             InfoLog(<< "Illegal request line " << e);
             if(reason) *reason="Malformed Request Line";
@@ -1629,7 +1680,7 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
          {
             message.header(h_StatusLine).checkParsed();
          }
-         catch(ParseBuffer::Exception& e)
+         catch(ParseException& e)
          {
             InfoLog(<< "Malformed status line " << e);
             if(reason) *reason="Malformed status line";
@@ -1962,7 +2013,7 @@ SdpContents* getSdpRecurse(Contents* tree)
          Contents* contents = getSdpRecurse(*it);
          return static_cast<SdpContents*>(contents);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          ErrLog(<< e.name() << endl << e.getMessage());       
       }
@@ -1989,7 +2040,7 @@ SdpContents* getSdpRecurse(Contents* tree)
             }
          }
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          ErrLog(<< e.name() << endl << e.getMessage());
       }
@@ -2017,7 +2068,7 @@ SdpContents* getSdpRecurse(Contents* tree)
             }
          }
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          ErrLog(<< e.name() << endl << e.getMessage());
       }

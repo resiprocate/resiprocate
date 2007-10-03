@@ -28,7 +28,7 @@ UInt32Parameter::UInt32Parameter(ParameterTypes::Type type,
       {
          mValue = pb.uInt32();
       }
-      catch (ParseBuffer::Exception&)
+      catch (ParseException&)
       {
          mValue = 3600;
          pb.skipToOneOf(ParseBuffer::ParamTerm);

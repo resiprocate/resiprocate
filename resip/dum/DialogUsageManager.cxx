@@ -217,9 +217,9 @@ DialogUsageManager::onAllHandlesDestroyed()
 
 
 void
-DialogUsageManager::shutdown(DumShutdownHandler* h, unsigned long giveUpSeconds)
+DialogUsageManager::shutdown(DumShutdownHandler* h)
 {
-   InfoLog (<< "shutdown giveup=" << giveUpSeconds << " dialogSets=" << mDialogSetMap.size());
+   InfoLog (<< "shutdown: dialogSets=" << mDialogSetMap.size());
    
    mDumShutdownHandler = h;
    mShutdownState = ShutdownRequested;
@@ -227,15 +227,15 @@ DialogUsageManager::shutdown(DumShutdownHandler* h, unsigned long giveUpSeconds)
    shutdownWhenEmpty();
 }
 
-void
-DialogUsageManager::shutdownIfNoUsages(DumShutdownHandler* h, unsigned long giveUpSeconds)
-{
-   InfoLog (<< "shutdown when no usages giveup=" << giveUpSeconds);
-
-   mDumShutdownHandler = h;
-   mShutdownState = ShutdownRequested;
-   assert(0);
-}
+// void
+// DialogUsageManager::shutdownIfNoUsages(DumShutdownHandler* h)
+// {
+//    InfoLog (<< "shutdown when no usages");
+// 
+//    mDumShutdownHandler = h;
+//    mShutdownState = ShutdownRequested;
+//    assert(0);
+// }
 
 void
 DialogUsageManager::forceShutdown(DumShutdownHandler* h)
@@ -357,9 +357,10 @@ DialogUsageManager::addTimer(DumTimeout::Type type, unsigned long duration,
 
 void
 DialogUsageManager::addTimerMs(DumTimeout::Type type, unsigned long duration,
-                               BaseUsageHandle target, unsigned int cseq, unsigned int rseq)
+                               BaseUsageHandle target, unsigned int cseq, unsigned int rseq,
+                               const Data &transactionId /*= Data::Empty*/)
 {
-   DumTimeout t(type, duration, target, cseq, rseq);
+   DumTimeout t(type, duration, target, cseq, rseq, transactionId);
    mStack.postMS(t, duration, this);
 }
 
@@ -912,8 +913,12 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
          //throw/assert if not unique.
          std::auto_ptr<SipMessage> toSend(static_cast<SipMessage*>(event->message()->clone()));
 
+         // .bwc. Protect ourselves from garbage with an isWellFormed() check.
+         // (Code in Dialog doesn't check for well-formedness in the 
+         // Record-Route stack, so bad stuff there can end up here)
          if (event->message()->exists(h_Routes) &&
              !event->message()->header(h_Routes).empty() &&
+             event->message()->header(h_Routes).front().isWellFormed() &&
              !event->message()->header(h_Routes).front().uri().exists(p_lr))
          {
             Helper::processStrictRoute(*toSend);
@@ -1232,7 +1237,7 @@ DialogUsageManager::incomingProcess(std::auto_ptr<Message> msg)
          
          if(garbage)
          {
-            if(sipMsg->isRequest() && !sipMsg->method()==ACK)
+            if(sipMsg->isRequest() && sipMsg->method()!=ACK)
             {
                // .bwc. Either we need to trim the last comma off, or make this 
                // a proper sentence fragment. This is more fun.

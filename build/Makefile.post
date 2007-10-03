@@ -303,21 +303,23 @@ endif
 ifdef TARGET_BINARY
 INSTALL_BINDIR := $(DESTDIR)$(INSTALL_PREFIX)/sbin
 install: all
-	install -d $(DESTDIR)$(INSTALL_PREFIX)
-	install -d $(INSTALL_BINDIR)
-	install $(BIN)/$(TARGET_BINARY) $(INSTALL_BINDIR)/$(TARGET_BINARY)
+	$(INSTALL) -d $(DESTDIR)$(INSTALL_PREFIX)
+	$(INSTALL) -d $(INSTALL_BINDIR)
+	$(INSTALL) $(BIN)/$(TARGET_BINARY) $(INSTALL_BINDIR)/$(TARGET_BINARY)
 else
 ifdef TARGET_LIBRARY
 INSTALL_LIBDIR := $(DESTDIR)$(INSTALL_PREFIX)/lib
 INSTALL_INCDIR := $(DESTDIR)$(INSTALL_PREFIX)/include/$(subst lib,,$(TARGET_LIBRARY))
 
 install: all
-	install -d $(DESTDIR)$(INSTALL_PREFIX)
-	install -d $(DESTDIR)$(INSTALL_PREFIX)/lib
-	install $(OBJ)/$(TARGET_LIBRARY).$(LIBSUFFIX) $(INSTALL_LIBDIR)/$(TARGET_LIBRARY).$(LIBSUFFIX)
-	install -d $(INSTALL_INCDIR)
-	install -m 644 *.h* $(INSTALL_INCDIR)
-	@ for subdir in $(CODE_SUBDIRS) ;  do ( install -d $(INSTALL_INCDIR)/$$subdir ; install -m 644 $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
+	$(INSTALL) -d $(DESTDIR)$(INSTALL_PREFIX)
+	$(INSTALL) -d $(DESTDIR)$(INSTALL_PREFIX)/lib
+	$(INSTALL) $(OBJ)/$(TARGET_LIBRARY).$(LIBSUFFIX) $(INSTALL_LIBDIR)/$(TARGET_LIBRARY).$(LIBSUFFIX)
+	$(INSTALL) -d $(INSTALL_INCDIR)
+	$(INSTALL) -m 644 *.h* $(INSTALL_INCDIR)
+ifdef CODE_SUBDIRS
+	@ for subdir in $(CODE_SUBDIRS) ;  do ( $(INSTALL) -d $(INSTALL_INCDIR)/$$subdir ; $(INSTALL) -m 644 $$subdir/*.h* $(INSTALL_INCDIR)/$$subdir) ; done 
+endif
 endif
 endif
 

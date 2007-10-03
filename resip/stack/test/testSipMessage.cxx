@@ -209,7 +209,7 @@ main(int argc, char** argv)
          cerr << "transport=" << message1->header(h_Vias).front().transport() << endl;
          assert(false);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
       }
    }
@@ -477,7 +477,7 @@ main(int argc, char** argv)
          assert(message->header(h_WWWAuthenticates).front().scheme() == "Basic");
          assert(0);
       }
-      catch (ParseBuffer::Exception& e)
+      catch (ParseException& e)
       {
          InfoLog (<< "Rejected unquoted realm");
       }
@@ -756,7 +756,7 @@ main(int argc, char** argv)
         response->header(h_CSeq).method();
         assert(false);
      }
-     catch (ParseBuffer::Exception& e)
+     catch (ParseException& e)
      {
         cerr << e << endl;
      }

@@ -53,6 +53,7 @@ static void process_answer(ares_channel channel, unsigned char *abuf,
 			   int alen, int whichserver, int tcp, time_t now);
 static void handle_error(ares_channel channel, int whichserver, time_t now);
 static void next_server(ares_channel channel, struct query *query, time_t now);
+static int next_server_new_network(ares_channel channel, struct query *query, time_t now);
 static int open_tcp_socket(ares_channel channel, struct server_state *server);
 static int open_udp_socket(ares_channel channel, struct server_state *server);
 static int same_questions(const unsigned char *qbuf, int qlen,
@@ -412,6 +413,16 @@ static void process_answer(ares_channel channel, unsigned char *abuf,
 	    next_server(channel, query, now);
 	  return;
 	}
+
+      /* 'No such name' */
+      if ((channel->flags & ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3) && rcode == NXDOMAIN)
+        {
+          if (query->server == whichserver)
+            {
+              if (next_server_new_network(channel, query, now))
+                return;
+            }
+        }
     }
 
   end_query(channel, query, ARES_SUCCESS, abuf, alen);
@@ -463,6 +474,49 @@ static void next_server(ares_channel channel, struct query *query, time_t now)
 	break;
     }
   end_query(channel, query, query->error_status, NULL, 0);
+}
+
+/*
+ * Same as next_server, but only attempt the next one if it's in a different network
+ * (subnet, designated by the NIC's physical address). We don't loop around to the
+ * beginning of the servers list since server responded with reply-code of 3
+ * 'No such name'
+ * returns:
+ *  1 - query sent
+ *  0 - nothing happened
+ */
+static int next_server_new_network(ares_channel channel, struct query *query, time_t now)
+{
+  if (query->itry >= channel->tries)
+     return 0;
+
+  query->server++;
+  for (; query->server < channel->nservers; query->server++)
+  {
+    int i = 0;
+    struct server_state* nextToTry = &channel->servers[query->server];
+    if (query->skip_server[query->server])
+      continue;
+    if (nextToTry->physical_addr_len == 0)
+      continue;
+
+    // only try the next DNS server, nextToTry, if it hasn't been tried UP TO THIS POINT: query->server.
+    for (i = 0; i < query->server; i++)
+    {
+      if (   (channel->servers[i].physical_addr_len == nextToTry->physical_addr_len)
+          && (memcmp(nextToTry->physical_addr, channel->servers[i].physical_addr, nextToTry->physical_addr_len) == 0))
+      {
+        // we've tried this network already, try next one (query->server++).
+        break;
+      }
+    }
+    if (i == query->server)
+    {
+      ares__send_query(channel, query, now);
+      return 1;
+    }
+  }
+  return 0;
 }
 
 void ares__send_query(ares_channel channel, struct query *query, time_t now)

@@ -216,7 +216,7 @@ ClientInviteSession::end(EndReason reason)
          break;
 
       case Terminated:
-         assert(0);
+         // no-op
          break;
 
       default:
@@ -866,7 +866,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          // too late
          break;
 
-      // !slg! This probably doesn't even make sense (after a 2xx)
+      // .slg. This doesn't really make sense (after a 2xx)
       case OnGeneralFailure:
       case On422Invite:
          break;
@@ -1275,6 +1275,8 @@ ClientInviteSession::dispatchCancelled (const SipMessage& msg)
       case On487Invite:
       case OnRedirect:
       case On422Invite:
+      case On491Invite:
+      case OnInviteFailure:
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Cancelled, &msg);
          mDum.destroy(this);
