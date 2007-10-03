@@ -181,7 +181,6 @@ NameAddr::parse(ParseBuffer& pb)
       {
          start = pb.position();
          pb.skipToChar(Symbols::LA_QUOTE[0]);
-         pb.skipBackWhitespace();
          if (pb.eof())
          {
             pb.reset(start);
@@ -189,6 +188,7 @@ NameAddr::parse(ParseBuffer& pb)
          else
          {
             laQuote = true;
+            pb.skipBackWhitespace();
             pb.data(mDisplayName, start);
             pb.skipToChar(Symbols::LA_QUOTE[0]);
             pb.skipChar(Symbols::LA_QUOTE[0]);
