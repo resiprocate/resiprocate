@@ -216,7 +216,7 @@ TransportSelector::process(FdSet& fdset)
       }
       catch (BaseException& e)
       {
-         InfoLog (<< "Exception thrown from Transport::process: " << e);
+         ErrLog (<< "Exception thrown from Transport::process: " << e);
       }
    }
 }
