@@ -1609,8 +1609,9 @@ SdpContents::Session::Medium::codecs()
             {
                mRtpMap[format].parse(pb, *this, format);
             }
-            catch (ParseException&)
+            catch (ParseException& e)
             {
+               ErrLog(<<"Caught exception: "<< e);
                mRtpMap.erase(format);
             }
          }

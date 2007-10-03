@@ -154,7 +154,10 @@ HttpBase::process(FdSet& fdset)
                // !jf! this can not be ready in some cases 
                return;
             default:
-               assert(0); // Transport::error(e);
+               ErrLog(<< "Some error reading from socket: " << e);
+               // .bwc. This is almost certainly a bad assert that a nefarious
+               // endpoint could hit.
+               // assert(0); // Transport::error(e);
          }
          return;
       }

@@ -42,7 +42,7 @@ InterruptableStackThread::thread()
       }
       catch (BaseException& e)
       {
-         InfoLog (<< "Unhandled exception: " << e);
+         ErrLog (<< "Unhandled exception: " << e);
       }
    }
    InfoLog (<< "Shutting down stack thread");

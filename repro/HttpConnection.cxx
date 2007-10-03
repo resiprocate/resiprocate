@@ -322,7 +322,7 @@ HttpConnection::tryParse()
    }
    catch ( ... )
    { 
-      InfoLog (<< "Some problem finding Authorizatin header in HTTP request" );
+      ErrLog (<< "Some problem finding Authorization header in HTTP request" );
    }
    
    mHttpBase.buildPage(uri,mPageNumber,user,password);
