@@ -34,8 +34,9 @@ RportParameter::RportParameter(ParameterTypes::Type type,
       {
       mValue = pb.integer();
       }
-      catch(BaseException& /* e */)
+      catch(BaseException&  e )
       {
+         ErrLog(<<"Caught exception: "<< e);
          mHasValue = false;
       }
    }

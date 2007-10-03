@@ -34,7 +34,7 @@ WebAdminThread::thread()
       }
       catch (...)
       {
-         InfoLog (<< "Unhandled exception: " );
+         ErrLog (<< "Unhandled exception: " );
       }
    }
 }

@@ -62,7 +62,7 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 
 UdpTransport::~UdpTransport()
 {
-   DebugLog (<< "Shutting down " << mTuple);
+   InfoLog (<< "Shutting down " << mTuple);
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
