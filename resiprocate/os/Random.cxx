@@ -198,7 +198,7 @@ Random::getRandom64()
    GUID guid;
    if(::CoCreateGuid(&guid) == S_OK)
    {
-      ret = (Int64)(*guid.Data4);
+      ret = *((Int64*)(guid.Data4));
    }
    else
    {
