@@ -34,6 +34,7 @@ Profile::reset()
    unsetDefaultSubscriptionTime();   
    unsetDefaultPublicationTime();  
    unsetDefaultStaleCallTime();  
+   unsetDefaultStaleReInviteTime();  
    unsetDefaultSessionTime(); 
    unsetDefaultSessionTimerMode();   
    unset1xxRetransmissionTime();   
@@ -242,6 +243,38 @@ Profile::unsetDefaultStaleCallTime()
    {
       mHasDefaultStaleCallTime = true;
       mDefaultStaleCallTime = 180;        // 3 minutes
+   }
+}
+
+void
+Profile::setDefaultStaleReInviteTime(int secs)
+{
+   mDefaultStaleReInviteTime = secs;
+   mHasDefaultStaleReInviteTime = true;
+}
+
+int 
+Profile::getDefaultStaleReInviteTime() const
+{
+   // Fall through seting (if required)
+   if(!mHasDefaultStaleReInviteTime && mBaseProfile.get())
+   {
+       return mBaseProfile->getDefaultStaleReInviteTime();
+   }
+   return mDefaultStaleReInviteTime;
+}
+
+void
+Profile::unsetDefaultStaleReInviteTime()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasDefaultStaleReInviteTime = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasDefaultStaleReInviteTime = true;
+      mDefaultStaleReInviteTime = 40;        // 40 Seconds (slightly longer than T1*64)
    }
 }
 
