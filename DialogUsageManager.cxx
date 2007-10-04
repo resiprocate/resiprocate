@@ -1,4 +1,4 @@
- #include "resip/stack/Security.hxx"
+#include "resip/stack/Security.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipFrag.hxx"
@@ -77,6 +77,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mIsDefaultServerReferHandler(true),
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
+   mDialogEventStateManager(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
    mDumShutdownHandler(0),
@@ -382,6 +383,10 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
       delete mServerSubscriptionHandlers[eventType];
       mIsDefaultServerReferHandler = false;
       //mServerSubscriptionHandlers.erase(eventType);
+   }
+   else if (eventType == "dialog")
+   {
+      mDialogEventStateManager = new DialogEventStateManager();
    }
 
    mServerSubscriptionHandlers[eventType] = handler;
@@ -2125,6 +2130,12 @@ TargetCommand::Target&
 DialogUsageManager::dumOutgoingTarget() 
 {
    return *mOutgoingTarget;
+}
+
+DialogEventStateManager&
+DialogUsageManager::getDialogEventStateManager()
+{
+   return *mDialogEventStateManager;
 }
 
 

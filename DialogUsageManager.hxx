@@ -25,6 +25,7 @@
 #include "resip/dum/TargetCommand.hxx"
 #include "resip/dum/ClientSubscriptionFunctor.hxx"
 #include "resip/dum/ServerSubscriptionFunctor.hxx"
+#include "resip/dum/DialogEventStateManager.hxx"
 
 namespace resip 
 {
@@ -479,6 +480,10 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ClientPagerMessageHandler* mClientPagerMessageHandler;
       ServerPagerMessageHandler* mServerPagerMessageHandler;
       std::vector<ExternalMessageHandler*> mExternalMessageHandlers;
+
+      // a pointer because we'll only initialize if we add a
+      // server subscription handler for the 'dialog' event...
+      DialogEventStateManager* mDialogEventStateManager;
 
       std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 
