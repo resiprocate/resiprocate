@@ -69,6 +69,11 @@ class Profile
       virtual int getDefaultStaleCallTime() const;
       virtual void unsetDefaultStaleCallTime();  
 
+      /// ReInvite is stale if UAC gets no final response within the stale reinvite timeout (default 40 seconds)
+      virtual void setDefaultStaleReInviteTime(int secs);
+      virtual int getDefaultStaleReInviteTime() const;
+      virtual void unsetDefaultStaleReInviteTime();  
+
       /// Only used if timer option tag is set in MasterProfile.
       /// Note:  Value must be higher than 90 (as specified in RFC 4028)
       virtual void setDefaultSessionTime(UInt32 secs); 
@@ -212,6 +217,9 @@ class Profile
 
       bool mHasDefaultStaleCallTime;
       int mDefaultStaleCallTime;
+
+      bool mHasDefaultStaleReInviteTime;
+      int mDefaultStaleReInviteTime;
 
       bool mHasDefaultSessionExpires;
       UInt32 mDefaultSessionExpires;
