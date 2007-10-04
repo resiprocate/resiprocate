@@ -65,6 +65,7 @@
 *Changed signature of ImsAuthUri methods to accomodate a username that includes the domain
 
 ===Bug fixes===
+*Fixed crash bug that could happen when a ClientSubscription re-establishes itself in a new Dialog after the other endpoint has crashed
 *Fixed problem where ReferredBy was set to contact instead of aor - 2 cases
 *Calling Dialog::end() will now end subscription usages
 *Fixed bug where MergedRequestKey::mCheckRequestUri was not being initialized in c'tor
@@ -72,8 +73,12 @@
 *Fixed leak in InviteSession that could caused if remote endpoint got the CSeq wrong on an INVITE/200
 *Fixed bug in ClientSubscription::removeBinding that would remove all bindings except the one passed
 *Fixed totally broken well-formedness check in DUM's main process loop
+*Fixed bug where InviteSession was not setting a timer on reINVITEs
+*Fixed bug where InviteSession would fail to respond to requests received while it was waiting to terminate, causing TransactionState leaks
+*Fixed memory leaks caused by ServerRegistration when a REGISTER request had a malformed Expires or Contact header
 *Fixed assert bug caused by absence of a From-tag in a response from the wire
 *Removing some unimplemented functions from DialogUsageManager.hxx
+*Fixed an uninitialized member in Handle
 
 ==repro==
 ===New features===

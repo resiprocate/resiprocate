@@ -25,7 +25,7 @@ class DumTimeout : public ApplicationMessage
          StaleCall,     // UAC gets no final response
          Subscription,
          SubscriptionRetry,
-         StaleReInvite, // ?slg? not used - remove?  probably should be used
+         StaleReInvite, 
          Glare,
          Cancelled,
          WaitingForForked2xx,

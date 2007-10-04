@@ -5,8 +5,6 @@
 
 using namespace resip;
 
-//const unsigned long DumFeatureMessage::StaleCallTimeout = 3600*2; //2 hrs - now in profile
-
 DumFeatureMessage::DumFeatureMessage(const Data& tid)
    : mTransactionId(tid)
 {}
