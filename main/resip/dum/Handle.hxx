@@ -17,7 +17,7 @@ class Handle
       {
       }
 
-      Handle() : mHam(0)
+      Handle() : mHam(0), mId(0)
       {
       }
 
@@ -88,12 +88,14 @@ class Handle
       
       bool operator==(const Handle<T>& other)
       {
-         return mId == other.mId;
+         return (mHam == other.mHam) && (mId == other.mId);
       }
       
       // !nash! to be able to use Handle in Set or Map container
       bool operator<(const Handle<T>& other) const
       {
+         assert(mHam);
+         assert(other.mHam);
          return mId < other.mId;
       }
    protected:
