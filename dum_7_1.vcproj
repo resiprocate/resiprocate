@@ -247,6 +247,12 @@
 				RelativePath=".\Dialog.cxx">
 			</File>
 			<File
+				RelativePath=".\DialogEventInfo.cxx">
+			</File>
+			<File
+				RelativePath=".\DialogEventStateManager.cxx">
+			</File>
+			<File
 				RelativePath=".\DialogId.cxx">
 			</File>
 			<File
