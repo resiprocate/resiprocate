@@ -63,6 +63,8 @@ class DialogEventStateManager
 private:
    DialogEventInfo* findOrCreateDialogInfo(const Dialog& dialog);
 
+   void onTerminatedImpl(const DialogSetId& dialogSetId, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
+
 private:
    // !jjg! we'll only have the DialogSetId if we aren't yet in the 'early' state;
    // once we get to early, we'll remove the DialogSetId in favour of the DialogId
