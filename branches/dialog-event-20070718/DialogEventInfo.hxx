@@ -15,7 +15,7 @@ namespace resip
 class DialogEventInfo
 {
    public:
-      DialogEventInfo();
+      DialogEventInfo(void);
       DialogEventInfo(const DialogEventInfo& rhs);
       DialogEventInfo& operator=(const DialogEventInfo& dialogEventInfo);
       
@@ -66,7 +66,7 @@ class DialogEventInfo
 
       UInt64 getDuration() const; // in seconds
 
-   private:
+   protected:
       friend class DialogEventStateManager;
 
       State mState;
