@@ -44,6 +44,7 @@ class InviteSession : public DialogUsage
          IllegalNegotiation,
          AckNotReceived,
          SessionExpired,
+         StaleReInvite,
          ENDREASON_MAX
       };
 
@@ -277,6 +278,7 @@ class InviteSession : public DialogUsage
 
       void startRetransmit200Timer();
       void start491Timer();
+      void startStaleReInviteTimer();
 
       void setSessionTimerHeaders(SipMessage& msg);
       void sessionRefresh();
@@ -335,6 +337,7 @@ class InviteSession : public DialogUsage
       SipMessage  mLastReferNoSubRequest;
       
       unsigned long mCurrentRetransmit200;
+      unsigned int mStaleReInviteTimerSeq;
 
       // Session Timer settings
       UInt32 mSessionInterval;
@@ -425,4 +428,5 @@ class InviteSession : public DialogUsage
  * <http://www.vovida.org/>.
  *
  */
+
 

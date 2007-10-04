@@ -60,6 +60,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mInvite200(new SipMessage),
      mLastNitResponse(new SipMessage),
      mCurrentRetransmit200(0),
+     mStaleReInviteTimerSeq(1),
      mSessionInterval(0),
      mMinSE(90), 
      mSessionRefresher(false),
@@ -305,6 +306,7 @@ InviteSession::requestOffer()
       case UAS_WaitingToRequestOffer:
          transition(SentReinviteNoOffer);
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
+         startStaleReInviteTimer();
          mLastLocalSessionModification->setContents(0);		// Clear the SDP contents from the INVITE
          setSessionTimerHeaders(*mLastLocalSessionModification);
 
@@ -345,6 +347,7 @@ InviteSession::provideOffer(const SdpContents& offer,
          {
             transition(SentReinvite);
             mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
+            startStaleReInviteTimer();
          }
          setSessionTimerHeaders(*mLastLocalSessionModification);
 
@@ -1151,6 +1154,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
 
          InfoLog (<< "Retransmitting the reINVITE (glare condition timer)");
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE); // increments CSeq
+         startStaleReInviteTimer();
          send(mLastLocalSessionModification);
       }
       else if (mState == SentReinviteNoOfferGlare)
@@ -1159,14 +1163,38 @@ InviteSession::dispatch(const DumTimeout& timeout)
 
          InfoLog (<< "Retransmitting the reINVITE-nooffer (glare condition timer)");
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE);  // increments CSeq
+         startStaleReInviteTimer();
          send(mLastLocalSessionModification);
+      }
+   }
+   else if (timeout.type() == DumTimeout::StaleReInvite)
+   {
+      if(timeout.seq() == mStaleReInviteTimerSeq)
+      {
+         if(mState == WaitingToTerminate)
+         {
+            sendBye();
+            transition(Terminated);
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+         }
+         else if(mState == SentReinvite ||
+                 mState == SentReinviteNoOffer)
+         {
+            transition(Connected);
+            mProposedLocalSdp.reset();
+            mProposedEncryptionLevel = DialogUsageManager::None;
+
+            // this is so the app can decide to ignore this. default implementation
+            // will call end next - which will send a BYE
+            mDum.mInviteSessionHandler->onStaleReInviteTimeout(getSessionHandle());
+         }
       }
    }
    else if (timeout.type() == DumTimeout::SessionExpiration)
    {
       if(timeout.seq() == mSessionTimerSeq)
       {
-         // this is so the app can decided to ignore this. default implementation
+         // this is so the app can decide to ignore this. default implementation
          // will call end next - which will send a BYE
          mDum.mInviteSessionHandler->onSessionExpired(getSessionHandle());
       }
@@ -1374,6 +1402,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
       case On2xxAnswer:
       case On2xxOffer:  // .slg. doesn't really make sense
       {
+         mStaleReInviteTimerSeq++;
          transition(Connected);
          handleSessionTimerResponse(msg);
          setCurrentLocalSdp(msg);
@@ -1409,6 +1438,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
       }
       case On2xx:
+         mStaleReInviteTimerSeq++;
          sendAck();
          transition(Connected);
          handleSessionTimerResponse(msg);
@@ -1418,6 +1448,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case On422Invite:
+         mStaleReInviteTimerSeq++;
          if(msg.exists(h_MinSE))
          {
             // Change interval to min from 422 response
@@ -1436,11 +1467,13 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          break;
 
       case On491Invite:
+         mStaleReInviteTimerSeq++;
          transition(SentReinviteGlare);
          start491Timer();
          break;
 
       case OnGeneralFailure:
+         mStaleReInviteTimerSeq++;
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
@@ -1448,6 +1481,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
 
       case OnInviteFailure:
       case On487Invite:
+         mStaleReInviteTimerSeq++;
          transition(Connected);
          mProposedLocalSdp.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -1488,6 +1522,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       case On2xxAnswer:  // .slg. doesn't really make sense
       case On2xxOffer:
       {
+         mStaleReInviteTimerSeq++;
          transition(SentReinviteAnswered);
          handleSessionTimerResponse(msg);
          // mLastSessionModification = msg;   // ?slg? why are we storing 200's?
@@ -1502,6 +1537,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
       }
 
       case On2xx:
+         mStaleReInviteTimerSeq++;
          sendAck();
          transition(Connected);
          handleSessionTimerResponse(msg);
@@ -1511,6 +1547,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          break;
 
       case On422Invite:
+         mStaleReInviteTimerSeq++;
          if(msg.exists(h_MinSE))
          {
             // Change interval to min from 422 response
@@ -1529,11 +1566,13 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          break;
 
       case On491Invite:
+         mStaleReInviteTimerSeq++;
          transition(SentReinviteNoOfferGlare);
          start491Timer();
          break;
 
       case OnGeneralFailure:
+         mStaleReInviteTimerSeq++;
          sendBye();
          transition(Terminated);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
@@ -1541,6 +1580,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
 
       case OnInviteFailure:
       case On487Invite:
+         mStaleReInviteTimerSeq++;
          transition(Connected);
          mProposedLocalSdp.reset();
          handler->onOfferRejected(getSessionHandle(), &msg);
@@ -1729,6 +1769,19 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       sendBye();
       transition(Terminated);
       mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+   }
+   else if(msg.isRequest())
+   {
+      if(msg.method() == BYE)
+      {
+         dispatchBye(msg);
+      }
+      else
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 400 /* Bad Request */);
+         send(response);
+      }
    }
 }
 
@@ -2090,6 +2143,18 @@ InviteSession::start491Timer()
 }
 
 void 
+InviteSession::startStaleReInviteTimer()
+{
+   InfoLog (<< toData(mState) << ": startStaleReInviteTimer");
+   unsigned long when = mDialog.mDialogSet.getUserProfile()->getDefaultStaleReInviteTime();
+   
+   mDum.addTimer(DumTimeout::StaleReInvite, 
+                 when, 
+                 getBaseHandle(), 
+                 ++mStaleReInviteTimerSeq);
+}
+
+void 
 InviteSession::setSessionTimerHeaders(SipMessage &msg)
 {
    if(mSessionInterval >= 90)  // If mSessionInterval is 0 then SessionTimers are considered disabled
@@ -2125,6 +2190,7 @@ InviteSession::sessionRefresh()
    {
       transition(SentReinvite);
       mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
+      startStaleReInviteTimer();
       InviteSession::setSdp(*mLastLocalSessionModification, mCurrentLocalSdp.get());
       mProposedLocalSdp = InviteSession::makeSdp(*mCurrentLocalSdp.get(), 0);
       mSessionRefreshReInvite = true;      
