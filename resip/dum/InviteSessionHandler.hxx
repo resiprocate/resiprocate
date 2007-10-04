@@ -136,6 +136,10 @@ class InviteSessionHandler
       /// default behaviour is to send a BYE to end the dialog
       virtual void onAckNotReceived(InviteSessionHandle);
 
+      /// UAC gets no final response within the stale re-invite timeout (default is 40
+      /// seconds).  Default behaviour is to send a BYE to end the dialog.
+      virtual void onStaleReInviteTimeout(InviteSessionHandle h);
+
       /// will be called if reINVITE or UPDATE in dialog fails
       virtual void onIllegalNegotiation(InviteSessionHandle, const SipMessage& msg);     
 

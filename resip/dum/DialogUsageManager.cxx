@@ -1043,10 +1043,8 @@ DialogUsageManager::findInviteSession(DialogId id)
    {
       return dialog->mInviteSession->getSessionHandle();
    }
-   else
-   {
-      return InviteSessionHandle::NotValid();
-   }
+
+   return InviteSessionHandle::NotValid();
 }
 
 pair<InviteSessionHandle, int>
@@ -1061,7 +1059,7 @@ DialogUsageManager::findInviteSession(CallId replaces)
    int ErrorStatusCode = 481; // Call/Transaction Does Not Exist
 
    // If we matched a session - Do RFC3891 Section 3 Processing
-   if(!(is == InviteSessionHandle::NotValid()))
+   if(is.isValid())
    {
       // Note some missing checks are:
       // 1.  If the Replaces header field matches more than one dialog, the UA must act as
