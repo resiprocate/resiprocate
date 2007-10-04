@@ -143,7 +143,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     UInt32 globalExpires = 0;
 
-    if (msg.exists(h_Expires))
+    if (msg.exists(h_Expires) && msg.header(h_Expires).isWellFormed())
     {
       globalExpires = msg.header(h_Expires).value();
     }
@@ -169,6 +169,16 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     for(i = contactList.begin(); i != contactList.end(); i++)
     {
+      if(!i->isWellFormed())
+      {
+         SharedPtr<SipMessage> failure(new SipMessage);
+         mDum.makeResponse(*failure, msg, 400, "Malformed Contact");
+         mDum.send(failure);
+         database->unlockRecord(mAor);
+         delete(this);
+         return;
+      }
+
       if (i->exists(p_expires))
       {
          expires = i->param(p_expires);

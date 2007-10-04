@@ -32,6 +32,13 @@ InviteSessionHandler::onAckNotReceived(InviteSessionHandle handle)
 }
 
 void 
+InviteSessionHandler::onStaleReInviteTimeout(InviteSessionHandle handle)
+{
+   InfoLog(<< "InviteSessionHandler::onStaleReInviteTimeout");
+   handle->end(InviteSession::StaleReInvite);
+}
+
+void 
 InviteSessionHandler::onIllegalNegotiation(InviteSessionHandle handle, const SipMessage& msg)
 {
    InfoLog(<< "InviteSessionHandler::onIllegalNegotiation");

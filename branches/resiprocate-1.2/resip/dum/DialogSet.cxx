@@ -297,6 +297,36 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 void
 DialogSet::dispatch(const SipMessage& msg)
 {
+   if(!mAppDialogSet)
+   {
+      // !bwc! There are conditions where reuse of the AppDialogSet will cause
+      // us to hit this code. This is because the teardown of DialogSets is not
+      // atomic, causing the DialogSet to hang around for a short time after it
+      // has given up its AppDialogSet. Also, if we have multiple Usages in
+      // this DialogSet, one of the Usages may decide to re-establish itself in 
+      // a new Dialog, and take the AppDialogSet with it, leaving all the others
+      // high and dry. This is a design issue that will take some real effort to
+      // fix properly. This is a band-aid for now.
+      // TODO fix this properly
+      if(msg.isRequest())
+      {
+         if(msg.method() != ACK)
+         {
+            SipMessage err;
+            Helper::makeResponse(err, msg, 500, "DialogSet: My AppDialogSet is "
+                                       "missing!");
+            mDum.sendResponse(err);
+         }
+      }
+      else
+      {
+         ErrLog(<<"Response came in, but no AppDialogSet! Dropping this is very"
+                  "likely to cause leaks, but continuing to process it is "
+                  "likely to cause a core. Taking the lesser of two evils...");
+      }
+      return;
+   }
+
    assert(msg.isRequest() || msg.isResponse());
 
    if (mState == WaitingToEnd)
@@ -412,18 +442,18 @@ DialogSet::dispatch(const SipMessage& msg)
    {
       if(dialog->isDestroying())
       {
-		 if( msg.isRequest() )
-		 {
+         if( msg.isRequest() )
+         {
             StackLog (<< "Matching dialog is destroying, sending 481 " << endl << msg);
             SharedPtr<SipMessage> response(new SipMessage);
             mDum.makeResponse(*response, msg, 481);
             mDum.send(response);
-		 }
-		 else
-		 {
-		    StackLog (<< "Matching dialog is destroying, dropping response message " << endl << msg);
-		 }
-  		 return;
+         }
+         else
+         {
+          StackLog (<< "Matching dialog is destroying, dropping response message " << endl << msg);
+         }
+         return;
       }
       else
       {
@@ -526,7 +556,7 @@ DialogSet::dispatch(const SipMessage& msg)
             assert(mServerOutOfDialogRequest == 0);
             mServerOutOfDialogRequest = makeServerOutOfDialog(request);
             mServerOutOfDialogRequest->dispatch(request);
-   			return;
+            return;
       }
    }
    else // the message is a response
@@ -733,7 +763,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
       }
 
-	  DebugLog ( << "mState == " << mState << " Creating a new Dialog from msg: " << std::endl << std::endl <<msg);
+      DebugLog ( << "mState == " << mState << " Creating a new Dialog from msg: " << std::endl << std::endl <<msg);
       try
       {
          // !jf! This could throw due to bad header in msg, should we catch and rethrow
@@ -771,7 +801,7 @@ DialogSet::dispatch(const SipMessage& msg)
       }
 
       assert(mState != WaitingToEnd);
-	  DebugLog ( << "### Calling CreateAppDialog ###: " << std::endl << std::endl <<msg);
+      DebugLog ( << "### Calling CreateAppDialog ###: " << std::endl << std::endl <<msg);
       AppDialog* appDialog = mAppDialogSet->createAppDialog(msg);
       dialog->mAppDialog = appDialog;
       appDialog->mDialog = dialog;
