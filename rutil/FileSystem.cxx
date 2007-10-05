@@ -82,10 +82,8 @@ FileSystem::Directory::iterator::operator==(const iterator& rhs) const
    {
       return **this == *rhs;
    }
-   else
-   {
-      return mDirent == rhs.mDirent;
-   }
+
+   return mDirent == rhs.mDirent;
 }
 
 
