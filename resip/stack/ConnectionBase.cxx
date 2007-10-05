@@ -231,6 +231,22 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                return;
             }
             
+            if(contentLength > 10485760 || contentLength < 0)
+            {
+               // !bwc! No more than 10M, thanks. We should make this
+               // configurable.
+               WarningLog(<<"Absurdly large Content-Length in connection-based "
+                           "transport.");
+               delete mMessage;
+               mMessage = 0;
+               mBuffer = 0;
+               // .bwc. mMessage just took ownership of mBuffer, so we don't
+               // delete it here. We do zero it though, for completeness.
+               //.jacob. Shouldn't the state also be set here?
+               delete this;
+               return;
+            }
+
             if (numUnprocessedChars < contentLength)
             {
                // The message body is incomplete.
