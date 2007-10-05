@@ -39,6 +39,7 @@
 *Improved logging of exceptions
 
 ===Bug fixes===
+*Fixed crash bug caused by receipt of an unreasonably large Content-Length in a connection-based transport
 *Fixed crash bug associated with Transports that run their own process loop
 *Fixed memory leaks caused by certain types of garbage in certain types of parameters
 *Fixed a memory leak caused by requests with a garbage topmost Via
