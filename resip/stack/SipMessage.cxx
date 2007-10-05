@@ -1129,10 +1129,11 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
    }
    else
    {
+      assert(headerLen >= 0);
       for (UnknownHeaders::iterator i = mUnknownHeaders.begin();
            i != mUnknownHeaders.end(); i++)
       {
-         if (i->first.size() == headerLen &&
+         if (i->first.size() == (unsigned int)headerLen &&
              strncasecmp(i->first.data(), headerName, headerLen) == 0)
          {
             // add to end of list
