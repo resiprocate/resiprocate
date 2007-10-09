@@ -5804,7 +5804,7 @@ class TestHolder : public Fixture
              optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
              derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
 
-             And(Sub(optional(derek->expect(INVITE/100, from(proxy), 1000, derek->check(checkRport)))),
+             And(Sub(optional(derek->expect(INVITE/100, from(proxy), 1000, derek->checkEchoName(checkRport)))),
                  Sub(jason->expect(INVITE, contact(derek), 1000, jason->ring()),
                      derek->expect(INVITE/180, from(jason), 1000, jason->answer()),
                      derek->expect(INVITE/200, contact(jason), 1000, derek->ack()),

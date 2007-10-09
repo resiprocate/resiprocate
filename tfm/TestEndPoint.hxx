@@ -17,8 +17,9 @@
 #include "tfm/ActionBase.hxx"
 #include "tfm/ExpectAction.hxx"
 
-#define check(_fn) check1(_fn, #_fn)
-#define execute(_fn) execute1(_fn, #_fn)
+
+//!dcm! -- deprecate this further
+#define checkEchoName(_fn) check1(_fn, #_fn)
 
 class SequenceClass;
 class SequenceSet;
