@@ -41,7 +41,7 @@ class DialogEventInfo
 
       const State& getState();
 
-      const Data& getDialogEventId();
+      const Data& getDialogEventId() const;
       
       const Data& getCallId();
       const Data& getLocalTag();
