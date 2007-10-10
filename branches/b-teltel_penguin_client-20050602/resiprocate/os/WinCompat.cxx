@@ -2,8 +2,9 @@
 #include <Winsock2.h>
 #include <Iphlpapi.h>
 #endif
-
-#include "resiprocate/os/Tuple.hxx"
+#if !defined(DISABLE_RESIP_TRANSPORT)
+#  include "resiprocate/os/Tuple.hxx"
+#endif
 #include "resiprocate/os/WinCompat.hxx"
 
 using namespace resip;
@@ -93,7 +94,7 @@ WinCompat::getVersion()
    return WinCompat::NotWindows;
 #endif
 }
-
+#if !defined(DISABLE_RESIP_TRANSPORT)
 Tuple
 WinCompat::determineSourceInterface(const Tuple& destination)
 {
@@ -172,7 +173,7 @@ WinCompat::determineSourceInterface(const Tuple& destination)
    return Tuple();
 #endif
 }
-
+#endif // #if !defined(DISABLE_RESIP_TRANSPORT)
 /* ====================================================================
 * The Vovida Software License, Version 1.0 
 * 
