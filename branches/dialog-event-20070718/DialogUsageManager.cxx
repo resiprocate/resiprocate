@@ -526,8 +526,6 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
 {
    SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
    DumHelper::setOutgoingEncryptionLevel(*inv, level);
-   //getDialogEventStateManager().onTryingUac(*appDs->mDialogSet, *inv);
-   //getDialogEventStateManager().onTryingUac(*(findDialogSet(DialogSetId(*inv))), *inv);
    return inv;
 }
 
@@ -837,7 +835,10 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
 
       if (msg->header(h_RequestLine).method() == INVITE)
       {
-         getDialogEventStateManager().onTryingUac(*(findDialogSet(DialogSetId(*msg))), *msg);
+         if (ds != 0)
+         {
+            getDialogEventStateManager().onTryingUac(*ds, *msg);
+         }
       }
    }
 
