@@ -2,7 +2,9 @@
 #define resip_WinCompat_hxx
 
 #include "resiprocate/os/BaseException.hxx"
-#include "resiprocate/os/Tuple.hxx"
+#if !defined(DISABLE_RESIP_TRANSPORT)
+#  include "resiprocate/os/Tuple.hxx"
+#endif
 #include "resiprocate/os/Win32Export.hxx"
 
 namespace resip
@@ -35,7 +37,9 @@ class RESIP_API WinCompat
       };
 
       static Version getVersion();
+#if !defined(DISABLE_RESIP_TRANSPORT)
       static Tuple determineSourceInterface(const Tuple& destination);
+#endif
 };
 
 }

@@ -27,8 +27,8 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DNS
 
 Tuple::Tuple() : 
-   transport(0),
-   connectionId(0),
+   mTransport(0),
+   mConnectionId(0),
    mTransportType(UNKNOWN_TRANSPORT)
 {
    sockaddr_in* addr4 = (sockaddr_in*)&mSockaddr;
@@ -38,8 +38,8 @@ Tuple::Tuple() :
 
 Tuple::Tuple(const GenericIPAddress& genericAddress, TransportType type, 
              const Data& targetDomain) : 
-   transport(0),
-   connectionId(0),
+   mTransport(0),
+   mConnectionId(0),
    mTransportType(type),
    mTargetDomain(targetDomain)
 {
@@ -65,8 +65,8 @@ Tuple::Tuple(const Data& printableAddr,
              IpVersion ipVer,
              TransportType type,
              const Data& targetDomain) :
-   transport(0),
-   connectionId(0),
+   mTransport(0),
+   mConnectionId(0),
    mTransportType(type),
    mTargetDomain(targetDomain)
 {
@@ -109,8 +109,8 @@ Tuple::Tuple(const Data& printableAddr,
              int port,
              TransportType ptype,
              const Data& targetDomain) : 
-   transport(0),
-   connectionId(0),
+   mTransport(0),
+   mConnectionId(0),
    mTransportType(ptype),
    mTargetDomain(targetDomain)
 {
@@ -139,8 +139,8 @@ Tuple::Tuple(const in_addr& ipv4,
              int port,
              TransportType ptype,
              const Data& targetDomain)
-   : transport(0),
-     connectionId(0),
+   : mTransport(0),
+     mConnectionId(0),
      mTransportType(ptype),
      mTargetDomain(targetDomain)
 {
@@ -155,8 +155,8 @@ Tuple::Tuple(const in6_addr& ipv6,
              int port,
              TransportType ptype,
              const Data& targetDomaina)
-   : transport(0),
-     connectionId(0),
+   : mTransport(0),
+     mConnectionId(0),
      mTransportType(ptype),
      mTargetDomain(targetDomaina)
 {
@@ -170,8 +170,8 @@ Tuple::Tuple(const in6_addr& ipv6,
 Tuple::Tuple(const struct sockaddr& addr, 
              TransportType ptype,
              const Data& targetDomain) : 
-   transport(0),
-   connectionId(0),
+   mTransport(0),
+   mConnectionId(0),
    mSockaddr(addr),
    mTransportType(ptype),
    mTargetDomain(targetDomain)
@@ -414,11 +414,11 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 
    ostrm  << " " 
           << Tuple::toData(tuple.mTransportType);
-   if (tuple.transport)
+   if (tuple.mTransport)
    {
-      ostrm << " received on: " << *tuple.transport;
+      ostrm << " received on: " << *tuple.mTransport;
    }
-   ostrm << " connectionId=" << tuple.connectionId
+   ostrm << " connectionId=" << tuple.mConnectionId
          << " ]";
    
    return ostrm;

@@ -5,7 +5,6 @@
 #include <time.h>
 
 #include "resiprocate/DateCategory.hxx"
-#include "resiprocate/Transport.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
 #include "resiprocate/os/Logger.hxx"
@@ -66,7 +65,6 @@ DateCategory::DateCategory()
    {
       int e = getErrno();
       DebugLog (<< "Failed to get time: " << strerror(e));
-      Transport::error(e);
       return;
    }
    
@@ -75,10 +73,9 @@ DateCategory::DateCategory()
    struct tm *gmtp = gmtime(&now);
    if (gmtp == 0)
    {
-	    int e = getErrno();
-        DebugLog (<< "Failed to convert to gmt: " << strerror(e));
-        Transport::error(e);
-        return;
+      int e = getErrno();
+      DebugLog (<< "Failed to convert to gmt: " << strerror(e));
+      return;
    }
    memcpy(&gmt,gmtp,sizeof(gmt));
 #else
@@ -559,7 +556,6 @@ DateCategory::encodeParsed(std::ostream& str) const
 
    return str;
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
