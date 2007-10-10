@@ -655,34 +655,34 @@ Data::~Data()
 }
 
 bool 
-Data::operator==(const Data& rhs) const
+resip::operator==(const Data& lhs, const Data& rhs)
 {
-   if (mSize != rhs.mSize)
+   if (lhs.mSize != rhs.mSize)
    {
       return false;
    }
-   return memcmp(mBuf, rhs.mBuf, mSize) == 0;
+   return memcmp(lhs.mBuf, rhs.mBuf, lhs.mSize) == 0;
 }
 
 bool 
-Data::operator==(const char* rhs) const
+resip::operator==(const Data& lhs, const char* rhs)
 {
    assert(rhs); // .dlb. not consistent with constructor
-   if (memcmp(mBuf, rhs, mSize) != 0)
+   if (memcmp(lhs.mBuf, rhs, lhs.mSize) != 0)
    {
       return false;
    }
    else
    {
       // make sure the string terminates at size
-      return rhs[mSize] == 0;
+      return (rhs[lhs.mSize] == 0);
    }
 }
 
 bool
-Data::operator<(const Data& rhs) const
+resip::operator<(const Data& lhs, const Data& rhs)
 {
-   int res = memcmp(mBuf, rhs.mBuf, resipMin(mSize, rhs.mSize));
+   int res = memcmp(lhs.mBuf, rhs.mBuf, resipMin(lhs.mSize, rhs.mSize));
 
    if (res < 0)
    {
@@ -694,22 +694,16 @@ Data::operator<(const Data& rhs) const
    }
    else
    {
-      return (mSize < rhs.mSize);
+      return (lhs.mSize < rhs.mSize);
    }
 }
 
 bool
-Data::operator<=(const Data& rhs) const
-{
-   return !(*this > rhs);
-}
-
-bool
-Data::operator<(const char* rhs) const
+resip::operator<(const Data& lhs, const char* rhs)
 {
    assert(rhs);
-   size_type l = strlen(rhs);
-   int res = memcmp(mBuf, rhs, resipMin(mSize, l));
+   Data::size_type l = strlen(rhs);
+   int res = memcmp(lhs.mBuf, rhs, resipMin(lhs.mSize, l));
 
    if (res < 0)
    {
@@ -721,38 +715,29 @@ Data::operator<(const char* rhs) const
    }
    else
    {
-      return (mSize < l);
+      return (lhs.mSize < l);
    }
 }
 
 bool
-Data::operator<=(const char* rhs) const
+resip::operator<(const char* lhs, const Data& rhs)
 {
-   return !(*this > rhs);
-}
+   assert(lhs);
+   Data::size_type l = strlen(lhs);
+   int res = memcmp(lhs, rhs.mBuf, resipMin(l, rhs.mSize));
 
-bool
-Data::operator>(const Data& rhs) const
-{
-   return rhs < *this;
-}
-
-bool
-Data::operator>=(const Data& rhs) const
-{
-   return !(*this < rhs);
-}
-
-bool
-Data::operator>(const char* rhs) const
-{
-   return rhs < *this;
-}
-
-bool
-Data::operator>=(const char* rhs) const
-{
-   return !(*this < rhs);
+   if (res < 0)
+   {
+      return true;
+   }
+   else if (res > 0)
+   {
+      return false;
+   }
+   else
+   {
+      return (l < rhs.mSize);
+   }
 }
 
 Data& 
@@ -1780,41 +1765,6 @@ Data::replace(const Data& match,
    }
 
    return count;
-}
-
-bool
-resip::operator==(const char* s, const Data& d)
-{
-   assert(s);
-   return ((memcmp(s, d.data(), d.size()) == 0) &&
-           strlen(s) == d.size() );
-}
-
-bool
-resip::operator!=(const char* s, const Data& d)
-{
-   return !(s == d);
-}
-
-bool
-resip::operator<(const char* s, const Data& d)
-{
-   assert(s);
-   Data::size_type l = strlen(s);
-   int res = memcmp(s, d.data(), resipMin(d.size(), l));
-
-   if (res < 0)
-   {
-      return true;
-   }
-   else if (res > 0)
-   {
-      return false;
-   }
-   else
-   {
-      return (l < d.size());
-   }
 }
 
 ostream& 
