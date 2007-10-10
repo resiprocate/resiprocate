@@ -94,8 +94,6 @@ class Handle
       // !nash! to be able to use Handle in Set or Map container
       bool operator<(const Handle<T>& other) const
       {
-         assert(mHam);
-         assert(other.mHam);
          return mId < other.mId;
       }
    protected:
