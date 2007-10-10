@@ -271,20 +271,12 @@ class Data
          return d;
       }
 
-      bool operator==(const Data& rhs) const;
-      bool operator==(const char* rhs) const;
+      friend bool operator==(const Data& lhs, const Data& rhs);
+      friend bool operator==(const Data& lhs, const char* rhs);
 
-      bool operator!=(const Data& rhs) const { return !(*this == rhs); }
-      bool operator!=(const char* rhs) const { return !(*this == rhs); }
-
-      bool operator<(const Data& rhs) const;
-      bool operator<=(const Data& rhs) const;
-      bool operator<(const char* rhs) const;
-      bool operator<=(const char* rhs) const;
-      bool operator>(const Data& rhs) const;
-      bool operator>=(const Data& rhs) const;
-      bool operator>(const char* rhs) const;
-      bool operator>=(const char* rhs) const;
+      friend bool operator<(const Data& lhs, const Data& rhs);
+      friend bool operator<(const Data& lhs, const char* rhs);
+      friend bool operator<(const char* lhs, const Data& rhs);
 
       Data& operator=(const Data& data);
 
@@ -726,8 +718,6 @@ class Data
 
       static const bool isCharHex[256];
 
-      friend bool operator==(const char* s, const Data& d);
-      friend bool operator!=(const char* s, const Data& d);
       friend std::ostream& operator<<(std::ostream& strm, const Data& d);
       friend class ParseBuffer;
       friend class DataBuffer;
@@ -811,9 +801,19 @@ Data::escapeToStream(std::ostream& str, Predicate shouldEscape) const
    return str;
 }
 
-bool operator==(const char* s, const Data& d);
-bool operator!=(const char* s, const Data& d);
-bool operator<(const char* s, const Data& d);
+inline bool operator!=(const Data& lhs, const Data& rhs) { return !(lhs == rhs); }
+inline bool operator>(const Data& lhs, const Data& rhs) { return rhs < lhs; }
+inline bool operator<=(const Data& lhs, const Data& rhs) { return !(rhs < lhs); }
+inline bool operator>=(const Data& lhs, const Data& rhs) { return !(lhs < rhs); }
+inline bool operator!=(const Data& lhs, const char* rhs) { return !(lhs == rhs); }
+inline bool operator>(const Data& lhs, const char* rhs) { return rhs < lhs; }
+inline bool operator<=(const Data& lhs, const char* rhs) { return !(rhs < lhs); }
+inline bool operator>=(const Data& lhs, const char* rhs) { return !(lhs < rhs); }
+inline bool operator==(const char* lhs, const Data& rhs) { return rhs == lhs; }
+inline bool operator!=(const char* lhs, const Data& rhs) { return !(rhs == lhs); }
+inline bool operator>(const char* lhs, const Data& rhs) { return rhs < lhs; }
+inline bool operator<=(const char* lhs, const Data& rhs) { return !(rhs < lhs); }
+inline bool operator>=(const char* lhs, const Data& rhs) { return !(lhs < rhs); }
 
 std::ostream& operator<<(std::ostream& strm, const Data& d);
 
