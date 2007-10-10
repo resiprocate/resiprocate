@@ -1917,6 +1917,10 @@ InviteSession::dispatchBye(const SipMessage& msg)
 
       // !jf! should we make some other callback here
       transition(Terminated);
+
+      mDum.getDialogEventStateManager().onTerminated(mDialog, msg, 
+         InviteSessionHandler::RemoteBye);
+
       handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
       mDum.destroy(this);
    }
