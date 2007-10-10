@@ -2,7 +2,9 @@
 #include <fstream>
 #include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/ThreadIf.hxx"
-#include "resiprocate/os/SysLogStream.hxx"
+#if !defined(_WIN32) || !defined(WIN32)
+#  include "resiprocate/os/SysLogStream.hxx"
+#endif
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
@@ -16,6 +18,7 @@ GenericLogImpl::Instance()
 {
    switch (Log::_type)
    {
+#if !defined(_WIN32) || !defined(WIN32)
       case Log::Syslog:
          if (mLogger == 0)
          {
@@ -23,7 +26,7 @@ GenericLogImpl::Instance()
             mLogger = new SysLogStream;
          }
          return *mLogger;
-
+#endif
       case Log::Cerr:
          return std::cerr;
 

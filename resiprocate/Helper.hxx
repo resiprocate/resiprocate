@@ -14,8 +14,10 @@ namespace resip
 
 class SipMessage;
 class NameAddr;
+#if !defined(DISABLE_RESIP_TRANSPORT)
 class SecurityAttributes;
 class Security;
+#endif
 
 class RESIP_API UnsupportedAuthenticationScheme : public BaseException
 {
@@ -178,10 +180,11 @@ class RESIP_API Helper
 
       static void processStrictRoute(SipMessage& request);
 
+#if !defined(DISABLE_RESIP_TRANSPORT)
       // renamed to make more explicit that this is the port that we should reply too
       // given that we are following SIP rules WRT rport etc.
       static int getPortForReply(SipMessage& request);
-
+#endif
       static Uri fromAor(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 
       // Do basic checks to validate a received message off the wire
@@ -195,7 +198,7 @@ class RESIP_API Helper
       // GRUU support -- extract instance id and aor from user portion
       static std::pair<Data,Data> fromGruuUserPart(const Data& gruuUserPart,
                                                    const Data& key);
-
+#if !defined(DISABLE_RESIP_TRANSPORT)
       struct RESIP_API ContentsSecAttrs
       {
             ContentsSecAttrs();
@@ -208,7 +211,7 @@ class RESIP_API Helper
       };
 
       static ContentsSecAttrs extractFromPkcs7(const SipMessage& message, Security& security);
-
+#endif
       
       enum FailureMessageEffect{ DialogTermination, TransactionTermination, UsageTermination, 
                                  RetryAfter, OptionalRetryAfter, ApplicationDependant };
