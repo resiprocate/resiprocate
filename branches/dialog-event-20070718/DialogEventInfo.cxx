@@ -32,6 +32,14 @@ DialogEventInfo::DialogEventInfo(const DialogEventInfo& rhs)
                                                          rhs.mReplacesId->getLocalTag(),
                                                          rhs.mReplacesId->getRemoteTag()));
    }
+   if (rhs.mLocalSdp.get())
+   {
+      mLocalSdp = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(rhs.mLocalSdp->clone()));
+   }
+   if (rhs.mRemoteSdp.get())
+   {
+      mRemoteSdp = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(rhs.mRemoteSdp->clone()));
+   }
 }
 
 bool 
@@ -53,7 +61,7 @@ DialogEventInfo::operator<(const DialogEventInfo& rhs) const
 }
 
 const DialogEventInfo::State& 
-DialogEventInfo::getState()
+DialogEventInfo::getState() const
 {
    return mState;
 }
@@ -65,25 +73,25 @@ DialogEventInfo::getDialogEventId() const
 }
 
 const Data& 
-DialogEventInfo::getCallId()
+DialogEventInfo::getCallId() const
 {
    return mDialogId.getCallId();
 }
 
 const Data& 
-DialogEventInfo::getLocalTag()
+DialogEventInfo::getLocalTag() const
 {
    return mDialogId.getLocalTag();
 }
 
 bool 
-DialogEventInfo::hasRemoteTag()
+DialogEventInfo::hasRemoteTag() const
 {
    return (mDialogId.getRemoteTag() != Data::Empty);
 }
 
 const Data& 
-DialogEventInfo::getRemoteTag()
+DialogEventInfo::getRemoteTag() const
 {
    return mDialogId.getRemoteTag();
 }
