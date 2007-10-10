@@ -39,14 +39,14 @@ class DialogEventInfo
          Terminated
       };
 
-      const State& getState();
+      const State& getState() const;
 
       const Data& getDialogEventId() const;
       
-      const Data& getCallId();
-      const Data& getLocalTag();
-      bool hasRemoteTag();
-      const Data& getRemoteTag();
+      const Data& getCallId() const;
+      const Data& getLocalTag() const;
+      bool hasRemoteTag() const;
+      const Data& getRemoteTag() const;
       
       bool hasRefferedBy() const;
       const NameAddr& getRefferredBy() const;
