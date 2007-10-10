@@ -17,16 +17,21 @@ DialogEventInfo::DialogEventInfo(const DialogEventInfo& rhs)
   mState(rhs.mState),
   mDialogEventId(rhs.mDialogEventId),
   mDirection(rhs.mDirection),
-  mReplacesId(new DialogId(rhs.mReplacesId->getCallId(), rhs.mReplacesId->getLocalTag(), rhs.mReplacesId->getRemoteTag())),
   mInviteSession(rhs.mInviteSession),
-  mReferredBy(new NameAddr(*rhs.mReferredBy)),
+  mReferredBy(rhs.mReferredBy.get() ? new NameAddr(*rhs.mReferredBy) : 0),
   mRouteSet(rhs.mRouteSet),
   mLocalIdentity(rhs.mLocalIdentity),
   mRemoteIdentity(rhs.mRemoteIdentity),
   mLocalTarget(rhs.mLocalTarget),
-  mRemoteTarget(new Uri(*rhs.mRemoteTarget)),
+  mRemoteTarget(rhs.mRemoteTarget.get() ? new Uri(*rhs.mRemoteTarget) : 0),
   mCreationTime(rhs.mCreationTime)
 {
+   if (rhs.mReplacesId.get())
+   {
+      mReplacesId = std::auto_ptr<DialogId>(new DialogId(rhs.mReplacesId->getCallId(),
+                                                         rhs.mReplacesId->getLocalTag(),
+                                                         rhs.mReplacesId->getRemoteTag()));
+   }
 }
 
 bool 
@@ -54,7 +59,7 @@ DialogEventInfo::getState()
 }
 
 const Data& 
-DialogEventInfo::getDialogEventId()
+DialogEventInfo::getDialogEventId() const
 {
    return mDialogEventId;
 }
