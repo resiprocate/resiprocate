@@ -91,8 +91,8 @@ class RESIP_API Tuple
 
       GenericIPAddress toGenericIPAddress() const;
 
-      Transport* transport;
-      ConnectionId connectionId;
+      Transport* mTransport;
+      ConnectionId mConnectionId;
 
       // special comparitors
       class AnyInterfaceCompare

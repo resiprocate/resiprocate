@@ -19,8 +19,10 @@
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/SipMessage.hxx"
-#include "resiprocate/Security.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
+#if !defined(DISABLE_RESIP_TRANSPORT)
+#  include "resiprocate/Security.hxx"
+#  include "resiprocate/SecurityAttributes.hxx"
+#endif
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/MultipartMixedContents.hxx"
@@ -1281,6 +1283,7 @@ Helper::processStrictRoute(SipMessage& request)
    }
 }
 
+#if !defined(DISABLE_RESIP_TRANSPORT)
 int
 Helper::getPortForReply(SipMessage& request)
 {
@@ -1301,6 +1304,7 @@ Helper::getPortForReply(SipMessage& request)
    assert(port != -1);
    return port;
 }
+#endif
 
 Uri 
 Helper::fromAor(const Data& aor, const Data& scheme)
@@ -1422,6 +1426,7 @@ Helper::fromGruuUserPart(const Data& gruuUserPart,
                          pair.substr(pos+sep.size()).c_str());
 }
 #endif
+#if !defined(DISABLE_RESIP_TRANSPORT)
 Helper::ContentsSecAttrs::ContentsSecAttrs()
    : mContents(0),
      mAttributes(0)
@@ -1448,7 +1453,6 @@ Helper::ContentsSecAttrs::operator=(const ContentsSecAttrs& rhs)
    }
    return *this;
 }
-
 
 Contents*
 extractFromPkcs7Recurse(Contents* tree,
@@ -1539,6 +1543,7 @@ Helper::extractFromPkcs7(const SipMessage& message,
    std::auto_ptr<SecurityAttributes> a(attr);
    return ContentsSecAttrs(c, a);
 }
+#endif
 
 Helper::FailureMessageEffect 
 Helper::determineFailureMessageEffect(const SipMessage& response)

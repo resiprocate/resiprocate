@@ -24,9 +24,18 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
+#if !defined(DISABLE_RESIP_TRANSPORT)
 SipMessage::SipMessage(const Transport* fromWire)
+#else
+SipMessage::SipMessage()
+#endif
+#if !defined(DISABLE_RESIP_TRANSPORT)
    : mIsExternal(fromWire != 0),
      mTransport(fromWire),
+
+#else
+   : mIsExternal(false),
+#endif
      mStartLine(0),
      mContentsHfv(0),
      mContents(0),
@@ -66,9 +75,11 @@ SipMessage::operator=(const SipMessage& rhs)
       this->cleanUp();
 
       mIsExternal = rhs.mIsExternal;
+#if !defined(DISABLE_RESIP_TRANSPORT)
       mTransport = rhs.mTransport;
       mSource = rhs.mSource;
       mDestination = rhs.mDestination;
+#endif
       mStartLine = 0;
       mContentsHfv = 0;
       mContents = 0;
@@ -178,8 +189,12 @@ SipMessage::make(const char* data, bool isExternal)
 std::auto_ptr<SipMessage>
 SipMessage::make(const char* data, unsigned int len, bool isExternal)
 {
+#if !defined(DISABLE_RESIP_TRANSPORT)
    Transport* external = (Transport*)(0xFFFF);
    std::auto_ptr<SipMessage> msg(new SipMessage(isExternal ? external : 0));
+#else
+   std::auto_ptr<SipMessage> msg(new SipMessage());
+#endif
 
    char *buffer = new char[len + 5];
    msg->addBuffer(buffer);
@@ -1348,13 +1363,13 @@ SipMessage::mergeUri(const Uri& source)
    //unknown header merge
    return *this;   
 }
-
+#if !defined(DISABLE_RESIP_TRANSPORT)
 void 
 SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec) const
 {
    mSecurityAttributes = sec;   
 }
-
+#endif
 
 #if defined(DEBUG) && defined(DEBUG_MEMORY)
 namespace resip

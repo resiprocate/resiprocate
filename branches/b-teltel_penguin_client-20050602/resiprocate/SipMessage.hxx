@@ -19,8 +19,10 @@
 #include "resiprocate/TransactionMessage.hxx"
 #include "resiprocate/ParserContainer.hxx"
 #include "resiprocate/ParserCategories.hxx"
-#include "resiprocate/SecurityAttributes.hxx"
-#include "resiprocate/Transport.hxx"
+#if !defined(DISABLE_RESIP_TRANSPORT)
+#  include "resiprocate/SecurityAttributes.hxx"
+#  include "resiprocate/Transport.hxx"
+#endif
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/Data.hxx"
@@ -34,7 +36,6 @@ namespace resip
 
 class Contents;
 class ExtensionHeader;
-class SecurityAttributes;
 
 class RESIP_API SipMessage : public TransactionMessage
 {
@@ -42,7 +43,11 @@ class RESIP_API SipMessage : public TransactionMessage
       RESIP_HeapCount(SipMessage);
       typedef std::list< std::pair<Data, HeaderFieldValueList*> > UnknownHeaders;
 
+#if !defined(DISABLE_RESIP_TRANSPORT)
       explicit SipMessage(const Transport* fromWire = 0);
+#else
+      explicit SipMessage();
+#endif
       // .dlb. public, allows pass by value to compile.
       SipMessage(const SipMessage& message);
 
@@ -275,6 +280,7 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
       // Interface used to determine which Transport was used to receive a
       // particular SipMessage. If the SipMessage was not received from the
       // wire, getReceivedTransport() returns 0. Set in constructor
+#if !defined(DISABLE_RESIP_TRANSPORT)
       const Transport* getReceivedTransport() const { return mTransport; }
 
       // Returns the source tuple that the message was received from
@@ -285,7 +291,7 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
       // Used by the stateless interface to specify where to send a request/response
       void setDestination(const Tuple& tuple) { mDestination = tuple; }
       Tuple& getDestination() { return mDestination; }
-
+#endif
       void addBuffer(char* buf);
 
       // returns the encoded buffer which was encoded by resolve()
@@ -307,9 +313,10 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
       
       SipMessage& mergeUri(const Uri& source);      
 
+#if !defined(DISABLE_RESIP_TRANSPORT)
       void setSecurityAttributes(std::auto_ptr<SecurityAttributes>) const;
       const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
-
+#endif
    protected:
       void cleanUp();
    
@@ -333,6 +340,7 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
       // raw text corresponding to each unknown header
       mutable UnknownHeaders mUnknownHeaders;
   
+#if !defined(DISABLE_RESIP_TRANSPORT)
       // !jf!
       const Transport* mTransport;
 
@@ -342,6 +350,7 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
       // Used by the TU to specify where a message is to go
       Tuple mDestination;
+#endif
       
       // Raw buffers coming from the Transport. message manages the memory
       std::vector<char*> mBufferList;
@@ -372,9 +381,9 @@ defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 
       // domain associated with this message for tls cert
       Data mTlsDomain;
-
+#if !defined(DISABLE_RESIP_TRANSPORT)
       mutable std::auto_ptr<SecurityAttributes> mSecurityAttributes;
-
+#endif
       friend class TransportSelector;
 };
 
