@@ -105,6 +105,8 @@ class Timer
 };
  
 std::ostream& operator<<(std::ostream&, const Timer&);
+bool operator<(const Timer& t1, const Timer& t2);
+bool operator>(const Timer& t1, const Timer& t2);
 
 }
 
