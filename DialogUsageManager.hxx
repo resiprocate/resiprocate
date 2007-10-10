@@ -314,6 +314,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void unRegisterForConnectionTermination(Postable*);
 
       DialogEventStateManager& getDialogEventStateManager();
+      void setDialogEventHandler(DialogEventHandler* handler);
 
    protected:
       virtual void onAllHandlesDestroyed();      
