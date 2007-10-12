@@ -14,11 +14,11 @@ namespace resip
 
 class Tuple;
 
-/** DnsUtil provides a collection of utility functions for
-  * manipulating DNS names and IP addresses and discovering
-  * details about the local interfaces
+/** 
+   @brief Provides a collection of utility functions for
+   manipulating DNS names and IP addresses and discovering
+   details about the local interfaces
   */
-
 class DnsUtil
 {
    public:

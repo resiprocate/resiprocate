@@ -8,6 +8,10 @@
 namespace resip
 {
 
+/**
+   @brief A static class that wraps the random-number generation code of your
+      platform.
+*/
 class Random
 {
    public:

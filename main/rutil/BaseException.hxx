@@ -9,7 +9,9 @@
 namespace resip
 {
 
-// treat as abstract
+/**
+   @brief The abstract base-class for all exceptions thrown by resip code.
+*/
 class BaseException : public std::exception
 {
    public:

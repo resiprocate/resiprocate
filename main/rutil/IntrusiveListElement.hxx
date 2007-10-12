@@ -1,10 +1,13 @@
 #ifndef RESIP_IntrusiveListElement
 #define RESIP_IntrusiveListElement
 
-/*
-  Heritable intrusive doubly linked list element template.
+/**
+   @file
+  @brief Heritable intrusive doubly linked list element templates.
 
-  // For a class that is an element in a single list, use like this:
+  For a class that is an element in a single list, use like this:
+
+  @code
   class Foo : public IntrusiveListElement<Foo*>
   {
      ...
@@ -13,9 +16,11 @@
   Foo* fooHead = new Foo();
   // initialize head to cycle -- represent an empty list
   Foo::makeList(fooHead);
+  @endcode
 
-  // For a class that is an element of multiple lists, use like this:
-  // has two independent intrusive lists, named read and write
+  For a class that is an element of multiple lists, use like this:
+  has two independent intrusive lists, named read and write
+  @code
   class FooFoo : public IntrusiveListElement<FooFoo*>, public IntrusiveListElement1<FooFoo*>
   {
      public:
@@ -46,7 +51,7 @@
 
   // element could be in either list, so use aspect
   element->write::remove();  
-
+  @endcode
 */
 
 namespace resip

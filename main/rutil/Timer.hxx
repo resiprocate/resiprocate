@@ -10,8 +10,13 @@ namespace resip
 
 class Message;
 
-// Note: Timers are not thread safe; if the application needs to create timers
-// do something else
+/**
+   @brief Instances of this class represent a SIP timer, while static functions
+      in this class are used to get the current system time.
+
+   @note Should we refactor this? It seems like the SIP-timer stuff should live
+      in resip/stack somewhere.
+*/
 class Timer
 {
    public:

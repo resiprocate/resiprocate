@@ -15,6 +15,11 @@
 #include "compat.hxx"
 #include "rutil/TransportType.hxx"
 
+/**
+   @file
+   @brief Handles cross-platform sockets compatibility.
+*/
+
 #ifdef WIN32
 
 typedef int socklen_t;
@@ -86,6 +91,9 @@ bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
 int closeSocket( Socket fd );
 
+/**
+   @brief Object-oriented wrapper for your platform's file-descriptor set.
+*/
 class FdSet
 {
    public:

@@ -8,6 +8,11 @@
 namespace resip
 {
 
+/**
+   @brief BaseException used to indicate parse failures.
+
+   @see ParseBuffer
+*/
 class ParseException : public BaseException
 {
    public:

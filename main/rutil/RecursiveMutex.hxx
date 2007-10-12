@@ -8,6 +8,13 @@ namespace resip
 {
 class Condition;
 	
+/**
+   @brief Wraps the recursive mutex implementation on your platform (if there is 
+   one).
+
+   @note A recursive mutex is a mutex that can be locked more than once by a 
+   given thread without causing a deadlock.
+*/
 class RecursiveMutex : public Lockable
 {
    public:

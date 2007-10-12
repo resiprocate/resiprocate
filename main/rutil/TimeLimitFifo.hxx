@@ -15,6 +15,10 @@
 namespace resip
 {
 
+/**
+   @brief A templated, threadsafe message-queue class that enforces constraints
+      on time-depth.
+*/
 template <class Msg>
 class TimeLimitFifo : public AbstractFifo
 {

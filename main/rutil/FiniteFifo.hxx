@@ -10,6 +10,9 @@
 namespace resip
 {
 
+/**
+   @brief A templated, threadsafe message-queue class with a fixed size.
+*/
 template < class Msg >
 class FiniteFifo : public AbstractFifo
 {

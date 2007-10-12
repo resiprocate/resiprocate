@@ -6,6 +6,9 @@
 namespace resip
 {
 
+/**
+   @brief Abstract base-class for Mutexes.
+*/
 class Lockable
 {
    protected:

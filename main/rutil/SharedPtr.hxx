@@ -1,11 +1,14 @@
 #if !defined(RESIP_SHAREDPTR_HXX)
 #define RESIP_SHAREDPTR_HXX
 
-// Note:  This implementation is a modified version of shared_ptr from
-// Boost.org.  License text is below.
-//
-// http://www.boost.org/libs/smart_ptr/shared_ptr.htm
-//
+/**
+   @file
+   @brief Defines a reference-counted pointer class.
+   @note This implementation is a modified version of shared_ptr from
+   Boost.org.  License text is below.
+
+   http://www.boost.org/libs/smart_ptr/shared_ptr.htm
+*/
 
 #include "rutil/SharedCount.hxx"
 #include <memory>               // for std::auto_ptr
@@ -61,14 +64,12 @@ inline void sp_enable_shared_from_this( shared_count const & /*pn*/, ... )
 {
 }
 
-//
-//  SharedPtr
-//
-//  Reference counted copy semantics.
-//  The object pointed to is deleted when the last SharedPtr pointing to it
-//  is destroyed or reset.
-//
+/**
+   @brief Implements reference counted copy semantics for a class T.
 
+   The object pointed to is deleted when the last SharedPtr pointing to it
+   is destroyed or reset.
+*/
 template<class T> class SharedPtr
 {
 private:

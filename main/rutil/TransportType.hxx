@@ -8,6 +8,9 @@
 namespace resip
 {
 
+/**
+   @brief An enumeration of transport protocols.
+*/
 typedef enum 
 {
    UNKNOWN_TRANSPORT = 0,
@@ -20,6 +23,9 @@ typedef enum
    MAX_TRANSPORT
 } TransportType;
 
+/**
+   @brief An enumeration of IP versions.
+*/
 typedef enum 
 {
    V4,
