@@ -2775,6 +2775,8 @@ void InviteSession::sendBye()
       reason.param(p_description) = txt;
       bye->header(h_Reasons).push_back(reason);      
    }
+
+   mDum.getDialogEventStateManager().onTerminated(mDialog, *bye, InviteSessionHandler::LocalBye);
    
    InfoLog (<< myAddr() << " Sending BYE " << txt);
    send(bye);

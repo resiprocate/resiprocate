@@ -805,6 +805,8 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
    storePeerCapabilities(msg);
 
+   mDum.getDialogEventStateManager().onTryingUas(mDialog, msg);
+
    switch (toEvent(msg, sdp.get()))
    {
       case OnInviteOffer:
@@ -1207,6 +1209,7 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
    send(i487);
 
    transition(Terminated);
+
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
    mDum.destroy(this);
 }
@@ -1273,6 +1276,9 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
    startRetransmit200Timer(); // 2xx timer
    DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
+
+   mDum.getDialogEventStateManager().onConfirmed(mDialog, getSessionHandle());
+
    send(mInvite200);
 }
 
