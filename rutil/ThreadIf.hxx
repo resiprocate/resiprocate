@@ -16,27 +16,29 @@
 namespace resip
 {
 
-/* A wrapper class to create and spawn a thread.  It is a base class.
+/** 
+   @brief A wrapper class to create and spawn a thread.  
+
+   It is a base class.
    ThreadIf::thread() is a pure virtual method .
 
-   <P>Usage:
    To use this class, derive from it and override the thread() method.
    To start the thread, call the run() method.  The code in thread() will
    run in a separate thread.
 
-   <P>Call shutdown() from the constructing thread to shut down the
+   Call shutdown() from the constructing thread to shut down the
    code.  This will set the bool shutdown_ to true.  The code in
    thread() should react properly to shutdown_ being set, by
    returning.  Call join() to join the code.
-   <P>Sample:
-   <PRE>
-   ...
+
+   Sample:
+   @code
    DerivedThreadIf thread;
    thread.run();
-   ... do stuff ...
+   // ... do stuff ...
    thread.shutdown();
    thread.join();
-   </PRE>
+   @endcode
 */
 class ThreadIf
 {

@@ -10,9 +10,7 @@
 
 namespace resip
 {
-/*
- *  FindMemoryLeaks
- *
+/**
  *  Creating a single instance of this class at start up will cause
  *  memory leak information to be dumped to the debug window when
  *  the program terminates.  

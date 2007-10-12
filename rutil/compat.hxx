@@ -1,6 +1,12 @@
 #if !defined(RESIP_COMPAT_HXX)
 #define RESIP_COMPAT_HXX 
 
+/**
+   @file
+   This file is used to handle compatibility fixes/tweaks so reSIProcate can 
+   function on multiple platforms.
+*/
+
 #if defined(__INTEL_COMPILER ) && defined( __OPTIMIZE__ )
 #  undef __OPTIMIZE__ // wierd intel bug with ntohs and htons macros
 #endif

@@ -24,7 +24,9 @@ struct DataLocalSize
 };
 
 /**
-  This class encapsulates an arbitrary buffer of bytes.
+  @brief An alternative to std::string, encapsulates an arbitrary buffer of 
+  bytes.
+
   It has a variety of memory management styles that can be
   established at contruction time.
 
@@ -40,6 +42,15 @@ struct DataLocalSize
            
     @li 'Take'   - The Data instance takes complete ownership of the
                    buffer. The buffer is deallocated using delete[].
+
+   Additionally, Data has a small locally-allocated buffer (member buffer) that
+   it will use to hold small amounts of data. By default, this buffer can 
+   contain 16 bytes, meaning that Data will not use the heap unless it
+   needs more than 16 bytes of space. The tradeoff here, of course, is that
+   instances of Data will be larger than instances of std::string. Generally
+   speaking, if you expect to need more than 16 bytes of room, and you cannot
+   make good use of the flexible memory management offered by Data, you may want
+   to use a std::string instead.
 
   @see RESIP_HeapCount
 

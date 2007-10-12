@@ -10,24 +10,25 @@ namespace resip
 class Condition;
 
 /**
- A semaphore that can be locked by only one thread at a time.  Used to
-serialize access to some resource (such as a data member).  Here's
-an example:
+   @brief A semaphore that can be locked by only one thread at a time.  
 
-@code
-  void
-  Log::setLevel(Level level)
-  {
-     Lock lock(_mutex);
-     _level = level; 
-  }
-@endcode
+   Used to serialize access to some resource (such as a data member).  Here's
+   an example:
 
-  As indicated in the example, you will probably never use any member function 
-in this class.  The 'Lock' class provides this functionality.
+   @code
+     void
+     Log::setLevel(Level level)
+     {
+        Lock lock(_mutex);
+        _level = level; 
+     }
+   @endcode
 
-  @see Lock
-  @see Condition
+   As indicated in the example, you will probably never use any member function 
+   in this class.  The 'Lock' class provides this functionality.
+
+   @see Lock
+   @see Condition
 
 */
 class Mutex : public Lockable

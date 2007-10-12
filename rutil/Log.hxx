@@ -29,6 +29,11 @@ namespace resip
 class ExternalLogger;
 class Subsystem;
 
+/**
+   @brief Singleton that handles logging calls.
+
+   @see Logger
+*/
 class Log
 {
    public:
@@ -72,7 +77,8 @@ class Log
       
 
       /**
-         Implementation for logging macros.
+         @brief Implementation for logging macros.
+
          Log::Guard(Log::Info, Subsystem::TEST, __FILE__, __LINE__) << ... ;
       */
       class Guard
@@ -205,7 +211,8 @@ class Log
 
 static bool invokeLogInit = Log::init();
 
-/** Interface functor for external logging. */
+/** @brief Interface functor for external logging.
+ */
 class ExternalLogger
 {
    public:
