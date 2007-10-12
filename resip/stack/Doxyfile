@@ -64,7 +64,8 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 INPUT                  = 
 FILE_PATTERNS          = *.cxx \
-                         *.hxx
+                         *.hxx \
+                         *.doc
 RECURSIVE              = YES
 EXCLUDE                = test/
 EXCLUDE_SYMLINKS       = NO
