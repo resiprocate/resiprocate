@@ -92,8 +92,8 @@ class RESIP_API GenericLogImpl :  public Log
       static void OutputToWin32DebugWindow(const Data& result);
 
    private:
-      static std::ostream* mLogger;
-      static unsigned int mLineCount;
+      static std::ostream* sLogger;
+      static unsigned int sLineCount;
 };
  
 }

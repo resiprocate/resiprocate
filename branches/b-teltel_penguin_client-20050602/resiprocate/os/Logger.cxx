@@ -9,23 +9,23 @@
 
 using namespace resip;
 
-std::ostream* GenericLogImpl::mLogger=0;
-unsigned int GenericLogImpl::mLineCount=0;
+std::ostream* GenericLogImpl::sLogger=0;
+unsigned int GenericLogImpl::sLineCount=0;
 unsigned int GenericLogImpl::MaxLineCount = 0; // no limit by default
 
 std::ostream&
 GenericLogImpl::Instance()
 {
-   switch (Log::_type)
+   switch (Log::_type & 0x7F)
    {
 #if !defined(_WIN32) || !defined(WIN32)
       case Log::Syslog:
-         if (mLogger == 0)
+         if (sLogger == 0)
          {
             std::cerr << "Creating a syslog stream" << std::endl;
-            mLogger = new SysLogStream;
+            sLogger = new SysLogStream;
          }
-         return *mLogger;
+         return *sLogger;
 #endif
       case Log::Cerr:
          return std::cerr;
@@ -34,22 +34,22 @@ GenericLogImpl::Instance()
          return std::cout;
 
       case Log::File:
-         if (mLogger == 0 || (MaxLineCount && mLineCount > MaxLineCount))
+         if (sLogger == 0 || (MaxLineCount && sLineCount > MaxLineCount))
          {
             std::cerr << "Creating a file logger" << std::endl;
             if (Log::_logFileName != "")
             {
-               mLogger = new std::ofstream(_logFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
-               mLineCount = 0;
+               sLogger = new std::ofstream(_logFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
+               sLineCount = 0;
             }
             else
             {
-               mLogger = new std::ofstream("resiprocate.log", std::ios_base::out | std::ios_base::trunc);
-               mLineCount = 0;
+               sLogger = new std::ofstream("resiprocate.log", std::ios_base::out | std::ios_base::trunc);
+               sLineCount = 0;
             }
          }
-         mLineCount++;
-         return *mLogger;
+         ++sLineCount;
+         return *sLogger;
       default:
          assert(0);
          return std::cout;
