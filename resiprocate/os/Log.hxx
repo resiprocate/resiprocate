@@ -31,7 +31,7 @@ class RESIP_API Log
          Syslog, 
          File, 
          Cerr,
-         VSDebugWindow,   // Use only for Visual Studio Debug Window logging - WIN32 must be defined
+         VSDebugWindow = 1 << 7,   // Use only for Visual Studio Debug Window logging - WIN32 must be defined
       } Type;
       
       typedef enum 
@@ -170,7 +170,7 @@ class RESIP_API Log
       static void setThreadSetting(int serv, Level l);
       static void setThreadSetting(int serv);
       static volatile short touchCount;
-      static Type _type;
+      static int _type; //(enum Type)
       static const Data delim;
    protected:
       static Level _level;
