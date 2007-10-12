@@ -160,7 +160,7 @@ Log::toLevel(const Data& l)
       {
          return Level(i-1);
       }
-      i++;
+      ++i;
    }
 
    cerr << "Choosing Debug level since string was not understood: " << l << endl;
@@ -528,16 +528,13 @@ Log::Guard::~Guard()
     
    resip::Lock lock(resip::Log::_mutex);
    // !dlb! imlement VSDebugWindow as an external logger
-   if (resip::Log::_type == resip::Log::VSDebugWindow)
+   if (resip::Log::_type & resip::Log::VSDebugWindow)
    {
       mData += "\r\n";
       resip::GenericLogImpl::OutputToWin32DebugWindow(mData);
    }
-   else
-   {
-      // endl is magic in syslog -- so put it here
-      resip::GenericLogImpl::Instance() << mData << std::endl;
-   }
+   // endl is magic in syslog -- so put it here
+   resip::GenericLogImpl::Instance() << mData << std::endl;
 }
 
 
