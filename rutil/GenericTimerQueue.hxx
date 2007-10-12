@@ -7,13 +7,13 @@
 
 namespace resip {
 
-//!dcm! -- hoist?
+// !dcm! -- hoist?
 template<class T>
 class GenericTimerQueue
 {
    public:
 
-      //!dcm! -- can def. hoist
+      // !dcm! -- can def. hoist
       template<class E>
       class TimerEntry
       {

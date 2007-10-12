@@ -36,8 +36,9 @@ namespace resip {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/*
-  This class abstracts the Unix system call "poll".
+/**
+  @brief This class abstracts the Unix system call "poll".
+
   It offers implementations in terms of "poll" itself, "epoll", and "select".
   (Respectively #ifdef'd by RESIP_POLL_IMPL_POLL, RESIP_POLL_IMPL_SELECT, and
   RESIP_POLL_IMPL_EPOLL.)

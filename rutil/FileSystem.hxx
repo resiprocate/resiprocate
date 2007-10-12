@@ -16,6 +16,11 @@
 
 namespace resip
 {
+
+/**
+   @brief Provides file-system traversal. Wraps the POSIX/Windows 
+   implementation, depending on environment.
+*/
 class FileSystem
 {
    public:

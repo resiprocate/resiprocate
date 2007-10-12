@@ -7,8 +7,9 @@
 namespace resip
 {
 
-/** CountBuffer is used to back the CountStream - it counts the bytes written
-    to the stream and does not accumulate the data.
+/**
+   @brief Implementation of std::streambuf used to back CountStream.
+    @see CountStream
  */
 class CountBuffer : public std::streambuf
 {
@@ -27,11 +28,13 @@ class CountBuffer : public std::streambuf
       size_t& mCount;
 };
 
-/** CountStream is used to count the amount of data written to the stream.  The
-    actual data written to the stream is not accumulated anywhere.  It follows
-    the general pattern of DataStream in sip/resiprocate/os where the
-    data is accumulated into the reference passed to the constructor.  The data
-    is valid after CountStream's destructor is called.
+/** 
+   @brief Used to count the amount of data written to a stream.
+
+   The actual data written to the stream is not accumulated anywhere.  It 
+   follows the general pattern of DataStream where the data is accumulated into 
+   the reference passed to the constructor.  The data is valid after 
+   CountStream's destructor is called (ie, flush occurs on destruction).
 */
 class CountStream : private CountBuffer, public std::ostream
 {

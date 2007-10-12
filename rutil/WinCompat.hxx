@@ -12,6 +12,10 @@
 namespace resip
 {
 
+/**
+   @brief Class for handling compatibility across the multiple versions of 
+      Windows.
+*/
 class WinCompat
 {
    public:

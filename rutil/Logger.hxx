@@ -12,7 +12,7 @@
 #endif 
 
 /**
-   Defines a set of logging macros, one for each level of logging.
+   @file Defines a set of logging macros, one for each level of logging.
 
    Example:
 #include Logger.hxx

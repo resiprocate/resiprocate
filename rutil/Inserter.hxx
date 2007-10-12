@@ -13,15 +13,6 @@
 #include "HashMap.hxx"
 #include "rutil/compat.hxx"
 
-/**
-   Allows a (possibly recursive) container of anything with operator<< to be
-   dumped to a stream.
-
-   This is particularly useful within a Log call.
-   e.g., assuming vector<Vocal::SipContact> contacts;
-   DebugLog(<< "Contacts: " << Inserter(contacts));
- */
-
 namespace resip
 {
 
@@ -220,7 +211,22 @@ insert(std::ostream& s, const std::pair<T, U>& p)
    return s;
 }
 
-/// Holder of container to be inserted
+/**
+   @brief Allows a (possibly recursive) container of anything with operator<< to 
+   be dumped to a stream.
+
+   
+   This is particularly useful within a Log call.
+   e.g.
+   @code
+   void logNameAddrs(vector<resip::NameAddr>& contacts)
+   {
+      DebugLog(<< "Contacts: " << Inserter(contacts));
+   }
+   @endcode
+
+   @see Inserter()
+ */
 template <class T>
 class InserterClass
 {

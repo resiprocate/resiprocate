@@ -14,8 +14,8 @@ enum LockType
 };
 
 /**
-  A convenience class to lock a Lockable (such as a Mutex) on object creation,
-and unlock on destruction.
+  @brief A convenience class to lock a Lockable (such as a Mutex) on object 
+  creation, and unlock on destruction. (ie, a scoped lock)
 
   @see Mutex
 */

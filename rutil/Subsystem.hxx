@@ -8,6 +8,28 @@
 namespace resip
 {
 
+/**
+   @brief Class used to specify what sub-system given sections of code belong
+      to, for use by the logging system.
+
+   @note The logging macros defined in Logger.hxx assume that the preprocessor
+      macro RESIPROCATE_SUBSYSTEM is defined to an instance of this class. The
+      logging macro uses this object to determine what logging level should be
+      used, and what sub-system the logging statement should come from. So, in
+      your code you might do something like the following:
+
+      @code
+      #define RESIPROCATE_SUBSYSTEM Subsystem::APP
+      //...
+      void doStuff()
+      {
+         DebugLog(<< "Doing some stuff...");
+      }
+      @endcode
+
+      This would cause your log statement to be marked as coming from 
+      Subsystem::APP.
+*/
 class Subsystem 
 {
    public:

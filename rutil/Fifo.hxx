@@ -7,6 +7,9 @@
 namespace resip
 {
 
+/**
+   @brief A templated, threadsafe message-queue class.
+*/
 template < class Msg >
 class Fifo : public AbstractFifo
 {
