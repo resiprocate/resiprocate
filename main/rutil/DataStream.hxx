@@ -8,7 +8,8 @@ namespace resip
 
 class Data;
 
-/** DataBuffer is used to back the DataStream, iDataStream, and oDataStream.
+/** @brief Implementation of std::streambuf used to back the DataStream, 
+   iDataStream, and oDataStream.
  */
 class DataBuffer : public std::streambuf
 {
@@ -27,8 +28,9 @@ class DataBuffer : public std::streambuf
 };
 
 /**
-   DataStream is an iostream that operates on an existing Data.  The data
-   written to the stream is appended to the reference passed to the
+   @brief An iostream that operates on an existing Data.
+
+   The data written to the stream is appended to the reference passed to the
    constructor.  The data is valid after DataStream's destructor is called. 
    Data read from the stream is read from the reference passed to the
    constructor.
@@ -51,7 +53,7 @@ class DataStream : private DataBuffer, public std::iostream
 };
 
 /**
-   iDataStream is an istream that operates on an existing Data.
+   @brief An istream that operates on an existing Data.
  */
 class iDataStream : private DataBuffer, public std::istream
 {
@@ -69,9 +71,10 @@ class iDataStream : private DataBuffer, public std::istream
 };
 
 /**
-   oDataStream operates on an existing Data.  The data is appended to the
-   reference passed to the constructor.  The data is valid after DataStream's
-   destructor is called.
+   @brief An ostream that operates on an existing Data.
+
+   The data is appended to the reference passed to the constructor.  The data is 
+   valid after DataStream's destructor is called.
  */
 class oDataStream : private DataBuffer, public std::ostream {
    public:

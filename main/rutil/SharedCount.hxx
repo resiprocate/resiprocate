@@ -1,9 +1,13 @@
 #if !defined(RESIP_SHAREDCOUNT_HXX)
 #define RESIP_SHAREDCOUNT_HXX
 
-// Note:  This implementation is a modified version of shared_count from
-// Boost.org
-//
+/**
+   @file 
+   @brief Defines a threadsafe (shared) reference-count object.
+
+   @note   This implementation is a modified version of shared_count from
+   Boost.org
+*/
 
 #include <memory>           // std::auto_ptr, std::allocator
 #include <functional>       // std::less

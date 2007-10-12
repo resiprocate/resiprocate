@@ -19,7 +19,14 @@ class FifoStatsInterface
       virtual time_t getTimeDepth() const = 0;
 };
 
-/** First in first out queue template hoist.
+/**
+   @brief The base class from which various templated Fifo classes are derived.
+
+   (aka template hoist) 
+   AbstractFifo's get operations are all threadsafe; AbstractFifo does not 
+   define any put operations (these are defined in subclasses).
+   @note Users of the resip stack will not need to interact with this class 
+      directly in most cases. Look at Fifo and TimeLimitFifo instead.
  */
 class AbstractFifo : public FifoStatsInterface
 {

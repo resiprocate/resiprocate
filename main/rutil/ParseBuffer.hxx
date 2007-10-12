@@ -7,6 +7,12 @@
 namespace resip
 {
 
+/**
+   @brief Provides string-parsing functionality with protection from buffer
+      overflow.
+
+   Throws ParseException when parse failures occur.
+*/
 class ParseBuffer
 {
    public:

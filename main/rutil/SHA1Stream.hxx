@@ -18,7 +18,8 @@ typedef int SHA_CTX;
 namespace resip
 {
 
-/** SHA1Buffer is used to back the SHA1Stream.
+/** 
+   @brief An implementation of std::streambuf used to back the SHA1Stream.
  */
 class SHA1Buffer : public std::streambuf
 {
@@ -44,7 +45,8 @@ class SHA1Buffer : public std::streambuf
       std::vector<char> mBuf;
 };
 
-/** SHA1Stream is used to accumlate data written to the stream in a SHA1Buffer and
+/** 
+   @brief Used to accumlate data written to the stream in a SHA1Buffer and
     convert the data to SHA1.
  */
 class SHA1Stream : private SHA1Buffer, public std::ostream

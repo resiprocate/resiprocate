@@ -18,8 +18,12 @@ namespace resip
 class Mutex;
 
 /**
-  A condition variable that can be signaled or waited on.  Used for scheduling.
-Here's an example (from ThreadIf):
+  @brief 
+  A <a href="http://en.wikipedia.org/wiki/Condition_variable#Condition_variables"> 
+  condition variable</a> that can be signaled or waited on, wraps POSIX/Windows 
+  implementations depending on environment.
+
+   Here's an example (from ThreadIf):
 
 @code
   void

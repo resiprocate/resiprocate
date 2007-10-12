@@ -11,7 +11,11 @@
 
 namespace resip
 {
-/** This class is missnamed - it is really an IP address and port */
+/** 
+   @brief Represents an IP-address and port (V4 or V6).
+
+   @note This class is misnamed - it is really an IP address and port 
+*/
 struct GenericIPAddress
 {
    public:   
