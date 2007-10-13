@@ -10,9 +10,11 @@
 namespace resip
 {
 
-//====================
-// NameAddr:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "name-addr" and the "addr-spec" elements in the RFC 
+      3261 grammar.
+*/
 class NameAddr : public ParserCategory
 {
    public:

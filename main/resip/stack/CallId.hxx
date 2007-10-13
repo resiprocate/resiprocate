@@ -10,9 +10,10 @@ namespace resip
 {
 
 
-//====================
-// CallID:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "callid" element in the SIP grammar.
+*/
 class CallID : public ParserCategory
 {
    public:

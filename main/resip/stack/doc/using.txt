@@ -208,18 +208,18 @@ Contact                    h_Contacts                 NameAddrs
 Content-Disposition        h_ContentDisposition       Token       
 Content-Encoding           h_ContentEncoding          Token           
 Content-Language           h_ContentLanguages         Tokens           
-Content-Length             h_ContentLength            IntegerCategory 
+Content-Length             h_ContentLength            UInt32Category 
 Content-Type               h_ContentType              Mime            
 Content-Transfer-Encoding  h_ContentTransferEncoding  StringCategory	  
 CSeq                       h_CSeq                     CSeqCategory    
 Date                       h_Date                     DateCategory    
 Error-Info                 h_ErrorInfos               GenericUris
-Expires                    h_Expires                  IntegerCategory
+Expires                    h_Expires                  UInt32Category
 From                       h_From                     NameAddr        
 In-ReplyTo                 h_InReplyTo                CallID, CallId
-Max-Forwards               h_MaxForwards              IntegerCategory 
+Max-Forwards               h_MaxForwards              UInt32Category 
 MIME-Version               h_MIMEVersion              Tokens
-Min-Expires                h_MinExpires               IntegerCategory 
+Min-Expires                h_MinExpires               UInt32Category 
 Organization               h_Organization             StringCategory              
 Priority                   h_Priority                 Token           
 Proxy-Authenticate         h_ProxyAuthenticates       Auths          
@@ -228,7 +228,7 @@ Proxy-Require              h_ProxyRequires            Tokens
 Record-Route               h_RecordRoutes             NameAddrs
 Reply-To                   h_ReplyTo                  NameAddr        
 Require                    h_Requires                 Tokens       
-Retry-After                h_RetryAfter               IntegerCategory 
+Retry-After                h_RetryAfter               UInt32Category 
 Route                      h_Routes                   NameAddrs
 Server                     h_Server                   StringCategory  
 Subject                    h_Subject                  StringCategory  
@@ -384,7 +384,7 @@ GenericUri
    Call-Info
    Error-Info
 
-IntegerCategory 
+UInt32Category 
 ===============
   RFC name:
     1*DIGIT
