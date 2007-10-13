@@ -1,23 +1,22 @@
 /**
    @mainpage The reSIProcate SIP Stack library (resip)
 
-   @subpage resip_prim_func Primary Functionality
+   @section resip_prim_func Primary Functionality
 
-   @page resip_prim_func
-   @section resip_transp_mgmt Transport Management
+   @subsection resip_transp_mgmt Transport Management
       Resip is capable of listening/sending on an arbitrary
       number of interfaces/ports simultaneously. Additionally, resip is 
       responsible for deciding what interface/port a given SIP message should
       be sent on, based on its destination, and preferences indicated by the 
       app.
 
-   @section resip_transaction_mgmt SIP Transaction Management
+   @subsection resip_transaction_mgmt SIP Transaction Management
       Resip is responsible for handling all of the UAS and UAC core transaction
       logic defined in 
       <a href="http://www.ietf.org/rfc/rfc3261.txt">RFC 3261</a>. 
       This includes handling of reliability (ie, retransmissions) and timeouts.
 
-   @section resip_garbage_check Basic SIP Garbage Checking
+   @subsection resip_garbage_check Basic SIP Garbage Checking
       Resip is responsible for very basic garbage checking on incoming traffic
       (from the wire; NOT from the app). This includes verifying the presence
       of mandatory headers, the well-formedness of headers that are required for
@@ -25,29 +24,27 @@
       consistency between the CSeq and the Request-Line (ie, the method 
       matches).
 
-   @section resip_dns RFC 3263 DNS logic
+   @subsection resip_dns RFC 3263 DNS logic
       Resip is responsible for carrying out the logic mandated in 
       <a href="http://www.ietf.org/rfc/rfc3263.txt">RFC 3263</a> when sending
       SIP requests. By default, it relies on MIT's ares DNS, an asynchronous
       DNS resolver.
 
-   @section resip_parsing SIP Message Parsing
+   @subsection resip_parsing SIP Message Parsing
       Resip supplies a lazy-parser (parse on access), and parse code for the 
       important elements in the RFC 3261 grammar. This parse code is relatively 
       liberal (No deep validation, yet. If you want deep validation, let us 
       know!).
 
-   @section resip_sip_construction SIP Message Construction
+   @subsection resip_sip_construction SIP Message Construction
       Resip supplies implementations of the various RFC 3261 SIP message 
       construction rules.
 
-   @endpage
+   @section resip_secondary Secondary Functionality and RFC Support
 
-   @subpage resip_secondary Secondary Functionality and RFC Support
+   @section resip_arch Architecture Overview
 
-   @subpage resip_arch Architecture Overview
-
-   @section resip_responsibilities Resip's Responsibilities
+   @subsection resip_responsibilities Resip's Responsibilities
       Generally speaking, if it is specified as a MUST/MUST NOT in the core SIP 
       RFCs, resip handles it, unless it is the responsibility of the TU. (And if 
       you can find a case where it does not, let us know!) When such a 
@@ -55,7 +52,7 @@
       TU can use to fulfill the requirement (see resip::Helper). SHOULD-level 
       requirements are generally handled as well, but are often configurable.
 
-   @section resip_big_picture The Big Picture
+   @subsection resip_big_picture The Big Picture
       The basic anatomy of a SIP application running on top of the resip stack
       is as follows. You have:
       - A single instance of resip::SipStack
@@ -65,7 +62,7 @@
       These are all connected together through a combination of message-passing,
       and direct function calls(usually reserved for stuff like configuration).
 
-   @section resip_low_detail The Internals
+   @subsection resip_low_detail The Internals
       The resip stack can be broken down into the following large components:
       - resip::SipStack : This is the part that the resip::TransactionUser 
          (app-layer) talks to. It also is responsible for coordinating the rest
@@ -118,7 +115,7 @@
          buffer, and posts it to the chosen resip::Transport.
          - resip::Transport throws the bits out on the wire.
          
-   @section resip_high_detail The Nitty Gritty Details
+   @subsection resip_high_detail The Nitty Gritty Details
    
-   @subpage resip_usage Usage
+   @section resip_usage Usage
 */
