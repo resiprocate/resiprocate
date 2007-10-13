@@ -10,9 +10,10 @@ namespace resip
 {
 
 
-//====================
-// WarningCategory:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "warning-value" element in the RFC 3261 grammar.
+*/
 class WarningCategory : public ParserCategory
 {
    public:

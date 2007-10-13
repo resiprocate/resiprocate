@@ -9,9 +9,11 @@
 namespace resip
 {
 
-//====================
-// StringCategory
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "header-value" element in the RFC 3261 grammar (ie, an
+      unknown header field value).
+*/
 class StringCategory : public ParserCategory
 {
    public:
