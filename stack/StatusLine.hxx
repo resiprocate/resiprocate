@@ -8,9 +8,10 @@
 namespace resip
 {
 
-//====================
-// StatusLine:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "Status-Line" element in the RFC 3261 grammar.
+*/
 class StatusLine : public ParserCategory
 {
    public:

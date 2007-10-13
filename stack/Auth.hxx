@@ -12,9 +12,12 @@ namespace resip
       _enum##_Param::DType& param(const _enum##_Param& paramType); \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const
 
-//====================
-// Auth:
-//====================
+
+/**
+   @ingroup sip_grammar
+   @brief Represents the "credentials" and "challenge" elements in the SIP 
+      grammar.
+*/
 class Auth : public ParserCategory
 {
    public:

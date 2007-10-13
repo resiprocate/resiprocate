@@ -10,9 +10,10 @@
 namespace resip
 {
 
-//====================
-// RequestLine:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "Request-Line" element in the RFC 3261 grammar.
+*/
 class RequestLine : public ParserCategory
 {
    public:

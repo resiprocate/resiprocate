@@ -9,9 +9,10 @@
 namespace resip
 {
 
-//====================
-// GenericUri:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "absoluteURI" element in the RFC 3261 grammar.
+*/
 class GenericUri : public ParserCategory
 {
    public:

@@ -12,9 +12,10 @@ namespace resip
 
 class HeaderFieldValue;
 
-//====================
-// Mime:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "media-type" element in the RFC 3261 grammar.
+*/
 class Mime : public ParserCategory
 {
    public:

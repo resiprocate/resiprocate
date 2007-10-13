@@ -10,9 +10,11 @@ namespace resip
 {
 
 
-//====================
-// CSeqCategory:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents a CSeq header field value (this doesn't have an official
+      name in the RFC 3261 grammar).
+*/
 class CSeqCategory : public ParserCategory
 {
    public:
