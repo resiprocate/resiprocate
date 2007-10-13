@@ -10,9 +10,10 @@ namespace resip
 {
 
 
-//====================
-// Token:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "token" element in the RFC 3261 grammar.
+*/
 class Token : public ParserCategory
 {
    public:

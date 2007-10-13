@@ -8,9 +8,10 @@
 namespace resip
 {
 
-//====================
-// UInt32:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents a numeric-with-comment header field value.
+*/
 class UInt32Category : public ParserCategory
 {
    public:

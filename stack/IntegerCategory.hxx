@@ -8,9 +8,10 @@
 namespace resip
 {
 
-//====================
-// Integer:
-//====================
+/**
+   @deprecated Use UInt32Category instead.
+   @brief Represents a numeric-with-comment header field value.
+*/
 class IntegerCategory : public ParserCategory
 {
    public:
