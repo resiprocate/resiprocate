@@ -318,6 +318,9 @@
 				RelativePath=".\Helper.cxx">
 			</File>
 			<File
+				RelativePath=".\IntegerCategory.cxx">
+			</File>
+			<File
 				RelativePath=".\IntegerParameter.cxx">
 			</File>
 			<File
@@ -698,6 +701,9 @@
 			</File>
 			<File
 				RelativePath=".\Helper.hxx">
+			</File>
+			<File
+				RelativePath=".\IntegerCategory.hxx">
 			</File>
 			<File
 				RelativePath=".\IntegerParameter.hxx">
