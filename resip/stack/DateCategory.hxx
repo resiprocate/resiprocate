@@ -40,6 +40,10 @@ enum Month {
    Dec
 };
 
+/**
+   @ingroup sip_grammar
+   @brief Represents the "SIP-date" element in the RFC 3261 grammar.
+*/
 class DateCategory : public ParserCategory
 {
    public:

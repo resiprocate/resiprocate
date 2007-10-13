@@ -9,9 +9,10 @@
 namespace resip
 {
 
-//====================
-// Via:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the "via-parm" element in the RFC 3261 grammar.
+*/
 class Via : public ParserCategory
 {
    public:
