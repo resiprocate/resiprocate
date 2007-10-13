@@ -30,6 +30,44 @@ class ExtensionHeader;
 class SecurityAttributes;
 class Transport;
 
+/**
+   @brief Encapsulates a SIP message.
+
+   This is the class that your app will spend the most time working with. This
+   is because, in the UA core/Transaction User architecture, the vast majority
+   of interaction is carried out through SIP messaging.
+
+   When you get a SipMessage, generally the first thing you want to know is 
+   whether it is a request or a response. This is done by calling 
+   SipMessage::isRequest() or SipMessage::isResponse().
+   
+   Next, it is usually important to determine what the SIP method of the message 
+   is. This is done by calling SipMessage::method() (this is a convenience 
+   function that checks the method of the Request-Line if the message is a 
+   request, or the method of the CSeq if a response).
+   
+   At this point, it may become useful to examine the start-line of the message.
+
+   If the message is a request, you can get the Request-Line (represented by a 
+   RequestLine&) by calling
+   @code
+      RequestLine& rLine = sip.header(h_RequestLine);
+   @endcode
+
+   If the message is a response, you can get the Status-Line (represented by a StatusLine&) by calling
+   @code
+      StatusLine& sLine = sip.header(h_StatusLine);
+   @endcode
+
+   From here, examination of the various headers is in order. Each header type
+   has an associated h_HeaderName access token that we use to retrieve the 
+   value/values of that header. Generally speaking, the access token 
+   h_HeaderName is named in a predictable fashion; all non-alphanumeric 
+   characters are omitted, the first letter of each word is capitalized, and the 
+   name is pluralized if the header is multi-valued. Examples include h_To, 
+   h_From, h_CSeq, h_CallId, h_Routes, h_Contacts, h_RecordRoutes, etc.
+
+*/
 class SipMessage : public TransactionMessage
 {
    public:

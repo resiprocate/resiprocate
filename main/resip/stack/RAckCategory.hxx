@@ -9,9 +9,11 @@
 namespace resip
 {
 
-//====================
-// RAckCategory:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the RAck header field value defined in the RFC 3262 
+      grammar.
+*/
 class RAckCategory : public ParserCategory
 {
    public:

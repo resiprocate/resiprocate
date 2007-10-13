@@ -8,9 +8,14 @@
 namespace resip
 {
 
-//====================
-// ExpiresCategory:
-//====================
+/**
+   @ingroup sip_grammar
+   @brief Represents the header field value for an Expires-type header. (Numeric
+      with no comment)
+   @todo Seems like this and UInt32Category (numeric _with_ a comment) could be
+      renamed to something a little more self-explanatory.
+
+*/
 class ExpiresCategory : public ParserCategory
 {
    public:
