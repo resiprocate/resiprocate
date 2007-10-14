@@ -68,10 +68,10 @@ int main(int argc, char* argv[])
                  << " Lifetime=" << turnSocket.getLifetime() 
                  << " Bandwidth=" << turnSocket.getBandwidth() 
                  << std::endl;
-       resip::Data turnData("This is test wrapped Turn Data!");
+       resip::Data turnData("This test is for wrapped Turn Data!");
        turnSocket.sendTo(asio::ip::address::from_string("127.0.0.1"), 2000, turnData.c_str(), turnData.size());
        turnSocket.setActiveDestination(asio::ip::address::from_string("127.0.0.1"), 2000);
-       turnData = "This is test framed turn data!";
+       turnData = "This test is for framed turn data!";
        turnSocket.send(turnData.c_str(), turnData.size());
 
        // Receive Data
