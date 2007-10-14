@@ -8,8 +8,8 @@ namespace reTurn {
 
 UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, const std::string& port)
 : TurnTransportBase(ioService),
-  mRequestHandler(requestHandler),
   mSocket(ioService), // , asio::ip::udp::endpoint(asio::ip::address::from_string(address), port))
+  mRequestHandler(requestHandler),
   mAlternatePortUdpServer(0),
   mAlternateIpUdpServer(0),
   mAlternateIpPortUdpServer(0)

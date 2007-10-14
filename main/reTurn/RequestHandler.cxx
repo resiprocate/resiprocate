@@ -263,7 +263,7 @@ RequestHandler::ProcessResult
 RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& response)
 {
    ProcessResult result = RespondFromReceiving;
-   bool verbose = true;
+   //bool verbose = true;
 
    // TODO should check for unknown attributes here and send 420 listing the
    // unknown attributes. 
