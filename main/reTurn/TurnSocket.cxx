@@ -588,7 +588,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, asio::ip::address* sourceA
          memcpy(&stunMsgLen, &mBuffer[2], 2);
          stunMsgLen = ntohs(stunMsgLen);  // Framed length will be entire size of StunMessage
 
-         if(readSize != stunMsgLen+4)
+         if(readSize != (unsigned int)stunMsgLen+4)
          {
             // TODO - fix read logic so that we can read in chuncks
             std::cout << "Did not read entire message: read=" << readSize << " wanted=" << stunMsgLen+4 << std::endl;

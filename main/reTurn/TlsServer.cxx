@@ -5,11 +5,11 @@ namespace reTurn {
 
 TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, const std::string& port)
 : mIOService(ioService),
-  mRequestHandler(requestHandler),
   mAcceptor(ioService),
   mContext(ioService, asio::ssl::context::tlsv1),
   mConnectionManager(),
-  mNewConnection(new TlsConnection(ioService, mConnectionManager, mRequestHandler, mContext))
+  mNewConnection(new TlsConnection(ioService, mConnectionManager, mRequestHandler, mContext)),
+  mRequestHandler(requestHandler)
 {
    // Set Context options - TODO make into configuration settings
    mContext.set_options(asio::ssl::context::default_workarounds | 
