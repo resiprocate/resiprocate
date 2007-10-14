@@ -7,6 +7,7 @@ class TurnTransportHandler
 {
 public:
    TurnTransportHandler() {}
+   virtual ~TurnTransportHandler() {}
 
    virtual void onTransportDestroyed() = 0;
 };

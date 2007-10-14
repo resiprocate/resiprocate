@@ -11,9 +11,9 @@ namespace reTurn {
 #define PORT_RANGE_MAX 50003  // must be odd
 
 TurnManager::TurnManager(asio::io_service& ioService) : 
-   mIOService(ioService),
    mLastAllocatedUdpPort(PORT_RANGE_MIN-1),
-   mLastAllocatedTcpPort(PORT_RANGE_MIN-1)
+   mLastAllocatedTcpPort(PORT_RANGE_MIN-1),
+   mIOService(ioService)
 {
    // Initialize Allocation Ports
    for(unsigned short i = PORT_RANGE_MIN; i <= PORT_RANGE_MAX; i++)

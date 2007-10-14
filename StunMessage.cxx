@@ -30,12 +30,12 @@ StunMessage::StunMessage(const StunTuple& localTuple,
                          asio::ip::udp::endpoint* alternateIpEndpoint,
                          asio::ip::udp::endpoint* alternateIpPortEndpoint) :
    mLocalTuple(localTuple),
-   mRemoteTuple(remoteTuple),
-   mBuffer(buf, bufLen), // !slg! copies buffer from Socket buffer assuming for now that StunMessages will persist past one request/response transaction
-                         //       could make this more efficient by having the transports allocate buffer dynamically and pass ownership over
+   mRemoteTuple(remoteTuple),   
    mAlternatePortEndpoint(alternatePortEndpoint),
    mAlternateIpEndpoint(alternateIpEndpoint),
-   mAlternateIpPortEndpoint(alternateIpPortEndpoint)
+   mAlternateIpPortEndpoint(alternateIpPortEndpoint),
+   mBuffer(buf, bufLen)  // !slg! copies buffer from Socket buffer assuming for now that StunMessages will persist past one request/response transaction
+                         //       could make this more efficient by having the transports allocate buffer dynamically and pass ownership over
 {
    init();
    mIsValid = stunParseMessage(buf, bufLen);
@@ -43,10 +43,10 @@ StunMessage::StunMessage(const StunTuple& localTuple,
 }
 
 StunMessage::StunMessage() :
-   mIsValid(true),
    mAlternatePortEndpoint(0),
    mAlternateIpEndpoint(0),
-   mAlternateIpPortEndpoint(0)
+   mAlternateIpPortEndpoint(0),
+   mIsValid(true)
 {
    init();
 }
