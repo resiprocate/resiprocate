@@ -29,6 +29,8 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
     return FALSE;
   }
 }
+#endif // defined(_WIN32)
+
 
 class reTurnConfig
 {
@@ -71,9 +73,17 @@ int main(int argc, char* argv[])
     a2p1UdpServer.setAlternateUdpServers(&a2p2UdpServer, &a1p1UdpServer, &a1p2UdpServer);
     a2p2UdpServer.setAlternateUdpServers(&a2p1UdpServer, &a1p2UdpServer, &a1p1UdpServer);
 
+#ifdef _WIN32
     // Set console control handler to allow server to be stopped.
     console_ctrl_function = boost::bind(&asio::io_service::stop, &ioService);
     SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
+#else
+    // Block all signals for background thread.
+    sigset_t new_mask;
+    sigfillset(&new_mask);
+    sigset_t old_mask;
+    pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
+#endif
 
     // Run the ioService until stopped.
     // Create a pool of threads to run all of the io_services.
@@ -84,6 +94,21 @@ int main(int argc, char* argv[])
           boost::bind(&asio::io_service::run, &ioService)));
        threads.push_back(thread);
     }
+
+#ifndef _WIN32
+    // Restore previous signals.
+    pthread_sigmask(SIG_SETMASK, &old_mask, 0);
+
+    // Wait for signal indicating time to shut down.
+    sigset_t wait_mask;
+    sigemptyset(&wait_mask);
+    sigaddset(&wait_mask, SIGINT);
+    sigaddset(&wait_mask, SIGQUIT);
+    sigaddset(&wait_mask, SIGTERM);
+    pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
+    int sig = 0;
+    sigwait(&wait_mask, &sig);
+#endif
 
     // Wait for all threads in the pool to exit.
     for (std::size_t i = 0; i < threads.size(); ++i)
@@ -98,8 +123,6 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-
-#endif // defined(_WIN32)
 
 
 /* ====================================================================
