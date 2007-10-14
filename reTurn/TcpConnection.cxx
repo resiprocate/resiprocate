@@ -90,7 +90,7 @@ TcpConnection::handleReadHeader(const asio::error_code& e)
          stunMsgLen = ntohs(stunMsgLen) + 20;  // 20 bytes for header
          mReadBufferPos = 4;  // Don't overwrite part of StunMessage header already read
          mBufferLen = stunMsgLen;
-         if(stunMsgLen >= 0)
+         if(stunMsgLen > 0)
          {
             std::cout << "Reading StunMessage with length=" << stunMsgLen << std::endl;
             mReadingStunMessage = true;
@@ -105,7 +105,7 @@ TcpConnection::handleReadHeader(const asio::error_code& e)
          stunMsgLen = ntohs(stunMsgLen);  // Framed length will be entire size of StunMessage
          mReadBufferPos = 0;   // Overwrite framing info and read in entire StunMessage
          mBufferLen = stunMsgLen;
-         if(stunMsgLen >= 0)
+         if(stunMsgLen > 0)
          {
             std::cout << "Reading StunMessage with length=" << stunMsgLen << std::endl;
             mReadingStunMessage = true;
