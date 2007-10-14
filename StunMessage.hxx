@@ -2,7 +2,7 @@
 #define STUNMESSAGE_HXX 
 
 #include <ostream>
-#include <rutil/Compat.hxx>
+#include <rutil/compat.hxx>
 #include <rutil/Data.hxx>
 #include <asio.hpp>
 
