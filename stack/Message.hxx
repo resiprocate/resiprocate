@@ -7,6 +7,11 @@
 namespace resip
 {
 class TransactionUser;
+
+/**
+   @ingroup resip_crit
+   @brief The base-class used for message-passing.
+*/
 class Message 
 {
    public:

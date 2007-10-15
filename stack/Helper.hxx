@@ -30,6 +30,16 @@ class UnsupportedAuthenticationScheme : public BaseException
       const char* name() const { return "UnsupportedAuthenticationScheme"; }
 };
 
+
+/**
+   @ingroup resip_crit
+   @brief An aggregation of useful static functions.
+
+   These are mostly involved with
+      - The manufacture of SIP messages (requests and responses). This is of 
+      particular importance to app-writers.
+      - Digest auth related functions.
+*/
 class Helper
 {
    public:
@@ -41,7 +51,7 @@ class Helper
           Used by Registration, Publication and Subscription refreshes, to
           calculate the time at which a refresh should be performed (which
           is some time, that is a bit smaller than the Expiration interval).
-          The recommended caluclation from the RFC's is the minimnum of the 
+          The recommended calculation from the RFC's is the minimnum of the 
           Exipiration interval less 5 seconds and nine tenths of the exipiration 
           interval.
       */
