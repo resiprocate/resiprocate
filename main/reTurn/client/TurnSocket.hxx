@@ -5,8 +5,8 @@
 #include <asio.hpp>
 #include <rutil/Data.hxx>
 
-#include "StunTuple.hxx"
-#include "StunMessage.hxx"
+#include "../StunTuple.hxx"
+#include "../StunMessage.hxx"
 
 namespace reTurn {
 
