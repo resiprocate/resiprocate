@@ -21,6 +21,11 @@ class ExtensionParameter;
 class Parameter;
 class ParseBuffer;
 
+/**
+   @ingroup resip_crit
+   @brief Base class for all SIP grammar elements that can have parameters.
+   @todo Maybe a better name? IHaveParams? ElemWithParams?
+*/
 class ParserCategory : public LazyParser
 {
     public:

@@ -10,6 +10,15 @@ namespace resip
 class ParseBuffer;
 class Data;
 
+/**
+   @ingroup resip_crit
+   @ingroup sip_parse
+   @brief The base-class for all lazily-parsed SIP grammar elements.
+
+   Subclasses of this are parse-on-access; the parse will be carried out (if
+   it hasn't already) the first time one of the members is accessed. Right now,
+   all header-field-values and SIP bodies are lazily parsed.
+*/
 class LazyParser
 {
    public:

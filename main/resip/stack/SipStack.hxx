@@ -29,6 +29,13 @@ class TransactionUser;
 class AsyncProcessHandler;
 class Compression;
 
+
+/**
+   @ingroup resip_crit
+   @brief This is the primary point of interaction between the app-layer and the
+      stack.
+
+*/
 class SipStack
 {
    public:
