@@ -31,7 +31,8 @@ class SecurityAttributes;
 class Transport;
 
 /**
-   @brief Encapsulates a SIP message.
+   @ingroup resip_crit
+   @brief Represents a SIP message.
 
    This is the class that your app will spend the most time working with. This
    is because, in the UA core/Transaction User architecture, the vast majority

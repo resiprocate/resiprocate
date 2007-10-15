@@ -9,6 +9,12 @@
 namespace resip
 {
 
+/**
+   @ingroup resip_crit
+   @brief Container class for ParserCategory, used by SipMessage.
+
+   Multi-value headers (Contact, Via, etc) are represented as one of these.
+*/
 template<class T>
 class ParserContainer : public ParserContainerBase
 {

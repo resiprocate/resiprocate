@@ -7,6 +7,14 @@
 namespace resip
 {
 
+/**
+   @ingroup resip_crit
+   @brief A base-class for messages used by applications.
+
+   One use case for these is timers; you use SipStack::post() or 
+   SipStack::postMs() to get timer events in the form of your subclass of
+   ApplicationMessage.
+*/
 class ApplicationMessage : public Message
 {
    public:
