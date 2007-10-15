@@ -2,12 +2,8 @@ BUILD := ../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += ASIO RUTIL ARES OPENSSL PTHREAD
-#TARGET_BINARY = reTurnServer
-TARGET_LIBRARY = libreTurnClient
+TARGET_BINARY = reTurnServer
 CXXFLAGS += -DBOOST_ALL_NO_LIB
-
-TESTPROGRAMS += \
-	reTurnServer.cxx
 
 SRC += \
 	ConnectionManager.cxx \
@@ -31,12 +27,7 @@ SRC += \
 	UdpRelayServer.cxx \
 	UdpServer.cxx \
 	StunMessage.cxx \
-	StunTuple.cxx \
-	TurnSocket.cxx \
-	TurnTcpSocket.cxx \
-	TurnTlsSocket.cxx \
-	TurnUdpSocket.cxx
-
+	StunTuple.cxx
 
 
 include $(BUILD)/Makefile.post
