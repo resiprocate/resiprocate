@@ -10,10 +10,13 @@ namespace resip
 class SipStack;
 
 /** 
-    This class is used to create a thread to run the SipStack in.  The
-    thread provides cycles to the SipStack by calling process.  Process
-    is called at least every 25ms, or sooner if select returns a signaled
-    file descriptor.
+   @ingroup resip_crit
+   @brief This class is used to create a thread to run the SipStack in.
+
+   The thread provides cycles to the SipStack by calling process.  Process
+   is called at least every 25ms, or sooner if select returns a signaled
+   file descriptor.  This is also the canonical example code for how to run
+   SipStack's process-loop, if you want to do it yourself.
 */
 class StackThread : public ThreadIf
 {

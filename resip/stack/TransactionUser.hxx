@@ -13,6 +13,11 @@ namespace resip
 {
 class SipMessage;
 
+/**
+   @ingroup resip_crit
+   @brief The base-class for an RFC 3261 Transaction User. This is the 
+      "app-layer".
+*/
 class TransactionUser
 {
    public:

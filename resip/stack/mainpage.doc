@@ -17,7 +17,7 @@
       additional functionality, such as:
 
       - @ref sip_parse "SIP message parsing" : Resip supplies parse-code for all 
-      the major RFC 3261 @ref sip_grammar "grammar elements" (this parse code 
+      the core @ref sip_grammar "SIP grammar elements" (this parse code 
       is fairly liberal, and does not do deep validation).
       - @ref make_sip "SIP message construction" : Resip supplies code for 
       constructing SIP messages according to the rules in RFC 3261.
@@ -78,8 +78,9 @@
          resip::TcpTransport, and resip::TlsTransport. There may be any number 
          of these.
       - resip::TuSelector : This is the part that determines which TU (there
-         may be several) a SIP message should be sent to. It also decides how to
-         route other message-passing.
+         may be several) a received SIP message should be sent to. It also 
+         decides how to route other message-passing from the stack (see 
+         TransactionTerminated and ConnectionTerminated)
 
       Here's a description of the typical flow:
          - resip::SipStack's main process loop runs, eventually causing one of 
