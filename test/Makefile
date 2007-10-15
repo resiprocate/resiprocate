@@ -1,7 +1,7 @@
 BUILD := ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RUTIL ARES OPENSSL PTHREAD 
+PACKAGES += ASIO RUTIL ARES OPENSSL PTHREAD 
 CXXFLAGS += -DBOOST_ALL_NO_LIB
 LDLIBS += -L../$(OBJ) -lreTurnClient
 
