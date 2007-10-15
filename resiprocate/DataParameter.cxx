@@ -7,14 +7,17 @@
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/ParseException.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
+#endif
 DataParameter::DataParameter(ParameterTypes::Type type,
                              ParseBuffer& pb,
 			     const char* terminators)
@@ -72,7 +75,9 @@ DataParameter::encode(ostream& stream) const
       // calling exists(p_foo) before calling param(p_foo)
       if (mValue.empty())
       {
+#if !defined(DISABLE_RESIP_LOG)
          ErrLog(<< "Accessing defaulted DataParameter: '" << getName() << "'");
+#endif
       }
       assert(!mValue.empty()); // !jf!  probably should throw here
       return stream << getName() << Symbols::EQUALS << mValue;

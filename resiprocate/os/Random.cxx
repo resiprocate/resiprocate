@@ -23,8 +23,9 @@
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/Mutex.hxx"
 #include "resiprocate/os/Lock.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
-
+#endif
 #ifdef USE_SSL
 #  define USE_OPENSSL 1
 #else
@@ -44,7 +45,9 @@
 
 using namespace resip;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#endif
 
 bool Random::sIsInitialized = false;
 Mutex Random::sMutex;
@@ -230,8 +233,9 @@ Random::getCryptoRandom()
       
       char buf[1024];
       ERR_error_string_n(err,buf,sizeof(buf));
-      
+#if !defined(DISABLE_RESIP_LOG)    
       ErrLog( << buf );
+#endif
       assert(0);
    }
    return ret;
@@ -388,4 +392,5 @@ Random::getCryptoRandomHex(unsigned int numBytes)
  * <http://www.vovida.org/>.
  *
  */
+
 

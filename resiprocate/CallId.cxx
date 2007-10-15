@@ -6,16 +6,18 @@
 #include "resiprocate/UnknownParameter.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
-
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
+#endif
 //====================
 // CallID:
 //====================

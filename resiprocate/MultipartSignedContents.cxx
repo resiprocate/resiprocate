@@ -4,7 +4,9 @@
 
 #include "resiprocate/MultipartSignedContents.hxx"
 #include "resiprocate/SipMessage.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 //#include "resiprocate/EncodingContext.hxx"
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
@@ -12,7 +14,9 @@
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
+#endif
 
 bool
 MultipartSignedContents::init()

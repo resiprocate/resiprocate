@@ -5,14 +5,18 @@
 #include "resiprocate/RportParameter.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
+#endif
 
 RportParameter::RportParameter(ParameterTypes::Type type,
                                ParseBuffer& pb, 

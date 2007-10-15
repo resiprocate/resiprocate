@@ -6,14 +6,18 @@
 #include "resiprocate/ParseException.hxx"
 #include "resiprocate/QuotedDataParameter.hxx"
 #include "resiprocate/Symbols.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#endif
 
 QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type,
                                          ParseBuffer& pb,
@@ -22,7 +26,9 @@ QuotedDataParameter::QuotedDataParameter(ParameterTypes::Type type,
 {
    if (!mQuoted)
    {
+#if !defined(DISABLE_RESIP_LOG)
       DebugLog (<< "Fixing unquoted parameter to be quoted: " << mValue);
+#endif
       mQuoted = true; // may want to fail in this case if we are being strict
       //pb.fail(__FILE__, __LINE__);
    }

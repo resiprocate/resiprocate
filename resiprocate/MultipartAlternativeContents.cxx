@@ -3,12 +3,16 @@
 #endif
 
 #include "resiprocate/MultipartAlternativeContents.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
+#endif
 
 bool 
 MultipartAlternativeContents::init()

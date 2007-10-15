@@ -4,7 +4,9 @@
 
 #include "resiprocate/MultipartMixedContents.hxx"
 #include "resiprocate/SipMessage.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/BaseException.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
@@ -13,7 +15,9 @@
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
+#endif
 
 bool 
 MultipartMixedContents::init()
