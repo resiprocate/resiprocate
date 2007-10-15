@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;../../asio-0.3.8rc3/include&quot;;../../boost_1_34_1;../contrib/OpenSSL/include;../"
+				AdditionalIncludeDirectories="&quot;../contrib/asio&quot;;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;../../asio-0.3.8rc3/include&quot;;../../boost_1_34_1;../contrib/OpenSSL/include;../"
+				AdditionalIncludeDirectories="&quot;../contrib/asio&quot;;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
