@@ -29,6 +29,16 @@ struct GenericIPAddress;
 
 typedef unsigned long ConnectionId;
 
+/**
+   @ingroup resip_crit
+   @brief Represents a network address.
+
+   This includes:
+      - IP address
+      - port
+      - protocol
+      - TLS hostname (since this is integral to connection establishment)
+*/
 class Tuple
 {
    public:

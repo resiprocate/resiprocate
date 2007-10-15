@@ -39,7 +39,11 @@ class H_ContentDescription : public MIME_Header
 };
 extern H_ContentDescription h_ContentDescription;
       
-// Common type for all body contents
+
+/**
+   @ingroup resip_crit
+   @brief Base class for all SIP body types. Lazily-parsed.
+*/
 class Contents : public LazyParser
 {
    public:

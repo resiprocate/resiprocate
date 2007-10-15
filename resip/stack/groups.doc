@@ -1,0 +1,4 @@
+/** @defgroup resip_crit Critically Important Classes */
+/** @defgroup sip_grammar SIP Grammar Elements */
+/** @defgroup sip_parse SIP Parsing Infrastructure */
+/** @defgroup make_sip SIP Message Generation Functions */
