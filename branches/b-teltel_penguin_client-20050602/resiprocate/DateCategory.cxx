@@ -7,7 +7,9 @@
 #include "resiprocate/DateCategory.hxx"
 #include "resiprocate/os/Data.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
@@ -15,8 +17,9 @@
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
+#endif
 //====================
 // Date
 //====================
@@ -64,7 +67,9 @@ DateCategory::DateCategory()
    if (now == ((time_t)-1))
    {
       int e = getErrno();
+#if !defined(DISABLE_RESIP_LOG)
       DebugLog (<< "Failed to get time: " << strerror(e));
+#endif
       return;
    }
    
@@ -74,7 +79,9 @@ DateCategory::DateCategory()
    if (gmtp == 0)
    {
       int e = getErrno();
+#if !defined(DISABLE_RESIP_LOG)
       DebugLog (<< "Failed to convert to gmt: " << strerror(e));
+#endif
       return;
    }
    memcpy(&gmt,gmtp,sizeof(gmt));
@@ -95,10 +102,12 @@ DateCategory::DateCategory()
    mHour = gmt.tm_hour;
    mMin = gmt.tm_min;
    mSec = gmt.tm_sec;
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog (<< "Set date: day=" << mDayOfWeek 
              << " month=" << mMonth
              << " year=" << mYear
              << " " << mHour << ":" << mMin << ":" << mSec);
+#endif
 }
 
 DateCategory::DateCategory(HeaderFieldValue* hfv, Headers::Type type)

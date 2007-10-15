@@ -16,10 +16,14 @@
 #include "resiprocate/os/Socket.hxx"
 #include "resiprocate/os/Tuple.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/WinLeakCheck.hxx"
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
+#endif
 
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 256
@@ -40,10 +44,14 @@ DnsUtil::getLocalHostName()
          switch (err)
          {
             case WSANOTINITIALISED:
+#if !defined(DISABLE_RESIP_LOG)
                CritLog( << "could not find local hostname because netwrok not initialized:" << strerror(err) );
+#endif
                break;
             default:
+#if !defined(DISABLE_RESIP_LOG)
                CritLog( << "could not find local hostname:" << strerror(err) );
+#endif
                break;
          }
          throw Exception("could not find local hostname",__FILE__,__LINE__);
@@ -55,7 +63,9 @@ DnsUtil::getLocalHostName()
        strncpy(buffer, he->h_name, sizeof(buffer));
      }
 	 else {
+#if !defined(DISABLE_RESIP_LOG)
        WarningLog( << "local hostname does not contain a domain part");
+#endif
      }
    }
    return Data(buffer);
@@ -74,14 +84,18 @@ DnsUtil::getLocalDomainName()
 #if defined( __APPLE__ ) || defined( WIN32 ) || defined(__SUNPRO_CC) || defined(__sun__)
      throw Exception("Could not find domainname in local hostname",__FILE__,__LINE__);
 #else
+#if !defined(DISABLE_RESIP_LOG)
      WarningLog( << "using getdomainname, because of missing domainname");
+#endif
      char buffer[MAXHOSTNAMELEN];
      if (int e = getdomainname(buffer,sizeof(buffer)) == -1)
      {
        if ( e != 0 )
        {
          int err = getErrno();
+#if !defined(DISABLE_RESIP_LOG)
          CritLog(<< "Couldn't find domainname: " << strerror(err));
+#endif
          throw Exception(strerror(err), __FILE__,__LINE__);
        }
      }
@@ -98,7 +112,9 @@ DnsUtil::getLocalIpAddress(const Data& myInterface)
 
    if (ifs.empty())
    {
+#if !defined(DISABLE_RESIP_LOG)
       ErrLog( << "No interfaces matching "  << myInterface << " were found" );
+#endif
       throw Exception("No interfaces matching", __FILE__, __LINE__);
    }
    else
@@ -244,7 +260,9 @@ DnsUtil::canonicalizeIpV6Address(const Data& ipV6Address)
    int res = DnsUtil::inet_pton(ipV6Address, dst);
    if (res <= 0)
    {
+#if !defined(DISABLE_RESIP_LOG)
       WarningLog(<< ipV6Address << " not well formed IPV6 address");
+#endif
       assert(0);
    }
    return DnsUtil::inet_ntop(dst);
@@ -305,8 +323,10 @@ DnsUtil::getInterfaces(const Data& matching)
       e = ioctl(s,SIOCGIFADDR,&ifr2);
       if ( e == -1 )
       {
-         // no valid address for this interface, skip it    
+         // no valid address for this interface, skip it   
+#if !defined(DISABLE_RESIP_LOG)
          DebugLog (<< "Ignoring interface  " << name << " as there is no valid address" );
+#endif
          continue;
       }
       struct sockaddr a = ifr2.ifr_addr;
@@ -801,4 +821,5 @@ inet_pton6(const char *src, u_char *dst)
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
+
 

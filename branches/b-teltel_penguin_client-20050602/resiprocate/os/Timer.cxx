@@ -11,11 +11,11 @@
 #include <cassert>
 
 #include "resiprocate/os/Timer.hxx"
-#include "resiprocate/os/Logger.hxx"
 #include "resiprocate/os/Random.hxx"
-
+#if !defined(DISABLE_RESIP_LOG)
+#include "resiprocate/os/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
+#endif
 using namespace resip;
  
 unsigned long

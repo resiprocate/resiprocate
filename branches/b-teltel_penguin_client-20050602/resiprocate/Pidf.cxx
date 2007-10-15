@@ -6,14 +6,18 @@
 #include "resiprocate/SipMessage.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/XMLCursor.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/Inserter.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#endif
 
 bool
 Pidf::init()
@@ -153,8 +157,9 @@ Pidf::encodeParsed(std::ostream& str) const
 void 
 Pidf::parse(ParseBuffer& pb)
 {
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<< "Pidf::parse(" << Data(pb.start(), int(pb.end()-pb.start())) << ") ");
-
+#endif
    XMLCursor xml(pb);
 
    if (xml.getTag() == "presence")
@@ -166,7 +171,9 @@ Pidf::parse(ParseBuffer& pb)
       }
       else
       {
+#if !defined(DISABLE_RESIP_LOG)
          DebugLog(<< "no entity!");
+#endif
       }
       
       if (xml.firstChild())
@@ -249,7 +256,9 @@ Pidf::parse(ParseBuffer& pb)
    }
    else
    {
+#if !defined(DISABLE_RESIP_LOG)
       DebugLog(<< "no presence tag!");
+#endif
    }
 }
 

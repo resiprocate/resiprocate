@@ -13,14 +13,18 @@
 #include "resiprocate/Uri.hxx"
 #include "resiprocate/os/DataStream.hxx"
 #include "resiprocate/os/DnsUtil.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 #include "resiprocate/os/Win32Export.hxx"
 
 using namespace resip;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#endif
 #define HANDLE_CHARACTER_ESCAPING //undef for old behaviour
 
 Uri::Uri() 
@@ -165,7 +169,9 @@ Uri::fromTel(const Uri& tel, const Uri& hostUri)
    // need to sort the user parameters
    if (!tel.userParameters().empty())
    {
+#if !defined(DISABLE_RESIP_LOG)
       DebugLog(<< "Uri::fromTel: " << tel.userParameters());
+#endif
       Data isub;
       Data postd;
 
@@ -221,7 +227,9 @@ Uri::fromTel(const Uri& tel, const Uri& hostUri)
       for(std::set<Data>::const_iterator i = userParameters.begin();
           i != userParameters.end(); ++i)
       {
+#if !defined(DISABLE_RESIP_LOG)
          DebugLog(<< "Adding param: " << *i);
+#endif
          if (!u.userParameters().empty())
          {
             u.userParameters() += Symbols::SEMI_COLON[0];
@@ -932,7 +940,9 @@ Uri::embedded() const
 void
 Uri::parseEmbeddedHeaders(ParseBuffer& pb)
 {
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<< "Uri::parseEmbeddedHeaders");
+#endif
    if (!pb.eof() && *pb.position() == Symbols::QUESTION[0])
    {
       pb.skipChar();
@@ -974,7 +984,9 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
       }
       else
       {
+#if !defined(DISABLE_RESIP_LOG)
          DebugLog(<< "Uri::parseEmbeddedHeaders(" << headerName << ", " << Data(decodedContents, len) << ")");
+#endif
          mEmbeddedHeaders->addHeader(Headers::getType(headerName.c_str(), headerName.size()),
                                      headerName.data(), headerName.size(),
                                      decodedContents, len);

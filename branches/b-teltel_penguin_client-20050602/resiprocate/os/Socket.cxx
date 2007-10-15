@@ -4,8 +4,9 @@
 #include <errno.h>
 
 #include "resiprocate/os/Socket.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
-
+#endif
 #ifndef WIN32
 #include <unistd.h>
 #endif
@@ -13,7 +14,9 @@
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+#endif
 
 bool
 resip::setSocketKeepalive(Socket fd)
@@ -27,7 +30,9 @@ resip::setSocketKeepalive(Socket fd)
 #endif
    {
       int e = getErrno();
+#if !defined(DISABLE_RESIP_LOG)
       InfoLog(<< "Couldn't set sockoptions KEEPALIVE: " << strerror(e));
+#endif
       return false;
    }
    return true;
