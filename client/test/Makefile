@@ -1,4 +1,4 @@
-BUILD := ../../build
+BUILD := ../../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += ASIO RUTIL ARES OPENSSL PTHREAD 
