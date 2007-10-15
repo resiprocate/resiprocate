@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="TestClient"
-	ProjectGUID="{73151749-13F0-4093-97F1-A6952ECECDBF}"
+	Name="reTurnClient"
+	ProjectGUID="{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -14,13 +14,13 @@
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
-			ConfigurationType="1"
+			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;../../../asio-0.3.8rc3/include&quot;;../../../boost_1_34_1;../../;../../contrib/OpenSSL/include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
+				AdditionalIncludeDirectories="&quot;../../contrib/asio&quot;;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -31,14 +31,8 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\ssleay32MDd.lib&quot;"
-				OutputFile="$(OutDir)/TestClient.exe"
-				LinkIncremental="2"
-				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/TestClient.pdb"
-				SubSystem="1"
-				TargetMachine="1"/>
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/reTurnClient.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -53,8 +47,6 @@
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCWebDeploymentTool"/>
 			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
@@ -64,12 +56,12 @@
 			Name="Release|Win32"
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
-			ConfigurationType="1"
+			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;../../../asio-0.3.8rc3/include&quot;;../../../boost_1_34_1;../../;../../contrib/OpenSSL/include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="&quot;../../contrib/asio&quot;;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -78,15 +70,8 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\libeay32MD.lib&quot; &quot;$(ProjectDir)..\..\contrib\openssl\lib\vc\ssleay32MD.lib&quot;"
-				OutputFile="$(OutDir)/TestClient.exe"
-				LinkIncremental="1"
-				GenerateDebugInformation="TRUE"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"/>
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/reTurnClient.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -101,8 +86,6 @@
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCWebDeploymentTool"/>
 			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
@@ -117,13 +100,49 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\TestClient.cxx">
+				RelativePath="..\StunMessage.cxx">
+			</File>
+			<File
+				RelativePath="..\StunTuple.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnTcpSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnTlsSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnUdpSocket.cxx">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			<File
+				RelativePath=".\ErrorCode.hxx">
+			</File>
+			<File
+				RelativePath="..\StunMessage.hxx">
+			</File>
+			<File
+				RelativePath="..\StunTuple.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnTcpSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnTlsSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnUdpSocket.hxx">
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

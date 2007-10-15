@@ -7,8 +7,8 @@
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 
-#include "../StunTuple.hxx"
-#include "../StunMessage.hxx"
+#include "../../StunTuple.hxx"
+#include "../../StunMessage.hxx"
 #include "../TurnTcpSocket.hxx"
 #include "../TurnTlsSocket.hxx"
 #include "../TurnUdpSocket.hxx"
