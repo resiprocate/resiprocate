@@ -4,7 +4,9 @@
 
 #include "resiprocate/XMLCursor.hxx"
 #include "resiprocate/Symbols.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/WinLeakCheck.hxx"
 #include "resiprocate/os/Win32Export.hxx"
 
@@ -14,8 +16,9 @@
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
-
+#endif
 /**
 Whitespace handling:
 Are the following XML fragments equivalent?
@@ -68,7 +71,9 @@ mAttributesSet(false)
    lPb.skipToChars(COMMENT_START);
    if (!lPb.eof())
    {
+#if !defined(DISABLE_RESIP_LOG)
       StackLog(<< "removing comments");
+#endif
       lPb.reset(start);
       mData.reserve(lPb.end() - lPb.start());
 
@@ -101,7 +106,9 @@ mAttributesSet(false)
 
    if (mRoot->extractTag())
    {
+#if !defined(DISABLE_RESIP_LOG)
       InfoLog(<< "XML: empty element no a legal root");
+#endif
       mRoot->mPb.fail(__FILE__, __LINE__);
    }
 
@@ -201,7 +208,9 @@ XMLCursor::parseNextRootChild()
          const char* end = pb.position();
          if ( pb.end() < end + mTag.size() )
          {
+#if !defined(DISABLE_RESIP_LOG)
             InfoLog(<< "XML: unexpected end");
+#endif
             pb.fail(__FILE__, __LINE__);
          }
 
@@ -243,11 +252,14 @@ XMLCursor::nextSibling()
 {
    if (atRoot())
    {
+#if !defined(DISABLE_RESIP_LOG)
       StackLog(<< "XMLCursor::nextSibling" << *this->mCursor << " <<root>>");
+#endif
       return false;
    }
-
+#if !defined(DISABLE_RESIP_LOG)
    StackLog(<< "XMLCursor::nextSibling" << *this->mCursor << " " << *this->mCursor->mParent);
+#endif
    if (mCursor->mParent == mRoot)
    {
       parseNextRootChild();
@@ -363,9 +375,9 @@ XMLCursor::getAttributes() const
          pb.skipToOneOf(ParseBuffer::Whitespace, Symbols::EQUALS);
          pb.data(attribute, anchor);
          XMLCursor::decodeName(attribute);
-
+#if !defined(DISABLE_RESIP_LOG)
          StackLog(<< "attribute: " << attribute);
-
+#endif
          pb.skipWhitespace();
          pb.skipToChar(Symbols::EQUALS[0]);
          pb.skipChar();
@@ -373,13 +385,15 @@ XMLCursor::getAttributes() const
          if (!pb.eof())
          {
             const char quote = *pb.position();
-
+#if !defined(DISABLE_RESIP_LOG)
             StackLog(<< "quote is <" << quote << ">");
-
+#endif
             if (quote != Symbols::DOUBLE_QUOTE[0] &&
                quote != '\'')
             {
+#if !defined(DISABLE_RESIP_LOG)
                InfoLog(<< "XML: badly quoted attribute value");
+#endif
                pb.fail(__FILE__, __LINE__);
             }
             anchor = pb.skipChar();
@@ -535,7 +549,9 @@ mNext(mChildren.begin()),
 mIsLeaf(false)
 {
    mPb.assertNotEof();
+#if !defined(DISABLE_RESIP_LOG)
    StackLog(<< "XMLCursor::Node::Node" << *this);
+#endif
 }
 
 XMLCursor::Node::~Node()
@@ -588,7 +604,9 @@ void
 XMLCursor::Node::skipToEndTag()
 {
    extractTag();
+#if !defined(DISABLE_RESIP_LOG)
    StackLog(<< "XMLCursor::Node::skipToEndTag(" <<  mTag << ")");
+#endif
    //StackLog(<< "XMLCursor::Node::skipToEndTag(" << Data(mPb.position(), mPb.end() - mPb.position()) << ")");
 
    //<foo />
@@ -640,7 +658,9 @@ XMLCursor::Node::skipToEndTag()
          const char* end = mPb.position();
          if ( mPb.end() < end + mTag.size() )
          {
+#if !defined(DISABLE_RESIP_LOG)
             InfoLog(<< "XML: unexpected end");
+#endif
             mPb.fail(__FILE__, __LINE__);
          }
 
@@ -653,7 +673,9 @@ XMLCursor::Node::skipToEndTag()
          }
          else
          {
+#if !defined(DISABLE_RESIP_LOG)
             InfoLog(<< "Badly formed XML: unexpected endtag");
+#endif
             mPb.fail(__FILE__, __LINE__);
          }
       }
@@ -662,7 +684,9 @@ XMLCursor::Node::skipToEndTag()
       // ^
       if (mPb.position() == mPb.start())
       {
+#if !defined(DISABLE_RESIP_LOG)
          InfoLog(<< "XML: badly formed element");
+#endif
          mPb.fail(__FILE__, __LINE__);
       }
 
@@ -674,7 +698,9 @@ XMLCursor::Node::skipToEndTag()
       child->skipToEndTag();
       mPb.reset(child->mPb.end());
       XMLCursor::decodeName(child->mTag);
+#if !defined(DISABLE_RESIP_LOG)
       StackLog(<< mTag << "(" << child->mTag << ")");
+#endif
    }
 }
 

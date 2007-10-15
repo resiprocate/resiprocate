@@ -9,7 +9,9 @@
 #include "resiprocate/ExtensionHeader.hxx"
 #include "resiprocate/os/Coders.hxx"
 #include "resiprocate/os/CountStream.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/MD5Stream.hxx"
 #include "resiprocate/os/compat.hxx"
 #include "resiprocate/os/vmd5.hxx"
@@ -22,7 +24,9 @@
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#endif
 
 #if !defined(DISABLE_RESIP_TRANSPORT)
 SipMessage::SipMessage(const Transport* fromWire)
@@ -206,8 +210,10 @@ SipMessage::make(const char* data, unsigned int len, bool isExternal)
    char *unprocessedCharPtr;
    if (msgHeaderScanner.scanChunk(buffer, len, &unprocessedCharPtr) != MsgHeaderScanner::scrEnd)
    {
+#if !defined(DISABLE_RESIP_LOG)
       DebugLog(<<"Scanner rejecting buffer as unparsable / fragmented.");
       DebugLog(<< data);
+#endif
       return 0;
    }
 
@@ -236,7 +242,9 @@ SipMessage::getTransactionId() const
 {
    if (!this->exists(h_Vias) || this->header(h_Vias).empty())
    {
+#if !defined(DISABLE_RESIP_LOG)
       InfoLog (<< "Bad message with no Vias: " << *this);
+#endif
       throw Exception("No Via in message", __FILE__,__LINE__);
    }
    
@@ -350,8 +358,10 @@ SipMessage::compute2543TransactionHash() const
    }
    else
    {
+#if !defined(DISABLE_RESIP_LOG)
       InfoLog (<< "Trying to compute a transaction id on a 2543 response. Drop the response");
       DebugLog (<< *this);
+#endif
       throw Exception("Drop invalid 2543 response", __FILE__, __LINE__);
    }
 }
@@ -396,7 +406,9 @@ SipMessage::getCanonicalIdentityString() const
    // if there is no date, it will throw 
    if ( !exists(h_Date) )
    {
+#if !defined(DISABLE_RESIP_LOG)
       WarningLog( << "Computing Identity on message with no Date header" );
+#endif
    }
    header(h_Date).dayOfMonth(); // force it to be parsed 
    header(h_Date).encodeParsed( strm );
@@ -426,9 +438,9 @@ SipMessage::getCanonicalIdentityString() const
    }
 
    strm.flush();
-
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog( << "Indentity Canonical String is: " << result );
-   
+#endif
    return result;
 }
 
@@ -786,22 +798,27 @@ SipMessage::getContents() const
    {
       if (!exists(h_ContentType))
       {
+#if !defined(DISABLE_RESIP_LOG)
          StackLog(<< "SipMessage::getContents: ContentType header does not exist - implies no contents");
+#endif
          return 0;
       }
+#if !defined(DISABLE_RESIP_LOG)
       DebugLog(<< "SipMessage::getContents: " 
                << header(h_ContentType).type()
                << "/"
                << header(h_ContentType).subType());
-
+#endif
       if ( Contents::getFactoryMap().find(header(h_ContentType)) == Contents::getFactoryMap().end() )
       {
+#if !defined(DISABLE_RESIP_LOG)
          InfoLog(<< "SipMessage::getContents: got content type ("
                  << header(h_ContentType).type()
                  << "/"
                  << header(h_ContentType).subType()
                  << ") that is not known, "
                  << "returning as opaque application/octet-stream");
+#endif
          mContents = Contents::getFactoryMap()[OctetContents::getStaticType()]->create(mContentsHfv, OctetContents::getStaticType());
       }
       else
@@ -1066,8 +1083,10 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
    {
       // header missing
       // assert(false);
+#if !defined(DISABLE_RESIP_LOG)
       InfoLog( << "Missing Header [" << Headers::getHeaderName(type) << "]");      
       DebugLog (<< *this);
+#endif
       Data eMsg("Missing header ");
       eMsg += Headers::getHeaderName(type);
       throw Exception(eMsg.c_str(), __FILE__, __LINE__);
@@ -1079,8 +1098,10 @@ SipMessage::ensureHeaders(Headers::Type type, bool single) const
       {
          // !dlb! when will this happen?
          // assert(false);
+#if !defined(DISABLE_RESIP_LOG)
          InfoLog( << "Missing Header " << Headers::getHeaderName(type) );
          DebugLog (<< *this);
+#endif
          throw Exception("Empty header", __FILE__, __LINE__);
       }
    }
@@ -1379,8 +1400,10 @@ void*
 operator new(size_t size)
 {
    void * p = std::operator new(size);
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<<"operator new | " << hex << p << " | "
             << dec << size);
+#endif
    if (size == 60)
    {
       3;
@@ -1391,13 +1414,17 @@ operator new(size_t size)
 
 void operator delete(void* p)
 {
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<<"operator delete | " << hex << p << dec);
+#endif
    return std::operator delete( p );
 }
 
 void operator delete[](void* p)
 {
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<<"operator delete [] | " << hex << p << dec);
+#endif
    return std::operator delete[] ( p );
 }
  

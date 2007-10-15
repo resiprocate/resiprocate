@@ -4,13 +4,15 @@
 
 #include "ExtensionHeader.hxx"
 #include "HeaderTypes.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
-
+#endif
 #include <cassert>
 #include "resiprocate/os/ParseBuffer.hxx"
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
+#endif
 using namespace resip;
 
 ExtensionHeader::ExtensionHeader(const char* name)

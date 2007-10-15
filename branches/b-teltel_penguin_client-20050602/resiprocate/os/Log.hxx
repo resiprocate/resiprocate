@@ -170,7 +170,7 @@ class RESIP_API Log
       static void setThreadSetting(int serv, Level l);
       static void setThreadSetting(int serv);
       static volatile short touchCount;
-      static int _type; //(enum Type)
+      static Log::Type _type; //(enum Type)
       static const Data delim;
    protected:
       static Level _level;

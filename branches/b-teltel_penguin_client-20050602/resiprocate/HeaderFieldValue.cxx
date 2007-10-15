@@ -10,14 +10,17 @@
 #include "resiprocate/ParserCategory.hxx"
 #include "resiprocate/Symbols.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace std;
 using namespace resip;
 
-
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#endif
 
 HeaderFieldValue::HeaderFieldValue(const char* field, unsigned int fieldLength)
    : mField(field),

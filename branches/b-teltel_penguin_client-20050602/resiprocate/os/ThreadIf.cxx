@@ -20,9 +20,11 @@ typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 #include "resiprocate/os/ThreadIf.hxx"
 #include "resiprocate/os/Lock.hxx"
 #include "resiprocate/os/Socket.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#endif
 
 using namespace resip;
 

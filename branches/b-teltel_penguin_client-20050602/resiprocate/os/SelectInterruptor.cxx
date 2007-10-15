@@ -1,15 +1,18 @@
 #include "resiprocate/os/SelectInterruptor.hxx"
 
 #include <cassert>
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
-
+#endif
 #ifndef WIN32
 #include <unistd.h>
 #endif
 
 using namespace resip;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+#endif
 
 SelectInterruptor::SelectInterruptor()
 {

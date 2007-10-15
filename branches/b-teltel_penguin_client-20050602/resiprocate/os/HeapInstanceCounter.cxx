@@ -1,6 +1,8 @@
 #include "HeapInstanceCounter.hxx"
 #include "resiprocate/os/Mutex.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/Data.hxx"
 
 #include <assert.h>
@@ -9,7 +11,9 @@
 using namespace std;
 using namespace resip;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::STATS
+#endif
 
 namespace   //  unnamed namespace
 {
@@ -37,7 +41,9 @@ HeapInstanceCounter::dump()
    Lock l(allocationMutex);
    if (allocationMap.empty())
    {
+#if !defined(DISABLE_RESIP_LOG)
       WarningLog(<< "No allocations.");
+#endif
    }
    else
    {
@@ -47,7 +53,9 @@ HeapInstanceCounter::dump()
          if (i->second.total)
          {
             //abi::__cxa_demangle(typeid(obj).name(), 0, 0, &status);
+#if !defined(DISABLE_RESIP_LOG)
             WarningLog(<< i->first << " " << i->second.total << " > " << i->second.outstanding);
+#endif
          }
       }
    }
