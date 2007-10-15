@@ -4,14 +4,18 @@
 
 #include "resiprocate/Pkcs7Contents.hxx"
 #include "resiprocate/SipMessage.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
+#endif
 
 const Pkcs7Contents Pkcs7Contents::Empty;
 const Pkcs7SignedContents Pkcs7SignedContents::Empty;
@@ -141,16 +145,21 @@ Pkcs7Contents::parse(ParseBuffer& pb)
 
    if ( mTransferEncoding )
    {
+#if !defined(DISABLE_RESIP_LOG)
       InfoLog( << "Transfer Encoding is " << mTransferEncoding->value() );
+#endif
       if ( mTransferEncoding->value() == Data("base64") )
       {
          Data bin = mText.base64decode();
          mText = bin;
+#if !defined(DISABLE_RESIP_LOG)
          InfoLog( << "Base64 decoded to " << mText.escaped() );
+#endif
       }
    }
-   
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<< "Pkcs7Contents::parsed <" << mText.escaped() << ">" );
+#endif
 }
 
 

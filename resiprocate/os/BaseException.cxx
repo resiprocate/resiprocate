@@ -1,10 +1,14 @@
 #include "resiprocate/os/BaseException.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 
 using namespace resip;
 using namespace std;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
+#endif
 
 BaseException::BaseException( const char* msg,
                         const char* file,
@@ -14,7 +18,9 @@ BaseException::BaseException( const char* msg,
         lineNumber( line )
 {
 #if !defined(RESIP_NO_EXCEPTION_DEBUG_LOGS)
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<< "BaseException at " << file << ":" << line << " " << message);
+#endif
 #endif
 }
 
@@ -76,4 +82,5 @@ ostream& resip::operator<<(ostream& strm, const BaseException& e)
  * <http://www.vovida.org/>.
  *
  */
+
 

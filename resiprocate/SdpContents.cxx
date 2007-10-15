@@ -5,11 +5,15 @@
 #include "resiprocate/SdpContents.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
 #include "resiprocate/Symbols.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/WinLeakCheck.hxx"
 #include "resiprocate/os/Random.hxx"
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SDP
+#endif
 
 using namespace resip;
 using namespace std;

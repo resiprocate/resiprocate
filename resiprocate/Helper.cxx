@@ -10,7 +10,9 @@
 #include "resiprocate/Helper.hxx"
 #include "resiprocate/os/Coders.hxx"
 #include "resiprocate/Uri.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/os/Random.hxx"
 #include "resiprocate/os/Timer.hxx"
 #include "resiprocate/os/DataStream.hxx"
@@ -31,9 +33,9 @@
 
 using namespace resip;
 using namespace std;
-
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
+#endif
 const int Helper::tagSize = 4;
 
 SipMessage*
@@ -293,7 +295,9 @@ Helper::makeResponse(SipMessage& response,
                      const Data& hostname,
                      const Data& warning)
 {
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<< "Helper::makeResponse(" << request.brief() << " code=" << responseCode << " reason=" << reason);
+#endif
    response.header(h_StatusLine).responseCode() = responseCode;
    response.header(h_From) = request.header(h_From);
    response.header(h_To) = request.header(h_To);
@@ -632,7 +636,9 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                                     int expiresDelta)
 {
    Data username;
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<< "Authenticating: realm=" << realm << " expires=" << expiresDelta);
+#endif
    //DebugLog(<< request);
    
    if (request.exists(h_ProxyAuthorizations))
@@ -648,7 +654,9 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
             ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
+#if !defined(DISABLE_RESIP_LOG)
                DebugLog(<< "Invalid nonce; expected timestamp.");
+#endif
                return make_pair(BadlyFormed,username);
             }
             const char* anchor = pb.position();
@@ -656,7 +664,9 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
 
             if (pb.eof())
             {
+#if !defined(DISABLE_RESIP_LOG)
                DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+#endif
                return make_pair(BadlyFormed,username);
             }
 
@@ -667,13 +677,17 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                int now = (int)(Timer::getTimeMs()/1000);
                if (then.convertInt() + expiresDelta < now)
                {
+#if !defined(DISABLE_RESIP_LOG)
                   DebugLog(<< "Nonce has expired.");
+#endif
                   return make_pair(BadlyFormed,username);
                }
             }
             if (i->param(p_nonce) != makeNonce(request, then))
             {
+#if !defined(DISABLE_RESIP_LOG)
                InfoLog(<< "Not my nonce.");
+#endif
                return make_pair(Failed,username);
             }
          
@@ -703,7 +717,9 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                }
                else
                {
+#if !defined(DISABLE_RESIP_LOG)
                   InfoLog (<< "Unsupported qop=" << i->param(p_qop));
+#endif
                   return make_pair(Failed,username);
                }
             }
@@ -730,7 +746,9 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
       }
       return make_pair(BadlyFormed,username);
    }
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog (<< "No authentication headers. Failing request.");
+#endif
    return make_pair(Failed,username);
 }
 
@@ -742,7 +760,9 @@ Helper::authenticateRequest(const SipMessage& request,
                             const Data& password,
                             int expiresDelta)
 {
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<< "Authenticating: realm=" << realm << " expires=" << expiresDelta);
+#endif
    //DebugLog(<< request);
    
    if (request.exists(h_ProxyAuthorizations))
@@ -758,7 +778,9 @@ Helper::authenticateRequest(const SipMessage& request,
             ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
+#if !defined(DISABLE_RESIP_LOG)
                DebugLog(<< "Invalid nonce; expected timestamp.");
+#endif
                return BadlyFormed;
             }
             const char* anchor = pb.position();
@@ -766,7 +788,9 @@ Helper::authenticateRequest(const SipMessage& request,
 
             if (pb.eof())
             {
+#if !defined(DISABLE_RESIP_LOG)
                DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+#endif
                return BadlyFormed;
             }
 
@@ -777,23 +801,28 @@ Helper::authenticateRequest(const SipMessage& request,
                int now = (int)(Timer::getTimeMs()/1000);
                if (then.convertInt() + expiresDelta < now)
                {
+#if !defined(DISABLE_RESIP_LOG)
                   DebugLog(<< "Nonce has expired.");
+#endif
                   return Expired;
                }
             }
             if (i->param(p_nonce) != makeNonce(request, then))
             {
+#if !defined(DISABLE_RESIP_LOG)
                InfoLog(<< "Not my nonce.");
+#endif
                return Failed;
             }
          
+#if !defined(DISABLE_RESIP_LOG)
             InfoLog (<< " username=" << (i->param(p_username))
                      << " password=" << password
                      << " realm=" << realm
                      << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
                      << " uri=" << i->param(p_uri)
                      << " nonce=" << i->param(p_nonce));
-            
+#endif
             if (i->exists(p_qop))
             {
                if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
@@ -818,7 +847,9 @@ Helper::authenticateRequest(const SipMessage& request,
                }
                else
                {
+#if !defined(DISABLE_RESIP_LOG)
                   InfoLog (<< "Unsupported qop=" << i->param(p_qop));
+#endif
                   return Failed;
                }
             }
@@ -843,7 +874,9 @@ Helper::authenticateRequest(const SipMessage& request,
       }
       return BadlyFormed;
    }
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog (<< "No authentication headers. Failing request.");
+#endif
    return Failed;
 }
 
@@ -853,7 +886,9 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
                                   const Data& hA1,
                                   int expiresDelta)
 {
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<< "Authenticating with HA1: realm=" << realm << " expires=" << expiresDelta);
+#endif
    //DebugLog(<< request);
    
    if (request.exists(h_ProxyAuthorizations))
@@ -869,7 +904,9 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
             ParseBuffer pb(i->param(p_nonce).data(), i->param(p_nonce).size());
             if (!pb.eof() && !isdigit(*pb.position()))
             {
+#if !defined(DISABLE_RESIP_LOG)
                DebugLog(<< "Invalid nonce; expected timestamp.");
+#endif
                return BadlyFormed;
             }
             const char* anchor = pb.position();
@@ -877,7 +914,9 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
 
             if (pb.eof())
             {
+#if !defined(DISABLE_RESIP_LOG)
                DebugLog(<< "Invalid nonce; expected timestamp terminator.");
+#endif
                return BadlyFormed;
             }
 
@@ -888,23 +927,27 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
                int now = (int)(Timer::getTimeMs()/1000);
                if (then.convertInt() + expiresDelta < now)
                {
+#if !defined(DISABLE_RESIP_LOG)
                   DebugLog(<< "Nonce has expired.");
+#endif
                   return Expired;
                }
             }
             if (i->param(p_nonce) != makeNonce(request, then))
             {
+#if !defined(DISABLE_RESIP_LOG)
                InfoLog(<< "Not my nonce.");
+#endif
                return Failed;
             }
-         
+#if !defined(DISABLE_RESIP_LOG)
             InfoLog (<< " username=" << (i->param(p_username))
                      << " H(A1)=" << hA1
                      << " realm=" << realm
                      << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
                      << " uri=" << i->param(p_uri)
                      << " nonce=" << i->param(p_nonce));
-            
+#endif
             if (i->exists(p_qop))
             {
                if (i->param(p_qop) == Symbols::auth || i->param(p_qop) == Symbols::authInt)
@@ -927,7 +970,9 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
                }
                else
                {
+#if !defined(DISABLE_RESIP_LOG)
                   InfoLog (<< "Unsupported qop=" << i->param(p_qop));
+#endif
                   return Failed;
                }
             }
@@ -950,7 +995,9 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
       }
       return BadlyFormed;
    }
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog (<< "No authentication headers. Failing request.");
+#endif
    return Failed;
 }
 
@@ -1026,7 +1073,9 @@ void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
       
       s << std::setw(8) << std::setfill('0') << std::hex << nonceCount;
    }
+#if !defined(DISABLE_RESIP_LOG)
    DebugLog(<< "nonceCount is now: [" << nonceCountString << "]");
+#endif
 }
 
 
@@ -1322,8 +1371,10 @@ Helper::validateMessage(const SipMessage& message)
        !message.exists(h_Vias) ||
        message.header(h_Vias).empty())
    {
+#if !defined(DISABLE_RESIP_LOG)
       InfoLog(<< "Missing mandatory header fields (To, From, CSeq, Call-Id or Via)");
       DebugLog(<< message);
+#endif
       return false;
    }
    else

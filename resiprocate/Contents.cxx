@@ -4,13 +4,17 @@
 
 #include "resiprocate/Contents.hxx"
 #include "resiprocate/os/ParseBuffer.hxx"
+#if !defined(DISABLE_RESIP_LOG)
 #include "resiprocate/os/Logger.hxx"
+#endif
 #include "resiprocate/GenericContents.hxx"
 #include "resiprocate/os/WinLeakCheck.hxx"
 
 using namespace resip;
 
+#if !defined(DISABLE_RESIP_LOG)
 #define RESIPROCATE_SUBSYSTEM Subsystem::CONTENTS
+#endif
 
 H_ContentID resip::h_ContentID;
 H_ContentDescription resip::h_ContentDescription;
@@ -444,7 +448,9 @@ Contents::preParseHeaders(ParseBuffer& pb)
             {
                // add to application headers someday
                std::cerr << "Unknown MIME Content- header: " << headerName << std::endl;
+#if !defined(DISABLE_RESIP_LOG)
                ErrLog(<< "Unknown MIME Content- header: " << headerName);
+#endif
                assert(false);
             }
          }
@@ -453,7 +459,9 @@ Contents::preParseHeaders(ParseBuffer& pb)
    }
    catch (ParseBuffer::Exception & /* e */)
    {
+#if !defined(DISABLE_RESIP_LOG)
       ErrLog( << "Some problem parsing contents" );
+#endif
 #if 0 // TODO CJ REMOVE this if 0 and make this throw
       throw;
 #endif
@@ -536,7 +544,9 @@ Contents::encodeHeaders(std::ostream& str) const
 Data
 Contents::getBodyData() const 
 {
+#if !defined(DISABLE_RESIP_LOG)
    ErrLog( << "Need to implement getBodyData function for " << getType() );
+#endif
    assert(0);
    return Data::Empty;
 }
