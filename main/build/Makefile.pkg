@@ -252,6 +252,8 @@ SIPX_DEFINES := __pingtel_on_posix__
 
 BOOSTSER_LIBNAME = boost_serialization boost_wserialization
 
+ASIO_INCLUDEDIRS := $(ROOT)/contrib/asio
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 
