@@ -25,7 +25,12 @@ using namespace std;
 
 HttpBase::~HttpBase()
 {
-   close(mFd); mFd=0;
+#if defined(WIN32)
+   closesocket(mFd);
+#else
+   close(mFd); 
+#endif
+   mFd=0;
    for( int i=0; i<MaxConnections; i++)
    {
       if ( mConnection[i] )
