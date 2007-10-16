@@ -7,8 +7,6 @@
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Mime.hxx"
 
-#include "repro/HttpBase.hxx"
-
 namespace repro
 {
 class HttpConnection;
