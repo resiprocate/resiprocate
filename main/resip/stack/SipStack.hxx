@@ -395,6 +395,14 @@ class SipStack
       /// Sets the interval that determines the time between Statistics messages
       void setStatisticsInterval(unsigned long seconds);
 
+      /** Installs a handler for the stacks internal StatisticsManager.  This handler is called before the 
+        * default behavior.
+        */
+      void setExternalStatsHandler(ExternalStatsHandler *handler)
+      {
+         mStatsManager.setExternalStatsHandler(handler);
+      }
+
       /// output current state of the stack - for debug
       std::ostream& dump(std::ostream& strm) const;
       
