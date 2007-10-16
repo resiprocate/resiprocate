@@ -19,16 +19,9 @@ SRC += \
 	TurnAllocationKey.cxx \
 	TurnManager.cxx \
 	TurnPermission.cxx \
-	TurnSocket.cxx \
-	TurnTcpSocket.cxx \
-	TurnTlsSocket.cxx \
 	TurnTransportBase.cxx \
-	TurnUdpSocket.cxx \
 	UdpRelayServer.cxx \
-	UdpServer.cxx \
-	StunMessage.cxx \
-	StunTuple.cxx
-
+	UdpServer.cxx
 
 include $(BUILD)/Makefile.post
 
