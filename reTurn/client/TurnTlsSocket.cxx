@@ -1,4 +1,5 @@
 #include "TurnTlsSocket.hxx"
+#include <boost/bind.hpp>
 
 using namespace std;
 
@@ -14,6 +15,15 @@ TurnTlsSocket::TurnTlsSocket(const asio::ip::address& address, unsigned short po
    // Setup SSL context
    mSslContext.set_verify_mode(asio::ssl::context::verify_peer);
    mSslContext.load_verify_file("ca.pem");
+
+   asio::error_code errorCode;
+   mSocket.lowest_layer().open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
+   if(errorCode == 0)
+   {
+      mSocket.lowest_layer().set_option(asio::ip::tcp::socket::reuse_address(true));
+      mSocket.lowest_layer().set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
+      mSocket.lowest_layer().bind(asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
+   }
 }
 
 asio::error_code 
@@ -51,12 +61,19 @@ TurnTlsSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
 }
 
 asio::error_code 
-TurnTlsSocket::rawRead(char* buffer, unsigned int size, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+TurnTlsSocket::rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    // !slg! Note: Only handles response comming back contiguously
-   asio::error_code errorCode;
-   *bytesRead = (unsigned int)mSocket.read_some(asio::buffer(buffer, size), errorCode);  
-   if(errorCode == 0)
+
+   startReadTimer(timeout);
+   mSocket.async_read_some(asio::buffer(buffer, size), boost::bind(&TurnTlsSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+
+   // Wait for timer and read to end
+   mIOService.run();
+   mIOService.reset();
+
+   *bytesRead = (unsigned int)mBytesRead;
+   if(mReadErrorCode == 0)
    {
       if(sourceAddress)
       {
@@ -67,7 +84,13 @@ TurnTlsSocket::rawRead(char* buffer, unsigned int size, unsigned int* bytesRead,
          *sourcePort = mSocket.lowest_layer().remote_endpoint().port();
       }
    }
-   return errorCode;
+   return mReadErrorCode;
+}
+
+void
+TurnTlsSocket::cancelSocket()
+{
+   mSocket.lowest_layer().cancel();
 }
 
 } // namespace
