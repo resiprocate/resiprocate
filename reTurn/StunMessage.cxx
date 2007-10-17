@@ -26,14 +26,14 @@ namespace reTurn {
 StunMessage::StunMessage(const StunTuple& localTuple,
                          const StunTuple& remoteTuple,
                          char* buf, unsigned int bufLen,
-                         asio::ip::udp::endpoint* alternatePortEndpoint,
-                         asio::ip::udp::endpoint* alternateIpEndpoint,
-                         asio::ip::udp::endpoint* alternateIpPortEndpoint) :
+                         asio::ip::udp::socket* alternatePortSocket,
+                         asio::ip::udp::socket* alternateIpSocket,
+                         asio::ip::udp::socket* alternateIpPortSocket) :
    mLocalTuple(localTuple),
    mRemoteTuple(remoteTuple),   
-   mAlternatePortEndpoint(alternatePortEndpoint),
-   mAlternateIpEndpoint(alternateIpEndpoint),
-   mAlternateIpPortEndpoint(alternateIpPortEndpoint),
+   mAlternatePortSocket(alternatePortSocket),
+   mAlternateIpSocket(alternateIpSocket),
+   mAlternateIpPortSocket(alternateIpPortSocket),
    mBuffer(buf, bufLen)  // !slg! copies buffer from Socket buffer assuming for now that StunMessages will persist past one request/response transaction
                          //       could make this more efficient by having the transports allocate buffer dynamically and pass ownership over
 {
@@ -43,9 +43,9 @@ StunMessage::StunMessage(const StunTuple& localTuple,
 }
 
 StunMessage::StunMessage() :
-   mAlternatePortEndpoint(0),
-   mAlternateIpEndpoint(0),
-   mAlternateIpPortEndpoint(0),
+   mAlternatePortSocket(0),
+   mAlternateIpSocket(0),
+   mAlternateIpPortSocket(0),
    mIsValid(true)
 {
    init();
