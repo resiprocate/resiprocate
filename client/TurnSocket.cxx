@@ -1,7 +1,14 @@
 #include "TurnSocket.hxx"
 #include "ErrorCode.hxx"
+#include <boost/bind.hpp>
 
 using namespace std;
+
+#define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
+                     // Should also be calculation this on the fly
+#define UDP_MAX_RETRANSMITS  7       // Defined by RFC3489-bis06
+#define TCP_RESPONSE_TIME 7900       // Defined by RFC3489-bis06
+#define UDP_FINAL_REQUEST_TIME 1600  // Defined by RFC3489-bis06
 
 namespace reTurn {
 
@@ -13,7 +20,8 @@ asio::ip::address TurnSocket::UnspecifiedIpAddress = asio::ip::address::from_str
 
 TurnSocket::TurnSocket(const asio::ip::address& address, unsigned short port) : 
    mLocalBinding(StunTuple::None, address, port),
-   mHaveAllocation(false)
+   mHaveAllocation(false),
+   mReadTimer(mIOService)
 {
 }
 
@@ -25,44 +33,87 @@ StunMessage*
 TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode)
 {
    unsigned int size = request.stunEncodeMessage(mBuffer, sizeof(mBuffer));
+   bool sendRequest = true;
+   bool reliableTransport = mLocalBinding.getTransportType() != StunTuple::UDP;
+   unsigned int timeout = reliableTransport ? TCP_RESPONSE_TIME : UDP_RT0;
+   unsigned int totalTime = 0;
+   unsigned int requestsSent = 0;
 
-   //cout << "writting " << size << " bytes..."  << endl;
-
-   // Send request to Turn Server
-   errorCode = rawWrite(mBuffer, size);
-   if(errorCode != 0)
+   while(true)
    {
-      return 0;
-   }
-
-   // Wait for response
-   errorCode = rawRead(mBuffer, sizeof(mBuffer), &size);
-   if(errorCode != 0)
-   {
-      return 0;
-   }
-
-   StunMessage* response = new StunMessage(mLocalBinding, mTurnServer, mBuffer, size);
-
-   if(response->isValid())
-   {
-      if(!response->checkMessageIntegrity(request.mHmacKey))
+      if(sendRequest)
       {
-         std::cout << "Stun response message integrity is bad!" << std::endl;
-         delete response;
-         errorCode = asio::error_code(reTurn::BadMessageIntegrity, asio::misc_ecat);
+         // Send request to Turn Server
+         requestsSent++;
+         errorCode = rawWrite(mBuffer, size);
+         if(errorCode != 0)
+         {
+            return 0;
+         }
+         sendRequest = false;
+      }
+      //cout << "Reading with a timeout of " << timeout << "ms." << endl;
+
+      // Wait for response
+      errorCode = rawRead(mBuffer, sizeof(mBuffer), timeout, &size);
+      if(errorCode != 0)
+      {
+         if(errorCode == asio::error::operation_aborted)
+         {
+            totalTime += timeout;
+            //cout << "timeout at: " << totalTime << endl;
+            if(reliableTransport || requestsSent == UDP_MAX_RETRANSMITS)
+            {
+               std::cout << "Timed out waiting for Stun response!" << std::endl;
+               errorCode = asio::error_code(reTurn::ResponseTimeout, asio::misc_ecat);
+               return 0;
+            }
+
+            // timed out and should retransmit - calculate next timeout
+            if(requestsSent == UDP_MAX_RETRANSMITS - 1)
+            {
+               timeout = UDP_FINAL_REQUEST_TIME;
+            } 
+            else
+            {
+               timeout = (timeout*2);
+            }
+            sendRequest = true;
+            continue;
+         }
          return 0;
       }
 
-      errorCode = asio::error_code(reTurn::Success, asio::misc_ecat);
-      return response;
-   }
-   else
-   {
-      std::cout << "Stun response message is invalid!" << std::endl;
-      delete response;
-      errorCode = asio::error_code(reTurn::ErrorParsingMessage, asio::misc_ecat);  
-      return 0;
+      StunMessage* response = new StunMessage(mLocalBinding, mTurnServer, mBuffer, size);
+
+      if(response->isValid())
+      {
+         if(!response->checkMessageIntegrity(request.mHmacKey))
+         {
+            std::cout << "Stun response message integrity is bad!" << std::endl;
+            delete response;
+            errorCode = asio::error_code(reTurn::BadMessageIntegrity, asio::misc_ecat);
+            return 0;
+         }
+
+         // Check that TID matches request
+         if(!(response->mHeader.magicCookieAndTid == request.mHeader.magicCookieAndTid))
+         {
+            std::cout << "Stun response TID does not match request - discarding!" << std::endl;
+            delete response;
+            continue;  // read next message
+         }
+
+         errorCode = asio::error_code(reTurn::Success, asio::misc_ecat);
+         return response;
+      }
+      else
+      {
+         std::cout << "Stun response message is invalid!" << std::endl;
+         delete response;
+         errorCode = asio::error_code(reTurn::ErrorParsingMessage, asio::misc_ecat);  
+         return 0;
+      }
    }
 }
 
@@ -505,14 +556,14 @@ TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const 
 }
 
 asio::error_code 
-TurnSocket::receive(char* buffer, unsigned int& size, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    asio::error_code errorCode;
    // TODO - rethink this scheme so that we don't need to copy recieved data
 
    // Wait for response
    unsigned int readSize;
-   errorCode = rawRead(mBuffer, sizeof(mBuffer), &readSize, sourceAddress, sourcePort); // Note: SourceAddress and sourcePort may be overwritten below if from Turn Relay
+   errorCode = rawRead(mBuffer, sizeof(mBuffer), timeout, &readSize, sourceAddress, sourcePort); // Note: SourceAddress and sourcePort may be overwritten below if from Turn Relay
    if(errorCode != 0)
    {
       return errorCode;
@@ -617,7 +668,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, asio::ip::address* sourceA
 }
 
 asio::error_code 
-TurnSocket::receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size)
+TurnSocket::receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout)
 {
    asio::ip::address sourceAddress;
    unsigned short sourcePort;
@@ -627,7 +678,7 @@ TurnSocket::receiveFrom(const asio::ip::address& address, unsigned short port, c
    while(!done)
    {
       done = true;
-      errorCode = receive(buffer, size, &sourceAddress, &sourcePort);
+      errorCode = receive(buffer, size, timeout, &sourceAddress, &sourcePort);
       if(errorCode == 0)
       {
          if(sourceAddress != address || sourcePort != port)
@@ -724,6 +775,35 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
       return asio::error_code(reTurn::ErrorParsingMessage, asio::misc_ecat);
    }
    return errorCode;
+}
+
+void 
+TurnSocket::startReadTimer(unsigned int timeout)
+{
+   if(timeout != 0)
+   {
+      mReadTimer.expires_from_now(boost::posix_time::milliseconds(timeout));
+      mReadTimer.async_wait(boost::bind(&TurnSocket::handleRawReadTimeout, this, asio::placeholders::error));
+   }
+}
+
+void 
+TurnSocket::handleRawRead(const asio::error_code& errorCode, size_t bytesRead)
+{
+   //clog << "handleRawRead: errorCode=" << errorCode << ", bytes=" << bytesRead << endl;
+   mBytesRead = bytesRead;
+   mReadErrorCode = errorCode;
+   mReadTimer.cancel();
+}
+
+void 
+TurnSocket::handleRawReadTimeout(const asio::error_code& errorCode)
+{
+   //clog << "handleRawReadTimeout: errorCode=" << errorCode << endl;
+   if(errorCode == 0)
+   {
+      cancelSocket();
+   }
 }
 
 } // namespace

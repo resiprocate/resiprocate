@@ -1,4 +1,5 @@
 #include "TurnTcpSocket.hxx"
+#include <boost/bind.hpp>
 
 using namespace std;
 
@@ -9,11 +10,13 @@ TurnTcpSocket::TurnTcpSocket(const asio::ip::address& address, unsigned short po
    mSocket(mIOService)
 {
    mLocalBinding.setTransportType(StunTuple::TCP);
+
    asio::error_code errorCode;
    mSocket.open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
    if(errorCode == 0)
    {
-      mSocket.set_option(asio::ip::tcp::no_delay(true));
+      mSocket.set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
+      mSocket.set_option(asio::ip::tcp::socket::reuse_address(true));
       mSocket.bind(asio::ip::tcp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
    }
 }
@@ -43,12 +46,19 @@ TurnTcpSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
 }
 
 asio::error_code 
-TurnTcpSocket::rawRead(char* buffer, unsigned int size, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+TurnTcpSocket::rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    // !slg! Note: Only handles response comming back contiguously
-   asio::error_code errorCode;
-   *bytesRead = (unsigned int)mSocket.read_some(asio::buffer(buffer, size), errorCode);
-   if(errorCode == 0)
+   
+   startReadTimer(timeout);
+   mSocket.async_read_some(asio::buffer(buffer, size), boost::bind(&TurnTcpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+
+   // Wait for timer and read to end
+   mIOService.run();
+   mIOService.reset();
+
+   *bytesRead = (unsigned int)mBytesRead;
+   if(mReadErrorCode == 0)
    {
       if(sourceAddress)
       {
@@ -59,7 +69,13 @@ TurnTcpSocket::rawRead(char* buffer, unsigned int size, unsigned int* bytesRead,
          *sourcePort = mSocket.remote_endpoint().port();
       }
    }
-   return errorCode;
+   return mReadErrorCode;
+}
+
+void
+TurnTcpSocket::cancelSocket()
+{
+   mSocket.cancel();
 }
 
 } // namespace

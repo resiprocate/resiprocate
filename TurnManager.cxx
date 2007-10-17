@@ -8,7 +8,7 @@ using namespace std;
 namespace reTurn {
 
 #define PORT_RANGE_MIN 50000  // must be even
-#define PORT_RANGE_MAX 50003  // must be odd
+#define PORT_RANGE_MAX 50999  // must be odd
 
 TurnManager::TurnManager(asio::io_service& ioService) : 
    mLastAllocatedUdpPort(PORT_RANGE_MIN-1),
