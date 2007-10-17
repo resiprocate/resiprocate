@@ -275,23 +275,23 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
    asio::ip::address sendFromAddress;
    unsigned short sendFromPort;
    UInt32 changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
-   if(changeRequest & StunMessage::ChangeIpFlag && changeRequest & StunMessage::ChangePortFlag && request.mAlternateIpPortEndpoint)
+   if(changeRequest & StunMessage::ChangeIpFlag && changeRequest & StunMessage::ChangePortFlag && request.mAlternateIpPortSocket)
    {
       result = RespondFromAlternateIpPort;
-      sendFromAddress = request.mAlternateIpPortEndpoint->address();
-      sendFromPort = request.mAlternateIpPortEndpoint->port();
+      sendFromAddress = request.mAlternateIpPortSocket->local_endpoint().address();
+      sendFromPort = request.mAlternateIpPortSocket->local_endpoint().port();
    }
-   else if(changeRequest & StunMessage::ChangePortFlag && request.mAlternatePortEndpoint)
+   else if(changeRequest & StunMessage::ChangePortFlag && request.mAlternatePortSocket)
    {
       result = RespondFromAlternatePort;
-      sendFromAddress = request.mAlternatePortEndpoint->address();
-      sendFromPort = request.mAlternatePortEndpoint->port();
+      sendFromAddress = request.mAlternatePortSocket->local_endpoint().address();
+      sendFromPort = request.mAlternatePortSocket->local_endpoint().port();
    }
-   else if(changeRequest & StunMessage::ChangeIpFlag && request.mAlternateIpEndpoint)
+   else if(changeRequest & StunMessage::ChangeIpFlag && request.mAlternateIpSocket)
    {
       result = RespondFromAlternateIp;
-      sendFromAddress = request.mAlternateIpEndpoint->address();
-      sendFromPort = request.mAlternateIpEndpoint->port();
+      sendFromAddress = request.mAlternateIpSocket->local_endpoint().address();
+      sendFromPort = request.mAlternateIpSocket->local_endpoint().port();
    }
    else
    {
@@ -323,7 +323,7 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
    }
 
    // Only add RFC3489 attributes if alternates were provided
-   if(request.mAlternateIpPortEndpoint && request.mAlternateIpEndpoint && request.mAlternatePortEndpoint) 
+   if(request.mAlternateIpPortSocket && request.mAlternateIpSocket && request.mAlternatePortSocket) 
    {
       // Add source address - for RFC3489 backwards compatibility
       response.mHasSourceAddress = true;
@@ -341,16 +341,16 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
 
       // Add changed address - for RFC3489 backward compatibility
       response.mHasChangedAddress = true;
-      response.mChangedAddress.port = request.mAlternateIpPortEndpoint->port();
-      if(request.mAlternateIpPortEndpoint->address().is_v6())
+      response.mChangedAddress.port = request.mAlternateIpPortSocket->local_endpoint().port();
+      if(request.mAlternateIpPortSocket->local_endpoint().address().is_v6())
       {
          response.mChangedAddress.family = StunMessage::IPv6Family; 
-         memcpy(&response.mChangedAddress.addr.ipv6, request.mAlternateIpPortEndpoint->address().to_v6().to_bytes().c_array(), sizeof(response.mChangedAddress.addr.ipv6));
+         memcpy(&response.mChangedAddress.addr.ipv6, request.mAlternateIpPortSocket->local_endpoint().address().to_v6().to_bytes().c_array(), sizeof(response.mChangedAddress.addr.ipv6));
       }
       else
       {
          response.mChangedAddress.family = StunMessage::IPv4Family; 
-         response.mChangedAddress.addr.ipv4 = request.mAlternateIpPortEndpoint->address().to_v4().to_ulong();  
+         response.mChangedAddress.addr.ipv4 = request.mAlternateIpPortSocket->local_endpoint().address().to_v4().to_ulong();  
       }
 
       // If Response-Address is present, then response should be sent here instead of source address to be
