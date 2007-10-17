@@ -16,6 +16,7 @@ static const ErrorType BadMessageIntegrity                   = 8003;
 static const ErrorType ErrorParsingMessage                   = 8004;
 static const ErrorType NoAllocation                          = 8005;
 static const ErrorType ReadError                             = 8006;
+static const ErrorType ResponseTimeout                       = 8007;
 } 
 
 #endif

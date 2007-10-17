@@ -18,7 +18,8 @@ public:
 protected:
    virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
    virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers);
-   virtual asio::error_code rawRead(char* buffer, unsigned int size, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+   virtual asio::error_code rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+   virtual void cancelSocket();
 
 private:
    asio::ssl::context mSslContext;

@@ -69,7 +69,7 @@ General TODO
 - if server is forwarding data with a magic cookie, it must use a DataInd (UDP only)
 - if server receives non-encapsulated data on a connection (TCP/TLS) with no Active Destination Set then connection is closed
 - Shared Secret Re-Transmissions when receiving duplicate request, must return exact same response (need to store/cache in server)
-- from chart below
+- from chart above
  - Configuration Framework
  - Multi-threaded support
  - Bandwidth check
@@ -80,20 +80,12 @@ Client TODO
 -----------
 - don't allow TCP allocate request over UDP
 - refresh allocations (3/4 lifetime) <- before
-- retries should be paced at 500ms, 1000ms, 2000ms, etc.
+- retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response
 - UDP Set Active Dest Requests, to change, must remove first, wait 5 seconds, then set new
 - ability to send an empty packet in a SendInd
 - DNS Discovery (?)
 - Server Binding Usage - ability to handle Binding Requests, Shared Secret Requests (?)
 - Keep Alive Usage
-- Client API timeouts
-- UDP Retransmissions
- - RTO - 100ms (fixed line) - calculated?
- - 7 requests max
- - wait 1.6 seconds afer last request, then fail
- - 0ms, 100ms, 300ms, 700ms, 1500ms, 3100ms, 6300ms and fail at 7900ms
-- TCP Timeout in 7900ms
-- furthur responses must be discarded - check TID
 - requests can be piplined
 - client long term password use - auto re-request after 401
 - implement 300 Try-Alternate response
