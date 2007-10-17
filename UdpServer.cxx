@@ -95,9 +95,9 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
          StunMessage request(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
                              StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
                              (char*)mBuffer.c_array(), (unsigned int)bytesTransferred,
-                             mAlternatePortUdpServer ? &mAlternatePortUdpServer->getSocket().local_endpoint() : 0,
-                             mAlternateIpUdpServer ? &mAlternateIpUdpServer->getSocket().local_endpoint() : 0,
-                             mAlternateIpPortUdpServer ? &mAlternateIpPortUdpServer->getSocket().local_endpoint() : 0);
+                             mAlternatePortUdpServer ? &mAlternatePortUdpServer->getSocket() : 0,
+                             mAlternateIpUdpServer ? &mAlternateIpUdpServer->getSocket() : 0,
+                             mAlternateIpPortUdpServer ? &mAlternateIpPortUdpServer->getSocket() : 0);
          if(!request.isValid())
          {
             treatAsData = true;
