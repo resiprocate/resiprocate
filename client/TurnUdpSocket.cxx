@@ -1,4 +1,5 @@
 #include "TurnUdpSocket.hxx"
+#include <boost/bind.hpp>
 
 using namespace std;
 
@@ -46,23 +47,34 @@ TurnUdpSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
 }
 
 asio::error_code 
-TurnUdpSocket::rawRead(char* buffer, unsigned int size, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+TurnUdpSocket::rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
-   asio::error_code errorCode;
-   asio::ip::udp::endpoint sender;
-   *bytesRead = (unsigned int)mSocket.receive_from(asio::buffer(buffer, size), sender, 0, errorCode); 
-   if(errorCode == 0)
+   startReadTimer(timeout);
+   mSocket.async_receive_from(asio::buffer(buffer, size), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+
+   // Wait for timer and read to end
+   mIOService.run();
+   mIOService.reset();
+
+   *bytesRead = (unsigned int)mBytesRead;
+   if(mReadErrorCode == 0)
    {
       if(sourceAddress)
       {
-         *sourceAddress = sender.address();
+         *sourceAddress = mSenderEndpoint.address();
       }
       if(sourcePort)
       {
-         *sourcePort = sender.port();
+         *sourcePort = mSenderEndpoint.port();
       }
    }
-   return errorCode;
+   return mReadErrorCode;
+}
+
+void
+TurnUdpSocket::cancelSocket()
+{
+   mSocket.cancel();
 }
 
 } // namespace
