@@ -23,6 +23,32 @@ static const Data PASSWORD_KEY("stunServerPasswordKey");
 
 namespace reTurn {
 
+bool operator<(const UInt128& lhs, const UInt128& rhs)
+{
+   if(lhs.longpart[0] != rhs.longpart[0])
+   {
+      return lhs.longpart[0] < rhs.longpart[0];
+   }
+   else if(lhs.longpart[1] != rhs.longpart[1])
+   {
+      return lhs.longpart[1] < rhs.longpart[1];
+   }
+   else if(lhs.longpart[2] != rhs.longpart[2])
+   {
+      return lhs.longpart[2] < rhs.longpart[2];
+   }
+
+   return lhs.longpart[3] < rhs.longpart[3];
+}
+
+bool operator==(const UInt128& lhs, const UInt128& rhs)
+{
+   return lhs.longpart[0] == rhs.longpart[0] &&
+          lhs.longpart[1] == rhs.longpart[1] &&
+          lhs.longpart[2] == rhs.longpart[2] &&
+          lhs.longpart[3] == rhs.longpart[3];
+}
+
 StunMessage::StunMessage(const StunTuple& localTuple,
                          const StunTuple& remoteTuple,
                          char* buf, unsigned int bufLen,
@@ -382,7 +408,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 	
    if (sizeof(StunMsgHdr) > bufLen)
    {
-      clog << "Bad message" << endl;
+      clog << "Bad message, bufLen=" << bufLen << endl;
       return false;
    }
 	
@@ -990,7 +1016,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    ptr = encode16(ptr, mHeader.msgType);
    char* lengthp = ptr;
    ptr = encode16(ptr, 0);
-   ptr = encode(ptr, reinterpret_cast<const char*>(mHeader.magicCookieAndTid.longpart), sizeof(mHeader.id));
+   ptr = encode(ptr, reinterpret_cast<const char*>(&mHeader.id), sizeof(mHeader.id));
 
    if (mHasTurnMagicCookie)
    {

@@ -79,11 +79,15 @@ int main(int argc, char* argv[])
        unsigned int size = sizeof(buffer);
        asio::ip::address sourceAddress;
        unsigned short sourcePort;
-       if(turnSocket.receive(buffer, size, &sourceAddress, &sourcePort) == 0)
+       if((rc=turnSocket.receive(buffer, size, 10000, &sourceAddress, &sourcePort)) == 0)
        {
           std::cout << "Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
           turnSocket.send(buffer, size);
           size = sizeof(buffer);
+       }
+       else
+       {
+          std::cout << "Receive error: " << rc << std::endl;
        }
 
        turnSocket.clearActiveDestination();
