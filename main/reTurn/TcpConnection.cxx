@@ -125,6 +125,12 @@ TcpConnection::handleReadHeader(const asio::error_code& e)
       else
       {
          std::cout << "Invalid data on TCP connection." << std::endl;
+         std::cout << "Bytes: " << std::endl;
+         for(unsigned int i = 0; i < 4; i++)
+         {
+            std::cout << (char)mBuffer[i] << "(" << (int)mBuffer[i] << ") ";
+         }
+         std::cout << std::endl;
          mConnectionManager.stop(shared_from_this());
       }
    }

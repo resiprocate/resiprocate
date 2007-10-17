@@ -57,13 +57,14 @@ public:
    asio::error_code sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
 
    // Receive Methods
-   asio::error_code receive(char* buffer, unsigned int& size, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
-   asio::error_code receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size);
+   asio::error_code receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+   asio::error_code receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout);
 
 protected:
    virtual asio::error_code rawWrite(const char* buffer, unsigned int size) = 0;
    virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers) = 0;
-   virtual asio::error_code rawRead(char* buffer, unsigned int size, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0) = 0;
+   virtual asio::error_code rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0) = 0;
+   virtual void cancelSocket() = 0;
 
    // Local binding info
    StunTuple mLocalBinding;
@@ -89,6 +90,14 @@ protected:
    StunTuple mActiveDestination;
 
    asio::io_service mIOService;
+
+   // handlers and timers required to do a timed out read
+   asio::deadline_timer mReadTimer;
+   size_t mBytesRead;
+   asio::error_code mReadErrorCode;
+   void startReadTimer(unsigned int timeout);
+   void handleRawRead(const asio::error_code& errorCode, size_t bytesRead);
+   void handleRawReadTimeout(const asio::error_code& errorCode);
 
 private:
    StunMessage* sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode);
