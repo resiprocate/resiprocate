@@ -9,7 +9,6 @@
 namespace resip
 {
 
-
 //As uac, one is created for DialogSet; given to first dialog, new instances are
 //generated for each fork.  As uas, created at the same time as a Dialog.
 class DialogEventInfo
@@ -63,6 +62,8 @@ class DialogEventInfo
       // cache the first one, then forevermore lookup from InviteSession
       const SdpContents& getLocalSdp() const;
       const SdpContents& getRemoteSdp() const;
+      bool hasLocalSdp() const;
+      bool hasRemoteSdp() const;
 
       UInt64 getDuration() const; // in seconds
 
