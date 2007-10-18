@@ -166,7 +166,7 @@ UdpTransport::process(FdSet& fdset)
 
 
       // Save all the info where this message came from
-      tuple.transport = this;
+      tuple.mTransport = this;
       char* buffer = new char[len + 1];
       ::memcpy(buffer, mBuffer, len);
       buffer[len]=0; // null terminate the buffer string just to make debug easier and reduce errors

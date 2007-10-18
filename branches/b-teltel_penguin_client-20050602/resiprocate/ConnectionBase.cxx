@@ -47,7 +47,7 @@ ConnectionBase::~ConnectionBase()
    while (!mOutstandingSends.empty())
    {
       SendData* sendData = mOutstandingSends.front();
-      mWho.transport->fail(sendData->transactionId);
+      mWho.mTransport->fail(sendData->transactionId);
       delete sendData;
       mOutstandingSends.pop_front();
    }
@@ -58,7 +58,7 @@ ConnectionBase::~ConnectionBase()
 ConnectionId
 ConnectionBase::getId() const
 {
-   return mWho.connectionId;
+   return mWho.mConnectionId;
 }
 
 void
@@ -90,11 +90,11 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             }
          }
          assert(mWho.transport);
-         mMessage = new SipMessage(mWho.transport);
+         mMessage = new SipMessage(mWho.mTransport);
          
          StackLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);
-         mMessage->setTlsDomain(mWho.transport->tlsDomain());
+         mMessage->setTlsDomain(mWho.mTransport->tlsDomain());
          mMsgHeaderScanner.prepareForMessage(mMessage);
          // Fall through to the next case.
       }
@@ -286,7 +286,7 @@ Transport*
 ConnectionBase::transport()
 {
    assert(this);
-   return mWho.transport;
+   return mWho.mTransport;
 }
 
 RESIP_API std::ostream& 
@@ -348,4 +348,5 @@ resip::operator<<(std::ostream& strm, const resip::ConnectionBase& c)
  * <http://www.vovida.org/>.
  *
  */
+
 

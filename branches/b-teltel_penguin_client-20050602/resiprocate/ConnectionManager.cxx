@@ -47,7 +47,7 @@ ConnectionManager::~ConnectionManager()
 Connection*
 ConnectionManager::findConnection(const Tuple& addr)
 {
-   if (addr.connectionId == 0)
+   if (addr.mConnectionId == 0)
    {
       AddrMap::const_iterator i = mAddrMap.find(addr);
       if (i != mAddrMap.end())
@@ -57,7 +57,7 @@ ConnectionManager::findConnection(const Tuple& addr)
    }
    else
    {
-      IdMap::const_iterator i = mIdMap.find(addr.connectionId);
+      IdMap::const_iterator i = mIdMap.find(addr.mConnectionId);
       if (i != mIdMap.end())
       {
          return i->second;
@@ -178,11 +178,11 @@ ConnectionManager::removeFromWritable()
 void
 ConnectionManager::addConnection(Connection* connection)
 {
-   connection->who().connectionId = ++mConnectionIdGenerator;
+   connection->who().mConnectionId = ++mConnectionIdGenerator;
    //DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.connectionId  << ":" << connection->mSocket);
    
    mAddrMap[connection->who()] = connection;
-   mIdMap[connection->who().connectionId] = connection;
+   mIdMap[connection->who().mConnectionId] = connection;
 
    mReadHead->push_back(connection);
    mLRUHead->push_back(connection);
@@ -199,7 +199,7 @@ ConnectionManager::removeConnection(Connection* connection)
 
    assert(!mReadHead->empty());
 
-   mIdMap.erase(connection->mWho.connectionId);
+   mIdMap.erase(connection->mWho.mConnectionId);
    mAddrMap.erase(connection->mWho);
 
    connection->ConnectionReadList::remove();

@@ -106,7 +106,7 @@ TcpBaseTransport::processListen(FdSet& fdset)
       }
       makeSocketNonBlocking(sock);
       
-      tuple.transport = this;
+      tuple.mTransport = this;
       StackLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
       createConnection(tuple, sock, true);
    }
@@ -248,8 +248,8 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          assert(conn);
          assert( conn->transport() );
 
-         data->destination.transport = this;
-         data->destination.connectionId = conn->getId(); // !jf!
+         data->destination.mTransport = this;
+         data->destination.mConnectionId = conn->getId(); // !jf!
       }
    
       if (conn == 0)
@@ -329,5 +329,6 @@ TcpBaseTransport::process(FdSet& fdSet)
  * <http://www.vovida.org/>.
  *
  */
+
 
 
