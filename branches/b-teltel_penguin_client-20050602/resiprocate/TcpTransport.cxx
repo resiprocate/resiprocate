@@ -35,7 +35,7 @@ Connection*
 TcpTransport::createConnection(Tuple& who, Socket fd, bool server)
 {
    assert(this);
-   who.transport = this;
+   who.mTransport = this;
    assert(  who.transport );
    
    Connection* conn = new TcpConnection(who, fd);
