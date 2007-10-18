@@ -543,11 +543,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          source = determineSourceInterface(msg, target);
 
          // would already be specified for ACK or CANCEL
-         if (target.transport == 0)
+         if (target.mTransport == 0)
          {
             if (target.getType() == TLS)
             {
-               target.transport = findTlsTransport(msg->getTlsDomain());
+               target.mTransport = findTlsTransport(msg->getTlsDomain());
                //target.transport = findTlsTransport(msg->header(h_From).uri().host());
             }
 #if defined( USE_DTLS )
@@ -559,11 +559,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 #endif
             else
             {
-               target.transport = findTransport(source);
+               target.mTransport = findTransport(source);
             }
          }
 
-         if (target.transport) // findTransport may have failed
+         if (target.mTransport) // findTransport may have failed
          {
             Via& topVia(msg->header(h_Vias).front());
             topVia.remove(p_maddr); // !jf! why do this?
@@ -571,7 +571,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             // insert the via
             if (topVia.transport().empty())
             {
-               topVia.transport() = Tuple::toData(target.transport->transport());
+               topVia.transport() = Tuple::toData(target.mTransport->transport());
             }
             if (!topVia.sentHost().size())
             {
@@ -579,7 +579,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             }
             if (!topVia.sentPort())
             {
-               msg->header(h_Vias).front().sentPort() = target.transport->port();
+               msg->header(h_Vias).front().sentPort() = target.mTransport->port();
             }
          }
       }
@@ -589,13 +589,13 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // know the transport that the corresponding request was received on
          // and this has been copied by TransactionState::sendToWire into target.transport
          assert(target.transport);
-         if (target.transport->getTuple().isAnyInterface())
+         if (target.mTransport->getTuple().isAnyInterface())
          {
             source = determineSourceInterface(msg, target);
          }
          else
          {
-            source = target.transport->getTuple();
+            source = target.mTransport->getTuple();
          }
       }
       else
@@ -603,7 +603,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          assert(0);
       }
 
-      if (target.transport)
+      if (target.mTransport)
       {
          // There is a contact header and it contains exactly one entry
          if (msg->exists(h_Contacts) && !msg->header(h_Contacts).empty())
@@ -616,12 +616,12 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                if (contact.uri().host().empty())
                {
                   contact.uri().host() = DnsUtil::inet_ntop(source);
-                  contact.uri().port() = target.transport->port();
+                  contact.uri().port() = target.mTransport->port();
 
-                  if (msg->isRequest() && target.transport->transport() != UDP)
+                  if (msg->isRequest() && target.mTransport->transport() != UDP)
                   {
                      DebugLog(<< "added transport to Contact");
-                     contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
+                     contact.uri().param(p_transport) = Tuple::toData(target.mTransport->transport());
                   }
 
                   DebugLog(<<"!sipit! Populated Contact: " << contact);
@@ -663,7 +663,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          DebugLog (<< "Transmitting to " << target
             << " via " << source << '\n'
             << msg->brief()/* encoded.escaped()*/);
-         target.transport->send(target, encoded, msg->getTransactionId());
+         target.mTransport->send(target, encoded, msg->getTransactionId());
       }
       else
       {
@@ -711,7 +711,7 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& target)
    if(!msg->getEncoded().empty())
    {
       //DebugLog(<<"!ah! retransmit to " << target);
-      target.transport->send(target, msg->getEncoded(), msg->getTransactionId());
+      target.mTransport->send(target, msg->getEncoded(), msg->getTransactionId());
    }
 }
 

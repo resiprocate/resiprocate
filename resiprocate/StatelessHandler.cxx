@@ -52,7 +52,7 @@ StatelessHandler::process()
             }
          else if (sip->isRequest())
          {
-            if (sip->getDestination().transport)
+            if (sip->getDestination().mTransport)
             {
                DebugLog (<< "Processing request from TU : " << msg->brief());
                mController.mTransportSelector.transmit(sip, sip->getDestination()); // results not used

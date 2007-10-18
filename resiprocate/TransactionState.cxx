@@ -236,7 +236,7 @@ TransactionState::process(TransactionController& controller)
                // since we don't want to reply to the source port unless rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                state->mState = Proceeding;
-               state->mIsReliable = state->mResponseTarget.transport->isReliable();
+               state->mIsReliable = state->mResponseTarget.mTransport->isReliable();
                state->add(tid);
                
                if (Timer::T100 == 0)
@@ -276,7 +276,7 @@ TransactionState::process(TransactionController& controller)
                // since we don't want to reply to the source port unless rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                state->add(tid);
-               state->mIsReliable = state->mResponseTarget.transport->isReliable();
+               state->mIsReliable = state->mResponseTarget.mTransport->isReliable();
             }
             
 
@@ -1462,7 +1462,7 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       if (sip->hasForceTarget())
       {
          target = simpleTupleForUri(sip->getForceTarget());
-         target.transport = mResponseTarget.transport;
+         target.mTransport = mResponseTarget.mTransport;
          StackLog(<<"!ah! response with force target going to : "<<target);
       }
       else if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
@@ -1484,7 +1484,7 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
          mController.mTransportSelector.transmit(sip, target);
       }
    }
-   else if (sip->getDestination().transport)
+   else if (sip->getDestination().mTransport)
    {
       mController.mTransportSelector.transmit(sip, sip->getDestination()); // dns not used
    }
