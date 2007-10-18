@@ -42,6 +42,31 @@ DialogEventInfo::DialogEventInfo(const DialogEventInfo& rhs)
    }
 }
 
+DialogEventInfo&
+DialogEventInfo::operator=(const DialogEventInfo& dialogEventInfo)
+{
+   if (this != &dialogEventInfo)
+   {
+      mDialogId = dialogEventInfo.mDialogId;
+      mState = dialogEventInfo.mState;
+      mCreationTime = dialogEventInfo.mCreationTime;
+      mDialogEventId = dialogEventInfo.mDialogEventId;
+      mDirection = dialogEventInfo.mDirection;
+      mInviteSession = dialogEventInfo.mInviteSession;
+      mLocalIdentity = dialogEventInfo.mLocalIdentity;
+      mLocalSdp = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(dialogEventInfo.mLocalSdp->clone()));
+      mLocalTarget = dialogEventInfo.mLocalTarget;
+      mReferredBy = std::auto_ptr<NameAddr>(static_cast<NameAddr*>(dialogEventInfo.mReferredBy->clone()));
+      mRemoteIdentity = dialogEventInfo.mRemoteIdentity;
+      mRemoteSdp = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(dialogEventInfo.mRemoteSdp->clone()));
+      mRemoteTarget = std::auto_ptr<Uri>(static_cast<Uri*>(dialogEventInfo.mRemoteTarget->clone()));
+      mReplacesId = std::auto_ptr<DialogId>(new DialogId(dialogEventInfo.mReplacesId->getDialogSetId(), 
+         dialogEventInfo.mReplacesId->getRemoteTag()));
+      mRouteSet = dialogEventInfo.mRouteSet;
+   }
+   return *this;
+}
+
 bool 
 DialogEventInfo::operator==(const DialogEventInfo& rhs) const
 {
@@ -176,6 +201,18 @@ DialogEventInfo::getRemoteSdp() const
    }
    assert(mRemoteSdp.get() != NULL);
    return *mRemoteSdp;
+}
+
+bool
+DialogEventInfo::hasLocalSdp() const
+{
+   return (mInviteSession.isValid() ? mInviteSession->hasLocalSdp() : mLocalSdp.get() != 0);
+}
+
+bool
+DialogEventInfo::hasRemoteSdp() const
+{
+   return (mInviteSession.isValid() ? mInviteSession->hasRemoteSdp() : mRemoteSdp.get() != 0);
 }
 
 UInt64

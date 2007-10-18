@@ -180,7 +180,7 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
       eventInfo = it->second;
       eventInfo->mState = DialogEventInfo::Terminated;
 
-      if (reason == InviteSessionHandler::Referred)
+      if (reason == InviteSessionHandler::Referred && msg.exists(h_ReferredBy))
       {
          eventInfo->mReferredBy = std::auto_ptr<NameAddr>(new NameAddr(msg.header(h_ReferredBy)));
       }
@@ -193,16 +193,28 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
             msg.header(h_Replaces).param(p_fromTag)));
       }
 
-      mDialogEventHandler->onTerminated(*eventInfo, reason);
+      int respCode = 0;
+      if (msg.isResponse())
+      {
+         respCode = msg.header(h_StatusLine).responseCode();
+      }
+
+      mDialogEventHandler->onTerminated(*eventInfo, reason, respCode);
       delete it->second;
       mDialogIdToEventInfo.erase(it++);
    }
 }
 
-const std::map<DialogId, DialogEventInfo*, DialogEventStateManager::DialogIdComparator>&
+DialogEventStateManager::DialogInfos
 DialogEventStateManager::getDialogEventInfos() const
 {
-   return mDialogIdToEventInfo;
+   DialogInfos infos;
+   std::map<DialogId, DialogEventInfo*, DialogIdComparator>::const_iterator it = mDialogIdToEventInfo.begin();
+   for (; it != mDialogIdToEventInfo.end(); it++)
+   {
+      infos.push_back(*(it->second));
+   }
+   return infos;
 }
 
 DialogEventInfo* 
