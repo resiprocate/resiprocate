@@ -67,6 +67,9 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          send(response);
 
          transition(Terminated);
+
+         mDum.getDialogEventStateManager().onTerminated(mDialog, *response, InviteSessionHandler::Referred);
+
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Referred); 
          mDum.destroy(this);
          break;
