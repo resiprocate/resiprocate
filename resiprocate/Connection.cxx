@@ -39,7 +39,7 @@ Connection::~Connection()
 ConnectionId
 Connection::getId() const
 {
-   return mWho.connectionId;
+   return mWho.mConnectionId;
 }
 
 
@@ -95,7 +95,7 @@ ConnectionManager&
 Connection::getConnectionManager() const
 {
    assert(mWho.transport);
-   TcpBaseTransport* transport = static_cast<TcpBaseTransport*>(mWho.transport);
+   TcpBaseTransport* transport = static_cast<TcpBaseTransport*>(mWho.mTransport);
    
    return transport->getConnectionManager();
 }
@@ -111,7 +111,7 @@ Transport*
 Connection::transport()
 {
    assert(this);
-   return mWho.transport;
+   return mWho.mTransport;
 }
 
 int
@@ -194,4 +194,5 @@ Connection::isGood()
  * <http://www.vovida.org/>.
  *
  */
+
 
