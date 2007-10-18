@@ -16,7 +16,7 @@ class DialogEventHandler
       virtual void onEarly(const DialogEventInfo& info)=0;
       //add conv. accessor for sdp.  Include INV/200?
       virtual void onConfirmed(const DialogEventInfo& info)=0; 
-      virtual void onTerminated(const DialogEventInfo& info, InviteSessionHandler::TerminatedReason)=0;
+      virtual void onTerminated(const DialogEventInfo& info, InviteSessionHandler::TerminatedReason reason, int code)=0;
 };
       
 
