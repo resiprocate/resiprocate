@@ -475,6 +475,9 @@ ClientInviteSession::handleRedirect (const SipMessage& msg)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    transition(Terminated);
+
+   mDum.getDialogEventStateManager().onTerminated(mDialog, msg, InviteSessionHandler::Rejected);
+
    handler->onRedirected(getHandle(), msg);
    mDum.destroy(this);
 }
