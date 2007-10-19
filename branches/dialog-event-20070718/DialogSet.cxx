@@ -403,6 +403,10 @@ DialogSet::dispatch(const SipMessage& msg)
 
    if (handledByAuthOrRedirect(msg))
    {
+      if (mDialogs.size() == 0)
+      {
+         mDum.getDialogEventStateManager().onTerminated(*this, msg, InviteSessionHandler::Rejected);
+      }
       return;
    }
 
