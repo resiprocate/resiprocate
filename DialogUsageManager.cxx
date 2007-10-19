@@ -617,7 +617,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    {
       inv->header(h_Replaces) = referTo.embedded().header(h_Replaces);
    }
-   getDialogEventStateManager().onTryingUac(*appDs->mDialogSet, *inv);
+
    return inv;
 }
 
