@@ -873,6 +873,7 @@ DialogSet::end()
                try
                {
                   it->second->cancel();
+                  mDum.getDialogEventStateManager().onTerminated(*(it->second), *cancel, InviteSessionHandler::LocalCancel);
                }
                catch(UsageUseException& e)
                {
