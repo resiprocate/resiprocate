@@ -1196,6 +1196,9 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
    send(i487);
 
    transition(Terminated);
+
+   mDum.getDialogEventStateManager().onTerminated(mDialog, msg, InviteSessionHandler::RemoteCancel);
+
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
    mDum.destroy(this);
 }
