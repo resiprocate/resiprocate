@@ -121,8 +121,15 @@ ServerOutOfDialogReq::reject(int statusCode)
 std::ostream& 
 ServerOutOfDialogReq::dump(std::ostream& strm) const
 {
-   strm << "ServerOutOfDialogReq " << getMethodName(mRequest.header(h_RequestLine).method()) 
-        << " cseq=" << mRequest.header(h_CSeq).sequence();
+   if(mRequest.exists(h_CSeq))
+   {
+      strm << "ServerOutOfDialogReq " << getMethodName(mRequest.header(h_RequestLine).method()) 
+           << " cseq=" << mRequest.header(h_CSeq).sequence();
+   }
+   else
+   {
+      strm << "ServerOutOfDialogReq, dispatch has not occured yet.";
+   }
    return strm;
 }
 
