@@ -268,6 +268,14 @@ ServerRegistration::dispatch(const DumTimeout& msg)
 {
 }
 
+std::ostream& 
+ServerRegistration::dump(std::ostream& strm) const
+{
+   strm << "ServerRegistration " << mAor;
+   return strm;
+}
+
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

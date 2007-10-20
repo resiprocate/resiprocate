@@ -29,6 +29,7 @@ class ServerPublication : public BaseUsage
       void send(SharedPtr<SipMessage> response);      
 
       const Data& getPublisher() const; // aor of From
+      virtual std::ostream& dump(std::ostream& strm) const;
       
    protected:
       virtual ~ServerPublication();

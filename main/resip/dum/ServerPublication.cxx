@@ -169,6 +169,14 @@ ServerPublication::send(SharedPtr<SipMessage> response)
    }
 }
 
+std::ostream& 
+ServerPublication::dump(std::ostream& strm) const
+{
+   strm << "ServerPublication " << mDocumentKey << " " << mEventType;
+   return strm;
+}
+   
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
