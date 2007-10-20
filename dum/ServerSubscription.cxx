@@ -409,6 +409,12 @@ void ServerSubscription::onReadyToSend(SipMessage& msg)
    handler->onReadyToSend(getHandle(), msg);
 }
 
+std::ostream& 
+ServerSubscription::dump(std::ostream& strm) const
+{
+   strm << "ServerSubscription " << mSubscriber;
+   return strm;
+}
 
 
 /* ====================================================================

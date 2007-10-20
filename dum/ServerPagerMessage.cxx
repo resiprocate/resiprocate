@@ -171,6 +171,15 @@ ServerPagerMessage::rejectCommand(int statusCode)
    mDum.post(new ServerPagerMessageRejectCommand(*this, statusCode));
 }
 
+std::ostream& 
+ServerPagerMessage::dump(std::ostream& strm) const
+{
+   strm << "ServerPagerMessage ";
+   mRequest.encodeBrief(strm);
+   return strm;
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
