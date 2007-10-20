@@ -275,6 +275,14 @@ ClientPagerMessage::clearMsgQueued ()
    mMsgQueue.clear();
 }
 
+std::ostream& 
+ClientPagerMessage::dump(std::ostream& strm) const
+{
+   strm << "ClientPagerMessage queued: " << mMsgQueue.size();
+   return strm;
+}
+
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

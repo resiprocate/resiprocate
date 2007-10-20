@@ -25,6 +25,9 @@ class ServerRegistration: public NonDialogUsage
       virtual void end();
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
+
+      virtual std::ostream& dump(std::ostream& strm) const;
+
    protected:
       virtual ~ServerRegistration();
    private:

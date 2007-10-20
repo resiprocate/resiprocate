@@ -118,6 +118,13 @@ ServerOutOfDialogReq::reject(int statusCode)
    return mResponse;
 }
 
+std::ostream& 
+ServerOutOfDialogReq::dump(std::ostream& strm) const
+{
+   strm << "ServerOutOfDialogReq " << getMethodName(mRequest.header(h_RequestLine).method()) 
+        << " cseq=" << mRequest.header(h_CSeq).sequence();
+   return strm;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
