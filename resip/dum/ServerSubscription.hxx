@@ -40,6 +40,8 @@ class ServerSubscription : public BaseSubscription
       virtual void dispatch(const SipMessage& msg);
       virtual void dispatch(const DumTimeout& timer);
 
+      virtual std::ostream& dump(std::ostream& strm) const;
+
    protected:
       virtual ~ServerSubscription();
       virtual void dialogDestroyed(const SipMessage& msg);           

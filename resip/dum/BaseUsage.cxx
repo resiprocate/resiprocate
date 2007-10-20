@@ -38,13 +38,14 @@ BaseUsage::getBaseHandle()
    return mHandle;
 }
 
+#if 0
 std::ostream& 
 BaseUsage::dump(std::ostream& strm) const
 {
    strm << "BaseUsage: " << mId;
    return strm;
 }
-
+#endif
 
 
 /* ====================================================================

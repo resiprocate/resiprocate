@@ -90,6 +90,14 @@ ClientOutOfDialogReq::matches(const SipMessage& msg) const
    return (DialogSetId(mRequest) == DialogSetId(msg));
 }
 
+std::ostream& 
+ClientOutOfDialogReq::dump(std::ostream& strm) const
+{
+   strm << "ClientOutOfDialogReq " << getMethodName(mRequest.header(h_RequestLine).method()) 
+        << " cseq=" << mRequest.header(h_CSeq).sequence();
+   return strm;
+}
+
 
 
 
