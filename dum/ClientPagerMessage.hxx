@@ -42,6 +42,8 @@ class ClientPagerMessage : public NonDialogUsage
 
       size_t       msgQueued () const;
 
+      virtual std::ostream& dump(std::ostream& strm) const;
+
    protected:
       virtual ~ClientPagerMessage();
 
