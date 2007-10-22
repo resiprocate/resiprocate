@@ -7,6 +7,7 @@ CXXFLAGS += -DBOOST_ALL_NO_LIB
 
 SRC += \
 	ConnectionManager.cxx \
+	RemotePeer.cxx \
 	RequestHandler.cxx \
 	StunAuth.cxx \
 	StunMessage.cxx \

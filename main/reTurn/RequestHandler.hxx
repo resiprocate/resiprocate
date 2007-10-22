@@ -37,7 +37,7 @@ public:
    /// Process a received StunMessage, and produce a reply
    /// Returns true if the response message is to be sent
    ProcessResult processStunMessage(TurnTransportBase* turnTransport, StunMessage& request, StunMessage& response);
-   void processTurnData(const StunTuple& localTuple, const StunTuple& remoteTuple, const char* data, unsigned int size);
+   void processTurnData(unsigned char channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, const char* data, unsigned int size);
 
 private:
 
@@ -49,7 +49,7 @@ private:
    ProcessResult processStunBindingRequest(StunMessage& request, StunMessage& response);
    ProcessResult processStunSharedSecretRequest(StunMessage& request, StunMessage& response);
    ProcessResult processTurnAllocateRequest(TurnTransportBase* turnTransport, StunMessage& request, StunMessage& response);
-   ProcessResult processTurnSetActiveDestinationRequest(StunMessage& request, StunMessage& response);
+   ProcessResult processTurnListenPermissionRequest(StunMessage& request, StunMessage& response);
 
    // Specific Indication processors
    void processTurnSendIndication(StunMessage& request);

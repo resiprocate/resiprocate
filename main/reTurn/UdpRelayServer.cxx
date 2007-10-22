@@ -43,8 +43,8 @@ UdpRelayServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTr
       if(mTurnAllocation.existsPermission(mSenderEndpoint.address())) 
       {
          // If active destination is not set, then send to client as a DataInd, otherwise send packet as is
-         mTurnAllocation.sendDataToLocal(StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
-                                         resip::Data(resip::Data::Share, (const char*)mBuffer.data(), (int)bytesTransferred));
+         mTurnAllocation.sendDataToClient(StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
+                                          resip::Data(resip::Data::Share, (const char*)mBuffer.data(), (int)bytesTransferred));
       }
    }
 
