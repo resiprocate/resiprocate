@@ -8,7 +8,8 @@ DialogEventInfo::DialogEventInfo()
   mState(DialogEventInfo::Trying),
   mDirection(DialogEventInfo::Initiator),
   mCreationTime(0),
-  mInviteSession(InviteSessionHandle::NotValid())
+  mInviteSession(InviteSessionHandle::NotValid()),
+  mReplaced(false)
 {
 }
 
@@ -24,7 +25,8 @@ DialogEventInfo::DialogEventInfo(const DialogEventInfo& rhs)
   mRemoteIdentity(rhs.mRemoteIdentity),
   mLocalTarget(rhs.mLocalTarget),
   mRemoteTarget(rhs.mRemoteTarget.get() ? new Uri(*rhs.mRemoteTarget) : 0),
-  mCreationTime(rhs.mCreationTime)
+  mCreationTime(rhs.mCreationTime),
+  mReplaced(rhs.mReplaced)
 {
    if (rhs.mReplacesId.get())
    {
@@ -63,6 +65,7 @@ DialogEventInfo::operator=(const DialogEventInfo& dialogEventInfo)
       mReplacesId = std::auto_ptr<DialogId>(new DialogId(dialogEventInfo.mReplacesId->getDialogSetId(), 
          dialogEventInfo.mReplacesId->getRemoteTag()));
       mRouteSet = dialogEventInfo.mRouteSet;
+      mReplaced = dialogEventInfo.mReplaced;
    }
    return *this;
 }
@@ -221,6 +224,19 @@ DialogEventInfo::getDuration() const
    UInt64 delta = Timer::getTimeSecs() - mCreationTime;
    return delta;
 }
+
+bool 
+DialogEventInfo::hasReplacesId() const
+{
+   return (mReplacesId.get() != 0);
+}
+
+const DialogId& 
+DialogEventInfo::getReplacesId() const
+{
+   return *mReplacesId;
+}
+
 
 
 /* ====================================================================

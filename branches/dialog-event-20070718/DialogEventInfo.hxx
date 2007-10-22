@@ -67,6 +67,9 @@ class DialogEventInfo
 
       UInt64 getDuration() const; // in seconds
 
+      bool hasReplacesId() const;
+      const DialogId& getReplacesId() const;
+
    protected:
       friend class DialogEventStateManager;
 
@@ -93,6 +96,9 @@ class DialogEventInfo
 
       std::auto_ptr<SdpContents> mLocalSdp;
       std::auto_ptr<SdpContents> mRemoteSdp;
+
+   private:
+      bool mReplaced;
 };
 
 }
