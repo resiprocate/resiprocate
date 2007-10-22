@@ -148,7 +148,7 @@ TurnAllocation::sendDataToPeer(unsigned char channelNumber, const resip::Data& d
    if(it != mClientToServerChannelRemotePeerMap.end())
    {
       // channel found - send Data
-      sendDataToPeer(channelNumber, it->second->getPeerTuple(), data);
+      sendDataToPeer(it->second->getPeerTuple(), data);
    }
    else
    {
@@ -181,7 +181,7 @@ TurnAllocation::sendDataToPeer(unsigned char channelNumber, const StunTuple& pee
       remotePeer->setClientToServerChannel(channelNumber);
       remotePeer->setClientToServerChannelConfirmed();
 
-      // Add RemoteAddress to 2 of the three maps
+      // Add RemoteAddress to two of the three maps
       mTupleRemotePeerMap[peerAddress] = remotePeer;
       mClientToServerChannelRemotePeerMap[channelNumber] = remotePeer;
    }
@@ -214,8 +214,14 @@ TurnAllocation::sendDataToPeer(unsigned char channelNumber, const StunTuple& pee
       mLocalTurnTransport->sendTurnData(mKey.getClientRemoteTuple(), buffer.data(), size);
    }      
 
+   sendDataToPeer(peerAddress, data);
+}
+
+void 
+TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, const resip::Data& data)
+{
    cout << "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress << " data=" << data << endl;
+           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress << " data=" << data << endl;
 
    // add permission if it does not exist
    refreshPermission(peerAddress.getAddress());
