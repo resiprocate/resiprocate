@@ -417,7 +417,7 @@ ClientInviteSession::dispatch(const SipMessage& msg)
   catch (BaseException& e)
   {
      WarningLog (<< "Caught: " << e);
-     mDum.mInviteSessionHandler->onFailure(getHandle(), msg);
+     onFailureAspect(getHandle(), msg);
      end(NotSpecified); 
   }
 }
@@ -501,7 +501,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    if (msg.header(h_CSeq).sequence() != mLastLocalSessionModification->header(h_CSeq).sequence())
    {
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
-      handler->onFailure(getHandle(), msg);
+      onFailureAspect(getHandle(), msg);
       end(NotSpecified);
    }
    //!dcm! this should never happen, the invite will have 100rel in the
@@ -511,7 +511,7 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
       if (!msg.exists(h_RSeq))
       {
          InfoLog (<< "Failure:  No RSeq in 1xx: " << msg.brief());
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          end(NotSpecified);
          return;
       }
@@ -721,7 +721,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
       }
@@ -734,7 +734,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
          break;
@@ -820,7 +820,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          sendBye();
          InfoLog (<< "Failure:  2xx with no answer: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
       }
@@ -832,7 +832,7 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case On487Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
          break;
@@ -882,7 +882,7 @@ ClientInviteSession::dispatchAnswered (const SipMessage& msg)
          sendBye();
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
          break;
@@ -920,7 +920,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
          sendBye();
          InfoLog (<< "Failure:  no answer sent: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
@@ -932,7 +932,7 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
          break;
@@ -976,7 +976,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
@@ -993,7 +993,7 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
          break;
@@ -1052,7 +1052,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
@@ -1069,7 +1069,7 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
          break;
@@ -1120,7 +1120,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
@@ -1140,7 +1140,7 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
       case On491Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
          break;
@@ -1201,7 +1201,7 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
       case On487Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
          break;
@@ -1242,7 +1242,7 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
       case On487Invite:
          InfoLog (<< "Failure:  error response: " << msg.brief());
          transition(Terminated);
-         handler->onFailure(getHandle(), msg);
+         onFailureAspect(getHandle(), msg);
          handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          mDum.destroy(this);
          break;
@@ -1365,8 +1365,19 @@ ClientInviteSession::onFailureAspect(ClientInviteSessionHandle c, const SipMessa
 {
    if (mDum.mDialogEventStateManager)
    {
-      mDum.mDialogEventStateManager->onTerminated(mDialog, msg, 
-                                                  InviteSessionHandler::Rejected);
+      InviteSessionHandler::TerminatedReason reason = InviteSessionHandler::Rejected;
+      if (msg.isResponse())
+      {
+         if (msg.header(h_StatusLine).responseCode() == 408)
+         {
+            reason = InviteSessionHandler::Timeout;
+         }
+         else if (msg.header(h_StatusLine).responseCode() / 100 == 5)
+         {
+            reason = InviteSessionHandler::Error;
+         }
+      }
+      mDum.mDialogEventStateManager->onTerminated(mDialog, msg, reason);
    }
    mDum.mInviteSessionHandler->onFailure(c, msg);
 }
