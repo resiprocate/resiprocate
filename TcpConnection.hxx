@@ -70,8 +70,8 @@ protected:
 
   /// Amount of data in buffer
   unsigned int mBufferLen;
-  unsigned int mReadBufferPos;
   bool mReadingStunMessage;
+  unsigned char mChannelNumber;
 
   /// Transport Type
   StunTuple::TransportType mTransportType;

@@ -120,6 +120,9 @@
 				RelativePath=".\ConnectionManager.cxx">
 			</File>
 			<File
+				RelativePath=".\RemotePeer.cxx">
+			</File>
+			<File
 				RelativePath=".\RequestHandler.cxx">
 			</File>
 			<File
@@ -174,6 +177,9 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
 				RelativePath=".\ConnectionManager.hxx">
+			</File>
+			<File
+				RelativePath=".\RemotePeer.hxx">
 			</File>
 			<File
 				RelativePath=".\RequestHandler.hxx">
