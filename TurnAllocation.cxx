@@ -32,7 +32,8 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
    mTurnManager(turnManager),
    mAllocationTimer(turnManager.getIOService()),
    mLocalTurnTransport(localTurnTransport),
-   mUdpRelayServer(0)
+   mUdpRelayServer(0),
+   mNextServerToClientChannel(1)
 {
    if(requestedIpAddress)
    {
@@ -153,7 +154,7 @@ TurnAllocation::sendDataToPeer(unsigned char channelNumber, const resip::Data& d
    else
    {
       cout << "sendDataToPeer bad channel number - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-         mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << endl;
+         mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << (int)channelNumber << endl;
    }
 }
 
@@ -169,7 +170,7 @@ TurnAllocation::sendDataToPeer(unsigned char channelNumber, const StunTuple& pee
       {
          cout << "sendDataToPeer channel number mismatch - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
             mKey.getClientRemoteTuple() << " requested=" <<  mRequestedTuple << " oldChannelNumber=" << (int)it->second->getClientToServerChannel() <<
-            " newChannelNumber=" << channelNumber << endl;
+            " newChannelNumber=" << (int)channelNumber << endl;
          // drop message
          return;
       }
@@ -188,9 +189,9 @@ TurnAllocation::sendDataToPeer(unsigned char channelNumber, const StunTuple& pee
 
    if(mKey.getClientLocalTuple().getTransportType() == StunTuple::UDP)
    {
-      // If UDP, then send ChannelConfirmationIndication
+      // If UDP, then send TurnChannelConfirmationInd
       StunMessage channelConfirmationInd;
-      channelConfirmationInd.createHeader(StunMessage::StunClassIndication, StunMessage::ChannelConfirmationInd);
+      channelConfirmationInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationInd);
       channelConfirmationInd.mHasTurnRemoteAddress = true;
       channelConfirmationInd.mTurnRemoteAddress.port = peerAddress.getPort();
       if(peerAddress.getAddress().is_v6())
@@ -208,9 +209,9 @@ TurnAllocation::sendDataToPeer(unsigned char channelNumber, const StunTuple& pee
       channelConfirmationInd.mHasFingerprint = true;
 
       // send channelConfirmationInd to local client
-      unsigned int bufferSize = (unsigned int)data.size() + 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnChannelNumber */ + 8 /* Fingerprint */;
+      unsigned int bufferSize = (unsigned int)data.size() + 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnChannelNumber */ + 8 /* Fingerprint */ + 4 /* Turn Frame size */;
       Data buffer(bufferSize, Data::Preallocate);
-      unsigned int size = channelConfirmationInd.stunEncodeMessage((char*)buffer.data(), bufferSize);
+      unsigned int size = channelConfirmationInd.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
       mLocalTurnTransport->sendTurnData(mKey.getClientRemoteTuple(), buffer.data(), size);
    }      
 
@@ -237,34 +238,32 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, const resip::Data& 
 void 
 TurnAllocation::sendDataToClient(const StunTuple& peerAddress, const Data& data)
 {
+   // Find RemotePeer
+   TupleRemotePeerMap::iterator it = mTupleRemotePeerMap.find(peerAddress);
+   if(it == mTupleRemotePeerMap.end())
+   {
+      cout << "sendDataToClient RemotePeer info not found - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+            mKey.getClientRemoteTuple() << " requested=" <<  mRequestedTuple << " peerAddress=" << peerAddress << endl;
+      return;
+   }
+
+   // Use DataInd if channel is not yet confirmed
+   bool useDataInd = !it->second->isServerToClientChannelConfirmed();
+
+   // If channel number is not allocated yet, allocate one
+   if(it->second->getServerToClientChannel() == 0)
+   {
+      it->second->setServerToClientChannel(mNextServerToClientChannel++);
+      if(mKey.getClientLocalTuple().getTransportType() != StunTuple::UDP)
+      {
+         // Set channel to confirmed for TCP and TLS transports
+         it->second->setServerToClientChannelConfirmed();
+      }
+   }
+
    cout << "TurnAllocation sendDataToClient: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << " data=" << data << endl;
+      mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << " channelNumber=" << it->second->getServerToClientChannel() << " data=" << data << endl;
 
-   bool useDataInd = false;
-
-   // If UDP and Data contains StunMagic cookie then encapsulate in DataInd
-   if(mRequestedTuple.getTransportType() == StunTuple::UDP)
-   {
-      if(data.size() > 8)  // StunMagicCookie will be in bytes 4-8
-      {
-         unsigned int magicCookie;
-         memcpy(&magicCookie, data.data()+4, sizeof(magicCookie));
-         //magicCookie = ntohl(magicCookie);
-         if(magicCookie == StunMessage::StunMagicCookie)
-         {
-            useDataInd = true;
-         }
-      }
-   }
-   if(!useDataInd)
-   {
-      // If active destination is not set, or does not match this data then wrap in a DataInd
-      // !SLG! TODO - fix me
-      //if(!mActiveDestinationSet || mActiveDestination != peerAddress)
-      {
-         useDataInd = true;
-      }
-   }
    if(useDataInd)
    {
       StunMessage dataInd;
@@ -281,21 +280,44 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, const Data& data)
          dataInd.mTurnRemoteAddress.family = StunMessage::IPv4Family;
          dataInd.mTurnRemoteAddress.addr.ipv4 = peerAddress.getAddress().to_v4().to_ulong();   
       }
+      dataInd.mHasTurnChannelNumber = true;
+      dataInd.mTurnChannelNumber = it->second->getServerToClientChannel();
       dataInd.setTurnData(data.data(), (unsigned int)data.size());
       dataInd.mHasFingerprint = true;
 
       // send DataInd to local client
-      unsigned int bufferSize = (unsigned int)data.size() + 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnData Header + potential pad */ + 8 /* Fingerprint */;
+      unsigned int bufferSize = (unsigned int)data.size() + 8 /* Stun Header */ + 36 /* Remote Address (v6) */ +8 /* Channel Number */ + 8 /* TurnData Header + potential pad */ + 8 /* Fingerprint */  + 4 /* Turn Frame size */;
       Data buffer(bufferSize, Data::Preallocate);
-      unsigned int size = dataInd.stunEncodeMessage((char*)buffer.data(), bufferSize);
+      unsigned int size = dataInd.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
       mLocalTurnTransport->sendTurnData(mKey.getClientRemoteTuple(), buffer.data(), size);
    }
    else
    {
       // send data to local client
-      mLocalTurnTransport->sendTurnData(mKey.getClientRemoteTuple(), data.data(), (unsigned int)data.size());
+      mLocalTurnTransport->sendTurnFramedData(it->second->getServerToClientChannel(), mKey.getClientRemoteTuple(), data.data(), (unsigned int)data.size());
    }
+}
 
+void TurnAllocation::serverToClientChannelConfirmed(unsigned char channelNumber,  const StunTuple& peerAddress)
+{
+   ChannelRemotePeerMap::iterator it = mServerToClientChannelRemotePeerMap.find(channelNumber);
+   if(it != mServerToClientChannelRemotePeerMap.end())
+   {
+      if(it->second->getPeerTuple() == peerAddress)
+      {
+         it->second->setServerToClientChannelConfirmed();
+      }
+      else
+      {
+         cout << "serverToClientChannelConfirmed bad peer address - discarding confirmed indication: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << (int)channelNumber << " peerAddress=" << peerAddress << endl;
+      }
+   }
+   else
+   {
+      cout << "serverToClientChannelConfirmed bad channel number - discarding confirmed indication: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+         mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << (int)channelNumber << endl;
+   }
 }
 
 } // namespace

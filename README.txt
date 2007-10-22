@@ -66,9 +66,9 @@ General TODO
 - Ability for Server to accept both long term credentials
 - Check for unknown attributes
 - if server receives SendInd with no Data attribute (for UDP only), send empty UDP packet, TCP - do nothing
-- if server is forwarding data with a magic cookie, it must use a DataInd (UDP only)
 - if server receives non-encapsulated data on a connection (TCP/TLS) with no Active Destination Set then connection is closed
 - Shared Secret Re-Transmissions when receiving duplicate request, must return exact same response (need to store/cache in server)
+- Standardize on a logging interface
 - from chart above
  - Configuration Framework
  - Multi-threaded support
@@ -81,7 +81,6 @@ Client TODO
 - don't allow TCP allocate request over UDP
 - refresh allocations (3/4 lifetime) <- before
 - retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response
-- UDP Set Active Dest Requests, to change, must remove first, wait 5 seconds, then set new
 - ability to send an empty packet in a SendInd
 - DNS Discovery (?)
 - Server Binding Usage - ability to handle Binding Requests, Shared Secret Requests (?)

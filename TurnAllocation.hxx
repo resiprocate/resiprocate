@@ -56,6 +56,9 @@ public:
    // Used when Data is received from peer, to forward data to client
    void sendDataToClient(const StunTuple& peerAddress, const resip::Data& data); 
 
+   // Called when a ChannelConfirmed Indication is received
+   void serverToClientChannelConfirmed(unsigned char channelNumber, const StunTuple& peerAddress);
+
    // !slg! todo - should be private with accessors
    TurnAllocationKey mKey;  // contains ClientLocalTuple and clientRemoteTuple
    StunAuth  mClientAuth;
@@ -85,6 +88,8 @@ private:
 
    TurnTransportBase* mLocalTurnTransport;
    UdpRelayServer* mUdpRelayServer;
+
+   unsigned char mNextServerToClientChannel;
 };
 
 } 

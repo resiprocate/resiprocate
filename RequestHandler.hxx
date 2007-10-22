@@ -53,6 +53,7 @@ private:
 
    // Specific Indication processors
    void processTurnSendIndication(StunMessage& request);
+   void processTurnChannelConfirmationIndication(StunMessage& request);
 
    // Utility methods
    void buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg, const char* realm = 0);

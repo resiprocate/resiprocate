@@ -78,17 +78,19 @@ RequestHandler::processStunMessage(TurnTransportBase* turnTransport, StunMessage
          break;
 
       case StunMessage::StunClassIndication:
+         result = NoResponseToSend;  // Indications don't have responses
          switch (request.mMethod) 
          {
          case StunMessage::TurnSendInd:
             processTurnSendIndication(request);
-            result = NoResponseToSend;  // Indications don't have responses
             break;
+         case StunMessage::TurnChannelConfirmationInd:
+            processTurnChannelConfirmationIndication(request);
+            break;        
          case StunMessage::TurnDataInd: // Don't need to handle these - only sent by server, never received
          case StunMessage::TurnConnectStatusInd:  
          default:
             // Unknown indication - just ignore
-            result = NoResponseToSend;
             break;
          }
    
@@ -835,6 +837,49 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
    }
 
    allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, *request.mTurnData);
+}
+
+void
+RequestHandler::processTurnChannelConfirmationIndication(StunMessage& request)
+{
+   bool verbose = true;
+
+   TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
+
+   if(!allocation)
+   {
+      if (verbose) clog << "Turn channel confirmation indication for non existing allocation.  Dropping." << endl; 
+      return;
+   }
+
+   if(!request.mHasTurnChannelNumber)
+   {
+      if (verbose) clog << "Turn channel confirmation indication with no channel number.  Dropping." << endl; 
+      return;
+   }
+
+   if(!request.mHasTurnRemoteAddress)
+   {
+      if (verbose) clog << "Turn channel confirmation indication with no remote address.  Dropping." << endl; 
+      return;
+   }
+
+   StunTuple remoteAddress;
+   remoteAddress.setTransportType(allocation->mRequestedTuple.getTransportType());
+   remoteAddress.setPort(request.mTurnRemoteAddress.port);
+   if(request.mTurnRemoteAddress.family == StunMessage::IPv6Family)
+   {            
+      asio::ip::address_v6::bytes_type bytes;
+      memcpy(bytes.c_array(), &request.mTurnRemoteAddress.addr.ipv6, bytes.size());
+      asio::ip::address_v6 addr(bytes);
+      remoteAddress.setAddress(addr);
+   }
+   else
+   {
+      remoteAddress.setAddress(asio::ip::address_v4(request.mTurnRemoteAddress.addr.ipv4));
+   }
+
+   allocation->serverToClientChannelConfirmed(request.mTurnChannelNumber, remoteAddress);
 }
 
 void 
