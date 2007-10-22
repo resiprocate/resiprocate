@@ -213,6 +213,10 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
       if (msg.isResponse())
       {
          respCode = msg.header(h_StatusLine).responseCode();
+         if (msg.exists(h_Contacts))
+         {
+            eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(msg.header(h_Contacts).front().uri()));
+         }
       }
 
       mDialogEventHandler->onTerminated(*eventInfo, actualReason, respCode);
