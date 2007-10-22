@@ -47,7 +47,7 @@ TcpConnection::readHeader()
 void
 TcpConnection::readBody()
 {
-   asio::async_read(mSocket, asio::buffer(&mBuffer[mReadBufferPos], mBufferLen-mReadBufferPos),
+   asio::async_read(mSocket, asio::buffer(mBuffer, mBufferLen),
                     boost::bind(&TcpConnection::handleReadBody, shared_from_this(), asio::placeholders::error));
 }
 
@@ -78,32 +78,14 @@ TcpConnection::handleReadHeader(const asio::error_code& e)
       std::cout << std::endl;
       */
 
-      // Note:  we only accept the following:
-      //        1.  Unframed Stun Requests - first octet 0x00
-      //        2.  Framed Stun Requests - first octet 0x02
-      //        3.  Framed Data - first octet 0x03
-      if(mBuffer[0] == 0x00)  // Unframed Stun
+      // All Turn messaging will be framed
+      mChannelNumber = mBuffer[0];
+      if(mChannelNumber == 0) // Stun/Turn Request
       {
-         // This is likely a StunMessage - length will be in bytes 3 and 4
-         UInt16 stunMsgLen;
-         memcpy(&stunMsgLen, &mBuffer[2], 2);
-         stunMsgLen = ntohs(stunMsgLen) + 20;  // 20 bytes for header
-         mReadBufferPos = 4;  // Don't overwrite part of StunMessage header already read
-         mBufferLen = stunMsgLen;
-         if(stunMsgLen > 0)
-         {
-            std::cout << "Reading StunMessage with length=" << stunMsgLen << std::endl;
-            mReadingStunMessage = true;
-            readBody();
-         }
-      }
-      else if(mBuffer[0] == 0x02) // Framed Stun Request
-      {
-         // This is a StunMessage - length will be in bytes 3 and 4
+         // This is a StunMessage (channel 0) - length will be in bytes 3 and 4
          UInt16 stunMsgLen;
          memcpy(&stunMsgLen, &mBuffer[2], 2);
          stunMsgLen = ntohs(stunMsgLen);  // Framed length will be entire size of StunMessage
-         mReadBufferPos = 0;   // Overwrite framing info and read in entire StunMessage
          mBufferLen = stunMsgLen;
          if(stunMsgLen > 0)
          {
@@ -112,26 +94,14 @@ TcpConnection::handleReadHeader(const asio::error_code& e)
             readBody();
          }
       }
-      else if(mBuffer[0] == 0x03) // Framed Data
+      else // Framed Data
       {
          UInt16 dataLen;
          memcpy(&dataLen, &mBuffer[2], 2);
          dataLen = ntohs(dataLen);
-         mReadBufferPos = 0;
          mBufferLen = dataLen;
          mReadingStunMessage = false;
          readBody();
-      }
-      else
-      {
-         std::cout << "Invalid data on TCP connection." << std::endl;
-         std::cout << "Bytes: " << std::endl;
-         for(unsigned int i = 0; i < 4; i++)
-         {
-            std::cout << (char)mBuffer[i] << "(" << (int)mBuffer[i] << ") ";
-         }
-         std::cout << std::endl;
-         mConnectionManager.stop(shared_from_this());
       }
    }
    else if (e != asio::error::operation_aborted)
@@ -193,7 +163,8 @@ TcpConnection::handleReadBody(const asio::error_code& e)
       }
       else  // reading turn data
       {
-         mRequestHandler.processTurnData(StunTuple(mTransportType, mLocalEndpoint.address(), mLocalEndpoint.port()),
+         mRequestHandler.processTurnData(mChannelNumber,
+                                         StunTuple(mTransportType, mLocalEndpoint.address(), mLocalEndpoint.port()),
                                          StunTuple(mTransportType, mRemoteEndpoint.address(), mRemoteEndpoint.port()),
                                          (char*)mBuffer.c_array(), mBufferLen);
          readHeader();

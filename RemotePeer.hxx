@@ -1,61 +1,43 @@
-#ifndef UDP_SERVER_HXX
-#define UDP_SERVER_HXX
+#ifndef REMOTEPEER_HXX
+#define REMOTEPEER_HXX
 
 #include <asio.hpp>
-#include <string>
-#include <boost/noncopyable.hpp>
-#include "RequestHandler.hxx"
-#include "TurnTransportBase.hxx"
+
+#include "StunTuple.hxx"
 
 namespace reTurn {
 
-class StunMessage;
 
-class UdpServer
-  : public TurnTransportBase,
-    private boost::noncopyable
+class RemotePeer
 {
 public:
-   /// Create the server to listen on the specified UDP address and port
-   explicit UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, const std::string& port);
+   explicit RemotePeer(const StunTuple& peerTuple);
 
-   /// This method is used if this UdpServer supports RFC3489 operation
-   void setAlternateUdpServers(UdpServer* alternatePort, UdpServer* alternateIp, UdpServer* alternateIpPort);
-   bool isRFC3489BackwardsCompatServer();
+   unsigned char getClientToServerChannel() const { return mClientToServerChannel; }
+   void setClientToServerChannel(unsigned char channel) { mClientToServerChannel = channel; }
+   void setClientToServerChannelConfirmed() { mClientToServerChannelConfirmed = true; }
+   bool isClientToServerChannelConfirmed() const { return mClientToServerChannelConfirmed; }
 
-   /// Returns the socket for this server
-   asio::ip::udp::socket& getSocket();
+   unsigned char getServerToClientChannel() const { return mServerToClientChannel; }
+   void setServerToClientChannel(unsigned char channel) { mServerToClientChannel = channel; }
+   void setServerToClientChannelConfirmed() { mServerToClientChannelConfirmed = true; }
+   bool isServerToClientChannelConfirmed() const { return mServerToClientChannelConfirmed; }
 
-   virtual void sendData(const StunTuple& destination, const char* buffer, unsigned int size);
+   const StunTuple& getPeerTuple() const { return mPeerTuple; }
 
 private:
-   /// Handle completion of a receive_from operation
-   void handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransferred);
-
-   /// Handle completion of a sendTo operation
-   void handleSendTo(const asio::error_code& error, std::size_t bytesTransferred);
-
-   /// Socket for the connection.
-   asio::ip::udp::socket mSocket;
-
-   /// Endpoint info for current sender
-   asio::ip::udp::endpoint mSenderEndpoint;
-
-   /// The handler for all incoming requests.
-   RequestHandler& mRequestHandler;
-
-   /// The RFC3489 Alternate Server
-   UdpServer* mAlternatePortUdpServer;
-   UdpServer* mAlternateIpUdpServer;
-   UdpServer* mAlternateIpPortUdpServer;
-
-   /// Buffer for incoming data.
-   boost::array<unsigned char, 8192> mBuffer;
+   StunTuple mPeerTuple;
+ 
+   unsigned char mClientToServerChannel;
+   bool mClientToServerChannelConfirmed;
+ 
+   unsigned char mServerToClientChannel;
+   bool mServerToClientChannelConfirmed;
 };
 
-}
+} 
 
-#endif 
+#endif
 
 
 /* ====================================================================

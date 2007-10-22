@@ -70,9 +70,9 @@ int main(int argc, char* argv[])
                  << std::endl;
        resip::Data turnData("This test is for wrapped Turn Data!");
        turnSocket.sendTo(asio::ip::address::from_string("127.0.0.1"), 2000, turnData.c_str(), turnData.size());
-       turnSocket.setActiveDestination(asio::ip::address::from_string("127.0.0.1"), 2000);
+       //turnSocket.setActiveDestination(asio::ip::address::from_string("127.0.0.1"), 2000);
        turnData = "This test is for framed turn data!";
-       turnSocket.send(turnData.c_str(), turnData.size());
+       //turnSocket.send(turnData.c_str(), turnData.size());  // !SLG! TODO - FIXME
 
        // Receive Data
        char buffer[1024];
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
        if((rc=turnSocket.receive(buffer, size, 10000, &sourceAddress, &sourcePort)) == 0)
        {
           std::cout << "Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
-          turnSocket.send(buffer, size);
+          //turnSocket.send(buffer, size);  // !SLG! TODO - FIXME
           size = sizeof(buffer);
        }
        else
@@ -90,7 +90,6 @@ int main(int argc, char* argv[])
           std::cout << "Receive error: " << rc << std::endl;
        }
 
-       turnSocket.clearActiveDestination();
        turnSocket.destroyAllocation();
     }
   }

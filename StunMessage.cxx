@@ -126,6 +126,7 @@ StunMessage::init()
    mHasAlternateServer = false;
    mHasRefreshInterval = false;
    mHasSecondaryAddress = false;
+   mHasTurnChannelNumber = false;
    mHasTurnLifetime = false;
    mHasTurnAlternateServer = false;
    mHasTurnMagicCookie = false;
@@ -632,6 +633,19 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 
          // TURN attributes
 
+         case TurnChannelNumber:
+            mHasTurnChannelNumber = true;
+            {
+               UInt32 channelNumber;
+               if(stunParseAtrUInt32( body, attrLen, channelNumber) == false)
+               {
+                  return false;
+               }
+               mTurnChannelNumber = (channelNumber & 0xFF00000) >> 24;
+            }
+            if (verbose) clog << "Turn ChannelNumber = " << (int)mTurnChannelNumber << endl;
+            break;
+
          case TurnLifetime:
             mHasTurnLifetime = true;
             if (stunParseAtrUInt32( body, attrLen, mTurnLifetime) == false)
@@ -816,6 +830,9 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
       case StunMessage::TurnDataInd:
          os << "TurnDataInd";
          break;
+      case StunMessage::ChannelConfirmationInd:
+         os << "TurnChannelConfirmationInd";
+         break;
       case StunMessage::TurnConnectStatusInd:
          os << "TurnConnectStatusInd";
          break;
@@ -847,8 +864,8 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
 		case StunMessage::TurnAllocateRequest:
             os << "TurnAllocateRequest";
 			break;
-		case StunMessage::TurnSetActiveDestinationRequest:
-            os << "TurnSetActiveDestinationRequest";
+		case StunMessage::TurnListenPermissionRequest:
+            os << "TurnListenPermissionRequest";
 			break;
 		case StunMessage::TurnConnectRequest:
             os << "TurnConnectRequest";
@@ -1116,6 +1133,11 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       ptr = encodeAtrAddress(ptr, SecondaryAddress, mSecondaryAddress);
    }
 
+   if (mHasTurnChannelNumber)
+   {
+      if (verbose) clog << "Encoding Turn ChannelNumber: " << (int)mTurnChannelNumber << endl;
+      ptr = encodeAtrUInt32(ptr, TurnChannelNumber, UInt32(mTurnChannelNumber << 24));
+   }
    if (mHasTurnLifetime)
    {
       if (verbose) clog << "Encoding Turn Lifetime: " << mTurnLifetime << endl;
