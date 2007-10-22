@@ -6,18 +6,16 @@ using namespace std;
 
 namespace reTurn {
 
-UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, const std::string& port)
+UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, unsigned short port)
 : TurnTransportBase(ioService),
-  mSocket(ioService), // , asio::ip::udp::endpoint(asio::ip::address::from_string(address), port))
+  mSocket(ioService), //asio::ip::udp::endpoint(asio::ip::address::from_string(address), port))
   mRequestHandler(requestHandler),
   mAlternatePortUdpServer(0),
   mAlternateIpUdpServer(0),
   mAlternateIpPortUdpServer(0)
 {
-   // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-   asio::ip::udp::resolver resolver(mIOService);
-   asio::ip::udp::resolver::query query(address, port);
-   asio::ip::udp::endpoint endpoint = *resolver.resolve(query);
+   // Open with the option to reuse the address (i.e. SO_REUSEADDR).
+   asio::ip::udp::endpoint endpoint(asio::ip::address::from_string(address), port);
 
    mSocket.open(endpoint.protocol());
    mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
@@ -142,7 +140,15 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
                   responseSocket = &mSocket;            
                   break;
                }
-               unsigned int size = response.stunEncodeMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+               unsigned int size;
+               if(this->isRFC3489BackwardsCompatServer())
+               {
+                  size = response.stunEncodeMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+               }
+               else
+               {
+                  size = response.stunEncodeFramedMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+               }
    
                responseSocket->async_send_to(asio::buffer(mBuffer, size), 
                                              asio::ip::udp::endpoint(response.mRemoteTuple.getAddress(), response.mRemoteTuple.getPort()), 
