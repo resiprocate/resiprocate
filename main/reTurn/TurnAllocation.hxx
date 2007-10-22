@@ -49,9 +49,12 @@ public:
    // has been destroyed
    void onTransportDestroyed();
 
+   // Used when framed data is received from client, to forward data to peer
    void sendDataToPeer(unsigned char channelNumber, const resip::Data& data);
-   void sendDataToPeer(unsigned char channelNumber, const StunTuple& peerAddress, const resip::Data& data);
-   void sendDataToClient(const StunTuple& peerAddress, const resip::Data& data);
+   // Used when Send Indication is received from client, to forward data to peer
+   void sendDataToPeer(unsigned char channelNumber, const StunTuple& peerAddress, const resip::Data& data);  
+   // Used when Data is received from peer, to forward data to client
+   void sendDataToClient(const StunTuple& peerAddress, const resip::Data& data); 
 
    // !slg! todo - should be private with accessors
    TurnAllocationKey mKey;  // contains ClientLocalTuple and clientRemoteTuple
@@ -65,6 +68,9 @@ public:
    //unsigned int mBandwidth; // future use
 
 private:
+   // Used when there is any data to send to the peer, after channel has been identified
+   void sendDataToPeer(const StunTuple& peerAddress, const resip::Data& data);  
+
    typedef std::map<asio::ip::address,TurnPermission*> TurnPermissionMap;
    TurnPermissionMap mTurnPermissionMap;
 
