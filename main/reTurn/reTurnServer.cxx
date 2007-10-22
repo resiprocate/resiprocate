@@ -45,13 +45,13 @@ int main(int argc, char* argv[])
   try
   {
     // Check command line arguments.
-    if (argc != 5)
+    if (argc != 6)
     {
-      std::cerr << "Usage: reTurnServer <primaryAddress> <primaryPort> <altAddress> <altPort>\n";
+      std::cerr << "Usage: reTurnServer <address> <turnPort> <stunPort> <altAddress> <altPort>\n";
       std::cerr << "  For IPv4, try:\n";
-      std::cerr << "    reTurnServer 0.0.0.0 8776 0.0.0.0 8777\n";
+      std::cerr << "    reTurnServer 0.0.0.0 8777 8776 0.0.0.0 9776\n";
       std::cerr << "  For IPv6, try:\n";
-      std::cerr << "    reTurnServer 0::0 8776 0::0 8777\n";
+      std::cerr << "    reTurnServer 0::0 8777 8776 0::0 9776\n";
       return 1;
     }
 
@@ -60,18 +60,37 @@ int main(int argc, char* argv[])
     reTurn::TurnManager turnManager(ioService);         // The one and only Turn Manager
     reTurn::RequestHandler requestHandler(turnManager); // The one and only RequestHandler
 
-    resip::Data primport(argv[2]);
-    resip::Data tlsPort(primport.convertUnsignedLong() + 1);
-    reTurn::TcpServer tcpServer(ioService, requestHandler, argv[1], argv[2]);
-    reTurn::TlsServer tlsServer(ioService, requestHandler, argv[1], tlsPort.c_str());
-    reTurn::UdpServer a1p1UdpServer(ioService, requestHandler, argv[1], argv[2]);
-    reTurn::UdpServer a1p2UdpServer(ioService, requestHandler, argv[1], argv[4]);
-    reTurn::UdpServer a2p1UdpServer(ioService, requestHandler, argv[3], argv[2]);
-    reTurn::UdpServer a2p2UdpServer(ioService, requestHandler, argv[3], argv[4]);
-    a1p1UdpServer.setAlternateUdpServers(&a1p2UdpServer, &a2p1UdpServer, &a2p2UdpServer);
-    a1p2UdpServer.setAlternateUdpServers(&a1p1UdpServer, &a2p2UdpServer, &a2p1UdpServer);
-    a2p1UdpServer.setAlternateUdpServers(&a2p2UdpServer, &a1p1UdpServer, &a1p2UdpServer);
-    a2p2UdpServer.setAlternateUdpServers(&a2p1UdpServer, &a1p2UdpServer, &a1p1UdpServer);
+    unsigned int turnPort = resip::Data(argv[2]).convertUnsignedLong();
+    unsigned int stunPort = resip::Data(argv[3]).convertUnsignedLong();
+    unsigned int altStunPort = resip::Data(argv[5]).convertUnsignedLong();
+    unsigned int tlsPort = turnPort + 1;
+
+    reTurn::UdpServer* udpTurnServer=0;
+    reTurn::TcpServer* tcpTurnServer=0;
+    reTurn::TlsServer* tlsTurnServer=0;
+    reTurn::UdpServer* a1p1StunUdpServer=0;
+    reTurn::UdpServer* a1p2StunUdpServer=0;
+    reTurn::UdpServer* a2p1StunUdpServer=0;
+    reTurn::UdpServer* a2p2StunUdpServer=0;
+
+    if(turnPort != 0)
+    {
+       udpTurnServer = new reTurn::UdpServer(ioService, requestHandler, argv[1], turnPort);
+       tcpTurnServer = new reTurn::TcpServer(ioService, requestHandler, argv[1], turnPort);
+       tlsTurnServer = new reTurn::TlsServer(ioService, requestHandler, argv[1], tlsPort);
+    }
+
+    if(stunPort != 0)
+    {
+       a1p1StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, argv[1], stunPort);
+       a1p2StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, argv[1], altStunPort);
+       a2p1StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, argv[4], stunPort);
+       a2p2StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, argv[4], altStunPort);
+       a1p1StunUdpServer->setAlternateUdpServers(a1p2StunUdpServer, a2p1StunUdpServer, a2p2StunUdpServer);
+       a1p2StunUdpServer->setAlternateUdpServers(a1p1StunUdpServer, a2p2StunUdpServer, a2p1StunUdpServer);
+       a2p1StunUdpServer->setAlternateUdpServers(a2p2StunUdpServer, a1p1StunUdpServer, a1p2StunUdpServer);
+       a2p2StunUdpServer->setAlternateUdpServers(a2p1StunUdpServer, a1p2StunUdpServer, a1p1StunUdpServer);
+    }
 
 #ifdef _WIN32
     // Set console control handler to allow server to be stopped.
@@ -115,6 +134,14 @@ int main(int argc, char* argv[])
     {
        threads[i]->join();
     }
+
+    delete udpTurnServer;
+    delete tcpTurnServer;
+    delete tlsTurnServer;
+    delete a1p1StunUdpServer;
+    delete a1p2StunUdpServer;
+    delete a2p1StunUdpServer;
+    delete a2p2StunUdpServer;
   }
   catch (std::exception& e)
   {

@@ -41,6 +41,7 @@ public:
    bool isValid() { return mIsValid; }
 
    unsigned int stunEncodeMessage(char* buf, unsigned int bufLen);
+   unsigned int stunEncodeFramedMessage(char* buf, unsigned int bufLen);
 
    void setErrorCode(unsigned short errorCode, const char* reason);
    void setUsername(const char* username);
@@ -110,7 +111,7 @@ public:
    // define types for a turn indication - per behave-turn-03
    const static UInt16 TurnSendInd                 = 0x006;
    const static UInt16 TurnDataInd                 = 0x007;
-   const static UInt16 ChannelConfirmationInd      = 0x008;
+   const static UInt16 TurnChannelConfirmationInd  = 0x008;
    const static UInt16 TurnConnectStatusInd        = 0x009;
 
    // define  stun attribute

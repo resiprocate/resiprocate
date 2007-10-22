@@ -830,7 +830,7 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
       case StunMessage::TurnDataInd:
          os << "TurnDataInd";
          break;
-      case StunMessage::ChannelConfirmationInd:
+      case StunMessage::TurnChannelConfirmationInd:
          os << "TurnChannelConfirmationInd";
          break;
       case StunMessage::TurnConnectStatusInd:
@@ -1234,6 +1234,18 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
 
    if (verbose) clog << endl;
    return int(ptr - buf);
+}
+
+unsigned int
+StunMessage::stunEncodeFramedMessage(char* buf, unsigned int bufLen)
+{
+   unsigned short size = (unsigned short)stunEncodeMessage(&buf[4], bufLen-4);
+
+   // Add Frame Header info
+   buf[0] = 0; // Channel 0 for Stun Messages
+   buf[1] = 0; // reserved
+   memcpy(&buf[2], (void*)&size, 2);  // size is not needed if udp - but should be harmless
+   return size+4;
 }
 
 #ifndef USE_SSL

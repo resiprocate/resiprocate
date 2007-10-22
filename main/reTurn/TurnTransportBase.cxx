@@ -2,8 +2,20 @@
 #include "TurnTransportHandler.hxx"
 
 using namespace std;
+using namespace resip;
 
 namespace reTurn {
+
+TurnTransportBase::DataToSend::DataToSend(unsigned char channelNumber, const StunTuple& destination, const char* data, unsigned int length) : 
+         mDestination(destination), mData(length+4, Data::Preallocate) 
+{
+   // Add Turn Framing
+   mData[0] = channelNumber; 
+   mData[1] = 0; 
+   unsigned short size = (unsigned short)length;
+   memcpy(&mData[2], (void*)&size, 2);  // UDP doesn't need size - but shouldn't hurt to send it anyway
+   memcpy(&mData[4], data, length); 
+}
 
 TurnTransportBase::TurnTransportBase(asio::io_service& ioService) : 
   mIOService(ioService),
@@ -23,7 +35,18 @@ void
 TurnTransportBase::sendTurnData(const StunTuple& destination, const char* buffer, unsigned int size)
 {
    bool writeInProgress = !mTurnDataQueue.empty();
-   mTurnDataQueue.push_back(DataToSend(destination, resip::Data(resip::Data::Share, buffer, size)));  // Copies Data
+   mTurnDataQueue.push_back(DataToSend(destination, buffer, size));  // Copies Data
+   if (!writeInProgress)
+   {
+      sendData(mTurnDataQueue.front().mDestination, mTurnDataQueue.front().mData.data(), (unsigned int)mTurnDataQueue.front().mData.size());
+   }
+}
+
+void 
+TurnTransportBase::sendTurnFramedData(unsigned char channelNumber, const StunTuple& destination, const char* buffer, unsigned int size)
+{
+   bool writeInProgress = !mTurnDataQueue.empty();
+   mTurnDataQueue.push_back(DataToSend(channelNumber, destination, buffer, size));  // Copies Data
    if (!writeInProgress)
    {
       sendData(mTurnDataQueue.front().mDestination, mTurnDataQueue.front().mData.data(), (unsigned int)mTurnDataQueue.front().mData.size());
