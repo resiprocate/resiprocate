@@ -15,7 +15,7 @@ class TcpServer
 {
 public:
   /// Create the server to listen on the specified TCP address and port
-  explicit TcpServer(asio::io_service& ioService, RequestHandler& rqeuestHandler, const std::string& address, const std::string& port);
+  explicit TcpServer(asio::io_service& ioService, RequestHandler& rqeuestHandler, const std::string& address, unsigned short port);
 
 private:
   /// Handle completion of an asynchronous accept operation.

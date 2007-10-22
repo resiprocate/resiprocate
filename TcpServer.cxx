@@ -3,7 +3,7 @@
 
 namespace reTurn {
 
-TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, const std::string& port)
+TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
   mConnectionManager(),
@@ -11,9 +11,7 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
   mRequestHandler(requestHandler)
 {
    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-   asio::ip::tcp::resolver resolver(mIOService);
-   asio::ip::tcp::resolver::query query(address, port);
-   asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
+   asio::ip::tcp::endpoint endpoint(asio::ip::address::from_string(address), port);
 
    mAcceptor.open(endpoint.protocol());
    mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));

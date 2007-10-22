@@ -32,7 +32,7 @@ TurnSocket::~TurnSocket()
 StunMessage* 
 TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode)
 {
-   unsigned int size = request.stunEncodeMessage(mBuffer, sizeof(mBuffer));
+   unsigned int size = request.stunEncodeFramedMessage(mBuffer, sizeof(mBuffer));
    bool sendRequest = true;
    bool reliableTransport = mLocalBinding.getTransportType() != StunTuple::UDP;
    unsigned int timeout = reliableTransport ? TCP_RESPONSE_TIME : UDP_RT0;
@@ -451,7 +451,7 @@ TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const 
    ind.mHasFingerprint = true;
 
    // Send indication to Turn Server
-   unsigned int msgsize = ind.stunEncodeMessage(mBuffer, sizeof(mBuffer));
+   unsigned int msgsize = ind.stunEncodeFramedMessage(mBuffer, sizeof(mBuffer));
    return rawWrite(mBuffer, msgsize);
 }
 
