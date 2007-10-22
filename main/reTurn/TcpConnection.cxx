@@ -151,7 +151,7 @@ TcpConnection::handleReadBody(const asio::error_code& e)
             default:
                break;
             }
-            mBufferLen = response.stunEncodeMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+            mBufferLen = response.stunEncodeFramedMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
 
             write();
          }
