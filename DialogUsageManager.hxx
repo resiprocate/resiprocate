@@ -313,7 +313,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void registerForConnectionTermination(Postable*);
       void unRegisterForConnectionTermination(Postable*);
 
-      DialogEventStateManager& getDialogEventStateManager();
+      DialogEventStateManager* getDialogEventStateManager();
       void setDialogEventHandler(DialogEventHandler* handler);
 
    protected:
