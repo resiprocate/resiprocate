@@ -837,7 +837,10 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       {
          if (ds != 0)
          {
-            getDialogEventStateManager().onTryingUac(*ds, *msg);
+            if (mDialogEventStateManager)
+            {
+               mDialogEventStateManager->onTryingUac(*ds, *msg);
+            }
          }
       }
    }
@@ -2139,10 +2142,10 @@ DialogUsageManager::dumOutgoingTarget()
    return *mOutgoingTarget;
 }
 
-DialogEventStateManager&
+DialogEventStateManager*
 DialogUsageManager::getDialogEventStateManager()
 {
-   return *mDialogEventStateManager;
+   return mDialogEventStateManager;
 }
 
 void
