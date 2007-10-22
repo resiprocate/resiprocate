@@ -43,6 +43,20 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
    eventInfo->mRouteSet = dialog.getRouteSet();
    eventInfo->mState = DialogEventInfo::Trying;
 
+   if (invite.exists(h_Replaces))
+   {
+      // !jjg! need to check that this is right...
+      eventInfo->mReplacesId = std::auto_ptr<DialogId>(new DialogId(invite.header(h_Replaces).value(), 
+         invite.header(h_Replaces).param(p_toTag),
+         invite.header(h_Replaces).param(p_fromTag)));
+
+      std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.find(*(eventInfo->mReplacesId));
+      if (it != mDialogIdToEventInfo.end())
+      {
+         it->second->mReplaced = true;
+      }
+   }
+
    mDialogIdToEventInfo[dialog.getId()] = eventInfo;
 
    mDialogEventHandler->onTrying(*eventInfo, invite);
@@ -180,17 +194,19 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
       eventInfo = it->second;
       eventInfo->mState = DialogEventInfo::Terminated;
 
-      if (reason == InviteSessionHandler::Referred && msg.exists(h_ReferredBy))
+      // .jjg. when we get an INVITE w/Replaces, we mark the replaced dialog event info 
+      // as 'replaced' (see onTryingUas);
+      // when the replaced dialog is ended, it will be ended normally with a BYE or CANCEL, 
+      // but since we've marked it as 'replaced' we can update the termination reason
+      InviteSessionHandler::TerminatedReason actualReason = reason;
+
+      if (actualReason == InviteSessionHandler::Referred && msg.exists(h_ReferredBy))
       {
          eventInfo->mReferredBy = std::auto_ptr<NameAddr>(new NameAddr(msg.header(h_ReferredBy)));
       }
-
-      if (reason == InviteSessionHandler::Replaced)
+      else if (eventInfo->mReplaced)
       {
-         // !jjg! need to check that this is right...
-         eventInfo->mReplacesId = std::auto_ptr<DialogId>(new DialogId(msg.header(h_Replaces).value(), 
-            msg.header(h_Replaces).param(p_toTag),
-            msg.header(h_Replaces).param(p_fromTag)));
+         actualReason = InviteSessionHandler::Replaced;
       }
 
       int respCode = 0;
@@ -199,7 +215,7 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
          respCode = msg.header(h_StatusLine).responseCode();
       }
 
-      mDialogEventHandler->onTerminated(*eventInfo, reason, respCode);
+      mDialogEventHandler->onTerminated(*eventInfo, actualReason, respCode);
       delete it->second;
       mDialogIdToEventInfo.erase(it++);
    }
