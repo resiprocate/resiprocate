@@ -68,7 +68,10 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 
          transition(Terminated);
 
-         mDum.getDialogEventStateManager().onTerminated(mDialog, *response, InviteSessionHandler::Rejected);
+         if (mDum.mDialogEventStateManager)
+         {
+            mDum.mDialogEventStateManager->onTerminated(mDialog, *response, InviteSessionHandler::Rejected);
+         }
 
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Referred); 
          mDum.destroy(this);
@@ -808,7 +811,10 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
    storePeerCapabilities(msg);
 
-   mDum.getDialogEventStateManager().onTryingUas(mDialog, msg);
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onTryingUas(mDialog, msg);
+   }
 
    switch (toEvent(msg, sdp.get()))
    {
@@ -1197,7 +1203,10 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
 
    transition(Terminated);
 
-   mDum.getDialogEventStateManager().onTerminated(mDialog, msg, InviteSessionHandler::RemoteCancel);
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onTerminated(mDialog, msg, InviteSessionHandler::RemoteCancel);
+   }
 
    mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
    mDum.destroy(this);
@@ -1283,7 +1292,10 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
    startRetransmit200Timer(); // 2xx timer
    DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
 
-   mDum.getDialogEventStateManager().onConfirmed(mDialog, getSessionHandle());
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+   }
 
    send(mInvite200);
 }

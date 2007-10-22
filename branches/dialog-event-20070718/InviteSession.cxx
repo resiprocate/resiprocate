@@ -1893,6 +1893,7 @@ InviteSession::dispatchCancel(const SipMessage& msg)
       sendBye();
       // !jf! should we make some other callback here
       transition(Terminated);
+
       handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteCancel, &msg);
    }
    else
@@ -1918,8 +1919,11 @@ InviteSession::dispatchBye(const SipMessage& msg)
       // !jf! should we make some other callback here
       transition(Terminated);
 
-      mDum.getDialogEventStateManager().onTerminated(mDialog, msg, 
+      if (mDum.mDialogEventStateManager)
+      {
+         mDum.mDialogEventStateManager->onTerminated(mDialog, msg, 
          InviteSessionHandler::RemoteBye);
+      }
 
       handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
       mDum.destroy(this);
@@ -2776,7 +2780,10 @@ void InviteSession::sendBye()
       bye->header(h_Reasons).push_back(reason);      
    }
 
-   mDum.getDialogEventStateManager().onTerminated(mDialog, *bye, InviteSessionHandler::LocalBye);
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onTerminated(mDialog, *bye, InviteSessionHandler::LocalBye);
+   }
    
    InfoLog (<< myAddr() << " Sending BYE " << txt);
    send(bye);

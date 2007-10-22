@@ -330,13 +330,18 @@ DialogSet::dispatch(const SipMessage& msg)
                   //!dcm!--should we add another overload to
                   //!DialogEventStateManager::onTerminated so we have the to tag, or is
                   //!the DialogSet enough?
-                  mDum.getDialogEventStateManager().onTerminated(*this, *bye, InviteSessionHandler::LocalBye);
+                  if (mDum.mDialogEventStateManager)
+                  {
+                     mDum.mDialogEventStateManager->onTerminated(*this, *bye, InviteSessionHandler::LocalBye);
+                  }
                   // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
                }
                else
                {
-                  mDum.getDialogEventStateManager().onTerminated(*this, msg, InviteSessionHandler::Rejected);
-               
+                  if (mDum.mDialogEventStateManager)
+                  {
+                     mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Rejected);
+                  }           
                   mState = Destroying;
                   mDum.destroy(this);
                }
@@ -405,7 +410,10 @@ DialogSet::dispatch(const SipMessage& msg)
    {
       if (mDialogs.size() == 0)
       {
-         mDum.getDialogEventStateManager().onTerminated(*this, msg, InviteSessionHandler::Rejected);
+         if (mDum.mDialogEventStateManager)
+         {
+            mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Rejected);
+         }
       }
       return;
    }
@@ -732,7 +740,10 @@ DialogSet::dispatch(const SipMessage& msg)
             InfoLog ( << "Cannot create a dialog, no Contact or To tag in 1xx." );
             if (mDum.mDialogSetHandler)
             {
-               mDum.getDialogEventStateManager().onProceedingUac(*this, msg);
+               if (mDum.mDialogEventStateManager)
+               {
+                  mDum.mDialogEventStateManager->onProceedingUac(*this, msg);
+               }
                mDum.mDialogSetHandler->onNonDialogCreatingProvisional(mAppDialogSet->getHandle(), msg);
             }
             return;         
@@ -762,7 +773,10 @@ DialogSet::dispatch(const SipMessage& msg)
                msg.header(h_StatusLine).statusCode() >= 200)
             {
                // really we should wait around 32s before deleting this
-               mDum.getDialogEventStateManager().onTerminated(*this, msg, InviteSessionHandler::Error);
+               if (mDum.mDialogEventStateManager)
+               {
+                  mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Error);
+               }
                
                mState = Destroying;
                mDum.destroy(this);
@@ -777,7 +791,10 @@ DialogSet::dispatch(const SipMessage& msg)
             mDum.send(response);
             if(mDialogs.empty())
             {
-               mDum.getDialogEventStateManager().onTerminated(*this, msg, InviteSessionHandler::Error);
+               if (mDum.mDialogEventStateManager)
+               {
+                  mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Error);
+               }
                mState = Destroying;
                mDum.destroy(this);
             }
@@ -860,7 +877,10 @@ DialogSet::end()
             // non-dialog creating provisional (e.g. 100), then we need to:
             // Add a new state, if we receive a 200/INV in this state, ACK and
             // then send a BYE and destroy the dialogset. 
-            mDum.getDialogEventStateManager().onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
+            if (mDum.mDialogEventStateManager)
+            {
+               mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
+            }
             mState = Destroying;
             mDum.destroy(this);
          }
@@ -873,7 +893,10 @@ DialogSet::end()
                try
                {
                   it->second->cancel();
-                  mDum.getDialogEventStateManager().onTerminated(*(it->second), *cancel, InviteSessionHandler::LocalCancel);
+                  if (mDum.mDialogEventStateManager)
+                  {
+                     mDum.mDialogEventStateManager->onTerminated(*(it->second), *cancel, InviteSessionHandler::LocalCancel);
+                  }
                }
                catch(UsageUseException& e)
                {
