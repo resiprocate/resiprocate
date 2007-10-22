@@ -76,7 +76,7 @@ public:
    const static UInt32 ChangePortFlag = 0x02;
 
 
-   // Message Type - from RFC3489-bis-06
+   // Message Type - from RFC3489-bis-11
    //
    //        0                   1                   2                   3
    //        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -99,45 +99,49 @@ public:
    const static UInt16 StunClassErrorResponse      = 0x0110; 
 
    // define types for a stun message 
-   // RFC3489-bis-06
+   // RFC3489-bis-11
    const static UInt16 BindRequest                  = 0x001;
-   const static UInt16 SharedSecretRequest          = 0x002;
+   const static UInt16 SharedSecretRequest          = 0x002;  // deprecated by RFC3289-bis-11 (used for backwards compatibility to 3489 only)
 
    // define types for a turn message - per behave-turn-03
    const static UInt16 TurnAllocateRequest         = 0x003;
-   const static UInt16 TurnSetActiveDestinationRequest = 0x004;
-   const static UInt16 TurnConnectRequest          = 0x005;
+   const static UInt16 TurnConnectRequest          = 0x004;
+   const static UInt16 TurnListenPermissionRequest = 0x005;
    // define types for a turn indication - per behave-turn-03
-   const static UInt16 TurnSendInd                 = 0x001;
-   const static UInt16 TurnDataInd                 = 0x002;
-   const static UInt16 TurnConnectStatusInd        = 0x003;
+   const static UInt16 TurnSendInd                 = 0x006;
+   const static UInt16 TurnDataInd                 = 0x007;
+   const static UInt16 ChannelConfirmationInd      = 0x008;
+   const static UInt16 TurnConnectStatusInd        = 0x009;
 
    // define  stun attribute
-   // RFC3489-bis-06
+   // RFC3489-bis-11
+   // Comprehension required attributes
    const static UInt16 MappedAddress    = 0x0001;
-   const static UInt16 ResponseAddress  = 0x0002;  // deprecated by RFC3489-bis-06
-   const static UInt16 ChangeRequest    = 0x0003;  // deprecated by RFC3489-bis-06
-   const static UInt16 SourceAddress    = 0x0004;  // deprecated by RFC3489-bis-06
-   const static UInt16 ChangedAddress   = 0x0005;  // deprecated by RFC3489-bis-06
+   const static UInt16 ResponseAddress  = 0x0002;  // deprecated by RFC3489-bis-11
+   const static UInt16 ChangeRequest    = 0x0003;  // deprecated by RFC3489-bis-11
+   const static UInt16 SourceAddress    = 0x0004;  // deprecated by RFC3489-bis-11
+   const static UInt16 ChangedAddress   = 0x0005;  // deprecated by RFC3489-bis-11
    const static UInt16 Username         = 0x0006;  
-   const static UInt16 Password         = 0x0007;
+   const static UInt16 Password         = 0x0007;  // deprecated by RFC3489-bis-11
    const static UInt16 MessageIntegrity = 0x0008;
    const static UInt16 ErrorCode        = 0x0009;
    const static UInt16 UnknownAttribute = 0x000A;
-   const static UInt16 ReflectedFrom    = 0x000B;  // deprecated by RFC3489-bis-06
+   const static UInt16 ReflectedFrom    = 0x000B;  // deprecated by RFC3489-bis-11
    const static UInt16 Realm            = 0x0014;
    const static UInt16 Nonce            = 0x0015;
    const static UInt16 XorMappedAddress = 0x0020;
    const static UInt16 XorMappedAddress_old = 0x8020; // deprecated
-   const static UInt16 Fingerprint      = 0x0021;  
+   // Comprehension Optional Attributes
    const static UInt16 Server           = 0x8022;
    const static UInt16 AlternateServer  = 0x8023;
    const static UInt16 RefreshInterval  = 0x8024;
-   const static UInt16 SecondaryAddress = 0x8050;  // Non standard extention
+   const static UInt16 Fingerprint      = 0x8028;  
+   const static UInt16 SecondaryAddress = 0x8050;  // Non standard extension
 
-   // TURN specific message attributes - from behave-turn-03
-   const static UInt16 TurnLifetime     = 0x000d;
-   const static UInt16 TurnAlternateServer = 0x000e; // deprecated
+   // TURN specific message attributes - from behave-turn-05
+   const static UInt16 TurnChannelNumber = 0x000C;
+   const static UInt16 TurnLifetime     = 0x000D;
+   const static UInt16 TurnAlternateServer = 0x000E; // deprecated
    const static UInt16 TurnMagicCookie  = 0x000f;    // deprecated
    const static UInt16 TurnBandwidth    = 0x0010;
    const static UInt16 TurnDestinationAddress = 0x0011; // deprecated
@@ -290,6 +294,9 @@ public:
    StunAtrAddress mSecondaryAddress;
 
    // Turn Attributes
+   bool mHasTurnChannelNumber;
+   unsigned char mTurnChannelNumber;
+
    bool mHasTurnLifetime;
    UInt32 mTurnLifetime;
 

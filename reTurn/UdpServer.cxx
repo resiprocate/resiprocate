@@ -40,6 +40,12 @@ UdpServer::setAlternateUdpServers(UdpServer* alternatePort, UdpServer* alternate
    mAlternateIpPortUdpServer = alternateIpPort;
 }
 
+bool 
+UdpServer::isRFC3489BackwardsCompatServer()
+{
+   return mAlternatePortUdpServer != 0;  // Just check that any of the alternate servers is populated - if so, we are running in back compat mode
+}
+
 asio::ip::udp::socket& 
 UdpServer::getSocket()
 {
@@ -59,6 +65,9 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
 {
    if (!e && bytesTransferred > 0)
    {
+      char* stunMessageBuffer = 0;
+      unsigned int stunMessageSize = 0;
+
       bool treatAsData=false;
       /*
       std::cout << "Read " << bytesTransferred << " bytes from udp socket (" << mSenderEndpoint.address().to_string() << ":" << mSenderEndpoint.port() << "): " << std::hex << std::endl;
@@ -68,76 +77,86 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
       }
       std::cout << std::dec << std::endl;
       */
+      unsigned char channelNumber = mBuffer[0];
 
-      // Check if first byte is 0x00 - if so data might be STUN message
-      if(bytesTransferred >= 1 && mBuffer[0] == 0x00)
+      if(!isRFC3489BackwardsCompatServer())
       {
-         // if this is a TURN relay usage UDP server - then we check upfront for existance of StunMagicCookie
-         if(!mAlternatePortUdpServer && bytesTransferred > 8 )  // If alternate servers are not set, then assume this is Turn relay usage only
+         // All Turn messaging will be framed
+         if(channelNumber == 0) // Stun/Turn Request
          {
-            unsigned int magicCookie;  // Stun magic cookie is in bytes 4-8
-            memcpy(&magicCookie, &mBuffer[4], sizeof(magicCookie));
-            //magicCookie = ntohl(magicCookie);
-            if(magicCookie != StunMessage::StunMagicCookie)
-            {
-               treatAsData = true;
-            }
+            if(bytesTransferred > 4)  // Ensure we have at least 1 more byte than the frame size
+            stunMessageBuffer = (char*)&mBuffer[4];
+            stunMessageSize = (unsigned int)bytesTransferred-4;
+         }
+         else  
+         {
+            // Turn Data
+            treatAsData = true;
          }
       }
       else
       {
-         treatAsData = true;
+         stunMessageBuffer = (char*)&mBuffer[0];
+         stunMessageSize = (unsigned int)bytesTransferred;
       }
 
       if(!treatAsData)
       {
-         // Try to parse stun message
-         StunMessage request(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
-                             StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
-                             (char*)mBuffer.c_array(), (unsigned int)bytesTransferred,
-                             mAlternatePortUdpServer ? &mAlternatePortUdpServer->getSocket() : 0,
-                             mAlternateIpUdpServer ? &mAlternateIpUdpServer->getSocket() : 0,
-                             mAlternateIpPortUdpServer ? &mAlternateIpPortUdpServer->getSocket() : 0);
-         if(!request.isValid())
+         if(stunMessageBuffer && stunMessageSize)
          {
-            treatAsData = true;
-         }
-         else
-         {
-            StunMessage response;
-            asio::ip::udp::socket* responseSocket;
-            RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
-
-            switch(result)
+            // Try to parse stun message
+            StunMessage request(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                              StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
+                              stunMessageBuffer, stunMessageSize,
+                              mAlternatePortUdpServer ? &mAlternatePortUdpServer->getSocket() : 0,
+                              mAlternateIpUdpServer ? &mAlternateIpUdpServer->getSocket() : 0,
+                              mAlternateIpPortUdpServer ? &mAlternateIpPortUdpServer->getSocket() : 0);
+            if(request.isValid())
             {
-            case RequestHandler::NoResponseToSend:
-               // No response to send - just receive next message
-               mSocket.async_receive_from(asio::buffer(mBuffer), mSenderEndpoint,
-                  boost::bind(&UdpServer::handleReceiveFrom, this, asio::placeholders::error, asio::placeholders::bytes_transferred));  
-               return;
-            case RequestHandler::RespondFromAlternatePort:
-               responseSocket = &mAlternatePortUdpServer->getSocket();
-               break;
-            case RequestHandler::RespondFromAlternateIp:
-               responseSocket = &mAlternateIpUdpServer->getSocket();
-               break;
-            case RequestHandler::RespondFromAlternateIpPort:
-               responseSocket = &mAlternateIpPortUdpServer->getSocket();
-               break;
-            case RequestHandler::RespondFromReceiving:
-            default:
-                responseSocket = &mSocket;            
-                break;
-            }
-            unsigned int size = response.stunEncodeMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+               StunMessage response;
+               asio::ip::udp::socket* responseSocket;
+               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
 
-            responseSocket->async_send_to(asio::buffer(mBuffer, size), asio::ip::udp::endpoint(response.mRemoteTuple.getAddress(), response.mRemoteTuple.getPort()), 
-                 boost::bind(&UdpServer::handleSendTo, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+               switch(result)
+               {
+               case RequestHandler::NoResponseToSend:
+                  // No response to send - just receive next message
+                  mSocket.async_receive_from(asio::buffer(mBuffer), 
+                                             mSenderEndpoint,
+                                             boost::bind(&UdpServer::handleReceiveFrom, 
+                                                         this, 
+                                                         asio::placeholders::error, 
+                                                         asio::placeholders::bytes_transferred));  
+                  return;
+               case RequestHandler::RespondFromAlternatePort:
+                  responseSocket = &mAlternatePortUdpServer->getSocket();
+                  break;
+               case RequestHandler::RespondFromAlternateIp:
+                  responseSocket = &mAlternateIpUdpServer->getSocket();
+                  break;
+               case RequestHandler::RespondFromAlternateIpPort:
+                  responseSocket = &mAlternateIpPortUdpServer->getSocket();
+                  break;
+               case RequestHandler::RespondFromReceiving:
+               default:
+                  responseSocket = &mSocket;            
+                  break;
+               }
+               unsigned int size = response.stunEncodeMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+   
+               responseSocket->async_send_to(asio::buffer(mBuffer, size), 
+                                             asio::ip::udp::endpoint(response.mRemoteTuple.getAddress(), response.mRemoteTuple.getPort()), 
+                                             boost::bind(&UdpServer::handleSendTo, 
+                                                         this, 
+                                                         asio::placeholders::error, 
+                                                         asio::placeholders::bytes_transferred));
+            }
          }
-      }
-      if(treatAsData)
+      } 
+      else
       {
-         mRequestHandler.processTurnData(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+         mRequestHandler.processTurnData(channelNumber,
+                                         StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
                                          StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
                                          (char*)mBuffer.c_array(), (unsigned int)bytesTransferred);
 
@@ -147,8 +166,12 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
    }
    else if(e != asio::error::operation_aborted)
    {
-      mSocket.async_receive_from(asio::buffer(mBuffer), mSenderEndpoint,
-         boost::bind(&UdpServer::handleReceiveFrom, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+      mSocket.async_receive_from(asio::buffer(mBuffer), 
+                                 mSenderEndpoint,
+                                 boost::bind(&UdpServer::handleReceiveFrom, 
+                                             this, 
+                                             asio::placeholders::error, 
+                                             asio::placeholders::bytes_transferred));
    }
 }
 
