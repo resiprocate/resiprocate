@@ -6,9 +6,9 @@ using namespace std;
 
 #define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
                      // Should also be calculation this on the fly
-#define UDP_MAX_RETRANSMITS  7       // Defined by RFC3489-bis06
-#define TCP_RESPONSE_TIME 7900       // Defined by RFC3489-bis06
-#define UDP_FINAL_REQUEST_TIME 1600  // Defined by RFC3489-bis06
+#define UDP_MAX_RETRANSMITS  7       // Defined by RFC3489-bis11
+#define TCP_RESPONSE_TIME 7900       // Defined by RFC3489-bis11
+#define UDP_FINAL_REQUEST_TIME (UDP_RT0 * 16)  // Defined by RFC3489-bis11
 
 namespace reTurn {
 
@@ -392,106 +392,7 @@ TurnSocket::getBandwidth()
 }
 
 asio::error_code 
-TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
-{
-   asio::error_code errorCode;
-
-   // ensure there is an allocation
-   if(!mHaveAllocation)
-   {
-      return asio::error_code(reTurn::NoAllocation, asio::misc_ecat); 
-   }
-
-   // Form Set Active Destination request
-   StunMessage request;
-   request.createHeader(StunMessage::StunClassRequest, StunMessage::TurnSetActiveDestinationRequest);
-   request.mHasTurnRemoteAddress = true;
-   request.mTurnRemoteAddress.port = port;
-   if(address.is_v6())
-   {
-      request.mTurnRemoteAddress.family = StunMessage::IPv6Family;
-      memcpy(&request.mTurnRemoteAddress.addr.ipv6, address.to_v6().to_bytes().c_array(), sizeof(request.mTurnRemoteAddress.addr.ipv6));
-   }
-   else
-   {
-      request.mTurnRemoteAddress.family = StunMessage::IPv4Family;
-      request.mTurnRemoteAddress.addr.ipv4 = address.to_v4().to_ulong();
-   }
-   request.mHasFingerprint = true;
-   request.mHasMessageIntegrity = true;
-
-   request.setUsername(mUsername.data()); 
-   request.mHmacKey = mPassword;
-
-   // Get Response
-   StunMessage* response = sendRequestAndGetResponse(request, errorCode);
-   if(response == 0)
-   {
-      return errorCode;
-   }
-
-   // Check if success or not
-   if(response->mHasErrorCode)
-   {
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::misc_ecat);
-      delete response;
-      return errorCode;
-   }
-
-   // All was well - return 0 errorCode
-   mActiveDestination.setTransportType(mRelayTuple.getTransportType());
-   mActiveDestination.setAddress(address);
-   mActiveDestination.setPort(port);
-
-   delete response;
-   return errorCode;
-}
-
-asio::error_code 
-TurnSocket::clearActiveDestination()
-{
-   asio::error_code errorCode;
-
-   // ensure there is an allocation
-   if(!mHaveAllocation)
-   {
-      return asio::error_code(reTurn::NoAllocation, asio::misc_ecat); 
-   }
-
-   // Form Set Active Destination request with no destination (clear)
-   StunMessage request;
-   request.createHeader(StunMessage::StunClassRequest, StunMessage::TurnSetActiveDestinationRequest);
-   request.mHasFingerprint = true;
-   request.mHasMessageIntegrity = true;
-
-   request.setUsername(mUsername.data()); 
-   request.mHmacKey = mPassword;
-
-   // Get Response
-   StunMessage* response = sendRequestAndGetResponse(request, errorCode);
-   if(response == 0)
-   {
-      return errorCode;
-   }
-
-   // Check if success or not
-   if(response->mHasErrorCode)
-   {
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::misc_ecat);
-      delete response;
-      return errorCode;
-   }
-
-   // All was well - return 0 errorCode
-   mActiveDestination.setTransportType(StunTuple::None);
-   mActiveDestination.setAddress(UnspecifiedIpAddress);
-   mActiveDestination.setPort(0);
-   delete response;
-   return errorCode;
-}
-
-asio::error_code 
-TurnSocket::send(const char* buffer, unsigned int size)
+TurnSocket::send(unsigned char channelNumber, const char* buffer, unsigned int size)
 {
    // Allow raw data to be sent if there is no allocation
    if(!mHaveAllocation)
@@ -499,28 +400,27 @@ TurnSocket::send(const char* buffer, unsigned int size)
       return rawWrite(buffer, size);
    }
 
-   // !slg! TODO - ensure active destination is set 
-
+   // send framed data to active destination
+   char framing[4];
+   framing[0] = channelNumber;
+   framing[1] = 0x00;  // reserved
    if(mLocalBinding.getTransportType() == StunTuple::UDP)
    {
-      // send non-stun data to active destination (or connection) as is
-      return rawWrite(buffer, size);
+      // No size in header for UDP
+      framing[2] = 0x00;
+      framing[3] = 0x00;
    }
    else
    {
-      // send TCP framed data to active destination
-      char framing[4];
-      framing[0] = 0x03;
-      framing[1] = 0x00;  // reserved
       UInt16 turnDataSize = size;
       turnDataSize = htons(turnDataSize);
       memcpy((void*)&framing[2], &turnDataSize, 2);
-      std::vector<asio::const_buffer> bufs;
-      bufs.push_back(asio::buffer(framing, sizeof(framing)));
-      bufs.push_back(asio::buffer(buffer, size));
-
-      return rawWrite(bufs);
    }
+   std::vector<asio::const_buffer> bufs;
+   bufs.push_back(asio::buffer(framing, sizeof(framing)));
+   bufs.push_back(asio::buffer(buffer, size));
+
+   return rawWrite(bufs);
 }
 
 asio::error_code 

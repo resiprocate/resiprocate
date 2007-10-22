@@ -48,12 +48,8 @@ public:
    unsigned int getLifetime();
    unsigned int getBandwidth();
 
-   // Methods to control active destination
-   asio::error_code setActiveDestination(const asio::ip::address& address, unsigned short port);
-   asio::error_code clearActiveDestination();
-
    // Turn Send Methods
-   asio::error_code send(const char* buffer, unsigned int size);
+   asio::error_code send(unsigned char channelNumber, const char* buffer, unsigned int size);
    asio::error_code sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
 
    // Receive Methods

@@ -51,7 +51,7 @@ TlsConnection::readHeader()
 void
 TlsConnection::readBody()
 {
-   asio::async_read(mTlsSocket, asio::buffer(&mBuffer[mReadBufferPos], mBufferLen-mReadBufferPos),
+   asio::async_read(mTlsSocket, asio::buffer(mBuffer, mBufferLen),
                     boost::bind(&TlsConnection::handleReadBody, shared_from_this(), asio::placeholders::error));
 }
 

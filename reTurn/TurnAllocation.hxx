@@ -13,6 +13,7 @@
 namespace reTurn {
 
 class TurnPermission;
+class RemotePeer;
 class TurnManager;
 class UdpRelayServer;
 class TurnTransportBase;
@@ -37,10 +38,6 @@ public:
    const TurnAllocationKey& getKey() { return mKey; }
    void  refresh(unsigned int lifetime);  // update expiration time
 
-   void setActiveDestination(const StunTuple& activeDestination);
-   bool isActiveDestinationSet() { return mActiveDestinationSet; }
-   void clearActiveDestination();
-
    // checks if the permission exists or not - also checks for expired
    // permissions
    bool existsPermission(const asio::ip::address& address);
@@ -52,9 +49,9 @@ public:
    // has been destroyed
    void onTransportDestroyed();
 
-   void sendDataToRemote(const resip::Data& data);
-   void sendDataToRemote(const StunTuple& remoteAddress, const resip::Data& data);
-   void sendDataToLocal(const StunTuple& fromAddress, const resip::Data& data);
+   void sendDataToPeer(unsigned char channelNumber, const resip::Data& data);
+   void sendDataToPeer(unsigned char channelNumber, const StunTuple& peerAddress, const resip::Data& data);
+   void sendDataToClient(const StunTuple& peerAddress, const resip::Data& data);
 
    // !slg! todo - should be private with accessors
    TurnAllocationKey mKey;  // contains ClientLocalTuple and clientRemoteTuple
@@ -67,12 +64,15 @@ public:
    time_t    mExpires;
    //unsigned int mBandwidth; // future use
 
-   StunTuple mActiveDestination;
-   bool      mActiveDestinationSet;
-
 private:
    typedef std::map<asio::ip::address,TurnPermission*> TurnPermissionMap;
    TurnPermissionMap mTurnPermissionMap;
+
+   typedef std::map<unsigned char,RemotePeer*> ChannelRemotePeerMap;
+   typedef std::map<StunTuple,RemotePeer*> TupleRemotePeerMap;
+   ChannelRemotePeerMap mClientToServerChannelRemotePeerMap;
+   ChannelRemotePeerMap mServerToClientChannelRemotePeerMap;
+   TupleRemotePeerMap mTupleRemotePeerMap;
 
    TurnManager& mTurnManager;
    asio::deadline_timer mAllocationTimer;
