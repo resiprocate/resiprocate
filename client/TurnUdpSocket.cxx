@@ -5,9 +5,10 @@ using namespace std;
 
 namespace reTurn {
 
-TurnUdpSocket::TurnUdpSocket(const asio::ip::address& address, unsigned short port) : 
+TurnUdpSocket::TurnUdpSocket(const asio::ip::address& address, unsigned short port, bool turnFramingDisabled) : 
    TurnSocket(address,port),
-   mSocket(mIOService)
+   mSocket(mIOService),
+   mTurnFramingDisabled(turnFramingDisabled)
 {
    mLocalBinding.setTransportType(StunTuple::UDP);
 
@@ -34,7 +35,17 @@ asio::error_code
 TurnUdpSocket::rawWrite(const char* buffer, unsigned int size)
 {
    asio::error_code errorCode;
-   mSocket.send_to(asio::buffer(buffer, size), mRemoteEndpoint, 0, errorCode); 
+   if(mTurnFramingDisabled)
+   {
+      assert(size > 4);
+
+      // Write everything except turn framing header
+      mSocket.send_to(asio::buffer(&buffer[4], size-4), mRemoteEndpoint, 0, errorCode); 
+   }
+   else
+   {
+      mSocket.send_to(asio::buffer(buffer, size), mRemoteEndpoint, 0, errorCode); 
+   }
    return errorCode;
 }
 
@@ -42,7 +53,16 @@ asio::error_code
 TurnUdpSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
 {
    asio::error_code errorCode;
-   mSocket.send_to(buffers, mRemoteEndpoint, 0, errorCode); 
+   if(mTurnFramingDisabled)
+   {
+      // first buffer will be framing - only send second one
+      assert(buffers.size() == 2);
+      mSocket.send_to(asio::buffer(buffers.back()), mRemoteEndpoint, 0, errorCode); 
+   }
+   else
+   {
+      mSocket.send_to(buffers, mRemoteEndpoint, 0, errorCode); 
+   }
    return errorCode;
 }
 
@@ -50,13 +70,33 @@ asio::error_code
 TurnUdpSocket::rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    startReadTimer(timeout);
-   mSocket.async_receive_from(asio::buffer(buffer, size), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+
+   if(mTurnFramingDisabled)
+   {
+      // If Turn Framing is disabled - fake that framing came from socket
+      assert(size > 4);
+      memset(buffer, 0, 4);  // set first four bytes (framing) to all 0's, first byte of 0 = stun/turn channel
+      mSocket.async_receive_from(asio::buffer(&buffer[4], size-4), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+   }
+   else
+   {
+      mSocket.async_receive_from(asio::buffer(buffer, size), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+   }
 
    // Wait for timer and read to end
    mIOService.run();
    mIOService.reset();
 
-   *bytesRead = (unsigned int)mBytesRead;
+   if(mTurnFramingDisabled && mBytesRead > 0)
+   {
+      // Inflate read size to fake framing
+      *bytesRead = (unsigned int)mBytesRead+4;
+   }
+   else
+   {
+      *bytesRead = (unsigned int)mBytesRead;
+   }
+
    if(mReadErrorCode == 0)
    {
       if(sourceAddress)

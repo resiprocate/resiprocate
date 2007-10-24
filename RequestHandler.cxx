@@ -13,8 +13,8 @@ using namespace resip;
 namespace reTurn {
 
 // !slg! these need to be made into settings
-//RequestHandler::AuthenticationMode authenticationMode = RequestHandler::NoAuthentication;
-RequestHandler::AuthenticationMode authenticationMode = RequestHandler::ShortTermPassword;
+RequestHandler::AuthenticationMode authenticationMode = RequestHandler::NoAuthentication;
+//RequestHandler::AuthenticationMode authenticationMode = RequestHandler::ShortTermPassword;
 const char authenticationRealm[] = "test";
 const char authenticationUsername[] = "test";
 const char authenticationPassword[] = "1234";

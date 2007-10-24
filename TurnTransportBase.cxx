@@ -12,7 +12,7 @@ TurnTransportBase::DataToSend::DataToSend(unsigned char channelNumber, const Stu
    // Add Turn Framing
    mData[0] = channelNumber; 
    mData[1] = 0; 
-   unsigned short size = (unsigned short)length;
+   unsigned short size = htons((unsigned short)length);
    memcpy(&mData[2], (void*)&size, 2);  // UDP doesn't need size - but shouldn't hurt to send it anyway
    memcpy(&mData[4], data, length); 
 }

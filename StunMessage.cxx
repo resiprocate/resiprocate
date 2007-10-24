@@ -1244,7 +1244,8 @@ StunMessage::stunEncodeFramedMessage(char* buf, unsigned int bufLen)
    // Add Frame Header info
    buf[0] = 0; // Channel 0 for Stun Messages
    buf[1] = 0; // reserved
-   memcpy(&buf[2], (void*)&size, 2);  // size is not needed if udp - but should be harmless
+   UInt16 frameSize = htons(size);
+   memcpy(&buf[2], (void*)&frameSize, 2);  // size is not needed if udp - but should be harmless
    return size+4;
 }
 
