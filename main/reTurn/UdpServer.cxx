@@ -55,7 +55,7 @@ UdpServer::sendData(const StunTuple& destination, const char* buffer, unsigned i
 {
    mSocket.async_send_to(asio::buffer(buffer, size), 
                                  asio::ip::udp::endpoint(destination.getAddress(), destination.getPort()), 
-                                 boost::bind(&TurnTransportBase::handleSendData, this, asio::placeholders::error));
+                                 boost::bind(&UdpServer::handleSendData, this, asio::placeholders::error));
 }
 
 void 
@@ -82,7 +82,6 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
          // All Turn messaging will be framed
          if(channelNumber == 0) // Stun/Turn Request
          {
-            if(bytesTransferred > 4)  // Ensure we have at least 1 more byte than the frame size
             stunMessageBuffer = (char*)&mBuffer[4];
             stunMessageSize = (unsigned int)bytesTransferred-4;
          }
@@ -161,10 +160,17 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
       } 
       else
       {
-         mRequestHandler.processTurnData(channelNumber,
-                                         StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
-                                         StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
-                                         (char*)mBuffer.c_array(), (unsigned int)bytesTransferred);
+         if(bytesTransferred > 4)
+         {
+            mRequestHandler.processTurnData(channelNumber,
+                                            StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                                            StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
+                                            (char*)&mBuffer[4], (unsigned int)bytesTransferred-4);
+         }
+         else
+         {
+            cout << "UdpServer::handleReceiveFrom not enough data for framed message - discarding!" << endl;
+         }
 
          mSocket.async_receive_from(asio::buffer(mBuffer), mSenderEndpoint,
                   boost::bind(&UdpServer::handleReceiveFrom, this, asio::placeholders::error, asio::placeholders::bytes_transferred));  
@@ -172,6 +178,8 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
    }
    else if(e != asio::error::operation_aborted)
    {
+      cout << "handleReceiveFrom error: " << e.message() << endl;
+
       mSocket.async_receive_from(asio::buffer(mBuffer), 
                                  mSenderEndpoint,
                                  boost::bind(&UdpServer::handleReceiveFrom, 

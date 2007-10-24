@@ -6,6 +6,7 @@ TARGET_BINARY = reTurnServer
 CXXFLAGS += -DBOOST_ALL_NO_LIB
 
 SRC += \
+ 	ChannelManager.cxx \
 	ConnectionManager.cxx \
 	RemotePeer.cxx \
 	RequestHandler.cxx \

@@ -6,6 +6,7 @@ TARGET_LIBRARY = libreTurnClient
 CXXFLAGS += -DBOOST_ALL_NO_LIB
 
 SRC += \
+	../ChannelManager.cxx \
 	../RemotePeer.cxx \
 	../StunMessage.cxx \
 	../StunTuple.cxx \
