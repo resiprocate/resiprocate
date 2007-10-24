@@ -1,19 +1,42 @@
-#include "RemotePeer.hxx"
+#ifndef CHANNELMANAGER_HXX
+#define CHANNELMANAGER_HXX
 
-using namespace std;
+#include <asio.hpp>
+
+#include "RemotePeer.hxx"
 
 namespace reTurn {
 
-RemotePeer::RemotePeer(const StunTuple& peerTuple, unsigned char clientToServerChannel, unsigned char serverToClientChannel) : 
-   mPeerTuple(peerTuple), 
-   mClientToServerChannel(clientToServerChannel),
-   mClientToServerChannelConfirmed(false),
-   mServerToClientChannel(serverToClientChannel),
-   mServerToClientChannelConfirmed(false)
-{
-}
 
-} // namespace
+class ChannelManager
+{
+public:
+   explicit ChannelManager();
+   ~ChannelManager();
+
+   RemotePeer* createRemotePeer(const StunTuple& peerTuple, unsigned char clientToServerChannel, unsigned char serverToClientChannel);
+   void addRemotePeerServerToClientChannelLookup(RemotePeer* remotePeer);
+   void addRemotePeerClientToServerChannelLookup(RemotePeer* remotePeer);
+
+   RemotePeer* findRemotePeerByServerToClientChannel(unsigned char channelNumber);
+   RemotePeer* findRemotePeerByClientToServerChannel(unsigned char channelNumber);
+   RemotePeer* findRemotePeerByPeerAddress(const StunTuple& peerAddress);
+
+   unsigned char getNextChannelNumber() { return mNextChannelNumber++; }
+
+private:
+   typedef std::map<unsigned char,RemotePeer*> ChannelRemotePeerMap;
+   typedef std::map<StunTuple,RemotePeer*> TupleRemotePeerMap;
+   ChannelRemotePeerMap mClientToServerChannelRemotePeerMap;
+   ChannelRemotePeerMap mServerToClientChannelRemotePeerMap;
+   TupleRemotePeerMap mTupleRemotePeerMap;
+
+   unsigned char mNextChannelNumber;
+};
+
+} 
+
+#endif
 
 
 /* ====================================================================

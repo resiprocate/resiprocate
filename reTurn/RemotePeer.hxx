@@ -11,7 +11,7 @@ namespace reTurn {
 class RemotePeer
 {
 public:
-   explicit RemotePeer(const StunTuple& peerTuple);
+   explicit RemotePeer(const StunTuple& peerTuple, unsigned char clientToServerChannel, unsigned char serverToClientChannel);
 
    unsigned char getClientToServerChannel() const { return mClientToServerChannel; }
    void setClientToServerChannel(unsigned char channel) { mClientToServerChannel = channel; }

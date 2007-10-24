@@ -34,19 +34,17 @@ Configuration Framework                no           no      Currently just uses 
 RFC3489 support                        yes          mostly  
 Multi-threaded Server                  no           no      Once Turn code is implemented consider asio threading model and provide locking
 TLS Server Support                     yes          yes     TLS server is working but first connect on program start always fails - need to tweak openSSL settings
-RFC3489 bis 06 message parsing         yes          partly
+RFC3489 bis 11 message parsing         yes          partly
 IPV6 message parsing support           yes          no 
 Shared Secret with Short Term Cred     yes          yes     Checking username for expirey and correct HMAC is not completed
 Shared Secret with Long Term Cred      little       no      Implementation is not complete and currently only accepts one hardcoded username/password - nonce generation not implemented
 Finger Print Insertion and Validation  yes          yes     Uses BOOST:crc_optimal
 Checking for unknown attributes        no           no
 Bandwidth Check                        no           no
-Turn Allocation                        started      no
+Turn Allocation                        almost       no
 Requested Port Props (Even, Odd, etc)  yes          yes
 Turn Permissions                       yes          no      Permissions need more thought when TCP/TLS relay is implemented
-UDP Demux                              yes          partly
-TCP/TLS Demux                          yes          partly
-Turn Relay                             yes          partly  UDP destinations only
+Turn Relay                             partly       partly  UDP destinations only
 Asyncronous Client APIs                no           no
 
 
@@ -66,7 +64,6 @@ General TODO
 - Ability for Server to accept both long term credentials
 - Check for unknown attributes
 - if server receives SendInd with no Data attribute (for UDP only), send empty UDP packet, TCP - do nothing
-- if server receives non-encapsulated data on a connection (TCP/TLS) with no Active Destination Set then connection is closed
 - Shared Secret Re-Transmissions when receiving duplicate request, must return exact same response (need to store/cache in server)
 - Standardize on a logging interface
 - from chart above
