@@ -9,11 +9,11 @@
 #include "StunAuth.hxx"
 #include "TurnAllocationKey.hxx"
 #include "TurnTransportHandler.hxx"
+#include "ChannelManager.hxx"
 
 namespace reTurn {
 
 class TurnPermission;
-class RemotePeer;
 class TurnManager;
 class UdpRelayServer;
 class TurnTransportBase;
@@ -77,19 +77,13 @@ private:
    typedef std::map<asio::ip::address,TurnPermission*> TurnPermissionMap;
    TurnPermissionMap mTurnPermissionMap;
 
-   typedef std::map<unsigned char,RemotePeer*> ChannelRemotePeerMap;
-   typedef std::map<StunTuple,RemotePeer*> TupleRemotePeerMap;
-   ChannelRemotePeerMap mClientToServerChannelRemotePeerMap;
-   ChannelRemotePeerMap mServerToClientChannelRemotePeerMap;
-   TupleRemotePeerMap mTupleRemotePeerMap;
-
    TurnManager& mTurnManager;
    asio::deadline_timer mAllocationTimer;
 
    TurnTransportBase* mLocalTurnTransport;
    UdpRelayServer* mUdpRelayServer;
 
-   unsigned char mNextServerToClientChannel;
+   ChannelManager mChannelManager;
 };
 
 } 

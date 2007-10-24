@@ -10,13 +10,20 @@ typedef asio::error_code::value_type ErrorType;
 static const ErrorType Success                               = 0;
 static const ErrorType GeneralError                          = -1;
 
-static const ErrorType MissingAuthenticationAttributes       = 8001;
-static const ErrorType BufferTooSmall                        = 8002;
-static const ErrorType BadMessageIntegrity                   = 8003;
-static const ErrorType ErrorParsingMessage                   = 8004;
-static const ErrorType NoAllocation                          = 8005;
-static const ErrorType ReadError                             = 8006;
-static const ErrorType ResponseTimeout                       = 8007;
+static const ErrorType ErrorBase                             = 8000;
+
+static const ErrorType MissingAuthenticationAttributes       = ErrorBase + 1;
+static const ErrorType BufferTooSmall                        = ErrorBase + 2;
+static const ErrorType BadMessageIntegrity                   = ErrorBase + 3;
+static const ErrorType ErrorParsingMessage                   = ErrorBase + 4;
+static const ErrorType NoAllocation                          = ErrorBase + 5;
+static const ErrorType NoActiveDestination                   = ErrorBase + 6;
+static const ErrorType ReadError                             = ErrorBase + 7;
+static const ErrorType ResponseTimeout                       = ErrorBase + 8;
+static const ErrorType FrameError                            = ErrorBase + 9;
+static const ErrorType InvalidChannelNumberReceived          = ErrorBase + 10;
+static const ErrorType MissingAttributes                     = ErrorBase + 11;
+static const ErrorType UnknownRemoteAddress                  = ErrorBase + 12;
 } 
 
 #endif
