@@ -19,7 +19,7 @@ class PortAllocator
 #else
          StartAddress = 1,
 #endif
-         StartPort = 5061,
+         StartPort = 25061,
          VoicemailPort = 60000,
          AttendantPort = 61000
       };

@@ -22,8 +22,12 @@ TestProxy::TestProxy(const Data& name,
 {
    mPort = (port == 0 ? PortAllocator::getNextPort() : port);
    mProxyUrl.uri().host() = host;
-   mProxyUrl.uri().port() = mPort;
 
+   if (port != 5060) 
+   {
+      mProxyUrl.uri().port() = mPort;
+   }
+   
    try //throws if only loopback is available
    {
       Source s(resip::DnsUtil::getLocalIpAddress(), mPort, UDP);
@@ -114,6 +118,7 @@ TestProxy::getUri() const
 const resip::NameAddr&
 TestProxy::getContact() const
 {
+
    if (mContact.uri().host().empty())
    {
       mContact.displayName() = mName;
@@ -125,7 +130,8 @@ TestProxy::getContact() const
          mContact.uri().host() = ips.front();
       }
    }
-
+   DebugLog(<<"TestProxy::getContact returned " << mContact);
+   
    return mContact;
 }
 
