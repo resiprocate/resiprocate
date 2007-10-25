@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+$usage = "Usage: doublequoteme sourcefile [destfile]\n\n";
+
+if ($#ARGV < 0 || $#ARGV > 1) {print $usage; exit; }
+
+if ($#ARGV == 1) { ($src, $dst) = @ARGV; }
+else  
+{
+  ($src) = @ARGV;
+#  $dst = "$src" . ".fixme"; 
+  $_ = $src;
+  s/^([A-Za-z0-9-]+)\.html$/$1.ixx/; 
+  $dst = $_;
+}
+
+open (SRC, "<$src");
+open (DST, ">$dst");
+
+while (<SRC>)
+{
+  chomp;
+  s'\\'\\\\'g;
+  s/"/\\"/g;
+  print DST "\"$_\\n\"\n";
+}
+
+close SRC;
+close DST;
+
+# if ($#ARGV == 0) {unlink $dst};
+
