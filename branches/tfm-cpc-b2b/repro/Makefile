@@ -26,7 +26,7 @@ endif
 
 CODE_SUBDIRS = monkeys stateAgents
 TARGET_LIBRARY = librepro
-TARGET_BINARY = repro
+#TARGET_BINARY = repro
 
 TESTPROGRAMS = \
 #	repro.cxx \
