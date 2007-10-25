@@ -906,6 +906,21 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             // value semantics
       };
 
+      class B2BContact : public Matcher
+      {
+         public:
+            B2BContact(const TestSipEndPoint* endpoint, TestProxy* testProxy);
+
+            virtual bool isMatch(boost::shared_ptr<resip::SipMessage>& message) const;
+            virtual resip::Data toString() const;
+
+         private:
+            resip::Uri makeB2bUri() const ;
+
+            const TestSipEndPoint* mEndPoint;
+            TestProxy* mProxy;
+      };
+
       class HasMessageBodyMatch : public Matcher
       {
          public:
@@ -1135,6 +1150,8 @@ TestSipEndPoint::Contact* contact(const TestSipEndPoint* testEndPoint);
 TestSipEndPoint::Contact* contact(TestProxy* testProxy);
 TestSipEndPoint::Contact* contact(const resip::NameAddr* contact);
 
+TestSipEndPoint::B2BContact* b2b(const TestSipEndPoint* ep, TestProxy* testproxy);
+
 TestSipEndPoint::HasMessageBodyMatch* hasMessageBodyMatch();
 
 TestSipEndPoint::MessageAction*
@@ -1206,6 +1223,8 @@ operator<=(boost::shared_ptr<resip::SipMessage>& msgPtr,
 // CANCEL/200
 std::pair<resip::MethodTypes, int>
 operator/(resip::MethodTypes meth, int code);
+static const int CHAL = 90000;
+
 
 // syntactic sugar for composing conditions
 TestSipEndPoint::MessageConditionerFn

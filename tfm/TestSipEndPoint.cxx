@@ -1071,6 +1071,8 @@ TestSipEndPoint::Invite::go()
    shared_ptr<SipMessage> invite(Helper::makeInvite(NameAddr(mTo),
                                                     NameAddr(mEndPoint.getAddressOfRecord()),
                                                     mEndPoint.getContact()));
+   InfoLog(<<"Tfm constructed invite: " << *invite);
+   
    if (mSdp.get())
       invite->setContents(mSdp.get());
 
@@ -2959,6 +2961,67 @@ TestSipEndPoint::From::toString() const
    return Data::Empty;   
 }
 
+TestSipEndPoint::B2BContact::B2BContact(const TestSipEndPoint* endpoint, TestProxy* testProxy) :
+   mEndPoint(endpoint),
+   mProxy(testProxy)
+{
+}
+
+Uri 
+TestSipEndPoint::B2BContact::makeB2bUri() const
+{
+   Uri b2buri(mProxy->getContact().uri());
+   b2buri.user() = mEndPoint->getAddressOfRecord().user();
+   return b2buri;
+}
+
+bool 
+TestSipEndPoint::B2BContact::isMatch(shared_ptr<SipMessage>& message) const
+{
+   if (message->exists(h_Contacts) &&
+       message->header(h_Contacts).size() == 1)
+   {
+      DebugLog(<< "B2BContact::isMatch " << message->header(h_Contacts).front().uri().getAor()
+                  << " " << mProxy->getContact().uri().getAor());
+      
+      Uri b2buri(makeB2bUri());
+      Uri u = message->header(h_Contacts).front().uri();
+      //may be removed after eas change
+      if (u.port() == 5060)
+      {
+         u.port() = 0;
+         
+      }
+      
+      if (u.getAor() != b2buri.getAor())
+      {
+         //!dcm! TODO -- we ned to save failure deatils for output later
+         InfoLog(<< "B2BContact::isMatch failed, expected " << b2buri.getAor() << " received " << message->header(h_Contacts).front().uri().getAor());
+         return false;
+      }
+      else
+      {
+         return true;
+      }
+   }
+   InfoLog(<< "B2BContact::isMatch: no contacts");
+   return false;
+}
+
+resip::Data 
+TestSipEndPoint::B2BContact::toString() const
+{
+   return "b2b(" + makeB2bUri().getAor() + ")";
+}
+
+TestSipEndPoint::B2BContact*
+b2b(const TestSipEndPoint* ep, TestProxy* testproxy)
+{
+   return new TestSipEndPoint::B2BContact(ep, testproxy);
+}
+
+
+
 TestSipEndPoint::Contact::Contact(const TestSipEndPoint& testEndPoint)
    : mEndPoint(&testEndPoint),
      mProxy(0),
@@ -3203,10 +3266,16 @@ TestSipEndPoint::SipExpect::onEvent(TestEndPoint& endPoint, shared_ptr<Event> ev
 {
    mExpectAction->exec(event);
 }
+
+//!dcm! -- render special 401/407 frobby
 resip::Data
 TestSipEndPoint::SipExpect::getMsgTypeString() const
 {
-   if (mMsgTypeCode.second != 0)
+   if (mMsgTypeCode.second == CHAL)
+   {
+      return getMethodName(mMsgTypeCode.first) + "/" + "CHAL";
+   }
+   else if (mMsgTypeCode.second != 0)
    {
       return getMethodName(mMsgTypeCode.first) + "/" + resip::Data(mMsgTypeCode.second);
    }
@@ -3276,7 +3345,24 @@ TestSipEndPoint::SipExpect::isMatch(shared_ptr<Event> event) const
          return false;
       }
 
-      if (msg->header(h_StatusLine).responseCode() != mMsgTypeCode.second)
+      int code = msg->header(h_StatusLine).responseCode();
+      
+      if (mMsgTypeCode.second == CHAL)
+      {
+         if (code == 401 || code == 407)
+         {
+            return true;
+         }
+         else
+         {
+             DebugLog(<< "isMatch failed on response code: " 
+                      << msg->header(h_StatusLine).responseCode() 
+                      << ", needed: 401 or 407");
+             
+             return false;
+         }
+      }
+      else if (code != mMsgTypeCode.second)
       {
          DebugLog(<< "isMatch failed on response code: " 
                   << msg->header(h_StatusLine).responseCode() 

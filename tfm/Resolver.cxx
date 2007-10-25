@@ -20,6 +20,9 @@
 
 using namespace resip;
 
+
+//.dcm.  I think this is where we can modify the resolution logic to be more
+//robust and default to the particular testproxy/fake srv.
 Resolver::Resolver(const Uri& uri) : 
    mTransport(UNKNOWN_TRANSPORT),
    mHost(uri.host()),

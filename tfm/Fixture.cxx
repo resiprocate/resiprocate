@@ -61,29 +61,31 @@ static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Da
    return new TestReproUser(proxy, j, j.user(), j.user(), transport, TestSipEndPoint::NoOutboundProxy, Data::Empty, security);
 #endif
 }
+//.dcm. change to change proxy contact
+const char* host="172.17.0.72";
 
 void
 Fixture::initialize(int argc, char** argv)
 {
-#if 0
-   proxy = new TestProxy("proxy",
-                         "localhost", 
+#if 1
+   proxy = new TestProxy(host,
+                         host, 
                          5060);
 #else
    // enable for TLS testing
    //security = new resip::Security(getenv("PWD"));
-   proxy = new TestRepro("proxy", "localhost", 5060, Data::Empty, security);
-   jason = makeReproUser(*proxy, "jason", "localhost", security);
-   jason1 = makeReproUser(*proxy, "jason", "localhost", security);
-   jason2 = makeReproUser(*proxy, "jason", "localhost", security);
-   jason3 = makeReproUser(*proxy, "jason", "localhost", security);
-   derek = makeReproUser(*proxy, "derek", "localhost", security);
-   david = makeReproUser(*proxy, "david", "localhost", security);
-   enlai = makeReproUser(*proxy, "enlai", "localhost", security);
-   cullen = makeReproUser(*proxy, "cullen", "localhost", security);
-   jozsef = makeReproUser(*proxy, "jozsef", "localhost", security, TCP);
-   jasonTcp = makeReproUser(*proxy, "jozsef", "localhost", security, TCP);
+   proxy = new TestRepro("proxy", host, 5060, Data::Empty, security);
 #endif
+   jason = makeReproUser(*proxy, "jason", host, security);
+   jason1 = makeReproUser(*proxy, "jason", host, security);
+   jason2 = makeReproUser(*proxy, "jason", host, security);
+   jason3 = makeReproUser(*proxy, "jason", host, security);
+   derek = makeReproUser(*proxy, "derek", host, security);
+   david = makeReproUser(*proxy, "david", host, security);
+   enlai = makeReproUser(*proxy, "enlai", host, security);
+   cullen = makeReproUser(*proxy, "cullen", host, security);
+   jozsef = makeReproUser(*proxy, "jozsef", host, security, TCP);
+   jasonTcp = makeReproUser(*proxy, "jozsef", host, security, TCP);
 }
 
 
