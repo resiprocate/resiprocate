@@ -62,7 +62,7 @@ static TestReproUser* makeReproUser(TestProxy& proxy, const Data& user, const Da
 #endif
 }
 //.dcm. change to change proxy contact
-const char* host="172.17.0.72";
+const char* host="172.17.2.127";
 
 void
 Fixture::initialize(int argc, char** argv)
