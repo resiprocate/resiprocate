@@ -811,26 +811,6 @@ class TestHolder : public Fixture
 
 //*************Sunny Day***************//       
        
-   void testInviteBasic()
-   {
-      WarningLog(<<"*!testInviteBasic!*");
-      Seq(derek->registerUser(60, derek->getDefaultContacts()),
-          derek->expect(REGISTER/CHAL, from(proxy), WaitForResponse, derek->digestRespond()),
-          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
-          WaitForEndOfSeq);
-      ExecuteSequences();
-      
-      Seq(jason->invite(*derek),
-          And(Sub(optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction()))),
-              Sub(derek->expect(INVITE, b2b(jason, proxy), WaitForCommand, chain(derek->ring(), derek->answer())),
-                  jason->expect(INVITE/180, b2b(derek, proxy), WaitFor100, jason->noAction()),
-                  jason->expect(INVITE/200, b2b(derek, proxy), WaitForResponse, jason->ack()),
-                  derek->expect(ACK, from(proxy), WaitForResponse, jason->noAction()))),
-          WaitForEndOfTest);
-      ExecuteSequences();  
-   }
-
-
    void testInviteCallerHangsUp()
    {
       WarningLog(<<"*!testInviteCallerHangsUp!*");
@@ -5622,40 +5602,6 @@ class TestHolder : public Fixture
          ExecuteSequences();
       }
 
-
-      void testBasic302()
-      {
-         WarningLog(<<"*!testBasic302!*");
-
-         Seq(jason->registerUser(60, jason->getDefaultContacts()),
-             jason->expect(REGISTER/CHAL, from(proxy), WaitForResponse, jason->digestRespond()),
-             jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
-             WaitForEndOfSeq);
-         Seq(david->registerUser(60, david->getDefaultContacts()),
-             david->expect(REGISTER/CHAL, from(proxy), WaitForResponse, david->digestRespond()),
-             david->expect(REGISTER/200, from(proxy), WaitForResponse, david->noAction()),
-             WaitForEndOfSeq);
-         ExecuteSequences();
-         
-         Seq(derek->invite(*jason),
-             optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
-             derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
-
-             And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
-                 Sub(jason->expect(INVITE, contact(derek), WaitForCommand, jason->send302()),
-                     And(Sub(jason->expect(ACK, from(proxy), WaitForResponse, jason->noAction())),
-                         Sub(derek->expect(INVITE/302, from(jason), WaitForResponse, chain(derek->ack(), derek->invite(*david))),
-                             optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
-                             derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
-                             And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
-                                 Sub(david->expect(INVITE, contact(derek), WaitForCommand, david->ok()),
-                                     derek->expect(INVITE/200, contact(david), WaitForResponse, derek->ack()),
-                                     david->expect(ACK, from(derek), WaitForCommand, david->noAction()))))))),
-             WaitForEndOfTest);
-         ExecuteSequences();  
-      }
-
-
       void testInviteNoAnswerCancel()
       {
          WarningLog(<<"*!testInviteNoAnswerCancel!*");
@@ -5744,7 +5690,7 @@ class TestHolder : public Fixture
              WaitForEndOfSeq);
          ExecuteSequences();
       }
-
+      
       class CheckRport
       {
          public:
@@ -6873,6 +6819,115 @@ class TestHolder : public Fixture
       static void createStatic()
       {
       }
+      
+      // *************************************************************************************************
+      // B2BUA tests 
+      
+      void testB2B_Registers()
+      {
+          WarningLog(<<"*!test B2B Registers!*");
+
+          Seq(david->registerUser(60, david->getDefaultContacts()),
+              david->expect(REGISTER/CHAL, from(proxy), WaitForResponse, david->digestRespond()),
+              david->expect(REGISTER/200, from(proxy), WaitForResponse, david->noAction()),
+              WaitForEndOfSeq);
+          
+          Seq(derek->registerUser(60, derek->getDefaultContacts()),
+              derek->expect(REGISTER/CHAL, from(proxy), WaitForResponse, derek->digestRespond()),
+              derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+              WaitForEndOfSeq);
+
+          Seq(jason->registerUser(60, jason->getDefaultContacts()),
+              jason->expect(REGISTER/CHAL, from(proxy), WaitForResponse, jason->digestRespond()),
+              jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+              WaitForEndOfSeq);
+          
+          ExecuteSequences();
+      }
+      
+      void testB2B_DeRegisters()
+      {
+          WarningLog(<<"*!test B2B DeRegisters!*");
+    	  
+          set<NameAddr> all;
+          
+          Seq(david->registerUser(0, all ),
+              optional(david->expect(REGISTER/CHAL,from(proxy),WaitForResponse,david->digestRespond())),
+              david->expect(REGISTER/200, from(proxy), WaitForResponse, david->noAction()),
+              WaitForEndOfTest);
+          
+          Seq(derek->registerUser(0, all ),
+              optional(derek->expect(REGISTER/CHAL,from(proxy),WaitForResponse,derek->digestRespond())),
+              derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+              WaitForEndOfTest);
+          
+          Seq(jason->registerUser(0, all ),
+              optional(jason->expect(REGISTER/CHAL,from(proxy),WaitForResponse,jason->digestRespond())),
+              jason->expect(REGISTER/200, from(proxy), WaitForResponse, jason->noAction()),
+              WaitForEndOfTest);
+          
+          ExecuteSequences();
+      }
+      
+      void testB2B_BasicCall()
+      {
+         WarningLog(<<"*!test B2B basic call!*");
+         
+         Seq(jason->invite(*derek),
+             And(Sub(optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction()))),
+                 Sub(derek->expect(INVITE, b2b(jason, proxy), WaitForCommand, chain(derek->ring(), derek->answer())),
+                     jason->expect(INVITE/180, b2b(derek, proxy), WaitFor100, jason->noAction()),
+                     jason->expect(INVITE/200, b2b(derek, proxy), WaitForResponse, jason->ack()),
+                     derek->expect(ACK, from(proxy), WaitForResponse, jason->noAction()))),
+             WaitForEndOfTest);
+         
+         ExecuteSequences();  
+      }
+      
+      /*
+      void testB2B_BasicCall_CallerHangsUp
+      {
+	      WarningLog(<<"*!testInviteCallerHangsUp!*");
+	
+	      Seq(derek->invite(*jason),
+	          optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
+	          derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
+	
+	          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+	              Sub(jason->expect(INVITE, contact(derek), WaitForCommand, chain(jason->ring(), jason->answer())),
+	                  derek->expect(INVITE/180, from(jason), WaitFor100, derek->noAction()),
+	                  derek->expect(INVITE/200, contact(jason), WaitForResponse, derek->ack()),
+	                  jason->expect(ACK, from(derek), WaitForResponse, chain(jason->pause(PauseTime), derek->bye(jason))),
+	                  jason->expect(BYE, from(derek), WaitForPause, jason->ok()),
+	                  derek->expect(BYE/200, from(jason), WaitForResponse, derek->noAction()))),
+	          WaitForEndOfTest);
+	
+	      ExecuteSequences(); 
+      }
+      */
+      
+      void testB2B_BasicRedirect()
+      {
+    	  WarningLog(<<"*!test B2B basic redirect!*");
+    	
+    	  Seq(derek->invite(*jason),
+    	      And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+                  Sub(jason->expect(INVITE, b2b(derek, proxy), WaitForCommand, jason->send302()),
+                      And(Sub(jason->expect(ACK, from(proxy), WaitForResponse, jason->noAction())),
+                          Sub(derek->expect(INVITE/302, from(proxy), WaitForResponse, derek->ack()))))),
+              WaitForEndOfSeq);
+	 
+    	  ExecuteSequences();
+	 
+    	  Seq(derek->invite(*david),
+        	  And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
+        		  Sub(david->expect(INVITE, b2b(derek,proxy), WaitForCommand, david->ok()),
+        			  derek->expect(INVITE/200, b2b(david,proxy), WaitForResponse, derek->ack()),
+        			  david->expect(ACK, from(proxy), WaitForCommand, david->noAction()))),
+        	  WaitForEndOfTest);
+    	  
+    	  ExecuteSequences();  
+      }
 };
 
 #define TEST(_method) \
@@ -7097,10 +7152,11 @@ class MyTestCase
          // user's transports.
          TEST(testInviteTransportFailure);
 #else
-//         TEST(testRegisterBasic);
-         TEST(testInviteBasic);
-//         TEST(testMultiple1);
-//         TEST(testInviteAllBusyContacts);
+         TEST(testB2B_Registers);
+         TEST(testB2B_BasicCall);
+         TEST(testB2B_BasicRedirect);
+         TEST(testB2B_DeRegisters);
+
 #endif         
          return suiteOfTests;
       }
@@ -7115,7 +7171,7 @@ int main(int argc, char** argv)
       exit(-1);
    }
 #endif
-
+ 
    initNetwork();
    try
    {
