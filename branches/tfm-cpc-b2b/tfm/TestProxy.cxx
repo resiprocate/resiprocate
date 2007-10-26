@@ -30,6 +30,8 @@ TestProxy::TestProxy(const Data& name,
    
    try //throws if only loopback is available
    {
+      Source stest(host, mPort, UDP);
+      addSource(stest);
       Source s(resip::DnsUtil::getLocalIpAddress(), mPort, UDP);
       addSource(s);
       Source s2(resip::DnsUtil::getLocalIpAddress(), mPort, TCP);
