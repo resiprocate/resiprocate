@@ -260,7 +260,7 @@ sub stat_compiler {
 
 	    if ($clo{'mkshared'}) {
 		if ($linker eq 'gnu') {
-		    $flags{'mkshared'} = "-shared -o $clo{'mkshared'} -Wl,-soname,$clo{'mkshared'}.$clo{'major'}";
+		    $flags{'mkshared'} = "-shared -o $clo{'mkshared'} -Wl";
 		} elsif ($linker eq 'sun') {
 		    $flags{'mkshared'} = "-o $clo{'mkshared'} -Wl,-G,-h,$clo{'mkshared'}.$clo{'major'}";
 		} elsif ($linker eq 'mach') {
