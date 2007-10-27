@@ -410,9 +410,15 @@ DialogSet::dispatch(const SipMessage& msg)
    {
       if (mDialogs.size() == 0)
       {
+         if (msg.isResponse())
+         {
+            if (msg.header(h_StatusLine).responseCode() / 100 == 3)
+            {
          if (mDum.mDialogEventStateManager)
          {
             mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Rejected);
+               }
+            }
          }
       }
       return;
