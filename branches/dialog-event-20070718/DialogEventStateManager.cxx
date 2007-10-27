@@ -1,7 +1,10 @@
 #include "resip/dum/DialogEventStateManager.hxx"
 #include "rutil/Random.hxx"
+#include "rutil/Logger.hxx"
 
 using namespace resip;
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
 //!dcm! -- we can optimize by time and only update what is necessary in the
 //!DialogeventInfo, or by space and only store creation and id in the map.
@@ -66,7 +69,23 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
 void
 DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& invite)
 {
-   DialogEventInfo* eventInfo = new DialogEventInfo();
+   DialogId fakeId(dialogSet.getId(), Data::Empty);
+   std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.find(fakeId);
+
+   DialogEventInfo* eventInfo = 0;
+
+   if (it != mDialogIdToEventInfo.end())
+   {
+      // .jjg. we will get in here if our INVITE gets challenged; just swallow the onTrying event in this case
+      eventInfo = it->second;
+      if (eventInfo->mState == DialogEventInfo::Trying)
+      {
+         return;
+      }
+   }
+   else
+   {
+      eventInfo = new DialogEventInfo();
    eventInfo->mDialogEventId = Random::getVersion4UuidUrn();
    eventInfo->mDialogId = DialogId(dialogSet.getId(), Data::Empty);
    eventInfo->mDirection = DialogEventInfo::Initiator;
@@ -75,6 +94,8 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
    eventInfo->mLocalIdentity = invite.header(h_From);
    eventInfo->mLocalTarget = invite.header(h_Contacts).front().uri();
    eventInfo->mRemoteIdentity = invite.header(h_To);
+   }
+
    eventInfo->mLocalSdp = std::auto_ptr<SdpContents>((SdpContents*)invite.getContents()->clone());
    eventInfo->mState = DialogEventInfo::Trying;
 
@@ -130,6 +151,8 @@ DialogEventStateManager::onEarly(const Dialog& dialog, InviteSessionHandle is)
 {
    DialogEventInfo* eventInfo = findOrCreateDialogInfo(dialog);
 
+   if (eventInfo)
+   {
    eventInfo->mState = DialogEventInfo::Early;
    eventInfo->mRouteSet = dialog.getRouteSet();
    eventInfo->mInviteSession = is;
@@ -140,12 +163,15 @@ DialogEventStateManager::onEarly(const Dialog& dialog, InviteSessionHandle is)
 
    mDialogEventHandler->onEarly(*eventInfo);
 }
+}
 
 void
 DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle is)
 {
    DialogEventInfo* eventInfo = findOrCreateDialogInfo(dialog);
 
+   if (eventInfo)
+   {
    eventInfo->mInviteSession = is;
    eventInfo->mRouteSet = dialog.getRouteSet(); // won't change due to re-INVITEs, but is
                                                 // needed for the Trying --> Confirmed transition
@@ -156,6 +182,7 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
    eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
 
    mDialogEventHandler->onConfirmed(*eventInfo);
+}
 }
 
 void
@@ -272,7 +299,12 @@ DialogEventStateManager::findOrCreateDialogInfo(const Dialog& dialog)
       }
       else
       {
-         assert(it->first.getDialogSetId() == dialog.getId().getDialogSetId());
+         // .jjg. this can happen if onTryingUax(..) wasn't called yet for this dialog (set) id
+         if (it->first.getDialogSetId() != dialog.getId().getDialogSetId())
+         {
+            DebugLog(<< "DialogSetId " << fakeId << " was not found! This indicates a bug; onTryingUax() should have been called first!");
+            return 0;
+         }
 
          // clone this fellow member dialog, initializing it with a new id and creation time 
          DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
