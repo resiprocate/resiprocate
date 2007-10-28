@@ -6,7 +6,7 @@ using namespace std;
 
 namespace reTurn {
 
-UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, unsigned short port)
+UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : TurnTransportBase(ioService),
   mSocket(ioService), //asio::ip::udp::endpoint(asio::ip::address::from_string(address), port))
   mRequestHandler(requestHandler),
@@ -15,7 +15,7 @@ UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler
   mAlternateIpPortUdpServer(0)
 {
    // Open with the option to reuse the address (i.e. SO_REUSEADDR).
-   asio::ip::udp::endpoint endpoint(asio::ip::address::from_string(address), port);
+   asio::ip::udp::endpoint endpoint(address, port);
 
    mSocket.open(endpoint.protocol());
    mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
@@ -104,10 +104,7 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
             // Try to parse stun message
             StunMessage request(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
                               StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
-                              stunMessageBuffer, stunMessageSize,
-                              mAlternatePortUdpServer ? &mAlternatePortUdpServer->getSocket() : 0,
-                              mAlternateIpUdpServer ? &mAlternateIpUdpServer->getSocket() : 0,
-                              mAlternateIpPortUdpServer ? &mAlternateIpPortUdpServer->getSocket() : 0);
+                              stunMessageBuffer, stunMessageSize);
             if(request.isValid())
             {
                StunMessage response;

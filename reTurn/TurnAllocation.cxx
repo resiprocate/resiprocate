@@ -249,7 +249,7 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, const Data& data)
    }
 
    cout << "TurnAllocation sendDataToClient: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-      mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << " channelNumber=" << remotePeer->getServerToClientChannel() << " data=" << data << endl;
+      mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << " channelNumber=" << (int)remotePeer->getServerToClientChannel() << " data=" << data << endl;
 
    if(useDataInd)
    {

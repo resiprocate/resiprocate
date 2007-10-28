@@ -16,7 +16,7 @@ class TlsServer
 {
 public:
   /// Create the server to listen on the specified TCP address and port
-  explicit TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, unsigned short port);
+  explicit TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port);
 
 private:
   /// Handle completion of an asynchronous accept operation.

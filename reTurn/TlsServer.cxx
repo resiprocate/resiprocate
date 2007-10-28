@@ -3,12 +3,11 @@
 
 namespace reTurn {
 
-TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const std::string& address, unsigned short port)
+TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
   mContext(ioService, asio::ssl::context::tlsv1),
   mConnectionManager(),
-  mNewConnection(new TlsConnection(ioService, mConnectionManager, mRequestHandler, mContext)),
   mRequestHandler(requestHandler)
 {
    // Set Context options - TODO make into configuration settings
@@ -21,16 +20,16 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    mContext.use_tmp_dh_file("dh512.pem");
 
    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-   asio::ip::tcp::endpoint endpoint(asio::ip::address::from_string(address), port);
+   asio::ip::tcp::endpoint endpoint(address, port);
 
    mAcceptor.open(endpoint.protocol());
    mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
-   std::cout << "TlsServer started.  Listening on " << address << ":" << port << std::endl;
-
+   mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
    mAcceptor.async_accept(mNewConnection->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+   std::cout << "TlsServer started.  Listening on " << address << ":" << port << std::endl;
 }
 
 std::string 

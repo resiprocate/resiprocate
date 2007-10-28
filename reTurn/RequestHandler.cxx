@@ -22,8 +22,23 @@ const char authenticationPassword[] = "1234";
 #define DEFAULT_LIFETIME 600   // 10 minutes
 #define DEFAULT_BANDWIDTH 100  // 100 kbit/s - enough for G711 RTP ?slg? what do we want this to be?
 
-RequestHandler::RequestHandler(TurnManager& turnManager) : mTurnManager(turnManager)
+RequestHandler::RequestHandler(TurnManager& turnManager,
+                               const asio::ip::address* prim3489Address, unsigned short* prim3489Port,
+                               const asio::ip::address* alt3489Address, unsigned short* alt3489Port) 
+ : mTurnManager(turnManager)
 {
+   if(prim3489Address && prim3489Port && alt3489Address && alt3489Port)
+   {
+      mRFC3489SupportEnabled = true;
+      mPrim3489Address = *prim3489Address;
+      mPrim3489Port = *prim3489Port;
+      mAlt3489Address = *alt3489Address;
+      mAlt3489Port = *alt3489Port;
+   }
+   else
+   {
+      mRFC3489SupportEnabled = false;
+   }
 }
 
 RequestHandler::ProcessResult 
@@ -140,7 +155,7 @@ RequestHandler::buildErrorResponse(StunMessage& response, unsigned short errorCo
 bool 
 RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response)
 {
-   bool verbose = true;
+   bool verbose = false;
 
    // !slg! could add here to lookup transactionId - if this is a retransmission of a previous request, then just resend last response
    // for binding requests it's OK to just re-calculate the response - just do that for now
@@ -270,47 +285,46 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
    // form the outgoing message
    response.mClass = StunMessage::StunClassSuccessResponse;
 
-   if(request.mHasMagicCookie)
+   // Add XOrMappedAddress to response - we do this even for 3489 endpoints - since some support it, others should just ignore this attribute
+   response.mHasXorMappedAddress = true;
+   response.mXorMappedAddress.port = request.mRemoteTuple.getPort();
+   if(request.mRemoteTuple.getAddress().is_v6())
    {
-      // If Magic cookie is present the add XOrMappedAddress only to response
-      response.mHasXorMappedAddress = true;
-      response.mXorMappedAddress.port = request.mRemoteTuple.getPort();
-      if(request.mRemoteTuple.getAddress().is_v6())
-      {
-         response.mXorMappedAddress.family = StunMessage::IPv6Family;  
-         memcpy(&response.mXorMappedAddress.addr.ipv6, request.mRemoteTuple.getAddress().to_v6().to_bytes().c_array(), sizeof(response.mXorMappedAddress.addr.ipv6));
-      }
-      else
-      {
-         response.mXorMappedAddress.family = StunMessage::IPv4Family;  
-         response.mXorMappedAddress.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();   
-      }
-
-      response.applyXorToAddress(response.mXorMappedAddress, response.mXorMappedAddress);
+      response.mXorMappedAddress.family = StunMessage::IPv6Family;  
+      memcpy(&response.mXorMappedAddress.addr.ipv6, request.mRemoteTuple.getAddress().to_v6().to_bytes().c_array(), sizeof(response.mXorMappedAddress.addr.ipv6));
    }
    else
+   {
+      response.mXorMappedAddress.family = StunMessage::IPv4Family;  
+      response.mXorMappedAddress.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();   
+   }
+   response.applyXorToAddress(response.mXorMappedAddress, response.mXorMappedAddress);
+
    // the following code is for RFC3489 backward compatibility
+   if(mRFC3489SupportEnabled)
    {
       asio::ip::address sendFromAddress;
       unsigned short sendFromPort;
+      asio::ip::address changeAddress = request.mLocalTuple.getAddress() == mPrim3489Address ? mAlt3489Address : mPrim3489Address;
+      unsigned short changePort = request.mLocalTuple.getPort() == mPrim3489Port ? mAlt3489Port : mPrim3489Port;
       UInt32 changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
-      if(changeRequest & StunMessage::ChangeIpFlag && changeRequest & StunMessage::ChangePortFlag && request.mAlternateIpPortSocket)
+      if(changeRequest & StunMessage::ChangeIpFlag && changeRequest & StunMessage::ChangePortFlag)
       {
          result = RespondFromAlternateIpPort;
-         sendFromAddress = request.mAlternateIpPortSocket->local_endpoint().address();
-         sendFromPort = request.mAlternateIpPortSocket->local_endpoint().port();
+         sendFromAddress = changeAddress;
+         sendFromPort = changePort;
       }
-      else if(changeRequest & StunMessage::ChangePortFlag && request.mAlternatePortSocket)
+      else if(changeRequest & StunMessage::ChangePortFlag)
       {
          result = RespondFromAlternatePort;
-         sendFromAddress = request.mAlternatePortSocket->local_endpoint().address();
-         sendFromPort = request.mAlternatePortSocket->local_endpoint().port();
+         sendFromAddress = request.mLocalTuple.getAddress();
+         sendFromPort = changePort;
       }
-      else if(changeRequest & StunMessage::ChangeIpFlag && request.mAlternateIpSocket)
+      else if(changeRequest & StunMessage::ChangeIpFlag)
       {
          result = RespondFromAlternateIp;
-         sendFromAddress = request.mAlternateIpSocket->local_endpoint().address();
-         sendFromPort = request.mAlternateIpSocket->local_endpoint().port();
+         sendFromAddress = changeAddress;
+         sendFromPort = request.mLocalTuple.getPort();
       }
       else
       {
@@ -333,91 +347,87 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
          response.mMappedAddress.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();   
       }
 
-      // Only add RFC3489 attributes if alternates were provided
-      if(request.mAlternateIpPortSocket && request.mAlternateIpSocket && request.mAlternatePortSocket) 
+      // Add source address - for RFC3489 backwards compatibility
+      response.mHasSourceAddress = true;
+      response.mSourceAddress.port = sendFromPort;
+      if(sendFromAddress.is_v6())
       {
-         // Add source address - for RFC3489 backwards compatibility
-         response.mHasSourceAddress = true;
-         response.mSourceAddress.port = sendFromPort;
-         if(sendFromAddress.is_v6())
+         response.mSourceAddress.family = StunMessage::IPv6Family;  
+         memcpy(&response.mSourceAddress.addr.ipv6, sendFromAddress.to_v6().to_bytes().c_array(), sizeof(response.mSourceAddress.addr.ipv6));
+      }
+      else
+      {
+         response.mSourceAddress.family = StunMessage::IPv4Family;
+         response.mSourceAddress.addr.ipv4 = sendFromAddress.to_v4().to_ulong();
+      }
+
+      // Add changed address - for RFC3489 backward compatibility
+      response.mHasChangedAddress = true;
+      response.mChangedAddress.port = changePort;
+      if(changeAddress.is_v6())
+      {
+         response.mChangedAddress.family = StunMessage::IPv6Family; 
+         memcpy(&response.mChangedAddress.addr.ipv6, changeAddress.to_v6().to_bytes().c_array(), sizeof(response.mChangedAddress.addr.ipv6));
+      }
+      else
+      {
+         response.mChangedAddress.family = StunMessage::IPv4Family; 
+         response.mChangedAddress.addr.ipv4 = changeAddress.to_v4().to_ulong();  
+      }
+
+      // If Response-Address is present, then response should be sent here instead of source address to be
+      // compliant with RFC3489.  In this case we need to add a REFLECTED-FROM attribute
+      if(request.mHasResponseAddress)
+      {
+         response.mRemoteTuple.setPort(request.mResponseAddress.port);
+         if(request.mResponseAddress.family == StunMessage::IPv6Family)
          {
-            response.mSourceAddress.family = StunMessage::IPv6Family;  
-            memcpy(&response.mSourceAddress.addr.ipv6, sendFromAddress.to_v6().to_bytes().c_array(), sizeof(response.mSourceAddress.addr.ipv6));
+            asio::ip::address_v6::bytes_type bytes;
+            memcpy(bytes.c_array(), &request.mResponseAddress.addr.ipv6, bytes.size());
+            asio::ip::address_v6 addr(bytes);
+            response.mRemoteTuple.setAddress(addr);
          }
          else
          {
-            response.mSourceAddress.family = StunMessage::IPv4Family;
-            response.mSourceAddress.addr.ipv4 = sendFromAddress.to_v4().to_ulong();
+            asio::ip::address_v4 addr(request.mResponseAddress.addr.ipv4);
+            response.mRemoteTuple.setAddress(addr);
          }
 
-         // Add changed address - for RFC3489 backward compatibility
-         response.mHasChangedAddress = true;
-         response.mChangedAddress.port = request.mAlternateIpPortSocket->local_endpoint().port();
-         if(request.mAlternateIpPortSocket->local_endpoint().address().is_v6())
+         // If the username is present and is greater than or equal to 92 bytes long, then we assume this username
+         // was obtained from a shared secret request
+         if (request.mHasUsername && (request.mUsername->size() >= 92 ) )
          {
-            response.mChangedAddress.family = StunMessage::IPv6Family; 
-            memcpy(&response.mChangedAddress.addr.ipv6, request.mAlternateIpPortSocket->local_endpoint().address().to_v6().to_bytes().c_array(), sizeof(response.mChangedAddress.addr.ipv6));
+            // Extract source address that sent the shared secret request from the encoded username and use this in response address
+            asio::ip::address responseAddress;
+            unsigned int responsePort;
+            request.getAddressFromUsername(responseAddress, responsePort);
+
+            response.mHasReflectedFrom = true;
+            response.mReflectedFrom.port = responsePort;  
+            if(responseAddress.is_v6())
+            {
+               response.mReflectedFrom.family = StunMessage::IPv6Family;  
+               memcpy(&response.mReflectedFrom.addr.ipv6, responseAddress.to_v6().to_bytes().c_array(), sizeof(response.mReflectedFrom.addr.ipv6));
+            }
+            else
+            {
+               response.mReflectedFrom.family = StunMessage::IPv4Family;  
+               response.mReflectedFrom.addr.ipv4 = responseAddress.to_v4().to_ulong();
+            }
          }
          else
          {
-            response.mChangedAddress.family = StunMessage::IPv4Family; 
-            response.mChangedAddress.addr.ipv4 = request.mAlternateIpPortSocket->local_endpoint().address().to_v4().to_ulong();  
-         }
-
-         // If Response-Address is present, then response should be sent here instead of source address to be
-         // compliant with RFC3489.  In this case we need to add a REFLECTED-FROM attribute
-         if(request.mHasResponseAddress)
-         {
-            response.mRemoteTuple.setPort(request.mResponseAddress.port);
-            if(request.mResponseAddress.family == StunMessage::IPv6Family)
+            response.mHasReflectedFrom = true;
+            response.mReflectedFrom.port = request.mRemoteTuple.getPort();
+            if(request.mRemoteTuple.getAddress().is_v6())
             {
-               asio::ip::address_v6::bytes_type bytes;
-               memcpy(bytes.c_array(), &request.mResponseAddress.addr.ipv6, bytes.size());
-               asio::ip::address_v6 addr(bytes);
-               response.mRemoteTuple.setAddress(addr);
+               response.mReflectedFrom.family = StunMessage::IPv6Family;  
+               memcpy(&response.mReflectedFrom.addr.ipv6, request.mRemoteTuple.getAddress().to_v6().to_bytes().c_array(), sizeof(response.mReflectedFrom.addr.ipv6));
             }
             else
             {
-               asio::ip::address_v4 addr(request.mResponseAddress.addr.ipv4);
-               response.mRemoteTuple.setAddress(addr);
-            }
-
-            // If the username is present and is greater than or equal to 92 bytes long, then we assume this username
-            // was obtained from a shared secret request
-            if (request.mHasUsername && (request.mUsername->size() >= 92 ) )
-            {
-               // Extract source address that sent the shared secret request from the encoded username and use this in response address
-               asio::ip::address responseAddress;
-               unsigned int responsePort;
-               request.getAddressFromUsername(responseAddress, responsePort);
-
-               response.mHasReflectedFrom = true;
-               response.mReflectedFrom.port = responsePort;  
-               if(responseAddress.is_v6())
-               {
-                  response.mReflectedFrom.family = StunMessage::IPv6Family;  
-                  memcpy(&response.mReflectedFrom.addr.ipv6, responseAddress.to_v6().to_bytes().c_array(), sizeof(response.mReflectedFrom.addr.ipv6));
-               }
-               else
-               {
-                  response.mReflectedFrom.family = StunMessage::IPv4Family;  
-                  response.mReflectedFrom.addr.ipv4 = responseAddress.to_v4().to_ulong();
-               }
-            }
-            else
-            {
-               response.mHasReflectedFrom = true;
-               response.mReflectedFrom.port = request.mRemoteTuple.getPort();
-               if(request.mRemoteTuple.getAddress().is_v6())
-               {
-                  response.mReflectedFrom.family = StunMessage::IPv6Family;  
-                  memcpy(&response.mReflectedFrom.addr.ipv6, request.mRemoteTuple.getAddress().to_v6().to_bytes().c_array(), sizeof(response.mReflectedFrom.addr.ipv6));
-               }
-               else
-               {
-                  response.mReflectedFrom.family = StunMessage::IPv4Family;  
-                  response.mReflectedFrom.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();
-               }
+               response.mReflectedFrom.family = StunMessage::IPv4Family;  
+               response.mReflectedFrom.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();
             }
          }
       }

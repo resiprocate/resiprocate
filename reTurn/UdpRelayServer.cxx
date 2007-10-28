@@ -36,8 +36,9 @@ UdpRelayServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTr
       for(int i = 0; i < (int)bytesTransferred; i++)
       {
          std::cout << (char)mBuffer[i] << "(" << int(mBuffer[i]) << ") ";
-      }*/
+      }
       std::cout << std::dec << std::endl;
+      */
 
       // If no permission then just drop packet
       if(mTurnAllocation.existsPermission(mSenderEndpoint.address())) 
