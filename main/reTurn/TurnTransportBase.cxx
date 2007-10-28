@@ -10,11 +10,13 @@ TurnTransportBase::DataToSend::DataToSend(unsigned char channelNumber, const Stu
          mDestination(destination), mData(length+4, Data::Preallocate) 
 {
    // Add Turn Framing
-   mData[0] = channelNumber; 
-   mData[1] = 0; 
+   char framing[4];
+   framing[0] = channelNumber; 
+   framing[1] = 0; 
    unsigned short size = htons((unsigned short)length);
-   memcpy(&mData[2], (void*)&size, 2);  // UDP doesn't need size - but shouldn't hurt to send it anyway
-   memcpy(&mData[4], data, length); 
+   memcpy(&framing[2], (void*)&size, 2);  // UDP doesn't need size - but shouldn't hurt to send it anyway
+   mData.append(framing,sizeof(framing));
+   mData.append(data, length); 
 }
 
 TurnTransportBase::TurnTransportBase(asio::io_service& ioService) : 

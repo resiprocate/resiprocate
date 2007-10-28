@@ -106,7 +106,7 @@ TcpConnection::handleReadHeader(const asio::error_code& e)
    }
    else if (e != asio::error::operation_aborted)
    {
-      std::cout << "Read header error: " << e << std::endl;
+      std::cout << "Read header error: " << e.message() << std::endl;
       mConnectionManager.stop(shared_from_this());
    }
 }
@@ -129,7 +129,7 @@ TcpConnection::handleReadBody(const asio::error_code& e)
       {
          StunMessage request(StunTuple(mTransportType, mLocalEndpoint.address(), mLocalEndpoint.port()),
                              StunTuple(mTransportType, mRemoteEndpoint.address(), mRemoteEndpoint.port()),
-                             (char*)mBuffer.c_array(), mBufferLen, 0, 0, 0);
+                             (char*)mBuffer.c_array(), mBufferLen);
          if(request.isValid())
          {
             StunMessage response;

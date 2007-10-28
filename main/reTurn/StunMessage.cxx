@@ -51,15 +51,9 @@ bool operator==(const UInt128& lhs, const UInt128& rhs)
 
 StunMessage::StunMessage(const StunTuple& localTuple,
                          const StunTuple& remoteTuple,
-                         char* buf, unsigned int bufLen,
-                         asio::ip::udp::socket* alternatePortSocket,
-                         asio::ip::udp::socket* alternateIpSocket,
-                         asio::ip::udp::socket* alternateIpPortSocket) :
+                         char* buf, unsigned int bufLen) :
    mLocalTuple(localTuple),
    mRemoteTuple(remoteTuple),   
-   mAlternatePortSocket(alternatePortSocket),
-   mAlternateIpSocket(alternateIpSocket),
-   mAlternateIpPortSocket(alternateIpPortSocket),
    mBuffer(buf, bufLen)  // !slg! copies buffer from Socket buffer assuming for now that StunMessages will persist past one request/response transaction
                          //       could make this more efficient by having the transports allocate buffer dynamically and pass ownership over
 {
@@ -69,9 +63,6 @@ StunMessage::StunMessage(const StunTuple& localTuple,
 }
 
 StunMessage::StunMessage() :
-   mAlternatePortSocket(0),
-   mAlternateIpSocket(0),
-   mAlternateIpPortSocket(0),
    mIsValid(true)
 {
    init();
