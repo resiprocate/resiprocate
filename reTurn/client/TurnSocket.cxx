@@ -262,7 +262,14 @@ TurnSocket::refreshAllocation()
    {
       // TODO - could do some validation here
       request.mHasTurnRequestedTransport = true;
-      request.mTurnRequestedTransport = mRequestedTransportType == StunTuple::UDP ? StunMessage::RequestedTransportUdp : StunMessage::RequestedTransportTcp;
+      if(mRequestedTransportType == StunTuple::UDP)
+      {
+         request.mTurnRequestedTransport = StunMessage::RequestedTransportUdp;
+      }
+      else 
+      {
+         request.mTurnRequestedTransport = StunMessage::RequestedTransportTcp;
+      }
    }
    if(mRequestedIpAddress != UnspecifiedIpAddress)
    {
@@ -315,7 +322,15 @@ TurnSocket::refreshAllocation()
    }
    if(response->mHasTurnRelayAddress)
    {
-      mRelayTuple.setTransportType(request.mHasTurnRequestedTransport ? (StunTuple::TransportType)request.mTurnRequestedTransport : mLocalBinding.getTransportType());  // Transport Type is requested type or socket type
+      // Transport Type is requested type or socket type
+      if(request.mHasTurnRequestedTransport)
+      {
+         mRelayTuple.setTransportType(request.mHasTurnRequestedTransport == StunMessage::RequestedTransportUdp ? StunTuple::UDP : StunTuple::TCP);
+      }
+      else
+      {
+         mRelayTuple.setTransportType(mLocalBinding.getTransportType());  
+      }
       mRelayTuple.setPort(response->mTurnRelayAddress.port);
       if(response->mTurnRelayAddress.family == StunMessage::IPv6Family)
       {
