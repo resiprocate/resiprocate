@@ -15,8 +15,8 @@ namespace reTurn {
 
 class TurnPermission;
 class TurnManager;
-class UdpRelayServer;
 class TurnTransportBase;
+class UdpRelayServer;
 
 class TurnAllocation
   : public TurnTransportHandler,
@@ -81,7 +81,7 @@ private:
    asio::deadline_timer mAllocationTimer;
 
    TurnTransportBase* mLocalTurnTransport;
-   UdpRelayServer* mUdpRelayServer;
+   boost::shared_ptr<UdpRelayServer> mUdpRelayServer;
 
    ChannelManager mChannelManager;
 };

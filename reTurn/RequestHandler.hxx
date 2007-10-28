@@ -52,6 +52,7 @@ private:
    asio::ip::address mAlt3489Address;
    unsigned short mAlt3489Port;
 
+   // Authentication handler
    bool handleAuthentication(StunMessage& request, StunMessage& response);
 
    // Specific request processors

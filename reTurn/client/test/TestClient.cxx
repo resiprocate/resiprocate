@@ -104,10 +104,10 @@ int main(int argc, char* argv[])
               << std::endl;
 #endif
 
-    //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000);
-    //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000, true /* disable turn framing */); port--;
-    //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000);
-    TurnTlsSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000); port++;
+    TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
+    //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0, true /* disable turn framing */); port--;
+    //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
+    //TurnTlsSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0); port++;
 
     rc = turnSocket.createAllocation(asio::ip::address::from_string(argv[1]), 
                                      port, 
@@ -162,6 +162,7 @@ int main(int argc, char* argv[])
        cout << "CLIENT: Sending: " << turnData << endl;
        turnSocket.send(turnData.c_str(), turnData.size());       
 
+       
        while((rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)) == 0)
        {
           std::cout << "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;

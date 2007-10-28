@@ -31,8 +31,7 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
    mRequestedTransport(requestedTransport),
    mTurnManager(turnManager),
    mAllocationTimer(turnManager.getIOService()),
-   mLocalTurnTransport(localTurnTransport),
-   mUdpRelayServer(0)
+   mLocalTurnTransport(localTurnTransport)
 {
    if(requestedIpAddress)
    {
@@ -44,7 +43,8 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
 
    if(mRequestedTuple.getTransportType() == StunTuple::UDP)
    {
-      mUdpRelayServer = new UdpRelayServer(turnManager.getIOService(), *this);
+      mUdpRelayServer.reset(new UdpRelayServer(turnManager.getIOService(), *this));
+      mUdpRelayServer->start();
    }
 
    // Register for Turn Transport onDestroyed notification
@@ -57,7 +57,7 @@ TurnAllocation::~TurnAllocation()
            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << endl;
 
    // Delete Relay Servers
-   if(mUdpRelayServer) delete mUdpRelayServer;
+   if(mUdpRelayServer) mUdpRelayServer->stop();
 
    // Deallocate Port
    mTurnManager.deallocatePort(mRequestedTuple.getTransportType(), mRequestedTuple.getPort());
