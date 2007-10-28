@@ -15,9 +15,26 @@ UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turn
   mTurnAllocation(turnAllocation)
 {
    std::cout << "UdpRelayServer started.  Listening on " << mTurnAllocation.mRequestedTuple.getAddress() << ":" << mTurnAllocation.mRequestedTuple.getPort() << std::endl;
+}
 
+UdpRelayServer::~UdpRelayServer()
+{
+   cout << "~UdpRelayServer - socket destroyed" << endl;
+}
+
+void 
+UdpRelayServer::start()
+{
+   // Note:  This function is required, since you cannot call shared_from_this in the constructor: shared_from_this requires that at least one shared ptr exists already
    mSocket.async_receive_from(asio::buffer(mBuffer), mSenderEndpoint,
-      boost::bind(&UdpRelayServer::handleReceiveFrom, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+      boost::bind(&UdpRelayServer::handleReceiveFrom, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+}
+
+void 
+UdpRelayServer::stop()
+{
+   mSocket.close();
+   mStopping = true;
 }
 
 asio::ip::udp::socket& 
@@ -29,6 +46,10 @@ UdpRelayServer::getSocket()
 void 
 UdpRelayServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransferred)
 {
+   if(mStopping)
+   {
+      return;
+   }
    if (!e && bytesTransferred > 0)
    {      
       std::cout << "Read " << (int)bytesTransferred << " bytes from udp relay socket (" << mSenderEndpoint.address().to_string() << ":" << mSenderEndpoint.port() << "): " << std::hex << std::endl;
@@ -52,7 +73,7 @@ UdpRelayServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTr
    if(e != asio::error::operation_aborted)
    {
       mSocket.async_receive_from(asio::buffer(mBuffer), mSenderEndpoint,
-         boost::bind(&UdpRelayServer::handleReceiveFrom, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+         boost::bind(&UdpRelayServer::handleReceiveFrom, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
    }
 }
 
@@ -63,7 +84,7 @@ UdpRelayServer::sendData(const StunTuple& destination, const char* buffer, unsig
 
    mSocket.async_send_to(asio::buffer(buffer, size), 
                                  asio::ip::udp::endpoint(destination.getAddress(), destination.getPort()), 
-                                 boost::bind(&TurnTransportBase::handleSendData, this, asio::placeholders::error));
+                                 boost::bind(&TurnTransportBase::handleSendData, shared_from_this(), asio::placeholders::error));
 }
 
 }

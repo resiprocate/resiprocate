@@ -45,6 +45,10 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
       if(sendRequest)
       {
          // Send request to Turn Server
+         if(requestsSent > 0)
+         {
+            cout << "TurnSocket: retranmitting request..." << endl;
+         }
          requestsSent++;
          errorCode = rawWrite(mWriteBuffer, writesize);
          if(errorCode != 0)
@@ -738,7 +742,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             // Mismatched channel number
             std::cout << "Channel number received in DataInd (" << (int)stunMessage.mTurnChannelNumber << ") does not match existing number for RemotePeer (" << (int)remotePeer->getServerToClientChannel() << ")." << std::endl;
             return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::misc_ecat);
-          }
+         }
 
          remotePeer->setServerToClientChannel(stunMessage.mTurnChannelNumber);
          remotePeer->setServerToClientChannelConfirmed();
@@ -828,6 +832,11 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          }
 
          remotePeer->setClientToServerChannelConfirmed();
+         size = 0;
+      }
+      else if(stunMessage.mClass == StunMessage::StunClassSuccessResponse || stunMessage.mClass == StunMessage::StunClassSuccessResponse)
+      {
+         // Received a stray or response retranmission - ignore
          size = 0;
       }
       else

@@ -38,7 +38,7 @@ TlsConnection::start()
    mRemoteEndpoint = mTlsSocket.lowest_layer().remote_endpoint();
 
    mTlsSocket.async_handshake(asio::ssl::stream_base::server, 
-                              boost::bind(&TlsConnection::handleHandshake, this, asio::placeholders::error));  // !slg! using this instead of shared_from_this()
+                              boost::bind(&TlsConnection::handleWrite, shared_from_this(), asio::placeholders::error));  // Note: handleWrite does what we want after handshake completes
 }
 
 void
@@ -71,25 +71,10 @@ TlsConnection::stop()
 }
 
 void 
-TlsConnection::handleHandshake(const asio::error_code& e)
-{
-   std::cout << "TlsConnection: handleHandshake, e=" << e.message() << std::endl;
-
-   if(!e)
-   {
-      readHeader();
-   }
-   else if (e != asio::error::operation_aborted)
-   {
-      mConnectionManager.stop(shared_from_this());
-   }
-}
-
-void 
 TlsConnection::sendData(const StunTuple& destination, const char* buffer, unsigned int size)
 {
    async_write(mTlsSocket, asio::buffer(buffer, size),  
-               boost::bind(&TurnTransportBase::handleSendData, this, asio::placeholders::error));  // !slg! using this instead of shared_from_this()
+               boost::bind(&TlsConnection::handleSendData, shared_from_this(), asio::placeholders::error));  
 }
 
 } 
