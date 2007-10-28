@@ -4,6 +4,7 @@
 #include <asio.hpp>
 #include <string>
 #include <boost/noncopyable.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include "RequestHandler.hxx"
 #include "TurnTransportBase.hxx"
 
@@ -13,11 +14,18 @@ class StunTuple;
 
 class UdpRelayServer
   : public TurnTransportBase, 
+    public boost::enable_shared_from_this<UdpRelayServer>,
     private boost::noncopyable
 {
 public:
    /// Create the server to listen on the specified UDP address and port
    explicit UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation);
+   ~UdpRelayServer();
+
+   /// Starts processing
+   void start();
+   /// Causes this object to destroy itself safely (ie. waiting for ayncronous callbacks to finish)
+   void stop();
 
    /// Returns the socket for this server
    asio::ip::udp::socket& getSocket();
@@ -38,10 +46,13 @@ private:
    asio::ip::udp::endpoint mSenderEndpoint;
 
    TurnAllocation& mTurnAllocation;
+   bool mStopping;
 
    /// Buffer for incoming data.
    boost::array<unsigned char, 8192> mBuffer;
 };
+
+typedef boost::shared_ptr<UdpRelayServer> UdpRelayServerPtr;
 
 }
 

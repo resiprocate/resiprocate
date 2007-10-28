@@ -194,7 +194,7 @@ void
 TcpConnection::sendData(const StunTuple& destination, const char* buffer, unsigned int size)
 {
    async_write(mSocket, asio::buffer(buffer, size),  
-               boost::bind(&TurnTransportBase::handleSendData, this, asio::placeholders::error));  // !slg! note:  not using shared_from_this()
+               boost::bind(&TcpConnection::handleSendData, shared_from_this(), asio::placeholders::error));  
 }
 
 } 
