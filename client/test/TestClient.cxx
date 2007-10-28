@@ -6,6 +6,7 @@
 #include <string>
 #include <asio.hpp>
 #include <asio/ssl.hpp>
+#include <rutil/ThreadIf.hxx>
 
 #include "../../StunTuple.hxx"
 #include "../../StunMessage.hxx"
@@ -17,6 +18,54 @@ using namespace reTurn;
 using namespace std;
 
 #define NO_AUTHENTICATION
+
+// Simple UDP Echo Server
+class TurnPeer : public resip::ThreadIf
+{
+public:
+   TurnPeer() {}
+
+   virtual ~TurnPeer() {}
+
+   virtual void thread()
+   {
+      asio::error_code rc;
+      TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 2000);
+
+      char buffer[1024];
+      unsigned int size = sizeof(buffer);
+      asio::ip::address sourceAddress;
+      unsigned short sourcePort;
+      bool activeDestSet = false;
+
+      // Receive Data
+      rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort);
+      while((rc == 0 || rc == asio::error::operation_aborted) && !isShutdown())
+      {
+         if(rc == 0)
+         {
+            if(!activeDestSet)
+            {
+               turnSocket.setActiveDestination(sourceAddress, sourcePort);
+               activeDestSet = true;
+            }
+            std::cout << "PEER: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
+            turnSocket.send(buffer, size);
+         }
+         size = sizeof(buffer);
+         rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort);
+      }
+
+      if(rc != 0)
+      {
+         if(rc != asio::error::operation_aborted)
+         {
+            std::cout << "PEER: Receive error: " << rc.message() << std::endl;
+         }
+      }
+   }
+private:
+};
 
 int main(int argc, char* argv[])
 {
@@ -32,6 +81,8 @@ int main(int argc, char* argv[])
     asio::error_code rc;
     char username[256] = "";
     char password[256] = "";
+    TurnPeer turnPeer;
+    turnPeer.run();
 
 #ifndef NO_AUTHENTICATION
     {  // Connect via TLS, get SharedSecret, and disconnect
@@ -44,19 +95,19 @@ int main(int argc, char* argv[])
 
     if(rc != 0)
     {
-       std::cout << "Error getting shared secret: rc=" << rc.value() << std::endl;
+       std::cout << "Error getting shared secret: rc=" << rc..message() << std::endl;
        return 1;
     }
 
-    std::cout << "SharedSecret obtained:  Username=" << username 
+    std::cout << "CLIENT: SharedSecret obtained:  Username=" << username 
               << " Password=" << password
               << std::endl;
 #endif
 
     //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000);
     //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000, true /* disable turn framing */); port--;
-    TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000);
-    //TurnTlsSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000); port++;
+    //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000);
+    TurnTlsSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 40000); port++;
 
     rc = turnSocket.createAllocation(asio::ip::address::from_string(argv[1]), 
                                      port, 
@@ -64,14 +115,16 @@ int main(int argc, char* argv[])
                                      password, 
                                      TurnSocket::UnspecifiedLifetime, 
                                      TurnSocket::UnspecifiedBandwidth, 
-                                     StunMessage::PortPropsEvenPair);
+                                     StunMessage::PortPropsEvenPair,
+                                     TurnSocket::UnspecifiedPort,
+                                     StunTuple::UDP);
     if(rc != 0)
     {
-       std::cout << "Error creating allocation: rc=" << rc.value() << std::endl;
+       std::cout << "CLIENT: Error creating allocation: rc=" << rc.message() << std::endl;
     }
     else
     {
-       std::cout << "Allocation Successful!  Relay=" << turnSocket.getRelayTuple() 
+       std::cout << "CLIENT: Allocation Successful!  Relay=" << turnSocket.getRelayTuple() 
                  << " Reflexive=" << turnSocket.getReflexiveTuple() 
                  << " Lifetime=" << turnSocket.getLifetime() 
                  << " Bandwidth=" << turnSocket.getBandwidth() 
@@ -83,48 +136,50 @@ int main(int argc, char* argv[])
        unsigned short sourcePort;
 
        resip::Data turnData("This test is for wrapped Turn Data!");
-       cout << "Sending: " << turnData << endl;
+       cout << "CLIENT: Sending: " << turnData << endl;
        turnSocket.sendTo(asio::ip::address::from_string("127.0.0.1"), 2000, turnData.c_str(), turnData.size());
 
        turnData = "This test should be framed in TCP/TLS but not in UDP - since ChannelConfirmed is not yet received.";
-       cout << "Sending: " << turnData << endl;
+       cout << "CLIENT: Sending: " << turnData << endl;
        turnSocket.setActiveDestination(asio::ip::address::from_string("127.0.0.1"), 2000);
        turnSocket.send(turnData.c_str(), turnData.size());
       
        // Receive Data
-       if((rc=turnSocket.receive(buffer, size, 10000, &sourceAddress, &sourcePort)) == 0)
+       while((rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)) == 0)
        {
-          std::cout << "Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
-          turnSocket.send(buffer, size);
+          std::cout << "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
           size = sizeof(buffer);
        }
-       else
+       if(rc != 0)
        {
           if(rc != asio::error::operation_aborted)
           {
-            std::cout << "Receive error: " << rc << std::endl;
+            std::cout << "CLIENT: Receive error: " << rc.message() << std::endl;
           }          
        }
+
        turnData = "This test is for framed turn data!";
-       cout << "Sending: " << turnData << endl;
+       cout << "CLIENT: Sending: " << turnData << endl;
        turnSocket.send(turnData.c_str(), turnData.size());       
 
-       if((rc=turnSocket.receive(buffer, size, 10000, &sourceAddress, &sourcePort)) == 0)
+       while((rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)) == 0)
        {
-          std::cout << "Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
-          turnSocket.send(buffer, size);
+          std::cout << "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
           size = sizeof(buffer);
        }
-       else
+       if(rc != 0)
        {
           if(rc != asio::error::operation_aborted)
           {
-             std::cout << "Receive error: " << rc << std::endl;
+             std::cout << "CLIENT: Receive error: " << rc.message() << std::endl;
           }
        }
       
        turnSocket.destroyAllocation();
     }
+
+    turnPeer.shutdown();
+    turnPeer.join();
   }
   catch (std::exception& e)
   {

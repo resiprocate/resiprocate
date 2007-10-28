@@ -16,7 +16,9 @@ class RequestHandler
   : private boost::noncopyable
 {
 public:
-   explicit RequestHandler(TurnManager& turnManager);
+   explicit RequestHandler(TurnManager& turnManager, 
+                           const asio::ip::address* prim3489Address = 0, unsigned short* prim3489Port = 0,
+                           const asio::ip::address* alt3489Address = 0, unsigned short* alt3489Port = 0);
 
    typedef enum
    {
@@ -42,6 +44,13 @@ public:
 private:
 
    TurnManager& mTurnManager;
+
+   // RFC3489 Server List
+   bool mRFC3489SupportEnabled;
+   asio::ip::address mPrim3489Address;
+   unsigned short mPrim3489Port;
+   asio::ip::address mAlt3489Address;
+   unsigned short mAlt3489Port;
 
    bool handleAuthentication(StunMessage& request, StunMessage& response);
 
