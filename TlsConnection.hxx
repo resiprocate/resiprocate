@@ -43,14 +43,12 @@ public:
   virtual void sendData(const StunTuple& destination, const char* buffer, unsigned int size);
 
 private:
-  /// Handle completion of a ssl handshake
-  virtual void handleHandshake(const asio::error_code& e);
 
   /// Socket for the connection.
   ssl_socket mTlsSocket;
 };
 
-typedef boost::shared_ptr<TlsConnection> TlsConnectionPtr;
+typedef boost::shared_ptr<TcpConnection> TlsConnectionPtr;
 
 }
 

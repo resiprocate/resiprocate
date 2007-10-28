@@ -63,7 +63,6 @@ General TODO
 - Ability for Server to accept both long term credentials
 - Check for unknown attributes
 - if server receives SendInd with no Data attribute (for UDP only), send empty UDP packet, TCP - do nothing
-- Shared Secret Re-Transmissions when receiving duplicate request, must return exact same response (need to store/cache in server)
 - Standardize on a logging interface
 - from chart above
  - Configuration Framework

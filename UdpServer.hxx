@@ -26,6 +26,8 @@ public:
    /// Returns the socket for this server
    asio::ip::udp::socket& getSocket();
 
+   void cleanupResponseMap(const asio::error_code& e, UInt128 tid);
+
    virtual void sendData(const StunTuple& destination, const char* buffer, unsigned int size);
 
 private:
@@ -51,6 +53,20 @@ private:
 
    /// Buffer for incoming data.
    boost::array<unsigned char, 8192> mBuffer;
+
+   // Response map (for retransmissions)
+   class ResponseEntry
+   {
+   public:
+      ResponseEntry(UdpServer* udpServer, asio::ip::udp::socket* responseSocket, StunMessage* responseMessage);
+      ~ResponseEntry();
+
+      asio::ip::udp::socket* mResponseSocket;
+      StunMessage* mResponseMessage;
+      asio::deadline_timer mCleanupTimer;
+   };
+   typedef std::map<UInt128, ResponseEntry*> ResponseMap;
+   ResponseMap mResponseMap;
 };
 
 }
