@@ -26,12 +26,8 @@ class StunMessage
 public:
    explicit StunMessage(const StunTuple& localTuple,
                         const StunTuple& remoteTuple,
-                        char* buf, unsigned int bufLen,
-                        asio::ip::udp::socket* alternatePortSocket = 0,    // Currently these are just here so that the Request handler can 
-                        asio::ip::udp::socket* alternateIpSocket = 0,      // access them - could just pass to the request handler when it is 
-                        asio::ip::udp::socket* alternateIpPortSocket = 0); // created, then using the localTuple of the StunMessage it would 
-                                                                           // need to figure out the correct alternates
-                                                                           // Note: These are used for RFC3489 backwards compatibility support
+                        char* buf, unsigned int bufLen);
+
    explicit StunMessage();
 
    StunMessage(const StunMessage& message);
@@ -229,9 +225,6 @@ public:
    bool mHasMagicCookie;  // Set to true if stun magic cookie is in message header
    StunTuple mLocalTuple;  // Local address and port that received stun message
    StunTuple mRemoteTuple; // Remote address and port that send stun message
-   asio::ip::udp::socket* mAlternatePortSocket;   // for RFC3489 backwards compatibility - NAT Type detection
-   asio::ip::udp::socket* mAlternateIpSocket;     // for RFC3489 backwards compatibility - NAT Type detection
-   asio::ip::udp::socket* mAlternateIpPortSocket; // for RFC3489 backwards compatibility - NAT Type detection
    resip::Data mBuffer;
    resip::Data mHmacKey;
 

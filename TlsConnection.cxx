@@ -67,13 +67,13 @@ TlsConnection::stop()
 {
   asio::error_code ec;
   mTlsSocket.shutdown(ec);
-  std::cout << "TlsConnection shutdown, e=" << ec << std::endl;
+  std::cout << "TlsConnection shutdown, e=" << ec.message() << std::endl;
 }
 
 void 
 TlsConnection::handleHandshake(const asio::error_code& e)
 {
-   std::cout << "TlsConnection: handleHandshake, e=" << e << std::endl;
+   std::cout << "TlsConnection: handleHandshake, e=" << e.message() << std::endl;
 
    if(!e)
    {

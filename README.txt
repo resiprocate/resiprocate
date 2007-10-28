@@ -33,7 +33,7 @@ Feature                                Implemented  Tested  Notes
 Configuration Framework                no           no      Currently just uses a few command line parameters and hardcoded settings
 RFC3489 support                        yes          mostly  
 Multi-threaded Server                  no           no      Once Turn code is implemented consider asio threading model and provide locking
-TLS Server Support                     yes          yes     TLS server is working but first connect on program start always fails - need to tweak openSSL settings
+TLS Server Support                     yes          yes     need to tweak openSSL cipher suite settings
 RFC3489 bis 11 message parsing         yes          partly
 IPV6 message parsing support           yes          no 
 Shared Secret with Short Term Cred     yes          yes     Checking username for expirey and correct HMAC is not completed
@@ -51,7 +51,6 @@ Asyncronous Client APIs                no           no
 General TODO
 -------------
 - Complete Turn Implementation - TCP/TLS relay - Implement Connect Request and Connect Status Indication
-- Troubleshoot why first TLS connection on server fails, but subsequent succeeds
 - optimize server data copying - especially for TURN DATA forwarding
 - optimize client data copying when receiving data
 - reduce library use - remove BOOST requirement - remove ASIO for client??
