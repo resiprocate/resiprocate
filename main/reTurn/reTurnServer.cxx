@@ -58,12 +58,13 @@ int main(int argc, char* argv[])
     // Initialize server.
     asio::io_service ioService;                       // The one and only ioService for the stunServer
     reTurn::TurnManager turnManager(ioService);         // The one and only Turn Manager
-    reTurn::RequestHandler requestHandler(turnManager); // The one and only RequestHandler
 
-    unsigned int turnPort = resip::Data(argv[2]).convertUnsignedLong();
-    unsigned int stunPort = resip::Data(argv[3]).convertUnsignedLong();
-    unsigned int altStunPort = resip::Data(argv[5]).convertUnsignedLong();
-    unsigned int tlsPort = turnPort + 1;
+    unsigned short turnPort = (unsigned short)resip::Data(argv[2]).convertUnsignedLong();
+    unsigned short stunPort = (unsigned short)resip::Data(argv[3]).convertUnsignedLong();
+    unsigned short altStunPort = (unsigned short)resip::Data(argv[5]).convertUnsignedLong();
+    unsigned short tlsPort = turnPort + 1;
+    asio::ip::address turnAddress = asio::ip::address::from_string(argv[1]);
+    asio::ip::address altStunAddress = asio::ip::address::from_string(argv[4]);
 
     reTurn::UdpServer* udpTurnServer=0;
     reTurn::TcpServer* tcpTurnServer=0;
@@ -73,19 +74,22 @@ int main(int argc, char* argv[])
     reTurn::UdpServer* a2p1StunUdpServer=0;
     reTurn::UdpServer* a2p2StunUdpServer=0;
 
+    // The one and only RequestHandler - if stun port is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
+    reTurn::RequestHandler requestHandler(turnManager, stunPort != 0 ? &turnAddress : 0, stunPort != 0 ? &turnPort : 0, stunPort != 0 ? &altStunAddress : 0, stunPort != 0 ? &altStunPort : 0); 
+
     if(turnPort != 0)
     {
-       udpTurnServer = new reTurn::UdpServer(ioService, requestHandler, argv[1], turnPort);
-       tcpTurnServer = new reTurn::TcpServer(ioService, requestHandler, argv[1], turnPort);
-       tlsTurnServer = new reTurn::TlsServer(ioService, requestHandler, argv[1], tlsPort);
+       udpTurnServer = new reTurn::UdpServer(ioService, requestHandler, turnAddress, turnPort);
+       tcpTurnServer = new reTurn::TcpServer(ioService, requestHandler, turnAddress, turnPort);
+       tlsTurnServer = new reTurn::TlsServer(ioService, requestHandler, turnAddress, tlsPort);
     }
 
-    if(stunPort != 0)
+    if(stunPort != 0)  // if stun port is non-zero, then assume RFC3489 support is enabled
     {
-       a1p1StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, argv[1], stunPort);
-       a1p2StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, argv[1], altStunPort);
-       a2p1StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, argv[4], stunPort);
-       a2p2StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, argv[4], altStunPort);
+       a1p1StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, turnAddress, stunPort);
+       a1p2StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, turnAddress, altStunPort);
+       a2p1StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, altStunAddress, stunPort);
+       a2p2StunUdpServer = new reTurn::UdpServer(ioService, requestHandler, altStunAddress, altStunPort);
        a1p1StunUdpServer->setAlternateUdpServers(a1p2StunUdpServer, a2p1StunUdpServer, a2p2StunUdpServer);
        a1p2StunUdpServer->setAlternateUdpServers(a1p1StunUdpServer, a2p2StunUdpServer, a2p1StunUdpServer);
        a2p1StunUdpServer->setAlternateUdpServers(a2p2StunUdpServer, a1p1StunUdpServer, a1p2StunUdpServer);
