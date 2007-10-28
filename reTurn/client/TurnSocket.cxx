@@ -258,11 +258,11 @@ TurnSocket::refreshAllocation()
       request.mHasTurnBandwidth = true;
       request.mTurnBandwidth = mRequestedBandwidth;
    }
-   if(mRequestedTransportType != StunTuple::None)
+   if(mRequestedTransportType != StunTuple::None && mRequestedTransportType != StunTuple::TLS)
    {
       // TODO - could do some validation here
       request.mHasTurnRequestedTransport = true;
-      request.mTurnRequestedTransport = mRequestedTransportType;
+      request.mTurnRequestedTransport = mRequestedTransportType == StunTuple::UDP ? StunMessage::RequestedTransportUdp : StunMessage::RequestedTransportTcp;
    }
    if(mRequestedIpAddress != UnspecifiedIpAddress)
    {
@@ -415,7 +415,8 @@ TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned shor
    // ensure there is an allocation
    if(!mHaveAllocation)
    {
-      return asio::error_code(reTurn::NoAllocation, asio::misc_ecat); 
+      // Connect socket to active Destination so that raw socket operations can be used
+      return connect(address, port);
    }
 
    // Setup Remote Peer 
@@ -579,9 +580,9 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
       }
 
       // Check Channel
-      if(size > 4 && mReadBuffer[0] > 0) // We have received Turn Data
+      if(readSize > 4 && mReadBuffer[0] > 0) // We have received Turn Data
       {
-         RemotePeer* remotePeer = mChannelManager.findRemotePeerByServerToClientChannel(buffer[0]);
+         RemotePeer* remotePeer = mChannelManager.findRemotePeerByServerToClientChannel(mReadBuffer[0]);
          if(remotePeer)
          {
             UInt16 dataLen;
@@ -602,9 +603,10 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
          {
             // Invalid ServerToClient Channel - teardown?
             errorCode = asio::error_code(reTurn::InvalidChannelNumberReceived, asio::misc_ecat);  
+            done = true;
          }
       }
-      else if(size > 4 && mReadBuffer[0] == 0)  // We have received a Stun/Turn Message
+      else if(readSize > 4 && mReadBuffer[0] == 0)  // We have received a Stun/Turn Message
       {
          // StunMessage
          StunMessage* stunMsg = new StunMessage(mLocalBinding, mTurnServer, &mReadBuffer[4], readSize-4);
@@ -622,7 +624,8 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
       else
       {
          // Less data than frame size received
-         errorCode = asio::error_code(reTurn::FrameError, asio::misc_ecat);  
+         errorCode = asio::error_code(reTurn::FrameError, asio::misc_ecat);
+         done = true;
       }
    }
    return errorCode;
@@ -838,7 +841,7 @@ TurnSocket::startReadTimer(unsigned int timeout)
 void 
 TurnSocket::handleRawRead(const asio::error_code& errorCode, size_t bytesRead)
 {
-   //clog << "handleRawRead: errorCode=" << errorCode << ", bytes=" << bytesRead << endl;
+   //clog << "handleRawRead: errorCode=" << errorCode.message() << ", bytes=" << bytesRead << endl;
    mBytesRead = bytesRead;
    mReadErrorCode = errorCode;
    mReadTimer.cancel();
@@ -847,7 +850,7 @@ TurnSocket::handleRawRead(const asio::error_code& errorCode, size_t bytesRead)
 void 
 TurnSocket::handleRawReadTimeout(const asio::error_code& errorCode)
 {
-   //clog << "handleRawReadTimeout: errorCode=" << errorCode << endl;
+   //clog << "handleRawReadTimeout: errorCode=" << errorCode.message() << endl;
    if(errorCode == 0)
    {
       cancelSocket();
