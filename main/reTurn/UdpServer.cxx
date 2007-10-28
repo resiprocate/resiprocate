@@ -107,47 +107,62 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
                               stunMessageBuffer, stunMessageSize);
             if(request.isValid())
             {
-               StunMessage response;
+               StunMessage* response;
                asio::ip::udp::socket* responseSocket;
-               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
+               ResponseMap::iterator it = mResponseMap.find(request.mHeader.magicCookieAndTid);
+               if(it == mResponseMap.end())
+               {
+                  response = new StunMessage;
+                  RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, *response);
 
-               switch(result)
-               {
-               case RequestHandler::NoResponseToSend:
-                  // No response to send - just receive next message
-                  mSocket.async_receive_from(asio::buffer(mBuffer), 
-                                             mSenderEndpoint,
-                                             boost::bind(&UdpServer::handleReceiveFrom, 
-                                                         this, 
-                                                         asio::placeholders::error, 
-                                                         asio::placeholders::bytes_transferred));  
-                  return;
-               case RequestHandler::RespondFromAlternatePort:
-                  responseSocket = &mAlternatePortUdpServer->getSocket();
-                  break;
-               case RequestHandler::RespondFromAlternateIp:
-                  responseSocket = &mAlternateIpUdpServer->getSocket();
-                  break;
-               case RequestHandler::RespondFromAlternateIpPort:
-                  responseSocket = &mAlternateIpPortUdpServer->getSocket();
-                  break;
-               case RequestHandler::RespondFromReceiving:
-               default:
-                  responseSocket = &mSocket;            
-                  break;
-               }
-               unsigned int size;
-               if(this->isRFC3489BackwardsCompatServer())
-               {
-                  size = response.stunEncodeMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+                  switch(result)
+                  {
+                  case RequestHandler::NoResponseToSend:
+                     // No response to send - just receive next message
+                     delete response;
+                     mSocket.async_receive_from(asio::buffer(mBuffer), 
+                                                mSenderEndpoint,
+                                                boost::bind(&UdpServer::handleReceiveFrom, 
+                                                            this, 
+                                                            asio::placeholders::error, 
+                                                            asio::placeholders::bytes_transferred));  
+                     return;
+                  case RequestHandler::RespondFromAlternatePort:
+                     responseSocket = &mAlternatePortUdpServer->getSocket();
+                     break;
+                  case RequestHandler::RespondFromAlternateIp:
+                     responseSocket = &mAlternateIpUdpServer->getSocket();
+                     break;
+                  case RequestHandler::RespondFromAlternateIpPort:
+                     responseSocket = &mAlternateIpPortUdpServer->getSocket();
+                     break;
+                  case RequestHandler::RespondFromReceiving:
+                  default:
+                     responseSocket = &mSocket;            
+                     break;
+                  }
+
+                  // Store response in Map - to be resent if a retranmission is received
+                  mResponseMap[response->mHeader.magicCookieAndTid] = new ResponseEntry(this, responseSocket, response);
                }
                else
                {
-                  size = response.stunEncodeFramedMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+                  std::cout << "UdpServer: received retransmission of request with tid: " << request.mHeader.magicCookieAndTid << std::endl;
+                  response = it->second->mResponseMessage;
+                  responseSocket = it->second->mResponseSocket;
                }
-   
-               responseSocket->async_send_to(asio::buffer(mBuffer, size), 
-                                             asio::ip::udp::endpoint(response.mRemoteTuple.getAddress(), response.mRemoteTuple.getPort()), 
+               unsigned int responseSize;
+               if(isRFC3489BackwardsCompatServer())
+               {
+                  responseSize = response->stunEncodeMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+               }
+               else
+               {
+                  responseSize = response->stunEncodeFramedMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+               }
+
+               responseSocket->async_send_to(asio::buffer(mBuffer, responseSize), 
+                                             asio::ip::udp::endpoint(response->mRemoteTuple.getAddress(), response->mRemoteTuple.getPort()), 
                                              boost::bind(&UdpServer::handleSendTo, 
                                                          this, 
                                                          asio::placeholders::error, 
@@ -191,6 +206,33 @@ UdpServer::handleSendTo(const asio::error_code& error, std::size_t bytesTransfer
 {
    mSocket.async_receive_from(asio::buffer(mBuffer), mSenderEndpoint,
       boost::bind(&UdpServer::handleReceiveFrom, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+}
+
+UdpServer::ResponseEntry::ResponseEntry(UdpServer* udpServer, asio::ip::udp::socket* responseSocket, StunMessage* responseMessage) :
+   mResponseSocket(responseSocket),
+   mResponseMessage(responseMessage),
+   mCleanupTimer(udpServer->mIOService)
+{
+   // start timer
+   mCleanupTimer.expires_from_now(boost::posix_time::seconds(10));  // Transaction Responses are cahced for 10 seconds
+   mCleanupTimer.async_wait(boost::bind(&UdpServer::cleanupResponseMap, udpServer, asio::placeholders::error, responseMessage->mHeader.magicCookieAndTid));
+}
+
+UdpServer::ResponseEntry::~ResponseEntry() 
+{ 
+   delete mResponseMessage; 
+}
+
+void 
+UdpServer::cleanupResponseMap(const asio::error_code& e, UInt128 tid)
+{
+   ResponseMap::iterator it = mResponseMap.find(tid);
+   if(it != mResponseMap.end())
+   {
+      cout << "UdpServer::cleanupResponseMap - removing transaction id=" << tid << endl;
+      delete it->second;
+      mResponseMap.erase(it);
+   }
 }
 
 }
