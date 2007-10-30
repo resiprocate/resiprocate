@@ -4,6 +4,7 @@
 #include "resip/stack/Connection.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/SecurityTypes.hxx"
+#include "resip/stack/Security.hxx"
 
 #ifdef USE_SSL
 #include <openssl/ssl.h>
@@ -17,6 +18,7 @@ namespace resip
 
 class Tuple;
 class Security;
+
 
 class TlsConnection : public Connection
 {
@@ -35,10 +37,12 @@ class TlsConnection : public Connection
       virtual bool hasDataToRead(); // has data that can be read 
       virtual bool isGood(); // has valid connection
       virtual bool isWritable();
+
+      virtual bool transportWrite();
       
-      const std::list<Data>& getPeerNames() const;
+      void getPeerNames(std::list<Data> & peerNames) const;
       
-      typedef enum TlsState { Broken, Accepting, Connecting, Handshaking, Up } TlsState;
+      typedef enum TlsState { Initial, Broken, Handshaking, Up } TlsState;
       static const char * fromState(TlsState);
    
    private:
@@ -52,10 +56,11 @@ class TlsConnection : public Connection
       Data mDomain;
       
       TlsState mTlsState;
+      bool mHandShakeWantsRead;
 
       SSL* mSsl;
       BIO* mBio;
-      std::list<Data> mPeerNames;
+      std::list<BaseSecurity::PeerName> mPeerNames;
 };
  
 }
