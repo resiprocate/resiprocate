@@ -36,6 +36,8 @@ class Symbols
       static const char* ZERO;
       static const char* LPAREN;
       static const char* RPAREN;
+      static const char* LS_BRACKET;
+      static const char* RS_BRACKET;
       static const char* PERIOD;
       static const char* QUESTION;
       static const char* AMPERSAND;
