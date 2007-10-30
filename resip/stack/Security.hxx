@@ -3,6 +3,7 @@
 
 #include <map>
 #include <vector>
+#include <list>
 
 #include "rutil/Socket.hxx"
 #include "rutil/BaseException.hxx"
@@ -49,6 +50,21 @@ class BaseSecurity
             Data cipherList() const { return mCipherList; }
          private:
             Data mCipherList;
+      };
+
+      public:
+
+      typedef enum 
+      {
+         SubjectAltName,
+         CommonName
+      }NameType;
+
+      struct PeerName
+      {
+         NameType mType;
+         Data mName;
+         PeerName(NameType type, Data name): mType(type), mName(name){}
       };
       
       static CipherList ExportableSuite;
@@ -139,17 +155,18 @@ class BaseSecurity
       // returns NULL if fails. returns the data that was originally signed
       Contents* checkSignature( MultipartSignedContents*, 
                                 Data* signedBy, SignatureStatus* sigStat );
+      // returns the first SubjectAltName or commonName, if subjectAltName does not exist
+      static Data getCertName(X509 *cert);
 
-      //returns SubjectAltName or commonName, if subjectAltName does not exist
-      Data getCertName(X509 *cert);
+      // retrieves a list of all certificate names (subjectAltNAme's and CommonName)
+      static void getCertNames(X509 *cert, std::list<PeerName> &peerNames);
 
-      //compares (with wildcards) the hostname with the
-      //subjectAltName/commonName from the 'cert' certificate
-      bool compareCertName(X509 *cert, const Data& hostname);
+      static bool isSelfSigned(const X509* cert);
 
-      bool isSelfSigned(X509* cert);
+      // match with wildcards
+      static int matchHostName(const Data& certificateName, const Data& domainName);
 
-      // allow particular classes to acces the fucntions below 
+      // allow particular classes to acces the functions below 
       // friend class TlsConnection;
    public:
       SSL_CTX*       getTlsCtx ();

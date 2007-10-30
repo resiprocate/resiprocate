@@ -48,6 +48,7 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       /// has valid connection
       virtual bool isGood(); 
       virtual bool isWritable();
+      virtual bool transportWrite(){return false;}
 
       /// queue data to write and add this to writable list
       void requestWrite(SendData* sendData);

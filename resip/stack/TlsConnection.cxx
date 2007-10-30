@@ -104,7 +104,8 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    
    SSL_set_bio( mSsl, mBio, mBio );
 
-   mTlsState = mServer ? Accepting : Connecting;
+   mTlsState = Initial;
+   mHandShakeWantsRead = false;
 
 #endif // USE_SSL   
 }
@@ -123,10 +124,9 @@ TlsConnection::fromState(TlsConnection::TlsState s)
 {
    switch(s)
    {
+      case Initial: return "Initial"; break;
       case Handshaking: return "Handshaking"; break;
-      case Accepting: return "Accepting"; break;
       case Broken: return "Broken"; break;
-      case Connecting: return "Connecting"; break;
       case Up: return "Up"; break;
    }
    return "????";
@@ -146,135 +146,103 @@ TlsConnection::checkState()
    int ok=0;
    
    ERR_clear_error();
-   
-   if (mTlsState != Handshaking)
+
+   if(mTlsState != Handshaking)
    {
-      if (mTlsState == Accepting)
+      if (mServer)
       {
-         ok = SSL_accept(mSsl);
+         InfoLog( << "TLS handshake starting (Server mode)" ); 
+         SSL_set_accept_state(mSsl);
+         mTlsState = Handshaking;
       }
       else
       {
-         ok = SSL_connect(mSsl);
+         InfoLog( << "TLS handshake starting (client mode)" ); 
+         SSL_set_connect_state(mSsl);
+         mTlsState = Handshaking;
          //StackLog( << "TLS SSL_connect - state = " << fromTlsState(mTlsState) );
       }
-
-      if ( ok <= 0 )
-      {
-         int err = SSL_get_error(mSsl,ok);
-         char buf[256];
-         ERR_error_string_n(err,buf,sizeof(buf));
-//          StackLog( << "TLS error in " 
-//                    << (char*)( (mTlsState == Accepting) ? (char*)"accept" : (char*)"connect" )
-//                    << " ok=" << ok << " err=" << err << " " << buf );
-          
-         switch (err)
-         {
-            case SSL_ERROR_WANT_READ:
-               //StackLog( << "TLS connection want read" );
-               return mTlsState;
-            case SSL_ERROR_WANT_WRITE:
-               //StackLog( << "TLS connection want write" );
-               return mTlsState;
-            case SSL_ERROR_WANT_CONNECT:
-               //StackLog( << "TLS connection want connect" );
-               return mTlsState;
-#if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
-            case SSL_ERROR_WANT_ACCEPT:
-               //StackLog( << "TLS connection want accept" );
-               return mTlsState;
-#endif
-         }
-	   
-         ErrLog( << "TLS connection failed "
-                 << "ok=" << ok << " err=" << err << " " << buf );
-         
-         switch (err)
-         {
-            case SSL_ERROR_NONE: 
-               ErrLog( <<" (SSL Error none)" );
-               break;
-            case SSL_ERROR_SSL: 
-               ErrLog( <<" (SSL Error ssl)" );
-               break;
-            case SSL_ERROR_WANT_READ: 
-               ErrLog( <<" (SSL Error want read)" ); 
-               break;
-            case SSL_ERROR_WANT_WRITE: 
-               ErrLog( <<" (SSL Error want write)" ); 
-               break;
-            case SSL_ERROR_WANT_X509_LOOKUP: 
-               ErrLog( <<" (SSL Error want x509 lookup)" ); 
-               break;
-            case SSL_ERROR_SYSCALL: 
-               ErrLog( <<" (SSL Error want syscall)" ); 
-               ErrLog( <<"Error may be because trying ssl connection to tls server" ); 
-               break;
-            case SSL_ERROR_WANT_CONNECT: 
-               ErrLog( <<" (SSL Error want connect)" ); 
-               break;
-#if ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
-            case SSL_ERROR_WANT_ACCEPT: 
-               ErrLog( <<" (SSL Error want accept)" ); 
-               break;
-#endif
-         }
-         while (true)
-         {
-            const char* file;
-            int line;
-            
-            unsigned long code = ERR_get_error_line(&file,&line);
-            if ( code == 0 )
-            {
-               break;
-            }
-            
-            char buf[256];
-            ERR_error_string_n(code,buf,sizeof(buf));
-            ErrLog( << buf  );
-            ErrLog( << "Error code = " 
-                     << code << " file=" << file << " line=" << line );
-         }
-         
-         mTlsState = Broken;
-         mBio = 0;
-         //.dcm. -- may not be correct
-         mFailureReason = TransportFailure::CertValidationFailure;
-         ErrLog (<< "Couldn't TLS connect");
-         return mTlsState;
-      }
-      
-      InfoLog( << "TLS connected" ); 
-      mTlsState = Handshaking;
    }
 
-   InfoLog( << "TLS handshake starting" ); 
-
+   mHandShakeWantsRead = false;
    ok = SSL_do_handshake(mSsl);
       
    if ( ok <= 0 )
    {
       int err = SSL_get_error(mSsl,ok);
-      char buf[256];
-      ERR_error_string_n(err,buf,sizeof(buf));
-         
+
       switch (err)
       {
          case SSL_ERROR_WANT_READ:
             StackLog( << "TLS handshake want read" );
+            mHandShakeWantsRead = true;
             return mTlsState;
+
          case SSL_ERROR_WANT_WRITE:
             StackLog( << "TLS handshake want write" );
+            ensureWritable();
             return mTlsState;
+
+         case SSL_ERROR_ZERO_RETURN:
+            StackLog( << "TLS connection closed cleanly");
+            return mTlsState;
+
+         case SSL_ERROR_WANT_CONNECT:
+            StackLog( << "BIO not connected, try later");
+            return mTlsState;
+
+#if  ( OPENSSL_VERSION_NUMBER >= 0x0090702fL )
+         case SSL_ERROR_WANT_ACCEPT:
+            StackLog( << "TLS connection want accept" );
+            return mTlsState;
+#endif
+
+         case SSL_ERROR_WANT_X509_LOOKUP:
+            StackLog( << "Try later");
+            return mTlsState;
+
          default:
-            ErrLog( << "TLS handshake failed "
-                    << "ok=" << ok << " err=" << err << " " << buf );
+            if(err == SSL_ERROR_SYSCALL)
+            {
+               switch(getErrno()) 
+               {
+                  case EINTR:
+                  case EAGAIN:
+                     StackLog( << "try later");
+                     return mTlsState;
+               }
+               ErrLog( << "socket error " << getErrno());
+            }
+            else if (err == SSL_ERROR_SSL)
+            {
+               mFailureReason = TransportFailure::CertValidationFailure;
+            }
+            ErrLog( << "TLS handshake failed ");
+            while (true)
+            {
+               const char* file;
+               int line;
+               
+               unsigned long code = ERR_get_error_line(&file,&line);
+               if ( code == 0 )
+               {
+                  break;
+               }
+               
+               char buf[256];
+               ERR_error_string_n(code,buf,sizeof(buf));
+               ErrLog( << buf  );
+               ErrLog( << "Error code = " 
+                        << code << " file=" << file << " line=" << line );
+            }
             mBio = NULL;
             mTlsState = Broken;
-            mFailureReason = TransportFailure::CertValidationFailure;         
             return mTlsState;
       }
+   }
+   else // ok > 1
+   {
+      InfoLog( << "TLS connected" ); 
    }
 
    // force peer name to get checked and perhaps cert loaded
@@ -284,18 +252,31 @@ TlsConnection::checkState()
    if (!mServer)
    {
       bool matches = false;
-      for(std::list<Data>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+      for(std::list<BaseSecurity::PeerName>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
       {
-         if(isEqualNoCase(*it, who().getTargetDomain()))
+         if(it->mType == BaseSecurity::CommonName)
          {
-             matches=true;
-             break;
+            //allow wildcard match for subdomain name (RFC 2459)
+            if(BaseSecurity::matchHostName(it->mName, who().getTargetDomain()))
+            {
+               matches=true;
+               break;
+            }
+         }
+         else //it->mType == SubjectAltName
+         {
+            //no wildcards for SubjectAltName 
+            if(isEqualNoCase(it->mName, who().getTargetDomain()))
+            {
+               matches=true;
+               break;
+            }
          }
       }
       if(!matches)
       {
          mTlsState = Broken;
-         mBio = 0;
+         mBio = NULL;
          ErrLog (<< "Certificate name mismatch: trying to connect to <" 
                  << who().getTargetDomain()
                  << "> remote cert domain(s) are <" 
@@ -307,8 +288,10 @@ TlsConnection::checkState()
 
    InfoLog( << "TLS handshake done for peer " << getPeerNamesData()); 
    mTlsState = Up;
-   ensureWritable();
-   
+   if (!mOutstandingSends.empty())
+   {
+      ensureWritable();
+   }
 #endif // USE_SSL   
    return mTlsState;
 }
@@ -395,6 +378,32 @@ TlsConnection::read(char* buf, int count )
    return -1;
 }
 
+bool 
+TlsConnection::transportWrite()
+{
+   switch(mTlsState)
+   {
+      case Handshaking:
+      case Initial:
+         checkState();
+         if (mTlsState == Handshaking)
+         {
+            DebugLog(<< "Transportwrite--Handshaking--remove from write: " << mHandShakeWantsRead);
+            return mHandShakeWantsRead;         
+         }
+         else
+         {
+            DebugLog(<< "Transportwrite--Handshake complete, in " << fromState(mTlsState) << " calling write");
+            return false;
+         }
+      case Up:
+      case Broken:     
+         DebugLog(<< "Transportwrite--" << fromState(mTlsState) << " fall through to write");
+         return false;
+   }
+   assert(0);
+   return false;
+}
 
 int 
 TlsConnection::write( const char* buf, int count )
@@ -476,6 +485,10 @@ bool
 TlsConnection::hasDataToRead() // has data that can be read 
 {
 #if defined(USE_SSL)
+   //hack (for now)
+   if(mTlsState == Initial)
+      return false;
+
    if (checkState() != Up)
    {
       return false;
@@ -513,33 +526,41 @@ bool
 TlsConnection::isWritable() 
 {
 #if defined(USE_SSL)
-   if (checkState() == Up && isGood())
+   switch(mTlsState)
    {
-      return true;
+      case Handshaking:
+         return mHandShakeWantsRead ? false : true;
+      case Initial:
+      case Up:
+         return isGood();
+      default:
+         return false;
    }
 #endif 
    return false;
 }
 
-const std::list<Data>&
-TlsConnection::getPeerNames() const
+void TlsConnection::getPeerNames(std::list<Data> &peerNames) const
 {
-   return mPeerNames;
+   for(std::list<BaseSecurity::PeerName>::const_iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+   {
+      peerNames.push_back(it->mName);
+   }
 }
 
 Data
 TlsConnection::getPeerNamesData() const
 {
    Data peerNamesString;
-   for(std::list<Data>::const_iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+   for(std::list<BaseSecurity::PeerName>::const_iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
    {
       if(it == mPeerNames.begin())
       {
-         peerNamesString += *it;
+         peerNamesString += it->mName;
       }
       else
       {
-         peerNamesString += ", " + *it;
+         peerNamesString += ", " + it->mName;
       }
    }
    return peerNamesString;
@@ -584,110 +605,23 @@ TlsConnection::computePeerName()
       return;
    }
 
-   // look at the Common Name to find the peerName of the cert 
-   X509_NAME* subject = X509_get_subject_name(cert);
-   assert(subject);
-   int i =-1;
-   while( true )
-   {
-      i = X509_NAME_get_index_by_NID(subject, NID_commonName,i);
-      if ( i == -1 )
-      {
-         break;
-      }
-      assert( i != -1 );
-      X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
-      assert( entry );
-      
-      ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
-      assert( s );
-      
-      int t = M_ASN1_STRING_type(s);
-      int l = M_ASN1_STRING_length(s);
-      unsigned char* d = M_ASN1_STRING_data(s);
-      Data name(d,l);
-      DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
-      assert( name.size() == (unsigned)l );
-      
-      DebugLog( << "Found common name in cert of " << name );
-      
-      commonName = name;
-   }
-
-#if 0  // junk code to print certificates extentions for debugging 
-   int numExt = X509_get_ext_count(cert);
-   ErrLog(<< "Got peer certificate with " << numExt << " extentions" );
-
-   for ( int i=0; i<numExt; i++ )
-   {
-      X509_EXTENSION* ext = X509_get_ext(cert,i);
-      assert( ext );
-      
-      const char* str = OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
-      assert(str);
-      DebugLog(<< "Got certificate extention" << str );
-
-      if  ( OBJ_obj2nid(X509_EXTENSION_get_object(ext)) == NID_subject_alt_name )
-      {   
-         DebugLog(<< "Got subjectAltName extention" );
-      }
-   }
-#endif 
-
-   // Look at the SubjectAltName, and if found, set as peerName
-   GENERAL_NAMES* gens;
-   gens = (GENERAL_NAMES*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
-   for(int i = 0; i < sk_GENERAL_NAME_num(gens); i++)
-   {  
-      GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
-
-      DebugLog(<< "subjectAltName of cert contains type <" << gen->type << ">" );
-
-      if (gen->type == GEN_DNS)
-      {
-         ASN1_IA5STRING* asn = gen->d.dNSName;
-         Data dns(asn->data, asn->length);
-         mPeerNames.push_back(dns);
-         InfoLog(<< "subjectAltName of TLS session cert contains DNS <" << dns << ">" );
-      }
-          
-      if (gen->type == GEN_EMAIL)
-      {
-         DebugLog(<< "subjectAltName of cert has EMAIL type" );
-      }
-          
-      if(gen->type == GEN_URI) 
-      {
-         ASN1_IA5STRING* asn = gen->d.uniformResourceIdentifier;
-         Uri uri(Data(asn->data, asn->length));
-         try
-         {
-             mPeerNames.push_back(uri.host());
-             InfoLog(<< "subjectAltName of TLS session cert contains URI <" << uri << ">" );
-         }
-         catch (...)
-         {
-             InfoLog(<< "subjectAltName of TLS session cert contains unparseable URI");
-         }
-      }
-   }
-   sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
-
-   // If there are no peer names from the subjectAltName, then use the commonName
+   mPeerNames.clear();
+   BaseSecurity::getCertNames(cert, mPeerNames);
    if(mPeerNames.empty())
    {
-       mPeerNames.push_back(commonName);
+      ErrLog(<< "Invalid certificate: no subjectAltName/CommonName found");
+      return;
    }
 
    // add the certificate to the Security store
    unsigned char* buf = NULL;
    int len = i2d_X509( cert, &buf );
    Data derCert( buf, len );
-   for(std::list<Data>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
+   for(std::list<BaseSecurity::PeerName>::iterator it = mPeerNames.begin(); it != mPeerNames.end(); it++)
    {
-      if ( !mSecurity->hasDomainCert( *it ) )
+      if ( !mSecurity->hasDomainCert( it->mName ) )
       {
-         mSecurity->addDomainCertDER(*it,derCert);
+         mSecurity->addDomainCertDER(it->mName,derCert);
       }
    }
    OPENSSL_free(buf); buf=NULL;

@@ -2321,87 +2321,169 @@ BaseSecurity::getSslCtx ()
    return   mSslCtx;
 }
 
+void 
+BaseSecurity::getCertNames(X509 *cert, std::list<PeerName> &peerNames) 
+{
+   if(NULL == cert)
+      return;
+
+   if(peerNames.size() > 0)
+      peerNames.clear();
+
+   Data commonName;
+
+   // look at the Common Name to find the peerName of the cert 
+   X509_NAME* subject = X509_get_subject_name(cert);
+   if(NULL == subject)
+   {
+      ErrLog( << "Invalid certificate: subject not found ");
+      return;
+   }
+
+   int i =-1;
+   while( true )
+   {
+      i = X509_NAME_get_index_by_NID(subject, NID_commonName,i);
+      if ( i == -1 )
+      {
+         break;
+      }
+      assert( i != -1 );
+      X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
+      assert( entry );
+      
+      ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
+      assert( s );
+      
+      int t = M_ASN1_STRING_type(s);
+      int l = M_ASN1_STRING_length(s);
+      unsigned char* d = M_ASN1_STRING_data(s);
+      Data name(d,l);
+      DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
+      assert( name.size() == (unsigned)l );
+      
+      DebugLog( << "Found common name in cert of " << name );
+      
+      commonName = name;
+   }
+
+#if 0  // junk code to print certificates extentions for debugging 
+   int numExt = X509_get_ext_count(cert);
+   ErrLog(<< "Got peer certificate with " << numExt << " extentions" );
+
+   for ( int i=0; i<numExt; i++ )
+   {
+      X509_EXTENSION* ext = X509_get_ext(cert,i);
+      assert( ext );
+      
+      const char* str = OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
+      assert(str);
+      DebugLog(<< "Got certificate extention" << str );
+
+      if  ( OBJ_obj2nid(X509_EXTENSION_get_object(ext)) == NID_subject_alt_name )
+      {   
+         DebugLog(<< "Got subjectAltName extention" );
+      }
+   }
+#endif 
+
+   // Look at the SubjectAltName, and if found, set as peerName
+   GENERAL_NAMES* gens;
+   gens = (GENERAL_NAMES*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+   for(int i = 0; i < sk_GENERAL_NAME_num(gens); i++)
+   {  
+      GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
+
+      DebugLog(<< "subjectAltName of cert contains type <" << gen->type << ">" );
+
+      if (gen->type == GEN_DNS)
+      {
+         ASN1_IA5STRING* asn = gen->d.dNSName;
+         Data dns(asn->data, asn->length);
+         PeerName peerName(SubjectAltName, dns);
+         peerNames.push_back(peerName);
+         InfoLog(<< "subjectAltName of TLS session cert contains DNS <" << dns << ">" );
+      }
+          
+      if (gen->type == GEN_EMAIL)
+      {
+         DebugLog(<< "subjectAltName of cert has EMAIL type" );
+      }
+          
+      if(gen->type == GEN_URI) 
+      {
+         ASN1_IA5STRING* asn = gen->d.uniformResourceIdentifier;
+         Uri uri(Data(asn->data, asn->length));
+         try
+         {
+             PeerName peerName(SubjectAltName, uri.host());
+             peerNames.push_back(peerName);
+             InfoLog(<< "subjectAltName of TLS session cert contains URI <" << uri << ">" );
+         }
+         catch (...)
+         {
+             InfoLog(<< "subjectAltName of TLS session cert contains unparseable URI");
+         }
+      }
+   }
+   sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+
+   // If there are no peer names from the subjectAltName, then use the commonName
+   if(peerNames.empty())
+   {
+      PeerName peerName(CommonName, commonName);
+      peerNames.push_back(peerName);
+   }
+}
+
 Data 
 BaseSecurity::getCertName(X509 *cert)
 {
-    X509_NAME *subj;
-    int       extcount;
+   Data certName;
+   std::list<PeerName> cNames;
 
-    assert(cert);
+   //get all the names (subjectAltName or CommonName)
+   getCertNames(cert, cNames);
 
-    if ((extcount = X509_get_ext_count(cert)) > 0)
-    {
-        for (int i = 0;  i < extcount;  i++)
-        {
-            char              *extstr;
-            X509_EXTENSION    *ext;
- 
-            ext = X509_get_ext(cert, i);
-            extstr = (char*) OBJ_nid2sn(OBJ_obj2nid(X509_EXTENSION_get_object(ext)));
- 
-            if (!strcmp(extstr, "subjectAltName"))
-            {
-                int                  j;
+   //prefere the subjectAltName
+   for(std::list<PeerName>::const_iterator it = cNames.begin(); it != cNames.end(); it++)
+   {
+      if(it->mType == SubjectAltName)
+      {
+         return it->mName;
+      }
+   }
 
-#if (OPENSSL_VERSION_NUMBER < 0x0090800fL )
-                unsigned char *data;
-#else
-                unsigned const char  *data;
-#endif
-
-                STACK_OF(CONF_VALUE) *val;
-                CONF_VALUE           *nval;
-                X509V3_EXT_METHOD    *meth;
-                void                 *ext_str = NULL;
- 
-                if (!(meth = X509V3_EXT_get(ext)))
-                    break;
-                data = ext->value->data;
-
-#if (OPENSSL_VERSION_NUMBER > 0x00907000L)
-                if (meth->it)
-                  ext_str = ASN1_item_d2i(NULL, &data, ext->value->length,
-                                          ASN1_ITEM_ptr(meth->it));
-                else
-                  ext_str = meth->d2i(NULL, &data, ext->value->length);
-#else
-                ext_str = meth->d2i(NULL, &data, ext->value->length);
-#endif
-                val = meth->i2v(meth, ext_str, NULL);
-                for (j = 0;  j < sk_CONF_VALUE_num(val);  j++)
-                {
-                    nval = sk_CONF_VALUE_value(val, j);
-                    if (!strcmp(nval->name, "DNS"))
-                    {
-                        //retrieve name, from nval->value                        
-                        return Data(nval->value);
-                    }
-                }
-            }
-        }
-    }
- 
-    char cname[256];
-    memset(cname, 0, sizeof cname);
-
-    if ((subj = X509_get_subject_name(cert)) &&
-        X509_NAME_get_text_by_NID(subj, NID_commonName, cname, sizeof(cname)-1) > 0)
-    {        
-        return Data(cname);
-    }
-
-    ErrLog(<< "This certificate doesn't have neither subjectAltName nor commonName");
-    return Data::Empty;
+   //if not subjectAltName found, get the CommonName
+   for(std::list<PeerName>::const_iterator it = cNames.begin(); it != cNames.end(); it++)
+   {
+      if(it->mType == CommonName)
+      {
+         return it->mName;
+      }
+   }
+   ErrLog(<< "This certificate doesn't have neither subjectAltName nor commonName");
+   return Data::Empty;
 }
+
 /**
    Matchtes subjectAltName and cnames 
    @todo    looks incomplete, make better
 */
-static int 
-matchHostName(char *certName, const char *domainName)
+int 
+BaseSecurity::matchHostName(const Data& certificateName, const Data& domainName)
 {
-   const char *dot;
-   dot = strchr(domainName, '.');
+   const char *dot = NULL;
+
+   const char *certName = certificateName.c_str();
+   if(certName == NULL)
+      return 0;
+
+   const char *domName = domainName.c_str();
+   if(domName == NULL)
+      return 0;
+
+   dot = strchr(domName, '.');
    if (dot == NULL)
    {
       char *pnt = strchr(certName, '.');
@@ -2415,33 +2497,15 @@ matchHostName(char *certName, const char *domainName)
    {
       if (strncmp(certName, "*.", 2) == 0) 
       {
-         domainName = dot + 1;
+         domName = dot + 1;
          certName += 2;
       }
    }
-   return !strcasecmp(certName, domainName);
-}
-
-bool 
-BaseSecurity::compareCertName(X509 *cert, const Data& domainName)
-{
-   assert(cert);
-
-   Data certName = getCertName(cert);
-   if(Data::Empty == certName)
-   {
-      InfoLog (<< "No cert name to match against " << domainName);
-      return false;
-   }
-
-   DebugLog (<< "Matching " << certName << " cert against " << domainName);
-   bool isMatching = matchHostName((char*)certName.c_str(), domainName.c_str()) ? true : false;
-
-   return isMatching;
+   return !strcasecmp(certName, domName);
 }
 
 bool
-BaseSecurity::isSelfSigned(X509 *cert)
+BaseSecurity::isSelfSigned(const X509 *cert)
 {
    int iRet = X509_NAME_cmp(cert->cert_info->issuer, cert->cert_info->subject);
    return (iRet == 0);
