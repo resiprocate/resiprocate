@@ -1,0 +1,79 @@
+#!/usr/bin/make -f
+#
+# based on the sample debian/rules file for debhelper
+
+# get dpatch
+include /usr/share/dpatch/dpatch.make
+
+# Uncomment this to turn on verbose mode
+#export DH_VERBOSE=1
+
+build: build-stamp
+build-stamp: patch
+	dh_testdir
+
+	$(CURDIR)/configure -y --with-toolchain=gnu --with-compile-type=debug --with-cross-compiler-dir="" --disable-shared-libs --disable-distcc --disable-dtls --enable-ssl --enable-popt --disable-curl --disable-google-malloc --disable-google-cpuperf --disable-ipv6  --prefix="/usr"
+	$(MAKE) all 
+
+	touch build-stamp
+
+clean: clean-patched unpatch
+clean-patched:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	-$(MAKE) clean
+	-$(MAKE) distclean
+
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	# Add here commands to install the package into debian/<packagename>
+	$(MAKE) DESTDIR=$(CURDIR)/debian/tmp install-repro
+	install -D $(CURDIR)/repro/doc/repro.8 $(CURDIR)/debian/tmp/usr/share/man/man8/repro.8
+	install -D $(CURDIR)/repro/etc/repro.conf $(CURDIR)/debian/tmp/etc/repro.conf
+	gzip $(CURDIR)/debian/tmp/usr/share/man/man8/repro.8
+	
+	dh_install
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_installexamples
+	dh_install
+#	dh_installmenu
+#	dh_installdebconf	
+#	dh_installlogrotate
+#	dh_installemacsen
+#	dh_installcatalogs
+#	dh_installpam
+#	dh_installmime
+	dh_installinit
+#	dh_installcron
+#	dh_installinfo
+#	dh_undocumented
+	dh_installman
+	dh_link
+#	dh_strip
+	dh_compress
+	dh_fixperms
+#	dh_perl
+#	dh_python
+#	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install
