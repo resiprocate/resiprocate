@@ -1,0 +1,165 @@
+# This makefile can be called by VS.NET 2003 nmake, after all of the resiprocate libraries (SSL-Debug) have already been compiled via the GUI 
+
+CFLAGS=/Od /I "../../" /I "../../../" /I "../../../contrib/OpenSSL/include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "USE_ARES" /D "USE_IPV6" /D "USE_SSL" /D "_MBCS" /Gm /EHsc /RTC1 /MDd /GS /GR /W3 /c /Wp64 /Zi /TP
+RESIPLIBS=..\..\..\rutil\SSL-Debug\rutil.lib ..\SSL-Debug\resiprocate.lib
+LFLAGS=/INCREMENTAL /NOLOGO /DEBUG /PDB:"test.pdb" /SUBSYSTEM:CONSOLE /MACHINE:X86 Ws2_32.lib Iphlpapi.lib Dnsapi.lib crypt32.lib "..\..\..\contrib\openssl\lib\vc\libeay32.lib" "..\..\..\contrib\openssl\lib\vc\ssleay32.lib" kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(RESIPLIBS)
+
+all: \
+	testSupport.obj \
+	sipTortureTests.obj sipTortureTests.exe \
+	limpc.obj limpc.exe \
+	test503Generator.obj test503Generator.exe \
+	testAppTimer.obj testAppTimer.exe \
+	testApplicationSip.obj testApplicationSip.exe \
+	testClient.obj testClient.exe \
+ 	testConnectionBase.obj testConnectionBase.exe \
+ 	testCorruption.obj testCorruption.exe \
+	testDigestAuthentication.obj testDigestAuthentication.exe \
+	testDigestAuthentication2.obj testDigestAuthentication2.exe \
+	testDns.obj testDns.exe \
+        testDnsStub.obj testDnsStub.exe \
+#	testDtlsTransport.obj testDtlsTransport.exe \
+	testEmbedded.obj testEmbedded.exe \
+	testEmptyHeader.obj testEmptyHeader.exe \
+        testEmptyHfv.obj testEmptyHfv.exe \
+	testExternalLogger.obj testExternalLogger.exe \
+	testFlowId.obj testFlowId.exe \
+	testIM.obj testIM.exe \
+	testLockStep.obj testLockStep.exe \
+	testMessageWaiting.obj testMessageWaiting.exe \
+	testMultipartMixedContents.obj testMultipartMixedContents.exe \
+	testMultipartRelated.obj testMultipartRelated.exe \
+	testParserCategories.obj testParserCategories.exe \
+	testPidf.obj testPidf.exe \
+	testPksc7.obj testPksc7.exe \
+	testPlainContents.obj testPlainContents.exe \
+	testRSP-2.obj testRSP-2.exe \
+	testResponses.obj testResponses.exe \
+	testRlmi.obj testRlmi.exe \
+	testSdp.obj testSdp.exe \
+        testSecurity.obj testSecurity.exe \
+	testSelect.obj testSelect.exe \
+	testSelectInterruptor.obj testSelectInterruptor.exe \
+	testServer.obj testServer.exe \
+	testSipFrag.obj testSipFrag.exe \
+	testSipMessage.obj testSipMessage.exe \
+	testSipMessageMemory.obj testSipMessageMemory.exe \
+	testSipStack1.obj testSipStack1.exe \
+	testStack.obj testStack.exe \
+	testTcp.obj testTcp.exe \
+	testTime.obj testTime.exe \
+	testTimer.obj testTimer.exe \
+#	testTransactionFSM.obj testTransactionFSM.exe \
+	testTuple.obj testTuple.exe \
+#	testTypedef.obj testTypedef.exe \
+	testUdp.obj testUdp.exe \
+	testUri.obj testUri.exe \
+	testXMLCursor.obj testXMLCursor.exe \
+	RFC4475TortureTests.obj RFC4475TortureTests.exe \
+	run
+
+
+.cxx.obj:
+	cl $(CFLAGS) $<
+
+.obj.exe:
+	link /out:$@ $< TestSupport.obj $(LFLAGS)	
+
+run: 
+#	sipTortureTests.exe
+#	test503Generator.exe
+	testAppTimer.exe
+	testApplicationSip.exe
+	testConnectionBase.exe
+        testDns.exe
+        testDnsStub.exe
+	testCorruption.exe
+	testDigestAuthentication.exe
+#	testDigestAuthentication2.exe
+	testEmbedded.exe
+	testEmptyHeader.exe
+        testEmptyHfv.exe
+	testExternalLogger.exe
+#	testFlowId.exe
+	testIM.exe
+#	testLockStep.exe
+	testMessageWaiting.exe
+	testMultipartMixedContents.exe
+	testMultipartRelated.exe
+	testParserCategories.exe
+	testPidf.exe
+	testPksc7.exe
+	testPlainContents.exe
+#	testResponses.exe
+	testRlmi.exe
+	testSdp.exe
+        testSecurity.exe
+	testSelectInterruptor.exe
+	testSipFrag.exe
+	testSipMessage.exe
+	testSipMessageMemory.exe
+	testStack.exe
+	testTcp.exe
+	testTime.exe
+	testTimer.exe	
+	testTuple.exe
+#	testUdp.exe
+	testUri.exe
+	testXmlCursor.exe
+	RFC4475TortureTests.exe
+
+clean:
+	@del *.exe
+        @del *.obj
+	@del *.ilk
+
+##############################################################################
+# 
+# The Vovida Software License, Version 1.0 
+# Copyright (c) 2000-2007 Vovida Networks, Inc.  All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 
+# 3. The names "VOCAL", "Vovida Open Communication Application Library",
+#    and "Vovida Open Communication Application Library (VOCAL)" must
+#    not be used to endorse or promote products derived from this
+#    software without prior written permission. For written
+#    permission, please contact vocal@vovida.org.
+# 
+# 4. Products derived from this software may not be called "VOCAL", nor
+#    may "VOCAL" appear in their name, without prior written
+#    permission of Vovida Networks, Inc.
+# 
+# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+# NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+# NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+# IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+# DAMAGE.
+# 
+# ====================================================================
+# 
+# This software consists of voluntary contributions made by Vovida
+# Networks, Inc. and many individuals on behalf of Vovida Networks,
+# Inc.  For more information on Vovida Networks, Inc., please see
+# <http://www.vovida.org/>.
+# 
+##############################################################################
+
