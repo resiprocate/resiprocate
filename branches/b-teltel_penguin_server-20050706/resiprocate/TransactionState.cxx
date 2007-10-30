@@ -167,8 +167,9 @@ TransactionState::process(TransactionController& controller)
             state->processServerStale(message);
             break;
          default:
+	    // don't know why it enters this state, just discard message
             CritLog(<<"internal state error: " << state->mMachine);
-            assert(0);
+	    delete message;
             return;
       }
    }
