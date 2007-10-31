@@ -1,4 +1,4 @@
-#/bin/csh
+#!/bin/csh
 
 foreach nm ( ` cat hosts.txt ` )
         echo $nm
