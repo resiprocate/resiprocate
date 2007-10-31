@@ -67,7 +67,7 @@ Connection::performWrite()
    if(transportWrite())
    {
       assert(mInWritable);
-      getConnectionManager().removeFromWritable();
+      getConnectionManager().removeFromWritable(this);
       mInWritable = false;
       return;
    }
@@ -142,7 +142,7 @@ Connection::performWrite()
          if (mOutstandingSends.empty())
          {
             assert(mInWritable);
-            getConnectionManager().removeFromWritable();
+            getConnectionManager().removeFromWritable(this);
             mInWritable = false;
          }
       }
