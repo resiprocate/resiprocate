@@ -22,12 +22,30 @@ TurnUdpSocket::TurnUdpSocket(const asio::ip::address& address, unsigned short po
 }
 
 asio::error_code 
-TurnUdpSocket::connect(const asio::ip::address& address, unsigned short port)
+TurnUdpSocket::connect(const std::string& address, unsigned short port)
 {
    asio::error_code errorCode;
+
+   // Get a list of endpoints corresponding to the server name.
+   asio::ip::udp::resolver resolver(mIOService);
+   resip::Data service(port);
+   asio::ip::udp::resolver::query query(address, service.c_str());   
+   asio::ip::udp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+   asio::ip::udp::resolver::iterator end;
+
+   // Use first endpoint in list
+   if(endpoint_iterator == end)
+   {
+      return asio::error::host_not_found;
+   }
+   
    // Nothing to do for UDP except store the remote endpoint
-   mRemoteEndpoint.address(address);
-   mRemoteEndpoint.port(port);
+   mRemoteEndpoint = endpoint_iterator->endpoint();
+
+   mConnectedTuple.setTransportType(StunTuple::UDP);
+   mConnectedTuple.setAddress(mRemoteEndpoint.address());
+   mConnectedTuple.setPort(mRemoteEndpoint.port());
+
    return errorCode;
 }
 
@@ -67,20 +85,19 @@ TurnUdpSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
 }
 
 asio::error_code 
-TurnUdpSocket::rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+TurnUdpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    startReadTimer(timeout);
 
    if(mTurnFramingDisabled)
    {
       // If Turn Framing is disabled - fake that framing came from socket
-      assert(size > 4);
-      memset(buffer, 0, 4);  // set first four bytes (framing) to all 0's, first byte of 0 = stun/turn channel
-      mSocket.async_receive_from(asio::buffer(&buffer[4], size-4), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+      memset(mReadBuffer, 0, 4);  // set first four bytes (framing) to all 0's, first byte of 0 = stun/turn channel
+      mSocket.async_receive_from(asio::buffer(&mReadBuffer[4], sizeof(mReadBuffer)-4), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
    }
    else
    {
-      mSocket.async_receive_from(asio::buffer(buffer, size), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+      mSocket.async_receive_from(asio::buffer(mReadBuffer, sizeof(mReadBuffer)), mSenderEndpoint, 0, boost::bind(&TurnUdpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
    }
 
    // Wait for timer and read to end

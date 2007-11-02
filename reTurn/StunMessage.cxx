@@ -272,8 +272,19 @@ StunMessage::applyXorToAddress(const StunAtrAddress& in, StunAtrAddress& out)
    }
 }
 
+bool
+StunMessage::stunParseAtrXorAddress( char* body, unsigned int hdrLen, StunAtrAddress& result )
+{
+   bool ret = stunParseAtrAddress(body, hdrLen, result);
+   if(ret)
+   {
+      applyXorToAddress(result, result);
+   }
+   return ret;
+}
+
 bool 
-StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress& result )
+StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddress& result )
 {
    if ( hdrLen != 8 )
    {
@@ -570,7 +581,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
          case XorMappedAddress_old:
          case XorMappedAddress:
             mHasXorMappedAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mXorMappedAddress ) == false )
+            if ( stunParseAtrXorAddress(  body,  attrLen,  mXorMappedAddress ) == false )
             {
                if (verbose) clog << "problem parsing XorMappedAddress" << endl;
                return false;
@@ -684,7 +695,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 
          case TurnRemoteAddress:
             mHasTurnRemoteAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mTurnRemoteAddress ) == false )
+            if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRemoteAddress ) == false )
             {
                return false;
             }
@@ -699,7 +710,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 
          case TurnRelayAddress:
             mHasTurnRelayAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mTurnRelayAddress ) == false )
+            if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRelayAddress ) == false )
             {
                return false;
             }
@@ -726,7 +737,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 
          case TurnRequestedIp:
             mHasTurnRequestedIp = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mTurnRequestedIp ) == false )
+            if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRequestedIp ) == false )
             {
                return false;
             }
@@ -923,6 +934,14 @@ StunMessage::encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value)
    return ptr;
 }
 
+char*
+StunMessage::encodeAtrXorAddress(char* ptr, UInt16 type, const StunAtrAddress& atr)
+{
+   StunAtrAddress xorAtr;
+   applyXorToAddress(atr, xorAtr);
+   return encodeAtrAddress(ptr, type, xorAtr);
+}
+
 char* 
 StunMessage::encodeAtrAddress(char* ptr, UInt16 type, const StunAtrAddress& atr)
 {
@@ -1101,7 +1120,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasXorMappedAddress)
    {
       if (verbose) clog << "Encoding XorMappedAddress: " << mXorMappedAddress << endl;
-      ptr = encodeAtrAddress(ptr, XorMappedAddress, mXorMappedAddress);
+      ptr = encodeAtrXorAddress(ptr, XorMappedAddress, mXorMappedAddress);
    }
    if (mHasServer)
    {
@@ -1152,7 +1171,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasTurnRemoteAddress)
    {
       if (verbose) clog << "Encoding Turn RemoteAddress: " << mTurnRemoteAddress << endl;
-      ptr = encodeAtrAddress (ptr, TurnRemoteAddress, mTurnRemoteAddress);
+      ptr = encodeAtrXorAddress (ptr, TurnRemoteAddress, mTurnRemoteAddress);
    }
    if (mHasTurnData)
    {
@@ -1162,7 +1181,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasTurnRelayAddress)
    {
       if (verbose) clog << "Encoding Turn RelayAddress: " << mTurnRelayAddress << endl;
-      ptr = encodeAtrAddress (ptr, TurnRelayAddress, mTurnRelayAddress);
+      ptr = encodeAtrXorAddress (ptr, TurnRelayAddress, mTurnRelayAddress);
    }
    if (mHasTurnRequestedPortProps)
    {
@@ -1177,7 +1196,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasTurnRequestedIp)
    {
       if (verbose) clog << "Encoding Turn RequestedIp: " << mTurnRequestedIp << endl;
-      ptr = encodeAtrAddress (ptr, TurnRequestedIp, mTurnRequestedIp);
+      ptr = encodeAtrXorAddress (ptr, TurnRequestedIp, mTurnRequestedIp);
    }
    if (mHasTurnConnectStat)
    {

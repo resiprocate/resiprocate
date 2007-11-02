@@ -11,10 +11,10 @@ namespace reTurn {
 
 UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation)
 : TurnTransportBase(ioService),
-  mSocket(ioService, asio::ip::udp::endpoint(turnAllocation.mRequestedTuple.getAddress(), turnAllocation.mRequestedTuple.getPort())),
+  mSocket(ioService, asio::ip::udp::endpoint(turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort())),
   mTurnAllocation(turnAllocation)
 {
-   std::cout << "UdpRelayServer started.  Listening on " << mTurnAllocation.mRequestedTuple.getAddress() << ":" << mTurnAllocation.mRequestedTuple.getPort() << std::endl;
+   std::cout << "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress() << ":" << mTurnAllocation.getRequestedTuple().getPort() << std::endl;
 }
 
 UdpRelayServer::~UdpRelayServer()
