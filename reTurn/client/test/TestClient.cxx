@@ -104,16 +104,31 @@ int main(int argc, char* argv[])
               << std::endl;
 #endif
 
-    TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
+    //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
     //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0, true /* disable turn framing */); port--;
-    //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
+    //TurnUdpSocket turnSocket(asio::ip::address::from_string("192.168.1.106"), 0, true /* disable turn framing */); port--; port=3478;
+    TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
     //TurnTlsSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0); port++;
 
-    rc = turnSocket.createAllocation(asio::ip::address::from_string(argv[1]), 
+    rc = turnSocket.bindRequest(argv[1],
+                                port,
+                                username,
+                                password);
+    if(rc != 0)
+    {
+       std::cout << "CLIENT: Error calling bindRequest: rc=" << rc.message() << std::endl;
+       return 1;
+    }
+    else
+    {
+       std::cout << "CLIENT: Bind Successful!  Reflexive=" << turnSocket.getReflexiveTuple() << std::endl;
+    }
+
+    rc = turnSocket.createAllocation(argv[1], 
                                      port, 
                                      username, 
                                      password, 
-                                     TurnSocket::UnspecifiedLifetime, 
+                                     30,       // TurnSocket::UnspecifiedLifetime, 
                                      TurnSocket::UnspecifiedBandwidth, 
                                      StunMessage::PortPropsEvenPair,
                                      TurnSocket::UnspecifiedPort,
@@ -175,8 +190,8 @@ int main(int argc, char* argv[])
              std::cout << "CLIENT: Receive error: " << rc.message() << std::endl;
           }
        }
-      
-       turnSocket.destroyAllocation();
+
+       //turnSocket.destroyAllocation();
     }
 
     turnPeer.shutdown();

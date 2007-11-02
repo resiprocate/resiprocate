@@ -22,16 +22,23 @@ public:
    explicit TurnSocket(const asio::ip::address& address, unsigned short port);
    virtual ~TurnSocket();
 
-   virtual asio::error_code connect(const asio::ip::address& address, unsigned short port) = 0;
+   virtual asio::error_code connect(const std::string& address, unsigned short port) = 0;
 
    // Note: Shared Secret requests have been deprecated by RFC3489-bis11, and not 
    //       widely implemented in RFC3489 - so not really needed at all
-   asio::error_code requestSharedSecret(const asio::ip::address& turnServerAddress, 
-                                        unsigned short turnServerPort,
+   asio::error_code requestSharedSecret(const std::string& stunServerAddress, 
+                                        unsigned short stunServerPort,
                                         char* username, unsigned int usernameSize, 
                                         char* password, unsigned int passwordSize);
 
-   asio::error_code createAllocation(const asio::ip::address& turnServerAddress, 
+   // Stun Binding Methods
+   asio::error_code bindRequest(const std::string& turnServerAddress, 
+                                unsigned short turnServerPort, 
+                                char* username=0,
+                                char* password=0);
+
+   // Turn Allocation Methods
+   asio::error_code createAllocation(const std::string& turnServerAddress, 
                                      unsigned short turnServerPort, 
                                      char* username,
                                      char* password,
@@ -41,7 +48,6 @@ public:
                                      unsigned short requestedPort = UnspecifiedPort,
                                      StunTuple::TransportType requestedTransportType = StunTuple::None, 
                                      const asio::ip::address &requestedIpAddress = UnspecifiedIpAddress);
-
    asio::error_code refreshAllocation();
    asio::error_code destroyAllocation();
 
@@ -66,14 +72,14 @@ public:
 protected:
    virtual asio::error_code rawWrite(const char* buffer, unsigned int size) = 0;
    virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers) = 0;
-   virtual asio::error_code rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0) = 0;
+   virtual asio::error_code rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0) = 0;
    virtual void cancelSocket() = 0;
 
    // Local binding info
    StunTuple mLocalBinding;
+   StunTuple mConnectedTuple;
 
    // Turn Allocation Properties used in request
-   StunTuple mTurnServer;
    resip::Data mUsername;
    resip::Data mPassword;
    unsigned int mRequestedLifetime;
@@ -85,6 +91,7 @@ protected:
 
    // Turn Allocation Properties from response
    bool mHaveAllocation;
+   time_t mAllocationRefreshTime;
    StunTuple mRelayTuple;
    StunTuple mReflexiveTuple;
    unsigned int mLifetime;
@@ -103,13 +110,19 @@ protected:
    void handleRawRead(const asio::error_code& errorCode, size_t bytesRead);
    void handleRawReadTimeout(const asio::error_code& errorCode);
 
+   // Read/Write Buffers
+   char mReadBuffer[8192];
+   char mWriteBuffer[8192];
+
 private:
+   bool mConnected;
+
+   asio::error_code ensureConnected(const std::string& address, unsigned int port);
+   asio::error_code checkIfAllocationRefreshRequired();
    StunMessage* sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode);
    asio::error_code sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size);
    asio::error_code handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned int& size, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
    asio::error_code handleRawData(char* data, unsigned int dataSize,  unsigned int expectedSize, char* buffer, unsigned int& bufferSize);
-   char mReadBuffer[8192];
-   char mWriteBuffer[8192];
 };
 
 } 
