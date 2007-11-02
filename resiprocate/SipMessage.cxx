@@ -187,7 +187,7 @@ SipMessage::make(const char* data, bool isExternal)
    if (data)
       return SipMessage::make(data, strlen(data), isExternal);
    else
-      return NULL;
+      return std::auto_ptr<SipMessage>();
 }
 
 std::auto_ptr<SipMessage>
@@ -214,7 +214,7 @@ SipMessage::make(const char* data, unsigned int len, bool isExternal)
       DebugLog(<<"Scanner rejecting buffer as unparsable / fragmented.");
       DebugLog(<< data);
 #endif
-      return 0;
+      return std::auto_ptr<SipMessage>();
    }
 
    // no pp error
