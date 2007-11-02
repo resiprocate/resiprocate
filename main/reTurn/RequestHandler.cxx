@@ -79,7 +79,6 @@ RequestHandler::processStunMessage(TurnTransportBase* turnTransport, StunMessage
                   response.mXorMappedAddress.family = StunMessage::IPv4Family;  
                   response.mXorMappedAddress.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();   
                }
-               response.applyXorToAddress(response.mXorMappedAddress, response.mXorMappedAddress);
             }
             break;
          case StunMessage::TurnConnectRequest:
@@ -298,7 +297,6 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
       response.mXorMappedAddress.family = StunMessage::IPv4Family;  
       response.mXorMappedAddress.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();   
    }
-   response.applyXorToAddress(response.mXorMappedAddress, response.mXorMappedAddress);
 
    // the following code is for RFC3489 backward compatibility
    if(mRFC3489SupportEnabled)
@@ -481,13 +479,13 @@ RequestHandler::processTurnAllocateRequest(TurnTransportBase* turnTransport, Stu
    // If this is a subsequent request, then ensure that the same shared secret was used
    if(allocation)
    {
-      if(allocation->mClientAuth.getClientUsername() != *request.mUsername)
+      if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
       {
          if (verbose) clog << "Subsequent allocate requested with non-matching username.  Send 436." << endl; 
          buildErrorResponse(response, 436, "Unknown Username", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
          return RespondFromReceiving;
       }
-      if(allocation->mClientAuth.getClientSharedSecret() != hmacKey)
+      if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
       {
          if (verbose) clog << "Subsequent allocate requested with non-matching shared secret.  Send 431." << endl; 
          buildErrorResponse(response, 431, "Integrity Check Failure", authenticationMode == LongTermPassword ? authenticationRealm : 0 );   
@@ -565,8 +563,8 @@ RequestHandler::processTurnAllocateRequest(TurnTransportBase* turnTransport, Stu
          // Try to find an existing allocation with these properties - if we find one and the credentials match, then old
          // allocation is removed and new allocation is created.
          allocation = mTurnManager.findTurnAllocation(allocationTuple);
-         if(allocation && allocation->mClientAuth.getClientUsername() == *request.mUsername &&
-                          allocation->mClientAuth.getClientSharedSecret() == hmacKey)
+         if(allocation && allocation->getClientAuth().getClientUsername() == *request.mUsername &&
+                          allocation->getClientAuth().getClientSharedSecret() == hmacKey)
          {
             allocationSubsumed = true;
 
@@ -713,16 +711,16 @@ RequestHandler::processTurnAllocateRequest(TurnTransportBase* turnTransport, Stu
    response.mTurnLifetime = request.mHasTurnLifetime ? request.mTurnLifetime : DEFAULT_LIFETIME;
 
    response.mHasTurnRelayAddress = true;
-   response.mTurnRelayAddress.port = allocation->mRequestedTuple.getPort();
-   if(allocation->mRequestedTuple.getAddress().is_v6())
+   response.mTurnRelayAddress.port = allocation->getRequestedTuple().getPort();
+   if(allocation->getRequestedTuple().getAddress().is_v6())
    {
       response.mTurnRelayAddress.family = StunMessage::IPv6Family;  
-      memcpy(&response.mTurnRelayAddress.addr.ipv6, allocation->mRequestedTuple.getAddress().to_v6().to_bytes().c_array(), sizeof(response.mTurnRelayAddress.addr.ipv6));
+      memcpy(&response.mTurnRelayAddress.addr.ipv6, allocation->getRequestedTuple().getAddress().to_v6().to_bytes().c_array(), sizeof(response.mTurnRelayAddress.addr.ipv6));
    }
    else
    {
       response.mTurnRelayAddress.family = StunMessage::IPv4Family;  
-      response.mTurnRelayAddress.addr.ipv4 = allocation->mRequestedTuple.getAddress().to_v4().to_ulong();   
+      response.mTurnRelayAddress.addr.ipv4 = allocation->getRequestedTuple().getAddress().to_v4().to_ulong();   
    }
 
    response.mHasXorMappedAddress = true;
@@ -737,7 +735,6 @@ RequestHandler::processTurnAllocateRequest(TurnTransportBase* turnTransport, Stu
       response.mXorMappedAddress.family = StunMessage::IPv4Family;  
       response.mXorMappedAddress.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();   
    }
-   response.applyXorToAddress(response.mXorMappedAddress, response.mXorMappedAddress);
   
    response.mHasTurnBandwidth = true;
    response.mTurnBandwidth = request.mHasTurnBandwidth ? request.mTurnBandwidth : DEFAULT_BANDWIDTH;
@@ -773,13 +770,13 @@ RequestHandler::processTurnListenPermissionRequest(StunMessage& request, StunMes
       return RespondFromReceiving;
    }
 
-   if(allocation->mClientAuth.getClientUsername() != *request.mUsername)
+   if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
       if (verbose) clog << "Turn set active desination request requested with non-matching username.  Send 436." << endl; 
       buildErrorResponse(response, 436, "Unknown Username", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
-   if(allocation->mClientAuth.getClientSharedSecret() != hmacKey)
+   if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
       if (verbose) clog << "Turn set active desination request requested with non-matching shared secret.  Send 431." << endl; 
       buildErrorResponse(response, 431, "Integrity Check Failure", authenticationMode == LongTermPassword ? authenticationRealm : 0 );   
@@ -832,7 +829,7 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
    }
 
    StunTuple remoteAddress;
-   remoteAddress.setTransportType(allocation->mRequestedTuple.getTransportType());
+   remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
    remoteAddress.setPort(request.mTurnRemoteAddress.port);
    if(request.mTurnRemoteAddress.family == StunMessage::IPv6Family)
    {            
@@ -875,7 +872,7 @@ RequestHandler::processTurnChannelConfirmationIndication(StunMessage& request)
    }
 
    StunTuple remoteAddress;
-   remoteAddress.setTransportType(allocation->mRequestedTuple.getTransportType());
+   remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
    remoteAddress.setPort(request.mTurnRemoteAddress.port);
    if(request.mTurnRemoteAddress.family == StunMessage::IPv6Family)
    {            

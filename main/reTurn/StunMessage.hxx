@@ -334,12 +334,13 @@ protected:
 private:
    void init();
 
-   bool stunParseAtrAddress( char* body, unsigned int hdrLen,  StunAtrAddress& result );
-   bool stunParseAtrUInt32( char* body, unsigned int hdrLen,  UInt32& result );
-   bool stunParseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result );
-   bool stunParseAtrUnknown( char* body, unsigned int hdrLen,  StunAtrUnknown& result );
-   bool stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrIntegrity& result );
-   bool stunParseAtrRequestedPortProps( char* body, unsigned int hdrLen,  TurnAtrRequestedPortProps& result );
+   bool stunParseAtrXorAddress( char* body, unsigned int hdrLen, StunAtrAddress& result );
+   bool stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddress& result );
+   bool stunParseAtrUInt32( char* body, unsigned int hdrLen, UInt32& result );
+   bool stunParseAtrError( char* body, unsigned int hdrLen, StunAtrError& result );
+   bool stunParseAtrUnknown( char* body, unsigned int hdrLen, StunAtrUnknown& result );
+   bool stunParseAtrIntegrity( char* body, unsigned int hdrLen, StunAtrIntegrity& result );
+   bool stunParseAtrRequestedPortProps( char* body, unsigned int hdrLen, TurnAtrRequestedPortProps& result );
 
    bool stunParseMessage( char* buf, unsigned int bufLen);
 
@@ -348,6 +349,7 @@ private:
    char* encode(char* buf, const char* data, unsigned int length);
    char* encodeTurnData(char *ptr, const resip::Data* td);
    char* encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value);
+   char* encodeAtrXorAddress(char* ptr, UInt16 type, const StunAtrAddress& atr);
    char* encodeAtrAddress(char* ptr, UInt16 type, const StunAtrAddress& atr);
    char* encodeAtrError(char* ptr, const StunAtrError& atr);
    char* encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr);

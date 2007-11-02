@@ -22,10 +22,31 @@ TurnTcpSocket::TurnTcpSocket(const asio::ip::address& address, unsigned short po
 }
 
 asio::error_code 
-TurnTcpSocket::connect(const asio::ip::address& address, unsigned short port)
+TurnTcpSocket::connect(const std::string& address, unsigned short port)
 {
-   asio::error_code errorCode;
-   mSocket.connect(asio::ip::tcp::endpoint(address, port), errorCode);
+   // Get a list of endpoints corresponding to the server name.
+   asio::ip::tcp::resolver resolver(mIOService);
+   resip::Data service(port);
+   asio::ip::tcp::resolver::query query(address, service.c_str());   
+   asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+   asio::ip::tcp::resolver::iterator end;
+
+   // Try each endpoint until we successfully establish a connection.
+   asio::error_code errorCode = asio::error::host_not_found;
+   while (errorCode && endpoint_iterator != end)
+   {
+      mSocket.close();
+      mSocket.connect(*endpoint_iterator, errorCode);
+
+      if(errorCode == 0)
+      {
+         mConnectedTuple.setTransportType(StunTuple::TCP);
+         mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
+         mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
+      }
+      endpoint_iterator++;
+   }
+
    return errorCode;
 }
 
@@ -46,36 +67,81 @@ TurnTcpSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
 }
 
 asio::error_code 
-TurnTcpSocket::rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+TurnTcpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
-   // !slg! Note: Only handles response comming back contiguously
-   
-   startReadTimer(timeout);
-   mSocket.async_read_some(asio::buffer(buffer, size), boost::bind(&TurnTcpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+   startReadTimer(timeout);   
+   readHeader();
 
    // Wait for timer and read to end
    mIOService.run();
    mIOService.reset();
 
-   *bytesRead = (unsigned int)mBytesRead;
+   *bytesRead = (unsigned int)mBytesRead+4;
    if(mReadErrorCode == 0)
    {
       if(sourceAddress)
       {
-         *sourceAddress = mSocket.remote_endpoint().address();
+         *sourceAddress = mConnectedTuple.getAddress();
       }
       if(sourcePort)
       {
-         *sourcePort = mSocket.remote_endpoint().port();
+         *sourcePort = mConnectedTuple.getPort();
       }
    }
    return mReadErrorCode;
+}
+
+void 
+TurnTcpSocket::readHeader()
+{
+   asio::async_read(mSocket, asio::buffer(mReadBuffer, 4),
+                    boost::bind(&TurnTcpSocket::handleReadHeader, this, asio::placeholders::error));
+}
+
+void 
+TurnTcpSocket::readBody(unsigned int len)
+{
+   asio::async_read(mSocket, asio::buffer(&mReadBuffer[4], len),
+                    boost::bind(&TurnTcpSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
 }
 
 void
 TurnTcpSocket::cancelSocket()
 {
    mSocket.cancel();
+}
+
+void 
+TurnTcpSocket::handleReadHeader(const asio::error_code& e)
+{
+   if (!e)
+   {
+      /*
+      std::cout << "Read header from turn tcp socket: " << std::endl;
+      for(unsigned int i = 0; i < 4; i++)
+      {
+         std::cout << (char)mReadBuffer[i] << "(" << (int)mReadBuffer[i] << ") ";
+      }
+      std::cout << std::endl;
+      */
+
+      // All Turn messaging will be framed
+      UInt16 dataLen;
+      memcpy(&dataLen, &mReadBuffer[2], 2);
+      dataLen = ntohs(dataLen);
+
+      readBody(dataLen);
+   }
+   else 
+   {
+      mBytesRead = 0;
+      mReadErrorCode = e;
+      if (e != asio::error::operation_aborted)
+      {
+         std::cout << "Read header error: " << e.message() << std::endl;
+         mReadTimer.cancel();
+      }
+   }
 }
 
 } // namespace

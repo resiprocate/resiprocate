@@ -59,7 +59,14 @@ public:
    // Called when a ChannelConfirmed Indication is received
    void serverToClientChannelConfirmed(unsigned char channelNumber, const StunTuple& peerAddress);
 
-   // !slg! todo - should be private with accessors
+   const StunTuple& getRequestedTuple() const { return mRequestedTuple; }
+   time_t getExpires() const { return mExpires; }
+   const StunAuth& getClientAuth() const { return mClientAuth; }
+
+private:
+   // Used when there is any data to send to the peer, after channel has been identified
+   void sendDataToPeer(const StunTuple& peerAddress, const resip::Data& data);  
+
    TurnAllocationKey mKey;  // contains ClientLocalTuple and clientRemoteTuple
    StunAuth  mClientAuth;
    StunTuple mRequestedTuple;
@@ -69,10 +76,6 @@ public:
 
    time_t    mExpires;
    //unsigned int mBandwidth; // future use
-
-private:
-   // Used when there is any data to send to the peer, after channel has been identified
-   void sendDataToPeer(const StunTuple& peerAddress, const resip::Data& data);  
 
    typedef std::map<asio::ip::address,TurnPermission*> TurnPermissionMap;
    TurnPermissionMap mTurnPermissionMap;
