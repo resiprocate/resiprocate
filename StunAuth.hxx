@@ -11,8 +11,8 @@ public:
    explicit StunAuth(const resip::Data& clientUsername,
                      const resip::Data& clientSharedSecret);
 
-   const resip::Data& getClientUsername() { return mClientUsername; }
-   const resip::Data& getClientSharedSecret() { return mClientSharedSecret; }
+   const resip::Data& getClientUsername() const { return mClientUsername; }
+   const resip::Data& getClientSharedSecret() const { return mClientSharedSecret; }
 
 private:
    resip::Data mClientUsername;

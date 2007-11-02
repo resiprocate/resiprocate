@@ -59,7 +59,7 @@ TurnManager::findTurnAllocation(const StunTuple& requestedTuple)
    TurnAllocationMap::iterator it;
    for(it = mTurnAllocationMap.begin(); it != mTurnAllocationMap.end(); it++)
    {
-      if(it->second->mRequestedTuple == requestedTuple)
+      if(it->second->getRequestedTuple() == requestedTuple)
       {
          return it->second;
       }
@@ -78,7 +78,7 @@ TurnManager::allocationExpired(const asio::error_code& e, const TurnAllocationKe
       TurnAllocationMap::iterator it = mTurnAllocationMap.find(turnAllocationKey);
       if(it != mTurnAllocationMap.end())
       {
-         if(time(0) >= it->second->mExpires)
+         if(time(0) >= it->second->getExpires())
          {
             delete it->second;
             mTurnAllocationMap.erase(it);

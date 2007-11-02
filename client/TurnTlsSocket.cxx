@@ -6,7 +6,7 @@ using namespace std;
 namespace reTurn {
 
 TurnTlsSocket::TurnTlsSocket(const asio::ip::address& address, unsigned short port) : 
-   TurnSocket(address,port),
+   TurnTcpSocket(address,port),
    mSslContext(mIOService, asio::ssl::context::tlsv1),
    mSocket(mIOService, mSslContext)
 {
@@ -27,20 +27,36 @@ TurnTlsSocket::TurnTlsSocket(const asio::ip::address& address, unsigned short po
 }
 
 asio::error_code 
-TurnTlsSocket::connect(const asio::ip::address& address, unsigned short port)
+TurnTlsSocket::connect(const std::string& address, unsigned short port)
 {
-   asio::error_code errorCode;
+   // Get a list of endpoints corresponding to the server name.
+   asio::ip::tcp::resolver resolver(mIOService);
+   resip::Data service(port);
+   asio::ip::tcp::resolver::query query(address, service.c_str());   
+   asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+   asio::ip::tcp::resolver::iterator end;
 
-   mSocket.lowest_layer().connect(asio::ip::tcp::endpoint(address, port), errorCode);
-   if(errorCode == 0)
+   // Try each endpoint until we successfully establish a connection.
+   asio::error_code errorCode = asio::error::host_not_found;
+   while (errorCode && endpoint_iterator != end)
    {
-      std::cout << "Connected!" << std::endl;
-      mSocket.handshake(asio::ssl::stream_base::client, errorCode);
+      mSocket.lowest_layer().close();
+      mSocket.lowest_layer().connect(*endpoint_iterator, errorCode);
       if(errorCode == 0)
       {
-         std::cout << "Handshake complete!" << std::endl;
+         std::cout << "Connected!" << std::endl;
+         mSocket.handshake(asio::ssl::stream_base::client, errorCode);
+         if(errorCode == 0)
+         {  
+            std::cout << "Handshake complete!" << std::endl;
+            mConnectedTuple.setTransportType(StunTuple::TLS);
+            mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
+            mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
+         }
       }
+      endpoint_iterator++;
    }
+
    return errorCode;
 }
 
@@ -60,31 +76,18 @@ TurnTlsSocket::rawWrite(const std::vector<asio::const_buffer>& buffers)
    return errorCode;
 }
 
-asio::error_code 
-TurnTlsSocket::rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress, unsigned short* sourcePort)
+void 
+TurnTlsSocket::readHeader()
 {
-   // !slg! Note: Only handles response comming back contiguously
+   asio::async_read(mSocket, asio::buffer(mReadBuffer, 4),
+                    boost::bind(&TurnTlsSocket::handleReadHeader, this, asio::placeholders::error));
+}
 
-   startReadTimer(timeout);
-   mSocket.async_read_some(asio::buffer(buffer, size), boost::bind(&TurnTlsSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
-
-   // Wait for timer and read to end
-   mIOService.run();
-   mIOService.reset();
-
-   *bytesRead = (unsigned int)mBytesRead;
-   if(mReadErrorCode == 0)
-   {
-      if(sourceAddress)
-      {
-         *sourceAddress = mSocket.lowest_layer().remote_endpoint().address();
-      }
-      if(sourcePort)
-      {
-         *sourcePort = mSocket.lowest_layer().remote_endpoint().port();
-      }
-   }
-   return mReadErrorCode;
+void 
+TurnTlsSocket::readBody(unsigned int len)
+{
+   asio::async_read(mSocket, asio::buffer(&mReadBuffer[4], len),
+                    boost::bind(&TurnTlsSocket::handleRawRead, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
 }
 
 void

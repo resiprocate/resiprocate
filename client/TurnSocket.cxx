@@ -21,7 +21,8 @@ TurnSocket::TurnSocket(const asio::ip::address& address, unsigned short port) :
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
    mHaveAllocation(false),
    mActiveDestination(0),
-   mReadTimer(mIOService)
+   mReadTimer(mIOService),
+   mConnected(false)
 {
 }
 
@@ -29,117 +30,9 @@ TurnSocket::~TurnSocket()
 {
 }
 
-StunMessage* 
-TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode)
-{
-   unsigned int writesize = request.stunEncodeFramedMessage(mWriteBuffer, sizeof(mWriteBuffer));
-   bool sendRequest = true;
-   bool reliableTransport = mLocalBinding.getTransportType() != StunTuple::UDP;
-   unsigned int timeout = reliableTransport ? TCP_RESPONSE_TIME : UDP_RT0;
-   unsigned int totalTime = 0;
-   unsigned int requestsSent = 0;
-   unsigned int readsize = 0;
-
-   while(true)
-   {
-      if(sendRequest)
-      {
-         // Send request to Turn Server
-         if(requestsSent > 0)
-         {
-            cout << "TurnSocket: retranmitting request..." << endl;
-         }
-         requestsSent++;
-         errorCode = rawWrite(mWriteBuffer, writesize);
-         if(errorCode != 0)
-         {
-            return 0;
-         }
-         sendRequest = false;
-      }
-      //cout << "Reading with a timeout of " << timeout << "ms." << endl;
-
-      // Wait for response
-      errorCode = rawRead(mReadBuffer, sizeof(mReadBuffer), timeout, &readsize);
-      if(errorCode != 0)
-      {
-         if(errorCode == asio::error::operation_aborted)
-         {
-            totalTime += timeout;
-            //cout << "timeout at: " << totalTime << endl;
-            if(reliableTransport || requestsSent == UDP_MAX_RETRANSMITS)
-            {
-               std::cout << "Timed out waiting for Stun response!" << std::endl;
-               errorCode = asio::error_code(reTurn::ResponseTimeout, asio::misc_ecat);
-               return 0;
-            }
-
-            // timed out and should retransmit - calculate next timeout
-            if(requestsSent == UDP_MAX_RETRANSMITS - 1)
-            {
-               timeout = UDP_FINAL_REQUEST_TIME;
-            } 
-            else
-            {
-               timeout = (timeout*2);
-            }
-            sendRequest = true;
-            continue;
-         }
-         return 0;
-      }
-
-      if(readsize > 4 && mReadBuffer[0] == 0)  // Channel 0 is Stun/Turn messaging
-      {
-         StunMessage* response = new StunMessage(mLocalBinding, mTurnServer, &mReadBuffer[4], readsize-4);
-
-         if(response->isValid())
-         {
-            if(!response->checkMessageIntegrity(request.mHmacKey))
-            {
-               std::cout << "Stun response message integrity is bad!" << std::endl;
-               delete response;
-               errorCode = asio::error_code(reTurn::BadMessageIntegrity, asio::misc_ecat);
-               return 0;
-            }
-
-            // Check that TID matches request
-            if(!(response->mHeader.magicCookieAndTid == request.mHeader.magicCookieAndTid))
-            {
-               std::cout << "Stun response TID does not match request - discarding!" << std::endl;
-               delete response;
-               continue;  // read next message
-            }
-   
-            errorCode = asio::error_code(reTurn::Success, asio::misc_ecat);
-            return response;
-         }
-         else
-         {
-            std::cout << "Stun response message is invalid!" << std::endl;
-            delete response;
-            errorCode = asio::error_code(reTurn::ErrorParsingMessage, asio::misc_ecat);  
-            return 0;
-         }
-      }
-      else if(readsize > 4 && mReadBuffer[0] > 0) // Channel > 0 indicates Turn Data
-      {
-         // TODO - handle buffering of Turn data that is receive while waiting for a Request/Response
-         errorCode = asio::error_code(reTurn::FrameError, asio::misc_ecat);  
-         return 0;
-      }
-      else
-      {
-         // Less data than frame size received
-         errorCode = asio::error_code(reTurn::FrameError, asio::misc_ecat);  
-         return 0;
-      }
-   }
-}
-
 asio::error_code 
-TurnSocket::requestSharedSecret(const asio::ip::address& turnServerAddress, 
-                                unsigned short turnServerPort, 
+TurnSocket::requestSharedSecret(const std::string& stunServerAddress, 
+                                unsigned short stunServerPort, 
                                 char* username, unsigned int usernameSize, 
                                 char* password, unsigned int passwordSize)
 {
@@ -147,12 +40,8 @@ TurnSocket::requestSharedSecret(const asio::ip::address& turnServerAddress,
 
    // Should we check here if TLS and deny?
 
-   mTurnServer.setTransportType(mLocalBinding.getTransportType());
-   mTurnServer.setAddress(turnServerAddress);
-   mTurnServer.setPort(turnServerPort);
-
-   // Connect socket to Turn Server
-   errorCode = connect(turnServerAddress, turnServerPort);
+   // Connect socket to Stun Server
+   errorCode = ensureConnected(stunServerAddress, stunServerPort);
    if(errorCode != 0)
    {
       return errorCode;
@@ -205,7 +94,82 @@ TurnSocket::requestSharedSecret(const asio::ip::address& turnServerAddress,
 }
 
 asio::error_code 
-TurnSocket::createAllocation(const asio::ip::address& turnServerAddress, 
+TurnSocket::bindRequest(const std::string& turnServerAddress, 
+                        unsigned short turnServerPort, 
+                        char* username,
+                        char* password)
+{
+   asio::error_code errorCode;
+
+   // Connect socket to Turn Server
+   errorCode = ensureConnected(turnServerAddress, turnServerPort);
+   if(errorCode != 0)
+   {
+      return errorCode;
+   }
+
+   // Form Stun Bind request
+   StunMessage request;
+   request.createHeader(StunMessage::StunClassRequest, StunMessage::BindRequest);
+
+   request.mHasFingerprint = true;
+
+   if(!username && !password)
+   {
+      request.mHasMessageIntegrity = true;
+      request.setUsername(username); 
+      request.mHmacKey = password;
+   }
+
+   StunMessage* response = sendRequestAndGetResponse(request, errorCode);
+   if(response == 0)
+   {
+      return errorCode;
+   }
+
+   if(response->mHasXorMappedAddress)
+   {
+      mReflexiveTuple.setTransportType(mLocalBinding.getTransportType());
+      mReflexiveTuple.setPort(response->mXorMappedAddress.port);
+      if(response->mXorMappedAddress.family == StunMessage::IPv6Family)
+      {
+         asio::ip::address_v6::bytes_type bytes;
+         memcpy(bytes.c_array(), &response->mXorMappedAddress.addr.ipv6, bytes.size());
+         mReflexiveTuple.setAddress(asio::ip::address_v6(bytes));
+      }
+      else
+      {
+         mReflexiveTuple.setAddress(asio::ip::address_v4(response->mXorMappedAddress.addr.ipv4));
+      }            
+   }
+   else if(response->mHasMappedAddress)  // Only look at MappedAddress if XorMappedAddress is not found - for backwards compatibility
+   {
+      mReflexiveTuple.setTransportType(mLocalBinding.getTransportType());
+      mReflexiveTuple.setPort(response->mMappedAddress.port);
+      if(response->mMappedAddress.family == StunMessage::IPv6Family)
+      {
+         asio::ip::address_v6::bytes_type bytes;
+         memcpy(bytes.c_array(), &response->mMappedAddress.addr.ipv6, bytes.size());
+         mReflexiveTuple.setAddress(asio::ip::address_v6(bytes));
+      }
+      else
+      {
+         mReflexiveTuple.setAddress(asio::ip::address_v4(response->mMappedAddress.addr.ipv4));
+      }            
+   }
+
+   // Check if success or not
+   if(response->mHasErrorCode)
+   {
+      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::misc_ecat);
+   }
+
+   delete response;
+   return errorCode;
+}
+
+asio::error_code 
+TurnSocket::createAllocation(const std::string& turnServerAddress, 
                              unsigned short turnServerPort, 
                              char* username,
                              char* password,
@@ -218,12 +182,7 @@ TurnSocket::createAllocation(const asio::ip::address& turnServerAddress,
 {
    asio::error_code errorCode;
 
-   mHaveAllocation = false;  // toggled to true if successful
-
    // Store Allocation Properties
-   mTurnServer.setTransportType(mLocalBinding.getTransportType());
-   mTurnServer.setAddress(turnServerAddress);
-   mTurnServer.setPort(turnServerPort);
    mUsername = username;
    mPassword = password;
    mRequestedLifetime = lifetime;
@@ -234,7 +193,7 @@ TurnSocket::createAllocation(const asio::ip::address& turnServerAddress,
    mRequestedIpAddress = requestedIpAddress;
 
    // Connect socket to Turn Server
-   errorCode = connect(turnServerAddress, turnServerPort);
+   errorCode = ensureConnected(turnServerAddress, turnServerPort);
    if(errorCode != 0)
    {
       return errorCode;
@@ -248,6 +207,8 @@ asio::error_code
 TurnSocket::refreshAllocation()
 {
    asio::error_code errorCode;
+
+   mHaveAllocation = false;  // toggled to true if successful
 
    // Form Turn Allocate request
    StunMessage request;
@@ -263,16 +224,20 @@ TurnSocket::refreshAllocation()
       request.mTurnBandwidth = mRequestedBandwidth;
    }
    if(mRequestedTransportType != StunTuple::None && mRequestedTransportType != StunTuple::TLS)
-   {
-      // TODO - could do some validation here
+   {      
       request.mHasTurnRequestedTransport = true;
       if(mRequestedTransportType == StunTuple::UDP)
       {
          request.mTurnRequestedTransport = StunMessage::RequestedTransportUdp;
       }
-      else 
+      else if(mRequestedTransportType == StunTuple::TCP &&
+              mLocalBinding.getTransportType() != StunTuple::UDP)  // Ensure client is not requesting TCP over a UDP transport
       {
          request.mTurnRequestedTransport = StunMessage::RequestedTransportTcp;
+      }
+      else
+      {
+         return asio::error_code(reTurn::InvalidRequestedTransport, asio::misc_ecat); 
       }
    }
    if(mRequestedIpAddress != UnspecifiedIpAddress)
@@ -297,8 +262,8 @@ TurnSocket::refreshAllocation()
       request.mTurnRequestedPortProps.port = mRequestedPort;
    }
    request.mHasFingerprint = true;
-   request.mHasMessageIntegrity = true;
 
+   request.mHasMessageIntegrity = true;
    request.setUsername(mUsername.data()); 
    request.mHmacKey = mPassword;
 
@@ -310,7 +275,6 @@ TurnSocket::refreshAllocation()
 
    if(response->mHasXorMappedAddress)
    {
-      response->applyXorToAddress(response->mXorMappedAddress, response->mXorMappedAddress);
       mReflexiveTuple.setTransportType(mLocalBinding.getTransportType());
       mReflexiveTuple.setPort(response->mXorMappedAddress.port);
       if(response->mXorMappedAddress.family == StunMessage::IPv6Family)
@@ -373,6 +337,7 @@ TurnSocket::refreshAllocation()
    if(mLifetime != 0)
    {
       mHaveAllocation = true;
+      mAllocationRefreshTime = time(0) + ((mLifetime*5)/8);  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime
    }
    else
    {
@@ -435,7 +400,11 @@ TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned shor
    if(!mHaveAllocation)
    {
       // Connect socket to active Destination so that raw socket operations can be used
-      return connect(address, port);
+      errorCode = ensureConnected(address.to_string(), port);
+      if(errorCode != 0)
+      {
+         return errorCode;
+      }
    }
 
    // Setup Remote Peer 
@@ -512,6 +481,13 @@ TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const 
 asio::error_code 
 TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size)
 {
+   // Check to see if an allocation refresh is required - if so send it and make sure it was sucessful
+   asio::error_code ret = checkIfAllocationRefreshRequired();
+   if(ret != 0)
+   {
+      return ret;
+   }
+
    if(remotePeer.isClientToServerChannelConfirmed())
    {
       // send framed data to active destination
@@ -556,7 +532,10 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       }
       ind.mHasTurnChannelNumber = true;
       ind.mTurnChannelNumber = remotePeer.getClientToServerChannel();
-      ind.setTurnData(buffer, size);
+      if(size > 0)
+      {
+         ind.setTurnData(buffer, size);
+      }
       ind.mHasFingerprint = true;
 
       // If not using UDP - then mark channel as confirmed
@@ -586,7 +565,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
 
       // Wait for response
       unsigned int readSize;
-      errorCode = rawRead(mReadBuffer, sizeof(mReadBuffer), timeout, &readSize, sourceAddress, sourcePort); // Note: SourceAddress and sourcePort may be overwritten below if from Turn Relay
+      errorCode = rawRead(timeout, &readSize, sourceAddress, sourcePort); // Note: SourceAddress and sourcePort may be overwritten below if from Turn Relay
       if(errorCode != 0)
       {
          return errorCode;
@@ -628,7 +607,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
       else if(readSize > 4 && mReadBuffer[0] == 0)  // We have received a Stun/Turn Message
       {
          // StunMessage
-         StunMessage* stunMsg = new StunMessage(mLocalBinding, mTurnServer, &mReadBuffer[4], readSize-4);
+         StunMessage* stunMsg = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[4], readSize-4);
          unsigned int tempsize = size;
          errorCode = handleStunMessage(*stunMsg, buffer, tempsize, sourceAddress, sourcePort);
          if(errorCode == 0 && tempsize == 0)  // Signifies that a Stun/Turn request was received and there is nothing to return to receive caller
@@ -878,6 +857,143 @@ TurnSocket::handleRawReadTimeout(const asio::error_code& errorCode)
    if(errorCode == 0)
    {
       cancelSocket();
+   }
+}
+
+asio::error_code 
+TurnSocket::checkIfAllocationRefreshRequired()
+{
+   if(mHaveAllocation && (time(0) >= mAllocationRefreshTime))
+   {
+      // Do refresh
+      return refreshAllocation();
+   }
+   return asio::error_code();  // 0
+}
+
+asio::error_code
+TurnSocket::ensureConnected(const std::string& address, unsigned int port)
+{
+   asio::error_code errorCode;
+   if(!mConnected)
+   {
+      // Connect socket to Stun Server
+      errorCode = connect(address, port);
+      if(errorCode != 0)
+      {
+         return errorCode;
+      }
+      mConnected = true;
+      cout << "TurnSocket:  Connected to: " << mConnectedTuple << endl;
+   }
+   return errorCode;
+}
+
+StunMessage* 
+TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode)
+{
+   unsigned int writesize = request.stunEncodeFramedMessage(mWriteBuffer, sizeof(mWriteBuffer));
+   bool sendRequest = true;
+   bool reliableTransport = mLocalBinding.getTransportType() != StunTuple::UDP;
+   unsigned int timeout = reliableTransport ? TCP_RESPONSE_TIME : UDP_RT0;
+   unsigned int totalTime = 0;
+   unsigned int requestsSent = 0;
+   unsigned int readsize = 0;
+
+   while(true)
+   {
+      if(sendRequest)
+      {
+         // Send request to Turn Server
+         if(requestsSent > 0)
+         {
+            cout << "TurnSocket: retranmitting request..." << endl;
+         }
+         requestsSent++;
+         errorCode = rawWrite(mWriteBuffer, writesize);
+         if(errorCode != 0)
+         {
+            return 0;
+         }
+         sendRequest = false;
+      }
+      //cout << "Reading with a timeout of " << timeout << "ms." << endl;
+
+      // Wait for response
+      errorCode = rawRead(timeout, &readsize);
+      if(errorCode != 0)
+      {
+         if(errorCode == asio::error::operation_aborted)
+         {
+            totalTime += timeout;
+            //cout << "timeout at: " << totalTime << endl;
+            if(reliableTransport || requestsSent == UDP_MAX_RETRANSMITS)
+            {
+               std::cout << "Timed out waiting for Stun response!" << std::endl;
+               errorCode = asio::error_code(reTurn::ResponseTimeout, asio::misc_ecat);
+               return 0;
+            }
+
+            // timed out and should retransmit - calculate next timeout
+            if(requestsSent == UDP_MAX_RETRANSMITS - 1)
+            {
+               timeout = UDP_FINAL_REQUEST_TIME;
+            } 
+            else
+            {
+               timeout = (timeout*2);
+            }
+            sendRequest = true;
+            continue;
+         }
+         return 0;
+      }
+
+      if(readsize > 4 && mReadBuffer[0] == 0)  // Channel 0 is Stun/Turn messaging
+      {
+         StunMessage* response = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[4], readsize-4);
+
+         if(response->isValid())
+         {
+            if(!response->checkMessageIntegrity(request.mHmacKey))
+            {
+               std::cout << "Stun response message integrity is bad!" << std::endl;
+               delete response;
+               errorCode = asio::error_code(reTurn::BadMessageIntegrity, asio::misc_ecat);
+               return 0;
+            }
+
+            // Check that TID matches request
+            if(!(response->mHeader.magicCookieAndTid == request.mHeader.magicCookieAndTid))
+            {
+               std::cout << "Stun response TID does not match request - discarding!" << std::endl;
+               delete response;
+               continue;  // read next message
+            }
+   
+            errorCode = asio::error_code(reTurn::Success, asio::misc_ecat);
+            return response;
+         }
+         else
+         {
+            std::cout << "Stun response message is invalid!" << std::endl;
+            delete response;
+            errorCode = asio::error_code(reTurn::ErrorParsingMessage, asio::misc_ecat);  
+            return 0;
+         }
+      }
+      else if(readsize > 4 && mReadBuffer[0] > 0) // Channel > 0 indicates Turn Data
+      {
+         // TODO - handle buffering of Turn data that is receive while waiting for a Request/Response
+         errorCode = asio::error_code(reTurn::FrameError, asio::misc_ecat);  
+         return 0;
+      }
+      else
+      {
+         // Less data than frame size received
+         errorCode = asio::error_code(reTurn::FrameError, asio::misc_ecat);  
+         return 0;
+      }
    }
 }
 

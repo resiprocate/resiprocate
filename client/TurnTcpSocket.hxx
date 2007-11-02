@@ -14,15 +14,22 @@ public:
 
    // To use this socket without a Turn Relay, use this connect call to connect directly
    // to endpoint
-   virtual asio::error_code connect(const asio::ip::address& address, unsigned short port);
+   virtual asio::error_code connect(const std::string& address, unsigned short port);
 
 protected:
    virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
    virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers);
-   virtual asio::error_code rawRead(char* buffer, unsigned int size, unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+   virtual asio::error_code rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
+
+   virtual void readHeader();
+   virtual void readBody(unsigned int len);
    virtual void cancelSocket();
 
+   /// Handle completion of a read operation for first 32 bits
+   virtual void handleReadHeader(const asio::error_code& e);
+
 private:
+
    asio::ip::tcp::socket mSocket;
 };
 
