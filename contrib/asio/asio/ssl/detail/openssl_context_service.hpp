@@ -331,7 +331,7 @@ public:
           purpose ? context_base::for_writing : context_base::for_reading);
       *buf = '\0';
       strncat(buf, passwd.c_str(), size);
-      return strlen(buf);
+      return (int)strlen(buf);
     }
 
     return 0;
