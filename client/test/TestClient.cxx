@@ -36,18 +36,18 @@ public:
       unsigned int size = sizeof(buffer);
       asio::ip::address sourceAddress;
       unsigned short sourcePort;
-      bool activeDestSet = false;
+      bool connected = false;
 
       // Receive Data
       rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort);
-      while((rc == 0 || rc == asio::error::operation_aborted) && !isShutdown())
+      while((!rc || rc.value() == asio::error::operation_aborted) && !isShutdown())
       {
-         if(rc == 0)
+         if(!rc)
          {
-            if(!activeDestSet)
+            if(!connected)
             {
-               turnSocket.setActiveDestination(sourceAddress, sourcePort);
-               activeDestSet = true;
+               turnSocket.connect(sourceAddress.to_string(), sourcePort);
+               connected = true;
             }
             std::cout << "PEER: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
             turnSocket.send(buffer, size);
@@ -56,9 +56,9 @@ public:
          rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort);
       }
 
-      if(rc != 0)
+      if(rc)
       {
-         if(rc != asio::error::operation_aborted)
+         if(rc.value() != asio::error::operation_aborted)
          {
             std::cout << "PEER: Receive error: " << rc.message() << std::endl;
          }
@@ -110,11 +110,20 @@ int main(int argc, char* argv[])
     TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
     //TurnTlsSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0); port++;
 
-    rc = turnSocket.bindRequest(argv[1],
-                                port,
-                                username,
-                                password);
-    if(rc != 0)
+    // Connect to Stun/Turn Server
+    rc = turnSocket.connect(argv[1], port);
+    if(rc)
+    {
+       std::cout << "CLIENT: Error calling connect: rc=" << rc.message() << std::endl;
+       return 1;
+    }
+
+    // Set the username and password
+    turnSocket.setUsernameAndPassword(username, password);
+
+    // Test bind request
+    rc = turnSocket.bindRequest();
+    if(rc)
     {
        std::cout << "CLIENT: Error calling bindRequest: rc=" << rc.message() << std::endl;
        return 1;
@@ -124,16 +133,13 @@ int main(int argc, char* argv[])
        std::cout << "CLIENT: Bind Successful!  Reflexive=" << turnSocket.getReflexiveTuple() << std::endl;
     }
 
-    rc = turnSocket.createAllocation(argv[1], 
-                                     port, 
-                                     username, 
-                                     password, 
-                                     30,       // TurnSocket::UnspecifiedLifetime, 
+    // Test allocation
+    rc = turnSocket.createAllocation(30,       // TurnSocket::UnspecifiedLifetime, 
                                      TurnSocket::UnspecifiedBandwidth, 
                                      StunMessage::PortPropsEvenPair,
                                      TurnSocket::UnspecifiedPort,
                                      StunTuple::UDP);
-    if(rc != 0)
+    if(rc)
     {
        std::cout << "CLIENT: Error creating allocation: rc=" << rc.message() << std::endl;
     }
@@ -150,6 +156,7 @@ int main(int argc, char* argv[])
        asio::ip::address sourceAddress;
        unsigned short sourcePort;
 
+       // Test Data sending and receiving over allocation
        resip::Data turnData("This test is for wrapped Turn Data!");
        cout << "CLIENT: Sending: " << turnData << endl;
        turnSocket.sendTo(asio::ip::address::from_string("127.0.0.1"), 2000, turnData.c_str(), turnData.size());
@@ -160,14 +167,14 @@ int main(int argc, char* argv[])
        turnSocket.send(turnData.c_str(), turnData.size());
       
        // Receive Data
-       while((rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)) == 0)
+       while(!(rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)))
        {
           std::cout << "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
           size = sizeof(buffer);
        }
-       if(rc != 0)
+       if(rc)
        {
-          if(rc != asio::error::operation_aborted)
+          if(rc.value() != asio::error::operation_aborted)
           {
             std::cout << "CLIENT: Receive error: " << rc.message() << std::endl;
           }          
@@ -178,14 +185,14 @@ int main(int argc, char* argv[])
        turnSocket.send(turnData.c_str(), turnData.size());       
 
        
-       while((rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)) == 0)
+       while(!(rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)))
        {
           std::cout << "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
           size = sizeof(buffer);
        }
-       if(rc != 0)
+       if(rc)
        {
-          if(rc != asio::error::operation_aborted)
+          if(rc.value() != asio::error::operation_aborted)
           {
              std::cout << "CLIENT: Receive error: " << rc.message() << std::endl;
           }

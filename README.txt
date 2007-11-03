@@ -58,9 +58,8 @@ General TODO
 - per user allocation quota enforcement
 - set TLS server settings - ie. allowed cipher suite, etc.
 - cleanup stun message class so that there are accessors for all data members
-- Ability for Server to accept both long term credentials
+- Ability for Server to accept long term credentials - 3489-bis11 digest
 - Check for unknown attributes
-- if server receives SendInd with no Data attribute (for UDP only), send empty UDP packet, TCP - do nothing
 - Standardize on a logging interface (rutil?)
 - from chart above
  - Configuration Framework
@@ -80,6 +79,7 @@ Client TODO
 - implement 300 Try-Alternate response - currently applications responsibility
 - Try next DNS entry on failure - currently applications responsibility
 - asyncronous support
+- allow listen support for TCP/TLP sockets?
          
 
 
