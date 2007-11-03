@@ -24,7 +24,8 @@ DumTimeout::DumTimeout(const DumTimeout& source)
       mDuration(source.mDuration),
       mUsageHandle(source.mUsageHandle),
       mSeq(source.mSeq),
-      mSecondarySeq(source.mSecondarySeq)
+      mSecondarySeq(source.mSecondarySeq),
+      mTransactionId(source.transactionId)
 {}
 
 DumTimeout::~DumTimeout()
