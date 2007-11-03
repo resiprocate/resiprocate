@@ -176,7 +176,7 @@ TurnAllocation::sendDataToPeer(unsigned char channelNumber, const StunTuple& pee
    {
       // If UDP, then send TurnChannelConfirmationInd
       StunMessage channelConfirmationInd;
-      channelConfirmationInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationInd);
+      channelConfirmationInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationMethod);
       channelConfirmationInd.mHasTurnRemoteAddress = true;
       channelConfirmationInd.mTurnRemoteAddress.port = peerAddress.getPort();
       if(peerAddress.getAddress().is_v6())
@@ -262,7 +262,7 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, const Data& data)
    if(useDataInd)
    {
       StunMessage dataInd;
-      dataInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnDataInd);
+      dataInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnDataMethod);
       dataInd.mHasTurnRemoteAddress = true;
       dataInd.mTurnRemoteAddress.port = peerAddress.getPort();
       if(peerAddress.getAddress().is_v6())
