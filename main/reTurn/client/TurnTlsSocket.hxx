@@ -11,7 +11,8 @@ namespace reTurn {
    class TurnTlsSocket : public TurnTcpSocket
 {
 public:
-   explicit TurnTlsSocket(const asio::ip::address& address, unsigned short port);
+   explicit TurnTlsSocket(const asio::ip::address& address = UnspecifiedIpAddress, 
+                          unsigned short port = 0);
 
    virtual  asio::error_code connect(const std::string& address, unsigned short port);
 

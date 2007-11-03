@@ -86,7 +86,7 @@ public:
   };
 
   // The maximum number of buffers to support in a single operation.
-  enum { max_buffers = 16 };
+  enum { max_buffers = 64 < max_iov_len ? 64 : max_iov_len };
 
   // Constructor.
   reactive_socket_service(asio::io_service& io_service)
@@ -157,7 +157,7 @@ public:
 
     if (int err = reactor_.register_descriptor(sock.get()))
     {
-      ec = asio::error_code(err, asio::native_ecat);
+      ec = asio::error_code(err, asio::error::system_category);
       return ec;
     }
 
@@ -181,7 +181,7 @@ public:
 
     if (int err = reactor_.register_descriptor(native_socket))
     {
-      ec = asio::error_code(err, asio::native_ecat);
+      ec = asio::error_code(err, asio::error::system_category);
       return ec;
     }
 
@@ -450,7 +450,7 @@ public:
     }
 
     endpoint_type endpoint;
-    socket_addr_len_type addr_len = endpoint.capacity();
+    std::size_t addr_len = endpoint.capacity();
     if (socket_ops::getsockname(impl.socket_, endpoint.data(), &addr_len, ec))
       return endpoint_type();
     endpoint.resize(addr_len);
@@ -468,7 +468,7 @@ public:
     }
 
     endpoint_type endpoint;
-    socket_addr_len_type addr_len = endpoint.capacity();
+    std::size_t addr_len = endpoint.capacity();
     if (socket_ops::getpeername(impl.socket_, endpoint.data(), &addr_len, ec))
       return endpoint_type();
     endpoint.resize(addr_len);
@@ -624,7 +624,7 @@ public:
   {
     if (!is_open(impl))
     {
-      this->io_service().post(bind_handler(handler,
+      this->get_io_service().post(bind_handler(handler,
             asio::error::bad_descriptor, 0));
     }
     else
@@ -645,7 +645,7 @@ public:
         // A request to receive 0 bytes on a stream socket is a no-op.
         if (total_buffer_size == 0)
         {
-          this->io_service().post(bind_handler(handler,
+          this->get_io_service().post(bind_handler(handler,
                 asio::error_code(), 0));
           return;
         }
@@ -658,7 +658,7 @@ public:
         asio::error_code ec;
         if (socket_ops::ioctl(impl.socket_, FIONBIO, &non_blocking, ec))
         {
-          this->io_service().post(bind_handler(handler, ec, 0));
+          this->get_io_service().post(bind_handler(handler, ec, 0));
           return;
         }
         impl.flags_ |= implementation_type::internal_non_blocking;
@@ -666,7 +666,7 @@ public:
 
       reactor_.start_write_op(impl.socket_,
           send_handler<ConstBufferSequence, Handler>(
-            impl.socket_, this->io_service(), buffers, flags, handler));
+            impl.socket_, this->get_io_service(), buffers, flags, handler));
     }
   }
 
@@ -804,7 +804,7 @@ public:
   {
     if (!is_open(impl))
     {
-      this->io_service().post(bind_handler(handler,
+      this->get_io_service().post(bind_handler(handler,
             asio::error::bad_descriptor, 0));
     }
     else
@@ -816,7 +816,7 @@ public:
         asio::error_code ec;
         if (socket_ops::ioctl(impl.socket_, FIONBIO, &non_blocking, ec))
         {
-          this->io_service().post(bind_handler(handler, ec, 0));
+          this->get_io_service().post(bind_handler(handler, ec, 0));
           return;
         }
         impl.flags_ |= implementation_type::internal_non_blocking;
@@ -824,7 +824,7 @@ public:
 
       reactor_.start_write_op(impl.socket_,
           send_to_handler<ConstBufferSequence, Handler>(
-            impl.socket_, this->io_service(), buffers,
+            impl.socket_, this->get_io_service(), buffers,
             destination, flags, handler));
     }
   }
@@ -975,7 +975,7 @@ public:
   {
     if (!is_open(impl))
     {
-      this->io_service().post(bind_handler(handler,
+      this->get_io_service().post(bind_handler(handler,
             asio::error::bad_descriptor, 0));
     }
     else
@@ -996,7 +996,7 @@ public:
         // A request to receive 0 bytes on a stream socket is a no-op.
         if (total_buffer_size == 0)
         {
-          this->io_service().post(bind_handler(handler,
+          this->get_io_service().post(bind_handler(handler,
                 asio::error_code(), 0));
           return;
         }
@@ -1009,7 +1009,7 @@ public:
         asio::error_code ec;
         if (socket_ops::ioctl(impl.socket_, FIONBIO, &non_blocking, ec))
         {
-          this->io_service().post(bind_handler(handler, ec, 0));
+          this->get_io_service().post(bind_handler(handler, ec, 0));
           return;
         }
         impl.flags_ |= implementation_type::internal_non_blocking;
@@ -1019,13 +1019,13 @@ public:
       {
         reactor_.start_except_op(impl.socket_,
             receive_handler<MutableBufferSequence, Handler>(
-              impl.socket_, this->io_service(), buffers, flags, handler));
+              impl.socket_, this->get_io_service(), buffers, flags, handler));
       }
       else
       {
         reactor_.start_read_op(impl.socket_,
             receive_handler<MutableBufferSequence, Handler>(
-              impl.socket_, this->io_service(), buffers, flags, handler));
+              impl.socket_, this->get_io_service(), buffers, flags, handler));
       }
     }
   }
@@ -1073,7 +1073,7 @@ public:
     for (;;)
     {
       // Try to complete the operation without blocking.
-      socket_addr_len_type addr_len = sender_endpoint.capacity();
+      std::size_t addr_len = sender_endpoint.capacity();
       int bytes_recvd = socket_ops::recvfrom(impl.socket_, bufs, i, flags,
           sender_endpoint.data(), &addr_len, ec);
 
@@ -1124,7 +1124,7 @@ public:
     bool operator()(const asio::error_code& result)
     {
       // Check whether the operation was successful.
-      if (result != 0)
+      if (result)
       {
         io_service_.post(bind_handler(handler_, result, 0));
         return true;
@@ -1144,7 +1144,7 @@ public:
       }
 
       // Receive some data.
-      socket_addr_len_type addr_len = sender_endpoint_.capacity();
+      std::size_t addr_len = sender_endpoint_.capacity();
       asio::error_code ec;
       int bytes = socket_ops::recvfrom(socket_, bufs, i, flags_,
           sender_endpoint_.data(), &addr_len, ec);
@@ -1181,7 +1181,7 @@ public:
   {
     if (!is_open(impl))
     {
-      this->io_service().post(bind_handler(handler,
+      this->get_io_service().post(bind_handler(handler,
             asio::error::bad_descriptor, 0));
     }
     else
@@ -1193,7 +1193,7 @@ public:
         asio::error_code ec;
         if (socket_ops::ioctl(impl.socket_, FIONBIO, &non_blocking, ec))
         {
-          this->io_service().post(bind_handler(handler, ec, 0));
+          this->get_io_service().post(bind_handler(handler, ec, 0));
           return;
         }
         impl.flags_ |= implementation_type::internal_non_blocking;
@@ -1201,7 +1201,7 @@ public:
 
       reactor_.start_read_op(impl.socket_,
           receive_from_handler<MutableBufferSequence, Handler>(
-            impl.socket_, this->io_service(), buffers,
+            impl.socket_, this->get_io_service(), buffers,
             sender_endpoint, flags, handler));
     }
   }
@@ -1242,7 +1242,7 @@ public:
       // Try to complete the operation without blocking.
       asio::error_code ec;
       socket_holder new_socket;
-      socket_addr_len_type addr_len = 0;
+      std::size_t addr_len = 0;
       if (peer_endpoint)
       {
         addr_len = peer_endpoint->capacity();
@@ -1327,7 +1327,7 @@ public:
       // Accept the waiting connection.
       asio::error_code ec;
       socket_holder new_socket;
-      socket_addr_len_type addr_len = 0;
+      std::size_t addr_len = 0;
       if (peer_endpoint_)
       {
         addr_len = peer_endpoint_->capacity();
@@ -1384,12 +1384,12 @@ public:
   {
     if (!is_open(impl))
     {
-      this->io_service().post(bind_handler(handler,
+      this->get_io_service().post(bind_handler(handler,
             asio::error::bad_descriptor));
     }
     else if (peer.is_open())
     {
-      this->io_service().post(bind_handler(handler,
+      this->get_io_service().post(bind_handler(handler,
             asio::error::already_open));
     }
     else
@@ -1401,7 +1401,7 @@ public:
         asio::error_code ec;
         if (socket_ops::ioctl(impl.socket_, FIONBIO, &non_blocking, ec))
         {
-          this->io_service().post(bind_handler(handler, ec));
+          this->get_io_service().post(bind_handler(handler, ec));
           return;
         }
         impl.flags_ |= implementation_type::internal_non_blocking;
@@ -1409,7 +1409,7 @@ public:
 
       reactor_.start_read_op(impl.socket_,
           accept_handler<Socket, Handler>(
-            impl.socket_, this->io_service(),
+            impl.socket_, this->get_io_service(),
             peer, impl.protocol_, peer_endpoint,
             (impl.flags_ & implementation_type::enable_connection_aborted) != 0,
             handler));
@@ -1489,7 +1489,7 @@ public:
       if (connect_error)
       {
         ec = asio::error_code(connect_error,
-            asio::native_ecat);
+            asio::error::system_category);
         io_service_.post(bind_handler(handler_, ec));
         return true;
       }
@@ -1515,7 +1515,7 @@ public:
   {
     if (!is_open(impl))
     {
-      this->io_service().post(bind_handler(handler,
+      this->get_io_service().post(bind_handler(handler,
             asio::error::bad_descriptor));
       return;
     }
@@ -1527,7 +1527,7 @@ public:
       asio::error_code ec;
       if (socket_ops::ioctl(impl.socket_, FIONBIO, &non_blocking, ec))
       {
-        this->io_service().post(bind_handler(handler, ec));
+        this->get_io_service().post(bind_handler(handler, ec));
         return;
       }
       impl.flags_ |= implementation_type::internal_non_blocking;
@@ -1541,7 +1541,7 @@ public:
     {
       // The connect operation has finished successfully so we need to post the
       // handler immediately.
-      this->io_service().post(bind_handler(handler,
+      this->get_io_service().post(bind_handler(handler,
             asio::error_code()));
     }
     else if (ec == asio::error::in_progress
@@ -1551,13 +1551,13 @@ public:
       // until the socket becomes writeable.
       boost::shared_ptr<bool> completed(new bool(false));
       reactor_.start_write_and_except_ops(impl.socket_,
-          connect_handler<Handler>(
-            impl.socket_, completed, this->io_service(), reactor_, handler));
+          connect_handler<Handler>(impl.socket_, completed,
+            this->get_io_service(), reactor_, handler));
     }
     else
     {
       // The connect operation has failed, so post the handler immediately.
-      this->io_service().post(bind_handler(handler, ec));
+      this->get_io_service().post(bind_handler(handler, ec));
     }
   }
 

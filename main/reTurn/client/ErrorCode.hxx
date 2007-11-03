@@ -25,6 +25,7 @@ static const ErrorType InvalidChannelNumberReceived          = ErrorBase + 10;
 static const ErrorType MissingAttributes                     = ErrorBase + 11;
 static const ErrorType UnknownRemoteAddress                  = ErrorBase + 12;
 static const ErrorType InvalidRequestedTransport             = ErrorBase + 13;
+static const ErrorType NotConnected                          = ErrorBase + 14;
 } 
 
 #endif
