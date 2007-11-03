@@ -31,20 +31,17 @@ TurnSocket::~TurnSocket()
 }
 
 asio::error_code 
-TurnSocket::requestSharedSecret(const std::string& stunServerAddress, 
-                                unsigned short stunServerPort, 
-                                char* username, unsigned int usernameSize, 
+TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize, 
                                 char* password, unsigned int passwordSize)
 {
    asio::error_code errorCode;
 
    // Should we check here if TLS and deny?
 
-   // Connect socket to Stun Server
-   errorCode = ensureConnected(stunServerAddress, stunServerPort);
-   if(errorCode != 0)
+   // Ensure Connected
+   if(!mConnected)
    {
-      return errorCode;
+      return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
    }
 
    // Form Shared Secret request
@@ -62,7 +59,7 @@ TurnSocket::requestSharedSecret(const std::string& stunServerAddress,
    // Check if success or not
    if(response->mHasErrorCode)
    {
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::misc_ecat);
+      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
       delete response;
       return errorCode;
    }
@@ -71,7 +68,7 @@ TurnSocket::requestSharedSecret(const std::string& stunServerAddress,
    if(!response->mHasUsername || !response->mHasPassword)
    {
       std::cout << "Stun response message for SharedSecretRequest is missing username and/or password!" << std::endl;
-      errorCode = asio::error_code(reTurn::MissingAuthenticationAttributes, asio::misc_ecat);  
+      errorCode = asio::error_code(reTurn::MissingAuthenticationAttributes, asio::error::misc_category);  
       delete response;
       return errorCode;
    }
@@ -79,7 +76,7 @@ TurnSocket::requestSharedSecret(const std::string& stunServerAddress,
    if(response->mUsername->size() > usernameSize || response->mPassword->size() > passwordSize)
    {
       std::cout << "Stun response message for SharedSecretRequest contains data that is too large to return!" << std::endl;
-      errorCode = asio::error_code(reTurn::BufferTooSmall, asio::misc_ecat);   
+      errorCode = asio::error_code(reTurn::BufferTooSmall, asio::error::misc_category);   
       delete response;
       return errorCode;
    }
@@ -93,19 +90,22 @@ TurnSocket::requestSharedSecret(const std::string& stunServerAddress,
    return errorCode;
 }
 
+void 
+TurnSocket::setUsernameAndPassword(const char* username, const char* password)
+{
+   mUsername = username;
+   mPassword = password;
+}
+
 asio::error_code 
-TurnSocket::bindRequest(const std::string& turnServerAddress, 
-                        unsigned short turnServerPort, 
-                        char* username,
-                        char* password)
+TurnSocket::bindRequest()
 {
    asio::error_code errorCode;
 
-   // Connect socket to Turn Server
-   errorCode = ensureConnected(turnServerAddress, turnServerPort);
-   if(errorCode != 0)
+   // Ensure Connected
+   if(!mConnected)
    {
-      return errorCode;
+      return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
    }
 
    // Form Stun Bind request
@@ -114,11 +114,11 @@ TurnSocket::bindRequest(const std::string& turnServerAddress,
 
    request.mHasFingerprint = true;
 
-   if(!username && !password)
+   if(!mUsername.empty())
    {
       request.mHasMessageIntegrity = true;
-      request.setUsername(username); 
-      request.mHmacKey = password;
+      request.setUsername(mUsername.c_str()); 
+      request.mHmacKey = mPassword;
    }
 
    StunMessage* response = sendRequestAndGetResponse(request, errorCode);
@@ -161,7 +161,7 @@ TurnSocket::bindRequest(const std::string& turnServerAddress,
    // Check if success or not
    if(response->mHasErrorCode)
    {
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::misc_ecat);
+      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
    }
 
    delete response;
@@ -169,11 +169,7 @@ TurnSocket::bindRequest(const std::string& turnServerAddress,
 }
 
 asio::error_code 
-TurnSocket::createAllocation(const std::string& turnServerAddress, 
-                             unsigned short turnServerPort, 
-                             char* username,
-                             char* password,
-                             unsigned int lifetime,
+TurnSocket::createAllocation(unsigned int lifetime,
                              unsigned int bandwidth,
                              unsigned short requestedPortProps, 
                              unsigned short requestedPort,
@@ -183,8 +179,6 @@ TurnSocket::createAllocation(const std::string& turnServerAddress,
    asio::error_code errorCode;
 
    // Store Allocation Properties
-   mUsername = username;
-   mPassword = password;
    mRequestedLifetime = lifetime;
    mRequestedBandwidth = bandwidth;
    mRequestedPortProps = requestedPortProps;
@@ -192,11 +186,10 @@ TurnSocket::createAllocation(const std::string& turnServerAddress,
    mRequestedTransportType = requestedTransportType;
    mRequestedIpAddress = requestedIpAddress;
 
-   // Connect socket to Turn Server
-   errorCode = ensureConnected(turnServerAddress, turnServerPort);
-   if(errorCode != 0)
+   // Ensure Connected
+   if(!mConnected)
    {
-      return errorCode;
+      return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
    }
 
    // Perform allocation
@@ -237,7 +230,7 @@ TurnSocket::refreshAllocation()
       }
       else
       {
-         return asio::error_code(reTurn::InvalidRequestedTransport, asio::misc_ecat); 
+         return asio::error_code(reTurn::InvalidRequestedTransport, asio::error::misc_category); 
       }
    }
    if(mRequestedIpAddress != UnspecifiedIpAddress)
@@ -328,7 +321,7 @@ TurnSocket::refreshAllocation()
          mHaveAllocation = false;
       }
 
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::misc_ecat);
+      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
       delete response;
       return errorCode;
    }
@@ -363,7 +356,7 @@ TurnSocket::destroyAllocation()
    }
    else
    {
-      return asio::error_code(reTurn::NoAllocation, asio::misc_ecat); 
+      return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
    }
 }
 
@@ -399,12 +392,13 @@ TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned shor
    // ensure there is an allocation
    if(!mHaveAllocation)
    {
-      // Connect socket to active Destination so that raw socket operations can be used
-      errorCode = ensureConnected(address.to_string(), port);
-      if(errorCode != 0)
-      {
-         return errorCode;
-      }
+      return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
+   }
+
+   // Ensure Connected
+   if(!mConnected)
+   {
+      return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
    }
 
    // Setup Remote Peer 
@@ -432,7 +426,7 @@ TurnSocket::clearActiveDestination()
    // ensure there is an allocation
    if(!mHaveAllocation)
    {
-      return asio::error_code(reTurn::NoAllocation, asio::misc_ecat); 
+      return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
    }
 
    mActiveDestination = 0;
@@ -451,7 +445,7 @@ TurnSocket::send(const char* buffer, unsigned int size)
 
    if(!mActiveDestination)
    {
-      return asio::error_code(reTurn::NoActiveDestination, asio::misc_ecat); 
+      return asio::error_code(reTurn::NoActiveDestination, asio::error::misc_category); 
    }
 
    return sendTo(*mActiveDestination, buffer, size);
@@ -463,7 +457,7 @@ TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const 
    // ensure there is an allocation 
    if(!mHaveAllocation)
    {
-      return asio::error_code(reTurn::NoAllocation, asio::misc_ecat); 
+      return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
    }
 
    // Setup Remote Peer 
@@ -483,7 +477,7 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
 {
    // Check to see if an allocation refresh is required - if so send it and make sure it was sucessful
    asio::error_code ret = checkIfAllocationRefreshRequired();
-   if(ret != 0)
+   if(ret)
    {
       return ret;
    }
@@ -566,7 +560,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
       // Wait for response
       unsigned int readSize;
       errorCode = rawRead(timeout, &readSize, sourceAddress, sourcePort); // Note: SourceAddress and sourcePort may be overwritten below if from Turn Relay
-      if(errorCode != 0)
+      if(errorCode)
       {
          return errorCode;
       }
@@ -600,7 +594,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
          else
          {
             // Invalid ServerToClient Channel - teardown?
-            errorCode = asio::error_code(reTurn::InvalidChannelNumberReceived, asio::misc_ecat);  
+            errorCode = asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);  
             done = true;
          }
       }
@@ -610,7 +604,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
          StunMessage* stunMsg = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[4], readSize-4);
          unsigned int tempsize = size;
          errorCode = handleStunMessage(*stunMsg, buffer, tempsize, sourceAddress, sourcePort);
-         if(errorCode == 0 && tempsize == 0)  // Signifies that a Stun/Turn request was received and there is nothing to return to receive caller
+         if(!errorCode && tempsize == 0)  // Signifies that a Stun/Turn request was received and there is nothing to return to receive caller
          {
             done = false;
          }
@@ -622,7 +616,7 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
       else
       {
          // Less data than frame size received
-         errorCode = asio::error_code(reTurn::FrameError, asio::misc_ecat);
+         errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);
          done = true;
       }
    }
@@ -641,7 +635,7 @@ TurnSocket::receiveFrom(const asio::ip::address& address, unsigned short port, c
    {
       done = true;
       errorCode = receive(buffer, size, timeout, &sourceAddress, &sourcePort);
-      if(errorCode == 0)
+      if(!errorCode)
       {
          if(sourceAddress != address || sourcePort != port)
          {
@@ -662,14 +656,14 @@ TurnSocket::handleRawData(char* data, unsigned int dataSize, unsigned int expect
    {
       // TODO - fix read logic so that we can read in chuncks
       std::cout << "Did not read entire message: read=" << dataSize << " wanted=" << expectedSize << std::endl;
-      return asio::error_code(reTurn::ReadError, asio::misc_ecat); 
+      return asio::error_code(reTurn::ReadError, asio::error::misc_category); 
    }
 
    if(dataSize > bufferSize) 
    {
      // Passed in buffer is not large enough
      std::cout << "Passed in buffer not large enough." << std::endl;
-     return asio::error_code(reTurn::BufferTooSmall, asio::misc_ecat); 
+     return asio::error_code(reTurn::BufferTooSmall, asio::error::misc_category); 
    }
 
    // Copy data to return buffer
@@ -691,7 +685,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          {
             // Missing RemoteAddress or ChannelNumber attribute
             std::cout << "DataInd missing attributes." << std::endl;
-            return asio::error_code(reTurn::MissingAttributes, asio::misc_ecat);
+            return asio::error_code(reTurn::MissingAttributes, asio::error::misc_category);
          }
 
          StunTuple remoteTuple;
@@ -713,14 +707,14 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          {
             // Remote Peer not found - discard data
             std::cout << "Data received from unknown RemotePeer - discarding" << std::endl;
-            return asio::error_code(reTurn::UnknownRemoteAddress, asio::misc_ecat);
+            return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
          }
 
          if(remotePeer->getServerToClientChannel() != 0 && remotePeer->getServerToClientChannel() != stunMessage.mTurnChannelNumber)
          {
             // Mismatched channel number
             std::cout << "Channel number received in DataInd (" << (int)stunMessage.mTurnChannelNumber << ") does not match existing number for RemotePeer (" << (int)remotePeer->getServerToClientChannel() << ")." << std::endl;
-            return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::misc_ecat);
+            return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
          }
 
          remotePeer->setServerToClientChannel(stunMessage.mTurnChannelNumber);
@@ -752,7 +746,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             {
                // Passed in buffer is not large enough
                std::cout << "Passed in buffer not large enough." << std::endl;
-               return asio::error_code(reTurn::BufferTooSmall, asio::misc_ecat);
+               return asio::error_code(reTurn::BufferTooSmall, asio::error::misc_category);
             }
 
             memcpy(buffer, stunMessage.mTurnData->data(), stunMessage.mTurnData->size());
@@ -778,7 +772,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          {
             // Missing RemoteAddress or ChannelNumber attribute
             std::cout << "DataInd missing attributes." << std::endl;
-            return asio::error_code(reTurn::MissingAttributes, asio::misc_ecat);
+            return asio::error_code(reTurn::MissingAttributes, asio::error::misc_category);
          }
 
          StunTuple remoteTuple;
@@ -800,14 +794,14 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          {
             // Remote Peer not found - discard
             std::cout << "Received ChannelConfirmationInd for unknown channel (" << stunMessage.mTurnChannelNumber << ") - discarding" << std::endl;
-            return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::misc_ecat);
+            return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
          }
 
          if(remotePeer->getPeerTuple() != remoteTuple)
          {
             // Mismatched remote address
             std::cout << "RemoteAddress associated with channel (" << remotePeer->getPeerTuple() << ") does not match ChannelConfirmationInd (" << remoteTuple << ")." << std::endl;
-            return asio::error_code(reTurn::UnknownRemoteAddress, asio::misc_ecat);
+            return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
          }
 
          remotePeer->setClientToServerChannelConfirmed();
@@ -826,7 +820,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
    else
    {
       std::cout << "Read Invalid StunMsg." << std::endl;
-      return asio::error_code(reTurn::ErrorParsingMessage, asio::misc_ecat);
+      return asio::error_code(reTurn::ErrorParsingMessage, asio::error::misc_category);
    }
    return errorCode;
 }
@@ -854,7 +848,7 @@ void
 TurnSocket::handleRawReadTimeout(const asio::error_code& errorCode)
 {
    //clog << "handleRawReadTimeout: errorCode=" << errorCode.message() << endl;
-   if(errorCode == 0)
+   if(!errorCode)
    {
       cancelSocket();
    }
@@ -869,24 +863,6 @@ TurnSocket::checkIfAllocationRefreshRequired()
       return refreshAllocation();
    }
    return asio::error_code();  // 0
-}
-
-asio::error_code
-TurnSocket::ensureConnected(const std::string& address, unsigned int port)
-{
-   asio::error_code errorCode;
-   if(!mConnected)
-   {
-      // Connect socket to Stun Server
-      errorCode = connect(address, port);
-      if(errorCode != 0)
-      {
-         return errorCode;
-      }
-      mConnected = true;
-      cout << "TurnSocket:  Connected to: " << mConnectedTuple << endl;
-   }
-   return errorCode;
 }
 
 StunMessage* 
@@ -911,7 +887,7 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
          }
          requestsSent++;
          errorCode = rawWrite(mWriteBuffer, writesize);
-         if(errorCode != 0)
+         if(errorCode)
          {
             return 0;
          }
@@ -921,7 +897,7 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
 
       // Wait for response
       errorCode = rawRead(timeout, &readsize);
-      if(errorCode != 0)
+      if(errorCode)
       {
          if(errorCode == asio::error::operation_aborted)
          {
@@ -930,7 +906,7 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
             if(reliableTransport || requestsSent == UDP_MAX_RETRANSMITS)
             {
                std::cout << "Timed out waiting for Stun response!" << std::endl;
-               errorCode = asio::error_code(reTurn::ResponseTimeout, asio::misc_ecat);
+               errorCode = asio::error_code(reTurn::ResponseTimeout, asio::error::misc_category);
                return 0;
             }
 
@@ -959,7 +935,7 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
             {
                std::cout << "Stun response message integrity is bad!" << std::endl;
                delete response;
-               errorCode = asio::error_code(reTurn::BadMessageIntegrity, asio::misc_ecat);
+               errorCode = asio::error_code(reTurn::BadMessageIntegrity, asio::error::misc_category);
                return 0;
             }
 
@@ -971,27 +947,27 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
                continue;  // read next message
             }
    
-            errorCode = asio::error_code(reTurn::Success, asio::misc_ecat);
+            errorCode = asio::error_code(reTurn::Success, asio::error::misc_category);
             return response;
          }
          else
          {
             std::cout << "Stun response message is invalid!" << std::endl;
             delete response;
-            errorCode = asio::error_code(reTurn::ErrorParsingMessage, asio::misc_ecat);  
+            errorCode = asio::error_code(reTurn::ErrorParsingMessage, asio::error::misc_category);  
             return 0;
          }
       }
       else if(readsize > 4 && mReadBuffer[0] > 0) // Channel > 0 indicates Turn Data
       {
          // TODO - handle buffering of Turn data that is receive while waiting for a Request/Response
-         errorCode = asio::error_code(reTurn::FrameError, asio::misc_ecat);  
+         errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);  
          return 0;
       }
       else
       {
          // Less data than frame size received
-         errorCode = asio::error_code(reTurn::FrameError, asio::misc_ecat);  
+         errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);  
          return 0;
       }
    }

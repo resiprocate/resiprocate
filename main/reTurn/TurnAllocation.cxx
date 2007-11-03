@@ -217,7 +217,15 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, const resip::Data& 
       assert(mUdpRelayServer);
       mUdpRelayServer->sendTurnData(peerAddress, data.data(), (unsigned int)data.size());
    }
-   // !SLG! TODO - implement TCP relays
+   else
+   {
+      if(data==Data::Empty)
+      {
+         cout << "Turn send indication with no data for non-UDP transport.  Dropping." << endl; 
+         return;
+      }
+      // !SLG! TODO - implement TCP relays
+   }
 }
 
 void 

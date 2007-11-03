@@ -14,7 +14,7 @@ TurnUdpSocket::TurnUdpSocket(const asio::ip::address& address, unsigned short po
 
    asio::error_code errorCode;
    mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
-   if(errorCode == 0)
+   if(!errorCode)
    {
       mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
       mSocket.bind(asio::ip::udp::endpoint(mLocalBinding.getAddress(), mLocalBinding.getPort()), errorCode);
@@ -42,6 +42,7 @@ TurnUdpSocket::connect(const std::string& address, unsigned short port)
    // Nothing to do for UDP except store the remote endpoint
    mRemoteEndpoint = endpoint_iterator->endpoint();
 
+   mConnected = true;
    mConnectedTuple.setTransportType(StunTuple::UDP);
    mConnectedTuple.setAddress(mRemoteEndpoint.address());
    mConnectedTuple.setPort(mRemoteEndpoint.port());
@@ -114,7 +115,7 @@ TurnUdpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
       *bytesRead = (unsigned int)mBytesRead;
    }
 
-   if(mReadErrorCode == 0)
+   if(!mReadErrorCode)
    {
       if(sourceAddress)
       {

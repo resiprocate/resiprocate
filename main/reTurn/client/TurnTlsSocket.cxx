@@ -18,7 +18,7 @@ TurnTlsSocket::TurnTlsSocket(const asio::ip::address& address, unsigned short po
 
    asio::error_code errorCode;
    mSocket.lowest_layer().open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
-   if(errorCode == 0)
+   if(!errorCode)
    {
       mSocket.lowest_layer().set_option(asio::ip::tcp::socket::reuse_address(true));
       mSocket.lowest_layer().set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
@@ -42,13 +42,14 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
    {
       mSocket.lowest_layer().close();
       mSocket.lowest_layer().connect(*endpoint_iterator, errorCode);
-      if(errorCode == 0)
+      if(!errorCode)
       {
          std::cout << "Connected!" << std::endl;
          mSocket.handshake(asio::ssl::stream_base::client, errorCode);
-         if(errorCode == 0)
+         if(!errorCode)
          {  
             std::cout << "Handshake complete!" << std::endl;
+            mConnected = true;
             mConnectedTuple.setTransportType(StunTuple::TLS);
             mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
             mConnectedTuple.setPort(endpoint_iterator->endpoint().port());

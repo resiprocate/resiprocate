@@ -1,6 +1,6 @@
 //
-// select_reactor.hpp
-// ~~~~~~~~~~~~~~~~~~
+// dev_poll_reactor.hpp
+// ~~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (c) 2003-2007 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
@@ -8,8 +8,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef ASIO_DETAIL_SELECT_REACTOR_HPP
-#define ASIO_DETAIL_SELECT_REACTOR_HPP
+#ifndef ASIO_DETAIL_DEV_POLL_REACTOR_HPP
+#define ASIO_DETAIL_DEV_POLL_REACTOR_HPP
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1200)
 # pragma once
@@ -17,45 +17,49 @@
 
 #include "asio/detail/push_options.hpp"
 
-#include "asio/detail/socket_types.hpp" // Must come before posix_time.
+#include "asio/detail/dev_poll_reactor_fwd.hpp"
+
+#if defined(ASIO_HAS_DEV_POLL)
 
 #include "asio/detail/push_options.hpp"
 #include <cstddef>
+#include <vector>
 #include <boost/config.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <vector>
+#include <boost/throw_exception.hpp>
+#include <sys/devpoll.h>
 #include "asio/detail/pop_options.hpp"
 
+#include "asio/error.hpp"
 #include "asio/io_service.hpp"
+#include "asio/system_error.hpp"
 #include "asio/detail/bind_handler.hpp"
-#include "asio/detail/fd_set_adapter.hpp"
+#include "asio/detail/hash_map.hpp"
 #include "asio/detail/mutex.hpp"
-#include "asio/detail/noncopyable.hpp"
-#include "asio/detail/reactor_op_queue.hpp"
-#include "asio/detail/select_interrupter.hpp"
-#include "asio/detail/select_reactor_fwd.hpp"
-#include "asio/detail/service_base.hpp"
-#include "asio/detail/signal_blocker.hpp"
-#include "asio/detail/socket_ops.hpp"
-#include "asio/detail/socket_types.hpp"
 #include "asio/detail/task_io_service.hpp"
 #include "asio/detail/thread.hpp"
+#include "asio/detail/reactor_op_queue.hpp"
+#include "asio/detail/select_interrupter.hpp"
+#include "asio/detail/service_base.hpp"
+#include "asio/detail/signal_blocker.hpp"
+#include "asio/detail/socket_types.hpp"
 #include "asio/detail/timer_queue.hpp"
 
 namespace asio {
 namespace detail {
 
 template <bool Own_Thread>
-class select_reactor
-  : public asio::detail::service_base<select_reactor<Own_Thread> >
+class dev_poll_reactor
+  : public asio::detail::service_base<dev_poll_reactor<Own_Thread> >
 {
 public:
   // Constructor.
-  select_reactor(asio::io_service& io_service)
+  dev_poll_reactor(asio::io_service& io_service)
     : asio::detail::service_base<
-        select_reactor<Own_Thread> >(io_service),
+        dev_poll_reactor<Own_Thread> >(io_service),
       mutex_(),
-      select_in_progress_(false),
+      dev_poll_fd_(do_dev_poll_create()),
+      wait_in_progress_(false),
       interrupter_(),
       read_op_queue_(),
       write_op_queue_(),
@@ -65,18 +69,27 @@ public:
       thread_(0),
       shutdown_(false)
   {
+    // Start the reactor's internal thread only if needed.
     if (Own_Thread)
     {
       asio::detail::signal_blocker sb;
       thread_ = new asio::detail::thread(
-          bind_handler(&select_reactor::call_run_thread, this));
+          bind_handler(&dev_poll_reactor::call_run_thread, this));
     }
+
+    // Add the interrupter's descriptor to /dev/poll.
+    ::pollfd ev = { 0 };
+    ev.fd = interrupter_.read_descriptor();
+    ev.events = POLLIN | POLLERR;
+    ev.revents = 0;
+    ::write(dev_poll_fd_, &ev, sizeof(ev));
   }
 
   // Destructor.
-  ~select_reactor()
+  ~dev_poll_reactor()
   {
     shutdown_service();
+    ::close(dev_poll_fd_);
   }
 
   // Destroy all user-defined handler objects owned by the service.
@@ -117,9 +130,33 @@ public:
   void start_read_op(socket_type descriptor, Handler handler)
   {
     asio::detail::mutex::scoped_lock lock(mutex_);
-    if (!shutdown_)
-      if (read_op_queue_.enqueue_operation(descriptor, handler))
-        interrupter_.interrupt();
+
+    if (shutdown_)
+      return;
+
+    if (!read_op_queue_.has_operation(descriptor))
+      if (handler(asio::error_code()))
+        return;
+
+    if (read_op_queue_.enqueue_operation(descriptor, handler))
+    {
+      ::pollfd ev = { 0 };
+      ev.fd = descriptor;
+      ev.events = POLLIN | POLLERR | POLLHUP;
+      if (write_op_queue_.has_operation(descriptor))
+        ev.events |= POLLOUT;
+      if (except_op_queue_.has_operation(descriptor))
+        ev.events |= POLLPRI;
+      ev.revents = 0;
+
+      int result = ::write(dev_poll_fd_, &ev, sizeof(ev));
+      if (result != sizeof(ev))
+      {
+        asio::error_code ec(errno,
+            asio::error::system_category);
+        read_op_queue_.dispatch_all_operations(descriptor, ec);
+      }
+    }
   }
 
   // Start a new write operation. The handler object will be invoked when the
@@ -128,9 +165,33 @@ public:
   void start_write_op(socket_type descriptor, Handler handler)
   {
     asio::detail::mutex::scoped_lock lock(mutex_);
-    if (!shutdown_)
-      if (write_op_queue_.enqueue_operation(descriptor, handler))
-        interrupter_.interrupt();
+
+    if (shutdown_)
+      return;
+
+    if (!write_op_queue_.has_operation(descriptor))
+      if (handler(asio::error_code()))
+        return;
+
+    if (write_op_queue_.enqueue_operation(descriptor, handler))
+    {
+      ::pollfd ev = { 0 };
+      ev.fd = descriptor;
+      ev.events = POLLOUT | POLLERR | POLLHUP;
+      if (read_op_queue_.has_operation(descriptor))
+        ev.events |= POLLIN;
+      if (except_op_queue_.has_operation(descriptor))
+        ev.events |= POLLPRI;
+      ev.revents = 0;
+
+      int result = ::write(dev_poll_fd_, &ev, sizeof(ev));
+      if (result != sizeof(ev))
+      {
+        asio::error_code ec(errno,
+            asio::error::system_category);
+        write_op_queue_.dispatch_all_operations(descriptor, ec);
+      }
+    }
   }
 
   // Start a new exception operation. The handler object will be invoked when
@@ -139,9 +200,29 @@ public:
   void start_except_op(socket_type descriptor, Handler handler)
   {
     asio::detail::mutex::scoped_lock lock(mutex_);
-    if (!shutdown_)
-      if (except_op_queue_.enqueue_operation(descriptor, handler))
-        interrupter_.interrupt();
+
+    if (shutdown_)
+      return;
+
+    if (except_op_queue_.enqueue_operation(descriptor, handler))
+    {
+      ::pollfd ev = { 0 };
+      ev.fd = descriptor;
+      ev.events = POLLPRI | POLLERR | POLLHUP;
+      if (read_op_queue_.has_operation(descriptor))
+        ev.events |= POLLIN;
+      if (write_op_queue_.has_operation(descriptor))
+        ev.events |= POLLOUT;
+      ev.revents = 0;
+
+      int result = ::write(dev_poll_fd_, &ev, sizeof(ev));
+      if (result != sizeof(ev))
+      {
+        asio::error_code ec(errno,
+            asio::error::system_category);
+        except_op_queue_.dispatch_all_operations(descriptor, ec);
+      }
+    }
   }
 
   // Start new write and exception operations. The handler object will be
@@ -151,13 +232,30 @@ public:
   void start_write_and_except_ops(socket_type descriptor, Handler handler)
   {
     asio::detail::mutex::scoped_lock lock(mutex_);
-    if (!shutdown_)
+
+    if (shutdown_)
+      return;
+
+    bool need_mod = write_op_queue_.enqueue_operation(descriptor, handler);
+    need_mod = except_op_queue_.enqueue_operation(descriptor, handler)
+      && need_mod;
+    if (need_mod)
     {
-      bool interrupt = write_op_queue_.enqueue_operation(descriptor, handler);
-      interrupt = except_op_queue_.enqueue_operation(descriptor, handler)
-        || interrupt;
-      if (interrupt)
-        interrupter_.interrupt();
+      ::pollfd ev = { 0 };
+      ev.fd = descriptor;
+      ev.events = POLLOUT | POLLPRI | POLLERR | POLLHUP;
+      if (read_op_queue_.has_operation(descriptor))
+        ev.events |= POLLIN;
+      ev.revents = 0;
+
+      int result = ::write(dev_poll_fd_, &ev, sizeof(ev));
+      if (result != sizeof(ev))
+      {
+        asio::error_code ec(errno,
+            asio::error::system_category);
+        write_op_queue_.dispatch_all_operations(descriptor, ec);
+        except_op_queue_.dispatch_all_operations(descriptor, ec);
+      }
     }
   }
 
@@ -173,7 +271,7 @@ public:
   // Enqueue cancellation of all operations associated with the given
   // descriptor. The handlers associated with the descriptor will be invoked
   // with the operation_aborted error. This function does not acquire the
-  // select_reactor's mutex, and so should only be used from within a reactor
+  // dev_poll_reactor's mutex, and so should only be used from within a reactor
   // handler.
   void enqueue_cancel_ops_unlocked(socket_type descriptor)
   {
@@ -185,6 +283,15 @@ public:
   void close_descriptor(socket_type descriptor)
   {
     asio::detail::mutex::scoped_lock lock(mutex_);
+
+    // Remove the descriptor from /dev/poll.
+    ::pollfd ev = { 0 };
+    ev.fd = descriptor;
+    ev.events = POLLREMOVE;
+    ev.revents = 0;
+    ::write(dev_poll_fd_, &ev, sizeof(ev));
+
+    // Cancel any outstanding operations associated with the descriptor.
     cancel_ops_unlocked(descriptor);
   }
 
@@ -236,9 +343,9 @@ public:
   }
 
 private:
-  friend class task_io_service<select_reactor<Own_Thread> >;
+  friend class task_io_service<dev_poll_reactor<Own_Thread> >;
 
-  // Run select once until interrupted or events are ready to be dispatched.
+  // Run /dev/poll once until interrupted or events are ready to be dispatched.
   void run(bool block)
   {
     asio::detail::mutex::scoped_lock lock(mutex_);
@@ -267,54 +374,97 @@ private:
       return;
     }
 
-    // Set up the descriptor sets.
-    fd_set_adapter read_fds;
-    read_fds.set(interrupter_.read_descriptor());
-    read_op_queue_.get_descriptors(read_fds);
-    fd_set_adapter write_fds;
-    write_op_queue_.get_descriptors(write_fds);
-    fd_set_adapter except_fds;
-    except_op_queue_.get_descriptors(except_fds);
-    socket_type max_fd = read_fds.max_descriptor();
-    if (write_fds.max_descriptor() > max_fd)
-      max_fd = write_fds.max_descriptor();
-    if (except_fds.max_descriptor() > max_fd)
-      max_fd = except_fds.max_descriptor();
-
-    // Block on the select call without holding the lock so that new
-    // operations can be started while the call is executing.
-    timeval tv_buf = { 0, 0 };
-    timeval* tv = block ? get_timeout(tv_buf) : &tv_buf;
-    select_in_progress_ = true;
+    int timeout = block ? get_timeout() : 0;
+    wait_in_progress_ = true;
     lock.unlock();
-    asio::error_code ec;
-    int retval = socket_ops::select(static_cast<int>(max_fd + 1),
-        read_fds, write_fds, except_fds, tv, ec);
+
+    // Block on the /dev/poll descriptor.
+    ::pollfd events[128] = { { 0 } };
+    ::dvpoll dp = { 0 };
+    dp.dp_fds = events;
+    dp.dp_nfds = 128;
+    dp.dp_timeout = timeout;
+    int num_events = ::ioctl(dev_poll_fd_, DP_POLL, &dp);
+
     lock.lock();
-    select_in_progress_ = false;
+    wait_in_progress_ = false;
 
     // Block signals while dispatching operations.
     asio::detail::signal_blocker sb;
 
-    // Reset the interrupter.
-    if (retval > 0 && read_fds.is_set(interrupter_.read_descriptor()))
-      interrupter_.reset();
-
-    // Dispatch all ready operations.
-    if (retval > 0)
+    // Dispatch the waiting events.
+    for (int i = 0; i < num_events; ++i)
     {
-      // Exception operations must be processed first to ensure that any
-      // out-of-band data is read before normal data.
-      except_op_queue_.dispatch_descriptors(except_fds,
-          asio::error_code());
-      read_op_queue_.dispatch_descriptors(read_fds,
-          asio::error_code());
-      write_op_queue_.dispatch_descriptors(write_fds,
-          asio::error_code());
-      except_op_queue_.dispatch_cancellations();
-      read_op_queue_.dispatch_cancellations();
-      write_op_queue_.dispatch_cancellations();
+      int descriptor = events[i].fd;
+      if (descriptor == interrupter_.read_descriptor())
+      {
+        interrupter_.reset();
+      }
+      else
+      {
+        bool more_reads = false;
+        bool more_writes = false;
+        bool more_except = false;
+        asio::error_code ec;
+
+        // Exception operations must be processed first to ensure that any
+        // out-of-band data is read before normal data.
+        if (events[i].events & (POLLPRI | POLLERR | POLLHUP))
+          more_except = except_op_queue_.dispatch_operation(descriptor, ec);
+        else
+          more_except = except_op_queue_.has_operation(descriptor);
+
+        if (events[i].events & (POLLIN | POLLERR | POLLHUP))
+          more_reads = read_op_queue_.dispatch_operation(descriptor, ec);
+        else
+          more_reads = read_op_queue_.has_operation(descriptor);
+
+        if (events[i].events & (POLLOUT | POLLERR | POLLHUP))
+          more_writes = write_op_queue_.dispatch_operation(descriptor, ec);
+        else
+          more_writes = write_op_queue_.has_operation(descriptor);
+
+        if ((events[i].events == POLLHUP)
+            && !more_except && !more_reads && !more_writes)
+        {
+          // If we have only an POLLHUP event and no operations associated
+          // with the descriptor then we need to delete the descriptor from
+          // /dev/poll. The poll operation might produce POLLHUP events even
+          // if they are not specifically requested, so if we do not remove the
+          // descriptor we can end up in a tight polling loop.
+          ::pollfd ev = { 0 };
+          ev.fd = descriptor;
+          ev.events = POLLREMOVE;
+          ev.revents = 0;
+          ::write(dev_poll_fd_, &ev, sizeof(ev));
+        }
+        else
+        {
+          ::pollfd ev = { 0 };
+          ev.fd = descriptor;
+          ev.events = POLLERR | POLLHUP;
+          if (more_reads)
+            ev.events |= POLLIN;
+          if (more_writes)
+            ev.events |= POLLOUT;
+          if (more_except)
+            ev.events |= POLLPRI;
+          ev.revents = 0;
+          int result = ::write(dev_poll_fd_, &ev, sizeof(ev));
+          if (result != sizeof(ev))
+          {
+            ec = asio::error_code(errno,
+                asio::error::system_category);
+            read_op_queue_.dispatch_all_operations(descriptor, ec);
+            write_op_queue_.dispatch_all_operations(descriptor, ec);
+            except_op_queue_.dispatch_all_operations(descriptor, ec);
+          }
+        }
+      }
     }
+    read_op_queue_.dispatch_cancellations();
+    write_op_queue_.dispatch_cancellations();
+    except_op_queue_.dispatch_cancellations();
     for (std::size_t i = 0; i < timer_queues_.size(); ++i)
     {
       timer_queues_[i]->dispatch_timers();
@@ -342,7 +492,7 @@ private:
   }
 
   // Entry point for the select loop thread.
-  static void call_run_thread(select_reactor* reactor)
+  static void call_run_thread(dev_poll_reactor* reactor)
   {
     reactor->run_thread();
   }
@@ -351,6 +501,22 @@ private:
   void interrupt()
   {
     interrupter_.interrupt();
+  }
+
+  // Create the /dev/poll file descriptor. Throws an exception if the descriptor
+  // cannot be created.
+  static int do_dev_poll_create()
+  {
+    int fd = ::open("/dev/poll", O_RDWR);
+    if (fd == -1)
+    {
+      boost::throw_exception(
+          asio::system_error(
+            asio::error_code(errno,
+              asio::error::system_category),
+            "/dev/poll"));
+    }
+    return fd;
   }
 
   // Check if all timer queues are empty.
@@ -362,11 +528,13 @@ private:
     return true;
   }
 
-  // Get the timeout value for the select call.
-  timeval* get_timeout(timeval& tv)
+  // Get the timeout value for the /dev/poll DP_POLL operation. The timeout
+  // value is returned as a number of milliseconds. A return value of -1
+  // indicates that the poll should block indefinitely.
+  int get_timeout()
   {
     if (all_timer_queues_are_empty())
-      return 0;
+      return -1;
 
     // By default we will wait no longer than 5 minutes. This will ensure that
     // any changes to the system clock are detected after no longer than this.
@@ -383,21 +551,18 @@ private:
 
     if (minimum_wait_duration > boost::posix_time::time_duration())
     {
-      tv.tv_sec = minimum_wait_duration.total_seconds();
-      tv.tv_usec = minimum_wait_duration.total_microseconds() % 1000000;
+      int milliseconds = minimum_wait_duration.total_milliseconds();
+      return milliseconds > 0 ? milliseconds : 1;
     }
     else
     {
-      tv.tv_sec = 0;
-      tv.tv_usec = 0;
+      return 0;
     }
-
-    return &tv;
   }
 
   // Cancel all operations associated with the given descriptor. The do_cancel
   // function of the handler objects will be invoked. This function does not
-  // acquire the select_reactor's mutex.
+  // acquire the dev_poll_reactor's mutex.
   void cancel_ops_unlocked(socket_type descriptor)
   {
     bool interrupt = read_op_queue_.cancel_operations(descriptor);
@@ -426,10 +591,13 @@ private:
   // Mutex to protect access to internal data.
   asio::detail::mutex mutex_;
 
-  // Whether the select loop is currently running or not.
-  bool select_in_progress_;
+  // The /dev/poll file descriptor.
+  int dev_poll_fd_;
 
-  // The interrupter is used to break a blocking select call.
+  // Whether the DP_POLL operation is currently in progress
+  bool wait_in_progress_;
+
+  // The interrupter is used to break a blocking DP_POLL operation.
   select_interrupter interrupter_;
 
   // The queue of read operations.
@@ -438,7 +606,7 @@ private:
   // The queue of write operations.
   reactor_op_queue<socket_type> write_op_queue_;
 
-  // The queue of exception operations.
+  // The queue of except operations.
   reactor_op_queue<socket_type> except_op_queue_;
 
   // The timer queues.
@@ -464,6 +632,8 @@ private:
 } // namespace detail
 } // namespace asio
 
+#endif // defined(ASIO_HAS_DEV_POLL)
+
 #include "asio/detail/pop_options.hpp"
 
-#endif // ASIO_DETAIL_SELECT_REACTOR_HPP
+#endif // ASIO_DETAIL_DEV_POLL_REACTOR_HPP

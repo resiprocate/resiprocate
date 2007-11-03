@@ -32,24 +32,30 @@
 
 namespace asio {
 
-/// Available error code categories.
-enum error_category
+namespace error
 {
-  /// Native error codes.
-  native_ecat = ASIO_WIN_OR_POSIX(0, 0),
+  /// Available error code categories.
+  enum error_category
+  {
+    /// System error codes.
+    system_category = ASIO_WIN_OR_POSIX(0, 0),
 
-  /// Error codes from NetDB functions.
-  netdb_ecat = ASIO_WIN_OR_POSIX(native_ecat, 1),
+    /// Error codes from NetDB functions.
+    netdb_category = ASIO_WIN_OR_POSIX(system_category, 1),
 
-  /// Error codes from getaddrinfo.
-  addrinfo_ecat = ASIO_WIN_OR_POSIX(native_ecat, 2),
+    /// Error codes from getaddrinfo.
+    addrinfo_category = ASIO_WIN_OR_POSIX(system_category, 2),
 
-  /// Miscellaneous error codes.
-  misc_ecat = ASIO_WIN_OR_POSIX(3, 3),
+    /// Miscellaneous error codes.
+    misc_category = ASIO_WIN_OR_POSIX(3, 3),
 
-  /// SSL error codes.
-  ssl_ecat = ASIO_WIN_OR_POSIX(4, 4)
-};
+    /// SSL error codes.
+    ssl_category = ASIO_WIN_OR_POSIX(4, 4)
+  };
+} // namespace error
+
+/// Bring error category type into the asio namespace.
+typedef asio::error::error_category error_category;
 
 /// Class to represent an error code value.
 class error_code
@@ -61,7 +67,7 @@ public:
   /// Default constructor.
   error_code()
     : value_(0),
-      category_(native_ecat)
+      category_(error::system_category)
   {
   }
 
@@ -70,6 +76,13 @@ public:
     : value_(v),
       category_(c)
   {
+  }
+
+  /// Construct from an error code enum.
+  template <typename ErrorEnum>
+  error_code(ErrorEnum e)
+  {
+    *this = make_error_code(e);
   }
 
   /// Get the error value.

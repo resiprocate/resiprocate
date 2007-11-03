@@ -13,7 +13,7 @@ TurnTcpSocket::TurnTcpSocket(const asio::ip::address& address, unsigned short po
 
    asio::error_code errorCode;
    mSocket.open(address.is_v6() ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), errorCode);
-   if(errorCode == 0)
+   if(!errorCode)
    {
       mSocket.set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
       mSocket.set_option(asio::ip::tcp::socket::reuse_address(true));
@@ -38,8 +38,9 @@ TurnTcpSocket::connect(const std::string& address, unsigned short port)
       mSocket.close();
       mSocket.connect(*endpoint_iterator, errorCode);
 
-      if(errorCode == 0)
+      if(!errorCode)
       {
+         mConnected = true;
          mConnectedTuple.setTransportType(StunTuple::TCP);
          mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());
          mConnectedTuple.setPort(endpoint_iterator->endpoint().port());
@@ -77,7 +78,7 @@ TurnTcpSocket::rawRead(unsigned int timeout, unsigned int* bytesRead, asio::ip::
    mIOService.reset();
 
    *bytesRead = (unsigned int)mBytesRead+4;
-   if(mReadErrorCode == 0)
+   if(!mReadErrorCode)
    {
       if(sourceAddress)
       {
