@@ -46,7 +46,7 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
 
    // Form Shared Secret request
    StunMessage request;
-   request.createHeader(StunMessage::StunClassRequest, StunMessage::SharedSecretRequest);
+   request.createHeader(StunMessage::StunClassRequest, StunMessage::SharedSecretMethod);
    request.mHasFingerprint = true;
 
    // Get Response
@@ -110,7 +110,7 @@ TurnSocket::bindRequest()
 
    // Form Stun Bind request
    StunMessage request;
-   request.createHeader(StunMessage::StunClassRequest, StunMessage::BindRequest);
+   request.createHeader(StunMessage::StunClassRequest, StunMessage::BindMethod);
 
    request.mHasFingerprint = true;
 
@@ -205,7 +205,7 @@ TurnSocket::refreshAllocation()
 
    // Form Turn Allocate request
    StunMessage request;
-   request.createHeader(StunMessage::StunClassRequest, StunMessage::TurnAllocateRequest);
+   request.createHeader(StunMessage::StunClassRequest, StunMessage::TurnAllocateMethod);
    if(mRequestedLifetime != UnspecifiedLifetime)
    {
       request.mHasTurnLifetime = true;
@@ -511,7 +511,7 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       // Data must be wrapped in a Send Indication
       // Wrap data in a SendInd
       StunMessage ind;
-      ind.createHeader(StunMessage::StunClassIndication, StunMessage::TurnSendInd);
+      ind.createHeader(StunMessage::StunClassIndication, StunMessage::TurnSendMethod);
       ind.mHasTurnRemoteAddress = true;
       ind.mTurnRemoteAddress.port = remotePeer.getPeerTuple().getPort();
       if(remotePeer.getPeerTuple().getAddress().is_v6())
@@ -679,7 +679,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
    asio::error_code errorCode;
    if(stunMessage.isValid())
    {
-      if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnDataInd)
+      if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnData)
       {
          if(!stunMessage.mHasTurnRemoteAddress || !stunMessage.mHasTurnChannelNumber)
          {
@@ -725,7 +725,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          {
             // If UDP, then send TurnChannelConfirmationInd
             StunMessage channelConfirmationInd;
-            channelConfirmationInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationInd);
+            channelConfirmationInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationMethod);
             channelConfirmationInd.mHasTurnRemoteAddress = true;
             channelConfirmationInd.mTurnRemoteAddress = stunMessage.mTurnRemoteAddress;
             channelConfirmationInd.mHasTurnChannelNumber = true;
@@ -735,9 +735,9 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             // send channelConfirmationInd to local client
             unsigned int bufferSize = 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnChannelNumber */ + 8 /* Fingerprint */ + 4 /* Turn Frame size */;
             resip::Data buffer(bufferSize, resip::Data::Preallocate);
-            unsigned int size = channelConfirmationInd.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
+            unsigned int writeSize = channelConfirmationInd.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
 
-            errorCode = rawWrite(buffer.data(), size);
+            errorCode = rawWrite(buffer.data(), writeSize);
          }
 
          if(stunMessage.mHasTurnData)
@@ -766,7 +766,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             size = 0;
          }
       }
-      else if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnChannelConfirmationInd)
+      else if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnChannelConfirmationMethod)
       {
          if(!stunMessage.mHasTurnRemoteAddress || !stunMessage.mHasTurnChannelNumber)
          {
@@ -805,6 +805,48 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          }
 
          remotePeer->setClientToServerChannelConfirmed();
+         size = 0;
+      }
+      else if(stunMessage.mClass == StunMessage::StunClassRequest && stunMessage.mMethod == StunMessage::BindMethod)
+      {
+         // Note: handling of BindRequest is not fully backwards compatible with RFC3489 - it is inline with bis11
+         StunMessage response;
+
+         // form the outgoing message
+         response.mClass = StunMessage::StunClassSuccessResponse;
+         response.mMethod = StunMessage::BindMethod;
+
+         // Copy over TransactionId
+         response.mHeader.magicCookieAndTid = stunMessage.mHeader.magicCookieAndTid;
+
+         // Add XOrMappedAddress to response 
+         response.mHasXorMappedAddress = true;
+         response.mXorMappedAddress.port = stunMessage.mRemoteTuple.getPort();
+         if(stunMessage.mRemoteTuple.getAddress().is_v6())
+         {
+            response.mXorMappedAddress.family = StunMessage::IPv6Family;  
+            memcpy(&response.mXorMappedAddress.addr.ipv6, stunMessage.mRemoteTuple.getAddress().to_v6().to_bytes().c_array(), sizeof(response.mXorMappedAddress.addr.ipv6));
+         }
+         else
+         {
+            response.mXorMappedAddress.family = StunMessage::IPv4Family;  
+            response.mXorMappedAddress.addr.ipv4 = stunMessage.mRemoteTuple.getAddress().to_v4().to_ulong();   
+         }
+
+         // Ensure fingerprint is added
+         response.mHasFingerprint = true;
+
+         // send channelConfirmationInd to local client
+         unsigned int bufferSize = 8 /* Stun Header */ + 36 /* XorMapped Address (v6) */ + 8 /* Fingerprint */ + 4 /* Turn Frame size */;
+         resip::Data buffer(bufferSize, resip::Data::Preallocate);
+         unsigned int writeSize = response.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
+
+         errorCode = rawWrite(buffer.data(), writeSize);
+         size = 0; // go back to receiving
+      }
+      else if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::BindMethod)
+      {
+         // Nothing to do
          size = 0;
       }
       else if(stunMessage.mClass == StunMessage::StunClassSuccessResponse || stunMessage.mClass == StunMessage::StunClassSuccessResponse)

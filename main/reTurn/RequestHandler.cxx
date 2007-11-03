@@ -56,13 +56,13 @@ RequestHandler::processStunMessage(TurnTransportBase* turnTransport, StunMessage
       case StunMessage::StunClassRequest:
          switch (request.mMethod) 
          {
-         case StunMessage::BindRequest:
+         case StunMessage::BindMethod:
             result = processStunBindingRequest(request, response);
             break;
-         case StunMessage::SharedSecretRequest:
+         case StunMessage::SharedSecretMethod:
             result = processStunSharedSecretRequest(request, response);
             break;
-         case StunMessage::TurnAllocateRequest:
+         case StunMessage::TurnAllocateMethod:
             result = processTurnAllocateRequest(turnTransport, request, response);
             if(result != NoResponseToSend)
             {
@@ -81,7 +81,7 @@ RequestHandler::processStunMessage(TurnTransportBase* turnTransport, StunMessage
                }
             }
             break;
-         case StunMessage::TurnConnectRequest:
+         case StunMessage::TurnConnectMethod:
             // TODO
             buildErrorResponse(response, 400, "Invalid Request Method - not implemented yet");  
             break;
@@ -95,14 +95,17 @@ RequestHandler::processStunMessage(TurnTransportBase* turnTransport, StunMessage
          result = NoResponseToSend;  // Indications don't have responses
          switch (request.mMethod) 
          {
-         case StunMessage::TurnSendInd:
+         case StunMessage::TurnSendMethod:
             processTurnSendIndication(request);
             break;
-         case StunMessage::TurnChannelConfirmationInd:
+         case StunMessage::TurnChannelConfirmationMethod:
             processTurnChannelConfirmationIndication(request);
             break;        
-         case StunMessage::TurnDataInd: // Don't need to handle these - only sent by server, never received
-         case StunMessage::TurnConnectStatusInd:  
+         case StunMessage::BindMethod:
+            // A Bind indication is simply a keepalive with no response required
+            break;
+         case StunMessage::TurnDataMethod: // Don't need to handle these - only sent by server, never received
+         case StunMessage::TurnConnectStatusMethod:  
          default:
             // Unknown indication - just ignore
             break;
@@ -160,10 +163,10 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
    // for binding requests it's OK to just re-calculate the response - just do that for now
 
    // Don't authenticate shared secret requests, or Send/Data Indications
-   if((request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretRequest) ||
+   if((request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
       (request.mClass == StunMessage::StunClassIndication && 
-       (request.mMethod == StunMessage::TurnSendInd ||
-        request.mMethod == StunMessage::TurnDataInd)))
+       (request.mMethod == StunMessage::TurnSendMethod ||
+        request.mMethod == StunMessage::TurnDataMethod)))
    {
       return true;
    }
