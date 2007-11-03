@@ -97,18 +97,18 @@ public:
 
    // define types for a stun message 
    // RFC3489-bis-11
-   const static UInt16 BindRequest                  = 0x001;
-   const static UInt16 SharedSecretRequest          = 0x002;  // deprecated by RFC3289-bis-11 (used for backwards compatibility to 3489 only)
+   const static UInt16 BindMethod                  = 0x001;
+   const static UInt16 SharedSecretMethod          = 0x002;  // deprecated by RFC3289-bis-11 (used for backwards compatibility to 3489 only)
 
    // define types for a turn message - per behave-turn-03
-   const static UInt16 TurnAllocateRequest         = 0x003;
-   const static UInt16 TurnConnectRequest          = 0x004;
-   const static UInt16 TurnListenPermissionRequest = 0x005;
+   const static UInt16 TurnAllocateMethod          = 0x003;
+   const static UInt16 TurnConnectMethod           = 0x004;
+   const static UInt16 TurnListenPermissionMethod  = 0x005;
    // define types for a turn indication - per behave-turn-03
-   const static UInt16 TurnSendInd                 = 0x006;
-   const static UInt16 TurnDataInd                 = 0x007;
-   const static UInt16 TurnChannelConfirmationInd  = 0x008;
-   const static UInt16 TurnConnectStatusInd        = 0x009;
+   const static UInt16 TurnSendMethod              = 0x006;
+   const static UInt16 TurnDataMethod              = 0x007;
+   const static UInt16 TurnChannelConfirmationMethod= 0x008;
+   const static UInt16 TurnConnectStatusMethod     = 0x009;
 
    // define  stun attribute
    // RFC3489-bis-11
