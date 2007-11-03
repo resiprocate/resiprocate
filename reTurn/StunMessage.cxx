@@ -826,17 +826,17 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
       outputMethod = false;
       switch (h.msgType & 0x000F) 
       {
-      case StunMessage::TurnSendInd:
-         os << "TurnSendInd";
+      case StunMessage::TurnSendMethod:
+         os << "Send";
          break;
-      case StunMessage::TurnDataInd:
-         os << "TurnDataInd";
+      case StunMessage::TurnDataMethod:
+         os << "Data";
          break;
-      case StunMessage::TurnChannelConfirmationInd:
-         os << "TurnChannelConfirmationInd";
+      case StunMessage::TurnChannelConfirmationMethod:
+         os << "ChannelConfirmation";
          break;
-      case StunMessage::TurnConnectStatusInd:
-         os << "TurnConnectStatusInd";
+      case StunMessage::TurnConnectStatusMethod:
+         os << "ConnectStatus";
          break;
       default:
          os << "Unknown ind method (" << int(h.msgType & 0x000F) << ")";
@@ -857,20 +857,20 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
    {
       switch (h.msgType & 0x000F) 
       {
-      case StunMessage::BindRequest:
-         os << "BindingRequest";
+      case StunMessage::BindMethod:
+         os << "Bind";
          break;
-      case StunMessage::SharedSecretRequest:
-         os << "SharedSecretRequest";
+      case StunMessage::SharedSecretMethod:
+         os << "SharedSecret";
          break;
-		case StunMessage::TurnAllocateRequest:
-            os << "TurnAllocateRequest";
+		case StunMessage::TurnAllocateMethod:
+            os << "Allocate";
 			break;
-		case StunMessage::TurnListenPermissionRequest:
-            os << "TurnListenPermissionRequest";
+		case StunMessage::TurnListenPermissionMethod:
+            os << "ListenPermission";
 			break;
-		case StunMessage::TurnConnectRequest:
-            os << "TurnConnectRequest";
+		case StunMessage::TurnConnectMethod:
+            os << "Connect";
 			break;
       default:
          os << "Unknown method (" << int(h.msgType & 0x000F) << ")";
