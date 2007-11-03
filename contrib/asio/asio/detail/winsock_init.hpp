@@ -28,6 +28,7 @@
 #include <boost/throw_exception.hpp>
 #include "asio/detail/pop_options.hpp"
 
+#include "asio/error.hpp"
 #include "asio/system_error.hpp"
 #include "asio/detail/noncopyable.hpp"
 #include "asio/detail/socket_types.hpp"
@@ -85,7 +86,8 @@ public:
     if (this != &instance_ && ref_->result() != 0)
     {
       asio::system_error e(
-          asio::error_code(ref_->result(), asio::native_ecat),
+          asio::error_code(ref_->result(),
+            asio::error::system_category),
           "winsock");
       boost::throw_exception(e);
     }
