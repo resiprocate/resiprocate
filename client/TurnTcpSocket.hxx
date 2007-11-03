@@ -10,7 +10,8 @@ namespace reTurn {
    class TurnTcpSocket : public TurnSocket
 {
 public:
-   explicit TurnTcpSocket(const asio::ip::address& address, unsigned short port);
+   explicit TurnTcpSocket(const asio::ip::address& address = UnspecifiedIpAddress, 
+                          unsigned short port = 0);
 
    // To use this socket without a Turn Relay, use this connect call to connect directly
    // to endpoint

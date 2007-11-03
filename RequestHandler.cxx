@@ -822,12 +822,6 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
       return;
    }
 
-   if(!request.mHasTurnData && request.mLocalTuple.getTransportType() != StunTuple::UDP)
-   {
-      if (verbose) clog << "Turn send indication with no data for non-UDP transport.  Dropping." << endl; 
-      return;
-   }
-
    StunTuple remoteAddress;
    remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
    remoteAddress.setPort(request.mTurnRemoteAddress.port);
@@ -843,7 +837,14 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
       remoteAddress.setAddress(asio::ip::address_v4(request.mTurnRemoteAddress.addr.ipv4));
    }
 
-   allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, *request.mTurnData);
+   if(request.mHasTurnData)  
+   {
+      allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, *request.mTurnData);
+   }
+   else
+   {
+      allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, Data::Empty);
+   }
 }
 
 void
