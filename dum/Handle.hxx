@@ -2,6 +2,7 @@
 #define RESIP_HANDLE_HXX
 
 #include <iosfwd>
+#include <cassert>
 #include "resip/dum/Handled.hxx"
 #include "resip/dum/HandleManager.hxx"
 #include "resip/dum/HandleException.hxx"
@@ -94,6 +95,8 @@ class Handle
       // !nash! to be able to use Handle in Set or Map container
       bool operator<(const Handle<T>& other) const
       {
+         assert(mHam);
+         assert(other.mHam);
          return mId < other.mId;
       }
    protected:
