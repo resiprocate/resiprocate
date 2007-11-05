@@ -397,17 +397,10 @@ class SdpContents : public Contents
                   const std::list<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
 
-                  const Codec& findFirstMatchingCodecs(const std::list<Codec>& codecs, Codec* pMatchingCodec = 0) const;
-                  const Codec& findFirstMatchingCodecs(const Medium& medium, Codec* pMatchingCodec = 0) const
-                  {
-                     if (&medium == this)
-                        return codecs().front();
-                     else
-                        return findFirstMatchingCodecs(medium.codecs(), pMatchingCodec);
-                  }
+                  const Codec& findFirstMatchingCodecs(const std::list<Codec>& codecList, Codec* pMatchingCodec = 0) const;
+                  const Codec& findFirstMatchingCodecs(const Medium& medium, Codec* pMatchingCodec = 0) const;
 
                   int findTelephoneEventPayloadType() const;
-
 
                private:
                   void setSession(Session* session);
