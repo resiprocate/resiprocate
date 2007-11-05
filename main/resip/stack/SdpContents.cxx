@@ -1651,27 +1651,44 @@ SdpContents::Session::Medium::codecs()
 }
 
 const Codec& 
-SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& codecs, Codec* pMatchingCodec) const
+SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& codecList, Codec* pMatchingCodec) const
 {
+   const std::list<Codec>& internalCodecList = codecs();
    static Codec emptyCodec;
    std::list<resip::SdpContents::Session::Codec>::const_iterator sIter;
-   std::list<resip::SdpContents::Session::Codec>::const_iterator sEnd = mCodecs.end();
+   std::list<resip::SdpContents::Session::Codec>::const_iterator sEnd = internalCodecList.end();
    std::list<resip::SdpContents::Session::Codec>::const_iterator eIter;
-   std::list<resip::SdpContents::Session::Codec>::const_iterator eEnd = codecs.end();
+   std::list<resip::SdpContents::Session::Codec>::const_iterator eEnd = codecList.end();
    bool found = false;
-   for (eIter = codecs.begin(); eIter != eEnd ; ++eIter)
+   for (eIter = codecList.begin(); eIter != eEnd ; ++eIter)
    {
-      for (sIter = mCodecs.begin(); sIter != sEnd; ++sIter)
+      for (sIter = internalCodecList.begin(); sIter != sEnd; ++sIter)
       {
          if (*sIter == *eIter)
          {
             found = true;
-			if (pMatchingCodec) *pMatchingCodec = *eIter;
+			   if (pMatchingCodec) 
+            {
+               *pMatchingCodec = *eIter;
+            }
             return *sIter;
          }
       }
    }
    return emptyCodec;
+}
+
+const Codec& 
+SdpContents::Session::Medium::findFirstMatchingCodecs(const Medium& medium, Codec* pMatchingCodec) const
+{
+   if (&medium == this)
+   {
+      return codecs().front();
+   }
+   else
+   {
+      return findFirstMatchingCodecs(medium.codecs(), pMatchingCodec);
+   }
 }
 
 int
