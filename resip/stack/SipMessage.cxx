@@ -1010,16 +1010,20 @@ SipMessage::getContents() const
 auto_ptr<Contents>
 SipMessage::releaseContents()
 {
+   // .bwc. auto_ptr owns the Contents. No other references allowed!
    auto_ptr<Contents> ret(getContents());
-   if (ret.get() != 0)
+   mContents = 0;
+
+   if (ret.get() != 0 && !ret->isWellFormed())
    {
-      // the buffer may go away...
-      ret->checkParsed();
-      mContents = 0;
-      // ...here
+      ret.reset(0);
    }
-   setContents(auto_ptr<Contents>(0));
-   
+
+   // .bwc. At this point, the Contents object has been parsed, so we don't need
+   // this anymore.
+   delete mContentsHfv;
+   mContentsHfv=0;
+
    return ret;
 }
 
