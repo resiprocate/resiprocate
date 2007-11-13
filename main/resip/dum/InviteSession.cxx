@@ -1653,7 +1653,14 @@ InviteSession::dispatchGlare(const SipMessage& msg)
       DebugLog(<< "Re-INVITE or UPDATE received when in SentReinviteGlare or SentUpdateGlare" << endl);
       // Received inbound reinvite or update, when waiting to resend outbound reinvite or update
       handler->onOfferRejected(getSessionHandle(), &msg);
-      dispatchConnected(msg);  // act as if we received message in Connected state
+      if(!isTerminated())   // make sure application didn't call end()
+      {
+         dispatchConnected(msg);  // act as if we received message in Connected state
+      }
+      else
+      {
+         dispatchTerminated(msg);
+      }
    }
    else
    {
@@ -1670,7 +1677,14 @@ InviteSession::dispatchReinviteNoOfferGlare(const SipMessage& msg)
    {
       // Received inbound reinvite or update, when waiting to resend outbound reinvite or update
       handler->onOfferRequestRejected(getSessionHandle(), msg);
-      dispatchConnected(msg);  // act as if we received message in Connected state
+      if(!isTerminated())   // make sure application didn't call end()
+      {
+         dispatchConnected(msg);  // act as if we received message in Connected state
+      }
+      else
+      {
+         dispatchTerminated(msg);
+      }
    }
    else
    {
