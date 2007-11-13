@@ -88,7 +88,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
       }
       
       DebugLog( << "About to open Berkeley DB: " << fileName );
-      int ret =mDb[i]->open(NULL,fileName.c_str(),NULL,DB_BTREE,DB_CREATE,0);
+      int ret =mDb[i]->open(NULL,fileName.c_str(),NULL,DB_BTREE,DB_CREATE | DB_THREAD,0);
       //int ret =mDb->open(fileName,NULL,DB_BTREE,DB_CREATE,0);
       
       if ( ret!=0 )
@@ -144,6 +144,8 @@ BerkeleyDb::dbReadRecord( const Table table,
 { 
    Dbt key( (void*)pKey.data(), (::u_int32_t)pKey.size() );
    Dbt data;
+   data.set_flags( DB_DBT_MALLOC );
+
    int ret;
    
    assert( mDb );
@@ -152,12 +154,15 @@ BerkeleyDb::dbReadRecord( const Table table,
    if ( ret == DB_NOTFOUND )
    {
       // key not found 
+      if ( data.get_data() )      
+         free( data.get_data() );
       return false;
    }
    assert( ret != DB_KEYEMPTY );
    assert( ret == 0 );
    Data result( reinterpret_cast<const char*>(data.get_data()), data.get_size() );
-   
+   if ( data.get_data() )      
+      free( data.get_data() );
    if (result.empty())
    {
       // this should never happen
