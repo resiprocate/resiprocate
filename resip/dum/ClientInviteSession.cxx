@@ -682,7 +682,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
-            if(!isTerminated())   //?jf? can this be terminated here but not above? 
+            if(!isTerminated())   //?jf? can this be terminated here but not above? .slg. yes application can call end()
             {
                handler->onConnected(getHandle(), msg);  
             }
