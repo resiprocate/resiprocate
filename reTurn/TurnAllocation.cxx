@@ -207,7 +207,7 @@ void
 TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, const resip::Data& data)
 {
    cout << "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress << " data=" << data << endl;
+           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress << /* " data=" << data << */ endl;
 
    // add permission if it does not exist
    refreshPermission(peerAddress.getAddress());
@@ -257,7 +257,7 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, const Data& data)
    }
 
    cout << "TurnAllocation sendDataToClient: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-      mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << " channelNumber=" << (int)remotePeer->getServerToClientChannel() << " data=" << data << endl;
+      mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << " channelNumber=" << (int)remotePeer->getServerToClientChannel() << /* " data=" << data <<*/ endl;
 
    if(useDataInd)
    {

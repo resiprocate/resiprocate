@@ -12,7 +12,8 @@ namespace reTurn {
 UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation)
 : TurnTransportBase(ioService),
   mSocket(ioService, asio::ip::udp::endpoint(turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort())),
-  mTurnAllocation(turnAllocation)
+  mTurnAllocation(turnAllocation),
+  mStopping(false)
 {
    std::cout << "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress() << ":" << mTurnAllocation.getRequestedTuple().getPort() << std::endl;
 }
@@ -52,8 +53,9 @@ UdpRelayServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTr
    }
    if (!e && bytesTransferred > 0)
    {      
-      std::cout << "Read " << (int)bytesTransferred << " bytes from udp relay socket (" << mSenderEndpoint.address().to_string() << ":" << mSenderEndpoint.port() << "): " << std::hex << std::endl;
+      std::cout << "Read " << (int)bytesTransferred << " bytes from udp relay socket (" << mSenderEndpoint.address().to_string() << ":" << mSenderEndpoint.port() << "): "  << std::endl;
       /*
+      cout << std::hex;
       for(int i = 0; i < (int)bytesTransferred; i++)
       {
          std::cout << (char)mBuffer[i] << "(" << int(mBuffer[i]) << ") ";

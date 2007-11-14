@@ -392,7 +392,12 @@ TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned shor
    // ensure there is an allocation
    if(!mHaveAllocation)
    {
-      return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
+      if(mConnected)
+      {
+         // TODO - Disconnect
+      }
+      return connect(address.to_string(), port);
+      //return asio::error_code(reTurn::NoAllocation, asio::error::misc_category); 
    }
 
    // Ensure Connected
@@ -679,7 +684,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
    asio::error_code errorCode;
    if(stunMessage.isValid())
    {
-      if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnData)
+      if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnDataMethod)
       {
          if(!stunMessage.mHasTurnRemoteAddress || !stunMessage.mHasTurnChannelNumber)
          {
@@ -717,9 +722,12 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
          }
 
-         remotePeer->setServerToClientChannel(stunMessage.mTurnChannelNumber);
-         remotePeer->setServerToClientChannelConfirmed();
-         mChannelManager.addRemotePeerServerToClientChannelLookup(remotePeer);
+         if(!remotePeer->isServerToClientChannelConfirmed())
+         {
+            remotePeer->setServerToClientChannel(stunMessage.mTurnChannelNumber);
+            remotePeer->setServerToClientChannelConfirmed();
+            mChannelManager.addRemotePeerServerToClientChannelLookup(remotePeer);
+         }
 
          if(mLocalBinding.getTransportType() == StunTuple::UDP)
          {

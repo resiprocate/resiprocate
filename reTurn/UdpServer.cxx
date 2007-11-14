@@ -68,7 +68,8 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
 
       bool treatAsData=false;
       /*
-      std::cout << "Read " << bytesTransferred << " bytes from udp socket (" << mSenderEndpoint.address().to_string() << ":" << mSenderEndpoint.port() << "): " << std::hex << std::endl;
+      std::cout << "Read " << bytesTransferred << " bytes from udp socket (" << mSenderEndpoint.address().to_string() << ":" << mSenderEndpoint.port() << "): " << std::endl;
+      cout << std::hex;
       for(int i = 0; i < bytesTransferred; i++)
       {
          std::cout << (char)mBuffer[i] << "(" << int(mBuffer[i]) << ") ";
