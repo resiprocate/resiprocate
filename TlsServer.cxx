@@ -28,7 +28,7 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    mAcceptor.listen();
 
    mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
-   mAcceptor.async_accept(mNewConnection->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+   mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->tlsSocket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
    std::cout << "TlsServer started.  Listening on " << address << ":" << port << std::endl;
 }
 
@@ -46,7 +46,7 @@ TlsServer::handleAccept(const asio::error_code& e)
       mConnectionManager.start(mNewConnection);
 
       mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
-      mAcceptor.async_accept(mNewConnection->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+      mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->tlsSocket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
    }
 }
 
