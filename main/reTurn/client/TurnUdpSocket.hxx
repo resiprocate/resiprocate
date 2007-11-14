@@ -12,6 +12,8 @@ namespace reTurn {
 public:
    explicit TurnUdpSocket(const asio::ip::address& address, unsigned short port, bool turnFramingDisabled=false);  // If Turn is disabled then straight stun messaging is used with no framing
 
+   virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
+
    virtual  asio::error_code connect(const std::string& address, unsigned short port);
 
 protected:
