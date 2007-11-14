@@ -24,7 +24,7 @@ TlsConnection::~TlsConnection()
 }
 
 ssl_socket::lowest_layer_type& 
-TlsConnection::socket()
+TlsConnection::tlsSocket()
 {
   return mTlsSocket.lowest_layer();
 }
