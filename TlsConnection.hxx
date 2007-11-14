@@ -23,7 +23,7 @@ public:
   ~TlsConnection();
 
   /// Get the socket associated with the connection.
-  ssl_socket::lowest_layer_type& socket();
+  ssl_socket::lowest_layer_type& tlsSocket();
 
   /// Start the first asynchronous operation for the connection.
   virtual void start();

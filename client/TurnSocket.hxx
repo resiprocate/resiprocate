@@ -23,6 +23,7 @@ public:
                        unsigned short port = 0);
    virtual ~TurnSocket();
 
+   virtual unsigned int getSocketDescriptor() = 0;
    virtual asio::error_code connect(const std::string& address, unsigned short port) = 0;  // !slg! modify port parameter later to be able to do SRV lookups
 
    // Note: Shared Secret requests have been deprecated by RFC3489-bis11, and not 
