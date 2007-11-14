@@ -1,7 +1,8 @@
 reTurn Status
 =============
 
-Original Author: Scott Godin ( s g o d i n  AT  s i p s p e c t r u m  DOT  c o m )
+Original Author: Scott Godin 
+( s g o d i n  AT  s i p s p e c t r u m  DOT  c o m )
 
 
 What is reTurn?
@@ -49,7 +50,8 @@ Asyncronous Client APIs                no           no
 
 General TODO
 -------------
-- Complete Turn Implementation - TCP/TLS relay - Implement Connect Request and Connect Status Indication
+- Complete Turn Implementation - TCP/TLS relay - Implement Connect Request and Conne
+ct Status Indication
 - optimize server data copying - especially for TURN DATA forwarding
 - optimize client data copying when receiving data
 - make buffer size configurable or dynamic
@@ -69,16 +71,15 @@ General TODO
 
 Client TODO
 -----------
-- allow allocation refreshed to be triggered from socket receive (currently must be calling send)
+- allow automatic allocation refreshes to be triggered from socket receive (currently must be calling a send fn)
 - retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response - currently applications responsibility
 - DNS SRV Discovery - currently only does host record lookup (using ASIO)
-- Server Binding Usage - ability to handle Binding Requests, Shared Secret Requests (?)
-- Keep Alive Usage
 - Note: requests can be piplined - currently client does not send pipelined
 - client long term password use - auto re-request after 401
 - implement 300 Try-Alternate response - currently applications responsibility
 - Try next DNS entry on failure - currently applications responsibility
 - asyncronous support
+- keepalive usage
 - allow listen support for TCP/TLP sockets?
          
 
