@@ -1529,10 +1529,6 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteSdp = sdp; 
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
-
-         // !jf! do I need to allow a reINVITE overlapping the retransmission of
-         // the ACK when a 200I is received? If yes, then I need to store all
-         // ACK messages for 64*T1
          break;
       }
 
