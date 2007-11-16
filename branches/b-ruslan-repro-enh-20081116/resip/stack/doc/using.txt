@@ -1,0 +1,922 @@
+January 26. 2004
+
+Using reSIProcate.
+
+ReSIProcate is an object oriented SIP interface and stack implemented in
+C++. The reSIProcate approach emphasizes consistency, type safety, and ease of
+use. 
+
+A central component of any SIP service is handling of SIP messages and their
+parts. A SIP message consists of headers, request/status line, and body.
+
+Headers:
+=======
+
+Headers are accessed from messages with the header method. The header method is
+overloaded so that its return value is appopriate for each type of header. The
+actual header method is determined by the header type token passed to the
+overloaded header method.
+
+Each header type defined in RFC3261 has a corresponding header access token. For
+example, the header access tokens for To and From headers are h_To and
+h_From. The rule for determing the header access token from a header as named in
+RFC3261 is to remove all dashes from the header name and prefix the result with
+"h_". For example, "Content-Disposition" becomes h_ContentDisposition.
+
+Given a existing message, fetching the To header is simply:
+<code>
+const NameAddr& to = message->header(h_To);
+</code>
+
+The header methods are both accessors and setters. Accessing a header that isn't
+in the message creates the header in a default state. So to set an empty message's
+To header:
+
+<code>
+SipMessage message;
+// displayName and uri are accessor/setter methods on NameAddr, the storage class
+// for To headers.
+message.header(h_To).displayName() = "Speedy Shannon";
+message.header(h_To).uri() = Uri("speedy@home.com");
+</code>
+
+The header methods are used also to access existing headers. If you want to make
+sure that you are accessing an existing header and are not creating a default
+header, use the exists method. The exists method is overloaded with the same
+access tokens.
+
+<code>
+SipMessage* message;
+if (!message->exists(h_To))
+{
+   // complain bitterly
+   ...
+}
+else
+{
+   NameAddr& to = message->header(h_To);
+   ...
+}
+</code>
+
+However, if the message variable is declared const, the header methods will not
+create a default instance of a missing header, but will throw
+SipMessage::Exception. This is a typical mode when working with incoming
+messages.
+
+<code>
+try
+{
+   const SipMessage* message;
+   To::Type& to = message->header(h_To);
+   ...
+}
+catch (SipMessage::Exception e)
+{
+   // complain bitterly
+   ...
+}
+</code>
+
+The remove method is also overloaded for the access tokens. Removing a header
+that does not exist is a no-op.
+
+<code>
+SipMessage* message = ...;
+message->remove(h_RecordRoutes);
+</code>
+
+Each header type is either a single instance or multiple instance. For example,
+the header type To is single instance while the header type Record-Route is
+multiple instance. The return types differ accordingly. 
+
+Multiple instance headers are accessed through a collection of the
+appropriate header type. As a programming hint, access tokens for
+multiple headers are pluralized.
+
+Similarly, the collection of each header type is named the pluralized
+header type. Below is an example accessing a collection of NameAddr
+instances.
+
+<code>
+NameAddrs& rr = message.header(h_RecordRoutes);
+</code>
+
+The collection of header values can be iterated in the usual stl like fashion.
+
+<code>
+for (NameAddrs::iterator i = rr.begin(); i != rr.end(); ++i)
+{
+   NameAddr& r = *i;
+   ...
+}
+</code>
+
+All collections of header values support begin, end, empty, size, front, back,
+push_back, push_front, reverse, and clear. Each collection is specific to the
+header type so no casting is necessary.
+
+<code>
+NameAddr na;
+na.displayName() = "Alice";
+na.uri() = Uri("sip:alice@company.com");
+rr.push_back(na);
+</code>
+
+--
+
+The request/status lines are special cases of headers. They are
+accessed by the header method with the header type tokens
+h_RequestLine and h_StatusLine. A message may have one or the other of
+these headers but never both. To determine if a message has a Request
+Line, use:
+
+<code>
+if (message->isRequest())
+{
+   ...
+}
+</code>
+
+Similarly for Status Line:
+
+<code>
+if (message->isResponse())
+{
+   ...
+}
+</code>
+
+Note that a newly created message has neither a request or status line. The
+application must add one or the other for the message to be well formed.
+
+Body:
+====
+
+A message body is accessed with the getContents method. The retured
+value is of type Contents*, an abstract type. The return value must be
+cast (dynamic_cast is recommended for runtime type safety) to be
+used. The content type of a message can be determined by examining the
+Content-Type header of the message. 
+
+New message contents are created by instantiating an instance of a
+type derived from Contents. For example, SdpContents. A variety of
+content types are currently supported, including mulitpart, signed,
+and Pkcs7. New content types can be created either inside or outside
+of the reSIP library (see Creating a New Contents Type).
+
+Setting the contents of a message takes care of setting the Content-Type and
+Content-Length of the message.
+
+<code>
+Pkcs7* pres = new Pkcs7();
+...
+message->setContents(pres);
+</code>
+
+Recursive multipart contents are supported. 
+
+--
+
+Every RFC 3261 header has a corresponding access token. However, many
+of the headers have identical form. For example. The To and From
+header values both consist of a display name and a URI. The To and
+From headers are managed programmatically as NameAddr instances. The
+class that manages each header type is responsible for parsing header
+text, providing storage and access during the life of the message, and
+serializing the header value to text for transmission.
+
+The table below shows the reSIP types for each of the built in RFC
+headers currently supported by reSIP. The reSIP type is the return
+type of a SipMessage header call with the access token as its
+argument.
+
+Table of headers
+================
+RFC name                   reSIP access token         reSIP type
+----------------------------------------------------------------
+Accept                     h_Accepts                  Mimes            
+Accept-Encoding            h_AcceptEncodings          Tokens           
+Accept-Language            h_AcceptLanguages          Tokens           
+Alert-Info                 h_AlertInfos               GenericUris
+Allow                      h_Allows                   Tokens     
+Authentication-Info        h_AuthenticationInfos      Auths          
+Authorization              h_Authorizations           Auths           
+Call-ID                    h_CallID, h_CallId         CallID, CallId
+Call-Info                  h_CallInfos                GenericUris
+Contact                    h_Contacts                 NameAddrs     
+Content-Disposition        h_ContentDisposition       Token       
+Content-Encoding           h_ContentEncoding          Token           
+Content-Language           h_ContentLanguages         Tokens           
+Content-Length             h_ContentLength            UInt32Category 
+Content-Type               h_ContentType              Mime            
+Content-Transfer-Encoding  h_ContentTransferEncoding  StringCategory	  
+CSeq                       h_CSeq                     CSeqCategory    
+Date                       h_Date                     DateCategory    
+Error-Info                 h_ErrorInfos               GenericUris
+Expires                    h_Expires                  UInt32Category
+From                       h_From                     NameAddr        
+In-ReplyTo                 h_InReplyTo                CallID, CallId
+Max-Forwards               h_MaxForwards              UInt32Category 
+MIME-Version               h_MIMEVersion              Tokens
+Min-Expires                h_MinExpires               UInt32Category 
+Organization               h_Organization             StringCategory              
+Priority                   h_Priority                 Token           
+Proxy-Authenticate         h_ProxyAuthenticates       Auths          
+Proxy-Authorization        h_ProxyAuthorizations      Auths
+Proxy-Require              h_ProxyRequires            Tokens           
+Record-Route               h_RecordRoutes             NameAddrs
+Reply-To                   h_ReplyTo                  NameAddr        
+Require                    h_Requires                 Tokens       
+Retry-After                h_RetryAfter               UInt32Category 
+Route                      h_Routes                   NameAddrs
+Server                     h_Server                   StringCategory  
+Subject                    h_Subject                  StringCategory  
+Supported                  h_Supporteds               Tokens
+Timestamp                  h_Timestamp                StringCategory  
+To                         h_To                       NameAddr        
+Unsupported                h_Unsupporteds             Tokens          
+User-Agent                 h_UserAgent                StringCategory  
+Via                        h_Vias                     Vias          
+Warning                    h_Warnings                 WarningCategories
+WWW-Authenticate           h_WWWAuthenticates         Auths
+
+(!dlb!: const headers accessors return non-const references -- should have const
+and non-const versions of all settable accessors)
+
+The following table lists each of the reSIP types for managing headers. A
+complete list of accessors is included for each type. Recall that many headers
+are multi-valued; the return type in the multi-valued cases must be iterated to
+get to the types shown. Multi-values headers are identified with (*).
+
+Table of reSIP header types
+==========================
+
+RequestLine
+===========
+  RFC name: 
+    Request-Line
+  Description:
+    The first line of a request message. Does not correspond to a header proper
+    but is accessed with the header interface in reSIP.
+  Example:
+    INVITE sip:bob@biloxi.com SIP/2.0
+  Parts:
+     RFC Name          accessor            reSIP type      settable
+     --------------------------------------------------------------
+     Request-URI       uri()               Uri             yes
+     Method            getMethod()         MethodTypes     yes
+     Method            unknownMethodName() Data            yes
+     SIP-Version       getSipVersion()     Data            no
+
+   RFC Headers:
+    <none>
+
+StatusLine
+==========
+  RFC name: 
+    Status-Line
+  Description:
+    The first line of a response message. Does not correspond to a header proper
+    but is accessed with the header interface in reSIP.
+  Example:
+    SIP/2.0 200 OK
+  Parts:
+     RFC Name          accessor            reSIP type      settable
+     --------------------------------------------------------------
+     Status-Code       responseCode()      int             yes    // dlb should be statusCode()
+     SIP-Version       getSipVersion()     Data            no
+     Reason-Phrase     reason()            Data            yes
+
+   RFC Headers:
+     <none>
+
+Auth
+====
+  RFC name: 
+    challenge
+  Description:
+    Identifies the authentication scheme in a challenge response.
+  Example:
+    Digest-Authenticate: username="Alice", realm="atlanta.com",
+                         nonce="84a4cc6f3082121f32b42a2187831a9e",
+                         response="7587245234b3434cc3412213e5f113a5432"
+  Parts:
+     RFC Name          accessor        reSIP type      settable
+     ----------------------------------------------------------
+     auth-scheme       scheme()        Data            yes
+   RFC Headers:
+     Authentication-Info
+     Authorization (*)
+     Proxy-Authenticate (*)
+     Proxy-Authorization (*)
+     WWW-Authenticate (*)
+
+CSeqCategory
+============
+  RFC name:
+    CSeq
+  Description:
+    Places the message in sequence in the call.
+  Example:
+    CSeq: 314159 INVITE
+  Parts:
+    RFC Name          accessor            reSIP type      settable
+    --------------------------------------------------------------
+                      sequence()          int             yes
+    Method            method()            MethodTypes     yes
+                      unknownMethodName() Data            no
+   RFC Headers:
+     CSeq
+
+CallID
+======
+  RFC name:
+    Call-ID
+  Description:
+    Uniquely identifies the call.
+  Example:
+    Call-ID: a84b4c76e66710@pc33.atlanta.com
+  Parts:
+    RFC Name          accessor        reSIP type      settable
+    ----------------------------------------------------------
+                      value()         Data            yes  
+   RFC Headers:
+     Call-ID
+
+DateCategory
+============
+  RFC name:
+    SIP-date
+  Description:
+    Human readable date string.
+  Example:
+    Date: Sat, 13 Nov 2010 23:29:00 GMT
+  Parts:
+    RFC Name          accessor        reSIP type      settable
+    ----------------------------------------------------------
+    wkday             dayOfWeek()     DayOfWeek       yes
+    date1
+                      dayOfMonth      int             yes
+                      month()         int             yes
+                      year()          int             yes
+    time
+                      hour()          int             yes
+                      minute()        int             yes
+                      second()        int             yes
+   RFC Headers:
+     Date
+
+GenericUri      
+==========
+  RFC name:
+    absoluteURI
+  Description:
+    Non-structured human readable URI.
+  Example:
+    Alert-Info: <http://www.example.com/sounds/moo.wav>
+  Parts:
+    RFC Name          accessor        reSIP type      settable
+    ----------------------------------------------------------
+                      uri()           Data            yes
+  RFC Headers:
+   Alert-Info
+   Call-Info
+   Error-Info
+
+UInt32Category 
+===============
+  RFC name:
+    1*DIGIT
+  Description:
+    An integer.
+  Example:
+    Max-Forwards: 70
+  Parts:
+    RFC Name          accessor        reSIP type      settable
+    ----------------------------------------------------------
+                      value()         int             yes
+    comment           comment()       Data            yes
+  RFC Headers:
+    Content-Length // note: does not permit (comment)
+    Max-Forwards   // note: does not permit (comment)
+    Min-Expires    // note: does not permit (comment)
+    Retry-After
+
+ExpiresCategory
+===============
+  RFC name:
+
+  Description:
+    Seconds to expiration.
+  Example:
+    Expires: 5
+  Parts:
+    RFC Name          accessor        reSIP type      settable
+    ----------------------------------------------------------
+                      value()         int             yes
+  RFC Headers:
+    Expires
+
+Mime            
+============
+  RFC name:
+    media-type
+  Description:
+    Mime type and sub-type.
+  Example:
+    Content-Type: application/sdp
+  Parts:
+    RFC Name          accessor        reSIP type      settable
+    ----------------------------------------------------------
+    m-type            type()          Data            yes
+    m-subtype         subType()       Data            yes
+  RFC Headers:
+    Accept (*)
+    Content-Type
+   
+NameAddr        
+============
+  RFC name:
+    name-addr
+  Description:
+    URI and display name.
+  Example:
+    To: Bob <sip:bob@biloxi.com>
+  Parts:
+    RFC Name          accessor        reSIP type      settable
+    ----------------------------------------------------------
+    display-name      displayName()   Data            yes
+    addr-spec         uri()           Uri             yes
+  RFC Headers:
+    Contact (*)
+    From
+    Record-Route (*)
+    Refer-To
+    Referred-By
+    Reply-To
+    Route (*)
+    To
+    
+StringCategory  
+==============
+  RFC name:
+    TEXT-UTF8-TRIM
+  Description:
+    Unstructured human readable text.
+  Example:
+    Organization: Boxes by Bob
+  Parts:
+    RFC Name          accessor        reSIP type      settable
+    ----------------------------------------------------------
+                      value()         Data            yes
+  RFC Headers:
+    Content-Transfer-Encoding
+    Organization
+    Server
+    Subject
+    User-Agent
+    Timestamp
+    extension-header (*)
+
+Token           
+=====
+  RFC name:
+    token
+  Description:
+    A word.
+  Example:
+    Accept-Encoding: gzip
+  Parts:
+    RFC Name          accessor        reSIP type      settable
+    ----------------------------------------------------------
+                      value()         Data            yes
+  RFC Headers:
+    Accept-Encoding (*)
+    Accept-Language (*)
+    Allow (*)
+    Allow-Events (*)
+    Content-Disposition
+    Content-Encoding
+    Content-Language (*)
+    Event
+    Mime-Version
+    Priority
+    Proxy-Require (*)
+    Require (*)
+    Security-Client (*)
+    Security-Server (*)
+    Security-Verify (*)
+    Subscription-State (*)
+    Supported (*)
+    Unsupported (*)
+
+Via             
+============
+  RFC name:
+    via-parm
+  Description:
+    Via entry.
+  Example:
+    Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bK776asdhds
+  Parts:
+    RFC Name          accessor          reSIP type      settable
+    ------------------------------------------------------------
+    protocol-name     protocolName()    Data            yes
+    protocol-version  protocolVersion() Data            yes
+    transport         transport()       Data            yes
+    host              sentHost()        Data            yes
+    port              sentPort()        int             yes
+  RFC RFC Headers:
+    Via (*)
+
+WarningCategory 
+============
+  RFC name:
+    warning-value
+  Description:
+
+  Example:
+
+  Parts:
+    RFC Name          accessor      reSIP type      settable
+    --------------------------------------------------------
+    warn-code      code()        int                yes
+    warn-agent     hostname()    Data               yes
+    warn-text      text()        Data               yes
+  RFC Headers:
+    Warning (*)
+
+According to the grammar, each header has a set of acceptable parameters. Some
+headers accept no parameters. reSIP makes a simplifying assumption; all headers
+can have all parameters. While it is the goal of reSIP that every legal SIP
+message be parseable, reSIP does not strictly enforce production of legal
+SIP. In practice, correct usage will result in legal SIP, but it is not very
+difficult to use reSIP to produce a problematic message. Take home lesson -- the
+reSIP programmer must take responsibilty when adding parameters to a header.
+
+A corollary to this simplifying assumption is that the form of a parameter is
+independent of the header it appears in. A ttl parameter must always be followed
+by an integer even when used in a header that does not specify the syntax for
+a ttl parameter. (!dlb! potential compatibility issue)
+
+Parameters, like headers, corresponds to a small set of classes that manage
+parsing, accesing, and serializing to text.
+
+(!dlb!: QuotedDataParameter should be super of DataParameter -- currently
+allow setting quoted on QuotedDataParameter)
+
+Table of Parameters
+===================
+RFC name               reSIP access token       reSIP type      
+-----------------------------------------------------------
+  access-type          p_accessType            DataParameter
+  algorithm            p_algorithm             DataParameter
+  boundary             p_boundary              DataParameter
+  branch               p_branch                BranchParameter
+  charset              p_charset               DataParameter
+  cnonce               p_cnonce                QuotedDataParameter
+  comp                 p_comp                  DataParameter
+  d-alg                p_dAlg                  DataParameter
+  d-qop                p_dQop                  DataParameter
+  d-ver                p_dVer                  QuotedDataParameter
+  directory            p_directory             DataParameter
+  domain               p_domain                QuotedDataParameter
+  duration             p_duration              IntegerParameter
+  expiration           p_expiration            IntegerParameter
+  expires              p_expires               IntegerParameter
+  filename             p_filename              DataParameter
+  from-tag             p_fromTag               DataParameter
+  handling             p_handling              DataParameter
+  id                   p_id                    DataParameter
+  lr                   p_lr                    ExistsParameter
+  maddr                p_maddr                 DataParameter
+  method               p_method                DataParameter
+  micalg               p_micalg                DataParameter
+  mobility             p_mobility              DataParameter
+  mode                 p_mode                  DataParameter
+  name                 p_name                  DataParameter
+  nc                   p_nc                    DataParameter
+  nonce                p_nonce                 QuotedDataParameter
+  opaque               p_opaque                QuotedDataParameter
+  permission           p_permission            DataParameter
+  protocol             p_protocol              DataParameter // should be QuotedDataParameter?
+  purpose              p_purpose               DataParameter
+  q                    p_q                     FloatParameter
+  realm                p_realm                 QuotedDataParameter
+  reason               p_reason                DataParameter
+  received             p_received              DataParameter
+  response             p_response              QuotedDataParameter
+  retry-after          p_retryAfter            IntegerParameter
+  rport                p_rport                 RportParameter
+  server               p_server                DataParameter
+  site                 p_site                  DataParameter
+  size                 p_size                  DataParameter
+  smime-type           p_smimeType             DataParameter
+  stale                p_stale                 DataParameter
+  tag                  p_tag                   DataParameter
+  to-tag               p_toTag                 DataParameter
+  transport            p_transport             DataParameter
+  ttl                  p_ttl                   IntegerParameter
+  uri                  p_uri                   QuotedDataParameter
+  user                 p_user                  DataParameter
+  username             p_username              DataParameter // should be QuotedDataParameter?
+
+Table of reSIP Parameter Types
+==============================
+
+BranchParameter
+===============
+  RFC name:
+    
+  Description:
+    May have RFC 3261 marker, may have reSIP specific data, may have client
+    data.
+  Example:
+    Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bK776asdhds
+  Parts:
+    accessor                    reSIP type      settable
+    ----------------------------------------------------
+    hasMagicCookie()            bool            no
+    getTransactionId()          Data            no
+    incrementTransportSequence  void            no
+    reset(const Data&)          void            yes
+    clientData()                Data            yes
+  RCF Parameters:
+    branch
+
+DataParameter
+=============
+  RFC name:
+    token
+  Description:
+    Quoted or unquoted. Unquoted must be single word.
+  Example:
+    Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bK776asdhds
+  Parts:
+    accessor                reSIP type      settable
+    ------------------------------------------------
+    value()                 Data            yes
+    isQuoted()              bool            no
+    setQuoted(bool)         void            yes
+  RFC parameters:
+    ?access-type
+    algorithm
+    boundary
+    charset
+    ?comp
+    d-alg
+    d-qop
+    directory
+    filename
+    from-tag
+    handling
+    ?id
+    maddr
+    ?method
+    micalg
+    ?mobility
+    ?mode
+    name
+    nc
+    ?permission
+    purpose
+    ?reason
+    received
+    ?server
+    ?site
+    ?size
+    smime-type
+    stale
+    tag
+    to-tag
+    transport
+    user
+
+ExistsParameter
+===============
+  RFC name:
+
+  Description:
+    Has no value; is not followed by "=".
+  Example:
+    Record-Route: <sip:p1.example.com;lr>
+  Parts:
+    accessor                reSIP type      settable
+    ------------------------------------------------
+    value()                 bool            yes
+  RFC parameters:
+    lr
+
+FloatParameter
+==============
+  RFC name:
+    qvalue
+  Description:
+    0-1 inclusive, up to three digits after decimal point.
+  Example:
+    Accept-Language: da, en-gb;q=0.8, en;q=0.7
+  Parts:
+    accessor                reSIP type      settable
+    ------------------------------------------------
+    value()                 float            yes
+  RFC parameters:
+    q
+
+IntegerParameter
+================
+  RFC name:
+
+  Description:
+    Integer
+  Example:
+    sip:alice@atlanta.com;maddr=239.255.255.1;ttl=15
+  Parts:
+    accessor                reSIP type      settable
+    ------------------------------------------------
+    value()                 int             yes
+  RFC parameters:
+    duration
+    expiration
+    expires
+    retry-after
+    ttl
+
+QuotedDataParameter
+===================
+  RFC name:
+    quoted-string
+  Description:
+    Quoted text.
+  Example:
+    Authorization: Digest username="bob",
+              realm="biloxi.com",
+              nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
+              uri="sip:bob@biloxi.com",
+              qop=auth,
+              nc=00000001,
+              cnonce="0a4f113b",
+              response="6629fae49393a05397450978507c4ef1",
+              opaque="5ccc069c403ebaf9f0171e9517f40e41"
+  Parts:
+    accessor                reSIP type      settable
+    ------------------------------------------------
+    value()                 Data             yes
+  RFC Parameters:
+    cnonce
+    d-ver
+    domain
+    nonce
+    opaque
+    realm
+    response
+    uri
+
+RportParameter
+==============
+  RFC name:
+    quoted-string
+  Description:
+    May have a value or not.
+  Example:
+    Via: SIP/2.0/UDP whistler.gloo.net:6064;rport=6064;received=192.168.2.220;branch=z9hG4bK-kcD23-4-1
+  Parts:
+    accessor            reSIP type      settable
+    --------------------------------------------
+     port()             int             yes
+     hasValue()         bool            no
+  RFC Parameters:
+    rport
+
+MethodTypes
+==========
+ACK
+BYE
+CANCEL
+INFO
+INVITE
+MESSAGE
+NOTIFY
+OPTIONS
+PRACK
+PUBLISH
+REFER
+REGISTER
+SUBSCRIBE
+UPDATE ?? not in build?
+
+Uri
+===
+  RFC name:
+    addr-spec
+  Description:
+    URI
+  Example:
+     sip:alice:secretword@atlanta.com;transport=tcp
+  Parts:
+    RFC Name          accessor          reSIP type      settable                                      
+    ------------------------------------------------------------                                      
+    header            embedded()        SipMessage      yes                                           
+    userinfo+hostport getAor()          Data            no                                            
+    userinfo+host     getAorNoPort()    Data            no                                            
+                      hasEmbedded()     bool            no                                            
+    host              host()            Data            yes                                           
+    host              opaque()          Data            yes                                           
+    password          password()        Data            yes                                           
+    port              port()            int             yes                                           
+    userinfo          user()            Data            yes  // note: does not include user parameters
+                      userParameters()  Data            yes
+                      scheme()          Data            yes
+    
+Contents
+========
+  RFC name:
+    message-body
+  Description:
+    Base class for all content types. Each derived content type defines its own
+    parse, accessors and stream rendering.
+  Example:
+
+      --boundary42
+      Content-Type: message/sip
+
+      INVITE sip:bob@biloxi.com SIP/2.0
+      Via: SIP/2.0/UDP pc33.atlanta.com;branch=z9hG4bKnashds8
+      To: Bob <bob@biloxi.com>
+      From: Alice <alice@atlanta.com>;tag=1928301774
+      Call-ID: a84b4c76e66710
+      CSeq: 314159 INVITE
+      Max-Forwards: 70
+      Date: Thu, 21 Feb 2002 13:02:03 GMT
+      Contact: <sip:alice@pc33.atlanta.com>
+      Content-Type: application/sdp
+      Content-Length: 147
+
+      v=0
+      o=UserA 2890844526 2890844526 IN IP4 here.com
+      s=Session SDP
+      c=IN IP4 pc33.atlanta.com
+      t=0 0
+      m=audio 49172 RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+      --boundary42
+      Content-Type: application/pkcs7-signature; name=smime.p7s
+      Content-Transfer-Encoding: base64
+      Content-Disposition: attachment; filename=smime.p7s;
+         handling=required
+
+      ghyHhHUujhJhjH77n8HHGTrfvbnj756tbB9HG4VQpfyF467GhIGfHfYT6
+      4VQpfyF467GhIGfHfYT6jH77n8HHGghyHhHUujhJh756tbB9HGTrfvbnj
+      n8HHGTrfvhJhjH776tbB9HG4VQbnj7567GhIGfHfYT6ghyHhHUujpfyF4
+      7GhIGfHfYT64VQbnj756
+
+      --boundary42-
+  Parts:
+    accessor                   reSIP type      settable  notes                                      
+    ----------------------------------------------------------
+    exists                     bool            no
+    remove                     void	       no
+    header		       <various>       yes 
+      // shared header types 
+      H_ContentType::Type& header(const H_ContentType& headerType) const; 
+      H_ContentDisposition::Type& header(const H_ContentDisposition& headerType) const; 
+      H_ContentTransferEncoding::Type& header(const H_ContentTransferEncoding& headerType) const; 
+      H_ContentLanguages::Type& header(const H_ContentLanguages& headerType) const; 
+ 
+      // MIME specific header types 
+      H_ContentID::Type& header(const H_ContentID& headerType) const; 
+      H_ContentDescription::Type& header(const H_ContentDescription& headerType) const; 
+ 
+      int& verion() {return mVersion;} 
+      int& minorVersion() {return mMinorVersion;} 
+
+
+MultipartRelatedContents
+MultipartMixedContents
+MultipartSigned
+SdpContents
+Pkcs7Contents
+OctetContents
+
+SipMessage
+ non-header parts
+ examples
+
+--
+Adding a new content type at application compile time.
+
+--
+
+Extension headers.
+
+SIP is an open specification. Elements may add headers that are not generally known.
+  Multiple. Must appear on separate lines. May have parameters. However, not all
+stacks will consider semi-colons in extension headers significant, so could
+cause interop problems.
+
+--
+
+Extension parameters.
+  May or may not have a value. Are permitted in any header.
+
