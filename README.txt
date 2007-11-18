@@ -8,7 +8,7 @@ Original Author: Scott Godin
 What is reTurn?
 ---------------
 reTurn is a Stun/Turn server and client library implementation of the latest 
-Stun/Turn drafts:  RFC3489bis11, and draft-ietf-behave-turn-05
+Stun/Turn drafts:  RFC3489bis13, and draft-ietf-behave-turn-05
 
 
 Current External Library Usage
@@ -60,7 +60,7 @@ ct Status Indication
 - per user allocation quota enforcement
 - set TLS server settings - ie. allowed cipher suite, etc.
 - cleanup stun message class so that there are accessors for all data members
-- Ability for Server to accept long term credentials - 3489-bis11 digest
+- Ability for Server to accept long term credentials - 3489-bis13 digest
 - Check for unknown attributes
 - Standardize on a logging interface (rutil?)
 - from chart above
