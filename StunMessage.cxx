@@ -123,7 +123,7 @@ StunMessage::init()
    mHasTurnMagicCookie = false;
    mHasTurnBandwidth = false;
    mHasTurnDestinationAddress = false;
-   mHasTurnRemoteAddress = false;
+   mHasTurnPeerAddress = false;
    mHasTurnData = false;
    mHasTurnRelayAddress = false;
    mHasTurnRequestedPortProps = false;
@@ -643,9 +643,9 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
                {
                   return false;
                }
-               mTurnChannelNumber = (channelNumber & 0xFF00000) >> 24;
+               mTurnChannelNumber = (channelNumber & 0xFFFF0000) >> 16;
             }
-            if (verbose) clog << "Turn ChannelNumber = " << (int)mTurnChannelNumber << endl;
+            if (verbose) clog << "Turn ChannelNumber = " << mTurnChannelNumber << endl;
             break;
 
          case TurnLifetime:
@@ -693,13 +693,13 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             if (verbose) clog << "Turn Destination Address = " << mTurnDestinationAddress << endl;
             break;
 
-         case TurnRemoteAddress:
-            mHasTurnRemoteAddress = true;
-            if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRemoteAddress ) == false )
+         case TurnPeerAddress:
+            mHasTurnPeerAddress = true;
+            if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnPeerAddress ) == false )
             {
                return false;
             }
-            if (verbose) clog << "Turn Remote Address = " << mTurnRemoteAddress << endl;
+            if (verbose) clog << "Turn Remote Address = " << mTurnPeerAddress << endl;
             break;
 
          //overlay on parse, ownership is buffer parsed from
@@ -835,9 +835,6 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
       case StunMessage::TurnChannelConfirmationMethod:
          os << "ChannelConfirmation";
          break;
-      case StunMessage::TurnConnectStatusMethod:
-         os << "ConnectStatus";
-         break;
       default:
          os << "Unknown ind method (" << int(h.msgType & 0x000F) << ")";
          break;
@@ -866,11 +863,8 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
 		case StunMessage::TurnAllocateMethod:
             os << "Allocate";
 			break;
-		case StunMessage::TurnListenPermissionMethod:
-            os << "ListenPermission";
-			break;
-		case StunMessage::TurnConnectMethod:
-            os << "Connect";
+		case StunMessage::TurnRefreshMethod:
+            os << "Refresh";
 			break;
       default:
          os << "Unknown method (" << int(h.msgType & 0x000F) << ")";
@@ -1145,8 +1139,8 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
 
    if (mHasTurnChannelNumber)
    {
-      if (verbose) clog << "Encoding Turn ChannelNumber: " << (int)mTurnChannelNumber << endl;
-      ptr = encodeAtrUInt32(ptr, TurnChannelNumber, UInt32(mTurnChannelNumber << 24));
+      if (verbose) clog << "Encoding Turn ChannelNumber: " << mTurnChannelNumber << endl;
+      ptr = encodeAtrUInt32(ptr, TurnChannelNumber, UInt32(mTurnChannelNumber << 16));
    }
    if (mHasTurnLifetime)
    {
@@ -1168,10 +1162,10 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       if (verbose) clog << "Encoding Turn DestinationAddress: " << mTurnDestinationAddress << endl;
       ptr = encodeAtrAddress (ptr, TurnDestinationAddress, mTurnDestinationAddress);
    }
-   if (mHasTurnRemoteAddress)
+   if (mHasTurnPeerAddress)
    {
-      if (verbose) clog << "Encoding Turn RemoteAddress: " << mTurnRemoteAddress << endl;
-      ptr = encodeAtrXorAddress (ptr, TurnRemoteAddress, mTurnRemoteAddress);
+      if (verbose) clog << "Encoding Turn PeerAddress: " << mTurnPeerAddress << endl;
+      ptr = encodeAtrXorAddress (ptr, TurnPeerAddress, mTurnPeerAddress);
    }
    if (mHasTurnData)
    {
@@ -1253,7 +1247,7 @@ StunMessage::stunEncodeFramedMessage(char* buf, unsigned int bufLen)
 
    // Add Frame Header info
    buf[0] = 0; // Channel 0 for Stun Messages
-   buf[1] = 0; // reserved
+   buf[1] = 0; 
    UInt16 frameSize = htons(size);
    memcpy(&buf[2], (void*)&frameSize, 2);  // size is not needed if udp - but should be harmless
    return size+4;

@@ -55,7 +55,6 @@ public:
    bool checkMessageIntegrity(const resip::Data& hmacKey);
    bool checkFingerprint();
 
-
    /// define stun address families
    const static UInt8  IPv4Family = 0x01;
    const static UInt8  IPv6Family = 0x02;
@@ -100,15 +99,13 @@ public:
    const static UInt16 BindMethod                  = 0x001;
    const static UInt16 SharedSecretMethod          = 0x002;  // deprecated by RFC3289-bis-11 (used for backwards compatibility to 3489 only)
 
-   // define types for a turn message - per behave-turn-03
+   // define types for a turn message - per behave-turn-05
    const static UInt16 TurnAllocateMethod          = 0x003;
-   const static UInt16 TurnConnectMethod           = 0x004;
-   const static UInt16 TurnListenPermissionMethod  = 0x005;
-   // define types for a turn indication - per behave-turn-03
+   const static UInt16 TurnRefreshMethod           = 0x004;
+   // define types for a turn indication - per behave-turn-05
    const static UInt16 TurnSendMethod              = 0x006;
    const static UInt16 TurnDataMethod              = 0x007;
-   const static UInt16 TurnChannelConfirmationMethod= 0x008;
-   const static UInt16 TurnConnectStatusMethod     = 0x009;
+   const static UInt16 TurnChannelConfirmationMethod= 0x009;
 
    // define  stun attribute
    // RFC3489-bis-11
@@ -142,7 +139,7 @@ public:
    const static UInt16 TurnMagicCookie  = 0x000f;    // deprecated
    const static UInt16 TurnBandwidth    = 0x0010;
    const static UInt16 TurnDestinationAddress = 0x0011; // deprecated
-   const static UInt16 TurnRemoteAddress = 0x0012; 
+   const static UInt16 TurnPeerAddress  = 0x0012;
    const static UInt16 TurnData         = 0x0013;
    const static UInt16 TurnRelayAddress = 0x0016;
    const static UInt16 TurnRequestedPortProps = 0x0018;
@@ -289,7 +286,7 @@ public:
 
    // Turn Attributes
    bool mHasTurnChannelNumber;
-   unsigned char mTurnChannelNumber;
+   unsigned short mTurnChannelNumber;
 
    bool mHasTurnLifetime;
    UInt32 mTurnLifetime;
@@ -306,8 +303,8 @@ public:
    bool mHasTurnDestinationAddress;
    StunAtrAddress mTurnDestinationAddress;
 
-   bool mHasTurnRemoteAddress;
-   StunAtrAddress mTurnRemoteAddress;
+   bool mHasTurnPeerAddress;
+   StunAtrAddress mTurnPeerAddress;
 
    bool mHasTurnData;
    resip::Data* mTurnData;

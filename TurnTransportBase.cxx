@@ -6,13 +6,13 @@ using namespace resip;
 
 namespace reTurn {
 
-TurnTransportBase::DataToSend::DataToSend(unsigned char channelNumber, const StunTuple& destination, const char* data, unsigned int length) : 
+TurnTransportBase::DataToSend::DataToSend(unsigned short channelNumber, const StunTuple& destination, const char* data, unsigned int length) : 
          mDestination(destination), mData(length+4, Data::Preallocate) 
 {
    // Add Turn Framing
    char framing[4];
-   framing[0] = channelNumber; 
-   framing[1] = 0; 
+   channelNumber = htons(channelNumber);
+   memcpy(&framing[0], &channelNumber, 2);
    unsigned short size = htons((unsigned short)length);
    memcpy(&framing[2], (void*)&size, 2);  // UDP doesn't need size - but shouldn't hurt to send it anyway
    mData.append(framing,sizeof(framing));
@@ -45,7 +45,7 @@ TurnTransportBase::sendTurnData(const StunTuple& destination, const char* buffer
 }
 
 void 
-TurnTransportBase::sendTurnFramedData(unsigned char channelNumber, const StunTuple& destination, const char* buffer, unsigned int size)
+TurnTransportBase::sendTurnFramedData(unsigned short channelNumber, const StunTuple& destination, const char* buffer, unsigned int size)
 {
    bool writeInProgress = !mTurnDataQueue.empty();
    mTurnDataQueue.push_back(DataToSend(channelNumber, destination, buffer, size));  // Copies Data
