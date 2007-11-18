@@ -1,12 +1,17 @@
 #include "ChannelManager.hxx"
+#include <rutil/Random.hxx>
 
 using namespace std;
 
 namespace reTurn {
 
-ChannelManager::ChannelManager() :
-   mNextChannelNumber(1)
+#define MAX_CHANNEL_NUM 65534
+
+ChannelManager::ChannelManager()
 {
+   // make starting channel number random
+   int randInt = resip::Random::getRandom();
+   mNextChannelNumber = (unsigned short)(randInt % (MAX_CHANNEL_NUM+1));
 }
 
 ChannelManager::~ChannelManager()
@@ -21,8 +26,22 @@ ChannelManager::~ChannelManager()
    }
 }
 
+unsigned short 
+ChannelManager::getNextChannelNumber() 
+{ 
+   if(mNextChannelNumber == MAX_CHANNEL_NUM)
+   {
+      mNextChannelNumber = 1;
+   }
+   else
+   {
+      mNextChannelNumber++; 
+   }
+   return mNextChannelNumber;
+}
+
 RemotePeer*
-ChannelManager::createRemotePeer(const StunTuple& peerTuple, unsigned char clientToServerChannel, unsigned char serverToClientChannel)
+ChannelManager::createRemotePeer(const StunTuple& peerTuple, unsigned short clientToServerChannel, unsigned short serverToClientChannel)
 {
    assert(findRemotePeerByPeerAddress(peerTuple) == 0);
 
@@ -59,7 +78,7 @@ ChannelManager::addRemotePeerClientToServerChannelLookup(RemotePeer* remotePeer)
 }
 
 RemotePeer* 
-ChannelManager::findRemotePeerByServerToClientChannel(unsigned char channelNumber)
+ChannelManager::findRemotePeerByServerToClientChannel(unsigned short channelNumber)
 {
    ChannelRemotePeerMap::iterator it = mServerToClientChannelRemotePeerMap.find(channelNumber);
    if(it != mServerToClientChannelRemotePeerMap.end())
@@ -70,7 +89,7 @@ ChannelManager::findRemotePeerByServerToClientChannel(unsigned char channelNumbe
 }
 
 RemotePeer* 
-ChannelManager::findRemotePeerByClientToServerChannel(unsigned char channelNumber)
+ChannelManager::findRemotePeerByClientToServerChannel(unsigned short channelNumber)
 {
    ChannelRemotePeerMap::iterator it = mClientToServerChannelRemotePeerMap.find(channelNumber);
    if(it != mClientToServerChannelRemotePeerMap.end())
