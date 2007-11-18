@@ -79,7 +79,8 @@ TcpConnection::handleReadHeader(const asio::error_code& e)
       */
 
       // All Turn messaging will be framed
-      mChannelNumber = mBuffer[0];
+      memcpy(&mChannelNumber, &mBuffer[0], 2);
+      mChannelNumber = ntohs(mChannelNumber);
       if(mChannelNumber == 0) // Stun/Turn Request
       {
          // This is a StunMessage (channel 0) - length will be in bytes 3 and 4

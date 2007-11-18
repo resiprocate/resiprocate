@@ -50,14 +50,14 @@ public:
    void onTransportDestroyed();
 
    // Used when framed data is received from client, to forward data to peer
-   void sendDataToPeer(unsigned char channelNumber, const resip::Data& data);
+   void sendDataToPeer(unsigned short channelNumber, const resip::Data& data);
    // Used when Send Indication is received from client, to forward data to peer
-   void sendDataToPeer(unsigned char channelNumber, const StunTuple& peerAddress, const resip::Data& data);  
+   void sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, const resip::Data& data);  
    // Used when Data is received from peer, to forward data to client
    void sendDataToClient(const StunTuple& peerAddress, const resip::Data& data); 
 
    // Called when a ChannelConfirmed Indication is received
-   void serverToClientChannelConfirmed(unsigned char channelNumber, const StunTuple& peerAddress);
+   void serverToClientChannelConfirmed(unsigned short channelNumber, const StunTuple& peerAddress);
 
    const StunTuple& getRequestedTuple() const { return mRequestedTuple; }
    time_t getExpires() const { return mExpires; }
