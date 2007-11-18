@@ -19,7 +19,7 @@ public:
 
    // Note: destination is ignored for TCP and TLS connections
    virtual void sendTurnData(const StunTuple& destination, const char* buffer, unsigned int size);
-   virtual void sendTurnFramedData(unsigned char channelNumber, const StunTuple& destination, const char* buffer, unsigned int size);
+   virtual void sendTurnFramedData(unsigned short channelNumber, const StunTuple& destination, const char* buffer, unsigned int size);
 
    /// Handle completion of a sendData operation.
    virtual void handleSendData(const asio::error_code& e);
@@ -40,7 +40,7 @@ private:
    public:
       DataToSend(const StunTuple& destination, const char* data, unsigned int length) : 
          mDestination(destination), mData(data, length) {}
-      DataToSend(unsigned char channelNumber, const StunTuple& destination, const char* data, unsigned int length);
+      DataToSend(unsigned short channelNumber, const StunTuple& destination, const char* data, unsigned int length);
       StunTuple mDestination;  // only used for UDP
       resip::Data mData;
    };

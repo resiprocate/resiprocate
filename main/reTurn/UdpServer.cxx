@@ -76,7 +76,9 @@ UdpServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransfe
       }
       std::cout << std::dec << std::endl;
       */
-      unsigned char channelNumber = mBuffer[0];
+      unsigned short channelNumber;
+      memcpy(&channelNumber, &mBuffer[0], 2);
+      channelNumber = ntohs(channelNumber);
 
       if(!isRFC3489BackwardsCompatServer())
       {

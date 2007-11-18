@@ -1,6 +1,7 @@
 #include "TurnSocket.hxx"
 #include "ErrorCode.hxx"
 #include <boost/bind.hpp>
+#include <rutil/Lock.hxx>
 using namespace std;
 
 #define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
@@ -35,6 +36,7 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
                                 char* password, unsigned int passwordSize)
 {
    asio::error_code errorCode;
+   resip::Lock lock(mMutex);
 
    // Should we check here if TLS and deny?
 
@@ -47,7 +49,6 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
    // Form Shared Secret request
    StunMessage request;
    request.createHeader(StunMessage::StunClassRequest, StunMessage::SharedSecretMethod);
-   request.mHasFingerprint = true;
 
    // Get Response
    StunMessage* response = sendRequestAndGetResponse(request, errorCode);
@@ -101,6 +102,7 @@ asio::error_code
 TurnSocket::bindRequest()
 {
    asio::error_code errorCode;
+   resip::Lock lock(mMutex);
 
    // Ensure Connected
    if(!mConnected)
@@ -111,8 +113,6 @@ TurnSocket::bindRequest()
    // Form Stun Bind request
    StunMessage request;
    request.createHeader(StunMessage::StunClassRequest, StunMessage::BindMethod);
-
-   request.mHasFingerprint = true;
 
    if(!mUsername.empty())
    {
@@ -177,6 +177,7 @@ TurnSocket::createAllocation(unsigned int lifetime,
                              const asio::ip::address &requestedIpAddress)
 {
    asio::error_code errorCode;
+   resip::Lock lock(mMutex);
 
    // Store Allocation Properties
    mRequestedLifetime = lifetime;
@@ -192,16 +193,10 @@ TurnSocket::createAllocation(unsigned int lifetime,
       return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
    }
 
-   // Perform allocation
-   return refreshAllocation();
-}
-
-asio::error_code 
-TurnSocket::refreshAllocation()
-{
-   asio::error_code errorCode;
-
-   mHaveAllocation = false;  // toggled to true if successful
+   if(mHaveAllocation)
+   {
+      return asio::error_code(reTurn::AlreadyAllocated, asio::error::misc_category); 
+   }
 
    // Form Turn Allocate request
    StunMessage request;
@@ -254,8 +249,6 @@ TurnSocket::refreshAllocation()
       request.mTurnRequestedPortProps.props = mRequestedPortProps;
       request.mTurnRequestedPortProps.port = mRequestedPort;
    }
-   request.mHasFingerprint = true;
-
    request.mHasMessageIntegrity = true;
    request.setUsername(mUsername.data()); 
    request.mHmacKey = mPassword;
@@ -316,6 +309,53 @@ TurnSocket::refreshAllocation()
    // Check if success or not
    if(response->mHasErrorCode)
    {
+      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
+      delete response;
+      return errorCode;
+   }
+
+   // All was well - return 0 errorCode
+   if(mLifetime != 0)
+   {
+      mHaveAllocation = true;
+      mAllocationRefreshTime = time(0) + ((mLifetime*5)/8);  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime
+   }
+   delete response;
+   return errorCode;
+}
+
+asio::error_code 
+TurnSocket::refreshAllocation()
+{
+   asio::error_code errorCode;
+   resip::Lock lock(mMutex);
+
+   // Form Turn Allocate request
+   StunMessage request;
+   request.createHeader(StunMessage::StunClassRequest, StunMessage::TurnRefreshMethod);
+   if(mRequestedLifetime != UnspecifiedLifetime)
+   {
+      request.mHasTurnLifetime = true;
+      request.mTurnLifetime = mRequestedLifetime;
+   }
+   if(mRequestedBandwidth != UnspecifiedBandwidth)
+   {
+      request.mHasTurnBandwidth = true;
+      request.mTurnBandwidth = mRequestedBandwidth;
+   }
+   request.mHasMessageIntegrity = true;
+   request.setUsername(mUsername.data()); 
+   request.mHmacKey = mPassword;
+
+   StunMessage* response = sendRequestAndGetResponse(request, errorCode);
+   if(response == 0)
+   {
+      return errorCode;
+   }
+
+   // Check if success or not
+   if(response->mHasErrorCode)
+   {
       if(mRequestedLifetime != 0)
       {
          mHaveAllocation = false;
@@ -343,6 +383,7 @@ TurnSocket::refreshAllocation()
 asio::error_code 
 TurnSocket::destroyAllocation()
 {
+   resip::Lock lock(mMutex);
    if(mHaveAllocation)
    {
       mRequestedLifetime = 0;
@@ -388,6 +429,7 @@ asio::error_code
 TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
 {
    asio::error_code errorCode;
+   resip::Lock lock(mMutex);
 
    // ensure there is an allocation
    if(!mHaveAllocation)
@@ -427,6 +469,7 @@ asio::error_code
 TurnSocket::clearActiveDestination()
 {
    asio::error_code errorCode;
+   resip::Lock lock(mMutex);
 
    // ensure there is an allocation
    if(!mHaveAllocation)
@@ -459,6 +502,7 @@ TurnSocket::send(const char* buffer, unsigned int size)
 asio::error_code 
 TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
 {
+   resip::Lock lock(mMutex);
    // ensure there is an allocation 
    if(!mHaveAllocation)
    {
@@ -480,6 +524,7 @@ TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const 
 asio::error_code 
 TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size)
 {
+   resip::Lock lock(mMutex);
    // Check to see if an allocation refresh is required - if so send it and make sure it was sucessful
    asio::error_code ret = checkIfAllocationRefreshRequired();
    if(ret)
@@ -491,8 +536,9 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
    {
       // send framed data to active destination
       char framing[4];
-      framing[0] = remotePeer.getClientToServerChannel();
-      framing[1] = 0x00;  // reserved
+      unsigned short channelNumber = remotePeer.getClientToServerChannel();
+      channelNumber = htons(channelNumber);
+      memcpy(&framing[0], &channelNumber, 2);
       if(mLocalBinding.getTransportType() == StunTuple::UDP)
       {
          // No size in header for UDP
@@ -517,17 +563,17 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       // Wrap data in a SendInd
       StunMessage ind;
       ind.createHeader(StunMessage::StunClassIndication, StunMessage::TurnSendMethod);
-      ind.mHasTurnRemoteAddress = true;
-      ind.mTurnRemoteAddress.port = remotePeer.getPeerTuple().getPort();
+      ind.mHasTurnPeerAddress = true;
+      ind.mTurnPeerAddress.port = remotePeer.getPeerTuple().getPort();
       if(remotePeer.getPeerTuple().getAddress().is_v6())
       {
-         ind.mTurnRemoteAddress.family = StunMessage::IPv6Family;
-         memcpy(&ind.mTurnRemoteAddress.addr.ipv6, remotePeer.getPeerTuple().getAddress().to_v6().to_bytes().c_array(), sizeof(ind.mTurnRemoteAddress.addr.ipv6));
+         ind.mTurnPeerAddress.family = StunMessage::IPv6Family;
+         memcpy(&ind.mTurnPeerAddress.addr.ipv6, remotePeer.getPeerTuple().getAddress().to_v6().to_bytes().c_array(), sizeof(ind.mTurnPeerAddress.addr.ipv6));
       }
       else
       {
-         ind.mTurnRemoteAddress.family = StunMessage::IPv4Family;
-         ind.mTurnRemoteAddress.addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_ulong();
+         ind.mTurnPeerAddress.family = StunMessage::IPv4Family;
+         ind.mTurnPeerAddress.addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_ulong();
       }
       ind.mHasTurnChannelNumber = true;
       ind.mTurnChannelNumber = remotePeer.getClientToServerChannel();
@@ -535,7 +581,6 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       {
          ind.setTurnData(buffer, size);
       }
-      ind.mHasFingerprint = true;
 
       // If not using UDP - then mark channel as confirmed
       if(mLocalBinding.getTransportType() != StunTuple::UDP)
@@ -553,6 +598,7 @@ asio::error_code
 TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress, unsigned short* sourcePort)
 {
    asio::error_code errorCode;
+   resip::Lock lock(mMutex);
    bool done = false;
 
    // TODO - rethink this scheme so that we don't need to copy recieved data
@@ -577,9 +623,12 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
       }
 
       // Check Channel
-      if(readSize > 4 && mReadBuffer[0] > 0) // We have received Turn Data
+      if(readSize > 4 && mReadBuffer[0] > 0) 
       {
-         RemotePeer* remotePeer = mChannelManager.findRemotePeerByServerToClientChannel(mReadBuffer[0]);
+         unsigned short channelNumber;
+         memcpy(&channelNumber, &mReadBuffer[0], 2);
+         channelNumber = ntohs(channelNumber);
+         RemotePeer* remotePeer = mChannelManager.findRemotePeerByServerToClientChannel(channelNumber);
          if(remotePeer)
          {
             UInt16 dataLen;
@@ -635,6 +684,7 @@ TurnSocket::receiveFrom(const asio::ip::address& address, unsigned short port, c
    unsigned short sourcePort;
    bool done = false;
    asio::error_code errorCode;
+   resip::Lock lock(mMutex);
 
    while(!done)
    {
@@ -686,7 +736,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
    {
       if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnDataMethod)
       {
-         if(!stunMessage.mHasTurnRemoteAddress || !stunMessage.mHasTurnChannelNumber)
+         if(!stunMessage.mHasTurnPeerAddress || !stunMessage.mHasTurnChannelNumber)
          {
             // Missing RemoteAddress or ChannelNumber attribute
             std::cout << "DataInd missing attributes." << std::endl;
@@ -695,16 +745,16 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
 
          StunTuple remoteTuple;
          remoteTuple.setTransportType(mRelayTuple.getTransportType());
-         remoteTuple.setPort(stunMessage.mTurnRemoteAddress.port);
-         if(stunMessage.mTurnRemoteAddress.family == StunMessage::IPv6Family)
+         remoteTuple.setPort(stunMessage.mTurnPeerAddress.port);
+         if(stunMessage.mTurnPeerAddress.family == StunMessage::IPv6Family)
          {
             asio::ip::address_v6::bytes_type bytes;
-            memcpy(bytes.c_array(), &stunMessage.mTurnRemoteAddress.addr.ipv6, bytes.size());
+            memcpy(bytes.c_array(), &stunMessage.mTurnPeerAddress.addr.ipv6, bytes.size());
             remoteTuple.setAddress(asio::ip::address_v6(bytes));
          }
          else
          {
-            remoteTuple.setAddress(asio::ip::address_v4(stunMessage.mTurnRemoteAddress.addr.ipv4));
+            remoteTuple.setAddress(asio::ip::address_v4(stunMessage.mTurnPeerAddress.addr.ipv4));
          }
 
          RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
@@ -734,14 +784,13 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             // If UDP, then send TurnChannelConfirmationInd
             StunMessage channelConfirmationInd;
             channelConfirmationInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationMethod);
-            channelConfirmationInd.mHasTurnRemoteAddress = true;
-            channelConfirmationInd.mTurnRemoteAddress = stunMessage.mTurnRemoteAddress;
+            channelConfirmationInd.mHasTurnPeerAddress = true;
+            channelConfirmationInd.mTurnPeerAddress = stunMessage.mTurnPeerAddress;
             channelConfirmationInd.mHasTurnChannelNumber = true;
             channelConfirmationInd.mTurnChannelNumber = stunMessage.mTurnChannelNumber;
-            channelConfirmationInd.mHasFingerprint = true;
 
             // send channelConfirmationInd to local client
-            unsigned int bufferSize = 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnChannelNumber */ + 8 /* Fingerprint */ + 4 /* Turn Frame size */;
+            unsigned int bufferSize = 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnChannelNumber */ + 4 /* Turn Frame size */;
             resip::Data buffer(bufferSize, resip::Data::Preallocate);
             unsigned int writeSize = channelConfirmationInd.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
 
@@ -776,7 +825,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
       }
       else if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnChannelConfirmationMethod)
       {
-         if(!stunMessage.mHasTurnRemoteAddress || !stunMessage.mHasTurnChannelNumber)
+         if(!stunMessage.mHasTurnPeerAddress || !stunMessage.mHasTurnChannelNumber)
          {
             // Missing RemoteAddress or ChannelNumber attribute
             std::cout << "DataInd missing attributes." << std::endl;
@@ -785,16 +834,16 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
 
          StunTuple remoteTuple;
          remoteTuple.setTransportType(mRelayTuple.getTransportType());
-         remoteTuple.setPort(stunMessage.mTurnRemoteAddress.port);
-         if(stunMessage.mTurnRemoteAddress.family == StunMessage::IPv6Family)
+         remoteTuple.setPort(stunMessage.mTurnPeerAddress.port);
+         if(stunMessage.mTurnPeerAddress.family == StunMessage::IPv6Family)
          {
             asio::ip::address_v6::bytes_type bytes;
-            memcpy(bytes.c_array(), &stunMessage.mTurnRemoteAddress.addr.ipv6, bytes.size());
+            memcpy(bytes.c_array(), &stunMessage.mTurnPeerAddress.addr.ipv6, bytes.size());
             remoteTuple.setAddress(asio::ip::address_v6(bytes));
          }
          else
          {
-            remoteTuple.setAddress(asio::ip::address_v4(stunMessage.mTurnRemoteAddress.addr.ipv4));
+            remoteTuple.setAddress(asio::ip::address_v4(stunMessage.mTurnPeerAddress.addr.ipv4));
          }
 
          RemotePeer* remotePeer = mChannelManager.findRemotePeerByClientToServerChannel(stunMessage.mTurnChannelNumber);
@@ -841,11 +890,8 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             response.mXorMappedAddress.addr.ipv4 = stunMessage.mRemoteTuple.getAddress().to_v4().to_ulong();   
          }
 
-         // Ensure fingerprint is added
-         response.mHasFingerprint = true;
-
          // send channelConfirmationInd to local client
-         unsigned int bufferSize = 8 /* Stun Header */ + 36 /* XorMapped Address (v6) */ + 8 /* Fingerprint */ + 4 /* Turn Frame size */;
+         unsigned int bufferSize = 8 /* Stun Header */ + 36 /* XorMapped Address (v6) */ + 4 /* Turn Frame size */;
          resip::Data buffer(bufferSize, resip::Data::Preallocate);
          unsigned int writeSize = response.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
 
@@ -975,44 +1021,51 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
          return 0;
       }
 
-      if(readsize > 4 && mReadBuffer[0] == 0)  // Channel 0 is Stun/Turn messaging
+      if(readsize > 4)
       {
-         StunMessage* response = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[4], readsize-4);
+         unsigned short channelNumber;
+         memcpy(&channelNumber, &mReadBuffer[0], 2);
+         channelNumber = ntohs(channelNumber);
 
-         if(response->isValid())
+         if(channelNumber == 0) // Channel 0 is Stun/Turn messaging
          {
-            if(!response->checkMessageIntegrity(request.mHmacKey))
+            StunMessage* response = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[4], readsize-4);
+
+            if(response->isValid())
             {
-               std::cout << "Stun response message integrity is bad!" << std::endl;
+               if(!response->checkMessageIntegrity(request.mHmacKey))
+               {
+                  std::cout << "Stun response message integrity is bad!" << std::endl;
+                  delete response;
+                  errorCode = asio::error_code(reTurn::BadMessageIntegrity, asio::error::misc_category);
+                  return 0;
+               }
+   
+               // Check that TID matches request
+               if(!(response->mHeader.magicCookieAndTid == request.mHeader.magicCookieAndTid))
+               {
+                  std::cout << "Stun response TID does not match request - discarding!" << std::endl;
+                  delete response;
+                  continue;  // read next message
+               }
+   
+               errorCode = asio::error_code(reTurn::Success, asio::error::misc_category);
+               return response;
+            }
+            else
+            {
+               std::cout << "Stun response message is invalid!" << std::endl;
                delete response;
-               errorCode = asio::error_code(reTurn::BadMessageIntegrity, asio::error::misc_category);
+               errorCode = asio::error_code(reTurn::ErrorParsingMessage, asio::error::misc_category);  
                return 0;
             }
-
-            // Check that TID matches request
-            if(!(response->mHeader.magicCookieAndTid == request.mHeader.magicCookieAndTid))
-            {
-               std::cout << "Stun response TID does not match request - discarding!" << std::endl;
-               delete response;
-               continue;  // read next message
-            }
-   
-            errorCode = asio::error_code(reTurn::Success, asio::error::misc_category);
-            return response;
          }
-         else
+         else  // Channel != 0 indicates Turn Data
          {
-            std::cout << "Stun response message is invalid!" << std::endl;
-            delete response;
-            errorCode = asio::error_code(reTurn::ErrorParsingMessage, asio::error::misc_category);  
+            // TODO - handle buffering of Turn data that is receive while waiting for a Request/Response
+            errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);  
             return 0;
          }
-      }
-      else if(readsize > 4 && mReadBuffer[0] > 0) // Channel > 0 indicates Turn Data
-      {
-         // TODO - handle buffering of Turn data that is receive while waiting for a Request/Response
-         errorCode = asio::error_code(reTurn::FrameError, asio::error::misc_category);  
-         return 0;
       }
       else
       {
