@@ -18,6 +18,7 @@ class DnsHostRecord : public DnsResourceRecord
 {
    public:
       DnsHostRecord(const RROverlay&);
+      DnsHostRecord(const Data name, const in_addr addr):mName(name), mAddr(addr){};
       ~DnsHostRecord() {}
 
       // accessors.

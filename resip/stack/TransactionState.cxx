@@ -535,6 +535,29 @@ TransactionState::processStateless(TransactionMessage* message)
    }
 }
 
+void 
+TransactionState::saveOriginalContactAndVia(const SipMessage& sip)
+{
+   if(sip.exists(h_Contacts) && sip.header(h_Contacts).size() == 1)
+   {
+      mOriginalContact = std::auto_ptr<NameAddr>(new NameAddr(sip.header(h_Contacts).front()));
+   }
+   mOriginalVia = std::auto_ptr<Via>(new Via(sip.header(h_Vias).front()));
+}
+
+void TransactionState::restoreOriginalContactAndVia()
+{
+   if (mOriginalContact.get())
+   {
+      mMsgToRetransmit->header(h_Contacts).front() = *mOriginalContact;
+   }                  
+   if (mOriginalVia.get())
+   {
+      mOriginalVia->param(p_branch).incrementTransportSequence();
+      mMsgToRetransmit->header(h_Vias).front() = *mOriginalVia;
+   }
+}
+
 void
 TransactionState::processClientNonInvite(TransactionMessage* msg)
 { 
@@ -547,6 +570,7 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
       //StackLog (<< "received new non-invite request");
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       delete mMsgToRetransmit;
+      saveOriginalContactAndVia(*sip);
       mMsgToRetransmit = sip;
       mController.mTimers.add(Timer::TimerF, mId, Timer::TF);
       sendToWire(sip);  // don't delete
@@ -687,6 +711,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
          // transaction timeouts. 
          case INVITE:
             delete mMsgToRetransmit; 
+            saveOriginalContactAndVia(*sip);
             mMsgToRetransmit = sip;
             mController.mTimers.add(Timer::TimerB, mId, Timer::TB);
             sendToWire(msg); // don't delete msg
@@ -1512,7 +1537,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
          switch (mDnsResult->available())
          {
             case DnsResult::Available:
-               mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
+               restoreOriginalContactAndVia();
                mTarget = mDnsResult->next();
                processReliability(mTarget.getType());
                sendToWire(mMsgToRetransmit);
@@ -1520,7 +1545,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
             
             case DnsResult::Pending:
                mWaitingForDnsResult=true;
-               mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
+               restoreOriginalContactAndVia();
                break;
 
             case DnsResult::Finished:
