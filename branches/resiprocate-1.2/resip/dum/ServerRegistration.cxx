@@ -143,7 +143,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     UInt32 globalExpires = 0;
 
-    if (msg.exists(h_Expires) && msg.header(h_Expires).isWellFormed())
+    if (!msg.empty(h_Expires) && msg.header(h_Expires).isWellFormed())
     {
       globalExpires = msg.header(h_Expires).value();
     }
