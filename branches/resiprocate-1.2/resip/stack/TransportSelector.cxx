@@ -927,7 +927,7 @@ TransportSelector::retransmit(SipMessage* msg, Tuple& target)
    if(!msg->getEncoded().empty())
    {
       //DebugLog(<<"!ah! retransmit to " << target);
-      target.transport->send(target, msg->getEncoded(), msg->getTransactionId(),                             msg->getCompartmentId());
+      target.transport->send(target, msg->getEncoded(), msg->getTransactionId(), msg->getCompartmentId());
    }
 }
 
