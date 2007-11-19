@@ -83,7 +83,7 @@ StaticRoute::process(RequestContext& context)
          InfoLog(<< "Adding target " << *i );
          // .slg. adding StaticRoutes as QValueTargets allows them to be processed before the QValueTargets
          //       added in the LocationServer monkey - since all QValueTargets are processed before simple Targets
-         QValueTarget target(NameAddr(*i), 1.0);
+         QValueTarget target(NameAddr(*i), 1.0f);
          context.getResponseContext().addTarget(target, false /* beginImmediately */, mParallelForkStaticRoutes /* addToFirstBatch */);
          //context.addTarget(NameAddr(*i));
       }
