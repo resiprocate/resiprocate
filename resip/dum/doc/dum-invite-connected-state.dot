@@ -5,7 +5,7 @@
 //  names start with on are events
 
 //  Note:  not all Assert transitions are shown here
-digraph UAC {
+digraph ConnectedState {
   rankdir=LR;
   node [shape = box];
 
