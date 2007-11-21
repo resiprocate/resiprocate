@@ -8,7 +8,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include "RequestHandler.hxx"
 #include "StunTuple.hxx"
-#include "TurnTransportBase.hxx"
+#include "AsyncTcpSocketBase.hxx"
 
 namespace reTurn {
 
@@ -16,8 +16,8 @@ class ConnectionManager;
 
 /// Represents a single connection from a client.
 class TcpConnection
-  : public TurnTransportBase,
-    public boost::enable_shared_from_this<TcpConnection>,
+  : public AsyncTcpSocketBase,
+    //public boost::enable_shared_from_this<TcpConnection>,
     private boost::noncopyable
 {
 public:
@@ -83,7 +83,7 @@ protected:
 private:
 };
 
-typedef boost::shared_ptr<TcpConnection> TcpConnectionPtr;
+typedef boost::shared_ptr<AsyncSocketBase> TcpConnectionPtr;
 
 }
 
