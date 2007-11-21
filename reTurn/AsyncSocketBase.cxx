@@ -5,7 +5,7 @@
 using namespace std;
 using namespace resip;
 
-#define NO_CHANNEL (unsigned short(-1))
+#define NO_CHANNEL ((unsigned short)-1)
 
 namespace reTurn {
 
