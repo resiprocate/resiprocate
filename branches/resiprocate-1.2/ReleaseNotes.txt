@@ -1,3 +1,42 @@
+= Release Notes v 1.2.1 =
+
+==Build System==
+===Bug fixes===
+* Fixed a few build errors/warnings
+* Disable cppunit doxygen build (in tfm)
+
+==rutil==
+===New features===
+* host file lookup for A records
+
+===Bug fixes===
+* Fixed a bug in Timer under CE
+* Better handling of dns return codes when network is not available
+* fixed a bug in DnsUtil::getInterfaces() that occurs on 64Bit architectures, where no interface other than the local loopback is found, and therefore none is returned
+
+==stack==
+===Bug fixes===
+* Fixed a sockets incompatibility with OS 10.5 (Leopard)
+* Fixed bug where name-addr would be parsed as an "all-contacts" if the display name began with a '*' (ie, Contact: *bOb* <sip:bob@192.168.0.12:9645>)
+* Fixed a bug where Contact header would have an incorrect transport param in the event of a DNS failover
+* fix Uri:::getAor() for IPV6 hostnames
+* fix for SdpContents::findFirstMatchingCodec - to ensure codec list is built before accessing
+* fix a double-free bug in SipMessage::releaseContents()
+
+==DUM==
+===New features===
+* add ClientAuthExtension singleton to plug in authentication methods
+
+===Bug fixes===
+* handle cases where there is a missing Expires header in the 200 to a SUB
+* fixed a couple of assert bugs
+* added missing copy of mTransactionId in copy constructor of DumTimeout
+* correctly handle some cases where application may call end() from a callback (in InviteSession)
+
+==repro==
+===Bug fixes===
+* thread safety fixes to BerkeleyDb
+
 = Release Notes v 1.2 =
 
 ==Build System==
