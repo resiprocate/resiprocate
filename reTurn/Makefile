@@ -6,6 +6,10 @@ TARGET_BINARY = reTurnServer
 CXXFLAGS += -DBOOST_ALL_NO_LIB
 
 SRC += \
+        AsyncSocketBase.cxx \
+        AsyncUdpSocketBase.cxx \
+        AsyncTcpSocketBase.cxx \
+        AsyncTlsSocketBase.cxx \
  	ChannelManager.cxx \
 	ConnectionManager.cxx \
 	RemotePeer.cxx \
@@ -21,7 +25,6 @@ SRC += \
 	TurnAllocationKey.cxx \
 	TurnManager.cxx \
 	TurnPermission.cxx \
-	TurnTransportBase.cxx \
 	UdpRelayServer.cxx \
 	UdpServer.cxx
 
