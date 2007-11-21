@@ -5,43 +5,42 @@
 #include <string>
 #include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"
-#include "TurnTransportBase.hxx"
+#include "AsyncUdpSocketBase.hxx"
+#include "AsyncSocketBaseHandler.hxx"
 
 namespace reTurn {
 
 class StunMessage;
 
 class UdpServer
-  : public TurnTransportBase,
+  : public AsyncUdpSocketBase,
+    public AsyncSocketBaseHandler,
     private boost::noncopyable
 {
 public:
    /// Create the server to listen on the specified UDP address and port
    explicit UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port);
+   ~UdpServer();
+
+   void start();
 
    /// This method is used if this UdpServer supports RFC3489 operation
    void setAlternateUdpServers(UdpServer* alternatePort, UdpServer* alternateIp, UdpServer* alternateIpPort);
    bool isRFC3489BackwardsCompatServer();
 
-   /// Returns the socket for this server
+   ///// Returns the socket for this server
    asio::ip::udp::socket& getSocket();
 
    void cleanupResponseMap(const asio::error_code& e, UInt128 tid);
 
-   virtual void sendData(const StunTuple& destination, const char* buffer, unsigned int size);
-
 private:
-   /// Handle completion of a receive_from operation
-   void handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransferred);
+   /// Handle completion of a receive operation
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
 
-   /// Handle completion of a sendTo operation
-   void handleSendTo(const asio::error_code& error, std::size_t bytesTransferred);
-
-   /// Socket for the connection.
-   asio::ip::udp::socket mSocket;
-
-   /// Endpoint info for current sender
-   asio::ip::udp::endpoint mSenderEndpoint;
+   /// Handle completion of a send operation
+   virtual void onSendSuccess(unsigned int socketDesc);
+   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e);
 
    /// The handler for all incoming requests.
    RequestHandler& mRequestHandler;
@@ -52,7 +51,7 @@ private:
    UdpServer* mAlternateIpPortUdpServer;
 
    /// Buffer for incoming data.
-   boost::array<unsigned char, 8192> mBuffer;
+   boost::array<unsigned char, 8192> mBuffer;  // REMOVE_ME
 
    // Response map (for retransmissions)
    class ResponseEntry

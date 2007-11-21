@@ -623,48 +623,51 @@ TurnSocket::receive(char* buffer, unsigned int& size, unsigned int timeout, asio
       }
 
       // Check Channel
-      if(readSize > 4 && mReadBuffer[0] > 0) 
+      if(readSize > 4)
       {
          unsigned short channelNumber;
          memcpy(&channelNumber, &mReadBuffer[0], 2);
          channelNumber = ntohs(channelNumber);
-         RemotePeer* remotePeer = mChannelManager.findRemotePeerByServerToClientChannel(channelNumber);
-         if(remotePeer)
+         if(channelNumber > 0)
          {
-            UInt16 dataLen;
-            memcpy(&dataLen, &mReadBuffer[2], 2);
-            dataLen = ntohs(dataLen);
-
-            if(sourceAddress)
+            RemotePeer* remotePeer = mChannelManager.findRemotePeerByServerToClientChannel(channelNumber);
+            if(remotePeer)
             {
-               *sourceAddress = remotePeer->getPeerTuple().getAddress();
+               UInt16 dataLen;
+               memcpy(&dataLen, &mReadBuffer[2], 2);
+               dataLen = ntohs(dataLen);
+   
+               if(sourceAddress)
+               {
+                  *sourceAddress = remotePeer->getPeerTuple().getAddress();
+               }
+               if(sourcePort)
+               {
+                  *sourcePort = remotePeer->getPeerTuple().getPort();
+               }
+               errorCode = handleRawData(&mReadBuffer[4], readSize-4, dataLen, buffer, size);
             }
-            if(sourcePort)
+            else
             {
-               *sourcePort = remotePeer->getPeerTuple().getPort();
+               // Invalid ServerToClient Channel - teardown?
+               errorCode = asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);  
+               done = true;
             }
-            errorCode = handleRawData(&mReadBuffer[4], readSize-4, dataLen, buffer, size);
          }
-         else
+         else // We have received a Stun/Turn Message
          {
-            // Invalid ServerToClient Channel - teardown?
-            errorCode = asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);  
-            done = true;
-         }
-      }
-      else if(readSize > 4 && mReadBuffer[0] == 0)  // We have received a Stun/Turn Message
-      {
-         // StunMessage
-         StunMessage* stunMsg = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[4], readSize-4);
-         unsigned int tempsize = size;
-         errorCode = handleStunMessage(*stunMsg, buffer, tempsize, sourceAddress, sourcePort);
-         if(!errorCode && tempsize == 0)  // Signifies that a Stun/Turn request was received and there is nothing to return to receive caller
-         {
-            done = false;
-         }
-         else
-         {
-            size = tempsize;
+            // StunMessage
+            StunMessage* stunMsg = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[4], readSize-4);
+            unsigned int tempsize = size;
+            errorCode = handleStunMessage(*stunMsg, buffer, tempsize, sourceAddress, sourcePort);
+            if(!errorCode && tempsize == 0)  // Signifies that a Stun/Turn request was received and there is nothing to return to receive caller
+            {
+               done = false;
+            }
+            else
+            {
+               size = tempsize;
+            }
          }
       }
       else
@@ -794,6 +797,8 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             resip::Data buffer(bufferSize, resip::Data::Preallocate);
             unsigned int writeSize = channelConfirmationInd.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
 
+            std::cout << "Channel confirmation indication send for channel: " << stunMessage.mTurnChannelNumber  << std::endl;
+
             errorCode = rawWrite(buffer.data(), writeSize);
          }
 
@@ -890,7 +895,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             response.mXorMappedAddress.addr.ipv4 = stunMessage.mRemoteTuple.getAddress().to_v4().to_ulong();   
          }
 
-         // send channelConfirmationInd to local client
+         // send bind response to local client
          unsigned int bufferSize = 8 /* Stun Header */ + 36 /* XorMapped Address (v6) */ + 4 /* Turn Frame size */;
          resip::Data buffer(bufferSize, resip::Data::Preallocate);
          unsigned int writeSize = response.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
