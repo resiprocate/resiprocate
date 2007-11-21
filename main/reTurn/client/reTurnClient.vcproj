@@ -100,6 +100,18 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath="..\AsyncSocketBase.cxx">
+			</File>
+			<File
+				RelativePath="..\AsyncTcpSocketBase.cxx">
+			</File>
+			<File
+				RelativePath="..\AsyncTlsSocketBase.cxx">
+			</File>
+			<File
+				RelativePath="..\AsyncUdpSocketBase.cxx">
+			</File>
+			<File
 				RelativePath="..\ChannelManager.cxx">
 			</File>
 			<File
@@ -128,6 +140,21 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			<File
+				RelativePath="..\AsyncSocketBase.hxx">
+			</File>
+			<File
+				RelativePath="..\AsyncSocketBaseHandler.hxx">
+			</File>
+			<File
+				RelativePath="..\AsyncTcpSocketBase.hxx">
+			</File>
+			<File
+				RelativePath="..\AsyncTlsSocketBase.hxx">
+			</File>
+			<File
+				RelativePath="..\AsyncUdpSocketBase.hxx">
+			</File>
 			<File
 				RelativePath="..\ChannelManager.hxx">
 			</File>
