@@ -20,7 +20,7 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
 
    std::cout << "TcpServer started.  Listening on " << address << ":" << port << std::endl;
 
-   mAcceptor.async_accept(mNewConnection->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+   mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
 }
 
 void 
@@ -31,7 +31,7 @@ TcpServer::handleAccept(const asio::error_code& e)
       mConnectionManager.start(mNewConnection);
 
       mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler));
-      mAcceptor.async_accept(mNewConnection->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+      mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
    }
 }
 

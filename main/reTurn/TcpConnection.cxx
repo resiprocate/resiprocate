@@ -1,6 +1,7 @@
 #include "TcpConnection.hxx"
 #include <vector>
 #include <boost/bind.hpp>
+#include <rutil/SharedPtr.hxx>
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
 
@@ -8,7 +9,7 @@ namespace reTurn {
 
 TcpConnection::TcpConnection(asio::io_service& ioService,
     ConnectionManager& manager, RequestHandler& handler)
-  : TurnTransportBase(ioService),
+  : AsyncTcpSocketBase(ioService),
     mSocket(ioService),
     mConnectionManager(manager),
     mRequestHandler(handler),
@@ -40,22 +41,22 @@ TcpConnection::start()
 void
 TcpConnection::readHeader()
 {
-   asio::async_read(mSocket, asio::buffer(mBuffer, 4),
-                    boost::bind(&TcpConnection::handleReadHeader, shared_from_this(), asio::placeholders::error));
+   //asio::async_read(mSocket, asio::buffer(mBuffer, 4),
+   //                 boost::bind(&TcpConnection::handleReadHeader, shared_from_this(), asio::placeholders::error));
 }
 
 void
 TcpConnection::readBody()
 {
-   asio::async_read(mSocket, asio::buffer(mBuffer, mBufferLen),
-                    boost::bind(&TcpConnection::handleReadBody, shared_from_this(), asio::placeholders::error));
+   //asio::async_read(mSocket, asio::buffer(mBuffer, mBufferLen),
+   //                 boost::bind(&TcpConnection::handleReadBody, shared_from_this(), asio::placeholders::error));
 }
 
 void
 TcpConnection::write()
 {
-   async_write(mSocket, asio::buffer(mBuffer, mBufferLen),  
-               boost::bind(&TcpConnection::handleWrite, shared_from_this(), asio::placeholders::error));
+   //async_write(mSocket, asio::buffer(mBuffer, mBufferLen),  
+   //            boost::bind(&TcpConnection::handleWrite, shared_from_this(), asio::placeholders::error));
 }
 
 void 
@@ -164,10 +165,11 @@ TcpConnection::handleReadBody(const asio::error_code& e)
       }
       else  // reading turn data
       {
+         resip::SharedPtr<resip::Data> data(new resip::Data((char*)mBuffer.c_array(), mBufferLen));
          mRequestHandler.processTurnData(mChannelNumber,
                                          StunTuple(mTransportType, mLocalEndpoint.address(), mLocalEndpoint.port()),
                                          StunTuple(mTransportType, mRemoteEndpoint.address(), mRemoteEndpoint.port()),
-                                         (char*)mBuffer.c_array(), mBufferLen);
+                                         data);
          readHeader();
       }
    }
@@ -194,8 +196,8 @@ TcpConnection::handleWrite(const asio::error_code& e)
 void 
 TcpConnection::sendData(const StunTuple& destination, const char* buffer, unsigned int size)
 {
-   async_write(mSocket, asio::buffer(buffer, size),  
-               boost::bind(&TcpConnection::handleSendData, shared_from_this(), asio::placeholders::error));  
+   //async_write(mSocket, asio::buffer(buffer, size),  
+   //            boost::bind(&TcpConnection::handleSendData, shared_from_this(), asio::placeholders::error));  
 }
 
 } 

@@ -4,7 +4,7 @@
 #include <string>
 
 #include "TurnAllocation.hxx"
-#include "TurnTransportBase.hxx"
+#include "AsyncSocketBase.hxx"
 #include "StunAuth.hxx"
 
 using namespace std;
@@ -42,7 +42,7 @@ RequestHandler::RequestHandler(TurnManager& turnManager,
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processStunMessage(TurnTransportBase* turnTransport, StunMessage& request, StunMessage& response)
+RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response)
 {
    ProcessResult result =  RespondFromReceiving;
 
@@ -69,7 +69,7 @@ RequestHandler::processStunMessage(TurnTransportBase* turnTransport, StunMessage
             response.mHasFingerprint = true;
             break;
          case StunMessage::TurnAllocateMethod:
-            result = processTurnAllocateRequest(turnTransport, request, response);
+            result = processTurnAllocateRequest(turnSocket, request, response);
             if(result != NoResponseToSend)
             {
                // Add an XOrMappedAddress to all TurnAllocateResponses
@@ -88,7 +88,7 @@ RequestHandler::processStunMessage(TurnTransportBase* turnTransport, StunMessage
             }
             break;
          case StunMessage::TurnRefreshMethod:
-            result = processTurnRefreshRequest(turnTransport, request, response);
+            result = processTurnRefreshRequest(request, response);
             break;
          default:
             buildErrorResponse(response, 400, "Invalid Request Method");  
@@ -461,7 +461,7 @@ RequestHandler::processStunSharedSecretRequest(StunMessage& request, StunMessage
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processTurnAllocateRequest(TurnTransportBase* turnTransport, StunMessage& request, StunMessage& response)
+RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response)
 {
    bool verbose = true;
 
@@ -593,7 +593,7 @@ RequestHandler::processTurnAllocateRequest(TurnTransportBase* turnTransport, Stu
    try
    {
       allocation = new TurnAllocation(mTurnManager,
-                                      turnTransport, 
+                                      turnSocket, 
                                       request.mLocalTuple, 
                                       request.mRemoteTuple, 
                                       StunAuth(*request.mUsername, hmacKey), 
@@ -643,7 +643,7 @@ RequestHandler::processTurnAllocateRequest(TurnTransportBase* turnTransport, Stu
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processTurnRefreshRequest(TurnTransportBase* turnTransport, StunMessage& request, StunMessage& response)
+RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& response)
 {
    bool verbose = true;
 
@@ -814,11 +814,13 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
 
    if(request.mHasTurnData)  
    {
-      allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, *request.mTurnData);
+      SharedPtr<Data> data(new Data(*request.mTurnData));
+      allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, data, false /* framed? */);
    }
    else
    {
-      allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, Data::Empty);
+      SharedPtr<Data> empty(new Data((const char*)0, 0));
+      allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, empty, false /* framed? */);
    }
 }
 
@@ -866,7 +868,7 @@ RequestHandler::processTurnChannelConfirmationIndication(StunMessage& request)
 }
 
 void 
-RequestHandler::processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, const char* data, unsigned int size)
+RequestHandler::processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, resip::SharedPtr<resip::Data> data)
 {
    bool verbose = true;
 
@@ -878,7 +880,7 @@ RequestHandler::processTurnData(unsigned short channelNumber, const StunTuple& l
       return;
    }
 
-   allocation->sendDataToPeer(channelNumber, Data(Data::Share, data, size));
+   allocation->sendDataToPeer(channelNumber, data, true /* framed? */);
 }
 
 } // namespace

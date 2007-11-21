@@ -11,7 +11,9 @@
 namespace reTurn {
 
 TlsConnection::TlsConnection(asio::io_service& ioService,
-                             ConnectionManager& manager, RequestHandler& handler, asio::ssl::context& context)
+                             ConnectionManager& manager, 
+                             RequestHandler& handler, 
+                             asio::ssl::context& context)
   : TcpConnection(ioService, manager, handler),
     mTlsSocket(ioService, context)
 {
@@ -37,29 +39,29 @@ TlsConnection::start()
    mLocalEndpoint = mTlsSocket.lowest_layer().local_endpoint();
    mRemoteEndpoint = mTlsSocket.lowest_layer().remote_endpoint();
 
-   mTlsSocket.async_handshake(asio::ssl::stream_base::server, 
-                              boost::bind(&TlsConnection::handleWrite, shared_from_this(), asio::placeholders::error));  // Note: handleWrite does what we want after handshake completes
+   //mTlsSocket.async_handshake(asio::ssl::stream_base::server, 
+   //                           boost::bind(&TlsConnection::handleWrite, shared_from_this(), asio::placeholders::error));  // Note: handleWrite does what we want after handshake completes
 }
 
 void
 TlsConnection::readHeader()
 {
-   asio::async_read(mTlsSocket, asio::buffer(mBuffer, 4),
-                    boost::bind(&TlsConnection::handleReadHeader, shared_from_this(), asio::placeholders::error));
+   //asio::async_read(mTlsSocket, asio::buffer(mBuffer, 4),
+   //                 boost::bind(&TlsConnection::handleReadHeader, shared_from_this(), asio::placeholders::error));
 }
 
 void
 TlsConnection::readBody()
 {
-   asio::async_read(mTlsSocket, asio::buffer(mBuffer, mBufferLen),
-                    boost::bind(&TlsConnection::handleReadBody, shared_from_this(), asio::placeholders::error));
+   //asio::async_read(mTlsSocket, asio::buffer(mBuffer, mBufferLen),
+   //                 boost::bind(&TlsConnection::handleReadBody, shared_from_this(), asio::placeholders::error));
 }
 
 void
 TlsConnection::write()
 {
-   async_write(mTlsSocket, asio::buffer(mBuffer, mBufferLen),  
-               boost::bind(&TlsConnection::handleWrite, shared_from_this(), asio::placeholders::error));
+   //async_write(mTlsSocket, asio::buffer(mBuffer, mBufferLen),  
+   //            boost::bind(&TlsConnection::handleWrite, shared_from_this(), asio::placeholders::error));
 }
 
 void 
@@ -73,8 +75,8 @@ TlsConnection::stop()
 void 
 TlsConnection::sendData(const StunTuple& destination, const char* buffer, unsigned int size)
 {
-   async_write(mTlsSocket, asio::buffer(buffer, size),  
-               boost::bind(&TlsConnection::handleSendData, shared_from_this(), asio::placeholders::error));  
+   //async_write(mTlsSocket, asio::buffer(buffer, size),  
+   //            boost::bind(&TlsConnection::handleSendData, shared_from_this(), asio::placeholders::error));  
 }
 
 } 

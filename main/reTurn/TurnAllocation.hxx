@@ -8,23 +8,23 @@
 #include "StunTuple.hxx"
 #include "StunAuth.hxx"
 #include "TurnAllocationKey.hxx"
-#include "TurnTransportHandler.hxx"
+#include "AsyncSocketBaseHandler.hxx"
 #include "ChannelManager.hxx"
 
 namespace reTurn {
 
 class TurnPermission;
 class TurnManager;
-class TurnTransportBase;
+class AsyncSocketBase;
 class UdpRelayServer;
 
 class TurnAllocation
-  : public TurnTransportHandler,
+  : public AsyncSocketBaseDestroyedHandler,
     private boost::noncopyable
 {
 public:
    explicit TurnAllocation(TurnManager& turnManager,
-                           TurnTransportBase* localTurnTransport,
+                           AsyncSocketBase* localTurnSocket,
                            const StunTuple& clientLocalTuple, 
                            const StunTuple& clientRemoteTuple,
                            const StunAuth& clientAuth, 
@@ -45,16 +45,16 @@ public:
    // create Permission if not present, otherwise refresh permission timer
    void refreshPermission(const asio::ip::address& address);
 
-   // this get's called when being notified that the transport that the allocation came from
+   // this get's called when being notified that the socket that the allocation came from
    // has been destroyed
-   void onTransportDestroyed();
+   void onSocketDestroyed();
 
    // Used when framed data is received from client, to forward data to peer
-   void sendDataToPeer(unsigned short channelNumber, const resip::Data& data);
+   void sendDataToPeer(unsigned short channelNumber, resip::SharedPtr<resip::Data> data, bool framed);
    // Used when Send Indication is received from client, to forward data to peer
-   void sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, const resip::Data& data);  
+   void sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, resip::SharedPtr<resip::Data> data, bool framed);  
    // Used when Data is received from peer, to forward data to client
-   void sendDataToClient(const StunTuple& peerAddress, const resip::Data& data); 
+   void sendDataToClient(const StunTuple& peerAddress, resip::SharedPtr<resip::Data> data); 
 
    // Called when a ChannelConfirmed Indication is received
    void serverToClientChannelConfirmed(unsigned short channelNumber, const StunTuple& peerAddress);
@@ -65,7 +65,7 @@ public:
 
 private:
    // Used when there is any data to send to the peer, after channel has been identified
-   void sendDataToPeer(const StunTuple& peerAddress, const resip::Data& data);  
+   void sendDataToPeer(const StunTuple& peerAddress, resip::SharedPtr<resip::Data> data, bool framed);  
 
    TurnAllocationKey mKey;  // contains ClientLocalTuple and clientRemoteTuple
    StunAuth  mClientAuth;
@@ -83,7 +83,7 @@ private:
    TurnManager& mTurnManager;
    asio::deadline_timer mAllocationTimer;
 
-   TurnTransportBase* mLocalTurnTransport;
+   AsyncSocketBase* mLocalTurnSocket;
    boost::shared_ptr<UdpRelayServer> mUdpRelayServer;
 
    ChannelManager mChannelManager;

@@ -9,22 +9,26 @@ void
 ConnectionManager::start(TcpConnectionPtr c)
 {
   mConnections.insert(c);
-  c->start();
+  ((TcpConnection*)c.get())->start();
 }
 
 void 
 ConnectionManager::stop(TcpConnectionPtr c)
 {
   mConnections.erase(c);
-  c->stop();
+  ((TcpConnection*)c.get())->stop();
 }
 
 void 
 ConnectionManager::stopAll()
 {
-  std::for_each(mConnections.begin(), mConnections.end(),
-      boost::bind(&TcpConnection::stop, _1));
-  mConnections.clear();
+   std::set<TcpConnectionPtr>::iterator it = mConnections.begin();
+
+   for(; it != mConnections.end(); it++)
+   {
+     ((TcpConnection*)it->get())->stop();
+   }
+   mConnections.clear();
 }
 
 } 
