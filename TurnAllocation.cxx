@@ -3,7 +3,7 @@
 #include "TurnAllocation.hxx"
 #include "TurnManager.hxx"
 #include "TurnPermission.hxx"
-#include "TurnTransportBase.hxx"
+#include "AsyncSocketBase.hxx"
 #include "UdpRelayServer.hxx"
 #include "RemotePeer.hxx"
 
@@ -15,7 +15,7 @@ using namespace resip;
 namespace reTurn {
 
 TurnAllocation::TurnAllocation(TurnManager& turnManager,
-                               TurnTransportBase* localTurnTransport,
+                               AsyncSocketBase* localTurnSocket,
                                const StunTuple& clientLocalTuple, 
                                const StunTuple& clientRemoteTuple,
                                const StunAuth& clientAuth, 
@@ -31,7 +31,7 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
    mRequestedTransport(requestedTransport),
    mTurnManager(turnManager),
    mAllocationTimer(turnManager.getIOService()),
-   mLocalTurnTransport(localTurnTransport)
+   mLocalTurnSocket(localTurnSocket)
 {
    if(requestedIpAddress)
    {
@@ -48,7 +48,7 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
    }
 
    // Register for Turn Transport onDestroyed notification
-   mLocalTurnTransport->registerTurnTransportHandler(this);
+   mLocalTurnSocket->registerAsyncSocketBaseDestroyedHandler(this);
 }
 
 TurnAllocation::~TurnAllocation()
@@ -72,7 +72,7 @@ TurnAllocation::~TurnAllocation()
    }
    
    // Unregister for TurnTransport notifications
-   mLocalTurnTransport->registerTurnTransportHandler(0);
+   mLocalTurnSocket->registerAsyncSocketBaseDestroyedHandler(0);
 }
 
 void  
@@ -127,19 +127,19 @@ TurnAllocation::refreshPermission(const asio::ip::address& address)
 }
 
 void 
-TurnAllocation::onTransportDestroyed()
+TurnAllocation::onSocketDestroyed()
 {
    mTurnManager.removeTurnAllocation(mKey);   // will delete this
 }
 
 void 
-TurnAllocation::sendDataToPeer(unsigned short channelNumber, const resip::Data& data)
+TurnAllocation::sendDataToPeer(unsigned short channelNumber, resip::SharedPtr<resip::Data> data, bool framed)
 {
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByClientToServerChannel(channelNumber);
    if(remotePeer)
    {
       // channel found - send Data
-      sendDataToPeer(remotePeer->getPeerTuple(), data);
+      sendDataToPeer(remotePeer->getPeerTuple(), data, framed);
    }
    else
    {
@@ -149,7 +149,7 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, const resip::Data& 
 }
 
 void 
-TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, const resip::Data& data)
+TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, resip::SharedPtr<resip::Data> data, bool framed)
 {
    // Find RemotePeer
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(peerAddress);
@@ -194,16 +194,17 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& pe
 
       // send channelConfirmationInd to local client
       unsigned int bufferSize = 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnChannelNumber */ + 4 /* Turn Frame size */;
-      Data buffer(bufferSize, Data::Preallocate);
-      unsigned int size = channelConfirmationInd.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
-      mLocalTurnTransport->sendTurnData(mKey.getClientRemoteTuple(), buffer.data(), size);
+      SharedPtr<Data> buffer = AsyncSocketBase::allocateBuffer(bufferSize);
+      unsigned int size = channelConfirmationInd.stunEncodeFramedMessage((char*)buffer->data(), bufferSize);
+      buffer->truncate(size);  // Set size to proper size
+      mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), buffer);
    }      
 
-   sendDataToPeer(peerAddress, data);
+   sendDataToPeer(peerAddress, data, framed);
 }
 
 void 
-TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, const resip::Data& data)
+TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, resip::SharedPtr<resip::Data> data, bool framed)
 {
    cout << "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress << /* " data=" << data << */ endl;
@@ -214,11 +215,11 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, const resip::Data& 
    if(mRequestedTuple.getTransportType() == StunTuple::UDP)
    {
       assert(mUdpRelayServer);
-      mUdpRelayServer->sendTurnData(peerAddress, data.data(), (unsigned int)data.size());
+      mUdpRelayServer->doSend(peerAddress, data, framed ? 4 /* bufferStartPos is 4 so that framing is skipped */ : 0);
    }
    else
    {
-      if(data==Data::Empty)
+      if(data->size() <=4)
       {
          cout << "Turn send indication with no data for non-UDP transport.  Dropping." << endl; 
          return;
@@ -228,7 +229,7 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, const resip::Data& 
 }
 
 void 
-TurnAllocation::sendDataToClient(const StunTuple& peerAddress, const Data& data)
+TurnAllocation::sendDataToClient(const StunTuple& peerAddress, resip::SharedPtr<resip::Data> data)
 {
    // Find RemotePeer
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(peerAddress);
@@ -276,18 +277,19 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, const Data& data)
       }
       dataInd.mHasTurnChannelNumber = true;
       dataInd.mTurnChannelNumber = remotePeer->getServerToClientChannel();
-      dataInd.setTurnData(data.data(), (unsigned int)data.size());
+      dataInd.setTurnData(data->data(), (unsigned int)data->size());
 
       // send DataInd to local client
-      unsigned int bufferSize = (unsigned int)data.size() + 8 /* Stun Header */ + 36 /* Remote Address (v6) */ +8 /* Channel Number */ + 8 /* TurnData Header + potential pad */ + 4 /* Turn Frame size */;
-      Data buffer(bufferSize, Data::Preallocate);
-      unsigned int size = dataInd.stunEncodeFramedMessage((char*)buffer.data(), bufferSize);
-      mLocalTurnTransport->sendTurnData(mKey.getClientRemoteTuple(), buffer.data(), size);
+      unsigned int bufferSize = (unsigned int)data->size() + 8 /* Stun Header */ + 36 /* Remote Address (v6) */ +8 /* Channel Number */ + 8 /* TurnData Header + potential pad */ + 4 /* Turn Frame size */;
+      SharedPtr<Data> buffer = AsyncSocketBase::allocateBuffer(bufferSize);
+      unsigned int size = dataInd.stunEncodeFramedMessage((char*)buffer->data(), bufferSize);
+      buffer->truncate(size);  // Set size to proper size
+      mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), buffer);
    }
    else
    {
       // send data to local client
-      mLocalTurnTransport->sendTurnFramedData(remotePeer->getServerToClientChannel(), mKey.getClientRemoteTuple(), data.data(), (unsigned int)data.size());
+      mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), remotePeer->getServerToClientChannel(), data);
    }
 }
 

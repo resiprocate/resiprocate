@@ -1229,7 +1229,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    // add finger print if required
    if (mHasFingerprint)
    {
-      //cout << "***** Calculating fingerprint for data of size " << msgSize - 8 << endl;
+      //cout << "***** Calculating fingerprint for data of size " << ptr-buf << endl;
       stun_crc_32_type stun_crc;
       stun_crc.process_bytes(buf, ptr-buf); // Calculate CRC across entire message, except the fingerprint attribute
       UInt32 fingerprint = stun_crc.checksum();
