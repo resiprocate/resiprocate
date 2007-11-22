@@ -539,7 +539,8 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       // Record-Route addition only for new dialogs
       if ( !inDialog &&  // only for dialog-creating request
            (request.method() == INVITE ||
-            request.method() == SUBSCRIBE ) )
+            request.method() == SUBSCRIBE ) &&
+           !mRequestContext.mProxy.getRecordRoute().uri().host().empty())  // only add record route if configured to do so
       {
          NameAddr rt(mRequestContext.mProxy.getRecordRoute());
          // .bwc. Let's not record-route with a tel uri or something, shall we?
@@ -577,15 +578,10 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             {
                rt.uri().param(p_cid2) = request.header(h_RequestLine).uri().param(p_cid);
             }
-            InfoLog (<< "Added Record-Route: " << rt);
          }
 
-         // !jf! By not specifying host in Record-Route, the TransportSelector
-         //will fill it in. 
-         if (!mRequestContext.mProxy.getRecordRoute().uri().host().empty())
-         {
-            request.header(h_RecordRoutes).push_front(rt);
-         }
+         InfoLog (<< "Added Record-Route: " << rt);
+         request.header(h_RecordRoutes).push_front(rt);
       }
       
       // !jf! unleash the baboons here
