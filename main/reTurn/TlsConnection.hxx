@@ -6,49 +6,61 @@
 #include <boost/array.hpp>
 #include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"
-#include "TcpConnection.hxx"
+#include "AsyncTlsSocketBase.hxx"
+#include "AsyncSocketBaseHandler.hxx"
 
 namespace reTurn {
 
 class ConnectionManager;
+
 typedef asio::ssl::stream<asio::ip::tcp::socket> ssl_socket;
 
 /// Represents a single connection from a client.
 class TlsConnection
-  : public TcpConnection
+  : public AsyncTlsSocketBase,
+    public AsyncSocketBaseHandler,
+    private boost::noncopyable
 {
 public:
   /// Construct a connection with the given io_service.
-   explicit TlsConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, asio::ssl::context& context);
+   explicit TlsConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, bool turnFraming, asio::ssl::context& context);
   ~TlsConnection();
 
-  /// Get the socket associated with the connection.
-  ssl_socket::lowest_layer_type& tlsSocket();
+   /// Get the socket associated with the connection.
+   ssl_socket::lowest_layer_type& socket();
 
-  /// Start the first asynchronous operation for the connection.
-  virtual void start();
+   /// Start the first asynchronous operation for the connection.
+   virtual void start();
 
-  /// Start reading the header
-  virtual void readHeader();
+   /// Override close fn in AsyncTcpSocketBase so that we can remove ourselves from connection manager
+   virtual void close();
 
-  /// Read the Stun message body
-  virtual void readBody();
+   /// Stop all asynchronous operations associated with the connection.
+   virtual void stop();
 
-  /// Write buffer to socket
-  virtual void write();
+protected:
+   /// Handle completion of a handshake operation
+   virtual void onHandshakeSuccess(unsigned int socketDesc);
+   virtual void onHandshakeFailure(unsigned int socketDesc, const asio::error_code& e);
 
-  /// Stop all asynchronous operations associated with the connection.
-  virtual void stop();
+   /// Handle completion of a receive operation
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
 
-  virtual void sendData(const StunTuple& destination, const char* buffer, unsigned int size);
+   /// Handle completion of a send operation
+   virtual void onSendSuccess(unsigned int socketDesc);
+   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e);
+
+   /// The manager for this connection.
+   ConnectionManager& mConnectionManager;
+
+   /// The handler used to process the incoming request.
+   RequestHandler& mRequestHandler;
+
+   bool mTurnFraming;
 
 private:
-
-  /// Socket for the connection.
-  ssl_socket mTlsSocket;
 };
-
-typedef boost::shared_ptr<TcpConnection> TlsConnectionPtr;
 
 }
 

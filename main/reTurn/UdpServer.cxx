@@ -8,14 +8,15 @@ using namespace resip;
 
 namespace reTurn {
 
-UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
+UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming)
 : AsyncUdpSocketBase(ioService, address, port),
   mRequestHandler(requestHandler),
+  mTurnFraming(turnFraming),
   mAlternatePortUdpServer(0),
   mAlternateIpUdpServer(0),
   mAlternateIpPortUdpServer(0)
 {
-   std::cout << "UdpServer started.  Listening on " << address << ":" << port << std::endl;
+   std::cout << (mTurnFraming ? "TURN" : "STUN") << " UdpServer started.  Listening on " << address << ":" << port << std::endl;
 
    registerAsyncSocketBaseHandler(this);
 }
@@ -34,6 +35,7 @@ UdpServer::start()
 void 
 UdpServer::setAlternateUdpServers(UdpServer* alternatePort, UdpServer* alternateIp, UdpServer* alternateIpPort)
 {
+   assert(!mTurnFraming);
    assert(!mAlternatePortUdpServer);
    assert(!mAlternateIpUdpServer);
    assert(!mAlternateIpPortUdpServer);
@@ -76,7 +78,7 @@ UdpServer::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& ad
       memcpy(&channelNumber, &(*data)[0], 2);
       channelNumber = ntohs(channelNumber);
 
-      if(!isRFC3489BackwardsCompatServer())
+      if(mTurnFraming)
       {
          // All Turn messaging will be framed
          if(channelNumber == 0) // Stun/Turn Request
@@ -101,9 +103,9 @@ UdpServer::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& ad
          if(stunMessageBuffer && stunMessageSize)
          {
             // Try to parse stun message
-            StunMessage request(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
-                              StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
-                              stunMessageBuffer, stunMessageSize);
+            StunMessage request(StunTuple(StunTuple::UDP, address, port),
+                                StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
+                                stunMessageBuffer, stunMessageSize);
             if(request.isValid())
             {
                StunMessage* response;
@@ -112,7 +114,7 @@ UdpServer::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& ad
                if(it == mResponseMap.end())
                {
                   response = new StunMessage;
-                  RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, *response);
+                  RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, *response, isRFC3489BackwardsCompatServer());
 
                   switch(result)
                   {
@@ -148,13 +150,13 @@ UdpServer::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& ad
 #define RESPONSE_BUFFER_SIZE 1024
                SharedPtr<Data> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
                unsigned int responseSize;
-               if(isRFC3489BackwardsCompatServer())
+               if(mTurnFraming)
                {
-                  responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
+                  responseSize = response->stunEncodeFramedMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
                }
                else
                {
-                  responseSize = response->stunEncodeFramedMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
+                  responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
                }
                buffer->truncate(responseSize);  // set size to real size
 
@@ -165,14 +167,14 @@ UdpServer::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& ad
       else
       {
          mRequestHandler.processTurnData(channelNumber,
-                                         StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                                         StunTuple(StunTuple::UDP, address, port),
                                          StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
                                          data);
       }
    }
    else
    {
-      cout << "UdpServer::handleReceiveFrom not enough data for framed message - discarding!" << endl;
+      cout << "UdpServer::onReceiveSuccess not enough data for framed message - discarding!" << endl;
    }
 
    doReceive();
@@ -197,6 +199,10 @@ UdpServer::onSendSuccess(unsigned int socketDesc)
 void
 UdpServer::onSendFailure(unsigned int socketDesc, const asio::error_code& error)
 {
+   if(error != asio::error::operation_aborted)
+   {
+      cout << "UdpServer::onSendFailure: " << error.message() << endl;
+   }
 }
 
 UdpServer::ResponseEntry::ResponseEntry(UdpServer* udpServer, asio::ip::udp::socket* responseSocket, StunMessage* responseMessage) :

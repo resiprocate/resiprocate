@@ -1,5 +1,5 @@
-#ifndef SOCKET_BASE_HXX
-#define SOCKET_BASE_HXX
+#ifndef ASYNC_TCP_SOCKET_BASE_HXX
+#define ASYNC_TCP_SOCKET_BASE_HXX
 
 #include <asio.hpp>
 #include <boost/bind.hpp>
@@ -20,6 +20,7 @@ public:
 
    virtual unsigned int getSocketDescriptor();
    virtual void transportReceive();
+   virtual void transportFramedReceive();
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
    virtual void transportClose();
 
@@ -27,6 +28,8 @@ public:
    virtual unsigned short getSenderEndpointPort();
 
 protected:
+   virtual void handleReadHeader(const asio::error_code& e);
+
    asio::ip::tcp::socket mSocket;
 
 private:
