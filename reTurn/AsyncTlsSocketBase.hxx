@@ -1,5 +1,5 @@
-#ifndef SOCKET_BASE_HXX
-#define SOCKET_BASE_HXX
+#ifndef ASYNC_TLS_SOCKET_BASE_HXX
+#define ASYNC_TLS_SOCKET_BASE_HXX
 
 #include <asio.hpp>
 #include <asio/ssl.hpp>
@@ -19,8 +19,11 @@ public:
 
    asio::error_code bind(const asio::ip::address& address, unsigned short port);
 
+   void doHandshake();
+
    virtual unsigned int getSocketDescriptor();
    virtual void transportReceive();
+   virtual void transportFramedReceive();
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
    virtual void transportClose();
 
@@ -28,6 +31,9 @@ public:
    virtual unsigned short getSenderEndpointPort();
 
 protected:
+   virtual void handleReadHeader(const asio::error_code& e);
+   virtual void handleHandshake(const asio::error_code& e);
+
    asio::ssl::stream<asio::ip::tcp::socket> mSocket;
 
 private:

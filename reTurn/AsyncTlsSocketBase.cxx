@@ -1,6 +1,7 @@
 #include <boost/bind.hpp>
 
 #include "AsyncTlsSocketBase.hxx"
+#include "AsyncSocketBaseHandler.hxx"
 
 using namespace std;
 
@@ -28,6 +29,26 @@ AsyncTlsSocketBase::bind(const asio::ip::address& address, unsigned short port)
       mSocket.lowest_layer().bind(asio::ip::tcp::endpoint(address, port), errorCode);
    }
    return errorCode;
+}
+
+void
+AsyncTlsSocketBase::doHandshake()
+{
+   mSocket.async_handshake(asio::ssl::stream_base::server, 
+                           boost::bind(&AsyncSocketBase::handleHandshake, shared_from_this(), asio::placeholders::error));  
+}
+
+void 
+AsyncTlsSocketBase::handleHandshake(const asio::error_code& e)
+{
+   if(e)
+   {
+      if(mAsyncSocketBaseHandler) mAsyncSocketBaseHandler->onHandshakeFailure(getSocketDescriptor(), e);
+   }
+   else
+   {
+      if(mAsyncSocketBaseHandler) mAsyncSocketBaseHandler->onHandshakeSuccess(getSocketDescriptor());
+   }
 }
 
 unsigned int 
@@ -65,10 +86,53 @@ AsyncTlsSocketBase::transportReceive()
 }
 
 void 
+AsyncTlsSocketBase::transportFramedReceive()
+{
+   asio::async_read(mSocket, asio::buffer((void*)mReceiveBuffer->data(), 4),
+                    boost::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), asio::placeholders::error));
+}
+
+void 
 AsyncTlsSocketBase::transportClose()
 {
    mSocket.shutdown();  // ?slg? Should we use async_shutdown?
    mSocket.lowest_layer().close();
+}
+
+void 
+AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
+{
+   if (!e)
+   {
+      /*
+      std::cout << "Read header from tls socket: " << std::endl;
+      for(unsigned int i = 0; i < 4; i++)
+      {
+         std::cout << (char)(*mReceiveBuffer)[i] << "(" << (int)(*mReceiveBuffer)[i] << ") ";
+      }
+      std::cout << std::endl;
+      */
+
+      UInt16 dataLen;
+      memcpy(&dataLen, &(*mReceiveBuffer)[2], 2);
+      dataLen = ntohs(dataLen);
+
+      if(dataLen+4 < RECEIVE_BUFFER_SIZE)
+      {
+         asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen),
+                          boost::bind(&AsyncTlsSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, dataLen+4));
+      }
+      else
+      {
+         std::cout << "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accomdate incoming framed data (" << dataLen+4 << ") closing connection." << std::endl;
+         close();
+      }
+   }
+   else if (e != asio::error::operation_aborted)
+   {
+      std::cout << "Read header error: " << e.message() << std::endl;
+      close();
+   }
 }
 
 }

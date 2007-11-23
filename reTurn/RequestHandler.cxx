@@ -42,7 +42,7 @@ RequestHandler::RequestHandler(TurnManager& turnManager,
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response)
+RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer)
 {
    ProcessResult result =  RespondFromReceiving;
 
@@ -57,7 +57,7 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
          switch (request.mMethod) 
          {
          case StunMessage::BindMethod:
-            result = processStunBindingRequest(request, response);
+            result = processStunBindingRequest(request, response, isRFC3489BackwardsCompatServer);
 
             // Ensure fingerprint is added
             response.mHasFingerprint = true;
@@ -277,7 +277,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& response)
+RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer)
 {
    ProcessResult result = RespondFromReceiving;
    //bool verbose = true;
@@ -303,7 +303,7 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
    }
 
    // the following code is for RFC3489 backward compatibility
-   if(mRFC3489SupportEnabled)
+   if(mRFC3489SupportEnabled && isRFC3489BackwardsCompatServer)
    {
       asio::ip::address sendFromAddress;
       unsigned short sendFromPort;
