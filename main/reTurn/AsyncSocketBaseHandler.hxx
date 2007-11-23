@@ -22,6 +22,10 @@ public:
    AsyncSocketBaseHandler() {}
    virtual ~AsyncSocketBaseHandler() {}
 
+   // Only for TLS Connections
+   virtual void onHandshakeSuccess(unsigned int socketDesc) {};
+   virtual void onHandshakeFailure(unsigned int socketDesc, const asio::error_code& e) {};
+
    virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data) {};
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e) {};
 

@@ -34,22 +34,6 @@ AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, resi
    mIOService.post(boost::bind(&AsyncSocketBase::doSend, this, destination, channel, data, 0));
 }
 
-// TODO remove me - temp to make modifying server easier for now
-//void 
-//AsyncSocketBase::send(const StunTuple& destination, const char* buffer, unsigned int size)
-//{
-//   resip::SharedPtr<resip::Data> data(new Data(buffer, size));
-//   doSend(destination, data);
-//}
-
-// TODO remove me - temp to make modifying server easier for now
-//void 
-//AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, const char* buffer, unsigned int size)
-//{
-//   resip::SharedPtr<resip::Data> data(new Data(buffer, size));
-//   doSend(destination, channel, data);
-//}
-
 void
 AsyncSocketBase::doSend(const StunTuple& destination, resip::SharedPtr<Data> data, unsigned int bufferStartPos)
 {
@@ -125,6 +109,21 @@ AsyncSocketBase::doReceive()
    mReceiving=true;
    mReceiveBuffer = allocateBuffer(RECEIVE_BUFFER_SIZE);
    transportReceive();
+}
+
+void 
+AsyncSocketBase::framedReceive()
+{
+   mIOService.post(boost::bind(&AsyncSocketBase::doFramedReceive, this));
+}
+
+void
+AsyncSocketBase::doFramedReceive()
+{
+   assert(!mReceiving);
+   mReceiving=true;
+   mReceiveBuffer = allocateBuffer(RECEIVE_BUFFER_SIZE);
+   transportFramedReceive();
 }
 
 void 

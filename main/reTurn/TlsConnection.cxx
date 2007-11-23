@@ -8,27 +8,34 @@
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
 
+using namespace std;
+using namespace resip;
+
 namespace reTurn {
 
 TlsConnection::TlsConnection(asio::io_service& ioService,
                              ConnectionManager& manager, 
                              RequestHandler& handler, 
+                             bool turnFraming,
                              asio::ssl::context& context)
-  : TcpConnection(ioService, manager, handler),
-    mTlsSocket(ioService, context)
+  : AsyncTlsSocketBase(ioService, context),
+    mConnectionManager(manager),
+    mRequestHandler(handler),
+    mTurnFraming(turnFraming)
 {
-   mTransportType = StunTuple::TLS;  // Override TCP transport type
+   registerAsyncSocketBaseHandler(this);
 }
 
 TlsConnection::~TlsConnection()
 {
    std::cout << "TlsConnection destroyed." << std::endl;
+   registerAsyncSocketBaseHandler(0);
 }
 
 ssl_socket::lowest_layer_type& 
-TlsConnection::tlsSocket()
+TlsConnection::socket()
 {
-  return mTlsSocket.lowest_layer();
+  return mSocket.lowest_layer();
 }
 
 void 
@@ -36,47 +43,173 @@ TlsConnection::start()
 {
    std::cout << "TlsConnection started." << std::endl;
 
-   mLocalEndpoint = mTlsSocket.lowest_layer().local_endpoint();
-   mRemoteEndpoint = mTlsSocket.lowest_layer().remote_endpoint();
-
-   //mTlsSocket.async_handshake(asio::ssl::stream_base::server, 
-   //                           boost::bind(&TlsConnection::handleWrite, shared_from_this(), asio::placeholders::error));  // Note: handleWrite does what we want after handshake completes
-}
-
-void
-TlsConnection::readHeader()
-{
-   //asio::async_read(mTlsSocket, asio::buffer(mBuffer, 4),
-   //                 boost::bind(&TlsConnection::handleReadHeader, shared_from_this(), asio::placeholders::error));
-}
-
-void
-TlsConnection::readBody()
-{
-   //asio::async_read(mTlsSocket, asio::buffer(mBuffer, mBufferLen),
-   //                 boost::bind(&TlsConnection::handleReadBody, shared_from_this(), asio::placeholders::error));
-}
-
-void
-TlsConnection::write()
-{
-   //async_write(mTlsSocket, asio::buffer(mBuffer, mBufferLen),  
-   //            boost::bind(&TlsConnection::handleWrite, shared_from_this(), asio::placeholders::error));
+   doHandshake();
 }
 
 void 
 TlsConnection::stop()
 {
   asio::error_code ec;
-  mTlsSocket.shutdown(ec);
-  std::cout << "TlsConnection shutdown, e=" << ec.message() << std::endl;
+  mSocket.shutdown(ec);
+  std::cout << "TlsConnection shutdown, error=" << ec.message() << std::endl;
 }
 
 void 
-TlsConnection::sendData(const StunTuple& destination, const char* buffer, unsigned int size)
+TlsConnection::close()
 {
-   //async_write(mTlsSocket, asio::buffer(buffer, size),  
-   //            boost::bind(&TlsConnection::handleSendData, shared_from_this(), asio::placeholders::error));  
+   mConnectionManager.stop(shared_from_this());
+}
+
+void 
+TlsConnection::onHandshakeSuccess(unsigned int socketDesc)
+{
+  std::cout << "TlsConnection handshake completed." << std::endl;
+  doFramedReceive();
+}
+ 
+void 
+TlsConnection::onHandshakeFailure(unsigned int socketDesc, const asio::error_code& e)
+{
+  std::cout << "TlsConnection handshake failure, error=" << e.message() << std::endl;
+  close();
+}
+
+void 
+TlsConnection::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+{
+   if (data->size() > 4)
+   {
+      char* stunMessageBuffer = 0;
+      unsigned int stunMessageSize = 0;
+
+      bool treatAsData=false;
+      /*
+      std::cout << "Read " << bytesTransferred << " bytes from tls socket (" << address.to_string() << ":" << port << "): " << std::endl;
+      cout << std::hex;
+      for(int i = 0; i < data->size(); i++)
+      {
+         std::cout << (char)(*data)[i] << "(" << int((*data)[i]) << ") ";
+      }
+      std::cout << std::dec << std::endl;
+      */
+      unsigned short channelNumber;
+      memcpy(&channelNumber, &(*data)[0], 2);
+      channelNumber = ntohs(channelNumber);
+
+      if(mTurnFraming)  // TODO - If TURN Server (vs STUN server - no framing)
+      {
+         // All Turn messaging will be framed
+         if(channelNumber == 0) // Stun/Turn Request
+         {
+            stunMessageBuffer = (char*)&(*data)[4];
+            stunMessageSize = (unsigned int)data->size()-4;
+         }
+         else  
+         {
+            // Turn Data
+            treatAsData = true;
+         }
+      }
+      else
+      {
+         stunMessageBuffer = (char*)&(*data)[0];
+         stunMessageSize = data->size();
+      }
+
+      if(!treatAsData)
+      {
+         if(stunMessageBuffer && stunMessageSize)
+         {
+            // Try to parse stun message
+            StunMessage request(StunTuple(StunTuple::TLS, mSocket.lowest_layer().local_endpoint().address(), mSocket.lowest_layer().local_endpoint().port()),
+                                StunTuple(StunTuple::TLS, address, port),
+                                stunMessageBuffer, stunMessageSize);
+            if(request.isValid())
+            {
+               StunMessage response;
+               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
+
+               switch(result)
+               {
+               case RequestHandler::NoResponseToSend:
+                  // No response to send - just receive next message
+                  doFramedReceive();
+                  return;
+               case RequestHandler::RespondFromAlternatePort:
+               case RequestHandler::RespondFromAlternateIp:
+               case RequestHandler::RespondFromAlternateIpPort:
+                  // These only happen for UDP server for RFC3489 backwards compatibility
+                  assert(false);
+                  break;
+               case RequestHandler::RespondFromReceiving:
+               default:
+                  break;
+               }
+
+#define RESPONSE_BUFFER_SIZE 1024
+               SharedPtr<Data> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+               unsigned int responseSize;
+               if(mTurnFraming) 
+               {
+                  responseSize = response.stunEncodeFramedMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
+               }
+               else
+               {
+                  responseSize = response.stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
+               }
+               buffer->truncate(responseSize);  // set size to real size
+
+               doSend(response.mRemoteTuple, buffer);
+            }
+         }
+         else
+         {
+            close();
+            return;
+         }
+      } 
+      else
+      {
+         mRequestHandler.processTurnData(channelNumber,
+                                         StunTuple(StunTuple::TLS, mSocket.lowest_layer().local_endpoint().address(), mSocket.lowest_layer().local_endpoint().port()),
+                                         StunTuple(StunTuple::TLS, address, port),
+                                         data);
+      }
+   }
+   else
+   {
+      cout << "TlsConnection::onReceiveSuccess not enough data for framed message - discarding!" << endl;
+      close();
+      return;
+   }
+
+   doFramedReceive();
+}
+
+void 
+TlsConnection::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
+{
+   if(e != asio::error::operation_aborted)
+   {
+      cout << "TlsConnection::onReceiveFailure: " << e.message() << endl;
+
+      close();
+   }
+}
+
+void
+TlsConnection::onSendSuccess(unsigned int socketDesc)
+{
+}
+
+void
+TlsConnection::onSendFailure(unsigned int socketDesc, const asio::error_code& error)
+{
+   if(error != asio::error::operation_aborted)
+   {
+      cout << "TlsConnection::onSendFailure: " << error.message() << endl;
+      close();
+   }
 }
 
 } 
