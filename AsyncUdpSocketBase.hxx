@@ -1,5 +1,5 @@
-#ifndef SOCKET_BASE_HXX
-#define SOCKET_BASE_HXX
+#ifndef ASYNC_UDP_SOCKET_BASE_HXX
+#define ASYNC_UDP_SOCKET_BASE_HXX
 
 #include <asio.hpp>
 #include <boost/bind.hpp>
@@ -18,6 +18,7 @@ public:
 
    virtual unsigned int getSocketDescriptor();
    virtual void transportReceive();
+   virtual void transportFramedReceive();
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
    virtual void transportClose();
 
