@@ -3,12 +3,13 @@
 
 namespace reTurn {
 
-TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
+TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming)
 : mIOService(ioService),
   mAcceptor(ioService),
   mConnectionManager(),
-  mNewConnection(new TcpConnection(ioService, mConnectionManager, requestHandler)),
-  mRequestHandler(requestHandler)
+  mNewConnection(new TcpConnection(ioService, mConnectionManager, requestHandler, turnFraming)),
+  mRequestHandler(requestHandler),
+  mTurnFraming(turnFraming)
 {
    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
    asio::ip::tcp::endpoint endpoint(address, port);
@@ -18,8 +19,12 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
-   std::cout << "TcpServer started.  Listening on " << address << ":" << port << std::endl;
+   std::cout << (mTurnFraming ? "TURN" : "STUN") << " TcpServer started.  Listening on " << address << ":" << port << std::endl;
+}
 
+void 
+TcpServer::start()
+{
    mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
 }
 
@@ -30,7 +35,7 @@ TcpServer::handleAccept(const asio::error_code& e)
    {
       mConnectionManager.start(mNewConnection);
 
-      mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler));
+      mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler, mTurnFraming));
       mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
    }
 }

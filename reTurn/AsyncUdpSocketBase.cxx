@@ -54,7 +54,13 @@ AsyncUdpSocketBase::transportReceive()
 {
    mSocket.async_receive_from(asio::buffer((void*)mReceiveBuffer->data(), RECEIVE_BUFFER_SIZE), mSenderEndpoint,
                boost::bind(&AsyncUdpSocketBase::handleReceive, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+}
 
+void 
+AsyncUdpSocketBase::transportFramedReceive()
+{
+   // For UDP these two functions are the same
+   transportReceive();
 }
 
 void 

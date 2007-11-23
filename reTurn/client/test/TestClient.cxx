@@ -169,10 +169,10 @@ int main(int argc, char* argv[])
          << std::endl;
 #endif
 
-      TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
+      //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
       //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0, true /* disable turn framing */); port--;
       //TurnUdpSocket turnSocket(asio::ip::address::from_string("192.168.1.106"), 0, true /* disable turn framing */); port--; port=3478;
-      //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
+      TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
       //TurnTlsSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0); port++;
 
       // Connect to Stun/Turn Server
