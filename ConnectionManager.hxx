@@ -14,17 +14,17 @@ class ConnectionManager
 {
 public:
   /// Add the specified connection to the manager and start it.
-   void start(TcpConnectionPtr c);
+   void start(ConnectionPtr c);
 
   /// Stop the specified connection.
-  void stop(TcpConnectionPtr c);
+  void stop(ConnectionPtr c);
 
   /// Stop all connections.
   void stopAll();
 
 private:
   /// The managed connections.
-  std::set<TcpConnectionPtr> mConnections;
+  std::set<ConnectionPtr> mConnections;
 };
 
 } 

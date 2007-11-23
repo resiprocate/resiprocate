@@ -31,19 +31,24 @@ public:
    // Note: destination is ignored for TCP and TLS connections
    virtual void send(const StunTuple& destination, resip::SharedPtr<resip::Data> data);  // Send unframed data
    virtual void send(const StunTuple& destination, unsigned short channel, resip::SharedPtr<resip::Data> data);  // send with turn framing
-   //virtual void send(const StunTuple& destination, const char* buffer, unsigned int size);  // REMOVE ME
-   //virtual void send(const StunTuple& destination, unsigned short channel, const char* buffer, unsigned int size);  // REMOVE ME
-   virtual void receive();  // WARNING - don't overllap calls to receive
+
+   // WARNING - don't overllap calls to receive functions
+   virtual void receive();  
+   virtual void framedReceive();  
 
    // Use these if you already operating on the ioService thread
    virtual void doSend(const StunTuple& destination, unsigned short channel, resip::SharedPtr<resip::Data> data, unsigned int bufferStartPos=0);
    virtual void doSend(const StunTuple& destination, resip::SharedPtr<resip::Data> data, unsigned int bufferStartPos=0);
    virtual void doReceive();
+   virtual void doFramedReceive();
 
    virtual void close();
 
    // Utility API
    static resip::SharedPtr<resip::Data> allocateBuffer(unsigned int size);
+
+   virtual void handleReadHeader(const asio::error_code& e) { assert(false); };
+   virtual void handleHandshake(const asio::error_code& e) { assert(false); };
 
 protected:
    /// Handle completion of a sendData operation.
@@ -60,6 +65,7 @@ protected:
 private:
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) = 0;
    virtual void transportReceive() = 0;
+   virtual void transportFramedReceive() = 0;
    virtual void transportClose() = 0;
    virtual const asio::ip::address getSenderEndpointAddress() = 0;
    virtual unsigned short getSenderEndpointPort() = 0;

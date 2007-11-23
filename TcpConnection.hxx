@@ -5,10 +5,10 @@
 #include <boost/array.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include "RequestHandler.hxx"
 #include "StunTuple.hxx"
 #include "AsyncTcpSocketBase.hxx"
+#include "AsyncSocketBaseHandler.hxx"
 
 namespace reTurn {
 
@@ -17,73 +17,47 @@ class ConnectionManager;
 /// Represents a single connection from a client.
 class TcpConnection
   : public AsyncTcpSocketBase,
-    //public boost::enable_shared_from_this<TcpConnection>,
+    public AsyncSocketBaseHandler,
     private boost::noncopyable
 {
 public:
-  /// Construct a connection with the given io_service.
-  explicit TcpConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler);
-  ~TcpConnection();
+   /// Construct a connection with the given io_service.
+   explicit TcpConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, bool turnFraming);
+   ~TcpConnection();
 
-  /// Get the socket associated with the connection.
-  asio::ip::tcp::socket& socket();
+   /// Get the socket associated with the connection.
+   asio::ip::tcp::socket& socket();
 
-  /// Start the first asynchronous operation for the connection.
-  virtual void start();
+   /// Start the first asynchronous operation for the connection.
+   virtual void start();
 
-  /// Start reading the header
-  virtual void readHeader();
+   /// Override close fn in AsyncTcpSocketBase so that we can remove ourselves from connection manager
+   virtual void close();
 
-  /// Read the message body
-  virtual void readBody();
-
-  /// Write buffer to socket
-  virtual void write();
-
-  /// Stop all asynchronous operations associated with the connection.
-  virtual void stop();
-
-  /// Send Data
-  virtual void sendData(const StunTuple& destination, const char* buffer, unsigned int size);
+   /// Stop all asynchronous operations associated with the connection.
+   virtual void stop();
 
 protected:
-  /// Handle completion of a read operation for first 32 bits
-  virtual void handleReadHeader(const asio::error_code& e);
+   /// Handle completion of a receive operation
+   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
 
-  /// Handle completion of a read operation for entire message
-  virtual void handleReadBody(const asio::error_code& e);
+   /// Handle completion of a send operation
+   virtual void onSendSuccess(unsigned int socketDesc);
+   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e);
 
-  /// Handle completion of a write operation.
-  virtual void handleWrite(const asio::error_code& e);
+   /// The manager for this connection.
+   ConnectionManager& mConnectionManager;
 
-  /// Socket for the connection.
-  asio::ip::tcp::socket mSocket;
+   /// The handler used to process the incoming request.
+   RequestHandler& mRequestHandler;
 
-  /// The manager for this connection.
-  ConnectionManager& mConnectionManager;
-
-  /// The handler used to process the incoming request.
-  RequestHandler& mRequestHandler;
-
-  /// Buffer for incoming data.
-  boost::array<char, 8192> mBuffer;
-
-  /// Amount of data in buffer
-  unsigned int mBufferLen;
-  bool mReadingStunMessage;
-  unsigned short mChannelNumber;
-
-  /// Transport Type
-  StunTuple::TransportType mTransportType;
-
-  /// Endpoint info
-  asio::ip::tcp::endpoint mLocalEndpoint;
-  asio::ip::tcp::endpoint mRemoteEndpoint;
+   bool mTurnFraming;
 
 private:
 };
 
-typedef boost::shared_ptr<AsyncSocketBase> TcpConnectionPtr;
+typedef boost::shared_ptr<AsyncSocketBase> ConnectionPtr;
 
 }
 

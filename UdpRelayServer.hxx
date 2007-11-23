@@ -4,7 +4,6 @@
 #include <asio.hpp>
 #include <string>
 #include <boost/noncopyable.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include "RequestHandler.hxx"
 #include "AsyncUdpSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
@@ -16,7 +15,6 @@ class StunTuple;
 class UdpRelayServer
   : public AsyncUdpSocketBase, 
     public AsyncSocketBaseHandler,
-    //public boost::enable_shared_from_this<UdpRelayServer>,
     private boost::noncopyable
 {
 public:
