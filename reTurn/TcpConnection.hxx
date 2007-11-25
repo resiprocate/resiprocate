@@ -8,7 +8,6 @@
 #include "RequestHandler.hxx"
 #include "StunTuple.hxx"
 #include "AsyncTcpSocketBase.hxx"
-#include "AsyncSocketBaseHandler.hxx"
 
 namespace reTurn {
 
@@ -17,7 +16,6 @@ class ConnectionManager;
 /// Represents a single connection from a client.
 class TcpConnection
   : public AsyncTcpSocketBase,
-    public AsyncSocketBaseHandler,
     private boost::noncopyable
 {
 public:
@@ -39,12 +37,12 @@ public:
 
 protected:
    /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
-   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   virtual void onReceiveFailure(const asio::error_code& e);
 
    /// Handle completion of a send operation
-   virtual void onSendSuccess(unsigned int socketDesc);
-   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onSendSuccess();
+   virtual void onSendFailure(const asio::error_code& e);
 
    /// The manager for this connection.
    ConnectionManager& mConnectionManager;

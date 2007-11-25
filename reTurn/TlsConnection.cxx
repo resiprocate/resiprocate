@@ -23,13 +23,11 @@ TlsConnection::TlsConnection(asio::io_service& ioService,
     mRequestHandler(handler),
     mTurnFraming(turnFraming)
 {
-   registerAsyncSocketBaseHandler(this);
 }
 
 TlsConnection::~TlsConnection()
 {
    std::cout << "TlsConnection destroyed." << std::endl;
-   registerAsyncSocketBaseHandler(0);
 }
 
 ssl_socket::lowest_layer_type& 
@@ -61,21 +59,21 @@ TlsConnection::close()
 }
 
 void 
-TlsConnection::onHandshakeSuccess(unsigned int socketDesc)
+TlsConnection::onServerHandshakeSuccess()
 {
   std::cout << "TlsConnection handshake completed." << std::endl;
   doFramedReceive();
 }
  
 void 
-TlsConnection::onHandshakeFailure(unsigned int socketDesc, const asio::error_code& e)
+TlsConnection::onServerHandshakeFailure(const asio::error_code& e)
 {
   std::cout << "TlsConnection handshake failure, error=" << e.message() << std::endl;
   close();
 }
 
 void 
-TlsConnection::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
 {
    if (data->size() > 4)
    {
@@ -187,7 +185,7 @@ TlsConnection::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address
 }
 
 void 
-TlsConnection::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
+TlsConnection::onReceiveFailure(const asio::error_code& e)
 {
    if(e != asio::error::operation_aborted)
    {
@@ -198,12 +196,12 @@ TlsConnection::onReceiveFailure(unsigned int socketDesc, const asio::error_code&
 }
 
 void
-TlsConnection::onSendSuccess(unsigned int socketDesc)
+TlsConnection::onSendSuccess()
 {
 }
 
 void
-TlsConnection::onSendFailure(unsigned int socketDesc, const asio::error_code& error)
+TlsConnection::onSendFailure(const asio::error_code& error)
 {
    if(error != asio::error::operation_aborted)
    {

@@ -1,22 +1,17 @@
 #include <boost/bind.hpp>
 
 #include "AsyncUdpSocketBase.hxx"
+#include "AsyncSocketBaseHandler.hxx"
 
 using namespace std;
 
 namespace reTurn {
 
-AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_service& ioService, const asio::ip::address& address, unsigned short port) 
+AsyncUdpSocketBase::AsyncUdpSocketBase(asio::io_service& ioService) 
    : AsyncSocketBase(ioService),
-     mSocket(ioService) 
+     mSocket(ioService),
+     mResolver(ioService)
 {
-   asio::error_code errorCode;
-   mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
-   if(!errorCode)
-   {
-      mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
-      mSocket.bind(asio::ip::udp::endpoint(address, port), errorCode);
-   }
 }
 
 AsyncUdpSocketBase::~AsyncUdpSocketBase() 
@@ -27,6 +22,52 @@ unsigned int
 AsyncUdpSocketBase::getSocketDescriptor() 
 { 
    return mSocket.native(); 
+}
+
+asio::error_code 
+AsyncUdpSocketBase::bind(const asio::ip::address& address, unsigned short port)
+{
+   asio::error_code errorCode;
+   mSocket.open(address.is_v6() ? asio::ip::udp::v6() : asio::ip::udp::v4(), errorCode);
+   if(!errorCode)
+   {
+      mSocket.set_option(asio::ip::udp::socket::reuse_address(true));
+      mSocket.bind(asio::ip::udp::endpoint(address, port), errorCode);
+   }
+   return errorCode;
+}
+
+void 
+AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
+{
+   // Start an asynchronous resolve to translate the address
+   // into a list of endpoints.
+   resip::Data service(port);
+   asio::ip::udp::resolver::query query(address, service.c_str());   
+   mResolver.async_resolve(query,
+        boost::bind(&AsyncUdpSocketBase::handleResolve, dynamic_cast<AsyncUdpSocketBase*>(shared_from_this().get()),
+                    asio::placeholders::error,
+                    asio::placeholders::iterator));
+}
+
+void 
+AsyncUdpSocketBase::handleResolve(const asio::error_code& ec,
+                                  asio::ip::udp::resolver::iterator endpoint_iterator)
+{
+   if (!ec)
+   {
+      // Use the first endpoint in the list. 
+      // Nothing to do for UDP except store the connected address/port
+      mConnected = true;
+      mConnectedAddress = endpoint_iterator->endpoint().address();
+      mConnectedPort = endpoint_iterator->endpoint().port();
+
+      onConnectSuccess();
+   }
+   else
+   {
+      onConnectFailure(ec);
+   }
 }
 
 const asio::ip::address 
