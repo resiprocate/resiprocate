@@ -6,10 +6,19 @@ TARGET_LIBRARY = libreTurnClient
 CXXFLAGS += -DBOOST_ALL_NO_LIB
 
 SRC += \
+	../AsyncSocketBase.cxx \
+	../AsyncTcpSocketBase.cxx \
+	../AsyncTlsSocketBase.cxx \
+	../AsyncUdpSocketBase.cxx \
 	../ChannelManager.cxx \
 	../RemotePeer.cxx \
 	../StunMessage.cxx \
 	../StunTuple.cxx \
+	TurnAsyncSocket.cxx \
+ 	TurnAsyncSocketHandler.cxx \
+	TurnAsyncTcpSocket.cxx \
+	TurnAsyncTlsSocket.cxx \
+	TurnAsyncUdpSocket.cxx \
 	TurnSocket.cxx \
 	TurnTcpSocket.cxx \
 	TurnTlsSocket.cxx \
