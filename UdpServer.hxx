@@ -6,7 +6,6 @@
 #include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"
 #include "AsyncUdpSocketBase.hxx"
-#include "AsyncSocketBaseHandler.hxx"
 
 namespace reTurn {
 
@@ -14,7 +13,6 @@ class StunMessage;
 
 class UdpServer
   : public AsyncUdpSocketBase,
-    public AsyncSocketBaseHandler,
     private boost::noncopyable
 {
 public:
@@ -35,12 +33,12 @@ public:
 
 private:
    /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
-   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   virtual void onReceiveFailure(const asio::error_code& e);
 
    /// Handle completion of a send operation
-   virtual void onSendSuccess(unsigned int socketDesc);
-   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onSendSuccess();
+   virtual void onSendFailure(const asio::error_code& e);
 
    /// The handler for all incoming requests.
    RequestHandler& mRequestHandler;

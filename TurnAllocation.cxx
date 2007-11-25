@@ -48,7 +48,7 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
    }
 
    // Register for Turn Transport onDestroyed notification
-   mLocalTurnSocket->registerAsyncSocketBaseDestroyedHandler(this);
+   mLocalTurnSocket->registerAsyncSocketBaseHandler(this);
 }
 
 TurnAllocation::~TurnAllocation()
@@ -72,7 +72,7 @@ TurnAllocation::~TurnAllocation()
    }
    
    // Unregister for TurnTransport notifications
-   mLocalTurnSocket->registerAsyncSocketBaseDestroyedHandler(0);
+   mLocalTurnSocket->registerAsyncSocketBaseHandler(0);
 }
 
 void  
