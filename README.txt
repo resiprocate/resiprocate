@@ -52,8 +52,6 @@ General TODO
 -------------
 - Complete Turn Implementation - TCP/TLS relay - Implement Connect Request and Conne
 ct Status Indication
-- optimize server data copying - especially for TURN DATA forwarding
-- optimize client data copying when receiving data
 - make buffer size configurable or dynamic
 - reduce library use - remove BOOST and/or rutil requirement - remove ASIO for client??
 - allow multiple interfaces to be used for relay
@@ -86,7 +84,7 @@ Client TODO
 
 Client API
 -----------
-***CURRENTLY ONLY SYNCRONOUS***
+***CURRENTLY ONLY SYNCRONOUS - ASYNC WORK IN PROGRESS***
 Client API thoughts:
 1.  Syncronous vs Asyncrous possible approaches 
  - Queue all results to an application fifo - I don't think this approach is really good from an API usability standpoint though

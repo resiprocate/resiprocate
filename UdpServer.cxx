@@ -9,7 +9,7 @@ using namespace resip;
 namespace reTurn {
 
 UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming)
-: AsyncUdpSocketBase(ioService, address, port),
+: AsyncUdpSocketBase(ioService),
   mRequestHandler(requestHandler),
   mTurnFraming(turnFraming),
   mAlternatePortUdpServer(0),
@@ -18,12 +18,11 @@ UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler
 {
    std::cout << (mTurnFraming ? "TURN" : "STUN") << " UdpServer started.  Listening on " << address << ":" << port << std::endl;
 
-   registerAsyncSocketBaseHandler(this);
+   bind(address, port);
 }
 
 UdpServer::~UdpServer()
 {
-   registerAsyncSocketBaseHandler(0);
 }
 
 void 
@@ -57,7 +56,7 @@ UdpServer::getSocket()
 }
 
 void 
-UdpServer::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
 {
    if (data->size() > 4)
    {
@@ -181,7 +180,7 @@ UdpServer::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& ad
 }
 
 void 
-UdpServer::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
+UdpServer::onReceiveFailure(const asio::error_code& e)
 {
    if(e != asio::error::operation_aborted)
    {
@@ -192,12 +191,12 @@ UdpServer::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
 }
 
 void
-UdpServer::onSendSuccess(unsigned int socketDesc)
+UdpServer::onSendSuccess()
 {
 }
 
 void
-UdpServer::onSendFailure(unsigned int socketDesc, const asio::error_code& error)
+UdpServer::onSendFailure(const asio::error_code& error)
 {
    if(error != asio::error::operation_aborted)
    {

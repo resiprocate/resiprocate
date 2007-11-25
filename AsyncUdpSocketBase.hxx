@@ -13,10 +13,14 @@ namespace reTurn {
 class AsyncUdpSocketBase : public AsyncSocketBase
 {
 public:
-   AsyncUdpSocketBase(asio::io_service& ioService, const asio::ip::address& address, unsigned short port); 
+   AsyncUdpSocketBase(asio::io_service& ioService); 
    virtual ~AsyncUdpSocketBase();
 
    virtual unsigned int getSocketDescriptor();
+
+   virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
+   virtual void connect(const std::string& address, unsigned short port);  
+
    virtual void transportReceive();
    virtual void transportFramedReceive();
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
@@ -27,8 +31,13 @@ public:
 
 protected:
    asio::ip::udp::socket mSocket;
+   asio::ip::udp::resolver mResolver;
+
    /// Endpoint info for current sender
    asio::ip::udp::endpoint mSenderEndpoint;
+
+   void handleResolve(const asio::error_code& ec,
+                      asio::ip::udp::resolver::iterator endpoint_iterator);
 
 private:
 
