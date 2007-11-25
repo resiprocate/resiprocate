@@ -908,7 +908,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
          // Nothing to do
          size = 0;
       }
-      else if(stunMessage.mClass == StunMessage::StunClassSuccessResponse || stunMessage.mClass == StunMessage::StunClassSuccessResponse)
+      else if(stunMessage.mClass == StunMessage::StunClassSuccessResponse || stunMessage.mClass == StunMessage::StunClassErrorResponse)
       {
          // Received a stray or response retranmission - ignore
          size = 0;

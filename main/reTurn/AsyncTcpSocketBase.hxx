@@ -16,9 +16,11 @@ public:
    AsyncTcpSocketBase(asio::io_service& ioService); 
    virtual ~AsyncTcpSocketBase();
 
-   asio::error_code bind(const asio::ip::address& address, unsigned short port);
-
    virtual unsigned int getSocketDescriptor();
+
+   virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
+   virtual void connect(const std::string& address, unsigned short port);  
+
    virtual void transportReceive();
    virtual void transportFramedReceive();
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
@@ -28,9 +30,12 @@ public:
    virtual unsigned short getSenderEndpointPort();
 
 protected:
-   virtual void handleReadHeader(const asio::error_code& e);
+   void handleReadHeader(const asio::error_code& e);
+   void handleResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
+   void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
 
    asio::ip::tcp::socket mSocket;
+   asio::ip::tcp::resolver mResolver;
 
 private:
 };

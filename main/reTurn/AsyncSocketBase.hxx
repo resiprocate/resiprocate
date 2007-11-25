@@ -25,8 +25,11 @@ public:
    virtual ~AsyncSocketBase();
 
    virtual unsigned int getSocketDescriptor() = 0;
+
    virtual void registerAsyncSocketBaseHandler(AsyncSocketBaseHandler* handler) { mAsyncSocketBaseHandler = handler; }
-   virtual void registerAsyncSocketBaseDestroyedHandler(AsyncSocketBaseDestroyedHandler* handler) { mAsyncSocketBaseDestroyedHandler = handler; }
+
+   virtual asio::error_code bind(const asio::ip::address& address, unsigned short port) = 0;
+   virtual void connect(const std::string& address, unsigned short port) = 0;  
 
    // Note: destination is ignored for TCP and TLS connections
    virtual void send(const StunTuple& destination, resip::SharedPtr<resip::Data> data);  // Send unframed data
@@ -36,19 +39,24 @@ public:
    virtual void receive();  
    virtual void framedReceive();  
 
+   virtual void close();
+
    // Use these if you already operating on the ioService thread
    virtual void doSend(const StunTuple& destination, unsigned short channel, resip::SharedPtr<resip::Data> data, unsigned int bufferStartPos=0);
    virtual void doSend(const StunTuple& destination, resip::SharedPtr<resip::Data> data, unsigned int bufferStartPos=0);
    virtual void doReceive();
    virtual void doFramedReceive();
 
-   virtual void close();
+   /// Class override callbacks
+   virtual void onConnectSuccess() { assert(false); }
+   virtual void onConnectFailure(const asio::error_code& e) { assert(false); }
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data) = 0;
+   virtual void onReceiveFailure(const asio::error_code& e) = 0;
+   virtual void onSendSuccess() = 0;
+   virtual void onSendFailure(const asio::error_code& e) = 0;
 
-   // Utility API
+   /// Utility API
    static resip::SharedPtr<resip::Data> allocateBuffer(unsigned int size);
-
-   virtual void handleReadHeader(const asio::error_code& e) { assert(false); };
-   virtual void handleHandshake(const asio::error_code& e) { assert(false); };
 
 protected:
    /// Handle completion of a sendData operation.
@@ -57,16 +65,25 @@ protected:
 
    /// The io_service used to perform asynchronous operations.
    asio::io_service& mIOService;
+
+   /// Receive Buffer and state
    resip::SharedPtr<resip::Data> mReceiveBuffer;
    bool mReceiving;
+
+   /// Connected Info and State
+   asio::ip::address mConnectedAddress;
+   unsigned short mConnectedPort;
+   bool mConnected;
+
+   /// Handlers
    AsyncSocketBaseHandler* mAsyncSocketBaseHandler;
-   AsyncSocketBaseDestroyedHandler* mAsyncSocketBaseDestroyedHandler;
 
 private:
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers) = 0;
    virtual void transportReceive() = 0;
    virtual void transportFramedReceive() = 0;
    virtual void transportClose() = 0;
+
    virtual const asio::ip::address getSenderEndpointAddress() = 0;
    virtual unsigned short getSenderEndpointPort() = 0;
 

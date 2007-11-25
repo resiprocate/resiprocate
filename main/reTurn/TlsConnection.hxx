@@ -7,7 +7,6 @@
 #include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"
 #include "AsyncTlsSocketBase.hxx"
-#include "AsyncSocketBaseHandler.hxx"
 
 namespace reTurn {
 
@@ -18,7 +17,6 @@ typedef asio::ssl::stream<asio::ip::tcp::socket> ssl_socket;
 /// Represents a single connection from a client.
 class TlsConnection
   : public AsyncTlsSocketBase,
-    public AsyncSocketBaseHandler,
     private boost::noncopyable
 {
 public:
@@ -40,16 +38,16 @@ public:
 
 protected:
    /// Handle completion of a handshake operation
-   virtual void onHandshakeSuccess(unsigned int socketDesc);
-   virtual void onHandshakeFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onServerHandshakeSuccess();
+   virtual void onServerHandshakeFailure(const asio::error_code& e);
 
    /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
-   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   virtual void onReceiveFailure(const asio::error_code& e);
 
    /// Handle completion of a send operation
-   virtual void onSendSuccess(unsigned int socketDesc);
-   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e);
+   virtual void onSendSuccess();
+   virtual void onSendFailure(const asio::error_code& e);
 
    /// The manager for this connection.
    ConnectionManager& mConnectionManager;

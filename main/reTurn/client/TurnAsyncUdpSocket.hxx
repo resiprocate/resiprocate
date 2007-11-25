@@ -1,49 +1,49 @@
-#ifndef UDP_RELAY_SERVER_HXX
-#define UDP_REALY_SERVER_HXX
+#ifndef TURNASYNCUDPSOCKET_HXX
+#define TURNASYNCUDPSOCKET_HXX
 
 #include <asio.hpp>
-#include <string>
-#include <boost/noncopyable.hpp>
-#include "RequestHandler.hxx"
-#include "AsyncUdpSocketBase.hxx"
+
+#include "TurnAsyncSocket.hxx"
+#include "../AsyncUdpSocketBase.hxx"
 
 namespace reTurn {
 
-class StunTuple;
-
-class UdpRelayServer
-  : public AsyncUdpSocketBase, 
-    private boost::noncopyable
+   class TurnAsyncUdpSocket : public TurnAsyncSocket, public AsyncUdpSocketBase
 {
 public:
-   /// Create the server to listen on the specified UDP address and port
-   explicit UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation);
-   ~UdpRelayServer();
+   explicit TurnAsyncUdpSocket(asio::io_service& ioService,
+                               TurnAsyncSocketHandler* turnAsyncSocketHandler,
+                               const asio::ip::address& address, 
+                               unsigned short port, 
+                               bool turnFraming=true);  // If Turn framing is disabled then straight stun messaging is used with no framing
 
-   /// Starts processing
-   void start();
+   virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
 
-   /// Causes this object to destroy itself safely (ie. waiting for ayncronous callbacks to finish)
-   void stop();
+   virtual bool isConnected() const { return mConnected; }
+   virtual const asio::ip::address& getConnectedAddress() const { return mConnectedAddress; }
+   virtual unsigned short getConnectedPort() const { return mConnectedPort; }
+
+   virtual void send(resip::SharedPtr<resip::Data> data);  // Send unframed data
+   virtual void send(unsigned short channel, resip::SharedPtr<resip::Data> data);  // send with turn framing
+   virtual void receive();
+
+   virtual void close();
+
+protected:
 
 private:
-   /// Handle completion of a receive_from operation
+   // AsyncUdpSocketBase callbacks
+   virtual void onConnectSuccess();
+   virtual void onConnectFailure(const asio::error_code& e);
    virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
    virtual void onReceiveFailure(const asio::error_code& e);
-
-   /// Handle completion of a send operation
    virtual void onSendSuccess();
    virtual void onSendFailure(const asio::error_code& e);
-
-   TurnAllocation& mTurnAllocation;
-   bool mStopping;
 };
 
-typedef boost::shared_ptr<UdpRelayServer> UdpRelayServerPtr;
+} 
 
-}
-
-#endif 
+#endif
 
 
 /* ====================================================================

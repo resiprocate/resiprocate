@@ -1,19 +1,27 @@
 #include <boost/bind.hpp>
 
 #include "AsyncTcpSocketBase.hxx"
+#include "AsyncSocketBaseHandler.hxx"
 
 using namespace std;
 
 namespace reTurn {
 
 AsyncTcpSocketBase::AsyncTcpSocketBase(asio::io_service& ioService) 
-   : AsyncSocketBase(ioService),
-     mSocket(ioService) 
+ : AsyncSocketBase(ioService),
+   mSocket(ioService), 
+   mResolver(ioService)
 {
 }
 
 AsyncTcpSocketBase::~AsyncTcpSocketBase() 
 {
+}
+
+unsigned int 
+AsyncTcpSocketBase::getSocketDescriptor() 
+{ 
+   return mSocket.native(); 
 }
 
 asio::error_code 
@@ -30,10 +38,63 @@ AsyncTcpSocketBase::bind(const asio::ip::address& address, unsigned short port)
    return errorCode;
 }
 
-unsigned int 
-AsyncTcpSocketBase::getSocketDescriptor() 
-{ 
-   return mSocket.native(); 
+void 
+AsyncTcpSocketBase::connect(const std::string& address, unsigned short port)
+{
+   // Start an asynchronous resolve to translate the address
+   // into a list of endpoints.
+   resip::Data service(port);
+   asio::ip::tcp::resolver::query query(address, service.c_str());   
+   mResolver.async_resolve(query,
+        boost::bind(&AsyncTcpSocketBase::handleResolve, dynamic_cast<AsyncTcpSocketBase*>(shared_from_this().get()),
+                    asio::placeholders::error,
+                    asio::placeholders::iterator));
+}
+
+void 
+AsyncTcpSocketBase::handleResolve(const asio::error_code& ec,
+                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+{
+   if (!ec)
+   {
+      // Attempt a connection to the first endpoint in the list. Each endpoint
+      // will be tried until we successfully establish a connection.
+      //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
+      mSocket.async_connect(endpoint_iterator->endpoint(),
+                            boost::bind(&AsyncTcpSocketBase::handleConnect, dynamic_cast<AsyncTcpSocketBase*>(shared_from_this().get()),
+                            asio::placeholders::error, endpoint_iterator));
+   }
+   else
+   {
+      onConnectFailure(ec);
+   }
+}
+
+void 
+AsyncTcpSocketBase::handleConnect(const asio::error_code& ec,
+                                  asio::ip::tcp::resolver::iterator endpoint_iterator)
+{
+   if (!ec)
+   {
+      // The connection was successful.
+      mConnected = true;
+      mConnectedAddress = endpoint_iterator->endpoint().address();
+      mConnectedPort = endpoint_iterator->endpoint().port();
+
+      onConnectSuccess();
+   }
+   else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
+   {
+      // The connection failed. Try the next endpoint in the list.
+      mSocket.close();
+      mSocket.async_connect(endpoint_iterator->endpoint(),
+                            boost::bind(&AsyncTcpSocketBase::handleConnect, dynamic_cast<AsyncTcpSocketBase*>(shared_from_this().get()),
+                            asio::placeholders::error, endpoint_iterator));
+   }
+   else
+   {
+      onConnectFailure(ec);
+   }
 }
 
 const asio::ip::address 
@@ -67,7 +128,7 @@ void
 AsyncTcpSocketBase::transportFramedReceive()
 {
    asio::async_read(mSocket, asio::buffer((void*)mReceiveBuffer->data(), 4),
-                    boost::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), asio::placeholders::error));
+                    boost::bind(&AsyncTcpSocketBase::handleReadHeader, dynamic_cast<AsyncTcpSocketBase*>(shared_from_this().get()), asio::placeholders::error));
 }
 
 void 

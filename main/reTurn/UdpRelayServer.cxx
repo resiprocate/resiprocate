@@ -10,19 +10,18 @@ using namespace std;
 namespace reTurn {
 
 UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation)
-: AsyncUdpSocketBase(ioService, turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort()),
+: AsyncUdpSocketBase(ioService),
   mTurnAllocation(turnAllocation),
   mStopping(false)
 {
    std::cout << "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress() << ":" << mTurnAllocation.getRequestedTuple().getPort() << std::endl;
 
-   registerAsyncSocketBaseHandler(this);
+   bind(turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort());
 }
 
 UdpRelayServer::~UdpRelayServer()
 {
    cout << "~UdpRelayServer - socket destroyed" << endl;
-   registerAsyncSocketBaseHandler(0);
 }
 
 void 
@@ -46,7 +45,7 @@ UdpRelayServer::stop()
 //}
 
 void 
-UdpRelayServer::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
 {
    if(mStopping)
    {
@@ -75,11 +74,25 @@ UdpRelayServer::onReceiveSuccess(unsigned int socketDesc, const asio::ip::addres
 }
 
 void 
-UdpRelayServer::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
+UdpRelayServer::onReceiveFailure(const asio::error_code& e)
 {
    if(e != asio::error::operation_aborted)
    {
       doReceive();
+   }
+}
+
+void
+UdpRelayServer::onSendSuccess()
+{
+}
+
+void
+UdpRelayServer::onSendFailure(const asio::error_code& error)
+{
+   if(error != asio::error::operation_aborted)
+   {
+      cout << "UdpRelayServer::onSendFailure: " << error.message() << endl;
    }
 }
 
