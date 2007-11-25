@@ -17,13 +17,11 @@ TcpConnection::TcpConnection(asio::io_service& ioService,
     mRequestHandler(handler),
     mTurnFraming(turnFraming)
 {
-   registerAsyncSocketBaseHandler(this);
 }
 
 TcpConnection::~TcpConnection()
 {
    std::cout << "TcpConnection destroyed." << std::endl;
-   registerAsyncSocketBaseHandler(0);
 }
 
 asio::ip::tcp::socket& 
@@ -52,7 +50,7 @@ TcpConnection::close()
 }
 
 void 
-TcpConnection::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
 {
    if (data->size() > 4)
    {
@@ -164,7 +162,7 @@ TcpConnection::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address
 }
 
 void 
-TcpConnection::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
+TcpConnection::onReceiveFailure(const asio::error_code& e)
 {
    if(e != asio::error::operation_aborted)
    {
@@ -175,12 +173,12 @@ TcpConnection::onReceiveFailure(unsigned int socketDesc, const asio::error_code&
 }
 
 void
-TcpConnection::onSendSuccess(unsigned int socketDesc)
+TcpConnection::onSendSuccess()
 {
 }
 
 void
-TcpConnection::onSendFailure(unsigned int socketDesc, const asio::error_code& error)
+TcpConnection::onSendFailure(const asio::error_code& error)
 {
    if(error != asio::error::operation_aborted)
    {

@@ -24,6 +24,7 @@
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
@@ -63,6 +64,7 @@
 				AdditionalIncludeDirectories="&quot;../../contrib/asio&quot;;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				RuntimeLibrary="2"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
@@ -124,6 +126,21 @@
 				RelativePath="..\StunTuple.cxx">
 			</File>
 			<File
+				RelativePath=".\TurnAsyncSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncSocketHandler.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncTcpSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncTlsSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncUdpSocket.cxx">
+			</File>
+			<File
 				RelativePath=".\TurnSocket.cxx">
 			</File>
 			<File
@@ -171,10 +188,22 @@
 				RelativePath="..\StunTuple.hxx">
 			</File>
 			<File
-				RelativePath=".\TurnSocket.hxx">
+				RelativePath=".\TurnAsyncSocket.hxx">
 			</File>
 			<File
-				RelativePath=".\TurnTcpSocket.hxx">
+				RelativePath=".\TurnAsyncSocketHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncTcpSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncTlsSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncUdpSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnSocket.hxx">
 			</File>
 			<File
 				RelativePath=".\TurnTlsSocket.hxx">

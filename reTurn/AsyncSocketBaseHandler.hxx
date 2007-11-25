@@ -7,30 +7,13 @@
 
 namespace reTurn {
 
-class AsyncSocketBaseDestroyedHandler
-{
-public:
-   AsyncSocketBaseDestroyedHandler() {}
-   virtual ~AsyncSocketBaseDestroyedHandler() {}
-
-   virtual void onSocketDestroyed() = 0;
-};
-
 class AsyncSocketBaseHandler
 {
 public:
    AsyncSocketBaseHandler() {}
    virtual ~AsyncSocketBaseHandler() {}
 
-   // Only for TLS Connections
-   virtual void onHandshakeSuccess(unsigned int socketDesc) {};
-   virtual void onHandshakeFailure(unsigned int socketDesc, const asio::error_code& e) {};
-
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data) {};
-   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e) {};
-
-   virtual void onSendSuccess(unsigned int socketDesc) {};
-   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e) {};
+   virtual void onSocketDestroyed() = 0;
 };
 
 }

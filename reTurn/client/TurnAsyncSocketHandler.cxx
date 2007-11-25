@@ -1,49 +1,17 @@
-#ifndef UDP_RELAY_SERVER_HXX
-#define UDP_REALY_SERVER_HXX
-
-#include <asio.hpp>
-#include <string>
-#include <boost/noncopyable.hpp>
-#include "RequestHandler.hxx"
-#include "AsyncUdpSocketBase.hxx"
+#include "TurnAsyncSocketHandler.hxx"
+using namespace std;
 
 namespace reTurn {
 
-class StunTuple;
-
-class UdpRelayServer
-  : public AsyncUdpSocketBase, 
-    private boost::noncopyable
+TurnAsyncSocketHandler::TurnAsyncSocketHandler() 
 {
-public:
-   /// Create the server to listen on the specified UDP address and port
-   explicit UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation);
-   ~UdpRelayServer();
-
-   /// Starts processing
-   void start();
-
-   /// Causes this object to destroy itself safely (ie. waiting for ayncronous callbacks to finish)
-   void stop();
-
-private:
-   /// Handle completion of a receive_from operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
-   virtual void onReceiveFailure(const asio::error_code& e);
-
-   /// Handle completion of a send operation
-   virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
-
-   TurnAllocation& mTurnAllocation;
-   bool mStopping;
-};
-
-typedef boost::shared_ptr<UdpRelayServer> UdpRelayServerPtr;
-
 }
 
-#endif 
+TurnAsyncSocketHandler::~TurnAsyncSocketHandler()
+{
+}
+
+} // namespace
 
 
 /* ====================================================================
@@ -80,4 +48,5 @@ typedef boost::shared_ptr<UdpRelayServer> UdpRelayServerPtr;
  DAMAGE.
 
  ==================================================================== */
+
 

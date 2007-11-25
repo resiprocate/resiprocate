@@ -114,6 +114,7 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
             // Unknown indication - just ignore
             break;
          }
+         break;
    
       case StunMessage::StunClassSuccessResponse:
       case StunMessage::StunClassErrorResponse:

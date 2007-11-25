@@ -17,11 +17,13 @@ public:
    AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context); 
    virtual ~AsyncTlsSocketBase();
 
-   asio::error_code bind(const asio::ip::address& address, unsigned short port);
+   virtual unsigned int getSocketDescriptor();
+
+   virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
+   virtual void connect(const std::string& address, unsigned short port);  
 
    void doHandshake();
 
-   virtual unsigned int getSocketDescriptor();
    virtual void transportReceive();
    virtual void transportFramedReceive();
    virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
@@ -31,10 +33,17 @@ public:
    virtual unsigned short getSenderEndpointPort();
 
 protected:
-   virtual void handleReadHeader(const asio::error_code& e);
-   virtual void handleHandshake(const asio::error_code& e);
+   void handleReadHeader(const asio::error_code& e);
+   void handleServerHandshake(const asio::error_code& e);
+   void handleResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
+   void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
+   void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
+
+   virtual void onServerHandshakeSuccess() { assert(false); }
+   virtual void onServerHandshakeFailure(const asio::error_code& e) { assert(false); }
 
    asio::ssl::stream<asio::ip::tcp::socket> mSocket;
+   asio::ip::tcp::resolver mResolver;
 
 private:
 };

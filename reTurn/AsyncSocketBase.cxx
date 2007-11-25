@@ -12,14 +12,14 @@ namespace reTurn {
 AsyncSocketBase::AsyncSocketBase(asio::io_service& ioService) : 
   mIOService(ioService),
   mReceiving(false),
-  mAsyncSocketBaseHandler(0),
-  mAsyncSocketBaseDestroyedHandler(0)
+  mConnected(false),
+  mAsyncSocketBaseHandler(0)
 {
 }
 
 AsyncSocketBase::~AsyncSocketBase()
 {
-   if(mAsyncSocketBaseDestroyedHandler) mAsyncSocketBaseDestroyedHandler->onSocketDestroyed();
+   if(mAsyncSocketBaseHandler) mAsyncSocketBaseHandler->onSocketDestroyed();
 }
 
 void 
@@ -76,11 +76,11 @@ AsyncSocketBase::handleSend(const asio::error_code& e)
       {
          sendFirstQueuedData();
       }
-      if(mAsyncSocketBaseHandler) mAsyncSocketBaseHandler->onSendSuccess(getSocketDescriptor());
+      onSendSuccess();
    }
    else
    {
-      if(mAsyncSocketBaseHandler) mAsyncSocketBaseHandler->onSendFailure(getSocketDescriptor(), e);
+      onSendFailure(e);
    }
 }
 
@@ -135,11 +135,11 @@ AsyncSocketBase::handleReceive(const asio::error_code& e, std::size_t bytesTrans
    {
       // Handoff received buffer to appliction, and prepare receive buffer for next call
       mReceiveBuffer->truncate(bytesTransferred);
-      if(mAsyncSocketBaseHandler) mAsyncSocketBaseHandler->onReceiveSuccess(getSocketDescriptor(), getSenderEndpointAddress(), getSenderEndpointPort(), mReceiveBuffer);
+      onReceiveSuccess(getSenderEndpointAddress(), getSenderEndpointPort(), mReceiveBuffer);
    }
    else
    {
-      if(mAsyncSocketBaseHandler) mAsyncSocketBaseHandler->onReceiveFailure(getSocketDescriptor(), e);
+      onReceiveFailure(e);
    }
 }
 
