@@ -19,7 +19,7 @@ class AsyncSocketBase;
 class UdpRelayServer;
 
 class TurnAllocation
-  : public AsyncSocketBaseDestroyedHandler,
+  : public AsyncSocketBaseHandler,
     private boost::noncopyable
 {
 public:
