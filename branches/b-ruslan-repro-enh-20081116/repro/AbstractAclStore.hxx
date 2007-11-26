@@ -4,6 +4,7 @@
 #include <list>
 #include "rutil/Data.hxx"
 #include "resip/stack/Tuple.hxx"
+#include "resip/stack/SipMessage.hxx"
 
 namespace repro
 {

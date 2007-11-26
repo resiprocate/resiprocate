@@ -16,7 +16,7 @@ namespace repro
 {
 //class AbstractDb;
 
-   class RouteStore: public AbstractRouteStore
+class RouteStore: public AbstractRouteStore
 {
    public:
       RouteStore(AbstractDb& db);
