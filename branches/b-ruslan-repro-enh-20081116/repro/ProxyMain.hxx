@@ -14,7 +14,7 @@ namespace repro
 extern bool reproRestartServer;
 extern bool reproFinish;
 
-void reproMain( resip::ReproConfiguration *args, Store &store);
+void ProxyMain( resip::ReproConfiguration *args, Store &store);
 
 
 #ifdef WIN32

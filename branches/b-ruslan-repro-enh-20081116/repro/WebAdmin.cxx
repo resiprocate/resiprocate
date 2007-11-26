@@ -18,7 +18,7 @@
 #include "repro/AbstractRouteStore.hxx"
 #include "repro/AbstractUserStore.hxx"
 #include "repro/Store.hxx"
-#include "repro/reproMain.hxx"
+#include "repro/ProxyMain.hxx"
 
 
 using namespace resip;
