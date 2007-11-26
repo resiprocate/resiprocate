@@ -82,7 +82,7 @@ SERVICE_STATUS SvcStat={ SERVICE_WIN32, SERVICE_START_PENDING,
 #endif
 
 Data
-addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
+addDomains(TransactionUser& tu, ReproConfiguration& args, Store& store)
 {
    Data realm;
    
@@ -135,7 +135,7 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
    return realm;
 }
 
-void reproMain( resip::CommandLineParser *args, Store &store)
+void reproMain( resip::ReproConfiguration *args, Store &store)
 {
    Security* security = 0;
    Compression* compression = 0;

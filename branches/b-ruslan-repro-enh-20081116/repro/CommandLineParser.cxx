@@ -222,7 +222,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         Parameters::prmTimerC, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  Parameters::prmAdminPassword, "set web administrator password", ""},
       {"no-use-parameters",  0,   POPT_ARG_NONE,                            &NoUseParameters,  Parameters::prmMax, "set web administrator password", ""},
-      {"no-load-we-admin",  0,   POPT_ARG_NONE,                              &NoLoadWebAdmin,  Parameters::prmMax, "do not load web admin server", ""},
+      {"no-load-web-admin",  0,   POPT_ARG_NONE,                              &NoLoadWebAdmin,  Parameters::prmMax, "do not load web admin server", ""},
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    Parameters::prmMax, "show the version number and exit", 0},
 #ifdef WIN32
       {"install-service", 0,   POPT_ARG_NONE,                                &installService,    Parameters::prmMax, "install program as WinNT service", 0},
@@ -331,60 +331,3 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 #endif
 }
 
-resip::Uri 
-CommandLineParser::toUri(const char* input, const char* description)
-{
-   resip::Uri uri;
-   try
-   {
-      if (input)
-      {
-         uri = Uri(input);
-      }
-      else
-      {
-         std::cerr << "No " << description << " specified" << std::endl;
-      }
-   } 
-   catch (ParseException& e)
-   {
-      std::cerr << "Caught: " << e << std::endl;
-      std::cerr << "Can't parse " << description << " : " << input << std::endl;
-      exit(-1);
-   }
-   return uri;
-}
-
-std::vector<resip::Data> 
-CommandLineParser::toVector(const char* input, const char* description)
-{
-   std::vector<Data> domains; 
-
-   if (input)
-   {
-      Data buffer = input;
-      if (input)
-      {
-         for (char* token = strtok(const_cast<char*>(buffer.c_str()), ","); token != 0; token = strtok(0, ","))
-         {
-            try
-            {
-               domains.push_back(token);
-            } 
-            catch (ParseException& e)
-            {
-               std::cout << "Caught: " << e << std::endl;
-               std::cerr << "Can't parse " << description << " : " << token << std::endl;
-               exit(-1);
-            }
-            catch (...)
-            {
-               std::cout << "Caught some exception" <<std::endl;
-               std::cerr << "Some problem parsing " << description << " : " << token << std::endl;
-            }
-         }
-      }
-   }
-   return domains;
-}
-   

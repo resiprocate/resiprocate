@@ -1,47 +1,70 @@
-#if !defined(RESIP_PARAMETERS_HXX)
-#define RESIP_PARAMETERS_HXX
+#if !defined(REPRO_REPROCONFIGURATION_HXX)
+#define REPRO_REPROCONFIGURATION_HXX
 
-#include "ReproConfiguration.hxx"
-#include "AbstractDb.hxx"
+#include <vector>
+#include "resip/stack/Uri.hxx"
+#include "rutil/Data.hxx"
 
-namespace repro
+namespace resip
 {
 
-using namespace resip;
-
-class Parameters
+class ReproConfiguration
 {
-public:
-   enum Param {  prmLogType = 1,  prmLogLevel, prmLogPath, prmRecordRoute, prmUdp, prmTcp,
-            prmTlsDomain, prmTls, prmDtls, prmEnableCertServer, prmEnableV6, prmDisableV4, 
-            prmDisableAuth, prmDisableAuthInt, prmDisableWebAuth, prmDisableReg, 
-            prmDisableIdentity, prmIinterfaces, prmDomains, prmRoute, prmReqChainName, 
-            prmHttp, prmRecursiveRedirect, prmQValue, prmQValueBehavior, 
-            prmQValueCancelBtwForkGroups, prmQValueWaitForTerminateBtwForkGroups, 
-            prmQValueMsBetweenForkGroups, prmQValueMsBeforeCancel, prmEnumSuffix, 
-            prmAllowBadReg, prmParallelForkStaticRoutes, prmTimerC, prmAdminPassword, prmMax };
-   enum ParamType { ptInt, ptBool, ptString, ptStrings, ptRecordRoute };
-   static Parameters::ParamType TypeOfParam[Parameters::prmMax];
-   
-   static void DisableParam( Param prm );
-   static void SaveParam( Param prm, Data Value );
-   static Data GetParam( Param prm );
-   static void StoreParametersInArgs( ReproConfiguration *To );
-   static void SetDb( AbstractDb *Database );
+   public:
+      static resip::Uri toUri(const char* input, const char* description);
+      static std::vector<resip::Data> toVector(const char* input, const char* description);
 
-private:
-   static void  InitParameters();
-   friend class InitParams;
-   static void setParamBool( Parameters::Param prm, bool &val );
-   static void setParamInt( Parameters::Param prm, int &val );
-   static void setParamString( Parameters::Param prm, Data &val );
-   static void setParamStrings( Parameters::Param prm, std::vector<Data> &val, const char *Description );
-
+      ReproConfiguration();
+      Data mLogType;
+      Data mLogLevel;
+      Data mLogFilePath;
+      Data mTlsDomain;
+      Data mEnumSuffix;
+      bool mShouldRecordRoute;
+      resip::Uri mRecordRoute;
+      int mUdpPort;
+      int mTcpPort;
+      int mTlsPort;
+      int mDtlsPort;
+      bool mUseV4;
+      bool mUseV6;
+      std::vector<Data> mDomains;
+      std::vector<Data> mInterfaces;
+      std::vector<Data> mRouteSet;
+      Data mCertPath;
+      Data mDbPath;
+      bool mNoChallenge;
+      bool mNoAuthIntChallenge;
+      bool mNoWebChallenge;
+      bool mNoRegistrar;
+      bool mNoIdentityHeaders;
+      bool mCertServer;
+      Data mRequestProcessorChainName;
+      Data mMySqlServer;
+      int mHttpPort;
+      bool mRecursiveRedirect;
+      bool mDoQValue;
+      Data mForkBehavior;
+      bool mCancelBetweenForkGroups;
+      bool mWaitForTerminate;
+      int mMsBetweenForkGroups;
+      int mMsBeforeCancel;
+      bool mAllowBadReg;
+      bool mParallelForkStaticRoutes;
+      int mTimerC;
+      Data mAdminPassword;
+      bool mNoUseParameters;
+      bool mNoLoadWebAdmin;
+#ifdef WIN32
+      bool mInstallService;
+      bool mRemoveService;
+#endif
 };
-
+ 
 }
 
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -92,3 +115,6 @@ private:
  *
  */
 
+/* Local Variables: */
+/* c-file-style: "ellemtel" */
+/* End: */
