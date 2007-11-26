@@ -10,7 +10,7 @@
 namespace repro
 {
 
-   class AclStore: public AbstractAclStore
+class AclStore: public AbstractAclStore
 {
    public:
       class TlsPeerNameRecord

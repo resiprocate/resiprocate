@@ -10,7 +10,7 @@
 namespace repro
 {
 
-   class ConfigStore: public AbstractConfigStore
+class ConfigStore: public AbstractConfigStore
 {
    public:
       
