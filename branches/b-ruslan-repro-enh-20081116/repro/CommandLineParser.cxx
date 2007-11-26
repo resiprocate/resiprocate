@@ -105,6 +105,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* enumSuffix = 0;
    int allowBadReg = 0;
    int parallelForkStaticRoutes = 0;
+   int NoLoadWebAdmin = 0;
    int showVersion = 0;
 #ifdef WIN32
    int installService = 0;
@@ -221,6 +222,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         Parameters::prmTimerC, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  Parameters::prmAdminPassword, "set web administrator password", ""},
       {"no-use-parameters",  0,   POPT_ARG_NONE,                            &NoUseParameters,  Parameters::prmMax, "set web administrator password", ""},
+      {"no-load-we-admin",  0,   POPT_ARG_NONE,                              &NoLoadWebAdmin,  Parameters::prmMax, "do not load web admin server", ""},
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    Parameters::prmMax, "show the version number and exit", 0},
 #ifdef WIN32
       {"install-service", 0,   POPT_ARG_NONE,                                &installService,    Parameters::prmMax, "install program as WinNT service", 0},
@@ -294,7 +296,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mMsBeforeCancel=msBeforeCancel;
    mAllowBadReg = allowBadReg?true:false;
    mParallelForkStaticRoutes = parallelForkStaticRoutes?true:false;
-   mNoUseParameters = NoUseParameters == 1;
+   mNoUseParameters = NoUseParameters != 0;
+   mNoLoadWebAdmin = NoLoadWebAdmin != 0;
 
    if (enumSuffix) mEnumSuffix = enumSuffix;
    
