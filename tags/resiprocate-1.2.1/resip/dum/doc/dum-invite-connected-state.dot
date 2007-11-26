@@ -1,0 +1,117 @@
+//  names start with cap are states
+//  names start with app:: are appliction handlers
+//  names start with dum:: are dum interface to application
+//  names start with lower case are actions
+//  names start with on are events
+
+//  Note:  not all Assert transitions are shown here
+digraph ConnectedState {
+  rankdir=LR;
+  node [shape = box];
+
+  // Should we use UPDATE to send offer or reINVITE? How does the app know which to use? UPDATE needs to get a response right away
+  Connected -> SentUpdate                 [ label = "dum::provideOffer/send::UPDATE" ];
+  Connected -> SentReinvite               [ label = "dum::provideOffer/send::INVITE" ]; // UPDATE not supported
+  Connected -> SentReinviteNoOffer        [ label = "dum::requestOffer/send::INVITE" ];
+  Connected -> ReceivedUpdate             [ label = "onUPDATE-offer/app::onOffer" ];
+  Connected -> ReceivedReinvite           [ label = "onINVITE-offer/app::onOffer" ];
+  Connected -> ReceivedReinviteNoOffer    [ label = "onINVITE/app::onDialogModified,app::onOfferRequired" ];
+  Connected -> Connected                  [ label = "on200P" ]; 
+  Connected -> Connected                  [ label = "on200I/resend::ACK" ]; 
+  Connected -> Connected                  [ label = "onTimer200/resend::2xx" ];
+  Connected -> Connected                  [ label = "onCANCEL/send::200C" ]; // is this right?
+  Connected -> Terminated                 [ label = "dum::end/send::BYE" ];
+  Connected -> Terminated                 [ label = "onBYE/send::200B,app::onTerminated(PeerEnded)" ];
+
+  SentUpdate -> Connected                 [ label = "on200U/app::onAnswer" ];
+  SentUpdate -> Connected                 [ label = "on4XXU/app::onOfferRejected" ];
+  SentUpdate -> SentUpdate                [ label = "onUPDATE|onINVITE/send::491" ];
+  SentUpdate -> SentUpdateGlare           [ label = "on491U/timer::491" ];  
+  SentUpdate -> Terminated                [ label = "onGeneralFailure/app::onTerminated(GeneralFailure),send::BYE" ];
+  SentUpdate -> Terminated                [ label = "dum::end/send::BYE" ];
+
+  SentUpdateGlare -> SentUpdate           [ label = "onTimer491/resend::UPDATE" ]; 
+  SentUpdateGlare -> ReceivedUpdate       [ label = "onUPDATE/app::onOfferRejected,app::onOffer" ];
+  SentUpdateGlare -> ReceivedReinvite     [ label = "onINVITE/app::onOfferRejected,app::onOffer" ];
+  SentUpdateGlare -> Terminated           [ label = "dum::end/send::BYE" ];
+
+  SentReinvite -> Connected               [ label = "on200I-sdp/app::onAnswer,send::ACK" ];// need to store the ACK
+  SentReinvite -> Connected               [ label = "on200I-nosdp/app::onIllegalNegotiation,send::ACK" ];// need to store the ACK
+  SentReinvite -> Connected               [ label = "on4XXI/app::onOfferRejected" ];
+  SentReinvite -> SentReinvite            [ label = "onINVITE|onUPDATE/send::491" ];
+  SentReinvite -> SentReinviteGlare       [ label = "on491I/timer::491" ]; 
+  SentReinvite -> WaitingToTerminate      [ label = "dum::end" ];
+
+  SentReinviteGlare -> SentReinvite                   [ label = "onTimer491/resend::INVITE" ]; 
+  SentReinviteGlare -> ReceivedUpdate                 [ label = "onUPDATE/app::onOfferRejected,app::onOffer" ];
+  SentReinviteGlare -> ReceivedReinvite               [ label = "onINVITE/app::onOfferRejected,app::onOffer" ];
+  SentReinviteGlare -> ReceivedReinviteNoOffer        [ label = "onINVITE/app::onOfferRejected,app::onOfferRequired" ];
+  SentReinviteGlare -> Terminated                     [ label = "dum::end/send::BYE" ];
+
+  SentReinviteNoOffer -> SentReinviteAnswered         [ label = "on200I-sdp/app::onOffer" ];
+  SentReinviteNoOffer -> Connected                    [ label = "on200I-nosdp/app::onIllegalNegotiation,send::ACK" ];
+  SentReinviteNoOffer -> Connected                    [ label = "on4XXI/app::onOfferRequestRejected" ];
+  SentReinviteNoOffer -> SentReinviteNoOffer          [ label = "onINVITE|onUPDATE/send::491" ];
+  SentReinviteNoOffer -> SentReinviteNoOfferGlare     [ label = "on491I/timer::491" ]; 
+  SentReinviteNoOffer -> WaitingToTerminate           [ label = "dum::end" ];
+
+  SentReinviteAnswered -> Connected                   [ label = "dum::provideAnswer/send::ACK-answer" ];
+  SentReinviteAnswered -> Terminated                  [ label = "dum::end/app::onTerminated(GeneralFailure),send::BYE" ];
+
+  SentReinviteNoOfferGlare -> SentReinviteNoOffer     [ label = "onTimer491/resend::INVITE" ]; 
+  SentReinviteNoOfferGlare -> ReceivedUpdate          [ label = "onUPDATE/app::onOfferRequestRejected,app::onOffer" ];
+  SentReinviteNoOfferGlare -> ReceivedReinvite        [ label = "onINVITE/app::onOfferRequestRejected,app::onOffer" ];
+  SentReinviteNoOfferGlare -> ReceivedReinviteNoOffer [ label = "onINVITE/app::onOfferRequestRejected,app::onOfferRequired" ];
+  SentReinviteNoOfferGlare -> Terminated              [ label = "dum::end/send::BYE" ];
+
+
+  // If we require the app to synchronously provide an answer to an UPDATE then the 
+  // ReceivedUpdate state is not necessary. If we want the app to be able to respond 
+  // async then this state is necessary and the app must respond in a timely manner
+  ReceivedUpdate -> Connected             [ label = "dum::provideAnswer/send::200U" ];
+  ReceivedUpdate -> Connected             [ label = "dum::reject/send::488U" ];
+  ReceivedUpdate -> Terminated            [ label = "dum::end/send::488U,send::BYE" ];
+  ReceivedUpdate -> ReceivedUpdate        [ label = "onINVITE|onUPDATE/send::500" ]; 
+
+  ReceivedReinvite -> Answered            [ label = "dum::provideAnswer/send::200I,timer::200I,timer::NoACK" ];
+  ReceivedReinvite -> Connected           [ label = "dum::reject/send::488U" ];
+  ReceivedReinvite -> Terminated          [ label = "dum::end/send::488I,send::BYE" ];
+  ReceivedReinvite -> ReceivedReinvite    [ label = "onINVITE|onUPDATE/send::500" ]; 
+
+  Answered -> Answered                    [ label = "timer::2xx/resend::2xx" ];
+  Answered -> WaitingToOffer              [ label = "dum::provideOffer/saveOffer" ];
+  Answered -> WaitingToRequestOffer       [ label = "dum::requestOffer ];
+  Answered -> Connected                   [ label = "onACK/timer::NoACK/app::onAckNotReceived()" ];
+  Answered -> WaitingToHangup             [ label = "dum::end" ];
+
+  WaitingToOffer -> WaitingToOffer        [ label = "timer::2xx/resend::2xx" ];
+  WaitingToOffer -> SentUpdate            [ label = "onACK/send::UPDATE-offer" ]; 
+  WaitingToOffer -> SentReinvite          [ label = "onACK/send::INVITE-offer" ]; 
+  WaitingToOffer -> Terminated            [ label = "onTimerNoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
+  WaitingToOffer -> WaitingToHangup       [ label = "dum::end" ];
+
+  WaitingToRequestOffer -> WaitingToRequestOffer [ label = "timer::2xx/resend::2xx" ];
+  WaitingToRequestOffer -> SentReinviteNoOffer [ label = "onACK/send::INVITE" ]; 
+  WaitingToRequestOffer -> SentReinviteNoOffer [ label = "onTimerNoACK/app::onAckNotReceived/send::INVITE" ];
+  WaitingToRequestOffer -> WaitingToHangup [ label = "dum::end" ];
+
+  ReceivedReinviteNoOffer -> ReceivedReinviteSentOffer    [ label = "dum::provideOffer/send::200-offer,timer::200I,timer::NoACK" ];
+  ReceivedReinviteNoOffer -> Connected    [ label = "dum::reject/send::488I" ];
+  ReceivedReinviteNoOffer -> Terminated   [ label = "dum::end/send::488I,send::BYE" ];
+  ReceivedReinviteNoOffer -> ReceivedReinviteNoOffer  [ label = "onINVITE|onUPDATE/send::500" ]; 
+
+  ReceivedReinviteSentOffer -> Connected                     [ label = "onACK-answer/app::onAnswer" ];
+  ReceivedReinviteSentOffer -> Connected                     [ label = "onACK/app::onOfferRejected" ];
+  ReceivedReinviteSentOffer -> ReceivedReinviteSentOffer     [ label = "onTimer2xx/resend::2XXI" ]; 
+  ReceivedReinviteSentOffer -> Connected                     [ label = "onTimerNoACK/app::onOfferRejected" ];
+  ReceivedReinviteSentOffer -> WaitingToHangup               [ label = "dum::end" ];
+
+  WaitingToTerminate -> Terminated        [ label = "on200I/send::ACK,send::BYE" ];
+  WaitingToTerminate -> Terminated        [ label = "onFailureInvite/?send::BYE" ];
+
+  WaitingToHangup -> Terminated           [ label = "onACK/send::BYE" ];
+  WaitingToHangup -> Terminated           [ label = "onTimerNoACK/send::BYE" ];
+
+  Terminated -> Terminated                [ label = "onResponse/destroy" ];
+  Terminated -> Terminated                [ label = "onRequest/send::481,destroy" ];
+}

@@ -1,0 +1,45 @@
+Todo List
+Todo Before 1.0.0 Release
+
+  * Remove any calls to malloc with calls to new char[]. (Peer.cxx).
+   
+  * use SUN_LEN instead of sizeof for AF_LOCAL;
+   
+  * Separate the inet_ntop and inet_pton implementations into their own
+    files.
+   
+  * Have a separate file for OS stuff, like os_starup, os_finish,
+    os_get_error, os_set_error.
+   
+  * Clean up documentation and make more complete.
+   
+  * Add Solaris >= 8 /dev/poll support to the Probe class.
+   
+  * Add thread callbacks for OpenSSL.
+   
+  * Call THREADS_init() if initializing OpenSSL.
+   
+  * Add more callbacks to TLS::Context so that developers can better
+    customize TLS behavior.
+   
+  * Verify what WSAETIMEDOUT and WSAEMSGSIZE mean.
+   
+  * Optimize Netxx::Netbuf::xsputn().
+   
+  * Add support for the FreeBSD kqueue(2) function in Probe_impl.
+   
+  * Should Netxx::Peer::operator<< print out something different for
+    AF_LOCAL?
+   
+  * Should we allow some way to get user credentials from a local domain
+    socket?
+   
+  * TLS::handle_shutdown should be more robust and support non-blocking
+    sockets.
+   
+  * How should we handle file permissions for local domain sockets? Right
+    now we set them to 0666. There should be some way for the developer to
+    override this. Maybe using a fake port, e.g., /some/file:0600?
+   
+  * Add another callback to the Context class so that we can verify certs.
+   
