@@ -24,6 +24,39 @@ namespace resip
 class FileSystem
 {
    public:
+
+      static const char FileSystem::PathSeparator;
+/**
+        DirectoryExists returns a boolean value that indicates whether the
+        specified directory exists (and is actually a directory) 
+      */
+      static bool DirectoryExists(const Data path);
+      /**
+        ForceDirectories ensures that all the directories in a specific path exist.
+        Any portion that does not already exist will be created.  Function result
+        indicates success of the operation.  The function can fail if the current
+        user does not have sufficient file access rights to create directories in
+        the given path.
+      */
+      static bool ForceDirectories(const Data Name);
+
+#ifdef WIN32
+      /**
+        IsReadWriteAccess check WIN NT security permissions and return true if
+        current process have read/write access to given file or directory
+
+        @warning User or group that user belongs to must explicitly defined in security 
+        permission ( limitation of GetEffectiveRightsFromAcl )
+      */
+      static bool IsReadWriteAccess(const char *path);
+      /**
+        SetAccessAs copy to Acceptor access permissions from Donor.
+        Acceptor do not inherit permissions from own directory
+      */
+      static void SetAccessAs(const char *Acceptor,const char *Donor);
+
+#endif
+
       class Directory
       {
          public:
