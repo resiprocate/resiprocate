@@ -11,6 +11,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseException.hxx"
+#include "rutil/FileSystem.hxx"
 
 using namespace resip;
 using namespace std;
@@ -36,9 +37,18 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* domains = 0;
    char* interfaces = 0;
    char* routeSet = 0;
+#ifdef WIN32
+   char certPathBuf[MAX_PATH];
+#else
    char certPathBuf[256];
+#endif
    char* certPath = certPathBuf;
+#ifdef WIN32
+   char dbPathBuf[MAX_PATH]={0};
+   char* dbPath = dbPathBuf;
+#else
    char* dbPath = 0;
+#endif
    int noChallenge = false;
    int noAuthIntChallenge = false;
    int noWebChallenge = false;
@@ -71,7 +81,55 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 #ifndef HAVE_POPT_H
    noChallenge = 1;  // If no POPT, then default to no digest challenges
 #endif
-   strcpy(certPath,"C:\\sipCerts");   
+// when we have administrative right or run as LocalSystem for example as service
+   static const Data AllUsersCerts(Data( getenv( "ALLUSERSPROFILE" ) ) + "\\Application Data\\Resiprocate\\repro\\sipCerts");
+   static const Data AllUsersDb(Data( getenv( "ALLUSERSPROFILE" ) ) + "\\Application Data\\Resiprocate\\repro\\Db");
+//when we run as restricted user
+   static const Data LocalUserCerts(Data( getenv( "USERPROFILE" ) ) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\sipCerts");
+   static const Data LocalUserDb(Data( getenv( "USERPROFILE" ) ) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\Db");
+
+   if ( FileSystem::DirectoryExists( AllUsersCerts ) && FileSystem::IsReadWriteAccess ( AllUsersCerts.c_str() ) )
+   {
+      strcpy( certPath, AllUsersCerts.c_str() );
+   }
+   else if ( FileSystem::IsReadWriteAccess ( getenv( "ALLUSERSPROFILE" ) ) )
+   {
+      FileSystem::ForceDirectories( AllUsersCerts );
+      FileSystem::SetAccessAs( AllUsersCerts.c_str() , getenv( "ALLUSERSPROFILE" ) );
+      strcpy( certPath, AllUsersCerts.c_str() );
+   }
+   else if ( FileSystem::DirectoryExists( LocalUserCerts ) && FileSystem::IsReadWriteAccess ( LocalUserCerts.c_str() ) )
+   {
+      strcpy( certPath, LocalUserCerts.c_str() );
+   }
+   else if ( FileSystem::IsReadWriteAccess ( getenv( "USERPROFILE" ) ) )
+   {
+      FileSystem::ForceDirectories( LocalUserCerts );
+      FileSystem::SetAccessAs( LocalUserCerts.c_str(), getenv( "USERPROFILE" ) );
+      strcpy( certPath, LocalUserCerts.c_str() );
+   }
+   else // we must never get it
+      strcpy(certPath,"C:\\sipCerts");   
+   if ( FileSystem::DirectoryExists( AllUsersDb ) && FileSystem::IsReadWriteAccess ( AllUsersDb.c_str() ) )
+   {
+      strcpy( dbPath, AllUsersDb.c_str() );
+   }
+   else if ( FileSystem::IsReadWriteAccess ( getenv( "ALLUSERSPROFILE" ) ) )
+   {
+      FileSystem::ForceDirectories( AllUsersDb );
+      FileSystem::SetAccessAs( AllUsersDb.c_str(), getenv( "ALLUSERSPROFILE" ) );
+      strcpy( dbPath, AllUsersDb.c_str() );
+   }
+   else if ( FileSystem::DirectoryExists( LocalUserDb ) && FileSystem::IsReadWriteAccess ( LocalUserDb.c_str() ) )
+   {
+      strcpy( dbPath, LocalUserDb.c_str() );
+   }
+   else if ( FileSystem::IsReadWriteAccess ( getenv( "USERPROFILE" ) ) )
+   {
+      FileSystem::ForceDirectories( LocalUserDb );
+      FileSystem::SetAccessAs( LocalUserDb.c_str(), getenv( "USERPROFILE" ) );
+      strcpy( dbPath, LocalUserDb.c_str() );
+   }
 #else
    strcpy(certPath, getenv("HOME"));
    strcat(certPath, "/.sipCerts");
