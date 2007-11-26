@@ -1,4 +1,9 @@
 #include <signal.h>
+
+#include "repro/ProxyMainException.hxx"
+
+#include "resip/stack/Transport.hxx"
+
 #include "repro/ProxyMain.hxx"
 #include "repro/CommandLineParser.hxx"
 #include "repro/Store.hxx"
@@ -13,7 +18,6 @@
 #include "repro/BerkeleyDb.hxx"
 
 #ifdef WIN32
-//#include "windows.h"
 #include "rutil/Win32EventLog.hxx"
 #endif
 
@@ -99,7 +103,7 @@ ReproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID
    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
-void runRepro();
+int runRepro();
 
 static void 
 WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
@@ -110,10 +114,15 @@ WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
    svcH = RegisterServiceCtrlHandlerEx( ReproServiceName, &ReproSvcHandlerEx, &SvcStat);
    if ( svcH ) 
    {
+      SvcStat.dwWin32ExitCode = NO_ERROR;
       SetServiceStatus(svcH,&SvcStat);
-      runRepro();
+      if ( int ret = runRepro() )
+      {
+         SvcStat.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;
+         SvcStat.dwServiceSpecificExitCode = ret;
+      }
+      SetSvcStat();
    }
-   ReproState = reproEnd;
 }
 
 static bool 
@@ -207,9 +216,17 @@ removeService()
 CommandLineParser *args;
 char *argv0;
 
-static void
+static int
 runRepro()
 {
+   if(args->mLogType.lowercase() == "file")
+   {
+      Log::initialize("file", args->mLogLevel, argv0, (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str());
+   }
+   else
+   {
+      Log::initialize(args->mLogType, args->mLogLevel, argv0, NULL );
+   }
    AbstractDb *db=NULL;
 #ifdef USE_MYSQL
    if ( !args->mMySqlServer.empty() )
@@ -225,15 +242,21 @@ runRepro()
       }
       catch(...)
       {
-         exit(-1);
+         CritLog( <<"Exception while creating BerkleyDb database" );
+         return -1;
       }
       if (!static_cast<BerkeleyDb*>(db)->isSane())
       {
-        cerr <<"Failed to open configuration database";
-        exit(-1);
+         CritLog( <<"Failed to open configuration database" );
+         return -1;
       }
    }
-   assert( db );
+   if ( !db )
+   {
+      CritLog( <<"Failed to open configuration database" );
+      return -1;
+   }
+   auto_ptr<AbstractDb> dbGuard(db);
 
    Parameters::SetDb( db );
    Store store(new UserStore(*db), new RouteStore(*db), new AclStore(*db), new ConfigStore(*db) );
@@ -259,18 +282,41 @@ runRepro()
       if ( ReproWin32Service )
          NoticeLog (<< "Starting service " << ReproServiceName );
 #endif
-      ProxyMain( args, store );
+      try
+      {
+         ProxyMain( args, store );
+      }
+      catch ( ProxyMainException& e)
+      {
+         CritLog (<< "Caught: " << e);
+         return -1;
+      }
+      catch ( Transport::Exception& e )
+      {
+         std::cerr << "Likely a port is already in use" << endl;
+         CritLog (<< "Caught: " << e);
+         return -1;
+      }
+      catch ( resip::BaseException& e )
+      {
+         CritLog (<< "Caught: " << e);
+         return -1;
+      }
+      catch ( ... )
+      {
+         CritLog (<< "Caught unknown exception" );
+         return -1;
+      }
 #ifdef WIN32
       if ( ReproWin32Service )
-      NoticeLog (<< "Service " << ReproServiceName << " stopped" );
+         NoticeLog (<< "Service " << ReproServiceName << " stopped" );
 #endif
       if ( externalLogger )
          delete externalLogger;
    }
    while ( reproRestartServer );
 
-   delete db; db=0;
-
+   return 0;
 }
 
 int
@@ -330,7 +376,7 @@ main(int argc, char** argv)
       else
       {
          cerr << "Failed to remove service\n";
-         exit(0);
+         exit(0);  // We need exit(0) because of Windows uninstall procedure
       }
    }
 #endif
@@ -344,7 +390,7 @@ main(int argc, char** argv)
 
    argv0 = argv[0];
 #ifndef WIN32
-   runRepro();
+   return runRepro();
 #else
    SERVICE_TABLE_ENTRY SvcTE[]=
    {
@@ -356,10 +402,10 @@ main(int argc, char** argv)
       if ( GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT ) //Ok we run repro in console
       {
          ReproWin32Service = false;
-         runRepro();
+         return runRepro();
       }
       else
-         exit(-1);
+         return -1;
    }
 
 #endif
