@@ -44,6 +44,8 @@
 "        <p><a href=\"showRoutes.html\">Show Routes</a></p>\n"
 "      <h2>Statistics</h2>\n"
 "        <p><a href=\"registrations.html\">Registrations</a></p>\n"
+"      <h2>Server parameters</h2>\n"
+"        <p><a href=\"Parameters.html\">Edit server parameters</a></p>\n"
 "      <h2>Server manage</h2>\n"
 "        <p><a href=\"ServerRestart.html\">Restart Server</a></p>\n"
 "    </div>\n"
