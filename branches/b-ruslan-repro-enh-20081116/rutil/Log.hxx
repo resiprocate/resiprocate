@@ -56,6 +56,7 @@ class Log
          Crit = 2,
          Err = 3,
          Warning = 4,
+         Notice = 5,
          Info = 6,
          Debug = 7,
 #else
@@ -216,7 +217,7 @@ static bool invokeLogInit = Log::init();
 class ExternalLogger
 {
    public:
-      virtual ~ExternalLogger()=0;
+      virtual ~ExternalLogger();
       /** return true to also do default logging, false to supress default logging. */
       virtual bool operator()(Log::Level level,
                               const Subsystem& subsystem, 

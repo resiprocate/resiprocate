@@ -41,6 +41,9 @@ GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Debug, args_)
 #define InfoLog(args_) \
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Info, args_)
 
+#define NoticeLog(args_) \
+GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Notice, args_)
+
 #define WarningLog(args_) \
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Warning, args_)
 
