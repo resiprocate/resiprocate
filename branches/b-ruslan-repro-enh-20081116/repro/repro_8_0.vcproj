@@ -628,6 +628,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\repro.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ReproServerAuthManager.hxx"
 				>
 			</File>

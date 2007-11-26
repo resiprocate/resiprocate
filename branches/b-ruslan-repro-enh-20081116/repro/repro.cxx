@@ -58,6 +58,9 @@ using namespace repro;
 using namespace resip;
 using namespace std;
 
+bool reproRestartServer = false;
+
+
 #ifdef WIN32
 static const char* ReproServiceName="ReproService";
 static int ReproStateNum=1;
@@ -551,7 +554,7 @@ void reproMain( void )
    SetSvcStat();
 #endif
 
-   while (!finished)
+   while (!finished && !reproRestartServer)
    {
 #ifdef WIN32
    Sleep(1000);
@@ -685,7 +688,12 @@ void WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
    {
       SetServiceStatus(svcH,&SvcStat);
       NoticeLog (<< "Starting service " << ReproServiceName );
-      reproMain();
+      do
+      {
+         reproRestartServer = false;
+         reproMain();
+      }
+      while ( reproRestartServer );
       NoticeLog (<< "Service " << ReproServiceName << " stopped" );
    }
    if(args->mLogType.lowercase() == "file")
@@ -858,7 +866,12 @@ main(int argc, char** argv)
 #endif
 
 #ifndef WIN32
-   reproMain();
+   do
+   {
+      reproRestartServer = false;
+      reproMain();
+   }
+   while ( reproRestartServer );
 #else
    SERVICE_TABLE_ENTRY SvcTE[]=
    {
@@ -870,7 +883,12 @@ main(int argc, char** argv)
       if ( GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT ) //Ok we run repro in console
       {
          ReproService = false;
-         reproMain();
+         do
+         {
+            reproRestartServer = false;
+            reproMain();
+         }
+         while ( reproRestartServer );
       }
       else
          exit(-1);
