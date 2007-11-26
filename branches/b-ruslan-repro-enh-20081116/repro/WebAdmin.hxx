@@ -9,6 +9,7 @@
 
 //#include "repro/Store.hxx"
 #include "repro/HttpBase.hxx"
+#include "repro/Parameters.hxx"
 
 namespace resip
 {
@@ -60,7 +61,10 @@ class WebAdmin: public HttpBase
       void buildRegistrationsSubPage(resip::DataStream& s);
       void buildRestartServerSubPage(resip::DataStream& s);
       void buildRestartedServerSubPage(resip::DataStream& s);
-                                  
+      void buildParametersSubPage(resip::DataStream& s);
+      void buildParametersSetPage( int pageNumber, resip::DataStream& s);
+      void SaveParameter( Parameters::Param prm, char *WebParam );
+
       resip::Data buildCertPage(const resip::Data& domain);
       
       Store& mStore;

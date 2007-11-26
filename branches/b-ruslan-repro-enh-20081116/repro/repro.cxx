@@ -11,6 +11,7 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/FileSystem.hxx"
 #include "rutil/Inserter.hxx"
 
 #ifdef WIN32
@@ -43,6 +44,8 @@
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "repro/monkeys/SetTargetConnection.hxx"
 
+#include "repro/Parameters.hxx"
+
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #endif
@@ -59,7 +62,7 @@ using namespace resip;
 using namespace std;
 
 bool reproRestartServer = false;
-
+AbstractDb* db;
 
 #ifdef WIN32
 static const char* ReproServiceName="ReproService";
@@ -261,44 +264,6 @@ void reproMain( void )
    SetSvcStat();
 #endif
 
-   AbstractDb* db=NULL;
-#ifdef USE_MYSQL
-   if ( !args->mMySqlServer.empty() )
-   {
-      db = new MySqlDb(args->mMySqlServer);
-   }
-#endif
-   if (!db)
-   {
-      try // at least under Windows BerkleyDb throw exception when can't open database
-      {      
-         db = new BerkeleyDb(args->mDbPath);
-      }
-      catch(...)
-      {
-#ifndef WIN32
-         exit(-1);
-#else 
-         if ( ReproService )
-            return;
-         else
-            exit(-1);
-#endif
-      }
-      if (!static_cast<BerkeleyDb*>(db)->isSane())
-      {
-        CritLog(<<"Failed to open configuration database");
-#ifndef WIN32
-         exit(-1);
-#else 
-         if ( ReproService )
-            return;
-         else
-            exit(-1);
-#endif
-      }
-   }
-   assert( db );
    Store store(*db);
 
 #ifdef WIN32
@@ -547,6 +512,7 @@ void reproMain( void )
    if (dumThread)
    {
       dumThread->run();
+      Sleep(10000);
    }
    
 #ifdef WIN32
@@ -607,8 +573,6 @@ void reproMain( void )
    {
        delete dum;
    }
-
-   delete db; db=0;
 
 #ifdef WIN32
    SetSvcStat();
@@ -676,14 +640,6 @@ void WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
    svcH = RegisterServiceCtrlHandlerEx( ReproServiceName, &ReproSvcHandlerEx, &SvcStat);
    Win32EventLog *EventLog = new Win32EventLog( ReproServiceName );
    auto_ptr<Win32EventLog> EventLogpPtr( EventLog );
-   if(args->mLogType.lowercase() == "file")
-   {
-      Log::initialize("file", args->mLogLevel, ReproServiceName, (args->mLogFilePath+"\\repro_log.txt").c_str() , EventLog );
-   }
-   else
-   {
-      Log::initialize(args->mLogType, args->mLogLevel, ReproServiceName, NULL, EventLog );
-   }
    if ( svcH ) 
    {
       SetServiceStatus(svcH,&SvcStat);
@@ -691,6 +647,16 @@ void WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
       do
       {
          reproRestartServer = false;
+         if ( !args->mNoUseParameters )
+            Parameters::StoreParametersInArgs( args );
+         if(args->mLogType.lowercase() == "file")
+         {
+            Log::initialize("file", args->mLogLevel, ReproServiceName, (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str() , EventLog );
+         }
+         else
+         {
+            Log::initialize(args->mLogType, args->mLogLevel, ReproServiceName, NULL, EventLog );
+         }
          reproMain();
       }
       while ( reproRestartServer );
@@ -698,7 +664,7 @@ void WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
    }
    if(args->mLogType.lowercase() == "file")
    {
-      Log::initialize("file", args->mLogLevel, ReproServiceName, (args->mLogFilePath+"\\repro_log.txt").c_str() , NULL );
+      Log::initialize("file", args->mLogLevel, ReproServiceName, (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str() , NULL );
    }
    else
    {
@@ -805,6 +771,7 @@ main(int argc, char** argv)
    }
 #endif
 
+
    if ( signal( SIGINT, signalHandler ) == SIG_ERR )
    {
       cerr << "Couldn't install signal handler for SIGINT" << endl;
@@ -851,14 +818,36 @@ main(int argc, char** argv)
    }
 #endif
 
-   if(args->mLogType.lowercase() == "file")
+
+
+   db=NULL;
+#ifdef USE_MYSQL
+   if ( !args->mMySqlServer.empty() )
    {
-      Log::initialize("file", args->mLogLevel, argv[0], (args->mLogFilePath+"\\repro_log.txt").c_str() );
+      db = new MySqlDb(args->mMySqlServer);
    }
-   else
+#endif
+   if (!db)
    {
-      Log::initialize(args->mLogType, args->mLogLevel, argv[0]);
+      try // at least under Windows BerkleyDb throw exception when can't open database
+      {      
+         db = new BerkeleyDb(args->mDbPath);
+      }
+      catch(...)
+      {
+         exit(-1);
+      }
+      if (!static_cast<BerkeleyDb*>(db)->isSane())
+      {
+        cerr <<"Failed to open configuration database";
+        exit(-1);
+      }
    }
+   assert( db );
+
+   Parameters::SetDb( db );
+   if ( !args->mNoUseParameters )
+      Parameters::StoreParametersInArgs( args );
 
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
@@ -869,6 +858,16 @@ main(int argc, char** argv)
    do
    {
       reproRestartServer = false;
+      if ( !args->mNoUseParameters )
+         Parameters::StoreParametersInArgs( args );
+      if(args->mLogType.lowercase() == "file")
+      {
+         Log::initialize("file", args->mLogLevel, argv[0], (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str() );
+      }
+      else
+      {
+         Log::initialize(args->mLogType, args->mLogLevel, argv[0]);
+      }
       reproMain();
    }
    while ( reproRestartServer );
@@ -886,6 +885,16 @@ main(int argc, char** argv)
          do
          {
             reproRestartServer = false;
+            if ( !args->mNoUseParameters )
+               Parameters::StoreParametersInArgs( args );
+            if(args->mLogType.lowercase() == "file")
+            {
+               Log::initialize("file", args->mLogLevel, argv[0], (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str() );
+            }
+            else
+            {
+               Log::initialize(args->mLogType, args->mLogLevel, argv[0]);
+            }
             reproMain();
          }
          while ( reproRestartServer );
@@ -895,6 +904,8 @@ main(int argc, char** argv)
    }
 
 #endif
+
+   delete db; db=0;
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    }
