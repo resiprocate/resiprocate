@@ -52,6 +52,10 @@ class CommandLineParser
       bool mParallelForkStaticRoutes;
       int mTimerC;
       Data mAdminPassword;
+#ifdef WIN32
+      bool mInstallService;
+      bool mRemoveService;
+#endif
 };
  
 }

@@ -54,6 +54,38 @@ using namespace repro;
 using namespace resip;
 using namespace std;
 
+#ifdef WIN32
+static const char* ReproServiceName="ReproService";
+static int ReproStateNum=1;
+static volatile enum __ReproState { reproStarting, reproWorking, reproFinishing, reproEnd } ReproState = reproStarting; 
+static bool ReproService=true;  
+static SERVICE_STATUS_HANDLE svcH;
+SERVICE_STATUS SvcStat={ SERVICE_WIN32, SERVICE_START_PENDING, 
+      SERVICE_ACCEPT_STOP, 0, 0, 0, 5000 };  
+#define SetSvcStat() \
+   if ( ReproService ) \
+   { \
+      ReproStateNum++;\
+      SvcStat.dwWaitHint = ReproStateNum;\
+      switch ( ReproState )\
+      {\
+      case reproStarting:\
+         SvcStat.dwCurrentState = SERVICE_START_PENDING;\
+         break;\
+      case reproWorking:\
+         SvcStat.dwCurrentState = SERVICE_RUNNING;\
+         break;\
+      case reproFinishing:\
+         SvcStat.dwCurrentState = SERVICE_STOP_PENDING;\
+         break;\
+      case reproEnd:\
+         SvcStat.dwCurrentState = SERVICE_STOPPED;\
+         break;\
+      }\
+      SetServiceStatus( svcH, &SvcStat);\
+   }
+#endif
+
 static bool finished = false;
 
 static void
@@ -117,7 +149,534 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
    return realm;
 }
 
+CommandLineParser *args;
 
+void reproMain( void )
+{
+   Security* security = 0;
+   Compression* compression = 0;
+
+#ifdef USE_SSL
+   security = new Security(args->mCertPath);
+#endif
+
+#ifdef USE_SIGCOMP
+   compression = new Compression(Compression::DEFLATE);
+#endif
+
+   SipStack stack(security,DnsStub::EmptyNameserverList,0,false,0,compression);
+
+   std::vector<Data> enumSuffixes;
+   if (!args->mEnumSuffix.empty())
+   {
+      enumSuffixes.push_back(args->mEnumSuffix);
+      stack.setEnumSuffixes(enumSuffixes);
+   }
+
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+   try
+   {
+      // An example of how to use this follows. This sets up 2 transports, 1 TLS
+      // and 1 UDP. TLS domain is bound to example.com. 
+      // repro -i "sip:192.168.1.200:5060;transport=tls;tls=example.com,sip:192.168.1.200:5060;transport=udp"
+      // Note: If you specify interfaces the other transport arguments have no effect
+      if (!args->mInterfaces.empty())
+      {
+         for (std::vector<Data>::iterator i=args->mInterfaces.begin(); 
+              i != args->mInterfaces.end(); ++i)
+         {
+            Uri intf(*i);
+            ExtensionParameter p_tls("tls"); // for specifying tls domain
+            stack.addTransport(Tuple::toTransport(intf.param(p_transport)),
+                               intf.port(), 
+                               DnsUtil::isIpV6Address(intf.host()) ? V6 : V4,
+                               StunEnabled, 
+                               intf.host(), // interface to bind to
+                               intf.param(p_tls));
+         }
+      }
+      else
+      {
+         if (args->mUseV4) InfoLog (<< "V4 enabled");
+         if (args->mUseV6) InfoLog (<< "V6 enabled");         
+
+         if (args->mUdpPort)
+         {
+            if (args->mUseV4) stack.addTransport(UDP, args->mUdpPort, V4, StunEnabled);
+            if (args->mUseV6) stack.addTransport(UDP, args->mUdpPort, V6, StunEnabled);
+         }
+         if (args->mTcpPort)
+         {
+            if (args->mUseV4) stack.addTransport(TCP, args->mTcpPort, V4, StunEnabled);
+            if (args->mUseV6) stack.addTransport(TCP, args->mTcpPort, V6, StunEnabled);
+         }
+         if (args->mTlsPort)
+         {
+            if (args->mUseV4) stack.addTransport(TLS, args->mTlsPort, V4, StunEnabled, Data::Empty, args->mTlsDomain);
+            if (args->mUseV6) stack.addTransport(TLS, args->mTlsPort, V6, StunEnabled, Data::Empty, args->mTlsDomain);
+         }
+         if (args->mDtlsPort)
+         {
+            if (args->mUseV4) stack.addTransport(DTLS, args->mTlsPort, V4, StunEnabled, Data::Empty, args->mTlsDomain);
+            if (args->mUseV6) stack.addTransport(DTLS, args->mTlsPort, V6, StunEnabled, Data::Empty, args->mTlsDomain);
+         }
+      }
+   }
+   catch (Transport::Exception& e)
+   {
+      std::cerr << "Likely a port is already in use" << endl;
+      InfoLog (<< "Caught: " << e);
+#ifndef WIN32
+      exit(-1);
+#else 
+      if ( ReproService )
+         return;
+      else
+         exit(-1);
+#endif
+   }
+   
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+   StackThread stackThread(stack);
+
+   Registrar registrar;
+   InMemoryRegistrationDatabase regData;
+   SharedPtr<MasterProfile> profile(new MasterProfile);
+ 
+
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+   AbstractDb* db=NULL;
+#ifdef USE_MYSQL
+   if ( !args->mMySqlServer.empty() )
+   {
+      db = new MySqlDb(args->mMySqlServer);
+   }
+#endif
+   if (!db)
+   {
+      try // at least under Windows BerkleyDb throw exception when can't open database
+      {      
+         db = new BerkeleyDb(args->mDbPath);
+      }
+      catch(...)
+      {
+#ifndef WIN32
+         exit(-1);
+#else 
+         if ( ReproService )
+            return;
+         else
+            exit(-1);
+#endif
+      }
+      if (!static_cast<BerkeleyDb*>(db)->isSane())
+      {
+        CritLog(<<"Failed to open configuration database");
+#ifndef WIN32
+         exit(-1);
+#else 
+         if ( ReproService )
+            return;
+         else
+            exit(-1);
+#endif
+      }
+   }
+   assert( db );
+   Store store(*db);
+
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+   /* Initialize a proxy */
+   
+   /* Explanation:  "Monkeys" are processors which operate on incoming requests
+                    "Lemurs"  are processors which operate on incoming responses
+                    "Baboons" are processors which operate on a request for each target  
+                              as the request is about to be forwarded to that target */
+      
+   ProcessorChain requestProcessors(Processor::REQUEST_CHAIN);   // Monkeys
+   ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN); // Lemurs
+   ProcessorChain targetProcessors(Processor::TARGET_CHAIN);     // Baboons
+
+#if 0
+   if (args->mRequestProcessorChainName=="StaticTest")
+   {
+      ConstantLocationMonkey* testMonkey = new ConstantLocationMonkey();
+      requestProcessors.addProcessor(std::auto_ptr<Processor>(testMonkey));
+   }
+   else
+#endif
+   {
+      // Either the chainName is default or we don't know about it
+      // Use default if we don't recognize the name
+      // Should log about it.
+      ProcessorChain* locators = new ProcessorChain();
+      
+      StrictRouteFixup* srf = new StrictRouteFixup;
+      locators->addProcessor(std::auto_ptr<Processor>(srf));
+
+      SetTargetConnection* stc = new SetTargetConnection;   
+      locators->addProcessor(std::auto_ptr<Processor>(stc)); 
+      
+      IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
+      locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
+
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+      if (!args->mNoChallenge)
+      {
+         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
+                                                           &stack,args->mNoIdentityHeaders,
+                                                           args->mHttpPort,
+                                                           !args->mNoAuthIntChallenge /*useAuthInt*/);
+         locators->addProcessor(std::auto_ptr<Processor>(da)); 
+      }
+
+      AmIResponsible* isme = new AmIResponsible;
+      locators->addProcessor(std::auto_ptr<Processor>(isme));
+      
+      // [TODO] support for GRUU is on roadmap.  When it is added the GruuMonkey will go here
+      
+      // [TODO] support for Manipulating Tel URIs is on the roadmap.
+      //        When added, the telUriMonkey will go here 
+     
+      if (args->mRouteSet.empty())
+      {
+         StaticRoute* sr = new StaticRoute(store.mRouteStore, args->mNoChallenge, args->mParallelForkStaticRoutes, !args->mNoAuthIntChallenge /*useAuthInt*/);
+         locators->addProcessor(std::auto_ptr<Processor>(sr));
+      }
+      else
+      {
+         resip::NameAddrs routes;
+         for (std::vector<Data>::iterator i=args->mRouteSet.begin(); 
+              i != args->mRouteSet.end(); ++i)
+         {
+            routes.push_back(NameAddr(*i));
+         }
+         SimpleStaticRoute* sr = new SimpleStaticRoute(routes);
+         locators->addProcessor(std::auto_ptr<Processor>(sr));
+      }
+      
+      LocationServer* ls = new LocationServer(regData, args->mParallelForkStaticRoutes);
+      locators->addProcessor(std::auto_ptr<Processor>(ls));
+ 
+      requestProcessors.addProcessor(auto_ptr<Processor>(locators));      
+
+   }
+
+   if (args->mRecursiveRedirect)
+   {
+      ProcessorChain* lemurs = new ProcessorChain;
+      RecursiveRedirect* red = new RecursiveRedirect;
+      lemurs->addProcessor(std::auto_ptr<Processor>(red));
+      responseProcessors.addProcessor(auto_ptr<Processor>(lemurs));      
+   }
+   
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+   ProcessorChain* baboons = new ProcessorChain;
+
+   if( args->mDoQValue)
+   {
+      QValueTargetHandler::ForkBehavior behavior=QValueTargetHandler::EQUAL_Q_PARALLEL;
+      
+      if(args->mForkBehavior=="FULL_SEQUENTIAL")
+      {
+         behavior=QValueTargetHandler::FULL_SEQUENTIAL;
+      }
+      else if(args->mForkBehavior=="FULL_PARALLEL")
+      {
+         behavior=QValueTargetHandler::FULL_PARALLEL;
+      }
+      
+      QValueTargetHandler* qval = 
+         new QValueTargetHandler(behavior,
+                                 args->mCancelBetweenForkGroups, //Cancel btw fork groups?
+                                 args->mWaitForTerminate, //Wait for termination btw fork groups?
+                                 args->mMsBetweenForkGroups, //ms between fork groups, moot in this case
+                                 args->mMsBeforeCancel //ms before cancel
+                                 );
+      baboons->addProcessor(std::auto_ptr<Processor>(qval));
+   }
+   
+   SimpleTargetHandler* smpl = new SimpleTargetHandler;
+   baboons->addProcessor(std::auto_ptr<Processor>(smpl));
+   
+   targetProcessors.addProcessor(auto_ptr<Processor>(baboons));
+
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+   Proxy proxy(stack, 
+               args->mRecordRoute, 
+               requestProcessors, 
+               responseProcessors, 
+               targetProcessors, 
+               store.mUserStore,
+               args->mTimerC );
+   Data realm = addDomains(proxy, *args, store);
+   
+#ifdef USE_SSL
+   WebAdmin admin( store, regData, security, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
+#else
+   WebAdmin admin( store, regData, NULL, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
+#endif
+   if (!admin.isSane())
+   {
+     CritLog(<<"Failed to start the WebAdmin - exiting");
+#ifndef WIN32
+      exit(-1);
+#else 
+      if ( ReproService )
+         return;
+      else
+         exit(-1);
+#endif
+   }
+   WebAdminThread adminThread(admin);
+
+   profile->clearSupportedMethods();
+   profile->addSupportedMethod(resip::REGISTER);
+#ifdef USE_SSL
+   profile->addSupportedScheme(Symbols::Sips);
+#endif
+   if(args->mAllowBadReg)
+   {
+       profile->allowBadRegistrationEnabled() = true;
+   }
+   
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+   DialogUsageManager* dum = 0;
+   DumThread* dumThread = 0;
+
+   resip::MessageFilterRuleList ruleList;
+   if (!args->mNoRegistrar || args->mCertServer)
+   {
+      dum = new DialogUsageManager(stack);
+      dum->setMasterProfile(profile);
+      addDomains(*dum, *args, store);
+   }
+
+   if (!args->mNoRegistrar)
+   {   
+      assert(dum);
+      dum->setServerRegistrationHandler(&registrar);
+      dum->setRegistrationPersistenceManager(&regData);
+
+      // Install rules so that the registrar only gets REGISTERs
+      resip::MessageFilterRule::MethodList methodList;
+      methodList.push_back(resip::REGISTER);
+      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
+                                           resip::MessageFilterRule::Any,
+                                           methodList) );
+   }
+   
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+#if defined(USE_SSL)
+   CertServer* certServer = 0;
+#endif
+   if (args->mCertServer)
+   {
+#if defined(USE_SSL)
+      certServer = new CertServer(*dum);
+
+      // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
+      resip::MessageFilterRule::MethodList methodList;
+      resip::MessageFilterRule::EventList eventList;
+      methodList.push_back(resip::SUBSCRIBE);
+      methodList.push_back(resip::PUBLISH);
+      eventList.push_back(resip::Symbols::Credential);
+      eventList.push_back(resip::Symbols::Certificate);
+      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
+                                           resip::MessageFilterRule::Any,
+                                           methodList,
+                                           eventList));
+#endif
+   }
+
+   if (dum)
+   {
+      if (!args->mNoChallenge)
+      {
+         SharedPtr<ServerAuthManager> 
+            uasAuth( new ReproServerAuthManager(*dum,
+                                                store.mUserStore,
+                                                store.mAclStore,
+                                                !args->mNoAuthIntChallenge /*useAuthInt*/));
+         dum->setServerAuthManager(uasAuth);
+      }
+      dum->setMessageFilterRuleList(ruleList);
+      dumThread = new DumThread(*dum);
+   }
+
+   stack.registerTransactionUser(proxy);
+
+   /* Make it all go */
+   stackThread.run();
+   proxy.run();
+   adminThread.run();
+   if (dumThread)
+   {
+      dumThread->run();
+   }
+   
+#ifdef WIN32
+   ReproState = reproWorking;
+   SetSvcStat();
+#endif
+
+   while (!finished)
+   {
+#ifdef WIN32
+   Sleep(1000);
+#else
+   usleep(100000);
+#endif
+   }
+
+#ifdef WIN32
+   ReproState = reproFinishing;
+   SetSvcStat();
+#endif
+
+
+   proxy.shutdown();
+   stackThread.shutdown();
+   adminThread.shutdown();
+
+   if (dumThread)
+   {
+       dumThread->shutdown();
+   }
+
+   proxy.join();
+   stackThread.join();
+   adminThread.join();
+
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+   if (dumThread)
+   {
+      dumThread->join();
+      delete dumThread;
+   }
+
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+#if defined(USE_SSL)
+   if(certServer)
+   {
+       delete certServer;
+   }
+#endif
+
+   if(dum) 
+   {
+       delete dum;
+   }
+
+   delete db; db=0;
+
+#ifdef WIN32
+   SetSvcStat();
+#endif
+
+}
+
+#ifdef WIN32
+
+DWORD WINAPI ReproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext)
+{
+   SvcStat.dwWaitHint = ReproStateNum;
+   if ( dwControl == SERVICE_CONTROL_INTERROGATE )
+   {
+      switch ( ReproState )
+      {
+      case reproStarting:
+         SvcStat.dwCurrentState = SERVICE_START_PENDING;
+         break;
+      case reproWorking:
+         SvcStat.dwCurrentState = SERVICE_RUNNING;
+         break;
+      case reproFinishing:
+         SvcStat.dwCurrentState = SERVICE_STOP_PENDING;
+         break;
+      case reproEnd:
+         SvcStat.dwCurrentState = SERVICE_STOPPED;
+         break;
+      }
+      SetServiceStatus( svcH, &SvcStat);
+      return NO_ERROR;
+   }
+   else if ( dwControl == SERVICE_CONTROL_STOP )
+   {
+      finished = true;
+      while ( ReproState != reproEnd )
+         Sleep( 1000 );
+//      ReproState = reproFinishing;
+      SvcStat.dwCurrentState = SERVICE_STOPPED;
+      SetServiceStatus( svcH, &SvcStat);
+      return NO_ERROR;
+   }
+   switch ( ReproState )
+   {
+   case reproStarting:
+      SvcStat.dwCurrentState = SERVICE_START_PENDING;
+      break;
+   case reproWorking:
+      SvcStat.dwCurrentState = SERVICE_RUNNING;
+      break;
+   case reproFinishing:
+      SvcStat.dwCurrentState = SERVICE_STOP_PENDING;
+      break;
+   case reproEnd:
+      SvcStat.dwCurrentState = SERVICE_STOPPED;
+      break;
+   }
+   SetServiceStatus( svcH, &SvcStat);
+   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+void WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
+{
+   ReproState = reproStarting; 
+   svcH = RegisterServiceCtrlHandlerEx( ReproServiceName, &ReproSvcHandlerEx, &SvcStat);
+   if ( svcH ) 
+   {
+      SetServiceStatus(svcH,&SvcStat);
+      reproMain();
+   }
+   ReproState = reproEnd;
+   SetSvcStat();
+}
+
+#endif
 
 int
 main(int argc, char** argv)
@@ -143,377 +702,113 @@ main(int argc, char** argv)
    }
 
    /* Initialize a stack */
-   CommandLineParser args(argc, argv);
-   if(args.mLogType.lowercase() == "file")
+   args = new CommandLineParser(argc, argv);
+   std::auto_ptr<CommandLineParser> args_ptr(args);
+   if(args->mLogType.lowercase() == "file")
    {
-      Log::initialize("file", args.mLogLevel, argv[0], "repro_log.txt");
+      Log::initialize("file", args->mLogLevel, argv[0], "repro_log.txt");
    }
    else
    {
-      Log::initialize(args.mLogType, args.mLogLevel, argv[0]);
+      Log::initialize(args->mLogType, args->mLogLevel, argv[0]);
    }
+
+#ifdef WIN32
+   if ( args->mInstallService )
+   {
+      SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
+      if ( !sch )
+      {
+         CritLog(<<"Failed to install service");
+         exit(-1);
+      }
+      size_t CmdLineSize = 0;
+      for ( int i=0; i < argc; i++)
+         CmdLineSize+=strlen( argv[i])+1;
+      char *CmdLine = (char *)malloc( CmdLineSize + 1);
+      *CmdLine=0;
+      if ( strchr(argv[0] , (int) " " ) )
+      {
+         strcpy(CmdLine,"\"");
+         strcat(CmdLine,argv[0]);
+         strcat(CmdLine,"\"");
+      }
+      else
+      {
+         strcpy(CmdLine,argv[0]);
+      }
+      for ( int i=1; i < argc; i++)
+         if ( stricmp( argv[i], "--install-service") )
+         {
+            strcat( CmdLine, " " );
+            strcat( CmdLine, argv[i] );
+         }
+      SC_HANDLE svch=CreateService( sch, ReproServiceName, "Repro server", SERVICE_ALL_ACCESS, 
+              SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, CmdLine,
+              NULL, NULL, NULL, NULL, NULL);
+      if ( !svch )
+      {
+         CritLog(<<"Failed to install service");
+         exit(-1);
+      }
+      CloseServiceHandle(svch);
+      CloseServiceHandle(sch);
+      exit(0);
+   }
+   if ( args->mRemoveService )
+   {
+      SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
+      if ( !sch )
+      {
+         CritLog(<<"Failed to remove service");
+         exit(-1);
+      }
+      SC_HANDLE svch = OpenService( sch, ReproServiceName, SERVICE_ALL_ACCESS);
+      if ( !svch )
+      {
+         CritLog(<<"Failed to remove service");
+         exit(-1);
+      }
+      SERVICE_STATUS svcstat;
+      if ( ControlService( svch, SERVICE_CONTROL_STOP, &svcstat ) )
+         while ( svcstat.dwCurrentState != SERVICE_STOPPED )
+         {
+            Sleep(1000);
+            QueryServiceStatus( svch, &svcstat );
+         }
+      
+      DeleteService( svch );
+      CloseServiceHandle( svch );
+      CloseServiceHandle( sch );
+      exit(0);
+   }
+#endif
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    { FindMemoryLeaks fml;
 #endif
 
-   Security* security = 0;
-   Compression* compression = 0;
-
-#ifdef USE_SSL
-   security = new Security(args.mCertPath);
-#endif
-
-#ifdef USE_SIGCOMP
-   compression = new Compression(Compression::DEFLATE);
-#endif
-
-   SipStack stack(security,DnsStub::EmptyNameserverList,0,false,0,compression);
-
-   std::vector<Data> enumSuffixes;
-   if (!args.mEnumSuffix.empty())
+#ifndef WIN32
+   reproMain();
+#else
+   SERVICE_TABLE_ENTRY SvcTE[]=
    {
-      enumSuffixes.push_back(args.mEnumSuffix);
-      stack.setEnumSuffixes(enumSuffixes);
-   }
-
-   try
+      { (LPSTR)ReproServiceName, ReproServiceMain },
+      {NULL,                     NULL}
+   };
+   if ( !StartServiceCtrlDispatcher( SvcTE ) )
    {
-      // An example of how to use this follows. This sets up 2 transports, 1 TLS
-      // and 1 UDP. TLS domain is bound to example.com. 
-      // repro -i "sip:192.168.1.200:5060;transport=tls;tls=example.com,sip:192.168.1.200:5060;transport=udp"
-      // Note: If you specify interfaces the other transport arguments have no effect
-      if (!args.mInterfaces.empty())
+      if ( GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT ) //Ok we run repro in console
       {
-         for (std::vector<Data>::iterator i=args.mInterfaces.begin(); 
-              i != args.mInterfaces.end(); ++i)
-         {
-            Uri intf(*i);
-            ExtensionParameter p_tls("tls"); // for specifying tls domain
-            stack.addTransport(Tuple::toTransport(intf.param(p_transport)),
-                               intf.port(), 
-                               DnsUtil::isIpV6Address(intf.host()) ? V6 : V4,
-                               StunEnabled, 
-                               intf.host(), // interface to bind to
-                               intf.param(p_tls));
-         }
+         ReproService = false;
+         reproMain();
       }
       else
-      {
-         if (args.mUseV4) InfoLog (<< "V4 enabled");
-         if (args.mUseV6) InfoLog (<< "V6 enabled");         
-
-         if (args.mUdpPort)
-         {
-            if (args.mUseV4) stack.addTransport(UDP, args.mUdpPort, V4, StunEnabled);
-            if (args.mUseV6) stack.addTransport(UDP, args.mUdpPort, V6, StunEnabled);
-         }
-         if (args.mTcpPort)
-         {
-            if (args.mUseV4) stack.addTransport(TCP, args.mTcpPort, V4, StunEnabled);
-            if (args.mUseV6) stack.addTransport(TCP, args.mTcpPort, V6, StunEnabled);
-         }
-         if (args.mTlsPort)
-         {
-            if (args.mUseV4) stack.addTransport(TLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
-            if (args.mUseV6) stack.addTransport(TLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
-         }
-         if (args.mDtlsPort)
-         {
-            if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
-            if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
-         }
-      }
-   }
-   catch (Transport::Exception& e)
-   {
-      std::cerr << "Likely a port is already in use" << endl;
-      InfoLog (<< "Caught: " << e);
-      exit(-1);
-   }
-   
-   StackThread stackThread(stack);
-
-   Registrar registrar;
-   InMemoryRegistrationDatabase regData;
-   SharedPtr<MasterProfile> profile(new MasterProfile);
- 
-
-   AbstractDb* db=NULL;
-#ifdef USE_MYSQL
-   if ( !args.mMySqlServer.empty() )
-   {
-      db = new MySqlDb(args.mMySqlServer);
-   }
-#endif
-   if (!db)
-   {
-      db = new BerkeleyDb(args.mDbPath);
-      if (!static_cast<BerkeleyDb*>(db)->isSane())
-      {
-        CritLog(<<"Failed to open configuration database");
-        exit(-1);
-      }
-   }
-   assert( db );
-   Store store(*db);
-
-   /* Initialize a proxy */
-   
-   /* Explanation:  "Monkeys" are processors which operate on incoming requests
-                    "Lemurs"  are processors which operate on incoming responses
-                    "Baboons" are processors which operate on a request for each target  
-                              as the request is about to be forwarded to that target */
-      
-   ProcessorChain requestProcessors(Processor::REQUEST_CHAIN);   // Monkeys
-   ProcessorChain responseProcessors(Processor::RESPONSE_CHAIN); // Lemurs
-   ProcessorChain targetProcessors(Processor::TARGET_CHAIN);     // Baboons
-
-#if 0
-   if (args.mRequestProcessorChainName=="StaticTest")
-   {
-      ConstantLocationMonkey* testMonkey = new ConstantLocationMonkey();
-      requestProcessors.addProcessor(std::auto_ptr<Processor>(testMonkey));
-   }
-   else
-#endif
-   {
-      // Either the chainName is default or we don't know about it
-      // Use default if we don't recognize the name
-      // Should log about it.
-      ProcessorChain* locators = new ProcessorChain();
-      
-      StrictRouteFixup* srf = new StrictRouteFixup;
-      locators->addProcessor(std::auto_ptr<Processor>(srf));
-
-      SetTargetConnection* stc = new SetTargetConnection;   
-      locators->addProcessor(std::auto_ptr<Processor>(stc)); 
-      
-      IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
-      locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
-
-      if (!args.mNoChallenge)
-      {
-         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
-                                                           &stack,args.mNoIdentityHeaders,
-                                                           args.mHttpPort,
-                                                           !args.mNoAuthIntChallenge /*useAuthInt*/);
-         locators->addProcessor(std::auto_ptr<Processor>(da)); 
-      }
-
-      AmIResponsible* isme = new AmIResponsible;
-      locators->addProcessor(std::auto_ptr<Processor>(isme));
-      
-      // [TODO] support for GRUU is on roadmap.  When it is added the GruuMonkey will go here
-      
-      // [TODO] support for Manipulating Tel URIs is on the roadmap.
-      //        When added, the telUriMonkey will go here 
-     
-      if (args.mRouteSet.empty())
-      {
-         StaticRoute* sr = new StaticRoute(store.mRouteStore, args.mNoChallenge, args.mParallelForkStaticRoutes, !args.mNoAuthIntChallenge /*useAuthInt*/);
-         locators->addProcessor(std::auto_ptr<Processor>(sr));
-      }
-      else
-      {
-         resip::NameAddrs routes;
-         for (std::vector<Data>::iterator i=args.mRouteSet.begin(); 
-              i != args.mRouteSet.end(); ++i)
-         {
-            routes.push_back(NameAddr(*i));
-         }
-         SimpleStaticRoute* sr = new SimpleStaticRoute(routes);
-         locators->addProcessor(std::auto_ptr<Processor>(sr));
-      }
-      
-      LocationServer* ls = new LocationServer(regData, args.mParallelForkStaticRoutes);
-      locators->addProcessor(std::auto_ptr<Processor>(ls));
- 
-      requestProcessors.addProcessor(auto_ptr<Processor>(locators));      
-
+         exit(-1);
    }
 
-   if (args.mRecursiveRedirect)
-   {
-      ProcessorChain* lemurs = new ProcessorChain;
-      RecursiveRedirect* red = new RecursiveRedirect;
-      lemurs->addProcessor(std::auto_ptr<Processor>(red));
-      responseProcessors.addProcessor(auto_ptr<Processor>(lemurs));      
-   }
-   
-   ProcessorChain* baboons = new ProcessorChain;
-
-   if( args.mDoQValue)
-   {
-      QValueTargetHandler::ForkBehavior behavior=QValueTargetHandler::EQUAL_Q_PARALLEL;
-      
-      if(args.mForkBehavior=="FULL_SEQUENTIAL")
-      {
-         behavior=QValueTargetHandler::FULL_SEQUENTIAL;
-      }
-      else if(args.mForkBehavior=="FULL_PARALLEL")
-      {
-         behavior=QValueTargetHandler::FULL_PARALLEL;
-      }
-      
-      QValueTargetHandler* qval = 
-         new QValueTargetHandler(behavior,
-                                 args.mCancelBetweenForkGroups, //Cancel btw fork groups?
-                                 args.mWaitForTerminate, //Wait for termination btw fork groups?
-                                 args.mMsBetweenForkGroups, //ms between fork groups, moot in this case
-                                 args.mMsBeforeCancel //ms before cancel
-                                 );
-      baboons->addProcessor(std::auto_ptr<Processor>(qval));
-   }
-   
-   SimpleTargetHandler* smpl = new SimpleTargetHandler;
-   baboons->addProcessor(std::auto_ptr<Processor>(smpl));
-   
-   targetProcessors.addProcessor(auto_ptr<Processor>(baboons));
-
-   Proxy proxy(stack, 
-               args.mRecordRoute, 
-               requestProcessors, 
-               responseProcessors, 
-               targetProcessors, 
-               store.mUserStore,
-               args.mTimerC );
-   Data realm = addDomains(proxy, args, store);
-   
-#ifdef USE_SSL
-   WebAdmin admin( store, regData, security, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
-#else
-   WebAdmin admin( store, regData, NULL, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
-#endif
-   if (!admin.isSane())
-   {
-     CritLog(<<"Failed to start the WebAdmin - exiting");
-     exit(-1);
-   }
-   WebAdminThread adminThread(admin);
-
-   profile->clearSupportedMethods();
-   profile->addSupportedMethod(resip::REGISTER);
-#ifdef USE_SSL
-   profile->addSupportedScheme(Symbols::Sips);
-#endif
-   if(args.mAllowBadReg)
-   {
-       profile->allowBadRegistrationEnabled() = true;
-   }
-   
-   DialogUsageManager* dum = 0;
-   DumThread* dumThread = 0;
-
-   resip::MessageFilterRuleList ruleList;
-   if (!args.mNoRegistrar || args.mCertServer)
-   {
-      dum = new DialogUsageManager(stack);
-      dum->setMasterProfile(profile);
-      addDomains(*dum, args, store);
-   }
-
-   if (!args.mNoRegistrar)
-   {   
-      assert(dum);
-      dum->setServerRegistrationHandler(&registrar);
-      dum->setRegistrationPersistenceManager(&regData);
-
-      // Install rules so that the registrar only gets REGISTERs
-      resip::MessageFilterRule::MethodList methodList;
-      methodList.push_back(resip::REGISTER);
-      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                                           resip::MessageFilterRule::Any,
-                                           methodList) );
-   }
-   
-#if defined(USE_SSL)
-   CertServer* certServer = 0;
-#endif
-   if (args.mCertServer)
-   {
-#if defined(USE_SSL)
-      certServer = new CertServer(*dum);
-
-      // Install rules so that the cert server receives SUBSCRIBEs and PUBLISHs
-      resip::MessageFilterRule::MethodList methodList;
-      resip::MessageFilterRule::EventList eventList;
-      methodList.push_back(resip::SUBSCRIBE);
-      methodList.push_back(resip::PUBLISH);
-      eventList.push_back(resip::Symbols::Credential);
-      eventList.push_back(resip::Symbols::Certificate);
-      ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                                           resip::MessageFilterRule::Any,
-                                           methodList,
-                                           eventList));
-#endif
-   }
-
-   if (dum)
-   {
-      if (!args.mNoChallenge)
-      {
-         SharedPtr<ServerAuthManager> 
-            uasAuth( new ReproServerAuthManager(*dum,
-                                                store.mUserStore,
-                                                store.mAclStore,
-                                                !args.mNoAuthIntChallenge /*useAuthInt*/));
-         dum->setServerAuthManager(uasAuth);
-      }
-      dum->setMessageFilterRuleList(ruleList);
-      dumThread = new DumThread(*dum);
-   }
-
-   stack.registerTransactionUser(proxy);
-
-   /* Make it all go */
-   stackThread.run();
-   proxy.run();
-   adminThread.run();
-   if (dumThread)
-   {
-      dumThread->run();
-   }
-   
-   while (!finished)
-   {
-#ifdef WIN32
-   Sleep(1000);
-#else
-   usleep(100000);
-#endif
-   }
-
-   proxy.shutdown();
-   stackThread.shutdown();
-   adminThread.shutdown();
-   if (dumThread)
-   {
-       dumThread->shutdown();
-   }
-
-   proxy.join();
-   stackThread.join();
-   adminThread.join();
-   if (dumThread)
-   {
-      dumThread->join();
-      delete dumThread;
-   }
-
-#if defined(USE_SSL)
-   if(certServer)
-   {
-       delete certServer;
-   }
 #endif
 
-   if(dum) 
-   {
-       delete dum;
-   }
-
-   delete db; db=0;
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    }
 #endif
