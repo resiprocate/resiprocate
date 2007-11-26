@@ -104,14 +104,14 @@ void runRepro();
 static void 
 WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
 {
+//   DebugBreak();
    ReproState = reproStarting; 
+   SetSvcStat();
    svcH = RegisterServiceCtrlHandlerEx( ReproServiceName, &ReproSvcHandlerEx, &SvcStat);
    if ( svcH ) 
    {
       SetServiceStatus(svcH,&SvcStat);
-      NoticeLog (<< "Starting service " << ReproServiceName );
       runRepro();
-      NoticeLog (<< "Service " << ReproServiceName << " stopped" );
    }
    ReproState = reproEnd;
 }
@@ -255,7 +255,15 @@ runRepro()
       {
          Log::initialize(args->mLogType, args->mLogLevel, argv0, NULL, externalLogger );
       }
+#ifdef WIN32
+      if ( ReproWin32Service )
+         NoticeLog (<< "Starting service " << ReproServiceName );
+#endif
       reproMain( args, store );
+#ifdef WIN32
+      if ( ReproWin32Service )
+      NoticeLog (<< "Service " << ReproServiceName << " stopped" );
+#endif
       if ( externalLogger )
          delete externalLogger;
    }
@@ -322,7 +330,7 @@ main(int argc, char** argv)
       else
       {
          cerr << "Failed to remove service\n";
-         exit(-1);
+         exit(0);
       }
    }
 #endif
