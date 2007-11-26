@@ -652,6 +652,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProxyMainException.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\QValueTarget.hxx"
 				>
 			</File>
