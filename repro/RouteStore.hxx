@@ -7,12 +7,8 @@
 #include <regex.h>
 #endif
 
-#include <set>
-
-#include "rutil/Data.hxx"
+#include "repro/AbstractRouteStore.hxx"
 #include "rutil/RWMutex.hxx"
-#include "resip/stack/Uri.hxx"
-
 #include "repro/AbstractDb.hxx"
 
 
@@ -20,43 +16,40 @@ namespace repro
 {
 //class AbstractDb;
 
-class RouteStore
+   class RouteStore: public AbstractRouteStore
 {
    public:
-      typedef std::vector<resip::Uri> UriList;
-      typedef resip::Data Key;
-      
       RouteStore(AbstractDb& db);
-      ~RouteStore();
+      virtual ~RouteStore();
       
-      void addRoute(const resip::Data& method,
+      virtual void addRoute(const resip::Data& method,
                     const resip::Data& event,
                     const resip::Data& matchingPattern,
                     const resip::Data& rewriteExpression,
                     const int order );
       
-      void eraseRoute(const resip::Data& method,
+      virtual void eraseRoute(const resip::Data& method,
                       const resip::Data& event,
                       const resip::Data& matchingPattern);
-      void eraseRoute( const resip::Data& key );
+      virtual void eraseRoute( const resip::Data& key );
 
-      void updateRoute( const resip::Data& originalKey,
+      virtual void updateRoute( const resip::Data& originalKey,
                         const resip::Data& method,
                         const resip::Data& event,
                         const resip::Data& matchingPattern,
                         const resip::Data& rewriteExpression,
                         const int order );
       
-      resip::Data getRouteMethod( const resip::Data& key );
-      resip::Data getRouteEvent( const resip::Data& key );
-      resip::Data getRoutePattern( const resip::Data& key );
-      resip::Data getRouteRewrite( const resip::Data& key );
-      int         getRouteOrder( const resip::Data& key );
+      virtual resip::Data getRouteMethod( const resip::Data& key );
+      virtual resip::Data getRouteEvent( const resip::Data& key );
+      virtual resip::Data getRoutePattern( const resip::Data& key );
+      virtual resip::Data getRouteRewrite( const resip::Data& key );
+      virtual int         getRouteOrder( const resip::Data& key );
       
-      Key getFirstKey();// return empty if no more
-      Key getNextKey(Key& key); // return empty if no more 
+      virtual Key getFirstKey();// return empty if no more
+      virtual Key getNextKey(Key& key); // return empty if no more 
       
-      UriList process(const resip::Uri& ruri, 
+      virtual UriList process(const resip::Uri& ruri, 
                       const resip::Data& method, 
                       const resip::Data& event );
 

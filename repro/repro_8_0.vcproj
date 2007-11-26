@@ -528,7 +528,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\AbstractAclStore.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AbstractConfigStore.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\AbstractDb.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AbstractRouteStore.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\AbstractUserStore.hxx"
 				>
 			</File>
 			<File

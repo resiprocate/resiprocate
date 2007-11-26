@@ -26,6 +26,8 @@
 #include "repro/ProcessorChain.hxx"
 #include "repro/Store.hxx"
 #include "repro/UserStore.hxx"
+#include "repro/ConfigStore.hxx"
+#include "repro/AclStore.hxx"
 #include "repro/RouteStore.hxx"
 #include "repro/AbstractDb.hxx"
 #include "repro/BerkeleyDb.hxx"
@@ -62,7 +64,6 @@ using namespace resip;
 using namespace std;
 
 bool reproRestartServer = false;
-AbstractDb* db;
 
 #ifdef WIN32
 static const char* ReproServiceName="ReproService";
@@ -121,8 +122,8 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
       }
    }
 
-   const ConfigStore::ConfigData& dList = store.mConfigStore.getConfigs();
-   for (  ConfigStore::ConfigData::const_iterator i=dList.begin(); 
+   const AbstractConfigStore::ConfigData& dList = store.mConfigStore->getConfigs();
+   for (  AbstractConfigStore::ConfigData::const_iterator i=dList.begin(); 
            i != dList.end(); ++i)
    {
       InfoLog (<< "Adding domain " << i->second.mDomain << " from config");
@@ -159,9 +160,7 @@ addDomains(TransactionUser& tu, CommandLineParser& args, Store& store)
    return realm;
 }
 
-CommandLineParser *args;
-
-void reproMain( void )
+void reproMain( CommandLineParser *args, Store &store)
 {
    Security* security = 0;
    Compression* compression = 0;
@@ -264,7 +263,6 @@ void reproMain( void )
    SetSvcStat();
 #endif
 
-   Store store(*db);
 
 #ifdef WIN32
    SetSvcStat();
@@ -301,7 +299,7 @@ void reproMain( void )
       SetTargetConnection* stc = new SetTargetConnection;   
       locators->addProcessor(std::auto_ptr<Processor>(stc)); 
       
-      IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
+      IsTrustedNode* isTrusted = new IsTrustedNode(*store.mAclStore);
       locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
 #ifdef WIN32
@@ -310,7 +308,7 @@ void reproMain( void )
 
       if (!args->mNoChallenge)
       {
-         DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
+         DigestAuthenticator* da = new DigestAuthenticator(*store.mUserStore,
                                                            &stack,args->mNoIdentityHeaders,
                                                            args->mHttpPort,
                                                            !args->mNoAuthIntChallenge /*useAuthInt*/);
@@ -327,7 +325,7 @@ void reproMain( void )
      
       if (args->mRouteSet.empty())
       {
-         StaticRoute* sr = new StaticRoute(store.mRouteStore, args->mNoChallenge, args->mParallelForkStaticRoutes, !args->mNoAuthIntChallenge /*useAuthInt*/);
+         StaticRoute* sr = new StaticRoute(*store.mRouteStore, args->mNoChallenge, args->mParallelForkStaticRoutes, !args->mNoAuthIntChallenge /*useAuthInt*/);
          locators->addProcessor(std::auto_ptr<Processor>(sr));
       }
       else
@@ -400,7 +398,7 @@ void reproMain( void )
                requestProcessors, 
                responseProcessors, 
                targetProcessors, 
-               store.mUserStore,
+               *store.mUserStore,
                args->mTimerC );
    Data realm = addDomains(proxy, *args, store);
    
@@ -494,8 +492,8 @@ void reproMain( void )
       {
          SharedPtr<ServerAuthManager> 
             uasAuth( new ReproServerAuthManager(*dum,
-                                                store.mUserStore,
-                                                store.mAclStore,
+                                                *store.mUserStore,
+                                                *store.mAclStore,
                                                 !args->mNoAuthIntChallenge /*useAuthInt*/));
          dum->setServerAuthManager(uasAuth);
       }
@@ -634,6 +632,9 @@ DWORD WINAPI ReproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEven
    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+CommandLineParser *args;
+Store *store;
+
 void WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
 {
    ReproState = reproStarting; 
@@ -657,7 +658,7 @@ void WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
          {
             Log::initialize(args->mLogType, args->mLogLevel, ReproServiceName, NULL, EventLog );
          }
-         reproMain();
+         reproMain( args, *store );
       }
       while ( reproRestartServer );
       NoticeLog (<< "Service " << ReproServiceName << " stopped" );
@@ -820,7 +821,7 @@ main(int argc, char** argv)
 
 
 
-   db=NULL;
+   AbstractDb *db=NULL;
 #ifdef USE_MYSQL
    if ( !args->mMySqlServer.empty() )
    {
@@ -846,6 +847,7 @@ main(int argc, char** argv)
    assert( db );
 
    Parameters::SetDb( db );
+   store = new Store(new UserStore(*db), new RouteStore(*db), new AclStore(*db), new ConfigStore(*db) );
    if ( !args->mNoUseParameters )
       Parameters::StoreParametersInArgs( args );
 
@@ -868,7 +870,7 @@ main(int argc, char** argv)
       {
          Log::initialize(args->mLogType, args->mLogLevel, argv[0]);
       }
-      reproMain();
+      reproMain( args, *store );
    }
    while ( reproRestartServer );
 #else
@@ -895,7 +897,7 @@ main(int argc, char** argv)
             {
                Log::initialize(args->mLogType, args->mLogLevel, argv[0]);
             }
-            reproMain();
+            reproMain( args, *store );
          }
          while ( reproRestartServer );
       }
@@ -904,6 +906,8 @@ main(int argc, char** argv)
    }
 
 #endif
+
+   delete store;
 
    delete db; db=0;
 

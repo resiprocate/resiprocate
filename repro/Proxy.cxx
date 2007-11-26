@@ -5,7 +5,7 @@
 #include "repro/ProcessorChain.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/Ack200DoneMessage.hxx"
-#include "repro/UserStore.hxx"
+#include "repro/AbstractUserStore.hxx"
 #include "repro/Dispatcher.hxx"
 
 #include "resip/stack/TransactionTerminated.hxx"
@@ -28,7 +28,7 @@ Proxy::Proxy(SipStack& stack,
              ProcessorChain& requestP, 
              ProcessorChain& responseP, 
              ProcessorChain& targetP, 
-             UserStore& userStore,
+             AbstractUserStore& userStore,
              int timerC) 
    : TransactionUser(TransactionUser::RegisterForTransactionTermination),
      mStack(stack), 
@@ -61,7 +61,7 @@ Proxy::isShutDown() const
 }
 
 
-UserStore&
+AbstractUserStore&
 Proxy::getUserStore()
 {
    return mUserStore;
