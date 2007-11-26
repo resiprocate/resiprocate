@@ -22,6 +22,7 @@
 * fix Uri:::getAor() for IPV6 hostnames
 * fix for SdpContents::findFirstMatchingCodec - to ensure codec list is built before accessing
 * fix a double-free bug in SipMessage::releaseContents()
+* fix for a TLS client connection spin issue, when connection to endpoint can't be established
 
 ==DUM==
 ===New features===
@@ -32,6 +33,7 @@
 * fixed a couple of assert bugs
 * added missing copy of mTransactionId in copy constructor of DumTimeout
 * correctly handle some cases where application may call end() from a callback (in InviteSession)
+* fixed a bug where ACK/200 was not being retransmitted correctly
 
 ==repro==
 ===Bug fixes===
