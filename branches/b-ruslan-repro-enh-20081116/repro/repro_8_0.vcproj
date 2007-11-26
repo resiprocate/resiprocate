@@ -442,6 +442,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProxyMain.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\QValueTarget.cxx"
 				>
 			</File>
@@ -463,10 +467,6 @@
 			</File>
 			<File
 				RelativePath=".\ReproConfiguration.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\reproMain.cxx"
 				>
 			</File>
 			<File
@@ -648,6 +648,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ProxyMain.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\QValueTarget.hxx"
 				>
 			</File>
@@ -665,10 +669,6 @@
 			</File>
 			<File
 				RelativePath=".\ReproConfiguration.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\reproMain.hxx"
 				>
 			</File>
 			<File

@@ -1,5 +1,5 @@
 #include <signal.h>
-#include "repro/reproMain.hxx"
+#include "repro/ProxyMain.hxx"
 #include "repro/CommandLineParser.hxx"
 #include "repro/Store.hxx"
 #include "repro/UserStore.hxx"
@@ -259,7 +259,7 @@ runRepro()
       if ( ReproWin32Service )
          NoticeLog (<< "Starting service " << ReproServiceName );
 #endif
-      reproMain( args, store );
+      ProxyMain( args, store );
 #ifdef WIN32
       if ( ReproWin32Service )
       NoticeLog (<< "Service " << ReproServiceName << " stopped" );
