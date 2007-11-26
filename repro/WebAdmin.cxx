@@ -18,6 +18,7 @@
 #include "repro/RouteStore.hxx"
 #include "repro/UserStore.hxx"
 #include "repro/Store.hxx"
+#include "repro/repro.hxx"
 
 
 using namespace resip;
@@ -134,7 +135,9 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("editRoute.html") ) &&
       ( pageName != Data("showRoutes.html") )&& 
       ( pageName != Data("registrations.html") ) &&  
-      ( pageName != Data("user.html")  ) )
+      ( pageName != Data("user.html")  ) &&
+      ( pageName != Data("ServerRestart.html")  ) &&
+      ( pageName != Data("ServerRestarted.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
       return; 
@@ -314,6 +317,9 @@ WebAdmin::buildPage( const Data& uri,
       
       if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
       
+      if ( pageName == Data("ServerRestart.html")) buildRestartServerSubPage(s);
+      if ( pageName == Data("ServerRestarted.html")) buildRestartedServerSubPage(s);
+
       buildPageOutlinePost(s);
       s.flush();
 
@@ -1222,6 +1228,20 @@ WebAdmin::buildDefaultPage()
    return ret;
 }
 
+void WebAdmin::buildRestartServerSubPage(resip::DataStream& s)
+{
+   s << 
+#include "repro/webadmin/ServerRestart.ixx"
+   ;
+}
+
+void WebAdmin::buildRestartedServerSubPage(resip::DataStream& s)
+{
+   s << 
+#include "repro/webadmin/ServerRestarted.ixx"
+   ;
+   reproRestartServer = true;
+}
 
 void
 WebAdmin::buildPageOutlinePre(DataStream& s)
@@ -1239,7 +1259,6 @@ WebAdmin::buildPageOutlinePost(DataStream& s)
 #include "repro/webadmin/pageOutlinePost.ixx"   
    ;
 }
-
 
 Data 
 WebAdmin::buildUserPage()
@@ -1270,7 +1289,6 @@ WebAdmin::buildUserPage()
    }
    return ret;
 }
-
 
 
 /* ====================================================================
