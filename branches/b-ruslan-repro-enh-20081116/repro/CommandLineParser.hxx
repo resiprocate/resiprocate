@@ -54,6 +54,7 @@ class CommandLineParser
       int mTimerC;
       Data mAdminPassword;
       bool mNoUseParameters;
+      bool mNoLoadWebAdmin;
 #ifdef WIN32
       bool mInstallService;
       bool mRemoveService;
