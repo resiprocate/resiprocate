@@ -135,7 +135,8 @@ addDomains(TransactionUser& tu, ReproConfiguration& args, Store& store)
    return realm;
 }
 
-void reproMain( resip::ReproConfiguration *args, Store &store)
+void 
+reproMain( resip::ReproConfiguration *args, Store &store)
 {
    Security* security = 0;
    Compression* compression = 0;
