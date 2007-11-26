@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="repro"
 	ProjectGUID="{9D8D2649-213F-49D3-A8B0-C1849C611654}"
 	RootNamespace="repro"
@@ -25,7 +25,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;"
+				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;&#x0D;&#x0A;mc EventLogMessage.mc&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -61,6 +61,7 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
@@ -107,7 +108,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;"
+				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;&#x0D;&#x0A;mc EventLogMessage.mc&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -187,7 +188,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;"
+				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;&#x0D;&#x0A;mc EventLogMessage.mc&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -269,7 +270,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;"
+				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;&#x0D;&#x0A;mc EventLogMessage.mc&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -700,6 +701,10 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath=".\EventLogMessage.rc"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\webadmin\pageOutlinePost.ixx"

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="rutil"
 	ProjectGUID="{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
 	Keyword="Win32Proj"
@@ -470,6 +470,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Win32EventLog.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\WinCompat.cxx"
 				>
 			</File>
@@ -737,6 +741,10 @@
 			</File>
 			<File
 				RelativePath=".\vthread.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Win32EventLog.hxx"
 				>
 			</File>
 			<File
