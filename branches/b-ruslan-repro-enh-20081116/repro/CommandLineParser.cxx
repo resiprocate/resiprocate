@@ -22,6 +22,38 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 {
    char* logType = "cout";
    char* logLevel = "INFO";
+#ifndef WIN32
+   char logFilePath[256]={'.',0};
+#else
+   char logFilePathBuf[MAX_PATH]={0};
+#endif
+   char *logFilePath=logFilePathBuf;
+#ifdef WIN32
+   static const Data AllUsersLogFilePath(Data( getenv( "ALLUSERSPROFILE" ) ) + "\\Application Data\\Resiprocate\\repro\\");
+//when we run as restricted user
+   static const Data LocalUserLogFilePath(Data( getenv( "USERPROFILE" ) ) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\");
+
+   if ( FileSystem::DirectoryExists( AllUsersLogFilePath ) && FileSystem::IsReadWriteAccess ( AllUsersLogFilePath.c_str() ) )
+   {
+      strcpy( logFilePath, AllUsersLogFilePath.c_str() );
+   }
+   else if ( FileSystem::IsReadWriteAccess ( getenv( "ALLUSERSPROFILE" ) ) )
+   {
+      assert ( FileSystem::ForceDirectories( AllUsersLogFilePath ) );
+      FileSystem::SetAccessAs( AllUsersLogFilePath.c_str() , getenv( "ALLUSERSPROFILE" ) );
+      strcpy( logFilePath, AllUsersLogFilePath.c_str() );
+   }
+   else if ( FileSystem::DirectoryExists( LocalUserLogFilePath ) && FileSystem::IsReadWriteAccess ( LocalUserLogFilePath.c_str() ) )
+   {
+      strcpy( logFilePath, LocalUserLogFilePath.c_str() );
+   }
+   else if ( FileSystem::IsReadWriteAccess ( getenv( "USERPROFILE" ) ) )
+   {
+      assert ( FileSystem::ForceDirectories( LocalUserLogFilePath ) );
+      FileSystem::SetAccessAs( LocalUserLogFilePath.c_str(), getenv( "USERPROFILE" ) );
+      strcpy( logFilePath, LocalUserLogFilePath.c_str() );
+   }
+#endif
    char* tlsDomain = 0;
    char* recordRoute = 0;
    int udpPort = 5060;
@@ -143,6 +175,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
+      {"log-path",         0,  POPT_ARG_STRING,                            &logFilePath,       0, "specify the path for log file", 0},
       {"db-path",           0,   POPT_ARG_STRING,                            &dbPath,       0, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    0, "specify uri to use as Record-Route", "sip:example.com"},
 #if defined(USE_MYSQL)
@@ -206,6 +239,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mHttpPort = httpPort;
    mLogType = logType;
    mLogLevel = logLevel;
+   mLogFilePath = logFilePath;
 
    if (showVersion)
    {
