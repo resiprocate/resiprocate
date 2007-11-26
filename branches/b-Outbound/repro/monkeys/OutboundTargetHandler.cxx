@@ -48,7 +48,7 @@ OutboundTargetHandler::process(RequestContext & rc)
          if(i!=map.end())
          {
             unsigned int flowDeadCode;
-            if(resip::InteropHelper::getOutboundVersion() > 4)
+            if(resip::InteropHelper::getOutboundVersion() >= 5)
             {
                flowDeadCode=430;
             }
