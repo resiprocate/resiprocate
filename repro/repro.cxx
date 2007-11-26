@@ -46,7 +46,8 @@ signalHandler(int signo)
 
 #ifdef WIN32
 
-DWORD WINAPI ReproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext)
+static DWORD WINAPI 
+ReproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext)
 {
    SvcStat.dwWaitHint = ReproStateNum;
    if ( dwControl == SERVICE_CONTROL_INTERROGATE )
@@ -98,49 +99,25 @@ DWORD WINAPI ReproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEven
    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
-CommandLineParser *args;
-Store *store;
+void runRepro();
 
-void WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
+static void 
+WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
 {
    ReproState = reproStarting; 
    svcH = RegisterServiceCtrlHandlerEx( ReproServiceName, &ReproSvcHandlerEx, &SvcStat);
-   Win32EventLog *EventLog = new Win32EventLog( ReproServiceName );
-   auto_ptr<Win32EventLog> EventLogpPtr( EventLog );
    if ( svcH ) 
    {
       SetServiceStatus(svcH,&SvcStat);
       NoticeLog (<< "Starting service " << ReproServiceName );
-      do
-      {
-         reproRestartServer = false;
-         if ( !args->mNoUseParameters )
-            Parameters::StoreParametersInArgs( args );
-         if(args->mLogType.lowercase() == "file")
-         {
-            Log::initialize("file", args->mLogLevel, ReproServiceName, (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str() , EventLog );
-         }
-         else
-         {
-            Log::initialize(args->mLogType, args->mLogLevel, ReproServiceName, NULL, EventLog );
-         }
-         reproMain( args, *store );
-      }
-      while ( reproRestartServer );
+      runRepro();
       NoticeLog (<< "Service " << ReproServiceName << " stopped" );
-   }
-   if(args->mLogType.lowercase() == "file")
-   {
-      Log::initialize("file", args->mLogLevel, ReproServiceName, (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str() , NULL );
-   }
-   else
-   {
-      Log::initialize(args->mLogType, args->mLogLevel, ReproServiceName, NULL, NULL );
    }
    ReproState = reproEnd;
 }
 
-bool installService(int argc, char** argv)
+static bool 
+installService(int argc, char** argv)
 {
    SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
    if ( !sch )
@@ -168,7 +145,7 @@ bool installService(int argc, char** argv)
          strcat( CmdLine, " " );
          strcat( CmdLine, argv[i] );
       }
-   SC_HANDLE svch=CreateService( sch, ReproServiceName, "Repro server", SERVICE_ALL_ACCESS, 
+   SC_HANDLE svch=CreateService( sch, ReproServiceName, "Repro sip proxy server", SERVICE_ALL_ACCESS, 
            SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, CmdLine,
            NULL, NULL, NULL, NULL, NULL);
    if ( !svch )
@@ -194,7 +171,8 @@ bool installService(int argc, char** argv)
    return true;
 }
 
-bool removeService()
+static bool 
+removeService()
 {
    SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
    if ( !sch )
@@ -226,6 +204,67 @@ bool removeService()
 
 #endif
 
+CommandLineParser *args;
+char *argv0;
+
+static void
+runRepro()
+{
+   AbstractDb *db=NULL;
+#ifdef USE_MYSQL
+   if ( !args->mMySqlServer.empty() )
+   {
+      db = new MySqlDb(args->mMySqlServer);
+   }
+#endif
+   if (!db)
+   {
+      try // at least under Windows BerkleyDb throw exception when can't open database
+      {      
+         db = new BerkeleyDb(args->mDbPath);
+      }
+      catch(...)
+      {
+         exit(-1);
+      }
+      if (!static_cast<BerkeleyDb*>(db)->isSane())
+      {
+        cerr <<"Failed to open configuration database";
+        exit(-1);
+      }
+   }
+   assert( db );
+
+   Parameters::SetDb( db );
+   Store store(new UserStore(*db), new RouteStore(*db), new AclStore(*db), new ConfigStore(*db) );
+   do
+   {
+      reproRestartServer = false;
+      if ( !args->mNoUseParameters )
+         Parameters::StoreParametersInArgs( args );
+      ExternalLogger *externalLogger = NULL;
+#ifdef WIN32
+      if ( ReproWin32Service )
+         externalLogger = new Win32EventLog( ReproServiceName );
+#endif
+      if(args->mLogType.lowercase() == "file")
+      {
+         Log::initialize("file", args->mLogLevel, argv0, (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str(), externalLogger );
+      }
+      else
+      {
+         Log::initialize(args->mLogType, args->mLogLevel, argv0, NULL, externalLogger );
+      }
+      reproMain( args, store );
+      if ( externalLogger )
+         delete externalLogger;
+   }
+   while ( reproRestartServer );
+
+   delete db; db=0;
+
+}
+
 int
 main(int argc, char** argv)
 {
@@ -255,7 +294,11 @@ main(int argc, char** argv)
    std::auto_ptr<CommandLineParser> args_ptr(args);
 
 #ifdef WIN32
-//   assert(args->mInstallService && !args->mRemoveService || !args->mInstallService && args->mRemoveService);
+   if ( args->mInstallService && args->mRemoveService )
+   {
+      cerr << "You cannot install and remove service together\n" ;
+      exit(-1);
+   }
    if ( args->mInstallService )
    {
       if ( installService( argc, argv ) )
@@ -286,58 +329,14 @@ main(int argc, char** argv)
 
 
 
-   AbstractDb *db=NULL;
-#ifdef USE_MYSQL
-   if ( !args->mMySqlServer.empty() )
-   {
-      db = new MySqlDb(args->mMySqlServer);
-   }
-#endif
-   if (!db)
-   {
-      try // at least under Windows BerkleyDb throw exception when can't open database
-      {      
-         db = new BerkeleyDb(args->mDbPath);
-      }
-      catch(...)
-      {
-         exit(-1);
-      }
-      if (!static_cast<BerkeleyDb*>(db)->isSane())
-      {
-        cerr <<"Failed to open configuration database";
-        exit(-1);
-      }
-   }
-   assert( db );
-
-   Parameters::SetDb( db );
-   store = new Store(new UserStore(*db), new RouteStore(*db), new AclStore(*db), new ConfigStore(*db) );
-   if ( !args->mNoUseParameters )
-      Parameters::StoreParametersInArgs( args );
-
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    { FindMemoryLeaks fml;
 #endif
 
+   argv0 = argv[0];
 #ifndef WIN32
-   do
-   {
-      reproRestartServer = false;
-      if ( !args->mNoUseParameters )
-         Parameters::StoreParametersInArgs( args );
-      if(args->mLogType.lowercase() == "file")
-      {
-         Log::initialize("file", args->mLogLevel, argv[0], (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str() );
-      }
-      else
-      {
-         Log::initialize(args->mLogType, args->mLogLevel, argv[0]);
-      }
-      reproMain( args, *store );
-   }
-   while ( reproRestartServer );
+   runRepro();
 #else
    SERVICE_TABLE_ENTRY SvcTE[]=
    {
@@ -349,32 +348,13 @@ main(int argc, char** argv)
       if ( GetLastError() == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT ) //Ok we run repro in console
       {
          ReproWin32Service = false;
-         do
-         {
-            reproRestartServer = false;
-            if ( !args->mNoUseParameters )
-               Parameters::StoreParametersInArgs( args );
-            if(args->mLogType.lowercase() == "file")
-            {
-               Log::initialize("file", args->mLogLevel, argv[0], (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str() );
-            }
-            else
-            {
-               Log::initialize(args->mLogType, args->mLogLevel, argv[0]);
-            }
-            reproMain( args, *store );
-         }
-         while ( reproRestartServer );
+         runRepro();
       }
       else
          exit(-1);
    }
 
 #endif
-
-   delete store;
-
-   delete db; db=0;
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    }
