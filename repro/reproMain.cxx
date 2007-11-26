@@ -380,30 +380,29 @@ reproMain( resip::ReproConfiguration *args, Store &store)
                args->mTimerC );
    Data realm = addDomains(proxy, *args, store);
    
-   WebAdmin *admin;
+   WebAdmin *admin = NULL;;
+   WebAdminThread *adminThread = NULL;
    if ( !args->mNoLoadWebAdmin )
    {
 #ifdef USE_SSL
       admin = new WebAdmin( store, regData, security, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
 #else
-   if ( !args->mNoLoadWebAdmin )
       admin = new WebAdmin ( store, regData, NULL, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
 #endif
-   }
-   if (!admin->isSane())
-   {
-     CritLog(<<"Failed to start the WebAdmin - exiting");
+      if (!admin->isSane())
+      {
+         CritLog(<<"Failed to start the WebAdmin - exiting");
 #ifndef WIN32
-      exit(-1);
-#else 
-      if ( ReproWin32Service )
-         return;
-      else
          exit(-1);
+#else 
+         if ( ReproWin32Service )
+            return;
+         else
+            exit(-1);
 #endif
+      }
+      adminThread = new WebAdminThread(*admin);
    }
-   auto_ptr<WebAdmin> AdminGuard(admin);
-   WebAdminThread adminThread(*admin);
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
@@ -490,7 +489,10 @@ reproMain( resip::ReproConfiguration *args, Store &store)
    /* Make it all go */
    stackThread.run();
    proxy.run();
-   adminThread.run();
+   if(adminThread)
+   {
+      adminThread->run();
+   }
    if (dumThread)
    {
       dumThread->run();
@@ -504,9 +506,9 @@ reproMain( resip::ReproConfiguration *args, Store &store)
    while (!reproFinish && !reproRestartServer)
    {
 #ifdef WIN32
-   Sleep(1000);
+      Sleep(1000);
 #else
-   usleep(100000);
+      usleep(100000);
 #endif
    }
 
@@ -518,8 +520,10 @@ reproMain( resip::ReproConfiguration *args, Store &store)
 
    proxy.shutdown();
    stackThread.shutdown();
-   adminThread.shutdown();
-
+   if(adminThread) 
+   {
+      adminThread->shutdown();
+   }
    if (dumThread)
    {
        dumThread->shutdown();
@@ -527,8 +531,10 @@ reproMain( resip::ReproConfiguration *args, Store &store)
 
    proxy.join();
    stackThread.join();
-   adminThread.join();
-
+   if (adminThread)
+   {
+      adminThread->join();
+   }
 #ifdef WIN32
    SetSvcStat();
 #endif
@@ -550,6 +556,14 @@ reproMain( resip::ReproConfiguration *args, Store &store)
    }
 #endif
 
+   if(admin)
+   {
+      delete admin;
+   }
+   if(adminThread)
+   {
+      delete adminThread;
+   }
    if(dum) 
    {
        delete dum;
