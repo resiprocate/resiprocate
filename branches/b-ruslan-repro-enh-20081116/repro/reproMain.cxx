@@ -491,7 +491,6 @@ void reproMain( resip::ReproConfiguration *args, Store &store)
    if (dumThread)
    {
       dumThread->run();
-      Sleep(10000);
    }
    
 #ifdef WIN32
