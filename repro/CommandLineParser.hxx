@@ -17,6 +17,7 @@ class CommandLineParser
       
       Data mLogType;
       Data mLogLevel;
+      Data mLogFilePath;
       Data mTlsDomain;
       Data mEnumSuffix;
       bool mShouldRecordRoute;
