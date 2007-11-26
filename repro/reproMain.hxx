@@ -24,6 +24,7 @@ extern enum ReproServiceState ReproState;
 extern bool ReproWin32Service;  
 extern SERVICE_STATUS_HANDLE svcH;
 extern SERVICE_STATUS SvcStat;
+void SetSvcStat();
 #endif
 
 }
