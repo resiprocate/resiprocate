@@ -458,6 +458,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ReproConfiguration.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\reproMain.cxx"
 				>
 			</File>
@@ -653,6 +657,10 @@
 			</File>
 			<File
 				RelativePath=".\Registrar.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ReproConfiguration.hxx"
 				>
 			</File>
 			<File
