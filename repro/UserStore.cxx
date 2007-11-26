@@ -7,6 +7,7 @@
 #include "rutil/DataStream.hxx"
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Lock.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
 
@@ -121,6 +122,26 @@ UserStore::updateUser( const Key& originalKey,
    {
       eraseUser(originalKey);
    }
+}
+
+UserStore::Key
+UserStore::getKey( const AbstractDb::UserRecord &ur )
+{
+   return buildKey( ur.user, ur.domain );
+}
+
+AbstractDb::UserRecordList 
+UserStore::getAllUsers()
+{
+   AbstractDb::UserRecordList url;
+   Lock lock(mFFNMutex);
+   resip::Data key = mDb.firstUserKey();
+   while ( !key.empty() )
+   {
+      url.push_back( mDb.getUser( key ) );
+      key = mDb.nextUserKey();
+   }
+   return url;
 }
 
 
