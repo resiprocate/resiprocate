@@ -458,6 +458,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\reproMain.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ReproServerAuthManager.cxx"
 				>
 			</File>
@@ -652,7 +656,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\repro.hxx"
+				RelativePath=".\reproMain.hxx"
 				>
 			</File>
 			<File
