@@ -16,7 +16,7 @@ class SipStack;
 namespace repro
 {
 
-class UserStore;
+class AbstractUserStore;
 class ProcessorChain;
 
 class Proxy : public resip::TransactionUser, public resip::ThreadIf
@@ -27,7 +27,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
             ProcessorChain& requestP, 
             ProcessorChain& responseP,
             ProcessorChain& targetP,
-            UserStore& ,
+            AbstractUserStore& ,
             int timerC);
       virtual ~Proxy();
 
@@ -37,7 +37,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       bool isMyUri(const resip::Uri& uri);      
       const resip::NameAddr& getRecordRoute() const;
       
-      UserStore& getUserStore();
+      AbstractUserStore& getUserStore();
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
 
@@ -68,7 +68,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       HashMap<resip::Data, RequestContext*> mClientRequestContexts;
       HashMap<resip::Data, RequestContext*> mServerRequestContexts;
       
-      UserStore &mUserStore;
+      AbstractUserStore &mUserStore;
 };
 }
 #endif

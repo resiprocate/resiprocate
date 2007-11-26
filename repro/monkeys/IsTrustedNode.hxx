@@ -1,7 +1,7 @@
 #if !defined(RESIP_ISTRUSTEDNODE_REQUEST_PROCESSOR_HXX)
 #define RESIP_ISTRUSTEDNODE_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
-
+#include "repro/AbstractaclStore.hxx"
 #include <iosfwd>
 
 namespace repro
@@ -11,14 +11,14 @@ namespace repro
   class IsTrustedNode: public Processor
   {
     public:
-      IsTrustedNode(AclStore& store);
+      IsTrustedNode(AbstractAclStore& store);
       virtual ~IsTrustedNode();
 
       virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
 
   private:
-       AclStore& mAclStore;
+       AbstractAclStore& mAclStore;
   };
 }
 #endif

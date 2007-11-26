@@ -3,7 +3,7 @@
 
 #include "repro/Worker.hxx"
 #include "repro/AbstractDb.hxx"
-#include "repro/UserStore.hxx"
+#include "repro/AbstractUserStore.hxx"
 #include "resip/stack/Message.hxx"
 #include "repro/UserInfoMessage.hxx"
 
@@ -16,7 +16,7 @@ namespace repro
 class UserAuthGrabber : public Worker
 {
    public:
-      UserAuthGrabber(repro::UserStore& userStore ):
+      UserAuthGrabber(repro::AbstractUserStore& userStore ):
          mUserStore(userStore)
       {}
       
@@ -49,7 +49,7 @@ class UserAuthGrabber : public Worker
       }
       
    protected:
-      UserStore& mUserStore;
+      AbstractUserStore& mUserStore;
 
 
 };
