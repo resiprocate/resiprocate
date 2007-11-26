@@ -33,6 +33,8 @@
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "repro/monkeys/SetTargetConnection.hxx"
+#include "repro/ProxyMainException.hxx"
+
 #if defined(USE_SSL)
 #include "repro/stateAgents/CertServer.hxx"
 #endif
@@ -48,7 +50,6 @@ bool reproRestartServer = false;
 bool reproFinish = false;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
-
 
 #ifdef WIN32
 int ReproStateNum=1;
@@ -212,18 +213,10 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
          }
       }
    }
-   catch (Transport::Exception& e)
+   catch (Transport::Exception& )
    {
-      std::cerr << "Likely a port is already in use" << endl;
-      InfoLog (<< "Caught: " << e);
-#ifndef WIN32
-      exit(-1);
-#else 
-      if ( ReproWin32Service )
-         return;
-      else
-         exit(-1);
-#endif
+      // This catch no needed anymore, but I leave it for best code readability
+      throw;
    }
    
 #ifdef WIN32
@@ -241,10 +234,6 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
    SetSvcStat();
 #endif
 
-
-#ifdef WIN32
-   SetSvcStat();
-#endif
 
    /* Initialize a proxy */
    
@@ -391,18 +380,12 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
 #endif
       if (!admin->isSane())
       {
-         CritLog(<<"Failed to start the WebAdmin - exiting");
-#ifndef WIN32
-         exit(-1);
-#else 
-         if ( ReproWin32Service )
-            return;
-         else
-            exit(-1);
-#endif
+         throw ProxyMainException( "Failed to start the WebAdmin", __FILE__, __LINE__ );
       }
       adminThread = new WebAdminThread(*admin);
    }
+   auto_ptr<WebAdmin> adminGuard( admin );
+   auto_ptr<WebAdminThread> adminThreadGuard( adminThread );
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
@@ -428,6 +411,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
       dum->setMasterProfile(profile);
       addDomains(*dum, *args, store);
    }
+   auto_ptr<DialogUsageManager> dumGuard( dum );
 
    if (!args->mNoRegistrar)
    {   
@@ -469,6 +453,10 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
 #endif
    }
 
+#if defined(USE_SSL)
+   auto_ptr<CertServer> certServerGuard( certServer );
+#endif
+
    if (dum)
    {
       if (!args->mNoChallenge)
@@ -483,6 +471,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
       dum->setMessageFilterRuleList(ruleList);
       dumThread = new DumThread(*dum);
    }
+   auto_ptr<DumThread> dumThreadGuard( dumThread );
 
    stack.registerTransactionUser(proxy);
 
@@ -542,36 +531,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
    if (dumThread)
    {
       dumThread->join();
-      delete dumThread;
    }
-
-#ifdef WIN32
-   SetSvcStat();
-#endif
-
-#if defined(USE_SSL)
-   if(certServer)
-   {
-       delete certServer;
-   }
-#endif
-
-   if(admin)
-   {
-      delete admin;
-   }
-   if(adminThread)
-   {
-      delete adminThread;
-   }
-   if(dum) 
-   {
-       delete dum;
-   }
-
-#ifdef WIN32
-   SetSvcStat();
-#endif
 
 }
 
