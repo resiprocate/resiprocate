@@ -377,12 +377,17 @@ void reproMain( resip::CommandLineParser *args, Store &store)
                args->mTimerC );
    Data realm = addDomains(proxy, *args, store);
    
+   WebAdmin *admin;
+   if ( !args->mNoLoadWebAdmin )
+   {
 #ifdef USE_SSL
-   WebAdmin admin( store, regData, security, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
+      admin = new WebAdmin( store, regData, security, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
 #else
-   WebAdmin admin( store, regData, NULL, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
+   if ( !args->mNoLoadWebAdmin )
+      admin = new WebAdmin ( store, regData, NULL, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
 #endif
-   if (!admin.isSane())
+   }
+   if (!admin->isSane())
    {
      CritLog(<<"Failed to start the WebAdmin - exiting");
 #ifndef WIN32
@@ -394,7 +399,8 @@ void reproMain( resip::CommandLineParser *args, Store &store)
          exit(-1);
 #endif
    }
-   WebAdminThread adminThread(admin);
+   auto_ptr<WebAdmin> AdminGuard(admin);
+   WebAdminThread adminThread(*admin);
 
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
