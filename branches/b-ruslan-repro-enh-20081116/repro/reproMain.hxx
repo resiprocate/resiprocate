@@ -6,7 +6,7 @@
 #include <windows.h>
 #endif
 
-#include "repro/CommandLineParser.hxx"
+#include "repro/ReproConfiguration.hxx"
 #include "repro/Store.hxx"
 
 namespace repro
@@ -14,7 +14,7 @@ namespace repro
 extern bool reproRestartServer;
 extern bool reproFinish;
 
-void reproMain( resip::CommandLineParser *args, Store &store);
+void reproMain( resip::ReproConfiguration *args, Store &store);
 
 
 #ifdef WIN32
