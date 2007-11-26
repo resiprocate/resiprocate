@@ -72,6 +72,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int allowBadReg = 0;
    int parallelForkStaticRoutes = 0;
    int showVersion = 0;
+#ifdef WIN32
+   int installService = 0;
+   int removeService = 0;
+#endif
    int timerC=180;
    
    char* adminPassword = "";
@@ -182,6 +186,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  0, "set web administrator password", ""},
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    0, "show the version number and exit", 0},
+#ifdef WIN32
+      {"install-service", 0,   POPT_ARG_NONE,                                &installService,    0, "install program as WinNT service", 0},
+      {"remove-service",  0,   POPT_ARG_NONE,                                &removeService,     0, "remove program from WinNT service list", 0},
+#endif
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -265,6 +273,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    }
 
    mAdminPassword = adminPassword;
+#ifdef WIN32
+   mInstallService=installService != 0;
+   mRemoveService=removeService != 0;
+#endif
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);
