@@ -15,7 +15,25 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+        "MsmKey" = "8:_0B90E736BBA841CFA26E93B901591362"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_409569DDCCDB4505B6E40F5A99E231B4"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_47029B5DE7ED4DA2BC8AD96CC83453CF"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_526D21ACEEDD4FE49926FA04D26266B0"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -27,7 +45,43 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_589E4F8781B6EFF5018F0646F96CD14B"
+        "OwnerKey" = "8:_409569DDCCDB4505B6E40F5A99E231B4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_6288C29BB5B24D208BB744EE4D85C24F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_69B5E5F658074034834E363D4EB7FB43"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_6B57108D463947D9AE7C7D4699A0A004"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_6C60A377895E4340B5CDEF2CF0218077"
+        "OwnerKey" = "8:_6C60C0875CA74BBA85F97183B5F0CFDC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_6C60C0875CA74BBA85F97183B5F0CFDC"
+        "OwnerKey" = "8:_409569DDCCDB4505B6E40F5A99E231B4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_79B19343F6964858B882C8E89323824B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -45,7 +99,25 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_D0D93889C09B58E2E8B47843610C03BA"
+        "OwnerKey" = "8:_409569DDCCDB4505B6E40F5A99E231B4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_E20953FB537240289197E79D01548577"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EE41A5E8A2604381801D3792B28702DC"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FB5BF07BFE3C47269221BB349F5C264D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -111,6 +183,20 @@
     {
         "CustomAction"
         {
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_68421B9E2FD34DCEA90211659A4177C5"
+            {
+            "Name" = "8:Remove repro service"
+            "Condition" = "8:"
+            "Object" = "8:_409569DDCCDB4505B6E40F5A99E231B4"
+            "FileType" = "3:2"
+            "InstallAction" = "3:4"
+            "Arguments" = "8:--remove-service"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_6F9D5A82_D8D9_4061_B133_74FFCEDAE7F9"
+            "InstallerClass" = "11:FALSE"
+            "CustomActionData" = "8:"
+            }
         }
         "DefaultFeature"
         {
@@ -126,6 +212,66 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0B90E736BBA841CFA26E93B901591362"
+            {
+            "SourcePath" = "8:..\\doc\\repro-addUser.png"
+            "TargetName" = "8:repro-addUser.png"
+            "Tag" = "8:"
+            "Folder" = "8:_4227EF3CFDA841AE93582C301E9EB2B8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_47029B5DE7ED4DA2BC8AD96CC83453CF"
+            {
+            "SourcePath" = "8:..\\doc\\repro-login.png"
+            "TargetName" = "8:repro-login.png"
+            "Tag" = "8:"
+            "Folder" = "8:_4227EF3CFDA841AE93582C301E9EB2B8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_526D21ACEEDD4FE49926FA04D26266B0"
+            {
+            "SourcePath" = "8:..\\Repro.ico"
+            "TargetName" = "8:Repro.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_5752D824D4BA4CC4AE9A4129533CC084"
             {
             "SourcePath" = "8:readme.txt"
@@ -146,12 +292,92 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_589E4F8781B6EFF5018F0646F96CD14B"
+            {
+            "SourcePath" = "8:iphlpapi.dll"
+            "TargetName" = "8:iphlpapi.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6288C29BB5B24D208BB744EE4D85C24F"
             {
             "SourcePath" = "8:..\\..\\contrib\\popt\\win32\\libintl-2.dll"
             "TargetName" = "8:libintl-2.dll"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_69B5E5F658074034834E363D4EB7FB43"
+            {
+            "SourcePath" = "8:..\\USING.html"
+            "TargetName" = "8:USING.html"
+            "Tag" = "8:"
+            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6B57108D463947D9AE7C7D4699A0A004"
+            {
+            "SourcePath" = "8:..\\doc\\repro-domains.png"
+            "TargetName" = "8:repro-domains.png"
+            "Tag" = "8:"
+            "Folder" = "8:_4227EF3CFDA841AE93582C301E9EB2B8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_79B19343F6964858B882C8E89323824B"
+            {
+            "SourcePath" = "8:..\\doc\\repro-showRoutes.png"
+            "TargetName" = "8:repro-showRoutes.png"
+            "Tag" = "8:"
+            "Folder" = "8:_4227EF3CFDA841AE93582C301E9EB2B8"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -206,12 +432,72 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D0D93889C09B58E2E8B47843610C03BA"
+            {
+            "SourcePath" = "8:popt1.dll"
+            "TargetName" = "8:popt1.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E20953FB537240289197E79D01548577"
             {
             "SourcePath" = "8:..\\..\\contrib\\popt\\win32\\popt1.dll"
             "TargetName" = "8:popt1.dll"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EE41A5E8A2604381801D3792B28702DC"
+            {
+            "SourcePath" = "8:..\\doc\\repro-addRoute.png"
+            "TargetName" = "8:repro-addRoute.png"
+            "Tag" = "8:"
+            "Folder" = "8:_4227EF3CFDA841AE93582C301E9EB2B8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FB5BF07BFE3C47269221BB349F5C264D"
+            {
+            "SourcePath" = "8:..\\doc\\repro-showUsers.png"
+            "TargetName" = "8:repro-showUsers.png"
+            "Tag" = "8:"
+            "Folder" = "8:_4227EF3CFDA841AE93582C301E9EB2B8"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -256,7 +542,7 @@
             }
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_96F138CFF79546568B8B0A6277D34A78"
             {
-            "DefaultLocation" = "8:[ProgramFilesFolder]ReproSIPProxy"
+            "DefaultLocation" = "8:[ProgramFilesFolder]\\Resiprocate\\ReproSIPProxy"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:FALSE"
             "Condition" = "8:"
@@ -264,6 +550,17 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_4227EF3CFDA841AE93582C301E9EB2B8"
+                    {
+                    "Name" = "8:doc"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_2969770095F34446A02B206F1E291733"
+                        "Folders"
+                        {
+                        }
+                    }
                 }
             }
             "{1525181F-901A-416C-8A58-119130FE478E}:_C7E885D6EFDA4457AF7FABB767CBA37B"
@@ -293,7 +590,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Repro SIP Proxy"
         "ProductCode" = "8:{1D66F08D-5168-4EC9-B809-CC792E780CA9}"
-        "PackageCode" = "8:{FB3E028B-C8D1-4BB7-877B-DB02256660BB}"
+        "PackageCode" = "8:{6C7ADF02-9D0E-475A-A684-81482B6EB1D9}"
         "UpgradeCode" = "8:{7BD08495-64E4-4565-A1DC-93954D304A2E}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
@@ -420,8 +717,36 @@
             "ShowCmd" = "3:1"
             "IconIndex" = "3:0"
             "Transitive" = "11:FALSE"
-            "Target" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+            "Target" = "8:_409569DDCCDB4505B6E40F5A99E231B4"
             "Folder" = "8:_C7E885D6EFDA4457AF7FABB767CBA37B"
+            "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Icon" = "8:"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_434E8E66E07D47449526F2BC2EFBED76"
+            {
+            "Name" = "8:Remove Repro service"
+            "Arguments" = "8:--remove-service"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_409569DDCCDB4505B6E40F5A99E231B4"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
+            "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Icon" = "8:_526D21ACEEDD4FE49926FA04D26266B0"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_7512127D3FB440AE8137F9DA52A943D2"
+            {
+            "Name" = "8:Using Repro"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_69B5E5F658074034834E363D4EB7FB43"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
             "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
             "Icon" = "8:"
             "Feature" = "8:"
@@ -434,10 +759,10 @@
             "ShowCmd" = "3:1"
             "IconIndex" = "3:0"
             "Transitive" = "11:FALSE"
-            "Target" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+            "Target" = "8:_409569DDCCDB4505B6E40F5A99E231B4"
             "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
             "WorkingFolder" = "8:"
-            "Icon" = "8:"
+            "Icon" = "8:_526D21ACEEDD4FE49926FA04D26266B0"
             "Feature" = "8:"
             }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_86981A780076446AB0844591EB5D0967"
@@ -452,6 +777,20 @@
             "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
             "WorkingFolder" = "8:"
             "Icon" = "8:"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_D42623842B4A4BDAB9ADCD4F54BEAA37"
+            {
+            "Name" = "8:Install repro as service"
+            "Arguments" = "8:--install-service"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_409569DDCCDB4505B6E40F5A99E231B4"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
+            "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Icon" = "8:_526D21ACEEDD4FE49926FA04D26266B0"
             "Feature" = "8:"
             }
         }
@@ -850,12 +1189,40 @@
         }
         "MergeModule"
         {
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_6C60A377895E4340B5CDEF2CF0218077"
+            {
+            "UseDynamicProperties" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "SourcePath" = "8:policy_8_0_microsoft_vc80_debugcrt_x86.msm"
+                "Properties"
+                {
+                }
+            "LanguageId" = "3:0"
+            "Exclude" = "11:FALSE"
+            "Folder" = "8:"
+            "Feature" = "8:"
+            "IsolateTo" = "8:"
+            }
+            "{CEE29DC0-9FBA-4B99-8D47-5BC643D9B626}:_6C60C0875CA74BBA85F97183B5F0CFDC"
+            {
+            "UseDynamicProperties" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "SourcePath" = "8:Microsoft_VC80_DebugCRT_x86.msm"
+                "Properties"
+                {
+                }
+            "LanguageId" = "3:0"
+            "Exclude" = "11:FALSE"
+            "Folder" = "8:"
+            "Feature" = "8:"
+            "IsolateTo" = "8:"
+            }
         }
         "ProjectOutput"
         {
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_449747DB7BDE448E8557B9834BB2A62D"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_409569DDCCDB4505B6E40F5A99E231B4"
             {
-            "SourcePath" = "8:..\\debug\\repro.exe"
+            "SourcePath" = "8:..\\Debug\\repro.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
@@ -881,6 +1248,9 @@
                 {
                 }
             }
+        }
+        "VJSharpPlugin"
+        {
         }
     }
 }
