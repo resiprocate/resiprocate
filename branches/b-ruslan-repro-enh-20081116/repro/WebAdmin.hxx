@@ -21,8 +21,8 @@ class DataStream;
 namespace repro
 {
 class Store;
-class UserStore;
-class RouteStore;
+class AbstractUserStore;
+class AbstractRouteStore;
 typedef std::map<resip::Data, resip::Data> Dictionary;
 
 class WebAdmin: public HttpBase
