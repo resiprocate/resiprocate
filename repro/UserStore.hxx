@@ -4,6 +4,8 @@
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "resip/stack/Message.hxx"
+#include "rutil/Mutex.hxx"
+
 
 #include "repro/AbstractDb.hxx"
 
@@ -55,14 +57,18 @@ class UserStore
                        const resip::Data& fullName,
                        const resip::Data& emailAddress );
       
+	   AbstractDb::UserRecordList getAllUsers();
+      Key getKey( const AbstractDb::UserRecord &ur );
+
+   private:
       Key getFirstKey();// return empty if no more
       Key getNextKey(); // return empty if no more 
-      
-   private:
-      Key buildKey( const resip::Data& user, 
+
+	   Key buildKey( const resip::Data& user, 
                     const resip::Data& domain) const;
 
       AbstractDb& mDb;
+      mutable resip::Mutex mFFNMutex; //find first/next mutex
 };
 
  }
