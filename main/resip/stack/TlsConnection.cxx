@@ -239,8 +239,7 @@ TlsConnection::checkState()
          
          mTlsState = Broken;
          mBio = 0;
-         //.dcm. -- may not be correct
-         mFailureReason = TransportFailure::CertValidationFailure;
+         mFailureReason = TransportFailure::Failure;
          ErrLog (<< "Couldn't TLS connect");
          return mTlsState;
       }
@@ -513,7 +512,11 @@ bool
 TlsConnection::isWritable() 
 {
 #if defined(USE_SSL)
-   if (checkState() == Up && isGood())
+   // !slg! If the state is Broken - then we want to attemp a write request, 
+   //       so that the write logic will detect the error and tear down the 
+   //       TLS connection
+   TlsConnection::TlsState tlsState = checkState();
+   if ((tlsState == Up && isGood()) || tlsState == Broken)  
    {
       return true;
    }
