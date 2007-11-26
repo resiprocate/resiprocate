@@ -8,8 +8,6 @@
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Lock.hxx"
-#include "resip/stack/TransactionUser.hxx"
-#include "resip/dum/UserAuthInfo.hxx"
 
 #include "repro/UserStore.hxx"
 #include "repro/AbstractDb.hxx"
@@ -29,21 +27,6 @@ UserStore::UserStore(AbstractDb& db ):
 
 UserStore::~UserStore()
 { 
-}
-
-
-void 
-UserStore::requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& realm,
-                                const resip::Data& transactionToken,
-                                resip::TransactionUser& transactionUser ) const
-{
-   // TODO - this should put a message on a local queue then a thread should
-   // read that and then do the stuff in the rest of this fucntion
-   
-   resip::Data a1 = getUserAuthInfo(user, realm);
-   UserAuthInfo* msg = new UserAuthInfo(user,realm,a1,transactionToken);
-   transactionUser.post( msg );
 }
 
 

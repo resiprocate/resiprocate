@@ -22,11 +22,6 @@ class UserStore: public AbstractUserStore
       
       virtual ~UserStore();
       
-      virtual void requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& realm,
-                                const resip::Data& transactionToken,
-                                resip::TransactionUser& transactionUser ) const;
-
       virtual AbstractDb::UserRecord getUserInfo( const Key& key ) const;
 
       virtual resip::Data getUserAuthInfo( const resip::Data& user,

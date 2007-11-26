@@ -1,66 +1,29 @@
-#if !defined(REPRO_ABSTRACTUSERSTORE_HXX)
-#define REPRO_ABSTRACTUSERSTORE_HXX
-
-#include "rutil/Data.hxx"
-#include "repro/AbstractDb.hxx"
-#include "rutil/Fifo.hxx"
-#include "resip/stack/Message.hxx"
-
-
-
-namespace resip
-{
-  class TransactionUser;
-}
+#include "repro/AbstractUserStore.hxx"
+#include "resip/dum/UserAuthInfo.hxx"
+#include "resip/stack/TransactionUser.hxx"
 
 namespace repro
 {
 
-typedef resip::Fifo<resip::Message> MessageFifo;
+using namespace resip;
 
-class AbstractUserStore
-{
-   public:
-      typedef resip::Data Key;
-      
-      virtual ~AbstractUserStore(){};
-      
-      void requestUserAuthInfo( const resip::Data& user, 
+void 
+AbstractUserStore::requestUserAuthInfo( const resip::Data& user, 
                                 const resip::Data& realm,
                                 const resip::Data& transactionToken,
-                                resip::TransactionUser& transactionUser ) const;
+                                resip::TransactionUser& transactionUser ) const
+{
+   // TODO - this should put a message on a local queue then a thread should
+   // read that and then do the stuff in the rest of this fucntion
+   
+   resip::Data a1 = getUserAuthInfo(user, realm);
+   UserAuthInfo* msg = new UserAuthInfo(user,realm,a1,transactionToken);
+   transactionUser.post( msg );
+}
 
-      virtual AbstractDb::UserRecord getUserInfo( const Key& key ) const =0;
 
-      virtual resip::Data getUserAuthInfo( const resip::Data& user,
-                                   const resip::Data& realm ) const =0;
-      
-      virtual void addUser( const resip::Data& user, 
-                    const resip::Data& domain, 
-                    const resip::Data& realm, 
-                    const resip::Data& password, 
-                    bool  applyA1HashToPassword,
-                    const resip::Data& fullName,
-                    const resip::Data& emailAddress  ) = 0;
-      
-      virtual void eraseUser( const Key& key ) = 0;
-      
-      virtual void updateUser( const Key& originalKey,
-                       const resip::Data& user, 
-                       const resip::Data& domain, 
-                       const resip::Data& realm, 
-                       const resip::Data& password, 
-                       bool  applyA1HashToPassword,
-                       const resip::Data& fullName,
-                       const resip::Data& emailAddress ) = 0;
-      
-	   virtual AbstractDb::UserRecordList getAllUsers() = 0;
-      virtual Key getKey( const AbstractDb::UserRecord &ur ) = 0;
-
-};
 
 }
-#endif  
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
