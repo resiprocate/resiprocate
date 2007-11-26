@@ -414,6 +414,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Parameters.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.cxx"
 				>
 			</File>
@@ -589,6 +593,10 @@
 			</File>
 			<File
 				RelativePath=".\monkeys\LocationServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Parameters.hxx"
 				>
 			</File>
 			<File

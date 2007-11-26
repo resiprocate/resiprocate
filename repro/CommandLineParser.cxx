@@ -12,8 +12,10 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseException.hxx"
 #include "rutil/FileSystem.hxx"
+#include "Parameters.hxx"
 
 using namespace resip;
+using namespace repro;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
@@ -109,7 +111,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int removeService = 0;
 #endif
    int timerC=180;
-   
+   int NoUseParameters = 0;
    char* adminPassword = "";
 
 
@@ -173,66 +175,73 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
 #ifdef HAVE_POPT_H
    struct poptOption table[] = {
-      {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
-      {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"log-path",         0,  POPT_ARG_STRING,                            &logFilePath,       0, "specify the path for log file", 0},
-      {"db-path",           0,   POPT_ARG_STRING,                            &dbPath,       0, "path to databases", 0},
-      {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    0, "specify uri to use as Record-Route", "sip:example.com"},
+      {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        Parameters::prmLogType, "where to send logging messages", "syslog|cerr|cout"},
+      {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       Parameters::prmLogLevel, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
+      {"log-path",         0,  POPT_ARG_STRING,                            &logFilePath,      Parameters::prmLogPath, "specify the path for log file", 0},
+      {"db-path",           0,   POPT_ARG_STRING,                            &dbPath,         Parameters::prmMax, "path to databases", 0},
+      {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    Parameters::prmRecordRoute, "specify uri to use as Record-Route", "sip:example.com"},
 #if defined(USE_MYSQL)
-      {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
+      {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    Parameters::prmMax, "enable MySQL and provide name of server", "localhost"},
 #endif
-      {"udp",                0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort,        0, "listen on UDP port", "5060"},
-      {"tcp",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tcpPort,        0, "listen on TCP port", "5060"},
+      {"udp",                0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort,        Parameters::prmUdp, "listen on UDP port", "5060"},
+      {"tcp",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tcpPort,        Parameters::prmTcp, "listen on TCP port", "5060"},
 #if defined(USE_SSL)
-      {"tls-domain",       't',  POPT_ARG_STRING,                            &tlsDomain,      0, "act as a TLS server for specified domain", "example.com"},
-      {"tls",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tlsPort,        0, "add TLS transport on specified port", "5061"},
-      {"dtls",               0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &dtlsPort,       0, "add DTLS transport on specified port", "0"},
-      {"enable-cert-server", 0,  POPT_ARG_NONE,                              &certServer,     0, "run a cert server", 0},
+      {"tls-domain",       't',  POPT_ARG_STRING,                            &tlsDomain,      Parameters::prmTlsDomain, "act as a TLS server for specified domain", "example.com"},
+      {"tls",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tlsPort,        Parameters::prmTls, "add TLS transport on specified port", "5061"},
+      {"dtls",               0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &dtlsPort,       Parameters::prmDtls, "add DTLS transport on specified port", "0"},
+      {"enable-cert-server", 0,  POPT_ARG_NONE,                              &certServer,     Parameters::prmEnableCertServer, "run a cert server", 0},
 #ifdef WIN32
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: c:\\sipCerts)", 0},
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       Parameters::prmMax, "path to certificates (default: c:\\sipCerts)", 0},
 #else
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: ~/.sipCerts)", 0},
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       Parameters::prmMax, "path to certificates (default: ~/.sipCerts)", 0},
 #endif
 #endif
-      {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       0, "enable IPV6", 0},
-      {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      0, "disable IPV4", 0},
-      {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    0, "disable DIGEST challenges", 0},
-      {"disable-auth-int",  0,   POPT_ARG_NONE,                              &noAuthIntChallenge,0, "disable auth-int DIGEST challenges", 0},
-      {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, 0, "disable HTTP challenges", 0},
-      {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    0, "disable registrar", 0},
-      {"disable-identity",  0,   POPT_ARG_NONE,                              &noIdentityHeaders, 0, "disable adding identity headers", 0},
-      {"interfaces",      'i',   POPT_ARG_STRING,                            &interfaces,     0, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls"},
-      {"domains",         'd',   POPT_ARG_STRING,                            &domains,        0, "specify domains that this proxy is authorative", "example.com,foo.com"},
-      {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
-      {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   0, "name of request chain (default: default)", 0},
-      {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", "5080"},
-      {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
-      {"q-value",           0,   POPT_ARG_NONE,                              &doQValue,       0, "Enable sequential q-value processing", 0},
-      {"q-value-behavior",  0,   POPT_ARG_STRING,                              &forkBehavior,   0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
-      {"q-value-cancel-btw-fork-groups",0,POPT_ARG_NONE,                     &cancelBetweenForkGroups, 0, "Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.", 0},
-      {"q-value-wait-for-terminate-btw-fork-groups",0,POPT_ARG_NONE,         &waitForTerminate, 0, "Whether to wait for parallel fork groups to terminate before starting new fork-groups.", 0},
-      {"q-value-ms-between-fork-groups",0,POPT_ARG_INT,                      &msBetweenForkGroups, 0, "msec to wait before starting new groups of parallel forks", 0},
-      {"q-value-ms-before-cancel",0,   POPT_ARG_INT,                         &msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
-      {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
-      {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
-      {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "paralled fork to all matching static routes and (first batch) registrations", 0},
-      {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
-      {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  0, "set web administrator password", ""},
-      {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    0, "show the version number and exit", 0},
+      {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       Parameters::prmEnableV6, "enable IPV6", 0},
+      {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      Parameters::prmDisableV4, "disable IPV4", 0},
+      {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    Parameters::prmDisableAuth, "disable DIGEST challenges", 0},
+      {"disable-auth-int",  0,   POPT_ARG_NONE,                              &noAuthIntChallenge, Parameters::prmDisableAuthInt, "disable auth-int DIGEST challenges", 0},
+      {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, Parameters::prmDisableWebAuth, "disable HTTP challenges", 0},
+      {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    Parameters::prmDisableReg, "disable registrar", 0},
+      {"disable-identity",  0,   POPT_ARG_NONE,                              &noIdentityHeaders, Parameters::prmDisableIdentity, "disable adding identity headers", 0},
+      {"interfaces",      'i',   POPT_ARG_STRING,                            &interfaces,     Parameters::prmIinterfaces, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls"},
+      {"domains",         'd',   POPT_ARG_STRING,                            &domains,        Parameters::prmDomains, "specify domains that this proxy is authorative", "example.com,foo.com"},
+      {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       Parameters::prmRoute, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
+      {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   Parameters::prmReqChainName, "name of request chain (default: default)", 0},
+      {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       Parameters::prmHttp, "run HTTP server on specified port", "5080"},
+      {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, Parameters::prmRecursiveRedirect, "Handle 3xx responses in the proxy", 0},
+      {"q-value",           0,   POPT_ARG_NONE,                              &doQValue,       Parameters::prmQValue, "Enable sequential q-value processing", 0},
+      {"q-value-behavior",  0,   POPT_ARG_STRING,                              &forkBehavior,   Parameters::prmQValueBehavior, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
+      {"q-value-cancel-btw-fork-groups",0,POPT_ARG_NONE,                     &cancelBetweenForkGroups, Parameters::prmQValueCancelBtwForkGroups, "Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.", 0},
+      {"q-value-wait-for-terminate-btw-fork-groups",0,POPT_ARG_NONE,         &waitForTerminate, Parameters::prmQValueWaitForTerminateBtwForkGroups, "Whether to wait for parallel fork groups to terminate before starting new fork-groups.", 0},
+      {"q-value-ms-between-fork-groups",0,POPT_ARG_INT,                      &msBetweenForkGroups, Parameters::prmQValueMsBetweenForkGroups, "msec to wait before starting new groups of parallel forks", 0},
+      {"q-value-ms-before-cancel",0,   POPT_ARG_INT,                         &msBeforeCancel, Parameters::prmQValueMsBeforeCancel, "msec to wait before cancelling parallel fork groups", 0},
+      {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     Parameters::prmEnumSuffix, "specify enum suffix to search", "e164.arpa"},
+      {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    Parameters::prmAllowBadReg, "allow To tag in registrations", 0},
+      {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, Parameters::prmParallelForkStaticRoutes, "paralled fork to all matching static routes and (first batch) registrations", 0},
+      {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         Parameters::prmTimerC, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
+      {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  Parameters::prmAdminPassword, "set web administrator password", ""},
+      {"no-use-parameters",  0,   POPT_ARG_NONE,                            &NoUseParameters,  Parameters::prmMax, "set web administrator password", ""},
+      {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    Parameters::prmMax, "show the version number and exit", 0},
 #ifdef WIN32
-      {"install-service", 0,   POPT_ARG_NONE,                                &installService,    0, "install program as WinNT service", 0},
-      {"remove-service",  0,   POPT_ARG_NONE,                                &removeService,     0, "remove program from WinNT service list", 0},
+      {"install-service", 0,   POPT_ARG_NONE,                                &installService,    Parameters::prmMax, "install program as WinNT service", 0},
+      {"remove-service",  0,   POPT_ARG_NONE,                                &removeService,     Parameters::prmMax, "remove program from WinNT service list", 0},
 #endif
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
-   if (poptGetNextOpt(context) < -1)
+   int prm;
+   while ( (prm = poptGetNextOpt(context) ) != -1)
    {
-      cerr << "Bad command line argument entered" << endl;
-      poptPrintHelp(context, stderr, 0);
-      exit(-1);
+      if ( prm < -1 )
+      {
+         cerr << "Bad command line argument entered" << endl;
+         poptPrintHelp(context, stderr, 0);
+         exit(-1);
+      }
+      if ( prm != Parameters::prmMax )
+         Parameters::DisableParam( (Parameters::Param)prm );
    }
 #endif
 
@@ -285,6 +294,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mMsBeforeCancel=msBeforeCancel;
    mAllowBadReg = allowBadReg?true:false;
    mParallelForkStaticRoutes = parallelForkStaticRoutes?true:false;
+   mNoUseParameters = NoUseParameters == 1;
+
    if (enumSuffix) mEnumSuffix = enumSuffix;
    
    if (mySqlServer) 
