@@ -671,13 +671,117 @@ void WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
 {
    ReproState = reproStarting; 
    svcH = RegisterServiceCtrlHandlerEx( ReproServiceName, &ReproSvcHandlerEx, &SvcStat);
+   Win32EventLog *EventLog = new Win32EventLog( ReproServiceName );
+   auto_ptr<Win32EventLog> EventLogpPtr( EventLog );
+   if(args->mLogType.lowercase() == "file")
+   {
+      Log::initialize("file", args->mLogLevel, ReproServiceName, (args->mLogFilePath+"\\repro_log.txt").c_str() , EventLog );
+   }
+   else
+   {
+      Log::initialize(args->mLogType, args->mLogLevel, ReproServiceName, NULL, EventLog );
+   }
    if ( svcH ) 
    {
       SetServiceStatus(svcH,&SvcStat);
+      NoticeLog (<< "Starting service " << ReproServiceName );
       reproMain();
+      NoticeLog (<< "Service " << ReproServiceName << " stopped" );
+   }
+   if(args->mLogType.lowercase() == "file")
+   {
+      Log::initialize("file", args->mLogLevel, ReproServiceName, (args->mLogFilePath+"\\repro_log.txt").c_str() , NULL );
+   }
+   else
+   {
+      Log::initialize(args->mLogType, args->mLogLevel, ReproServiceName, NULL, NULL );
    }
    ReproState = reproEnd;
    SetSvcStat();
+}
+
+bool installService(int argc, char** argv)
+{
+   SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
+   if ( !sch )
+   {
+      return false;
+   }
+   size_t CmdLineSize = 0;
+   for ( int i=0; i < argc; i++)
+      CmdLineSize+=strlen( argv[i])+1;
+   char *CmdLine = (char *)malloc( CmdLineSize + 1);
+   *CmdLine=0;
+   if ( strchr(argv[0] , (int) " " ) )
+   {
+      strcpy(CmdLine,"\"");
+      strcat(CmdLine,argv[0]);
+      strcat(CmdLine,"\"");
+   }
+   else
+   {
+      strcpy(CmdLine,argv[0]);
+   }
+   for ( int i=1; i < argc; i++)
+      if ( stricmp( argv[i], "--install-service") )
+      {
+         strcat( CmdLine, " " );
+         strcat( CmdLine, argv[i] );
+      }
+   SC_HANDLE svch=CreateService( sch, ReproServiceName, "Repro server", SERVICE_ALL_ACCESS, 
+           SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, CmdLine,
+           NULL, NULL, NULL, NULL, NULL);
+   if ( !svch )
+   {
+      CloseServiceHandle(sch);
+      return false;
+   }
+   CloseServiceHandle(svch);
+   CloseServiceHandle(sch);
+
+   HKEY hk; 
+   DWORD dwData; 
+   char *BaseKey="SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\";
+   char *Key=(char *)malloc( strlen( BaseKey ) + strlen( ReproServiceName ) + 1 );
+   strcpy( Key, BaseKey );
+   strcat( Key, ReproServiceName );
+   RegCreateKey(HKEY_LOCAL_MACHINE, Key, &hk);
+   RegSetValueEx(hk, "EventMessageFile", 0, REG_EXPAND_SZ, (LPBYTE) argv[0], strlen( argv[0] ) + 1);
+   dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE; 
+   RegSetValueEx(hk,"TypesSupported",0,REG_DWORD,(LPBYTE) &dwData,sizeof(DWORD));
+   RegCloseKey(hk); 
+
+   return true;
+}
+
+bool removeService()
+{
+   SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
+   if ( !sch )
+   {
+      return false;
+   }
+   SC_HANDLE svch = OpenService( sch, ReproServiceName, SERVICE_ALL_ACCESS);
+   if ( !svch )
+   {
+      return false;
+   }
+   SERVICE_STATUS svcstat;
+   if ( ControlService( svch, SERVICE_CONTROL_STOP, &svcstat ) )
+   {
+      int i=0;
+      while ( i<=20 && svcstat.dwCurrentState != SERVICE_STOPPED )
+      {
+         Sleep(1000);
+         QueryServiceStatus( svch, &svcstat );
+      }
+      if ( svcstat.dwCurrentState != SERVICE_STOPPED )
+         cerr << "Unable to stop service, service will be deleted after reboot\n";
+   }   
+   DeleteService( svch );
+   CloseServiceHandle( svch );
+   CloseServiceHandle( sch );
+   return true;
 }
 
 #endif
@@ -708,85 +812,46 @@ main(int argc, char** argv)
    /* Initialize a stack */
    args = new CommandLineParser(argc, argv);
    std::auto_ptr<CommandLineParser> args_ptr(args);
+
+#ifdef WIN32
+//   assert(args->mInstallService && !args->mRemoveService || !args->mInstallService && args->mRemoveService);
+   if ( args->mInstallService )
+   {
+      if ( installService( argc, argv ) )
+      {
+         cerr << "Service installed\n";
+         exit(0);
+      }
+      else
+      {
+         cerr << "Failed to install service\n";
+         exit(-1);
+      }
+   }
+   if ( args->mRemoveService )
+   {
+      if ( removeService() )
+      {
+         cerr << "Service removed\n";
+         exit(0);
+      }
+      else
+      {
+         cerr << "Failed to remove service\n";
+         exit(-1);
+      }
+   }
+#endif
+
    if(args->mLogType.lowercase() == "file")
    {
-      Log::initialize("file", args->mLogLevel, argv[0], "repro_log.txt");
+      Log::initialize("file", args->mLogLevel, argv[0], (args->mLogFilePath+"\\repro_log.txt").c_str() );
    }
    else
    {
       Log::initialize(args->mLogType, args->mLogLevel, argv[0]);
    }
 
-#ifdef WIN32
-   if ( args->mInstallService )
-   {
-      SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
-      if ( !sch )
-      {
-         CritLog(<<"Failed to install service");
-         exit(-1);
-      }
-      size_t CmdLineSize = 0;
-      for ( int i=0; i < argc; i++)
-         CmdLineSize+=strlen( argv[i])+1;
-      char *CmdLine = (char *)malloc( CmdLineSize + 1);
-      *CmdLine=0;
-      if ( strchr(argv[0] , (int) " " ) )
-      {
-         strcpy(CmdLine,"\"");
-         strcat(CmdLine,argv[0]);
-         strcat(CmdLine,"\"");
-      }
-      else
-      {
-         strcpy(CmdLine,argv[0]);
-      }
-      for ( int i=1; i < argc; i++)
-         if ( stricmp( argv[i], "--install-service") )
-         {
-            strcat( CmdLine, " " );
-            strcat( CmdLine, argv[i] );
-         }
-      SC_HANDLE svch=CreateService( sch, ReproServiceName, "Repro server", SERVICE_ALL_ACCESS, 
-              SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, CmdLine,
-              NULL, NULL, NULL, NULL, NULL);
-      if ( !svch )
-      {
-         CritLog(<<"Failed to install service");
-         exit(-1);
-      }
-      CloseServiceHandle(svch);
-      CloseServiceHandle(sch);
-      exit(0);
-   }
-   if ( args->mRemoveService )
-   {
-      SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
-      if ( !sch )
-      {
-         CritLog(<<"Failed to remove service");
-         exit(-1);
-      }
-      SC_HANDLE svch = OpenService( sch, ReproServiceName, SERVICE_ALL_ACCESS);
-      if ( !svch )
-      {
-         CritLog(<<"Failed to remove service");
-         exit(-1);
-      }
-      SERVICE_STATUS svcstat;
-      if ( ControlService( svch, SERVICE_CONTROL_STOP, &svcstat ) )
-         while ( svcstat.dwCurrentState != SERVICE_STOPPED )
-         {
-            Sleep(1000);
-            QueryServiceStatus( svch, &svcstat );
-         }
-      
-      DeleteService( svch );
-      CloseServiceHandle( svch );
-      CloseServiceHandle( sch );
-      exit(0);
-   }
-#endif
 
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    { FindMemoryLeaks fml;
