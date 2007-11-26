@@ -1,6 +1,16 @@
 #include "rutil/FileSystem.hxx"
 #include "rutil/Logger.hxx"
 
+#include <assert.h>
+
+#ifdef WIN32
+#include <windows.h>
+#include <aclapi.h>
+#include <Sddl.h>
+#else
+#include <sys/stat.h>
+#endif
+
 #include <cassert>
 using namespace resip;
 
@@ -209,6 +219,139 @@ FileSystem::Directory::iterator FileSystem::Directory::end() const
 {
    return staticEnd;   
 }
+
+bool FileSystem::DirectoryExists(const Data path)
+{
+#ifndef WIN32
+	struct stat st;
+	if ( stat( path.c_str(), &st )==0 )
+		return st.st_mode & S_IFDIR;
+	else
+		return false;
+#else
+	 int code=GetFileAttributes( path.c_str() );
+	 return code != -1 && code & FILE_ATTRIBUTE_DIRECTORY;
+#endif
+}
+
+#ifdef WIN32
+const char FileSystem::PathSeparator='\\';
+const char DriveSeparator=':';
+#else
+const char FileSystem::PathSeparator='/';
+#endif
+
+static Data ExtractFilePath( const Data FileName )
+{
+   const char *pos=FileName.end();
+   while ( pos >= FileName.begin() && *pos!=FileSystem::PathSeparator 
+#ifdef WIN32
+      && *pos!=DriveSeparator
+#endif
+      )
+   {
+      pos--;
+   }
+   if ( pos < FileName.begin() )
+      return FileName;
+#ifdef WIN32
+   assert( *pos == FileSystem::PathSeparator || pos - FileName.begin() == 1 );
+#endif
+   return FileName.substr( 0, pos - FileName.begin() +1 );
+}
+
+static Data RemoveLastPathSeparator( const Data FileName )
+{
+   if ( FileName.empty() || FileName[ FileName.size()-1 ] != FileSystem::PathSeparator )
+      return FileName;
+   return FileName.trunc( FileName.size() - 1 );
+}
+
+static bool CreateDir(const Data Dir)
+{
+#ifdef WIN32
+   return CreateDirectory( Dir.c_str(), NULL ) == TRUE;
+#else
+   return mkdir( Dir.c_str() , -1 ) == 0;
+#endif
+}
+
+bool FileSystem::ForceDirectories(const Data Name)
+{
+   if ( Name.empty() )
+      return true; // may be need throw exception??
+   Data ExtractPath;
+  Data Name2 = RemoveLastPathSeparator(Name);
+#ifdef WIN32
+  ExtractPath = ExtractFilePath(Name2);
+  if ( Name2.size() == 2 &&  Name2[1] == ':'  || DirectoryExists(Name2) || ExtractPath == Name2 )
+    return true;
+#else
+  if ( Name2.empty() || DirectoryExists(Name2) )
+    return true;
+  ExtractPath = ExtractFilePath(Name2);
+#endif  
+  if ( ExtractPath.empty() )
+    return CreateDir(Name2);
+  else
+    return ForceDirectories(ExtractPath) && CreateDir(Name2);
+}
+
+#ifdef WIN32
+
+bool FileSystem::IsReadWriteAccess( const char *path )
+{
+	HANDLE tokhandle=0;
+	OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &tokhandle );
+
+	TOKEN_OWNER *to;
+	DWORD retlen;
+	GetTokenInformation( tokhandle, TokenOwner, NULL, 0, &retlen );
+	to=(TOKEN_OWNER *)malloc( retlen );
+	GetTokenInformation( tokhandle, TokenOwner, to, retlen, &retlen ) ;
+	TRUSTEE trust;
+	BuildTrusteeWithSid( &trust, to->Owner );
+	PACL pacl;
+	PSECURITY_DESCRIPTOR psd=0;
+	GetNamedSecurityInfo( (LPSTR)path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL,
+			 &pacl, NULL, &psd );
+	if ( !pacl )
+	{
+		free( to );
+		if ( psd )
+			LocalFree( psd );
+		return false;
+	}
+	ACCESS_MASK acc;
+	GetEffectiveRightsFromAcl( pacl, &trust, &acc );
+	free( to );
+	if ( psd )
+		LocalFree( psd );
+
+	const unsigned RWAcc= FILE_READ_DATA | FILE_APPEND_DATA | FILE_WRITE_DATA;
+	return (acc & RWAcc) == RWAcc;
+}
+
+void FileSystem::SetAccessAs(const char *Acceptor,const char *Donor)
+{
+
+	PACL pacl;
+	PSECURITY_DESCRIPTOR psd=0;
+	GetNamedSecurityInfo( (LPSTR)Donor, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL,
+			 &pacl, NULL, &psd );
+	if ( !pacl )
+	{
+		if ( psd )
+			LocalFree( psd );
+		return ;
+	}
+   SetNamedSecurityInfo( (LPSTR)Acceptor, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
+      NULL, NULL, pacl, NULL );
+	if ( psd )
+		LocalFree( psd );
+
+}
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
