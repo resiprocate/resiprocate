@@ -973,27 +973,25 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       
       int count =0;
       
-      key = mStore.mUserStore.getFirstKey();
-      while ( !key.empty() )
+      AbstractDb::UserRecordList url = mStore.mUserStore.getAllUsers();
+      for ( AbstractDb::UserRecordList::const_iterator i = url.begin(); i != url.end(); i++ )
       {
-         rec = mStore.mUserStore.getUserInfo(key);
+         rec = *i;
 
          if ((rec.domain == Data::Empty) && (rec.user == "admin"))
          {
-            key = mStore.mUserStore.getNextKey();
             continue;   // skip the row for the admin web user
          }
       
          s << "<tr>" << endl 
            << "  <td><a href=\"editUser.html?key=";
-         key.urlEncode(s);
+         mStore.mUserStore.getKey(*i).urlEncode(s);
          s << "\">" << rec.user << "@" << rec.domain << "</a></td>" << endl
            << "  <td>" << rec.name << "</td>" << endl
            << "  <td>" << rec.email << "</td>" << endl
-           << "  <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl
+           << "  <td><input type=\"checkbox\" name=\"remove." << mStore.mUserStore.getKey(*i) << "\"/></td>" << endl
            << "</tr>" << endl;
          
-         key = mStore.mUserStore.getNextKey();
 
          // make a limit to how many users are displayed 
          if ( ++count > 1000 )

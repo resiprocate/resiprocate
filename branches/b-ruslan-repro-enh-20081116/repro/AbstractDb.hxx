@@ -65,6 +65,7 @@ class AbstractDb
       typedef std::vector<RouteRecord> RouteRecordList;
       typedef std::vector<AclRecord> AclRecordList;
       typedef std::vector<ConfigRecord> ConfigRecordList;
+      typedef std::vector<UserRecord> UserRecordList;
 
       // functions for User Records 
       virtual void addUser( const Key& key, const UserRecord& rec );
