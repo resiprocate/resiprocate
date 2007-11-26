@@ -1,4 +1,4 @@
-#include "repro/reproMain.hxx"
+#include "repro/ProxyMain.hxx"
 
 #include "resip/stack/MessageFilterRule.hxx"
 #include "resip/stack/Security.hxx"
@@ -138,7 +138,7 @@ addDomains(TransactionUser& tu, ReproConfiguration& args, Store& store)
 }
 
 void 
-reproMain( resip::ReproConfiguration *args, Store &store)
+ProxyMain( resip::ReproConfiguration *args, Store &store)
 {
    Security* security = 0;
    Compression* compression = 0;
