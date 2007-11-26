@@ -749,6 +749,10 @@
 				RelativePath=".\EventLogMessage.rc"
 				>
 			</File>
+			<File
+				RelativePath=".\Repro.res"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\webadmin\pageOutlinePost.ixx"
