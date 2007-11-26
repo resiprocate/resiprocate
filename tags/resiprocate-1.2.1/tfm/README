@@ -1,0 +1,25 @@
+Instructions on how to build tfm
+--------------------------------
+
+1. Build resiprocate and ares
+cd sip
+make
+
+2. Ensure that boost is installed: 
+- on linux fc3 you can simply install: 
+ftp://rpmfind.net/linux/fedora/core/updates/testing/3/i386/boost-1.32.0-6.fc3.i386.rpm
+ftp://rpmfind.net/linux/fedora/core/updates/testing/3/i386/boost-devel-1.32.0-6.fc3.i386.rpm
+
+3. Build Netxx
+cd sip/contrib/Netxx-0.3.2
+perl configure.pl --contrib --disable-examples
+make
+
+4. Build cppunit
+cd sip/contrib/cppunit
+./configure
+make
+
+Note: contrib/loki doesn't need to be compiled - just templates
+
+
