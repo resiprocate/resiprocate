@@ -121,11 +121,11 @@ void Parameters::setParamStrings( Parameters::Param prm, std::vector<Data> &val,
    Data str;
    if ( EnabledParam[prm] && Db->dbReadRecord( AbstractDb::ParametersTable, NameOfParam[prm], str ) )
    {
-      val = CommandLineParser::toVector( str.c_str(), Description );
+      val = ReproConfiguration::toVector( str.c_str(), Description );
    }
 }
 
-void Parameters::StoreParametersInArgs( CommandLineParser *To )
+void Parameters::StoreParametersInArgs( ReproConfiguration *To )
 {
    assert( Db );
    setParamString( prmLogType, To->mLogType );
@@ -135,7 +135,7 @@ void Parameters::StoreParametersInArgs( CommandLineParser *To )
    if ( Db->dbReadRecord( AbstractDb::ParametersTable, NameOfParam[prmRecordRoute], str ) )
    {
       To->mShouldRecordRoute = true;
-      To->mRecordRoute = CommandLineParser::toUri( str.c_str(), "Record-Route");
+      To->mRecordRoute = ReproConfiguration::toUri( str.c_str(), "Record-Route");
    }
    setParamInt( prmUdp, To->mUdpPort );
    setParamInt( prmTcp, To->mTcpPort );
