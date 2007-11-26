@@ -104,7 +104,7 @@ StatisticsMessage::logStats(const resip::Subsystem& subsystem,
       retriesNonFinal += stats.responsesRetransmittedByMethodByCode[INVITE][c];
    }
 
-   WarningLog(<< subsystem
+   InfoLog(<< subsystem
               << std::endl
               << "TU summary: " << stats.tuFifoSize
               << " TRANSPORT " << stats.transportFifoSizeSum

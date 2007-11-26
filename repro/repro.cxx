@@ -13,6 +13,10 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 
+#ifdef WIN32
+#include "rutil/Win32EventLog.hxx"
+#endif
+
 #include "repro/CommandLineParser.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/Registrar.hxx"
