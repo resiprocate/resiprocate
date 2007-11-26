@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AbstractUserStore.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\AclStore.cxx"
 				>
 			</File>
