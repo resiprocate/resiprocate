@@ -57,28 +57,30 @@ bool ReproWin32Service=true;
 SERVICE_STATUS_HANDLE svcH;
 SERVICE_STATUS SvcStat={ SERVICE_WIN32, SERVICE_START_PENDING, 
       SERVICE_ACCEPT_STOP, 0, 0, 0, 5000 };  
-#define SetSvcStat() \
-   if ( ReproWin32Service ) \
-   { \
-      ReproStateNum++;\
-      SvcStat.dwWaitHint = ReproStateNum;\
-      switch ( ReproState )\
-      {\
-      case reproStarting:\
-         SvcStat.dwCurrentState = SERVICE_START_PENDING;\
-         break;\
-      case reproWorking:\
-         SvcStat.dwCurrentState = SERVICE_RUNNING;\
-         break;\
-      case reproFinishing:\
-         SvcStat.dwCurrentState = SERVICE_STOP_PENDING;\
-         break;\
-      case reproEnd:\
-         SvcStat.dwCurrentState = SERVICE_STOPPED;\
-         break;\
-      }\
-      SetServiceStatus( svcH, &SvcStat);\
+void SetSvcStat()
+{
+   if ( ReproWin32Service ) 
+   { 
+      ReproStateNum++;
+      SvcStat.dwWaitHint = ReproStateNum;
+      switch ( ReproState )
+      {
+      case reproStarting:
+         SvcStat.dwCurrentState = SERVICE_START_PENDING;
+         break;
+      case reproWorking:
+         SvcStat.dwCurrentState = SERVICE_RUNNING;
+         break;
+      case reproFinishing:
+         SvcStat.dwCurrentState = SERVICE_STOP_PENDING;
+         break;
+      case reproEnd:
+         SvcStat.dwCurrentState = SERVICE_STOPPED;
+         break;
+      }
+      SetServiceStatus( svcH, &SvcStat);
    }
+}
 #endif
 
 Data
