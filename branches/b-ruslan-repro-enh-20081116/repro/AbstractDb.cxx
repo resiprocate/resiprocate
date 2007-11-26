@@ -6,7 +6,7 @@
 #include "rutil/Logger.hxx"
 
 
-#include "repro/UserStore.hxx"
+#include "repro/AbstractUserStore.hxx"
 #include "repro/AbstractDb.hxx"
 
 

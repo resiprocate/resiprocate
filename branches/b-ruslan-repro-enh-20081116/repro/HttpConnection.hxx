@@ -7,7 +7,7 @@
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/Mime.hxx"
 
-#include "repro/UserStore.hxx"
+#include "repro/AbstractUserStore.hxx"
 #include "repro/HttpBase.hxx"
 
 namespace repro

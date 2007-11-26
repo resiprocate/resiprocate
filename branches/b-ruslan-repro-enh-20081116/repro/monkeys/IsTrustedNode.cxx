@@ -18,7 +18,7 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-IsTrustedNode::IsTrustedNode(AclStore& store) :
+IsTrustedNode::IsTrustedNode(AbstractAclStore& store) :
    mAclStore(store)
 {}
 
