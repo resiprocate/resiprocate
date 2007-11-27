@@ -19,11 +19,12 @@ namespace repro
 class UserStore;
 class ProcessorChain;
 
-class Proxy : public resip::TransactionUser, public resip::ThreadIf
+class Proxy : public resip::TransactionUser, public resip::ThreadIf, public resip::MessageDecorator
 {
    public:
       Proxy(resip::SipStack&,
             const resip::Uri& recordRoute, 
+            bool enableRecordRoute,
             ProcessorChain& requestP, 
             ProcessorChain& responseP,
             ProcessorChain& targetP,
@@ -36,8 +37,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       
       bool isMyUri(const resip::Uri& uri);      
       const resip::NameAddr& getRecordRoute() const;
+      bool getRecordRouteEnabled() const;
       
       UserStore& getUserStore();
+      resip::SipStack& getStack(){return mStack;}
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
 
@@ -47,13 +50,17 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
 
       int mTimerC;
       
-      
+      virtual void decorateMessage(resip::SipMessage &msg,
+                                   const resip::Tuple &source, 
+                                   const resip::Tuple &destination);
+
    protected:
       virtual const resip::Data& name() const;
 
    private:
       resip::SipStack& mStack;
       resip::NameAddr mRecordRoute;
+      bool mRecordRouteEnabled;
       
       // needs to be a reference since parent owns it
       ProcessorChain& mRequestProcessorChain;

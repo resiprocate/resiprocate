@@ -33,21 +33,21 @@ SetTargetConnection::process(RequestContext& context)
    SipMessage& request = context.getOriginalRequest();
    const Uri& route = context.getTopRoute().uri();
    
-   static ExtensionParameter p_cid("cid");
-   static ExtensionParameter p_cid1("cid1");
-   static ExtensionParameter p_cid2("cid2");
+   static ExtensionParameter p_fid("fid");
+   static ExtensionParameter p_fid1("fid1");
+   static ExtensionParameter p_fid2("fid2");
    
-   ConnectionId cid1 = route.exists(p_cid1) ? route.param(p_cid1).convertUnsignedLong() : 0;
-   ConnectionId cid2 = route.exists(p_cid2) ? route.param(p_cid2).convertUnsignedLong() : 0;
-   if (request.getSource().connectionId != 0 && 
-       request.getSource().connectionId == cid1)
+   FlowKey fid1 = route.exists(p_fid1) ? route.param(p_fid1).convertUnsignedLong() : 0;
+   FlowKey fid2 = route.exists(p_fid2) ? route.param(p_fid2).convertUnsignedLong() : 0;
+   if (request.getSource().mFlowKey != 0 && 
+       request.getSource().mFlowKey == fid1)
    {
-      context.setTargetConnection(cid2);
+      context.setTargetConnection(fid2);
    }
-   else if (request.getSource().connectionId != 0 && 
-            request.getSource().connectionId == cid2)
+   else if (request.getSource().mFlowKey != 0 && 
+            request.getSource().mFlowKey == fid2)
    {
-      context.setTargetConnection(cid1);
+      context.setTargetConnection(fid1);
    }
    return Processor::Continue;
 }

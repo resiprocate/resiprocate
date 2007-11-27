@@ -1,56 +1,48 @@
-#include "resip/stack/FlowId.hxx"
+#ifndef INTEROP_HELPER_HXX
+#define INTEROP_HELPER_HXX
 
-#include <sstream>
-
-using namespace resip;
-using namespace std;
-
-int main()
+namespace resip
 {
-#if 0
-   Transport* orig = (Transport*) 0x0077ffee;
 
-
-   Data out;
-   
-   DataStream ds(foo);
-//   stringstream ds;
-   
-   ds << orig;
-
-   Transport* fromStream;
-   ds >> (long)fromStream;
-   cerr << orig << " " << fromStream << endl;   
-   ds.flush();
-   
-   assert(fromStream == orig);
-   
-#else
-   Tuple tup;
-   tup.transport = (Transport*) 0x0077ffee;
-   tup.connectionId = 7;
-   
-   FlowId flow(tup);
-   Data d = Data::from(flow);
-   Data e;
-   {
-      DataStream ds(e);
-      ds << flow;
-   }
-   assert(d == e);
-   FlowId flowFromData(e);
-
-   std::cerr << "flow: " << flow << " flowFromData: " << flowFromData << std::endl;
-   assert(flow == flowFromData);
-#endif
-   return 0;   
+/**
+   This class is intended to encapsulate what version/s of various drafts are
+   supported by the stack. This also allows for configurable version support at
+   runtime.
+*/
+class InteropHelper
+{
+   public:
+      static int getOutboundVersion() {return theOutboundVersion;}
+      static void setOutboundVersion(int version) {theOutboundVersion=version;}
+      static bool getOutboundSupported() {return isOutboundSupported;}
+      static void setOutboundSupported(bool supported) {isOutboundSupported=supported;}
+      
+      // .bwc. If this is enabled, we will record-route with flow tokens 
+      // whenever possible. This will make things work with endpoints that don't
+      // use NAT traversal tricks. However, this will break several things:
+      // 1) Target-refreshes won't work.
+      // 2) Proxies that do not record-route may be implicitly included in the
+      //    route-set by this proxy, because a flow token may point to them.
+      // 3) Third-party registrations won't work.
+      static bool getRRTokenHackEnabled(){return useRRTokenHack;}
+      static void setRRTokenHackEnabled(bool enabled) {useRRTokenHack=enabled;}
+      
+   private:
+      InteropHelper();
+      ~InteropHelper();
+      
+      static int theOutboundVersion;
+      static bool isOutboundSupported;
+      static bool useRRTokenHack;
+};
 }
 
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -96,3 +88,4 @@ int main()
  * <http://www.vovida.org/>.
  *
  */
+
