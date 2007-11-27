@@ -326,7 +326,7 @@ TransactionState::process(TransactionController& controller)
                state->mResponseTarget = sip->getSource(); // UACs source address
                // since we don't want to reply to the source port if rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
-               state->mIsReliable = state->mResponseTarget.transport->isReliable();
+               state->mIsReliable = isReliable(state->mResponseTarget.getType());
                state->add(tid);
                
                if (Timer::T100 == 0)
@@ -369,7 +369,7 @@ TransactionState::process(TransactionController& controller)
                // since we don't want to reply to the source port if rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                state->add(tid);
-               state->mIsReliable = state->mResponseTarget.transport->isReliable();
+               state->mIsReliable = isReliable(state->mResponseTarget.getType());
                state->startServerNonInviteTimerTrying(*sip,tid);
             }
             
@@ -1704,7 +1704,6 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       if (sip->hasForceTarget())
       {
          target = simpleTupleForUri(sip->getForceTarget());
-         target.transport = mResponseTarget.transport;
          StackLog(<<"!ah! response with force target going to : "<<target);
       }
       else if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
@@ -1726,8 +1725,10 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
          mController.mTransportSelector.transmit(sip, target);
       }
    }
-   else if (sip->getDestination().connectionId || sip->getDestination().transport)
+   else if (sip->getDestination().mFlowKey)
    {
+      // !bwc! We have the FlowKey. This completely specifies our Transport
+      // (and Connection, if applicable)
       DebugLog(<< "Sending to tuple: " << sip->getDestination());
       mTarget = sip->getDestination();
       processReliability(mTarget.getType());
