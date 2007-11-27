@@ -691,10 +691,32 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       int j = 0;
       for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         Uri key(i->mKey1);
-         Uri contact(i->mKey2);
-         mRegDb.removeContact(key, contact);
-         ++j;
+         Uri aor(i->mKey1);
+         ContactInstanceRecord rec;
+         size_t bar1 = i->mKey2.find("|");
+         size_t bar2 = i->mKey2.find("|",bar1);
+         
+         if(bar1==Data::npos || bar2 == Data::npos)
+         {
+            InfoLog(<< "Registration removal key was malformed: " << i->mKey2);
+            continue;
+         }
+         
+         try
+         {
+            resip::Data rawNameAddr = i->mKey2.substr(0,bar1);
+            rec.mContact = NameAddr(rawNameAddr);
+            rec.mInstance = i->mKey2.substr(bar1,bar2);
+            rec.mRegId = i->mKey2.substr(bar2,Data::npos).convertInt();
+            mRegDb.removeContact(aor, rec);
+            ++j;
+         }
+         catch(resip::ParseBuffer::Exception& e)
+         {
+            InfoLog(<< "Registration removal key was malformed: " << e <<
+                     " Key was: " << i->mKey2);
+         }
+         
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
    }
@@ -718,14 +740,14 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                aor = aors.begin(); aor != aors.end(); ++aor )
       {
          Uri uri = *aor;
-         RegistrationPersistenceManager::ContactRecordList 
+         ContactList 
             contacts = mRegDb.getContacts(uri);
          
          bool first = true;
-         for (RegistrationPersistenceManager::ContactRecordList::iterator i = contacts.begin();
+         for (ContactList::iterator i = contacts.begin();
               i != contacts.end(); ++i )
          {
-            if (i->expires >= time(NULL))
+            if (i->mRegExpires >= (UInt64)time(NULL))
             {
                s << "<tr>" << endl
                  << "  <td>" ;
@@ -737,21 +759,24 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                s << "</td>" << endl
                  << "  <td>";
             
-               const RegistrationPersistenceManager::ContactRecord& r = *i;
-               const Uri& contact = r.uri; 
+               const ContactInstanceRecord& r = *i;
+               const NameAddr& contact = r.mContact;
+               const Data& instanceId = r.mInstance;
+               int regId = r.mRegId;
 
                s << contact;
                s <<"</td>" << endl 
-                 <<"<td>" << i->expires - time(NULL) << "s</td>" << endl
+                 << "<td> " << instanceId << "</td> <td>" << regId << "</td>"
+                 <<"<td>" << i->mRegExpires - time(NULL) << "s</td>" << endl
                  << "  <td>"
-                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << contact
+                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << contact << "|" << instanceId << "|" << regId
                  << "\"/></td>" << endl
                  << "</tr>" << endl;
             }
             else
             {
                // remove expired contact 
-               mRegDb.removeContact(uri, i->uri);
+               mRegDb.removeContact(uri, *i);
             }
          }
       }

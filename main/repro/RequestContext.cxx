@@ -41,7 +41,6 @@ RequestContext::RequestContext(Proxy& proxy,
    mTargetProcessorChain(targetP),
    mTransactionCount(1),
    mProxy(proxy),
-   mTargetConnectionId(0),
    mResponseContext(*this),
    mTCSerial(0),
    mFromTrustedNode(false)
@@ -724,6 +723,15 @@ RequestContext::removeTopRouteIfSelf()
       mTopRoute = mOriginalRequest->header(h_Routes).front();
 
       mOriginalRequest->header(h_Routes).pop_front();
+
+      if(!mOriginalRequest->header(h_Routes).empty()
+           &&  mProxy.isMyUri(mOriginalRequest->header(h_Routes).front().uri()))
+      {
+         // .bwc. Do double-record routing logic
+         mTopRoute = mOriginalRequest->header(h_Routes).front();
+   
+         mOriginalRequest->header(h_Routes).pop_front();
+      }
    }
 }
 
@@ -743,12 +751,6 @@ NameAddr&
 RequestContext::getTopRoute()
 {
    return mTopRoute;
-}
-
-void
-RequestContext::setTargetConnection(ConnectionId cid)
-{
-   mTargetConnectionId = cid;
 }
 
 void 

@@ -95,9 +95,10 @@ class TransportSelector
       void setEnumSuffixes(const std::vector<Data>& suffixes);
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);
-
+      bool connectionAlive(const Tuple& dest) const;
+      
    private:
-      Connection* findConnection(const Tuple& dest);
+      const Connection* findConnection(const Tuple& dest) const;
       Transport* findTransportBySource(Tuple& src);
       Transport* findTransportByDest(SipMessage* msg, Tuple& dest);
       Transport* findTlsTransport(const Data& domain,TransportType type,IpVersion ipv);
@@ -123,6 +124,8 @@ class TransportSelector
       typedef std::map<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> AnyPortAnyInterfaceTupleMap;
       AnyPortAnyInterfaceTupleMap mAnyPortAnyInterfaceTransports;
 
+      std::map<FlowKey,Transport*> mConnectionlessMap;
+      
       class TlsTransportKey
       {
          public:
@@ -175,6 +178,9 @@ class TransportSelector
       typedef std::vector<Transport*> TransportList;
       TransportList mSharedProcessTransports;
       TransportList mHasOwnProcessTransports;
+
+      typedef std::multimap<Tuple, Transport*, Tuple::AnyPortAnyInterfaceCompare> TypeToTransportMap;
+      TypeToTransportMap mTypeToTransportMap;
 
       // fake socket for connect() and route table lookups
       mutable Socket mSocket;

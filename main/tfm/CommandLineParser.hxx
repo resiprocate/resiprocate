@@ -38,6 +38,8 @@ class CommandLineParser
       resip::Uri mTarget;
       resip::Data mPassPhrase;
       resip::Data mCertPath;
+      
+      bool mForceRecordRoute;
 };
  
 #endif

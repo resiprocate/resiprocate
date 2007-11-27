@@ -6,6 +6,7 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/monkeys/StaticRoute.hxx"
 #include "repro/monkeys/StrictRouteFixup.hxx"
+#include "repro/monkeys/OutboundTargetHandler.hxx"
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "rutil/Logger.hxx"
@@ -64,6 +65,10 @@ static ProcessorChain&
 makeTargetProcessorChain(ProcessorChain& chain) 
 {
    ProcessorChain* baboons = new ProcessorChain;
+   
+   OutboundTargetHandler* ob = new OutboundTargetHandler;
+   baboons->addProcessor(std::auto_ptr<Processor>(ob));
+   
    QValueTargetHandler* qval=
       new QValueTargetHandler(QValueTargetHandler::EQUAL_Q_PARALLEL,
                               true, //Cancel btw fork groups?
@@ -99,6 +104,7 @@ TestRepro::TestRepro(const resip::Data& name,
                      const resip::Data& host, 
                      int port, 
                      const resip::Data& nwInterface,
+                     bool forceRecordRoute,
                      Security* security) : 
    TestProxy(name, host, port, nwInterface),
    mStack(security),
@@ -111,6 +117,7 @@ TestRepro::TestRepro(const resip::Data& name,
    mRegData(),
    mProxy(mStack, 
           makeUri(host, port),
+          forceRecordRoute, //<- Enable record-route
           makeRequestProcessorChain(mRequestProcessors, mStore, mRegData,&mStack),
           makeResponseProcessorChain(mResponseProcessors),
           makeTargetProcessorChain(mTargetProcessors),

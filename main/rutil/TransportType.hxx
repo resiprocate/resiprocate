@@ -50,6 +50,8 @@ resip::Data toData(const TransportType typeEnum);
 
 TransportType toTransportType(const resip::Data & transportName);
 
+bool isReliable(TransportType type);
+
 // Indicate whether or not to run a stun server on a Transport
 typedef enum
 {

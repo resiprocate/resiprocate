@@ -1,4 +1,5 @@
 #include "resip/stack/ExtensionParameter.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/MasterProfile.hxx"
@@ -21,7 +22,8 @@ ServerRegistration::getHandle()
 
 ServerRegistration::ServerRegistration(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& request)
    : NonDialogUsage(dum, dialogSet),
-     mRequest(request)
+     mRequest(request),
+     mDidOutbound(false)
 {}
 
 ServerRegistration::~ServerRegistration()
@@ -43,28 +45,31 @@ ServerRegistration::accept(SipMessage& ok)
   
   // Add all registered contacts to the message.
   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-  RegistrationPersistenceManager::ContactRecordList contacts;
-  RegistrationPersistenceManager::ContactRecordList::iterator i;
+  ContactList contacts;
+  ContactList::iterator i;
   contacts = database->getContacts(mAor);
   database->unlockRecord(mAor);
 
-  time_t now;
-  time(&now);
+  UInt64 now=Timer::getTimeMs();
 
   NameAddr contact;
   for (i = contacts.begin(); i != contacts.end(); i++)
   {
-    if (i->expires - now <= 0)
+    if (i->mRegExpires <= now)
     {
+      database->removeContact(mAor,*i);
       continue;
     }
-    contact.uri() = i->uri;
-    contact.param(p_expires) = UInt32(i->expires - now);
+    contact = i->mContact;
+   // .bwc. p_expires is in seconds.
+    contact.param(p_expires) = UInt32( ((i->mRegExpires - now)/1000) );
     ok.header(h_Contacts).push_back(contact);
-    if(i->useQ)
-    {
-      ok.header(h_Contacts).back().param(p_q)=(int)i->q;
-    }
+  }
+  
+  if(mDidOutbound)
+  {
+     static Token outbound("outbound");
+     ok.header(h_Supporteds).push_back(outbound);
   }
 
   SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
@@ -142,7 +147,8 @@ ServerRegistration::dispatch(const SipMessage& msg)
     database->lockRecord(mAor);
 
     UInt32 globalExpires = 0;
-
+    UInt32 expires=0;
+    
     if (msg.exists(h_Expires) && msg.header(h_Expires).isWellFormed())
     {
       globalExpires = msg.header(h_Expires).value();
@@ -163,9 +169,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
     ParserContainer<NameAddr>::iterator i;
-    UInt32 expires;
-    time_t now;
-    time(&now);
+    UInt64 now=Timer::getTimeMs();
 
     for(i = contactList.begin(); i != contactList.end(); i++)
     {
@@ -206,7 +210,97 @@ ServerRegistration::dispatch(const SipMessage& msg)
         return;
       }
 
-      unsigned int cid = msg.getSource().connectionId;
+      ContactInstanceRecord rec;
+      rec.mContact=*i;
+      rec.mRegExpires=((UInt64)expires)*1000+now;
+
+      if(i->exists(p_Instance))
+      {
+         rec.mInstance=i->param(p_Instance);
+      }
+
+      if(!msg.empty(h_Paths))
+      {
+         rec.mSipPath=msg.header(h_Paths);
+      }
+
+      rec.mLastUpdated=now;
+
+      // .bwc. If, in the end, this is true, it means all necessary conditions
+      // for outbound support have been met.
+      bool supportsOutbound=InteropHelper::getOutboundSupported();
+
+      // .bwc. We only store flow information if we have a direct flow to the
+      // endpoint. We do not create a flow if there is an edge-proxy, because if
+      // our connection to the edge proxy fails, the flow from the edge-proxy to
+      // the endpoint is still good, so we should not discard the registration.
+      bool haveDirectFlow=true;
+
+      if(supportsOutbound)
+      {
+         try
+         {
+            if(!i->exists(p_Instance) || !i->exists(p_regid))
+            {
+               supportsOutbound=false;
+            }
+
+            if(!msg.empty(h_Paths))
+            {
+               haveDirectFlow=false;
+               if(!msg.header(h_Paths).back().exists(p_ob))
+               {
+                  supportsOutbound=false;
+               }
+            }
+            else if(msg.header(h_Vias).size() > 1)
+            {
+               supportsOutbound=false;
+            }
+         }
+         catch(resip::ParseBuffer::Exception& e)
+         {
+            supportsOutbound=false;
+         }
+      }
+
+      // .bwc. The outbound processing
+      if(supportsOutbound)
+      {
+         rec.mRegId=i->param(p_regid);
+         if(haveDirectFlow)
+         {
+            // .bwc. We NEVER record the source if outbound is not being used.
+            // There is nothing we can do with this info in the non-outbound
+            // case that doesn't flagrantly violate spec (yet).
+            // (Example: If we remember this info with the intent of sending
+            // incoming stuff to this source directly, we end up being forced
+            // to record-route with a flow token to give in-dialog stuff a
+            // chance of working. Once we have record-routed, we have set this
+            // decision in stone for the rest of the dialog, preventing target
+            // refresh requests from working. If record-route was mutable, 
+            // maybe it would be okay to do this, but until this is officially
+            // allowed, we shouldn't touch it.)
+            rec.mReceivedFrom=msg.getSource();
+            // .bwc. In the outbound case, we should fail if the connection is
+            // gone. No recovery should be attempted by the server.
+            rec.mReceivedFrom.onlyUseExistingConnection=true;
+            DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
+         }
+      }
+      else if(InteropHelper::getRRTokenHackEnabled())
+      {
+         // .bwc. If we are going to do the broken thing, and record-route with
+         // flow-tokens every time, we enable it here. Keep in mind, this will
+         // either break target-refreshes (if we have a direct connection to the
+         // endpoint), or we have a good chance of inadvertently including a 
+         // proxy that didn't record-route in the dialog.
+         // !bwc! TODO remove this once mid-dialog connection reuse is handled
+         // by most endpoints.
+         rec.mReceivedFrom=msg.getSource();
+         rec.mReceivedFrom.onlyUseExistingConnection=false;
+         DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
+      }
       
       // Check to see if this is a removal.
       if (expires == 0)
@@ -215,26 +309,25 @@ ServerRegistration::dispatch(const SipMessage& msg)
         {
           operation = REMOVE;
         }
-        database->removeContact(mAor, i->uri());
+        database->removeContact(mAor, rec);
       }
       // Otherwise, it's an addition or refresh.
       else
       {
         RegistrationPersistenceManager::update_status_t status;
         InfoLog (<< "Adding " << mAor << " -> " << *i  );
-        if(i->exists(p_q))
-        {
-            status = database->updateContact(mAor, i->uri(), now + expires,cid,i->param(p_q).getValue());
-        }
-        else
-        {
-            status = database->updateContact(mAor, i->uri(), now + expires,cid);
-         }
+        DebugLog(<< "Contact has tuple " << rec.mReceivedFrom);
+         status = database->updateContact(mAor, rec);
         if (status == RegistrationPersistenceManager::CONTACT_CREATED)
         {
           operation = ADD;
         }
       }
+   
+      // !bwc! If we perform outbound processing for any Contact, we need to
+      // set this to true.
+      mDidOutbound |= supportsOutbound;
+
     }
 
     // The way this works is:
