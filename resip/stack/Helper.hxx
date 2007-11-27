@@ -479,6 +479,8 @@ class Helper
       // RFC 3261 - 18.2.2
       static int getPortForReply(SipMessage& request);
 
+      static void massageRoute(const SipMessage& request, NameAddr& route);
+
       static Uri fromAor(const Data& aor, const Data& scheme=Symbols::DefaultSipScheme);
 
       // Do basic checks to validate a received message off the wire

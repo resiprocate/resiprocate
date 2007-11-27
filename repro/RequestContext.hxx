@@ -51,7 +51,6 @@ class RequestContext
       ResponseContext& getResponseContext();
       
       resip::NameAddr& getTopRoute();
-      void setTargetConnection(resip::ConnectionId);
             
       void sendResponse(resip::SipMessage& response);
 
@@ -78,7 +77,6 @@ class RequestContext
       int mTransactionCount;
       Proxy& mProxy;
       resip::NameAddr mTopRoute;
-      resip::ConnectionId mTargetConnectionId;
       ResponseContext mResponseContext;
       int mTCSerial;
       resip::Data mTid;
