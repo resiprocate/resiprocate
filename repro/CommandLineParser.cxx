@@ -11,6 +11,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseException.hxx"
+#include "resip/stack/InteropHelper.hxx"
 
 using namespace resip;
 using namespace std;
@@ -22,7 +23,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* logType = "cout";
    char* logLevel = "INFO";
    char* tlsDomain = 0;
-   char* recordRoute = 0;
+   int forceRecordRoute = 0;
+   char* recordRouteUri = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
 #if defined(USE_SSL)
@@ -65,6 +67,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int timerC=180;
    
    char* adminPassword = "";
+   int outboundDisabled=0;
+   int outboundVersion=8;
+   int rrTokenHackEnabled=0;
 
 
 #ifdef WIN32
@@ -82,7 +87,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
       {"db-path",           0,   POPT_ARG_STRING,                            &dbPath,       0, "path to databases", 0},
-      {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    0, "specify uri to use as Record-Route", "sip:example.com"},
+      {"record-route",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
+      {"force-record-route",     0,  POPT_ARG_NONE,                            &forceRecordRoute,    0, "force record-routing", 0},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -123,7 +129,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "paralled fork to all matching static routes and (first batch) registrations", 0},
       {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  0, "set web administrator password", ""},
-      {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    0, "show the version number and exit", 0},
+      {"disable-outbound",     0,   POPT_ARG_NONE,                            &outboundDisabled,     0, "disable outbound support (draft-ietf-sip-outbound)", 0},
+      {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "8"},
+      {"enable-flow-tokens",     0,   POPT_ARG_NONE,                            &rrTokenHackEnabled,     0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
+      {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
@@ -152,11 +161,20 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       mTlsDomain = tlsDomain;
    }
 
-   mShouldRecordRoute = false;
-   if (recordRoute) 
+   mForceRecordRoute = (forceRecordRoute!=0);
+
+   if (recordRouteUri) 
    {
-      mShouldRecordRoute = true;
-      mRecordRoute = toUri(recordRoute, "Record-Route");
+      mRecordRoute = toUri(recordRouteUri, "Record-Route");
+      // .bwc. You must give a fully specified hostname for the record-route.
+      // Furthermore, you should ensure that this uri will allow a 
+      // 3263-compliant sender to know what transports this proxy supports, and 
+      // how to reach it over any of these transports. (ie, set up your full
+      // NAPTR->SRV->A or AAAA DNS zone for this uri) For senders that don't
+      // support 3263 (ie, they just assume that a proxy supports a given 
+      // ip-version and protocol, and do A or AAAA lookups), this won't work all 
+      // the time. This is their fault, not yours.
+      assert(!mRecordRoute.host().empty());
    }
    
    mUdpPort = udpPort;
@@ -207,6 +225,24 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    }
 
    mAdminPassword = adminPassword;
+   
+   InteropHelper::setOutboundVersion(outboundVersion);
+   InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
+   InteropHelper::setRRTokenHackEnabled((rrTokenHackEnabled==0) ? false : true);
+   
+   if((InteropHelper::getOutboundSupported() 
+         || InteropHelper::getRRTokenHackEnabled()
+         || mForceRecordRoute
+      )
+      && !recordRouteUri)
+   {
+      CritLog(<< "In order for outbound support, the Record-Route flow-token"
+      " hack, or force-record-route to work, you MUST specify a Record-Route URI. Launching "
+      "without...");
+      InteropHelper::setOutboundSupported(false);
+      InteropHelper::setRRTokenHackEnabled(false);
+      mForceRecordRoute=false;
+   }
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);

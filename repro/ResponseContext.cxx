@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "resip/stack/ExtensionParameter.hxx"
+#include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
@@ -89,7 +90,7 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately, bool ad
          return false;
       }
    
-      mTargetList.push_back(target.uri());
+      mTargetList.push_back(target.rec());
       
       beginClientTransaction(&target);
       target.status()=Target::Trying;
@@ -149,7 +150,7 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
          {
             queue.push_back(target->tid());
          }
-         DebugLog(<<"Adding Target to Candidates: " << target->uri());
+         DebugLog(<<"Adding Target to Candidates: " << target->uri() << " tid=" << target->tid());
          mCandidateTransactionMap[target->tid()]=target;
       }
       else
@@ -187,6 +188,25 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
    return true;
 }
 
+bool
+ResponseContext::addOutboundBatch(std::map<resip::Data, std::list<Target*> > batch)
+{
+   std::map<resip::Data, std::list<Target*> >::iterator i;
+   for(i=batch.begin();i!=batch.end();++i)
+   {
+      std::list<resip::Data>& subList=mOutboundMap[i->first];
+      while(!i->second.empty())
+      {
+         Target* target = i->second.front();
+         mCandidateTransactionMap[target->tid()]=target;
+         i->second.pop_front();
+         subList.push_back(target->tid());
+      }
+   }
+   
+   return true;
+}
+
 bool 
 ResponseContext::beginClientTransactions()
 {
@@ -202,7 +222,7 @@ ResponseContext::beginClientTransactions()
    {
       if(!isDuplicate(i->second) && !mRequestContext.mHaveSentFinalResponse)
       {
-         mTargetList.push_back(i->second->uri());
+         mTargetList.push_back(i->second->rec());
          beginClientTransaction(i->second);
          result=true;
          // see rfc 3261 section 16.6
@@ -241,7 +261,7 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
       return false;
    }
    
-   mTargetList.push_back(i->second->uri());
+   mTargetList.push_back(i->second->rec());
    
    beginClientTransaction(i->second);
    mActiveTransactionMap[i->second->tid()] = i->second;
@@ -487,7 +507,7 @@ ResponseContext::removeClientTransaction(const resip::Data& transactionId)
 bool
 ResponseContext::isDuplicate(const repro::Target* target) const
 {
-   std::list<resip::Uri>::const_iterator i;
+   resip::ContactList::const_iterator i;
    // make sure each target is only inserted once
 
    // !bwc! We can not optimize this by using stl, because operator
@@ -497,7 +517,7 @@ ResponseContext::isDuplicate(const repro::Target* target) const
 
    for(i=mTargetList.begin();i!=mTargetList.end();i++)
    {
-      if(*i==target->uri())
+      if(*i==target->rec())
       {
          return true;
       }
@@ -513,16 +533,13 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       // target in an invalid state, it is a bug.
       assert(target->status() == Target::Candidate);
 
-      SipMessage request(mRequestContext.getOriginalRequest());
-
+      SipMessage& orig=mRequestContext.getOriginalRequest();
+      SipMessage request(orig);
+      
       request.header(h_RequestLine).uri() = target->uri(); 
 
       // .bwc. Proxy checks whether this is valid, and rejects if not.
       request.header(h_MaxForwards).value()--;
-      
-      static ExtensionParameter p_cid("cid");
-      static ExtensionParameter p_cid1("cid1");
-      static ExtensionParameter p_cid2("cid2");
       
       bool inDialog=false;
       
@@ -536,54 +553,58 @@ ResponseContext::beginClientTransaction(repro::Target* target)
          // request?
       }
       
-      // Record-Route addition only for new dialogs
+      // Potential source Record-Route addition only for new dialogs
+      // !bwc! It looks like we really ought to be record-routing in-dialog
+      // stuff.
       if ( !inDialog &&  // only for dialog-creating request
            (request.method() == INVITE ||
             request.method() == SUBSCRIBE ) &&
            !mRequestContext.mProxy.getRecordRoute().uri().host().empty())  // only add record route if configured to do so
       {
-         NameAddr rt(mRequestContext.mProxy.getRecordRoute());
-         // .bwc. Let's not record-route with a tel uri or something, shall we?
-         // If the topmost route header is malformed, we can get along without.
-         // (We are going to be popping it off in a moment anyway)
-         if (request.exists(h_Routes) && 
-               request.header(h_Routes).size() != 0 && 
-               request.header(h_Routes).front().isWellFormed() &&
-               (request.header(h_Routes).front().uri().scheme() == "sip" ||
-               request.header(h_Routes).front().uri().scheme() == "sips" ) )
+         insertRecordRoute(request,target);
+      }
+      else if(request.method()==REGISTER)
+      {
+         // .bwc. Edge-proxy stuff for outbound.
+         if(request.header(h_Vias).size() == 1 
+            && resip::InteropHelper::getOutboundSupported()
+            && !request.empty(h_Contacts)
+            && request.header(h_Contacts).front().exists(p_regid))
          {
-            rt.uri().scheme() = request.header(h_Routes).front().uri().scheme();
-         }
-         else if(request.header(h_RequestLine).uri().scheme() == "sip" ||
-                  request.header(h_RequestLine).uri().scheme() == "sips")
-         {
-            rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
-         }
-         
-         // .bwc. This Via is well-formed, since we grabbed the tid from it.
-         const Data& sentTransport = request.header(h_Vias).front().transport();
-         if (sentTransport != Symbols::UDP)
-         {
-            if(!rt.uri().exists(p_transport))
-            {
-               rt.uri().param(p_transport) = sentTransport;
-            }
+            resip::NameAddr rt(mRequestContext.mProxy.getRecordRoute());
+            resip::Helper::massageRoute(request,rt);
+            resip::Data binaryFlowToken;
+            Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
             
-            if (mRequestContext.getOriginalRequest().getSource().connectionId != 0)
-            {
-               rt.uri().param(p_cid1) = Data(mRequestContext.getOriginalRequest().getSource().connectionId);
-            }
-            
-            if (request.header(h_RequestLine).uri().exists(p_cid))
-            {
-               rt.uri().param(p_cid2) = request.header(h_RequestLine).uri().param(p_cid);
-            }
+            // !bwc! TODO encrypt this binary token to self.
+            rt.uri().user()=binaryFlowToken.base64encode();
+            rt.param(p_ob);
+            request.header(h_Paths).push_front(rt);
+            InfoLog (<< "Added Path: " << rt);
+            request.header(h_Supporteds).push_back(Token("path"));
          }
-
-         InfoLog (<< "Added Record-Route: " << rt);
-         request.header(h_RecordRoutes).push_front(rt);
       }
       
+      if( (resip::InteropHelper::getOutboundSupported() ||
+          resip::InteropHelper::getRRTokenHackEnabled()) 
+          && target->rec().mReceivedFrom.mFlowKey)
+      {
+         // .bwc. We only override the destination if we are sending to an
+         // outbound contact. If this is not an outbound contact, but the
+         // endpoint has given us a Contact with the correct ip-address and 
+         // port, we might be able to find the connection they formed when they
+         // registered earlier, but that will happen down in TransportSelector.
+         request.setDestination(target->rec().mReceivedFrom);
+      }
+
+      DebugLog(<<"Set tuple dest: " << request.getDestination());
+
+      // .bwc. Path header addition.
+      if(!target->rec().mSipPath.empty())
+      {
+         request.header(h_Routes).append(target->rec().mSipPath);
+      }
+
       // !jf! unleash the baboons here
       // a baboon might adorn the message, record call logs or CDRs, might
       // insert loose routes on the way to the next hop
@@ -594,13 +615,6 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       //should be the same from here on out.
       request.header(h_Vias).push_front(target->via());
 
-      if (mRequestContext.mTargetConnectionId != 0)
-      {
-         request.header(h_RequestLine).uri().param(p_cid) = Data(mRequestContext.mTargetConnectionId);
-         InfoLog (<< "Use an existing connection id: " << request.header(h_RequestLine).uri());
-      }
-
-      
       if(!mRequestContext.mInitialTimerCSet)
       {
          mRequestContext.mInitialTimerCSet=true;
@@ -616,6 +630,119 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       target->status() = Target::Trying;
 }
 
+void
+ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,Target* target)
+{
+   resip::Data inboundFlowToken=getInboundFlowToken();
+   bool needsOutboundFlowToken=outboundFlowTokenNeeded(target);
+
+   // .bwc. If we have a flow-token we need to insert, we need to record-route.
+   // Also, we might record-route if we are configured to do so.
+   if( !inboundFlowToken.empty() 
+      || needsOutboundFlowToken 
+      || mRequestContext.mProxy.getRecordRouteEnabled() )
+   {
+      resip::NameAddr rt=mRequestContext.mProxy.getRecordRoute();
+      Helper::massageRoute(outgoing,rt);
+      rt.uri().user()=inboundFlowToken;
+      outgoing.header(h_RecordRoutes).push_front(rt);
+      InfoLog (<< "Added Record-Route: " << rt);
+   }
+
+   // .bwc. We only double record-route if we are putting in a flow-token, and 
+   // we are not sending to ourself.
+   // (if we are configured to always record-route, we will have already record-
+   // routed once above, no sense in putting a second, identical RR in.)
+   // !bwc! TODO some logic or config to allow double record-routing in other
+   // circumstances (on transport switch, for instance)
+   if(!sendingToSelf(target) 
+      && (  !inboundFlowToken.empty() 
+            || needsOutboundFlowToken) )
+   {
+      outgoing.addOutboundDecorator(&mRequestContext.mProxy);
+   }
+}
+
+resip::Data
+ResponseContext::getInboundFlowToken()
+{
+   resip::Data flowToken=resip::Data::Empty;
+   resip::SipMessage& orig=mRequestContext.getOriginalRequest();
+   
+   if(InteropHelper::getOutboundSupported() && 
+      orig.header(h_Contacts).front().uri().exists(p_ob) &&
+      orig.header(h_Vias).size()==1)
+   {
+      // This arrived over an outbound flow (or so the endpoint claims)
+      // (See outbound-09 Sec 4.3 para 3)
+      resip::Data binaryFlowToken;
+      Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
+      // !bwc! TODO encrypt to self
+      flowToken = binaryFlowToken.base64encode();
+   }
+   else if(resip::InteropHelper::getRRTokenHackEnabled()
+      && !selfAlreadyRecordRouted() )
+   {
+      // !bwc! TODO remove this when flow-token hack is no longer needed.
+      // Poor-man's outbound. Shouldn't be our default behavior, because it
+      // breaks target-refreshes (once a flow-token is in the Route-Set, the 
+      // flow-token cannot be changed, and will override any update to the 
+      // Contact)
+      resip::Data binaryFlowToken;
+      Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
+      // !bwc! TODO encrypt to self
+      flowToken = binaryFlowToken.base64encode();
+   }
+   
+   return flowToken;
+}
+
+bool
+ResponseContext::outboundFlowTokenNeeded(Target* target)
+{
+   if(mRequestContext.mProxy.isMyUri(target->uri()))
+   {
+      // .bwc. We don't need to put flow-tokens pointed at ourselves.
+      return false;
+   }
+   
+   if(InteropHelper::getOutboundSupported() 
+      && target->rec().mRegId != 0)
+   {
+      return true;
+   }
+   else if(resip::InteropHelper::getRRTokenHackEnabled())
+   {
+      // !bwc! TODO remove this when flow-token hack is no longer needed.
+      // Poor-man's outbound. Shouldn't be our default behavior, because it
+      // breaks target-refreshes (once a flow-token is in the Route-Set, the 
+      // flow-token cannot be changed, and will override any update to the 
+      // Contact)
+      return true;
+   }
+   
+   return false;
+}
+
+bool
+ResponseContext::selfAlreadyRecordRouted()
+{
+   resip::SipMessage& orig=mRequestContext.getOriginalRequest();
+   return (!orig.empty(h_RecordRoutes) 
+            && orig.header(h_RecordRoutes).front().isWellFormed()
+            && mRequestContext.mProxy.isMyUri(
+                        orig.header(h_RecordRoutes).front().uri()));
+}
+
+bool
+ResponseContext::sendingToSelf(Target* target)
+{
+   if(mRequestContext.mProxy.isMyUri(target->uri()))
+   {
+      return true;
+   }
+   return false;
+}
 
 void 
 ResponseContext::sendRequest(const resip::SipMessage& request)
@@ -676,7 +803,7 @@ ResponseContext::processResponse(SipMessage& response)
    InfoLog (<< "processResponse: " << endl << response);
 
    // store this before we pop the via and lose the branch tag
-   const Data transactionId = response.getTransactionId();
+   mCurrentResponseTid = response.getTransactionId();
    
    assert (response.isResponse());
    assert (response.exists(h_Vias) && !response.header(h_Vias).empty());
@@ -698,7 +825,7 @@ ResponseContext::processResponse(SipMessage& response)
       {
          InfoLog( << "Received final response, but can't forward as there are no more Vias: " << response.brief() );
          // .bwc. Treat as server error.
-         terminateClientTransaction(transactionId);
+         terminateClientTransaction(mCurrentResponseTid);
          return;
       }
       else if(response.header(h_StatusLine).statusCode() != 100)
@@ -719,16 +846,16 @@ ResponseContext::processResponse(SipMessage& response)
             " in their response. (Via is malformed) This is not fixable.");
          if(response.header(h_StatusLine).statusCode() > 199)
          {
-            terminateClientTransaction(transactionId);
+            terminateClientTransaction(mCurrentResponseTid);
          }
          
          return;
       }
    }
    
-   InfoLog (<< "Search for " << transactionId << " in " << Inserter(mActiveTransactionMap));
+   InfoLog (<< "Search for " << mCurrentResponseTid << " in " << Inserter(mActiveTransactionMap));
 
-   TransactionMap::iterator i = mActiveTransactionMap.find(transactionId);
+   TransactionMap::iterator i = mActiveTransactionMap.find(mCurrentResponseTid);
 
    int code = response.header(h_StatusLine).statusCode();
    if (i == mActiveTransactionMap.end())
@@ -792,7 +919,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 2:
-         terminateClientTransaction(transactionId);
+         terminateClientTransaction(mCurrentResponseTid);
          if (mRequestContext.getOriginalRequest().method() == INVITE)
          {
             cancelAllClientTransactions();
@@ -816,7 +943,7 @@ ResponseContext::processResponse(SipMessage& response)
       case 5:
          DebugLog (<< "forwardedFinal=" << mRequestContext.mHaveSentFinalResponse 
                    << " outstanding client transactions: " << Inserter(mActiveTransactionMap));
-         terminateClientTransaction(transactionId);
+         terminateClientTransaction(mCurrentResponseTid);
          if (!mRequestContext.mHaveSentFinalResponse)
          {
             int priority = getPriority(response);
@@ -891,7 +1018,7 @@ ResponseContext::processResponse(SipMessage& response)
          break;
          
       case 6:
-         terminateClientTransaction(transactionId);
+         terminateClientTransaction(mCurrentResponseTid);
          if (!mRequestContext.mHaveSentFinalResponse)
          {
             if (mBestResponse.header(h_StatusLine).statusCode() / 100 != 6)

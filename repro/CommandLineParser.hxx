@@ -19,7 +19,7 @@ class CommandLineParser
       Data mLogLevel;
       Data mTlsDomain;
       Data mEnumSuffix;
-      bool mShouldRecordRoute;
+      bool mForceRecordRoute;
       resip::Uri mRecordRoute;
       int mUdpPort;
       int mTcpPort;

@@ -478,7 +478,9 @@ class SipStack
       }
 
       Compression &getCompression() { return *mCompression; }
-
+      
+      bool isFlowAlive(const resip::Tuple& flow) const;
+      
    private:
       /// Notify an async process handler - if one has been registered
       void checkAsyncProcessHandler();
@@ -515,10 +517,11 @@ class SipStack
       
       /// Used to Track stack statistics
       StatisticsManager mStatsManager;
-
+      
       /// All aspects of the Transaction State Machine / DNS resolver
       TransactionController mTransactionController;
-
+      
+      
       /** store all domains that this stack is responsible for. Controlled by
           addAlias and addTransport interfaces and checks can be made with isMyDomain() */
       std::set<Data> mDomains;
@@ -551,8 +554,7 @@ inline void
 SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
                                      TransactionUser* tu)
 {
-   assert(tuple.transport);
-   assert(tuple.connectionId);   
+   assert(tuple.mFlowKey);   
    Tuple tup(tuple);
    tup.onlyUseExistingConnection = true;   
    sendTo(msg, tuple, tu);
