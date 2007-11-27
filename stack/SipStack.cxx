@@ -331,7 +331,6 @@ void
 SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   assert(destination.transport);
    
    if (tu) msg->setTransactionUser(tu);
    msg->setDestination(destination);
@@ -363,7 +362,6 @@ void
 SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   assert(destination.transport);
    
    //SipMessage* toSend = new SipMessage(msg);
    SipMessage* toSend = dynamic_cast<SipMessage*>(msg.clone());
@@ -634,6 +632,11 @@ const SipStack& stack)
    return stack.dump(strm);
 }
 
+bool
+SipStack::isFlowAlive(const resip::Tuple& flow) const
+{
+   return mTransactionController.transportSelector().connectionAlive(flow);
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

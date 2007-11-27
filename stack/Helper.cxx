@@ -1566,6 +1566,28 @@ Helper::processStrictRoute(SipMessage& request)
    }
 }
 
+void
+Helper::massageRoute(const SipMessage& request, NameAddr& rt)
+{
+   assert(request.isRequest());
+   // .bwc. Let's not record-route with a tel uri or something, shall we?
+   // If the topmost route header is malformed, we can get along without.
+   if (!request.empty(h_Routes) && 
+         request.header(h_Routes).front().isWellFormed() &&
+         (request.header(h_Routes).front().uri().scheme() == "sip" ||
+         request.header(h_Routes).front().uri().scheme() == "sips" ) )
+   {
+      rt.uri().scheme() = request.header(h_Routes).front().uri().scheme();
+   }
+   else if(request.header(h_RequestLine).uri().scheme() == "sip" ||
+            request.header(h_RequestLine).uri().scheme() == "sips")
+   {
+      rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
+   }
+   
+   rt.uri().param(p_lr);
+}
+
 int
 Helper::getPortForReply(SipMessage& request)
 {
