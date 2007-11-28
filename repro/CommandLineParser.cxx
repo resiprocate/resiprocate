@@ -68,7 +68,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    char* adminPassword = "";
    int outboundDisabled=0;
-   int outboundVersion=8;
+   int outboundVersion=11;
    int rrTokenHackEnabled=0;
 
 
@@ -130,7 +130,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  0, "set web administrator password", ""},
       {"disable-outbound",     0,   POPT_ARG_NONE,                            &outboundDisabled,     0, "disable outbound support (draft-ietf-sip-outbound)", 0},
-      {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "8"},
+      {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "11"},
       {"enable-flow-tokens",     0,   POPT_ARG_NONE,                            &rrTokenHackEnabled,     0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
       {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
