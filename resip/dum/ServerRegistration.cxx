@@ -242,6 +242,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
          {
             if(!i->exists(p_Instance) || !i->exists(p_regid))
             {
+               DebugLog(<<"instance or reg-id missing");
                supportsOutbound=false;
             }
 
@@ -250,11 +251,13 @@ ServerRegistration::dispatch(const SipMessage& msg)
                haveDirectFlow=false;
                if(!msg.header(h_Paths).back().exists(p_ob))
                {
+                  DebugLog(<<"last Path doesn't have ob");
                   supportsOutbound=false;
                }
             }
             else if(msg.header(h_Vias).size() > 1)
             {
+               DebugLog(<<"more than one Via, and no Path");
                supportsOutbound=false;
             }
          }
@@ -262,6 +265,10 @@ ServerRegistration::dispatch(const SipMessage& msg)
          {
             supportsOutbound=false;
          }
+      }
+      else
+      {
+         DebugLog(<<"outbound support disabled");
       }
 
       // .bwc. The outbound processing
