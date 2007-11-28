@@ -686,13 +686,11 @@ Uri::getAor() const
        mOldHost != mHost ||
        mOldPort != mPort)
    {
-      bool hostIsIpV6Address = false;
       mOldHost = mHost;
       // canonicalize host
       if (DnsUtil::isIpV6Address(mOldHost))
       {
          mCanonicalHost = DnsUtil::canonicalizeIpV6Address(mHost);
-         hostIsIpV6Address = true;
       }
       else
       {
@@ -716,14 +714,7 @@ Uri::getAor() const
          if (!mCanonicalHost.empty())
          {
             mAor += Symbols::AT_SIGN;
-            if (hostIsIpV6Address && mPort != 0)
-            {
-               mAor += Symbols::LS_BRACKET + mCanonicalHost + Symbols::RS_BRACKET;
-            }
-            else
-            {
-               mAor += mCanonicalHost;
-            }
+            mAor += mCanonicalHost;
          }
       }
 

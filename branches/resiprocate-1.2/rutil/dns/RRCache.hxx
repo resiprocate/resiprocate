@@ -34,7 +34,6 @@ class RRCache
                        const int rrType,
                        Itr  begin, 
                        Itr  end);
-      void updateCacheFromHostFile(const DnsHostRecord&);
       void cacheTTL(const Data& target,                    
                     const int rrType,
                     const int status,
