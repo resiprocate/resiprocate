@@ -28,10 +28,11 @@ public:
    virtual void onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime) = 0;
    virtual void onRefreshFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
-   virtual void onSetActiveDestinationSuccess(unsigned int socketDesc) = 0;
-   virtual void onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
-   virtual void onClearActiveDestinationSuccess(unsigned int socketDesc) = 0;
-   virtual void onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
+   // !slg! there may be able to remain synchronous
+   //virtual void onSetActiveDestinationSuccess(unsigned int socketDesc) = 0;
+   //virtual void onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
+   //virtual void onClearActiveDestinationSuccess(unsigned int socketDesc) = 0;
+   //virtual void onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
 
    virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size) = 0;
    virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
