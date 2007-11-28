@@ -166,14 +166,7 @@ Timer::getSystemTime()
     UInt64 time=0;
 #if defined(WIN32)  
     FILETIME ft;
-#ifdef UNDER_CE
-    SYSTEMTIME st;
-    GetSystemTime( &st);
-    SystemTimeToFileTime(&st,&ft);
-#else
     GetSystemTimeAsFileTime( &ft);
-#endif
-
     ULARGE_INTEGER li;
     li.LowPart = ft.dwLowDateTime;
     li.HighPart = ft.dwHighDateTime;

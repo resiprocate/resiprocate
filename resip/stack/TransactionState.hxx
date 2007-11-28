@@ -15,8 +15,6 @@ class SipMessage;
 class TransactionMap;
 class TransactionController;
 class TransactionUser;
-class NameAddr;
-class Via;
 
 class TransactionState : public DnsHandler
 {
@@ -102,9 +100,6 @@ class TransactionState : public DnsHandler
          @return true iff a response was successfully sent.
       **/
       static bool handleBadRequest(const resip::SipMessage& badReq,TransactionController& controller);
-
-      void saveOriginalContactAndVia(const SipMessage& msg);
-      void TransactionState::restoreOriginalContactAndVia();
       
       TransactionController& mController;
       
@@ -126,11 +121,6 @@ class TransactionState : public DnsHandler
       // CANCEL to exactly the same tuple as the original INVITE went to. 
       Tuple mTarget; 
       Tuple mResponseTarget; // used to reply to requests
-
-      // used when the DnsResult moves to another transport on failure. Only
-      // used for outgoing stateful, so auto_ptr for space efficiency.
-      std::auto_ptr<NameAddr> mOriginalContact;
-      std::auto_ptr<Via> mOriginalVia;
 
       Data mId;
       bool mAckIsValid;
