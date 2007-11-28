@@ -9,14 +9,14 @@ void
 ConnectionManager::start(ConnectionPtr c)
 {
   mConnections.insert(c);
-  ((TcpConnection*)c.get())->start();
+  c->start();
 }
 
 void 
 ConnectionManager::stop(ConnectionPtr c)
 {
   mConnections.erase(c);
-  ((TcpConnection*)c.get())->stop();
+  c->stop();
 }
 
 void 
@@ -26,7 +26,7 @@ ConnectionManager::stopAll()
 
    for(; it != mConnections.end(); it++)
    {
-     ((TcpConnection*)it->get())->stop();
+      (*it)->stop();
    }
    mConnections.clear();
 }

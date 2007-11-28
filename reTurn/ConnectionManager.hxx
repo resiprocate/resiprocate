@@ -3,7 +3,7 @@
 
 #include <set>
 #include <boost/noncopyable.hpp>
-#include "TcpConnection.hxx"
+#include "AsyncSocketBase.hxx"
 
 namespace reTurn {
 

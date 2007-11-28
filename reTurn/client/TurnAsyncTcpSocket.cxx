@@ -10,7 +10,7 @@ TurnAsyncTcpSocket::TurnAsyncTcpSocket(asio::io_service& ioService,
                                        const asio::ip::address& address, 
                                        unsigned short port,
                                        bool turnFraming) : 
-   TurnAsyncSocket(ioService, turnAsyncSocketHandler, address, port, turnFraming),
+   TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port, turnFraming),
    AsyncTcpSocketBase(ioService)
 {
    mLocalBinding.setTransportType(StunTuple::TCP);
@@ -18,43 +18,10 @@ TurnAsyncTcpSocket::TurnAsyncTcpSocket(asio::io_service& ioService,
 }
 
 void 
-TurnAsyncTcpSocket::send(resip::SharedPtr<resip::Data> data)
-{
-   StunTuple destination(StunTuple::TCP, mConnectedAddress, mConnectedPort);
-   AsyncSocketBase::send(destination, data);
-}
-
-void 
-TurnAsyncTcpSocket::send(unsigned short channel, resip::SharedPtr<resip::Data> data)
-{
-   StunTuple destination(StunTuple::TCP, mConnectedAddress, mConnectedPort);
-   AsyncSocketBase::send(destination, channel, data);
-}
-
-void 
-TurnAsyncTcpSocket::receive()
-{
-   if(mTurnFraming)
-   {
-      AsyncSocketBase::framedReceive();
-   }
-   else
-   {
-      AsyncSocketBase::receive();
-   }
-}
-
-void
-TurnAsyncTcpSocket::close()
-{
-   AsyncSocketBase::close();
-}
-
-void 
 TurnAsyncTcpSocket::onConnectSuccess()
 {
    mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
-   receive();
+   turnReceive();
 }
 
 void 
@@ -67,7 +34,7 @@ void
 TurnAsyncTcpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
 {
    handleReceivedData(address, port, data);
-   receive();
+   turnReceive();
 }
 
 void 
