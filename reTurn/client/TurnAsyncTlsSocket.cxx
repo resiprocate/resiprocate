@@ -11,7 +11,7 @@ TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,
                                        const asio::ip::address& address, 
                                        unsigned short port,
                                        bool turnFraming) : 
-   TurnAsyncSocket(ioService, turnAsyncSocketHandler, address, port, turnFraming),
+   TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port, turnFraming),
    AsyncTlsSocketBase(ioService, sslContext)
 {
    mLocalBinding.setTransportType(StunTuple::TLS);
@@ -20,43 +20,10 @@ TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,
 }
 
 void 
-TurnAsyncTlsSocket::send(resip::SharedPtr<resip::Data> data)
-{
-   StunTuple destination(StunTuple::TLS, mConnectedAddress, mConnectedPort);
-   AsyncSocketBase::send(destination, data);
-}
-
-void 
-TurnAsyncTlsSocket::send(unsigned short channel, resip::SharedPtr<resip::Data> data)
-{
-   StunTuple destination(StunTuple::TLS, mConnectedAddress, mConnectedPort);
-   AsyncSocketBase::send(destination, channel, data);
-}
-
-void 
-TurnAsyncTlsSocket::receive()
-{
-   if(mTurnFraming)
-   {
-      AsyncSocketBase::framedReceive();
-   }
-   else
-   {
-      AsyncSocketBase::receive();
-   }
-}
-
-void
-TurnAsyncTlsSocket::close()
-{
-   AsyncSocketBase::close();
-}
-
-void 
 TurnAsyncTlsSocket::onConnectSuccess()
 {
    mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
-   receive();
+   turnReceive();
 }
 
 void 
@@ -69,7 +36,7 @@ void
 TurnAsyncTlsSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
 {
    handleReceivedData(address, port, data);
-   receive();
+   turnReceive();
 }
 
 void 

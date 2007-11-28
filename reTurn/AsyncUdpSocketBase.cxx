@@ -45,14 +45,14 @@ AsyncUdpSocketBase::connect(const std::string& address, unsigned short port)
    resip::Data service(port);
    asio::ip::udp::resolver::query query(address, service.c_str());   
    mResolver.async_resolve(query,
-        boost::bind(&AsyncUdpSocketBase::handleResolve, dynamic_cast<AsyncUdpSocketBase*>(shared_from_this().get()),
+        boost::bind(&AsyncSocketBase::handleUdpResolve, shared_from_this(),
                     asio::placeholders::error,
                     asio::placeholders::iterator));
 }
 
 void 
-AsyncUdpSocketBase::handleResolve(const asio::error_code& ec,
-                                  asio::ip::udp::resolver::iterator endpoint_iterator)
+AsyncUdpSocketBase::handleUdpResolve(const asio::error_code& ec,
+                                     asio::ip::udp::resolver::iterator endpoint_iterator)
 {
    if (!ec)
    {

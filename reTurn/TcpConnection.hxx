@@ -55,8 +55,6 @@ protected:
 private:
 };
 
-typedef boost::shared_ptr<AsyncSocketBase> ConnectionPtr;
-
 }
 
 #endif 
