@@ -34,6 +34,8 @@ class AresDns : public ExternalDns
 
       void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
 
+      virtual bool hostFileLookup(const char* target, in_addr &addr);
+
    private:
 
       typedef std::pair<ExternalDnsHandler*, void*> Payload;
