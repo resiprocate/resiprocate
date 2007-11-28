@@ -126,26 +126,6 @@ AresDns::~AresDns()
    ares_destroy_suppress_callbacks(mChannel);
 }
 
-bool AresDns::hostFileLookup(const char* target, in_addr &addr)
-{
-   assert(target);
-
-   hostent *hostdata = 0;
-   int status = hostfile_lookup(target, &hostdata);
-
-   if (status != ARES_SUCCESS)
-   {
-      return false;
-   }
-   sockaddr_in saddr;
-   memset(&saddr,0,sizeof(saddr));  /* Initialize sockaddr fields. */
-   saddr.sin_family = AF_INET;
-   memcpy((char *)&(saddr.sin_addr.s_addr),(char *)hostdata->h_addr_list[0], (size_t)hostdata->h_length);
-   addr = saddr.sin_addr;
-   
-   return true;
-}
-
 ExternalDnsHandler* 
 AresDns::getHandler(void* arg)
 {
