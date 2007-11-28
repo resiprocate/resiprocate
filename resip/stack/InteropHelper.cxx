@@ -2,7 +2,7 @@
 
 namespace resip
 {
-int InteropHelper::theOutboundVersion=8;
+int InteropHelper::theOutboundVersion=11;
 bool InteropHelper::isOutboundSupported=true;
 bool InteropHelper::useRRTokenHack=false;
 }
