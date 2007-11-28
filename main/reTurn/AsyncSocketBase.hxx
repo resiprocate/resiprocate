@@ -28,20 +28,22 @@ public:
 
    virtual void registerAsyncSocketBaseHandler(AsyncSocketBaseHandler* handler) { mAsyncSocketBaseHandler = handler; }
 
+   /// Note:  The following API's are thread safe and queue the request to be handled by the ioService thread
    virtual asio::error_code bind(const asio::ip::address& address, unsigned short port) = 0;
    virtual void connect(const std::string& address, unsigned short port) = 0;  
-
-   // Note: destination is ignored for TCP and TLS connections
+   /// Note: destination is ignored for TCP and TLS connections
    virtual void send(const StunTuple& destination, resip::SharedPtr<resip::Data> data);  // Send unframed data
    virtual void send(const StunTuple& destination, unsigned short channel, resip::SharedPtr<resip::Data> data);  // send with turn framing
-
-   // WARNING - don't overllap calls to receive functions
+   /// WARNING - don't overllap calls to receive functions
    virtual void receive();  
    virtual void framedReceive();  
-
    virtual void close();
 
-   // Use these if you already operating on the ioService thread
+   bool isConnected() { return mConnected; }
+   asio::ip::address& getConnectedAddress() { return mConnectedAddress; }
+   unsigned short getConnectedPort() { return mConnectedPort; }
+
+   /// Use these if you already operating within the ioService thread
    virtual void doSend(const StunTuple& destination, unsigned short channel, resip::SharedPtr<resip::Data> data, unsigned int bufferStartPos=0);
    virtual void doSend(const StunTuple& destination, resip::SharedPtr<resip::Data> data, unsigned int bufferStartPos=0);
    virtual void doReceive();
@@ -57,6 +59,17 @@ public:
 
    /// Utility API
    static resip::SharedPtr<resip::Data> allocateBuffer(unsigned int size);
+
+   // Stubbed out async handlers needed by Protocol specific Subclasses of this - the requirement for these 
+   // to be in the base class all revolves around the shared_from_this() use/requirement
+   virtual void start() { assert(false); }
+   virtual void stop() { assert(false); }
+   virtual void handleReadHeader(const asio::error_code& e) { assert(false); }
+   virtual void handleServerHandshake(const asio::error_code& e) { assert(false); }
+   virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { assert(false); }
+   virtual void handleUdpResolve(const asio::error_code& ec, asio::ip::udp::resolver::iterator endpoint_iterator) { assert(false); }
+   virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { assert(false); }
+   virtual void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator) { assert(false); }
 
 protected:
    /// Handle completion of a sendData operation.
@@ -88,7 +101,6 @@ private:
    virtual unsigned short getSenderEndpointPort() = 0;
 
    virtual void sendFirstQueuedData();
-
    class SendData
    {
    public:
@@ -103,6 +115,8 @@ private:
    typedef std::deque<SendData> SendDataQueue;
    SendDataQueue mSendDataQueue;
 };
+
+typedef boost::shared_ptr<AsyncSocketBase> ConnectionPtr;
 
 }
 

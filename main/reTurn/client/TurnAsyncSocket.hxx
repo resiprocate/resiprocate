@@ -10,6 +10,7 @@
 #include "../StunMessage.hxx"
 #include "../ChannelManager.hxx"
 #include "TurnAsyncSocketHandler.hxx"
+#include "../AsyncSocketBase.hxx"
 
 namespace reTurn {
 
@@ -22,6 +23,7 @@ public:
    static asio::ip::address UnspecifiedIpAddress;
 
    explicit TurnAsyncSocket(asio::io_service& ioService,
+                            AsyncSocketBase& asyncSocketBase,
                             TurnAsyncSocketHandler* turnAsyncSocketHandler,
                             const asio::ip::address& address = UnspecifiedIpAddress, 
                             unsigned short port = 0, 
@@ -36,6 +38,7 @@ public:
 
    // Set the username and password for all future requests
    void setUsernameAndPassword(const char* username, const char* password);
+   void connect(const std::string& address, unsigned short port);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    void bindRequest();
@@ -62,17 +65,10 @@ public:
    //asio::error_code receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
    //asio::error_code receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout);
 
-   virtual void close() = 0;
+   virtual void close();
+   virtual void turnReceive();
 
 protected:
-   // Note: destination is ignored for TCP and TLS connections
-   virtual void send(resip::SharedPtr<resip::Data> data)=0;  // Send unframed data
-   virtual void send(unsigned short channel, resip::SharedPtr<resip::Data> data)=0;  // send with turn framing
-   virtual void receive() = 0;  
-
-   virtual bool isConnected() const = 0;
-   virtual const asio::ip::address& getConnectedAddress() const = 0;
-   virtual unsigned short getConnectedPort() const = 0;
 
    void handleReceivedData(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
 
@@ -102,8 +98,13 @@ protected:
 
 private:
    resip::Mutex mMutex;
+   AsyncSocketBase& mAsyncSocketBase;
+
    void sendStunMessage(StunMessage& request);
    void sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size);
+   void send(resip::SharedPtr<resip::Data> data);  // Send unframed data
+   void send(unsigned short channel, resip::SharedPtr<resip::Data> data);  // send with turn framing
+
    asio::error_code handleStunMessage(StunMessage& stunMessage);
    asio::error_code handleDataInd(StunMessage& stunMessage);
    asio::error_code handleChannelConfirmation(StunMessage &stunMessage);

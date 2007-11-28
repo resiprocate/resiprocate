@@ -21,16 +21,6 @@ public:
 
    virtual unsigned int getSocketDescriptor() { return mSocket.lowest_layer().native(); }
 
-   virtual bool isConnected() const { return mConnected; }
-   virtual const asio::ip::address& getConnectedAddress() const { return mConnectedAddress; }
-   virtual unsigned short getConnectedPort() const { return mConnectedPort; }
-
-   virtual void send(resip::SharedPtr<resip::Data> data);  // Send unframed data
-   virtual void send(unsigned short channel, resip::SharedPtr<resip::Data> data);  // send with turn framing
-   virtual void receive();
-
-   virtual void close();
-
 protected:
 
 private:

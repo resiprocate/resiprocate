@@ -36,8 +36,8 @@ protected:
    /// Endpoint info for current sender
    asio::ip::udp::endpoint mSenderEndpoint;
 
-   void handleResolve(const asio::error_code& ec,
-                      asio::ip::udp::resolver::iterator endpoint_iterator);
+   virtual void handleUdpResolve(const asio::error_code& ec,
+                                 asio::ip::udp::resolver::iterator endpoint_iterator);
 
 private:
 

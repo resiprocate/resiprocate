@@ -227,8 +227,8 @@ int main(int argc, char* argv[])
     sslContext.load_verify_file("ca.pem");
 
     //boost::shared_ptr<TurnAsyncUdpSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string("127.0.0.1"), 0));
-    boost::shared_ptr<TurnAsyncTcpSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string("127.0.0.1"), 0));
-    //boost::shared_ptr<TurnAsyncTlsSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, &handler, asio::ip::address::from_string("127.0.0.1"), 0)); port++;
+    //boost::shared_ptr<TurnAsyncTcpSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string("127.0.0.1"), 0));
+    boost::shared_ptr<TurnAsyncTlsSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, &handler, asio::ip::address::from_string("127.0.0.1"), 0)); port++;
 
     handler.setTurnAsyncSocket(turnSocket.get());
 
