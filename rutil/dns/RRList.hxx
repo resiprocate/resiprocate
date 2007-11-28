@@ -9,6 +9,7 @@
 namespace resip
 {
 class DnsResourceRecord;
+class DnsHostRecord;
 
 class RRList : public IntrusiveListElement<RRList*>
 {
@@ -40,6 +41,9 @@ class RRList : public IntrusiveListElement<RRList*>
              Itr end, 
              int ttl);
       
+      RRList(const DnsHostRecord &record, int ttl);
+      void update(const DnsHostRecord &record, int ttl);
+
       void update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl);
       Records records(const int protocol);
 

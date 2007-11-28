@@ -219,6 +219,11 @@ static int fake_hostent(const char *name, ares_host_callback callback,
   return 1;
 }
 
+int hostfile_lookup(const char *name, struct hostent **host)
+{
+   return file_lookup(name, host);
+}
+
 static int file_lookup(const char *name, struct hostent **host)
 {
   FILE *fp;
