@@ -1,119 +1,61 @@
+#if !defined(CLIENT_AUTH_EXTENSION_HXX)
+#define CLIENT_AUTH_EXTENSION_HXX
 
-/*
-** Build system provides these.
-** VERSION comes from a file and is the 'marketing' version
-**          of repro (major.minor)
-** BUILD_REV is the subversion svnversion output (lightly formatted)
-**           (ends in M if there are local modifications)
-** RELEASE_VERSION
-*/
+#include <time.h>
 
-#include <string>
+#include <time.h>
 
-#if defined(TESTDRIVER)
-#include <iostream>
-#endif
-
-#include "repro/ReproVersion.hxx"
-#include "repro/reproInfo.hxx"
-#if !defined(REPRO_BUILD_REV)
-# define REPRO_BUILD_REV "000000"
-#endif
-
-#if !defined(REPRO_BUILD_HOST)
-# define REPRO_BUILD_HOST "unknown.invalid"
-#endif
-
-#if !defined(REPRO_RELEASE_VERSION)
-# define REPRO_RELEASE_VERSION "0.0"
-#endif
-
-#if !defined(REPRO_NAME)
-# define REPRO_NAME "Repro"
-#endif
+#include "resip/stack/NonceHelper.hxx"
+#include "resip/stack/Symbols.hxx"
+#include "resip/stack/Uri.hxx"
+#include "resip/stack/MethodTypes.hxx"
+#include "rutil/BaseException.hxx"
+#include "rutil/Data.hxx"
+#include "resip/stack/Contents.hxx"
+#include "resip/stack/SecurityAttributes.hxx"
+#include "resip/stack/SdpContents.hxx"
 
 
 
-namespace repro
+namespace resip
 {
-   VersionUtils::VersionUtils():
-      mBuildHost(REPRO_BUILD_HOST),
-      mReleaseVersion(REPRO_RELEASE_VERSION),
-      mScmRevision(REPRO_BUILD_REV),
-      mDisplayVersion(REPRO_NAME),
-      mBuildStamp(REPRO_BUILD_REV)
-   {
-      mDisplayVersion += ' ';
-      mDisplayVersion += mReleaseVersion;
-      mDisplayVersion += '/';
 
-      mBuildStamp += '@';
-      mBuildStamp += mBuildHost;
+class SipMessage;
+class NameAddr;
+class SecurityAttributes;
+class Security;
 
-      mDisplayVersion += mBuildStamp;
-   }
+class ClientAuthExtension
+{
+   public:
+      virtual ~ClientAuthExtension() {}
+      virtual Auth makeChallengeResponseAuth(SipMessage& request,
+                                             const Data& username,
+                                             const Data& password,
+                                             const Auth& challenge,
+                                             const Data& cnonce,
+                                             unsigned int& nonceCount,
+                                             Data& nonceCountString);      
+      
+      virtual bool algorithmAndQopSupported(const Auth& challenge);
 
-   VersionUtils* VersionUtils::sVU = 0;
-
-   const VersionUtils&
-   VersionUtils::instance()
-   {
-      if (sVU == 0)
+      static void setInstance(ClientAuthExtension*);
+      static ClientAuthExtension& instance() 
       {
-	 sVU = new VersionUtils;
-      }
-      return *sVU;
-   }
+         return *mInstance;
+      }      
+   protected:
+      ClientAuthExtension() {}
 
-   VersionUtils::~VersionUtils() {};
-
-   const std::string&
-   VersionUtils::buildStamp() const
-   {
-      return  mBuildStamp;
-   }
-   
-   const std::string&
-   VersionUtils::releaseVersion() const
-   {
-      return mReleaseVersion;
-   }
-
-
-   const std::string&
-   VersionUtils::buildHost() const
-   {
-      return mBuildHost;
-   }
-
-   const std::string&
-   VersionUtils::displayVersion() const
-   {
-      return mDisplayVersion;
-   }
-
-   const std::string&
-   VersionUtils::scmRevision() const
-   {
-      return mScmRevision;
-   }
-
+      
+      static ClientAuthExtension* mInstance;
+      
 };
 
-
-#if defined(TESTDRIVER)
-int main()
-{
-#define T(x) std::cout << #x << " = " << repro::VersionUtils::instance().x() << std::endl;
-   T(displayVersion);
-   T(buildStamp);
-   T(scmRevision);
-   T(releaseVersion);
-   T(buildHost);
-   return 0;
 }
-#undef T
+
 #endif
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
@@ -156,4 +98,10 @@ int main()
  * DAMAGE.
  * 
  * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
  */
