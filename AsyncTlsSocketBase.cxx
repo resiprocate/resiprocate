@@ -46,13 +46,13 @@ AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
    resip::Data service(port);
    asio::ip::tcp::resolver::query query(address, service.c_str());   
    mResolver.async_resolve(query,
-        boost::bind(&AsyncTlsSocketBase::handleResolve, dynamic_cast<AsyncTlsSocketBase*>(shared_from_this().get()),
+        boost::bind(&AsyncSocketBase::handleTcpResolve, shared_from_this(),
                     asio::placeholders::error,
                     asio::placeholders::iterator));
 }
 
 void 
-AsyncTlsSocketBase::handleResolve(const asio::error_code& ec,
+AsyncTlsSocketBase::handleTcpResolve(const asio::error_code& ec,
                                   asio::ip::tcp::resolver::iterator endpoint_iterator)
 {
    if (!ec)
@@ -61,7 +61,7 @@ AsyncTlsSocketBase::handleResolve(const asio::error_code& ec,
       // will be tried until we successfully establish a connection.
       //asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
       mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncTlsSocketBase::handleConnect, dynamic_cast<AsyncTlsSocketBase*>(shared_from_this().get()),
+                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
                             asio::placeholders::error, endpoint_iterator));
    }
    else
@@ -78,7 +78,7 @@ AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
    {
       // The connection was successful - now do handshake.
       mSocket.async_handshake(asio::ssl::stream_base::client, 
-                              boost::bind(&AsyncTlsSocketBase::handleClientHandshake, dynamic_cast<AsyncTlsSocketBase*>(shared_from_this().get()), 
+                              boost::bind(&AsyncSocketBase::handleClientHandshake, shared_from_this(), 
                                           asio::placeholders::error, endpoint_iterator));
    }
    else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
@@ -86,7 +86,7 @@ AsyncTlsSocketBase::handleConnect(const asio::error_code& ec,
       // The connection failed. Try the next endpoint in the list.
       mSocket.lowest_layer().close();
       mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncTlsSocketBase::handleConnect, dynamic_cast<AsyncTlsSocketBase*>(shared_from_this().get()),
+                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
                             asio::placeholders::error, endpoint_iterator));
    }
    else
@@ -113,7 +113,7 @@ AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
       // The handshake failed. Try the next endpoint in the list.
       mSocket.lowest_layer().close();
       mSocket.lowest_layer().async_connect(endpoint_iterator->endpoint(),
-                            boost::bind(&AsyncTlsSocketBase::handleConnect, dynamic_cast<AsyncTlsSocketBase*>(shared_from_this().get()),
+                            boost::bind(&AsyncSocketBase::handleConnect, shared_from_this(),
                             asio::placeholders::error, endpoint_iterator));
    }
    else
@@ -126,7 +126,7 @@ void
 AsyncTlsSocketBase::doHandshake()
 {
    mSocket.async_handshake(asio::ssl::stream_base::server, 
-                           boost::bind(&AsyncTlsSocketBase::handleServerHandshake, dynamic_cast<AsyncTlsSocketBase*>(shared_from_this().get()), asio::placeholders::error));  
+                           boost::bind(&AsyncSocketBase::handleServerHandshake, shared_from_this(), asio::placeholders::error));  
 }
 
 void 
@@ -174,7 +174,7 @@ void
 AsyncTlsSocketBase::transportFramedReceive()
 {
    asio::async_read(mSocket, asio::buffer((void*)mReceiveBuffer->data(), 4),
-                    boost::bind(&AsyncTlsSocketBase::handleReadHeader, dynamic_cast<AsyncTlsSocketBase*>(shared_from_this().get()), asio::placeholders::error));
+                    boost::bind(&AsyncSocketBase::handleReadHeader, shared_from_this(), asio::placeholders::error));
 }
 
 void 

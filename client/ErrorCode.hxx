@@ -27,6 +27,7 @@ static const ErrorType UnknownRemoteAddress                  = ErrorBase + 12;
 static const ErrorType InvalidRequestedTransport             = ErrorBase + 13;
 static const ErrorType NotConnected                          = ErrorBase + 14;
 static const ErrorType AlreadyAllocated                      = ErrorBase + 15;
+static const ErrorType ReceiveTimeout                        = ErrorBase + 16;
 } 
 
 #endif

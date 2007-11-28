@@ -22,6 +22,7 @@ unsigned short TurnAsyncSocket::UnspecifiedPort = 0;
 asio::ip::address TurnAsyncSocket::UnspecifiedIpAddress = asio::ip::address::from_string("0.0.0.0");
 
 TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService, 
+                                 AsyncSocketBase& asyncSocketBase,
                                  TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                  const asio::ip::address& address, 
                                  unsigned short port,
@@ -31,8 +32,10 @@ TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService,
    mTurnFraming(turnFraming),
    mLocalBinding(StunTuple::None /* Set properly by sub class */, address, port),
    mHaveAllocation(false),
-   mActiveDestination(0)
+   mActiveDestination(0),
+   mAsyncSocketBase(asyncSocketBase)
 {
+   assert(mTurnAsyncSocketHandler);
 }
 
 TurnAsyncSocket::~TurnAsyncSocket()
@@ -47,7 +50,7 @@ TurnAsyncSocket::requestSharedSecret()
    // Should we check here if TLS and deny?
 
    // Ensure Connected
-   if(!isConnected())
+   if(!mAsyncSocketBase.isConnected())
    {
       mTurnAsyncSocketHandler->onSharedSecretFailure(getSocketDescriptor(), asio::error_code(reTurn::NotConnected, asio::error::misc_category));
    }
@@ -73,7 +76,7 @@ TurnAsyncSocket::bindRequest()
    asio::error_code errorCode;
 
    // Ensure Connected
-   if(!isConnected())
+   if(!mAsyncSocketBase.isConnected())
    {
       mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(reTurn::NotConnected, asio::error::misc_category));
    }
@@ -107,7 +110,7 @@ TurnAsyncSocket::createAllocation(unsigned int lifetime,
    mRequestedTransportType = requestedTransportType;
 
    // Ensure Connected
-   if(!isConnected())
+   if(!mAsyncSocketBase.isConnected())
    {
       mTurnAsyncSocketHandler->onAllocationFailure(getSocketDescriptor(), asio::error_code(reTurn::NotConnected, asio::error::misc_category));
    }
@@ -228,7 +231,7 @@ TurnAsyncSocket::setActiveDestination(const asio::ip::address& address, unsigned
    }
 
    // Ensure Connected
-   if(!isConnected())
+   if(!mAsyncSocketBase.isConnected())
    {
       return asio::error_code(reTurn::NotConnected, asio::error::misc_category); 
    }
@@ -304,7 +307,7 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
          {
             // Handle Stun Message
             StunMessage* stunMsg = new StunMessage(mLocalBinding, 
-                                                   StunTuple(mLocalBinding.getTransportType(), getConnectedAddress(), getConnectedPort()), 
+                                                   StunTuple(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort()), 
                                                    &(*data)[4], data->size()-4);
             handleStunMessage(*stunMsg);
             delete stunMsg;
@@ -335,7 +338,7 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
    {
       // mTurnFraming is disabled - message should be a Stun Message
       StunMessage* stunMsg = new StunMessage(mLocalBinding, 
-                                             StunTuple(mLocalBinding.getTransportType(), getConnectedAddress(), getConnectedPort()), 
+                                             StunTuple(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort()), 
                                              &(*data)[0], data->size());
       if(stunMsg->isValid())
       {
@@ -903,6 +906,46 @@ TurnAsyncSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int
       sendStunMessage(ind);
    }
 }
+
+void
+TurnAsyncSocket::connect(const std::string& address, unsigned short port)
+{
+   mAsyncSocketBase.connect(address,port);
+}
+
+void
+TurnAsyncSocket::close()
+{
+   mAsyncSocketBase.close();
+}
+
+void 
+TurnAsyncSocket::turnReceive()
+{
+   if(mTurnFraming)
+   {
+      mAsyncSocketBase.framedReceive();
+   }
+   else
+   {
+      mAsyncSocketBase.receive();
+   }
+}
+
+void 
+TurnAsyncSocket::send(resip::SharedPtr<resip::Data> data)
+{
+   StunTuple destination(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort());
+   mAsyncSocketBase.send(destination, data);
+}
+
+void 
+TurnAsyncSocket::send(unsigned short channel, resip::SharedPtr<resip::Data> data)
+{
+   StunTuple destination(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort());
+   mAsyncSocketBase.send(destination, channel, data);
+}
+
 
 } // namespace
 

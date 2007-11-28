@@ -10,7 +10,7 @@ TurnAsyncUdpSocket::TurnAsyncUdpSocket(asio::io_service& ioService,
                                        const asio::ip::address& address, 
                                        unsigned short port, 
                                        bool turnFraming) : 
-   TurnAsyncSocket(ioService, turnAsyncSocketHandler, address, port, turnFraming),
+   TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port, turnFraming),
    AsyncUdpSocketBase(ioService)
 {
    mLocalBinding.setTransportType(StunTuple::UDP);
@@ -18,43 +18,10 @@ TurnAsyncUdpSocket::TurnAsyncUdpSocket(asio::io_service& ioService,
 }
 
 void 
-TurnAsyncUdpSocket::send(resip::SharedPtr<resip::Data> data)
-{
-   StunTuple destination(StunTuple::UDP, mConnectedAddress, mConnectedPort);
-   AsyncSocketBase::send(destination, data);
-}
-
-void 
-TurnAsyncUdpSocket::send(unsigned short channel, resip::SharedPtr<resip::Data> data)
-{
-   StunTuple destination(StunTuple::UDP, mConnectedAddress, mConnectedPort);
-   AsyncSocketBase::send(destination, channel, data);
-}
-
-void 
-TurnAsyncUdpSocket::receive()
-{
-   if(mTurnFraming)
-   {
-      AsyncSocketBase::framedReceive();
-   }
-   else
-   {
-      AsyncSocketBase::receive();
-   }
-}
-
-void
-TurnAsyncUdpSocket::close()
-{
-   AsyncSocketBase::close();
-}
-
-void 
 TurnAsyncUdpSocket::onConnectSuccess()
 {
    mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
-   receive();
+   turnReceive();
 }
 
 void 
@@ -67,7 +34,7 @@ void
 TurnAsyncUdpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
 {
    handleReceivedData(address, port, data);
-   receive();
+   turnReceive();
 }
 
 void 
