@@ -30,9 +30,9 @@ public:
    virtual unsigned short getSenderEndpointPort();
 
 protected:
-   void handleReadHeader(const asio::error_code& e);
-   void handleResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
-   void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
+   virtual void handleReadHeader(const asio::error_code& e);
+   virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
+   virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
 
    asio::ip::tcp::socket mSocket;
    asio::ip::tcp::resolver mResolver;
