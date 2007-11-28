@@ -490,7 +490,8 @@ TransportSelector::determineSourceInterface(SipMessage* msg, const Tuple& target
       if ( ret<0 )
       {
          int e =  getErrno();
-         if  ( e != EAFNOSUPPORT )
+         //.dcm. OS X 10.5 workaround, we could #ifdef for specific OS X version.
+         if  (!(e ==EAFNOSUPPORT || e == EADDRNOTAVAIL))
          {
             ErrLog(<< "Can't disconnect socket :  " << strerror(e) );
             Transport::error(e);
