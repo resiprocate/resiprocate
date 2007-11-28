@@ -3,7 +3,6 @@
 
 #include "resip/dum/DialogSetId.hxx"
 #include "resip/dum/UserProfile.hxx"
-#include "rutil/SharedPtr.hxx"
 
 #include <map>
 #include <functional>
@@ -13,15 +12,13 @@ namespace resip
 
 class Auth;
 class SipMessage;
-class ClientAuthExtension;
-
 
 class ClientAuthManager
 {
    public:
       ClientAuthManager();
       virtual ~ClientAuthManager() {}
-      
+
       // For any response received by the UAC, handle will be
       // called. origRequest is the request that generated the 401/407.
       // return true if the challenge can be handled with an updated request. 
@@ -72,10 +69,6 @@ class ClientAuthManager
             State mState;            
             unsigned int mNonceCount;
             Auth mAuth;            
-
-            // FH add the realm state so it can change
-            Auth *mAuthPtr;
-            
 //             .dcm. only one credential per realm per challenge supported
 //             typedef std::map<Auth, UserProfile::DigestCredential, CompareAuth > CredentialMap;            
 //             CredentialMap proxyCredentials;

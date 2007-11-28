@@ -129,13 +129,6 @@ void DnsStub::process(FdSet& fdset)
 }
 
 void DnsStub::cache(const Data& key,
-                    in_addr addr)
-{
-   DnsHostRecord record(key, addr);
-   RRCache::instance()->updateCacheFromHostFile(record);
-}
-
-void DnsStub::cache(const Data& key,
                     const unsigned char* abuf, 
                     int alen)
 {
@@ -418,7 +411,7 @@ DnsStub::Query::go()
    {
       if (mTransform && !records.empty())
       {
-         mTransform->transform(mTarget, mRRType, records);
+         mTransform->transform(targetToQuery, mRRType, records);
       }
       mResultConverter->notifyUser(mTarget, status, mStub.errorMessage(status), records, mSink); 
 
@@ -440,27 +433,6 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          case ARES_ENOTFOUND:
          case ARES_ENOTIMP:
          case ARES_EREFUSED:
-            if(mRRType == T_A)
-            {
-               in_addr address;  
-               if (mStub.mDnsProvider->hostFileLookup(mTarget.c_str(), address))
-               {
-                  mStub.cache(mTarget, address);
-                  mReQuery = 0;
-                  DnsResourceRecordsByPtr result;
-                  int queryStatus = 0;
-
-                  RRCache::instance()->lookup(mTarget, mRRType, mProto, result, queryStatus);
-                  if (mTransform) 
-                  {
-                     mTransform->transform(mTarget, mRRType, result);
-                  }
-                  mResultConverter->notifyUser(mTarget, queryStatus, mStub.errorMessage(queryStatus), result, mSink);
-                  mStub.removeQuery(this);
-                  delete this;
-                  return;
-               }
-            }
             try
             {
                mStub.cacheTTL(mTarget, mRRType, status, abuf, alen);
@@ -473,25 +445,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
                InfoLog(<< e.getMessage());
             }
             break;
-         case ARES_ECONNREFUSED:
-         case ARES_ETIMEOUT:
-            ErrLog (<< "Connection error " << mStub.errorMessage(status) << " for " << mTarget);
-            break;
-         case ARES_EBADRESP:
-            ErrLog (<< "Server response error " << mStub.errorMessage(status) << " for " << mTarget);
-            break;
-         case ARES_EOF:
-         case ARES_EFILE:
-         case ARES_ENOMEM:
-         case ARES_EDESTRUCTION:
-            ErrLog (<< "Error " << mStub.errorMessage(status) << " for " << mTarget);
-            break;
-         case ARES_EBADQUERY:
-         case ARES_EBADNAME:
-         case ARES_EBADFAMILY:
-            ErrLog (<< "Ares usage rror " << mStub.errorMessage(status) << " for " << mTarget);
-            assert(0);
-            break;
+
          default:
             ErrLog (<< "Unknown error " << mStub.errorMessage(status) << " for " << mTarget);
             // .bwc. There are a whole bunch more error codes here.
@@ -551,7 +505,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          RRCache::instance()->lookup(targetToQuery, mRRType, mProto, result, queryStatus);
          if (mTransform) 
          {
-            mTransform->transform(mTarget, mRRType, result);
+            mTransform->transform(targetToQuery, mRRType, result);
          }
          mResultConverter->notifyUser(mTarget, queryStatus, mStub.errorMessage(queryStatus), result, mSink);
       }
