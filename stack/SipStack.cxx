@@ -635,7 +635,8 @@ const SipStack& stack)
 bool
 SipStack::isFlowAlive(const resip::Tuple& flow) const
 {
-   return mTransactionController.transportSelector().connectionAlive(flow);
+   return flow.getType()==UDP || 
+         mTransactionController.transportSelector().connectionAlive(flow);
 }
 
 /* ====================================================================
