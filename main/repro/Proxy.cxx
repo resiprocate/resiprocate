@@ -109,6 +109,20 @@ Proxy::thread()
                   }
 
                   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
+                  if(sip->method()==OPTIONS && 
+                     sip->header(h_RequestLine).uri().user().empty() &&
+                     isMyUri(sip->header(h_RequestLine).uri()))
+                  {
+                     std::auto_ptr<SipMessage> resp(new SipMessage);
+                     Helper::makeResponse(*resp,*sip,200);
+                     if(resip::InteropHelper::getOutboundSupported())
+                     {
+                        resp->header(h_Supporteds).push_back(Token("outbound"));
+                     }
+                     mStack.send(*resp,this);
+                     delete sip;
+                     continue;
+                  }
 
                   // check the MaxForwards isn't too low
                   if (!sip->exists(h_MaxForwards))
