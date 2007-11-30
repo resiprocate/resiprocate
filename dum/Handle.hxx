@@ -99,12 +99,6 @@ class Handle
          assert(other.mHam);
          return mId < other.mId;
       }
-   protected:
-      Handle(HandleManager& ham, Handled* handled) : mHam(&ham), mId(mHam->create(this)) 
-      {
-      }
-
-      //for invalid handles
 
    private:
       HandleManager* mHam;
