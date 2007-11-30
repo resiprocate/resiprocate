@@ -46,8 +46,8 @@ using namespace std;
 
 namespace repro
 {
-bool reproRestartServer = false;
-bool reproFinish = false;
+volatile bool reproRestartServer = false;
+volatile bool reproFinish = false;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
@@ -58,7 +58,8 @@ bool ReproWin32Service=true;
 SERVICE_STATUS_HANDLE svcH;
 SERVICE_STATUS SvcStat={ SERVICE_WIN32, SERVICE_START_PENDING, 
       SERVICE_ACCEPT_STOP, 0, 0, 0, 5000 };  
-void SetSvcStat()
+void 
+setSvcStat()
 {
    if ( ReproWin32Service ) 
    { 
@@ -139,7 +140,7 @@ addDomains(TransactionUser& tu, ReproConfiguration& args, Store& store)
 }
 
 void 
-ProxyMain( resip::ReproConfiguration *args, Store &store)
+proxyMain(resip::ReproConfiguration *args, Store &store)
 {
    Security* security = 0;
    Compression* compression = 0;
@@ -162,7 +163,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
    }
 
 #ifdef WIN32
-   SetSvcStat();
+   setSvcStat();
 #endif
 
    try
@@ -220,7 +221,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
    }
    
 #ifdef WIN32
-   SetSvcStat();
+   setSvcStat();
 #endif
 
    StackThread stackThread(stack);
@@ -231,7 +232,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
  
 
 #ifdef WIN32
-   SetSvcStat();
+   setSvcStat();
 #endif
 
 
@@ -270,7 +271,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
       locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
 #ifdef WIN32
-   SetSvcStat();
+   setSvcStat();
 #endif
 
       if (!args->mNoChallenge)
@@ -323,7 +324,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
    }
    
 #ifdef WIN32
-   SetSvcStat();
+   setSvcStat();
 #endif
 
    ProcessorChain* baboons = new ProcessorChain;
@@ -357,7 +358,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
    targetProcessors.addProcessor(auto_ptr<Processor>(baboons));
 
 #ifdef WIN32
-   SetSvcStat();
+   setSvcStat();
 #endif
 
    Proxy proxy(stack, 
@@ -398,7 +399,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
    }
    
 #ifdef WIN32
-   SetSvcStat();
+   setSvcStat();
 #endif
 
    DialogUsageManager* dum = 0;
@@ -428,7 +429,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
    }
    
 #ifdef WIN32
-   SetSvcStat();
+   setSvcStat();
 #endif
 
 #if defined(USE_SSL)
@@ -489,7 +490,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
    
 #ifdef WIN32
    ReproState = reproWorking;
-   SetSvcStat();
+   setSvcStat();
 #endif
 
    while (!reproFinish && !reproRestartServer)
@@ -503,9 +504,8 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
 
 #ifdef WIN32
    ReproState = reproFinishing;
-   SetSvcStat();
+   setSvcStat();
 #endif
-
 
    proxy.shutdown();
    stackThread.shutdown();
@@ -525,7 +525,7 @@ ProxyMain( resip::ReproConfiguration *args, Store &store)
       adminThread->join();
    }
 #ifdef WIN32
-   SetSvcStat();
+   setSvcStat();
 #endif
 
    if (dumThread)

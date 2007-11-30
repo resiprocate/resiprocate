@@ -4,24 +4,45 @@ namespace resip
 {
 
 
-   ReproConfiguration::ReproConfiguration():mLogType("cout"),
-         mLogLevel("NONE"), mUdpPort(5060), mTcpPort(5060),
+ReproConfiguration::ReproConfiguration() :
+    mLogType("cout")
+   ,mLogLevel("NONE") 
+   ,mUdpPort(5060) 
+   ,mTcpPort(5060)
 #if defined(USE_SSL)
-         mTlsPort(5061),
+   ,mTlsPort(5061)
 #else
-         mTlsPort(0),
+   ,mTlsPort(0)
 #endif
-         mRequestProcessorChainName("default"), mHttpPort(5080),mForkBehavior("EQUAL_Q_PARALLEL"),
-         mCancelBetweenForkGroups(true), mWaitForTerminate(true), mMsBetweenForkGroups(3000), 
-         mMsBeforeCancel(3000), mTimerC(180), mAdminPassword("admin"),
-         mShouldRecordRoute(false), mDtlsPort(0), mUseV4(true), mUseV6(true), mNoChallenge(false), 
-         mNoAuthIntChallenge(false), mNoWebChallenge(false), mNoRegistrar(false), mNoIdentityHeaders(false), 
-         mCertServer(false), mRecursiveRedirect(0), mDoQValue(0), mAllowBadReg(0),mParallelForkStaticRoutes(0),
-         mNoUseParameters(false), mNoLoadWebAdmin(false)
+   ,mRequestProcessorChainName("default") 
+   ,mHttpPort(5080)
+   ,mForkBehavior("EQUAL_Q_PARALLEL")
+   ,mCancelBetweenForkGroups(true)
+   ,mWaitForTerminate(true)
+   ,mMsBetweenForkGroups(3000)
+   ,mMsBeforeCancel(3000)
+   ,mTimerC(180)
+   ,mAdminPassword("admin")
+   ,mShouldRecordRoute(false)
+   ,mDtlsPort(0)
+   ,mUseV4(true)
+   ,mUseV6(true)
+   ,mNoChallenge(false)
+   ,mNoAuthIntChallenge(false)
+   ,mNoWebChallenge(false)
+   ,mNoRegistrar(false)
+   ,mNoIdentityHeaders(false) 
+   ,mCertServer(false)
+   ,mRecursiveRedirect(0)
+   ,mDoQValue(0)
+   ,mAllowBadReg(0)
+   ,mParallelForkStaticRoutes(0)
+   ,mNoUseParameters(false)
+   ,mNoLoadWebAdmin(false)
 #ifdef WIN32
-         , mInstallService(false), mRemoveService( false )
+   ,mInstallService(false)
+   ,mRemoveService(false)
 #endif
-
 {
 }
 

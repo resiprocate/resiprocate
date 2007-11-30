@@ -51,50 +51,50 @@ WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
 
 // !cj! TODO - make all the removes on the web pages work 
 
-WebAdmin::WebAdmin(  Store& store,
-                     RegistrationPersistenceManager& regDb,
-                     Security* security,
-                     bool noChal,  
-                     const Data& realm, // this realm is used for http challenges
-                     const Data& adminPassword,
-                     int port, 
-                     IpVersion version ):
-   HttpBase( port, version, realm ),
+WebAdmin::WebAdmin(Store& store,
+                   RegistrationPersistenceManager& regDb,
+                   Security* security,
+                   bool noChal,  
+                   const Data& realm, // this realm is used for http challenges
+                   const Data& adminPassword,
+                   int port, 
+                   IpVersion version):
+   HttpBase(port, version, realm),
    mStore(store),
    mRegDb(regDb),
    mSecurity(security),
-   mNoWebChallenges( noChal ) 
+   mNoWebChallenges(noChal) 
 {
-      const Data adminName("admin");
+   const Data adminName("admin");
 
-      Data dbA1 = Parameters::GetParam( Parameters::prmAdminPassword );
+   Data dbA1 = Parameters::getParam( Parameters::prmAdminPassword );
       
-      DebugLog(<< " Looking to see if admin user exists (creating WebAdmin)");
-      if ( dbA1.empty() ) // if the admin user does not exist, add it 
-      { 
-         DebugLog(<< "Setting admin password" );
+   DebugLog(<< " Looking to see if admin user exists (creating WebAdmin)");
+   if ( dbA1.empty() ) // if the admin user does not exist, add it 
+   { 
+      DebugLog(<< "Setting admin password");
          
-         Parameters::SaveParam( Parameters::prmAdminPassword, adminPassword==""?Data("admin"):adminPassword );
-         dbA1 = Parameters::GetParam( Parameters::prmAdminPassword );
-         assert( !dbA1.empty() );
-      }
-      else if ( !adminPassword.empty() && adminPassword.md5() != dbA1 )
-      {
-         //All we're using for admin is the password.
-         //This next bit of code relies on it being ok that we 
-         //blow away any other information
-         //in that row. It also expects addUser to replace anything matching the existing key
-         DebugLog(<< "Changing the web admin password" );
-         Parameters::SaveParam( Parameters::prmAdminPassword, adminPassword==""?Data("admin"):adminPassword );
-      }
+      Parameters::saveParam(Parameters::prmAdminPassword, adminPassword == "" ? Data("admin") : adminPassword);
+      dbA1 = Parameters::getParam( Parameters::prmAdminPassword );
+      assert( !dbA1.empty() );
+   }
+   else if (!adminPassword.empty() && adminPassword.md5() != dbA1)
+   {
+      //All we're using for admin is the password.
+      //This next bit of code relies on it being ok that we 
+      //blow away any other information
+      //in that row. It also expects addUser to replace anything matching the existing key
+      DebugLog(<< "Changing the web admin password");
+      Parameters::saveParam(Parameters::prmAdminPassword, adminPassword == "" ? Data("admin") : adminPassword);
+   }
 }
 
 
 void 
-WebAdmin::buildPage( const Data& uri,
-                     int pageNumber, 
-                     const resip::Data& pUser,
-                     const resip::Data& pPassword )
+WebAdmin::buildPage(const Data& uri,
+                    int pageNumber, 
+                    const resip::Data& pUser,
+                    const resip::Data& pPassword)
 {
    ParseBuffer pb(uri);
    
@@ -124,10 +124,10 @@ WebAdmin::buildPage( const Data& uri,
       ( pageName != Data("showRoutes.html") )&& 
       ( pageName != Data("registrations.html") ) &&  
       ( pageName != Data("user.html")  ) &&
-      ( pageName != Data("ServerRestart.html")  ) &&
-      ( pageName != Data("ServerRestarted.html")  ) &&
-      ( pageName != Data("Parameters.html")  ) &&
-      ( pageName != Data("ParametersSet.html")  ) )
+      ( pageName != Data("serverRestart.html")  ) &&
+      ( pageName != Data("serverRestarted.html")  ) &&
+      ( pageName != Data("parameters.html")  ) &&
+      ( pageName != Data("parametersSet.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
       return; 
@@ -195,7 +195,7 @@ WebAdmin::buildPage( const Data& uri,
       }
       
       // check that authentication is correct 
-      Data dbA1 = Parameters::GetParam( Parameters::prmAdminPassword );
+      Data dbA1 = Parameters::getParam( Parameters::prmAdminPassword );
       
 #if 0
       if ( dbA1.empty() ) // if the admin user does not exist, add it 
@@ -307,11 +307,11 @@ WebAdmin::buildPage( const Data& uri,
       
       if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
       
-      if ( pageName == Data("ServerRestart.html")) buildRestartServerSubPage(s);
-      if ( pageName == Data("ServerRestarted.html")) buildRestartedServerSubPage(s);
+      if ( pageName == Data("serverRestart.html")) buildRestartServerSubPage(s);
+      if ( pageName == Data("serverRestarted.html")) buildRestartedServerSubPage(s);
 
-      if ( pageName == Data("Parameters.html")) buildParametersSubPage(s);
-      if ( pageName == Data("ParametersSet.html")) 
+      if ( pageName == Data("parameters.html")) buildParametersSubPage(s);
+      if ( pageName == Data("parametersSet.html")) 
       {
          buildParametersSetPage( pageNumber, s );
          return ;
@@ -1240,15 +1240,24 @@ void WebAdmin::buildRestartedServerSubPage(resip::DataStream& s)
    reproRestartServer = true;
 }
 
-static Data setParamsFunctionLine(Parameters::Param prm, char *WebParam )
+static Data 
+setParamsFunctionLine(Parameters::Param prm, char *WebParam )
 {
-   if ( Parameters::TypeOfParam[prm] == Parameters::ptBool || prm == Parameters::prmLogLevel
-         || prm == Parameters::prmLogType || prm == Parameters::prmQValueBehavior )
-      return Data("setSelect(document.Parameters.") + WebParam + ",\""+Parameters::GetParam( prm ) + "\" );\n";
+   if (Parameters::TypeOfParam[prm] == Parameters::ptBool || 
+       prm == Parameters::prmLogLevel || 
+       prm == Parameters::prmLogType || 
+       prm == Parameters::prmQValueBehavior)
+   {
+      return Data("setSelect(document.Parameters.") + WebParam + ",\""+Parameters::getParam( prm ) + "\" );\n";
+   }
    else
-      return Data("setEdit(document.Parameters.") + WebParam + ",\""+Parameters::GetParam( prm ) + "\" );\n";
+   {
+      return Data("setEdit(document.Parameters.") + WebParam + ",\""+Parameters::getParam( prm ) + "\" );\n";
+   }
 }
-void WebAdmin::buildParametersSubPage(resip::DataStream& s)
+
+void 
+WebAdmin::buildParametersSubPage(resip::DataStream& s)
 {
    Data str(
 #include "repro/webadmin/Parameters.ixx"
@@ -1292,57 +1301,63 @@ void WebAdmin::buildParametersSubPage(resip::DataStream& s)
    s << str;
 }
 
-void WebAdmin::SaveParameter( Parameters::Param prm, char *WebParam )
+void 
+WebAdmin::saveParameter( Parameters::Param prm, char *webParam )
 {
-   Dictionary::iterator it = mHttpParams.find( Data( WebParam ) );
+   Dictionary::iterator it = mHttpParams.find( Data( webParam ) );
    if ( it == mHttpParams.end() )
+   {
       return;
+   }
    if ( it->second == "nothing" )
-      Parameters::SaveParam( prm, Data::Empty );
+   {
+      Parameters::saveParam( prm, Data::Empty );
+   }
    else
-      Parameters::SaveParam( prm, it->second );
+   {
+      Parameters::saveParam( prm, it->second );
+   }
 }
 
-void WebAdmin::buildParametersSetPage( int pageNumber, resip::DataStream& s )
+void 
+WebAdmin::buildParametersSetPage(int pageNumber, resip::DataStream& s)
 {
-   SaveParameter( Parameters::prmLogType, "LogType" );
-   SaveParameter( Parameters::prmLogLevel, "LogLevel" );
-   SaveParameter( Parameters::prmLogPath, "LogPath" );
-   SaveParameter( Parameters::prmRecordRoute, "RecordRoute" );
-   SaveParameter( Parameters::prmUdp, "UdpPort" );
-   SaveParameter( Parameters::prmTcp, "TcpPort" );
-   SaveParameter( Parameters::prmTlsDomain, "TlsDomain" );
-   SaveParameter( Parameters::prmTls, "TlsPort" );
-   SaveParameter( Parameters::prmDtls, "DtlsPort" );
-   SaveParameter( Parameters::prmEnableCertServer, "CertServer" );
-   SaveParameter( Parameters::prmEnableV6, "EnableIpv6" );
-   SaveParameter( Parameters::prmDisableV4, "DisableIpv4" );
-   SaveParameter( Parameters::prmDisableAuth, "DisableAuth" );
-   SaveParameter( Parameters::prmDisableAuthInt, "DisableAuthInt" );
-   SaveParameter( Parameters::prmDisableWebAuth, "DisabaleWebAuth" );
-   SaveParameter( Parameters::prmDisableReg, "DisableReg" );
-   SaveParameter( Parameters::prmDisableIdentity, "DisableIdentity" );
-   SaveParameter( Parameters::prmIinterfaces, "Interfaces" );
-   SaveParameter( Parameters::prmDomains, "Domains" );
-   SaveParameter( Parameters::prmRoute, "Routes" );
-   SaveParameter( Parameters::prmReqChainName, "NameReqChain" );
-   SaveParameter( Parameters::prmHttp, "HttpPort" );
-   SaveParameter( Parameters::prmRecursiveRedirect, "ReqursiveRedirect" );
-   SaveParameter( Parameters::prmQValue, "QVal" );
-   SaveParameter( Parameters::prmQValueBehavior, "QValBehavior" );
-   SaveParameter( Parameters::prmQValueCancelBtwForkGroups, "QValCancelFork" );
-   SaveParameter( Parameters::prmQValueWaitForTerminateBtwForkGroups, "QValWaitFork" );
-   SaveParameter( Parameters::prmQValueMsBetweenForkGroups, "QValMsBetween" );
-   SaveParameter( Parameters::prmQValueMsBeforeCancel, "QValMsCancel" );
-   SaveParameter( Parameters::prmEnumSuffix, "EnumSuffix" );
-   SaveParameter( Parameters::prmAllowBadReg, "AllowBadReg" );
-   SaveParameter( Parameters::prmParallelForkStaticRoutes, "parallelFork" );
-   SaveParameter( Parameters::prmTimerC, "TimerC" );
-   SaveParameter( Parameters::prmAdminPassword, "AdminPassword" );
+   saveParameter( Parameters::prmLogType, "LogType" );
+   saveParameter( Parameters::prmLogLevel, "LogLevel" );
+   saveParameter( Parameters::prmLogPath, "LogPath" );
+   saveParameter( Parameters::prmRecordRoute, "RecordRoute" );
+   saveParameter( Parameters::prmUdp, "UdpPort" );
+   saveParameter( Parameters::prmTcp, "TcpPort" );
+   saveParameter( Parameters::prmTlsDomain, "TlsDomain" );
+   saveParameter( Parameters::prmTls, "TlsPort" );
+   saveParameter( Parameters::prmDtls, "DtlsPort" );
+   saveParameter( Parameters::prmEnableCertServer, "CertServer" );
+   saveParameter( Parameters::prmEnableV6, "EnableIpv6" );
+   saveParameter( Parameters::prmDisableV4, "DisableIpv4" );
+   saveParameter( Parameters::prmDisableAuth, "DisableAuth" );
+   saveParameter( Parameters::prmDisableAuthInt, "DisableAuthInt" );
+   saveParameter( Parameters::prmDisableWebAuth, "DisabaleWebAuth" );
+   saveParameter( Parameters::prmDisableReg, "DisableReg" );
+   saveParameter( Parameters::prmDisableIdentity, "DisableIdentity" );
+   saveParameter( Parameters::prmIinterfaces, "Interfaces" );
+   saveParameter( Parameters::prmDomains, "Domains" );
+   saveParameter( Parameters::prmRoute, "Routes" );
+   saveParameter( Parameters::prmReqChainName, "NameReqChain" );
+   saveParameter( Parameters::prmHttp, "HttpPort" );
+   saveParameter( Parameters::prmRecursiveRedirect, "ReqursiveRedirect" );
+   saveParameter( Parameters::prmQValue, "QVal" );
+   saveParameter( Parameters::prmQValueBehavior, "QValBehavior" );
+   saveParameter( Parameters::prmQValueCancelBtwForkGroups, "QValCancelFork" );
+   saveParameter( Parameters::prmQValueWaitForTerminateBtwForkGroups, "QValWaitFork" );
+   saveParameter( Parameters::prmQValueMsBetweenForkGroups, "QValMsBetween" );
+   saveParameter( Parameters::prmQValueMsBeforeCancel, "QValMsCancel" );
+   saveParameter( Parameters::prmEnumSuffix, "EnumSuffix" );
+   saveParameter( Parameters::prmAllowBadReg, "AllowBadReg" );
+   saveParameter( Parameters::prmParallelForkStaticRoutes, "parallelFork" );
+   saveParameter( Parameters::prmTimerC, "TimerC" );
+   saveParameter( Parameters::prmAdminPassword, "AdminPassword" );
    setPage( "user.html", pageNumber, 301 );
-
 }
-
 
 void
 WebAdmin::buildPageOutlinePre(DataStream& s)
@@ -1351,7 +1366,6 @@ WebAdmin::buildPageOutlinePre(DataStream& s)
 #include "repro/webadmin/pageOutlinePre.ixx"
    ;
 }
-
 
 void
 WebAdmin::buildPageOutlinePost(DataStream& s)

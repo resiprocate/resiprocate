@@ -51,7 +51,7 @@ signalHandler(int signo)
 #ifdef WIN32
 
 static DWORD WINAPI 
-ReproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext)
+reproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext)
 {
    SvcStat.dwWaitHint = ReproStateNum;
    if ( dwControl == SERVICE_CONTROL_INTERROGATE )
@@ -106,12 +106,12 @@ ReproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID
 int runRepro();
 
 static void 
-WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
+WINAPI reproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
 {
 //   DebugBreak();
    ReproState = reproStarting; 
-   SetSvcStat();
-   svcH = RegisterServiceCtrlHandlerEx( ReproServiceName, &ReproSvcHandlerEx, &SvcStat);
+   setSvcStat();
+   svcH = RegisterServiceCtrlHandlerEx( ReproServiceName, &reproSvcHandlerEx, &SvcStat);
    if ( svcH ) 
    {
       SvcStat.dwWin32ExitCode = NO_ERROR;
@@ -121,24 +121,26 @@ WINAPI ReproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
          SvcStat.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;
          SvcStat.dwServiceSpecificExitCode = ret;
       }
-      SetSvcStat();
+      setSvcStat();
    }
 }
 
 static bool 
 installService(int argc, char** argv)
 {
-   SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
-   if ( !sch )
+   SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+   if (!sch)
    {
       return false;
    }
    size_t CmdLineSize = 0;
-   for ( int i=0; i < argc; i++)
-      CmdLineSize+=strlen( argv[i])+1;
-   char *CmdLine = (char *)malloc( CmdLineSize + 1);
+   for (int i=0; i < argc; i++)
+   {
+      CmdLineSize+=strlen(argv[i]) + 1;
+   }
+   char *CmdLine = (char *)malloc(CmdLineSize + 1);
    *CmdLine=0;
-   if ( strchr(argv[0] , (int) " " ) )
+   if (strchr(argv[0], (int) " "))
    {
       strcpy(CmdLine,"\"");
       strcat(CmdLine,argv[0]);
@@ -148,16 +150,28 @@ installService(int argc, char** argv)
    {
       strcpy(CmdLine,argv[0]);
    }
-   for ( int i=1; i < argc; i++)
-      if ( stricmp( argv[i], "--install-service") )
+   for (int i=1; i < argc; i++)
+   {
+      if (stricmp(argv[i], "--install-service"))
       {
-         strcat( CmdLine, " " );
-         strcat( CmdLine, argv[i] );
+         strcat(CmdLine, " ");
+         strcat(CmdLine, argv[i]);
       }
-   SC_HANDLE svch=CreateService( sch, ReproServiceName, "Repro sip proxy server", SERVICE_ALL_ACCESS, 
-           SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, CmdLine,
-           NULL, NULL, NULL, NULL, NULL);
-   if ( !svch )
+   }
+   SC_HANDLE svch=CreateService(sch, 
+                                ReproServiceName, 
+                                "Repro sip proxy server", 
+                                SERVICE_ALL_ACCESS, 
+                                SERVICE_WIN32_OWN_PROCESS, 
+                                SERVICE_AUTO_START, 
+                                SERVICE_ERROR_IGNORE, 
+                                CmdLine,
+                                NULL, 
+                                NULL, 
+                                NULL, 
+                                NULL, 
+                                NULL);
+   if (!svch)
    {
       CloseServiceHandle(sch);
       return false;
@@ -168,11 +182,11 @@ installService(int argc, char** argv)
    HKEY hk; 
    DWORD dwData; 
    char *BaseKey="SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\";
-   char *Key=(char *)malloc( strlen( BaseKey ) + strlen( ReproServiceName ) + 1 );
-   strcpy( Key, BaseKey );
-   strcat( Key, ReproServiceName );
+   char *Key=(char *)malloc(strlen(BaseKey) + strlen(ReproServiceName) + 1);
+   strcpy(Key, BaseKey);
+   strcat(Key, ReproServiceName);
    RegCreateKey(HKEY_LOCAL_MACHINE, Key, &hk);
-   RegSetValueEx(hk, "EventMessageFile", 0, REG_EXPAND_SZ, (LPBYTE) argv[0], strlen( argv[0] ) + 1);
+   RegSetValueEx(hk, "EventMessageFile", 0, REG_EXPAND_SZ, (LPBYTE) argv[0], strlen(argv[0]) + 1);
    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE; 
    RegSetValueEx(hk,"TypesSupported",0,REG_DWORD,(LPBYTE) &dwData,sizeof(DWORD));
    RegCloseKey(hk); 
@@ -183,31 +197,33 @@ installService(int argc, char** argv)
 static bool 
 removeService()
 {
-   SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS );
-   if ( !sch )
+   SC_HANDLE sch = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+   if (!sch)
    {
       return false;
    }
-   SC_HANDLE svch = OpenService( sch, ReproServiceName, SERVICE_ALL_ACCESS);
-   if ( !svch )
+   SC_HANDLE svch = OpenService(sch, ReproServiceName, SERVICE_ALL_ACCESS);
+   if (!svch)
    {
       return false;
    }
    SERVICE_STATUS svcstat;
-   if ( ControlService( svch, SERVICE_CONTROL_STOP, &svcstat ) )
+   if (ControlService(svch, SERVICE_CONTROL_STOP, &svcstat))
    {
       int i=0;
-      while ( i<=20 && svcstat.dwCurrentState != SERVICE_STOPPED )
+      while (i<=20 && svcstat.dwCurrentState != SERVICE_STOPPED)
       {
          Sleep(1000);
          QueryServiceStatus( svch, &svcstat );
       }
-      if ( svcstat.dwCurrentState != SERVICE_STOPPED )
+      if (svcstat.dwCurrentState != SERVICE_STOPPED)
+      {
          cerr << "Unable to stop service, service will be deleted after reboot\n";
+      }
    }   
-   DeleteService( svch );
-   CloseServiceHandle( svch );
-   CloseServiceHandle( sch );
+   DeleteService(svch);
+   CloseServiceHandle(svch);
+   CloseServiceHandle(sch);
    return true;
 }
 
@@ -258,17 +274,21 @@ runRepro()
    }
    auto_ptr<AbstractDb> dbGuard(db);
 
-   Parameters::SetDb( db );
+   Parameters::setDb( db );
    Store store(new UserStore(*db), new RouteStore(*db), new AclStore(*db), new ConfigStore(*db) );
    do
    {
       reproRestartServer = false;
-      if ( !args->mNoUseParameters )
-         Parameters::StoreParametersInArgs( args );
+      if (!args->mNoUseParameters)
+      {
+         Parameters::storeParametersInArgs(args);
+      }
       ExternalLogger *externalLogger = NULL;
 #ifdef WIN32
-      if ( ReproWin32Service )
-         externalLogger = new Win32EventLog( ReproServiceName );
+      if (ReproWin32Service)
+      {
+         externalLogger = new Win32EventLog(ReproServiceName);
+      }
 #endif
       if(args->mLogType.lowercase() == "file")
       {
@@ -279,12 +299,15 @@ runRepro()
          Log::initialize(args->mLogType, args->mLogLevel, argv0, NULL, externalLogger );
       }
 #ifdef WIN32
-      if ( ReproWin32Service )
+      if (ReproWin32Service)
+      {
          NoticeLog (<< "Starting service " << ReproServiceName );
+      }
 #endif
+
       try
       {
-         ProxyMain( args, store );
+         proxyMain( args, store );
       }
       catch ( ProxyMainException& e)
       {
@@ -308,13 +331,17 @@ runRepro()
          return -1;
       }
 #ifdef WIN32
-      if ( ReproWin32Service )
+      if(ReproWin32Service)
+      {
          NoticeLog (<< "Service " << ReproServiceName << " stopped" );
+      }
 #endif
-      if ( externalLogger )
+      if(externalLogger)
+      {
          delete externalLogger;
+      }
    }
-   while ( reproRestartServer );
+   while (reproRestartServer);
 
    return 0;
 }
@@ -323,13 +350,12 @@ int
 main(int argc, char** argv)
 {
 #ifndef _WIN32
-   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
+   if (signal( SIGPIPE, SIG_IGN) == SIG_ERR)
    {
       cerr << "Couldn't install signal handler for SIGPIPE" << endl;
       exit(-1);
    }
 #endif
-
 
    if ( signal( SIGINT, signalHandler ) == SIG_ERR )
    {
@@ -382,8 +408,6 @@ main(int argc, char** argv)
 #endif
 
 
-
-
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    { FindMemoryLeaks fml;
 #endif
@@ -394,7 +418,7 @@ main(int argc, char** argv)
 #else
    SERVICE_TABLE_ENTRY SvcTE[]=
    {
-      { (LPSTR)ReproServiceName, ReproServiceMain },
+      { (LPSTR)ReproServiceName, reproServiceMain },
       {NULL,                     NULL}
    };
    if ( !StartServiceCtrlDispatcher( SvcTE ) )
