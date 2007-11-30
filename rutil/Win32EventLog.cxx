@@ -3,9 +3,9 @@
 namespace resip
 {
 
-Win32EventLog::Win32EventLog(const char *Application)
+Win32EventLog::Win32EventLog(const char *application)
 {
-   EventLogHandle = RegisterEventSource( NULL, Application );
+   EventLogHandle = RegisterEventSource( NULL, application );
 }
 
 Win32EventLog::~Win32EventLog()
@@ -13,7 +13,8 @@ Win32EventLog::~Win32EventLog()
    DeregisterEventSource( EventLogHandle );
 }
 
-bool Win32EventLog::operator()(Log::Level level,
+bool 
+Win32EventLog::operator()(Log::Level level,
                         const Subsystem& subsystem, 
                         const Data& appName,
                         const char* file,
