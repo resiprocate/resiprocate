@@ -12,7 +12,7 @@ namespace resip
    class Win32EventLog: public ExternalLogger
    {
    public:
-      Win32EventLog(const char *Application);
+      Win32EventLog(const char *application);
       virtual ~Win32EventLog();
       virtual bool operator()(Log::Level level,
                         const Subsystem& subsystem, 

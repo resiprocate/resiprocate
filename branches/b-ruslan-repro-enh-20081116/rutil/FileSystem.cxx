@@ -220,17 +220,18 @@ FileSystem::Directory::iterator FileSystem::Directory::end() const
    return staticEnd;   
 }
 
-bool FileSystem::DirectoryExists(const Data path)
+bool 
+FileSystem::directoryExists(const Data& path)
 {
 #ifndef WIN32
-	struct stat st;
-	if ( stat( path.c_str(), &st )==0 )
-		return st.st_mode & S_IFDIR;
-	else
-		return false;
+   struct stat st;
+   if ( stat( path.c_str(), &st )==0 )
+      return st.st_mode & S_IFDIR;
+   else
+      return false;
 #else
-	 int code=GetFileAttributes( path.c_str() );
-	 return code != -1 && code & FILE_ATTRIBUTE_DIRECTORY;
+   int code=GetFileAttributes( path.c_str() );
+   return code != -1 && code & FILE_ATTRIBUTE_DIRECTORY;
 #endif
 }
 
@@ -241,10 +242,11 @@ const char DriveSeparator=':';
 const char FileSystem::PathSeparator='/';
 #endif
 
-static Data ExtractFilePath( const Data FileName )
+static Data 
+extractFilePath( const Data fileName )
 {
-   const char *pos=FileName.end();
-   while ( pos >= FileName.begin() && *pos!=FileSystem::PathSeparator 
+   const char *pos=fileName.end();
+   while ( pos >= fileName.begin() && *pos!=FileSystem::PathSeparator 
 #ifdef WIN32
       && *pos!=DriveSeparator
 #endif
@@ -252,103 +254,112 @@ static Data ExtractFilePath( const Data FileName )
    {
       pos--;
    }
-   if ( pos < FileName.begin() )
-      return FileName;
+   if ( pos < fileName.begin() )
+   {
+      return fileName;
+   }
 #ifdef WIN32
-   assert( *pos == FileSystem::PathSeparator || pos - FileName.begin() == 1 );
+   assert( *pos == FileSystem::PathSeparator || pos - fileName.begin() == 1 );
 #endif
-   return FileName.substr( 0, pos - FileName.begin() +1 );
+   return fileName.substr( 0, pos - fileName.begin() +1 );
 }
 
-static Data RemoveLastPathSeparator( const Data FileName )
+static Data 
+removeLastPathSeparator( const Data fileName )
 {
-   if ( FileName.empty() || FileName[ FileName.size()-1 ] != FileSystem::PathSeparator )
-      return FileName;
-   return FileName.trunc( FileName.size() - 1 );
+   if ( fileName.empty() || fileName[ fileName.size()-1 ] != FileSystem::PathSeparator )
+      return fileName;
+   return fileName.trunc( fileName.size() - 1 );
 }
 
-static bool CreateDir(const Data Dir)
+static bool 
+createDir(const Data& dir)
 {
 #ifdef WIN32
-   return CreateDirectory( Dir.c_str(), NULL ) == TRUE;
+   return CreateDirectory( dir.c_str(), NULL ) == TRUE;
 #else
-   return mkdir( Dir.c_str() , -1 ) == 0;
+   return mkdir( dir.c_str() , -1 ) == 0;
 #endif
 }
 
-bool FileSystem::ForceDirectories(const Data Name)
+bool 
+FileSystem::forceDirectories(const Data& name)
 {
-   if ( Name.empty() )
+   if ( name.empty() )
+   {
       return true; // may be need throw exception??
-   Data ExtractPath;
-  Data Name2 = RemoveLastPathSeparator(Name);
+   }
+   Data extractPath;
+   Data name2 = removeLastPathSeparator(name);
 #ifdef WIN32
-  ExtractPath = ExtractFilePath(Name2);
-  if ( Name2.size() == 2 &&  Name2[1] == ':'  || DirectoryExists(Name2) || ExtractPath == Name2 )
-    return true;
+   extractPath = extractFilePath(name2);
+   if ( name2.size() == 2 &&  name2[1] == ':'  || directoryExists(name2) || extractPath == name2 )
+      return true;
 #else
-  if ( Name2.empty() || DirectoryExists(Name2) )
-    return true;
-  ExtractPath = ExtractFilePath(Name2);
+   if ( name2.empty() || directoryExists(name2) )
+      return true;
+   extractPath = extractFilePath(name2);
 #endif  
-  if ( ExtractPath.empty() )
-    return CreateDir(Name2);
-  else
-    return ForceDirectories(ExtractPath) && CreateDir(Name2);
+   if ( extractPath.empty() )
+      return createDir(name2);
+   else
+      return forceDirectories(extractPath) && createDir(name2);
 }
 
 #ifdef WIN32
 
-bool FileSystem::IsReadWriteAccess( const char *path )
+bool 
+FileSystem::isReadWriteAccess( const char *path )
 {
-	HANDLE tokhandle=0;
-	OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &tokhandle );
+   HANDLE tokhandle=0;
+   OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &tokhandle );
 
-	TOKEN_OWNER *to;
-	DWORD retlen;
-	GetTokenInformation( tokhandle, TokenOwner, NULL, 0, &retlen );
-	to=(TOKEN_OWNER *)malloc( retlen );
-	GetTokenInformation( tokhandle, TokenOwner, to, retlen, &retlen ) ;
-	TRUSTEE trust;
-	BuildTrusteeWithSid( &trust, to->Owner );
-	PACL pacl;
-	PSECURITY_DESCRIPTOR psd=0;
-	GetNamedSecurityInfo( (LPSTR)path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL,
-			 &pacl, NULL, &psd );
-	if ( !pacl )
-	{
-		free( to );
-		if ( psd )
-			LocalFree( psd );
-		return false;
-	}
-	ACCESS_MASK acc;
-	GetEffectiveRightsFromAcl( pacl, &trust, &acc );
-	free( to );
-	if ( psd )
-		LocalFree( psd );
+   TOKEN_OWNER *to;
+   DWORD retlen;
+   GetTokenInformation( tokhandle, TokenOwner, NULL, 0, &retlen );
+   to=(TOKEN_OWNER *)malloc( retlen );
+   GetTokenInformation( tokhandle, TokenOwner, to, retlen, &retlen ) ;
+   TRUSTEE trust;
+   BuildTrusteeWithSid( &trust, to->Owner );
+   PACL pacl;
+   PSECURITY_DESCRIPTOR psd=0;
+   GetNamedSecurityInfo( (LPSTR)path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL,
+      &pacl, NULL, &psd );
+   if ( !pacl )
+   {
+      free( to );
+      if ( psd )
+         LocalFree( psd );
+      return false;
+   }
+   ACCESS_MASK acc;
+   GetEffectiveRightsFromAcl( pacl, &trust, &acc );
+   free( to );
+   if ( psd )
+      LocalFree( psd );
 
-	const unsigned RWAcc= FILE_READ_DATA | FILE_APPEND_DATA | FILE_WRITE_DATA;
-	return (acc & RWAcc) == RWAcc;
+   const unsigned RWAcc= FILE_READ_DATA | FILE_APPEND_DATA | FILE_WRITE_DATA;
+   return (acc & RWAcc) == RWAcc;
 }
 
-void FileSystem::SetAccessAs(const char *Acceptor,const char *Donor)
+void 
+FileSystem::setAccessAs(const char *acceptor,const char *donor)
 {
 
-	PACL pacl;
-	PSECURITY_DESCRIPTOR psd=0;
-	GetNamedSecurityInfo( (LPSTR)Donor, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL,
-			 &pacl, NULL, &psd );
-	if ( !pacl )
-	{
-		if ( psd )
-			LocalFree( psd );
-		return ;
-	}
-   SetNamedSecurityInfo( (LPSTR)Acceptor, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
+   PACL pacl;
+   PSECURITY_DESCRIPTOR psd=0;
+   GetNamedSecurityInfo( (LPSTR)donor, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL,
+      &pacl, NULL, &psd );
+   if ( !pacl )
+   {
+      if ( psd )
+         LocalFree( psd );
+      return ;
+   }
+   SetNamedSecurityInfo( (LPSTR)acceptor, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
       NULL, NULL, pacl, NULL );
-	if ( psd )
-		LocalFree( psd );
+   if ( psd )
+      LocalFree( psd );
 
 }
 #endif
