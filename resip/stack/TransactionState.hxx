@@ -104,7 +104,7 @@ class TransactionState : public DnsHandler
       static bool handleBadRequest(const resip::SipMessage& badReq,TransactionController& controller);
 
       void saveOriginalContactAndVia(const SipMessage& msg);
-      void TransactionState::restoreOriginalContactAndVia();
+      void restoreOriginalContactAndVia();
       
       TransactionController& mController;
       
