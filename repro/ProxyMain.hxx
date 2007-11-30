@@ -1,5 +1,5 @@
-#ifndef REPRO_REPROMAIN_HXX
-#define REPRO_REPROMAIN_HXX
+#ifndef REPRO_PROXYMAIN_HXX
+#define REPRO_PROXYMAIN_HXX
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -11,10 +11,10 @@
 
 namespace repro
 {
-extern bool reproRestartServer;
-extern bool reproFinish;
+extern volatile bool reproRestartServer;
+extern volatile bool reproFinish;
 
-void ProxyMain( resip::ReproConfiguration *args, Store &store);
+void proxyMain(resip::ReproConfiguration *args, Store &store);
 
 
 #ifdef WIN32
@@ -24,7 +24,7 @@ extern enum ReproServiceState ReproState;
 extern bool ReproWin32Service;  
 extern SERVICE_STATUS_HANDLE svcH;
 extern SERVICE_STATUS SvcStat;
-void SetSvcStat();
+void setSvcStat();
 #endif
 
 }

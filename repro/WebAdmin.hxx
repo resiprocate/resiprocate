@@ -62,8 +62,8 @@ class WebAdmin: public HttpBase
       void buildRestartServerSubPage(resip::DataStream& s);
       void buildRestartedServerSubPage(resip::DataStream& s);
       void buildParametersSubPage(resip::DataStream& s);
-      void buildParametersSetPage( int pageNumber, resip::DataStream& s);
-      void SaveParameter( Parameters::Param prm, char *WebParam );
+      void buildParametersSetPage(int pageNumber, resip::DataStream& s);
+      void saveParameter(Parameters::Param prm, char *webParam);
 
       resip::Data buildCertPage(const resip::Data& domain);
       

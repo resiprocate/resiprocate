@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="repro"
 	ProjectGUID="{9D8D2649-213F-49D3-A8B0-C1849C611654}"
 	RootNamespace="repro"
@@ -764,6 +764,10 @@
 		</File>
 		<File
 			RelativePath=".\webadmin\pageOutlinePre.ixx"
+			>
+		</File>
+		<File
+			RelativePath=".\webadmin\Parameters.ixx"
 			>
 		</File>
 	</Files>
