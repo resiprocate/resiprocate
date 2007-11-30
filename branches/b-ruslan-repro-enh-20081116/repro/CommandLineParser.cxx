@@ -20,42 +20,49 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
+#ifdef WIN32
+#define REPRO_MAX_PATH MAX_PATH
+#else
+#define PEPRO_MAX_PATH 256
+#endif
+
 CommandLineParser::CommandLineParser(int argc, char** argv)
 {
    char* logType = "cout";
    char* logLevel = "INFO";
 #ifndef WIN32
-   char logFilePath[256]={'.',0};
+   char logFilePath[REPRO_MAX_PATH]=".";
 #else
-   char logFilePathBuf[MAX_PATH]={0};
-#endif
-   char *logFilePath=logFilePathBuf;
-#ifdef WIN32
-   static const Data AllUsersLogFilePath(Data( getenv( "ALLUSERSPROFILE" ) ) + "\\Application Data\\Resiprocate\\repro\\");
-//when we run as restricted user
-   static const Data LocalUserLogFilePath(Data( getenv( "USERPROFILE" ) ) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\");
+   char logFilePath[REPRO_MAX_PATH]={0};
 
-   if ( FileSystem::DirectoryExists( AllUsersLogFilePath ) && FileSystem::IsReadWriteAccess ( AllUsersLogFilePath.c_str() ) )
+   static const Data allUsersLogFilePath(Data(getenv("ALLUSERSPROFILE")) + "\\Application Data\\Resiprocate\\repro\\");
+   //when we run as restricted user
+   static const Data localUserLogFilePath(Data(getenv("USERPROFILE")) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\");
+
+   if(FileSystem::directoryExists(allUsersLogFilePath) && 
+      FileSystem::isReadWriteAccess(allUsersLogFilePath.c_str()))
    {
-      strcpy( logFilePath, AllUsersLogFilePath.c_str() );
+      strcpy(logFilePath, allUsersLogFilePath.c_str());
    }
-   else if ( FileSystem::IsReadWriteAccess ( getenv( "ALLUSERSPROFILE" ) ) )
+   else if(FileSystem::isReadWriteAccess(getenv("ALLUSERSPROFILE")))
    {
-      assert ( FileSystem::ForceDirectories( AllUsersLogFilePath ) );
-      FileSystem::SetAccessAs( AllUsersLogFilePath.c_str() , getenv( "ALLUSERSPROFILE" ) );
-      strcpy( logFilePath, AllUsersLogFilePath.c_str() );
+      assert(FileSystem::forceDirectories(allUsersLogFilePath));
+      FileSystem::setAccessAs(allUsersLogFilePath.c_str(), getenv("ALLUSERSPROFILE"));
+      strcpy(logFilePath, allUsersLogFilePath.c_str());
    }
-   else if ( FileSystem::DirectoryExists( LocalUserLogFilePath ) && FileSystem::IsReadWriteAccess ( LocalUserLogFilePath.c_str() ) )
+   else if(FileSystem::directoryExists(localUserLogFilePath) && 
+           FileSystem::isReadWriteAccess (localUserLogFilePath.c_str()))
    {
-      strcpy( logFilePath, LocalUserLogFilePath.c_str() );
+      strcpy(logFilePath, localUserLogFilePath.c_str());
    }
-   else if ( FileSystem::IsReadWriteAccess ( getenv( "USERPROFILE" ) ) )
+   else if(FileSystem::isReadWriteAccess(getenv("USERPROFILE")))
    {
-      assert ( FileSystem::ForceDirectories( LocalUserLogFilePath ) );
-      FileSystem::SetAccessAs( LocalUserLogFilePath.c_str(), getenv( "USERPROFILE" ) );
-      strcpy( logFilePath, LocalUserLogFilePath.c_str() );
+      assert(FileSystem::forceDirectories(localUserLogFilePath));
+      FileSystem::setAccessAs(localUserLogFilePath.c_str(),getenv("USERPROFILE"));
+      strcpy(logFilePath, localUserLogFilePath.c_str());
    }
 #endif
+   
    char* tlsDomain = 0;
    char* recordRoute = 0;
    int udpPort = 5060;
@@ -71,18 +78,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* domains = 0;
    char* interfaces = 0;
    char* routeSet = 0;
-#ifdef WIN32
-   char certPathBuf[MAX_PATH];
-#else
-   char certPathBuf[256];
-#endif
-   char* certPath = certPathBuf;
-#ifdef WIN32
-   char dbPathBuf[MAX_PATH]={0};
-   char* dbPath = dbPathBuf;
-#else
-   char* dbPath = 0;
-#endif
+
+   char certPath[REPRO_MAX_PATH];
+   char dbPath[REPRO_MAX_PATH];
+
    int noChallenge = false;
    int noAuthIntChallenge = false;
    int noWebChallenge = false;
@@ -105,14 +104,14 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* enumSuffix = 0;
    int allowBadReg = 0;
    int parallelForkStaticRoutes = 0;
-   int NoLoadWebAdmin = 0;
+   int noLoadWebAdmin = 0;
    int showVersion = 0;
 #ifdef WIN32
    int installService = 0;
    int removeService = 0;
 #endif
    int timerC=180;
-   int NoUseParameters = 0;
+   int noUseParameters = 0;
    char* adminPassword = "";
 
 
@@ -120,54 +119,56 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 #ifndef HAVE_POPT_H
    noChallenge = 1;  // If no POPT, then default to no digest challenges
 #endif
-// when we have administrative right or run as LocalSystem for example as service
-   static const Data AllUsersCerts(Data( getenv( "ALLUSERSPROFILE" ) ) + "\\Application Data\\Resiprocate\\repro\\sipCerts");
-   static const Data AllUsersDb(Data( getenv( "ALLUSERSPROFILE" ) ) + "\\Application Data\\Resiprocate\\repro\\Db");
-//when we run as restricted user
-   static const Data LocalUserCerts(Data( getenv( "USERPROFILE" ) ) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\sipCerts");
-   static const Data LocalUserDb(Data( getenv( "USERPROFILE" ) ) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\Db");
+   // when we have administrative right or run as LocalSystem for example as service
+   static const Data allUsersCerts(Data(getenv("ALLUSERSPROFILE")) + "\\Application Data\\Resiprocate\\repro\\sipCerts");
+   static const Data allUsersDb(Data(getenv("ALLUSERSPROFILE")) + "\\Application Data\\Resiprocate\\repro\\Db");
+   //when we run as restricted user
+   static const Data localUserCerts(Data(getenv("USERPROFILE")) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\sipCerts");
+   static const Data localUserDb(Data(getenv("USERPROFILE")) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\Db");
 
-   if ( FileSystem::DirectoryExists( AllUsersCerts ) && FileSystem::IsReadWriteAccess ( AllUsersCerts.c_str() ) )
+   if (FileSystem::directoryExists(allUsersCerts) && FileSystem::isReadWriteAccess(allUsersCerts.c_str()))
    {
-      strcpy( certPath, AllUsersCerts.c_str() );
+      strcpy(certPath, allUsersCerts.c_str());
    }
-   else if ( FileSystem::IsReadWriteAccess ( getenv( "ALLUSERSPROFILE" ) ) )
+   else if (FileSystem::isReadWriteAccess(getenv("ALLUSERSPROFILE")))
    {
-      FileSystem::ForceDirectories( AllUsersCerts );
-      FileSystem::SetAccessAs( AllUsersCerts.c_str() , getenv( "ALLUSERSPROFILE" ) );
-      strcpy( certPath, AllUsersCerts.c_str() );
+      FileSystem::forceDirectories(allUsersCerts);
+      FileSystem::setAccessAs(allUsersCerts.c_str(), getenv("ALLUSERSPROFILE"));
+      strcpy(certPath, allUsersCerts.c_str());
    }
-   else if ( FileSystem::DirectoryExists( LocalUserCerts ) && FileSystem::IsReadWriteAccess ( LocalUserCerts.c_str() ) )
+   else if(FileSystem::directoryExists(localUserCerts) && FileSystem::isReadWriteAccess(localUserCerts.c_str()))
    {
-      strcpy( certPath, LocalUserCerts.c_str() );
+      strcpy(certPath, localUserCerts.c_str());
    }
-   else if ( FileSystem::IsReadWriteAccess ( getenv( "USERPROFILE" ) ) )
+   else if (FileSystem::isReadWriteAccess(getenv("USERPROFILE")))
    {
-      FileSystem::ForceDirectories( LocalUserCerts );
-      FileSystem::SetAccessAs( LocalUserCerts.c_str(), getenv( "USERPROFILE" ) );
-      strcpy( certPath, LocalUserCerts.c_str() );
+      FileSystem::forceDirectories(localUserCerts);
+      FileSystem::setAccessAs(localUserCerts.c_str(), getenv("USERPROFILE"));
+      strcpy(certPath, localUserCerts.c_str());
    }
    else // we must never get it
+   {
       strcpy(certPath,"C:\\sipCerts");   
-   if ( FileSystem::DirectoryExists( AllUsersDb ) && FileSystem::IsReadWriteAccess ( AllUsersDb.c_str() ) )
-   {
-      strcpy( dbPath, AllUsersDb.c_str() );
    }
-   else if ( FileSystem::IsReadWriteAccess ( getenv( "ALLUSERSPROFILE" ) ) )
+   if (FileSystem::directoryExists(allUsersDb) && FileSystem::isReadWriteAccess(allUsersDb.c_str()))
    {
-      FileSystem::ForceDirectories( AllUsersDb );
-      FileSystem::SetAccessAs( AllUsersDb.c_str(), getenv( "ALLUSERSPROFILE" ) );
-      strcpy( dbPath, AllUsersDb.c_str() );
+      strcpy(dbPath, allUsersDb.c_str());
    }
-   else if ( FileSystem::DirectoryExists( LocalUserDb ) && FileSystem::IsReadWriteAccess ( LocalUserDb.c_str() ) )
+   else if (FileSystem::isReadWriteAccess(getenv("ALLUSERSPROFILE")))
    {
-      strcpy( dbPath, LocalUserDb.c_str() );
+      FileSystem::forceDirectories(allUsersDb);
+      FileSystem::setAccessAs(allUsersDb.c_str(), getenv("ALLUSERSPROFILE"));
+      strcpy(dbPath, allUsersDb.c_str());
    }
-   else if ( FileSystem::IsReadWriteAccess ( getenv( "USERPROFILE" ) ) )
+   else if (FileSystem::directoryExists(localUserDb ) && FileSystem::isReadWriteAccess (localUserDb.c_str()))
    {
-      FileSystem::ForceDirectories( LocalUserDb );
-      FileSystem::SetAccessAs( LocalUserDb.c_str(), getenv( "USERPROFILE" ) );
-      strcpy( dbPath, LocalUserDb.c_str() );
+      strcpy(dbPath, localUserDb.c_str());
+   }
+   else if (FileSystem::isReadWriteAccess(getenv("USERPROFILE")))
+   {
+      FileSystem::forceDirectories(localUserDb);
+      FileSystem::setAccessAs(localUserDb.c_str(), getenv("USERPROFILE"));
+      strcpy(dbPath, localUserDb.c_str());
    }
 #else
    strcpy(certPath, getenv("HOME"));
@@ -178,8 +179,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        Parameters::prmLogType, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       Parameters::prmLogLevel, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"log-path",         0,  POPT_ARG_STRING,                            &logFilePath,      Parameters::prmLogPath, "specify the path for log file", 0},
-      {"db-path",           0,   POPT_ARG_STRING,                            &dbPath,         Parameters::prmMax, "path to databases", 0},
+      {"log-path",           0,  POPT_ARG_STRING,                            &logFilePath,    Parameters::prmLogPath, "specify the path for log file", 0},
+      {"db-path",            0,  POPT_ARG_STRING,                            &dbPath,         Parameters::prmMax, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    Parameters::prmRecordRoute, "specify uri to use as Record-Route", "sip:example.com"},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    Parameters::prmMax, "enable MySQL and provide name of server", "localhost"},
@@ -221,12 +222,12 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, Parameters::prmParallelForkStaticRoutes, "paralled fork to all matching static routes and (first batch) registrations", 0},
       {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         Parameters::prmTimerC, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  Parameters::prmAdminPassword, "set web administrator password", ""},
-      {"no-use-parameters",  0,   POPT_ARG_NONE,                            &NoUseParameters,  Parameters::prmMax, "set web administrator password", ""},
-      {"no-load-web-admin",  0,   POPT_ARG_NONE,                              &NoLoadWebAdmin,  Parameters::prmMax, "do not load web admin server", ""},
+      {"no-use-parameters",  0,   POPT_ARG_NONE,                             &noUseParameters,Parameters::prmMax, "set web administrator password", ""},
+      {"no-load-web-admin",  0,   POPT_ARG_NONE,                             &noLoadWebAdmin, Parameters::prmMax, "do not load web admin server", ""},
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    Parameters::prmMax, "show the version number and exit", 0},
 #ifdef WIN32
-      {"install-service", 0,   POPT_ARG_NONE,                                &installService,    Parameters::prmMax, "install program as WinNT service", 0},
-      {"remove-service",  0,   POPT_ARG_NONE,                                &removeService,     Parameters::prmMax, "remove program from WinNT service list", 0},
+      {"install-service", 0,   POPT_ARG_NONE,                                &installService, Parameters::prmMax, "install program as WinNT service", 0},
+      {"remove-service",  0,   POPT_ARG_NONE,                                &removeService,  Parameters::prmMax, "remove program from WinNT service list", 0},
 #endif
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
@@ -234,16 +235,18 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    int prm;
-   while ( (prm = poptGetNextOpt(context) ) != -1)
+   while ((prm = poptGetNextOpt(context)) != -1)
    {
-      if ( prm < -1 )
+      if (prm < -1)
       {
          cerr << "Bad command line argument entered" << endl;
          poptPrintHelp(context, stderr, 0);
          exit(-1);
       }
-      if ( prm != Parameters::prmMax )
-         Parameters::DisableParam( (Parameters::Param)prm );
+      if (prm != Parameters::prmMax)
+      {
+         Parameters::disableParam((Parameters::Param)prm);
+      }
    }
 #endif
 
@@ -296,8 +299,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mMsBeforeCancel=msBeforeCancel;
    mAllowBadReg = allowBadReg?true:false;
    mParallelForkStaticRoutes = parallelForkStaticRoutes?true:false;
-   mNoUseParameters = NoUseParameters != 0;
-   mNoLoadWebAdmin = NoLoadWebAdmin != 0;
+   mNoUseParameters = noUseParameters != 0;
+   mNoLoadWebAdmin = noLoadWebAdmin != 0;
 
    if (enumSuffix) mEnumSuffix = enumSuffix;
    

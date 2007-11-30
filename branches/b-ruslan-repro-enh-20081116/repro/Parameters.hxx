@@ -23,19 +23,19 @@ public:
    enum ParamType { ptInt, ptBool, ptString, ptStrings, ptRecordRoute };
    static Parameters::ParamType TypeOfParam[Parameters::prmMax];
    
-   static void DisableParam( Param prm );
-   static void SaveParam( Param prm, Data Value );
-   static Data GetParam( Param prm );
-   static void StoreParametersInArgs( ReproConfiguration *To );
-   static void SetDb( AbstractDb *Database );
+   static void disableParam(Param prm);
+   static void saveParam(Param prm, Data value);
+   static Data getParam(Param prm);
+   static void storeParametersInArgs(ReproConfiguration *to);
+   static void setDb(AbstractDb *database);
 
 private:
-   static void  InitParameters();
+   static void  initParameters();
    friend class InitParams;
-   static void setParamBool( Parameters::Param prm, bool &val );
-   static void setParamInt( Parameters::Param prm, int &val );
-   static void setParamString( Parameters::Param prm, Data &val );
-   static void setParamStrings( Parameters::Param prm, std::vector<Data> &val, const char *Description );
+   static void setParamBool(Parameters::Param prm, bool& val);
+   static void setParamInt(Parameters::Param prm, int& val);
+   static void setParamString(Parameters::Param prm, Data& val);
+   static void setParamStrings(Parameters::Param prm, std::vector<Data>& val, const char *description);
 
 };
 

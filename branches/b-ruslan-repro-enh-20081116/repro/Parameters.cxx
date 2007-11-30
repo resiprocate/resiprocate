@@ -11,43 +11,50 @@ Parameters::ParamType Parameters::TypeOfParam[Parameters::prmMax];
 static class InitParams
 {
 public:
-   InitParams() { Parameters::InitParameters(); };
+   InitParams() { Parameters::initParameters(); };
 } Init;
 
-void Parameters::DisableParam( Param prm )
+void 
+Parameters::disableParam( Param prm )
 {
    EnabledParam[prm] = false;
 }
 
-void Parameters::SetDb( AbstractDb *Database )
+void 
+Parameters::setDb( AbstractDb *database )
 {
-   Db = Database;
+   Db = database;
 }
 
-void Parameters::SaveParam( Param prm, Data Value )
+void 
+Parameters::saveParam(Param prm, Data value)
 {
-   assert( Db );
-   assert( prm>0 && prm <prmMax );
+   assert(Db);
+   assert(prm>0 && prm <prmMax);
    Data str;
-   switch ( TypeOfParam[prm] )
+   switch (TypeOfParam[prm])
    {
    case ptBool:
-      if ( !Value.empty() && Value != " ")
+      if (!value.empty() && value != " ")
       {
-         if ( Value=="0" || Value.lowercase() == "false" || Value.lowercase() == "no" )
+         if (value=="0" || value.lowercase() == "false" || value.lowercase() == "no")
+         {
             str = Data( "No" );
+         }
          else
+         {
             str = Data( "Yes" );
+         }
       }
       break;
    case ptInt:
-      if ( !Value.empty() && Value != " ")
+      if (!value.empty() && value != " ")
       {
-         str = Data( Value.convertInt() );
+         str = Data(value.convertInt());
       }
       break;
    case ptStrings:
-      str = Value;
+      str = value;
       str.replace("\n","");
       str.replace("\t","");
       str.replace("\r","");
@@ -56,15 +63,18 @@ void Parameters::SaveParam( Param prm, Data Value )
       str.replace("\'","");
       break;
    default:
-      str = Value;
+      str = value;
       break;
    };
-   if ( ( str.empty() || str == " " ) && prm != prmAdminPassword )
-      Db->dbEraseRecord( AbstractDb::ParametersTable, NameOfParam[prm] );
+   if((str.empty() || str == " ") && prm != prmAdminPassword)
+   {
+      Db->dbEraseRecord(AbstractDb::ParametersTable, NameOfParam[prm]);
+   }
    else
-      if ( prm == prmAdminPassword )
+   {
+      if(prm == prmAdminPassword)
       {
-         if ( !str.empty() )
+         if(!str.empty())
          {
             MD5Stream a1;
             a1 << Data( "admin" ) // username
@@ -73,22 +83,27 @@ void Parameters::SaveParam( Param prm, Data Value )
                << Symbols::COLON
                << str;
             Data str2 = a1.getHex();
-            Db->dbWriteRecord( AbstractDb::ParametersTable, NameOfParam[prm], str2 );
+            Db->dbWriteRecord(AbstractDb::ParametersTable, NameOfParam[prm], str2);
          }
       }
       else
-         Db->dbWriteRecord( AbstractDb::ParametersTable, NameOfParam[prm], str );
+      {
+         Db->dbWriteRecord(AbstractDb::ParametersTable, NameOfParam[prm], str);
+      }
+   }
 }
 
-Data Parameters::GetParam( Param prm )
+Data 
+Parameters::getParam(Param prm)
 {
-   assert( Db );
+   assert(Db);
    Data ret;
-   Db->dbReadRecord( AbstractDb::ParametersTable, NameOfParam[prm], ret);
+   Db->dbReadRecord(AbstractDb::ParametersTable, NameOfParam[prm], ret);
    return ret;
 }
 
-void Parameters::setParamBool( Parameters::Param prm, bool &val )
+void 
+Parameters::setParamBool(Parameters::Param prm, bool& val)
 {
    Data str;
    static Data True( "Yes" );
@@ -98,83 +113,91 @@ void Parameters::setParamBool( Parameters::Param prm, bool &val )
    }
 }
 
-void Parameters::setParamInt( Parameters::Param prm, int &val )
+void 
+Parameters::setParamInt(Parameters::Param prm, int& val)
 {
    Data str;
-   if ( EnabledParam[prm] && Db->dbReadRecord( AbstractDb::ParametersTable, NameOfParam[prm], str ) )
+   if (EnabledParam[prm] && Db->dbReadRecord(AbstractDb::ParametersTable, NameOfParam[prm], str))
    {
       val = str.convertInt();
    }
 }
 
-void Parameters::setParamString( Parameters::Param prm, Data &val )
+void 
+Parameters::setParamString(Parameters::Param prm, Data& val)
 {
    Data str;
-   if ( EnabledParam[prm] && Db->dbReadRecord( AbstractDb::ParametersTable, NameOfParam[prm], str ) )
+   if (EnabledParam[prm] && Db->dbReadRecord(AbstractDb::ParametersTable, NameOfParam[prm], str ))
    {
       val = str;
    }
 }
 
-void Parameters::setParamStrings( Parameters::Param prm, std::vector<Data> &val, const char *Description )
+void 
+Parameters::setParamStrings( Parameters::Param prm, std::vector<Data>& val, const char *description )
 {
    Data str;
-   if ( EnabledParam[prm] && Db->dbReadRecord( AbstractDb::ParametersTable, NameOfParam[prm], str ) )
+   if (EnabledParam[prm] && Db->dbReadRecord(AbstractDb::ParametersTable, NameOfParam[prm], str))
    {
-      val = ReproConfiguration::toVector( str.c_str(), Description );
+      val = ReproConfiguration::toVector(str.c_str(), description);
    }
 }
 
-void Parameters::StoreParametersInArgs( ReproConfiguration *To )
+void 
+Parameters::storeParametersInArgs(ReproConfiguration *to)
 {
    assert( Db );
-   setParamString( prmLogType, To->mLogType );
-   setParamString( prmLogLevel, To->mLogLevel );
-   setParamString( prmLogPath, To->mLogFilePath );
+   setParamString(prmLogType, to->mLogType);
+   setParamString(prmLogLevel, to->mLogLevel);
+   setParamString(prmLogPath, to->mLogFilePath);
    Data str;
    if ( Db->dbReadRecord( AbstractDb::ParametersTable, NameOfParam[prmRecordRoute], str ) )
    {
-      To->mShouldRecordRoute = true;
-      To->mRecordRoute = ReproConfiguration::toUri( str.c_str(), "Record-Route");
+      to->mShouldRecordRoute = true;
+      to->mRecordRoute = ReproConfiguration::toUri( str.c_str(), "Record-Route");
    }
-   setParamInt( prmUdp, To->mUdpPort );
-   setParamInt( prmTcp, To->mTcpPort );
-   setParamString( prmTlsDomain, To->mTlsDomain );
-   setParamInt( prmTls, To->mTlsPort );
-   setParamInt( prmDtls, To->mDtlsPort );
-   setParamBool( prmEnableCertServer, To->mCertServer );
-   setParamBool( prmEnableV6, To->mUseV6 );
-   bool Bool = !To->mUseV4 ;
+   setParamInt( prmUdp, to->mUdpPort );
+   setParamInt( prmTcp, to->mTcpPort );
+   setParamString( prmTlsDomain, to->mTlsDomain );
+   setParamInt( prmTls, to->mTlsPort );
+   setParamInt( prmDtls, to->mDtlsPort );
+   setParamBool( prmEnableCertServer, to->mCertServer );
+   setParamBool( prmEnableV6, to->mUseV6 );
+   bool Bool = !to->mUseV4 ;
    setParamBool( prmDisableV4, Bool );
-   To->mUseV4 = !Bool;
-   setParamBool( prmDisableAuth, To->mNoChallenge );
-   setParamBool( prmDisableAuthInt, To->mNoAuthIntChallenge );
-   setParamBool( prmDisableWebAuth, To->mNoWebChallenge );
-   setParamBool( prmDisableReg, To->mNoRegistrar );
-   setParamBool( prmDisableIdentity, To->mNoIdentityHeaders );
-   setParamStrings( prmIinterfaces, To->mInterfaces, "interfaces" );
-   setParamStrings( prmDomains, To->mDomains, "domains" );
-   setParamStrings( prmRoute, To->mRouteSet, "routeSet" );
-   setParamString( prmReqChainName, To->mRequestProcessorChainName );
-   setParamInt( prmHttp, To->mHttpPort );
-   setParamBool( prmRecursiveRedirect, To->mRecursiveRedirect );
-   setParamBool( prmQValue, To->mDoQValue );
-   setParamString( prmQValueBehavior, To->mForkBehavior );
-   setParamBool( prmQValueCancelBtwForkGroups, To->mCancelBetweenForkGroups );
-   setParamBool( prmQValueWaitForTerminateBtwForkGroups, To->mWaitForTerminate );
-   setParamInt( prmQValueMsBetweenForkGroups, To->mMsBetweenForkGroups );
-   setParamInt( prmQValueMsBeforeCancel, To->mMsBeforeCancel );
-   setParamString( prmEnumSuffix, To->mEnumSuffix );
-   setParamBool( prmAllowBadReg, To->mAllowBadReg );
-   setParamBool( prmParallelForkStaticRoutes, To->mParallelForkStaticRoutes );
-   setParamInt( prmTimerC, To->mTimerC );
+   to->mUseV4 = !Bool;
+   setParamBool( prmDisableAuth, to->mNoChallenge );
+   setParamBool( prmDisableAuthInt, to->mNoAuthIntChallenge );
+   setParamBool( prmDisableWebAuth, to->mNoWebChallenge );
+   setParamBool( prmDisableReg, to->mNoRegistrar );
+   setParamBool( prmDisableIdentity, to->mNoIdentityHeaders );
+   setParamStrings( prmIinterfaces, to->mInterfaces, "interfaces" );
+   setParamStrings( prmDomains, to->mDomains, "domains" );
+   setParamStrings( prmRoute, to->mRouteSet, "routeSet" );
+   setParamString( prmReqChainName, to->mRequestProcessorChainName );
+   setParamInt( prmHttp, to->mHttpPort );
+   setParamBool( prmRecursiveRedirect, to->mRecursiveRedirect );
+   setParamBool( prmQValue, to->mDoQValue );
+   setParamString( prmQValueBehavior, to->mForkBehavior );
+   setParamBool( prmQValueCancelBtwForkGroups, to->mCancelBetweenForkGroups );
+   setParamBool( prmQValueWaitForTerminateBtwForkGroups, to->mWaitForTerminate );
+   setParamInt( prmQValueMsBetweenForkGroups, to->mMsBetweenForkGroups );
+   setParamInt( prmQValueMsBeforeCancel, to->mMsBeforeCancel );
+   setParamString( prmEnumSuffix, to->mEnumSuffix );
+   setParamBool( prmAllowBadReg, to->mAllowBadReg );
+   setParamBool( prmParallelForkStaticRoutes, to->mParallelForkStaticRoutes );
+   setParamInt( prmTimerC, to->mTimerC );
 //   setParamString( prmAdminPassword, To->mAdminPassword );
 }
 
-void Parameters::InitParameters()
+void 
+Parameters::initParameters()
 {
-   for ( int i=0; i<prmMax; i++ )
+   for (int i=0; i<prmMax; i++)
+   {
       EnabledParam[i] = true;
+   }
+
    NameOfParam[prmLogType] = "prmLogType";
    TypeOfParam[prmLogType] = ptString;
    NameOfParam[prmLogLevel] = "prmLogLevel";
@@ -243,7 +266,6 @@ void Parameters::InitParameters()
    TypeOfParam[prmTimerC] = ptInt;
    NameOfParam[prmAdminPassword] = "prmAdminPassword";
    TypeOfParam[prmAdminPassword] = ptString;
-
 }
 
 }
