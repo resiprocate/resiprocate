@@ -100,12 +100,14 @@ private:
    AsyncSocketBase& mAsyncSocketBase;
 
    // Request map (for retransmissions)
-   class RequestEntry
+   class RequestEntry : public boost::enable_shared_from_this<RequestEntry>
    {
    public:
       RequestEntry(asio::io_service& ioService, TurnAsyncSocket* turnAsyncSocket, StunMessage* requestMessage);
       ~RequestEntry();
 
+      void startTimer();
+      void stopTimer();
       void requestTimerExpired(const asio::error_code& e);
 
       asio::io_service& mIOService;
@@ -115,7 +117,7 @@ private:
       unsigned int mRequestsSent;
       unsigned int mTimeout;
    };
-   typedef std::map<UInt128, RequestEntry*> RequestMap;
+   typedef std::map<UInt128, boost::shared_ptr<RequestEntry> > RequestMap;
    RequestMap mActiveRequestMap;
    friend class RequestEntry;
    void requestTimeout(UInt128 tid);

@@ -338,8 +338,9 @@ TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission)
       // If message is a request, then start appropriate transaction and retranmission timers
       if(message->mClass == StunMessage::StunClassRequest)
       {
-         RequestEntry* requestEntry(new RequestEntry(mIOService, this, message));
+         boost::shared_ptr<RequestEntry> requestEntry(new RequestEntry(mIOService, this, message));
          mActiveRequestMap[message->mHeader.magicCookieAndTid] = requestEntry;
+         requestEntry->startTimer();
       }
       else
       {
@@ -482,7 +483,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
          }
          else
          {
-            delete it->second;
+            it->second->stopTimer();
             mActiveRequestMap.erase(it);
          }
 
@@ -1039,10 +1040,22 @@ TurnAsyncSocket::RequestEntry::RequestEntry(asio::io_service& ioService,
    mRequestTimer(ioService),
    mRequestsSent(1)
 {
-   // start the request timer
    mTimeout = mTurnAsyncSocket->mLocalBinding.getTransportType() == StunTuple::UDP ? UDP_RT0 : TCP_RESPONSE_TIME;
+}
+
+void
+TurnAsyncSocket::RequestEntry::startTimer()
+{
+   // start the request timer
    mRequestTimer.expires_from_now(boost::posix_time::milliseconds(mTimeout));  
-   mRequestTimer.async_wait(boost::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, this, asio::placeholders::error));
+   mRequestTimer.async_wait(boost::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, shared_from_this(), asio::placeholders::error));
+}
+
+void
+TurnAsyncSocket::RequestEntry::stopTimer()
+{
+   // stop the request timer
+   mRequestTimer.cancel();
 }
 
 TurnAsyncSocket::RequestEntry::~RequestEntry() 
@@ -1074,8 +1087,7 @@ TurnAsyncSocket::RequestEntry::requestTimerExpired(const asio::error_code& e)
       mRequestsSent++;
       mTurnAsyncSocket->sendStunMessage(mRequestMessage, true);
 
-      mRequestTimer.expires_from_now(boost::posix_time::milliseconds(mTimeout));  
-      mRequestTimer.async_wait(boost::bind(&TurnAsyncSocket::RequestEntry::requestTimerExpired, this, asio::placeholders::error));
+      startTimer();
    }
 }
 
@@ -1102,7 +1114,6 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
       default:
          assert(false);
       }
-      delete it->second;
       mActiveRequestMap.erase(it);
    }
 }
@@ -1114,7 +1125,7 @@ TurnAsyncSocket::clearActiveRequestMap()
    RequestMap::iterator it = mActiveRequestMap.begin();
    for(;it != mActiveRequestMap.end(); it++)
    {
-      delete it->second;
+      it->second->stopTimer();
    }
    mActiveRequestMap.clear();
 }
