@@ -20,7 +20,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;../../contrib/asio&quot;;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL;LEAK_CHECK"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"

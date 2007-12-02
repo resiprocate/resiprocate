@@ -67,16 +67,13 @@ General TODO
 
 Client TODO
 -----------
-- asynchrounous turn sockets need retranmission and stun request timeout logic
 - rework synchronous sockets to use Asynchrous sockets to unify implementation better
 - retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response - currently applications responsibility
 - DNS SRV Discovery - currently only does host record lookup (using ASIO)
-- Note: requests can be piplined - currently client does not send pipelined
+- Note: requests can be piplined - pipelining request is only possible with Asynchronous api
 - client long term password use - auto re-request after 401
 - implement 300 Try-Alternate response - currently applications responsibility
-- Try next DNS entry on failure - currently applications responsibility
-- sort out thread safety on Turn Async Sockets
-- keepalive usage
+- keepalive usage??
          
 
 
@@ -90,19 +87,20 @@ Current Asynchronous Implementation:
 
 Synchronous API Set - Wrapping in a TurnSocket - TurnUdpSocket, TurnTcpSocket, TurnTlsSocket - bound to local socket
 Note: API with a * are implemented
- * requestSharedSecret(turnServerIP, turnServerPort, username, password) - username and password are returned
- * createAllocation(turnServerIP, turnServerPort, username, password, lifetime, bandwidth, requestedPortProps, requestedPort, requestedTransportType, requestedIpAddress)
+ * setUsernameAndPassword()
+ * requestSharedSecret() - username and password are returned
+ * createAllocation(lifetime, bandwidth, requestedPortProps, requestedPort, requestedTransportType, requestedIpAddress)
+ * refreshAllocation(lifetime)
  * destroyAllocation() 
- * refreshAllocation()
- * getRelayTuple() - used to retrieve info about the allocation
- * getReflexiveTuple() - used to retrieve info about the allocation
- * getLifetime() - used to retrieve info about the allocation
- * getBandwidth() - used to retrieve info about the allocation
+ * getRelayTuple() - (SYNC API ONLY) used to retrieve info about the allocation
+ * getReflexiveTuple() - (SYNC API ONLY) used to retrieve info about the allocation
+ * getLifetime() - (SYNC API ONLY) used to retrieve info about the allocation
+ * getBandwidth() - (SYNC API ONLY) used to retrieve info about the allocation
  * setActiveDestination(destinationIP, destinationPort)
  * clearActiveDestination()
  - connectAllocation(destinationIP, destinationPort)
  - listenAllocation(destinationIP, destinationPort)
- * bindRequest(remoteIP, remotePort) - what other args are required? - need to return binding info - full 3489 not yet supported
+ * bindRequest() - full 3489 not yet supported
  * send(bufferToSend, bufferSize);      
  * sendTo(destinationIP, destinationPort, bufferToSend, bufferSize)
  * receive(bufferToReceiveIn, bufferSize[in/out], senderIPAddress, senderPort) - last 2 args are return args - if receive is non-blocking the this data is returned in callback instead 
@@ -125,6 +123,11 @@ onAllocationFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
 onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime) = 0;
 onRefreshFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
+
+onSetActiveDestinationSuccess(unsigned int socketDesc) = 0;
+onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
+onClearActiveDestinationSuccess(unsigned int socketDesc) = 0;
+onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
 
 onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size) = 0;
 onReceiveFailure(unsigned int socketDesc, const asio::error_code& e) = 0;

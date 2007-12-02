@@ -1,5 +1,6 @@
 #include "ChannelManager.hxx"
 #include <rutil/Random.hxx>
+#include <rutil/WinLeakCheck.hxx>
 
 using namespace std;
 
