@@ -1,5 +1,6 @@
 #include "TlsServer.hxx"
 #include <boost/bind.hpp>
+#include <rutil/WinLeakCheck.hxx>
 
 namespace reTurn {
 
