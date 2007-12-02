@@ -6,6 +6,7 @@
 #include "TurnAllocation.hxx"
 #include "AsyncSocketBase.hxx"
 #include "StunAuth.hxx"
+#include <rutil/WinLeakCheck.hxx>
 
 using namespace std;
 using namespace resip;

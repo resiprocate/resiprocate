@@ -1,6 +1,7 @@
 #include "AsyncSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
 #include <boost/bind.hpp>
+#include <rutil/WinLeakCheck.hxx>
 
 using namespace std;
 using namespace resip;

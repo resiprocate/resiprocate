@@ -54,8 +54,8 @@ public:
    void destroyAllocation();
 
    // Methods to control active destination
-   asio::error_code setActiveDestination(const asio::ip::address& address, unsigned short port);
-   asio::error_code clearActiveDestination();
+   void setActiveDestination(const asio::ip::address& address, unsigned short port);
+   void clearActiveDestination();
 
    // Turn Send Methods
    virtual void send(const char* buffer, unsigned int size);
@@ -97,11 +97,50 @@ protected:
    RemotePeer* mActiveDestination;
 
 private:
-   resip::Mutex mMutex;
    AsyncSocketBase& mAsyncSocketBase;
 
-   void sendStunMessage(StunMessage& request);
-   void sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size);
+   // Request map (for retransmissions)
+   class RequestEntry
+   {
+   public:
+      RequestEntry(asio::io_service& ioService, TurnAsyncSocket* turnAsyncSocket, StunMessage* requestMessage);
+      ~RequestEntry();
+
+      void requestTimerExpired(const asio::error_code& e);
+
+      asio::io_service& mIOService;
+      TurnAsyncSocket* mTurnAsyncSocket;
+      StunMessage* mRequestMessage;
+      asio::deadline_timer mRequestTimer;
+      unsigned int mRequestsSent;
+      unsigned int mTimeout;
+   };
+   typedef std::map<UInt128, RequestEntry*> RequestMap;
+   RequestMap mActiveRequestMap;
+   friend class RequestEntry;
+   void requestTimeout(UInt128 tid);
+   void clearActiveRequestMap();
+
+
+   void doRequestSharedSecret();
+   void doSetUsernameAndPassword(resip::Data* username, resip::Data* password);
+   void doConnect(const std::string& address, unsigned short port);
+   void doBindRequest();
+   void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,
+                           unsigned int bandwidth = UnspecifiedBandwidth,
+                           unsigned short requestedPortProps = StunMessage::PortPropsNone, 
+                           unsigned short requestedPort = UnspecifiedPort,
+                           StunTuple::TransportType requestedTransportType = StunTuple::None, 
+                           const asio::ip::address &requestedIpAddress = UnspecifiedIpAddress);
+   void doRefreshAllocation(unsigned int lifetime);
+   void doDestroyAllocation();
+   void doSetActiveDestination(const asio::ip::address& address, unsigned short port);
+   void doClearActiveDestination();
+   void doSend(resip::SharedPtr<resip::Data> data);
+   void doSendTo(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+
+   void sendStunMessage(StunMessage* request, bool reTransmission=false);
+   void sendTo(RemotePeer& remotePeer, resip::SharedPtr<resip::Data> data);
    void send(resip::SharedPtr<resip::Data> data);  // Send unframed data
    void send(unsigned short channel, resip::SharedPtr<resip::Data> data);  // send with turn framing
 

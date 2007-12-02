@@ -10,6 +10,7 @@
 #include "UdpServer.hxx"
 #include "RequestHandler.hxx"
 #include "TurnManager.hxx"
+#include <rutil/WinLeakCheck.hxx>
 
 #if defined(_WIN32)
 
@@ -42,6 +43,10 @@ public:
 
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+  resip::FindMemoryLeaks fml;
+#endif
+
   try
   {
     // Check command line arguments.

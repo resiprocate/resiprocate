@@ -6,6 +6,7 @@
 #include "AsyncSocketBase.hxx"
 #include "UdpRelayServer.hxx"
 #include "RemotePeer.hxx"
+#include <rutil/WinLeakCheck.hxx>
 
 using namespace std;
 using namespace resip;
