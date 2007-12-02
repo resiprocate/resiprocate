@@ -15,6 +15,7 @@
 #include "../TurnAsyncTlsSocket.hxx"
 #include "../TurnAsyncUdpSocket.hxx"
 #include "../TurnAsyncSocketHandler.hxx"
+#include <rutil/WinLeakCheck.hxx>
 
 using namespace reTurn;
 using namespace std;
@@ -144,6 +145,23 @@ public:
       cout << "MyTurnAsyncSocketHandler::onRefreshFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")."  << endl;
    }
 
+   virtual void onSetActiveDestinationSuccess(unsigned int socketDesc)
+   {
+      cout << "MyTurnAsyncSocketHandler::onSetActiveDestinationSuccess: socketDest=" << socketDesc << endl;
+   }
+   virtual void onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
+   {
+      cout << "MyTurnAsyncSocketHandler::onSetActiveDestinationFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")."  << endl;
+   }
+   virtual void onClearActiveDestinationSuccess(unsigned int socketDesc)
+   {
+      cout << "MyTurnAsyncSocketHandler::onClearActiveDestinationSuccess: socketDest=" << socketDesc << endl;
+   }
+   virtual void onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code& e)
+   {
+      cout << "MyTurnAsyncSocketHandler::onClearActiveDestinationFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ")."  << endl;
+   }
+
    virtual void onSendSuccess(unsigned int socketDesc)
    {
       cout << "MyTurnAsyncSocketHandler::onSendSuccess: socketDest=" << socketDesc << endl;
@@ -187,6 +205,9 @@ private:
 
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+  resip::FindMemoryLeaks fml;
+#endif
   try
   {
     if (argc != 3)
@@ -209,8 +230,8 @@ int main(int argc, char* argv[])
     sslContext.set_verify_mode(asio::ssl::context::verify_peer);
     sslContext.load_verify_file("ca.pem");
 
-    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string("127.0.0.1"), 0));
-    boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string("127.0.0.1"), 0));
+    boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncUdpSocket(ioService, &handler, asio::ip::address::from_string("127.0.0.1"), 0));
+    //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTcpSocket(ioService, &handler, asio::ip::address::from_string("127.0.0.1"), 0));
     //boost::shared_ptr<TurnAsyncSocket> turnSocket(new TurnAsyncTlsSocket(ioService, sslContext, &handler, asio::ip::address::from_string("127.0.0.1"), 0)); port++;
 
     handler.setTurnAsyncSocket(turnSocket.get());

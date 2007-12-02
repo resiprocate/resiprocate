@@ -5,6 +5,7 @@
 #include <rutil/DataStream.hxx>
 #include <rutil/MD5Stream.hxx>
 #include <boost/crc.hpp>
+#include <rutil/WinLeakCheck.hxx>
 
 typedef boost::crc_optimal<32, 0x04C11DB7, 0xFFFFFFFF, 0x5354554e, true, true> stun_crc_32_type;
 

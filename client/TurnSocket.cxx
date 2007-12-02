@@ -2,6 +2,7 @@
 #include "ErrorCode.hxx"
 #include <boost/bind.hpp>
 #include <rutil/Lock.hxx>
+#include <rutil/WinLeakCheck.hxx>
 using namespace std;
 
 #define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
