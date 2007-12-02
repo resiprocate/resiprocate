@@ -2,6 +2,7 @@
 #include "StunMessage.hxx"
 #include <boost/bind.hpp>
 #include <rutil/SharedPtr.hxx>
+#include <rutil/WinLeakCheck.hxx>
 
 using namespace std;
 using namespace resip;
@@ -23,6 +24,12 @@ UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler
 
 UdpServer::~UdpServer()
 {
+   ResponseMap::iterator it = mResponseMap.begin();
+   for(;it != mResponseMap.end(); it++)
+   {
+      delete it->second;
+   }
+   mResponseMap.clear();
 }
 
 void 
