@@ -1,7 +1,7 @@
 #if !defined(RESIP_ISTRUSTEDNODE_REQUEST_PROCESSOR_HXX)
 #define RESIP_ISTRUSTEDNODE_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
-#include "repro/AbstractaclStore.hxx"
+#include "repro/AbstractAclStore.hxx"
 #include <iosfwd>
 
 namespace repro
