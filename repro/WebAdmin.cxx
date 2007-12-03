@@ -1228,14 +1228,14 @@ WebAdmin::buildDefaultPage()
 void WebAdmin::buildRestartServerSubPage(resip::DataStream& s)
 {
    s << 
-#include "repro/webadmin/ServerRestart.ixx"
+#include "repro/webadmin/serverRestart.ixx"
    ;
 }
 
 void WebAdmin::buildRestartedServerSubPage(resip::DataStream& s)
 {
    s << 
-#include "repro/webadmin/ServerRestarted.ixx"
+#include "repro/webadmin/serverRestarted.ixx"
    ;
    reproRestartServer = true;
 }
@@ -1260,7 +1260,7 @@ void
 WebAdmin::buildParametersSubPage(resip::DataStream& s)
 {
    Data str(
-#include "repro/webadmin/Parameters.ixx"
+#include "repro/webadmin/parameters.ixx"
       );
    Data ReplaceStr;
    ReplaceStr += setParamsFunctionLine( Parameters::prmLogType, "LogType" );
