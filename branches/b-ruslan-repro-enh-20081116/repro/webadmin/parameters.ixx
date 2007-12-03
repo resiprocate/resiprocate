@@ -13,7 +13,7 @@
 "    </tr>\n"
 "    <tr>\n"
 "      <td>Log level </td>\n"
-"      <td><select name=\"LogLevel\" id=\"LogLerel\">\n"
+"      <td><select name=\"LogLevel\" id=\"LogLevel\">\n"
 "        <option selected=\"selected\">nothing</option>\n"
 "        <option>NONE</option>\n"
 "        <option>EMERG</option>\n"
