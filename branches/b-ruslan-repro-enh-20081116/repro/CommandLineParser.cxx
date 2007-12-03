@@ -30,11 +30,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 {
    char* logType = "cout";
    char* logLevel = "INFO";
+   char logFilePathBuf[REPRO_MAX_PATH];
+   char* logFilePath = logFilePathBuf;
 #ifndef WIN32
-   char logFilePath[REPRO_MAX_PATH]=".";
+   strcpy(logFilePath, ".");
 #else
-   char logFilePath[REPRO_MAX_PATH]={0};
-
    static const Data allUsersLogFilePath(Data(getenv("ALLUSERSPROFILE")) + "\\Application Data\\Resiprocate\\repro\\");
    //when we run as restricted user
    static const Data localUserLogFilePath(Data(getenv("USERPROFILE")) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\");
@@ -62,7 +62,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       strcpy(logFilePath, localUserLogFilePath.c_str());
    }
 #endif
-   
    char* tlsDomain = 0;
    char* recordRoute = 0;
    int udpPort = 5060;
@@ -79,8 +78,10 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* interfaces = 0;
    char* routeSet = 0;
 
-   char certPath[REPRO_MAX_PATH];
-   char dbPath[REPRO_MAX_PATH];
+   char certPathBuf[REPRO_MAX_PATH] = { 0 };
+   char* certPath = certPathBuf;
+   char dbPathBuf[REPRO_MAX_PATH] = { 0 };
+   char* dbPath = dbPathBuf;
 
    int noChallenge = false;
    int noAuthIntChallenge = false;
@@ -222,7 +223,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, Parameters::prmParallelForkStaticRoutes, "paralled fork to all matching static routes and (first batch) registrations", 0},
       {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         Parameters::prmTimerC, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  Parameters::prmAdminPassword, "set web administrator password", ""},
-      {"no-use-parameters",  0,   POPT_ARG_NONE,                             &noUseParameters,Parameters::prmMax, "set web administrator password", ""},
+      {"no-use-parameters",  0,   POPT_ARG_NONE,                             &noUseParameters,Parameters::prmMax, "do not use parameters settings from database", ""},
       {"no-load-web-admin",  0,   POPT_ARG_NONE,                             &noLoadWebAdmin, Parameters::prmMax, "do not load web admin server", ""},
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    Parameters::prmMax, "show the version number and exit", 0},
 #ifdef WIN32
