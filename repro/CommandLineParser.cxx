@@ -23,7 +23,7 @@ using namespace std;
 #ifdef WIN32
 #define REPRO_MAX_PATH MAX_PATH
 #else
-#define PEPRO_MAX_PATH 256
+#define REPRO_MAX_PATH 256
 #endif
 
 CommandLineParser::CommandLineParser(int argc, char** argv)

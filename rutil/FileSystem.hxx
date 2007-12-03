@@ -25,7 +25,7 @@ namespace resip
    {
    public:
 
-      static const char FileSystem::PathSeparator;
+      static const char PathSeparator;
 
       /**
         DirectoryExists returns a boolean value that indicates whether the
