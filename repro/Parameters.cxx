@@ -172,9 +172,6 @@ Parameters::storeParametersInArgs(ReproConfiguration *to)
    setParamBool( prmDisableReg, to->mNoRegistrar );
    setParamBool( prmDisableIdentity, to->mNoIdentityHeaders );
    setParamStrings( prmIinterfaces, to->mInterfaces, "interfaces" );
-   setParamStrings( prmDomains, to->mDomains, "domains" );
-   setParamStrings( prmRoute, to->mRouteSet, "routeSet" );
-   setParamString( prmReqChainName, to->mRequestProcessorChainName );
    setParamInt( prmHttp, to->mHttpPort );
    setParamBool( prmRecursiveRedirect, to->mRecursiveRedirect );
    setParamBool( prmQValue, to->mDoQValue );
@@ -234,12 +231,6 @@ Parameters::initParameters()
    TypeOfParam[prmDisableIdentity] = ptBool;
    NameOfParam[prmIinterfaces] = "prmIinterfaces";
    TypeOfParam[prmIinterfaces] = ptStrings;
-   NameOfParam[prmDomains] = "prmDomains";
-   TypeOfParam[prmDomains] = ptStrings;
-   NameOfParam[prmRoute] = "prmRoute";
-   TypeOfParam[prmRoute] = ptStrings;
-   NameOfParam[prmReqChainName] = "prmReqChainName";
-   TypeOfParam[prmReqChainName] = ptString;
    NameOfParam[prmHttp] = "prmHttp";
    TypeOfParam[prmHttp] = ptInt;
    NameOfParam[prmRecursiveRedirect] = "prmRecursiveRedirect";

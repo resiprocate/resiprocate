@@ -15,7 +15,7 @@ public:
    enum Param {  prmLogType = 1,  prmLogLevel, prmLogPath, prmRecordRoute, prmUdp, prmTcp,
             prmTlsDomain, prmTls, prmDtls, prmEnableCertServer, prmEnableV6, prmDisableV4, 
             prmDisableAuth, prmDisableAuthInt, prmDisableWebAuth, prmDisableReg, 
-            prmDisableIdentity, prmIinterfaces, prmDomains, prmRoute, prmReqChainName, 
+            prmDisableIdentity, prmIinterfaces,  
             prmHttp, prmRecursiveRedirect, prmQValue, prmQValueBehavior, 
             prmQValueCancelBtwForkGroups, prmQValueWaitForTerminateBtwForkGroups, 
             prmQValueMsBetweenForkGroups, prmQValueMsBeforeCancel, prmEnumSuffix, 
