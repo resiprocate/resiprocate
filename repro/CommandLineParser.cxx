@@ -32,9 +32,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* logLevel = "INFO";
    char logFilePathBuf[REPRO_MAX_PATH];
    char* logFilePath = logFilePathBuf;
-#ifndef WIN32
    strcpy(logFilePath, ".");
-#else
+#ifdef WIN32
    static const Data allUsersLogFilePath(Data(getenv("ALLUSERSPROFILE")) + "\\Application Data\\Resiprocate\\repro\\");
    //when we run as restricted user
    static const Data localUserLogFilePath(Data(getenv("USERPROFILE")) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\");
