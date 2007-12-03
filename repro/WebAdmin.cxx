@@ -1281,9 +1281,6 @@ WebAdmin::buildParametersSubPage(resip::DataStream& s)
    ReplaceStr += setParamsFunctionLine( Parameters::prmDisableReg, "DisableReg" );
    ReplaceStr += setParamsFunctionLine( Parameters::prmDisableIdentity, "DisableIdentity" );
    ReplaceStr += setParamsFunctionLine( Parameters::prmIinterfaces, "Interfaces" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmDomains, "Domains" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmRoute, "Routes" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmReqChainName, "NameReqChain" );
    ReplaceStr += setParamsFunctionLine( Parameters::prmHttp, "HttpPort" );
    ReplaceStr += setParamsFunctionLine( Parameters::prmRecursiveRedirect, "ReqursiveRedirect" );
    ReplaceStr += setParamsFunctionLine( Parameters::prmQValue, "QVal" );
@@ -1340,9 +1337,6 @@ WebAdmin::buildParametersSetPage(int pageNumber, resip::DataStream& s)
    saveParameter( Parameters::prmDisableReg, "DisableReg" );
    saveParameter( Parameters::prmDisableIdentity, "DisableIdentity" );
    saveParameter( Parameters::prmIinterfaces, "Interfaces" );
-   saveParameter( Parameters::prmDomains, "Domains" );
-   saveParameter( Parameters::prmRoute, "Routes" );
-   saveParameter( Parameters::prmReqChainName, "NameReqChain" );
    saveParameter( Parameters::prmHttp, "HttpPort" );
    saveParameter( Parameters::prmRecursiveRedirect, "ReqursiveRedirect" );
    saveParameter( Parameters::prmQValue, "QVal" );
