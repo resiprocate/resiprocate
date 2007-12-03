@@ -38,7 +38,6 @@ ReproConfiguration::ReproConfiguration() :
    ,mAllowBadReg(0)
    ,mParallelForkStaticRoutes(0)
    ,mNoUseParameters(false)
-   ,mNoLoadWebAdmin(false)
 #ifdef WIN32
    ,mInstallService(false)
    ,mRemoveService(false)
