@@ -372,12 +372,12 @@ proxyMain(resip::ReproConfiguration *args, Store &store)
    
    WebAdmin *admin = NULL;;
    WebAdminThread *adminThread = NULL;
-   if ( !args->mNoLoadWebAdmin )
+   if (args->mHttpPort != 0)
    {
 #ifdef USE_SSL
-      admin = new WebAdmin( store, regData, security, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
+      admin = new WebAdmin(store, regData, security, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort);
 #else
-      admin = new WebAdmin ( store, regData, NULL, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort  );
+      admin = new WebAdmin (store, regData, NULL, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort);
 #endif
       if (!admin->isSane())
       {

@@ -105,7 +105,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* enumSuffix = 0;
    int allowBadReg = 0;
    int parallelForkStaticRoutes = 0;
-   int noLoadWebAdmin = 0;
    int showVersion = 0;
 #ifdef WIN32
    int installService = 0;
@@ -180,8 +179,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        Parameters::prmLogType, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       Parameters::prmLogLevel, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"log-path",           0,  POPT_ARG_STRING,                            &logFilePath,    Parameters::prmLogPath, "specify the path for log file", 0},
-      {"db-path",            0,  POPT_ARG_STRING,                            &dbPath,         Parameters::prmMax, "path to databases", 0},
+      {"log-path",           0,  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logFilePath,    Parameters::prmLogPath, "specify the path for log file", 0},
+      {"db-path",            0,  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &dbPath,         Parameters::prmMax, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    Parameters::prmRecordRoute, "specify uri to use as Record-Route", "sip:example.com"},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    Parameters::prmMax, "enable MySQL and provide name of server", "localhost"},
@@ -193,11 +192,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"tls",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tlsPort,        Parameters::prmTls, "add TLS transport on specified port", "5061"},
       {"dtls",               0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &dtlsPort,       Parameters::prmDtls, "add DTLS transport on specified port", "0"},
       {"enable-cert-server", 0,  POPT_ARG_NONE,                              &certServer,     Parameters::prmEnableCertServer, "run a cert server", 0},
-#ifdef WIN32
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       Parameters::prmMax, "path to certificates (default: c:\\sipCerts)", 0},
-#else
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       Parameters::prmMax, "path to certificates (default: ~/.sipCerts)", 0},
-#endif
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       Parameters::prmMax, "path to certificates", 0},
 #endif
       {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       Parameters::prmEnableV6, "enable IPV6", 0},
       {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      Parameters::prmDisableV4, "disable IPV4", 0},
@@ -223,8 +218,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, Parameters::prmParallelForkStaticRoutes, "paralled fork to all matching static routes and (first batch) registrations", 0},
       {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         Parameters::prmTimerC, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
       {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  Parameters::prmAdminPassword, "set web administrator password", ""},
-      {"no-use-parameters",  0,   POPT_ARG_NONE,                             &noUseParameters,Parameters::prmMax, "do not use parameters settings from database", ""},
-      {"no-load-web-admin",  0,   POPT_ARG_NONE,                             &noLoadWebAdmin, Parameters::prmMax, "do not load web admin server", ""},
+      {"no-use-parameters",  0,  POPT_ARG_NONE,                              &noUseParameters,Parameters::prmMax, "do not use parameters settings from database", ""},
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    Parameters::prmMax, "show the version number and exit", 0},
 #ifdef WIN32
       {"install-service", 0,   POPT_ARG_NONE,                                &installService, Parameters::prmMax, "install program as WinNT service", 0},
@@ -301,7 +295,6 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mAllowBadReg = allowBadReg?true:false;
    mParallelForkStaticRoutes = parallelForkStaticRoutes?true:false;
    mNoUseParameters = noUseParameters != 0;
-   mNoLoadWebAdmin = noLoadWebAdmin != 0;
 
    if (enumSuffix) mEnumSuffix = enumSuffix;
    
