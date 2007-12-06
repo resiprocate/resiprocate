@@ -180,7 +180,8 @@ AsyncTlsSocketBase::transportFramedReceive()
 void 
 AsyncTlsSocketBase::transportClose()
 {
-   mSocket.shutdown();  // ?slg? Should we use async_shutdown?
+   asio::error_code ec;
+   mSocket.shutdown(ec);  // ?slg? Should we use async_shutdown?
    mSocket.lowest_layer().close();
 }
 

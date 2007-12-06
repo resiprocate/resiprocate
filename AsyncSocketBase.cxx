@@ -26,13 +26,13 @@ AsyncSocketBase::~AsyncSocketBase()
 void 
 AsyncSocketBase::send(const StunTuple& destination, resip::SharedPtr<Data> data)
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doSend, this, destination, data, 0));
+   mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
 }
 
 void 
 AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, resip::SharedPtr<Data> data)
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doSend, this, destination, channel, data, 0));
+   mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, channel, data, 0));
 }
 
 void
@@ -100,31 +100,35 @@ AsyncSocketBase::sendFirstQueuedData()
 void 
 AsyncSocketBase::receive()
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doReceive, this));
+   mIOService.post(boost::bind(&AsyncSocketBase::doReceive, shared_from_this()));
 }
 
 void
 AsyncSocketBase::doReceive()
 {
-   assert(!mReceiving);
-   mReceiving=true;
-   mReceiveBuffer = allocateBuffer(RECEIVE_BUFFER_SIZE);
-   transportReceive();
+   if(!mReceiving)
+   {
+      mReceiving=true;
+      mReceiveBuffer = allocateBuffer(RECEIVE_BUFFER_SIZE);
+      transportReceive();
+   }
 }
 
 void 
 AsyncSocketBase::framedReceive()
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::doFramedReceive, this));
+   mIOService.post(boost::bind(&AsyncSocketBase::doFramedReceive, shared_from_this()));
 }
 
 void
 AsyncSocketBase::doFramedReceive()
 {
-   assert(!mReceiving);
-   mReceiving=true;
-   mReceiveBuffer = allocateBuffer(RECEIVE_BUFFER_SIZE);
-   transportFramedReceive();
+   if(!mReceiving)
+   {
+      mReceiving=true;
+      mReceiveBuffer = allocateBuffer(RECEIVE_BUFFER_SIZE);
+      transportFramedReceive();
+   }
 }
 
 void 
@@ -147,7 +151,7 @@ AsyncSocketBase::handleReceive(const asio::error_code& e, std::size_t bytesTrans
 void 
 AsyncSocketBase::close()
 {
-   mIOService.post(boost::bind(&AsyncSocketBase::transportClose, this));
+   mIOService.post(boost::bind(&AsyncSocketBase::transportClose, shared_from_this()));
 }
 
 resip::SharedPtr<resip::Data> 
