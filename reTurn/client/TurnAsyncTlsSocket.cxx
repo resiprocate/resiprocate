@@ -22,14 +22,14 @@ TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,
 void 
 TurnAsyncTlsSocket::onConnectSuccess()
 {
-   mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectSuccess(getSocketDescriptor(), mConnectedAddress, mConnectedPort);
    turnReceive();
 }
 
 void 
 TurnAsyncTlsSocket::onConnectFailure(const asio::error_code& e)
 {
-   mTurnAsyncSocketHandler->onConnectFailure(getSocketDescriptor(), e);
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onConnectFailure(getSocketDescriptor(), e);
 }
 
 void 
@@ -42,19 +42,19 @@ TurnAsyncTlsSocket::onReceiveSuccess(const asio::ip::address& address, unsigned 
 void 
 TurnAsyncTlsSocket::onReceiveFailure(const asio::error_code& e)
 {
-   mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), e);
 }
  
 void 
 TurnAsyncTlsSocket::onSendSuccess()
 {
-   //mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
+   //if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
 }
  
 void 
 TurnAsyncTlsSocket::onSendFailure(const asio::error_code& e)
 {
-   mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), e);
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), e);
 }
 
 } // namespace
