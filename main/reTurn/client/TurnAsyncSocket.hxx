@@ -30,6 +30,7 @@ public:
                             bool turnFraming = true);
    virtual ~TurnAsyncSocket();
 
+   virtual void disableTurnAsyncHandler();
    virtual unsigned int getSocketDescriptor() = 0;
 
    // Note: Shared Secret requests have been deprecated by RFC3489-bis11, and not 
@@ -38,7 +39,7 @@ public:
 
    // Set the username and password for all future requests
    void setUsernameAndPassword(const char* username, const char* password);
-   void connect(const std::string& address, unsigned short port);
+   void connect(const std::string& address, unsigned short port, bool turnFraming);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    void bindRequest();
@@ -88,10 +89,8 @@ protected:
 
    // Turn Allocation Properties from response
    bool mHaveAllocation;
-   time_t mAllocationRefreshTime;
    StunTuple::TransportType mRelayTransportType;
    unsigned int mLifetime;
-   unsigned int mBandwidth;
 
    ChannelManager mChannelManager;
    RemotePeer* mActiveDestination;
@@ -123,6 +122,10 @@ private:
    void requestTimeout(UInt128 tid);
    void clearActiveRequestMap();
 
+   asio::deadline_timer mAllocationTimer;
+   void startAllocationTimer();
+   void cancelAllocationTimer();
+   void allocationTimerExpired(const asio::error_code& e);
 
    void doRequestSharedSecret();
    void doSetUsernameAndPassword(resip::Data* username, resip::Data* password);
