@@ -726,7 +726,8 @@ Tuple::isEqualWithMask(const Tuple& compare, short mask, bool ignorePort, bool i
                // sun has no s6_addr16
                if((*((unsigned long*)&addr1->sin6_addr._S6_un._S6_u32[i]) & htonl(mask6part)) !=
                   (*((unsigned long*)&addr2->sin6_addr._S6_un._S6_u32[i]) & htonl(mask6part)))
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+               // bsd has no s6_addr16
                if((*((unsigned long*)&addr1->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)) != 
                   (*((unsigned long*)&addr2->sin6_addr.__u6_addr.__u6_addr32[i]) & htonl(mask6part)))				  
 #else
