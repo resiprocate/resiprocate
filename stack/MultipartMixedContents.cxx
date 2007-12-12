@@ -55,7 +55,9 @@ MultipartMixedContents::MultipartMixedContents(const MultipartMixedContents& rhs
      mContents()
 {
    vector<Contents*>::const_iterator j;
-   const vector<Contents*>& list = rhs.parts();
+
+   // .bwc. Don't trigger a parse of the original by calling parts()
+   const vector<Contents*>& list = rhs.mContents;
    
    for ( j = list.begin(); 
          j != list.end(); ++j)
