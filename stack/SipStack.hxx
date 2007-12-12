@@ -472,6 +472,16 @@ class SipStack
       volatile bool& statisticsManagerEnabled();
       const bool statisticsManagerEnabled() const;
       
+      bool getFixBadDialogIdentifiers() const 
+      {
+         return mTransactionController.mFixBadDialogIdentifiers;
+      }
+
+      void setFixBadDialogIdentifiers(bool pFixBadDialogIdentifiers) 
+      {
+         mTransactionController.mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
+      }
+
       void setContentLengthChecking(bool check)
       {
          SipMessage::checkContentLength=check;
