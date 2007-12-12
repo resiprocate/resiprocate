@@ -220,12 +220,86 @@ TransactionState::process(TransactionController& controller)
    if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
    else state = controller.mServerTransactionMap.find(tid);
    
-   // .bwc. This code ensures that the transaction state-machine can recover
-   // from ACK/200 with the same tid as the original INVITE. This problem is
-   // stupidly common. 
-   if (state && sip && sip->isExternal() && sip->isRequest() && sip->method() == ACK)
+   if (state && sip && sip->isExternal())
    {
-      if (!state->mAckIsValid)
+      // .bwc. This code (if enabled) ensures that responses have the same
+      // CallId and tags as the request did (excepting the introduction of a 
+      // remote tag). This is to protect dialog-stateful TUs that don't react 
+      // gracefully when a stupid/malicious endpoint fiddles with the tags 
+      // and/or CallId when it isn't supposed to. (DUM is one such TU)
+      if(state->mController.getFixBadDialogIdentifiers() &&
+         sip->isResponse() &&
+         state->mMsgToRetransmit)
+      {
+         if(sip->header(h_CallId).isWellFormed())
+         {
+            if(!(sip->header(h_CallId) == 
+                        state->mMsgToRetransmit->header(h_CallId)))
+            {
+               InfoLog(<< "Other end modified our Call-Id... correcting.");
+               sip->header(h_CallId) = state->mMsgToRetransmit->header(h_CallId);
+            }
+         }
+         else
+         {
+            InfoLog(<< "Other end corrupted our CallId... correcting.");
+            sip->header(h_CallId) = state->mMsgToRetransmit->header(h_CallId);
+         }
+
+         NameAddr& from = state->mMsgToRetransmit->header(h_From);
+         if(sip->header(h_From).isWellFormed())
+         {
+            // Overwrite tag.
+            if(from.exists(p_tag))
+            {
+               if(sip->header(h_From).param(p_tag) != from.param(p_tag))
+               {
+                  InfoLog(<<"Other end modified our local tag... correcting.");
+                  sip->header(h_From).param(p_tag) = from.param(p_tag);
+               }
+            }
+            else if(sip->header(h_From).exists(p_tag))
+            {
+               if(sip->header(h_From).exists(p_tag))
+               {
+                  InfoLog(<<"Other end added a local tag for us... removing.");
+                  sip->header(h_From).remove(p_tag);
+               }
+            }
+         }
+         else
+         {
+            InfoLog(<<"Other end corrupted our From header... replacing.");
+            // Whole header is hosed, overwrite.
+            sip->header(h_From) = from;
+         }
+
+         NameAddr& to = state->mMsgToRetransmit->header(h_To);
+         if(sip->header(h_To).isWellFormed())
+         {
+            // Overwrite tag.
+            if(to.exists(p_tag))
+            {
+               if(sip->header(h_To).param(p_tag) != to.param(p_tag))
+               {
+                  InfoLog(<<"Other end modified the (existing) remote tag... "
+                              "correcting.");
+                  sip->header(h_To).param(p_tag) = to.param(p_tag);
+               }
+            }
+         }
+         else
+         {
+            InfoLog(<<"Other end corrupted our To header... replacing.");
+            // Whole header is hosed, overwrite.
+            sip->header(h_To) = to;
+         }
+      }
+
+      // .bwc. This code ensures that the transaction state-machine can recover
+      // from ACK/200 with the same tid as the original INVITE. This problem is
+      // stupidly common. 
+      if(sip->isRequest() && sip->method() == ACK && !state->mAckIsValid)
       {
          // Must have received an ACK to a 200;
          // We will never respond to this, so nothing will need this tid for
