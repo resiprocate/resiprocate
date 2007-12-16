@@ -29,7 +29,7 @@ static const ErrorType NotConnected                          = ErrorBase + 14;
 static const ErrorType AlreadyAllocated                      = ErrorBase + 15;
 static const ErrorType ReceiveTimeout                        = ErrorBase + 16;
 static const ErrorType StrayResponse                         = ErrorBase + 17;
-} 
+static const ErrorType InvalidState                          = ErrorBase + 18;} 
 
 #endif
 

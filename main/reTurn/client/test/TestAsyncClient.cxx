@@ -188,6 +188,7 @@ public:
          break;
       case 3:
          mTurnAsyncSocket->destroyAllocation();
+         //mTurnAsyncSocket->close();
          break;
       }
    }
