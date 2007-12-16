@@ -148,6 +148,16 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
    // Store Allocation Properties
    mRequestedTransportType = requestedTransportType;
 
+   // Relay Transport Type is requested type or socket type
+   if(mRequestedTransportType != StunTuple::None)
+   {
+      mRelayTransportType = mRequestedTransportType;
+   }
+   else
+   {
+      mRelayTransportType = mLocalBinding.getTransportType();
+   }
+
    // Ensure Connected
    if(!mAsyncSocketBase.isConnected())
    {
@@ -275,20 +285,6 @@ TurnAsyncSocket::setActiveDestination(const asio::ip::address& address, unsigned
 void
 TurnAsyncSocket::doSetActiveDestination(const asio::ip::address& address, unsigned short port)
 {
-   // ensure there is an allocation
-   if(!mHaveAllocation)
-   {
-      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSetActiveDestinationFailure(getSocketDescriptor(), asio::error_code(reTurn::NoAllocation, asio::error::misc_category));
-      return;
-   }
-
-   // Ensure Connected
-   if(!mAsyncSocketBase.isConnected())
-   {
-      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSetActiveDestinationFailure(getSocketDescriptor(), asio::error_code(reTurn::NotConnected, asio::error::misc_category));
-      return;
-   }
-
    // Setup Remote Peer 
    StunTuple remoteTuple(mRelayTransportType, address, port);
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
@@ -302,6 +298,7 @@ TurnAsyncSocket::doSetActiveDestination(const asio::ip::address& address, unsign
       mActiveDestination = mChannelManager.createRemotePeer(remoteTuple, mChannelManager.getNextChannelNumber(), 0);
       assert(mActiveDestination);
    }
+   cout << "TurnAsyncSocket::doSetActiveDestination: Active Destination set to: " << remoteTuple << endl;
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSetActiveDestinationSuccess(getSocketDescriptor());
 }
 
@@ -560,7 +557,7 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
    if(!remotePeer)
    {
       // Remote Peer not found - discard data
-      std::cout << "TurnAsyncSocket::handleDataInd: Data received from unknown RemotePeer - discarding" << std::endl;
+      std::cout << "TurnAsyncSocket::handleDataInd: Data received from unknown RemotePeer " << remoteTuple << " - discarding" << std::endl;
       return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
    }
 
@@ -776,16 +773,6 @@ TurnAsyncSocket::handleAllocateResponse(StunMessage& stunMessage)
 {
    if(stunMessage.mClass == StunMessage::StunClassSuccessResponse)
    {
-      // Transport Type is requested type or socket type
-      if(mRequestedTransportType != StunTuple::None)
-      {
-         mRelayTransportType = mRequestedTransportType == StunMessage::RequestedTransportUdp ? StunTuple::UDP : StunTuple::TCP;
-      }
-      else
-      {
-         mRelayTransportType = mLocalBinding.getTransportType();
-      }
-
       StunTuple reflexiveTuple;
       StunTuple relayTuple;
       if(stunMessage.mHasXorMappedAddress)
