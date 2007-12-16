@@ -145,13 +145,13 @@ AsyncTlsSocketBase::handleServerHandshake(const asio::error_code& e)
 const asio::ip::address 
 AsyncTlsSocketBase::getSenderEndpointAddress() 
 { 
-   return mSocket.lowest_layer().remote_endpoint().address(); 
+   return mConnectedAddress; 
 }
 
 unsigned short 
 AsyncTlsSocketBase::getSenderEndpointPort() 
 { 
-   return mSocket.lowest_layer().remote_endpoint().port(); 
+   return mConnectedPort; 
 }
 
 void 
