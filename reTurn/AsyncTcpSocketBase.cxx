@@ -100,13 +100,13 @@ AsyncTcpSocketBase::handleConnect(const asio::error_code& ec,
 const asio::ip::address 
 AsyncTcpSocketBase::getSenderEndpointAddress() 
 { 
-   return mSocket.remote_endpoint().address(); 
+   return mConnectedAddress; 
 }
 
 unsigned short 
 AsyncTcpSocketBase::getSenderEndpointPort() 
 { 
-   return mSocket.remote_endpoint().port(); 
+   return mConnectedPort; 
 }
 
 void 
