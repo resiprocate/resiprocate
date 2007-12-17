@@ -336,6 +336,9 @@ endlocal
 				RelativePath=".\monkeys\LocationServer.cxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\OutboundTargetHandler.cxx">
+			</File>
+			<File
 				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.cxx">
 			</File>
 			<File
@@ -379,9 +382,6 @@ endlocal
 			</File>
 			<File
 				RelativePath=".\RouteStore.cxx">
-			</File>
-			<File
-				RelativePath=".\monkeys\SetTargetConnection.cxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.cxx">
@@ -473,6 +473,9 @@ endlocal
 				RelativePath=".\monkeys\LocationServer.hxx">
 			</File>
 			<File
+				RelativePath=".\monkeys\OutboundTargetHandler.hxx">
+			</File>
+			<File
 				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.hxx">
 			</File>
 			<File
@@ -513,9 +516,6 @@ endlocal
 			</File>
 			<File
 				RelativePath=".\RouteStore.hxx">
-			</File>
-			<File
-				RelativePath=".\monkeys\SetTargetConnection.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.hxx">

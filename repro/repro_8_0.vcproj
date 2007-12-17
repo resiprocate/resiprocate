@@ -413,6 +413,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\OutboundTargetHandler.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.cxx"
 				>
 			</File>
@@ -470,10 +474,6 @@
 			</File>
 			<File
 				RelativePath=".\RouteStore.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\monkeys\SetTargetConnection.cxx"
 				>
 			</File>
 			<File
@@ -591,6 +591,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\monkeys\OutboundTargetHandler.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.hxx"
 				>
 			</File>
@@ -644,10 +648,6 @@
 			</File>
 			<File
 				RelativePath=".\RouteStore.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\monkeys\SetTargetConnection.hxx"
 				>
 			</File>
 			<File
