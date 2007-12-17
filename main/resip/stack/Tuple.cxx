@@ -218,7 +218,7 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple,resip::Data& container)
    // V6: sin6_len(1), sin6_flowinfo(4), flowId(4), onlyUseExistingConnection(1)
    // V4: sin_family(2 instead of 1), sin_zero(8), flowId(4), onlyUseExistingConnection(1)
    UInt32 rawToken[6];
-   bzero(&rawToken, 24);
+   memset(&rawToken, 0, 24);
 
    rawToken[0] = tuple.mFlowKey;
 
