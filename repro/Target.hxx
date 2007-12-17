@@ -55,7 +55,7 @@ class Target
       virtual Target* clone() const;
       
       //In case you need const accessors to keep things happy.
-      virtual float getPriority() const;
+      virtual int getPriority() const;
       virtual bool shouldAutoProcess() const;
       
       static bool targetPtrCompare(const Target* lhs, const Target* rhs)
