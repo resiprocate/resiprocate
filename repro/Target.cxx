@@ -99,7 +99,7 @@ Target::clone() const
    return new Target(*this);
 }
 
-float
+int
 Target::getPriority() const
 {
    return mPriorityMetric;
