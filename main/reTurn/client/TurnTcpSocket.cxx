@@ -1,5 +1,9 @@
 #include "TurnTcpSocket.hxx"
 #include <boost/bind.hpp>
+#include <rutil/Logger.hxx>
+#include "../ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 
@@ -139,7 +143,7 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
       mReadErrorCode = e;
       if (e != asio::error::operation_aborted)
       {
-         std::cout << "Read header error: " << e.message() << std::endl;
+         WarningLog(<< "Read header error: " << e.value() << "-" << e.message());
          mReadTimer.cancel();
       }
    }

@@ -1,5 +1,9 @@
 #include "TurnTlsSocket.hxx"
 #include <boost/bind.hpp>
+#include <rutil/Logger.hxx>
+#include "../ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 
@@ -44,11 +48,11 @@ TurnTlsSocket::connect(const std::string& address, unsigned short port)
       mSocket.lowest_layer().connect(*endpoint_iterator, errorCode);
       if(!errorCode)
       {
-         std::cout << "Connected!" << std::endl;
+         DebugLog(<< "Connected!");
          mSocket.handshake(asio::ssl::stream_base::client, errorCode);
          if(!errorCode)
          {  
-            std::cout << "Handshake complete!" << std::endl;
+            DebugLog(<< "Handshake complete!");
             mConnected = true;
             mConnectedTuple.setTransportType(StunTuple::TLS);
             mConnectedTuple.setAddress(endpoint_iterator->endpoint().address());

@@ -46,7 +46,7 @@ TurnAsyncTcpSocket::onReceiveFailure(const asio::error_code& e)
 void 
 TurnAsyncTcpSocket::onSendSuccess()
 {
-   //if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
 }
  
 void 
