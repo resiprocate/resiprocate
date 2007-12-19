@@ -1,6 +1,10 @@
 #include "ChannelManager.hxx"
 #include <rutil/Random.hxx>
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 
@@ -18,12 +22,10 @@ ChannelManager::ChannelManager()
 ChannelManager::~ChannelManager()
 {
    // Cleanup RemotePeer Memory
+   TupleRemotePeerMap::iterator it;   
+   for(it = mTupleRemotePeerMap.begin(); it != mTupleRemotePeerMap.end(); it++)
    {
-      TupleRemotePeerMap::iterator it;   
-      for(it = mTupleRemotePeerMap.begin(); it != mTupleRemotePeerMap.end(); it++)
-      {
-         delete it->second;
-      }
+      delete it->second;
    }
 }
 

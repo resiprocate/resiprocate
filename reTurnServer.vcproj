@@ -146,6 +146,9 @@
 				RelativePath=".\reTurnServer.cxx">
 			</File>
 			<File
+				RelativePath=".\ReTurnSubsystem.cxx">
+			</File>
+			<File
 				RelativePath=".\StunAuth.cxx">
 			</File>
 			<File
@@ -215,6 +218,9 @@
 			</File>
 			<File
 				RelativePath=".\RequestHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\ReTurnSubsystem.hxx">
 			</File>
 			<File
 				RelativePath=".\StunAuth.hxx">

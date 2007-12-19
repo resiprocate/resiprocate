@@ -7,6 +7,10 @@
 #include <boost/bind.hpp>
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 using namespace resip;
@@ -27,7 +31,7 @@ TlsConnection::TlsConnection(asio::io_service& ioService,
 
 TlsConnection::~TlsConnection()
 {
-   std::cout << "TlsConnection destroyed." << std::endl;
+   DebugLog(<< "TlsConnection destroyed.");
 }
 
 ssl_socket::lowest_layer_type& 
@@ -39,7 +43,7 @@ TlsConnection::socket()
 void 
 TlsConnection::start()
 {
-   std::cout << "TlsConnection started." << std::endl;
+   DebugLog(<< "TlsConnection started.");
 
    doHandshake();
 }
@@ -49,7 +53,10 @@ TlsConnection::stop()
 {
   asio::error_code ec;
   mSocket.shutdown(ec);
-  std::cout << "TlsConnection shutdown, error=" << ec.message() << std::endl;
+  if(ec)
+  {
+     WarningLog(<< "TlsConnection shutdown, error=" << ec.value() << "-" << ec.message());
+  }
 }
 
 void 
@@ -61,15 +68,15 @@ TlsConnection::close()
 void 
 TlsConnection::onServerHandshakeSuccess()
 {
-  std::cout << "TlsConnection handshake completed." << std::endl;
-  doFramedReceive();
+   DebugLog(<< "TlsConnection handshake completed.");
+   doFramedReceive();
 }
  
 void 
 TlsConnection::onServerHandshakeFailure(const asio::error_code& e)
 {
-  std::cout << "TlsConnection handshake failure, error=" << e.message() << std::endl;
-  close();
+   WarningLog(<< "TlsConnection handshake failure, error=" << e.value() << "-" << e.message());
+   close();
 }
 
 void 
@@ -159,9 +166,14 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
 
                doSend(response.mRemoteTuple, buffer);
             }
+            else
+            {
+               WarningLog(<< "Received invalid StunMessage.  Dropping.");
+            }
          }
          else
          {
+            WarningLog(<< "Received invalid data.  Closing connection.");
             close();
             return;
          }
@@ -176,7 +188,7 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
    }
    else
    {
-      cout << "TlsConnection::onReceiveSuccess not enough data for framed message - discarding!" << endl;
+      WarningLog(<< "Not enough data for framed message.  Closing connection.");
       close();
       return;
    }
@@ -189,7 +201,7 @@ TlsConnection::onReceiveFailure(const asio::error_code& e)
 {
    if(e != asio::error::operation_aborted)
    {
-      cout << "TlsConnection::onReceiveFailure: " << e.message() << endl;
+      InfoLog(<< "TlsConnection::onReceiveFailure: " << e.value() << "-" << e.message());
 
       close();
    }
@@ -205,7 +217,7 @@ TlsConnection::onSendFailure(const asio::error_code& error)
 {
    if(error != asio::error::operation_aborted)
    {
-      cout << "TlsConnection::onSendFailure: " << error.message() << endl;
+      InfoLog(<< "TlsConnection::onSendFailure: " << error.value() << "-" << error.message());
       close();
    }
 }

@@ -11,6 +11,11 @@
 #include "RequestHandler.hxx"
 #include "TurnManager.hxx"
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Log.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 #if defined(_WIN32)
 
@@ -39,8 +44,6 @@ public:
    // TODO
 };
 
-#define NUM_THREADS 1  // Do not change this - code is not currently thread safe
-
 int main(int argc, char* argv[])
 {
 #ifdef WIN32
@@ -59,6 +62,9 @@ int main(int argc, char* argv[])
       std::cerr << "    reTurnServer 0::0 8777 3489 0::0 3589\n";
       return 1;
     }
+
+    // Initialize Logging - TODO make configurable
+    resip::Log::initialize(resip::Log::Cout, resip::Log::Info, argv[0]);
 
     // Initialize server.
     asio::io_service ioService;                       // The one and only ioService for the stunServer
@@ -83,7 +89,11 @@ int main(int argc, char* argv[])
     boost::shared_ptr<reTurn::TlsServer> tlsStunServer;
 
     // The one and only RequestHandler - if stun port is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
-    reTurn::RequestHandler requestHandler(turnManager, stunPort != 0 ? &turnAddress : 0, stunPort != 0 ? &turnPort : 0, stunPort != 0 ? &altStunAddress : 0, stunPort != 0 ? &altStunPort : 0); 
+    reTurn::RequestHandler requestHandler(turnManager, 
+                                          stunPort != 0 ? &turnAddress : 0, 
+                                          stunPort != 0 ? &turnPort : 0, 
+                                          stunPort != 0 ? &altStunAddress : 0, 
+                                          stunPort != 0 ? &altStunPort : 0); 
 
     if(turnPort != 0)
     {
@@ -127,13 +137,8 @@ int main(int argc, char* argv[])
 
     // Run the ioService until stopped.
     // Create a pool of threads to run all of the io_services.
-    std::vector<boost::shared_ptr<asio::thread> > threads;
-    for (std::size_t i = 0; i < NUM_THREADS; ++i)
-    {
-       boost::shared_ptr<asio::thread> thread(new asio::thread(
+    boost::shared_ptr<asio::thread> thread(new asio::thread(
           boost::bind(&asio::io_service::run, &ioService)));
-       threads.push_back(thread);
-    }
 
 #ifndef _WIN32
     // Restore previous signals.
@@ -150,15 +155,12 @@ int main(int argc, char* argv[])
     sigwait(&wait_mask, &sig);
 #endif
 
-    // Wait for all threads in the pool to exit.
-    for (std::size_t i = 0; i < threads.size(); ++i)
-    {
-       threads[i]->join();
-    }
+    // Wait for thread to exit
+    thread->join();
   }
   catch (std::exception& e)
   {
-    std::cerr << "exception: " << e.what() << "\n";
+     ErrLog(<< "exception: " << e.what());
   }
 
   return 0;

@@ -2,6 +2,10 @@
 
 #include "AsyncTlsSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 
@@ -138,6 +142,9 @@ AsyncTlsSocketBase::handleServerHandshake(const asio::error_code& e)
    }
    else
    {
+      mConnectedAddress = mSocket.lowest_layer().remote_endpoint().address();
+      mConnectedPort = mSocket.lowest_layer().remote_endpoint().port();
+
       onServerHandshakeSuccess();
    }
 }
@@ -210,13 +217,16 @@ AsyncTlsSocketBase::handleReadHeader(const asio::error_code& e)
       }
       else
       {
-         std::cout << "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accomdate incoming framed data (" << dataLen+4 << ") closing connection." << std::endl;
+         WarningLog(<< "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accomdate incoming framed data (" << dataLen+4 << ") closing connection.");
          close();
       }
    }
    else if (e != asio::error::operation_aborted)
    {
-      std::cout << "Read header error: " << e.message() << std::endl;
+      if(e != asio::error::eof)
+      {
+         WarningLog(<< "Read header error: " << e.value() << "-" << e.message());
+      }
       close();
    }
 }

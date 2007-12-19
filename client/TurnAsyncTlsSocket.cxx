@@ -48,7 +48,7 @@ TurnAsyncTlsSocket::onReceiveFailure(const asio::error_code& e)
 void 
 TurnAsyncTlsSocket::onSendSuccess()
 {
-   //if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
+   if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendSuccess(getSocketDescriptor());
 }
  
 void 
