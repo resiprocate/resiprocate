@@ -39,12 +39,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_5F685FFFF3B5815FF645AA2D5AE92256"
-        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_6288C29BB5B24D208BB744EE4D85C24F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -57,12 +51,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_8B5A67D0C38C64B5A040650B3F8E648A"
-        "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_990315E3271741AE9EA6C02E529B9B47"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -70,6 +58,12 @@
         "Entry"
         {
         "MsmKey" = "8:_B0B648F097BA49E5AF24FE8FAAAA3E44"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C04CE27686E8445C87033AA3BB66BA2A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -119,6 +113,20 @@
     {
         "CustomAction"
         {
+            "{0C9D821E-95BB-411F-BE03-2864360EBF94}:_4D21159AC62B4B74B979A7BAC738268A"
+            {
+            "Name" = "8:Remove repro service"
+            "Condition" = "8:"
+            "Object" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+            "FileType" = "3:2"
+            "InstallAction" = "3:4"
+            "Arguments" = "8:--remove-service"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_4369E0F2_5F28_468C_96F1_AE8044811E85"
+            "InstallerClass" = "11:FALSE"
+            "CustomActionData" = "8:"
+            }
         }
         "DefaultFeature"
         {
@@ -197,26 +205,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{A582A373-4685-4296-BEFE-614B80A702C3}:_5F685FFFF3B5815FF645AA2D5AE92256"
-            {
-            "SourcePath" = "8:LIBEAY32.dll"
-            "TargetName" = "8:LIBEAY32.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{A582A373-4685-4296-BEFE-614B80A702C3}:_6288C29BB5B24D208BB744EE4D85C24F"
             {
             "SourcePath" = "8:..\\..\\contrib\\popt\\win32\\libintl-2.dll"
@@ -257,26 +245,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{A582A373-4685-4296-BEFE-614B80A702C3}:_8B5A67D0C38C64B5A040650B3F8E648A"
-            {
-            "SourcePath" = "8:SSLEAY32.dll"
-            "TargetName" = "8:SSLEAY32.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{A582A373-4685-4296-BEFE-614B80A702C3}:_990315E3271741AE9EA6C02E529B9B47"
             {
             "SourcePath" = "8:..\\..\\contrib\\popt\\win32\\libiconv-2.dll"
@@ -301,6 +269,26 @@
             {
             "SourcePath" = "8:..\\VERSION"
             "TargetName" = "8:VERSION"
+            "Tag" = "8:"
+            "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_C04CE27686E8445C87033AA3BB66BA2A"
+            {
+            "SourcePath" = "8:..\\Repro.ico"
+            "TargetName" = "8:Repro.ico"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
             "Condition" = "8:"
@@ -543,7 +531,7 @@
             "Target" = "8:_449747DB7BDE448E8557B9834BB2A62D"
             "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
             "WorkingFolder" = "8:"
-            "Icon" = "8:"
+            "Icon" = "8:_C04CE27686E8445C87033AA3BB66BA2A"
             "Feature" = "8:"
             }
             "{478F747B-8505-45D1-9AAE-8C3B645C26E3}:_86981A780076446AB0844591EB5D0967"
@@ -558,6 +546,34 @@
             "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
             "WorkingFolder" = "8:"
             "Icon" = "8:"
+            "Feature" = "8:"
+            }
+            "{478F747B-8505-45D1-9AAE-8C3B645C26E3}:_9BD5A9FE045840E5AB7C955723D9CF1B"
+            {
+            "Name" = "8:Remove repro service"
+            "Arguments" = "8:--remove-service"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
+            "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Icon" = "8:_C04CE27686E8445C87033AA3BB66BA2A"
+            "Feature" = "8:"
+            }
+            "{478F747B-8505-45D1-9AAE-8C3B645C26E3}:_B316B4D579B94FBDAAB594CB93217112"
+            {
+            "Name" = "8:Install repro as service"
+            "Arguments" = "8:--install-service"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
+            "WorkingFolder" = "8:_96F138CFF79546568B8B0A6277D34A78"
+            "Icon" = "8:_C04CE27686E8445C87033AA3BB66BA2A"
             "Feature" = "8:"
             }
         }
@@ -948,7 +964,7 @@
         {
             "{8062640A-2EEE-46E9-AB67-688E9A886E9F}:_449747DB7BDE448E8557B9834BB2A62D"
             {
-            "SourcePath" = "8:..\\SSL-Debug\\repro.exe"
+            "SourcePath" = "8:..\\Debug\\repro.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_96F138CFF79546568B8B0A6277D34A78"
@@ -974,6 +990,9 @@
                 {
                 }
             }
+        }
+        "VJSharpPlugin"
+        {
         }
     }
 }
