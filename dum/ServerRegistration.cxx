@@ -261,7 +261,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
                supportsOutbound=false;
             }
          }
-         catch(resip::ParseBuffer::Exception& e)
+         catch(resip::ParseBuffer::Exception&)
          {
             supportsOutbound=false;
          }
