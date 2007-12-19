@@ -1,49 +1,22 @@
-#ifndef ASYNC_TCP_SOCKET_BASE_HXX
-#define ASYNC_TCP_SOCKET_BASE_HXX
+#if !defined(RETURN_SUBSYSTEM_HXX)
+#define RETURN_SUBSYSTEM_HXX 
 
-#include <asio.hpp>
-#include <boost/bind.hpp>
-#include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
+#include <iostream>
+#include <rutil/Subsystem.hxx>
 
-#include "AsyncSocketBase.hxx"
-
-namespace reTurn {
-
-class AsyncTcpSocketBase : public AsyncSocketBase
+class ReTurnSubsystem : public resip::Subsystem
 {
-public:
-   AsyncTcpSocketBase(asio::io_service& ioService); 
-   virtual ~AsyncTcpSocketBase();
+   public:
+      // Add new systems below
+      static ReTurnSubsystem RETURN;
 
-   virtual unsigned int getSocketDescriptor();
-
-   virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
-   virtual void connect(const std::string& address, unsigned short port);  
-
-   virtual void transportReceive();
-   virtual void transportFramedReceive();
-   virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
-   virtual void transportClose();
-
-   virtual void setConnectedAddressAndPort();  // Used by server side so that get fn's will work
-   virtual const asio::ip::address getSenderEndpointAddress();
-   virtual unsigned short getSenderEndpointPort();
-
-protected:
-   virtual void handleReadHeader(const asio::error_code& e);
-   virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
-   virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
-
-   asio::ip::tcp::socket mSocket;
-   asio::ip::tcp::resolver mResolver;
-
-private:
+   private:
+      explicit ReTurnSubsystem(const char* rhs) : resip::Subsystem(rhs) {};
+      explicit ReTurnSubsystem(const resip::Data& rhs);
+      ReTurnSubsystem& operator=(const resip::Data& rhs);
 };
 
-}
-
-#endif 
+#endif
 
 
 /* ====================================================================

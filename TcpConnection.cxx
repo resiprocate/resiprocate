@@ -4,6 +4,10 @@
 #include <rutil/SharedPtr.hxx>
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 using namespace resip;
@@ -21,7 +25,7 @@ TcpConnection::TcpConnection(asio::io_service& ioService,
 
 TcpConnection::~TcpConnection()
 {
-   std::cout << "TcpConnection destroyed." << std::endl;
+   DebugLog(<< "TcpConnection destroyed.");
 }
 
 asio::ip::tcp::socket& 
@@ -33,7 +37,8 @@ TcpConnection::socket()
 void 
 TcpConnection::start()
 {
-   std::cout << "TcpConnection started." << std::endl;
+   DebugLog(<< "TcpConnection started.");
+   setConnectedAddressAndPort();
    doFramedReceive();
 }
 
@@ -136,9 +141,14 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
 
                doSend(response.mRemoteTuple, buffer);
             }
+            else
+            {
+               WarningLog(<< "Received invalid StunMessage.  Dropping.");
+            }
          }
          else
          {
+            WarningLog(<< "Received invalid data.  Closing connection.");
             close();
             return;
          }
@@ -153,7 +163,7 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
    }
    else
    {
-      cout << "TcpConnection::onReceiveSuccess not enough data for framed message - discarding!" << endl;
+      WarningLog(<< "Not enough data for framed message.  Closing connection.");
       close();
       return;
    }
@@ -166,8 +176,7 @@ TcpConnection::onReceiveFailure(const asio::error_code& e)
 {
    if(e != asio::error::operation_aborted)
    {
-      cout << "TcpConnection::onReceiveFailure: " << e.message() << endl;
-
+      InfoLog(<< "TcpConnection::onReceiveFailure: " << e.value() << "-" << e.message());
       close();
    }
 }
@@ -182,7 +191,7 @@ TcpConnection::onSendFailure(const asio::error_code& error)
 {
    if(error != asio::error::operation_aborted)
    {
-      cout << "TcpConnection::onSendFailure: " << error.message() << endl;
+      InfoLog(<< "TcpConnection::onSendFailure: " << error.value() << "-" << error.message());
       close();
    }
 }
