@@ -3,6 +3,10 @@
 #include <boost/bind.hpp>
 #include <rutil/SharedPtr.hxx>
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 using namespace resip;
@@ -17,7 +21,7 @@ UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler
   mAlternateIpUdpServer(0),
   mAlternateIpPortUdpServer(0)
 {
-   std::cout << (mTurnFraming ? "TURN" : "STUN") << " UdpServer started.  Listening on " << address << ":" << port << std::endl;
+   InfoLog(<< (mTurnFraming ? "TURN" : "STUN") << " UdpServer started.  Listening on " << address << ":" << port);
 
    bind(address, port);
 }
@@ -149,7 +153,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
                }
                else
                {
-                  std::cout << "UdpServer: received retransmission of request with tid: " << request.mHeader.magicCookieAndTid << std::endl;
+                  InfoLog(<< "UdpServer: received retransmission of request with tid: " << request.mHeader.magicCookieAndTid);
                   response = it->second->mResponseMessage;
                   responseSocket = it->second->mResponseSocket;
                }
@@ -168,6 +172,14 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
 
                doSend(response->mRemoteTuple, buffer);
             }
+            else
+            {
+               WarningLog(<< "Received invalid StunMessage.  Dropping.");
+            }
+         }
+         else
+         {
+            WarningLog(<< "Received invalid data.  Dropping.");
          }
       } 
       else
@@ -180,7 +192,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
    }
    else
    {
-      cout << "UdpServer::onReceiveSuccess not enough data for framed message - discarding!" << endl;
+      WarningLog(<< "Not enough data for framed message.  Dropping.");
    }
 
    doReceive();
@@ -191,7 +203,7 @@ UdpServer::onReceiveFailure(const asio::error_code& e)
 {
    if(e != asio::error::operation_aborted)
    {
-      cout << "UdpServer::onReceiveFailure: " << e.message() << endl;
+      InfoLog(<< "UdpServer::onReceiveFailure: " << e.value() << "-" << e.message());
 
       doReceive();
    }
@@ -207,7 +219,7 @@ UdpServer::onSendFailure(const asio::error_code& error)
 {
    if(error != asio::error::operation_aborted)
    {
-      cout << "UdpServer::onSendFailure: " << error.message() << endl;
+      InfoLog(<< "UdpServer::onSendFailure: " << error.value() << "-" << error.message());
    }
 }
 
@@ -232,7 +244,7 @@ UdpServer::cleanupResponseMap(const asio::error_code& e, UInt128 tid)
    ResponseMap::iterator it = mResponseMap.find(tid);
    if(it != mResponseMap.end())
    {
-      cout << "UdpServer::cleanupResponseMap - removing transaction id=" << tid << endl;
+      DebugLog(<< "UdpServer::cleanupResponseMap - removing transaction id=" << tid);
       delete it->second;
       mResponseMap.erase(it);
    }

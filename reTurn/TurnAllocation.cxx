@@ -7,6 +7,10 @@
 #include "UdpRelayServer.hxx"
 #include "RemotePeer.hxx"
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 using namespace resip;
@@ -38,14 +42,21 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
    {
       mRequestedIpAddress = *requestedIpAddress;
    }
-   cout << "TurnAllocation created: clientLocal=" << clientLocalTuple << " clientRemote=" << 
-           clientRemoteTuple << " requested=" << requestedTuple << " lifetime=" << lifetime << endl;
+
+   InfoLog(<< "TurnAllocation created: clientLocal=" << clientLocalTuple << " clientRemote=" << 
+           clientRemoteTuple << " requested=" << requestedTuple << " lifetime=" << lifetime);
+
    refresh(lifetime);
 
    if(mRequestedTuple.getTransportType() == StunTuple::UDP)
    {
       mUdpRelayServer.reset(new UdpRelayServer(turnManager.getIOService(), *this));
       mUdpRelayServer->start();
+   }
+   else
+   {
+      ErrLog(<< "Only UDP relay's are currently implemented!");
+      assert(false);
    }
 
    // Register for Turn Transport onDestroyed notification
@@ -54,8 +65,8 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
 
 TurnAllocation::~TurnAllocation()
 {
-   cout << "TurnAllocation destroyed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << endl;
+   InfoLog(<< "TurnAllocation destroyed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple);
 
    // Delete Relay Servers
    if(mUdpRelayServer) mUdpRelayServer->stop();
@@ -64,12 +75,10 @@ TurnAllocation::~TurnAllocation()
    mTurnManager.deallocatePort(mRequestedTuple.getTransportType(), mRequestedTuple.getPort());
 
    // Cleanup Permission Memory
+   TurnPermissionMap::iterator it;   
+   for(it = mTurnPermissionMap.begin(); it != mTurnPermissionMap.end(); it++)
    {
-      TurnPermissionMap::iterator it;   
-      for(it = mTurnPermissionMap.begin(); it != mTurnPermissionMap.end(); it++)
-      {
-         delete it->second;
-      }
+      delete it->second;
    }
    
    // Unregister for TurnTransport notifications
@@ -79,8 +88,8 @@ TurnAllocation::~TurnAllocation()
 void  
 TurnAllocation::refresh(unsigned int lifetime)  // update expiration time
 {
-   cout << "TurnAllocation refreshed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " lifetime=" << lifetime << endl;
+   InfoLog(<< "TurnAllocation refreshed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " lifetime=" << lifetime);
 
    mExpires = time(0) + lifetime;
 
@@ -97,8 +106,8 @@ TurnAllocation::existsPermission(const asio::ip::address& address)
    {
       if(it->second->isExpired()) // check if expired
       {
-         cout << "TurnAllocation has expired permission: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " exipred address=" << it->first << endl;
+         InfoLog(<< "TurnAllocation has expired permission: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " exipred address=" << it->first);
          delete it->second;
          mTurnPermissionMap.erase(it);
          return false;
@@ -144,8 +153,8 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, resip::SharedPtr<re
    }
    else
    {
-      cout << "sendDataToPeer bad channel number - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-         mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << endl;
+      WarningLog(<< "sendDataToPeer bad channel number - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+         mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber);
    }
 }
 
@@ -159,9 +168,9 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& pe
       // Found Remote Peer - ensure channel number matches
       if(channelNumber != remotePeer->getClientToServerChannel())
       {
-         cout << "sendDataToPeer channel number mismatch - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+         WarningLog(<< "sendDataToPeer channel number mismatch - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
             mKey.getClientRemoteTuple() << " requested=" <<  mRequestedTuple << " oldChannelNumber=" << remotePeer->getClientToServerChannel() <<
-            " newChannelNumber=" << channelNumber << endl;
+            " newChannelNumber=" << channelNumber);
          // drop message
          return;
       }
@@ -179,17 +188,7 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& pe
       StunMessage channelConfirmationInd;
       channelConfirmationInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationMethod);
       channelConfirmationInd.mHasTurnPeerAddress = true;
-      channelConfirmationInd.mTurnPeerAddress.port = peerAddress.getPort();
-      if(peerAddress.getAddress().is_v6())
-      {            
-         channelConfirmationInd.mTurnPeerAddress.family = StunMessage::IPv6Family;
-         memcpy(&channelConfirmationInd.mTurnPeerAddress.addr.ipv6, peerAddress.getAddress().to_v6().to_bytes().c_array(), sizeof(channelConfirmationInd.mTurnPeerAddress.addr.ipv6));
-      }
-      else
-      {
-         channelConfirmationInd.mTurnPeerAddress.family = StunMessage::IPv4Family;
-         channelConfirmationInd.mTurnPeerAddress.addr.ipv4 = peerAddress.getAddress().to_v4().to_ulong();   
-      }
+      StunMessage::setStunAtrAddressFromTuple(channelConfirmationInd.mTurnPeerAddress, peerAddress);
       channelConfirmationInd.mHasTurnChannelNumber = true;
       channelConfirmationInd.mTurnChannelNumber = channelNumber;
 
@@ -207,8 +206,8 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& pe
 void 
 TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, resip::SharedPtr<resip::Data> data, bool framed)
 {
-   cout << "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress << /* " data=" << data << */ endl;
+   DebugLog(<< "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress);
 
    // add permission if it does not exist
    refreshPermission(peerAddress.getAddress());
@@ -222,10 +221,11 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, resip::SharedPtr<re
    {
       if(data->size() <=4)
       {
-         cout << "Turn send indication with no data for non-UDP transport.  Dropping." << endl; 
+         WarningLog(<< "Turn send indication with no data for non-UDP transport.  Dropping.");
          return;
       }
       // !SLG! TODO - implement TCP relays
+      assert(false);
    }
 }
 
@@ -236,8 +236,8 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, resip::SharedPtr<
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(peerAddress);
    if(!remotePeer)
    {
-      cout << "sendDataToClient RemotePeer info not found - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-            mKey.getClientRemoteTuple() << " requested=" <<  mRequestedTuple << " peerAddress=" << peerAddress << endl;
+      WarningLog(<< "sendDataToClient RemotePeer info not found - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+            mKey.getClientRemoteTuple() << " requested=" <<  mRequestedTuple << " peerAddress=" << peerAddress);
       return;
    }
 
@@ -257,25 +257,16 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, resip::SharedPtr<
       mChannelManager.addRemotePeerServerToClientChannelLookup(remotePeer);
    }
 
-   cout << "TurnAllocation sendDataToClient: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-      mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << " channelNumber=" << (int)remotePeer->getServerToClientChannel() << /* " data=" << data <<*/ endl;
+   DebugLog(<< "TurnAllocation sendDataToClient: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+               mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << 
+               " channelNumber=" << (int)remotePeer->getServerToClientChannel());
 
    if(useDataInd)
    {
       StunMessage dataInd;
       dataInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnDataMethod);
       dataInd.mHasTurnPeerAddress = true;
-      dataInd.mTurnPeerAddress.port = peerAddress.getPort();
-      if(peerAddress.getAddress().is_v6())
-      {            
-         dataInd.mTurnPeerAddress.family = StunMessage::IPv6Family;
-         memcpy(&dataInd.mTurnPeerAddress.addr.ipv6, peerAddress.getAddress().to_v6().to_bytes().c_array(), sizeof(dataInd.mTurnPeerAddress.addr.ipv6));
-      }
-      else
-      {
-         dataInd.mTurnPeerAddress.family = StunMessage::IPv4Family;
-         dataInd.mTurnPeerAddress.addr.ipv4 = peerAddress.getAddress().to_v4().to_ulong();   
-      }
+      StunMessage::setStunAtrAddressFromTuple(dataInd.mTurnPeerAddress, peerAddress);
       dataInd.mHasTurnChannelNumber = true;
       dataInd.mTurnChannelNumber = remotePeer->getServerToClientChannel();
       dataInd.setTurnData(data->data(), (unsigned int)data->size());
@@ -305,14 +296,14 @@ void TurnAllocation::serverToClientChannelConfirmed(unsigned short channelNumber
       }
       else
       {
-         cout << "serverToClientChannelConfirmed bad peer address - discarding confirmed indication: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress << endl;
+         WarningLog(<< "serverToClientChannelConfirmed bad peer address - discarding confirmed indication: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress);
       }
    }
    else
    {
-      cout << "serverToClientChannelConfirmed bad channel number - discarding confirmed indication: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-         mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << endl;
+      WarningLog(<< "serverToClientChannelConfirmed bad channel number - discarding confirmed indication: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+         mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber);
    }
 }
 

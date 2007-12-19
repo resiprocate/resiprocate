@@ -7,6 +7,10 @@
 #include "AsyncSocketBase.hxx"
 #include "StunAuth.hxx"
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 using namespace resip;
@@ -20,6 +24,7 @@ const char authenticationRealm[] = "test";
 const char authenticationUsername[] = "test";
 const char authenticationPassword[] = "1234";
 
+#define SERVER_STRING "reTURN 0.1"
 #define DEFAULT_LIFETIME 600   // 10 minutes
 #define DEFAULT_BANDWIDTH 100  // 100 kbit/s - enough for G711 RTP ?slg? what do we want this to be?
 
@@ -63,12 +68,14 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
             // Ensure fingerprint is added
             response.mHasFingerprint = true;
             break;
+
          case StunMessage::SharedSecretMethod:
             result = processStunSharedSecretRequest(request, response);
 
             // Ensure fingerprint is added
             response.mHasFingerprint = true;
             break;
+
          case StunMessage::TurnAllocateMethod:
             result = processTurnAllocateRequest(turnSocket, request, response);
             if(result != NoResponseToSend)
@@ -88,9 +95,11 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
                }
             }
             break;
+
          case StunMessage::TurnRefreshMethod:
             result = processTurnRefreshRequest(request, response);
             break;
+
          default:
             buildErrorResponse(response, 400, "Invalid Request Method");  
             break;
@@ -104,12 +113,15 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
          case StunMessage::TurnSendMethod:
             processTurnSendIndication(request);
             break;
+
          case StunMessage::TurnChannelConfirmationMethod:
             processTurnChannelConfirmationIndication(request);
-            break;        
+            break;     
+
          case StunMessage::BindMethod:
             // A Bind indication is simply a keepalive with no response required
             break;
+
          case StunMessage::TurnDataMethod: // Don't need to handle these - only sent by server, never received
          default:
             // Unknown indication - just ignore
@@ -136,7 +148,7 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
 
       if (1) // add ServerName - could be a setting in the future
       {
-         response.setServer("reTURN 0.1");
+         response.setServer(SERVER_STRING);
       }
    }
 
@@ -160,8 +172,6 @@ RequestHandler::buildErrorResponse(StunMessage& response, unsigned short errorCo
 bool 
 RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response)
 {
-   bool verbose = false;
-
    // !slg! could add here to lookup transactionId - if this is a retransmission of a previous request, then just resend last response
    // for binding requests it's OK to just re-calculate the response - just do that for now
 
@@ -176,13 +186,11 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
 
    if (!request.mHasMessageIntegrity)
    {
-      if (verbose) clog << "Request does not contain MessageIntegrity" << endl;
-
       if (authenticationMode != NoAuthentication) 
       {
          // !slg! if we want a long term credential to be provided, we need to add a realm to the response, otherwise 
          // we are requesting that short term credentials be provided
-         if(verbose) clog << "Received Request with no Message Integrity. Sending 401." << endl;
+         InfoLog(<< "Received Request with no Message Integrity. Sending 401.");
          buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
          return false;
       }
@@ -191,7 +199,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
    {
       if (!request.mHasUsername)
       {
-         if (verbose) clog << "No UserName. Send 432." << endl;
+         WarningLog(<< "No Username and contains MessageIntegrity. Sending 432.");
          buildErrorResponse(response, 432, "No UserName and contains MessageIntegrity", authenticationMode == LongTermPassword ? authenticationRealm : 0);
          return false;
       }
@@ -200,7 +208,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       {
          if(!request.mHasNonce)
          {
-            if (verbose) clog << "No Nonce. Send 435." << endl;
+            WarningLog(<< "No Nonce and contains realm.  Sending 435.");
             buildErrorResponse(response, 435, "No Nonce and contains Realm", authenticationMode == LongTermPassword ? authenticationRealm : 0);
             return false;
          }
@@ -210,7 +218,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          //       and removals
          if(0)
          {
-            if (verbose) clog << "Nonce Expired. Send 438." << endl;
+            WarningLog(<< "Nonce expired. Sending 438.");
             buildErrorResponse(response, 438, "Stale Nonce" /* Send realm? ,authenticationMode == LongTermPassword ? authenticationRealm : 0 */);
             return false;
          }
@@ -224,24 +232,24 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          //       and removals
          if(0)
          {
-            if (verbose) clog << "Username Expired. Send 430." << endl;
+            WarningLog(<< "Username expired. Sending 430.");
             buildErrorResponse(response, 430, "Stale Credentials");
             return false;
          }
       }
 
-      if (verbose) clog << "Validating username: " << *request.mUsername << endl;
+      DebugLog(<< "Validating username: " << *request.mUsername);
 
       // !slg! need to determine whether the USERNAME contains a known entity, and in the case of a long-term
       //       credential, known within the realm of the REALM attribute of the request
       if (authenticationMode == LongTermPassword && strcmp(request.mUsername->c_str(), authenticationUsername) != 0)
       {
-         if (verbose) clog << "Invalid username: " << *request.mUsername << "Send 436." << endl; 
+         WarningLog(<< "Invalid username: " << *request.mUsername << ". Sending 436.");
          buildErrorResponse(response, 436, "Unknown username.", authenticationMode == LongTermPassword ? authenticationRealm : 0);
          return false;
       }
 
-      if (verbose) clog << "Validating MessageIntegrity" << endl;
+      DebugLog(<< "Validating MessageIntegrity");
 
       // Need to calculate HMAC across entire message - for ShortTermAuthentication we use the password
       // as the key - for LongTermAuthentication we use username:realm:password string as the key
@@ -255,7 +263,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       
       if(!request.checkMessageIntegrity(hmacKey))
       {
-         if (verbose) clog << "MessageIntegrity is bad. Sending 431." << endl;
+         WarningLog(<< "MessageIntegrity is bad. Sending 431.");
          buildErrorResponse(response, 431, "Integrty Check Failure", authenticationMode == LongTermPassword ? authenticationRealm : 0);
          return false;
       }
@@ -282,7 +290,6 @@ RequestHandler::ProcessResult
 RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer)
 {
    ProcessResult result = RespondFromReceiving;
-   //bool verbose = true;
 
    // TODO should check for unknown attributes here and send 420 listing the
    // unknown attributes. 
@@ -292,147 +299,79 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
 
    // Add XOrMappedAddress to response - we do this even for 3489 endpoints - since some support it, others should just ignore this attribute
    response.mHasXorMappedAddress = true;
-   response.mXorMappedAddress.port = request.mRemoteTuple.getPort();
-   if(request.mRemoteTuple.getAddress().is_v6())
-   {
-      response.mXorMappedAddress.family = StunMessage::IPv6Family;  
-      memcpy(&response.mXorMappedAddress.addr.ipv6, request.mRemoteTuple.getAddress().to_v6().to_bytes().c_array(), sizeof(response.mXorMappedAddress.addr.ipv6));
-   }
-   else
-   {
-      response.mXorMappedAddress.family = StunMessage::IPv4Family;  
-      response.mXorMappedAddress.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();   
-   }
+   StunMessage::setStunAtrAddressFromTuple(response.mXorMappedAddress, request.mRemoteTuple);
 
    // the following code is for RFC3489 backward compatibility
    if(mRFC3489SupportEnabled && isRFC3489BackwardsCompatServer)
    {
-      asio::ip::address sendFromAddress;
-      unsigned short sendFromPort;
-      asio::ip::address changeAddress = request.mLocalTuple.getAddress() == mPrim3489Address ? mAlt3489Address : mPrim3489Address;
-      unsigned short changePort = request.mLocalTuple.getPort() == mPrim3489Port ? mAlt3489Port : mPrim3489Port;
+      StunTuple sendFromTuple;
+      StunTuple changeTuple;
+
+      sendFromTuple.setTransportType(request.mLocalTuple.getTransportType());
+      changeTuple.setTransportType(request.mLocalTuple.getTransportType());
+      changeTuple.setAddress(request.mLocalTuple.getAddress() == mPrim3489Address ? mAlt3489Address : mPrim3489Address);
+      changeTuple.setPort(request.mLocalTuple.getPort() == mPrim3489Port ? mAlt3489Port : mPrim3489Port);
       UInt32 changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
+
+
       if(changeRequest & StunMessage::ChangeIpFlag && changeRequest & StunMessage::ChangePortFlag)
       {
          result = RespondFromAlternateIpPort;
-         sendFromAddress = changeAddress;
-         sendFromPort = changePort;
+         sendFromTuple.setAddress(changeTuple.getAddress());
+         sendFromTuple.setPort(changeTuple.getPort());
       }
       else if(changeRequest & StunMessage::ChangePortFlag)
       {
          result = RespondFromAlternatePort;
-         sendFromAddress = request.mLocalTuple.getAddress();
-         sendFromPort = changePort;
+         sendFromTuple.setAddress(request.mLocalTuple.getAddress());
+         sendFromTuple.setPort(changeTuple.getPort());
       }
       else if(changeRequest & StunMessage::ChangeIpFlag)
       {
          result = RespondFromAlternateIp;
-         sendFromAddress = changeAddress;
-         sendFromPort = request.mLocalTuple.getPort();
+         sendFromTuple.setAddress(changeTuple.getAddress());
+         sendFromTuple.setPort(request.mLocalTuple.getPort());
       }
       else
       {
          // default to send from receiving transport
-         sendFromAddress = request.mLocalTuple.getAddress();
-         sendFromPort = request.mLocalTuple.getPort();
+         sendFromTuple.setAddress(request.mLocalTuple.getAddress());
+         sendFromTuple.setPort(request.mLocalTuple.getPort());
       }
 
       // Add Mapped address to response
       response.mHasMappedAddress = true;
-      response.mMappedAddress.port = request.mRemoteTuple.getPort();
-      if(request.mRemoteTuple.getAddress().is_v6())
-      {
-         response.mMappedAddress.family = StunMessage::IPv6Family;  
-         memcpy(&response.mMappedAddress.addr.ipv6, request.mRemoteTuple.getAddress().to_v6().to_bytes().c_array(), sizeof(response.mMappedAddress.addr.ipv6));
-      }
-      else
-      {
-         response.mMappedAddress.family = StunMessage::IPv4Family;  
-         response.mMappedAddress.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();   
-      }
+      StunMessage::setStunAtrAddressFromTuple(response.mMappedAddress, request.mRemoteTuple);
 
       // Add source address - for RFC3489 backwards compatibility
       response.mHasSourceAddress = true;
-      response.mSourceAddress.port = sendFromPort;
-      if(sendFromAddress.is_v6())
-      {
-         response.mSourceAddress.family = StunMessage::IPv6Family;  
-         memcpy(&response.mSourceAddress.addr.ipv6, sendFromAddress.to_v6().to_bytes().c_array(), sizeof(response.mSourceAddress.addr.ipv6));
-      }
-      else
-      {
-         response.mSourceAddress.family = StunMessage::IPv4Family;
-         response.mSourceAddress.addr.ipv4 = sendFromAddress.to_v4().to_ulong();
-      }
+      StunMessage::setStunAtrAddressFromTuple(response.mSourceAddress, sendFromTuple);
 
       // Add changed address - for RFC3489 backward compatibility
       response.mHasChangedAddress = true;
-      response.mChangedAddress.port = changePort;
-      if(changeAddress.is_v6())
-      {
-         response.mChangedAddress.family = StunMessage::IPv6Family; 
-         memcpy(&response.mChangedAddress.addr.ipv6, changeAddress.to_v6().to_bytes().c_array(), sizeof(response.mChangedAddress.addr.ipv6));
-      }
-      else
-      {
-         response.mChangedAddress.family = StunMessage::IPv4Family; 
-         response.mChangedAddress.addr.ipv4 = changeAddress.to_v4().to_ulong();  
-      }
+      StunMessage::setStunAtrAddressFromTuple(response.mChangedAddress, changeTuple);
 
       // If Response-Address is present, then response should be sent here instead of source address to be
       // compliant with RFC3489.  In this case we need to add a REFLECTED-FROM attribute
       if(request.mHasResponseAddress)
       {
-         response.mRemoteTuple.setPort(request.mResponseAddress.port);
-         if(request.mResponseAddress.family == StunMessage::IPv6Family)
-         {
-            asio::ip::address_v6::bytes_type bytes;
-            memcpy(bytes.c_array(), &request.mResponseAddress.addr.ipv6, bytes.size());
-            asio::ip::address_v6 addr(bytes);
-            response.mRemoteTuple.setAddress(addr);
-         }
-         else
-         {
-            asio::ip::address_v4 addr(request.mResponseAddress.addr.ipv4);
-            response.mRemoteTuple.setAddress(addr);
-         }
+         StunMessage::setTupleFromStunAtrAddress(response.mRemoteTuple, request.mResponseAddress);
 
          // If the username is present and is greater than or equal to 92 bytes long, then we assume this username
          // was obtained from a shared secret request
          if (request.mHasUsername && (request.mUsername->size() >= 92 ) )
          {
             // Extract source address that sent the shared secret request from the encoded username and use this in response address
-            asio::ip::address responseAddress;
-            unsigned int responsePort;
-            request.getAddressFromUsername(responseAddress, responsePort);
+            StunTuple responseTuple;
+            request.getTupleFromUsername(responseTuple);
 
             response.mHasReflectedFrom = true;
-            response.mReflectedFrom.port = responsePort;  
-            if(responseAddress.is_v6())
-            {
-               response.mReflectedFrom.family = StunMessage::IPv6Family;  
-               memcpy(&response.mReflectedFrom.addr.ipv6, responseAddress.to_v6().to_bytes().c_array(), sizeof(response.mReflectedFrom.addr.ipv6));
-            }
-            else
-            {
-               response.mReflectedFrom.family = StunMessage::IPv4Family;  
-               response.mReflectedFrom.addr.ipv4 = responseAddress.to_v4().to_ulong();
-            }
+            StunMessage::setStunAtrAddressFromTuple(response.mReflectedFrom, responseTuple);
          }
          else
          {
             response.mHasReflectedFrom = true;
-            response.mReflectedFrom.port = request.mRemoteTuple.getPort();
-            if(request.mRemoteTuple.getAddress().is_v6())
-            {
-               response.mReflectedFrom.family = StunMessage::IPv6Family;  
-               memcpy(&response.mReflectedFrom.addr.ipv6, request.mRemoteTuple.getAddress().to_v6().to_bytes().c_array(), sizeof(response.mReflectedFrom.addr.ipv6));
-            }
-            else
-            {
-               response.mReflectedFrom.family = StunMessage::IPv4Family;  
-               response.mReflectedFrom.addr.ipv4 = request.mRemoteTuple.getAddress().to_v4().to_ulong();
-            }
+            StunMessage::setStunAtrAddressFromTuple(response.mReflectedFrom, request.mRemoteTuple);
          }
       }
    }
@@ -443,12 +382,10 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
 RequestHandler::ProcessResult 
 RequestHandler::processStunSharedSecretRequest(StunMessage& request, StunMessage& response)
 {
-   bool verbose = true;
-
    // Only allow shared secret requests on TLS transport
    if(request.mLocalTuple.getTransportType() != StunTuple::TLS)
    {
-      if (verbose) clog << "Invalid transport for shared secret request.  Send 436." << endl; 
+      WarningLog(<< "Invalid transport for shared secret request.  TLS required.  Sending 433."); 
       buildErrorResponse(response, 433, "Invalid transport.  TLS required.");
       return RespondFromReceiving;
    }
@@ -465,13 +402,11 @@ RequestHandler::processStunSharedSecretRequest(StunMessage& request, StunMessage
 RequestHandler::ProcessResult 
 RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response)
 {
-   bool verbose = true;
-
    // Turn Allocate requests must be authenticated (note: if this attribute is present 
    // then handleAuthentication would have validation authentication info)
    if(!request.mHasMessageIntegrity)
    {
-      if (verbose) clog << "Turn allocate request without authentication.  Send 436." << endl; 
+      WarningLog(<< "Turn allocate request without authentication.  Sending 401.");
       buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
@@ -480,17 +415,17 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    assert(request.mHasUsername);
    request.calculateHmacKey(hmacKey, authenticationPassword);
 
+   InfoLog(<< "Allocation requested received: localTuple=" << request.mLocalTuple << ", remoteTuple=" << request.mRemoteTuple);
+
    TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    // If this is a subsequent allocation request, return error
    if(allocation)
    {
-      if (verbose) clog << "Allocation requested but already exists.  Send 437." << endl; 
+      WarningLog(<< "Allocation requested but already exists.  Sending 437.");
       buildErrorResponse(response, 437, "Allocation Mismatch", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
-
-   // TODO - This is a new allocation - If we delayed the nonce or username exirey check from handleAuthentication it should be checked now
 
    // TODO - add a check that a per-user quota for number of allowed TurnAllocations has not been exceeded
 
@@ -511,7 +446,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
       if(request.mTurnRequestedTransport == StunMessage::RequestedTransportTcp && 
          request.mLocalTuple.getTransportType() == StunTuple::UDP)  // Don't allow UDP traffic to request TCP transport
       {
-         if (verbose) clog << "Invalid transport requested.  Send 442." << endl; 
+         WarningLog(<< "Invalid transport requested.  Sending 442.");
          buildErrorResponse(response, 442, "Unsupported Transport Protocol", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
          return RespondFromReceiving;
       }
@@ -519,21 +454,12 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    }
    if(request.mHasTurnRequestedIp)
    {
-      if(request.mTurnRequestedIp.family == StunMessage::IPv6Family)
-      {            
-         asio::ip::address_v6::bytes_type bytes;
-         memcpy(bytes.c_array(), &request.mTurnRequestedIp.addr.ipv6, bytes.size());
-         asio::ip::address_v6 addr(bytes);
-         allocationTuple.setAddress(addr);
-      }
-      else
-      {
-         allocationTuple.setAddress(asio::ip::address_v4(request.mTurnRequestedIp.addr.ipv4));
-      }
+      StunMessage::setTupleFromStunAtrAddress(allocationTuple, request.mTurnRequestedIp);
+
       // Validate that requested interface is valid
       if(allocationTuple.getAddress() != request.mLocalTuple.getAddress())  // TODO - for now only allow receiving interface
       {
-         if (verbose) clog << "Invalid ip address requested.  Send 443." << endl; 
+         WarningLog(<< "Invalid ip address requested.  Sending 443.");
          buildErrorResponse(response, 443, "Invalid IP Address", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
          return RespondFromReceiving;
       }
@@ -583,7 +509,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    // If finding a port failed - send error
    if(port < 1024)
    {
-      if (verbose) clog << "Can't allocate port.  Send 444." << endl; 
+      WarningLog(<< "Can't allocate port.  Sending 444.");
       buildErrorResponse(response, 444, "Invalid Port", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
@@ -607,7 +533,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    }
    catch(asio::system_error e)
    {
-      if (verbose) clog << "Error allocating socket.  Send 500." << endl; 
+      ErrLog(<< "Error allocating socket for allocation.  Sending 500.");
       buildErrorResponse(response, 500, "Server Error", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
@@ -622,17 +548,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    response.mTurnLifetime = request.mHasTurnLifetime ? request.mTurnLifetime : DEFAULT_LIFETIME;
 
    response.mHasTurnRelayAddress = true;
-   response.mTurnRelayAddress.port = allocation->getRequestedTuple().getPort();
-   if(allocation->getRequestedTuple().getAddress().is_v6())
-   {
-      response.mTurnRelayAddress.family = StunMessage::IPv6Family;  
-      memcpy(&response.mTurnRelayAddress.addr.ipv6, allocation->getRequestedTuple().getAddress().to_v6().to_bytes().c_array(), sizeof(response.mTurnRelayAddress.addr.ipv6));
-   }
-   else
-   {
-      response.mTurnRelayAddress.family = StunMessage::IPv4Family;  
-      response.mTurnRelayAddress.addr.ipv4 = allocation->getRequestedTuple().getAddress().to_v4().to_ulong();   
-   }
+   StunMessage::setStunAtrAddressFromTuple(response.mTurnRelayAddress, allocation->getRequestedTuple());
 
    // Note:  XorMappedAddress is added to all TurnAllocate responses in processStunMessage
   
@@ -647,13 +563,11 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
 RequestHandler::ProcessResult 
 RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& response)
 {
-   bool verbose = true;
-
    // Turn Allocate requests must be authenticated (note: if this attribute is present 
    // then handleAuthentication would have validation authentication info)
    if(!request.mHasMessageIntegrity)
    {
-      if (verbose) clog << "Turn allocate request without authentication.  Send 436." << endl; 
+      WarningLog(<< "Turn refresh request without authentication.  Sending 401.");
       buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
@@ -666,7 +580,7 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
 
    if(!allocation)
    {
-      if (verbose) clog << "Refresh requested with non-matching allocation.  Send 437." << endl; 
+      WarningLog(<< "Refresh requested with non-matching allocation.  Sending 437."); 
       buildErrorResponse(response, 437, "Allocation Mismatch", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
@@ -674,13 +588,13 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
    // If allocation was found, then ensure that the same shared secret was used
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
-      if (verbose) clog << "Subsequent allocate requested with non-matching username.  Send 436." << endl; 
+      WarningLog(<< "Refresh requested with username not matching allocation.  Sending 436.");
       buildErrorResponse(response, 436, "Unknown Username", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
    if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
-      if (verbose) clog << "Subsequent allocate requested with non-matching shared secret.  Send 431." << endl; 
+      WarningLog(<< "Refresh requested with shared secret not matching allocation.  Sending 431.");
       buildErrorResponse(response, 431, "Integrity Check Failure", authenticationMode == LongTermPassword ? authenticationRealm : 0 );   
       return RespondFromReceiving;
    }
@@ -724,12 +638,10 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
 RequestHandler::ProcessResult 
 RequestHandler::processTurnListenPermissionRequest(StunMessage& request, StunMessage& response)
 {
-   bool verbose = true;
-
    // Turn Allocate requests must be authenticated
    if(!request.mHasMessageIntegrity)
    {
-      if (verbose) clog << "Turn set active desination request without authentication.  Send 436." << endl; 
+      WarningLog(<< "Turn set active desination request without authentication.  Send 401.");
       buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
@@ -742,20 +654,20 @@ RequestHandler::processTurnListenPermissionRequest(StunMessage& request, StunMes
 
    if(!allocation)
    {
-      if (verbose) clog << "Turn set active desination request for non-existing binding.  Send 437." << endl; 
-      buildErrorResponse(response, 437, "No Binding", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
+      WarningLog(<< "Turn listen permission request for non-existing allocation.  Send 437."); 
+      buildErrorResponse(response, 437, "No Allocation", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
 
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
-      if (verbose) clog << "Turn set active desination request requested with non-matching username.  Send 436." << endl; 
+      WarningLog(<< "Listen permission requested with username not matching allocation.  Sending 436.");
       buildErrorResponse(response, 436, "Unknown Username", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
    if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
-      if (verbose) clog << "Turn set active desination request requested with non-matching shared secret.  Send 431." << endl; 
+      WarningLog(<< "Listen permission requested with shared secret not matching allocation.  Sending 431.");
       buildErrorResponse(response, 431, "Integrity Check Failure", authenticationMode == LongTermPassword ? authenticationRealm : 0 );   
       return RespondFromReceiving;
    }
@@ -777,42 +689,29 @@ RequestHandler::processTurnListenPermissionRequest(StunMessage& request, StunMes
 void
 RequestHandler::processTurnSendIndication(StunMessage& request)
 {
-   bool verbose = true;
-
    TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    if(!allocation)
    {
-      if (verbose) clog << "Turn send indication for non existing allocation.  Dropping." << endl; 
+      WarningLog(<< "Turn send indication for non-existing allocation.  Dropping.");
       return;
    }
 
    if(!request.mHasTurnChannelNumber)
    {
-      if (verbose) clog << "Turn send indication with no channel number.  Dropping." << endl; 
+      WarningLog(<< "Turn send indication with no channel number.  Dropping.");
       return;
    }
 
    if(!request.mHasTurnPeerAddress)
    {
-      if (verbose) clog << "Turn send indication with no remote address.  Dropping." << endl; 
+      WarningLog(<< "Turn send indication with no remote address.  Dropping.");
       return;
    }
 
    StunTuple remoteAddress;
    remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
-   remoteAddress.setPort(request.mTurnPeerAddress.port);
-   if(request.mTurnPeerAddress.family == StunMessage::IPv6Family)
-   {            
-      asio::ip::address_v6::bytes_type bytes;
-      memcpy(bytes.c_array(), &request.mTurnPeerAddress.addr.ipv6, bytes.size());
-      asio::ip::address_v6 addr(bytes);
-      remoteAddress.setAddress(addr);
-   }
-   else
-   {
-      remoteAddress.setAddress(asio::ip::address_v4(request.mTurnPeerAddress.addr.ipv4));
-   }
+   StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnPeerAddress);
 
    if(request.mHasTurnData)  
    {
@@ -829,42 +728,29 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
 void
 RequestHandler::processTurnChannelConfirmationIndication(StunMessage& request)
 {
-   bool verbose = true;
-
    TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
    if(!allocation)
    {
-      if (verbose) clog << "Turn channel confirmation indication for non existing allocation.  Dropping." << endl; 
+      WarningLog(<< "Turn channel confirmation for non-existing allocation.  Dropping.");
       return;
    }
 
    if(!request.mHasTurnChannelNumber)
    {
-      if (verbose) clog << "Turn channel confirmation indication with no channel number.  Dropping." << endl; 
+      WarningLog(<< "Turn channel confirmation indication with no channel number.  Dropping.");
       return;
    }
 
    if(!request.mHasTurnPeerAddress)
    {
-      if (verbose) clog << "Turn channel confirmation indication with no remote address.  Dropping." << endl; 
+      WarningLog(<< "Turn channel confirmation indication with no remote address.  Dropping.");
       return;
    }
 
    StunTuple remoteAddress;
    remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
-   remoteAddress.setPort(request.mTurnPeerAddress.port);
-   if(request.mTurnPeerAddress.family == StunMessage::IPv6Family)
-   {            
-      asio::ip::address_v6::bytes_type bytes;
-      memcpy(bytes.c_array(), &request.mTurnPeerAddress.addr.ipv6, bytes.size());
-      asio::ip::address_v6 addr(bytes);
-      remoteAddress.setAddress(addr);
-   }
-   else
-   {
-      remoteAddress.setAddress(asio::ip::address_v4(request.mTurnPeerAddress.addr.ipv4));
-   }
+   StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnPeerAddress);
 
    allocation->serverToClientChannelConfirmed(request.mTurnChannelNumber, remoteAddress);
 }
@@ -872,13 +758,11 @@ RequestHandler::processTurnChannelConfirmationIndication(StunMessage& request)
 void 
 RequestHandler::processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, resip::SharedPtr<resip::Data> data)
 {
-   bool verbose = true;
-
    TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(localTuple, remoteTuple));
 
    if(!allocation)
    {
-      if (verbose) clog << "Turn data for non existing allocation.  Dropping." << endl; 
+      WarningLog(<< "Turn data for non existing allocation.  Dropping.");
       return;
    }
 

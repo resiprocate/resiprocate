@@ -1,6 +1,10 @@
 #include "TcpServer.hxx"
 #include <boost/bind.hpp>
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 namespace reTurn {
 
@@ -20,7 +24,7 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
-   std::cout << (mTurnFraming ? "TURN" : "STUN") << " TcpServer started.  Listening on " << address << ":" << port << std::endl;
+   InfoLog(<< (mTurnFraming ? "TURN" : "STUN") << " TcpServer started.  Listening on " << address << ":" << port);
 }
 
 void 
@@ -38,6 +42,10 @@ TcpServer::handleAccept(const asio::error_code& e)
 
       mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler, mTurnFraming));
       mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+   }
+   else
+   {
+      ErrLog(<< "Error in handleAccept: " << e.value() << "-" << e.message());
    }
 }
 

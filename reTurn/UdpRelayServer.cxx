@@ -4,6 +4,10 @@
 #include "StunMessage.hxx"
 #include "TurnAllocation.hxx"
 #include "StunTuple.hxx"
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 
@@ -14,14 +18,14 @@ UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turn
   mTurnAllocation(turnAllocation),
   mStopping(false)
 {
-   std::cout << "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress() << ":" << mTurnAllocation.getRequestedTuple().getPort() << std::endl;
+   InfoLog(<< "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress() << ":" << mTurnAllocation.getRequestedTuple().getPort());
 
    bind(turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort());
 }
 
 UdpRelayServer::~UdpRelayServer()
 {
-   cout << "~UdpRelayServer - socket destroyed" << endl;
+   DebugLog(<< "~UdpRelayServer - destroyed");
 }
 
 void 
@@ -38,12 +42,6 @@ UdpRelayServer::stop()
    mStopping = true;
 }
 
-//asio::ip::udp::socket& 
-//UdpRelayServer::getSocket()
-//{
-//   return mSocket;
-//}
-
 void 
 UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
 {
@@ -53,7 +51,7 @@ UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned shor
    }
    if (data->size() > 0)
    {      
-      std::cout << "Read " << (int)data->size() << " bytes from udp relay socket (" << address.to_string() << ":" << port << "): "  << std::endl;
+      DebugLog(<< "Read " << (int)data->size() << " bytes from udp relay socket (" << address.to_string() << ":" << port << "): ");
       /*
       cout << std::hex;
       for(int i = 0; i < (int)data->size(); i++)
@@ -68,6 +66,10 @@ UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned shor
       {
          // If active destination is not set, then send to client as a DataInd, otherwise send packet as is
          mTurnAllocation.sendDataToClient(StunTuple(StunTuple::UDP, address, port), data);
+      }
+      else
+      {
+         InfoLog(<< "No permission for " << address << " dropping data.");
       }
    }
    doReceive();
@@ -92,7 +94,7 @@ UdpRelayServer::onSendFailure(const asio::error_code& error)
 {
    if(error != asio::error::operation_aborted)
    {
-      cout << "UdpRelayServer::onSendFailure: " << error.message() << endl;
+      WarningLog(<< "UdpRelayServer::onSendFailure: " << error.value() << "-" << error.message());
    }
 }
 
