@@ -12,6 +12,7 @@ SRC += \
 	../AsyncUdpSocketBase.cxx \
 	../ChannelManager.cxx \
 	../RemotePeer.cxx \
+        ../ReTurnSubsystem.cxx \
 	../StunMessage.cxx \
 	../StunTuple.cxx \
 	TurnAsyncSocket.cxx \
