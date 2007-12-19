@@ -2,6 +2,10 @@
 
 #include "AsyncTcpSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 
@@ -34,7 +38,7 @@ AsyncTcpSocketBase::bind(const asio::ip::address& address, unsigned short port)
       mSocket.set_option(asio::ip::tcp::no_delay(true)); // ?slg? do we want this?
       mSocket.set_option(asio::ip::tcp::socket::reuse_address(true));
       mSocket.bind(asio::ip::tcp::endpoint(address, port), errorCode);
-   }
+   }   
    return errorCode;
 }
 
@@ -97,6 +101,13 @@ AsyncTcpSocketBase::handleConnect(const asio::error_code& ec,
    }
 }
 
+void
+AsyncTcpSocketBase::setConnectedAddressAndPort()
+{
+   mConnectedAddress = mSocket.remote_endpoint().address();
+   mConnectedPort = mSocket.remote_endpoint().port();
+}
+
 const asio::ip::address 
 AsyncTcpSocketBase::getSenderEndpointAddress() 
 { 
@@ -156,13 +167,16 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
       }
       else
       {
-         std::cout << "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accomdate incoming framed data (" << dataLen+4 << ") closing connection." << std::endl;
+         WarningLog(<< "Receive buffer (" << RECEIVE_BUFFER_SIZE << ") is not large enough to accomdate incoming framed data (" << dataLen+4 << ") closing connection.");
          close();
       }
    }
    else if (e != asio::error::operation_aborted)
    {
-      std::cout << "Read header error: " << e.message() << std::endl;
+      if(e != asio::error::eof)
+      {
+         WarningLog(<< "Read header error: " << e.value() << "-" << e.message());
+      }
       close();
    }
 }

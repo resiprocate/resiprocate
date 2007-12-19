@@ -50,7 +50,7 @@ public:
    void createHeader(UInt16 stunclass, UInt16 method);  // Set info needed for a new stun message - set's tid as well
    void createUsernameAndPassword();  // Ensure mRemoteTuple is set first
    void generateShortTermPasswordForUsername(resip::Data& password);  // Ensure username is set first
-   void getAddressFromUsername(asio::ip::address& address, unsigned int& port);
+   void getTupleFromUsername(StunTuple& tuple);   // note: does not set transport type
    void calculateHmacKey(resip::Data& hmacKey, const resip::Data& longtermAuthenticationPassword);
    bool checkMessageIntegrity(const resip::Data& hmacKey);
    bool checkFingerprint();
@@ -324,7 +324,10 @@ public:
    bool mHasTurnConnectStat;
    UInt32 mTurnConnectStat;
 
+   // Utility APIs
    void applyXorToAddress(const StunAtrAddress& in, StunAtrAddress& out);  // ensure tid is set first
+   static void setStunAtrAddressFromTuple(StunAtrAddress& address, const StunTuple& tuple);
+   static void setTupleFromStunAtrAddress(StunTuple& tuple, const StunAtrAddress& address);  // Note:  does not set transport type
 
 protected:
 

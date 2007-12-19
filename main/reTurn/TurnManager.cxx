@@ -2,6 +2,10 @@
 
 #include "TurnManager.hxx"
 #include "TurnAllocation.hxx"
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 
@@ -26,8 +30,7 @@ TurnManager::TurnManager(asio::io_service& ioService) :
 void 
 TurnManager::addTurnAllocation(TurnAllocation* turnAllocation)
 {
-   assert(findTurnAllocation(turnAllocation->getKey()) == 0);    // ?slg? what if already exists - delete?  assert doesn't exist for now
-
+   assert(findTurnAllocation(turnAllocation->getKey()) == 0);   
    mTurnAllocationMap[turnAllocation->getKey()] = turnAllocation;
 }
 
@@ -73,7 +76,7 @@ TurnManager::allocationExpired(const asio::error_code& e, const TurnAllocationKe
    if (e != asio::error::operation_aborted)  // Note: nothing currently stops timers
    {
       // Timer was not cancelled, take necessary action.
-      cout << "Turn Allocation Expired! clientLocal=" << turnAllocationKey.getClientLocalTuple() << " clientRemote=" << turnAllocationKey.getClientRemoteTuple() << endl;
+      InfoLog(<< "Turn Allocation Expired! clientLocal=" << turnAllocationKey.getClientLocalTuple() << " clientRemote=" << turnAllocationKey.getClientRemoteTuple());
 
       TurnAllocationMap::iterator it = mTurnAllocationMap.find(turnAllocationKey);
       if(it != mTurnAllocationMap.end())
