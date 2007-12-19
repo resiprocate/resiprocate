@@ -63,6 +63,8 @@ del %temp%\tmp$$$.cmd
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
 endlocal
+
+mc EventLogMessage.mc
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -129,6 +131,8 @@ del %temp%\tmp$$$.cmd
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
 endlocal
+
+mc EventLogMessage.mc
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -197,6 +201,8 @@ del %temp%\tmp$$$.cmd
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
 endlocal
+
+mc EventLogMessage.mc
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -263,6 +269,8 @@ del %temp%\tmp$$$.cmd
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
 endlocal
+
+mc EventLogMessage.mc
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -598,7 +606,10 @@ endlocal
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
 			<File
-				RelativePath=".\EventLogMessage.mc">
+				RelativePath=".\EventLogMessage.rc">
+			</File>
+			<File
+				RelativePath=".\Repro.res">
 			</File>
 		</Filter>
 		<File
