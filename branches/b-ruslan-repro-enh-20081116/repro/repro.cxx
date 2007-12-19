@@ -50,6 +50,8 @@ signalHandler(int signo)
 
 #ifdef WIN32
 
+HANDLE serviceThread = 0;
+
 static DWORD WINAPI 
 reproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext)
 {
@@ -77,10 +79,8 @@ reproSvcHandlerEx(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID
    else if ( dwControl == SERVICE_CONTROL_STOP )
    {
       reproFinish = true;
-      while ( ReproState != reproEnd )
-         Sleep( 1000 );
-//      ReproState = reproFinishing;
-      SvcStat.dwCurrentState = SERVICE_STOPPED;
+      WaitForSingleObject(serviceThread, INFINITE);
+      SvcStat.dwCurrentState =  SERVICE_STOPPED;
       SetServiceStatus( svcH, &SvcStat);
       return NO_ERROR;
    }
@@ -108,7 +108,13 @@ int runRepro();
 static void 
 WINAPI reproServiceMain(DWORD dwArgc,LPTSTR* lpszArgv)
 {
-//   DebugBreak();
+   DuplicateHandle(GetCurrentProcess(), 
+                   GetCurrentThread(), 
+                   GetCurrentProcess(), 
+                   &serviceThread, 
+                   0, 
+                   FALSE, 
+                   DUPLICATE_SAME_ACCESS);
    ReproState = reproStarting; 
    setSvcStat();
    svcH = RegisterServiceCtrlHandlerEx( ReproServiceName, &reproSvcHandlerEx, &SvcStat);
