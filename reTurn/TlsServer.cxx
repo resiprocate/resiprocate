@@ -1,6 +1,10 @@
 #include "TlsServer.hxx"
 #include <boost/bind.hpp>
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 namespace reTurn {
 
@@ -29,7 +33,7 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
-   std::cout << (mTurnFraming ? "TURN" : "STUN") << " TlsServer started.  Listening on " << address << ":" << port << std::endl;
+   InfoLog(<< (mTurnFraming ? "TURN" : "STUN") << " TlsServer started.  Listening on " << address << ":" << port);
 }
 
 void
@@ -42,7 +46,7 @@ TlsServer::start()
 std::string 
 TlsServer::getPassword() const
 {
-   return "test";
+   return "test";  // TODO configuration
 }
 
 void 
@@ -54,6 +58,10 @@ TlsServer::handleAccept(const asio::error_code& e)
 
       mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mTurnFraming, mContext));
       mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+   }
+   else
+   {
+      ErrLog(<< "Error in handleAccept: " << e.value() << "-" << e.message());
    }
 }
 

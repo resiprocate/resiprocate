@@ -120,6 +120,9 @@
 				RelativePath="..\RemotePeer.cxx">
 			</File>
 			<File
+				RelativePath="..\ReTurnSubsystem.cxx">
+			</File>
+			<File
 				RelativePath="..\StunMessage.cxx">
 			</File>
 			<File
@@ -180,6 +183,9 @@
 			</File>
 			<File
 				RelativePath="..\RemotePeer.hxx">
+			</File>
+			<File
+				RelativePath="..\ReTurnSubsystem.hxx">
 			</File>
 			<File
 				RelativePath="..\StunMessage.hxx">

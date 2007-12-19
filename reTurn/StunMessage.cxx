@@ -6,14 +6,16 @@
 #include <rutil/MD5Stream.hxx>
 #include <boost/crc.hpp>
 #include <rutil/WinLeakCheck.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 typedef boost::crc_optimal<32, 0x04C11DB7, 0xFFFFFFFF, 0x5354554e, true, true> stun_crc_32_type;
 
 #ifdef USE_SSL
 #include <openssl/hmac.h>
 #endif
-
-static bool verbose = false;
 
 using namespace std;
 using namespace resip;
@@ -60,7 +62,11 @@ StunMessage::StunMessage(const StunTuple& localTuple,
 {
    init();
    mIsValid = stunParseMessage(buf, bufLen);
-   if(mIsValid) cout << mHeader << endl;
+  
+   if(mIsValid)
+   {
+      DebugLog(<< "Successfully parsed StunMessage: " << mHeader);
+   }
 }
 
 StunMessage::StunMessage() :
@@ -273,6 +279,40 @@ StunMessage::applyXorToAddress(const StunAtrAddress& in, StunAtrAddress& out)
    }
 }
 
+void 
+StunMessage::setStunAtrAddressFromTuple(StunAtrAddress& address, const StunTuple& tuple)
+{
+   address.port = tuple.getPort();
+   if(tuple.getAddress().is_v6())
+   {
+      address.family = StunMessage::IPv6Family;  
+      memcpy(&address.addr.ipv6, tuple.getAddress().to_v6().to_bytes().c_array(), sizeof(address.addr.ipv6));
+   }
+   else
+   {
+      address.family = StunMessage::IPv4Family;  
+      address.addr.ipv4 = tuple.getAddress().to_v4().to_ulong();   
+   }
+}
+
+void 
+StunMessage::setTupleFromStunAtrAddress(StunTuple& tuple, const StunAtrAddress& address)
+{
+   tuple.setPort(address.port);
+   if(address.family == StunMessage::IPv6Family)
+   {
+      asio::ip::address_v6::bytes_type bytes;
+      memcpy(bytes.c_array(), &address.addr.ipv6, bytes.size());
+      asio::ip::address_v6 addr(bytes);
+      tuple.setAddress(addr);
+   }
+   else
+   {
+      asio::ip::address_v4 addr(address.addr.ipv4);
+      tuple.setAddress(addr);
+   }
+}
+
 bool
 StunMessage::stunParseAtrXorAddress( char* body, unsigned int hdrLen, StunAtrAddress& result )
 {
@@ -289,7 +329,7 @@ StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddres
 {
    if ( hdrLen != 8 )
    {
-      // clog << "hdrLen wrong for Address" <<endl;
+      WarningLog(<< "hdrLen wrong for Address");
       return false;
    }
    body++;  // Skip pad
@@ -319,7 +359,7 @@ StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddres
    }
    else
    {
-      clog << "bad address family: " << result.family << endl;
+      WarningLog(<< "bad address family: " << result.family);
    }
 	
    return false;
@@ -330,6 +370,7 @@ StunMessage::stunParseAtrRequestedPortProps( char* body, unsigned int hdrLen,  T
 {
    if ( hdrLen != 4 )
    {
+      WarningLog(<< "hdrLen wrong for PortProps");
       return false;
    }
    body++;  // Skip pad
@@ -347,6 +388,7 @@ StunMessage::stunParseAtrUInt32( char* body, unsigned int hdrLen,  UInt32& resul
 {
    if ( hdrLen != 4 )
    {
+      WarningLog(<< "hdrLen wrong for UInt32 attribute");
       return false;
    }
    else
@@ -373,6 +415,7 @@ StunMessage::stunParseAtrUnknown( char* body, unsigned int hdrLen,  StunAtrUnkno
 {
    if ( hdrLen >= sizeof(result) )
    {
+      WarningLog(<< "hdrLen wrong for Unknown attribute");
       return false;
    }
    else
@@ -393,7 +436,7 @@ StunMessage::stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrInt
 {
    if ( hdrLen != 20)
    {
-      //clog << "MessageIntegrity must be 20 bytes" << endl;
+      WarningLog(<< "hdrLen wrong for message integrity");
       return false;
    }
    else
@@ -408,11 +451,11 @@ StunMessage::stunParseAtrIntegrity( char* body, unsigned int hdrLen,  StunAtrInt
 bool
 StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 {
-   if (verbose) clog << "Received stun message: " << bufLen << " bytes" << endl;
+   DebugLog(<< "Received stun message: " << bufLen << " bytes");
 	
    if (sizeof(StunMsgHdr) > bufLen)
    {
-      clog << "Bad message, bufLen=" << bufLen << endl;
+      WarningLog(<< "Bad message, bufLen=" << bufLen);
       return false;
    }
 	
@@ -422,7 +465,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 	
    if (mHeader.msgLength + sizeof(StunMsgHdr) != bufLen)
    {
-      clog << "Message header length doesn't match message size: " << mHeader.msgLength << " - " << bufLen << endl;
+      WarningLog(<< "Message header length doesn't match message size: " << mHeader.msgLength << " - " << bufLen);
       return false;
    }
 
@@ -432,15 +475,15 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 	
    // Look for stun magic cookie
    mHasMagicCookie = mHeader.id.magicCookie == StunMagicCookie;
-   if(!mHasMagicCookie && verbose)
+   if(!mHasMagicCookie)
    {
-      clog << "stun magic cookie not found." << endl;
+      StackLog(<< "stun magic cookie not found.");
    }
 
    char* body = buf + sizeof(StunMsgHdr);
    unsigned int size = mHeader.msgLength;
 	
-   if (verbose) clog << "bytes after header = " << size << endl;
+   StackLog(<< "bytes after header = " << size);
 	
    while ( size > 0 )
    {
@@ -452,10 +495,10 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
       unsigned int attrLenPad = attrLen % 4 == 0 ? 0 : 4 - (attrLen % 4);  // attrLen may not be on 4 byte boundary, in which case we need to pad to 4 bytes when advancing to next attribute
       int atrType = ntohs(attr->type);
 		
-      if (verbose) clog << "Found attribute type=" << atrType << " length=" << attrLen << endl;
+      StackLog(<< "Found attribute type=" << atrType << " length=" << attrLen);
       if ( attrLen+attrLenPad+4 > size ) 
       {
-         clog << "claims attribute is larger than size of message " <<"(attribute type="<<atrType<<")"<< endl;
+         WarningLog(<< "claims attribute is larger than size of message " <<"(attribute type="<<atrType<<")");
          return false;
       }
 		
@@ -468,90 +511,90 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             mHasMappedAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  mMappedAddress )== false )
             {
-               clog << "problem parsing MappedAddress" << endl;
+               WarningLog(<< "problem parsing MappedAddress");
                return false;
             }
-            if (verbose) clog << "MappedAddress = " << mMappedAddress << endl;
+            StackLog(<< "MappedAddress = " << mMappedAddress);
             break;  
 
          case ResponseAddress:  // deprecated
             mHasResponseAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  mResponseAddress )== false )
             {
-               if (verbose) clog << "problem parsing ResponseAddress" << endl;
+               WarningLog(<< "problem parsing ResponseAddress");
                return false;
             }
-            if (verbose) clog << "ResponseAddress = " << mResponseAddress << endl;
+            StackLog(<< "ResponseAddress = " << mResponseAddress);
             break;  
 				
          case ChangeRequest:  // deprecated
             mHasChangeRequest = true;
             if (stunParseAtrUInt32( body, attrLen, mChangeRequest) == false)
             {
-               if (verbose) clog << "problem parsing ChangeRequest" << endl;
+               WarningLog(<< "problem parsing ChangeRequest");
                return false;
             }
-            if (verbose) clog << "ChangeRequest = " << mChangeRequest << endl;
+            StackLog(<< "ChangeRequest = " << mChangeRequest);
             break;
 				
          case SourceAddress:  // deprecated
             mHasSourceAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  mSourceAddress )== false )
             {
-               if (verbose) clog << "problem parsing SourceAddress" << endl;
+               WarningLog(<< "problem parsing SourceAddress");
                return false;
             }
-            if (verbose) clog << "SourceAddress = " << mSourceAddress << endl;
+            StackLog(<< "SourceAddress = " << mSourceAddress);
             break;  
 				
          case ChangedAddress:  // deprecated
             mHasChangedAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  mChangedAddress )== false )
             {
-               if (verbose) clog << "problem parsing ChangedAddress" << endl;
+               WarningLog(<< "problem parsing ChangedAddress");
                return false;
             }
-            if (verbose) clog << "ChangedAddress = " << mChangedAddress << endl;
+            StackLog(<< "ChangedAddress = " << mChangedAddress);
             break;  
 				
          case Username: 
             mHasUsername = true;
             mUsername = new resip::Data(resip::Data::Share, body, attrLen);
-            if (verbose) clog << "Username = " << *mUsername << endl;
+            StackLog(<< "Username = " << *mUsername);
             break;
 				
          case Password: 
             mHasPassword = true;
             mPassword = new resip::Data(resip::Data::Share, body, attrLen);
-            if (verbose) clog << "Password = " << *mPassword << endl;
+            StackLog(<< "Password = " << *mPassword);
             break;
 				
          case MessageIntegrity:
             mHasMessageIntegrity = true;
             if (stunParseAtrIntegrity( body, attrLen, mMessageIntegrity) == false)
             {
-               if (verbose) clog << "problem parsing MessageIntegrity" << endl;
+               WarningLog(<< "problem parsing MessageIntegrity");
                return false;
             }
-            //if (verbose) clog << "MessageIntegrity = " << mMessageIntegrity.hash << endl;
+            //StackLog(<< "MessageIntegrity = " << mMessageIntegrity.hash);
             break;
 				
          case ErrorCode:
             mHasErrorCode = true;
             if (stunParseAtrError(body, attrLen, mErrorCode) == false)
             {
-               if (verbose) clog << "problem parsing ErrorCode" << endl;
+               WarningLog(<< "problem parsing ErrorCode");
                return false;
             }
-            if (verbose) clog << "ErrorCode = " << (int(mErrorCode.errorClass) * 100 + int(mErrorCode.number)) 
-                              << " (" << *mErrorCode.reason << ")" << endl;					
+            StackLog(<< "ErrorCode = " << (int(mErrorCode.errorClass) * 100 + int(mErrorCode.number)) 
+                              << " (" << *mErrorCode.reason << ")");
             break;
 				
          case UnknownAttribute:
             mHasUnknownAttributes = true;
             if (stunParseAtrUnknown(body, attrLen, mUnknownAttributes) == false)
             {
-               if (verbose) clog << "problem parsing UnknownAttribute" << endl;
+               WarningLog(<< "problem parsing UnknownAttribute");
                return false;
             }
             // TODO output
@@ -561,22 +604,22 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             mHasReflectedFrom = true;
             if ( stunParseAtrAddress(  body,  attrLen,  mReflectedFrom ) == false )
             {
-               if (verbose) clog << "problem parsing ReflectedFrom" << endl;
+               WarningLog(<< "problem parsing ReflectedFrom");
                return false;
             }
-            if (verbose) clog << "ReflectedFrom = " << mReflectedFrom << endl;
+            StackLog(<< "ReflectedFrom = " << mReflectedFrom);
             break;  
 				
          case Realm: 
             mHasRealm = true;
             mRealm = new resip::Data(resip::Data::Share, body, attrLen);
-            if (verbose) clog << "Realm = " << *mRealm << endl;
+            StackLog(<< "Realm = " << *mRealm);
             break;
 
          case Nonce: 
             mHasNonce = true;
             mNonce = new resip::Data(resip::Data::Share, body, attrLen);
-            if (verbose) clog << "Nonce = " << *mNonce << endl;
+            StackLog(<< "Nonce = " << *mNonce);
             break;
 
          case XorMappedAddress_old:
@@ -584,54 +627,56 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             mHasXorMappedAddress = true;
             if ( stunParseAtrXorAddress(  body,  attrLen,  mXorMappedAddress ) == false )
             {
-               if (verbose) clog << "problem parsing XorMappedAddress" << endl;
+               WarningLog(<< "problem parsing XorMappedAddress");
                return false;
             }
-            if (verbose) clog << "XorMappedAddress = " << mXorMappedAddress << endl;
+            StackLog(<< "XorMappedAddress = " << mXorMappedAddress);
             break;  				
 
          case Fingerprint:
             mHasFingerprint = true;
             if (stunParseAtrUInt32( body, attrLen, mFingerprint) == false)
             {
+               WarningLog(<< "problem parsing Fingerprint");
                return false;
             }
-            if (verbose) clog << "Fingerprint = " << mFingerprint << endl;
+            StackLog(<< "Fingerprint = " << mFingerprint);
             break;
 
          case Server: 
             mHasServer = true;
             mServer = new resip::Data(resip::Data::Share, body, attrLen);
-            if (verbose) clog << "Server = " << *mServer << endl;
+            StackLog(<< "Server = " << *mServer);
             break;
 
          case AlternateServer:
             mHasAlternateServer = true;
             if ( stunParseAtrAddress(  body,  attrLen,  mAlternateServer ) == false )
             {
-               if (verbose) clog << "problem parsing AlternateServer" << endl;
+               WarningLog(<< "problem parsing AlternateServer");
                return false;
             }
-            if (verbose) clog << "AlternateServer = " << mAlternateServer << endl;
+            StackLog(<< "AlternateServer = " << mAlternateServer);
             break;  
 
          case RefreshInterval:
             mHasRefreshInterval = true;
             if (stunParseAtrUInt32( body, attrLen, mRefreshInterval) == false)
             {
+               WarningLog(<< "problem parsing refresh interval");
                return false;
             }
-            if (verbose) clog << "Refresh interval = " << mRefreshInterval << endl;
+            StackLog(<< "Refresh interval = " << mRefreshInterval);
             break;
 
          case SecondaryAddress:
             mHasSecondaryAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  mSecondaryAddress ) == false )
             {
-               if (verbose) clog << "problem parsing secondaryAddress" << endl;
+               WarningLog(<< "problem parsing secondaryAddress");
                return false;
             }
-            if (verbose) clog << "SecondaryAddress = " << mSecondaryAddress << endl;
+            StackLog(<< "SecondaryAddress = " << mSecondaryAddress);
             break;  
 
          // TURN attributes
@@ -642,65 +687,72 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
                UInt32 channelNumber;
                if(stunParseAtrUInt32( body, attrLen, channelNumber) == false)
                {
+                  WarningLog(<< "problem parsing channel number");
                   return false;
                }
                mTurnChannelNumber = (channelNumber & 0xFFFF0000) >> 16;
             }
-            if (verbose) clog << "Turn ChannelNumber = " << mTurnChannelNumber << endl;
+            StackLog(<< "Turn ChannelNumber = " << mTurnChannelNumber);
             break;
 
          case TurnLifetime:
             mHasTurnLifetime = true;
             if (stunParseAtrUInt32( body, attrLen, mTurnLifetime) == false)
             {
+               WarningLog(<< "problem parsing turn lifetime");
                return false;
             }
-            if (verbose) clog << "Turn Lifetime = " << mTurnLifetime << endl;
+            StackLog(<< "Turn Lifetime = " << mTurnLifetime);
             break;
 
          case TurnAlternateServer:
             mHasTurnAlternateServer = true;
             if ( stunParseAtrAddress(  body,  attrLen,  mTurnAlternateServer ) == false )
             {
+               WarningLog(<< "problem parsing turn alternate server");
                return false;
             }
-            if (verbose) clog << "Turn Alternate Server = " << mTurnAlternateServer << endl;
+            StackLog(<< "Turn Alternate Server = " << mTurnAlternateServer);
             break;
 
          case TurnMagicCookie:
             mHasTurnMagicCookie = true;
             if (stunParseAtrUInt32( body, attrLen, mTurnMagicCookie) == false)
             {
+               WarningLog(<< "problem parsing turn magic cookie");
                return false;
             }
-            if (verbose) clog << "TurnMagicCookie (deprecated) = " << mTurnMagicCookie << endl;
+            StackLog(<< "TurnMagicCookie (deprecated) = " << mTurnMagicCookie);
             break;
 
          case TurnBandwidth:
             mHasTurnBandwidth = true;
             if (stunParseAtrUInt32( body, attrLen, mTurnBandwidth) == false)
             {
+               WarningLog(<< "problem parsing turn bandwidth");
                return false;
             }
-            if (verbose) clog << "Turn Bandwidth = " << mTurnBandwidth << endl;
+            StackLog(<< "Turn Bandwidth = " << mTurnBandwidth);
             break;
 
          case TurnDestinationAddress:
             mHasTurnDestinationAddress = true;
             if ( stunParseAtrAddress(  body,  attrLen,  mTurnDestinationAddress ) == false )
             {
+               WarningLog(<< "problem parsing turn destination address");
                return false;
             }
-            if (verbose) clog << "Turn Destination Address = " << mTurnDestinationAddress << endl;
+            StackLog(<< "Turn Destination Address = " << mTurnDestinationAddress);
             break;
 
          case TurnPeerAddress:
             mHasTurnPeerAddress = true;
             if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnPeerAddress ) == false )
             {
+               WarningLog(<< "problem parsing turn peer address");
                return false;
             }
-            if (verbose) clog << "Turn Remote Address = " << mTurnPeerAddress << endl;
+            StackLog(<< "Turn Remote Address = " << mTurnPeerAddress);
             break;
 
          //overlay on parse, ownership is buffer parsed from
@@ -713,49 +765,54 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             mHasTurnRelayAddress = true;
             if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRelayAddress ) == false )
             {
+               WarningLog(<< "problem parsing turn relay address");
                return false;
             }
-            if (verbose) clog << "Turn Relay Address = " << mTurnRelayAddress << endl;
+            StackLog(<< "Turn Relay Address = " << mTurnRelayAddress);
             break;
 
          case TurnRequestedPortProps:
             mHasTurnRequestedPortProps = true;
             if (stunParseAtrRequestedPortProps( body, attrLen, mTurnRequestedPortProps) == false)
             {
+               WarningLog(<< "problem parsing turn requested port props");
                return false;
             }
-            if (verbose) clog << "Turn Requested Port Props = " << (int)mTurnRequestedPortProps.props << ", port = " << mTurnRequestedPortProps.port << endl;
+            StackLog(<< "Turn Requested Port Props = " << (int)mTurnRequestedPortProps.props << ", port = " << mTurnRequestedPortProps.port);
             break;
 
          case TurnRequestedTransport:
             mHasTurnRequestedTransport = true;
             if (stunParseAtrUInt32( body, attrLen, mTurnRequestedTransport) == false)
             {
+               WarningLog(<< "problem parsing turn requested transport");
                return false;
             }
-            if (verbose) clog << "Turn Requested Transport = " << mTurnRequestedTransport << endl;
+            StackLog(<< "Turn Requested Transport = " << mTurnRequestedTransport);
             break;
 
          case TurnRequestedIp:
             mHasTurnRequestedIp = true;
             if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRequestedIp ) == false )
             {
+               WarningLog(<< "problem parsing turn requested ip");
                return false;
             }
-            if (verbose) clog << "Turn Requested IP Address = " << mTurnRequestedIp << endl;
+            StackLog(<< "Turn Requested IP Address = " << mTurnRequestedIp);
             break;
 
          case TurnConnectStat:
             mHasTurnConnectStat = true;
             if (stunParseAtrUInt32( body, attrLen, mTurnConnectStat) == false)
             {
+               WarningLog(<< "problem parsing turn connect stat");
                return false;
             }
-            if (verbose) clog << "Turn Connect Stat = " << mTurnConnectStat << endl;
+            StackLog(<< "Turn Connect Stat = " << mTurnConnectStat);
             break;
 					
          default:
-            if (verbose) clog << "Unknown attribute: " << atrType << endl;
+            InfoLog(<< "Unknown attribute: " << atrType);
             if ( atrType <= 0x7FFF ) 
             {
                return false;
@@ -1031,7 +1088,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    assert(bufLen >= sizeof(StunMsgHdr));
    char* ptr = buf;
 
-   if (verbose) clog << "Encoding stun message: " << endl;
+   StackLog(<< "Encoding stun message: ");
 
    mHeader.msgType = mClass | mMethod;
 
@@ -1042,160 +1099,159 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
 
    if (mHasTurnMagicCookie)
    {
-      if (verbose) clog << "Encoding TurnMagicCookie: " << mTurnMagicCookie << endl;
+      StackLog(<< "Encoding TurnMagicCookie: " << mTurnMagicCookie);
       ptr = encodeAtrUInt32(ptr, TurnMagicCookie, mTurnMagicCookie);
    }
 
    if (mHasMappedAddress)
    {
-      if (verbose) clog << "Encoding MappedAddress: " << mMappedAddress << endl;
+      StackLog(<< "Encoding MappedAddress: " << mMappedAddress);
       ptr = encodeAtrAddress (ptr, MappedAddress, mMappedAddress);
    }
    if (mHasResponseAddress)
    {
-      if (verbose) clog << "Encoding ResponseAddress: " << mResponseAddress << endl;
+      StackLog(<< "Encoding ResponseAddress: " << mResponseAddress);
       ptr = encodeAtrAddress(ptr, ResponseAddress, mResponseAddress);
    }
    if (mHasChangeRequest)
    {
-      if (verbose) clog << "Encoding ChangeRequest: " << mChangeRequest << endl;
+      StackLog(<< "Encoding ChangeRequest: " << mChangeRequest);
       ptr = encodeAtrUInt32(ptr, ChangeRequest, mChangeRequest);
    }
    if (mHasSourceAddress)
    {
-      if (verbose) clog << "Encoding SourceAddress: " << mSourceAddress << endl;
+      StackLog(<< "Encoding SourceAddress: " << mSourceAddress);
       ptr = encodeAtrAddress(ptr, SourceAddress, mSourceAddress);
    }
    if (mHasChangedAddress)
    {
-      if (verbose) clog << "Encoding ChangedAddress: " << mChangedAddress << endl;
+      StackLog(<< "Encoding ChangedAddress: " << mChangedAddress);
       ptr = encodeAtrAddress(ptr, ChangedAddress, mChangedAddress);
    }
    if (mHasUsername)
    {
-      if (verbose) clog << "Encoding Username: " << *mUsername << endl;
+      StackLog(<< "Encoding Username: " << *mUsername);
       ptr = encodeAtrString(ptr, Username, mUsername);
    }
    if (mHasPassword)
    {
-      if (verbose) clog << "Encoding Password: " << *mPassword << endl;
+      StackLog(<< "Encoding Password: " << *mPassword);
       ptr = encodeAtrString(ptr, Password, mPassword);
    }
    if (mHasErrorCode)
    {
-      if (verbose) clog << "Encoding ErrorCode: class=" 
+      StackLog(<< "Encoding ErrorCode: "
 			<< int(mErrorCode.errorClass)  
 			<< " number=" << int(mErrorCode.number) 
 			<< " reason=" 
-			<< *mErrorCode.reason 
-			<< endl;
+			<< *mErrorCode.reason);
 		
       ptr = encodeAtrError(ptr, mErrorCode);
    }
    if (mHasUnknownAttributes)
    {
-      if (verbose) clog << "Encoding UnknownAttribute: ???" << endl;
+      StackLog(<< "Encoding UnknownAttribute: ???");
       ptr = encodeAtrUnknown(ptr, mUnknownAttributes);
    }
    if (mHasReflectedFrom)
    {
-      if (verbose) clog << "Encoding ReflectedFrom: " << mReflectedFrom << endl;
+      StackLog(<< "Encoding ReflectedFrom: " << mReflectedFrom);
       ptr = encodeAtrAddress(ptr, ReflectedFrom, mReflectedFrom);
    }
    if (mHasRealm)
    {
-      if (verbose) clog << "Encoding Realm: " << *mRealm << endl;
+      StackLog(<< "Encoding Realm: " << *mRealm);
       ptr = encodeAtrString(ptr, Realm, mRealm);
    }
    if (mHasNonce)
    {
-      if (verbose) clog << "Encoding Nonce: " << *mNonce << endl;
+      StackLog(<< "Encoding Nonce: " << *mNonce);
       ptr = encodeAtrString(ptr, Nonce, mNonce);
    }
    if (mHasXorMappedAddress)
    {
-      if (verbose) clog << "Encoding XorMappedAddress: " << mXorMappedAddress << endl;
+      StackLog(<< "Encoding XorMappedAddress: " << mXorMappedAddress);
       ptr = encodeAtrXorAddress(ptr, XorMappedAddress, mXorMappedAddress);
    }
    if (mHasServer)
    {
-      if (verbose) clog << "Encoding Server: " << *mServer << endl;
+      StackLog(<< "Encoding Server: " << *mServer);
       ptr = encodeAtrString(ptr, Server, mServer);
    }
    if (mHasAlternateServer)
    {
-      if (verbose) clog << "Encoding Alternate Server: " << mAlternateServer << endl;
+      StackLog(<< "Encoding Alternate Server: " << mAlternateServer);
       ptr = encodeAtrAddress(ptr, AlternateServer, mAlternateServer);
    }
    if (mHasRefreshInterval)
    {
-      if (verbose) clog << "Encoding Refresh Interval: " << mRefreshInterval << endl;
+      StackLog(<< "Encoding Refresh Interval: " << mRefreshInterval);
       ptr = encodeAtrUInt32(ptr, RefreshInterval, mRefreshInterval);
    }
    if (mHasSecondaryAddress)
    {
-      if (verbose) clog << "Encoding SecondaryAddress: " << mSecondaryAddress << endl;
+      StackLog(<< "Encoding SecondaryAddress: " << mSecondaryAddress);
       ptr = encodeAtrAddress(ptr, SecondaryAddress, mSecondaryAddress);
    }
 
    if (mHasTurnChannelNumber)
    {
-      if (verbose) clog << "Encoding Turn ChannelNumber: " << mTurnChannelNumber << endl;
+      StackLog(<< "Encoding Turn ChannelNumber: " << mTurnChannelNumber);
       ptr = encodeAtrUInt32(ptr, TurnChannelNumber, UInt32(mTurnChannelNumber << 16));
    }
    if (mHasTurnLifetime)
    {
-      if (verbose) clog << "Encoding Turn Lifetime: " << mTurnLifetime << endl;
+      StackLog(<< "Encoding Turn Lifetime: " << mTurnLifetime);
       ptr = encodeAtrUInt32(ptr, TurnLifetime, mTurnLifetime);
    }
    if (mHasTurnAlternateServer)
    {
-      if (verbose) clog << "Encoding Turn AlternateServer: " << mTurnAlternateServer << endl;
+      StackLog(<< "Encoding Turn AlternateServer: " << mTurnAlternateServer);
       ptr = encodeAtrAddress(ptr, TurnAlternateServer, mTurnAlternateServer);
    }
    if (mHasTurnBandwidth)
    {
-      if (verbose) clog << "Encoding Turn Bandwidth: " << mTurnBandwidth << endl;
+      StackLog(<< "Encoding Turn Bandwidth: " << mTurnBandwidth);
       ptr = encodeAtrUInt32(ptr, TurnBandwidth, mTurnBandwidth);
    }   
    if (mHasTurnDestinationAddress)
    {
-      if (verbose) clog << "Encoding Turn DestinationAddress: " << mTurnDestinationAddress << endl;
+      StackLog(<< "Encoding Turn DestinationAddress: " << mTurnDestinationAddress);
       ptr = encodeAtrAddress (ptr, TurnDestinationAddress, mTurnDestinationAddress);
    }
    if (mHasTurnPeerAddress)
    {
-      if (verbose) clog << "Encoding Turn PeerAddress: " << mTurnPeerAddress << endl;
+      StackLog(<< "Encoding Turn PeerAddress: " << mTurnPeerAddress);
       ptr = encodeAtrXorAddress (ptr, TurnPeerAddress, mTurnPeerAddress);
    }
    if (mHasTurnData)
    {
-      if (verbose) clog << "Encoding TurnData (not shown)" << endl;
+      StackLog(<< "Encoding TurnData (not shown)");
       ptr = encodeTurnData (ptr, mTurnData);
    }
    if (mHasTurnRelayAddress)
    {
-      if (verbose) clog << "Encoding Turn RelayAddress: " << mTurnRelayAddress << endl;
+      StackLog(<< "Encoding Turn RelayAddress: " << mTurnRelayAddress);
       ptr = encodeAtrXorAddress (ptr, TurnRelayAddress, mTurnRelayAddress);
    }
    if (mHasTurnRequestedPortProps)
    {
-      if (verbose) clog << "Encoding Turn RequestedPortProps: " << (int)mTurnRequestedPortProps.props << ", port=" << mTurnRequestedPortProps.port << endl;
+      StackLog(<< "Encoding Turn RequestedPortProps: " << (int)mTurnRequestedPortProps.props << ", port=" << mTurnRequestedPortProps.port);
       ptr = encodeAtrRequestedPortProps(ptr, mTurnRequestedPortProps);
    }   
    if (mHasTurnRequestedTransport)
    {
-      if (verbose) clog << "Encoding Turn RequestedTransport: " << mTurnRequestedTransport << endl;
+      StackLog(<< "Encoding Turn RequestedTransport: " << mTurnRequestedTransport);
       ptr = encodeAtrUInt32(ptr, TurnRequestedTransport, mTurnRequestedTransport);
    }   
    if (mHasTurnRequestedIp)
    {
-      if (verbose) clog << "Encoding Turn RequestedIp: " << mTurnRequestedIp << endl;
+      StackLog(<< "Encoding Turn RequestedIp: " << mTurnRequestedIp);
       ptr = encodeAtrXorAddress (ptr, TurnRequestedIp, mTurnRequestedIp);
    }
    if (mHasTurnConnectStat)
    {
-      if (verbose) clog << "Encoding Turn Connect Stat: " << mTurnConnectStat << endl;
+      StackLog(<< "Encoding Turn Connect Stat: " << mTurnConnectStat);
       ptr = encodeAtrUInt32(ptr, TurnConnectStat, mTurnConnectStat);
    }   
 
@@ -1207,7 +1263,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
 
    if (mHasMessageIntegrity)
    {
-      if (verbose) clog << "HMAC with key: " << mHmacKey << endl;
+      StackLog(<< "HMAC with key: " << mHmacKey);
 
       // allocate space for message integrity attribute (hash + attribute type + size)
       char* ptrMessageIntegrity = ptr;
@@ -1222,7 +1278,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
          padding = 64 - (len % 64);
          memset(ptrMessageIntegrity, 0, padding);
       }
-      //cout << "**** Calculating SHA1 for buffer of size: " << len+padding << endl;
+      StackLog(<< "Calculating SHA1 for buffer of size for message integrity: " << len+padding);
       computeHmac(integrity.hash, buf, len + padding, mHmacKey.c_str(), (int)mHmacKey.size());
 	   ptr = encodeAtrIntegrity(ptrMessageIntegrity, integrity);
    }
@@ -1230,14 +1286,13 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    // add finger print if required
    if (mHasFingerprint)
    {
-      //cout << "***** Calculating fingerprint for data of size " << ptr-buf << endl;
+      StackLog(<< "Calculating fingerprint for data of size " << ptr-buf);
       stun_crc_32_type stun_crc;
       stun_crc.process_bytes(buf, ptr-buf); // Calculate CRC across entire message, except the fingerprint attribute
       UInt32 fingerprint = stun_crc.checksum();
       ptr = encodeAtrUInt32(ptr, Fingerprint, fingerprint);
    }
 
-   if (verbose) clog << endl;
    return int(ptr - buf);
 }
 
@@ -1306,7 +1361,7 @@ StunMessage::createUsernameAndPassword()
 	
    assert( mUsername->size()%4 == 0 );
    	
-   if (verbose) clog << "computed username=" << *mUsername << endl;
+   StackLog(<< "computed username=" << *mUsername);
 
    // Compute Password
    mHasPassword = true;
@@ -1318,7 +1373,7 @@ StunMessage::createUsernameAndPassword()
    assert(mPassword);
    generateShortTermPasswordForUsername(*mPassword);
 
-   if (verbose) clog << "computed password=" << *mPassword << endl;
+   StackLog(<< "computed password=" << *mPassword);
 }
  
 void
@@ -1331,7 +1386,7 @@ StunMessage::generateShortTermPasswordForUsername(Data& password)
 }
 
 void
-StunMessage::getAddressFromUsername(asio::ip::address& address, unsigned int& port)
+StunMessage::getTupleFromUsername(StunTuple& tuple)
 {
    assert(mHasUsername);
    assert(mUsername && mUsername->size() >= 92);
@@ -1344,11 +1399,13 @@ StunMessage::getAddressFromUsername(asio::ip::address& address, unsigned int& po
       asio::ip::address_v6::bytes_type bytes;
       memcpy(bytes.c_array(), addressPart.data(), bytes.size());
       asio::ip::address_v6 addressv6(bytes);
-      address = addressv6;
+      tuple.setAddress(addressv6);
 
+      unsigned int port;
       Data portPart(Data::Share, mUsername->data()+25, 4);
       portPart = portPart.base64decode();
       memcpy(&port, portPart.data(), sizeof(port));
+      tuple.setPort(port);
    }
    else
    {
@@ -1357,11 +1414,13 @@ StunMessage::getAddressFromUsername(asio::ip::address& address, unsigned int& po
       asio::ip::address_v4::bytes_type bytes;
       memcpy(bytes.c_array(), addressPart.data(), bytes.size());
       asio::ip::address_v4 addressv4(bytes);
-      address = addressv4;     
+      tuple.setAddress(addressv4);
 
+      unsigned int port;
       Data portPart(Data::Share, mUsername->data()+9, 4);
       portPart = portPart.base64decode();
       memcpy(&port, portPart.data(), sizeof(port));
+      tuple.setPort(port);
    }
 }
 
@@ -1402,7 +1461,7 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
       Data buffer(mBuffer.data(), len+padding);  // .slg. this creates a temp copy of the buffer so that we can pad it
       memset((void*)(buffer.data() + len), 0, padding);  // Zero out padding area 
 
-      //cout << "**** Calculating SHA1 for buffer of size: " << (unsigned int)buffer.size() << endl;
+      StackLog(<< "Calculating SHA1 to check message integrity for buffer of size: " << (unsigned int)buffer.size());
       HMAC(EVP_sha1(), 
          hmacKey.c_str(), 
          (unsigned int)hmacKey.size(), 
@@ -1434,7 +1493,7 @@ StunMessage::checkFingerprint()
 {
    if(mHasFingerprint)
    {
-      //cout << "***** Calculating fingerprint for data of size " << mBuffer.size() - 8 << endl;
+      StackLog(<< "Calculating fingerprint to check for data of size " << mBuffer.size() - 8);
       stun_crc_32_type stun_crc;
       stun_crc.process_bytes(mBuffer.data(), mBuffer.size()-8); // Calculate CRC across entire message, except the fingerprint attribute
       if(stun_crc.checksum() == mFingerprint)
