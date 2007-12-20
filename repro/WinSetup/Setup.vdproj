@@ -407,7 +407,7 @@
             }
             "{58C0ADA3-3CEA-43BD-A3B3-2EA121BC8217}:_96F138CFF79546568B8B0A6277D34A78"
             {
-            "DefaultLocation" = "8:[ProgramFilesFolder]ReproSIPProxy"
+            "DefaultLocation" = "8:[ProgramFilesFolder]\\Resiprocate\\ReproSIPProxy"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:FALSE"
             "Condition" = "8:"
