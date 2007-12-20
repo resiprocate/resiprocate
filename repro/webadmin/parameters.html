@@ -1,9 +1,9 @@
-<form id="Parameters" name="Parameters" method="get" action="ParametersSet.html" onsubmit="OnSubmit();">
+<form id="Parameters" name="Parameters" method="get" action="parametersSet.html" onsubmit="OnSubmit();">
   <table width="675" border="1">
     <tr>
       <td width="190">Log type </td>
       <td width="475"><select name="LogType" id="LogType">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>cerr</option>
         <option>cout</option>
         <option>syslog</option>
@@ -14,7 +14,7 @@
     <tr>
       <td>Log level </td>
       <td><select name="LogLevel" id="LogLerel">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>NONE</option>
         <option>EMERG</option>
         <option>ALERT</option>
@@ -60,7 +60,7 @@
     <tr>
       <td>run a cert server</td>
       <td><select name="CertServer" id="CertServer">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -69,7 +69,7 @@
     <tr>
       <td>enable IPV6</td>
       <td><select name="EnableIpv6" id="EnableIpv6">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -78,7 +78,7 @@
     <tr>
       <td>disable IPV4</td>
       <td><select name="DisableIpv4" id="DisableIpv4">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -87,7 +87,7 @@
     <tr>
       <td>disable DIGEST challenges</td>
       <td><select name="DisableAuth" id="DisableAuth">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -96,7 +96,7 @@
     <tr>
       <td>disable auth-int DIGEST challenges</td>
       <td><select name="DisableAuthInt" id="DisableAuthInt">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -105,7 +105,7 @@
     <tr>
       <td>disable HTTP challenges</td>
       <td><select name="DisabaleWebAuth" id="DisabaleWebAuth">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -114,7 +114,7 @@
     <tr>
       <td>disable registrar</td>
       <td><select name="DisableReg" id="DisableReg">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -123,7 +123,7 @@
     <tr>
       <td>disable adding identity headers</td>
       <td><select name="DisableIdentity" id="DisableIdentity">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -132,14 +132,6 @@
     <tr>
       <td height="61">specify interfaces to add transports to</td>
       <td><textarea name="Interfaces" cols="60" rows="5" id="Interfaces"></textarea></td>
-    </tr>
-    <tr>
-      <td>specify domains that this proxy is authorative</td>
-      <td><textarea name="Domains" cols="60" rows="5" id="Domains"></textarea></td>
-    </tr>
-    <tr>
-      <td>specify where to route requests that are in this proxy's domain</td>
-      <td><textarea name="Routes" cols="60" rows="5" id="Routes"></textarea></td>
     </tr>
     <tr>
       <td>name of request chain</td>
@@ -152,7 +144,7 @@
     <tr>
       <td>Handle 3xx responses in the proxy</td>
       <td><select name="ReqursiveRedirect" id="ReqursiveRedirect">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -161,7 +153,7 @@
     <tr>
       <td>Enable sequential q-value processing</td>
       <td><select name="QVal" id="QVal">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -170,7 +162,7 @@
     <tr>
       <td>Specify forking behavior for q- value targets:</td>
       <td><select name="QValBehavior" id="QValBehavior">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>FULL_SEQUENTIAL</option>
         <option>EQUAL_Q_PARALLEL</option>
         <option>FULL_PARALLEL</option>
@@ -180,7 +172,7 @@
     <tr>
       <td>Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.</td>
       <td><select name="QValCancelFork" id="QValCancelFork">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -189,7 +181,7 @@
     <tr>
       <td>Whether to wait for parallel fork groups to terminate before starting new fork-groups.</td>
       <td><select name="QValWaitFork" id="QValWaitFork">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -210,7 +202,7 @@
     <tr>
       <td>allow To tag in registrations</td>
       <td><select name="AllowBadReg" id="AllowBadReg">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -219,7 +211,7 @@
     <tr>
       <td>paralled fork to all matching static routes and (first batch) registrations</td>
       <td><select name="parallelFork" id="parallelFork">
-        <option selected="selected">nothing</option>
+        <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
       </select>
@@ -243,7 +235,7 @@
 function setSelect( obj, val )
 {
 	if ( val == "" )
-    val = "nothing";
+    val = "<Default>";
   for ( i=0 ; i<obj.length; i++ )
     if ( obj.options[i].text.toLowerCase() == val.toLowerCase() )
 		obj.selectedIndex=i; 
@@ -254,10 +246,17 @@ function setEdit( obj, val )
 	obj.value=val; 
 }
 
+function TrimNl( str )
+{
+  return str.replace( /\s/g, "" );
+}
+
 function DoOnSubmit( obj )
 {
-	if ( obj.value == "" )
-	   obj.value = " ";
+	if ( TrimNl(obj.value) == "" )
+	   obj.value = "<Default>";
+	else
+    obj.value = TrimNl(obj.value);
 }
 
 function OnSubmit()
