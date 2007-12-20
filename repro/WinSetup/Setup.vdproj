@@ -15,6 +15,12 @@
     {
         "Entry"
         {
+        "MsmKey" = "8:_17A6A60E3CCA4C30A422C9A6882D4826"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_1CE753095581C5073A4DE82738CA4E5C"
         "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
         "MsmSig" = "8:_UNDEFINED"
@@ -47,6 +53,12 @@
         {
         "MsmKey" = "8:_73AB14BFFC45B26C96420EA533B0A805"
         "OwnerKey" = "8:_449747DB7BDE448E8557B9834BB2A62D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_7C3B4C0997AE4BD7AE80B2608DCF103C"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -145,6 +157,26 @@
         }
         "File"
         {
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_17A6A60E3CCA4C30A422C9A6882D4826"
+            {
+            "SourcePath" = "8:Using Repro.url"
+            "TargetName" = "8:Using Repro.url"
+            "Tag" = "8:"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{A582A373-4685-4296-BEFE-614B80A702C3}:_1CE753095581C5073A4DE82738CA4E5C"
             {
             "SourcePath" = "8:MSVCR71D.dll"
@@ -243,6 +275,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_7C3B4C0997AE4BD7AE80B2608DCF103C"
+            {
+            "SourcePath" = "8:WebAdmin.url"
+            "TargetName" = "8:WebAdmin.url"
+            "Tag" = "8:"
+            "Folder" = "8:_ADAE71E3079D4A2691B0E37C4D87E8F8"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{A582A373-4685-4296-BEFE-614B80A702C3}:_990315E3271741AE9EA6C02E529B9B47"
@@ -392,7 +444,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Repro SIP Proxy"
         "ProductCode" = "8:{1D66F08D-5168-4EC9-B809-CC792E780CA9}"
-        "PackageCode" = "8:{FB3E028B-C8D1-4BB7-877B-DB02256660BB}"
+        "PackageCode" = "8:{5FFE544A-B6FC-45C5-9ED0-D0C90F41AE7F}"
         "UpgradeCode" = "8:{7BD08495-64E4-4565-A1DC-93954D304A2E}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
