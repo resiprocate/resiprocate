@@ -1306,7 +1306,7 @@ WebAdmin::saveParameter( Parameters::Param prm, char *webParam )
    {
       return;
    }
-   if ( it->second == "nothing" )
+   if ( it->second == "<Default>" )
    {
       Parameters::saveParam( prm, Data::Empty );
    }
