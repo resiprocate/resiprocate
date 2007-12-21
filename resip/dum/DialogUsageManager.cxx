@@ -1,4 +1,4 @@
- #include "resip/stack/Security.hxx"
+#include "resip/stack/Security.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipFrag.hxx"
@@ -184,7 +184,7 @@ DialogUsageManager::getSipStack()
    return mStack;
 }
 
-Security*
+BaseSecurity*
 DialogUsageManager::getSecurity()
 {
    return mStack.getSecurity();
