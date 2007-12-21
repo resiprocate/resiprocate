@@ -9,7 +9,7 @@
 
 namespace resip
 {
-class Security;
+class BaseSecurity;
 class SipMessage;
 class SecurityAttributes;
 class Data;
@@ -22,7 +22,7 @@ namespace repro
 class CertSubscriptionHandler : public resip::ServerSubscriptionHandler
 {
    public:
-      CertSubscriptionHandler(resip::Security& security);
+      CertSubscriptionHandler(resip::BaseSecurity& security);
       virtual void onNewSubscription(resip::ServerSubscriptionHandle h, const resip::SipMessage& sub);
       virtual void onPublished(resip::ServerSubscriptionHandle associated, 
                                resip::ServerPublicationHandle publication, 
@@ -32,7 +32,7 @@ class CertSubscriptionHandler : public resip::ServerSubscriptionHandler
       virtual void onError(resip::ServerSubscriptionHandle, const resip::SipMessage& msg);
 
    private:
-      resip::Security& mSecurity;
+      resip::BaseSecurity& mSecurity;
 };
  
 }

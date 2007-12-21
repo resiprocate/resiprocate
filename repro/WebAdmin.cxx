@@ -53,7 +53,7 @@ WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
 
 WebAdmin::WebAdmin(Store& store,
                    RegistrationPersistenceManager& regDb,
-                   Security* security,
+                   BaseSecurity* security,
                    bool noChal,  
                    const Data& realm, // this realm is used for http challenges
                    const Data& adminPassword,

@@ -1819,7 +1819,7 @@ extractFromPkcs7Recurse(Contents* tree,
                         const Data& signerAor,
                         const Data& receiverAor,
                         SecurityAttributes* attributes,
-                        Security& security)
+                        BaseSecurity& security)
 {
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
@@ -1893,7 +1893,7 @@ extractFromPkcs7Recurse(Contents* tree,
 
 Helper::ContentsSecAttrs
 Helper::extractFromPkcs7(const SipMessage& message, 
-                         Security& security)
+                         BaseSecurity& security)
 {
    SecurityAttributes* attr = new SecurityAttributes;
    // .dlb. currently flattening SecurityAttributes?

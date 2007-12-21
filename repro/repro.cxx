@@ -249,6 +249,13 @@ runRepro()
    {
       Log::initialize(args->mLogType, args->mLogLevel, argv0, NULL );
    }
+   Security* security = 0;
+
+#ifdef USE_SSL
+   security = new Security(args->mCertPath);
+#endif
+   auto_ptr<Security> securityGuard(security);
+
    AbstractDb *db=NULL;
 #ifdef USE_MYSQL
    if ( !args->mMySqlServer.empty() )
@@ -313,7 +320,7 @@ runRepro()
 
       try
       {
-         proxyMain( args, store );
+         proxyMain( args, store , security );
       }
       catch ( ProxyMainException& e)
       {
