@@ -31,7 +31,7 @@ class Message;
 class TransactionMessage;
 class SipMessage;
 class TransactionController;
-class Security;
+class BaseSecurity;
 class Compression;
 
 /**
@@ -48,7 +48,7 @@ on Transport add.
 class TransportSelector 
 {
    public:
-      TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression);
+      TransportSelector(Fifo<TransactionMessage>& fifo, BaseSecurity* security, DnsStub& dnsStub, Compression &compression);
       virtual ~TransportSelector();
       /**
 	    @retval true	Some transport in the transport list has data to send
@@ -105,7 +105,7 @@ class TransportSelector
 
       DnsInterface mDns;
       Fifo<TransactionMessage>& mStateMacFifo;
-      Security* mSecurity;// for computing identity header
+      BaseSecurity* mSecurity;// for computing identity header
 
       // specific port and interface
       typedef std::map<Tuple, Transport*> ExactTupleMap;

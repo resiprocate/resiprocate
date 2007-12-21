@@ -30,7 +30,7 @@ class WebAdmin: public HttpBase
    public:
       WebAdmin( Store& store,
                 resip::RegistrationPersistenceManager& regDb,
-                resip::Security* security,
+                resip::BaseSecurity* security,
                 bool noWebChallenges,
                 const resip::Data& realm,
                 const resip::Data& adminPassword,
@@ -70,7 +70,7 @@ class WebAdmin: public HttpBase
       Store& mStore;
 
       resip::RegistrationPersistenceManager& mRegDb;
-      resip::Security* mSecurity;
+      resip::BaseSecurity* mSecurity;
 
       bool mNoWebChallenges;
       

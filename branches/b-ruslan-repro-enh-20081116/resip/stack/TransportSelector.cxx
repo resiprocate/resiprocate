@@ -54,7 +54,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression) :
+TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, BaseSecurity* security, DnsStub& dnsStub, Compression &compression) :
    mDns(dnsStub),
    mStateMacFifo(fifo),
    mSecurity(security),

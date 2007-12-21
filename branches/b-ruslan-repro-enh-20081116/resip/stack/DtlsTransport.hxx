@@ -31,7 +31,7 @@
 namespace resip
 {
 
-class Security;
+class BaseSecurity;
 class TransactionMessage;
 class UdpTransport;
 class DtlsMessage;
@@ -116,7 +116,7 @@ class DtlsTransport : public UdpTransport
                     int portNum,
                     IpVersion version,
                     const Data& interfaceObj,
-                    Security& security,
+                    BaseSecurity& security,
                     const Data& sipDomain,
                     Compression &compression);
       virtual  ~DtlsTransport();
@@ -152,7 +152,7 @@ class DtlsTransport : public UdpTransport
       static const int    MaxBufferSize;
       Fifo<DtlsMessage>   mHandshakePending ;
       DtlsTimerQueue      mTimer ;
-      Security*           mSecurity ;
+      BaseSecurity*           mSecurity ;
       DtlsConnectionMap   mDtlsConnections ;  /* IP addr/port -> transport */
       unsigned char       mDummyBuf[ 4 ] ;
       BIO*                mDummyBio ;
