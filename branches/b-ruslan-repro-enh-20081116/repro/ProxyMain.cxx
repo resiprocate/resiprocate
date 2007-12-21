@@ -1,7 +1,6 @@
 #include "repro/ProxyMain.hxx"
 
 #include "resip/stack/MessageFilterRule.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipStack.hxx"
@@ -140,14 +139,9 @@ addDomains(TransactionUser& tu, ReproConfiguration& args, Store& store)
 }
 
 void 
-proxyMain(resip::ReproConfiguration *args, Store &store)
+proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* security)
 {
-   Security* security = 0;
    Compression* compression = 0;
-
-#ifdef USE_SSL
-   security = new Security(args->mCertPath);
-#endif
 
 #ifdef USE_SIGCOMP
    compression = new Compression(Compression::DEFLATE);

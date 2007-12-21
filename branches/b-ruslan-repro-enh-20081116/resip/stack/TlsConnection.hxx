@@ -16,7 +16,7 @@ namespace resip
 {
 
 class Tuple;
-class Security;
+class BaseSecurity;
 
 class TlsConnection : public Connection
 {
@@ -24,7 +24,7 @@ class TlsConnection : public Connection
       RESIP_HeapCount(TlsConnection);
 
       TlsConnection( const Tuple& who, Socket fd, 
-                     Security* security, bool server, Data domain, 
+                     BaseSecurity* security, bool server, Data domain, 
                      SecurityTypes::SSLType sslType ,
                      Compression &compression);
       
@@ -47,7 +47,7 @@ class TlsConnection : public Connection
       TlsState checkState();
 
       bool mServer;
-      Security* mSecurity;
+      BaseSecurity* mSecurity;
       SecurityTypes::SSLType mSslType;
       Data mDomain;
       

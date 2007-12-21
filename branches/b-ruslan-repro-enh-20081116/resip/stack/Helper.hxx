@@ -19,7 +19,7 @@ namespace resip
 class SipMessage;
 class NameAddr;
 class SecurityAttributes;
-class Security;
+class BaseSecurity;
 
 class UnsupportedAuthenticationScheme : public BaseException
 {
@@ -507,7 +507,7 @@ class Helper
             mutable std::auto_ptr<SecurityAttributes> mAttributes;
       };
 
-      static ContentsSecAttrs extractFromPkcs7(const SipMessage& message, Security& security);
+      static ContentsSecAttrs extractFromPkcs7(const SipMessage& message, BaseSecurity& security);
 
       
       enum FailureMessageEffect{ DialogTermination, TransactionTermination, UsageTermination, 

@@ -61,7 +61,7 @@ class SipStack
                              SigComp. If set to 0, then SigComp compression
                              will be disabled.
       */
-      SipStack(Security* security=0, 
+      SipStack(BaseSecurity* security=0, 
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
                AsyncProcessHandler* handler = 0, 
                bool stateless=false,
@@ -407,7 +407,7 @@ class SipStack
       std::ostream& dump(std::ostream& strm) const;
       
       /// Returns a pointer to the embedded Security object, 0 if not set
-      Security* getSecurity() const;
+      BaseSecurity* getSecurity() const;
 
       /** 
           Adds a TU to the TU selection chain.  Tu's do not call receive or
@@ -484,7 +484,7 @@ class SipStack
       void checkAsyncProcessHandler();
 
       /// if this object exists, it manages advanced security featues
-      Security* mSecurity;
+      BaseSecurity* mSecurity;
 
       DnsStub* mDnsStub;
 

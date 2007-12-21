@@ -8,13 +8,14 @@
 
 #include "repro/ReproConfiguration.hxx"
 #include "repro/Store.hxx"
+#include "resip/stack/Security.hxx"
 
 namespace repro
 {
 extern volatile bool reproRestartServer;
 extern volatile bool reproFinish;
 
-void proxyMain(resip::ReproConfiguration *args, Store &store);
+void proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* security);
 
 
 #ifdef WIN32
