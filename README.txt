@@ -33,8 +33,8 @@ Feature                                Implemented  Tested  Notes
 Configuration Framework                no           no      Currently just uses a few command line parameters and hardcoded settings
 RFC3489 support                        yes          mostly  
 Multi-threaded Server                  no           no      Once Turn code is implemented consider asio threading model and provide locking
-TLS Server Support                     yes          yes     need to tweak openSSL cipher suite settings
-RFC3489 bis 11 message parsing         yes          partly
+TLS Server Support                     yes          yes     
+RFC3489 bis 13 message parsing         yes          partly
 IPV6 message parsing support           yes          no 
 Shared Secret with Short Term Cred     yes          yes     Checking username for expirey and correct HMAC is not completed
 Shared Secret with Long Term Cred      little       no      Implementation is not complete and currently only accepts one hardcoded username/password - nonce generation not implemented
@@ -45,7 +45,7 @@ Turn Allocation                        almost       no
 Requested Port Props (Even, Odd, etc)  yes          yes
 Turn Permissions                       yes          yes      
 Turn Relay                             partly       partly  UDP Peers only
-Asyncronous Client APIs                no           no
+Asyncronous Client APIs                yes          yes
 
 
 General TODO
@@ -54,11 +54,10 @@ General TODO
 - reduce library use - remove BOOST and/or rutil requirement - remove ASIO for client??
 - allow multiple interfaces to be used for relay
 - per user allocation quota enforcement
-- set TLS server settings - ie. allowed cipher suite, etc.
+- move TLS server settings to configuration
 - cleanup stun message class so that there are accessors for all data members
 - Ability for Server to accept long term credentials - 3489-bis13 digest
 - Check for unknown attributes
-- Standardize on a logging interface (rutil?)
 - from chart above
  - Configuration Framework
  - Multi-threaded support
@@ -70,9 +69,10 @@ Client TODO
 - rework synchronous sockets to use Asynchrous sockets to unify implementation better
 - retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response - currently applications responsibility
 - DNS SRV Discovery - currently only does host record lookup (using ASIO)
-- Note: requests can be piplined - pipelining request is only possible with Asynchronous api
 - client long term password use - auto re-request after 401
 - implement 300 Try-Alternate response - currently applications responsibility
+- use of a calculated RTO for retransmissions
+- TLS client- server hostname validation
 - keepalive usage??
          
 
