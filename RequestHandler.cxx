@@ -415,7 +415,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    assert(request.mHasUsername);
    request.calculateHmacKey(hmacKey, authenticationPassword);
 
-   InfoLog(<< "Allocation requested received: localTuple=" << request.mLocalTuple << ", remoteTuple=" << request.mRemoteTuple);
+   DebugLog(<< "Allocation request received: localTuple=" << request.mLocalTuple << ", remoteTuple=" << request.mRemoteTuple);
 
    TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 

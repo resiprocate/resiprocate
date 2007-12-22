@@ -185,8 +185,8 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
       else
       {
          mRequestHandler.processTurnData(channelNumber,
+                                         StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
                                          StunTuple(StunTuple::UDP, address, port),
-                                         StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
                                          data);
       }
    }
