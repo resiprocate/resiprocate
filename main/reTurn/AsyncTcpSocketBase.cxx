@@ -173,7 +173,7 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
    }
    else if (e != asio::error::operation_aborted)
    {
-      if(e != asio::error::eof)
+      if(e != asio::error::eof && e != asio::error::connection_reset)
       {
          WarningLog(<< "Read header error: " << e.value() << "-" << e.message());
       }

@@ -39,6 +39,7 @@ TurnAsyncSocket::TurnAsyncSocket(asio::io_service& ioService,
    mHaveAllocation(false),
    mActiveDestination(0),
    mAsyncSocketBase(asyncSocketBase),
+   mCloseAfterDestroyAllocationFinishes(false),
    mAllocationTimer(ioService)
 {
 }
@@ -236,6 +237,11 @@ TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
    if(!mHaveAllocation)
    {
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(NoAllocation, asio::error::misc_category));
+      if(mCloseAfterDestroyAllocationFinishes)
+      {
+         mHaveAllocation = false;
+         doClose();
+      }
       return;
    }
 
@@ -784,12 +790,21 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage& stunMessage)
          mHaveAllocation = true;
          startAllocationTimer();
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshSuccess(getSocketDescriptor(), mLifetime);
+         if(mCloseAfterDestroyAllocationFinishes)
+         {
+            mHaveAllocation = false;
+            doClose();
+         }
       }
       else
       {
          cancelAllocationTimer();
          mHaveAllocation = false;
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshSuccess(getSocketDescriptor(), 0);
+         if(mCloseAfterDestroyAllocationFinishes)
+         {
+            doClose();
+         }
       }
    }
    else
@@ -798,10 +813,20 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage& stunMessage)
       if(stunMessage.mHasErrorCode)
       {
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(stunMessage.mErrorCode.errorClass * 100 + stunMessage.mErrorCode.number, asio::error::misc_category));
+         if(mCloseAfterDestroyAllocationFinishes)
+         {
+            mHaveAllocation = false;
+            doClose();
+         }
       }
       else
       {
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(MissingAttributes, asio::error::misc_category));
+         if(mCloseAfterDestroyAllocationFinishes)
+         {
+            mHaveAllocation = false;
+            doClose();
+         }
          return asio::error_code(MissingAttributes, asio::error::misc_category);
       }
    }
@@ -906,9 +931,25 @@ TurnAsyncSocket::connect(const std::string& address, unsigned short port, bool t
 void
 TurnAsyncSocket::close()
 {
-   clearActiveRequestMap();
-   cancelAllocationTimer();
-   mAsyncSocketBase.close();
+   mIOService.post(boost::bind(&TurnAsyncSocket::doClose, this));
+}
+
+void
+TurnAsyncSocket::doClose()
+{
+   // If we have an allocation over UDP then we should send a refresh with lifetime 0 to destroy the allocation
+   // Note:  For TCP and TLS, the socket disconnection will destroy the allocation automatically
+   if(mHaveAllocation && mLocalBinding.getTransportType() == StunTuple::UDP)
+   {
+      mCloseAfterDestroyAllocationFinishes = true;
+      destroyAllocation();
+   }
+   else
+   {
+      clearActiveRequestMap();
+      cancelAllocationTimer();
+      mAsyncSocketBase.close();
+   }
 }
 
 void 
@@ -1017,6 +1058,11 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
          break;
       case StunMessage::TurnRefreshMethod:
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(reTurn::ResponseTimeout, asio::error::misc_category));
+         if(mCloseAfterDestroyAllocationFinishes)
+         {
+            mHaveAllocation = false;
+            doClose();
+         }
          break;
       default:
          assert(false);
