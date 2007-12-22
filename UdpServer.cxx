@@ -113,8 +113,8 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
          if(stunMessageBuffer && stunMessageSize)
          {
             // Try to parse stun message
-            StunMessage request(StunTuple(StunTuple::UDP, address, port),
-                                StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
+            StunMessage request(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                                StunTuple(StunTuple::UDP, address, port),
                                 stunMessageBuffer, stunMessageSize);
             if(request.isValid())
             {
