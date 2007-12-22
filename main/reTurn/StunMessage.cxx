@@ -492,7 +492,10 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
       StunAtrHdr* attr = reinterpret_cast<StunAtrHdr*>(body);
 		
       unsigned int attrLen = ntohs(attr->length);
-      unsigned int attrLenPad = attrLen % 4 == 0 ? 0 : 4 - (attrLen % 4);  // attrLen may not be on 4 byte boundary, in which case we need to pad to 4 bytes when advancing to next attribute
+      // attrLen may not be on 4 byte boundary, in which case we need to pad to 4 bytes when advancing to next attribute
+      // Note:  Later RFC3489bis documents re-instated that all stun attributes must be on the 4 byte boundary, so this
+      //        attrLenPad is not-really necessary.  Leaving it here for now, since it doesn't hurt.
+      unsigned int attrLenPad = attrLen % 4 == 0 ? 0 : 4 - (attrLen % 4);  
       int atrType = ntohs(attr->type);
 		
       StackLog(<< "Found attribute type=" << atrType << " length=" << attrLen);
@@ -1028,7 +1031,7 @@ StunMessage::encodeAtrError(char* ptr, const StunAtrError& atr)
    UInt16 padsize = (unsigned int)atr.reason->size() % 4 == 0 ? 0 : 4 - ((unsigned int)atr.reason->size() % 4);
 
    ptr = encode16(ptr, ErrorCode);
-   ptr = encode16(ptr, 4 + (UInt16)atr.reason->size() + padsize);  // The attribute length should be the real length - but this confuses RFC3489 implementations
+   ptr = encode16(ptr, 4 + (UInt16)atr.reason->size() + padsize); 
    ptr = encode16(ptr, 0); // pad
    *ptr++ = atr.errorClass;
    *ptr++ = atr.number;
@@ -1056,7 +1059,7 @@ StunMessage::encodeAtrString(char* ptr, UInt16 type, const Data* atr)
    UInt16 padsize = (UInt16)atr->size() % 4 == 0 ? 0 : 4 - ((UInt16)atr->size() % 4);
 	
    ptr = encode16(ptr, type);
-   ptr = encode16(ptr, (UInt16)atr->size()+padsize);  // The attribute length should be the real length - but this confuses RFC3489 implementations
+   ptr = encode16(ptr, (UInt16)atr->size()+padsize);  
    ptr = encode(ptr, atr->data(), (unsigned int)atr->size());
    memset(ptr, 0, padsize);
    return ptr + padsize;
