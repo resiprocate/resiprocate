@@ -20,6 +20,7 @@ namespace reTurn {
 // !slg! these need to be made into settings
 RequestHandler::AuthenticationMode authenticationMode = RequestHandler::NoAuthentication;
 //RequestHandler::AuthenticationMode authenticationMode = RequestHandler::ShortTermPassword;
+//RequestHandler::AuthenticationMode authenticationMode = RequestHandler::LongTermPassword;
 const char authenticationRealm[] = "test";
 const char authenticationUsername[] = "test";
 const char authenticationPassword[] = "1234";
@@ -64,16 +65,10 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
          {
          case StunMessage::BindMethod:
             result = processStunBindingRequest(request, response, isRFC3489BackwardsCompatServer);
-
-            // Ensure fingerprint is added
-            response.mHasFingerprint = true;
             break;
 
          case StunMessage::SharedSecretMethod:
             result = processStunSharedSecretRequest(request, response);
-
-            // Ensure fingerprint is added
-            response.mHasFingerprint = true;
             break;
 
          case StunMessage::TurnAllocateMethod:
@@ -186,40 +181,46 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
 
    if (!request.mHasMessageIntegrity)
    {
-      if (authenticationMode != NoAuthentication) 
+      if (authenticationMode == ShortTermPassword) 
       {
-         // !slg! if we want a long term credential to be provided, we need to add a realm to the response, otherwise 
-         // we are requesting that short term credentials be provided
-         InfoLog(<< "Received Request with no Message Integrity. Sending 401.");
-         buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
+         InfoLog(<< "Received Request with no Message Integrity. Sending 400.");
+         buildErrorResponse(response, 400, "Bad Request (no MessageIntegrity)", 0);  
          return false;
+      }
+      else if(authenticationMode == LongTermPassword)
+      {
+         InfoLog(<< "Received Request with no Message Integrity. Sending 401.");
+         buildErrorResponse(response, 401, "Unauthorized (no MessageIntegrity)", authenticationRealm);  
       }
    }
    else
    {
       if (!request.mHasUsername)
       {
-         WarningLog(<< "No Username and contains MessageIntegrity. Sending 432.");
-         buildErrorResponse(response, 432, "No UserName and contains MessageIntegrity", authenticationMode == LongTermPassword ? authenticationRealm : 0);
+         WarningLog(<< "No Username and contains MessageIntegrity. Sending 400.");
+         buildErrorResponse(response, 400, "Bad Request (no Username and contains MessageIntegrity)", 0);
          return false;
       }
 
-      if(request.mHasRealm && authenticationMode == LongTermPassword)  
+      if(authenticationMode == LongTermPassword)  
       {
+         if(!request.mHasRealm)
+         {
+            WarningLog(<< "No Realm.  Sending 400.");
+            buildErrorResponse(response, 400, "Bad Request (No Realm)", 0);
+            return false;
+         }
          if(!request.mHasNonce)
          {
-            WarningLog(<< "No Nonce and contains realm.  Sending 435.");
-            buildErrorResponse(response, 435, "No Nonce and contains Realm", authenticationMode == LongTermPassword ? authenticationRealm : 0);
+            WarningLog(<< "No Nonce and contains realm.  Sending 400.");
+            buildErrorResponse(response, 400, "Bad Request (No Nonce and contains Realm)", 0);
             return false;
          }
          // !slg! Need to check if nonce expired
-         // !slg! we may want to delay this check for Turn Allocations so that expired 
-         //       authentications can still be accepted for existing allocation refreshes 
-         //       and removals
          if(0)
          {
             WarningLog(<< "Nonce expired. Sending 438.");
-            buildErrorResponse(response, 438, "Stale Nonce" /* Send realm? ,authenticationMode == LongTermPassword ? authenticationRealm : 0 */);
+            buildErrorResponse(response, 438, "Stale Nonce", authenticationRealm);
             return false;
          }
       }
@@ -244,8 +245,8 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       //       credential, known within the realm of the REALM attribute of the request
       if (authenticationMode == LongTermPassword && strcmp(request.mUsername->c_str(), authenticationUsername) != 0)
       {
-         WarningLog(<< "Invalid username: " << *request.mUsername << ". Sending 436.");
-         buildErrorResponse(response, 436, "Unknown username.", authenticationMode == LongTermPassword ? authenticationRealm : 0);
+         WarningLog(<< "Invalid username: " << *request.mUsername << ". Sending 401.");
+         buildErrorResponse(response, 401, "Unathorized", authenticationMode == LongTermPassword ? authenticationRealm : 0);
          return false;
       }
 
@@ -263,24 +264,14 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       
       if(!request.checkMessageIntegrity(hmacKey))
       {
-         WarningLog(<< "MessageIntegrity is bad. Sending 431.");
-         buildErrorResponse(response, 431, "Integrty Check Failure", authenticationMode == LongTermPassword ? authenticationRealm : 0);
+         WarningLog(<< "MessageIntegrity is bad. Sending 401.");
+         buildErrorResponse(response, 401, "Unauthorized", authenticationMode == LongTermPassword ? authenticationRealm : 0);
          return false;
       }
 
       // need to compute this later after message is filled in
       response.mHasMessageIntegrity = true;
       response.mHmacKey = hmacKey;  // Used to later calculate Message Integrity during encoding
-
-      // copy username into response
-      assert(request.mHasUsername);
-      response.setUsername(request.mUsername->c_str()); 
-
-      // !slg! bis06 is missing this, but I think it makes sense
-      if (request.mHasRealm && !request.mRealm->empty()) 
-      {
-         response.setRealm(request.mRealm->c_str());
-      }
    }
 
    return true;

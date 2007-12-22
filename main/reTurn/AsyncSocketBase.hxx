@@ -10,7 +10,7 @@
 
 #include "StunTuple.hxx"
 
-#define RECEIVE_BUFFER_SIZE 8192
+#define RECEIVE_BUFFER_SIZE 8192  // ?slg? should be shrink this to something closer to MTU (1500 bytes)?
 
 namespace reTurn {
 
