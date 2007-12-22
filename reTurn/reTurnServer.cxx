@@ -153,6 +153,7 @@ int main(int argc, char* argv[])
     pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
     int sig = 0;
     sigwait(&wait_mask, &sig);
+    ioService.stop();
 #endif
 
     // Wait for thread to exit
