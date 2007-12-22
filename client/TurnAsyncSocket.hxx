@@ -97,6 +97,7 @@ protected:
 
 private:
    AsyncSocketBase& mAsyncSocketBase;
+   bool mCloseAfterDestroyAllocationFinishes;
 
    // Request map (for retransmissions)
    class RequestEntry : public boost::enable_shared_from_this<RequestEntry>
@@ -143,6 +144,7 @@ private:
    void doClearActiveDestination();
    void doSend(resip::SharedPtr<resip::Data> data);
    void doSendTo(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   void doClose();
 
    void sendStunMessage(StunMessage* request, bool reTransmission=false);
    void sendTo(RemotePeer& remotePeer, resip::SharedPtr<resip::Data> data);
