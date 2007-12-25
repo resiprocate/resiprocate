@@ -159,6 +159,7 @@ extern 	void ares_gethostbyname(ares_channel channel, const char *name, int fami
 				ares_host_callback callback, void *arg);
 extern 	void ares_gethostbyaddr(ares_channel channel, const void *addr, int addrlen,
 				int family, ares_host_callback callback, void *arg);
+extern   int hostfile_lookup(const char *name, struct hostent **host);
 
 extern 	int ares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
 extern 	struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,

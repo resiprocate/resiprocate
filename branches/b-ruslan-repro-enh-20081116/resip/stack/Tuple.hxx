@@ -18,8 +18,8 @@
 namespace resip
 {
 
-class Transport;
 struct GenericIPAddress;
+class Transport;
 
 // WARNING!!
 // When you change this structure, make sure to update the hash function,
@@ -27,7 +27,7 @@ struct GenericIPAddress;
 // instance, the Connection* and Transport* change value in the Tuple over
 // its lifetime so they must not be included in the hash or comparisons. 
 
-typedef unsigned long ConnectionId;
+typedef unsigned long FlowKey;
 
 /**
    @ingroup resip_crit
@@ -100,12 +100,22 @@ class Tuple
       static TransportType toTransport( const Data& );
       static const Data& toData( TransportType );
       static Data inet_ntop(const Tuple& tuple);
+      static void writeBinaryToken(const Tuple& tuple,Data& container);
+      static Tuple makeTuple(const Data& binaryToken);
 
       GenericIPAddress toGenericIPAddress() const;
 
+      /// This is a (largely) opaque key that subclasses of Transport will use
+      /// to help record/find flows. For UDP and DTLS, this is just the FD, and
+      /// the rest of the information about the flow is carried in the Tuple.
+      /// For TCP and TLS, the FD of the connection is used.
+      /// For protocols where using the FD would not be appropriate (SCTP),
+      /// the transport may use whatever method to generate these it likes.
+      /// (It is highly recommended that these ids are unique across all
+      /// instances of a transport type)
+      FlowKey mFlowKey;
       Transport* transport;
-      ConnectionId connectionId;
-      bool onlyUseExistingConnection;      
+      bool onlyUseExistingConnection;
 
       /// compares this tuple with the one passed in for family, port and address equality
       /// using the passed in address mask (mask is specified by number of bits)

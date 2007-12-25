@@ -142,16 +142,24 @@ NameAddr::parse(ParseBuffer& pb)
    const char* start;
    start = pb.skipWhitespace();
    bool laQuote = false;
-
+   bool starContact = false;
+   
    if (!pb.eof() && *pb.position() == Symbols::STAR[0])
    {
-      mAllContacts = true;
       pb.skipChar(Symbols::STAR[0]);
       pb.skipWhitespace();
+      if (pb.eof())
+         starContact = true;
+   }
+
+   if (starContact)
+   {
+      mAllContacts = true;
       // now fall through to parse header parameters
    }
    else
    {
+      pb.reset(start);
       if (!pb.eof() && *pb.position() == Symbols::DOUBLE_QUOTE[0])
       {
          start = pb.skipChar(Symbols::DOUBLE_QUOTE[0]);

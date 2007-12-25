@@ -2,6 +2,7 @@
 #include "rutil/Logger.hxx"
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 #include <Security/Security.h>
 
 #include <openssl/e_os2.h>
@@ -36,15 +37,33 @@ MacSecurity::openSystemCertStore()
 {
    OSStatus status = noErr;
 
-   // The ROOT certificates we're interested in are stored
-   // in the X509Anchors keychain
-
+   const char *pathName = nil;
+   SInt32 MacVersion = 0;
+    
+   if (Gestalt(gestaltSystemVersion, &MacVersion) == noErr)
+   {
+      if (MacVersion >= 0x1050)
+      {
+         //for Leopard OSX, the root certificate are located in SystemRootCertificates.keychain
+	     pathName = "/System/Library/Keychains/SystemRootCertificates.keychain"; 
+      }
+      else
+      {
+         //for earlier OSX (including Tiger), the root certificate are located in X509Anchors
+         pathName = "/System/Library/Keychains/X509Anchors";
+      }
+   }
+   if(nil == pathName)
+   {
+      ErrLog( << "Cannot retrieve OS version");
+      return NULL;
+   }
    // NOTE: instead of hardcoding the "/System" portion of the path
    // we could retrieve it using ::FSFindFolder instead. But it
    // doesn't seem useful right now.
    SecKeychainRef systemCertsKeyChain;
    status = ::SecKeychainOpen(
-      "/System/Library/Keychains/X509Anchors",
+      pathName,
       &systemCertsKeyChain
    );
 

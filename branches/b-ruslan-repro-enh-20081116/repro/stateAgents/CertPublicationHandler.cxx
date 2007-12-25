@@ -8,7 +8,7 @@
 using namespace repro;
 using namespace resip;
 
-CertPublicationHandler::CertPublicationHandler(BaseSecurity& security) : mSecurity(security)
+CertPublicationHandler::CertPublicationHandler(Security& security) : mSecurity(security)
 {
 }
 

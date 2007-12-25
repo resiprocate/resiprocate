@@ -20,10 +20,11 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;../../contrib/asio&quot;;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL;LEAK_CHECK"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
@@ -63,6 +64,7 @@
 				AdditionalIncludeDirectories="&quot;../../contrib/asio&quot;;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				RuntimeLibrary="2"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
@@ -100,16 +102,46 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath="..\AsyncSocketBase.cxx">
+			</File>
+			<File
+				RelativePath="..\AsyncTcpSocketBase.cxx">
+			</File>
+			<File
+				RelativePath="..\AsyncTlsSocketBase.cxx">
+			</File>
+			<File
+				RelativePath="..\AsyncUdpSocketBase.cxx">
+			</File>
+			<File
 				RelativePath="..\ChannelManager.cxx">
 			</File>
 			<File
 				RelativePath="..\RemotePeer.cxx">
 			</File>
 			<File
+				RelativePath="..\ReTurnSubsystem.cxx">
+			</File>
+			<File
 				RelativePath="..\StunMessage.cxx">
 			</File>
 			<File
 				RelativePath="..\StunTuple.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncSocketHandler.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncTcpSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncTlsSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncUdpSocket.cxx">
 			</File>
 			<File
 				RelativePath=".\TurnSocket.cxx">
@@ -129,6 +161,21 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
+				RelativePath="..\AsyncSocketBase.hxx">
+			</File>
+			<File
+				RelativePath="..\AsyncSocketBaseHandler.hxx">
+			</File>
+			<File
+				RelativePath="..\AsyncTcpSocketBase.hxx">
+			</File>
+			<File
+				RelativePath="..\AsyncTlsSocketBase.hxx">
+			</File>
+			<File
+				RelativePath="..\AsyncUdpSocketBase.hxx">
+			</File>
+			<File
 				RelativePath="..\ChannelManager.hxx">
 			</File>
 			<File
@@ -138,16 +185,31 @@
 				RelativePath="..\RemotePeer.hxx">
 			</File>
 			<File
+				RelativePath="..\ReTurnSubsystem.hxx">
+			</File>
+			<File
 				RelativePath="..\StunMessage.hxx">
 			</File>
 			<File
 				RelativePath="..\StunTuple.hxx">
 			</File>
 			<File
-				RelativePath=".\TurnSocket.hxx">
+				RelativePath=".\TurnAsyncSocket.hxx">
 			</File>
 			<File
-				RelativePath=".\TurnTcpSocket.hxx">
+				RelativePath=".\TurnAsyncSocketHandler.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncTcpSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncTlsSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnAsyncUdpSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnSocket.hxx">
 			</File>
 			<File
 				RelativePath=".\TurnTlsSocket.hxx">

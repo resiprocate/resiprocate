@@ -1,4 +1,4 @@
-#include "resip/stack/Security.hxx"
+ #include "resip/stack/Security.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipFrag.hxx"
@@ -184,7 +184,7 @@ DialogUsageManager::getSipStack()
    return mStack;
 }
 
-BaseSecurity*
+Security*
 DialogUsageManager::getSecurity()
 {
    return mStack.getSecurity();
@@ -890,7 +890,9 @@ void DialogUsageManager::outgoingProcess(auto_ptr<Message> message)
    }
 
    OutgoingEvent* event = dynamic_cast<OutgoingEvent*>(message.get());
-   assert(event);
+   //assert(event);
+   //.dcm. a TID collision can cause a message to be delivered to a finished
+   //chain. This is probably because pseudorandom was being used on Win32.
    if (event)
    {
       if (event->message()->isRequest())

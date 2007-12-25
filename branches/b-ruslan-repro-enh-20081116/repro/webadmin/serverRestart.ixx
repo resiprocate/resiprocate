@@ -1,5 +1,0 @@
-"  <div align=\"center\">\n"
-"    <form id=\"form1\" name=\"form1\" method=\"get\" action=\"serverRestarted.html\">\n"
-"      <input type=\"submit\" name=\"Restart\" value=\"Restart server\" />\n"
-"    </form>\n"
-"  </div>\n"
