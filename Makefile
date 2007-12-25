@@ -77,7 +77,7 @@ configure_cppunit: tfm/contrib/cppunit/Makefile
 
         
 tfm/contrib/cppunit/Makefile:
-	cd tfm/contrib/cppunit && ./configure ${CPPUNIT_USE_SHARED_LIBS} ${CONFIGURE_ARGS}
+	cd tfm/contrib/cppunit && ./configure ${CPPUNIT_USE_SHARED_LIBS} ${CONFIGURE_ARGS} --disable-doxygen
 
 cppunit: configure_cppunit
 	cd tfm/contrib/cppunit && $(MAKE)

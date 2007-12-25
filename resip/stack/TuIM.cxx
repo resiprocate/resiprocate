@@ -91,7 +91,7 @@ TuIM::haveCerts( bool sign, const Data& encryptFor )
 /*   assert(0); */
 
 #if defined( USE_SSL )
-   BaseSecurity* sec = mStack->getSecurity();
+   Security* sec = mStack->getSecurity();
    assert(sec);
    
    if ( sign )
@@ -159,7 +159,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 #if defined( USE_SSL )
    if ( !encryptFor.empty() )
    {
-      BaseSecurity* sec = mStack->getSecurity();
+      Security* sec = mStack->getSecurity();
       assert(sec);
       
       Contents* old = body;
@@ -180,7 +180,7 @@ TuIM::sendPage(const Data& text, const Uri& dest,
 
    if ( sign )
    {
-      BaseSecurity* sec = mStack->getSecurity();
+      Security* sec = mStack->getSecurity();
       assert(sec);
     
       Contents* old = body;
@@ -280,7 +280,7 @@ TuIM::processSipFrag(SipMessage* msg)
    MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
    if ( mBody )
    {
-      BaseSecurity* sec = mStack->getSecurity();
+      Security* sec = mStack->getSecurity();
       assert(sec);
       
       contents = sec->checkSignature( mBody, &signedBy, &sigStat );
@@ -599,7 +599,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    MultipartSignedContents* mBody = dynamic_cast<MultipartSignedContents*>(contents);
    if ( mBody )
    {
-      BaseSecurity* sec = mStack->getSecurity();
+      Security* sec = mStack->getSecurity();
       assert(sec);
       
       contents = sec->checkSignature( mBody, &signedBy, &sigStat );
@@ -620,7 +620,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    if ( sBody )
    {
       assert( sBody );
-      BaseSecurity* sec = mStack->getSecurity();
+      Security* sec = mStack->getSecurity();
       assert(sec);
 
       contents = sec->decrypt( mAor.getAor(), sBody );
@@ -641,7 +641,7 @@ TuIM::processMessageRequest(SipMessage* msg)
    if ( eBody )
    {
       assert( eBody );
-      BaseSecurity* sec = mStack->getSecurity();
+      Security* sec = mStack->getSecurity();
       assert(sec);
 
       contents = sec->decrypt( mAor.getAor(), eBody );

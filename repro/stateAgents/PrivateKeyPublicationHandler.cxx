@@ -8,7 +8,7 @@
 using namespace repro;
 using namespace resip;
 
-PrivateKeyPublicationHandler::PrivateKeyPublicationHandler(BaseSecurity& security) : mSecurity(security)
+PrivateKeyPublicationHandler::PrivateKeyPublicationHandler(Security& security) : mSecurity(security)
 {
 }
 

@@ -29,7 +29,8 @@ class OpenSSLInit
       static CRYPTO_dynlock_value* dynCreateFunction(char* file, int line);
       static void dynDestroyFunction(CRYPTO_dynlock_value*, const char* file, int line);
       static void dynLockFunction(int mode, struct CRYPTO_dynlock_value*, const char* file, int line);
-      static Mutex* mMutexes;      
+      static Mutex* mMutexes;    
+      static volatile bool mInitialized;
 };
 static bool invokeOpenSSLInit = OpenSSLInit::init();
 

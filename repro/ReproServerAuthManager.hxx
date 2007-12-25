@@ -7,6 +7,7 @@
 #include "resip/stack/Message.hxx"
 #include "resip/dum/UserProfile.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
+//#include "repro/UserStore.hxx"
 
 namespace resip
 {
@@ -16,15 +17,15 @@ class DialogUsageManager;
 
 namespace repro
 {
-class AbstractUserStore;
-class AbstractAclStore;
+class UserStore;
+class AclStore;
 
 class ReproServerAuthManager: public resip::ServerAuthManager
 {
    public:
       ReproServerAuthManager(resip::DialogUsageManager& dum, 
-                             AbstractUserStore& userDb, 
-                             AbstractAclStore& aclDb,
+                             UserStore& userDb, 
+                             AclStore& aclDb,
                              bool useAuthInt);
       
       ~ReproServerAuthManager();
@@ -42,8 +43,8 @@ class ReproServerAuthManager: public resip::ServerAuthManager
 
    private:
       resip::DialogUsageManager& mDum;
-      AbstractUserStore& mUserDb;
-      AbstractAclStore&  mAclDb;
+      UserStore& mUserDb;
+      AclStore&  mAclDb;
       bool mUseAuthInt;
 };
 

@@ -1,71 +1,48 @@
-#if !defined(REPRO_ABSTRACTUSERSTORE_HXX)
-#define REPRO_ABSTRACTUSERSTORE_HXX
-
-#include "rutil/Data.hxx"
-#include "repro/AbstractDb.hxx"
-#include "rutil/Fifo.hxx"
-#include "resip/stack/Message.hxx"
-
-
+#ifndef INTEROP_HELPER_HXX
+#define INTEROP_HELPER_HXX
 
 namespace resip
 {
-  class TransactionUser;
-}
 
-namespace repro
-{
-
-typedef resip::Fifo<resip::Message> MessageFifo;
-
-class AbstractUserStore
+/**
+   This class is intended to encapsulate what version/s of various drafts are
+   supported by the stack. This also allows for configurable version support at
+   runtime.
+*/
+class InteropHelper
 {
    public:
-      typedef resip::Data Key;
+      static int getOutboundVersion() {return theOutboundVersion;}
+      static void setOutboundVersion(int version) {theOutboundVersion=version;}
+      static bool getOutboundSupported() {return isOutboundSupported;}
+      static void setOutboundSupported(bool supported) {isOutboundSupported=supported;}
       
-      virtual ~AbstractUserStore(){};
+      // .bwc. If this is enabled, we will record-route with flow tokens 
+      // whenever possible. This will make things work with endpoints that don't
+      // use NAT traversal tricks. However, this will break several things:
+      // 1) Target-refreshes won't work.
+      // 2) Proxies that do not record-route may be implicitly included in the
+      //    route-set by this proxy, because a flow token may point to them.
+      // 3) Third-party registrations won't work.
+      static bool getRRTokenHackEnabled(){return useRRTokenHack;}
+      static void setRRTokenHackEnabled(bool enabled) {useRRTokenHack=enabled;}
       
-      void requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& realm,
-                                const resip::Data& transactionToken,
-                                resip::TransactionUser& transactionUser ) const;
-
-      virtual AbstractDb::UserRecord getUserInfo( const Key& key ) const =0;
-
-      virtual resip::Data getUserAuthInfo( const resip::Data& user,
-                                   const resip::Data& realm ) const =0;
+   private:
+      InteropHelper();
+      ~InteropHelper();
       
-      virtual void addUser( const resip::Data& user, 
-                    const resip::Data& domain, 
-                    const resip::Data& realm, 
-                    const resip::Data& password, 
-                    bool  applyA1HashToPassword,
-                    const resip::Data& fullName,
-                    const resip::Data& emailAddress  ) = 0;
-      
-      virtual void eraseUser( const Key& key ) = 0;
-      
-      virtual void updateUser( const Key& originalKey,
-                       const resip::Data& user, 
-                       const resip::Data& domain, 
-                       const resip::Data& realm, 
-                       const resip::Data& password, 
-                       bool  applyA1HashToPassword,
-                       const resip::Data& fullName,
-                       const resip::Data& emailAddress ) = 0;
-      
-	   virtual AbstractDb::UserRecordList getAllUsers() = 0;
-      virtual Key getKey( const AbstractDb::UserRecord &ur ) = 0;
-
+      static int theOutboundVersion;
+      static bool isOutboundSupported;
+      static bool useRRTokenHack;
 };
-
 }
-#endif  
+
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -104,4 +81,11 @@ class AbstractUserStore
  * DAMAGE.
  * 
  * ====================================================================
+ * 
+ * This software consists of voluntary contributions made by Vovida
+ * Networks, Inc. and many individuals on behalf of Vovida Networks,
+ * Inc.  For more information on Vovida Networks, Inc., please see
+ * <http://www.vovida.org/>.
+ *
  */
+

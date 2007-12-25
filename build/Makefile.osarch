@@ -132,8 +132,14 @@ ifeq ($(OSTYPE),Darwin)
     CXXFLAGS += -D_REENTRANT
     CFLAGS   += -D_REENTRANT
     LDFLAGS  += -framework CoreFoundation -framework SystemConfiguration -bind_at_load
-    INCDIRS += /sw/include /opt/local/include
-    LIBDIRS += /sw/lib /opt/local/lib
+
+#   Only add /sw/include and /sw/lib if they actually exist
+    INCDIRS += $(shell test -d /sw/include && echo "/sw/include")
+    LIBDIRS += $(shell test -d /sw/lib && echo "/sw/lib")
+
+#   Only add /opt/local/include and /opt/local/lib if they actually exist
+    INCDIRS += $(shell test -d /opt/local/include && echo "/opt/local/include")
+    LIBDIRS += $(shell test -d /opt/local/lib && echo "/opt/local/lib")
 
     USE_LIBGETOPT = 1
     USE_R_WRAPPER = 1

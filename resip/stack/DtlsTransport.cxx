@@ -73,7 +73,7 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              int portNum,
                              IpVersion version,
                              const Data& interfaceObj,
-                             BaseSecurity& security,
+                             Security& security,
                              const Data& sipDomain,
                              Compression& compression)
                              : UdpTransport( fifo, portNum, version, 

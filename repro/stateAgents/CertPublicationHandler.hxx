@@ -7,7 +7,7 @@
 
 namespace resip
 {
-class BaseSecurity;
+class Security;
 class SipMessage;
 class SecurityAttributes;
 class Data;
@@ -20,7 +20,7 @@ namespace repro
 class CertPublicationHandler : public resip::ServerPublicationHandler
 {
    public:
-      CertPublicationHandler(resip::BaseSecurity& security);
+      CertPublicationHandler(resip::Security& security);
       virtual void onInitial(resip::ServerPublicationHandle h, 
                              const resip::Data& etag, 
                              const resip::SipMessage& pub, 
@@ -45,7 +45,7 @@ class CertPublicationHandler : public resip::ServerPublicationHandler
    private:
       void add(resip::ServerPublicationHandle h, const resip::Contents* contents);
       
-      resip::BaseSecurity& mSecurity;
+      resip::Security& mSecurity;
 };
  
 }

@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "repro/AbstractUserStore.hxx"
+#include "repro/UserStore.hxx"
 #include "repro/AbstractDb.hxx"
 #include "repro/BerkeleyDb.hxx"
 #include "rutil/Data.hxx"

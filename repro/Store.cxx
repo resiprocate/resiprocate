@@ -3,6 +3,7 @@
 #include "rutil/Logger.hxx"
 
 #include "repro/Store.hxx"
+#include "repro/AbstractDb.hxx"
 
 
 using namespace resip;
@@ -12,24 +13,17 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
 
-Store::Store( AbstractUserStore *UserStore,
-             AbstractRouteStore *RouteStore, 
-             AbstractAclStore *AclStore,
-             AbstractConfigStore *ConfigStore):
-   mUserStore(UserStore),
-   mRouteStore(RouteStore),
-   mAclStore(AclStore),
-   mConfigStore(ConfigStore)
+Store::Store( AbstractDb& db ):
+   mUserStore(db),
+   mRouteStore(db),
+   mAclStore(db),
+   mConfigStore(db)
 {
 }
 
 
 Store::~Store()
 {
-   delete mUserStore;
-   delete mRouteStore;
-   delete mAclStore;
-   delete mConfigStore;
 }
 
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="repro"
 	ProjectGUID="{9D8D2649-213F-49D3-A8B0-C1849C611654}"
 	RootNamespace="repro"
@@ -25,7 +25,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;&#x0D;&#x0A;mc EventLogMessage.mc&#x0D;&#x0A;"
+				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -61,7 +61,6 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
-				CommandLine=""
 			/>
 			<Tool
 				Name="VCLinkerTool"
@@ -108,7 +107,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;&#x0D;&#x0A;mc EventLogMessage.mc&#x0D;&#x0A;"
+				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -188,7 +187,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;&#x0D;&#x0A;mc EventLogMessage.mc&#x0D;&#x0A;"
+				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -270,7 +269,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;&#x0D;&#x0A;mc EventLogMessage.mc&#x0D;&#x0A;"
+				CommandLine="echo Generating reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;@echo off &amp; setlocal enableextensions enabledelayedexpansion&#x0D;&#x0A;echo #define REPRO_BUILD_HOST &quot;%COMPUTERNAME%&quot; &gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;:: Get VERSION in a variable&#x0D;&#x0A;set lineNro_=&#x0D;&#x0A;for /f &quot;tokens=* delims=&quot; %%r in (&apos;type VERSION&apos;) do (&#x0D;&#x0A;set /a lineNro_+=1&#x0D;&#x0A;echo @set line!lineNro_!_=%%r&gt;&gt;%temp%\tmp$$$.cmd)&#x0D;&#x0A;call %temp%\tmp$$$.cmd&#x0D;&#x0A;del %temp%\tmp$$$.cmd&#x0D;&#x0A;&#x0D;&#x0A;echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx&#x0D;&#x0A;&#x0D;&#x0A;endlocal&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -354,10 +353,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\AbstractUserStore.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\AclStore.cxx"
 				>
 			</File>
@@ -418,7 +413,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Parameters.cxx"
+				RelativePath=".\monkeys\OutboundTargetHandler.cxx"
 				>
 			</File>
 			<File
@@ -442,10 +437,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ProxyMain.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\QValueTarget.cxx"
 				>
 			</File>
@@ -466,10 +457,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ReproConfiguration.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\ReproServerAuthManager.cxx"
 				>
 			</File>
@@ -487,10 +474,6 @@
 			</File>
 			<File
 				RelativePath=".\RouteStore.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\monkeys\SetTargetConnection.cxx"
 				>
 			</File>
 			<File
@@ -540,23 +523,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\AbstractAclStore.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\AbstractConfigStore.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\AbstractDb.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\AbstractRouteStore.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\AbstractUserStore.hxx"
 				>
 			</File>
 			<File
@@ -624,7 +591,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Parameters.hxx"
+				RelativePath=".\monkeys\OutboundTargetHandler.hxx"
 				>
 			</File>
 			<File
@@ -648,14 +615,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ProxyMain.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\ProxyMainException.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\QValueTarget.hxx"
 				>
 			</File>
@@ -669,10 +628,6 @@
 			</File>
 			<File
 				RelativePath=".\Registrar.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\ReproConfiguration.hxx"
 				>
 			</File>
 			<File
@@ -693,10 +648,6 @@
 			</File>
 			<File
 				RelativePath=".\RouteStore.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\monkeys\SetTargetConnection.hxx"
 				>
 			</File>
 			<File
@@ -749,14 +700,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath=".\EventLogMessage.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\Repro.res"
-				>
-			</File>
 		</Filter>
 		<File
 			RelativePath=".\webadmin\pageOutlinePost.ixx"
@@ -764,10 +707,6 @@
 		</File>
 		<File
 			RelativePath=".\webadmin\pageOutlinePre.ixx"
-			>
-		</File>
-		<File
-			RelativePath=".\webadmin\Parameters.ixx"
 			>
 		</File>
 	</Files>

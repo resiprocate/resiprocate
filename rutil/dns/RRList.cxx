@@ -19,6 +19,7 @@
 #include "rutil/Timer.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
+#include "rutil/dns/DnsHostRecord.hxx"
 #include "rutil/dns/RRFactory.hxx"
 #include "rutil/dns/RRList.hxx"
 #include "rutil/dns/DnsAAAARecord.hxx"
@@ -43,6 +44,22 @@ RRList::RRList(const Data& key,
    mAbsoluteExpiry = ttl + Timer::getTimeMs()/1000;
 }
 
+RRList::RRList(const DnsHostRecord &record, int ttl)
+   : mKey(record.name()), mRRType(T_A), mStatus(0), mAbsoluteExpiry(ULONG_MAX)
+{
+   update(record, ttl);
+}
+
+void RRList::update(const DnsHostRecord &record, int ttl)
+{
+   this->clear();
+
+   RecordItem item;
+   item.record = new DnsHostRecord(record);
+   mRecords.push_back(item);
+   mAbsoluteExpiry = Timer::getTimeMs()/1000 + ttl;
+}
+      
 RRList::RRList(const Data& key, int rrtype)
    : mKey(key), mRRType(rrtype), mStatus(0), mAbsoluteExpiry(ULONG_MAX)
 {}
