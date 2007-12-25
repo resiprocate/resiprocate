@@ -31,7 +31,7 @@ main(int argc, char *argv[])
 
    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-   bzero(&servaddr, sizeof(servaddr));
+   memset(&servaddr, 0, sizeof(servaddr));
    servaddr.sin_family = AF_INET;
    const int serv_port = 9999;
    servaddr.sin_port = htons(9999);

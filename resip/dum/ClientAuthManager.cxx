@@ -6,6 +6,7 @@
 #include "resip/dum/UserProfile.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
+#include "resip/dum/ClientAuthExtension.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -284,7 +285,8 @@ ClientAuthManager::RealmState::clear()
 bool 
 ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Auth& auth)
 {
-   if (!Helper::algorithmAndQopSupported(auth))
+   if (!(Helper::algorithmAndQopSupported(auth) 
+         || (ClientAuthExtension::instance().algorithmAndQopSupported(auth))))
    {
       DebugLog(<<"Unsupported algorithm or qop: " << auth);
       return false;
@@ -309,19 +311,36 @@ ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
    assert(mState != Failed);
    if (mState == Failed) return;
 
-   Data cnonce = Random::getCryptoRandomHex(8);
+   Data cnonce = Random::getCryptoRandomHex(16);
 
    Auths & target = mIsProxyCredential ? request.header(h_ProxyAuthorizations) : request.header(h_Authorizations);
    Data nonceCountString;
    
    DebugLog( << " Add auth, " << this << " in response to: " << mAuth);
-   target.push_back(Helper::makeChallengeResponseAuth(request,
-                                                      mCredential.user,
-                                                      mCredential.password,
-                                                      mAuth, 
-                                                      cnonce,
-                                                      mNonceCount, 
-                                                      nonceCountString));
+   if (ClientAuthExtension::instance().algorithmAndQopSupported(mAuth))
+   {
+      DebugLog(<<"Using extension to make auth response");
+      
+      target.push_back(ClientAuthExtension::instance().makeChallengeResponseAuth(request,
+                                                         mCredential.user,
+                                                         mCredential.password,
+                                                         mAuth, 
+                                                         cnonce,
+                                                         mNonceCount, 
+                                                         nonceCountString));
+      
+   }
+   else
+   {
+      target.push_back(Helper::makeChallengeResponseAuth(request,
+                                                         mCredential.user,
+                                                         mCredential.password,
+                                                         mAuth, 
+                                                         cnonce,
+                                                         mNonceCount, 
+                                                         nonceCountString));
+   }
+   
    DebugLog(<<"ClientAuthManager::RealmState::addAuthentication, proxy: " << mIsProxyCredential << " " << target.back());
 }
 

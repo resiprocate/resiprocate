@@ -15,10 +15,9 @@
 #include "repro/HttpBase.hxx"
 #include "repro/HttpConnection.hxx"
 #include "repro/WebAdmin.hxx"
-#include "repro/AbstractRouteStore.hxx"
-#include "repro/AbstractUserStore.hxx"
+#include "repro/RouteStore.hxx"
+#include "repro/UserStore.hxx"
 #include "repro/Store.hxx"
-#include "repro/ProxyMain.hxx"
 
 
 using namespace resip;
@@ -51,50 +50,62 @@ WebAdmin::RemoveKey::operator<(const RemoveKey& rhs) const
 
 // !cj! TODO - make all the removes on the web pages work 
 
-WebAdmin::WebAdmin(Store& store,
-                   RegistrationPersistenceManager& regDb,
-                   BaseSecurity* security,
-                   bool noChal,  
-                   const Data& realm, // this realm is used for http challenges
-                   const Data& adminPassword,
-                   int port, 
-                   IpVersion version):
-   HttpBase(port, version, realm),
+WebAdmin::WebAdmin(  Store& store,
+                     RegistrationPersistenceManager& regDb,
+                     Security* security,
+                     bool noChal,  
+                     const Data& realm, // this realm is used for http challenges
+                     const Data& adminPassword,
+                     int port, 
+                     IpVersion version ):
+   HttpBase( port, version, realm ),
    mStore(store),
    mRegDb(regDb),
    mSecurity(security),
-   mNoWebChallenges(noChal) 
+   mNoWebChallenges( noChal ) 
 {
-   const Data adminName("admin");
+      const Data adminName("admin");
 
-   Data dbA1 = Parameters::getParam( Parameters::prmAdminPassword );
+      Data dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
       
-   DebugLog(<< " Looking to see if admin user exists (creating WebAdmin)");
-   if ( dbA1.empty() ) // if the admin user does not exist, add it 
-   { 
-      DebugLog(<< "Setting admin password");
+      DebugLog(<< " Looking to see if admin user exists (creating WebAdmin)");
+      if ( dbA1.empty() ) // if the admin user does not exist, add it 
+      { 
+         DebugLog(<< "Creating admin user" );
          
-      Parameters::saveParam(Parameters::prmAdminPassword, adminPassword == "" ? Data("admin") : adminPassword);
-      dbA1 = Parameters::getParam( Parameters::prmAdminPassword );
-      assert( !dbA1.empty() );
-   }
-   else if (!adminPassword.empty() && adminPassword.md5() != dbA1)
-   {
-      //All we're using for admin is the password.
-      //This next bit of code relies on it being ok that we 
-      //blow away any other information
-      //in that row. It also expects addUser to replace anything matching the existing key
-      DebugLog(<< "Changing the web admin password");
-      Parameters::saveParam(Parameters::prmAdminPassword, adminPassword == "" ? Data("admin") : adminPassword);
-   }
+         mStore.mUserStore.addUser( adminName, // user
+                          Data::Empty, // domain 
+                          Data::Empty, // realm 
+                          (adminPassword==""?Data("admin"):adminPassword), // password 
+                          true,        // applyA1HashToPassword
+                          Data::Empty, // name 
+                          Data::Empty ); // email 
+         dbA1 = mStore.mUserStore.getUserAuthInfo( adminName, Data::Empty );
+         assert( !dbA1.empty() );
+      }
+      else if (adminPassword!=Data(""))
+      {
+         //All we're using for admin is the password.
+         //This next bit of code relies on it being ok that we 
+         //blow away any other information
+         //in that row. It also expects addUser to replace anything matching the existing key
+         DebugLog(<< "Changing the web admin password" );
+         mStore.mUserStore.addUser( adminName,
+                                       Data::Empty,
+                                       Data::Empty,
+                                       adminPassword,
+                                       true,        // applyA1HashToPassword
+                                       Data::Empty,
+                                       Data::Empty);
+      }
 }
 
 
 void 
-WebAdmin::buildPage(const Data& uri,
-                    int pageNumber, 
-                    const resip::Data& pUser,
-                    const resip::Data& pPassword)
+WebAdmin::buildPage( const Data& uri,
+                     int pageNumber, 
+                     const resip::Data& pUser,
+                     const resip::Data& pPassword )
 {
    ParseBuffer pb(uri);
    
@@ -123,11 +134,7 @@ WebAdmin::buildPage(const Data& uri,
       ( pageName != Data("editRoute.html") ) &&
       ( pageName != Data("showRoutes.html") )&& 
       ( pageName != Data("registrations.html") ) &&  
-      ( pageName != Data("user.html")  ) &&
-      ( pageName != Data("serverRestart.html")  ) &&
-      ( pageName != Data("serverRestarted.html")  ) &&
-      ( pageName != Data("parameters.html")  ) &&
-      ( pageName != Data("parametersSet.html")  ) )
+      ( pageName != Data("user.html")  ) )
    { 
       setPage( resip::Data::Empty, pageNumber, 301 );
       return; 
@@ -195,18 +202,18 @@ WebAdmin::buildPage(const Data& uri,
       }
       
       // check that authentication is correct 
-      Data dbA1 = Parameters::getParam( Parameters::prmAdminPassword );
+      Data dbA1 = mStore.mUserStore.getUserAuthInfo( pUser, Data::Empty );
       
 #if 0
       if ( dbA1.empty() ) // if the admin user does not exist, add it 
       { 
-         mStore.mUserStore->addUser( pUser, // user
+         mStore.mUserStore.addUser( pUser, // user
                           Data::Empty, // domain 
                           Data::Empty, // realm 
                           Data("admin"), // password 
                           Data::Empty, // name 
                           Data::Empty ); // email 
-         dbA1 = mStore.mUserStore->getUserAuthInfo( pUser, Data::Empty );
+         dbA1 = mStore.mUserStore.getUserAuthInfo( pUser, Data::Empty );
          assert( !dbA1.empty() );
       }
 #endif
@@ -307,16 +314,6 @@ WebAdmin::buildPage(const Data& uri,
       
       if ( pageName == Data("registrations.html")) buildRegistrationsSubPage(s);
       
-      if ( pageName == Data("serverRestart.html")) buildRestartServerSubPage(s);
-      if ( pageName == Data("serverRestarted.html")) buildRestartedServerSubPage(s);
-
-      if ( pageName == Data("parameters.html")) buildParametersSubPage(s);
-      if ( pageName == Data("parametersSet.html")) 
-      {
-         buildParametersSetPage( pageNumber, s );
-         return ;
-      }
-
       buildPageOutlinePost(s);
       s.flush();
 
@@ -344,7 +341,7 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       int j = 0;
       for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         mStore.mAclStore->eraseAcl(i->mKey1);
+         mStore.mAclStore.eraseAcl(i->mKey1);
          ++j;
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
@@ -357,7 +354,7 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       int port = mHttpParams["aclPort"].convertInt();
       TransportType transport = Tuple::toTransport(mHttpParams["aclTransport"]);
       
-      if (mStore.mAclStore->addAcl(hostOrIp, port, transport)){
+      if (mStore.mAclStore.addAcl(hostOrIp, port, transport)){
          s << "<p><em>Added</em> trusted access for: " << hostOrIp << "</p>\n";
       }
       else {
@@ -398,30 +395,30 @@ WebAdmin::buildAclsSubPage(DataStream& s)
       "        </thead>" << endl <<
       "        <tbody>" << endl;
    
-   AbstractAclStore::Key key = mStore.mAclStore->getFirstTlsPeerNameKey();
+   AclStore::Key key = mStore.mAclStore.getFirstTlsPeerNameKey();
    while (key != Data::Empty)
    {
       s << 
          "          <tr>" << endl << 
-         "            <td colspan=\"2\">" << mStore.mAclStore->getTlsPeerName(key) << "</td>" << endl <<
+         "            <td colspan=\"2\">" << mStore.mAclStore.getTlsPeerName(key) << "</td>" << endl <<
          "            <td>TLS auth</td>" << endl <<
          "            <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl <<
          "</tr>" << endl;
          
-      key = mStore.mAclStore->getNextTlsPeerNameKey(key);
+      key = mStore.mAclStore.getNextTlsPeerNameKey(key);
    }
-   key = mStore.mAclStore->getFirstAddressKey();
+   key = mStore.mAclStore.getFirstAddressKey();
    while (key != Data::Empty)
    {
       s <<
          "          <tr>" << endl << 
-         "            <td>" << mStore.mAclStore->getAddressTuple(key).presentationFormat() << "/"
-                            << mStore.mAclStore->getAddressMask(key) << "</td>" << endl <<
-         "            <td>" << mStore.mAclStore->getAddressTuple(key).getPort() << "</td>" << endl <<
-         "            <td>" << Tuple::toData(mStore.mAclStore->getAddressTuple(key).getType()) << "</td>" << endl <<
+         "            <td>" << mStore.mAclStore.getAddressTuple(key).presentationFormat() << "/"
+                            << mStore.mAclStore.getAddressMask(key) << "</td>" << endl <<
+         "            <td>" << mStore.mAclStore.getAddressTuple(key).getPort() << "</td>" << endl <<
+         "            <td>" << Tuple::toData(mStore.mAclStore.getAddressTuple(key).getType()) << "</td>" << endl <<
          "            <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl <<
          "          </tr>" << endl;
-      key = mStore.mAclStore->getNextAddressKey(key);
+      key = mStore.mAclStore.getNextAddressKey(key);
    }
    
    s <<  
@@ -460,7 +457,7 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       int j = 0;
       for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         mStore.mConfigStore->eraseDomain(i->mKey1);
+         mStore.mConfigStore.eraseDomain(i->mKey1);
          ++j;
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
@@ -471,7 +468,7 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
    {
       domainUri = pos->second;
       domainTlsPort = mHttpParams["domainTlsPort"].convertInt();
-      mStore.mConfigStore->addDomain(domainUri,domainTlsPort);
+      mStore.mConfigStore.addDomain(domainUri,domainTlsPort);
       
       s << "<p><em>Added</em> domain: " << domainUri << "</p>" << endl;
    }   
@@ -503,8 +500,8 @@ WebAdmin::buildDomainsSubPage(DataStream& s)
       "        </thead>" << endl <<
       "        <tbody>" << endl;
    
-   const AbstractConfigStore::ConfigData& configs = mStore.mConfigStore->getConfigs();
-   for ( AbstractConfigStore::ConfigData::const_iterator i = configs.begin();
+   const ConfigStore::ConfigData& configs = mStore.mConfigStore.getConfigs();
+   for ( ConfigStore::ConfigData::const_iterator i = configs.begin();
         i != configs.end(); i++ )
    {
       s << 
@@ -534,7 +531,7 @@ WebAdmin::buildAddRouteSubPage(DataStream& s)
       
       if (!routeDestination.empty())
       {
-         mStore.mRouteStore->addRoute(mHttpParams["routeMethod"], 
+         mStore.mRouteStore.addRoute(mHttpParams["routeMethod"], 
                                      mHttpParams["routeEvent"], 
                                      routeUri,
                                      routeDestination,
@@ -615,7 +612,7 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
 //         realm = mHttpParams["domain"];
 //      }
             
-      mStore.mUserStore->addUser(user,domain,domain,mHttpParams["password"],true,mHttpParams["name"],mHttpParams["email"]);      
+      mStore.mUserStore.addUser(user,domain,domain,mHttpParams["password"],true,mHttpParams["name"],mHttpParams["email"]);      
       // !rwm! TODO check if the add was successful
       // if (success)
       //{
@@ -642,8 +639,8 @@ WebAdmin::buildAddUserSubPage( DataStream& s)
          ; 
          
          // for each domain, add an option in the pulldown         
-         const AbstractConfigStore::ConfigData& list = mStore.mConfigStore->getConfigs();
-         for ( AbstractConfigStore::ConfigData::const_iterator i = list.begin();
+         const ConfigStore::ConfigData& list = mStore.mConfigStore.getConfigs();
+         for ( ConfigStore::ConfigData::const_iterator i = list.begin();
               i != list.end(); i++ )
          {
             s << "            <option";
@@ -694,10 +691,32 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       int j = 0;
       for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         Uri key(i->mKey1);
-         Uri contact(i->mKey2);
-         mRegDb.removeContact(key, contact);
-         ++j;
+         Uri aor(i->mKey1);
+         ContactInstanceRecord rec;
+         size_t bar1 = i->mKey2.find("|");
+         size_t bar2 = i->mKey2.find("|",bar1);
+         
+         if(bar1==Data::npos || bar2 == Data::npos)
+         {
+            InfoLog(<< "Registration removal key was malformed: " << i->mKey2);
+            continue;
+         }
+         
+         try
+         {
+            resip::Data rawNameAddr = i->mKey2.substr(0,bar1);
+            rec.mContact = NameAddr(rawNameAddr);
+            rec.mInstance = i->mKey2.substr(bar1,bar2);
+            rec.mRegId = i->mKey2.substr(bar2,Data::npos).convertInt();
+            mRegDb.removeContact(aor, rec);
+            ++j;
+         }
+         catch(resip::ParseBuffer::Exception& e)
+         {
+            InfoLog(<< "Registration removal key was malformed: " << e <<
+                     " Key was: " << i->mKey2);
+         }
+         
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
    }
@@ -721,14 +740,14 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                aor = aors.begin(); aor != aors.end(); ++aor )
       {
          Uri uri = *aor;
-         RegistrationPersistenceManager::ContactRecordList 
+         ContactList 
             contacts = mRegDb.getContacts(uri);
          
          bool first = true;
-         for (RegistrationPersistenceManager::ContactRecordList::iterator i = contacts.begin();
+         for (ContactList::iterator i = contacts.begin();
               i != contacts.end(); ++i )
          {
-            if (i->expires >= time(NULL))
+            if (i->mRegExpires >= (UInt64)time(NULL))
             {
                s << "<tr>" << endl
                  << "  <td>" ;
@@ -740,21 +759,24 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                s << "</td>" << endl
                  << "  <td>";
             
-               const RegistrationPersistenceManager::ContactRecord& r = *i;
-               const Uri& contact = r.uri; 
+               const ContactInstanceRecord& r = *i;
+               const NameAddr& contact = r.mContact;
+               const Data& instanceId = r.mInstance;
+               int regId = r.mRegId;
 
                s << contact;
                s <<"</td>" << endl 
-                 <<"<td>" << i->expires - time(NULL) << "s</td>" << endl
+                 << "<td> " << instanceId << "</td> <td>" << regId << "</td>"
+                 <<"<td>" << i->mRegExpires - time(NULL) << "s</td>" << endl
                  << "  <td>"
-                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << contact
+                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << contact << "|" << instanceId << "|" << regId
                  << "\"/></td>" << endl
                  << "</tr>" << endl;
             }
             else
             {
                // remove expired contact 
-               mRegDb.removeContact(uri, i->uri);
+               mRegDb.removeContact(uri, *i);
             }
          }
       }
@@ -772,7 +794,7 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
    if (pos != mHttpParams.end()) 
    {
       Data key = pos->second;
-      AbstractDb::UserRecord rec = mStore.mUserStore->getUserInfo(key);
+      AbstractDb::UserRecord rec = mStore.mUserStore.getUserInfo(key);
       // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
       
       s << "<p>Editing Record with key: " << key << "</p>" << endl <<
@@ -798,8 +820,8 @@ WebAdmin::buildEditUserSubPage( DataStream& s)
          ; 
       
       // for each domain, add an option in the pulldown      
-      const AbstractConfigStore::ConfigData& list = mStore.mConfigStore->getConfigs();      
-      for ( AbstractConfigStore::ConfigData::const_iterator i = list.begin();
+      const ConfigStore::ConfigData& list = mStore.mConfigStore.getConfigs();      
+      for ( ConfigStore::ConfigData::const_iterator i = list.begin();
             i != list.end(); i++ )
       {
          s << "            <option";
@@ -862,7 +884,7 @@ WebAdmin::buildEditRouteSubPage(DataStream& s)
       // !rwm! TODO check to see if we actually found a record corresponding to the key.  how do we do that?
       DebugLog( << "Creating page to edit route " << key );
       
-      s << "<p>Editing Record with matching pattern: " << mStore.mRouteStore->getRoutePattern(key) << "</p>" << endl;      
+      s << "<p>Editing Record with matching pattern: " << mStore.mRouteStore.getRoutePattern(key) << "</p>" << endl;      
 
       s << 
       "<form id=\"editRouteForm\" method=\"get\" action=\"showRoutes.html\" name=\"editRouteForm\">" << endl << 
@@ -870,28 +892,28 @@ WebAdmin::buildEditRouteSubPage(DataStream& s)
       "<input type=\"hidden\" name=\"key\" value=\"" << key << "\"/>" << endl << 
       "<tr>" << endl << 
       "<td>URI</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeUri\" value=\"" <<  mStore.mRouteStore->getRoutePattern(key) << "\" size=\"40\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeUri\" value=\"" <<  mStore.mRouteStore.getRoutePattern(key) << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
 
       "<tr>" << endl << 
       "<td>Method</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeMethod\" value=\"" <<  mStore.mRouteStore->getRouteMethod(key)  << "\" size=\"40\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeMethod\" value=\"" <<  mStore.mRouteStore.getRouteMethod(key)  << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Event</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeEvent\" value=\"" << mStore.mRouteStore->getRouteEvent(key)  << "\" size=\"40\"/></td>" << endl << 
+      "<td><input type=\"text\" name=\"routeEvent\" value=\"" << mStore.mRouteStore.getRouteEvent(key)  << "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Destination</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeDestination\" value=\"" << mStore.mRouteStore->getRouteRewrite(key)  <<
+      "<td><input type=\"text\" name=\"routeDestination\" value=\"" << mStore.mRouteStore.getRouteRewrite(key)  <<
                             "\" size=\"40\"/></td>" << endl << 
       "</tr>" << endl << 
       
       "<tr>" << endl << 
       "<td>Order</td>" << endl << 
-      "<td><input type=\"text\" name=\"routeOrder\" value=\"" << mStore.mRouteStore->getRouteOrder(key)  <<
+      "<td><input type=\"text\" name=\"routeOrder\" value=\"" << mStore.mRouteStore.getRouteOrder(key)  <<
                             "\" size=\"4\"/></td>" << endl << 
       "</tr>" << endl << 
 
@@ -924,7 +946,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       int j = 0;
       for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         mStore.mUserStore->eraseUser(i->mKey1);
+         mStore.mUserStore.eraseUser(i->mKey1);
          ++j;
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
@@ -934,7 +956,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
    if (pos != mHttpParams.end())  // check if the user parameter exists, if so, use as a key to update the record
    {
       key = pos->second;
-      rec = mStore.mUserStore->getUserInfo(key);
+      rec = mStore.mUserStore.getUserInfo(key);
       // check to see if we actually found a record corresponding to the key
       if (!rec.user.empty())
       {
@@ -953,7 +975,7 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
             applyA1HashToPassword = false;
          }
          // write out the updated record to the database now
-         mStore.mUserStore->updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email );
+         mStore.mUserStore.updateUser(key, user, domain, realm, password, applyA1HashToPassword, name, email );
          
          s << "<p><em>Updated:</em> " << key << "</p>" << endl; 
       }
@@ -976,25 +998,27 @@ WebAdmin::buildShowUsersSubPage(DataStream& s)
       
       int count =0;
       
-      AbstractDb::UserRecordList url = mStore.mUserStore->getAllUsers();
-      for ( AbstractDb::UserRecordList::const_iterator i = url.begin(); i != url.end(); i++ )
+      key = mStore.mUserStore.getFirstKey();
+      while ( !key.empty() )
       {
-         rec = *i;
+         rec = mStore.mUserStore.getUserInfo(key);
 
          if ((rec.domain == Data::Empty) && (rec.user == "admin"))
          {
+            key = mStore.mUserStore.getNextKey();
             continue;   // skip the row for the admin web user
          }
       
          s << "<tr>" << endl 
            << "  <td><a href=\"editUser.html?key=";
-         mStore.mUserStore->getKey(*i).urlEncode(s);
+         key.urlEncode(s);
          s << "\">" << rec.user << "@" << rec.domain << "</a></td>" << endl
            << "  <td>" << rec.name << "</td>" << endl
            << "  <td>" << rec.email << "</td>" << endl
-           << "  <td><input type=\"checkbox\" name=\"remove." << mStore.mUserStore->getKey(*i) << "\"/></td>" << endl
+           << "  <td><input type=\"checkbox\" name=\"remove." << key << "\"/></td>" << endl
            << "</tr>" << endl;
          
+         key = mStore.mUserStore.getNextKey();
 
          // make a limit to how many users are displayed 
          if ( ++count > 1000 )
@@ -1026,7 +1050,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       int j = 0;
       for (set<RemoveKey>::iterator i = mRemoveSet.begin(); i != mRemoveSet.end(); ++i)
       {
-         mStore.mRouteStore->eraseRoute(i->mKey1);
+         mStore.mRouteStore.eraseRoute(i->mKey1);
          ++j;
       }
       s << "<p><em>Removed:</em> " << j << " records</p>" << endl;
@@ -1049,7 +1073,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
          if (!matchingPattern.empty() && !rewriteExpression.empty())
          {
             // write out the updated record to the database now
-            mStore.mRouteStore->updateRoute(key, method,event,matchingPattern,rewriteExpression,order  );
+            mStore.mRouteStore.updateRoute(key, method,event,matchingPattern,rewriteExpression,order  );
          
             s << "<p><em>Updated:</em> " << rec.mMatchingPattern << "</p>" << endl; 
          }
@@ -1079,19 +1103,19 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       "              </tr></thead>" << endl << 
       "              <tbody>" << endl;
    
-   for ( AbstractRouteStore::Key key = mStore.mRouteStore->getFirstKey();
+   for ( RouteStore::Key key = mStore.mRouteStore.getFirstKey();
          !key.empty();
-         key = mStore.mRouteStore->getNextKey(key) )
+         key = mStore.mRouteStore.getNextKey(key) )
    {
       s <<  "<tr>" << endl << 
          "<td><a href=\"editRoute.html?key=";
             key.urlEncode(s); 
       s << 
-         "\">" << mStore.mRouteStore->getRoutePattern(key) << "</a></td>" << endl << 
-         "<td>" << mStore.mRouteStore->getRouteMethod(key) << "</td>" << endl << 
-         "<td>" << mStore.mRouteStore->getRouteEvent(key) << "</td>" << endl << 
-         "<td>" << mStore.mRouteStore->getRouteRewrite(key) << "</td>" << endl << 
-         "<td>" << mStore.mRouteStore->getRouteOrder(key) << "</td>" << endl << 
+         "\">" << mStore.mRouteStore.getRoutePattern(key) << "</a></td>" << endl << 
+         "<td>" << mStore.mRouteStore.getRouteMethod(key) << "</td>" << endl << 
+         "<td>" << mStore.mRouteStore.getRouteEvent(key) << "</td>" << endl << 
+         "<td>" << mStore.mRouteStore.getRouteRewrite(key) << "</td>" << endl << 
+         "<td>" << mStore.mRouteStore.getRouteOrder(key) << "</td>" << endl << 
          "<td><input type=\"checkbox\" name=\"remove." <<  key << "\"/></td>" << endl << 
          "</tr>" << endl;
    }
@@ -1137,10 +1161,10 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
    }
       
    // !cj! - TODO - shoudl input method and envent type to test 
-   AbstractRouteStore::UriList routeList;
+   RouteStore::UriList routeList;
    if ( !badUri )
    {
-      routeList = mStore.mRouteStore->process( uri, Data("INVITE"), Data::Empty);
+      routeList = mStore.mRouteStore.process( uri, Data("INVITE"), Data::Empty);
    }
    
    s << 
@@ -1156,7 +1180,7 @@ WebAdmin::buildShowRoutesSubPage(DataStream& s)
       "              </tr>" << endl;
    
    bool first=true;
-   for ( AbstractRouteStore::UriList::const_iterator i=routeList.begin();
+   for ( RouteStore::UriList::const_iterator i=routeList.begin();
          i != routeList.end(); i++)
    {
       s<<"              <tr>" << endl;
@@ -1225,133 +1249,6 @@ WebAdmin::buildDefaultPage()
    return ret;
 }
 
-void WebAdmin::buildRestartServerSubPage(resip::DataStream& s)
-{
-   s << 
-#include "repro/webadmin/serverRestart.ixx"
-   ;
-}
-
-void WebAdmin::buildRestartedServerSubPage(resip::DataStream& s)
-{
-   s << 
-#include "repro/webadmin/serverRestarted.ixx"
-   ;
-   reproRestartServer = true;
-}
-
-static Data 
-setParamsFunctionLine(Parameters::Param prm, char *WebParam )
-{
-   if (Parameters::TypeOfParam[prm] == Parameters::ptBool || 
-       prm == Parameters::prmLogLevel || 
-       prm == Parameters::prmLogType || 
-       prm == Parameters::prmQValueBehavior)
-   {
-      return Data("setSelect(document.Parameters.") + WebParam + ",\""+Parameters::getParam( prm ) + "\" );\n";
-   }
-   else
-   {
-      return Data("setEdit(document.Parameters.") + WebParam + ",\""+Parameters::getParam( prm ) + "\" );\n";
-   }
-}
-
-void 
-WebAdmin::buildParametersSubPage(resip::DataStream& s)
-{
-   Data str(
-#include "repro/webadmin/parameters.ixx"
-      );
-   Data ReplaceStr;
-   ReplaceStr += setParamsFunctionLine( Parameters::prmLogType, "LogType" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmLogLevel, "LogLevel" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmLogPath, "LogPath" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmRecordRoute, "RecordRoute" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmUdp, "UdpPort" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmTcp, "TcpPort" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmTlsDomain, "TlsDomain" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmTls, "TlsPort" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmDtls, "DtlsPort" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmEnableCertServer, "CertServer" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmEnableV6, "EnableIpv6" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmDisableV4, "DisableIpv4" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmDisableAuth, "DisableAuth" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmDisableAuthInt, "DisableAuthInt" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmDisableWebAuth, "DisabaleWebAuth" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmDisableReg, "DisableReg" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmDisableIdentity, "DisableIdentity" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmIinterfaces, "Interfaces" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmHttp, "HttpPort" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmRecursiveRedirect, "ReqursiveRedirect" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmQValue, "QVal" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmQValueBehavior, "QValBehavior" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmQValueCancelBtwForkGroups, "QValCancelFork" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmQValueWaitForTerminateBtwForkGroups, "QValWaitFork" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmQValueMsBetweenForkGroups, "QValMsBetween" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmQValueMsBeforeCancel, "QValMsCancel" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmEnumSuffix, "EnumSuffix" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmAllowBadReg, "AllowBadReg" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmParallelForkStaticRoutes, "parallelFork" );
-   ReplaceStr += setParamsFunctionLine( Parameters::prmTimerC, "TimerC" );
-
-   str.replace( "__ReplaceMe__", ReplaceStr );
-   s << str;
-}
-
-void 
-WebAdmin::saveParameter( Parameters::Param prm, char *webParam )
-{
-   Dictionary::iterator it = mHttpParams.find( Data( webParam ) );
-   if ( it == mHttpParams.end() )
-   {
-      return;
-   }
-   if ( it->second == "<Default>" )
-   {
-      Parameters::saveParam( prm, Data::Empty );
-   }
-   else
-   {
-      Parameters::saveParam( prm, it->second );
-   }
-}
-
-void 
-WebAdmin::buildParametersSetPage(int pageNumber, resip::DataStream& s)
-{
-   saveParameter( Parameters::prmLogType, "LogType" );
-   saveParameter( Parameters::prmLogLevel, "LogLevel" );
-   saveParameter( Parameters::prmLogPath, "LogPath" );
-   saveParameter( Parameters::prmRecordRoute, "RecordRoute" );
-   saveParameter( Parameters::prmUdp, "UdpPort" );
-   saveParameter( Parameters::prmTcp, "TcpPort" );
-   saveParameter( Parameters::prmTlsDomain, "TlsDomain" );
-   saveParameter( Parameters::prmTls, "TlsPort" );
-   saveParameter( Parameters::prmDtls, "DtlsPort" );
-   saveParameter( Parameters::prmEnableCertServer, "CertServer" );
-   saveParameter( Parameters::prmEnableV6, "EnableIpv6" );
-   saveParameter( Parameters::prmDisableV4, "DisableIpv4" );
-   saveParameter( Parameters::prmDisableAuth, "DisableAuth" );
-   saveParameter( Parameters::prmDisableAuthInt, "DisableAuthInt" );
-   saveParameter( Parameters::prmDisableWebAuth, "DisabaleWebAuth" );
-   saveParameter( Parameters::prmDisableReg, "DisableReg" );
-   saveParameter( Parameters::prmDisableIdentity, "DisableIdentity" );
-   saveParameter( Parameters::prmIinterfaces, "Interfaces" );
-   saveParameter( Parameters::prmHttp, "HttpPort" );
-   saveParameter( Parameters::prmRecursiveRedirect, "ReqursiveRedirect" );
-   saveParameter( Parameters::prmQValue, "QVal" );
-   saveParameter( Parameters::prmQValueBehavior, "QValBehavior" );
-   saveParameter( Parameters::prmQValueCancelBtwForkGroups, "QValCancelFork" );
-   saveParameter( Parameters::prmQValueWaitForTerminateBtwForkGroups, "QValWaitFork" );
-   saveParameter( Parameters::prmQValueMsBetweenForkGroups, "QValMsBetween" );
-   saveParameter( Parameters::prmQValueMsBeforeCancel, "QValMsCancel" );
-   saveParameter( Parameters::prmEnumSuffix, "EnumSuffix" );
-   saveParameter( Parameters::prmAllowBadReg, "AllowBadReg" );
-   saveParameter( Parameters::prmParallelForkStaticRoutes, "parallelFork" );
-   saveParameter( Parameters::prmTimerC, "TimerC" );
-   saveParameter( Parameters::prmAdminPassword, "AdminPassword" );
-   setPage( "user.html", pageNumber, 301 );
-}
 
 void
 WebAdmin::buildPageOutlinePre(DataStream& s)
@@ -1361,6 +1258,7 @@ WebAdmin::buildPageOutlinePre(DataStream& s)
    ;
 }
 
+
 void
 WebAdmin::buildPageOutlinePost(DataStream& s)
 {
@@ -1368,6 +1266,7 @@ WebAdmin::buildPageOutlinePost(DataStream& s)
 #include "repro/webadmin/pageOutlinePost.ixx"   
    ;
 }
+
 
 Data 
 WebAdmin::buildUserPage()
@@ -1398,6 +1297,7 @@ WebAdmin::buildUserPage()
    }
    return ret;
 }
+
 
 
 /* ====================================================================

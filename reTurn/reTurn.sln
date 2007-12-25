@@ -1,7 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 8.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reTurnServer", "returnServer.vcproj", "{EFA91988-1A0C-4739-9FF1-7471E933515C}"
 	ProjectSection(ProjectDependencies) = postProject
-		{73151749-13F0-4093-97F1-A6952ECECDBF} = {73151749-13F0-4093-97F1-A6952ECECDBF}
 		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
 	EndProjectSection
 EndProject

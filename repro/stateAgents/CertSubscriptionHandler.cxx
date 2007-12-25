@@ -7,7 +7,7 @@
 using namespace repro;
 using namespace resip;
 
-CertSubscriptionHandler::CertSubscriptionHandler(BaseSecurity& security) : mSecurity(security)
+CertSubscriptionHandler::CertSubscriptionHandler(Security& security) : mSecurity(security)
 {
 }
 

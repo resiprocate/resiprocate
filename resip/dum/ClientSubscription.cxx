@@ -236,7 +236,14 @@ ClientSubscription::processResponse(const SipMessage& msg)
 void 
 ClientSubscription::processNextNotify()
 {
-   assert(!mQueuedNotifies.empty());
+   //!dcm! There is a timing issue in this code which can cause this to be
+   //!called when there are no queued NOTIFY messages. Probably a subscription
+   //!teardown/timer crossover.
+   //assert(!mQueuedNotifies.empty());
+   if (mQueuedNotifies.empty())
+   {
+      return;
+   }
 
    QueuedNotify* qn = mQueuedNotifies.front();
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);

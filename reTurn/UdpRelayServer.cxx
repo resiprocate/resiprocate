@@ -4,31 +4,35 @@
 #include "StunMessage.hxx"
 #include "TurnAllocation.hxx"
 #include "StunTuple.hxx"
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
 
 namespace reTurn {
 
 UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turnAllocation)
-: TurnTransportBase(ioService),
-  mSocket(ioService, asio::ip::udp::endpoint(turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort())),
+: AsyncUdpSocketBase(ioService),
   mTurnAllocation(turnAllocation),
   mStopping(false)
 {
-   std::cout << "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress() << ":" << mTurnAllocation.getRequestedTuple().getPort() << std::endl;
+   InfoLog(<< "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress() << ":" << mTurnAllocation.getRequestedTuple().getPort());
+
+   bind(turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort());
 }
 
 UdpRelayServer::~UdpRelayServer()
 {
-   cout << "~UdpRelayServer - socket destroyed" << endl;
+   DebugLog(<< "~UdpRelayServer - destroyed");
 }
 
 void 
 UdpRelayServer::start()
 {
    // Note:  This function is required, since you cannot call shared_from_this in the constructor: shared_from_this requires that at least one shared ptr exists already
-   mSocket.async_receive_from(asio::buffer(mBuffer), mSenderEndpoint,
-      boost::bind(&UdpRelayServer::handleReceiveFrom, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+   doReceive();
 }
 
 void 
@@ -38,55 +42,60 @@ UdpRelayServer::stop()
    mStopping = true;
 }
 
-asio::ip::udp::socket& 
-UdpRelayServer::getSocket()
-{
-   return mSocket;
-}
-
 void 
-UdpRelayServer::handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransferred)
+UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
 {
    if(mStopping)
    {
       return;
    }
-   if (!e && bytesTransferred > 0)
+   if (data->size() > 0)
    {      
-      std::cout << "Read " << (int)bytesTransferred << " bytes from udp relay socket (" << mSenderEndpoint.address().to_string() << ":" << mSenderEndpoint.port() << "): "  << std::endl;
+      DebugLog(<< "Read " << (int)data->size() << " bytes from udp relay socket (" << address.to_string() << ":" << port << "): ");
       /*
       cout << std::hex;
-      for(int i = 0; i < (int)bytesTransferred; i++)
+      for(int i = 0; i < (int)data->size(); i++)
       {
-         std::cout << (char)mBuffer[i] << "(" << int(mBuffer[i]) << ") ";
+         std::cout << (char)(*data)[i] << "(" << int((*data)[i]) << ") ";
       }
       std::cout << std::dec << std::endl;
       */
 
       // If no permission then just drop packet
-      if(mTurnAllocation.existsPermission(mSenderEndpoint.address())) 
+      if(mTurnAllocation.existsPermission(address)) 
       {
          // If active destination is not set, then send to client as a DataInd, otherwise send packet as is
-         mTurnAllocation.sendDataToClient(StunTuple(StunTuple::UDP, mSenderEndpoint.address(), mSenderEndpoint.port()),
-                                          resip::Data(resip::Data::Share, (const char*)mBuffer.data(), (int)bytesTransferred));
+         mTurnAllocation.sendDataToClient(StunTuple(StunTuple::UDP, address, port), data);
+      }
+      else
+      {
+         InfoLog(<< "No permission for " << address << " dropping data.");
       }
    }
-
-   if(e != asio::error::operation_aborted)
-   {
-      mSocket.async_receive_from(asio::buffer(mBuffer), mSenderEndpoint,
-         boost::bind(&UdpRelayServer::handleReceiveFrom, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
-   }
+   doReceive();
 }
 
 void 
-UdpRelayServer::sendData(const StunTuple& destination, const char* buffer, unsigned int size)
+UdpRelayServer::onReceiveFailure(const asio::error_code& e)
 {
-   std::cout << "UdpRelayServer: sending " << size << " bytes to " << destination << std::endl;
+   if(e != asio::error::operation_aborted)
+   {
+      doReceive();
+   }
+}
 
-   mSocket.async_send_to(asio::buffer(buffer, size), 
-                                 asio::ip::udp::endpoint(destination.getAddress(), destination.getPort()), 
-                                 boost::bind(&TurnTransportBase::handleSendData, shared_from_this(), asio::placeholders::error));
+void
+UdpRelayServer::onSendSuccess()
+{
+}
+
+void
+UdpRelayServer::onSendFailure(const asio::error_code& error)
+{
+   if(error != asio::error::operation_aborted)
+   {
+      WarningLog(<< "UdpRelayServer::onSendFailure: " << error.value() << "-" << error.message());
+   }
 }
 
 }

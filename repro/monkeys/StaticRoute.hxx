@@ -2,7 +2,6 @@
 #define RESIP_STATICROUTE_HXX 
 
 #include "repro/Processor.hxx"
-#include "repro/AbstractRouteStore.hxx"
 
 namespace repro
 {
@@ -11,14 +10,14 @@ class RouteStore;
 class StaticRoute: public Processor
 {
    public:
-      StaticRoute(AbstractRouteStore& store, bool noChallenge, bool parallelForkStaticRoutes, bool useAuthInt);
+      StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes, bool useAuthInt);
       virtual ~StaticRoute();
       
       virtual processor_action_t process(RequestContext &);
       virtual void dump(std::ostream &os) const;
       
    private:
-      AbstractRouteStore& mRouteStore;
+      RouteStore& mRouteStore;
       bool mNoChallenge;
       bool mParallelForkStaticRoutes;
       bool mUseAuthInt;

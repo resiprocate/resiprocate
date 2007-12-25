@@ -23,10 +23,11 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, BaseSecurity* security, 
+TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple, 
+                              Socket fd, Security* security, 
                               bool server, Data domain,  SecurityTypes::SSLType sslType ,
                               Compression &compression) :
-   Connection(tuple, fd, compression),
+   Connection(transport,tuple, fd, compression),
    mServer(server),
    mSecurity(security),
    mSslType( sslType ),
@@ -239,8 +240,7 @@ TlsConnection::checkState()
          
          mTlsState = Broken;
          mBio = 0;
-         //.dcm. -- may not be correct
-         mFailureReason = TransportFailure::CertValidationFailure;
+         mFailureReason = TransportFailure::Failure;
          ErrLog (<< "Couldn't TLS connect");
          return mTlsState;
       }
@@ -513,7 +513,11 @@ bool
 TlsConnection::isWritable() 
 {
 #if defined(USE_SSL)
-   if (checkState() == Up && isGood())
+   // !slg! If the state is Broken - then we want to attemp a write request, 
+   //       so that the write logic will detect the error and tear down the 
+   //       TLS connection
+   TlsConnection::TlsState tlsState = checkState();
+   if ((tlsState == Up && isGood()) || tlsState == Broken)  
    {
       return true;
    }

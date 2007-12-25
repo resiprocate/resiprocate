@@ -3,6 +3,7 @@
 
 #include <list>
 #include "resip/stack/Uri.hxx"
+#include "resip/dum/ContactInstanceRecord.hxx"
 
 namespace resip
 {
@@ -10,16 +11,6 @@ namespace resip
 class RegistrationPersistenceManager
 {
   public:
-   struct ContactRecord
-   {
-      resip::Uri uri;
-      time_t expires;
-      unsigned short q;
-      unsigned int cid; //This may become regid from outbound soon
-      bool useQ;
-   };
-   
-    typedef std::list<ContactRecord> ContactRecordList;
     typedef std::list<Uri> UriList;
 
     typedef enum
@@ -31,7 +22,7 @@ class RegistrationPersistenceManager
     RegistrationPersistenceManager() {}
     virtual ~RegistrationPersistenceManager() {}
 
-    virtual void addAor(const Uri& aor, ContactRecordList contacts = ContactRecordList()) = 0;
+    virtual void addAor(const Uri& aor, const ContactList& contacts) = 0;
     virtual void removeAor(const Uri& aor) = 0;
     virtual bool aorIsRegistered(const Uri& aor) = 0;
  
@@ -41,24 +32,14 @@ class RegistrationPersistenceManager
      virtual UriList getAors() = 0;
      virtual void getAors(UriList& container) = 0;
 
-    /**
-      @param expires Absolute time of expiration, measured in seconds
-                     since midnight January 1st, 1970.
-                     
-      @param q The q-value of this contact. A negative value denotes that this
-         contact should not be prioritized according to q-value (default).
-         
-     */
-    virtual update_status_t updateContact(const Uri& aor, 
-                                          const Uri& contact, 
-                                          time_t expires,
-                                          unsigned int cid=0,
-                                          short q=-1) = 0;
+    virtual update_status_t updateContact(const Uri& aor,
+                                          const ContactInstanceRecord& rec) = 0;
 
-    virtual void removeContact(const Uri& aor, const Uri& contact) = 0;
+    virtual void removeContact(const Uri& aor,
+                                 const ContactInstanceRecord& rec) = 0;
 
-    virtual ContactRecordList getContacts(const Uri& aor) = 0;
-    virtual void getContacts(const Uri& aor,ContactRecordList& container) = 0;
+    virtual ContactList getContacts(const Uri& aor) = 0;
+    virtual void getContacts(const Uri& aor,ContactList& container) = 0;
   private:
 };
 

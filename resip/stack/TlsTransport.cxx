@@ -22,7 +22,7 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
                            int portNum, 
                            IpVersion version,
                            const Data& interfaceObj,
-                           BaseSecurity& security,
+                           Security& security,
                            const Data& sipDomain, 
                            SecurityTypes::SSLType sslType,
                            Compression &compression):
@@ -48,12 +48,8 @@ Connection*
 TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
 {
    assert(this);
-   who.transport = this;
-   assert(  who.transport );
-
-   Connection* conn = new TlsConnection(who, fd, mSecurity, server,
+   Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
                                         tlsDomain(), mSslType, mCompression );
-   assert( conn->transport() );
    return conn;
 }
 

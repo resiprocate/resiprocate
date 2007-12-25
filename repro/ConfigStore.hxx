@@ -1,29 +1,31 @@
 #if !defined(REPRO_CONFIGSTORE_HXX)
 #define REPRO_CONFIGSTORE_HXX
 
-#include "repro/AbstractConfigStore.hxx"
+#include "rutil/Data.hxx"
 #include "rutil/RWMutex.hxx"
 
+#include "repro/AbstractDb.hxx"
 #include <map>
 
 
 namespace repro
 {
 
-class ConfigStore: public AbstractConfigStore
+class ConfigStore
 {
    public:
+      typedef std::map<resip::Data,AbstractDb::ConfigRecord> ConfigData;
       
       ConfigStore(AbstractDb& db);
-      virtual ~ConfigStore();
+      ~ConfigStore();
       
-      virtual void addDomain(const resip::Data& domain,
+      void addDomain(const resip::Data& domain,
                      const int tlsPort);
       
-      virtual const ConfigData& getConfigs() const;
-      virtual int   getTlsPort(const resip::Data& domain);
+      const ConfigData& getConfigs() const;
+      int   getTlsPort(const resip::Data& domain);
       
-      virtual void eraseDomain(const resip::Data& domain);
+      void eraseDomain(const resip::Data& domain);
       
    private:
       AbstractDb& mDb;  

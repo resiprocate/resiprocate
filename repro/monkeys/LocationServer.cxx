@@ -8,6 +8,9 @@
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
 #include "repro/QValueTarget.hxx"
+#include "repro/Proxy.hxx"
+#include "resip/stack/SipStack.hxx"
+
 #include "rutil/WinLeakCheck.hxx"
 
 
@@ -32,39 +35,60 @@ LocationServer::process(RequestContext& context)
 
    if (true) // TODO fix mStore.aorExists(inputUri))
    {  
-      RegistrationPersistenceManager::ContactRecordList contacts = mStore.getContacts(inputUri);
-
+      resip::ContactList contacts;
+      mStore.getContacts(inputUri,contacts);
       mStore.unlockRecord(inputUri);
-
+      
       std::list<Target*> batch;
-      for ( RegistrationPersistenceManager::ContactRecordList::iterator i  = contacts.begin()
-            ; i != contacts.end()    ; ++i)
+      std::map<resip::Data,std::list<Target*> > outboundBatch;
+      for ( resip::ContactList::iterator i  = contacts.begin()
+               ; i != contacts.end()    ; ++i)
       {
-         RegistrationPersistenceManager::ContactRecord contact = *i;
-         if (contact.expires>=time(NULL))
+         resip::ContactInstanceRecord contact = *i;
+         if (contact.mRegExpires - time(NULL) >= 0)
          {
-            if(contact.cid != 0)
+            InfoLog (<< *this << " adding target " << contact.mContact <<
+                  " with tuple " << contact.mReceivedFrom);
+            if(contact.mInstance.empty() || contact.mRegId==0)
             {
-               static ExtensionParameter p_cid("cid");
-               contact.uri.param(p_cid)=resip::Data(contact.cid);
+               QValueTarget* target = new QValueTarget(contact);
+               batch.push_back(target);
             }
-            InfoLog (<< *this << " adding target " << contact.uri);
-            if(contact.useQ)
+            else if(!contact.mReceivedFrom.onlyUseExistingConnection ||
+               context.getProxy().getStack().isFlowAlive(contact.mReceivedFrom))
             {
-               batch.push_back(new QValueTarget(contact.uri,contact.q));
+               // !bwc! If we have an outbound target with 
+               // onlyUseExistingConnection=false, this means that we do not
+               // have a direct connection to the endpoint (some edge-proxy 
+               // does). Normally, this means we will ignore mReceivedFrom, but
+               // this can be configured to still use mReceivedFrom.
+               Target* target = new Target(contact);
+               target->mPriorityMetric=contact.mLastUpdated;
+               outboundBatch[contact.mInstance].push_back(target);
             }
             else
             {
-               batch.push_back(new QValueTarget(contact.uri,1.0));   
+               // !bwc! If our direct flow to the endpoint has failed, we remove 
+               // the contact.
+               mStore.removeContact(inputUri,contact);
             }
          }
          else
          {
             // remove expired contact 
-            mStore.removeContact(inputUri, contact.uri);
+            mStore.removeContact(inputUri, contact);
          }
       }
 
+      std::map<resip::Data, std::list<Target*> >::iterator o;
+      
+      for(o=outboundBatch.begin();o!=outboundBatch.end();++o)
+      {
+         o->second.sort(Target::targetPtrCompare);
+      }
+      
+      context.getResponseContext().addOutboundBatch(outboundBatch);
+      
       if(!batch.empty())
       {
          batch.sort(Target::targetPtrCompare);

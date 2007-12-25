@@ -74,6 +74,27 @@ RRCache* RRCache::instance()
    return mInstance.get();
 }
 
+void RRCache::updateCacheFromHostFile(const DnsHostRecord &record)
+{
+   //FactoryMap::iterator it = mFactoryMap.find(T_A);
+   RRList* key = new RRList(record, 3600);         
+   RRSet::iterator lb = mRRSet.lower_bound(key);
+   if (lb != mRRSet.end() &&
+       !(mRRSet.key_comp()(key, *lb)))
+   {
+      (*lb)->update(record, 3600);
+      touch(*lb);
+   }
+   else
+   {
+      RRList* val = new RRList(record, 3600);
+      mRRSet.insert(val);
+      mLruHead->push_back(val);
+      purge();
+   }
+   delete key;
+}
+
 void RRCache::updateCache(const Data& target,
                           const int rrType,
                           Itr begin, 

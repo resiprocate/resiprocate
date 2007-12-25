@@ -2811,8 +2811,8 @@ void InviteSession::sendAck(const SdpContents *sdp)
    {
       setSdp(*ack, *sdp);
    }
-   mAcks[ack->getTransactionId()] = ack;
-   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), ack->header(h_CSeq).sequence(),0,ack->getTransactionId());
+   mAcks[source->getTransactionId()] = ack;
+   mDum.addTimerMs(DumTimeout::CanDiscardAck, Timer::TH, getBaseHandle(), ack->header(h_CSeq).sequence(), 0, source->getTransactionId());
 
    InfoLog (<< "Sending " << ack->brief());
    send(ack);

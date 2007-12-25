@@ -24,7 +24,8 @@ actor, ParameterTypes::actor
 text, ParameterTypes::text
 extensions, ParameterTypes::extensions
 +sip.instance, ParameterTypes::Instance
-+sip.flowid, ParameterTypes::FlowId
+reg-id, ParameterTypes::regid
+ob, ParameterTypes::ob
 gruu, ParameterTypes::gruu
 name, ParameterTypes::name
 transport, ParameterTypes::transport
@@ -72,7 +73,6 @@ filename, ParameterTypes::filename
 protocol, ParameterTypes::protocol
 micalg, ParameterTypes::micalg
 boundary, ParameterTypes::boundary
-name, ParameterTypes::name
 expiration, ParameterTypes::expiration
 size, ParameterTypes::size
 permission, ParameterTypes::permission

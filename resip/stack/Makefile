@@ -18,6 +18,7 @@ SRC = \
 	ExpiresCategory.cxx \
 	GenericUri.cxx \
 	IntegerCategory.cxx \
+	InteropHelper.cxx \
 	UInt32Category.cxx \
 	Mime.cxx \
 	NameAddr.cxx \
@@ -52,7 +53,6 @@ SRC = \
 	ExternalBodyContents.cxx \
 	QValue.cxx \
 	QValueParameter.cxx \
-	FlowId.cxx \
 	GenericContents.cxx \
 	HeaderFieldValue.cxx \
 	HeaderFieldValueList.cxx \
@@ -139,7 +139,7 @@ SUFFIXES += .gperf .cxx
 GPERFOPTS = -D -E -L C++ -t -k '*' --compare-strncmp
 #GPERFVER="GNU gperf 2.7.2"
 
-code: .firstrun
+code *Hash.cxx: .firstrun
 
 .firstrun:
 	touch .firstrun MethodHash.cxx *Hash.cxx
