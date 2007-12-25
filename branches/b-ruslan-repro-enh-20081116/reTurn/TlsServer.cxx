@@ -1,14 +1,20 @@
 #include "TlsServer.hxx"
 #include <boost/bind.hpp>
+#include <rutil/WinLeakCheck.hxx>
+#include <rutil/Logger.hxx>
+#include "ReTurnSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 namespace reTurn {
 
-TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
+TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming)
 : mIOService(ioService),
   mAcceptor(ioService),
   mContext(ioService, asio::ssl::context::tlsv1),
   mConnectionManager(),
-  mRequestHandler(requestHandler)
+  mRequestHandler(requestHandler),
+  mTurnFraming(turnFraming)
 {
    // Set Context options - TODO make into configuration settings
    mContext.set_options(asio::ssl::context::default_workarounds | 
@@ -27,15 +33,20 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
-   mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
-   mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->tlsSocket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
-   std::cout << "TlsServer started.  Listening on " << address << ":" << port << std::endl;
+   InfoLog(<< (mTurnFraming ? "TURN" : "STUN") << " TlsServer started.  Listening on " << address << ":" << port);
+}
+
+void
+TlsServer::start()
+{
+   mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mTurnFraming, mContext));
+   mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
 }
 
 std::string 
 TlsServer::getPassword() const
 {
-   return "test";
+   return "test";  // TODO configuration
 }
 
 void 
@@ -45,8 +56,12 @@ TlsServer::handleAccept(const asio::error_code& e)
    {
       mConnectionManager.start(mNewConnection);
 
-      mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
-      mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->tlsSocket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+      mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mTurnFraming, mContext));
+      mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
+   }
+   else
+   {
+      ErrLog(<< "Error in handleAccept: " << e.value() << "-" << e.message());
    }
 }
 

@@ -264,8 +264,13 @@ main()
 
       MultipartRelatedContents* mpc = dynamic_cast<MultipartRelatedContents*>(msg->getContents());
       assert(mpc);
-      
+
+      Contents* copy = msg->getContents()->clone();
+
       traverseMulti(mpc);
+      
+      MultipartRelatedContents* mpcCopy = dynamic_cast<MultipartRelatedContents*>(copy);
+      traverseMulti(mpcCopy);
    }
 
    cerr << "All OK" << endl;

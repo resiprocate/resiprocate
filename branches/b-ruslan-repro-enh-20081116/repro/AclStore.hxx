@@ -2,15 +2,15 @@
 #define REPRO_ACLSTORE_HXX
 
 #include <list>
-
-#include "repro/AbstractAclStore.hxx"
+#include "rutil/Data.hxx"
 #include "rutil/RWMutex.hxx"
+#include "resip/stack/Tuple.hxx"
 #include "repro/AbstractDb.hxx"
 
 namespace repro
 {
 
-class AclStore: public AbstractAclStore
+class AclStore
 {
    public:
       class TlsPeerNameRecord

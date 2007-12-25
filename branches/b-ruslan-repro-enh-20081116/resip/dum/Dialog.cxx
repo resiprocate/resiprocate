@@ -660,7 +660,17 @@ Dialog::dispatch(const SipMessage& msg)
                   ClientSubscription desling with the expiration are expecting
                   duration type values from the headers. .mjf.
                 */
-               mDefaultSubExpiration = response.header(h_Expires).value();
+               if(response.exists(h_Expires))
+               {
+                  mDefaultSubExpiration = response.header(h_Expires).value();
+               }
+               else
+               {
+                  //?dcm? defaults to 3600 in ClientSubscription if no expires value
+                  //is provided anywhere...should we assume the value from the
+                  //sub in the basecreator if it exists?
+                  mDefaultSubExpiration = 0;
+               }               
                return;
             }
             else

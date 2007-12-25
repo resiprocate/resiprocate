@@ -1566,6 +1566,28 @@ Helper::processStrictRoute(SipMessage& request)
    }
 }
 
+void
+Helper::massageRoute(const SipMessage& request, NameAddr& rt)
+{
+   assert(request.isRequest());
+   // .bwc. Let's not record-route with a tel uri or something, shall we?
+   // If the topmost route header is malformed, we can get along without.
+   if (!request.empty(h_Routes) && 
+         request.header(h_Routes).front().isWellFormed() &&
+         (request.header(h_Routes).front().uri().scheme() == "sip" ||
+         request.header(h_Routes).front().uri().scheme() == "sips" ) )
+   {
+      rt.uri().scheme() = request.header(h_Routes).front().uri().scheme();
+   }
+   else if(request.header(h_RequestLine).uri().scheme() == "sip" ||
+            request.header(h_RequestLine).uri().scheme() == "sips")
+   {
+      rt.uri().scheme() = request.header(h_RequestLine).uri().scheme();
+   }
+   
+   rt.uri().param(p_lr);
+}
+
 int
 Helper::getPortForReply(SipMessage& request)
 {
@@ -1819,7 +1841,7 @@ extractFromPkcs7Recurse(Contents* tree,
                         const Data& signerAor,
                         const Data& receiverAor,
                         SecurityAttributes* attributes,
-                        BaseSecurity& security)
+                        Security& security)
 {
    Pkcs7Contents* pk;
    if ((pk = dynamic_cast<Pkcs7Contents*>(tree)))
@@ -1893,7 +1915,7 @@ extractFromPkcs7Recurse(Contents* tree,
 
 Helper::ContentsSecAttrs
 Helper::extractFromPkcs7(const SipMessage& message, 
-                         BaseSecurity& security)
+                         Security& security)
 {
    SecurityAttributes* attr = new SecurityAttributes;
    // .dlb. currently flattening SecurityAttributes?

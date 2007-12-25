@@ -9,7 +9,7 @@
 using namespace repro;
 using namespace resip;
 
-PrivateKeySubscriptionHandler::PrivateKeySubscriptionHandler(resip::BaseSecurity& security) : mSecurity(security)
+PrivateKeySubscriptionHandler::PrivateKeySubscriptionHandler(resip::Security& security) : mSecurity(security)
 {
 }
 

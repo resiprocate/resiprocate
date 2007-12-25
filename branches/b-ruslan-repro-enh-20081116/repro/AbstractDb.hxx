@@ -65,7 +65,6 @@ class AbstractDb
       typedef std::vector<RouteRecord> RouteRecordList;
       typedef std::vector<AclRecord> AclRecordList;
       typedef std::vector<ConfigRecord> ConfigRecordList;
-      typedef std::vector<UserRecord> UserRecordList;
 
       // functions for User Records 
       virtual void addUser( const Key& key, const UserRecord& rec );
@@ -109,7 +108,6 @@ class AbstractDb
          RouteTable,
          AclTable,
          ConfigTable,
-         ParametersTable,
          MaxTable  // This one MUST be last 
       } Table;
       
@@ -125,8 +123,7 @@ class AbstractDb
                                  const resip::Data& key ) =0;
       virtual resip::Data dbFirstKey(const Table table);
       virtual resip::Data dbNextKey(const Table table, 
-                                    bool first=false) =0; // return empty if no more
-      friend class Parameters;
+                                    bool first=false) =0; // return empty if no more  
 };
 
 }

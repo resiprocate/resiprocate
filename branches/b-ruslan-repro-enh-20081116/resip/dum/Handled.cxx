@@ -13,14 +13,14 @@ Handled::Handled(HandleManager& ham) :
    mId(Handled::npos)
 {
    mId = mHam.create(this);
-   StackLog ( << "&&&&&& Handled::Handled " << mId << "this(" << this << ") " << &ham );
+   StackLog ( << "&&&&&& Handled::Handled " << mId << " this(" << this << ") " << &ham );
 }
 
 Handled::~Handled()
 {
    if (mId != Handled::npos)
    {
-      StackLog ( << "&&&&&& ~Handled " << mId << "this(" << this << ") " << &mHam );
+      StackLog ( << "&&&&&& ~Handled " << mId << " this(" << this << ") " << &mHam );
       mHam.remove(mId);
    }
 }

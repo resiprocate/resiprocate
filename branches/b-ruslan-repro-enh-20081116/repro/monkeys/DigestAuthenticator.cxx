@@ -22,7 +22,7 @@ using namespace resip;
 using namespace repro;
 using namespace std;
 
-DigestAuthenticator::DigestAuthenticator( AbstractUserStore& userStore, 
+DigestAuthenticator::DigestAuthenticator( UserStore& userStore, 
                                           resip::SipStack* stack, 
                                           bool noIdentityHeaders, 
                                           int httpPort,

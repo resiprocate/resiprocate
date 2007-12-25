@@ -42,14 +42,18 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
-SipStack::SipStack(BaseSecurity* pSecurity, 
+SipStack::SipStack(Security* pSecurity, 
                    const DnsStub::NameserverList& additional,
                    AsyncProcessHandler* handler, 
                    bool stateless,
                    AfterSocketCreationFuncPtr socketFunc,
                    Compression *compression
    ) : 
-   mSecurity( pSecurity ),
+#ifdef USE_SSL
+   mSecurity( pSecurity ? pSecurity : new Security()),
+#else
+   mSecurity(0),
+#endif
    mDnsStub(new DnsStub(additional, socketFunc)),
    mCompression(compression ? compression : new Compression(Compression::NONE)),
    mAsyncProcessHandler(handler),
@@ -78,7 +82,7 @@ SipStack::~SipStack()
 {
    DebugLog (<< "SipStack::~SipStack()");
 #ifdef USE_SSL
-//   delete mSecurity;
+   delete mSecurity;
 #endif
    delete mCompression;
    delete mDnsStub;
@@ -327,7 +331,6 @@ void
 SipStack::sendTo(std::auto_ptr<SipMessage> msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   assert(destination.transport);
    
    if (tu) msg->setTransactionUser(tu);
    msg->setDestination(destination);
@@ -359,7 +362,6 @@ void
 SipStack::sendTo(const SipMessage& msg, const Tuple& destination, TransactionUser* tu)
 {
    assert(!mShuttingDown);
-   assert(destination.transport);
    
    //SipMessage* toSend = new SipMessage(msg);
    SipMessage* toSend = dynamic_cast<SipMessage*>(msg.clone());
@@ -525,7 +527,7 @@ SipStack::buildFdSet(FdSet& fdset)
    mDnsStub->buildFdSet(fdset);
 }
 
-BaseSecurity*
+Security*
 SipStack::getSecurity() const 
 {
     return mSecurity;
@@ -630,6 +632,12 @@ const SipStack& stack)
    return stack.dump(strm);
 }
 
+bool
+SipStack::isFlowAlive(const resip::Tuple& flow) const
+{
+   return flow.getType()==UDP || 
+         mTransactionController.transportSelector().connectionAlive(flow);
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -11,6 +11,7 @@
 #include "resip/stack/Uri.hxx"
 #include "tfm/SequenceSet.hxx"
 #include "tfm/TestUser.hxx"
+#include "tfm/CommandLineParser.hxx"
 
 namespace resip
 {
@@ -32,7 +33,7 @@ class Fixture : public CppUnit::TestFixture
       virtual ~Fixture() ;
       virtual void setUp();
       virtual void tearDown();
-      static void initialize(int argc, char** argv);
+      static void initialize(CommandLineParser& args);
       static void destroyStatic();
 
       static resip::Security* security;

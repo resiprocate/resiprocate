@@ -61,7 +61,7 @@ class SipStack
                              SigComp. If set to 0, then SigComp compression
                              will be disabled.
       */
-      SipStack(BaseSecurity* security=0, 
+      SipStack(Security* security=0, 
                const DnsStub::NameserverList& additional = DnsStub::EmptyNameserverList,
                AsyncProcessHandler* handler = 0, 
                bool stateless=false,
@@ -407,7 +407,7 @@ class SipStack
       std::ostream& dump(std::ostream& strm) const;
       
       /// Returns a pointer to the embedded Security object, 0 if not set
-      BaseSecurity* getSecurity() const;
+      Security* getSecurity() const;
 
       /** 
           Adds a TU to the TU selection chain.  Tu's do not call receive or
@@ -472,19 +472,31 @@ class SipStack
       volatile bool& statisticsManagerEnabled();
       const bool statisticsManagerEnabled() const;
       
+      bool getFixBadDialogIdentifiers() const 
+      {
+         return mTransactionController.mFixBadDialogIdentifiers;
+      }
+
+      void setFixBadDialogIdentifiers(bool pFixBadDialogIdentifiers) 
+      {
+         mTransactionController.mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
+      }
+
       void setContentLengthChecking(bool check)
       {
          SipMessage::checkContentLength=check;
       }
 
       Compression &getCompression() { return *mCompression; }
-
+      
+      bool isFlowAlive(const resip::Tuple& flow) const;
+      
    private:
       /// Notify an async process handler - if one has been registered
       void checkAsyncProcessHandler();
 
       /// if this object exists, it manages advanced security featues
-      BaseSecurity* mSecurity;
+      Security* mSecurity;
 
       DnsStub* mDnsStub;
 
@@ -515,10 +527,11 @@ class SipStack
       
       /// Used to Track stack statistics
       StatisticsManager mStatsManager;
-
+      
       /// All aspects of the Transaction State Machine / DNS resolver
       TransactionController mTransactionController;
-
+      
+      
       /** store all domains that this stack is responsible for. Controlled by
           addAlias and addTransport interfaces and checks can be made with isMyDomain() */
       std::set<Data> mDomains;
@@ -551,8 +564,7 @@ inline void
 SipStack::sendOverExistingConnection(const SipMessage& msg, const Tuple& tuple,
                                      TransactionUser* tu)
 {
-   assert(tuple.transport);
-   assert(tuple.connectionId);   
+   assert(tuple.mFlowKey);   
    Tuple tup(tuple);
    tup.onlyUseExistingConnection = true;   
    sendTo(msg, tuple, tu);

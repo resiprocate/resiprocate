@@ -3,8 +3,8 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
-#include "repro/AbstractUserStore.hxx"
-#include "repro/AbstractAclStore.hxx"
+#include "repro/UserStore.hxx"
+#include "repro/AclStore.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
 
@@ -13,8 +13,8 @@ using namespace repro;
 
 
 ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
-                                               AbstractUserStore& userDb,
-                                               AbstractAclStore& aclDb,
+                                               UserStore& userDb,
+                                               AclStore& aclDb,
                                                bool useAuthInt):
    ServerAuthManager(dum, dum.dumIncomingTarget()),
    mDum(dum),

@@ -11,7 +11,7 @@ namespace resip
 
 class Connection;
 class Message;
-class BaseSecurity;
+class Security;
 
 class TlsTransport : public TcpBaseTransport
 {
@@ -21,7 +21,7 @@ class TlsTransport : public TcpBaseTransport
                    int portNum, 
                    IpVersion version,
                    const Data& interfaceObj,
-                   BaseSecurity& security,
+                   Security& security,
                    const Data& sipDomain, 
                    SecurityTypes::SSLType sslType,
                    Compression &compression = Compression::Disabled
@@ -32,7 +32,7 @@ class TlsTransport : public TcpBaseTransport
    protected:
       Connection* createConnection(Tuple& who, Socket fd, bool server=false);
 
-      BaseSecurity* mSecurity;
+      Security* mSecurity;
       SecurityTypes::SSLType mSslType;
 };
 
