@@ -1,11 +1,8 @@
 #if !defined(REPRO_USERSTORE_HXX)
 #define REPRO_USERSTORE_HXX
 
-#include "rutil/Data.hxx"
-#include "rutil/Fifo.hxx"
-#include "resip/stack/Message.hxx"
-
-#include "repro/AbstractDb.hxx"
+#include "repro/AbstractUserStore.hxx"
+#include "rutil/Mutex.hxx"
 
 namespace resip
 {
@@ -17,26 +14,20 @@ namespace repro
 
 typedef resip::Fifo<resip::Message> MessageFifo;
 
-class UserStore
+class UserStore: public AbstractUserStore
 {
    public:
-      typedef resip::Data Key;
       
       UserStore(AbstractDb& db);
       
       virtual ~UserStore();
       
-      void requestUserAuthInfo( const resip::Data& user, 
-                                const resip::Data& realm,
-                                const resip::Data& transactionToken,
-                                resip::TransactionUser& transactionUser ) const;
+      virtual AbstractDb::UserRecord getUserInfo( const Key& key ) const;
 
-      AbstractDb::UserRecord getUserInfo( const Key& key ) const;
-
-      resip::Data getUserAuthInfo( const resip::Data& user,
+      virtual resip::Data getUserAuthInfo( const resip::Data& user,
                                    const resip::Data& realm ) const;
       
-      void addUser( const resip::Data& user, 
+      virtual void addUser( const resip::Data& user, 
                     const resip::Data& domain, 
                     const resip::Data& realm, 
                     const resip::Data& password, 
@@ -44,9 +35,9 @@ class UserStore
                     const resip::Data& fullName,
                     const resip::Data& emailAddress  );
       
-      void eraseUser( const Key& key );
+      virtual void eraseUser( const Key& key );
       
-      void updateUser( const Key& originalKey,
+      virtual void updateUser( const Key& originalKey,
                        const resip::Data& user, 
                        const resip::Data& domain, 
                        const resip::Data& realm, 
@@ -55,14 +46,18 @@ class UserStore
                        const resip::Data& fullName,
                        const resip::Data& emailAddress );
       
+	   virtual AbstractDb::UserRecordList getAllUsers();
+      virtual Key getKey( const AbstractDb::UserRecord &ur );
+
+   private:
       Key getFirstKey();// return empty if no more
       Key getNextKey(); // return empty if no more 
-      
-   private:
-      Key buildKey( const resip::Data& user, 
+
+	   Key buildKey( const resip::Data& user, 
                     const resip::Data& domain) const;
 
       AbstractDb& mDb;
+      mutable resip::Mutex mFFNMutex; //find first/next mutex
 };
 
  }

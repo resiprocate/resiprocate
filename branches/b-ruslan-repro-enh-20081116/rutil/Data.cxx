@@ -668,15 +668,9 @@ bool
 resip::operator==(const Data& lhs, const char* rhs)
 {
    assert(rhs); // .dlb. not consistent with constructor
-   if (memcmp(lhs.mBuf, rhs, lhs.mSize) != 0)
-   {
-      return false;
-   }
-   else
-   {
-      // make sure the string terminates at size
-      return (rhs[lhs.mSize] == 0);
-   }
+   if ( strlen(rhs)!=lhs.mSize )             
+      return false;                      
+   return memcmp(lhs.mBuf, rhs, lhs.mSize) == 0; 
 }
 
 bool
@@ -2093,4 +2087,5 @@ Data::base64encode(bool useSafeSet) const
  * <http://www.vovida.org/>.
  *
  */
+
 

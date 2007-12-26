@@ -22,7 +22,6 @@ class TestRepro : public TestProxy
                 const resip::Data& host, 
                 int port, 
                 const resip::Data& nwInterface = resip::Data::Empty,
-                bool forceRecordRoute=false,
                 resip::Security* security=0);
       ~TestRepro();
 

@@ -8,7 +8,7 @@ Original Author: Scott Godin
 What is reTurn?
 ---------------
 reTurn is a Stun/Turn server and client library implementation of the latest 
-Stun/Turn drafts:  RFC3489bis13, and draft-ietf-behave-turn-05
+Stun/Turn drafts:  RFC3489bis11, and draft-ietf-behave-turn-05
 
 
 Current External Library Usage
@@ -25,7 +25,7 @@ Current External Library Usage
         - BOOST::bind is used in server transports
         - BOOST::crc_optimal is used for fingerprint CRC calculations
         - BOOST::shared_ptr, array, enable_shared_from_this is used in server transports
-- RUTIL - Data class is used in StunMessage and StunAuth for strings and TurnData, SharedPtr is also used
+- RUTIL - Data class is used in StunMessage and StunAuth for strings and TurnData
 
 
 Feature                                Implemented  Tested  Notes
@@ -33,8 +33,8 @@ Feature                                Implemented  Tested  Notes
 Configuration Framework                no           no      Currently just uses a few command line parameters and hardcoded settings
 RFC3489 support                        yes          mostly  
 Multi-threaded Server                  no           no      Once Turn code is implemented consider asio threading model and provide locking
-TLS Server Support                     yes          yes     
-RFC3489 bis 13 message parsing         yes          partly
+TLS Server Support                     yes          yes     need to tweak openSSL cipher suite settings
+RFC3489 bis 11 message parsing         yes          partly
 IPV6 message parsing support           yes          no 
 Shared Secret with Short Term Cred     yes          yes     Checking username for expirey and correct HMAC is not completed
 Shared Secret with Long Term Cred      little       no      Implementation is not complete and currently only accepts one hardcoded username/password - nonce generation not implemented
@@ -45,19 +45,24 @@ Turn Allocation                        almost       no
 Requested Port Props (Even, Odd, etc)  yes          yes
 Turn Permissions                       yes          yes      
 Turn Relay                             partly       partly  UDP Peers only
-Asyncronous Client APIs                yes          yes
+Asyncronous Client APIs                no           no
 
 
 General TODO
 -------------
-- Complete Turn Implementation - TCP/TLS relay - Implement Connect Request and Connect Status Indication
+- Complete Turn Implementation - TCP/TLS relay - Implement Connect Request and Conne
+ct Status Indication
+- optimize server data copying - especially for TURN DATA forwarding
+- optimize client data copying when receiving data
+- make buffer size configurable or dynamic
 - reduce library use - remove BOOST and/or rutil requirement - remove ASIO for client??
 - allow multiple interfaces to be used for relay
 - per user allocation quota enforcement
-- move TLS server settings to configuration
+- set TLS server settings - ie. allowed cipher suite, etc.
 - cleanup stun message class so that there are accessors for all data members
-- Ability for Server to accept long term credentials - 3489-bis13 digest
+- Ability for Server to accept long term credentials - 3489-bis11 digest
 - Check for unknown attributes
+- Standardize on a logging interface (rutil?)
 - from chart above
  - Configuration Framework
  - Multi-threaded support
@@ -66,72 +71,57 @@ General TODO
 
 Client TODO
 -----------
-- rework synchronous sockets to use Asynchrous sockets to unify implementation better
+- allow automatic allocation refreshes to be triggered from socket receive (currently must be calling a send fn)
 - retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response - currently applications responsibility
 - DNS SRV Discovery - currently only does host record lookup (using ASIO)
+- Note: requests can be piplined - currently client does not send pipelined
 - client long term password use - auto re-request after 401
 - implement 300 Try-Alternate response - currently applications responsibility
-- use of a calculated RTO for retransmissions
-- TLS client- server hostname validation
-- keepalive usage??
+- Try next DNS entry on failure - currently applications responsibility
+- asyncronous support
+- keepalive usage
+- allow listen support for TCP/TLP sockets?
          
 
 
 Client API
 -----------
-Current Asynchronous Implementation:
-- Application must provide an asio::io_service object and is responsible for threading it out and calling run
-- Async Turn sockets must be held in a shared pointer, in order to ensure safety of asio callbacks - this could be abstracted better
-- When Async sockets are created a callback handler class is passed in to receive callback notifications when 
-  operations are complete
+***CURRENTLY ONLY SYNCRONOUS***
+Client API thoughts:
+1.  Syncronous vs Asyncrous possible approaches 
+ - Queue all results to an application fifo - I don't think this approach is really good from an API usability standpoint though
+ - Use a callback handler approach - like DUM - I think this makes the most sense, but we need to be careful about threading, since if we are using a ASIO thread pool - completion conditions can be met from any thread in the pool - to avoid this we could queue results to a common fifo
+ - Use ASIO processing model - this makes a lot sense and allows the application to control treading model, but ASIO model might be confusing for applications to implement
 
-Synchronous API Set - Wrapping in a TurnSocket - TurnUdpSocket, TurnTcpSocket, TurnTlsSocket - bound to local socket
+2.  API Set - Wrapping in a TurnSocket - TurnUdpSocket, TurnTcpSocket, TurnTlsSocket - bound to local socket
 Note: API with a * are implemented
- * setUsernameAndPassword()
- * requestSharedSecret() - username and password are returned
- * createAllocation(lifetime, bandwidth, requestedPortProps, requestedPort, requestedTransportType, requestedIpAddress)
- * refreshAllocation(lifetime)
+ * requestSharedSecret(turnServerIP, turnServerPort, username, password) - username and password are returned
+ * createAllocation(turnServerIP, turnServerPort, username, password, lifetime, bandwidth, requestedPortProps, requestedPort, requestedTransportType, requestedIpAddress)
  * destroyAllocation() 
- * getRelayTuple() - (SYNC API ONLY) used to retrieve info about the allocation
- * getReflexiveTuple() - (SYNC API ONLY) used to retrieve info about the allocation
- * getLifetime() - (SYNC API ONLY) used to retrieve info about the allocation
- * getBandwidth() - (SYNC API ONLY) used to retrieve info about the allocation
+ * refreshAllocation()
+ * getRelayTuple() - used to retrieve info about the allocation
+ * getReflexiveTuple() - used to retrieve info about the allocation
+ * getLifetime() - used to retrieve info about the allocation
+ * getBandwidth() - used to retrieve info about the allocation
  * setActiveDestination(destinationIP, destinationPort)
  * clearActiveDestination()
  - connectAllocation(destinationIP, destinationPort)
  - listenAllocation(destinationIP, destinationPort)
- * bindRequest() - full 3489 not yet supported
+ * bindRequest(remoteIP, remotePort) - what other args are required? - need to return binding info - full 3489 not yet supported
  * send(bufferToSend, bufferSize);      
  * sendTo(destinationIP, destinationPort, bufferToSend, bufferSize)
  * receive(bufferToReceiveIn, bufferSize[in/out], senderIPAddress, senderPort) - last 2 args are return args - if receive is non-blocking the this data is returned in callback instead 
  * receiveFrom(bufferToReceiveIn, bufferSize[in/out], senderIPAddress, senderPort) - in this case last 2 args are input and specify endpoint we want to receive from
 NOTE:  could also add a binding discovery API for attempting to detect NAT type using RFC3489 methods
  
-Asynchronous Callbacks:
-
-onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port) = 0;
-onConnectFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
-
-onSharedSecretSuccess(unsigned int socketDesc, const char* username, unsigned int usernameSize, const char* password, unsigned int passwordSize) = 0;  
-onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
-
-onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple) = 0; 
-onBindFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
-
-onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth) = 0; 
-onAllocationFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
-
-onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime) = 0;
-onRefreshFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
-
-onSetActiveDestinationSuccess(unsigned int socketDesc) = 0;
-onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
-onClearActiveDestinationSuccess(unsigned int socketDesc) = 0;
-onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
-
-onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size) = 0;
-onReceiveFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
-
-onSendSuccess(unsigned int socketDesc) = 0;
-onSendFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
-
+3.  Callbacks (not implemented yet):
+- allocationSucceeded(mappedAddress, relayAddress)
+- allocationFailed(status)
+- bindingSucceeded(mappedAddress)
+- bindingFailed(status)
+- sharedSecretRequestSucceeded(secret)
+- sharedSecretRequestFailed(status)
+- connectStatus(state)
+- sendSucceeded? - not sure if we need this - send can probably be syncronous
+- sendFailed?
+- dataReceived(data, senderIPAddress, senderPort, sendTransportType?)

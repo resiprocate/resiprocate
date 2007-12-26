@@ -3,7 +3,7 @@
 
 #include <set>
 #include <boost/noncopyable.hpp>
-#include "AsyncSocketBase.hxx"
+#include "TcpConnection.hxx"
 
 namespace reTurn {
 
@@ -14,17 +14,17 @@ class ConnectionManager
 {
 public:
   /// Add the specified connection to the manager and start it.
-   void start(ConnectionPtr c);
+   void start(TcpConnectionPtr c);
 
   /// Stop the specified connection.
-  void stop(ConnectionPtr c);
+  void stop(TcpConnectionPtr c);
 
   /// Stop all connections.
   void stopAll();
 
 private:
   /// The managed connections.
-  std::set<ConnectionPtr> mConnections;
+  std::set<TcpConnectionPtr> mConnections;
 };
 
 } 

@@ -214,9 +214,6 @@
 				RelativePath=".\ChallengeInfo.cxx">
 			</File>
 			<File
-				RelativePath=".\ClientAuthExtension.cxx">
-			</File>
-			<File
 				RelativePath=".\ClientAuthManager.cxx">
 			</File>
 			<File
@@ -436,9 +433,6 @@
 			</File>
 			<File
 				RelativePath=".\ChallengeInfo.hxx">
-			</File>
-			<File
-				RelativePath=".\ClientAuthExtension.hxx">
 			</File>
 			<File
 				RelativePath=".\ClientAuthManager.hxx">

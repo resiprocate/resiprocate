@@ -12,7 +12,11 @@ namespace repro
 class QValueTarget : public Target
 {
    public:
-      QValueTarget(const resip::ContactInstanceRecord& rec);
+      QValueTarget(float q);
+      QValueTarget(const resip::Uri& uri, float q);
+      QValueTarget(const resip::NameAddr& nameAddr, float q);
+      explicit QValueTarget(const Target& orig, float q);
+      explicit QValueTarget(const QValueTarget& orig);
       
       virtual ~QValueTarget();
       

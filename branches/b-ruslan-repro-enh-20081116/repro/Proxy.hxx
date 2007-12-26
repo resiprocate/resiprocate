@@ -16,19 +16,18 @@ class SipStack;
 namespace repro
 {
 
-class UserStore;
+class AbstractUserStore;
 class ProcessorChain;
 
-class Proxy : public resip::TransactionUser, public resip::ThreadIf, public resip::MessageDecorator
+class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
       Proxy(resip::SipStack&,
             const resip::Uri& recordRoute, 
-            bool enableRecordRoute,
             ProcessorChain& requestP, 
             ProcessorChain& responseP,
             ProcessorChain& targetP,
-            UserStore& ,
+            AbstractUserStore& ,
             int timerC);
       virtual ~Proxy();
 
@@ -37,10 +36,8 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf, public resi
       
       bool isMyUri(const resip::Uri& uri);      
       const resip::NameAddr& getRecordRoute() const;
-      bool getRecordRouteEnabled() const;
       
-      UserStore& getUserStore();
-      resip::SipStack& getStack(){return mStack;}
+      AbstractUserStore& getUserStore();
       void send(const resip::SipMessage& msg);
       void addClientTransaction(const resip::Data& transactionId, RequestContext* rc);
 
@@ -50,17 +47,13 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf, public resi
 
       int mTimerC;
       
-      virtual void decorateMessage(resip::SipMessage &msg,
-                                   const resip::Tuple &source, 
-                                   const resip::Tuple &destination);
-
+      
    protected:
       virtual const resip::Data& name() const;
 
    private:
       resip::SipStack& mStack;
       resip::NameAddr mRecordRoute;
-      bool mRecordRouteEnabled;
       
       // needs to be a reference since parent owns it
       ProcessorChain& mRequestProcessorChain;
@@ -75,7 +68,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf, public resi
       HashMap<resip::Data, RequestContext*> mClientRequestContexts;
       HashMap<resip::Data, RequestContext*> mServerRequestContexts;
       
-      UserStore &mUserStore;
+      AbstractUserStore &mUserStore;
 };
 }
 #endif

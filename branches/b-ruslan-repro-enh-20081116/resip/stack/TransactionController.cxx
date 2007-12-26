@@ -25,7 +25,6 @@ unsigned int TransactionController::MaxTUFifoTimeDepthSecs = 0;
 TransactionController::TransactionController(SipStack& stack) :
    mStack(stack),
    mDiscardStrayResponses(true),
-   mFixBadDialogIdentifiers(true),
    mStateMacFifo(),
    mTuSelector(stack.mTuSelector),
    mTransportSelector(mStateMacFifo,

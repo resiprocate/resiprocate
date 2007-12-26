@@ -6,14 +6,14 @@
 namespace reTurn {
 
 void 
-ConnectionManager::start(ConnectionPtr c)
+ConnectionManager::start(TcpConnectionPtr c)
 {
   mConnections.insert(c);
   c->start();
 }
 
 void 
-ConnectionManager::stop(ConnectionPtr c)
+ConnectionManager::stop(TcpConnectionPtr c)
 {
   mConnections.erase(c);
   c->stop();
@@ -22,13 +22,9 @@ ConnectionManager::stop(ConnectionPtr c)
 void 
 ConnectionManager::stopAll()
 {
-   std::set<ConnectionPtr>::iterator it = mConnections.begin();
-
-   for(; it != mConnections.end(); it++)
-   {
-      (*it)->stop();
-   }
-   mConnections.clear();
+  std::for_each(mConnections.begin(), mConnections.end(),
+      boost::bind(&TcpConnection::stop, _1));
+  mConnections.clear();
 }
 
 } 

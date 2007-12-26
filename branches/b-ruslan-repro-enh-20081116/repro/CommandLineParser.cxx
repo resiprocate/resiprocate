@@ -11,20 +11,58 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseException.hxx"
-#include "resip/stack/InteropHelper.hxx"
+#include "rutil/FileSystem.hxx"
+#include "Parameters.hxx"
 
 using namespace resip;
+using namespace repro;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::REPRO
+
+#ifdef WIN32
+#define REPRO_MAX_PATH MAX_PATH
+#else
+#define REPRO_MAX_PATH 256
+#endif
 
 CommandLineParser::CommandLineParser(int argc, char** argv)
 {
    char* logType = "cout";
    char* logLevel = "INFO";
+   char logFilePathBuf[REPRO_MAX_PATH];
+   char* logFilePath = logFilePathBuf;
+   strcpy(logFilePath, ".");
+#ifdef WIN32
+   static const Data allUsersLogFilePath(Data(getenv("ALLUSERSPROFILE")) + "\\Application Data\\Resiprocate\\repro\\");
+   //when we run as restricted user
+   static const Data localUserLogFilePath(Data(getenv("USERPROFILE")) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\");
+
+   if(FileSystem::directoryExists(allUsersLogFilePath) && 
+      FileSystem::isReadWriteAccess(allUsersLogFilePath.c_str()))
+   {
+      strcpy(logFilePath, allUsersLogFilePath.c_str());
+   }
+   else if(FileSystem::isReadWriteAccess(getenv("ALLUSERSPROFILE")))
+   {
+      assert(FileSystem::forceDirectories(allUsersLogFilePath));
+      FileSystem::setAccessAs(allUsersLogFilePath.c_str(), getenv("ALLUSERSPROFILE"));
+      strcpy(logFilePath, allUsersLogFilePath.c_str());
+   }
+   else if(FileSystem::directoryExists(localUserLogFilePath) && 
+           FileSystem::isReadWriteAccess (localUserLogFilePath.c_str()))
+   {
+      strcpy(logFilePath, localUserLogFilePath.c_str());
+   }
+   else if(FileSystem::isReadWriteAccess(getenv("USERPROFILE")))
+   {
+      assert(FileSystem::forceDirectories(localUserLogFilePath));
+      FileSystem::setAccessAs(localUserLogFilePath.c_str(),getenv("USERPROFILE"));
+      strcpy(logFilePath, localUserLogFilePath.c_str());
+   }
+#endif
    char* tlsDomain = 0;
-   int forceRecordRoute = 0;
-   char* recordRouteUri = 0;
+   char* recordRoute = 0;
    int udpPort = 5060;
    int tcpPort = 5060;
 #if defined(USE_SSL)
@@ -38,9 +76,12 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* domains = 0;
    char* interfaces = 0;
    char* routeSet = 0;
-   char certPathBuf[256];
+
+   char certPathBuf[REPRO_MAX_PATH] = { 0 };
    char* certPath = certPathBuf;
-   char* dbPath = 0;
+   char dbPathBuf[REPRO_MAX_PATH] = { 0 };
+   char* dbPath = dbPathBuf;
+
    int noChallenge = false;
    int noAuthIntChallenge = false;
    int noWebChallenge = false;
@@ -64,19 +105,70 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int allowBadReg = 0;
    int parallelForkStaticRoutes = 0;
    int showVersion = 0;
+#ifdef WIN32
+   int installService = 0;
+   int removeService = 0;
+#endif
    int timerC=180;
-   
+   int noUseParameters = 0;
    char* adminPassword = "";
-   int outboundDisabled=0;
-   int outboundVersion=11;
-   int rrTokenHackEnabled=0;
 
 
 #ifdef WIN32
 #ifndef HAVE_POPT_H
    noChallenge = 1;  // If no POPT, then default to no digest challenges
 #endif
-   strcpy(certPath,"C:\\sipCerts");   
+   // when we have administrative right or run as LocalSystem for example as service
+   static const Data allUsersCerts(Data(getenv("ALLUSERSPROFILE")) + "\\Application Data\\Resiprocate\\repro\\sipCerts");
+   static const Data allUsersDb(Data(getenv("ALLUSERSPROFILE")) + "\\Application Data\\Resiprocate\\repro\\Db");
+   //when we run as restricted user
+   static const Data localUserCerts(Data(getenv("USERPROFILE")) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\sipCerts");
+   static const Data localUserDb(Data(getenv("USERPROFILE")) + "\\Local Settings\\Application Data\\Resiprocate\\repro\\Db");
+
+   if (FileSystem::directoryExists(allUsersCerts) && FileSystem::isReadWriteAccess(allUsersCerts.c_str()))
+   {
+      strcpy(certPath, allUsersCerts.c_str());
+   }
+   else if (FileSystem::isReadWriteAccess(getenv("ALLUSERSPROFILE")))
+   {
+      FileSystem::forceDirectories(allUsersCerts);
+      FileSystem::setAccessAs(allUsersCerts.c_str(), getenv("ALLUSERSPROFILE"));
+      strcpy(certPath, allUsersCerts.c_str());
+   }
+   else if(FileSystem::directoryExists(localUserCerts) && FileSystem::isReadWriteAccess(localUserCerts.c_str()))
+   {
+      strcpy(certPath, localUserCerts.c_str());
+   }
+   else if (FileSystem::isReadWriteAccess(getenv("USERPROFILE")))
+   {
+      FileSystem::forceDirectories(localUserCerts);
+      FileSystem::setAccessAs(localUserCerts.c_str(), getenv("USERPROFILE"));
+      strcpy(certPath, localUserCerts.c_str());
+   }
+   else // we must never get it
+   {
+      strcpy(certPath,"C:\\sipCerts");   
+   }
+   if (FileSystem::directoryExists(allUsersDb) && FileSystem::isReadWriteAccess(allUsersDb.c_str()))
+   {
+      strcpy(dbPath, allUsersDb.c_str());
+   }
+   else if (FileSystem::isReadWriteAccess(getenv("ALLUSERSPROFILE")))
+   {
+      FileSystem::forceDirectories(allUsersDb);
+      FileSystem::setAccessAs(allUsersDb.c_str(), getenv("ALLUSERSPROFILE"));
+      strcpy(dbPath, allUsersDb.c_str());
+   }
+   else if (FileSystem::directoryExists(localUserDb ) && FileSystem::isReadWriteAccess (localUserDb.c_str()))
+   {
+      strcpy(dbPath, localUserDb.c_str());
+   }
+   else if (FileSystem::isReadWriteAccess(getenv("USERPROFILE")))
+   {
+      FileSystem::forceDirectories(localUserDb);
+      FileSystem::setAccessAs(localUserDb.c_str(), getenv("USERPROFILE"));
+      strcpy(dbPath, localUserDb.c_str());
+   }
 #else
    strcpy(certPath, getenv("HOME"));
    strcat(certPath, "/.sipCerts");
@@ -84,71 +176,78 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
 #ifdef HAVE_POPT_H
    struct poptOption table[] = {
-      {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
-      {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"db-path",           0,   POPT_ARG_STRING,                            &dbPath,       0, "path to databases", 0},
-      {"record-route",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
-      {"force-record-route",     0,  POPT_ARG_NONE,                            &forceRecordRoute,    0, "force record-routing", 0},
+      {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        Parameters::prmLogType, "where to send logging messages", "syslog|cerr|cout"},
+      {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       Parameters::prmLogLevel, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
+      {"log-path",           0,  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logFilePath,    Parameters::prmLogPath, "specify the path for log file", 0},
+      {"db-path",            0,  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &dbPath,         Parameters::prmMax, "path to databases", 0},
+      {"record-route",     'r',  POPT_ARG_STRING,                            &recordRoute,    Parameters::prmRecordRoute, "specify uri to use as Record-Route", "sip:example.com"},
 #if defined(USE_MYSQL)
-      {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
+      {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    Parameters::prmMax, "enable MySQL and provide name of server", "localhost"},
 #endif
-      {"udp",                0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort,        0, "listen on UDP port", "5060"},
-      {"tcp",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tcpPort,        0, "listen on TCP port", "5060"},
+      {"udp",                0,  POPT_ARG_INT| POPT_ARGFLAG_SHOW_DEFAULT,    &udpPort,        Parameters::prmUdp, "listen on UDP port", "5060"},
+      {"tcp",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tcpPort,        Parameters::prmTcp, "listen on TCP port", "5060"},
 #if defined(USE_SSL)
-      {"tls-domain",       't',  POPT_ARG_STRING,                            &tlsDomain,      0, "act as a TLS server for specified domain", "example.com"},
-      {"tls",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tlsPort,        0, "add TLS transport on specified port", "5061"},
-      {"dtls",               0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &dtlsPort,       0, "add DTLS transport on specified port", "0"},
-      {"enable-cert-server", 0,  POPT_ARG_NONE,                              &certServer,     0, "run a cert server", 0},
+      {"tls-domain",       't',  POPT_ARG_STRING,                            &tlsDomain,      Parameters::prmTlsDomain, "act as a TLS server for specified domain", "example.com"},
+      {"tls",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tlsPort,        Parameters::prmTls, "add TLS transport on specified port", "5061"},
+      {"dtls",               0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &dtlsPort,       Parameters::prmDtls, "add DTLS transport on specified port", "0"},
+      {"enable-cert-server", 0,  POPT_ARG_NONE,                              &certServer,     Parameters::prmEnableCertServer, "run a cert server", 0},
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       Parameters::prmMax, "path to certificates", 0},
+#endif
+      {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       Parameters::prmEnableV6, "enable IPV6", 0},
+      {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      Parameters::prmDisableV4, "disable IPV4", 0},
+      {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    Parameters::prmDisableAuth, "disable DIGEST challenges", 0},
+      {"disable-auth-int",  0,   POPT_ARG_NONE,                              &noAuthIntChallenge, Parameters::prmDisableAuthInt, "disable auth-int DIGEST challenges", 0},
+      {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, Parameters::prmDisableWebAuth, "disable HTTP challenges", 0},
+      {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    Parameters::prmDisableReg, "disable registrar", 0},
+      {"disable-identity",  0,   POPT_ARG_NONE,                              &noIdentityHeaders, Parameters::prmDisableIdentity, "disable adding identity headers", 0},
+      {"interfaces",      'i',   POPT_ARG_STRING,                            &interfaces,     Parameters::prmIinterfaces, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls"},
+      {"domains",         'd',   POPT_ARG_STRING,                            &domains,        Parameters::prmMax, "specify domains that this proxy is authorative", "example.com,foo.com"},
+      {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       Parameters::prmMax, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
+      {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   Parameters::prmMax, "name of request chain (default: default)", 0},
+      {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       Parameters::prmHttp, "run HTTP server on specified port", "5080"},
+      {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, Parameters::prmRecursiveRedirect, "Handle 3xx responses in the proxy", 0},
+      {"q-value",           0,   POPT_ARG_NONE,                              &doQValue,       Parameters::prmQValue, "Enable q-value processing", 0},
+      {"q-value-behavior",  0,   POPT_ARG_STRING,                            &forkBehavior,   Parameters::prmQValueBehavior, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
+      {"q-value-cancel-btw-fork-groups",0,POPT_ARG_NONE,                     &cancelBetweenForkGroups, Parameters::prmQValueCancelBtwForkGroups, "Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.", 0},
+      {"q-value-wait-for-terminate-btw-fork-groups",0,POPT_ARG_NONE,         &waitForTerminate, Parameters::prmQValueWaitForTerminateBtwForkGroups, "Whether to wait for parallel fork groups to terminate before starting new fork-groups.", 0},
+      {"q-value-ms-between-fork-groups",0,POPT_ARG_INT,                      &msBetweenForkGroups, Parameters::prmQValueMsBetweenForkGroups, "msec to wait before starting new groups of parallel forks", 0},
+      {"q-value-ms-before-cancel",0,   POPT_ARG_INT,                         &msBeforeCancel, Parameters::prmQValueMsBeforeCancel, "msec to wait before cancelling parallel fork groups", 0},
+      {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     Parameters::prmEnumSuffix, "specify enum suffix to search", "e164.arpa"},
+      {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    Parameters::prmAllowBadReg, "allow To tag in registrations", 0},
+      {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, Parameters::prmParallelForkStaticRoutes, "paralled fork to all matching static routes and (first batch) registrations", 0},
+      {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         Parameters::prmTimerC, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
+      {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  Parameters::prmAdminPassword, "set web administrator password", ""},
+      {"no-use-parameters",  0,  POPT_ARG_NONE,                              &noUseParameters,Parameters::prmMax, "do not use parameters settings from database", ""},
+      {"version",         'V',   POPT_ARG_NONE,                              &showVersion,    Parameters::prmMax, "show the version number and exit", 0},
 #ifdef WIN32
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: c:\\sipCerts)", 0},
-#else
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: ~/.sipCerts)", 0},
+      {"install-service", 0,   POPT_ARG_NONE,                                &installService, Parameters::prmMax, "install program as WinNT service", 0},
+      {"remove-service",  0,   POPT_ARG_NONE,                                &removeService,  Parameters::prmMax, "remove program from WinNT service list", 0},
 #endif
-#endif
-      {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       0, "enable IPV6", 0},
-      {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      0, "disable IPV4", 0},
-      {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    0, "disable DIGEST challenges", 0},
-      {"disable-auth-int",  0,   POPT_ARG_NONE,                              &noAuthIntChallenge,0, "disable auth-int DIGEST challenges", 0},
-      {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, 0, "disable HTTP challenges", 0},
-      {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    0, "disable registrar", 0},
-      {"disable-identity",  0,   POPT_ARG_NONE,                              &noIdentityHeaders, 0, "disable adding identity headers", 0},
-      {"interfaces",      'i',   POPT_ARG_STRING,                            &interfaces,     0, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls"},
-      {"domains",         'd',   POPT_ARG_STRING,                            &domains,        0, "specify domains that this proxy is authorative", "example.com,foo.com"},
-      {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
-      {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   0, "name of request chain (default: default)", 0},
-      {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", "5080"},
-      {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
-      {"q-value",           0,   POPT_ARG_NONE,                              &doQValue,       0, "Enable sequential q-value processing", 0},
-      {"q-value-behavior",  0,   POPT_ARG_STRING,                              &forkBehavior,   0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
-      {"q-value-cancel-btw-fork-groups",0,POPT_ARG_NONE,                     &cancelBetweenForkGroups, 0, "Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.", 0},
-      {"q-value-wait-for-terminate-btw-fork-groups",0,POPT_ARG_NONE,         &waitForTerminate, 0, "Whether to wait for parallel fork groups to terminate before starting new fork-groups.", 0},
-      {"q-value-ms-between-fork-groups",0,POPT_ARG_INT,                      &msBetweenForkGroups, 0, "msec to wait before starting new groups of parallel forks", 0},
-      {"q-value-ms-before-cancel",0,   POPT_ARG_INT,                         &msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
-      {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
-      {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
-      {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "paralled fork to all matching static routes and (first batch) registrations", 0},
-      {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
-      {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  0, "set web administrator password", ""},
-      {"disable-outbound",     0,   POPT_ARG_NONE,                            &outboundDisabled,     0, "disable outbound support (draft-ietf-sip-outbound)", 0},
-      {"outbound-version",     0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                            &outboundVersion,     0, "set the version of outbound to support", "11"},
-      {"enable-flow-tokens",     0,   POPT_ARG_NONE,                            &rrTokenHackEnabled,     0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
-      {"version",     'V',   POPT_ARG_NONE,                            &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
       { NULL, 0, 0, NULL, 0 }
    };
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
-   if (poptGetNextOpt(context) < -1)
+   int prm;
+   while ((prm = poptGetNextOpt(context)) != -1)
    {
-      cerr << "Bad command line argument entered" << endl;
-      poptPrintHelp(context, stderr, 0);
-      exit(-1);
+      if (prm < -1)
+      {
+         cerr << "Bad command line argument entered" << endl;
+         poptPrintHelp(context, stderr, 0);
+         exit(-1);
+      }
+      if (prm != Parameters::prmMax)
+      {
+         Parameters::disableParam((Parameters::Param)prm);
+      }
    }
 #endif
 
    mHttpPort = httpPort;
    mLogType = logType;
    mLogLevel = logLevel;
+   mLogFilePath = logFilePath;
 
    if (showVersion)
    {
@@ -161,20 +260,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       mTlsDomain = tlsDomain;
    }
 
-   mForceRecordRoute = (forceRecordRoute!=0);
-
-   if (recordRouteUri) 
+   mShouldRecordRoute = false;
+   if (recordRoute) 
    {
-      mRecordRoute = toUri(recordRouteUri, "Record-Route");
-      // .bwc. You must give a fully specified hostname for the record-route.
-      // Furthermore, you should ensure that this uri will allow a 
-      // 3263-compliant sender to know what transports this proxy supports, and 
-      // how to reach it over any of these transports. (ie, set up your full
-      // NAPTR->SRV->A or AAAA DNS zone for this uri) For senders that don't
-      // support 3263 (ie, they just assume that a proxy supports a given 
-      // ip-version and protocol, and do A or AAAA lookups), this won't work all 
-      // the time. This is their fault, not yours.
-      assert(!mRecordRoute.host().empty());
+      mShouldRecordRoute = true;
+      mRecordRoute = toUri(recordRoute, "Record-Route");
    }
    
    mUdpPort = udpPort;
@@ -203,6 +293,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mMsBeforeCancel=msBeforeCancel;
    mAllowBadReg = allowBadReg?true:false;
    mParallelForkStaticRoutes = parallelForkStaticRoutes?true:false;
+   mNoUseParameters = noUseParameters != 0;
+
    if (enumSuffix) mEnumSuffix = enumSuffix;
    
    if (mySqlServer) 
@@ -225,84 +317,13 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    }
 
    mAdminPassword = adminPassword;
-   
-   InteropHelper::setOutboundVersion(outboundVersion);
-   InteropHelper::setOutboundSupported(outboundDisabled ? false : true);
-   InteropHelper::setRRTokenHackEnabled((rrTokenHackEnabled==0) ? false : true);
-   
-   if((InteropHelper::getOutboundSupported() 
-         || InteropHelper::getRRTokenHackEnabled()
-         || mForceRecordRoute
-      )
-      && !recordRouteUri)
-   {
-      CritLog(<< "In order for outbound support, the Record-Route flow-token"
-      " hack, or force-record-route to work, you MUST specify a Record-Route URI. Launching "
-      "without...");
-      InteropHelper::setOutboundSupported(false);
-      InteropHelper::setRRTokenHackEnabled(false);
-      mForceRecordRoute=false;
-   }
+#ifdef WIN32
+   mInstallService=installService != 0;
+   mRemoveService=removeService != 0;
+#endif
 
 #ifdef HAVE_POPT_H
    poptFreeContext(context);
 #endif
 }
 
-resip::Uri 
-CommandLineParser::toUri(const char* input, const char* description)
-{
-   resip::Uri uri;
-   try
-   {
-      if (input)
-      {
-         uri = Uri(input);
-      }
-      else
-      {
-         std::cerr << "No " << description << " specified" << std::endl;
-      }
-   } 
-   catch (ParseException& e)
-   {
-      std::cerr << "Caught: " << e << std::endl;
-      std::cerr << "Can't parse " << description << " : " << input << std::endl;
-      exit(-1);
-   }
-   return uri;
-}
-
-std::vector<resip::Data> 
-CommandLineParser::toVector(const char* input, const char* description)
-{
-   std::vector<Data> domains; 
-
-   if (input)
-   {
-      Data buffer = input;
-      if (input)
-      {
-         for (char* token = strtok(const_cast<char*>(buffer.c_str()), ","); token != 0; token = strtok(0, ","))
-         {
-            try
-            {
-               domains.push_back(token);
-            } 
-            catch (ParseException& e)
-            {
-               std::cout << "Caught: " << e << std::endl;
-               std::cerr << "Can't parse " << description << " : " << token << std::endl;
-               exit(-1);
-            }
-            catch (...)
-            {
-               std::cout << "Caught some exception" <<std::endl;
-               std::cerr << "Some problem parsing " << description << " : " << token << std::endl;
-            }
-         }
-      }
-   }
-   return domains;
-}
-   

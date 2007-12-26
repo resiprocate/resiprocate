@@ -33,13 +33,11 @@ class ConnectionBase
 {
       friend std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
    public:
-      ConnectionBase(Transport* transport,
-                     const Tuple& who,
+      ConnectionBase(const Tuple& who,
                      Compression &compression = Compression::Disabled);
-      FlowKey getFlowKey() const;
-      
-      /// @todo should be reference
-      virtual Transport* transport() const;
+      ConnectionId getId() const;
+
+      Transport* transport();
 
       Tuple& who() { return mWho; }
       const UInt64& whenLastUsed() { return mLastUsed; }
@@ -75,15 +73,12 @@ class ConnectionBase
       Data::size_type mSendPos;
       std::list<SendData*> mOutstandingSends; // !jacob! intrusive queue?
 
+      ConnectionBase();
       virtual ~ConnectionBase();
       // no value semantics
-   private:
-      ConnectionBase();
       ConnectionBase(const Connection&);
       ConnectionBase& operator=(const Connection&);
    protected:
-      virtual void onDoubleCRLF(){}
-      Transport* mTransport;
       Tuple mWho;
       TransportFailure::FailureReason mFailureReason;      
       Compression &mCompression;

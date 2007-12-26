@@ -43,7 +43,6 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
 
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
-   mTuple.mFlowKey=mFd;
    bind();
 #ifdef USE_SIGCOMP
    if (mCompression.isEnabled())
@@ -254,7 +253,6 @@ UdpTransport::process(FdSet& fdset)
          
          if (ok)
          {
-            DebugLog(<<"Got UDP STUN keepalive. Sending response...");
             char* response = new char[STUN_MAX_MESSAGE_SIZE];
             int rlen = stunEncodeMessage( resp, 
                                           response, 
@@ -330,7 +328,6 @@ UdpTransport::process(FdSet& fdset)
 
       // Save all the info where this message came from
       tuple.transport = this;
-      tuple.mFlowKey=mTuple.mFlowKey;
       message->setSource(tuple);   
       //DebugLog (<< "Received from: " << tuple);
    

@@ -6,28 +6,24 @@ TARGET_BINARY = reTurnServer
 CXXFLAGS += -DBOOST_ALL_NO_LIB
 
 SRC += \
-        AsyncSocketBase.cxx \
-        AsyncUdpSocketBase.cxx \
-        AsyncTcpSocketBase.cxx \
-        AsyncTlsSocketBase.cxx \
-        ChannelManager.cxx \
-        ConnectionManager.cxx \
-        RemotePeer.cxx \
-        RequestHandler.cxx \
-        ReTurnSubsystem.cxx \
-        StunAuth.cxx \
-        StunMessage.cxx \
-        StunTuple.cxx \
-        TcpConnection.cxx \
-        TcpServer.cxx \
-        TlsConnection.cxx \
-        TlsServer.cxx \
-        TurnAllocation.cxx \
-        TurnAllocationKey.cxx \
-        TurnManager.cxx \
-        TurnPermission.cxx \
-        UdpRelayServer.cxx \
-        UdpServer.cxx
+ 	ChannelManager.cxx \
+	ConnectionManager.cxx \
+	RemotePeer.cxx \
+	RequestHandler.cxx \
+	StunAuth.cxx \
+	StunMessage.cxx \
+	StunTuple.cxx \
+	TcpConnection.cxx \
+	TcpServer.cxx \
+	TlsConnection.cxx \
+	TlsServer.cxx \
+	TurnAllocation.cxx \
+	TurnAllocationKey.cxx \
+	TurnManager.cxx \
+	TurnPermission.cxx \
+	TurnTransportBase.cxx \
+	UdpRelayServer.cxx \
+	UdpServer.cxx
 
 include $(BUILD)/Makefile.post
 

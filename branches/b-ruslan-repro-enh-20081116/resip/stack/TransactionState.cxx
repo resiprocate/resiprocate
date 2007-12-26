@@ -220,86 +220,12 @@ TransactionState::process(TransactionController& controller)
    if (message->isClientTransaction()) state = controller.mClientTransactionMap.find(tid);
    else state = controller.mServerTransactionMap.find(tid);
    
-   if (state && sip && sip->isExternal())
+   // .bwc. This code ensures that the transaction state-machine can recover
+   // from ACK/200 with the same tid as the original INVITE. This problem is
+   // stupidly common. 
+   if (state && sip && sip->isExternal() && sip->isRequest() && sip->method() == ACK)
    {
-      // .bwc. This code (if enabled) ensures that responses have the same
-      // CallId and tags as the request did (excepting the introduction of a 
-      // remote tag). This is to protect dialog-stateful TUs that don't react 
-      // gracefully when a stupid/malicious endpoint fiddles with the tags 
-      // and/or CallId when it isn't supposed to. (DUM is one such TU)
-      if(state->mController.getFixBadDialogIdentifiers() &&
-         sip->isResponse() &&
-         state->mMsgToRetransmit)
-      {
-         if(sip->header(h_CallId).isWellFormed())
-         {
-            if(!(sip->header(h_CallId) == 
-                        state->mMsgToRetransmit->header(h_CallId)))
-            {
-               InfoLog(<< "Other end modified our Call-Id... correcting.");
-               sip->header(h_CallId) = state->mMsgToRetransmit->header(h_CallId);
-            }
-         }
-         else
-         {
-            InfoLog(<< "Other end corrupted our CallId... correcting.");
-            sip->header(h_CallId) = state->mMsgToRetransmit->header(h_CallId);
-         }
-
-         NameAddr& from = state->mMsgToRetransmit->header(h_From);
-         if(sip->header(h_From).isWellFormed())
-         {
-            // Overwrite tag.
-            if(from.exists(p_tag))
-            {
-               if(sip->header(h_From).param(p_tag) != from.param(p_tag))
-               {
-                  InfoLog(<<"Other end modified our local tag... correcting.");
-                  sip->header(h_From).param(p_tag) = from.param(p_tag);
-               }
-            }
-            else if(sip->header(h_From).exists(p_tag))
-            {
-               if(sip->header(h_From).exists(p_tag))
-               {
-                  InfoLog(<<"Other end added a local tag for us... removing.");
-                  sip->header(h_From).remove(p_tag);
-               }
-            }
-         }
-         else
-         {
-            InfoLog(<<"Other end corrupted our From header... replacing.");
-            // Whole header is hosed, overwrite.
-            sip->header(h_From) = from;
-         }
-
-         NameAddr& to = state->mMsgToRetransmit->header(h_To);
-         if(sip->header(h_To).isWellFormed())
-         {
-            // Overwrite tag.
-            if(to.exists(p_tag))
-            {
-               if(sip->header(h_To).param(p_tag) != to.param(p_tag))
-               {
-                  InfoLog(<<"Other end modified the (existing) remote tag... "
-                              "correcting.");
-                  sip->header(h_To).param(p_tag) = to.param(p_tag);
-               }
-            }
-         }
-         else
-         {
-            InfoLog(<<"Other end corrupted our To header... replacing.");
-            // Whole header is hosed, overwrite.
-            sip->header(h_To) = to;
-         }
-      }
-
-      // .bwc. This code ensures that the transaction state-machine can recover
-      // from ACK/200 with the same tid as the original INVITE. This problem is
-      // stupidly common. 
-      if(sip->isRequest() && sip->method() == ACK && !state->mAckIsValid)
+      if (!state->mAckIsValid)
       {
          // Must have received an ACK to a 200;
          // We will never respond to this, so nothing will need this tid for
@@ -400,7 +326,7 @@ TransactionState::process(TransactionController& controller)
                state->mResponseTarget = sip->getSource(); // UACs source address
                // since we don't want to reply to the source port if rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
-               state->mIsReliable = isReliable(state->mResponseTarget.getType());
+               state->mIsReliable = state->mResponseTarget.transport->isReliable();
                state->add(tid);
                
                if (Timer::T100 == 0)
@@ -443,7 +369,7 @@ TransactionState::process(TransactionController& controller)
                // since we don't want to reply to the source port if rport present 
                state->mResponseTarget.setPort(Helper::getPortForReply(*sip));
                state->add(tid);
-               state->mIsReliable = isReliable(state->mResponseTarget.getType());
+               state->mIsReliable = state->mResponseTarget.transport->isReliable();
                state->startServerNonInviteTimerTrying(*sip,tid);
             }
             
@@ -609,29 +535,6 @@ TransactionState::processStateless(TransactionMessage* message)
    }
 }
 
-void 
-TransactionState::saveOriginalContactAndVia(const SipMessage& sip)
-{
-   if(sip.exists(h_Contacts) && sip.header(h_Contacts).size() == 1)
-   {
-      mOriginalContact = std::auto_ptr<NameAddr>(new NameAddr(sip.header(h_Contacts).front()));
-   }
-   mOriginalVia = std::auto_ptr<Via>(new Via(sip.header(h_Vias).front()));
-}
-
-void TransactionState::restoreOriginalContactAndVia()
-{
-   if (mOriginalContact.get())
-   {
-      mMsgToRetransmit->header(h_Contacts).front() = *mOriginalContact;
-   }                  
-   if (mOriginalVia.get())
-   {
-      mOriginalVia->param(p_branch).incrementTransportSequence();
-      mMsgToRetransmit->header(h_Vias).front() = *mOriginalVia;
-   }
-}
-
 void
 TransactionState::processClientNonInvite(TransactionMessage* msg)
 { 
@@ -644,7 +547,6 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
       //StackLog (<< "received new non-invite request");
       SipMessage* sip = dynamic_cast<SipMessage*>(msg);
       delete mMsgToRetransmit;
-      saveOriginalContactAndVia(*sip);
       mMsgToRetransmit = sip;
       mController.mTimers.add(Timer::TimerF, mId, Timer::TF);
       sendToWire(sip);  // don't delete
@@ -785,7 +687,6 @@ TransactionState::processClientInvite(TransactionMessage* msg)
          // transaction timeouts. 
          case INVITE:
             delete mMsgToRetransmit; 
-            saveOriginalContactAndVia(*sip);
             mMsgToRetransmit = sip;
             mController.mTimers.add(Timer::TimerB, mId, Timer::TB);
             sendToWire(msg); // don't delete msg
@@ -1611,7 +1512,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
          switch (mDnsResult->available())
          {
             case DnsResult::Available:
-               restoreOriginalContactAndVia();
+               mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
                mTarget = mDnsResult->next();
                processReliability(mTarget.getType());
                sendToWire(mMsgToRetransmit);
@@ -1619,7 +1520,7 @@ TransactionState::processTransportFailure(TransactionMessage* msg)
             
             case DnsResult::Pending:
                mWaitingForDnsResult=true;
-               restoreOriginalContactAndVia();
+               mMsgToRetransmit->header(h_Vias).front().param(p_branch).incrementTransportSequence();
                break;
 
             case DnsResult::Finished:
@@ -1803,6 +1704,7 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
       if (sip->hasForceTarget())
       {
          target = simpleTupleForUri(sip->getForceTarget());
+         target.transport = mResponseTarget.transport;
          StackLog(<<"!ah! response with force target going to : "<<target);
       }
       else if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
@@ -1824,10 +1726,8 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
          mController.mTransportSelector.transmit(sip, target);
       }
    }
-   else if (sip->getDestination().mFlowKey)
+   else if (sip->getDestination().connectionId || sip->getDestination().transport)
    {
-      // !bwc! We have the FlowKey. This completely specifies our Transport
-      // (and Connection, if applicable)
       DebugLog(<< "Sending to tuple: " << sip->getDestination());
       mTarget = sip->getDestination();
       processReliability(mTarget.getType());

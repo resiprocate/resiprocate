@@ -415,6 +415,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FlowId.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\GenericContents.cxx"
 				>
 			</File>
@@ -456,10 +460,6 @@
 			</File>
 			<File
 				RelativePath=".\InternalTransport.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\InteropHelper.cxx"
 				>
 			</File>
 			<File
@@ -932,6 +932,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FlowId.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\GenericContents.hxx"
 				>
 			</File>
@@ -973,10 +977,6 @@
 			</File>
 			<File
 				RelativePath=".\InternalTransport.hxx"
-				>
-			</File>
-			<File
-				RelativePath=".\InteropHelper.hxx"
 				>
 			</File>
 			<File

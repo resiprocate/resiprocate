@@ -5,7 +5,6 @@
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
 #include "resip/stack/Via.hxx"
-#include "resip/dum/ContactInstanceRecord.hxx"
 
 namespace repro
 {
@@ -33,7 +32,7 @@ class Target
       Target();
       Target(const resip::Uri& uri);
       Target(const resip::NameAddr& target);
-      Target(const resip::ContactInstanceRecord& record);
+      Target(const repro::Target& target);
 
       virtual ~Target();
       
@@ -43,19 +42,19 @@ class Target
       virtual Status& status();
       virtual const Status& status() const;
       
+      virtual const resip::Uri& setUri(const resip::Uri& uri);
+      virtual const resip::Uri& uri() const;
+      
       virtual const resip::Via& setVia(const resip::Via& via);
       virtual const resip::Via& via() const;
       
-      virtual const resip::Uri& uri() const {return mRec.mContact.uri();}
-      
-      virtual const resip::ContactInstanceRecord& rec() const;
-      virtual resip::ContactInstanceRecord& rec();
-      virtual void setRec(const resip::ContactInstanceRecord& rec);
+      virtual const resip::NameAddr& setNameAddr(const resip::NameAddr& nameAddr);
+      virtual const resip::NameAddr& nameAddr() const;
       
       virtual Target* clone() const;
       
       //In case you need const accessors to keep things happy.
-      virtual int getPriority() const;
+      virtual float getPriority() const;
       virtual bool shouldAutoProcess() const;
       
       static bool targetPtrCompare(const Target* lhs, const Target* rhs)
@@ -66,13 +65,13 @@ class Target
       /**
          Higher value denotes higher priority.
       */
-      int mPriorityMetric;
+      float mPriorityMetric;
       bool mShouldAutoProcess;
       
    protected:
       Status mStatus;
       resip::Via mVia;
-      resip::ContactInstanceRecord mRec;
+      resip::NameAddr mNameAddr;
       
 };// class Target
 

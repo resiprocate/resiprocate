@@ -9,6 +9,7 @@
 
 //#include "repro/Store.hxx"
 #include "repro/HttpBase.hxx"
+#include "repro/Parameters.hxx"
 
 namespace resip
 {
@@ -20,8 +21,8 @@ class DataStream;
 namespace repro
 {
 class Store;
-class UserStore;
-class RouteStore;
+class AbstractUserStore;
+class AbstractRouteStore;
 typedef std::map<resip::Data, resip::Data> Dictionary;
 
 class WebAdmin: public HttpBase
@@ -29,7 +30,7 @@ class WebAdmin: public HttpBase
    public:
       WebAdmin( Store& store,
                 resip::RegistrationPersistenceManager& regDb,
-                resip::Security* security,
+                resip::BaseSecurity* security,
                 bool noWebChallenges,
                 const resip::Data& realm,
                 const resip::Data& adminPassword,
@@ -58,13 +59,18 @@ class WebAdmin: public HttpBase
       void buildEditRouteSubPage(resip::DataStream& s);
       void buildShowRoutesSubPage(resip::DataStream& s);
       void buildRegistrationsSubPage(resip::DataStream& s);
-                                  
+      void buildRestartServerSubPage(resip::DataStream& s);
+      void buildRestartedServerSubPage(resip::DataStream& s);
+      void buildParametersSubPage(resip::DataStream& s);
+      void buildParametersSetPage(int pageNumber, resip::DataStream& s);
+      void saveParameter(Parameters::Param prm, char *webParam);
+
       resip::Data buildCertPage(const resip::Data& domain);
       
       Store& mStore;
 
       resip::RegistrationPersistenceManager& mRegDb;
-      resip::Security* mSecurity;
+      resip::BaseSecurity* mSecurity;
 
       bool mNoWebChallenges;
       
