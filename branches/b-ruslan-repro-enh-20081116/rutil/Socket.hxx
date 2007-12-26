@@ -71,10 +71,6 @@ inline int getErrno() { return WSAGetLastError(); }
 namespace resip
 {
 
-/// set up network - does nothing in unix but needed for windows
-void
-initNetwork();
-
 #ifndef WIN32
 typedef int Socket;
 static const Socket INVALID_SOCKET = -1;
