@@ -64,7 +64,7 @@ void
 resip::initNetwork()
 {
 #if defined(WIN32)
-	bool doneInit=false;
+	static bool doneInit=false;
 	if( !doneInit )
 	{ 
 		doneInit=true;

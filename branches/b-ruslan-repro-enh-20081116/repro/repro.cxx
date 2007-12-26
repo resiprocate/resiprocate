@@ -15,8 +15,12 @@
 #include "rutil/FileSystem.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/Socket.hxx"
 #include "repro/AbstractDb.hxx"
 #include "repro/BerkeleyDb.hxx"
+#include "repro/WebAdmin.hxx"
+#include "repro/WebAdminThread.hxx"
 
 #ifdef WIN32
 #include "rutil/Win32EventLog.hxx"
@@ -242,6 +246,8 @@ char *argv0;
 static int
 runRepro()
 {
+   resip::initNetwork();
+
    if(args->mLogType.lowercase() == "file")
    {
       Log::initialize("file", args->mLogLevel, argv0, (args->mLogFilePath+FileSystem::PathSeparator+"repro_log.txt").c_str());
@@ -321,9 +327,30 @@ runRepro()
 
       InMemoryRegistrationDatabase regData;
 
+      WebAdmin *admin = NULL;
+      WebAdminThread *adminThread = NULL;
+      Data realm(DnsUtil::getLocalHostName());
+      if (args->mHttpPort != 0)
+      {
+#ifdef USE_SSL
+         admin = new WebAdmin(store, regData, security, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort);
+#else
+         admin = new WebAdmin (store, regData, NULL, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort);
+#endif
+         if (!admin->isSane())
+         {
+            throw ProxyMainException( "Failed to start the WebAdmin", __FILE__, __LINE__ );
+         }
+         adminThread = new WebAdminThread(*admin);
+      }
+      auto_ptr<WebAdmin> adminGuard( admin );
+      auto_ptr<WebAdminThread> adminThreadGuard( adminThread );
+      ThreadList threadList;
+      threadList.push_back(adminThread);
+
       try
       {
-         proxyMain( args, store, security, regData );
+         proxyMain( args, store, security, regData, threadList );
       }
       catch ( ProxyMainException& e)
       {
