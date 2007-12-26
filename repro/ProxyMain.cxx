@@ -17,8 +17,6 @@
 #include "repro/ReproServerAuthManager.hxx"
 #include "repro/ReproServerAuthManager.hxx"
 #include "repro/ProcessorChain.hxx"
-#include "repro/WebAdmin.hxx"
-#include "repro/WebAdminThread.hxx"
 #include "repro/monkeys/IsTrustedNode.hxx"
 #include "repro/monkeys/AmIResponsible.hxx"
 #include "repro/monkeys/ConstantLocationMonkey.hxx"
@@ -139,7 +137,7 @@ addDomains(TransactionUser& tu, ReproConfiguration& args, Store& store)
 
 void 
 proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* security, 
-          resip::RegistrationPersistenceManager &regData)
+          resip::RegistrationPersistenceManager &regData, ThreadList threadList)
 {
    Compression* compression = 0;
 
@@ -363,24 +361,6 @@ proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* se
                args->mTimerC );
    Data realm = addDomains(proxy, *args, store);
    
-   WebAdmin *admin = NULL;;
-   WebAdminThread *adminThread = NULL;
-   if (args->mHttpPort != 0)
-   {
-#ifdef USE_SSL
-      admin = new WebAdmin(store, regData, security, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort);
-#else
-      admin = new WebAdmin (store, regData, NULL, args->mNoWebChallenge, realm, args->mAdminPassword, args->mHttpPort);
-#endif
-      if (!admin->isSane())
-      {
-         throw ProxyMainException( "Failed to start the WebAdmin", __FILE__, __LINE__ );
-      }
-      adminThread = new WebAdminThread(*admin);
-   }
-   auto_ptr<WebAdmin> adminGuard( admin );
-   auto_ptr<WebAdminThread> adminThreadGuard( adminThread );
-
    profile->clearSupportedMethods();
    profile->addSupportedMethod(resip::REGISTER);
 #ifdef USE_SSL
@@ -472,9 +452,12 @@ proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* se
    /* Make it all go */
    stackThread.run();
    proxy.run();
-   if(adminThread)
+   for(ThreadList::const_iterator i = threadList.begin(); i != threadList.end(); i++)
    {
-      adminThread->run();
+      (*i)->run();
+#ifdef WIN32
+      setSvcStat();
+#endif
    }
    if (dumThread)
    {
@@ -502,9 +485,12 @@ proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* se
 
    proxy.shutdown();
    stackThread.shutdown();
-   if(adminThread) 
+   for(ThreadList::const_iterator i = threadList.begin(); i != threadList.end(); i++)
    {
-      adminThread->shutdown();
+      (*i)->shutdown();
+#ifdef WIN32
+      setSvcStat();
+#endif
    }
    if (dumThread)
    {
@@ -513,9 +499,12 @@ proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* se
 
    proxy.join();
    stackThread.join();
-   if (adminThread)
+   for(ThreadList::const_iterator i = threadList.begin(); i != threadList.end(); i++)
    {
-      adminThread->join();
+      (*i)->join();
+#ifdef WIN32
+      setSvcStat();
+#endif
    }
 #ifdef WIN32
    setSvcStat();
