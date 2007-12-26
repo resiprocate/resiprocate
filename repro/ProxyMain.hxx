@@ -10,14 +10,17 @@
 #include "repro/Store.hxx"
 #include "resip/stack/Security.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
+#include "rutil/ThreadIf.hxx"
 
 namespace repro
 {
 extern volatile bool reproRestartServer;
 extern volatile bool reproFinish;
 
+typedef std::list<resip::ThreadIf*> ThreadList; 
+
 void proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* security,
-               resip::RegistrationPersistenceManager &regData);
+               resip::RegistrationPersistenceManager &regData, ThreadList threadList);
 
 
 #ifdef WIN32
