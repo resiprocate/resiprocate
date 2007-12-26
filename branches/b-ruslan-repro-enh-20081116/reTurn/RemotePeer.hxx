@@ -11,15 +11,15 @@ namespace reTurn {
 class RemotePeer
 {
 public:
-   explicit RemotePeer(const StunTuple& peerTuple, unsigned short clientToServerChannel, unsigned short serverToClientChannel);
+   explicit RemotePeer(const StunTuple& peerTuple, unsigned char clientToServerChannel, unsigned char serverToClientChannel);
 
-   unsigned short getClientToServerChannel() const { return mClientToServerChannel; }
-   void setClientToServerChannel(unsigned short channel) { mClientToServerChannel = channel; }
+   unsigned char getClientToServerChannel() const { return mClientToServerChannel; }
+   void setClientToServerChannel(unsigned char channel) { mClientToServerChannel = channel; }
    void setClientToServerChannelConfirmed() { mClientToServerChannelConfirmed = true; }
    bool isClientToServerChannelConfirmed() const { return mClientToServerChannelConfirmed; }
 
-   unsigned short getServerToClientChannel() const { return mServerToClientChannel; }
-   void setServerToClientChannel(unsigned short channel) { mServerToClientChannel = channel; }
+   unsigned char getServerToClientChannel() const { return mServerToClientChannel; }
+   void setServerToClientChannel(unsigned char channel) { mServerToClientChannel = channel; }
    void setServerToClientChannelConfirmed() { mServerToClientChannelConfirmed = true; }
    bool isServerToClientChannelConfirmed() const { return mServerToClientChannelConfirmed; }
 
@@ -28,10 +28,10 @@ public:
 private:
    StunTuple mPeerTuple;
  
-   unsigned short mClientToServerChannel;
+   unsigned char mClientToServerChannel;
    bool mClientToServerChannelConfirmed;
  
-   unsigned short mServerToClientChannel;
+   unsigned char mServerToClientChannel;
    bool mServerToClientChannelConfirmed;
 };
 

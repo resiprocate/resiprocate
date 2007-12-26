@@ -22,7 +22,6 @@ using namespace std;
 #include <iostream>
 
 static bool invokeOpenSSLInit = OpenSSLInit::init(); //.dcm. - only in hxx
-volatile bool OpenSSLInit::mInitialized = false;
 Mutex* OpenSSLInit::mMutexes;
 
 bool
@@ -55,12 +54,10 @@ OpenSSLInit::OpenSSLInit()
 	SSL_load_error_strings();
 	OpenSSL_add_all_algorithms();
 	assert(EVP_des_ede3_cbc());
-   mInitialized = true;
 }
 
 OpenSSLInit::~OpenSSLInit()
 {
-   mInitialized = false;
 	ERR_free_strings();// Clean up data allocated during SSL_load_error_strings
 	ERR_remove_state(0);// free thread error queue
 	CRYPTO_cleanup_all_ex_data();
@@ -76,7 +73,6 @@ OpenSSLInit::~OpenSSLInit()
 void
 OpenSSLInit::lockingFunction(int mode, int n, const char* file, int line)
 {
-   if(!mInitialized) return;
    if (mode & CRYPTO_LOCK)
    {
       OpenSSLInit::mMutexes[n].lock();

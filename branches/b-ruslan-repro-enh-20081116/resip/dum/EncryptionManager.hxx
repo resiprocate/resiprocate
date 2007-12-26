@@ -125,8 +125,8 @@ class EncryptionManager : public DumFeature
             bool isSigned(bool noDecryptionKey);
             bool isEncryptedRecurse(Contents**);
             bool isSignedRecurse(Contents**, const Data& decryptorAor, bool noDecryptionKey);
-            Helper::ContentsSecAttrs getContents(SipMessage* msg, Security& security, bool noDecryption);
-            Contents* getContentsRecurse(Contents**, Security&, bool, SecurityAttributes* attr);
+            Helper::ContentsSecAttrs getContents(SipMessage* msg, BaseSecurity& security, bool noDecryption);
+            Contents* getContentsRecurse(Contents**, BaseSecurity&, bool, SecurityAttributes* attr);
             InvalidContents* createInvalidContents(Contents*);
             bool isMultipart(Contents*);
             Data mDecryptor;

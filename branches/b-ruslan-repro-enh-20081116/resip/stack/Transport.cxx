@@ -191,9 +191,9 @@ Transport::error(int e)
 }
 
 void
-Transport::flowTerminated(const Tuple& flow)
+Transport::connectionTerminated(ConnectionId id)
 {
-   mStateMachineFifo.add(new ConnectionTerminated(flow));
+   mStateMachineFifo.add(new ConnectionTerminated(this, id));
 }
    
 void

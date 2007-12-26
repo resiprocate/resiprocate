@@ -1101,7 +1101,7 @@ bool EncryptionManager::Decrypt::isSignedRecurse(Contents** contents,
 }
 
 Helper::ContentsSecAttrs EncryptionManager::Decrypt::getContents(SipMessage* message,
-                                                                 Security& security,
+                                                                 BaseSecurity& security,
                                                                  bool noDecryptionKey)
 {
    SecurityAttributes* attr = new SecurityAttributes;
@@ -1126,7 +1126,7 @@ Helper::ContentsSecAttrs EncryptionManager::Decrypt::getContents(SipMessage* mes
 }
 
 Contents* EncryptionManager::Decrypt::getContentsRecurse(Contents** tree,
-                                                         Security& security,
+                                                         BaseSecurity& security,
                                                          bool noDecryptionKey,
                                                          SecurityAttributes* attributes)
 {

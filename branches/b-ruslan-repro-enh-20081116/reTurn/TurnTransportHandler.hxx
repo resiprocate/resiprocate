@@ -1,36 +1,15 @@
-#ifndef TURNASYNCTLSSOCKET_HXX
-#define TURNASYNCTLSSOCKET_HXX
-
-#include <asio.hpp>
-#include <asio/ssl.hpp>
-
-#include "TurnAsyncTcpSocket.hxx"
-#include "../AsyncTlsSocketBase.hxx"
+#ifndef TURN_TRANSPORT_HANDLER_HXX
+#define TURN_TRANSPORT_HANDLER_HXX
 
 namespace reTurn {
 
-class TurnAsyncTlsSocket : public TurnAsyncSocket, public AsyncTlsSocketBase
+class TurnTransportHandler
 {
 public:
-   explicit TurnAsyncTlsSocket(asio::io_service& ioService, 
-                               asio::ssl::context& sslContext,
-                               TurnAsyncSocketHandler* turnAsyncSocketHandler,
-                               const asio::ip::address& address = UnspecifiedIpAddress, 
-                               unsigned short port = 0,
-                               bool turnFraming = true);
+   TurnTransportHandler() {}
+   virtual ~TurnTransportHandler() {}
 
-   virtual unsigned int getSocketDescriptor() { return mSocket.lowest_layer().native(); }
-
-protected:
-
-private:
-   // AsyncTcpSocketBase callbacks
-   virtual void onConnectSuccess();
-   virtual void onConnectFailure(const asio::error_code& e);
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
-   virtual void onReceiveFailure(const asio::error_code& e);
-   virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
+   virtual void onTransportDestroyed() = 0;
 };
 
 } 

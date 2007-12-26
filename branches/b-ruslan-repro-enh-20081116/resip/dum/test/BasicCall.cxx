@@ -516,7 +516,7 @@ main (int argc, char** argv)
    dumUac->getMasterProfile()->setDigestCredential(uacAor.uri().host(), uacAor.uri().user(), uacPasswd);
    //dumUac->getMasterProfile()->setOutboundProxy(Uri("sip:209.134.58.33:9090"));    
 #else
-   uacAor = NameAddr("sip:UAC@127.0.0.1:12005");
+   uacAor = NameAddr("sip:UAC@127.0.0.1:1205");
 #endif
 
    dumUac->getMasterProfile()->setDefaultFrom(uacAor);

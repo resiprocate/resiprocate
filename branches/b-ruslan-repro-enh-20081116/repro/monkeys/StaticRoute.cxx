@@ -9,7 +9,6 @@
 #include "repro/QValueTarget.hxx"
 
 #include "rutil/Logger.hxx"
-#include "repro/RouteStore.hxx"
 
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
@@ -20,7 +19,7 @@ using namespace repro;
 using namespace std;
 
 
-StaticRoute::StaticRoute(RouteStore& store, bool noChallenge, bool parallelForkStaticRoutes, bool useAuthInt) :
+StaticRoute::StaticRoute(AbstractRouteStore& store, bool noChallenge, bool parallelForkStaticRoutes, bool useAuthInt) :
    mRouteStore(store),
    mNoChallenge(noChallenge),
    mParallelForkStaticRoutes(parallelForkStaticRoutes),
@@ -48,7 +47,7 @@ StaticRoute::process(RequestContext& context)
       event = msg.header(h_Event).value() ;
    }
    
-   RouteStore::UriList targets(mRouteStore.process( ruri,
+   AbstractRouteStore::UriList targets(mRouteStore.process( ruri,
                                                     method,
                                                     event));
    bool requireAuth = false;
@@ -56,7 +55,7 @@ StaticRoute::process(RequestContext& context)
       msg.method() != ACK && 
       msg.method() != BYE)
    {
-      for ( RouteStore::UriList::const_iterator i = targets.begin();
+      for ( AbstractRouteStore::UriList::const_iterator i = targets.begin();
             i != targets.end(); i++ )
       {      
          // !rwm! TODO would be useful to check if these targets require authentication
@@ -76,17 +75,14 @@ StaticRoute::process(RequestContext& context)
    }
    else
    {
-      for ( RouteStore::UriList::const_iterator i = targets.begin();
+      for ( AbstractRouteStore::UriList::const_iterator i = targets.begin();
             i != targets.end(); i++ )
       {
          //Targets are only added after authentication
          InfoLog(<< "Adding target " << *i );
          // .slg. adding StaticRoutes as QValueTargets allows them to be processed before the QValueTargets
          //       added in the LocationServer monkey - since all QValueTargets are processed before simple Targets
-         ContactInstanceRecord targetAddr;
-         targetAddr.mContact.uri() = *i;
-         targetAddr.mContact.param(p_q).setValue(1000);
-         QValueTarget target(targetAddr);
+         QValueTarget target(NameAddr(*i), 1.0);
          context.getResponseContext().addTarget(target, false /* beginImmediately */, mParallelForkStaticRoutes /* addToFirstBatch */);
          //context.addTarget(NameAddr(*i));
       }

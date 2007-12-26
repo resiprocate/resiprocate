@@ -1,46 +1,55 @@
-#ifndef ASYNC_UDP_SOCKET_BASE_HXX
-#define ASYNC_UDP_SOCKET_BASE_HXX
+#ifndef TURN_TRANSPORT_BASE_HXX
+#define TURN_TRANSPORT_BASE_HXX
 
+#include <deque>
 #include <asio.hpp>
-#include <boost/bind.hpp>
 #include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
 
-#include "AsyncSocketBase.hxx"
+#include "StunTuple.hxx"
 
 namespace reTurn {
 
-class AsyncUdpSocketBase : public AsyncSocketBase
+class TurnTransportHandler;
+
+class TurnTransportBase
 {
 public:
-   AsyncUdpSocketBase(asio::io_service& ioService); 
-   virtual ~AsyncUdpSocketBase();
+   TurnTransportBase(asio::io_service& ioService);
+   virtual ~TurnTransportBase();
 
-   virtual unsigned int getSocketDescriptor();
+   // Note: destination is ignored for TCP and TLS connections
+   virtual void sendTurnData(const StunTuple& destination, const char* buffer, unsigned int size);
+   virtual void sendTurnFramedData(unsigned char channelNumber, const StunTuple& destination, const char* buffer, unsigned int size);
 
-   virtual asio::error_code bind(const asio::ip::address& address, unsigned short port);
-   virtual void connect(const std::string& address, unsigned short port);  
+   /// Handle completion of a sendData operation.
+   virtual void handleSendData(const asio::error_code& e);
 
-   virtual void transportReceive();
-   virtual void transportFramedReceive();
-   virtual void transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers);
-   virtual void transportClose();
-
-   virtual const asio::ip::address getSenderEndpointAddress();
-   virtual unsigned short getSenderEndpointPort();
+  /// Register a TurnTransportHandler to receive transport destroyed noticiation
+  /// Note:  This is really only useful for TCP/TLS transports/connections
+  void registerTurnTransportHandler(TurnTransportHandler *turnTransportHandler);
 
 protected:
-   asio::ip::udp::socket mSocket;
-   asio::ip::udp::resolver mResolver;
-
-   /// Endpoint info for current sender
-   asio::ip::udp::endpoint mSenderEndpoint;
-
-   virtual void handleUdpResolve(const asio::error_code& ec,
-                                 asio::ip::udp::resolver::iterator endpoint_iterator);
+   /// The io_service used to perform asynchronous operations.
+   asio::io_service& mIOService;
 
 private:
+   virtual void sendData(const StunTuple& destination, const char* buffer, unsigned int size) = 0;
 
+   class DataToSend
+   {
+   public:
+      DataToSend(const StunTuple& destination, const char* data, unsigned int length) : 
+         mDestination(destination), mData(data, length) {}
+      DataToSend(unsigned char channelNumber, const StunTuple& destination, const char* data, unsigned int length);
+      StunTuple mDestination;  // only used for UDP
+      resip::Data mData;
+   };
+   /// Queue of data to send
+   typedef std::deque<DataToSend> TurnDataQueue;
+   TurnDataQueue mTurnDataQueue;
+
+  /// Registered TurnTransportHandler
+  TurnTransportHandler *mTurnTransportHandler;
 };
 
 }

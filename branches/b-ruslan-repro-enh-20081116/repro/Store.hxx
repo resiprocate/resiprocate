@@ -1,11 +1,10 @@
 #if !defined(REPRO_STORE_HXX)
 #define REPRO_STORE_HXX
 
-#include "repro/AbstractDb.hxx"
-#include "repro/UserStore.hxx"
-#include "repro/RouteStore.hxx"
-#include "repro/AclStore.hxx"
-#include "repro/ConfigStore.hxx"
+#include "repro/AbstractUserStore.hxx"
+#include "repro/AbstractRouteStore.hxx"
+#include "repro/AbstractAclStore.hxx"
+#include "repro/AbstractConfigStore.hxx"
 
 
 namespace repro
@@ -17,13 +16,16 @@ class  AbstractDb;
 class Store
 {
    public:
-      Store( AbstractDb& db );
+      Store( AbstractUserStore *UserStore,
+             AbstractRouteStore *RouteStore, 
+             AbstractAclStore *AclStore,
+             AbstractConfigStore *ConfigStore);
       ~Store();
       
-      UserStore mUserStore;
-      RouteStore mRouteStore; 
-      AclStore mAclStore; 
-      ConfigStore mConfigStore;
+      AbstractUserStore *mUserStore;
+      AbstractRouteStore *mRouteStore; 
+      AbstractAclStore *mAclStore; 
+      AbstractConfigStore *mConfigStore;
     private:
 };
 

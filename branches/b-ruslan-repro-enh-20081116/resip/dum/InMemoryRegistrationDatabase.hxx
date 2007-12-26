@@ -30,27 +30,29 @@ class InMemoryRegistrationDatabase : public RegistrationPersistenceManager
       InMemoryRegistrationDatabase(bool checkExpiry = false);
       virtual ~InMemoryRegistrationDatabase();
       
-      virtual void addAor(const Uri& aor, const ContactList& contacts);
+      virtual void addAor(const Uri& aor, ContactRecordList contacts = ContactRecordList());
       virtual void removeAor(const Uri& aor);
       virtual bool aorIsRegistered(const Uri& aor);
       
       virtual void lockRecord(const Uri& aor);
       virtual void unlockRecord(const Uri& aor);
       
-      virtual update_status_t updateContact(const resip::Uri& aor,
-                                             const ContactInstanceRecord& rec);
-      virtual void removeContact(const Uri& aor, 
-                                 const ContactInstanceRecord& rec);
+      virtual update_status_t updateContact(const Uri& aor, 
+                                             const Uri& contact, 
+                                             time_t expires,
+                                             unsigned int cid=0,
+                                             short q=-1);
+      virtual void removeContact(const Uri& aor, const Uri& contact);
       
-      virtual ContactList getContacts(const Uri& aor);
-      virtual void getContacts(const Uri& aor,ContactList& container);
+      virtual ContactRecordList getContacts(const Uri& aor);
+      virtual void getContacts(const Uri& aor,ContactRecordList& container);
    
       /// return all the AOR is the DB 
       virtual UriList getAors();
       virtual void getAors(UriList& container);
       
    private:
-      typedef std::map<Uri,ContactList *> database_map_t;
+      typedef std::map<Uri,ContactRecordList *> database_map_t;
       database_map_t mDatabase;
       Mutex mDatabaseMutex;
       

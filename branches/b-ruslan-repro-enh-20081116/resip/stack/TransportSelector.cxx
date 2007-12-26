@@ -25,10 +25,6 @@
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/InternalTransport.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
-#include "resip/stack/TcpTransport.hxx"
-#include "resip/stack/TlsTransport.hxx"
-#include "resip/stack/UdpTransport.hxx"
-#include "resip/stack/DtlsTransport.hxx"
 #include "resip/stack/Uri.hxx"
 
 #include "rutil/DataStream.hxx"
@@ -58,7 +54,7 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, Security* security, DnsStub& dnsStub, Compression &compression) :
+TransportSelector::TransportSelector(Fifo<TransactionMessage>& fifo, BaseSecurity* security, DnsStub& dnsStub, Compression &compression) :
    mDns(dnsStub),
    mStateMacFifo(fifo),
    mSecurity(security),
@@ -103,7 +99,6 @@ deleteMap(T& m)
 
 TransportSelector::~TransportSelector()
 {
-   mConnectionlessMap.clear();
    deleteMap(mExactTransports);
    deleteMap(mAnyInterfaceTransports);
    deleteMap(mTlsTransports);
@@ -142,63 +137,35 @@ TransportSelector::isFinished() const
 
 
 void
-TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
+TransportSelector::addTransport(std::auto_ptr<Transport> transport)
 {
-   Transport* transport = autoTransport.release();
    mDns.addTransportType(transport->transport(), transport->ipVersion());
-
-   // !bwc! This is a multimap from TransportType/IpVersion to Transport*.
-   // Make _extra_ sure that no garbage goes in here.
-   if(transport->transport()==TCP)
-   {
-      assert(dynamic_cast<TcpTransport*>(transport));
-   }
-   else if(transport->transport()==TLS)
-   {
-      assert(dynamic_cast<TlsTransport*>(transport));
-   }
-   else if(transport->transport()==UDP)
-   {
-      assert(dynamic_cast<UdpTransport*>(transport));
-   }
-#if USE_DTLS
-   else if(transport->transport()==DTLS)
-   {
-      assert(dynamic_cast<DtlsTransport*>(transport));
-   }
-#endif
-   else
-   {
-      assert(0);
-   }
-   
-   Tuple tuple(transport->interfaceName(), transport->port(), 
-                   transport->ipVersion(), transport->transport());
-   mTypeToTransportMap.insert(std::make_pair(tuple,transport));
-   
    switch (transport->transport())
    {
       case UDP:
       case TCP:
       {
-         assert(mExactTransports.find(tuple) == mExactTransports.end() &&
-                mAnyInterfaceTransports.find(tuple) == mAnyInterfaceTransports.end());
-
-         DebugLog (<< "Adding transport: " << tuple);
+         Tuple key(transport->interfaceName(), transport->port(), 
+                   transport->ipVersion(), transport->transport());
          
+         assert(mExactTransports.find(key) == mExactTransports.end() &&
+                mAnyInterfaceTransports.find(key) == mAnyInterfaceTransports.end());
+
+         DebugLog (<< "Adding transport: " << key);
+
          // Store the transport in the ANY interface maps if the tuple specifies ANY
          // interface. Store the transport in the specific interface maps if the tuple
          // specifies an interface. See TransportSelector::findTransport.
          if (transport->interfaceName().empty() ||
              transport->hasSpecificContact() )
          {
-            mAnyInterfaceTransports[tuple] = transport;
-            mAnyPortAnyInterfaceTransports[tuple] = transport;
+            mAnyInterfaceTransports[key] = transport.get();
+            mAnyPortAnyInterfaceTransports[key] = transport.get();
          }
          else
          {
-            mExactTransports[tuple] = transport;
-            mAnyPortTransports[tuple] = transport;
+            mExactTransports[key] = transport.get();
+            mAnyPortTransports[key] = transport.get();
          }
       }
       break;
@@ -206,7 +173,7 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
       case DTLS:
       {
          TlsTransportKey key(transport->tlsDomain(),transport->transport(),transport->ipVersion());
-         mTlsTransports[key]=transport;
+         mTlsTransports[key]=transport.get();
       }
          break;
       default:
@@ -214,18 +181,13 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
          break;
    }
 
-   if(transport->transport()==UDP || transport->transport()==DTLS)
-   {
-      mConnectionlessMap[transport->getTuple().mFlowKey]=transport;
-   }
-
    if (transport->shareStackProcessAndSelect())
    {
-      mSharedProcessTransports.push_back(transport);
+      mSharedProcessTransports.push_back(transport.release());
    }
    else
    {
-      mHasOwnProcessTransports.push_back(transport);
+      mHasOwnProcessTransports.push_back(transport.release());
       mHasOwnProcessTransports.back()->startOwnProcessing();
    }
 }
@@ -579,11 +541,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
       // .bwc. We need 3 things here:
       // 1) A Transport* to call send() on.
       // 2) A complete Tuple to pass in this call (target).
-      // 3) A host, port, and protocol for filling out the topmost via, and
-      //    possibly stuff like Contact, Referred-By, and other headers that
-      //    must specify a hostname that the TU was unable to supply, because
-      //    it didn't know what interface/port the message would be sent on.
-      //    (source)
+      // 3) A host, port, and protocol for filling out the topmost via (source)
       /*
          Our Transport* might be found in target. If so, we can skip this block
          of stuff.
@@ -609,12 +567,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
          transport = findTransportByDest(msg,target);
          
-         if(!transport && target.mFlowKey && target.onlyUseExistingConnection)
-         {
-            // .bwc. Connection info was specified, and use of this connection 
-            // was mandatory, but connection is no longer around. We fail.
-         }
-         else if (transport)// .bwc. Here we use transport to find source.
+         // .bwc. Here we use transport to find source.
+         if(transport)
          {
             source = transport->getTuple();
 
@@ -783,10 +737,6 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 
       if (target.transport)
       {
-         // !bwc! TODO This filling in of stuff really should be handled with
-         // the callOutboundDecorators() callback. (Or, at the very least,
-         // we should allow this code to be turned off through configuration.
-         // There are plenty of cases where this stuff is not at all necessary.)
          // There is a contact header and it contains exactly one entry
          if (msg->exists(h_Contacts) && msg->header(h_Contacts).size()==1)
          {
@@ -828,9 +778,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                {
                   if (contact.uri().exists(p_addTransport))
                   {
-                     if (target.getType() != UDP)
+                     if (target.transport->transport() != UDP)
                      {
-                        contact.uri().param(p_transport) = Tuple::toData(target.getType());
+                        contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                      }
                      contact.uri().remove(p_addTransport);
                   }
@@ -866,9 +816,9 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             {
                rr.uri().host() = Tuple::inet_ntop(source);
                rr.uri().port() = target.transport->port();
-               if (target.getType() != UDP && !rr.uri().exists(p_transport))
+               if (target.transport->transport() != UDP && !rr.uri().exists(p_transport))
                {
-                  rr.uri().param(p_transport) = Tuple::toData(target.getType());
+                  rr.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                }
                // Add comp=sigcomp and sigcomp-id="<urn>" to Record-Route
                // XXX This isn't quite right -- should be set only
@@ -1007,34 +957,42 @@ TransportSelector::sumTransportFifoSizes() const
    return sum;
 }
 
-bool
-TransportSelector::connectionAlive(const Tuple& target) const
+Connection*
+TransportSelector::findConnection(const Tuple& target)
 {
-   return (findConnection(target)!=0);
-}
-
-const Connection*
-TransportSelector::findConnection(const Tuple& target) const
-{
-   // !bwc! If we can find a match in the ConnectionManager, we can
-   // determine what Transport this needs to be sent on. This may also let
+   // .bwc. If we can find a match in the ConnectionManager, we can get
+   //determine what Tranport this needs to be sent on. This may also let
    // us know immediately what our source needs to be.
    if(target.getType()==TCP || target.getType()==TLS)
    {
       TcpBaseTransport* tcpb=0;
       Connection* conn=0;
-      TypeToTransportMap::const_iterator i;
-      TypeToTransportMap::const_iterator l=mTypeToTransportMap.lower_bound(target);
-      TypeToTransportMap::const_iterator u=mTypeToTransportMap.upper_bound(target);
-      for(i=l;i!=u;++i)
+      TransportList::const_iterator i;
+
+      for(i=mSharedProcessTransports.begin();i!=mSharedProcessTransports.end();i++)
       {
-         tcpb=static_cast<TcpBaseTransport*>(i->second);
-         conn = tcpb->getConnectionManager().findConnection(target);
-         if(conn)
+         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) )
          {
-            return conn;
+            conn = tcpb->getConnectionManager().findConnection(target);
+            if(conn)
+            {
+               return conn;
+            }
          }
       }
+      
+      for(i=mHasOwnProcessTransports.begin();i!=mHasOwnProcessTransports.end();i++)
+      {
+         if( (tcpb=dynamic_cast<TcpBaseTransport*>(*i)) )
+         {
+            conn = tcpb->getConnectionManager().findConnection(target);
+            if(conn)
+            {
+               return conn;
+            }
+         }
+      }
+
    }
    
    return 0;
@@ -1046,38 +1004,41 @@ TransportSelector::findTransportByDest(SipMessage* msg, Tuple& target)
 {
    if(!target.transport)
    {
-      if(target.getType()==UDP || target.getType()==DTLS)
+      if(target.getType()!=UDP) // .bwc. Maybe we can find a connection?
       {
-         if(target.mFlowKey)
+         if( !target.connectionId) // .bwc. Don't have a cid yet...
          {
-            std::map<FlowKey,Transport*>::iterator i=mConnectionlessMap.find(target.mFlowKey);
-            if(i!=mConnectionlessMap.end())
+            static ExtensionParameter p_cid("cid");
+            unsigned long cid=0;
+            if(msg->exists(h_Routes) && 
+               !msg->header(h_Routes).empty() && 
+               msg->header(h_Routes).front().uri().exists(p_cid))
             {
-               return i->second;
+               cid = msg->header(h_Routes).front().uri().param(p_cid).convertUnsignedLong();
+               msg->header(h_Routes).front().uri().remove(p_cid);
             }
+            else if (msg->header(h_RequestLine).uri().exists(p_cid))
+            {
+               cid = msg->header(h_RequestLine).uri().param(p_cid).convertUnsignedLong();
+               msg->header(h_RequestLine).uri().remove(p_cid);
+            }
+            
+            target.connectionId=cid;
          }
-      }
-      else if(target.getType()==TCP || target.getType()==TLS)
-      {
+         
          // .bwc. We might find a match by the cid, or maybe using the
          // tuple itself.
-         const Connection* conn = findConnection(target);
+         Connection* conn = findConnection(target);
          
          if(conn) // .bwc. Woohoo! Home free!
          {
             return conn->transport();
          }
-         else if(target.onlyUseExistingConnection)
+         else if(target.getType()==TLS || target.getType()==DTLS)
          {
-            // .bwc. Connection no longer exists, so we fail.
-            return 0;
+            return findTlsTransport(msg->getTlsDomain(),target.getType(),target.ipVersion());
          }
-      }
-      
-      // !bwc! No luck finding with a FlowKey.
-      if(target.getType()==TLS || target.getType()==DTLS)
-      {
-         return findTlsTransport(msg->getTlsDomain(),target.getType(),target.ipVersion());
+
       }
             
    }

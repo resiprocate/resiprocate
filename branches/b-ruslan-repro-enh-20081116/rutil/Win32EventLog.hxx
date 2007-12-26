@@ -1,65 +1,40 @@
-#if !defined(CLIENT_AUTH_EXTENSION_HXX)
-#define CLIENT_AUTH_EXTENSION_HXX
+#if !defined(RESIP_WIN32EVENTLOG_HXX)
+#define RESIP_WIN32EVENTLOG_HXX 
+#ifdef WIN32
 
-#include <time.h>
+#include <windows.h>
 
-#include <time.h>
-
-#include "resip/stack/NonceHelper.hxx"
-#include "resip/stack/Symbols.hxx"
-#include "resip/stack/Uri.hxx"
-#include "resip/stack/MethodTypes.hxx"
-#include "rutil/BaseException.hxx"
-#include "rutil/Data.hxx"
-#include "resip/stack/Contents.hxx"
-#include "resip/stack/SecurityAttributes.hxx"
-#include "resip/stack/SdpContents.hxx"
-
-
+#include "rutil/log.hxx"
 
 namespace resip
 {
 
-class SipMessage;
-class NameAddr;
-class SecurityAttributes;
-class Security;
-
-class ClientAuthExtension
-{
+   class Win32EventLog: public ExternalLogger
+   {
    public:
-      virtual ~ClientAuthExtension() {}
-      virtual Auth makeChallengeResponseAuth(SipMessage& request,
-                                             const Data& username,
-                                             const Data& password,
-                                             const Auth& challenge,
-                                             const Data& cnonce,
-                                             unsigned int& nonceCount,
-                                             Data& nonceCountString);      
-      
-      virtual bool algorithmAndQopSupported(const Auth& challenge);
-
-      static void setInstance(ClientAuthExtension*);
-      static ClientAuthExtension& instance() 
-      {
-         return *mInstance;
-      }      
-   protected:
-      ClientAuthExtension() {}
-
-      
-      static ClientAuthExtension* mInstance;
-      
-};
+      Win32EventLog(const char *application);
+      virtual ~Win32EventLog();
+      virtual bool operator()(Log::Level level,
+                        const Subsystem& subsystem, 
+                        const Data& appName,
+                        const char* file,
+                        int line,
+                        const Data& message,
+                        const Data& messageWithHeaders);
+   private:
+      HANDLE EventLogHandle;
+   };
 
 }
+
+#endif
 
 #endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

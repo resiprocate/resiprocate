@@ -20,11 +20,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;../contrib/asio&quot;;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL;LEAK_CHECK"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
@@ -72,7 +71,6 @@
 				AdditionalIncludeDirectories="&quot;../contrib/asio&quot;;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				RuntimeLibrary="2"
-				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
@@ -119,18 +117,6 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\AsyncSocketBase.cxx">
-			</File>
-			<File
-				RelativePath=".\AsyncTcpSocketBase.cxx">
-			</File>
-			<File
-				RelativePath=".\AsyncTlsSocketBase.cxx">
-			</File>
-			<File
-				RelativePath=".\AsyncUdpSocketBase.cxx">
-			</File>
-			<File
 				RelativePath=".\ChannelManager.cxx">
 			</File>
 			<File
@@ -144,9 +130,6 @@
 			</File>
 			<File
 				RelativePath=".\reTurnServer.cxx">
-			</File>
-			<File
-				RelativePath=".\ReTurnSubsystem.cxx">
 			</File>
 			<File
 				RelativePath=".\StunAuth.cxx">
@@ -182,6 +165,9 @@
 				RelativePath=".\TurnPermission.cxx">
 			</File>
 			<File
+				RelativePath=".\TurnTransportBase.cxx">
+			</File>
+			<File
 				RelativePath=".\UdpRelayServer.cxx">
 			</File>
 			<File
@@ -193,21 +179,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath=".\AsyncSocketBase.hxx">
-			</File>
-			<File
-				RelativePath=".\AsyncSocketBaseHandler.hxx">
-			</File>
-			<File
-				RelativePath=".\AsyncTcpSocketBase.hxx">
-			</File>
-			<File
-				RelativePath=".\AsyncTlsSocketBase.hxx">
-			</File>
-			<File
-				RelativePath=".\AsyncUdpSocketBase.hxx">
-			</File>
-			<File
 				RelativePath=".\ChannelManager.hxx">
 			</File>
 			<File
@@ -218,9 +189,6 @@
 			</File>
 			<File
 				RelativePath=".\RequestHandler.hxx">
-			</File>
-			<File
-				RelativePath=".\ReTurnSubsystem.hxx">
 			</File>
 			<File
 				RelativePath=".\StunAuth.hxx">
@@ -254,6 +222,12 @@
 			</File>
 			<File
 				RelativePath=".\TurnPermission.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnTransportBase.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnTransportHandler.hxx">
 			</File>
 			<File
 				RelativePath=".\UdpRelayServer.hxx">

@@ -17,53 +17,88 @@
 namespace resip
 {
 
-/**
-   @brief Provides file-system traversal. Wraps the POSIX/Windows 
-   implementation, depending on environment.
-*/
-class FileSystem
-{
+   /**
+     @brief Provides file-system traversal. Wraps the POSIX/Windows 
+     implementation, depending on environment.
+   */
+   class FileSystem
+   {
    public:
+
+      static const char PathSeparator;
+
+      /**
+        DirectoryExists returns a boolean value that indicates whether the
+        specified directory exists (and is actually a directory) 
+      */
+      static bool directoryExists(const Data& path);
+
+      /**
+         ForceDirectories ensures that all the directories in a specific path exist.
+         Any portion that does not already exist will be created.  Function result
+         indicates success of the operation.  The function can fail if the current
+         user does not have sufficient file access rights to create directories in
+         the given path.
+      */
+      static bool forceDirectories(const Data& name);
+
+#ifdef WIN32
+      /**
+        IsReadWriteAccess check WIN NT security permissions and return true if
+        current process have read/write access to given file or directory
+
+        @warning User or group that user belongs to must explicitly defined in security 
+        permission ( limitation of GetEffectiveRightsFromAcl )
+      */
+      static bool isReadWriteAccess(const char *path);
+
+      /**
+        SetAccessAs copy to Acceptor access permissions from Donor.
+        Acceptor do not inherit permissions from own directory
+      */
+      static void setAccessAs(const char *acceptor, const char *donor);
+#endif
+
       class Directory
       {
+      public:
+         typedef Data value_type;
+         typedef value_type* pointer;
+         typedef const value_type* const_pointer;
+         typedef value_type& reference;
+         typedef const value_type& const_reference;
+
+         Directory(const Data& path);
+
+         class iterator
+         {
          public:
-            typedef Data value_type;
-            typedef value_type* pointer;
-            typedef const value_type* const_pointer;
-            typedef value_type& reference;
-            typedef const value_type& const_reference;
+            iterator(const Directory& dir);
+            iterator();
+            ~iterator();
 
-            Directory(const Data& path);
-            
-            class iterator
-            {
-               public:
-                  iterator(const Directory& dir);
-                  iterator();
-                  ~iterator();
-
-                  iterator& operator++();
-                  bool operator!=(const iterator& rhs) const;
-                  bool operator==(const iterator& rhs) const;
-                  const Data& operator*() const;
-                  const Data* operator->() const;
-               private:
-#ifdef WIN32
-                  HANDLE mWinSearch;
-#else
-                  DIR* mNixDir;
-                  struct dirent* mDirent;
-#endif
-                  Data mFile;
-            };
-
-            iterator begin() const;
-            iterator end() const;
-            const Data& getPath() const { return mPath; }
+            iterator& operator++();
+            bool operator!=(const iterator& rhs) const;
+            bool operator==(const iterator& rhs) const;
+            const Data& operator*() const;
+            const Data* operator->() const;
          private:
-            Data mPath;
+#ifdef WIN32
+            HANDLE mWinSearch;
+#else
+            DIR* mNixDir;
+            struct dirent* mDirent;
+#endif
+            Data mFile;
+         };
+
+         iterator begin() const;
+         iterator end() const;
+         const Data& getPath() const { return mPath; }
+      private:
+         Data mPath;
       };
-};   
+   };   
 
 }
 

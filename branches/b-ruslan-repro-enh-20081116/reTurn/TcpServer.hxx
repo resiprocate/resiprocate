@@ -15,9 +15,7 @@ class TcpServer
 {
 public:
   /// Create the server to listen on the specified TCP address and port
-  explicit TcpServer(asio::io_service& ioService, RequestHandler& rqeuestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming);
-
-  void start();
+  explicit TcpServer(asio::io_service& ioService, RequestHandler& rqeuestHandler, const asio::ip::address& address, unsigned short port);
 
 private:
   /// Handle completion of an asynchronous accept operation.
@@ -33,12 +31,10 @@ private:
   ConnectionManager mConnectionManager;
 
   /// The next connection to be accepted.
-  ConnectionPtr mNewConnection;
+  TcpConnectionPtr mNewConnection;
 
   /// The handler for all incoming requests.
   RequestHandler& mRequestHandler;
-
-  bool mTurnFraming;
 };
 
 }

@@ -14,31 +14,28 @@ class ConnectionTerminated : public TransactionMessage
    public:
       RESIP_HeapCount(ConnectionTerminated);
 
-      ConnectionTerminated(const Tuple& flow) : 
-         mFlow(flow)
+      ConnectionTerminated(const Transport* transport, ConnectionId id) : 
+         mTransport(transport), 
+         mConnectionId(id)
       {
       }
       virtual const Data& getTransactionId() const { assert(0); return Data::Empty; }
       virtual bool isClientTransaction() const { assert(0); return false; }
-      virtual Message* clone() const { return new ConnectionTerminated(mFlow); }
+      virtual Message* clone() const { return new ConnectionTerminated(mTransport, mConnectionId); }
       virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm); }
       virtual std::ostream& encodeBrief(std::ostream& str) const 
       {
-         return str << "ConnectionTerminated " << mFlow;
+         return str << "ConnectionTerminated " << mConnectionId;
       }
 
-      FlowKey getFlowKey() const 
+      ConnectionId getConnectionId() const 
       {
-         return mFlow.mFlowKey;
-      }
-      
-      const Tuple& getFlow() const
-      {
-         return mFlow;
+         return mConnectionId;
       }
       
    private:
-      const Tuple mFlow;
+      const Transport* mTransport;
+      const ConnectionId mConnectionId;
 };
  
 }

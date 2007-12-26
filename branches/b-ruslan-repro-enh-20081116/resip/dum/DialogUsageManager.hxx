@@ -29,7 +29,7 @@
 namespace resip 
 {
 
-class Security;
+class BaseSecurity;
 class SipStack;
 class FdSet;
 class MasterProfile;
@@ -116,7 +116,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
                          SecurityTypes::SSLType sslType = SecurityTypes::TLSv1 );
 
       SipStack& getSipStack();
-      Security* getSecurity();
+      BaseSecurity* getSecurity();
       
       Data getHostAddress();
 

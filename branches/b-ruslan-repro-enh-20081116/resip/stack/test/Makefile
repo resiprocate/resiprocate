@@ -37,12 +37,14 @@ testDns.cxx \
 testEmbedded.cxx \
 testEmptyHeader.cxx \
 testExternalLogger.cxx \
+testFlowId.cxx \
 testIM.cxx \
 testLockStep.cxx \
 testMessageWaiting.cxx \
 testMultipartMixedContents.cxx \
 testMultipartRelated.cxx \
 testParserCategories.cxx \
+testPidf.cxx \
 testPidf.cxx \
 testPksc7.cxx \
 testPlainContents.cxx \

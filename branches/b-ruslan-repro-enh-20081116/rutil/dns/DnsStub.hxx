@@ -156,7 +156,6 @@ class DnsStub : public ExternalDnsHandler
       virtual void handleDnsRaw(ExternalDnsRawResult);
       
    protected:
-      void cache(const Data& key, in_addr addr);
       void cache(const Data& key, const unsigned char* abuf, int alen);
       void cacheTTL(const Data& key, int rrType, int status, const unsigned char* abuf, int alen);
 

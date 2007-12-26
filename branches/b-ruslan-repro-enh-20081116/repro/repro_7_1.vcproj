@@ -63,6 +63,8 @@ del %temp%\tmp$$$.cmd
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
 endlocal
+
+mc EventLogMessage.mc
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -129,6 +131,8 @@ del %temp%\tmp$$$.cmd
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
 endlocal
+
+mc EventLogMessage.mc
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -197,6 +201,8 @@ del %temp%\tmp$$$.cmd
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
 endlocal
+
+mc EventLogMessage.mc
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -263,6 +269,8 @@ del %temp%\tmp$$$.cmd
 echo #define REPRO_RELEASE_VERSION &quot;%line1_%&quot; &gt;&gt; reproInfo.hxx
 
 endlocal
+
+mc EventLogMessage.mc
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -289,6 +297,9 @@ endlocal
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
 				RelativePath=".\AbstractDb.cxx">
+			</File>
+			<File
+				RelativePath=".\AbstractUserStore.cxx">
 			</File>
 			<File
 				RelativePath=".\AclStore.cxx">
@@ -336,7 +347,7 @@ endlocal
 				RelativePath=".\monkeys\LocationServer.cxx">
 			</File>
 			<File
-				RelativePath=".\monkeys\OutboundTargetHandler.cxx">
+				RelativePath=".\Parameters.cxx">
 			</File>
 			<File
 				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.cxx">
@@ -354,6 +365,9 @@ endlocal
 				RelativePath=".\Proxy.cxx">
 			</File>
 			<File
+				RelativePath=".\ProxyMain.cxx">
+			</File>
+			<File
 				RelativePath=".\QValueTarget.cxx">
 			</File>
 			<File
@@ -369,6 +383,9 @@ endlocal
 				RelativePath=".\repro.cxx">
 			</File>
 			<File
+				RelativePath=".\ReproConfiguration.cxx">
+			</File>
+			<File
 				RelativePath=".\ReproServerAuthManager.cxx">
 			</File>
 			<File
@@ -382,6 +399,9 @@ endlocal
 			</File>
 			<File
 				RelativePath=".\RouteStore.cxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\SetTargetConnection.cxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.cxx">
@@ -419,7 +439,19 @@ endlocal
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
+				RelativePath=".\AbstractAclStore.hxx">
+			</File>
+			<File
+				RelativePath=".\AbstractConfigStore.hxx">
+			</File>
+			<File
 				RelativePath=".\AbstractDb.hxx">
+			</File>
+			<File
+				RelativePath=".\AbstractRouteStore.hxx">
+			</File>
+			<File
+				RelativePath=".\AbstractUserStore.hxx">
 			</File>
 			<File
 				RelativePath=".\Ack200DoneMessage.hxx">
@@ -473,7 +505,7 @@ endlocal
 				RelativePath=".\monkeys\LocationServer.hxx">
 			</File>
 			<File
-				RelativePath=".\monkeys\OutboundTargetHandler.hxx">
+				RelativePath=".\Parameters.hxx">
 			</File>
 			<File
 				RelativePath=".\stateAgents\PrivateKeyPublicationHandler.hxx">
@@ -491,6 +523,12 @@ endlocal
 				RelativePath=".\Proxy.hxx">
 			</File>
 			<File
+				RelativePath=".\ProxyMain.hxx">
+			</File>
+			<File
+				RelativePath=".\ProxyMainException.hxx">
+			</File>
+			<File
 				RelativePath=".\QValueTarget.hxx">
 			</File>
 			<File
@@ -501,6 +539,9 @@ endlocal
 			</File>
 			<File
 				RelativePath=".\Registrar.hxx">
+			</File>
+			<File
+				RelativePath=".\ReproConfiguration.hxx">
 			</File>
 			<File
 				RelativePath=".\ReproServerAuthManager.hxx">
@@ -516,6 +557,9 @@ endlocal
 			</File>
 			<File
 				RelativePath=".\RouteStore.hxx">
+			</File>
+			<File
+				RelativePath=".\monkeys\SetTargetConnection.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.hxx">
@@ -561,12 +605,21 @@ endlocal
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
+			<File
+				RelativePath=".\EventLogMessage.rc">
+			</File>
+			<File
+				RelativePath=".\Repro.res">
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\webadmin\pageOutlinePost.ixx">
 		</File>
 		<File
 			RelativePath=".\webadmin\pageOutlinePre.ixx">
+		</File>
+		<File
+			RelativePath=".\webadmin\Parameters.ixx">
 		</File>
 	</Files>
 	<Globals>

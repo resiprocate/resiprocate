@@ -5,14 +5,13 @@
 #include "repro/ProcessorChain.hxx"
 #include "repro/Proxy.hxx"
 #include "repro/Ack200DoneMessage.hxx"
-#include "repro/UserStore.hxx"
+#include "repro/AbstractUserStore.hxx"
 #include "repro/Dispatcher.hxx"
 
 #include "resip/stack/TransactionTerminated.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Helper.hxx"
-#include "resip/stack/InteropHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -26,16 +25,14 @@ using namespace std;
 
 Proxy::Proxy(SipStack& stack, 
              const Uri& recordRoute,
-             bool enableRecordRoute,
              ProcessorChain& requestP, 
              ProcessorChain& responseP, 
              ProcessorChain& targetP, 
-             UserStore& userStore,
+             AbstractUserStore& userStore,
              int timerC) 
    : TransactionUser(TransactionUser::RegisterForTransactionTermination),
      mStack(stack), 
      mRecordRoute(recordRoute),
-     mRecordRouteEnabled(enableRecordRoute),
      mRequestProcessorChain(requestP), 
      mResponseProcessorChain(responseP),
      mTargetProcessorChain(targetP),
@@ -64,7 +61,7 @@ Proxy::isShutDown() const
 }
 
 
-UserStore&
+AbstractUserStore&
 Proxy::getUserStore()
 {
    return mUserStore;
@@ -109,20 +106,6 @@ Proxy::thread()
                   }
 
                   // The TU selector already checks the URI scheme for us (Sect 16.3, Step 2)
-                  if(sip->method()==OPTIONS && 
-                     sip->header(h_RequestLine).uri().user().empty() &&
-                     isMyUri(sip->header(h_RequestLine).uri()))
-                  {
-                     std::auto_ptr<SipMessage> resp(new SipMessage);
-                     Helper::makeResponse(*resp,*sip,200);
-                     if(resip::InteropHelper::getOutboundSupported())
-                     {
-                        resp->header(h_Supporteds).push_back(Token("outbound"));
-                     }
-                     mStack.send(*resp,this);
-                     delete sip;
-                     continue;
-                  }
 
                   // check the MaxForwards isn't too low
                   if (!sip->exists(h_MaxForwards))
@@ -463,57 +446,6 @@ const resip::NameAddr&
 Proxy::getRecordRoute() const
 {
    return mRecordRoute;
-}
-
-bool
-Proxy::getRecordRouteEnabled() const
-{
-   return mRecordRouteEnabled;
-}
-
-void
-Proxy::decorateMessage(resip::SipMessage &request,
-                        const resip::Tuple &source,
-                        const resip::Tuple &destination)
-{
-   DebugLog(<<"Proxy::decorateMessage called.");
-   NameAddr rt;
-   
-   if(destination.onlyUseExistingConnection 
-      || resip::InteropHelper::getRRTokenHackEnabled())
-   {
-      rt=getRecordRoute();
-      // .bwc. If our target has an outbound flow to us, we need to put a flow
-      // token in a Record-Route.
-      Helper::massageRoute(request,rt);
-      resip::Data binaryFlowToken;
-      Tuple::writeBinaryToken(destination,binaryFlowToken);
-      
-      // !bwc! TODO encrypt this binary token to self.
-      rt.uri().user()=binaryFlowToken.base64encode();
-   }
-   else if(!request.empty(h_RecordRoutes) 
-            && isMyUri(request.header(h_RecordRoutes).front().uri())
-            && !request.header(h_RecordRoutes).front().uri().user().empty())
-   {
-      // .bwc. If we Record-Routed earlier with a flow-token, we need to
-      // add a second Record-Route (to make in-dialog stuff work both ways)
-      rt = getRecordRoute();
-      Helper::massageRoute(request,rt);
-   }
-   
-   // This pushes the Record-Route that represents the interface from
-   // which the request is being sent
-   //
-   // .bwc. This shouldn't duplicate the previous Record-Route, since rt only
-   // gets defined if we need to double-record-route. (ie, the source or the
-   // target had an outbound flow to us). The only way these could end up the
-   // same is if the target and source were the same entity.
-   if (!rt.uri().host().empty())
-   {
-      request.header(h_RecordRoutes).push_front(rt);
-      InfoLog (<< "Added outbound Record-Route: " << rt);
-   }
 }
 
 

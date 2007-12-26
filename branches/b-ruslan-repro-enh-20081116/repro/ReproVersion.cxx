@@ -112,7 +112,6 @@ int main()
    T(buildHost);
    return 0;
 }
-#undef T
 #endif
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
