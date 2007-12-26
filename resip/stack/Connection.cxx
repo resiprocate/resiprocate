@@ -6,7 +6,6 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/Connection.hxx"
 #include "resip/stack/ConnectionManager.hxx"
-#include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Security.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
@@ -21,30 +20,40 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
-Connection::Connection(Transport* transport,const Tuple& who, Socket socket,
-                       Compression &compression)
-   : ConnectionBase(transport,who,compression),
+Connection::Connection()
+   : mSocket(INVALID_SOCKET),
      mInWritable(false)
 {
-   mWho.mFlowKey=socket;
-   if(mWho.mFlowKey && ConnectionBase::transport())
-   {
-      getConnectionManager().addConnection(this);
-   }
+}
+
+Connection::Connection(const Tuple& who, Socket socket,
+                       Compression &compression)
+   : ConnectionBase(who,compression),
+     mSocket(socket),
+     mInWritable(false)
+{
+   getConnectionManager().addConnection(this);
 }
 
 Connection::~Connection()
 {
-   if(mWho.mFlowKey && ConnectionBase::transport())
+   if (mSocket != INVALID_SOCKET) // bogus Connections
    {
-      closeSocket(mWho.mFlowKey);
+      closeSocket(mSocket);
       getConnectionManager().removeConnection(this);
    }
+}
+
+ConnectionId
+Connection::getId() const
+{
+   return mWho.connectionId;
 }
 
 void
 Connection::requestWrite(SendData* sendData)
 {
+   assert(mWho.transport);
    mOutstandingSends.push_back(sendData);
    if (isWritable())
    {
@@ -145,7 +154,8 @@ Connection::ensureWritable()
 ConnectionManager&
 Connection::getConnectionManager() const
 {
-   TcpBaseTransport* transport = static_cast<TcpBaseTransport*>(ConnectionBase::transport());
+   assert(mWho.transport);
+   TcpBaseTransport* transport = static_cast<TcpBaseTransport*>(mWho.transport);
    
    return transport->getConnectionManager();
 }
@@ -155,6 +165,12 @@ resip::operator<<(std::ostream& strm, const resip::Connection& c)
 {
    strm << "CONN: " << &c << " " << int(c.getSocket()) << " " << c.mWho;
    return strm;
+}
+
+Transport* 
+Connection::transport()
+{
+   return mWho.transport;
 }
 
 int
@@ -206,18 +222,6 @@ Connection::read(Fifo<TransactionMessage>& fifo)
    return bytesRead;
 }
 
-void
-Connection::onDoubleCRLF()
-{
-   // !bwc! TODO might need to make this more efficient.
-   // !bwc! Need to make this sigcomp-friendly
-   if(InteropHelper::getOutboundVersion()>=8)
-   {
-      DebugLog(<<"Sending response CRLF (aka pong).");
-      requestWrite(new SendData(mWho,Symbols::CRLF,Data::Empty,Data::Empty));
-   }
-}
-
 bool 
 Connection::hasDataToRead()
 {
@@ -235,6 +239,7 @@ Connection::isWritable()
 {
    return true;
 }
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
@@ -285,3 +290,4 @@ Connection::isWritable()
  * <http://www.vovida.org/>.
  *
  */
+

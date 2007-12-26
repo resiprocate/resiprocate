@@ -6,8 +6,7 @@ CXXFLAGS += -DBOOST_ALL_NO_LIB
 LDLIBS += -L../$(OBJ) -lreTurnClient
 
 TESTPROGRAMS += \
-	TestClient.cxx \
-	TestAsyncClient.cxx
+	TestClient.cxx
 
 include $(BUILD)/Makefile.post
 

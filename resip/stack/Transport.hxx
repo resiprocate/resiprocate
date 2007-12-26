@@ -51,7 +51,7 @@ class Transport
       virtual void process(FdSet& fdset) = 0;
       virtual void buildFdSet( FdSet& fdset) =0;
 
-      void flowTerminated(const Tuple& flow);
+      void connectionTerminated(ConnectionId id);
             
          
       void fail(const Data& tid, TransportFailure::FailureReason reason = TransportFailure::Failure); // called when transport failed

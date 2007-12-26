@@ -1,20 +1,14 @@
 #include "TcpServer.hxx"
 #include <boost/bind.hpp>
-#include <rutil/WinLeakCheck.hxx>
-#include <rutil/Logger.hxx>
-#include "ReTurnSubsystem.hxx"
-
-#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 namespace reTurn {
 
-TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming)
+TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
   mConnectionManager(),
-  mNewConnection(new TcpConnection(ioService, mConnectionManager, requestHandler, turnFraming)),
-  mRequestHandler(requestHandler),
-  mTurnFraming(turnFraming)
+  mNewConnection(new TcpConnection(ioService, mConnectionManager, requestHandler)),
+  mRequestHandler(requestHandler)
 {
    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
    asio::ip::tcp::endpoint endpoint(address, port);
@@ -24,13 +18,9 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
-   InfoLog(<< (mTurnFraming ? "TURN" : "STUN") << " TcpServer started.  Listening on " << address << ":" << port);
-}
+   std::cout << "TcpServer started.  Listening on " << address << ":" << port << std::endl;
 
-void 
-TcpServer::start()
-{
-   mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
+   mAcceptor.async_accept(mNewConnection->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
 }
 
 void 
@@ -40,12 +30,8 @@ TcpServer::handleAccept(const asio::error_code& e)
    {
       mConnectionManager.start(mNewConnection);
 
-      mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler, mTurnFraming));
-      mAcceptor.async_accept(((TcpConnection*)mNewConnection.get())->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
-   }
-   else
-   {
-      ErrLog(<< "Error in handleAccept: " << e.value() << "-" << e.message());
+      mNewConnection.reset(new TcpConnection(mIOService, mConnectionManager, mRequestHandler));
+      mAcceptor.async_accept(mNewConnection->socket(), boost::bind(&TcpServer::handleAccept, this, asio::placeholders::error));
    }
 }
 

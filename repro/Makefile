@@ -34,6 +34,7 @@ TESTPROGRAMS = \
 #	userAdmin.cxx 
 
 SRC 	+=   \
+ 	AbstractUserStore.cxx \
 	RouteStore.cxx \
 	UserStore.cxx \
 	ConfigStore.cxx \
@@ -43,6 +44,8 @@ SRC 	+=   \
 	BerkeleyDb.cxx \
 	\
 	CommandLineParser.cxx \
+	ReproConfiguration.cxx \
+	Parameters.cxx \
 	ReproVersion.cxx \
 	HttpBase.cxx \
 	HttpConnection.cxx \
@@ -50,6 +53,7 @@ SRC 	+=   \
 	WebAdminThread.cxx \
 	\
 	Proxy.cxx \
+	ProxyMain.cxx \
 	Registrar.cxx \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
@@ -67,13 +71,13 @@ SRC 	+=   \
 	monkeys/IsTrustedNode.cxx \
 	monkeys/ConstantLocationMonkey.cxx \
 	monkeys/LocationServer.cxx \
-	monkeys/OutboundTargetHandler.cxx \
 	monkeys/RecursiveRedirect.cxx \
 	monkeys/SimpleStaticRoute.cxx \
 	monkeys/StaticRoute.cxx \
 	monkeys/StrictRouteFixup.cxx \
 	monkeys/QValueTargetHandler.cxx \
 	monkeys/SimpleTargetHandler.cxx \
+	monkeys/SetTargetConnection.cxx \
 	\
 
 

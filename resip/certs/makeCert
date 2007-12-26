@@ -16,7 +16,7 @@ fi
 DOMAIN=`echo $1 | perl -ne '{print "$1\n" if (/\.(.*)$/)}'   ` 
 ADDR=$1
 
-echo "making cert for ${DOMAIN} ${ADDR}"
+echo "making cert for $DOMAIN ${ADDR}"
 
 rm -f ${ADDR}_*.pem
 rm -f ${ADDR}.p12
@@ -24,7 +24,7 @@ rm -f ${ADDR}.p12
 case ${ADDR} in
 *:*) ALTNAME="URI:${ADDR}" ;;
 *@*) ALTNAME="URI:sip:${ADDR},URI:im:${ADDR},URI:pres:${ADDR}" ;;
-*)   ALTNAME="DNS:${DOMAIN},DNS:${ADDR},URI:sip:${ADDR}" ;;
+*)   ALTNAME="DNS:${DOMAIN},URI:sip:${ADDR}" ;;
 esac
  
 #ALTNAME="URI:sip:pekka.nrc.sipit.net,URI:sip:nrc.sipit.net"

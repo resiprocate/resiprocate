@@ -25,10 +25,10 @@ InMemoryRegistrationDatabase::~InMemoryRegistrationDatabase()
 
 void 
 InMemoryRegistrationDatabase::addAor(const Uri& aor,
-                                       const ContactList& contacts)
+    RegistrationPersistenceManager::ContactRecordList contacts)
 {
   Lock g(mDatabaseMutex);
-  mDatabase[aor] = new ContactList(contacts);
+  mDatabase[aor] = new ContactRecordList(contacts);
 }
 
 void 
@@ -126,10 +126,13 @@ InMemoryRegistrationDatabase::unlockRecord(const Uri& aor)
 }
 
 RegistrationPersistenceManager::update_status_t 
-InMemoryRegistrationDatabase::updateContact(const resip::Uri& aor, 
-                                             const ContactInstanceRecord& rec) 
+InMemoryRegistrationDatabase::updateContact(const Uri& aor, 
+                                             const Uri& contact, 
+                                             time_t expires,
+                                             unsigned int cid,
+                                             short q)
 {
-  ContactList *contactList = 0;
+  ContactRecordList *contactList = 0;
 
   {
     Lock g(mDatabaseMutex);
@@ -138,7 +141,7 @@ InMemoryRegistrationDatabase::updateContact(const resip::Uri& aor,
     i = mDatabase.find(aor);
     if (i == mDatabase.end() || i->second == 0)
     {
-      contactList = new ContactList();
+      contactList = new ContactRecordList();
       mDatabase[aor] = contactList;
     }
     else
@@ -150,28 +153,58 @@ InMemoryRegistrationDatabase::updateContact(const resip::Uri& aor,
 
   assert(contactList);
 
-  ContactList::iterator j;
+  ContactRecordList::iterator j;
 
   // See if the contact is already present. We use URI matching rules here.
   for (j = contactList->begin(); j != contactList->end(); j++)
   {
-    if (*j == rec)
+    if ((*j).uri == contact)
     {
-      *j=rec;
+      (*j).uri = contact;
+      (*j).expires = expires;
+
+      if(q>=0)
+      {
+         (*j).useQ=true;
+         (*j).q=(unsigned short)q;
+      }
+      else
+      {
+         (*j).useQ=false;
+         (*j).q=0;
+      }
+
+      (*j).cid=cid;
       return CONTACT_UPDATED;
     }
   }
 
+   ContactRecord newRec;
+   newRec.uri=contact;
+   newRec.expires=expires;
+
+   if(q>=0)
+   {
+      newRec.useQ=true;
+      newRec.q=(unsigned short)q;
+   }
+   else
+   {
+      newRec.useQ=false;
+      newRec.q=0;
+   }
+
+   newRec.cid=cid;
+   
   // This is a new contact, so we add it to the list.
-  contactList->push_back(rec);
+  contactList->push_back(newRec);
   return CONTACT_CREATED;
 }
 
 void 
-InMemoryRegistrationDatabase::removeContact(const Uri& aor, 
-                                             const ContactInstanceRecord& rec)
+InMemoryRegistrationDatabase::removeContact(const Uri& aor, const Uri& contact)
 {
-  ContactList *contactList = 0;
+  ContactRecordList *contactList = 0;
 
   {
     Lock g(mDatabaseMutex);
@@ -185,12 +218,12 @@ InMemoryRegistrationDatabase::removeContact(const Uri& aor,
     contactList = i->second;
   }
 
-  ContactList::iterator j;
+  ContactRecordList::iterator j;
 
   // See if the contact is present. We use URI matching rules here.
   for (j = contactList->begin(); j != contactList->end(); j++)
   {
-    if (*j == rec)
+    if ((*j).uri == contact)
     {
       contactList->erase(j);
       if (contactList->empty())
@@ -202,10 +235,10 @@ InMemoryRegistrationDatabase::removeContact(const Uri& aor,
   }
 }
 
-ContactList
+RegistrationPersistenceManager::ContactRecordList
 InMemoryRegistrationDatabase::getContacts(const Uri& aor)
 {
-  ContactList result;
+   ContactRecordList result;
   Lock g(mDatabaseMutex);
   getContacts(aor,result);
   return result;
@@ -213,7 +246,7 @@ InMemoryRegistrationDatabase::getContacts(const Uri& aor)
 }
 
 void
-InMemoryRegistrationDatabase::getContacts(const Uri& aor,ContactList& container)
+InMemoryRegistrationDatabase::getContacts(const Uri& aor,RegistrationPersistenceManager::ContactRecordList& container)
 {
   database_map_t::iterator i = findNotExpired(aor);
   if (i == mDatabase.end() || i->second == 0)
@@ -233,14 +266,14 @@ public:
     {
        time(&now);
     }
-    bool operator () (const ContactInstanceRecord& rec)
+    bool operator () (RegistrationPersistenceManager::ContactRecord rec)
     {
-      if(rec.mRegExpires < now) 
-      {
-         DebugLog(<< "ContactInstanceRecord expired: " << rec.mContact);
-         return true;
-      }
-      return false;
+        if(rec.expires < now) 
+        {
+		DebugLog(<< "ContactRecord expired: " << rec.uri);
+		return true;
+	}
+        return false;
     }
 };
 
@@ -254,7 +287,7 @@ InMemoryRegistrationDatabase::findNotExpired(const Uri& aor) {
    }
    if(mCheckExpiry)
    {
-      ContactList *contacts = i->second;
+      ContactRecordList *contacts = i->second;
       contacts->remove_if(RemoveIfExpired());
    }
    return i;

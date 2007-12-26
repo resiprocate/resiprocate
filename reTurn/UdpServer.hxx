@@ -5,50 +5,54 @@
 #include <string>
 #include <boost/noncopyable.hpp>
 #include "RequestHandler.hxx"
-#include "AsyncUdpSocketBase.hxx"
+#include "TurnTransportBase.hxx"
 
 namespace reTurn {
 
 class StunMessage;
 
 class UdpServer
-  : public AsyncUdpSocketBase,
+  : public TurnTransportBase,
     private boost::noncopyable
 {
 public:
    /// Create the server to listen on the specified UDP address and port
-   explicit UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming);
-   ~UdpServer();
+   explicit UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port);
 
-   void start();
-
-   /// This method is used if this UdpServer supports RFC3489 operation - note turnFraming in contructor must be false
+   /// This method is used if this UdpServer supports RFC3489 operation
    void setAlternateUdpServers(UdpServer* alternatePort, UdpServer* alternateIp, UdpServer* alternateIpPort);
    bool isRFC3489BackwardsCompatServer();
 
-   ///// Returns the socket for this server
+   /// Returns the socket for this server
    asio::ip::udp::socket& getSocket();
 
    void cleanupResponseMap(const asio::error_code& e, UInt128 tid);
 
-private:
-   /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
-   virtual void onReceiveFailure(const asio::error_code& e);
+   virtual void sendData(const StunTuple& destination, const char* buffer, unsigned int size);
 
-   /// Handle completion of a send operation
-   virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
+private:
+   /// Handle completion of a receive_from operation
+   void handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransferred);
+
+   /// Handle completion of a sendTo operation
+   void handleSendTo(const asio::error_code& error, std::size_t bytesTransferred);
+
+   /// Socket for the connection.
+   asio::ip::udp::socket mSocket;
+
+   /// Endpoint info for current sender
+   asio::ip::udp::endpoint mSenderEndpoint;
 
    /// The handler for all incoming requests.
    RequestHandler& mRequestHandler;
-
-   bool mTurnFraming;
 
    /// The RFC3489 Alternate Server
    UdpServer* mAlternatePortUdpServer;
    UdpServer* mAlternateIpUdpServer;
    UdpServer* mAlternateIpPortUdpServer;
+
+   /// Buffer for incoming data.
+   boost::array<unsigned char, 8192> mBuffer;
 
    // Response map (for retransmissions)
    class ResponseEntry

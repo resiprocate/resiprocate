@@ -16,15 +16,15 @@ namespace resip
 {
 
 class Tuple;
-class Security;
+class BaseSecurity;
 
 class TlsConnection : public Connection
 {
    public:
       RESIP_HeapCount(TlsConnection);
 
-      TlsConnection( Transport* transport, const Tuple& who, Socket fd, 
-                     Security* security, bool server, Data domain, 
+      TlsConnection( const Tuple& who, Socket fd, 
+                     BaseSecurity* security, bool server, Data domain, 
                      SecurityTypes::SSLType sslType ,
                      Compression &compression);
       
@@ -42,14 +42,12 @@ class TlsConnection : public Connection
       static const char * fromState(TlsState);
    
    private:
-      /// No default c'tor
-      TlsConnection();
       void computePeerName();
       Data getPeerNamesData() const;
       TlsState checkState();
 
       bool mServer;
-      Security* mSecurity;
+      BaseSecurity* mSecurity;
       SecurityTypes::SSLType mSslType;
       Data mDomain;
       

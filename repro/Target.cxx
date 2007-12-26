@@ -10,33 +10,38 @@ namespace repro
 {
 
 Target::Target()
-   :mPriorityMetric(0),
-   mShouldAutoProcess(true),
-   mStatus(Candidate)
-{}
+{
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
+   mStatus=Candidate;
+}
 
 Target::Target(const resip::Uri& uri)
-   :mPriorityMetric(0),
-   mShouldAutoProcess(true),
-   mStatus(Candidate)
 {  
-   mRec.mContact.uri()=uri;
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
+   mNameAddr=resip::NameAddr(uri);
+   mStatus=Candidate;
 }
 
 Target::Target(const resip::NameAddr& target)
-   :mPriorityMetric(0),
-   mShouldAutoProcess(true),
-   mStatus(Candidate)
 {
-   mRec.mContact=target;
+   mPriorityMetric=0;
+   mShouldAutoProcess=true;
+   mNameAddr=target;
+   mStatus=Candidate;
 }
 
-Target::Target(const resip::ContactInstanceRecord& rec)
-   :mPriorityMetric(0),
-   mShouldAutoProcess(true),
-   mStatus(Candidate),
-   mRec(rec)
-{}
+Target::Target(const repro::Target& target)
+{
+   mPriorityMetric=target.mPriorityMetric;
+   mShouldAutoProcess=target.mShouldAutoProcess;
+   mNameAddr=target.mNameAddr;
+   mStatus=target.mStatus;
+   mVia=target.mVia;
+}
+
+
 
 Target::~Target()
 {
@@ -63,6 +68,20 @@ Target::status() const
    return mStatus;
 }
 
+
+const resip::Uri&
+Target::setUri(const resip::Uri& uri)
+{
+   return mNameAddr.uri()=uri;
+}
+
+const resip::Uri&
+Target::uri() const
+{
+   return mNameAddr.uri();
+}
+
+
 const resip::Via&
 Target::setVia(const resip::Via& via)
 {
@@ -75,22 +94,17 @@ Target::via() const
    return mVia;
 }
 
-const resip::ContactInstanceRecord& 
-Target::rec() const
+
+const resip::NameAddr&
+Target::setNameAddr(const resip::NameAddr& nameAddr)
 {
-   return mRec;
+   return mNameAddr=nameAddr;
 }
 
-resip::ContactInstanceRecord& 
-Target::rec()
+const resip::NameAddr&
+Target::nameAddr() const
 {
-   return mRec;
-}
-
-void 
-Target::setRec(const resip::ContactInstanceRecord& rec)
-{
-   mRec=rec;
+   return mNameAddr;
 }
 
 Target*
@@ -99,7 +113,7 @@ Target::clone() const
    return new Target(*this);
 }
 
-int
+float
 Target::getPriority() const
 {
    return mPriorityMetric;

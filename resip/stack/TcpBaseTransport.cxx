@@ -106,7 +106,7 @@ TcpBaseTransport::processListen(FdSet& fdset)
       }
       makeSocketNonBlocking(sock);
       
-      
+      tuple.transport = this;
       DebugLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
       createConnection(tuple, sock, true);
    }
@@ -122,9 +122,10 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       
       // this will check by connectionId first, then by address
       Connection* conn = mConnectionManager.findConnection(data->destination);
-      
-      
-      
+      if ( conn )
+      {
+         assert( conn->transport() );
+      }
       
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
       
@@ -188,8 +189,10 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          // This will add the connection to the manager
          conn = createConnection(data->destination, sock, false);
          assert(conn);
-         assert(conn->getSocket() >= 0);
-         data->destination.mFlowKey = conn->getSocket(); // !jf!
+         assert( conn->transport() );
+
+         data->destination.transport = this;
+         data->destination.connectionId = conn->getId(); // !jf!
       }
    
       if (conn == 0)
@@ -200,6 +203,8 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       }
       else // have a connection
       {
+         assert( conn->transport() );
+         
          conn->requestWrite(data);
       }
    }

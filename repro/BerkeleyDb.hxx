@@ -37,8 +37,8 @@ class BerkeleyDb: public AbstractDb
       void init(const resip::Data& dbPath, const resip::Data& dbName);
 
       //DbEnv mEnv; // !cj! TODO - move to using envoronments
-      Db*   mDb[4];
-      Dbc*  mCursor[4];
+      Db*   mDb[5];
+      Dbc*  mCursor[5];
       
       bool sane;
       

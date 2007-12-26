@@ -24,9 +24,29 @@ char
 ConnectionBase::connectionStates[ConnectionBase::MAX][32] = { "NewMessage", "ReadingHeaders", "PartialBody" };
 
 
-ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compression &compression)
+ConnectionBase::ConnectionBase()
    : mSendPos(0),
-     mTransport(transport),
+     mWho(),
+     mFailureReason(TransportFailure::None),
+     mCompression(Compression::Disabled),
+#ifdef USE_SIGCOMP
+     mSigcompStack(0),
+     mSigcompFramer(0),
+#endif
+     mSendingTransmissionFormat(Unknown),
+     mReceivingTransmissionFormat(Unknown),
+     mMessage(0),
+     mBuffer(0),
+     mBufferPos(0),
+     mBufferSize(0),
+     mLastUsed(0),
+     mConnState(NewMessage)
+{
+   DebugLog (<< "ConnectionBase::ConnectionBase, no params: " << this);
+}
+
+ConnectionBase::ConnectionBase(const Tuple& who, Compression &compression)
+   : mSendPos(0),
      mWho(who),
      mFailureReason(TransportFailure::None),
      mCompression(compression),
@@ -59,20 +79,19 @@ ConnectionBase::ConnectionBase(Transport* transport, const Tuple& who, Compressi
    DebugLog (<< "No compression library available: " << this);
 #endif
 
-   mWho.transport=mTransport;
 }
 
 ConnectionBase::~ConnectionBase()
 {
-   if(mTransport)
+   if (mWho.transport)
    {
-      mTransport->flowTerminated(mWho);
+      mWho.transport->connectionTerminated(getId());
    }
 
    while (!mOutstandingSends.empty())
    {
       SendData* sendData = mOutstandingSends.front();
-      mTransport->fail(sendData->transactionId, mFailureReason);
+      mWho.transport->fail(sendData->transactionId, mFailureReason);
       
       delete sendData;
       mOutstandingSends.pop_front();
@@ -85,15 +104,16 @@ ConnectionBase::~ConnectionBase()
 #endif
 }
 
-FlowKey
-ConnectionBase::getFlowKey() const
+ConnectionId
+ConnectionBase::getId() const
 {
-   return mWho.mFlowKey;
+   return mWho.connectionId;
 }
 
 void
 ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 {
+   assert(mWho.transport);
 
    DebugLog(<< "In State: " << connectionStates[mConnState]);
    //getConnectionManager().touch(this); -- !dcm!
@@ -107,10 +127,8 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          if (strncmp(mBuffer + mBufferPos, Symbols::CRLFCRLF, 4) == 0)
          {
             StackLog(<<"Throwing away incoming firewall keep-alive");
-            DebugLog(<< "Got incoming double-CRLF keepalive (aka ping).");
             mBufferPos += 4;
             bytesRead -= 4;
-            onDoubleCRLF();
             if (bytesRead)
             {
                goto start;
@@ -122,12 +140,12 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                return;
             }
          }
-         assert(mTransport);
-         mMessage = new SipMessage(mTransport);
+         assert(mWho.transport);
+         mMessage = new SipMessage(mWho.transport);
          
          DebugLog(<< "ConnectionBase::process setting source " << mWho);
          mMessage->setSource(mWho);
-         mMessage->setTlsDomain(mTransport->tlsDomain());
+         mMessage->setTlsDomain(mWho.transport->tlsDomain());
 
          // Set TlsPeerName if message is from TlsConnection
          TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
@@ -497,10 +515,10 @@ ConnectionBase::setBuffer(char* bytes, int count)
 }
 
 Transport* 
-ConnectionBase::transport() const
+ConnectionBase::transport()
 {
    assert(this);
-   return mTransport;
+   return mWho.transport;
 }
 
 std::ostream& 

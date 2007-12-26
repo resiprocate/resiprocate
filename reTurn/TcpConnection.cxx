@@ -1,31 +1,25 @@
 #include "TcpConnection.hxx"
 #include <vector>
 #include <boost/bind.hpp>
-#include <rutil/SharedPtr.hxx>
 #include "ConnectionManager.hxx"
 #include "RequestHandler.hxx"
-#include <rutil/Logger.hxx>
-#include "ReTurnSubsystem.hxx"
-
-#define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
-
-using namespace std;
-using namespace resip;
 
 namespace reTurn {
 
 TcpConnection::TcpConnection(asio::io_service& ioService,
-    ConnectionManager& manager, RequestHandler& handler, bool turnFraming)
-  : AsyncTcpSocketBase(ioService),
+    ConnectionManager& manager, RequestHandler& handler)
+  : TurnTransportBase(ioService),
+    mSocket(ioService),
     mConnectionManager(manager),
     mRequestHandler(handler),
-    mTurnFraming(turnFraming)
+    mBufferLen(0),
+    mTransportType(StunTuple::TCP)
 {
 }
 
 TcpConnection::~TcpConnection()
 {
-   DebugLog(<< "TcpConnection destroyed.");
+   std::cout << "TcpConnection destroyed." << std::endl;
 }
 
 asio::ip::tcp::socket& 
@@ -37,9 +31,31 @@ TcpConnection::socket()
 void 
 TcpConnection::start()
 {
-   DebugLog(<< "TcpConnection started.");
-   setConnectedAddressAndPort();
-   doFramedReceive();
+   std::cout << "TcpConnection started." << std::endl;
+   mLocalEndpoint = mSocket.local_endpoint();
+   mRemoteEndpoint = mSocket.remote_endpoint();
+   readHeader();
+}
+
+void
+TcpConnection::readHeader()
+{
+   asio::async_read(mSocket, asio::buffer(mBuffer, 4),
+                    boost::bind(&TcpConnection::handleReadHeader, shared_from_this(), asio::placeholders::error));
+}
+
+void
+TcpConnection::readBody()
+{
+   asio::async_read(mSocket, asio::buffer(mBuffer, mBufferLen),
+                    boost::bind(&TcpConnection::handleReadBody, shared_from_this(), asio::placeholders::error));
+}
+
+void
+TcpConnection::write()
+{
+   async_write(mSocket, asio::buffer(mBuffer, mBufferLen),  
+               boost::bind(&TcpConnection::handleWrite, shared_from_this(), asio::placeholders::error));
 }
 
 void 
@@ -49,151 +65,136 @@ TcpConnection::stop()
 }
 
 void 
-TcpConnection::close()
+TcpConnection::handleReadHeader(const asio::error_code& e)
 {
-   mConnectionManager.stop(shared_from_this());
+   if (!e)
+   {
+      /*
+      std::cout << "Read header from tcp socket: " << std::endl;
+      for(unsigned int i = 0; i < 4; i++)
+      {
+         std::cout << (char)mBuffer[i] << "(" << (int)mBuffer[i] << ") ";
+      }
+      std::cout << std::endl;
+      */
+
+      // All Turn messaging will be framed
+      mChannelNumber = mBuffer[0];
+      if(mChannelNumber == 0) // Stun/Turn Request
+      {
+         // This is a StunMessage (channel 0) - length will be in bytes 3 and 4
+         UInt16 stunMsgLen;
+         memcpy(&stunMsgLen, &mBuffer[2], 2);
+         stunMsgLen = ntohs(stunMsgLen);  // Framed length will be entire size of StunMessage
+         mBufferLen = stunMsgLen;
+         if(stunMsgLen > 0)
+         {
+            std::cout << "Reading StunMessage with length=" << stunMsgLen << std::endl;
+            mReadingStunMessage = true;
+            readBody();
+         }
+      }
+      else // Framed Data
+      {
+         UInt16 dataLen;
+         memcpy(&dataLen, &mBuffer[2], 2);
+         dataLen = ntohs(dataLen);
+         mBufferLen = dataLen;
+         mReadingStunMessage = false;
+         readBody();
+      }
+   }
+   else if (e != asio::error::operation_aborted)
+   {
+      std::cout << "Read header error: " << e.message() << std::endl;
+      mConnectionManager.stop(shared_from_this());
+   }
 }
 
 void 
-TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+TcpConnection::handleReadBody(const asio::error_code& e)
 {
-   if (data->size() > 4)
+   if (!e)
    {
-      char* stunMessageBuffer = 0;
-      unsigned int stunMessageSize = 0;
-
-      bool treatAsData=false;
       /*
-      std::cout << "Read " << bytesTransferred << " bytes from tcp socket (" << address.to_string() << ":" << port << "): " << std::endl;
-      cout << std::hex;
-      for(int i = 0; i < data->size(); i++)
+      std::cout << "Read " << mBufferLen << " bytes from tcp socket: " << std::endl;
+      for(unsigned int i = 0; i < mBufferLen; i++)
       {
-         std::cout << (char)(*data)[i] << "(" << int((*data)[i]) << ") ";
+         std::cout << (char)mBuffer[i] << "(" << (int)mBuffer[i] << ") ";
       }
-      std::cout << std::dec << std::endl;
+      std::cout << std::endl;
       */
-      unsigned short channelNumber;
-      memcpy(&channelNumber, &(*data)[0], 2);
-      channelNumber = ntohs(channelNumber);
 
-      if(mTurnFraming)
+      if(mReadingStunMessage)
       {
-         // All Turn messaging will be framed
-         if(channelNumber == 0) // Stun/Turn Request
+         StunMessage request(StunTuple(mTransportType, mLocalEndpoint.address(), mLocalEndpoint.port()),
+                             StunTuple(mTransportType, mRemoteEndpoint.address(), mRemoteEndpoint.port()),
+                             (char*)mBuffer.c_array(), mBufferLen);
+         if(request.isValid())
          {
-            stunMessageBuffer = (char*)&(*data)[4];
-            stunMessageSize = (unsigned int)data->size()-4;
-         }
-         else  
-         {
-            // Turn Data
-            treatAsData = true;
-         }
-      }
-      else
-      {
-         stunMessageBuffer = (char*)&(*data)[0];
-         stunMessageSize = data->size();
-      }
+            StunMessage response;
+            RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
 
-      if(!treatAsData)
-      {
-         if(stunMessageBuffer && stunMessageSize)
-         {
-            // Try to parse stun message
-            StunMessage request(StunTuple(StunTuple::TCP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
-                                StunTuple(StunTuple::TCP, address, port),
-                                stunMessageBuffer, stunMessageSize);
-            if(request.isValid())
+            switch(result)
             {
-               StunMessage response;
-               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
-
-               switch(result)
-               {
-               case RequestHandler::NoResponseToSend:
-                  // No response to send - just receive next message
-                  doFramedReceive();
-                  return;
-               case RequestHandler::RespondFromAlternatePort:
-               case RequestHandler::RespondFromAlternateIp:
-               case RequestHandler::RespondFromAlternateIpPort:
-                  // These only happen for UDP server for RFC3489 backwards compatibility
-                  assert(false);
-                  break;
-               case RequestHandler::RespondFromReceiving:
-               default:
-                  break;
-               }
-
-#define RESPONSE_BUFFER_SIZE 1024
-               SharedPtr<Data> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
-               unsigned int responseSize;
-               if(mTurnFraming)  
-               {
-                  responseSize = response.stunEncodeFramedMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
-               }
-               else
-               {
-                  responseSize = response.stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
-               }
-               buffer->truncate(responseSize);  // set size to real size
-
-               doSend(response.mRemoteTuple, buffer);
+            case RequestHandler::NoResponseToSend:
+               // No response to send - just receive next message
+               readHeader();
+               return;
+            case RequestHandler::RespondFromAlternatePort:
+            case RequestHandler::RespondFromAlternateIp:
+            case RequestHandler::RespondFromAlternateIpPort:
+               // These only happen for UDP server for RFC3489 backwards compatibility
+               assert(false);
+               break;
+            case RequestHandler::RespondFromReceiving:
+            default:
+               break;
             }
-            else
-            {
-               WarningLog(<< "Received invalid StunMessage.  Dropping.");
-            }
+            mBufferLen = response.stunEncodeFramedMessage((char*)mBuffer.c_array(), (unsigned int)mBuffer.size());
+
+            write();
          }
          else
          {
-            WarningLog(<< "Received invalid data.  Closing connection.");
-            close();
-            return;
+            std::cout << "Invalid StunMessage received, ending connection." << std::endl;
+            mConnectionManager.stop(shared_from_this());
          }
-      } 
-      else
+      }
+      else  // reading turn data
       {
-         mRequestHandler.processTurnData(channelNumber,
-                                         StunTuple(StunTuple::TCP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
-                                         StunTuple(StunTuple::TCP, address, port),
-                                         data);
+         mRequestHandler.processTurnData(mChannelNumber,
+                                         StunTuple(mTransportType, mLocalEndpoint.address(), mLocalEndpoint.port()),
+                                         StunTuple(mTransportType, mRemoteEndpoint.address(), mRemoteEndpoint.port()),
+                                         (char*)mBuffer.c_array(), mBufferLen);
+         readHeader();
       }
    }
-   else
+   else if (e != asio::error::operation_aborted)
    {
-      WarningLog(<< "Not enough data for framed message.  Closing connection.");
-      close();
-      return;
+      std::cout << "Read body error: " << e << std::endl;
+      mConnectionManager.stop(shared_from_this());
    }
-
-   doFramedReceive();
 }
 
 void 
-TcpConnection::onReceiveFailure(const asio::error_code& e)
+TcpConnection::handleWrite(const asio::error_code& e)
 {
-   if(e != asio::error::operation_aborted)
+   if(!e)
    {
-      InfoLog(<< "TcpConnection::onReceiveFailure: " << e.value() << "-" << e.message());
-      close();
+      readHeader();
+   }
+   else if (e != asio::error::operation_aborted)
+   {
+      mConnectionManager.stop(shared_from_this());
    }
 }
 
-void
-TcpConnection::onSendSuccess()
+void 
+TcpConnection::sendData(const StunTuple& destination, const char* buffer, unsigned int size)
 {
-}
-
-void
-TcpConnection::onSendFailure(const asio::error_code& error)
-{
-   if(error != asio::error::operation_aborted)
-   {
-      InfoLog(<< "TcpConnection::onSendFailure: " << error.value() << "-" << error.message());
-      close();
-   }
+   async_write(mSocket, asio::buffer(buffer, size),  
+               boost::bind(&TcpConnection::handleSendData, shared_from_this(), asio::placeholders::error));  
 }
 
 } 

@@ -42,7 +42,7 @@ StackThread::thread()
          ErrLog (<< "Unhandled exception: " << e);
       }
    }
-   WarningLog (<< "Shutting down stack thread");
+   InfoLog (<< "Shutting down stack thread");
 }
 
 void

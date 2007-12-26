@@ -4,7 +4,6 @@
 #include <vector>
 #include <asio.hpp>
 #include <rutil/Data.hxx>
-#include <rutil/Mutex.hxx>
 
 #include "../StunTuple.hxx"
 #include "../StunMessage.hxx"
@@ -115,7 +114,6 @@ protected:
    bool mConnected;
 
 private:
-   resip::Mutex mMutex;
    asio::error_code checkIfAllocationRefreshRequired();
    StunMessage* sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode);
    asio::error_code sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size);
