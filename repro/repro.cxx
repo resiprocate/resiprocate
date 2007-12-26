@@ -3,6 +3,7 @@
 #include "repro/ProxyMainException.hxx"
 
 #include "resip/stack/Transport.hxx"
+#include "resip/dum/InMemoryRegistrationDatabase.hxx"
 
 #include "repro/ProxyMain.hxx"
 #include "repro/CommandLineParser.hxx"
@@ -318,9 +319,11 @@ runRepro()
       }
 #endif
 
+      InMemoryRegistrationDatabase regData;
+
       try
       {
-         proxyMain( args, store , security );
+         proxyMain( args, store, security, regData );
       }
       catch ( ProxyMainException& e)
       {

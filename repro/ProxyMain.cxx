@@ -7,7 +7,6 @@
 #include "resip/stack/StackThread.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/dum/DumThread.hxx"
-#include "resip/dum/InMemoryRegistrationDatabase.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
@@ -139,7 +138,8 @@ addDomains(TransactionUser& tu, ReproConfiguration& args, Store& store)
 }
 
 void 
-proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* security)
+proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* security, 
+          resip::RegistrationPersistenceManager &regData)
 {
    Compression* compression = 0;
 
@@ -221,7 +221,6 @@ proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* se
    StackThread stackThread(stack);
 
    Registrar registrar;
-   InMemoryRegistrationDatabase regData;
    SharedPtr<MasterProfile> profile(new MasterProfile);
  
 
