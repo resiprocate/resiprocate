@@ -65,7 +65,6 @@ SipStack::SipStack(BaseSecurity* pSecurity,
 {
    Timer::getTimeMs(); // initalize time offsets
    Random::initialize();
-   initNetwork();
    if (pSecurity)
    {
       pSecurity->preload();

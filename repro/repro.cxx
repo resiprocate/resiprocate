@@ -246,7 +246,6 @@ char *argv0;
 static int
 runRepro()
 {
-   resip::initNetwork();
 
    if(args->mLogType.lowercase() == "file")
    {
