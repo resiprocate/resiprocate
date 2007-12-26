@@ -9,13 +9,15 @@
 #include "repro/ReproConfiguration.hxx"
 #include "repro/Store.hxx"
 #include "resip/stack/Security.hxx"
+#include "resip/dum/RegistrationPersistenceManager.hxx"
 
 namespace repro
 {
 extern volatile bool reproRestartServer;
 extern volatile bool reproFinish;
 
-void proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* security);
+void proxyMain(resip::ReproConfiguration *args, Store &store, resip::BaseSecurity* security,
+               resip::RegistrationPersistenceManager &regData);
 
 
 #ifdef WIN32
