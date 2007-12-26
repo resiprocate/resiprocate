@@ -1,8 +1,8 @@
 <form id="Parameters" name="Parameters" method="get" action="parametersSet.html" onsubmit="OnSubmit();">
   <table width="675" border="1">
     <tr>
-      <td width="190">Log type </td>
-      <td width="475"><select name="LogType" id="LogType">
+      <td width="260">Log type </td>
+      <td width="415"><select name="LogType" id="LogType">
         <option selected="selected">&lt;Default&gt;</option>
         <option>cerr</option>
         <option>cout</option>
@@ -13,7 +13,7 @@
     </tr>
     <tr>
       <td>Log level </td>
-      <td><select name="LogLevel" id="LogLerel">
+      <td><select name="LogLevel" id="LogLevel">
         <option selected="selected">&lt;Default&gt;</option>
         <option>NONE</option>
         <option>EMERG</option>
@@ -31,43 +31,34 @@
     </tr>
     <tr>
       <td>Log path </td>
-      <td><input name="LogPath" type="text" id="LogPath" size="80" /></td>
+      <td><input name="LogPath" type="text" id="LogPath" size="60" /></td>
     </tr>
     <tr>
-      <td>Record route </td>
-      <td><input name="RecordRoute" type="text" id="RecordRoute" size="80" /></td>
-    </tr>
-    <tr>
-      <td>Udp port </td>
+      <td>UDP port </td>
       <td><input name="UdpPort" type="text" id="UdpPort" /></td>
     </tr>
     <tr>
-      <td>Tcp port </td>
+      <td>TCP port </td>
       <td><input name="TcpPort" type="text" id="TcpPort" /></td>
     </tr>
     <tr>
-      <td>Tls domain </td>
-      <td><input name="TlsDomain" type="text" id="TlsDomain" size="80" /></td>
-    </tr>
-    <tr>
-      <td>Tls port </td>
+      <td>TLS port </td>
       <td><input name="TlsPort" type="text" id="TlsPort" /></td>
     </tr>
     <tr>
-      <td>Dtls port </td>
+      <td>TLS domain </td>
+      <td><input name="TlsDomain" type="text" id="TlsDomain" size="60" /></td>
+    </tr>
+    <tr>
+      <td>DTLS port </td>
       <td><input name="DtlsPort" type="text" id="DtlsPort" /></td>
     </tr>
     <tr>
-      <td>run a cert server</td>
-      <td><select name="CertServer" id="CertServer">
-        <option selected="selected">&lt;Default&gt;</option>
-        <option>Yes</option>
-        <option>No</option>
-      </select>
-      </td>
+      <td>run HTTP server on specified port</td>
+      <td><input name="HttpPort" type="text" id="HttpPort" /></td>
     </tr>
     <tr>
-      <td>enable IPV6</td>
+      <td>Enable IPv6</td>
       <td><select name="EnableIpv6" id="EnableIpv6">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
@@ -76,7 +67,7 @@
       </td>
     </tr>
     <tr>
-      <td>disable IPV4</td>
+      <td>Disable IPv4</td>
       <td><select name="DisableIpv4" id="DisableIpv4">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
@@ -85,25 +76,21 @@
       </td>
     </tr>
     <tr>
-      <td>disable DIGEST challenges</td>
-      <td><select name="DisableAuth" id="DisableAuth">
-        <option selected="selected">&lt;Default&gt;</option>
-        <option>Yes</option>
-        <option>No</option>
-      </select>
-      </td>
+      <td height="61">Custom transport interfaces, comma separated (disables above transport parameters)</td>
+      <td><textarea name="Interfaces" cols="50" rows="4" id="Interfaces"></textarea>
+					<br>Example: This sets up 2 transports, 1 TLS and 1 UDP.<br>TLS domain is bound to example.com.
+					sip:192.168.1.200:5060;transport=tls;tls=example.com,<br>sip:192.168.1.200:5060;transport=udp</td>
     </tr>
     <tr>
-      <td>disable auth-int DIGEST challenges</td>
-      <td><select name="DisableAuthInt" id="DisableAuthInt">
-        <option selected="selected">&lt;Default&gt;</option>
-        <option>Yes</option>
-        <option>No</option>
-      </select>
-      </td>
+      <td>Record route URI</td>
+      <td><input name="RecordRoute" type="text" id="RecordRoute" size="60" /></td>
     </tr>
     <tr>
-      <td>disable HTTP challenges</td>
+      <td>ENUM suffix to search</td>
+      <td><input name="EnumSuffix" type="text" id="EnumSuffix" size="60" /></td>
+    </tr>
+    <tr>
+      <td>Disable HTTP challenges</td>
       <td><select name="DisabaleWebAuth" id="DisabaleWebAuth">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
@@ -112,7 +99,7 @@
       </td>
     </tr>
     <tr>
-      <td>disable registrar</td>
+      <td>Disable registrar</td>
       <td><select name="DisableReg" id="DisableReg">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
@@ -121,8 +108,8 @@
       </td>
     </tr>
     <tr>
-      <td>disable adding identity headers</td>
-      <td><select name="DisableIdentity" id="DisableIdentity">
+      <td>Disable digest challenges</td>
+      <td><select name="DisableAuth" id="DisableAuth">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
         <option>No</option>
@@ -130,16 +117,31 @@
       </td>
     </tr>
     <tr>
-      <td height="61">specify interfaces to add transports to</td>
-      <td><textarea name="Interfaces" cols="60" rows="5" id="Interfaces"></textarea></td>
+      <td>Disable auth-int digest challenges</td>
+      <td><select name="DisableAuthInt" id="DisableAuthInt">
+        <option selected="selected">&lt;Default&gt;</option>
+        <option>Yes</option>
+        <option>No</option>
+      </select>
+      </td>
     </tr>
     <tr>
-      <td>name of request chain</td>
-      <td><input name="NameReqChain" type="text" id="NameReqChain" /></td>
+      <td>Enable cert server</td>
+      <td><select name="CertServer" id="CertServer">
+        <option selected="selected">&lt;Default&gt;</option>
+        <option>Yes</option>
+        <option>No</option>
+      </select>
+      </td>
     </tr>
     <tr>
-      <td>run HTTP server on specified port</td>
-      <td><input name="HttpPort" type="text" id="HttpPort" /></td>
+      <td>Disable adding identity headers</td>
+      <td><select name="DisableIdentity" id="DisableIdentity">
+        <option selected="selected">&lt;Default&gt;</option>
+        <option>Yes</option>
+        <option>No</option>
+      </select>
+      </td>
     </tr>
     <tr>
       <td>Handle 3xx responses in the proxy</td>
@@ -151,7 +153,11 @@
       </td>
     </tr>
     <tr>
-      <td>Enable sequential q-value processing</td>
+      <td>Timer C seconds (0 or negative will disable timer C)</td>
+      <td><input name="TimerC" type="text" id="TimerC" /></td>
+    </tr>
+    <tr>
+      <td>Enable q-value processing</td>
       <td><select name="QVal" id="QVal">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
@@ -160,7 +166,7 @@
       </td>
     </tr>
     <tr>
-      <td>Specify forking behavior for q- value targets:</td>
+      <td>Forking behavior for q-value targets</td>
       <td><select name="QValBehavior" id="QValBehavior">
         <option selected="selected">&lt;Default&gt;</option>
         <option>FULL_SEQUENTIAL</option>
@@ -170,7 +176,7 @@
       </td>
     </tr>
     <tr>
-      <td>Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.</td>
+      <td>Cancel groups of parallel forks after specified period</td>
       <td><select name="QValCancelFork" id="QValCancelFork">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
@@ -179,7 +185,7 @@
       </td>
     </tr>
     <tr>
-      <td>Whether to wait for parallel fork groups to terminate before starting new fork-groups.</td>
+      <td>Wait for parallel fork groups to terminate before starting new fork-groups</td>
       <td><select name="QValWaitFork" id="QValWaitFork">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
@@ -188,19 +194,15 @@
       </td>
     </tr>
     <tr>
-      <td>msec to wait before starting new groups of parallel forks</td>
+      <td>Time to wait before starting new groups of parallel forks (msec)</td>
       <td><input name="QValMsBetween" type="text" id="QValMsBetween" /></td>
     </tr>
     <tr>
-      <td>msec to wait before cancelling parallel fork groups<br /></td>
+      <td>Time to wait before cancelling parallel fork groups (msec)</td>
       <td><input name="QValMsCancel" type="text" id="QValMsCancel" /></td>
     </tr>
     <tr>
-      <td>specify enum suffix to search</td>
-      <td><input name="EnumSuffix" type="text" id="EnumSuffix" size="80" /></td>
-    </tr>
-    <tr>
-      <td>allow To tag in registrations</td>
+      <td>Allow To tag in registrations</td>
       <td><select name="AllowBadReg" id="AllowBadReg">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
@@ -209,7 +211,7 @@
       </td>
     </tr>
     <tr>
-      <td>paralled fork to all matching static routes and (first batch) registrations</td>
+      <td>Paralled fork to all matching static routes and (first batch) registrations</td>
       <td><select name="parallelFork" id="parallelFork">
         <option selected="selected">&lt;Default&gt;</option>
         <option>Yes</option>
@@ -218,11 +220,7 @@
       </td>
     </tr>
     <tr>
-      <td>specify length of timer C in sec (0 or negative will disable timer C)</td>
-      <td><input name="TimerC" type="text" id="TimerC" /></td>
-    </tr>
-    <tr>
-      <td>set web administrator password</td>
+      <td>Web administrator password</td>
       <td><input name="AdminPassword" type="password" id="AdminPassword" /></td>
     </tr>
   </table>
@@ -279,9 +277,6 @@ function OnSubmit()
   DoOnSubmit( document.Parameters.DisableReg );
   DoOnSubmit( document.Parameters.DisableIdentity );
   DoOnSubmit( document.Parameters.Interfaces );
-  DoOnSubmit( document.Parameters.Domains );
-  DoOnSubmit( document.Parameters.Routes );
-  DoOnSubmit( document.Parameters.NameReqChain );
   DoOnSubmit( document.Parameters.HttpPort );
   DoOnSubmit( document.Parameters.ReqursiveRedirect );
   DoOnSubmit( document.Parameters.QVal );
