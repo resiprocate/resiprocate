@@ -53,8 +53,7 @@ defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"); // principal|msg-t
 defineParam(text, "text", ExistsParameter, "RFC 3840");
 defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"); //list
 defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
-defineParam(regid, "reg-id", UInt32Parameter, "outbound");
-defineParam(ob,"ob",ExistsParameter,"outbound-05");
+defineParam(FlowId, "+sip.flowId", UInt32Parameter, "outbound");
 defineParam(gruu, "gruu", QuotedDataParameter, "gruu");
 
 defineParam(accessType, "access-type", DataParameter, "RFC 2046");

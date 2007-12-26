@@ -14,9 +14,11 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
 
 const UInt64 ConnectionManager::MinimumGcAge = 1;
+ConnectionId ConnectionManager::theConnectionIdGenerator=1;
+resip::Mutex ConnectionManager::theCidMutex;
 
 ConnectionManager::ConnectionManager() : 
-   mHead(0,Tuple(),0,Compression::Disabled),
+   mHead(),
    mWriteHead(ConnectionWriteList::makeList(&mHead)),
    mReadHead(ConnectionReadList::makeList(&mHead)),
    mLRUHead(ConnectionLruList::makeList(&mHead))
@@ -38,31 +40,26 @@ ConnectionManager::~ConnectionManager()
 Connection*
 ConnectionManager::findConnection(const Tuple& addr)
 {
-   if (addr.mFlowKey != 0)
+   if (addr.connectionId != 0)
    {
-      IdMap::iterator i = mIdMap.find(addr.mFlowKey);
+      IdMap::iterator i = mIdMap.find(addr.connectionId);
       if (i != mIdMap.end())
       {
          if(i->second->who()==addr)
          {
-            DebugLog(<<"Found fd " << addr.mFlowKey);
+            DebugLog(<<"Found connection id " << addr.connectionId);
             return i->second;
          }
          else
          {
-            DebugLog(<<"fd " << addr.mFlowKey 
-                     << " exists, but does not match the destination. FD -> "
+            DebugLog(<<"connection id " << addr.connectionId 
+                     << " exists, but does not match the destination. Cid -> "
                      << i->second->who() << ", tuple -> " << addr);
          }
       }
       else
       {
-         DebugLog(<<"fd " << addr.mFlowKey << " does not exist.");
-      }
-
-      if(addr.onlyUseExistingConnection)
-      {
-         return 0;
+         DebugLog(<<"connection id " << addr.connectionId << " does not exist.");
       }
    }
    
@@ -81,26 +78,26 @@ ConnectionManager::findConnection(const Tuple& addr)
 const Connection* 
 ConnectionManager::findConnection(const Tuple& addr) const
 {
-   if (addr.mFlowKey != 0)
+   if (addr.connectionId != 0)
    {
-      IdMap::const_iterator i = mIdMap.find(addr.mFlowKey);
+      IdMap::const_iterator i = mIdMap.find(addr.connectionId);
       if (i != mIdMap.end())
       {
          if(i->second->who()==addr)
          {
-            DebugLog(<<"Found fd " << addr.mFlowKey);
+            DebugLog(<<"Found connection id " << addr.connectionId);
             return i->second;
          }
          else
          {
-            DebugLog(<<"fd " << addr.mFlowKey 
-                     << " exists, but does not match the destination. FD -> "
+            DebugLog(<<"connection id " << addr.connectionId 
+                     << " exists, but does not match the destination. Cid -> "
                      << i->second->who() << ", tuple -> " << addr);
          }
       }
       else
       {
-         DebugLog(<<"fd " << addr.mFlowKey << " does not exist.");
+         DebugLog(<<"connection id " << addr.connectionId << " does not exist.");
       }
    }
    
@@ -152,11 +149,15 @@ ConnectionManager::addConnection(Connection* connection)
 {
    assert(mAddrMap.find(connection->who())==mAddrMap.end());
 
-   //DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.mFlowKey  << ":" << connection->mSocket);
+   {
+      resip::Lock g(theCidMutex);
+      connection->who().connectionId = ++theConnectionIdGenerator;
+   }
+   //DebugLog (<< "ConnectionManager::addConnection() " << connection->mWho.connectionId  << ":" << connection->mSocket);
    
    
    mAddrMap[connection->who()] = connection;
-   mIdMap[connection->who().mFlowKey] = connection;
+   mIdMap[connection->who().connectionId] = connection;
 
    mReadHead->push_back(connection);
    mLRUHead->push_back(connection);
@@ -174,7 +175,7 @@ ConnectionManager::removeConnection(Connection* connection)
    assert(!mReadHead->empty());
 
 
-   mIdMap.erase(connection->mWho.mFlowKey);
+   mIdMap.erase(connection->mWho.connectionId);
    mAddrMap.erase(connection->mWho);
 
    connection->ConnectionReadList::remove();

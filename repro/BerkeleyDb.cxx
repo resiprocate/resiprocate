@@ -9,6 +9,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/FileSystem.hxx"
 
 #include "repro/AbstractDb.hxx"
 #include "repro/BerkeleyDb.hxx"
@@ -39,11 +40,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
    // An empty path is how you specify the current working directory as a path
    if ( !filePath.empty() )
    {
-#ifdef WIN32
-      filePath += '\\';
-#else
-      filePath += '/';
-#endif
+      filePath += FileSystem::PathSeparator;
    }
 
    if ( dbName.empty() )
@@ -60,7 +57,7 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
 
    sane = true;
    
-   assert( MaxTable <= 4 );
+   assert( MaxTable <= 5 );
    
    for (int i=0;i<MaxTable;i++)
    {
@@ -83,6 +80,8 @@ BerkeleyDb::init( const Data& dbPath, const Data& dbName )
             fileName += "_acl.db"; break;
          case ConfigTable:
             fileName += "_config.db"; break;
+         case ParametersTable:
+            fileName += "_parameters.db"; break;
          default:
             assert(0);
       }

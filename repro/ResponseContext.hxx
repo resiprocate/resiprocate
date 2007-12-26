@@ -10,7 +10,6 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Via.hxx"
 #include "resip/stack/Uri.hxx"
-#include "resip/stack/MessageDecorator.hxx"
 
 #include "repro/Target.hxx"
 
@@ -96,8 +95,6 @@ class ResponseContext
       bool addTargetBatch(std::list<Target*>& targets,
                            bool highPriority=false,
                            bool addToFirstBatch=false);
-      
-      bool addOutboundBatch(std::map<resip::Data, std::list<Target*> > batch);
       
       /**
          Begins all Candidate client transactions.
@@ -223,12 +220,7 @@ class ResponseContext
 
       std::list<std::list<resip::Data> > mTransactionQueueCollection;
 
-      // !bwc! Map from instance-id to lists of tid
-      // (Each elem in list has identical instance id)
-      typedef std::map<resip::Data, std::list<resip::Data> > OutboundMap;
 
-      OutboundMap mOutboundMap;
-      resip::Data mCurrentResponseTid;      
    private:
       // only constructed by RequestContext
       ResponseContext(RequestContext& parent);
@@ -254,12 +246,6 @@ class ResponseContext
       //There is no terminateClientTransaction(Target target) since terminating
       //a branch is very simple. The guts can be found in the API functions.
       
-      void insertRecordRoute(resip::SipMessage& outgoing,Target* target);
-      resip::Data getInboundFlowToken();
-      bool outboundFlowTokenNeeded(Target* target);
-      bool selfAlreadyRecordRouted();
-      bool sendingToSelf(Target* target);
-
       void sendRequest(const resip::SipMessage& request);
       
       TransactionMap mCandidateTransactionMap; //Targets with status Candidate.
@@ -269,7 +255,7 @@ class ResponseContext
       
       //Maybe someday canonicalized Uris will go here, and checking for duplicates
       //will be much faster
-      resip::ContactList mTargetList;
+      std::list<resip::Uri> mTargetList;
       
       bool isDuplicate(const repro::Target* target) const;
       
@@ -278,7 +264,7 @@ class ResponseContext
       bool mSecure;
 
       void forwardBestResponse();
-
+      
       friend class RequestContext;
       friend std::ostream& operator<<(std::ostream& strm, const repro::ResponseContext& rc);
 };

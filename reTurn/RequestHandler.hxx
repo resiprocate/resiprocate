@@ -3,14 +3,13 @@
 
 #include <string>
 #include <boost/noncopyable.hpp>
-#include <rutil/SharedPtr.hxx>
 
 #include "StunMessage.hxx"
 #include "TurnManager.hxx"
 
 namespace reTurn {
 
-class AsyncSocketBase;
+class TurnTransportBase;
 
 /// The common handler for all incoming requests.
 class RequestHandler
@@ -39,8 +38,8 @@ public:
 
    /// Process a received StunMessage, and produce a reply
    /// Returns true if the response message is to be sent
-   ProcessResult processStunMessage(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer=false);
-   void processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, resip::SharedPtr<resip::Data> data);
+   ProcessResult processStunMessage(TurnTransportBase* turnTransport, StunMessage& request, StunMessage& response);
+   void processTurnData(unsigned char channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, const char* data, unsigned int size);
 
 private:
 
@@ -57,10 +56,9 @@ private:
    bool handleAuthentication(StunMessage& request, StunMessage& response);
 
    // Specific request processors
-   ProcessResult processStunBindingRequest(StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer);
+   ProcessResult processStunBindingRequest(StunMessage& request, StunMessage& response);
    ProcessResult processStunSharedSecretRequest(StunMessage& request, StunMessage& response);
-   ProcessResult processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response);
-   ProcessResult processTurnRefreshRequest(StunMessage& request, StunMessage& response);
+   ProcessResult processTurnAllocateRequest(TurnTransportBase* turnTransport, StunMessage& request, StunMessage& response);
    ProcessResult processTurnListenPermissionRequest(StunMessage& request, StunMessage& response);
 
    // Specific Indication processors

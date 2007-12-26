@@ -85,8 +85,11 @@ Log::initialize(const Data& typed, const Data& leveld, const Data& appName,
    if (isEqualNoCase(typed, "cout")) type = Log::Cout;
    else if (isEqualNoCase(typed, "cerr")) type = Log::Cerr;
    else if (isEqualNoCase(typed, "file")) type = Log::File;
+#ifndef WIN32
    else type = Log::Syslog;
-   
+#else
+   else type = Log::Cout;
+#endif
    Level level = Log::Info;
    level = toLevel(leveld);
 
@@ -123,7 +126,7 @@ Log::initialize(Type type, Level level, const Data& appName,
    gethostname(buffer, sizeof(buffer));
    mHostname = buffer;
 #ifdef WIN32 
-   mPid = (int)GetCurrentProcess();
+   mPid = (int)GetCurrentProcessId();
 #else
    mPid = getpid();
 #endif
@@ -196,7 +199,11 @@ Log::toType(const Data& arg)
    }
    else
    {
+#ifndef WIN32
       return Log::Syslog;
+#else
+      return Log::Cout;
+#endif
    }
 }
 

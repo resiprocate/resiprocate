@@ -25,11 +25,9 @@ class ContactInstanceRecord
       Tuple mReceivedFrom;  // source transport, IP address, and port 
       NameAddrs mSipPath;     // Value of SIP Path header from the request
       Data mInstance;   // From the instance parameter; usually a UUID URI
-      UInt32 mRegId;
+      unsigned long mClientFlowId;
       Data mServerSessionId;   // if there is no SIP Path header, the connection/session identifier 
       // Uri gruu;  (GRUU is currently derived)
-      
-      bool operator==(const ContactInstanceRecord& rhs) const;
 };
 
 typedef std::list<ContactInstanceRecord> ContactList;

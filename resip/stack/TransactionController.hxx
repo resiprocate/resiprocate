@@ -51,16 +51,6 @@ class TransactionController
       void registerMarkListener(MarkListener* listener);
       void unregisterMarkListener(MarkListener* listener);
 
-      inline bool getFixBadDialogIdentifiers() const 
-      {
-         return mFixBadDialogIdentifiers;
-      }
-
-      inline void setFixBadDialogIdentifiers(bool pFixBadDialogIdentifiers) 
-      {
-         mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
-      }
-
    private:
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
@@ -70,8 +60,6 @@ class TransactionController
       // there is no transaction. 
       // !jf! Probably should transmit stray responses statelessly. see RFC3261
       bool mDiscardStrayResponses;
-
-      bool mFixBadDialogIdentifiers;
 
       // fifo used to communicate to the transaction state machine within the
       // stack. Not for external use by the application. May contain, sip

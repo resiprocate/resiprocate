@@ -4,15 +4,17 @@
 #include <asio.hpp>
 #include <string>
 #include <boost/noncopyable.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include "RequestHandler.hxx"
-#include "AsyncUdpSocketBase.hxx"
+#include "TurnTransportBase.hxx"
 
 namespace reTurn {
 
 class StunTuple;
 
 class UdpRelayServer
-  : public AsyncUdpSocketBase, 
+  : public TurnTransportBase, 
+    public boost::enable_shared_from_this<UdpRelayServer>,
     private boost::noncopyable
 {
 public:
@@ -22,21 +24,32 @@ public:
 
    /// Starts processing
    void start();
-
    /// Causes this object to destroy itself safely (ie. waiting for ayncronous callbacks to finish)
    void stop();
 
+   /// Returns the socket for this server
+   asio::ip::udp::socket& getSocket();
+
+   virtual void sendData(const StunTuple& destination, const char* buffer, unsigned int size);
+
 private:
    /// Handle completion of a receive_from operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
-   virtual void onReceiveFailure(const asio::error_code& e);
+   void handleReceiveFrom(const asio::error_code& e, std::size_t bytesTransferred);
 
-   /// Handle completion of a send operation
-   virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
+   /// Handle completion of a sendData operation
+   void handleSendData(const asio::error_code& error, std::size_t bytesTransferred);
+
+   /// Socket for the connection.
+   asio::ip::udp::socket mSocket;
+
+   /// Endpoint info for current sender
+   asio::ip::udp::endpoint mSenderEndpoint;
 
    TurnAllocation& mTurnAllocation;
    bool mStopping;
+
+   /// Buffer for incoming data.
+   boost::array<unsigned char, 8192> mBuffer;
 };
 
 typedef boost::shared_ptr<UdpRelayServer> UdpRelayServerPtr;

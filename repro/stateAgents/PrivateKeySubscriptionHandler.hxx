@@ -6,7 +6,7 @@
 
 namespace resip
 {
-class Security;
+class BaseSecurity;
 class SipMessage;
 class SecurityAttributes;
 class Data;
@@ -19,7 +19,7 @@ namespace repro
 class PrivateKeySubscriptionHandler : public resip::ServerSubscriptionHandler
 {
    public:
-      PrivateKeySubscriptionHandler(resip::Security& security);
+      PrivateKeySubscriptionHandler(resip::BaseSecurity& security);
       virtual void onNewSubscription(resip::ServerSubscriptionHandle h, const resip::SipMessage& sub);
       virtual void onPublished(resip::ServerSubscriptionHandle associated, 
                                resip::ServerPublicationHandle publication, 
@@ -29,7 +29,7 @@ class PrivateKeySubscriptionHandler : public resip::ServerSubscriptionHandler
       virtual void onError(resip::ServerSubscriptionHandle, const resip::SipMessage& msg);
 
    private:
-      resip::Security& mSecurity;
+      resip::BaseSecurity& mSecurity;
 };
  
 }

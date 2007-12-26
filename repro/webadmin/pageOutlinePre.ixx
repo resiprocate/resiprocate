@@ -35,6 +35,8 @@
 "\n"
 "        <p><a href=\"domains.html\">Domains</a></p>\n"
 "        <p><a href=\"acls.html\">ACLs</a></p>\n"
+"        <p><a href=\"parameters.html\">Parameters</a></p>\n"
+"        <p><a href=\"serverRestart.html\">Restart</a></p>\n"
 "      <h2>Users</h2>\n"
 "        <p><a href=\"addUser.html\">Add User</a></p>\n"
 "        <p><a href=\"showUsers.html\">Show Users</a></p>\n"
