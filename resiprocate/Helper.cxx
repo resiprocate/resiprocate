@@ -785,7 +785,7 @@ Helper::authenticateRequest(const SipMessage& request,
                return Failed;
             }
          
-            InfoLog (<< " username=" << (i->param(p_username))
+            DebugLog (<< " username=" << (i->param(p_username))
                      << " password=" << password
                      << " realm=" << realm
                      << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
@@ -896,7 +896,7 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
                return Failed;
             }
          
-            InfoLog (<< " username=" << (i->param(p_username))
+            DebugLog (<< " username=" << (i->param(p_username))
                      << " H(A1)=" << hA1
                      << " realm=" << realm
                      << " method=" << getMethodName(request.header(h_RequestLine).getMethod())
