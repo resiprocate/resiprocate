@@ -1,7 +1,8 @@
 #ifndef TURNASYNCSOCKET_HXX
 #define TURNASYNCSOCKET_HXX
 
-#include <vector>
+#include <map>
+#include <queue>
 #include <asio.hpp>
 #include <rutil/Data.hxx>
 #include <rutil/Mutex.hxx>
@@ -9,8 +10,8 @@
 #include "../StunTuple.hxx"
 #include "../StunMessage.hxx"
 #include "../ChannelManager.hxx"
-#include "TurnAsyncSocketHandler.hxx"
 #include "../AsyncSocketBase.hxx"
+#include "TurnAsyncSocketHandler.hxx"
 
 namespace reTurn {
 
@@ -38,7 +39,7 @@ public:
    void requestSharedSecret();
 
    // Set the username and password for all future requests
-   void setUsernameAndPassword(const char* username, const char* password);
+   void setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth=false);
    void connect(const std::string& address, unsigned short port, bool turnFraming);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
@@ -71,7 +72,7 @@ public:
 
 protected:
 
-   void handleReceivedData(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   void handleReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data);
 
    asio::io_service& mIOService;
    TurnAsyncSocketHandler* mTurnAsyncSocketHandler;
@@ -83,6 +84,9 @@ protected:
    // Authentication Info
    resip::Data mUsername;
    resip::Data mPassword;
+   resip::Data mHmacKey;
+   resip::Data mRealm;
+   resip::Data mNonce;
 
    // Turn Allocation Properties used in request
    StunTuple::TransportType mRequestedTransportType;
@@ -123,14 +127,25 @@ private:
    void requestTimeout(UInt128 tid);
    void clearActiveRequestMap();
 
+   // Async guards - holds shared pointers to AsyncSocketBase so that TurnAsyncSocket 
+   // destruction will be delayed if there are outstanding async TurnAsyncSocket calls   
+   std::queue<boost::shared_ptr<AsyncSocketBase> > mGuards;
+   class GuardReleaser 
+   {
+   public:
+      GuardReleaser(std::queue<boost::shared_ptr<AsyncSocketBase> >&  guards) : mGuards(guards) {}
+      ~GuardReleaser() { mGuards.pop(); }
+   private:
+      std::queue<boost::shared_ptr<AsyncSocketBase> >&  mGuards;
+   };
+
    asio::deadline_timer mAllocationTimer;
    void startAllocationTimer();
    void cancelAllocationTimer();
    void allocationTimerExpired(const asio::error_code& e);
 
    void doRequestSharedSecret();
-   void doSetUsernameAndPassword(resip::Data* username, resip::Data* password);
-   void doConnect(const std::string& address, unsigned short port);
+   void doSetUsernameAndPassword(resip::Data* username, resip::Data* password, bool shortTermAuth);
    void doBindRequest();
    void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,
                            unsigned int bandwidth = UnspecifiedBandwidth,
@@ -142,14 +157,16 @@ private:
    void doDestroyAllocation();
    void doSetActiveDestination(const asio::ip::address& address, unsigned short port);
    void doClearActiveDestination();
-   void doSend(resip::SharedPtr<resip::Data> data);
-   void doSendTo(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   void doSend(boost::shared_ptr<DataBuffer> data);
+   void doSendTo(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data);
    void doClose();
+   void actualClose();
 
+   StunMessage* createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo=true);
    void sendStunMessage(StunMessage* request, bool reTransmission=false);
-   void sendTo(RemotePeer& remotePeer, resip::SharedPtr<resip::Data> data);
-   void send(resip::SharedPtr<resip::Data> data);  // Send unframed data
-   void send(unsigned short channel, resip::SharedPtr<resip::Data> data);  // send with turn framing
+   void sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer> data);
+   void send(boost::shared_ptr<DataBuffer> data);  // Send unframed data
+   void send(unsigned short channel, boost::shared_ptr<DataBuffer> data);  // send with turn framing
 
    asio::error_code handleStunMessage(StunMessage& stunMessage);
    asio::error_code handleDataInd(StunMessage& stunMessage);

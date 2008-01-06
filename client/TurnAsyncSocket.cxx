@@ -2,7 +2,7 @@
 #include "../AsyncSocketBase.hxx"
 #include "ErrorCode.hxx"
 #include <boost/bind.hpp>
-#include <rutil/SharedPtr.hxx>
+#include <rutil/MD5Stream.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
@@ -60,12 +60,14 @@ TurnAsyncSocket::disableTurnAsyncHandler()
 void
 TurnAsyncSocket::requestSharedSecret()
 {
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doRequestSharedSecret, this));
 }
 
 void
 TurnAsyncSocket::doRequestSharedSecret()
 {
+   GuardReleaser guardReleaser(mGuards);
    // Should we check here if TLS and deny?
 
    // Ensure Connected
@@ -73,26 +75,34 @@ TurnAsyncSocket::doRequestSharedSecret()
    {
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretFailure(getSocketDescriptor(), asio::error_code(reTurn::NotConnected, asio::error::misc_category));
    }
+   else
+   {
+      // Form Shared Secret request
+      StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::SharedSecretMethod);
 
-   // Form Shared Secret request
-   StunMessage* request = new StunMessage();
-   request->createHeader(StunMessage::StunClassRequest, StunMessage::SharedSecretMethod);
-
-   // Send the Request and start transaction timers
-   sendStunMessage(request);
+      // Send the Request and start transaction timers
+      sendStunMessage(request);
+   }
 }
 
 void
-TurnAsyncSocket::setUsernameAndPassword(const char* username, const char* password)
+TurnAsyncSocket::setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth)
 {
-   mIOService.post(boost::bind(&TurnAsyncSocket::doSetUsernameAndPassword, this, new Data(username), new Data(password)));
+   mGuards.push(mAsyncSocketBase.shared_from_this());
+   mIOService.post(boost::bind(&TurnAsyncSocket::doSetUsernameAndPassword, this, new Data(username), new Data(password), shortTermAuth));
 }
 
 void 
-TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password)
+TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password, bool shortTermAuth)
 {
+   GuardReleaser guardReleaser(mGuards);
    mUsername = *username;
    mPassword = *password;
+   if(shortTermAuth)
+   {
+      // If we are using short term auth, then use short term password as HMAC key
+      mHmacKey = *password;
+   }
    delete username;
    delete password;
 }
@@ -100,30 +110,25 @@ TurnAsyncSocket::doSetUsernameAndPassword(Data* username, Data* password)
 void 
 TurnAsyncSocket::bindRequest()
 {
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doBindRequest, this));
 }
 
 void 
 TurnAsyncSocket::doBindRequest()
 {
+   GuardReleaser guardReleaser(mGuards);
    // Ensure Connected
    if(!mAsyncSocketBase.isConnected())
    {
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(reTurn::NotConnected, asio::error::misc_category));
    }
-
-   // Form Stun Bind request
-   StunMessage* request = new StunMessage();
-   request->createHeader(StunMessage::StunClassRequest, StunMessage::BindMethod);
-
-   if(!mUsername.empty())
+   else
    {
-      request->mHasMessageIntegrity = true;
-      request->setUsername(mUsername.c_str()); 
-      request->mHmacKey = mPassword;
+      // Form Stun Bind request
+      StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::BindMethod);
+      sendStunMessage(request);
    }
-
-   sendStunMessage(request);
 }
 
 void
@@ -134,6 +139,7 @@ TurnAsyncSocket::createAllocation(unsigned int lifetime,
                                   StunTuple::TransportType requestedTransportType, 
                                   const asio::ip::address &requestedIpAddress)
 {
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doCreateAllocation, this, lifetime, 
                                                                            bandwidth, 
                                                                            requestedPortProps, 
@@ -150,6 +156,8 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
                                     StunTuple::TransportType requestedTransportType, 
                                     const asio::ip::address &requestedIpAddress)
 {
+   GuardReleaser guardReleaser(mGuards);
+
    // Store Allocation Properties
    mRequestedTransportType = requestedTransportType;
 
@@ -167,16 +175,17 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
    if(!mAsyncSocketBase.isConnected())
    {
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onAllocationFailure(getSocketDescriptor(), asio::error_code(reTurn::NotConnected, asio::error::misc_category));
+      return;
    }
 
    if(mHaveAllocation)
    {
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onAllocationFailure(getSocketDescriptor(), asio::error_code(reTurn::AlreadyAllocated, asio::error::misc_category));
+      return;
    }
 
    // Form Turn Allocate request
-   StunMessage* request = new StunMessage();
-   request->createHeader(StunMessage::StunClassRequest, StunMessage::TurnAllocateMethod);
+   StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::TurnAllocateMethod);
    if(lifetime != UnspecifiedLifetime)
    {
       request->mHasTurnLifetime = true;
@@ -218,36 +227,34 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
       request->mTurnRequestedPortProps.props = requestedPortProps;
       request->mTurnRequestedPortProps.port = requestedPort;
    }
-   request->mHasMessageIntegrity = true;
-   request->setUsername(mUsername.data()); 
-   request->mHmacKey = mPassword;
-
+      
    sendStunMessage(request);
 }
-
+   
 void 
 TurnAsyncSocket::refreshAllocation(unsigned int lifetime)
 {
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doRefreshAllocation, this, lifetime));
 }
 
 void 
 TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
 {
+   GuardReleaser guardReleaser(mGuards);
    if(!mHaveAllocation)
    {
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(NoAllocation, asio::error::misc_category));
       if(mCloseAfterDestroyAllocationFinishes)
       {
          mHaveAllocation = false;
-         doClose();
+         actualClose();
       }
       return;
    }
 
-   // Form Turn Allocate request
-   StunMessage* request = new StunMessage();
-   request->createHeader(StunMessage::StunClassRequest, StunMessage::TurnRefreshMethod);
+   // Form Turn Refresh request
+   StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::TurnRefreshMethod);
    if(lifetime != UnspecifiedLifetime)
    {
       request->mHasTurnLifetime = true;
@@ -258,9 +265,6 @@ TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
    //   request.mHasTurnBandwidth = true;
    //   request.mTurnBandwidth = mRequestedBandwidth;
    //}
-   request->mHasMessageIntegrity = true;
-   request->setUsername(mUsername.data()); 
-   request->mHmacKey = mPassword;
 
    sendStunMessage(request);
 }
@@ -268,6 +272,7 @@ TurnAsyncSocket::doRefreshAllocation(unsigned int lifetime)
 void 
 TurnAsyncSocket::destroyAllocation()
 {
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doDestroyAllocation, this));
 }
 
@@ -280,12 +285,15 @@ TurnAsyncSocket::doDestroyAllocation()
 void
 TurnAsyncSocket::setActiveDestination(const asio::ip::address& address, unsigned short port)
 {
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doSetActiveDestination, this, address, port));
 }
 
 void
 TurnAsyncSocket::doSetActiveDestination(const asio::ip::address& address, unsigned short port)
 {
+   GuardReleaser guardReleaser(mGuards);
+
    // Setup Remote Peer 
    StunTuple remoteTuple(mRelayTransportType, address, port);
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
@@ -306,12 +314,15 @@ TurnAsyncSocket::doSetActiveDestination(const asio::ip::address& address, unsign
 void
 TurnAsyncSocket::clearActiveDestination()
 {
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doClearActiveDestination, this));
 }
 
 void
 TurnAsyncSocket::doClearActiveDestination()
 {
+   GuardReleaser guardReleaser(mGuards);
+
    // ensure there is an allocation
    if(!mHaveAllocation)
    {
@@ -323,11 +334,34 @@ TurnAsyncSocket::doClearActiveDestination()
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onClearActiveDestinationSuccess(getSocketDescriptor());
 }
 
+StunMessage* 
+TurnAsyncSocket::createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo)
+{
+   StunMessage* msg = new StunMessage();
+   msg->createHeader(stunclass, method);
+
+   if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
+   {
+      msg->mHasMessageIntegrity = true;
+      msg->setUsername(mUsername.c_str()); 
+      msg->mHmacKey = mHmacKey;
+      if(!mRealm.empty())
+      {
+         msg->setRealm(mRealm.c_str());
+      }
+      if(!mNonce.empty())
+      {
+         msg->setNonce(mNonce.c_str());
+      }
+   }
+   return msg;
+}
+
 void
 TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission)
 {
 #define REQUEST_BUFFER_SIZE 1024
-   SharedPtr<Data> buffer = AsyncSocketBase::allocateBuffer(REQUEST_BUFFER_SIZE);
+   boost::shared_ptr<DataBuffer> buffer = AsyncSocketBase::allocateBuffer(REQUEST_BUFFER_SIZE);
    unsigned int bufferSize;
    if(mTurnFraming)  
    {
@@ -358,7 +392,7 @@ TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission)
 }
 
 void 
-TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data)
 {
    if(mTurnFraming)
    {
@@ -383,10 +417,11 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
             RemotePeer* remotePeer = mChannelManager.findRemotePeerByServerToClientChannel(channelNumber);
             if(remotePeer)
             {
+               data->offset(4);  // move buffer start past framing for callback
                if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(), 
                                                          remotePeer->getPeerTuple().getAddress(), 
                                                          remotePeer->getPeerTuple().getPort(), 
-                                                         &(*data)[4], data->size()-4);
+                                                         data);
             }
             else
             {
@@ -421,7 +456,7 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(), 
                                                    address, 
                                                    port, 
-                                                   &(*data)[0], data->size());
+                                                   data);
    }
 }
 
@@ -431,7 +466,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
    asio::error_code errorCode;
    if(stunMessage.isValid())
    {
-      if(!stunMessage.checkMessageIntegrity(mPassword))
+      if(!stunMessage.checkMessageIntegrity(mHmacKey))
       {
          WarningLog(<< "TurnAsyncSocket::handleStunMessage: Stun message integrity is bad!");
          return asio::error_code(reTurn::BadMessageIntegrity, asio::error::misc_category);
@@ -493,6 +528,37 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
          else
          {
             it->second->stopTimer();
+
+            // If a realm and nonce attributes are present and the response is a 401 or 438 (Nonce Expired), 
+            // then re-issue request with new auth attributes
+            if(stunMessage.mHasRealm &&
+               stunMessage.mHasNonce &&
+               stunMessage.mHasErrorCode && 
+               stunMessage.mErrorCode.errorClass == 4 &&
+               ((stunMessage.mErrorCode.number == 1 && mHmacKey.empty()) ||  // Note if 401 error then ensure we haven't already tried once - if we've tried then mHmacKey will be populated
+               stunMessage.mErrorCode.number == 38))
+            {
+               mNonce = *stunMessage.mNonce;
+               mRealm = *stunMessage.mRealm;
+               MD5Stream r;
+               r << mUsername << ":" << mRealm << ":" << mPassword;
+               mHmacKey = r.getHex();
+
+               // Create a new transaction - by starting with old request
+               StunMessage* newRequest = it->second->mRequestMessage;
+               it->second->mRequestMessage = 0;  // clear out pointer in mActiveRequestMap so that it will not be deleted
+               mActiveRequestMap.erase(it);
+
+               newRequest->createHeader(newRequest->mClass, newRequest->mMethod);  // updates TID
+               newRequest->mHasMessageIntegrity = true;
+               newRequest->setUsername(mUsername.c_str()); 
+               newRequest->mHmacKey = mHmacKey;
+               newRequest->setRealm(mRealm.c_str());
+               newRequest->setNonce(mNonce.c_str());
+               sendStunMessage(newRequest);
+               return errorCode;
+            }
+          
             mActiveRequestMap.erase(it);
          }
 
@@ -569,8 +635,7 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
    if(mLocalBinding.getTransportType() == StunTuple::UDP)
    {
       // If UDP, then send TurnChannelConfirmationInd
-      StunMessage* channelConfirmationInd = new StunMessage();
-      channelConfirmationInd->createHeader(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationMethod);
+      StunMessage* channelConfirmationInd = createNewStunMessage(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationMethod, false);
       channelConfirmationInd->mHasTurnPeerAddress = true;
       channelConfirmationInd->mTurnPeerAddress = stunMessage.mTurnPeerAddress;
       channelConfirmationInd->mHasTurnChannelNumber = true;
@@ -582,10 +647,11 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
 
    if(stunMessage.mHasTurnData)
    {
+      boost::shared_ptr<DataBuffer> data(new DataBuffer(stunMessage.mTurnData->data(), stunMessage.mTurnData->size()));
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveSuccess(getSocketDescriptor(), 
          remoteTuple.getAddress(), 
          remoteTuple.getPort(), 
-         stunMessage.mTurnData->data(), (unsigned int)stunMessage.mTurnData->size());
+         data);
    }
 
    return asio::error_code();
@@ -793,7 +859,7 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage& stunMessage)
          if(mCloseAfterDestroyAllocationFinishes)
          {
             mHaveAllocation = false;
-            doClose();
+            actualClose();
          }
       }
       else
@@ -803,7 +869,7 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage& stunMessage)
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshSuccess(getSocketDescriptor(), 0);
          if(mCloseAfterDestroyAllocationFinishes)
          {
-            doClose();
+            actualClose();
          }
       }
    }
@@ -816,7 +882,7 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage& stunMessage)
          if(mCloseAfterDestroyAllocationFinishes)
          {
             mHaveAllocation = false;
-            doClose();
+            actualClose();
          }
       }
       else
@@ -825,7 +891,7 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage& stunMessage)
          if(mCloseAfterDestroyAllocationFinishes)
          {
             mHaveAllocation = false;
-            doClose();
+            actualClose();
          }
          return asio::error_code(MissingAttributes, asio::error::misc_category);
       }
@@ -836,13 +902,16 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage& stunMessage)
 void
 TurnAsyncSocket::send(const char* buffer, unsigned int size)
 {
-   SharedPtr<Data> data(new Data(buffer, size));
+   boost::shared_ptr<DataBuffer> data(new DataBuffer(buffer, size));
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doSend, this, data));
 }
 
 void
-TurnAsyncSocket::doSend(resip::SharedPtr<resip::Data> data)
+TurnAsyncSocket::doSend(boost::shared_ptr<DataBuffer> data)
 {
+   GuardReleaser guardReleaser(mGuards);
+
    // Allow raw data to be sent if there is no allocation
    if(!mHaveAllocation)
    {
@@ -861,13 +930,16 @@ TurnAsyncSocket::doSend(resip::SharedPtr<resip::Data> data)
 void 
 TurnAsyncSocket::sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size)
 {
-   SharedPtr<Data> data(new Data(buffer, size));
+   boost::shared_ptr<DataBuffer> data(new DataBuffer(buffer, size));
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doSendTo, this, address, port, data));
 }
 
 void 
-TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data)
 {
+   GuardReleaser guardReleaser(mGuards);
+
    // ensure there is an allocation 
    if(!mHaveAllocation)
    {
@@ -888,7 +960,7 @@ TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port,
 }
 
 void
-TurnAsyncSocket::sendTo(RemotePeer& remotePeer, resip::SharedPtr<resip::Data> data)
+TurnAsyncSocket::sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer> data)
 {
    if(remotePeer.isClientToServerChannelConfirmed())
    {
@@ -899,8 +971,7 @@ TurnAsyncSocket::sendTo(RemotePeer& remotePeer, resip::SharedPtr<resip::Data> da
    {
       // Data must be wrapped in a Send Indication
       // Wrap data in a SendInd
-      StunMessage* ind = new StunMessage();
-      ind->createHeader(StunMessage::StunClassIndication, StunMessage::TurnSendMethod);
+      StunMessage* ind = createNewStunMessage(StunMessage::StunClassIndication, StunMessage::TurnSendMethod, false);
       ind->mHasTurnPeerAddress = true;
       StunMessage::setStunAtrAddressFromTuple(ind->mTurnPeerAddress, remotePeer.getPeerTuple());
       ind->mHasTurnChannelNumber = true;
@@ -931,12 +1002,15 @@ TurnAsyncSocket::connect(const std::string& address, unsigned short port, bool t
 void
 TurnAsyncSocket::close()
 {
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mIOService.post(boost::bind(&TurnAsyncSocket::doClose, this));
 }
 
 void
 TurnAsyncSocket::doClose()
 {
+   GuardReleaser guardReleaser(mGuards);
+
    // If we have an allocation over UDP then we should send a refresh with lifetime 0 to destroy the allocation
    // Note:  For TCP and TLS, the socket disconnection will destroy the allocation automatically
    if(mHaveAllocation && mLocalBinding.getTransportType() == StunTuple::UDP)
@@ -946,10 +1020,16 @@ TurnAsyncSocket::doClose()
    }
    else
    {
-      clearActiveRequestMap();
-      cancelAllocationTimer();
-      mAsyncSocketBase.close();
+      actualClose();
    }
+}
+
+void
+TurnAsyncSocket::actualClose()
+{
+   clearActiveRequestMap();
+   cancelAllocationTimer();
+   mAsyncSocketBase.close();
 }
 
 void 
@@ -957,23 +1037,25 @@ TurnAsyncSocket::turnReceive()
 {
    if(mTurnFraming)
    {
-      mAsyncSocketBase.framedReceive();
+      //mAsyncSocketBase.framedReceive();
+      mAsyncSocketBase.doFramedReceive();
    }
    else
    {
-      mAsyncSocketBase.receive();
+      //mAsyncSocketBase.receive();
+      mAsyncSocketBase.doReceive();
    }
 }
 
 void 
-TurnAsyncSocket::send(resip::SharedPtr<resip::Data> data)
+TurnAsyncSocket::send(boost::shared_ptr<DataBuffer> data)
 {
    StunTuple destination(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort());
    mAsyncSocketBase.send(destination, data);
 }
 
 void 
-TurnAsyncSocket::send(unsigned short channel, resip::SharedPtr<resip::Data> data)
+TurnAsyncSocket::send(unsigned short channel, boost::shared_ptr<DataBuffer> data)
 {
    StunTuple destination(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort());
    mAsyncSocketBase.send(destination, channel, data);
@@ -1014,7 +1096,7 @@ TurnAsyncSocket::RequestEntry::~RequestEntry()
 void 
 TurnAsyncSocket::RequestEntry::requestTimerExpired(const asio::error_code& e)
 {
-   if(!e)
+   if(!e && mRequestMessage)  // Note:  There is a race condition with clearing out of mRequestMessage when 401 is received - check that mRequestMessage is not 0 avoids any resulting badness
    {
       if(mTurnAsyncSocket->mLocalBinding.getTransportType() != StunTuple::UDP || mRequestsSent == UDP_MAX_RETRANSMITS)
       {
@@ -1061,7 +1143,7 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
          if(mCloseAfterDestroyAllocationFinishes)
          {
             mHaveAllocation = false;
-            doClose();
+            actualClose();
          }
          break;
       default:
@@ -1087,6 +1169,7 @@ void
 TurnAsyncSocket::startAllocationTimer()
 {
    mAllocationTimer.expires_from_now(boost::posix_time::seconds((mLifetime*5)/8));  // Allocation refresh should sent before 3/4 lifetime - use 5/8 lifetime 
+   mGuards.push(mAsyncSocketBase.shared_from_this());
    mAllocationTimer.async_wait(boost::bind(&TurnAsyncSocket::allocationTimerExpired, this, asio::placeholders::error));
 }
 
@@ -1102,6 +1185,12 @@ TurnAsyncSocket::allocationTimerExpired(const asio::error_code& e)
    if(!e)
    {
       doRefreshAllocation(mLifetime);
+   }
+   else
+   {
+      // Note:  only release guard if not calling doRefreshAllocation - since
+      // doRefreshAllocation will release the guard
+      GuardReleaser guardReleaser(mGuards);
    }
 }
 

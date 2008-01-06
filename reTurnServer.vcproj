@@ -137,6 +137,9 @@
 				RelativePath=".\ConnectionManager.cxx">
 			</File>
 			<File
+				RelativePath=".\DataBuffer.cxx">
+			</File>
+			<File
 				RelativePath=".\RemotePeer.cxx">
 			</File>
 			<File
@@ -212,6 +215,9 @@
 			</File>
 			<File
 				RelativePath=".\ConnectionManager.hxx">
+			</File>
+			<File
+				RelativePath=".\DataBuffer.hxx">
 			</File>
 			<File
 				RelativePath=".\RemotePeer.hxx">

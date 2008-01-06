@@ -1,10 +1,6 @@
 #ifndef ASYNC_SOCKET_BASE_HANDLER_HXX
 #define ASYNC_SOCKET_BASE_HANDLER_HXX
 
-#include <asio.hpp>
-#include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
-
 namespace reTurn {
 
 class AsyncSocketBaseHandler

@@ -4,13 +4,12 @@
 #include <deque>
 #include <asio.hpp>
 #include <boost/bind.hpp>
-#include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
 #include <boost/enable_shared_from_this.hpp>
 
+#include "DataBuffer.hxx"
 #include "StunTuple.hxx"
 
-#define RECEIVE_BUFFER_SIZE 8192  // ?slg? should be shrink this to something closer to MTU (1500 bytes)?
+#define RECEIVE_BUFFER_SIZE 2048 // ?slg? should we shrink this to something closer to MTU (1500 bytes)?
 
 namespace reTurn {
 
@@ -32,9 +31,9 @@ public:
    virtual asio::error_code bind(const asio::ip::address& address, unsigned short port) = 0;
    virtual void connect(const std::string& address, unsigned short port) = 0;  
    /// Note: destination is ignored for TCP and TLS connections
-   virtual void send(const StunTuple& destination, resip::SharedPtr<resip::Data> data);  // Send unframed data
-   virtual void send(const StunTuple& destination, unsigned short channel, resip::SharedPtr<resip::Data> data);  // send with turn framing
-   /// WARNING - don't overllap calls to receive functions
+   virtual void send(const StunTuple& destination, boost::shared_ptr<DataBuffer> data);  // Send unframed data
+   virtual void send(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer> data);  // send with turn framing
+   /// Overlapped calls to receive functions have no effect
    virtual void receive();  
    virtual void framedReceive();  
    virtual void close();
@@ -44,21 +43,21 @@ public:
    unsigned short getConnectedPort() { return mConnectedPort; }
 
    /// Use these if you already operating within the ioService thread
-   virtual void doSend(const StunTuple& destination, unsigned short channel, resip::SharedPtr<resip::Data> data, unsigned int bufferStartPos=0);
-   virtual void doSend(const StunTuple& destination, resip::SharedPtr<resip::Data> data, unsigned int bufferStartPos=0);
+   virtual void doSend(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer> data, unsigned int bufferStartPos=0);
+   virtual void doSend(const StunTuple& destination, boost::shared_ptr<DataBuffer> data, unsigned int bufferStartPos=0);
    virtual void doReceive();
    virtual void doFramedReceive();
 
    /// Class override callbacks
    virtual void onConnectSuccess() { assert(false); }
    virtual void onConnectFailure(const asio::error_code& e) { assert(false); }
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data) = 0;
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data) = 0;
    virtual void onReceiveFailure(const asio::error_code& e) = 0;
    virtual void onSendSuccess() = 0;
    virtual void onSendFailure(const asio::error_code& e) = 0;
 
    /// Utility API
-   static resip::SharedPtr<resip::Data> allocateBuffer(unsigned int size);
+   static boost::shared_ptr<DataBuffer> allocateBuffer(unsigned int size);
 
    // Stubbed out async handlers needed by Protocol specific Subclasses of this - the requirement for these 
    // to be in the base class all revolves around the shared_from_this() use/requirement
@@ -80,7 +79,7 @@ protected:
    asio::io_service& mIOService;
 
    /// Receive Buffer and state
-   resip::SharedPtr<resip::Data> mReceiveBuffer;
+   boost::shared_ptr<DataBuffer> mReceiveBuffer;
    bool mReceiving;
 
    /// Connected Info and State
@@ -104,11 +103,11 @@ private:
    class SendData
    {
    public:
-      SendData(const StunTuple& destination, resip::SharedPtr<resip::Data> frameData, resip::SharedPtr<resip::Data> data, unsigned int bufferStartPos = 0) :
+      SendData(const StunTuple& destination, boost::shared_ptr<DataBuffer> frameData, boost::shared_ptr<DataBuffer> data, unsigned int bufferStartPos = 0) :
          mDestination(destination), mFrameData(frameData), mData(data), mBufferStartPos(bufferStartPos) {}
       StunTuple mDestination;
-      resip::SharedPtr<resip::Data> mFrameData;
-      resip::SharedPtr<resip::Data> mData;
+      boost::shared_ptr<DataBuffer> mFrameData;
+      boost::shared_ptr<DataBuffer> mData;
       unsigned int mBufferStartPos;
    };
    /// Queue of data to send
