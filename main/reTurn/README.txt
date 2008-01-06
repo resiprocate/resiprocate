@@ -37,14 +37,14 @@ TLS Server Support                     yes          yes
 RFC3489 bis 13 message parsing         yes          partly
 IPV6 message parsing support           yes          no 
 Shared Secret with Short Term Cred     yes          yes     Checking username for expirey and correct HMAC is not completed
-Shared Secret with Long Term Cred      little       no      Implementation is not complete and currently only accepts one hardcoded username/password - nonce generation not implemented
+Shared Secret with Long Term Cred      mostly       yes     Implementation currently only accepts one hardcoded username/password - not implement on client side sync sockets
 Finger Print Insertion and Validation  yes          yes     Uses BOOST:crc_optimal
 Checking for unknown attributes        no           no
 Bandwidth Check                        no           no
-Turn Allocation                        almost       no
+Turn Allocation                        yes          yes     Only UDP Relay's are implemented
 Requested Port Props (Even, Odd, etc)  yes          yes
 Turn Permissions                       yes          yes      
-Turn Relay                             partly       partly  UDP Peers only
+Turn Relay                             yes          yes     UDP Peers only
 Asyncronous Client APIs                yes          yes
 
 
@@ -56,7 +56,6 @@ General TODO
 - per user allocation quota enforcement
 - move TLS server settings to configuration
 - cleanup stun message class so that there are accessors for all data members
-- Ability for Server to accept long term credentials - 3489-bis13 digest
 - Check for unknown attributes
 - from chart above
  - Configuration Framework
@@ -67,13 +66,14 @@ General TODO
 Client TODO
 -----------
 - rework synchronous sockets to use Asynchrous sockets to unify implementation better
+- Note:  synchronous sockets currently do not support long term authentication
 - retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response - currently applications responsibility
 - DNS SRV Discovery - currently only does host record lookup (using ASIO)
-- client long term password use - auto re-request after 401
 - implement 300 Try-Alternate response - currently applications responsibility
 - use of a calculated RTO for retransmissions
-- TLS client- server hostname validation
+- TLS client- post connect/handshake server hostname validation
 - keepalive usage??
+- add option to require message integrity - depends on usage - ICE
          
 
 

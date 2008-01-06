@@ -3,8 +3,8 @@
 
 #include <string>
 #include <boost/noncopyable.hpp>
-#include <rutil/SharedPtr.hxx>
 
+#include "DataBuffer.hxx"
 #include "StunMessage.hxx"
 #include "TurnManager.hxx"
 
@@ -40,7 +40,7 @@ public:
    /// Process a received StunMessage, and produce a reply
    /// Returns true if the response message is to be sent
    ProcessResult processStunMessage(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer=false);
-   void processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, resip::SharedPtr<resip::Data> data);
+   void processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer> data);
 
 private:
 
@@ -52,6 +52,8 @@ private:
    unsigned short mPrim3489Port;
    asio::ip::address mAlt3489Address;
    unsigned short mAlt3489Port;
+
+   resip::Data mPrivateNonceKey;
 
    // Authentication handler
    bool handleAuthentication(StunMessage& request, StunMessage& response);
@@ -69,6 +71,9 @@ private:
 
    // Utility methods
    void buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg, const char* realm = 0);
+   void generateNonce(const resip::Data& timestamp, resip::Data& nonce);
+   enum CheckNonceResult { Valid, NotValid, Expired };
+   CheckNonceResult checkNonce(const resip::Data& nonce);
 };
 
 } 

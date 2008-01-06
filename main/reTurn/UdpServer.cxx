@@ -1,7 +1,6 @@
 #include "UdpServer.hxx"
 #include "StunMessage.hxx"
 #include <boost/bind.hpp>
-#include <rutil/SharedPtr.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "ReTurnSubsystem.hxx"
@@ -67,7 +66,7 @@ UdpServer::getSocket()
 }
 
 void 
-UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data)
 {
    if (data->size() > 4)
    {
@@ -158,7 +157,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
                   responseSocket = it->second->mResponseSocket;
                }
 #define RESPONSE_BUFFER_SIZE 1024
-               SharedPtr<Data> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+               boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
                unsigned int responseSize;
                if(mTurnFraming)
                {

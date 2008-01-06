@@ -55,7 +55,7 @@ TcpConnection::close()
 }
 
 void 
-TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data)
 {
    if (data->size() > 4)
    {
@@ -127,7 +127,7 @@ TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
                }
 
 #define RESPONSE_BUFFER_SIZE 1024
-               SharedPtr<Data> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+               boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
                unsigned int responseSize;
                if(mTurnFraming)  
                {
