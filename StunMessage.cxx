@@ -1281,7 +1281,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
          padding = 64 - (len % 64);
          memset(ptrMessageIntegrity, 0, padding);
       }
-      StackLog(<< "Calculating SHA1 for buffer of size for message integrity: " << len+padding);
+      StackLog(<< "Adding message integrity: buffer size=" << len+padding << ", hmacKey=" << mHmacKey);
       computeHmac(integrity.hash, buf, len + padding, mHmacKey.c_str(), (int)mHmacKey.size());
 	   ptr = encodeAtrIntegrity(ptrMessageIntegrity, integrity);
    }
@@ -1435,12 +1435,7 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& longtermAuthenticationP
    if(mHasRealm)  // Longterm authenicationmode
    {
       MD5Stream r;
-      // remove quotes from username and realm
-      Data username(*mUsername);
-      Data realm(*mRealm);
-      username.replace("\"", "");
-      realm.replace("\"", "");
-      r << username << ":" << realm << ":" << longtermAuthenticationPassword;
+      r << *mUsername << ":" << *mRealm << ":" << longtermAuthenticationPassword;
       hmacKey = r.getHex();
    }
    else
@@ -1455,8 +1450,6 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
    if(mHasMessageIntegrity)
    {
       unsigned char hmac[20];
-#ifdef USE_SSL
-      unsigned int hmacSize=20;
 
       // pad with zeros prior to calculating message integrity attribute	   
       int len = (int)mBuffer.size()-20-4-(mHasFingerprint?8:0);  // remove last TLV (Message Integrity TLV) from HMAC calculation and Fingerprint TLV (if present)
@@ -1464,16 +1457,8 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
       Data buffer(mBuffer.data(), len+padding);  // .slg. this creates a temp copy of the buffer so that we can pad it
       memset((void*)(buffer.data() + len), 0, padding);  // Zero out padding area 
 
-      StackLog(<< "Calculating SHA1 to check message integrity for buffer of size: " << (unsigned int)buffer.size());
-      HMAC(EVP_sha1(), 
-         hmacKey.c_str(), 
-         (unsigned int)hmacKey.size(), 
-         reinterpret_cast<const unsigned char*>(buffer.data()), 
-         buffer.size(),  
-         hmac, 
-         &hmacSize);
-      assert(hmacSize == 20);
-#endif
+      StackLog(<< "Checking message integrity: buffer size=" << (unsigned int)buffer.size() << ", hmacKey=" << hmacKey);
+      computeHmac((char*)hmac, buffer.data(), buffer.size(), hmacKey.c_str(), hmacKey.size());
 
       if (memcmp(mMessageIntegrity.hash, hmac, 20) == 0)
       {

@@ -3,7 +3,8 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += ASIO RUTIL ARES OPENSSL PTHREAD
 TARGET_BINARY = reTurnServer
-CXXFLAGS += -DBOOST_ALL_NO_LIB
+CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1
+LDFLAGS += -ldl
 
 SRC += \
         AsyncSocketBase.cxx \
@@ -12,6 +13,7 @@ SRC += \
         AsyncTlsSocketBase.cxx \
         ChannelManager.cxx \
         ConnectionManager.cxx \
+        DataBuffer.cxx \
         RemotePeer.cxx \
         RequestHandler.cxx \
         ReTurnSubsystem.cxx \

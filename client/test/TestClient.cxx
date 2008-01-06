@@ -14,9 +14,6 @@
 #include "../TurnTlsSocket.hxx"
 #include "../TurnUdpSocket.hxx"
 
-#include "../../AsyncUdpSocketBase.hxx"
-#include "../../AsyncSocketBaseHandler.hxx"
-
 using namespace reTurn;
 using namespace std;
 
@@ -71,69 +68,8 @@ private:
 };
 
 #define MAX_RUNS 1000
-class MySocketBaseHandler : public AsyncSocketBaseHandler
-{
-public:
-   MySocketBaseHandler(): mLoopCount(0) {}
-   virtual ~MySocketBaseHandler() {}
-
-   virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
-   {
-      cout << "MySocketBaseHandler::onReceiveSuccess: (" << mLoopCount << ") received " << data->size() << " bytes from " << address << ":" << port << ", msg=" << data->c_str() << endl;
-      if(mLoopCount <= MAX_RUNS)
-      {
-         mSocketBase->receive();
-      }
-   }
-   virtual void onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
-   {
-      cout << "MySocketBaseHandler::onReceiveFailure: error=" << e.message() << endl;
-   }
-   virtual void onSendSuccess(unsigned int socketDesc)
-   {
-      cout << "MySocketBaseHandler::onSendSuccess." << endl;
-      if(++mLoopCount <= MAX_RUNS)
-      {
-         StunTuple dest(StunTuple::UDP, asio::ip::address::from_string("127.0.0.1"), 2000);
-         resip::SharedPtr<resip::Data> data(new resip::Data("This is loop " + resip::Data(mLoopCount) + " test"));
-         mSocketBase->send(dest, data);
-      }      
-   }
-   virtual void onSendFailure(unsigned int socketDesc, const asio::error_code& e)
-   {
-      cout << "MySocketBaseHandler::onSendFailure: error=" << e.message() << endl;
-   }
-
-   void setSocket(AsyncSocketBase* socket) { mSocketBase = socket; }
-private:
-   AsyncSocketBase* mSocketBase;
-   unsigned int mLoopCount;
-};
-
 int main(int argc, char* argv[])
 {
-   /*
-   TurnPeer turnPeer;
-   turnPeer.run();
-   Sleep(100);
-
-   MySocketBaseHandler handler;
-   asio::io_service ioService;
-   boost::shared_ptr<AsyncUdpSocketBase> us(new AsyncUdpSocketBase(ioService, asio::ip::address::from_string("127.0.0.1"), 0));
-   us->registerAsyncSocketBaseHandler(&handler);
-   handler.setSocket(us.get());
-   StunTuple dest(StunTuple::UDP, asio::ip::address::from_string("127.0.0.1"), 2000);
-   {
-      resip::SharedPtr<resip::Data> data(new resip::Data("This is a test"));
-      us->send(dest, data);
-   }
-   us->receive();
-
-   ioService.run();
-
-   return 0;
-   */
-
    try
    {
       if (argc != 3)

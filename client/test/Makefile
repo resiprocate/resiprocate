@@ -2,12 +2,13 @@ BUILD := ../../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += ASIO RUTIL ARES OPENSSL PTHREAD 
-CXXFLAGS += -DBOOST_ALL_NO_LIB
-LDLIBS += -L../$(OBJ) -lreTurnClient
+CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1
+LDLIBS += -L../$(OBJ) -lreTurnClient -ldl
 
 TESTPROGRAMS += \
 	TestClient.cxx \
-	TestAsyncClient.cxx
+	TestAsyncClient.cxx \
+	TestRtpLoad.cxx
 
 include $(BUILD)/Makefile.post
 

@@ -33,7 +33,7 @@ public:
 
 private:
    /// Handle completion of a receive operation
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data);
+   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data);
    virtual void onReceiveFailure(const asio::error_code& e);
 
    /// Handle completion of a send operation

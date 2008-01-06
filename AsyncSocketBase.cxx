@@ -4,7 +4,6 @@
 #include <rutil/WinLeakCheck.hxx>
 
 using namespace std;
-using namespace resip;
 
 #define NO_CHANNEL ((unsigned short)-1)
 
@@ -24,36 +23,36 @@ AsyncSocketBase::~AsyncSocketBase()
 }
 
 void 
-AsyncSocketBase::send(const StunTuple& destination, resip::SharedPtr<Data> data)
+AsyncSocketBase::send(const StunTuple& destination, boost::shared_ptr<DataBuffer> data)
 {
    mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
 }
 
 void 
-AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, resip::SharedPtr<Data> data)
+AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer> data)
 {
    mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, channel, data, 0));
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, resip::SharedPtr<Data> data, unsigned int bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, boost::shared_ptr<DataBuffer> data, unsigned int bufferStartPos)
 {
    doSend(destination, NO_CHANNEL, data, bufferStartPos);
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, resip::SharedPtr<Data> data, unsigned int bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer> data, unsigned int bufferStartPos)
 {
    bool writeInProgress = !mSendDataQueue.empty();
    if(channel == NO_CHANNEL)
    {
-      resip::SharedPtr<resip::Data> empty;
+      boost::shared_ptr<DataBuffer> empty;
       mSendDataQueue.push_back(SendData(destination, empty, data, bufferStartPos));
    }
    else
    {
       // Add Turn Framing
-      resip::SharedPtr<resip::Data> frame = allocateBuffer(4);
+      boost::shared_ptr<DataBuffer> frame = allocateBuffer(4);
       channel = htons(channel);
       memcpy(&(*frame)[0], &channel, 2);
       unsigned short msgsize = htons((unsigned short)data->size());
@@ -154,11 +153,10 @@ AsyncSocketBase::close()
    mIOService.post(boost::bind(&AsyncSocketBase::transportClose, shared_from_this()));
 }
 
-resip::SharedPtr<resip::Data> 
+boost::shared_ptr<DataBuffer>  
 AsyncSocketBase::allocateBuffer(unsigned int size)
 {
-   char* buf = new char[size];
-   return resip::SharedPtr<resip::Data>(new resip::Data(resip::Data::Take, buf, size));
+   return boost::shared_ptr<DataBuffer>(new DataBuffer(size));
 }
 
 } // namespace
