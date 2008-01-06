@@ -4,8 +4,6 @@
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 #include <boost/bind.hpp>
-#include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
 
 #include "AsyncSocketBase.hxx"
 

@@ -31,7 +31,7 @@ TurnAsyncUdpSocket::onConnectFailure(const asio::error_code& e)
 }
 
 void 
-TurnAsyncUdpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, resip::SharedPtr<resip::Data> data)
+TurnAsyncUdpSocket::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data)
 {
    handleReceivedData(address, port, data);
    turnReceive();
