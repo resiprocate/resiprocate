@@ -209,8 +209,9 @@ Security::preload()
       if (name.postfix(PEM))
       {
          Data fileName = mPath + name;
+         bool attemptedToLoad = true;
          
-         DebugLog(<< "Trying to load file " << name );
+         DebugLog(<< "Checking to load file " << name );
          try
          {
             if (name.prefix(pemTypePrefixes(UserCert)))
@@ -233,13 +234,21 @@ Security::preload()
             {
                addRootCertPEM(readIntoData(fileName));
             }
+            else
+            {
+               DebugLog(<< "PEM file " << name << " does not have appropriate resip prefix, skipping...");
+               attemptedToLoad = false;
+            }
          }
          catch (...)
          {  
             ErrLog(<< "Some problem reading " << fileName );
          }
          
-         InfoLog(<<"Sucessfully loaded " << fileName );
+         if(attemptedToLoad)
+         {
+            InfoLog(<<"Sucessfully loaded " << fileName );
+         }
       }
    }
 #else
