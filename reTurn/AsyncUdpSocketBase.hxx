@@ -3,8 +3,6 @@
 
 #include <asio.hpp>
 #include <boost/bind.hpp>
-#include <rutil/Data.hxx>
-#include <rutil/SharedPtr.hxx>
 
 #include "AsyncSocketBase.hxx"
 

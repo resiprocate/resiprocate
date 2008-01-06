@@ -17,13 +17,28 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
   mTurnFraming(turnFraming)
 {
    // Set Context options - TODO make into configuration settings
+   asio::error_code ec;
    mContext.set_options(asio::ssl::context::default_workarounds | 
                         asio::ssl::context::no_sslv2 |
                         asio::ssl::context::single_dh_use);
    mContext.set_password_callback(boost::bind(&TlsServer::getPassword, this));
-   mContext.use_certificate_chain_file("server.pem");
-   mContext.use_private_key_file("server.pem", asio::ssl::context::pem);
-   mContext.use_tmp_dh_file("dh512.pem");
+#define SERVER_CERT_FILE "server.pem"
+#define TMP_DH_FILE "dh512.pem"
+   mContext.use_certificate_chain_file(SERVER_CERT_FILE, ec);
+   if(ec)
+   {
+      ErrLog(<< "Unable to load server cert chain file: " << SERVER_CERT_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
+   }
+   mContext.use_private_key_file(SERVER_CERT_FILE, asio::ssl::context::pem, ec);
+   if(ec)
+   {
+      ErrLog(<< "Unable to load server private key file: " << SERVER_CERT_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
+   }
+   mContext.use_tmp_dh_file(TMP_DH_FILE, ec);
+   if(ec)
+   {
+      ErrLog(<< "Unable to load temporary Diffie-Hellman parameters file: " << TMP_DH_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
+   }
 
    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
    asio::ip::tcp::endpoint endpoint(address, port);

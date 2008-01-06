@@ -3,7 +3,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += ASIO RUTIL ARES OPENSSL PTHREAD
 TARGET_LIBRARY = libreTurnClient
-CXXFLAGS += -DBOOST_ALL_NO_LIB
+CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1
 
 SRC += \
 	../AsyncSocketBase.cxx \
@@ -11,8 +11,9 @@ SRC += \
 	../AsyncTlsSocketBase.cxx \
 	../AsyncUdpSocketBase.cxx \
 	../ChannelManager.cxx \
+	../DataBuffer.cxx \
 	../RemotePeer.cxx \
-        ../ReTurnSubsystem.cxx \
+	../ReTurnSubsystem.cxx \
 	../StunMessage.cxx \
 	../StunTuple.cxx \
 	TurnAsyncSocket.cxx \
