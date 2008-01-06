@@ -770,7 +770,7 @@ Data::operator=(const Data& data)
    return *this;
 }
 
-size_t
+Data::size_type
 Data::truncate(size_type len)
 {
    if (len < mSize)
