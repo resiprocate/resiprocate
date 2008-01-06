@@ -376,13 +376,12 @@ class Data
 
         @todo Remove this at some point.
       */
-      size_type truncate(size_t len);
+      size_type truncate(size_type len);
 
       /**
         Checks whether the Data is empty.
       */
       bool empty() const { return mSize == 0; }
-
 
       /**
         Returns the number of bytes in this Data.
