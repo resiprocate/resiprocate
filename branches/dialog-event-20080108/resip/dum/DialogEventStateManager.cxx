@@ -6,24 +6,6 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-//!dcm! -- we can optimize by time and only update what is necessary in the
-//!DialogeventInfo, or by space and only store creation and id in the map.
-
-//?dcm? -- threading/lifetime design: we can have DialogEventInfo point to the
-//right information and not hold state and require the user to be in the dum
-//thread.  This is consistent w/ the dum api; a copy cons could copy the state
-//but would have to be run in the DUM thread; probably unecesssary.
-
-//sounds like the storing approach is easier in the face of working w/ key
-//mismatch.
-
-//the comparator/key of the map must have an ordering so that a key can be
-//contructed which points to the beinning of a dialogSet.  This could be done by
-//no remote tag being always, which might be the existing behaviour, but
-//shouldn't be relied on.
-
-
-
 DialogEventStateManager::DialogEventStateManager()
 {
 }
@@ -159,16 +141,16 @@ DialogEventStateManager::onEarly(const Dialog& dialog, InviteSessionHandle is)
 
    if (eventInfo)
    {
-   eventInfo->mState = DialogEventInfo::Early;
-   eventInfo->mRouteSet = dialog.getRouteSet();
-   eventInfo->mInviteSession = is;
+      eventInfo->mState = DialogEventInfo::Early;
+      eventInfo->mRouteSet = dialog.getRouteSet();
+      eventInfo->mInviteSession = is;
 
-   // local or remote target might change due to an UPDATE or re-INVITE
-   eventInfo->mLocalTarget = dialog.getLocalContact().uri();
-   eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
+      // local or remote target might change due to an UPDATE or re-INVITE
+      eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+      eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
 
-   mDialogEventHandler->onEarly(*eventInfo);
-}
+      mDialogEventHandler->onEarly(*eventInfo);
+   }
 }
 
 void
@@ -178,17 +160,17 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
 
    if (eventInfo)
    {
-   eventInfo->mInviteSession = is;
-   eventInfo->mRouteSet = dialog.getRouteSet(); // won't change due to re-INVITEs, but is
-                                                // needed for the Trying --> Confirmed transition
-   eventInfo->mState = DialogEventInfo::Confirmed;
+      eventInfo->mInviteSession = is;
+      eventInfo->mRouteSet = dialog.getRouteSet(); // won't change due to re-INVITEs, but is
+                                                   // needed for the Trying --> Confirmed transition
+      eventInfo->mState = DialogEventInfo::Confirmed;
 
-   // local or remote target might change due to an UPDATE or re-INVITE
-   eventInfo->mLocalTarget = dialog.getLocalContact().uri();
-   eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
+      // local or remote target might change due to an UPDATE or re-INVITE
+      eventInfo->mLocalTarget = dialog.getLocalContact().uri();
+      eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
 
-   mDialogEventHandler->onConfirmed(*eventInfo);
-}
+      mDialogEventHandler->onConfirmed(*eventInfo);
+   }
 }
 
 void
@@ -233,11 +215,7 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
       // but since we've marked it as 'replaced' we can update the termination reason
       InviteSessionHandler::TerminatedReason actualReason = reason;
 
-      //if (actualReason == InviteSessionHandler::Referred && msg.exists(h_ReferredBy))
-      //{
-      //   eventInfo->mReferredBy = std::auto_ptr<NameAddr>(new NameAddr(msg.header(h_ReferredBy)));
-      //}
-      /* else */if (eventInfo->mReplaced)
+      if (eventInfo->mReplaced)
       {
          actualReason = InviteSessionHandler::Replaced;
       }
@@ -317,7 +295,6 @@ DialogEventStateManager::findOrCreateDialogInfo(const Dialog& dialog)
          newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
          newForkInfo->mCreationTime = Timer::getTimeSecs();
          newForkInfo->mDialogId = dialog.getId();
-         //newForkInfo->mInviteSession = is;
          newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
          newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
          newForkInfo->mRouteSet = dialog.getRouteSet();
