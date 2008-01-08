@@ -15,11 +15,11 @@
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
-			CharacterSet="1">
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;.\contrib\cppunit\include;&quot;.\contrib\Netxx-0.3.2\include\&quot;;.\contrib\boost_1_33_0;..\contrib\db\build_win32;..;"
+				AdditionalIncludeDirectories="..\contrib\pcre;..\contrib\popt\win32\include;.\contrib\cppunit\include;&quot;.\contrib\Netxx-0.3.2\include\&quot;;E:\src\frontier\SUA\Library\boost\boost_1_33_1\;..\contrib\db\build_win32;.."
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"

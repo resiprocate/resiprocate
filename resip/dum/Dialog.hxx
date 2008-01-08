@@ -40,6 +40,11 @@ class Dialog
       Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds);
 
       const DialogId& getId() const;
+      const NameAddr& getLocalNameAddr() const;
+      const NameAddr& getLocalContact() const;
+      const NameAddr& getRemoteNameAddr() const;
+      const NameAddr& getRemoteTarget() const;
+      const NameAddrs& getRouteSet() const;
       
       // pass dialog sip messages through dialog so we can cache the requests on
       // the way out to be able to respond to digest authenticate requests

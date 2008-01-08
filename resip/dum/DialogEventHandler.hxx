@@ -1,32 +1,26 @@
 #if !defined(RESIP_DialogEventHandler_HXX)
 #define RESIP_DialogEventHandler_HXX
 
+#include "resip/dum/DialogEventInfo.hxx"
+#include "resip/dum/InviteSessionHandler.hxx"
+
 namespace resip
 {
-  class DialogEventHandler : public ServerSubscriptionHandler
-  {
-  public:   
-    virtual ~DialogEventHandler() {}
 
-    //acquire doc, send notify
-    virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
-    //do nothing
-    virtual void onTerminated(ServerSubscriptionHandle)=0;
-
-    //call update
-    virtual void onPublished(ServerSubscriptionHandle associated, 
-			     ServerPublicationHandle publication, 
-			     const Contents* contents,
-			     const SecurityAttributes* attrs);
-
+class DialogEventHandler
+{
+   public:   
+      virtual ~DialogEventHandler() {}
+      virtual void onTrying(const DialogEventInfo& info, const SipMessage& intialInvite)=0;
+      virtual void onProceeding(const DialogEventInfo& info)=0;
+      virtual void onEarly(const DialogEventInfo& info)=0;
+      //add conv. accessor for sdp.  Include INV/200?
+      virtual void onConfirmed(const DialogEventInfo& info)=0; 
+      virtual void onTerminated(const DialogEventInfo& info, InviteSessionHandler::TerminatedReason reason, int code)=0;
+};
       
-    
- private:
-    std::multimap<Data, InviteSessionHandler>
-  };
- 
-}
 
+}
 
 #endif
 
