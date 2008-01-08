@@ -1,7 +1,6 @@
 #if !defined(RESIP_INVITESESSIONHANDLER_HXX)
 #define RESIP_INVITESESSIONHANDLER_HXX
 
-#include "resip/dum/InviteSession.hxx"
 #include "resip/dum/Handles.hxx"
 
 namespace resip
@@ -15,9 +14,17 @@ class InviteSessionHandler
 {
    public:
       virtual ~InviteSessionHandler() {}
+
+      typedef enum
+      {
+         None, // means no Offer or Answer (may have SDP)
+         Offer,
+         Answer
+      } OfferAnswerType;
+
       /// called when an initial INVITE or the intial response to an outoing invite  
-      virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
-      virtual void onNewSession(ServerInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
+      virtual void onNewSession(ClientInviteSessionHandle, InviteSessionHandler::OfferAnswerType oat, const SipMessage& msg)=0;
+      virtual void onNewSession(ServerInviteSessionHandle, InviteSessionHandler::OfferAnswerType oat, const SipMessage& msg)=0;
 
       /// Received a failure response from UAS
       virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)=0;
@@ -51,13 +58,26 @@ class InviteSessionHandler
       /// called when an dialog enters the terminated state - this can happen
       /// after getting a BYE, Cancel, or 4xx,5xx,6xx response - or the session
       /// times out
-      typedef enum
+      enum TerminatedReason
       {
-         PeerEnded,      // received a BYE or CANCEL from peer
-         Ended,          // ended by the application
-         GeneralFailure, // ended due to a failure
-         Cancelled       // ended by the application via Cancel
-      } TerminatedReason;
+         Error,
+         Timeout, 
+         Replaced,
+         LocalBye,
+         RemoteBye,
+         LocalCancel,
+         RemoteCancel,
+         Rejected, //Only as UAS, UAC has distinct onFailure callback
+         Referred
+      };
+
+//       typedef enum
+//       {
+//          PeerEnded,      // received a BYE or CANCEL from peer
+//          Ended,          // ended by the application
+//          GeneralFailure, // ended due to a failure
+//          Cancelled       // ended by the application via Cancel
+//       } TerminatedReason;
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
       /// called when a fork that was created through a 1xx never receives a 2xx

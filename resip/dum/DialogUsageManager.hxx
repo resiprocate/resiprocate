@@ -25,6 +25,7 @@
 #include "resip/dum/TargetCommand.hxx"
 #include "resip/dum/ClientSubscriptionFunctor.hxx"
 #include "resip/dum/ServerSubscriptionFunctor.hxx"
+#include "resip/dum/DialogEventStateManager.hxx"
 
 namespace resip 
 {
@@ -67,6 +68,7 @@ class RWMutex;
 
 class ExternalMessageBase;
 class ExternalMessageHandler;
+class DialogEventStateManager;
 
 class DialogUsageManager : public HandleManager, public TransactionUser
 {
@@ -316,6 +318,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void registerForConnectionTermination(Postable*);
       void unRegisterForConnectionTermination(Postable*);
 
+      DialogEventStateManager* getDialogEventStateManager();
+      void setDialogEventHandler(DialogEventHandler* handler);
+
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
@@ -482,6 +487,10 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ClientPagerMessageHandler* mClientPagerMessageHandler;
       ServerPagerMessageHandler* mServerPagerMessageHandler;
       std::vector<ExternalMessageHandler*> mExternalMessageHandlers;
+
+      // a pointer because we'll only initialize if we add a
+      // server subscription handler for the 'dialog' event...
+      DialogEventStateManager* mDialogEventStateManager;
 
       std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 

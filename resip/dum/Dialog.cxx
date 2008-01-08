@@ -258,6 +258,36 @@ Dialog::getId() const
    return mId;
 }
 
+const NameAddr&
+Dialog::getLocalNameAddr() const
+{
+   return mLocalNameAddr;
+}
+
+const NameAddr&
+Dialog::getLocalContact() const
+{
+   return mLocalContact;
+}
+
+const NameAddr&
+Dialog::getRemoteNameAddr() const
+{
+   return mRemoteNameAddr;
+}
+
+const NameAddr&
+Dialog::getRemoteTarget() const
+{
+   return mRemoteTarget;
+}
+
+const NameAddrs&
+Dialog::getRouteSet() const
+{
+   return mRouteSet;
+}
+
 void
 Dialog::cancel()
 {

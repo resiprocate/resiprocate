@@ -17,7 +17,6 @@
 #include "tfm/ActionBase.hxx"
 #include "tfm/ExpectAction.hxx"
 
-
 //!dcm! -- deprecate this further
 #define checkEchoName(_fn) check1(_fn, #_fn)
 
