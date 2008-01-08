@@ -22,19 +22,14 @@ class DialogEventStateManager
       void onTryingUas(Dialog& dialog, const SipMessage& invite);
       void onTryingUac(DialogSet& dialogSet, const SipMessage& invite);
       void onProceedingUac(const DialogSet& dialogSet, const SipMessage& response);
-      // !jjg! do we need onProceedingUas? will we ever call it?
 
-      // .jjg. looks like we can have just one onEarly -- same logic void
-      //onEarlyUac(const Dialog& dialog, InviteSessionHandle is); void
-      //onEarlyUas(const Dialog& dialog, InviteSessionHandle is);
-   //?dcm? how is direction determined when the onEarly is the first use of
-   //this dialog?
+      //?dcm? how is direction determined when the onEarly is the first use of
+      //this dialog?
       void onEarly(const Dialog& dialog, InviteSessionHandle is);
       
       void onConfirmed(const Dialog& dialog, InviteSessionHandle is);
       void onTerminated(const Dialog& dialog, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
       
-      //TODO - implement this
       void onTerminated(const DialogSet& dialogSet, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
       
       
@@ -70,8 +65,12 @@ private:
 
    friend class DialogUsageManager;
 
-   // !jjg! we'll only have the DialogSetId if we aren't yet in the 'early' state;
-   // once we get to early, we'll remove the DialogSetId in favour of the DialogId
+   // .jjg. we'll only have the DialogSetId if we aren't yet in the 'early' state;
+   // once we get to early, we'll remove the DialogSetId in favour of the DialogId.
+   // The comparator/key of the map must have an ordering so that a key can be
+   // contructed which points to the beginning of a dialogSet.  This could be done by
+   // no remote tag being always, which might be the existing behaviour, but
+   // shouldn't be relied on.
    std::map<DialogId, DialogEventInfo*, DialogIdComparator> mDialogIdToEventInfo;
 
    DialogEventHandler* mDialogEventHandler;
