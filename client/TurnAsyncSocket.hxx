@@ -72,7 +72,7 @@ public:
 
 protected:
 
-   void handleReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data);
+   void handleReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
 
    asio::io_service& mIOService;
    TurnAsyncSocketHandler* mTurnAsyncSocketHandler;
@@ -157,16 +157,16 @@ private:
    void doDestroyAllocation();
    void doSetActiveDestination(const asio::ip::address& address, unsigned short port);
    void doClearActiveDestination();
-   void doSend(boost::shared_ptr<DataBuffer> data);
-   void doSendTo(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data);
+   void doSend(boost::shared_ptr<DataBuffer>& data);
+   void doSendTo(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
    void doClose();
    void actualClose();
 
    StunMessage* createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo=true);
    void sendStunMessage(StunMessage* request, bool reTransmission=false);
-   void sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer> data);
-   void send(boost::shared_ptr<DataBuffer> data);  // Send unframed data
-   void send(unsigned short channel, boost::shared_ptr<DataBuffer> data);  // send with turn framing
+   void sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& data);
+   void send(boost::shared_ptr<DataBuffer>& data);  // Send unframed data
+   void send(unsigned short channel, boost::shared_ptr<DataBuffer>& data);  // send with turn framing
 
    asio::error_code handleStunMessage(StunMessage& stunMessage);
    asio::error_code handleDataInd(StunMessage& stunMessage);

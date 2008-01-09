@@ -55,7 +55,7 @@ TcpConnection::close()
 }
 
 void 
-TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data)
+TcpConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
 {
    if (data->size() > 4)
    {

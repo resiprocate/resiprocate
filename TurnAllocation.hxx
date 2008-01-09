@@ -51,11 +51,11 @@ public:
    void onSocketDestroyed();
 
    // Used when framed data is received from client, to forward data to peer
-   void sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer> data, bool framed);
+   void sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer>& data, bool framed);
    // Used when Send Indication is received from client, to forward data to peer
-   void sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, boost::shared_ptr<DataBuffer> data, bool framed);  
+   void sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool framed);  
    // Used when Data is received from peer, to forward data to client
-   void sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer> data); 
+   void sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data); 
 
    // Called when a ChannelConfirmed Indication is received
    void serverToClientChannelConfirmed(unsigned short channelNumber, const StunTuple& peerAddress);
@@ -66,7 +66,7 @@ public:
 
 private:
    // Used when there is any data to send to the peer, after channel has been identified
-   void sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer> data, bool framed);  
+   void sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool framed);  
 
    TurnAllocationKey mKey;  // contains ClientLocalTuple and clientRemoteTuple
    StunAuth  mClientAuth;

@@ -143,7 +143,7 @@ TurnAllocation::onSocketDestroyed()
 }
 
 void 
-TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer> data, bool framed)
+TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer>& data, bool framed)
 {
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByClientToServerChannel(channelNumber);
    if(remotePeer)
@@ -159,7 +159,7 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<D
 }
 
 void 
-TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, boost::shared_ptr<DataBuffer> data, bool framed)
+TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool framed)
 {
    // Find RemotePeer
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(peerAddress);
@@ -204,7 +204,7 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& pe
 }
 
 void 
-TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer> data, bool framed)
+TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool framed)
 {
    DebugLog(<< "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress);
@@ -230,7 +230,7 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<D
 }
 
 void 
-TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer> data)
+TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data)
 {
    // Find RemotePeer
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(peerAddress);
