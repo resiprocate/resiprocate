@@ -392,7 +392,7 @@ TurnAsyncSocket::sendStunMessage(StunMessage* message, bool reTransmission)
 }
 
 void 
-TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data)
+TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
 {
    if(mTurnFraming)
    {
@@ -908,7 +908,7 @@ TurnAsyncSocket::send(const char* buffer, unsigned int size)
 }
 
 void
-TurnAsyncSocket::doSend(boost::shared_ptr<DataBuffer> data)
+TurnAsyncSocket::doSend(boost::shared_ptr<DataBuffer>& data)
 {
    GuardReleaser guardReleaser(mGuards);
 
@@ -936,7 +936,7 @@ TurnAsyncSocket::sendTo(const asio::ip::address& address, unsigned short port, c
 }
 
 void 
-TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer> data)
+TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
 {
    GuardReleaser guardReleaser(mGuards);
 
@@ -960,7 +960,7 @@ TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port,
 }
 
 void
-TurnAsyncSocket::sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer> data)
+TurnAsyncSocket::sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& data)
 {
    if(remotePeer.isClientToServerChannelConfirmed())
    {
@@ -1048,14 +1048,14 @@ TurnAsyncSocket::turnReceive()
 }
 
 void 
-TurnAsyncSocket::send(boost::shared_ptr<DataBuffer> data)
+TurnAsyncSocket::send(boost::shared_ptr<DataBuffer>& data)
 {
    StunTuple destination(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort());
    mAsyncSocketBase.send(destination, data);
 }
 
 void 
-TurnAsyncSocket::send(unsigned short channel, boost::shared_ptr<DataBuffer> data)
+TurnAsyncSocket::send(unsigned short channel, boost::shared_ptr<DataBuffer>& data)
 {
    StunTuple destination(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort());
    mAsyncSocketBase.send(destination, channel, data);

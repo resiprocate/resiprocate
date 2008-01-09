@@ -40,7 +40,7 @@ public:
    /// Process a received StunMessage, and produce a reply
    /// Returns true if the response message is to be sent
    ProcessResult processStunMessage(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer=false);
-   void processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer> data);
+   void processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data);
 
 private:
 
