@@ -267,6 +267,14 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                   it->second->redirected(msg);         
                }
 
+               if (mDialogs.size() == 0)
+               {
+                  if (mDum.mDialogEventStateManager)
+                  {
+                     mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Rejected);
+                  }
+               }
+
                InfoLog( << "about to re-send request to redirect destination" );
                DebugLog( << getCreator()->getLastRequest() );
                
@@ -438,19 +446,6 @@ DialogSet::dispatch(const SipMessage& msg)
 
    if (handledByAuthOrRedirect(msg))
    {
-      if (mDialogs.size() == 0)
-      {
-         if (msg.isResponse())
-         {
-            if (msg.header(h_StatusLine).responseCode() / 100 == 3)
-            {
-         if (mDum.mDialogEventStateManager)
-         {
-            mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Rejected);
-               }
-            }
-         }
-      }
       return;
    }
 
