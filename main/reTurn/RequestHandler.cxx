@@ -808,7 +808,7 @@ RequestHandler::processTurnChannelConfirmationIndication(StunMessage& request)
 }
 
 void 
-RequestHandler::processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer> data)
+RequestHandler::processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data)
 {
    TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(localTuple, remoteTuple));
 
