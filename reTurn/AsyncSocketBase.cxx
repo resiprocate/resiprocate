@@ -23,25 +23,25 @@ AsyncSocketBase::~AsyncSocketBase()
 }
 
 void 
-AsyncSocketBase::send(const StunTuple& destination, boost::shared_ptr<DataBuffer> data)
+AsyncSocketBase::send(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data)
 {
    mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, data, 0));
 }
 
 void 
-AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer> data)
+AsyncSocketBase::send(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data)
 {
    mIOService.post(boost::bind(&AsyncSocketBase::doSend, shared_from_this(), destination, channel, data, 0));
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, boost::shared_ptr<DataBuffer> data, unsigned int bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos)
 {
    doSend(destination, NO_CHANNEL, data, bufferStartPos);
 }
 
 void
-AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer> data, unsigned int bufferStartPos)
+AsyncSocketBase::doSend(const StunTuple& destination, unsigned short channel, boost::shared_ptr<DataBuffer>& data, unsigned int bufferStartPos)
 {
    bool writeInProgress = !mSendDataQueue.empty();
    if(channel == NO_CHANNEL)
