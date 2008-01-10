@@ -21,6 +21,7 @@
 #include "resip/dum/DestroyUsage.hxx"
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/DialogEventStateManager.hxx"
+#include "resip/dum/DialogEventHandler.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ClientPagerMessage.hxx"
 #include "resip/dum/DumException.hxx"
