@@ -5,6 +5,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/dum/BaseCreator.hxx"
 #include "resip/dum/Dialog.hxx"
+#include "resip/dum/DialogEventStateManager.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/InviteSession.hxx"
 #include "resip/dum/ServerInviteSession.hxx"

@@ -36,6 +36,13 @@ class InviteSession : public DialogUsage
           reinvite with no sdp to be sent.  */
       virtual void requestOffer();
 
+      typedef enum
+      {
+         None, // means no Offer or Answer (may have SDP)
+         Offer,
+         Answer
+      } OfferAnswerType;
+
       enum EndReason
       {
          NotSpecified=0,
