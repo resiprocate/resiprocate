@@ -25,7 +25,6 @@
 #include "resip/dum/TargetCommand.hxx"
 #include "resip/dum/ClientSubscriptionFunctor.hxx"
 #include "resip/dum/ServerSubscriptionFunctor.hxx"
-#include "resip/dum/DialogEventStateManager.hxx"
 
 namespace resip 
 {
@@ -68,7 +67,9 @@ class RWMutex;
 
 class ExternalMessageBase;
 class ExternalMessageHandler;
+
 class DialogEventStateManager;
+class DialogEventHandler;
 
 class DialogUsageManager : public HandleManager, public TransactionUser
 {

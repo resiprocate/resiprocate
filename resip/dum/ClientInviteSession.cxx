@@ -633,7 +633,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
    {
       case On1xx:
          transition(UAC_Early);
-         handler->onNewSession(getHandle(), InviteSessionHandler::None, msg);
+         handler->onNewSession(getHandle(), InviteSession::None, msg);
          if(!isTerminated())  
          {
             handleProvisional(msg);
@@ -650,7 +650,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
          transition(UAC_Early);
          mEarlyMedia = InviteSession::makeSdp(*sdp);
-         handler->onNewSession(getHandle(), InviteSessionHandler::None, msg);
+         handler->onNewSession(getHandle(), InviteSession::None, msg);
          if(!isTerminated())  
          {
             handleProvisional(msg);
@@ -663,7 +663,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On1xxOffer:
          transition(UAC_EarlyWithOffer);
-         handler->onNewSession(getHandle(), InviteSessionHandler::Offer, msg);
+         handler->onNewSession(getHandle(), InviteSession::Offer, msg);
          if(!isTerminated())  
          {
             handleOffer(msg, *sdp);
@@ -672,7 +672,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
 
       case On1xxAnswer:
          transition(UAC_EarlyWithAnswer);
-         handler->onNewSession(getHandle(), InviteSessionHandler::Answer, msg);
+         handler->onNewSession(getHandle(), InviteSession::Answer, msg);
          if(!isTerminated())  
          {
             handleAnswer(msg, *sdp);
@@ -683,7 +683,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          transition(UAC_Answered);
          handleFinalResponse(msg);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onNewSession(getHandle(), InviteSessionHandler::Offer, msg);
+         handler->onNewSession(getHandle(), InviteSession::Offer, msg);
          assert(mProposedLocalSdp.get() == 0);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          if(!isTerminated())  
@@ -704,7 +704,7 @@ ClientInviteSession::dispatchStart (const SipMessage& msg)
          setCurrentLocalSdp(msg);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
-         handler->onNewSession(getHandle(), InviteSessionHandler::Answer, msg);
+         handler->onNewSession(getHandle(), InviteSession::Answer, msg);
          if(!isTerminated())  // onNewSession callback may call end() or reject()
          {
             handler->onAnswer(getSessionHandle(), msg, *sdp);
