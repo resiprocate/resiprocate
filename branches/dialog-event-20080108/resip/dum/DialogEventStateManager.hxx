@@ -53,8 +53,7 @@ class DialogEventStateManager
       }
    };
 
-   typedef std::vector<DialogEventInfo> DialogInfos;
-   DialogInfos getDialogEventInfos() const;
+   DialogUsageManager::DialogEventInfos getDialogEventInfo() const;
 
 private:
    DialogEventInfo* findOrCreateDialogInfo(const Dialog& dialog);

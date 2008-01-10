@@ -7,6 +7,7 @@
 
 #include "resip/stack/Headers.hxx"
 #include "resip/dum/EventDispatcher.hxx"
+#include "resip/dum/DialogEventInfo.hxx"
 #include "resip/dum/DialogSet.hxx"
 #include "resip/dum/DumTimeout.hxx"
 #include "resip/dum/HandleManager.hxx"
@@ -320,6 +321,9 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void unRegisterForConnectionTermination(Postable*);
 
       void setDialogEventHandler(DialogEventHandler* handler);
+      
+      typedef std::vector<DialogEventInfo> DialogEventInfos;
+      DialogEventInfos getDialogEventInfo() const;
 
    protected:
       virtual void onAllHandlesDestroyed();      
