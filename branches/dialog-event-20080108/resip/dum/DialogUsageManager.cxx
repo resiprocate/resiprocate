@@ -388,7 +388,7 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
    }
    else if (eventType == "dialog")
    {
-      mDialogEventStateManager = new DialogEventStateManager();
+      mDialogEventStateManager.reset(new DialogEventStateManager());
    }
 
    mServerSubscriptionHandlers[eventType] = handler;
@@ -839,7 +839,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       {
          if (ds != 0)
          {
-            if (mDialogEventStateManager)
+            if (mDialogEventStateManager.get())
             {
                Dialog* d = ds->findDialog(*msg);
                if (d != 0)
@@ -2154,12 +2154,6 @@ TargetCommand::Target&
 DialogUsageManager::dumOutgoingTarget() 
 {
    return *mOutgoingTarget;
-}
-
-DialogEventStateManager*
-DialogUsageManager::getDialogEventStateManager()
-{
-   return mDialogEventStateManager;
 }
 
 void

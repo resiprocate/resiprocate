@@ -319,7 +319,6 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void registerForConnectionTermination(Postable*);
       void unRegisterForConnectionTermination(Postable*);
 
-      DialogEventStateManager* getDialogEventStateManager();
       void setDialogEventHandler(DialogEventHandler* handler);
 
    protected:
@@ -491,7 +490,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       // a pointer because we'll only initialize if we add a
       // server subscription handler for the 'dialog' event...
-      DialogEventStateManager* mDialogEventStateManager;
+      std::auto_ptr<DialogEventStateManager> mDialogEventStateManager;
 
       std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 
