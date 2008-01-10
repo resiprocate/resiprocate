@@ -476,7 +476,7 @@ ClientInviteSession::handleRedirect (const SipMessage& msg)
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    transition(Terminated);
 
-   if (mDum.mDialogEventStateManager)
+   if (mDum.mDialogEventStateManager.get())
    {
       mDum.mDialogEventStateManager->onTerminated(mDialog, msg, InviteSessionHandler::Rejected);
    }
@@ -1345,7 +1345,7 @@ ClientInviteSession::checkRseq(const SipMessage& msg)
 void 
 ClientInviteSession::onConnectedAspect(ClientInviteSessionHandle c, const SipMessage& msg)
 {
-   if (mDum.mDialogEventStateManager)
+   if (mDum.mDialogEventStateManager.get())
    {
       mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
    }
@@ -1355,7 +1355,7 @@ ClientInviteSession::onConnectedAspect(ClientInviteSessionHandle c, const SipMes
 void 
 ClientInviteSession::onProvisionalAspect(ClientInviteSessionHandle c, const SipMessage& msg)
 {
-   if (mDum.mDialogEventStateManager)
+   if (mDum.mDialogEventStateManager.get())
    {
       mDum.mDialogEventStateManager->onEarly(mDialog, getSessionHandle());
    }
@@ -1365,7 +1365,7 @@ ClientInviteSession::onProvisionalAspect(ClientInviteSessionHandle c, const SipM
 void 
 ClientInviteSession::onFailureAspect(ClientInviteSessionHandle c, const SipMessage& msg)
 {
-   if (mDum.mDialogEventStateManager)
+   if (mDum.mDialogEventStateManager.get())
    {
       InviteSessionHandler::TerminatedReason reason = InviteSessionHandler::Rejected;
       if (msg.isResponse())
