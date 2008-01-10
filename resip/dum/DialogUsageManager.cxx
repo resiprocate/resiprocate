@@ -299,6 +299,15 @@ RedirectHandler* DialogUsageManager::getRedirectHandler()
    return mRedirectHandler;
 }
 
+DialogUsageManager::DialogEventInfos DialogUsageManager::getDialogEventInfo() const
+{
+   if (mDialogEventStateManager.get())
+   {
+      return mDialogEventStateManager->getDialogEventInfo();
+   }
+   return DialogEventInfos(); // return empty if a dialog event server subscription handler hasn't been added
+}
+
 void
 DialogUsageManager::setClientAuthManager(std::auto_ptr<ClientAuthManager> manager)
 {
