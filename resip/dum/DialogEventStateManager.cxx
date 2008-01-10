@@ -236,10 +236,10 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
    }
 }
 
-DialogEventStateManager::DialogInfos
-DialogEventStateManager::getDialogEventInfos() const
+DialogUsageManager::DialogEventInfos 
+DialogEventStateManager::getDialogEventInfo() const
 {
-   DialogInfos infos;
+   DialogUsageManager::DialogEventInfos infos;
    std::map<DialogId, DialogEventInfo*, DialogIdComparator>::const_iterator it = mDialogIdToEventInfo.begin();
    for (; it != mDialogIdToEventInfo.end(); it++)
    {
