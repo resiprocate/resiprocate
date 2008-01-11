@@ -710,7 +710,7 @@ static int config_nameserver(struct server_state **servers, int *nservers,
   newserv = realloc(*servers, (*nservers + 1) * sizeof(struct server_state));
   if (!newserv)
     return ARES_ENOMEM;
-  memset(newserv + (*nservers * sizeof(struct server_state)), '\0', sizeof(struct server_state));   // clear *new* memory only
+  memset(&newserv[*nservers], '\0', sizeof(struct server_state));   // clear *new* memory only
 
 #ifdef USE_IPV6
   newserv[*nservers].family = family;
