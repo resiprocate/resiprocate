@@ -1,3 +1,9 @@
+= Release Notes v 1.2.3 =
+
+==rutil==
+===Bug Fixes===
+* Fixed a memory-corruption bug caused by alignment issues within a memset call (in ares)
+
 = Release Notes v 1.2.2 =
 
 ==Build System==
