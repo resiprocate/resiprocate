@@ -138,12 +138,12 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
           return -1;
       }
 
-      virtual void onNewSession(ClientInviteSessionHandle, InviteSessionHandler::OfferAnswerType oat, const SipMessage& msg)
+      virtual void onNewSession(ClientInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
          cout << name << ": ClientInviteSession-onNewSession - " << msg.brief() << endl;
       }
       
-      virtual void onNewSession(ServerInviteSessionHandle, InviteSessionHandler::OfferAnswerType oat, const SipMessage& msg)
+      virtual void onNewSession(ServerInviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
          cout << name << ": ServerInviteSession-onNewSession - " << msg.brief() << endl;
       }
@@ -212,7 +212,7 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          cout << name << ": InviteSession-onOfferRejected" << endl;
       }
 
-      virtual void onDialogModified(InviteSessionHandle, InviteSessionHandler::OfferAnswerType oat, const SipMessage& msg)
+      virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
          cout << name << ": InviteSession-onDialogModified - " << msg.brief() << endl;
       }
@@ -396,7 +396,7 @@ class TestUas : public TestInviteSessionHandler
       }
 
       virtual void 
-      onNewSession(ServerInviteSessionHandle sis, InviteSessionHandler::OfferAnswerType oat, const SipMessage& msg)
+      onNewSession(ServerInviteSessionHandle sis, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
          cout << name << ": ServerInviteSession-onNewSession - " << msg.brief() << endl;
          cout << name << ": Sending 180 response." << endl;

@@ -16,7 +16,13 @@ namespace resip
  */
 class DialogEventStateManager
 {
-   public:
+public:
+   typedef std::vector<DialogEventInfo> DialogEventInfos;
+   DialogEventInfos getDialogEventInfo() const;
+
+   virtual ~DialogEventStateManager();
+
+private:
       DialogEventStateManager();
       
       void onTryingUas(Dialog& dialog, const SipMessage& invite);
@@ -53,9 +59,6 @@ class DialogEventStateManager
       }
    };
 
-   DialogUsageManager::DialogEventInfos getDialogEventInfo() const;
-
-private:
    DialogEventInfo* findOrCreateDialogInfo(const Dialog& dialog);
 
    void onTerminatedImpl(const DialogSetId& dialogSetId, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
@@ -63,6 +66,10 @@ private:
 private:
 
    friend class DialogUsageManager;
+   friend class ServerInviteSession;
+   friend class ClientInviteSession;
+   friend class InviteSession;
+   friend class DialogSet;
 
    // .jjg. we'll only have the DialogSetId if we aren't yet in the 'early' state;
    // once we get to early, we'll remove the DialogSetId in favour of the DialogId.

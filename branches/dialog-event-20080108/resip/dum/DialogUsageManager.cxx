@@ -299,15 +299,6 @@ RedirectHandler* DialogUsageManager::getRedirectHandler()
    return mRedirectHandler;
 }
 
-DialogUsageManager::DialogEventInfos DialogUsageManager::getDialogEventInfo() const
-{
-   if (mDialogEventStateManager.get())
-   {
-      return mDialogEventStateManager->getDialogEventInfo();
-   }
-   return DialogEventInfos(); // return empty if a dialog event server subscription handler hasn't been added
-}
-
 void
 DialogUsageManager::setClientAuthManager(std::auto_ptr<ClientAuthManager> manager)
 {
@@ -394,10 +385,6 @@ DialogUsageManager::addServerSubscriptionHandler(const Data& eventType, ServerSu
       delete mServerSubscriptionHandlers[eventType];
       mIsDefaultServerReferHandler = false;
       //mServerSubscriptionHandlers.erase(eventType);
-   }
-   else if (eventType == "dialog")
-   {
-      mDialogEventStateManager.reset(new DialogEventStateManager());
    }
 
    mServerSubscriptionHandlers[eventType] = handler;
@@ -848,7 +835,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       {
          if (ds != 0)
          {
-            if (mDialogEventStateManager.get())
+            if (mDialogEventStateManager)
             {
                Dialog* d = ds->findDialog(*msg);
                if (d != 0)
@@ -2165,10 +2152,12 @@ DialogUsageManager::dumOutgoingTarget()
    return *mOutgoingTarget;
 }
 
-void
-DialogUsageManager::setDialogEventHandler(DialogEventHandler* handler)
+DialogEventStateManager* 
+DialogUsageManager::createDialogEventStateManager(DialogEventHandler* handler)
 {
+   mDialogEventStateManager = new DialogEventStateManager();
    mDialogEventStateManager->mDialogEventHandler = handler;
+   return mDialogEventStateManager;
 }
 
 

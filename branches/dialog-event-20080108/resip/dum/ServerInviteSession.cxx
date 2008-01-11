@@ -69,7 +69,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
 
          transition(Terminated);
 
-         if (mDum.mDialogEventStateManager.get())
+         if (mDum.mDialogEventStateManager)
          {
             mDum.mDialogEventStateManager->onTerminated(mDialog, *response, InviteSessionHandler::Rejected);
          }
@@ -707,7 +707,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
    storePeerCapabilities(msg);
 
-   if (mDum.mDialogEventStateManager.get())
+   if (mDum.mDialogEventStateManager)
    {
       mDum.mDialogEventStateManager->onTryingUas(mDialog, msg);
    }
@@ -1102,7 +1102,7 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
 
    transition(Terminated);
 
-   if (mDum.mDialogEventStateManager.get())
+   if (mDum.mDialogEventStateManager)
    {
       mDum.mDialogEventStateManager->onTerminated(mDialog, msg, InviteSessionHandler::RemoteCancel);
    }
@@ -1176,7 +1176,7 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
    startRetransmit1xxTimer();
    DumHelper::setOutgoingEncryptionLevel(*m1xx, mProposedEncryptionLevel);
 
-   if (mDum.mDialogEventStateManager.get())
+   if (mDum.mDialogEventStateManager)
    {
       mDum.mDialogEventStateManager->onEarly(mDialog, getSessionHandle());
    }
@@ -1197,7 +1197,7 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
    startRetransmit200Timer(); // 2xx timer
    DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
 
-   if (mDum.mDialogEventStateManager.get())
+   if (mDum.mDialogEventStateManager)
    {
       mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
    }
