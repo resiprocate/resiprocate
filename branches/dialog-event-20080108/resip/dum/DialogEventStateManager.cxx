@@ -10,6 +10,10 @@ DialogEventStateManager::DialogEventStateManager()
 {
 }
 
+DialogEventStateManager::~DialogEventStateManager()
+{
+}
+
 // we've received an INVITE
 void
 DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
@@ -236,10 +240,10 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
    }
 }
 
-DialogUsageManager::DialogEventInfos 
+DialogEventStateManager::DialogEventInfos 
 DialogEventStateManager::getDialogEventInfo() const
 {
-   DialogUsageManager::DialogEventInfos infos;
+   DialogEventStateManager::DialogEventInfos infos;
    std::map<DialogId, DialogEventInfo*, DialogIdComparator>::const_iterator it = mDialogIdToEventInfo.begin();
    for (; it != mDialogIdToEventInfo.end(); it++)
    {
