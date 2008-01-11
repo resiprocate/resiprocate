@@ -320,10 +320,11 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void registerForConnectionTermination(Postable*);
       void unRegisterForConnectionTermination(Postable*);
 
-      void setDialogEventHandler(DialogEventHandler* handler);
-      
-      typedef std::vector<DialogEventInfo> DialogEventInfos;
-      DialogEventInfos getDialogEventInfo() const;
+      // The DialogEventStateManager is returned so that the client can query it for
+      // the current set of active dialogs (useful when accepting a dialog event subscription).
+      // The caller is responsible for deleting the DialogEventStateManager
+      // at the same time it deletes other handlers when DUM is destroyed.
+      DialogEventStateManager* createDialogEventStateManager(DialogEventHandler* handler);
 
    protected:
       virtual void onAllHandlesDestroyed();      
@@ -494,7 +495,7 @@ class DialogUsageManager : public HandleManager, public TransactionUser
 
       // a pointer because we'll only initialize if we add a
       // server subscription handler for the 'dialog' event...
-      std::auto_ptr<DialogEventStateManager> mDialogEventStateManager;
+      DialogEventStateManager* mDialogEventStateManager;
 
       std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 

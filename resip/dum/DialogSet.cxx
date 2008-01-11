@@ -269,7 +269,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 
                if (mDialogs.size() == 0)
                {
-                  if (mDum.mDialogEventStateManager.get())
+                  if (mDum.mDialogEventStateManager)
                   {
                      mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Rejected);
                   }
@@ -368,7 +368,7 @@ DialogSet::dispatch(const SipMessage& msg)
                   //!dcm!--should we add another overload to
                   //!DialogEventStateManager::onTerminated so we have the to tag, or is
                   //!the DialogSet enough?
-                  if (mDum.mDialogEventStateManager.get())
+                  if (mDum.mDialogEventStateManager)
                   {
                      mDum.mDialogEventStateManager->onTerminated(*this, *bye, InviteSessionHandler::LocalBye);
                   }
@@ -376,7 +376,7 @@ DialogSet::dispatch(const SipMessage& msg)
                }
                else
                {
-                  if (mDum.mDialogEventStateManager.get())
+                  if (mDum.mDialogEventStateManager)
                   {
                      mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Rejected);
                   }           
@@ -771,7 +771,7 @@ DialogSet::dispatch(const SipMessage& msg)
             InfoLog ( << "Cannot create a dialog, no Contact or To tag in 1xx." );
             if (mDum.mDialogSetHandler)
             {
-               if (mDum.mDialogEventStateManager.get())
+               if (mDum.mDialogEventStateManager)
                {
                   mDum.mDialogEventStateManager->onProceedingUac(*this, msg);
                }
@@ -804,7 +804,7 @@ DialogSet::dispatch(const SipMessage& msg)
                msg.header(h_StatusLine).statusCode() >= 200)
             {
                // really we should wait around 32s before deleting this
-               if (mDum.mDialogEventStateManager.get())
+               if (mDum.mDialogEventStateManager)
                {
                   mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Error);
                }
@@ -822,7 +822,7 @@ DialogSet::dispatch(const SipMessage& msg)
             mDum.send(response);
             if(mDialogs.empty())
             {
-               if (mDum.mDialogEventStateManager.get())
+               if (mDum.mDialogEventStateManager)
                {
                   mDum.mDialogEventStateManager->onTerminated(*this, msg, InviteSessionHandler::Error);
                }
@@ -908,7 +908,7 @@ DialogSet::end()
             // non-dialog creating provisional (e.g. 100), then we need to:
             // Add a new state, if we receive a 200/INV in this state, ACK and
             // then send a BYE and destroy the dialogset. 
-            if (mDum.mDialogEventStateManager.get())
+            if (mDum.mDialogEventStateManager)
             {
                mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
             }
@@ -924,7 +924,7 @@ DialogSet::end()
                try
                {
                   it->second->cancel();
-                  if (mDum.mDialogEventStateManager.get())
+                  if (mDum.mDialogEventStateManager)
                   {
                      mDum.mDialogEventStateManager->onTerminated(*(it->second), *cancel, InviteSessionHandler::LocalCancel);
                   }
