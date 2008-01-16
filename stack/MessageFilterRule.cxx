@@ -85,24 +85,13 @@ MessageFilterRule::matches(const SipMessage &msg) const
    return true;
 }
 
-
-//defaults for the constructor of a MessageFilterRule
-/*
-const SchemeList schemes(SIP, SIPS, TEL, IM, PRES, H323);
-const MethodList methods(INVITE, ACK, CANCEL, BYE, REGISTER, 
- PUBLISH, SUBSCRIBE, NOTIFY, INFO, OPTIONS, REFER, UPDATE, PRACK, MESSAGE);
-*/
-// legal values for hostpart comparison are ANY, HOSTISME, DOMAINISME, or a list of Datas
-// legal values for events are ANY or a list of Datas
-
-
 bool
 MessageFilterRule::schemeIsInList(const Data& scheme) const
 {
    // Emtpy list means "sip or sips"
    if (mSchemeList.empty())
    {
-      return (scheme == "sip" || scheme == "sips" || scheme == "tel");
+      return (scheme == Symbols::Sip || scheme == Symbols::Sips || scheme == Symbols::Tel);
    }
 
    // step through mSchemeList looking for supported schemes
@@ -181,7 +170,7 @@ MessageFilterRule::hostIsInList(const Data& hostpart) const
          break;
       case DomainIsMe:
            // !abr! Waiting for TU support for this method.
-           // return (tu.domainIsMe(hostpart));
+           //return (tu.domainIsMe(hostpart));
            return false;
          break;
       case List:
