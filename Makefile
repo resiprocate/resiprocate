@@ -40,6 +40,10 @@ presSvr: resiprocate
 apps: dum
 	cd apps; $(MAKE)
 	
+reTurn: rutil
+	cd reTurn; $(MAKE)
+	cd reTurn/client; $(MAKE)
+	cd reTurn/client/test; $(MAKE)
 
 ifeq (${BUILD_SHARED_LIBS},no)
    NETXX_USE_SHARED_LIBS=--disable-shared
