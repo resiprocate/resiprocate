@@ -11,7 +11,7 @@ class MessageFilterRule
    public:
       typedef std::vector<Data> SchemeList;
       typedef std::vector<Data> HostpartList;
-      enum HostpartTypes { Any, HostIsMe, DomainIsMe, List };
+      enum HostpartTypes { Any, HostIsMe, DomainIsMe, List };  // Note: HostIsMe and DomainIsMe are currently not implemented
       typedef std::vector<Data> EventList;
       typedef std::vector<MethodTypes> MethodList;
 
@@ -40,9 +40,6 @@ class MessageFilterRule
       HostpartList mHostpartList;
       MethodList mMethodList;
       EventList mEventList;
-
-      bool mAnyEventType;
-      bool mAcceptWinfoTypes; // matches *.winfo  ?? do we nned this ??
 };
 
 typedef std::vector<MessageFilterRule> MessageFilterRuleList;
