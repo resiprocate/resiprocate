@@ -16,7 +16,7 @@ TransactionUser::TransactionUser(TransactionTermination t,
      mRegisteredForConnectionTermination(c == RegisterForConnectionTermination)
 {
   // This creates a default message filter rule, which
-  // handles all sip: and sips: requests.
+  // handles all sip:, sips:, and tel: requests.
   mRuleList.push_back(MessageFilterRule());
 }
 
