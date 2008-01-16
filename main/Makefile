@@ -114,7 +114,7 @@ contrib: ares
 ###########################################################################
 # Various clean targets
 CLEANDIRS := resip/stack resip/dum resip/stack/test presSvr repro rutil \
-             rutil/test tfm apps
+             rutil/test tfm apps reTurn reTurn/client reTurn/client/test
 
 cleancontrib:
 	-rm -Rf contrib/ares-build.*
