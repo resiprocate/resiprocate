@@ -1,8 +1,9 @@
 #include <ctime>
 
 #include "resip/dum/InMemoryRegistrationDatabase.hxx"
-#include "rutil/WinLeakCheck.hxx"
+#include "rutil/Timer.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 
@@ -227,15 +228,15 @@ InMemoryRegistrationDatabase::getContacts(const Uri& aor,ContactList& container)
 class RemoveIfExpired
 {
 protected:
-    time_t now;
+    UInt64 now;
 public:
     RemoveIfExpired()
     {
-       time(&now);
+       now = Timer::getTimeSecs();
     }
     bool operator () (const ContactInstanceRecord& rec)
     {
-      if(rec.mRegExpires < (UInt64)now) 
+      if(rec.mRegExpires < now) 
       {
          DebugLog(<< "ContactInstanceRecord expired: " << rec.mContact);
          return true;
@@ -245,7 +246,8 @@ public:
 };
 
 InMemoryRegistrationDatabase::database_map_t::iterator
-InMemoryRegistrationDatabase::findNotExpired(const Uri& aor) {
+InMemoryRegistrationDatabase::findNotExpired(const Uri& aor) 
+{
    database_map_t::iterator i;
    i = mDatabase.find(aor);
    if (i == mDatabase.end() || i->second == 0) 
