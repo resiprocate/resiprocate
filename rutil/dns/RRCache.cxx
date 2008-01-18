@@ -168,7 +168,7 @@ bool RRCache::lookup(const Data& target,
    }
    else
    {
-      if (Timer::getTimeMs()/1000 >= (*it)->absoluteExpiry())
+      if (Timer::getTimeSecs() >= (*it)->absoluteExpiry())
       {
          delete *it;
          mRRSet.erase(it);

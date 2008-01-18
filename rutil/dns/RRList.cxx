@@ -41,7 +41,7 @@ RRList::RRList(const Data& key,
                int status)
    : mKey(key), mRRType(rrtype), mStatus(status)
 {
-   mAbsoluteExpiry = ttl + Timer::getTimeMs()/1000;
+   mAbsoluteExpiry = ttl + Timer::getTimeSecs();
 }
 
 RRList::RRList(const DnsHostRecord &record, int ttl)
@@ -57,7 +57,7 @@ void RRList::update(const DnsHostRecord &record, int ttl)
    RecordItem item;
    item.record = new DnsHostRecord(record);
    mRecords.push_back(item);
-   mAbsoluteExpiry = Timer::getTimeMs()/1000 + ttl;
+   mAbsoluteExpiry = Timer::getTimeSecs() + ttl;
 }
       
 RRList::RRList(const Data& key, int rrtype)
@@ -108,7 +108,7 @@ void RRList::update(const RRFactoryBase* factory, Itr begin, Itr end, int ttl)
       mAbsoluteExpiry = ttl;
    }
 
-   mAbsoluteExpiry += Timer::getTimeMs()/1000;
+   mAbsoluteExpiry += Timer::getTimeSecs();
 }
 
 RRList::Records RRList::records(const int protocol)

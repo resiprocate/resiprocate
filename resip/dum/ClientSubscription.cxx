@@ -282,7 +282,7 @@ ClientSubscription::processNextNotify()
          DebugLog(<< "No expires header in last request, set to " << expires);
          mLastRequest->header(h_Expires).value() = expires;
       }
-      UInt64 now = Timer::getTimeMs() / 1000;
+      UInt64 now = Timer::getTimeSecs();
       
       if (mExpires == 0 || now + expires < mExpires)
       {

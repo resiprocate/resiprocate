@@ -45,7 +45,7 @@ LocationServer::process(RequestContext& context)
                ; i != contacts.end()    ; ++i)
       {
          resip::ContactInstanceRecord contact = *i;
-         if (contact.mRegExpires - time(NULL) >= 0)
+         if (contact.mRegExpires - Timer::getTimeSecs() >= 0)
          {
             InfoLog (<< *this << " adding target " << contact.mContact <<
                   " with tuple " << contact.mReceivedFrom);
