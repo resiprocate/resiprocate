@@ -55,7 +55,7 @@ ServerSubscription::~ServerSubscription()
 UInt32
 ServerSubscription::getTimeLeft()
 {
-   UInt32 timeleft =  UInt32(mAbsoluteExpiry - time(0));
+   UInt32 timeleft =  UInt32(mAbsoluteExpiry - Timer::getTimeSecs());
    if (timeleft < 0)
    {
       return 0;
@@ -104,7 +104,7 @@ ServerSubscription::send(SharedPtr<SipMessage> msg)
          {
             mDum.addTimer(DumTimeout::Subscription, msg->header(h_Expires).value(), getBaseHandle(), ++mTimerSeq);
             DialogUsage::send(msg);
-            mAbsoluteExpiry = time(0) + msg->header(h_Expires).value();            
+            mAbsoluteExpiry = Timer::getTimeSecs() + msg->header(h_Expires).value();            
             mState = Established;            
          }
          else

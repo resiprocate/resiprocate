@@ -8,6 +8,7 @@
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Timer.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
@@ -50,7 +51,7 @@ ServerRegistration::accept(SipMessage& ok)
   contacts = database->getContacts(mAor);
   database->unlockRecord(mAor);
 
-  UInt64 now=Timer::getTimeMs();
+  UInt64 now=Timer::getTimeSecs();
 
   NameAddr contact;
   for (i = contacts.begin(); i != contacts.end(); i++)
@@ -61,8 +62,7 @@ ServerRegistration::accept(SipMessage& ok)
       continue;
     }
     contact = i->mContact;
-   // .bwc. p_expires is in seconds.
-    contact.param(p_expires) = UInt32( ((i->mRegExpires - now)/1000) );
+    contact.param(p_expires) = UInt32(i->mRegExpires - now);
     ok.header(h_Contacts).push_back(contact);
   }
   
@@ -169,7 +169,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
     ParserContainer<NameAddr>::iterator i;
-    UInt64 now=Timer::getTimeMs();
+    UInt64 now=Timer::getTimeSecs();
 
     for(i = contactList.begin(); i != contactList.end(); i++)
     {
@@ -189,7 +189,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
       }
       else
       {
-        expires = globalExpires;
+         expires = globalExpires;
       }
 
       // Check for "Contact: *" style deregistration
@@ -212,7 +212,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
       ContactInstanceRecord rec;
       rec.mContact=*i;
-      rec.mRegExpires=((UInt64)expires)*1000+now;
+      rec.mRegExpires=(UInt64)expires+now;
 
       if(i->exists(p_Instance))
       {
