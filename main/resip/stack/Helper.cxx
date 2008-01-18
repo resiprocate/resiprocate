@@ -810,7 +810,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
 
             if (expiresDelta > 0)
             {
-               UInt64 now = Timer::getTimeMs()/1000;
+               UInt64 now = Timer::getTimeSecs();
                if (x_nonce.getCreationTime() + expiresDelta < now)
                {
                   DebugLog(<< "Nonce has expired.");
@@ -967,7 +967,7 @@ Helper::authenticateRequest(const SipMessage& request,
          
          if (expiresDelta > 0)
          {
-            UInt64 now = Timer::getTimeMs()/1000;
+            UInt64 now = Timer::getTimeSecs();
             if (x_nonce.getCreationTime() + expiresDelta < now)
             {
                DebugLog(<< "Nonce has expired.");
@@ -1123,7 +1123,7 @@ Helper::authenticateRequestWithA1(const SipMessage& request,
 
          if (expiresDelta > 0)
          {
-            UInt64 now = Timer::getTimeMs()/1000;
+            UInt64 now = Timer::getTimeSecs();
             if (x_nonce.getCreationTime() + expiresDelta < now)
             {
                DebugLog(<< "Nonce has expired.");
@@ -1255,7 +1255,7 @@ Helper::makeChallenge(const SipMessage& request, const Data& realm, bool useAuth
 {
    Auth auth;
    auth.scheme() = "Digest";
-   Data timestamp(Timer::getTimeMs()/1000);
+   Data timestamp(Timer::getTimeSecs());
    auth.param(p_nonce) = makeNonce(request, timestamp);
    auth.param(p_algorithm) = "MD5";
    auth.param(p_realm) = realm;

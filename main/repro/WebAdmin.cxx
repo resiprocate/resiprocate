@@ -10,6 +10,7 @@
 #include "rutil/MD5Stream.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/Timer.hxx"
 #include "rutil/TransportType.hxx"
 
 #include "repro/HttpBase.hxx"
@@ -694,7 +695,7 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
          Uri aor(i->mKey1);
          ContactInstanceRecord rec;
          size_t bar1 = i->mKey2.find("|");
-         size_t bar2 = i->mKey2.find("|",bar1);
+         size_t bar2 = i->mKey2.find("|",bar1+1);
          
          if(bar1==Data::npos || bar2 == Data::npos)
          {
@@ -704,10 +705,10 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
          
          try
          {
-            resip::Data rawNameAddr = i->mKey2.substr(0,bar1);
+            resip::Data rawNameAddr = i->mKey2.substr(0,bar1).urlDecoded();
             rec.mContact = NameAddr(rawNameAddr);
-            rec.mInstance = i->mKey2.substr(bar1,bar2);
-            rec.mRegId = i->mKey2.substr(bar2,Data::npos).convertInt();
+            rec.mInstance = i->mKey2.substr(bar1+1,bar2-bar1-1).urlDecoded();
+            rec.mRegId = i->mKey2.substr(bar2+1,Data::npos).convertInt();
             mRegDb.removeContact(aor, rec);
             ++j;
          }
@@ -731,6 +732,8 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
       "<tr>" << endl << 
       "  <td>AOR</td>" << endl << 
       "  <td>Contact</td>" << endl << 
+      "  <td>Instance ID</td>" << endl <<
+      "  <td>Reg ID</td>" << endl <<
       "  <td>Expires In</td>" << endl << 
       "  <td><input type=\"submit\" value=\"Remove\"/></td>" << endl << 
       "</tr>" << endl;
@@ -747,7 +750,8 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
          for (ContactList::iterator i = contacts.begin();
               i != contacts.end(); ++i )
          {
-            if (i->mRegExpires >= (UInt64)time(NULL))
+            UInt64 secondsRemaining = i->mRegExpires - Timer::getTimeSecs();
+            if (secondsRemaining > 0)
             {
                s << "<tr>" << endl
                  << "  <td>" ;
@@ -764,12 +768,12 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
                const Data& instanceId = r.mInstance;
                int regId = r.mRegId;
 
-               s << contact;
+               s << contact.uri();
                s <<"</td>" << endl 
-                 << "<td> " << instanceId << "</td> <td>" << regId << "</td>"
-                 <<"<td>" << i->mRegExpires - time(NULL) << "s</td>" << endl
+                 << "<td> " << instanceId.xmlCharDataEncode() << "</td> <td>" << regId << "</td>"
+                 <<"<td>" << secondsRemaining << "s</td>" << endl
                  << "  <td>"
-                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << contact << "|" << instanceId << "|" << regId
+                 << "<input type=\"checkbox\" name=\"remove." << uri << "\" value=\"" << Data::from(contact.uri()).urlEncoded() << "|" << instanceId.urlEncoded() << "|" << regId
                  << "\"/></td>" << endl
                  << "</tr>" << endl;
             }
