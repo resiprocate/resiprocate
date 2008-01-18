@@ -235,7 +235,7 @@ public:
     }
     bool operator () (const ContactInstanceRecord& rec)
     {
-      if(rec.mRegExpires < now) 
+      if(rec.mRegExpires < (UInt64)now) 
       {
          DebugLog(<< "ContactInstanceRecord expired: " << rec.mContact);
          return true;
