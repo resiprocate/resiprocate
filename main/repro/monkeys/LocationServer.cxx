@@ -63,7 +63,7 @@ LocationServer::process(RequestContext& context)
                // does). Normally, this means we will ignore mReceivedFrom, but
                // this can be configured to still use mReceivedFrom.
                Target* target = new Target(contact);
-               target->mPriorityMetric=contact.mLastUpdated;
+               target->mPriorityMetric=(int)contact.mLastUpdated;
                outboundBatch[contact.mInstance].push_back(target);
             }
             else
