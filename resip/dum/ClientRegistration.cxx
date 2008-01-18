@@ -302,7 +302,7 @@ UInt32
 ClientRegistration::whenExpires() const
 {
 // !cj! - TODO - I'm supisious these time are getting confused on what units they are in 
-   UInt64 now = Timer::getTimeMs() / 1000;
+   UInt64 now = Timer::getTimeSecs();
    UInt64 ret = mExpires - now;
    return (UInt32)ret;
 }
@@ -482,7 +482,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
          if (expiry != UINT_MAX)
          {
             int exp = Helper::aBitSmallerThan(expiry);
-            mExpires = exp + Timer::getTimeMs() / 1000;
+            mExpires = exp + Timer::getTimeSecs();
             mDum.addTimer(DumTimeout::Registration,
                           exp,
                           getBaseHandle(),
