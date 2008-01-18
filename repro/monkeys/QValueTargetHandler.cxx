@@ -291,7 +291,7 @@ QValueTargetHandler::fillNextTargetGroup(std::vector<resip::Data>& fillHere,
    }
 
    std::list<resip::Data>::const_iterator i = queue.begin();
-   float currentQ=0;
+   int currentQ=0;
    
 
    //Find the first Candidate target in the queue.

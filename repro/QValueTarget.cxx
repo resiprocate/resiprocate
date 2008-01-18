@@ -15,7 +15,7 @@ QValueTarget::QValueTarget(const resip::ContactInstanceRecord& rec)
       {
          mPriorityMetric=mRec.mContact.param(resip::p_q);
       }
-      catch(resip::ParseBuffer::Exception& e)
+      catch(resip::ParseBuffer::Exception& /*e*/)
       {
          mPriorityMetric=0;
       }
