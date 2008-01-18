@@ -1249,7 +1249,8 @@ ClientInviteSession::dispatchSentUpdateEarlyGlare (const SipMessage& msg)
 void
 ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
 {
-   //InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   /*
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
 
    switch (toEvent(msg, sdp.get()))
@@ -1260,6 +1261,8 @@ ClientInviteSession::dispatchReceivedUpdateEarly (const SipMessage& msg)
          WarningLog (<< "Don't know what this is : " << msg);
          break;
    }
+   */
+   WarningLog (<< "Ignoring message received in ReceivedUpdateEarly: " << msg);
 }
 
 void

@@ -10,12 +10,8 @@
 namespace repro
 {
 
-
-
 class Target
 {
-
-
    public:
    
       typedef enum
@@ -38,8 +34,7 @@ class Target
       virtual ~Target();
       
       virtual const resip::Data& tid() const;
-      
-      
+           
       virtual Status& status();
       virtual const Status& status() const;
       
