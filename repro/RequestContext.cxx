@@ -549,6 +549,12 @@ RequestContext::forwardAck200(const resip::SipMessage& ack)
       Helper::processStrictRoute(*mAck200ToRetransmit);
       
       mAck200ToRetransmit->header(h_Vias).push_front(Via());
+
+      // .bwc. Check for flow-token
+      if(!mTopRoute.uri().user().empty())
+      {
+         mAck200ToRetransmit->setDestination(Tuple::makeTuple(mTopRoute.uri().user()));
+      }
    }
 
    mProxy.send(*mAck200ToRetransmit);
