@@ -212,6 +212,8 @@ UdpTransport::process(FdSet& fdset)
             mStunMappedAddress = Tuple(sin_addr,resp.mappedAddress.ipv4.port, UDP);
             mStunSuccess = true;
          }
+         delete[] buffer;
+         buffer = 0;
          return;
       }
 
