@@ -55,7 +55,11 @@ threadWrapper( void* threadParm )
 }
 }
 
-ThreadIf::ThreadIf() : mId(0), mShutdown(false), mShutdownMutex()
+ThreadIf::ThreadIf() : 
+#ifdef WIN32
+   mThread(0),
+#endif
+   mId(0), mShutdown(false), mShutdownMutex()
 {
 }
 
@@ -83,7 +87,7 @@ ThreadIf::run()
        // there is no _beginthreadex() for WINCE
        CreateThread
 #else
-       (HANDLE)_beginthreadex
+       (HANDLE)_beginthreadex 
 #endif // _WIN32_WCE
          (
          NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
@@ -143,6 +147,7 @@ ThreadIf::join()
 
    //  !kh!
    CloseHandle(mThread);
+   mThread=0;
 #else
    void* stat;
    if (mId != pthread_self())
@@ -167,8 +172,11 @@ ThreadIf::detach()
 #if !defined(WIN32)
    pthread_detach(mId);
 #else
-   CloseHandle(mThread);
-   mThread = 0;
+   if(mThread)
+   {
+      CloseHandle(mThread);
+      mThread = 0;
+   }
 #endif
    mId = 0;
 }
@@ -214,7 +222,7 @@ ThreadIf::isShutdown() const
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2008 Vovida Networks, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
