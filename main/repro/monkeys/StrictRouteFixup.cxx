@@ -45,7 +45,7 @@ StrictRouteFixup::process(RequestContext& context)
       Target target(request.header(h_RequestLine).uri());
       if(!context.getTopRoute().uri().user().empty())
       {
-         target.rec().mReceivedFrom = Tuple::makeTuple(context.getTopRoute().uri().user());
+         target.rec().mReceivedFrom = Tuple::makeTuple(context.getTopRoute().uri().user().base64decode());
       }
       context.getResponseContext().addTarget(target);
       return Processor::SkipThisChain;

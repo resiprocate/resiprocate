@@ -553,7 +553,7 @@ RequestContext::forwardAck200(const resip::SipMessage& ack)
       // .bwc. Check for flow-token
       if(!mTopRoute.uri().user().empty())
       {
-         mAck200ToRetransmit->setDestination(Tuple::makeTuple(mTopRoute.uri().user()));
+         mAck200ToRetransmit->setDestination(Tuple::makeTuple(mTopRoute.uri().user().base64decode()));
       }
    }
 
