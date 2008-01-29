@@ -62,7 +62,8 @@ class InviteSession : public DialogUsage
       // Following methods are for sending requests within a dialog
 
       /** sends a refer request */
-      virtual void refer(const NameAddr& referTo, bool referSub = true);
+	  virtual void refer(const NameAddr& referTo, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents, bool referSub = true);
 
       /** sends a refer request with a replaces header */
       virtual void refer(const NameAddr& referTo, InviteSessionHandle sessionToReplace, bool referSub = true);
@@ -428,5 +429,6 @@ class InviteSession : public DialogUsage
  * <http://www.vovida.org/>.
  *
  */
+
 
 
