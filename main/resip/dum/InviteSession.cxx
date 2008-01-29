@@ -727,6 +727,11 @@ InviteSession::targetRefresh(const NameAddr& localUri)
 void
 InviteSession::refer(const NameAddr& referTo, bool referSub)
 {
+   refer(referTo,std::auto_ptr<resip::Contents>(0),referSub);
+}
+void
+InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents,bool referSub)
+{
    if (mSentRefer)
    {
       throw UsageUseException("Attempted to send overlapping refer", __FILE__, __LINE__);
@@ -741,7 +746,7 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
       refer->header(h_ReferTo) = referTo;
       refer->header(h_ReferredBy) = myAddr(); 
       refer->header(h_ReferredBy).remove(p_tag);   // tag-param not permitted in rfc3892; not the same as generic-param
-
+      refer->setContents(contents);
       if (!referSub)
       {
          refer->header(h_ReferSub).value() = "false";
@@ -2963,4 +2968,5 @@ InviteSession::rejectReferNoSub(int responseCode)
  * <http://www.vovida.org/>.
  *
  */
+
 
