@@ -104,7 +104,13 @@ AmIResponsible::process(RequestContext& context)
             }
          }*/
          
-         context.getResponseContext().addTarget(NameAddr(request.header(h_RequestLine).uri()));
+         Target target(request.header(h_RequestLine).uri());
+         if(!context.getTopRoute().uri().user().empty())
+         {
+            target.rec().mReceivedFrom = Tuple::makeTuple(context.getTopRoute().uri().user().base64decode());
+         }
+         context.getResponseContext().addTarget(target);
+
          InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());
          // skip the rest of the monkeys
          return Processor::SkipThisChain;	
