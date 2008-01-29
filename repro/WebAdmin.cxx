@@ -173,7 +173,14 @@ WebAdmin::buildPage( const Data& uri,
       if ( !domain.empty() )
       {
          InfoLog( << "domain is " << domain );
-         setPage( buildCertPage(domain), pageNumber, 200, Mime("application","pkix-cert") );
+         try
+         {
+            setPage( buildCertPage(domain), pageNumber, 200, Mime("application","pkix-cert") );
+         }
+         catch(BaseSecurity::Exception&)
+         {
+            setPage( resip::Data::Empty, pageNumber, 404 );
+         }
          return;
       }
       else

@@ -530,7 +530,7 @@ BaseSecurity::getCertDER (PEMType type, const Data& key) const
 
    if (hasCert(type, key) == false)
    {
-      ErrLog(<< "Could find certificate for '" << key << "'");
+      ErrLog(<< "Could not find certificate for '" << key << "'");
       throw BaseSecurity::Exception("Could not find certificate", __FILE__,__LINE__);
    }
 
