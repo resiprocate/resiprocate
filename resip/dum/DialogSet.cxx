@@ -133,6 +133,13 @@ void DialogSet::possiblyDie()
 {
    if(mState != Destroying &&
       mDialogs.empty() &&
+      // The following check ensures we are not a UAC DialogSet in the Initial or 
+      // ReceivedProvisional states.
+      // .slg. this check fixes a case where we might receive a short term usuage 
+      //       request (such as OPTIONS) in the same dialogset as a UAC dialogset
+      //       for which we have not created any Dialogs yet - in this case
+      //       we don't want the dialogset to die, since the UAC usage is not complete.     
+      (mCreator == 0 || (mState != Initial && mState != ReceivedProvisional)) &&  
       mClientOutOfDialogRequests.empty() &&
       !(mClientPublication ||
         mServerOutOfDialogRequest ||
