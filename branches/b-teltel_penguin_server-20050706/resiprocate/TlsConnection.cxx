@@ -326,8 +326,9 @@ TlsConnection::read(char* buf, int count )
    }
    //DebugLog(<<"SSL bytesRead="<<bytesRead);
    return bytesRead;
-#endif // USE_SSL
+#else // USE_SSL
    return -1;
+#endif
 }
 
 
@@ -399,8 +400,9 @@ TlsConnection::write( const char* buf, int count )
    DebugLog( << "Did TLS write"  );
 
    return ret;
-#endif // USE_SSL
+#else // USE_SSL
    return -1;
+#endif
 }
 
 
