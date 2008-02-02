@@ -137,11 +137,11 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
    if (NULL != pErrCert)
       X509_NAME_oneline(X509_get_subject_name(pErrCert),cBuf1,256);
 
-   sprintf(cBuf2,"depth=%d %s\n",iDepth,cBuf1);
+   snprintf(cBuf2, sizeof(cBuf2), "depth=%d %s\n", iDepth, cBuf1);
    if(!iInCode)
    {
       memset(cBuf2, 0, sizeof(cBuf2) ); 
-      sprintf(cBuf2, "\n Error %s", X509_verify_cert_error_string(pInStore->error) );
+      snprintf(cBuf2, sizeof(cBuf2), "\n Error %s", X509_verify_cert_error_string(pInStore->error) );
    }
  
    return iInCode;
