@@ -204,7 +204,10 @@ bool
 ThreadIf::waitForShutdown(int ms) const
 {
    Lock lock(mShutdownMutex);
-   mShutdownCondition.wait(mShutdownMutex, ms);
+   if(!mShutdown)
+   {
+      mShutdownCondition.wait(mShutdownMutex, ms);
+   }
    return mShutdown;
 }
 
