@@ -3,7 +3,7 @@
 BUILD = ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += OPENSSL
+PACKAGES += OPENSSL SRTP RUTIL 
 
 CODE_SUBDIRS = 
 TARGET_LIBRARY = libdtls_wrapper
@@ -11,7 +11,8 @@ TESTPROGRAMS =
 
 SRC = DtlsTimer.cxx \
 	DtlsSocket.cxx \
-	DtlsFactory.cxx
+	DtlsFactory.cxx \
+	bf_dwrap.c
 
 include $(BUILD)/Makefile.post
 

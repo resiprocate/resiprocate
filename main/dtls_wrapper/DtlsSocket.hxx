@@ -3,54 +3,105 @@
 
 #include <memory>
 
+extern "C" 
+{
+#include <srtp.h>
+}
+
 #include <openssl/e_os2.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 
+
+
 namespace dtls
 {
 
 class DtlsFactory;
+class DtlsSocket;
+class DtlsTimer;
 
 class DtlsSocketContext
 {
    public:
-     //memory is only valid for duration of callback; must be copied if queueing
-     //is required 
+      //memory is only valid for duration of callback; must be copied if queueing
+      //is required 
       virtual ~DtlsSocketContext(){}      
-     virtual void write(const unsigned char* data, unsigned int len)=0;
-     virtual void handshakeCompleted()=0;
-     virtual void handshakeFailed()=0;
+      virtual void write(const unsigned char* data, unsigned int len)=0;
+      virtual void handshakeCompleted()=0;
+      virtual void handshakeFailed(const char *err)=0;
+
+   protected:
+      DtlsSocket *mSocket;
+     
+   private:
+      friend class DtlsSocket;
+     
+      void setDtlsSocket(DtlsSocket *sock) {mSocket=sock;}
 };
+
+class SrtpSessionKeys
+{
+   public:
+      unsigned char *clientMasterKey;
+      int clientMasterKeyLen;
+      unsigned char *serverMasterKey;
+      int serverMasterKeyLen;
+      unsigned char *clientMasterSalt;
+      int clientMasterSaltLen;
+      unsigned char *serverMasterSalt;
+      int serverMasterSaltLen;
+};
+
+class DtlsSocketTimer;
+   
 
 class DtlsSocket
 {
    public:
-     bool handlePacketMaybe(const char* bytes, unsigned int len);
-     bool checkFingerprint(const char* fingerprint, unsigned int len);      
+	  enum SocketType { Client, Server};
+      bool handlePacketMaybe(const unsigned char* bytes, unsigned int len);
+      
+      void expired(DtlsSocketTimer*);
+      
+      bool checkFingerprint(const char* fingerprint, unsigned int len);
+      bool DtlsSocket::getRemoteFingerprint(char *fingerprint);
+      void DtlsSocket::getMyCertFingerprint(char *fingerprint);
+      void startClient();
+	  SocketType getSocketType() {return mSocketType;} 
+      SrtpSessionKeys getSrtpSessionKeys();
+      static void DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint);
+     
+      //may return 0 if profile selection failed
+      SRTP_PROTECTION_PROFILE* getSrtpProfile();      
+      void createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);      
+      
+      bool handshakeCompleted() { return mHandshakeCompleted; }
 
-     void startClient();      
+
+      ~DtlsSocket(); 
 
    private:
-     friend class DtlsFactory;
-     enum SocketType { Client, Server};
-     
-     DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType);
-     void doHandshakeIteration();
-
-     // Internals
-     std::auto_ptr<DtlsSocketContext> mSocketContext;
-     DtlsFactory* mFactory;
-     
-     // OpenSSL context data
-     SSL *ssl;
-     BIO *mInBio;
-     BIO *mOutBio;
+      friend class DtlsFactory;
+      void forceRetransmit();     
+      DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType);
+      void doHandshakeIteration();
+      int getReadTimeout();
       
-     SocketType mSocketType;
+      // Internals
+      std::auto_ptr<DtlsSocketContext> mSocketContext;
+      DtlsFactory* mFactory;
+      DtlsTimer *mReadTimer;
       
+      // OpenSSL context data
+      SSL *ssl;
+      BIO *mInBio;
+      BIO *mOutBio;
+      
+      SocketType mSocketType;
+      bool mHandshakeCompleted;      
 };
 
 
