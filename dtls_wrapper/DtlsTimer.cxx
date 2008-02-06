@@ -4,13 +4,16 @@ using namespace dtls;
 
 DtlsTimer::DtlsTimer(unsigned int seq)
 {
-  mValid=true;
-};
-    
-DtlsTimer::~DtlsTimer() {}
+   mValid=true;
+}
+
+DtlsTimer::~DtlsTimer() 
+{
+}
 
 void
-DtlsTimer::fire() {
+DtlsTimer::fire() 
+{
    if(mValid)
    {
       expired();
@@ -24,6 +27,7 @@ DtlsTimer::fire() {
 }
 
 void
-DtlsTimerContext::fire(DtlsTimer *timer){
-  timer->fire();
+DtlsTimerContext::fire(DtlsTimer *timer)
+{
+   timer->fire();
 }
