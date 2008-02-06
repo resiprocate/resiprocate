@@ -87,7 +87,7 @@ DtlsFactory::setSrtpProfiles(const char *str)
 {
    int r;
 
-   r=SSL_CTX_set_tlsext_use_srtp(mContext, DefaultSrtpProfile);
+   r=SSL_CTX_set_tlsext_use_srtp(mContext,str);
 
    assert(r==0);
 }
