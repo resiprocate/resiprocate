@@ -12,7 +12,7 @@ class Data;
 namespace dtls
 {
 
-int createCert (const resip::Data& pAor, int expireDays, int keyLen, X509&* outCert, EVP_PKEY&* outKey );
+int createCert (const resip::Data& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey );
 
 }
 
