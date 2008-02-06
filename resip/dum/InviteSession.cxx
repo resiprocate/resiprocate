@@ -66,7 +66,6 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
      mSessionRefresher(false),
      mSessionTimerSeq(0),
      mSessionRefreshReInvite(false),
-     mSentRefer(false),
      mReferSub(true),
      mCurrentEncryptionLevel(DialogUsageManager::None),
      mProposedEncryptionLevel(DialogUsageManager::None),
@@ -80,6 +79,11 @@ InviteSession::~InviteSession()
 {
    DebugLog ( << "^^^ InviteSession::~InviteSession " << this);
    mDialog.mInviteSession = 0;
+   while(!mNITQueue.empty())
+   {
+      delete mNITQueue.front();
+      mNITQueue.pop();
+   }
 }
 
 void 
@@ -732,15 +736,8 @@ InviteSession::refer(const NameAddr& referTo, bool referSub)
 void
 InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents,bool referSub)
 {
-   if (mSentRefer)
-   {
-      throw UsageUseException("Attempted to send overlapping refer", __FILE__, __LINE__);
-   }
-
    if (isConnected()) // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
-      mSentRefer = true;
-      mReferSub = referSub;
       SharedPtr<SipMessage> refer(new SipMessage());
       mDialog.makeRequest(*refer, REFER);
       refer->header(h_ReferTo) = referTo;
@@ -753,13 +750,38 @@ InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> con
          refer->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
       }
 
-      send(refer);
+      if(mNitState == NitComplete)
+      {
+         mNitState = NitProceeding;
+         mReferSub = referSub;
+         send(refer);
+         return;
+      }
+      mNITQueue.push(new QueuedNIT(refer,referSub));
+      DebugLog(<< "refer - queuing NIT:" << refer->brief()<<endl);
+      return;
    }
    else
    {
       WarningLog (<< "Can't refer before Connected");
       assert(0);
       throw UsageUseException("REFER not allowed in this context", __FILE__, __LINE__);
+   }
+}
+
+void
+InviteSession::nitComplete()
+{
+   mNitState = NitComplete;
+   if (mNITQueue.size())
+   {
+      QueuedNIT *qn=mNITQueue.front();
+      mNITQueue.pop();
+      mNitState = NitProceeding;
+      mReferSub = qn->referSubscription();
+      DebugLog(<< "checkNITQueue - sending queued NIT:" << qn->getNIT()->brief()<<endl);
+      send(qn->getNIT());
+      delete qn;
    }
 }
 
@@ -804,15 +826,8 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
       throw UsageUseException("Attempted to make a refer w/ and invalid replacement target", __FILE__, __LINE__);
    }
 
-   if (mSentRefer)
-   {
-      throw UsageUseException("Attempted to send overlapping refer", __FILE__, __LINE__);
-   }
-
    if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
-      mSentRefer = true;
-      mReferSub = referSub;
       SharedPtr<SipMessage> refer(new SipMessage());      
       mDialog.makeRequest(*refer, REFER);
 
@@ -834,7 +849,16 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
          refer->header(h_Supporteds).push_back(Token(Symbols::NoReferSub));
       }
 
-      send(refer);
+      if(mNitState == NitComplete)
+      {
+         mNitState = NitProceeding;
+         mReferSub = referSub;
+         send(refer);
+         return;
+      }
+      mNITQueue.push(new QueuedNIT(refer,referSub));
+      DebugLog(<< "refer/replace - queuing NIT:" << refer->brief()<<endl);
+      return;
    }
    else
    {
@@ -881,29 +905,28 @@ InviteSession::referCommand(const NameAddr& referTo, InviteSessionHandle session
 void
 InviteSession::info(const Contents& contents)
 {
-   if (mNitState == NitComplete)
+   if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
-      if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+      SharedPtr<SipMessage> info(new SipMessage());
+      mDialog.makeRequest(*info, INFO);
+      // !jf! handle multipart here
+      info->setContents(&contents);
+      DumHelper::setOutgoingEncryptionLevel(*info, mCurrentEncryptionLevel);
+      if (mNitState == NitComplete)
       {
          mNitState = NitProceeding;
-         SharedPtr<SipMessage> info(new SipMessage());
-         mDialog.makeRequest(*info, INFO);
-         // !jf! handle multipart here
-         info->setContents(&contents);
-         DumHelper::setOutgoingEncryptionLevel(*info, mCurrentEncryptionLevel);
          send(info);
+         return;
       }
-      else
-      {
-         WarningLog (<< "Can't send INFO before Connected");
-         assert(0);
-         throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
-      }
+      mNITQueue.push(new QueuedNIT(info));
+      DebugLog(<< "refer - queuing NIT:" << info->brief()<<endl);
+      return;
    }
    else
    {
-      throw UsageUseException("Cannot start a non-invite transaction until the previous one has completed",
-                              __FILE__, __LINE__);
+      WarningLog (<< "Can't send INFO before Connected");
+      assert(0);
+      throw UsageUseException("Can't send INFO before Connected", __FILE__, __LINE__);
    }
 }
 
@@ -939,30 +962,29 @@ InviteSession::infoCommand(const Contents& contents)
 void
 InviteSession::message(const Contents& contents)
 {
-   if (mNitState == NitComplete)
+   if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
    {
-      if (isConnected())  // ?slg? likely not safe in any state except Connected - what should behaviour be if state is ReceivedReinvite?
+      SharedPtr<SipMessage> message(new SipMessage());
+      mDialog.makeRequest(*message, MESSAGE);
+      // !jf! handle multipart here
+      message->setContents(&contents);
+      DumHelper::setOutgoingEncryptionLevel(*message, mCurrentEncryptionLevel);
+      InfoLog (<< "Trying to send MESSAGE: " << message);
+      if (mNitState == NitComplete)
       {
          mNitState = NitProceeding;
-         SharedPtr<SipMessage> message(new SipMessage());
-         mDialog.makeRequest(*message, MESSAGE);
-         // !jf! handle multipart here
-         message->setContents(&contents);
-         DumHelper::setOutgoingEncryptionLevel(*message, mCurrentEncryptionLevel);
          send(message);
-         InfoLog (<< "Trying to send MESSAGE: " << message);
+         return;
       }
-      else
-      {
-         WarningLog (<< "Can't send MESSAGE before Connected");
-         assert(0);
-         throw UsageUseException("Can't send MESSAGE before Connected", __FILE__, __LINE__);
-      }
+      mNITQueue.push(new QueuedNIT(message));
+      DebugLog(<< "refer - queuing NIT:" << message->brief()<<endl);
+      return;
    }
    else
    {
-      throw UsageUseException("Cannot start a non-invite transaction until the previous one has completed",
-                              __FILE__, __LINE__);
+      WarningLog (<< "Can't send MESSAGE before Connected");
+      assert(0);
+      throw UsageUseException("Can't send MESSAGE before Connected", __FILE__, __LINE__);
    }
 }
 
@@ -1990,7 +2012,6 @@ InviteSession::dispatchInfo(const SipMessage& msg)
    else
    {
       assert(mNitState == NitProceeding);
-      mNitState = NitComplete;
       //!dcm! -- toss away 1xx to an info?
       if (msg.header(h_StatusLine).statusCode() >= 300)
       {
@@ -2000,6 +2021,7 @@ InviteSession::dispatchInfo(const SipMessage& msg)
       {
          handler->onInfoSuccess(getSessionHandle(), msg);
       }
+      nitComplete();
    }
 }
 
@@ -2105,7 +2127,6 @@ InviteSession::dispatchMessage(const SipMessage& msg)
    else
    {
       assert(mNitState == NitProceeding);
-      mNitState = NitComplete;
       //!dcm! -- toss away 1xx to an message?
       if (msg.header(h_StatusLine).statusCode() >= 300)
       {
@@ -2115,6 +2136,7 @@ InviteSession::dispatchMessage(const SipMessage& msg)
       {
          handler->onMessageSuccess(getSessionHandle(), msg);
       }
+      nitComplete();
    }
 }
 
@@ -2968,5 +2990,6 @@ InviteSession::rejectReferNoSub(int responseCode)
  * <http://www.vovida.org/>.
  *
  */
+
 
 

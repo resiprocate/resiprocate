@@ -523,7 +523,6 @@ Dialog::dispatch(const SipMessage& msg)
                         mClientSubscriptions.push_back(sub);
                         ClientSubscriptionHandle client = sub->getHandle();
                         mDum.mInviteSessionHandler->onReferAccepted(mInviteSession->getSessionHandle(), client, msg);				      
-                        mInviteSession->mSentRefer = false;
                         sub->dispatch(request);
                      }
                      else
@@ -616,8 +615,6 @@ Dialog::dispatch(const SipMessage& msg)
 		 case REFER:
             if(mInviteSession)
             {
-               mInviteSession->mSentRefer = false;
-
                if (code >= 300)
                {
                   mDum.mInviteSessionHandler->onReferRejected(mInviteSession->getSessionHandle(), msg);
@@ -634,6 +631,7 @@ Dialog::dispatch(const SipMessage& msg)
                   }
                   // else no need for action - first Notify will cause onReferAccepted to be called
                }
+               mInviteSession->nitComplete();
                break;
             }
             // fall through, out of dialog refer was sent.
@@ -1157,5 +1155,6 @@ resip::operator<<(ostream& strm, const Dialog& dialog)
  * <http://www.vovida.org/>.
  *
  */
+
 
 
