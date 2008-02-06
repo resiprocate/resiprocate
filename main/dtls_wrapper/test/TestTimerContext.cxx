@@ -8,50 +8,54 @@ using namespace dtls;
 using namespace resip;
 
 TestTimerContext::TestTimerContext()
-  {
-    mTimer=0;
-  }
-     
+{
+   mTimer=0;
+}
+
 void
-TestTimerContext::addTimer(DtlsTimer *timer, unsigned int lifetime){
-  if(mTimer)
-    delete mTimer;
+TestTimerContext::addTimer(DtlsTimer *timer, unsigned int lifetime)
+{
+   if(mTimer)
+      delete mTimer;
 
-  mTimer=timer;
-  UInt64 timeMs=Timer::getTimeMs();
-  mExpiryTime=timeMs+lifetime;
+   mTimer=timer;
+   UInt64 timeMs=Timer::getTimeMs();
+   mExpiryTime=timeMs+lifetime;
 
-  cerr << "Setting a timer for " << lifetime << " ms from now" << endl;
+   cerr << "Setting a timer for " << lifetime << " ms from now" << endl;
 }
 
 UInt64
-TestTimerContext::getRemainingTime(){
-  UInt64 timeMs=Timer::getTimeMs();
+TestTimerContext::getRemainingTime()
+{
+   UInt64 timeMs=Timer::getTimeMs();
 
-  if(mTimer){
-    if(mExpiryTime<timeMs)
-      return(0);
+   if(mTimer)
+   {
+      if(mExpiryTime<timeMs)
+         return(0);
 
-    return(mExpiryTime-timeMs);
-  }
-  else{
-    return Timer::getForever();
-  }
+      return(mExpiryTime-timeMs);
+   }
+   else
+   {
+      return Timer::getForever();
+   }
 }
 
 void
-TestTimerContext::updateTimer(){
-  UInt64 timeMs=Timer::getTimeMs();
+TestTimerContext::updateTimer()
+{
+   UInt64 timeMs=Timer::getTimeMs();
 
-  if(mTimer) {
-    if(mExpiryTime<timeMs){
-      DtlsTimer *tmpTimer=mTimer;
-      mTimer=0;
+   if(mTimer) 
+   {
+      if(mExpiryTime<timeMs)
+      {
+         DtlsTimer *tmpTimer=mTimer;
+         mTimer=0;
 
-      fire(tmpTimer);
-    }
-  }
+         fire(tmpTimer);
+      }
+   }
 }
-
-
-    
