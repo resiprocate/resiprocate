@@ -23,7 +23,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -32,10 +32,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib resiprocate.lib dtls_wrapper.lib libsrtp.lib Iphlpapi.lib Dnsapi.lib"
+				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib dtls_wrapper.lib libsrtp.lib Iphlpapi.lib Dnsapi.lib rutil.lib"
 				OutputFile="$(OutDir)/testDtlsClient.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\out32&quot;;..\..\..\Projects\resiprocate\Win32\Debug;..\Debug;&quot;..\..\..\contrib\dtls-srtp\srtp\Debug&quot;"
+				AdditionalLibraryDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\out32.dbg&quot;;..\..\rutil\Debug;..\Debug;&quot;..\..\..\contrib\dtls-srtp\srtp\Debug&quot;"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/testDtlsClient.pdb"
 				SubSystem="1"
@@ -70,7 +70,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="4"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="3"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -79,8 +79,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib dtls_wrapper.lib libsrtp.lib Iphlpapi.lib Dnsapi.lib rutil.lib"
 				OutputFile="$(OutDir)/testDtlsClient.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\out32&quot;;..\..\rutil\Release;..\Release;&quot;..\..\..\contrib\dtls-srtp\srtp\Release&quot;"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"

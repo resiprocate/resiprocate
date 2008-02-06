@@ -27,7 +27,6 @@ class DtlsFactory
      // Note: this orphans any DtlsSockets you were stupid enough
      // not to free
      ~DtlsFactory();
-
      
      DtlsSocket* createClient(std::auto_ptr<DtlsSocketContext> context);
      DtlsSocket* createServer(std::auto_ptr<DtlsSocketContext> context);
@@ -39,7 +38,6 @@ class DtlsFactory
 
      static PacketType demuxPacket(const unsigned char *buf, unsigned int len);
      
-
       //context accessor
 private:
      friend class DtlsSocket;

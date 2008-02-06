@@ -14,8 +14,6 @@ extern "C"
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 
-
-
 namespace dtls
 {
 
@@ -57,21 +55,23 @@ class SrtpSessionKeys
 
 class DtlsSocketTimer;
    
-
 class DtlsSocket
 {
    public:
-	  enum SocketType { Client, Server};
+	   enum SocketType { Client, Server};
+      ~DtlsSocket(); 
+
       bool handlePacketMaybe(const unsigned char* bytes, unsigned int len);
       
       void expired(DtlsSocketTimer*);
       
       bool checkFingerprint(const char* fingerprint, unsigned int len);
-      bool DtlsSocket::getRemoteFingerprint(char *fingerprint);
-      void DtlsSocket::getMyCertFingerprint(char *fingerprint);
+      bool getRemoteFingerprint(char *fingerprint);
+      void getMyCertFingerprint(char *fingerprint);
       void startClient();
-	  SocketType getSocketType() {return mSocketType;} 
+	   SocketType getSocketType() {return mSocketType;} 
       SrtpSessionKeys getSrtpSessionKeys();
+
       static void DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint);
      
       //may return 0 if profile selection failed
@@ -79,9 +79,6 @@ class DtlsSocket
       void createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);      
       
       bool handshakeCompleted() { return mHandshakeCompleted; }
-
-
-      ~DtlsSocket(); 
 
    private:
       friend class DtlsFactory;
