@@ -4,6 +4,7 @@
 #include <vector>
 #include <list>
 #include <iosfwd>
+#include <memory>
 
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/Uri.hxx"
