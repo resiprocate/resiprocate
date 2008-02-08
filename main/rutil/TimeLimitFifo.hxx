@@ -2,6 +2,7 @@
 #define RESIP_TimeLimitFifo_hxx 
 
 #include <cassert>
+#include <memory>
 #include "rutil/AbstractFifo.hxx"
 #include <iostream>
 #if defined( WIN32 )

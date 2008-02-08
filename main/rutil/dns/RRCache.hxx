@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <memory>
 
 #include "rutil/dns/RRFactory.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
