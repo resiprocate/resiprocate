@@ -1,6 +1,7 @@
 #if !defined(RESIP_TARGETCOMMAND_HXX)
 #define RESIP_TARGETCOMMAND_HXX
 
+#include <memory>
 #include "resip/dum/DumCommand.hxx"
 
 namespace resip
