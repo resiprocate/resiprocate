@@ -35,8 +35,9 @@ main(int argc, char* argv[])
                      "localhost", // domain
                      "localhost", // realm
                      "password", // password 
+                     true,       // apply hash to password
                      "Alice W. Here", // fullName
-                     "aliace@example.com" /*email*/ );
+                     "alice@example.com" /*email*/ );
 
       if ( i%100 == 0 )
       {
