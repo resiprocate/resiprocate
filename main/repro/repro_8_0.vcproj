@@ -226,7 +226,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -305,7 +305,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\libeay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\static\ssleay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
