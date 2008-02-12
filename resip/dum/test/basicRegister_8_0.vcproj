@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="basicRegister"
 	ProjectGUID="{34E29A7D-181B-4A13-9194-EB2300000000}"
+	RootNamespace="basicRegister"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -236,7 +237,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MDd.lib&quot;"
 				OutputFile="$(OutDir)/basicRegister.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -322,7 +323,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\libeay32MD.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\static\ssleay32MD.lib&quot;"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
