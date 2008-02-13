@@ -52,6 +52,7 @@ testSipFrag.cxx \
 testSipMessage.cxx \
 testSipMessageMemory.cxx \
 testSipStack1.cxx \
+testSMIME.cxx \
 testStack.cxx \
 testTcp.cxx \
 testTime.cxx \
