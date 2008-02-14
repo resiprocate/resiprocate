@@ -10,7 +10,8 @@ PACKAGES += RESIP RUTIL ARES OPENSSL PTHREAD POPT OPENSIGCOMP
 ifeq ($(USE_SSL), yes)
 TESTPROGRAMS += makeSelfCert.cxx \
 		testSecurity.cxx \
-		testTls.cxx 
+		testTls.cxx \
+		dumpTls.cxx
 endif
 
 
