@@ -166,7 +166,12 @@ ResponseContext::addTargetBatch(std::list<Target*>& targets,
    {
       if(!mTransactionQueueCollection.empty())
       {
-         mTransactionQueueCollection.front().merge(queue);
+         //mTransactionQueueCollection.front().merge(queue); !slg! list merge requires that both lists first be sorted - implementing manual merge
+         std::list<resip::Data>::iterator it = queue.begin();
+         for(; it != queue.end(); it++)
+         {
+            mTransactionQueueCollection.front().push_back(*it);
+         }
       }
       else
       {
