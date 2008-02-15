@@ -27,6 +27,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/ShutdownMessage.hxx"
 
 using namespace resip;
 using namespace std;
@@ -79,8 +80,8 @@ main(int argc, char* argv[])
 
    if (dumpPid==0)
    {
+     // todo - make this something that can come on the command line
      char *args[] = { "ssldump","-A","-i","lo0",NULL };
-     //int ret = execvp("/opt/local/sbin/ssldump",args);
      int ret = execvp("ssldump",args);
      ErrLog(<< "Can't execvp: return is " << ret <<" errno is " << errno);
      exit(-1);
@@ -129,6 +130,7 @@ main(int argc, char* argv[])
    int rundown = 0;
    while ( (!done) || (rundown-- > 0) )
    {
+
       FdSet fdset; 
 
       clientStack->buildFdSet(fdset);
@@ -167,9 +169,8 @@ main(int argc, char* argv[])
             }
             else
             {
-              //assert(msg->header(h_StatusLine).statusCode() == 200);
               done = true;
-              rundown = 3;
+              rundown = 100;
             }
             delete msg;
          }
@@ -180,17 +181,19 @@ main(int argc, char* argv[])
 #if defined(HAVE_POPT_H)
    poptFreeContext(context);
 #endif
-
    sleep(2);
+   delete serverStack; //btw - this deletes the security object
+   delete clientStack;
+   sleep(5);
+
    if (dumpPid>0)
+
    {
      DebugLog( << "Trying to kill process id " << dumpPid);
-     int ret = kill(dumpPid, SIGINT);
+     int ret = kill(dumpPid, SIGINT); // ssldump catches INT and does an fflush
      DebugLog( << "Kill returned: " << ret);
    }
 
-   delete serverStack; //btw - this deletes the security object
-   delete clientStack;
 
 #endif
    return 0;
@@ -198,7 +201,7 @@ main(int argc, char* argv[])
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2007, Robert Sparks.  All rights reserved.
+ * Copyright (c) 2008 Robert Sparks.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
