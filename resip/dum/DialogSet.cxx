@@ -584,64 +584,67 @@ DialogSet::dispatch(const SipMessage& msg)
          return;
       }
       
-      switch(mState)
+      // We should only do DialogState processing if this is a response to our initial request
+      if(getCreator() &&
+         msg.header(h_CSeq) == getCreator()->getLastRequest()->header(h_CSeq))
       {
-         case Initial:
-            if (code < 200)
-            {
-               mState = ReceivedProvisional;
-            }
-            else if(code < 300)
-            {
-               mState = Established;
-            }
-            else
-            {
-
-               if (mDialogs.empty())
+         switch(mState)
+         {
+            case Initial:
+               if (code < 200)
+               {
+                  mState = ReceivedProvisional;
+               }
+               else if(code < 300)
                {
                   mState = Established;
                }
                else
                {
-                  dispatchToAllDialogs(msg);
-                  return;
-               }
-            }
-            break;
-         case ReceivedProvisional:
-            if (code < 200)
-            {
-               // fall through
-            }
-            else if (code < 300)
-            {
-               mState = Established;
-               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
-               {
-                  if (it->second != dialog) // this is dialog that accepted
+                  if (mDialogs.empty())
                   {
-                     it->second->onForkAccepted();
+                     mState = Established;
+                  }
+                  else
+                  {
+                     dispatchToAllDialogs(msg);
+                     return;
                   }
                }
-            }
-            else // failure response
-            {
-               if (mDialogs.empty())
+               break;
+            case ReceivedProvisional:
+               if (code < 200)
+               {
+                  // fall through
+               }
+               else if (code < 300)
                {
                   mState = Established;
+                  for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
+                  {
+                     if (it->second != dialog) // this is dialog that accepted
+                     {
+                        it->second->onForkAccepted();
+                     }
+                  }
                }
-               else
+               else // failure response
                {
-                  dispatchToAllDialogs(msg);
-                  return;
+                  if (mDialogs.empty())
+                  {
+                     mState = Established;
+                  }
+                  else
+                  {
+                     dispatchToAllDialogs(msg);
+                     return;
+                  }
                }
-            }
-            break;
-         default:
-            // !jf!
-            break;
-            
+               break;
+            default:
+               // !jf!
+               break;            
+         }
       }
 
       if (response.header(h_StatusLine).statusCode() == 100)
