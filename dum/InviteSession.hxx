@@ -7,6 +7,7 @@
 #include "resip/dum/DialogUsageManager.hxx"
 
 #include <map>
+#include <queue>
 
 namespace resip
 {
@@ -62,7 +63,7 @@ class InviteSession : public DialogUsage
       // Following methods are for sending requests within a dialog
 
       /** sends a refer request */
-	  virtual void refer(const NameAddr& referTo, bool referSub = true);
+      virtual void refer(const NameAddr& referTo, bool referSub = true);
       virtual void refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> contents, bool referSub = true);
 
       /** sends a refer request with a replaces header */
@@ -347,7 +348,19 @@ class InviteSession : public DialogUsage
       unsigned int  mSessionTimerSeq;
       bool mSessionRefreshReInvite;      
 
-      bool mSentRefer;
+      class QueuedNIT
+      {
+      public:
+         QueuedNIT(SharedPtr<SipMessage> NIT, bool referSub=false)
+            : mNIT(NIT), mReferSubscription(referSub) {}
+         SharedPtr<SipMessage>& getNIT() { return mNIT; }
+         bool referSubscription() { return mReferSubscription; }
+      private:
+         SharedPtr<SipMessage> mNIT;
+         bool mReferSubscription;
+      };
+      std::queue<QueuedNIT*> mNITQueue;
+      void nitComplete();
       bool mReferSub;
 
       DialogUsageManager::EncryptionLevel mCurrentEncryptionLevel;
@@ -429,6 +442,7 @@ class InviteSession : public DialogUsage
  * <http://www.vovida.org/>.
  *
  */
+
 
 
 
