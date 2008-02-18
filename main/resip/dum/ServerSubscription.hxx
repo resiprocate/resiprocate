@@ -69,7 +69,7 @@ class ServerSubscription : public BaseSubscription
       // disabled
       ServerSubscription(const ServerSubscription&);
       ServerSubscription& operator=(const ServerSubscription&);
-      time_t mAbsoluteExpiry;      
+      UInt64 mAbsoluteExpiry;      
 };
  
 }
