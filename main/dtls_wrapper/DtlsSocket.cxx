@@ -275,7 +275,7 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
 {
    assert(mHandshakeCompleted);
 
-   /* we assume that the defau1lt profile is in effect, for now */
+   /* we assume that the default profile is in effect, for now */
    srtp_profile_t profile = srtp_profile_aes128_cm_sha1_80;
    int key_len = srtp_profile_get_master_key_length(profile);
    int salt_len = srtp_profile_get_master_salt_length(profile);
@@ -287,8 +287,7 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
    srtp_policy_t server_policy;
 
    SrtpSessionKeys srtp_key = getSrtpSessionKeys();   
-   /* set client_write key */  //Dragos--direct assignment then memcpy? Look
-   //into this...
+   /* set client_write key */  
    client_policy.key = client_master_key_and_salt;
    if (srtp_key.clientMasterKeyLen != key_len)
    {
@@ -313,11 +312,10 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
 
    err = crypto_policy_set_from_profile_for_rtcp(&client_policy.rtcp, profile);
    if (err) assert(0);
-   client_policy.ssrc.type  = ssrc_any_inbound;
+   client_policy.ssrc.type  = ssrc_any_inbound;   
    client_policy.next = NULL;
 
    /* set server_write key */
-   //Dragos--direct assignment then memcpy? Look into this...
    server_policy.key = server_master_key_and_salt;
 
    if (srtp_key.serverMasterKeyLen != key_len)
@@ -345,6 +343,8 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
    server_policy.ssrc.type  = ssrc_any_inbound;
    server_policy.next = NULL;
 
+   // Note:  !slg! both policies have ssrc.type set to ssrc_any_inbound - this 
+   //        does not seem correct - this may generate unneeded event_ssrc_collision srtp events??
    if (mSocketType == Client) 
    {
       outboundPolicy = client_policy;
