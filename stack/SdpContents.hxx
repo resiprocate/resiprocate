@@ -32,6 +32,7 @@ class AttributeHelper
       void addAttribute(const Data& key, const Data& value = Data::Empty);
       void clearAttribute(const Data& key);
    private:
+      std::list<std::pair<Data, Data> > mAttributeList;  // used to ensure attribute ordering on encode
       HashMap< Data, std::list<Data> > mAttributes;
 };
 
