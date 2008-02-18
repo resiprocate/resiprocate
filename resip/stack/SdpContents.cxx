@@ -58,7 +58,8 @@ void skipEol(ParseBuffer& pb)
 }
 
 AttributeHelper::AttributeHelper(const AttributeHelper& rhs)
-   : mAttributes(rhs.mAttributes)
+   : mAttributeList(rhs.mAttributeList),
+     mAttributes(rhs.mAttributes)
 {
 }
 
@@ -71,6 +72,7 @@ AttributeHelper::operator=(const AttributeHelper& rhs)
 {
    if (this != &rhs)
    {
+      mAttributeList = rhs.mAttributeList;
       mAttributes = rhs.mAttributes;
    }
    return *this;
@@ -96,21 +98,16 @@ AttributeHelper::getValues(const Data& key) const
 ostream&
 AttributeHelper::encode(ostream& s) const
 {
-   for (HashMap< Data, list<Data> >::const_iterator i = mAttributes.begin();
-        i != mAttributes.end(); ++i)
+   for (std::list<std::pair<Data, Data> >::const_iterator i = mAttributeList.begin();
+        i != mAttributeList.end(); ++i)
    {
-      for (list<Data>::const_iterator j = i->second.begin();
-           j != i->second.end(); ++j)
+      s << "a=" << i->first;
+      if (!i->second.empty())
       {
-         s << "a="
-           << i->first;
-         if (!j->empty())
-         {
-            s << Symbols::COLON[0] << *j;
-         }
-         s << Symbols::CRLF;
+         s << Symbols::COLON[0] << i->second;
       }
-   }
+      s << Symbols::CRLF;
+   }  
    return s;
 }
 
@@ -133,8 +130,9 @@ AttributeHelper::parse(ParseBuffer& pb)
          pb.data(value, anchor);
       }
 
-	  if(!pb.eof()) skipEol(pb);
+      if(!pb.eof()) skipEol(pb);
 
+      mAttributeList.push_back(std::make_pair(key, value));
       mAttributes[key].push_back(value);
    }
 }
@@ -142,12 +140,22 @@ AttributeHelper::parse(ParseBuffer& pb)
 void
 AttributeHelper::addAttribute(const Data& key, const Data& value)
 {
+   mAttributeList.push_back(std::make_pair(key, value));
    mAttributes[key].push_back(value);
 }
 
 void
 AttributeHelper::clearAttribute(const Data& key)
 {
+   for (std::list<std::pair<Data, Data> >::iterator i = mAttributeList.begin();
+        i != mAttributeList.end(); )
+   {
+      std::list<std::pair<Data, Data> >::iterator j = i++;
+      if (j->first == key)
+      {
+         mAttributeList.erase(j);
+      }
+   }
    mAttributes.erase(key);
 }
 
@@ -1789,55 +1797,54 @@ const Data&
 Codec::getName() const
 {
    return mName;
-};
+}
 
 int
 Codec::getRate() const
 {
    return mRate;
-};
+}
 
 Codec::CodecMap& Codec::getStaticCodecs()
 {
+   if (! sStaticCodecsCreated)
+   {
+      //
+      // Build map of static codecs as defined in RFC 3551
+      //
+      sStaticCodecs = std::auto_ptr<CodecMap>(new CodecMap);
 
-    if (! sStaticCodecsCreated)
-    {
-        //
-        // Build map of static codecs as defined in RFC 3551
-        //
-       sStaticCodecs = std::auto_ptr<CodecMap>(new CodecMap);
+      // Audio codecs
+      sStaticCodecs->insert(make_pair(0,Codec("PCMU",0,8000)));
+      sStaticCodecs->insert(make_pair(3,Codec("GSM",3,8000)));
+      sStaticCodecs->insert(make_pair(4,Codec("G723",4,8000)));
+      sStaticCodecs->insert(make_pair(5,Codec("DVI4",5,8000)));
+      sStaticCodecs->insert(make_pair(6,Codec("DVI4",6,16000)));
+      sStaticCodecs->insert(make_pair(7,Codec("LPC",7,8000)));
+      sStaticCodecs->insert(make_pair(8,Codec("PCMA",8,8000)));
+      sStaticCodecs->insert(make_pair(9,Codec("G722",9,8000)));
+      sStaticCodecs->insert(make_pair(10,Codec("L16-2",10,44100)));
+      sStaticCodecs->insert(make_pair(11,Codec("L16-1",11,44100)));
+      sStaticCodecs->insert(make_pair(12,Codec("QCELP",12,8000)));
+      sStaticCodecs->insert(make_pair(13,Codec("CN",13,8000)));
+      sStaticCodecs->insert(make_pair(14,Codec("MPA",14,90000)));
+      sStaticCodecs->insert(make_pair(15,Codec("G728",15,8000)));
+      sStaticCodecs->insert(make_pair(16,Codec("DVI4",16,11025)));
+      sStaticCodecs->insert(make_pair(17,Codec("DVI4",17,22050)));
+      sStaticCodecs->insert(make_pair(18,Codec("G729",18,8000)));
 
-        // Audio codecs
-        sStaticCodecs->insert(make_pair(0,Codec("PCMU",0,8000)));
-        sStaticCodecs->insert(make_pair(3,Codec("GSM",3,8000)));
-        sStaticCodecs->insert(make_pair(4,Codec("G723",4,8000)));
-        sStaticCodecs->insert(make_pair(5,Codec("DVI4",5,8000)));
-        sStaticCodecs->insert(make_pair(6,Codec("DVI4",6,16000)));
-        sStaticCodecs->insert(make_pair(7,Codec("LPC",7,8000)));
-        sStaticCodecs->insert(make_pair(8,Codec("PCMA",8,8000)));
-        sStaticCodecs->insert(make_pair(9,Codec("G722",9,8000)));
-        sStaticCodecs->insert(make_pair(10,Codec("L16-2",10,44100)));
-        sStaticCodecs->insert(make_pair(11,Codec("L16-1",11,44100)));
-        sStaticCodecs->insert(make_pair(12,Codec("QCELP",12,8000)));
-        sStaticCodecs->insert(make_pair(13,Codec("CN",13,8000)));
-        sStaticCodecs->insert(make_pair(14,Codec("MPA",14,90000)));
-        sStaticCodecs->insert(make_pair(15,Codec("G728",15,8000)));
-        sStaticCodecs->insert(make_pair(16,Codec("DVI4",16,11025)));
-        sStaticCodecs->insert(make_pair(17,Codec("DVI4",17,22050)));
-        sStaticCodecs->insert(make_pair(18,Codec("G729",18,8000)));
+      // Video or audio/video codecs
+      sStaticCodecs->insert(make_pair(25,Codec("CelB",25,90000)));
+      sStaticCodecs->insert(make_pair(26,Codec("JPEG",26,90000)));
+      sStaticCodecs->insert(make_pair(28,Codec("nv",28,90000)));
+      sStaticCodecs->insert(make_pair(31,Codec("H261",31,90000)));
+      sStaticCodecs->insert(make_pair(32,Codec("MPV",32,90000)));
+      sStaticCodecs->insert(make_pair(33,Codec("MP2T",33,90000)));
+      sStaticCodecs->insert(make_pair(34,Codec("H263",34,90000)));
 
-        // Video or audio/video codecs
-        sStaticCodecs->insert(make_pair(25,Codec("CelB",25,90000)));
-        sStaticCodecs->insert(make_pair(26,Codec("JPEG",26,90000)));
-        sStaticCodecs->insert(make_pair(28,Codec("nv",28,90000)));
-        sStaticCodecs->insert(make_pair(31,Codec("H261",31,90000)));
-        sStaticCodecs->insert(make_pair(32,Codec("MPV",32,90000)));
-        sStaticCodecs->insert(make_pair(33,Codec("MP2T",33,90000)));
-        sStaticCodecs->insert(make_pair(34,Codec("H263",34,90000)));
-
-        sStaticCodecsCreated = true;
-    }
-    return *(sStaticCodecs.get());
+      sStaticCodecsCreated = true;
+   }
+   return *(sStaticCodecs.get());
 }
 
 bool
