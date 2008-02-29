@@ -72,6 +72,7 @@ TransactionController::process(FdSet& fdset)
 // !dcm! -- why would one wait for the Tu's fifo to be empty before delivering a
 // shutdown message?
    {
+      StackLog(<< "TransactionController::process() - Shutting down");
       //!dcm! -- send to all?
       mTuSelector.add(new ShutdownMessage, TimeLimitFifo<Message>::InternalElement);
    }
