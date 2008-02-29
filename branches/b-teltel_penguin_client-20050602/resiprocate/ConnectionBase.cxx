@@ -64,7 +64,7 @@ ConnectionBase::getId() const
 void
 ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
 {
-   assert(mWho.transport);
+   assert(mWho.mTransport);
 
    StackLog(<< "In State: " << connectionStates[mState]);
    //getConnectionManager().touch(this); -- !dcm!
@@ -89,7 +89,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                return;
             }
          }
-         assert(mWho.transport);
+         assert(mWho.mTransport);
          mMessage = new SipMessage(mWho.mTransport);
          
          StackLog(<< "ConnectionBase::process setting source " << mWho);

@@ -588,7 +588,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          // We assume that all stray responses have been discarded, so we always
          // know the transport that the corresponding request was received on
          // and this has been copied by TransactionState::sendToWire into target.transport
-         assert(target.transport);
+         assert(target.mTransport);
          if (target.mTransport->getTuple().isAnyInterface())
          {
             source = determineSourceInterface(msg, target);
@@ -683,7 +683,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 void
 TransportSelector::retransmit(SipMessage* msg, Tuple& target)
 {
-   assert(target.transport);
+   assert(target.mTransport);
 
    // !jf! The previous call to transmit may have blocked or failed (It seems to
    // block in windows when the network is disconnected - don't know why just
