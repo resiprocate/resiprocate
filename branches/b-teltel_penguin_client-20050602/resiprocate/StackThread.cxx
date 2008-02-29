@@ -26,13 +26,17 @@ StackThread::thread()
          resip::FdSet fdset;
          buildFdSet(fdset);
          mStack.buildFdSet(fdset);
-		 int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(),
+         int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(),
                                                      getTimeTillNextProcessMS()));
          if (ret >= 0)
          {
             // .dlb. use return value to peak at the message to see if it is a
             // shutdown, and call shutdown if it is
             mStack.process(fdset);
+         }
+         else
+         {
+            StackLog(<< "FD Select Return: " << ret );
          }
       }
       catch (BaseException& e)

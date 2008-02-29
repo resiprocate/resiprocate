@@ -46,7 +46,8 @@ Connection::getId() const
 void
 Connection::requestWrite(SendData* sendData)
 {
-   assert(mWho.transport);
+   StackLog(<< "Connection::requestWrite()");
+   assert(mWho.mTransport);
    if (mOutstandingSends.empty())
    {
       getConnectionManager().addToWritable(this);
@@ -94,7 +95,7 @@ Connection::performWrite()
 ConnectionManager&
 Connection::getConnectionManager() const
 {
-   assert(mWho.transport);
+   assert(mWho.mTransport);
    TcpBaseTransport* transport = static_cast<TcpBaseTransport*>(mWho.mTransport);
    
    return transport->getConnectionManager();
