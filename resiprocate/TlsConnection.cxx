@@ -104,7 +104,7 @@ TlsConnection::TlsConnection( const Tuple& tuple, Socket fd, Security* security,
    SSL_set_bio( mSsl, mBio, mBio );
 
    mTlsState = mServer ? Accepting : Connecting;
-
+   DebugLog (<< "TLS State: " << TlsConnection::fromState(mTlsState));
 #endif // USE_SSL   
 }
 
@@ -135,7 +135,7 @@ TlsConnection::TlsState
 TlsConnection::checkState()
 {
 #if defined(USE_SSL)
-   //DebugLog(<<"state is " << fromTlsState(mTlsState));
+   DebugLog(<<"TLS state is " << TlsConnection::fromState(mTlsState));
 
    if (mTlsState == Up || mTlsState == Broken)
    {
@@ -155,7 +155,7 @@ TlsConnection::checkState()
       else
       {
          ok = SSL_connect(mSsl);
-         //StackLog( << "TLS SSL_connect - state = " << fromTlsState(mTlsState) );
+         StackLog( << "TLS SSL_connect - state = " << TlsConnection::fromState(mTlsState) );
       }
 
       if ( ok <= 0 )

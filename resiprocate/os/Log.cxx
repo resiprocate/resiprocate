@@ -154,9 +154,11 @@ Log::toLevel(const Data& l)
    }
    
    int i=0;
-   while (string(_descriptions[i]).size())
+
+   
+   while (_descriptions[i][0] != '\0')
    {
-      if (pri == string(_descriptions[i])) 
+      if (::stricmp(pri.c_str(), _descriptions[i]) == 0)
       {
          return Level(i-1);
       }
@@ -170,15 +172,15 @@ Log::toLevel(const Data& l)
 Log::Type
 Log::toType(const Data& arg)
 {
-   if (arg == "cout" || arg == "COUT")
+   if (::stricmp(arg.c_str(), "cout") == 0)
    {
       return Log::Cout;
    }
-   else if (arg == "cerr" || arg == "CERR")
+   else if (::stricmp(arg.c_str(), "cerr") == 0)
    {
       return Log::Cerr;
    }
-   else if (arg == "file" || arg == "FILE")
+   else if (::stricmp(arg.c_str(), "file") == 0)
    {
       return Log::File;
    }

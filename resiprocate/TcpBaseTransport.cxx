@@ -117,18 +117,27 @@ TcpBaseTransport::processSomeWrites(FdSet& fdset)
 {
    // !jf! may want to do a roundrobin later
    Connection* curr = mConnectionManager.getNextWrite(); 
-   if (curr && fdset.readyToWrite(curr->getSocket()))
+   if (curr)
    {
-      //StackLog (<< "TcpBaseTransport::processSomeWrites() " << curr->getSocket());
-      curr->performWrite();
-   }
-   else if (curr && fdset.hasException(curr->getSocket()))
-   {
-        int errNum = 0;
-        int errNumSize = sizeof(errNum);
-        getsockopt(curr->getSocket(),SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
-        InfoLog (<< "Exception writing to socket " << curr->getSocket() << " code: " << errNum << "; closing connection");
-        delete curr;
+      StackLog (<< "TcpBaseTransport::processSomeWrites() " << curr->getSocket());
+      bool readyToWrite = fdset.readyToWrite(curr->getSocket());
+      if (readyToWrite)
+      {
+         curr->performWrite();
+      }
+      else
+      {
+         StackLog (<< "TcpBaseTransport::processSomeWrites() [" << curr->getSocket() << "] not ready to write" );
+
+         if (fdset.hasException(curr->getSocket()))
+         {
+            int errNum = 0;
+            int errNumSize = sizeof(errNum);
+            getsockopt(curr->getSocket(),SOL_SOCKET,SO_ERROR,(char *)&errNum,(socklen_t *)&errNumSize);
+            InfoLog (<< "Exception writing to socket " << curr->getSocket() << " code: " << errNum << "; closing connection");
+            delete curr;
+         }
+      }
    }
 }
 
@@ -214,6 +223,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          DebugLog (<<"Opening new connection to " << data->destination);
          makeSocketNonBlocking(sock);         
          int e = connect( sock, &servaddr, data->destination.length() );
+         DebugLog (<<"Socket connect with err=" << e);
 
          // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
          if (e == INVALID_SOCKET)
@@ -271,6 +281,7 @@ void
 TcpBaseTransport::process(FdSet& fdSet)
 {
    processAllWriteRequests(fdSet);
+   StackLog(<< "Ready FD: " << fdSet.numReady);
    if(fdSet.numReady > 0)
    {
       processSomeWrites(fdSet);
