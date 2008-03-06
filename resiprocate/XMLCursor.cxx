@@ -324,6 +324,102 @@ XMLCursor::getTag() const
    return mCursor->mTag;
 }
 
+Data
+XMLCursor::encodeXMLCompatible(const Data& strData)
+{
+   Data encodedStr(strData.size() << 1, true);
+   int charCount = strData.size();
+   for (int i = 0; i < charCount; ++i)
+   {
+      switch (strData[i])
+      {
+      case '"':
+         encodedStr.append("&quot;", strlen("&quot;"));
+         break;
+      case '<':
+         encodedStr.append("&lt;", strlen("&lt;"));
+         break;
+      case '>':
+         encodedStr.append("&gt;", strlen("&gt;"));
+         break;
+      default:
+         encodedStr.append(strData.c_str() + i, 1);
+         break;
+      }
+   }
+   return encodedStr;
+}
+
+class FindStruct
+{
+   public:
+      FindStruct(const char* findStr, const char* replaceStr)
+	 :mFoundPos(Data::npos)
+	 ,mFindStr(findStr)
+	 ,mFindStrLen(::strlen(findStr))
+	 ,mReplaceStr(replaceStr)
+      {
+      }
+
+   public: // members
+      unsigned int mFoundPos;
+      const char* mFindStr;
+      const int   mFindStrLen;
+      const char* mReplaceStr;
+};
+
+Data
+XMLCursor::decodeXMLCompatible(const Data& strData)
+{
+   static FindStruct findDatas[] = 
+      { 
+         FindStruct("&quot;", "\""), 
+         FindStruct("&lt;", "<"), 
+         FindStruct("&gt;", ">"),
+         FindStruct("&nbsp;", " ") 
+      };
+
+   Data decodedStr(strData.size(), true);
+   Data lowerStrData(strData);
+   lowerStrData.lowercase();
+   int lastIdx = 0;
+   while (true)
+   {
+      unsigned int minIdx = Data::npos;
+      int foundIdx = -1;
+      for (unsigned int i = 0; i < (sizeof(findDatas) / sizeof(findDatas[0])); ++i)
+      {
+         findDatas[i].mFoundPos = lowerStrData.find(findDatas[i].mFindStr, lastIdx);
+         if (findDatas[i].mFoundPos != Data::npos)
+         {
+            if (foundIdx == -1)
+            {
+               minIdx = findDatas[i].mFoundPos;
+               foundIdx = i;
+            }
+            else if (findDatas[i].mFoundPos < minIdx)
+            {
+               minIdx = findDatas[i].mFoundPos;
+               foundIdx = i;
+            }
+         }
+      }
+
+      if (foundIdx != -1)
+      {
+         decodedStr += strData.substr(lastIdx, findDatas[foundIdx].mFoundPos - lastIdx);
+         decodedStr += findDatas[foundIdx].mReplaceStr;
+         lastIdx = findDatas[foundIdx].mFoundPos + findDatas[foundIdx].mFindStrLen;
+      }
+      else
+      {
+         break;
+      }
+   }
+   decodedStr += strData.substr(lastIdx);
+   return decodedStr;
+}
+
 //<foo >
 //<foo>
 //<foo/>
@@ -384,7 +480,7 @@ XMLCursor::getAttributes() const
 	    pb.data(value, anchor);
 	    XMLCursor::decode(value);
 	    pb.skipChar();
-	    mAttributes[attribute] = value;
+	    mAttributes[attribute] = decodeXMLCompatible(value);
 	 }
          pb.skipWhitespace();
       }
@@ -421,7 +517,7 @@ XMLCursor::encode(std::ostream& str, const AttributeMap& attrs)
          str << " ";
       }
       // !dlb! some sort of character encoding required here
-      str << i->first << "=\"" << i->second << "\"";
+      str << i->first << "=\"" << encodeXMLCompatible(i->second) << "\"";
    }
 
    return str;
