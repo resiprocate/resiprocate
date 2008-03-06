@@ -115,6 +115,7 @@ RouteStore::addRoute(const resip::Data& method,
       Lock lock(mMutex, VOCAL_WRITELOCK);
       mRouteOperators.insert( route );
    }
+   mCursor = mRouteOperators.begin(); 
 
    mDb.addRoute( key , route.routeRecord );
 }
@@ -185,6 +186,7 @@ RouteStore::eraseRoute(const resip::Data& key )
          }
       }
    }
+   mCursor = mRouteOperators.begin();  // reset the cursor since it may have been on deleted route
 }
 
 
