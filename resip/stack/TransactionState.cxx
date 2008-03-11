@@ -1472,6 +1472,12 @@ TransactionState::processServerStale(TransactionMessage* msg)
 void
 TransactionState::processNoDnsResults()
 {
+   if(mMsgToRetransmit->method()==ACK)
+   {
+      // Don't 503 a failed ACK
+      return;
+   }
+
    InfoLog (<< "Ran out of dns entries for " << mDnsResult->target() << ". Send 503");
    assert(mDnsResult->available() == DnsResult::Finished);
    SipMessage* response = Helper::makeResponse(*mMsgToRetransmit, 503);
