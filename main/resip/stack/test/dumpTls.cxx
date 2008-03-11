@@ -15,6 +15,7 @@
 #include <iostream>
 #include <memory>
 #include <sys/ioctl.h>
+#include <signal.h>
 
 #ifdef __MINGW32__
 #define sleep(x) Sleep((x)*1000)
