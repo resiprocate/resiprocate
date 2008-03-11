@@ -64,7 +64,7 @@ ServerAuthManager::process(Message* msg)
       InfoLog(<< "ServerAuth got ChallengeInfo " << challengeInfo->brief());
       MessageMap::iterator it = mMessages.find(challengeInfo->getTransactionId());
       assert(it != mMessages.end());
-      SipMessage* sipMsg = it->second;
+      std::auto_ptr<SipMessage> sipMsg(it->second);
       mMessages.erase(it);
 
       if(challengeInfo->isFailed()) 
@@ -80,7 +80,7 @@ ServerAuthManager::process(Message* msg)
 
       if(challengeInfo->isChallengeRequired()) 
       {
-        issueChallenge(sipMsg);  
+        issueChallenge(sipMsg.get());
         InfoLog(<< "ServerAuth challenged request (after async) " << sipMsg->brief());
         return DumFeature::ChainDoneAndEventDone;
       } 
