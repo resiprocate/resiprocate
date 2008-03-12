@@ -61,36 +61,65 @@ class DtlsSocket
 	   enum SocketType { Client, Server};
       ~DtlsSocket(); 
 
+      // Inspects packet to see if it's a DTLS packet, if so continue processing
       bool handlePacketMaybe(const unsigned char* bytes, unsigned int len);
       
+      // Called by DtlSocketTimer when timer expires - causes a retransmission (forceRetransmit)
       void expired(DtlsSocketTimer*);
       
-      bool checkFingerprint(const char* fingerprint, unsigned int len);
+      // Retrieves the finger print of the certificate presented by the remote party
       bool getRemoteFingerprint(char *fingerprint);
+
+      // Retrieves the finger print of the certificate presented by the remote party and checks
+      // it agains the passed in certificate
+      bool checkFingerprint(const char* fingerprint, unsigned int len);
+
+      // Retrieves the finger print of our local certificate, same as getMyCertFingerprint from DtlsFactory
       void getMyCertFingerprint(char *fingerprint);
+
+      // For client sockets only - causes a client handshake to start (doHandshakeIteration)
       void startClient();
+
+      // Returns the socket type: Client or Server
 	   SocketType getSocketType() {return mSocketType;} 
+
+      // Retreives the SRTP session keys from the Dtls session
       SrtpSessionKeys getSrtpSessionKeys();
 
+      // Utility fn to compute a certificates fingerprint
       static void DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint);
      
-      //may return 0 if profile selection failed
+      // Retrieves the DTLS negotiated SRTP profile - may return 0 if profile selection failed
       SRTP_PROTECTION_PROFILE* getSrtpProfile();      
+
+      // Creates SRTP session policies appropriately based on socket type (client vs server) and keys
+      // extracted from the DTLS handshake process
       void createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy);      
       
+      // returns true if the DTLS handshake has completed
       bool handshakeCompleted() { return mHandshakeCompleted; }
+
+      DtlsSocketContext* getSocketContext() { return mSocketContext.get(); }
 
    private:
       friend class DtlsFactory;
+
+      // Causes an immediate handshake iteration to happen, which will retransmit the handshake
       void forceRetransmit();     
-      DtlsSocket(std::auto_ptr<DtlsSocketContext>, DtlsFactory* factory, enum SocketType);
+
+      // Creates an SSL socket, and if client sets state to connect_state and if server sets state to accept_state.  Sets SSL BIO's.
+      DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType);
+
+      // Give CPU cyces to the handshake process - checks current state and acts appropraitely
       void doHandshakeIteration();
+
+      // returns the amount of time between handshake retranmssions (500ms)
       int getReadTimeout();
       
       // Internals
       std::auto_ptr<DtlsSocketContext> mSocketContext;
       DtlsFactory* mFactory;
-      DtlsTimer *mReadTimer;
+      DtlsTimer *mReadTimer;  // Timer used during handshake process
       
       // OpenSSL context data
       SSL *ssl;
