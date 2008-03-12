@@ -17,7 +17,8 @@ using namespace dtls;
 const char* DtlsFactory::DefaultSrtpProfile = "SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32";
 
 DtlsFactory::DtlsFactory(std::auto_ptr<DtlsTimerContext> tc,X509 *cert, EVP_PKEY *privkey):
-   mTimerContext(tc),mCert(cert)
+   mTimerContext(tc),
+   mCert(cert)
 {
    int r;
 
@@ -30,7 +31,7 @@ DtlsFactory::DtlsFactory(std::auto_ptr<DtlsTimerContext> tc,X509 *cert, EVP_PKEY
    r=SSL_CTX_use_PrivateKey(mContext, privkey);
    assert(r==1);
 
-   // Set SRTP profiles: TODO, make configurable
+   // Set SRTP profiles
    r=SSL_CTX_set_tlsext_use_srtp(mContext, DefaultSrtpProfile);
    assert(r==0);
 }
@@ -58,6 +59,25 @@ DtlsFactory::getMyCertFingerprint(char *fingerprint)
    DtlsSocket::computeFingerprint(mCert,fingerprint);
 }
 
+void
+DtlsFactory::setSrtpProfiles(const char *str)
+{
+   int r;
+
+   r=SSL_CTX_set_tlsext_use_srtp(mContext,str);
+
+   assert(r==0);
+}
+
+void
+DtlsFactory::setCipherSuites(const char *str)
+{
+   int r;
+
+   r=SSL_CTX_set_cipher_list(mContext,str);
+   assert(r==1);
+}
+
 DtlsFactory::PacketType
 DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len) 
 {
@@ -71,25 +91,6 @@ DtlsFactory::demuxPacket(const unsigned char *data, unsigned int len)
       return dtls;
 
    return unknown;
-}
-
-void
-DtlsFactory::setCipherSuites(const char *str)
-{
-   int r;
-
-   r=SSL_CTX_set_cipher_list(mContext,str);
-   assert(r==1);
-}
-
-void
-DtlsFactory::setSrtpProfiles(const char *str)
-{
-   int r;
-
-   r=SSL_CTX_set_tlsext_use_srtp(mContext,str);
-
-   assert(r==0);
 }
 
 
