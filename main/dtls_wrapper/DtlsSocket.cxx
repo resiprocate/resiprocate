@@ -25,11 +25,6 @@ class dtls::DtlsSocketTimer : public DtlsTimer
      DtlsSocket *mSocket;
 };
 
-DtlsSocket::~DtlsSocket()
-{
-   mReadTimer->invalidate();
-}
-
 DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
    mSocketContext(socketContext),
    mFactory(factory),
@@ -63,6 +58,11 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
    BIO_push(mOutBio,BIO_new(BIO_s_mem()));
 
    SSL_set_bio(ssl,mInBio,mOutBio);
+}
+
+DtlsSocket::~DtlsSocket()
+{
+   if(mReadTimer) mReadTimer->invalidate();
 }
 
 void
@@ -140,6 +140,7 @@ DtlsSocket::doHandshakeIteration()
       mHandshakeCompleted = true;       
       mSocketContext->handshakeCompleted();
       if(mReadTimer) mReadTimer->invalidate();
+      mReadTimer = 0;
       break;
    case SSL_ERROR_WANT_READ:
       // There are two cases here:
@@ -209,6 +210,12 @@ DtlsSocket::checkFingerprint(const char* fingerprint, unsigned int len)
    return true;
 }
 
+void
+DtlsSocket::getMyCertFingerprint(char *fingerprint)
+{
+   mFactory->getMyCertFingerprint(fingerprint);
+}
+
 SrtpSessionKeys
 DtlsSocket::getSrtpSessionKeys()
 {
@@ -238,12 +245,6 @@ DtlsSocket::getSrtpProfile()
    return SSL_get_selected_srtp_profile(ssl);
 }
 
-void
-DtlsSocket::getMyCertFingerprint(char *fingerprint)
-{
-   mFactory->getMyCertFingerprint(fingerprint);
-}
-
 // Fingerprint is assumed to be long enough
 void
 DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint) 
@@ -267,8 +268,6 @@ DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint)
    }
 }
 
-//srtp_t is a pointer(yes, a pointer) to an srtp session from libsrtp. Lifetime
-//is managed by the client.
 //TODO: assert(0) into exception, as elsewhere
 void
 DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy_t& inboundPolicy)
@@ -312,7 +311,6 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
 
    err = crypto_policy_set_from_profile_for_rtcp(&client_policy.rtcp, profile);
    if (err) assert(0);
-   client_policy.ssrc.type  = ssrc_any_inbound;   
    client_policy.next = NULL;
 
    /* set server_write key */
@@ -340,19 +338,22 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
 
    err = crypto_policy_set_from_profile_for_rtcp(&server_policy.rtcp, profile);
    if (err) assert(0);
-   server_policy.ssrc.type  = ssrc_any_inbound;
    server_policy.next = NULL;
 
-   // Note:  !slg! both policies have ssrc.type set to ssrc_any_inbound - this 
-   //        does not seem correct - this may generate unneeded event_ssrc_collision srtp events??
    if (mSocketType == Client) 
    {
+      client_policy.ssrc.type = ssrc_any_outbound;
       outboundPolicy = client_policy;
+
+      server_policy.ssrc.type  = ssrc_any_inbound;
       inboundPolicy = server_policy;
    }
    else
    {
+      server_policy.ssrc.type  = ssrc_any_outbound;
       outboundPolicy = server_policy;
+
+      client_policy.ssrc.type = ssrc_any_inbound;
       inboundPolicy = client_policy;
    }
    /* zeroize the input keys (but not the srtp session keys that are in use) */
