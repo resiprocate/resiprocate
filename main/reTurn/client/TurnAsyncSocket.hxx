@@ -59,6 +59,9 @@ public:
    void setActiveDestination(const asio::ip::address& address, unsigned short port);
    void clearActiveDestination();
 
+   asio::ip::address& getConnectedAddress() { return mAsyncSocketBase.getConnectedAddress(); }
+   unsigned short getConnectedPort() { return mAsyncSocketBase.getConnectedPort(); }
+
    // Turn Send Methods
    virtual void send(const char* buffer, unsigned int size);
    virtual void sendTo(const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size);
