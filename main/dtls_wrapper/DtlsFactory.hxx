@@ -22,23 +22,37 @@ class DtlsFactory
    public:
      enum PacketType { rtp, dtls, stun, unknown};
      
+     // Creates a DTLS SSL Context and enables srtp extension, also sets the private and public key cert
      DtlsFactory(std::auto_ptr<DtlsTimerContext> tc, X509 *cert, EVP_PKEY *privkey);
 
      // Note: this orphans any DtlsSockets you were stupid enough
      // not to free
      ~DtlsFactory();
      
+     // Creates a new DtlsSocket to be used as a client
      DtlsSocket* createClient(std::auto_ptr<DtlsSocketContext> context);
+
+     // Creates a new DtlsSocket to be used as a server
      DtlsSocket* createServer(std::auto_ptr<DtlsSocketContext> context);
+
+     // Returns the fingerprint of the user cert that was passed into the constructor
      void getMyCertFingerprint(char *fingerprint);
+
+     // Returns a reference to the timer context that was passed into the constructor
      DtlsTimerContext& getTimerContext() {return *mTimerContext;}
-     void setSrtpProfiles(const char *policyStr);
-     void setCipherSuites(const char *cipherSuites);
+
+     // The default SrtpProfile used at construction time (default is: SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32)
      static const char* DefaultSrtpProfile; 
 
+     // Changes the default SRTP profiles supported (default is: SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32)
+     void setSrtpProfiles(const char *policyStr);
+
+     // Changes the default DTLS Cipher Suites supported
+     void setCipherSuites(const char *cipherSuites);
+
+     // Examines the first few bits of a packet to determine its type: rtp, dtls, stun or unknown
      static PacketType demuxPacket(const unsigned char *buf, unsigned int len);
      
-      //context accessor
 private:
      friend class DtlsSocket;
      SSL_CTX* mContext;
