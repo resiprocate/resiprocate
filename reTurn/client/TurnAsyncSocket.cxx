@@ -437,8 +437,8 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
    }
    else
    {
-      // mTurnFraming is disabled - message could be a Stun Message if first 2 bits are also 0
-      if(((*data)[0] & 0xC0) == 0)
+      // mTurnFraming is disabled - message could be a Stun Message if first byte is 0 or 1
+      if((*data)[0] == 0 || (*data)[0] == 1)
       {
          StunMessage* stunMsg = new StunMessage(mLocalBinding, 
                                                 StunTuple(mLocalBinding.getTransportType(), mAsyncSocketBase.getConnectedAddress(), mAsyncSocketBase.getConnectedPort()), 
@@ -918,12 +918,6 @@ TurnAsyncSocket::doSend(boost::shared_ptr<DataBuffer>& data)
       return send(data);
    }
 
-   if(!mActiveDestination)
-   {
-      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), asio::error_code(reTurn::NoActiveDestination, asio::error::misc_category));
-      return;
-   }
-
    return sendTo(*mActiveDestination, data);
 }
 
@@ -940,11 +934,11 @@ TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port,
 {
    GuardReleaser guardReleaser(mGuards);
 
-   // ensure there is an allocation 
+   // Allow raw data to be sent if there is no allocation
    if(!mHaveAllocation)
    {
-      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSendFailure(getSocketDescriptor(), asio::error_code(reTurn::NoAllocation, asio::error::misc_category));
-      return; 
+      StunTuple destination(mLocalBinding.getTransportType(), address, port);
+      mAsyncSocketBase.send(destination, data);
    }
 
    // Setup Remote Peer 
