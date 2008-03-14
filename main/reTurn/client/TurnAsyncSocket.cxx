@@ -915,7 +915,8 @@ TurnAsyncSocket::doSend(boost::shared_ptr<DataBuffer>& data)
    // Allow raw data to be sent if there is no allocation
    if(!mHaveAllocation)
    {
-      return send(data);
+      send(data);
+      return;
    }
 
    return sendTo(*mActiveDestination, data);
@@ -939,6 +940,7 @@ TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port,
    {
       StunTuple destination(mLocalBinding.getTransportType(), address, port);
       mAsyncSocketBase.send(destination, data);
+      return;
    }
 
    // Setup Remote Peer 

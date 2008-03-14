@@ -71,16 +71,18 @@ AsyncSocketBase::handleSend(const asio::error_code& e)
 {
    if(!e)
    {
-      mSendDataQueue.pop_front();
-      if (!mSendDataQueue.empty())
-      {
-         sendFirstQueuedData();
-      }
       onSendSuccess();
    }
    else
    {
       onSendFailure(e);
+   }
+
+   // Clear this data from the queue and see if there is more data to send
+   mSendDataQueue.pop_front();
+   if (!mSendDataQueue.empty())
+   {
+      sendFirstQueuedData();
    }
 }
 
