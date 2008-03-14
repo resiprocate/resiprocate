@@ -89,6 +89,7 @@ AsyncUdpSocketBase::getSenderEndpointPort()
 void 
 AsyncUdpSocketBase::transportSend(const StunTuple& destination, std::vector<asio::const_buffer>& buffers)
 {
+   //InfoLog(<< "AsyncUdpSocketBase::transportSend " << buffers.size() << " buffer(s) to " << destination << " - buf1 size=" << buffer_size(buffers.front()));
    mSocket.async_send_to(buffers, 
                          asio::ip::udp::endpoint(destination.getAddress(), destination.getPort()), 
                          boost::bind(&AsyncUdpSocketBase::handleSend, shared_from_this(), asio::placeholders::error));
