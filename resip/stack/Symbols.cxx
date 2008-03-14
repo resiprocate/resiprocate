@@ -88,7 +88,8 @@ const char* Symbols::NaptrTcp = "D2T";
 
 const char* Symbols::audio = "audio";
 const char* Symbols::RTP_AVP = "RTP/AVP";
-const char* Symbols::RTP_SAVP = "RTP/SAVP";
+const char* Symbols::RTP_SAVP = "RTP/SAVP"; // used for SRTP
+const char* Symbols::UDP_TLS_RTP_SAVP = "UDP/TLS/RTP/SAVP";  // used for DTLS-SRTP
 
 const char* Symbols::Presence = "presence";
 const char* Symbols::Required = "required";
