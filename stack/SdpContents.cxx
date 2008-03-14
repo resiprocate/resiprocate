@@ -1546,7 +1546,7 @@ SdpContents::Session::Medium::exists(const Data& key) const
 const list<Data>&
 SdpContents::Session::Medium::getValues(const Data& key) const
 {
-   if (exists(key))
+   if (mAttributeHelper.exists(key))
    {
       return mAttributeHelper.getValues(key);
    }
