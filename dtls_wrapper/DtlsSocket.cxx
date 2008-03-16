@@ -35,17 +35,17 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
    mSocketContext->setDtlsSocket(this);
 
    assert(factory->mContext);
-   ssl=SSL_new(factory->mContext);
-   assert(ssl!=0);
+   mSsl=SSL_new(factory->mContext);
+   assert(mSsl!=0);
 
    switch(type)
    {
    case Client:
-      SSL_set_connect_state(ssl);
+      SSL_set_connect_state(mSsl);
       break;
    case Server:
-      SSL_set_accept_state(ssl);
-      //      SSL_set_verify(ssl,SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,0);
+      SSL_set_accept_state(mSsl);
+      //SSL_set_verify(mSsl,SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,0);
       break;
    default:
       assert(0);
@@ -57,12 +57,16 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
    mOutBio=BIO_new(BIO_f_dwrap());
    BIO_push(mOutBio,BIO_new(BIO_s_mem()));
 
-   SSL_set_bio(ssl,mInBio,mOutBio);
+   SSL_set_bio(mSsl,mInBio,mOutBio);
 }
 
 DtlsSocket::~DtlsSocket()
 {
    if(mReadTimer) mReadTimer->invalidate();
+
+   // Properly shutdown the socket and free it - note: this also free's the BIO's
+   SSL_shutdown(mSsl);
+   SSL_free(mSsl);
 }
 
 void
@@ -124,7 +128,7 @@ DtlsSocket::doHandshakeIteration()
    if(mHandshakeCompleted)
       return;
 
-   r=SSL_do_handshake(ssl);
+   r=SSL_do_handshake(mSsl);
    errbuf[0]=0;
    ERR_error_string_n(ERR_peek_error(),errbuf,sizeof(errbuf));
 
@@ -134,7 +138,7 @@ DtlsSocket::doHandshakeIteration()
    outBioLen=BIO_get_mem_data(mOutBio,&outBioData);
 
    // Now handle handshake errors */
-   switch(sslerr=SSL_get_error(ssl,r))
+   switch(sslerr=SSL_get_error(mSsl,r))
    {
    case SSL_ERROR_NONE:
       mHandshakeCompleted = true;       
@@ -184,7 +188,7 @@ DtlsSocket::getRemoteFingerprint(char *fprint)
 {
    X509 *x;
 
-   x=SSL_get_peer_certificate(ssl);
+   x=SSL_get_peer_certificate(mSsl);
    if(!x) // No certificate
       return false;
 
@@ -225,7 +229,7 @@ DtlsSocket::getSrtpSessionKeys()
 
    memset(&keys, 0x00, sizeof(keys));
 
-   SSL_get_srtp_key_info(ssl, 
+   SSL_get_srtp_key_info(mSsl, 
       &keys.clientMasterKey,
       &keys.clientMasterKeyLen,
       &keys.serverMasterKey,
@@ -242,7 +246,7 @@ DtlsSocket::getSrtpProfile()
 {
    //TODO: probably an exception candidate
    assert(mHandshakeCompleted);
-   return SSL_get_selected_srtp_profile(ssl);
+   return SSL_get_selected_srtp_profile(mSsl);
 }
 
 // Fingerprint is assumed to be long enough
@@ -302,8 +306,8 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
    memcpy(client_master_key_and_salt, srtp_key.clientMasterKey, key_len);
    memcpy(client_master_key_and_salt + key_len, srtp_key.clientMasterSalt, salt_len);
 
-   cout << "client master key and salt: " << 
-      octet_string_hex_string(client_master_key_and_salt, key_len + salt_len) << endl;
+   //cout << "client master key and salt: " << 
+   //   octet_string_hex_string(client_master_key_and_salt, key_len + salt_len) << endl;
 
    /* initialize client SRTP policy from profile  */
    err_status_t err = crypto_policy_set_from_profile_for_rtp(&client_policy.rtp, profile);
@@ -329,8 +333,8 @@ DtlsSocket::createSrtpSessionPolicies(srtp_policy_t& outboundPolicy, srtp_policy
 
    memcpy(server_master_key_and_salt, srtp_key.serverMasterKey, key_len);
    memcpy(server_master_key_and_salt + key_len, srtp_key.serverMasterSalt, salt_len);
-   cout << "server master key and salt: " << 
-      octet_string_hex_string(server_master_key_and_salt, key_len + salt_len) << endl;
+   //cout << "server master key and salt: " << 
+   //   octet_string_hex_string(server_master_key_and_salt, key_len + salt_len) << endl;
 
    /* initialize server SRTP policy from profile  */
    err = crypto_policy_set_from_profile_for_rtp(&server_policy.rtp, profile);
