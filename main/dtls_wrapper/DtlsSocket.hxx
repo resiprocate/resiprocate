@@ -122,7 +122,7 @@ class DtlsSocket
       DtlsTimer *mReadTimer;  // Timer used during handshake process
       
       // OpenSSL context data
-      SSL *ssl;
+      SSL *mSsl;
       BIO *mInBio;
       BIO *mOutBio;
       
