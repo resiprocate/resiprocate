@@ -52,6 +52,14 @@ namespace error
     /// SSL error codes.
     ssl_category = ASIO_WIN_OR_POSIX(4, 4)
   };
+
+  // Category getters.
+  inline error_category get_system_category() { return system_category; }
+  inline error_category get_netdb_category() { return netdb_category; }
+  inline error_category get_addrinfo_category() { return addrinfo_category; }
+  inline error_category get_misc_category() { return misc_category; }
+  inline error_category get_ssl_category() { return ssl_category; }
+
 } // namespace error
 
 /// Bring error category type into the asio namespace.
@@ -104,7 +112,11 @@ public:
   {
   };
 
-  typedef unspecified_bool_type_t* unspecified_bool_type;
+  typedef void (*unspecified_bool_type)(unspecified_bool_type_t);
+
+  static void unspecified_bool_true(unspecified_bool_type_t)
+  {
+  }
 
   /// Operator returns non-null if there is a non-success error code.
   operator unspecified_bool_type() const
@@ -112,7 +124,7 @@ public:
     if (value_ == 0)
       return 0;
     else
-      return reinterpret_cast<unspecified_bool_type>(1);
+      return &error_code::unspecified_bool_true;
   }
 
   /// Operator to test if the error represents success.
