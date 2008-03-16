@@ -66,7 +66,11 @@ public:
   // Create a new context implementation.
   void create(impl_type& impl, context_base::method m)
   {
+#if (OPENSSL_VERSION_NUMBER < 0x00909000L )
     ::SSL_METHOD* ssl_method = 0;
+#else
+    const ::SSL_METHOD* ssl_method = 0;
+#endif
     switch (m)
     {
     case context_base::sslv2:
@@ -331,7 +335,7 @@ public:
           purpose ? context_base::for_writing : context_base::for_reading);
       *buf = '\0';
       strncat(buf, passwd.c_str(), size);
-      return (int)strlen(buf);
+      return strlen(buf);
     }
 
     return 0;
