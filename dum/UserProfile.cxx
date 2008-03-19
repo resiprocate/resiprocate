@@ -9,12 +9,12 @@
 using namespace resip;
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
-UserProfile::UserProfile() : Profile()
+UserProfile::UserProfile() : Profile(), mGruuEnabled(false)
 {
     //InfoLog (<< "************ UserProfile created (no base)!: " << *this);
 }
 
-UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile)
+UserProfile::UserProfile(SharedPtr<Profile> baseProfile) : Profile(baseProfile), mGruuEnabled(false)
 {
     //InfoLog (<< "************ UserProfile created (with base)!: " << *this);
 }
@@ -70,6 +70,12 @@ UserProfile::getServiceRoute()
    return mServiceRoute;
 }
 
+bool
+UserProfile::hasInstanceId()
+{
+   return !mInstanceId.empty();
+}
+
 void
 UserProfile::setInstanceId(const Data& id)
 {
@@ -113,12 +119,6 @@ UserProfile:: getGruu(const Data& aor, const NameAddr& contact)
    assert(0);
    static NameAddr gruu;
    return gruu;
-}
-
-void 
-UserProfile::disableGruu()
-{
-   assert(0);
 }
 
 void 

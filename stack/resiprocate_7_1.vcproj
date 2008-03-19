@@ -276,6 +276,9 @@
 				RelativePath=".\Embedded.cxx">
 			</File>
 			<File
+				RelativePath=".\ExistsOrDataParameter.cxx">
+			</File>
+			<File
 				RelativePath=".\ExistsParameter.cxx">
 			</File>
 			<File
@@ -659,6 +662,9 @@
 			</File>
 			<File
 				RelativePath=".\Embedded.hxx">
+			</File>
+			<File
+				RelativePath=".\ExistsOrDataParameter.hxx">
 			</File>
 			<File
 				RelativePath=".\ExistsParameter.hxx">
