@@ -623,20 +623,20 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             if(source.isAnyInterface())
             {
                Tuple temp = determineSourceInterface(msg,target);
-               /* determineSourceInterface can return 0 in the port as default
-                  to let the stack pick an "arbitrary (but appropriate) transport"
-                  so we'll assert that the port is 0 _or_ the same as source. (mjf)
-                */
-               assert((source.getPort()==temp.getPort() ||
-                       temp.getPort()==0) && 
-                        source.ipVersion()==temp.ipVersion() &&
+
+               // .bwc. determineSourceInterface() can give us a port, if the TU
+               // put one in the topmost Via.
+               assert(source.ipVersion()==temp.ipVersion() &&
                         source.getType()==temp.getType());
                source=temp;
 
-               /* determineSourceInterface will return an arbitrary port here,
-                  so use the port specified in target.transport->port().
+               /* determineSourceInterface might return an arbitrary port 
+                  here, so use the port specified in target.transport->port().
                */
-               source.setPort(transport->port());
+               if(source.getPort()==0)
+               {
+                  source.setPort(transport->port());
+               }
             }
          }
          // .bwc. Here we use source to find transport.
@@ -645,8 +645,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
             source = determineSourceInterface(msg, target);
             transport = findTransportBySource(source);
             
-            // .bwc. determineSourceInterface doesn't give us a port
-            if(transport)
+            // .bwc. determineSourceInterface might give us a port
+            if(transport && source.getPort()==0)
             {
                source.setPort(transport->port());
             }
@@ -741,13 +741,16 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          {
             Tuple temp = source;
             source = determineSourceInterface(msg,target);
-            /* determineSourceInterface will return an arbitrary port here,
-               so use the port specified in target.transport->port().
-            */
             assert(source.ipVersion()==temp.ipVersion() &&
                      source.getType()==temp.getType());
 
-            source.setPort(target.transport->port());
+            /* determineSourceInterface might return an arbitrary port here,
+               so use the port specified in target.transport->port().
+            */
+            if(source.getPort()==0)
+            {
+               source.setPort(target.transport->port());
+            }
          }
          if (mCompression.isEnabled())
          {
