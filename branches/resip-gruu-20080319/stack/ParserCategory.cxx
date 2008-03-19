@@ -433,7 +433,10 @@ defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"); //lis
 defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
 defineParam(regid, "reg-id", UInt32Parameter, "outbound");
 defineParam(ob,"ob",ExistsParameter,"outbound-05");
-defineParam(gruu, "gruu", QuotedDataParameter, "gruu");
+
+defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "gruu");
+defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "gruu");
+defineParam(gr, "gr", ExistsOrDataParameter, "gruu");
 
 defineParam(accessType, "access-type", DataParameter, "RFC 2046");
 defineParam(algorithm, "algorithm", DataParameter, "RFC ????");

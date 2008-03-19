@@ -403,6 +403,34 @@ ClientRegistration::dispatch(const SipMessage& msg)
             InfoLog(<< "Error Parsing Service Route:" << e);
          }    
 
+         //gruu update, should be optimized
+         try
+         {
+            if(getUserProfile()->gruuEnabled() && msg.exists(h_Contacts))
+            {
+               for (NameAddrs::const_iterator it = msg.header(h_Contacts).begin(); 
+                    it != msg.header(h_Contacts).end(); it++)
+               {
+                  if (it->exists(p_Instance) && it->param(p_Instance) == getUserProfile()->getInstanceId())
+                  {
+                     if(it->exists(p_pubGruu))
+                     {
+                        getUserProfile()->setPublicGruu(Uri(it->param(p_pubGruu)));
+                     }
+                     if(it->exists(p_tempGruu))
+                     {
+                        getUserProfile()->setTempGruu(Uri(it->param(p_tempGruu)));
+                     }
+                     break;
+                   }
+               }
+            }
+         }
+         catch(BaseException&e)
+         {
+            InfoLog(<<"Error parsing GRUU:" << e);
+         }
+         
          // !jf! consider what to do if no contacts
          // !ah! take list of ctcs and push into mMy or mOther as required.
 
