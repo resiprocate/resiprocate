@@ -1908,7 +1908,8 @@ TransactionState::sendToTU(TransactionMessage* msg) const
          
             break;
          case 408:
-            if(sipMsg->getReceivedTransport() == 0 && mState == Trying)  // only greylist if internally generated and we haven't received any responses yet
+            if(sipMsg->getReceivedTransport() == 0 && 
+                  (mState == Trying || mState==Calling))  // only greylist if internally generated and we haven't received any responses yet
             {
                // greylist last target.
                // ?bwc? How long do we greylist this for? Probably should make
