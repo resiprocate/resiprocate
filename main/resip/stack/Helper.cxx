@@ -552,6 +552,7 @@ Helper::makeCancel(const SipMessage& request)
    RequestLine rLine(CANCEL, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
    cancel->header(h_RequestLine) = rLine;
+   cancel->header(h_MaxForwards).value() = 70;
    cancel->header(h_To) = request.header(h_To);
    cancel->header(h_From) = request.header(h_From);
    cancel->header(h_CallId) = request.header(h_CallId);
@@ -588,7 +589,7 @@ Helper::makeFailureAck(const SipMessage& request, const SipMessage& response)
    RequestLine rLine(ACK, request.header(h_RequestLine).getSipVersion());
    rLine.uri() = request.header(h_RequestLine).uri();
    ack->header(h_RequestLine) = rLine;
-
+   ack->header(h_MaxForwards).value() = 70;
    ack->header(h_CallId) = request.header(h_CallId);
    ack->header(h_From) = request.header(h_From);
    ack->header(h_To) = response.header(h_To); // to get to-tag
