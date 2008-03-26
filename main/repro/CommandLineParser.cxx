@@ -43,6 +43,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* dbPath = 0;
    int noChallenge = false;
    int noAuthIntChallenge = false;
+   int rejectBadNonces = false;
    int noWebChallenge = false;
    
    int noRegistrar = false;
@@ -109,6 +110,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-v4",        0,   POPT_ARG_NONE,                              &disableV4,      0, "disable IPV4", 0},
       {"disable-auth",      0,   POPT_ARG_NONE,                              &noChallenge,    0, "disable DIGEST challenges", 0},
       {"disable-auth-int",  0,   POPT_ARG_NONE,                              &noAuthIntChallenge,0, "disable auth-int DIGEST challenges", 0},
+      {"reject-bad-nonces",  0,   POPT_ARG_NONE,                              &rejectBadNonces,0, "Send 403 if a client sends a bad nonce in their credentials (will send a new challenge otherwise)", 0},
       {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    0, "disable registrar", 0},
       {"disable-identity",  0,   POPT_ARG_NONE,                              &noIdentityHeaders, 0, "disable adding identity headers", 0},
@@ -189,6 +191,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    mCertPath = certPath;
    mNoChallenge = noChallenge != 0;
    mNoAuthIntChallenge = noAuthIntChallenge != 0;
+   mRejectBadNonces = rejectBadNonces != 0;
    mNoWebChallenge = noWebChallenge != 0;
    mNoRegistrar = noRegistrar != 0 ;
    mNoIdentityHeaders = noIdentityHeaders != 0;

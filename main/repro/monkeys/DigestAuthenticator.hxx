@@ -16,7 +16,7 @@ namespace repro
   class DigestAuthenticator : public Processor
   {
     public:
-      DigestAuthenticator( UserStore& userStore, resip::SipStack* stack, bool noIdentityHeaders=false, int httpPort=5080, bool useAuthInt=true);
+      DigestAuthenticator( UserStore& userStore, resip::SipStack* stack, bool noIdentityHeaders=false, int httpPort=5080, bool useAuthInt=true, bool rejectBadNonces=false);
       ~DigestAuthenticator();
 
       virtual processor_action_t process(RequestContext &);
@@ -32,6 +32,7 @@ namespace repro
       bool mNoIdentityHeaders;
       int  mHttpPort;
       bool mUseAuthInt;
+      bool mRejectBadNonces;
   };
   
 }
