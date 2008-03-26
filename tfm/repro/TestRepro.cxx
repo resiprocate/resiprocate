@@ -152,7 +152,7 @@ TestRepro::TestRepro(const resip::Data& name,
                                         methodList) );
    mDum.setMessageFilterRuleList(ruleList);
     
-   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, mStore.mUserStore, mStore.mAclStore, true ));
+   SharedPtr<ServerAuthManager> authMgr(new ReproServerAuthManager(mDum, mStore.mUserStore, mStore.mAclStore, true, false));
    mDum.setServerAuthManager(authMgr);    
 
    mStack.registerTransactionUser(mProxy);

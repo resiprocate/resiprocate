@@ -75,6 +75,21 @@ class TestHolder : public Fixture
 
 
       static boost::shared_ptr<SipMessage>
+      badNonce(boost::shared_ptr<SipMessage> msg)
+      {
+         if(msg->exists(h_ProxyAuthorizations))
+         {
+            Auths::iterator i = msg->header(h_ProxyAuthorizations).begin();
+            for(; i!=msg->header(h_ProxyAuthorizations).end(); ++i)
+            {
+               i->param(p_nonce)="ffffffffffffffffffffffffffffffff";
+            }
+         }
+
+         return msg;
+      }
+
+      static boost::shared_ptr<SipMessage>
       noUserInTo(boost::shared_ptr<SipMessage> msg)
       {
          msg->header(h_To).uri().user()="";
@@ -340,6 +355,22 @@ class TestHolder : public Fixture
          jason->registerUser(60,jason->getDefaultContacts()),
          jason->expect(REGISTER/407, from(proxy), WaitForResponse, condition(bogusAuth,jason->digestRespond())),
          jason->expect(REGISTER/403, from(proxy), WaitForResponse, jason->noAction()),
+         WaitForEndOfTest
+      );
+      
+      ExecuteSequences();
+   }
+   
+   void testRegisterBadNonce()
+   {
+      WarningLog(<<"*!testRegisterBadNonce!*");
+      
+      Seq
+      (
+         jason->registerUser(60,jason->getDefaultContacts()),
+         jason->expect(REGISTER/407, from(proxy), WaitForResponse, condition(badNonce,jason->digestRespond())),
+         jason->expect(REGISTER/407, from(proxy), WaitForResponse, jason->digestRespond()),
+         jason->expect(REGISTER/200, from(proxy), WaitForResponse, new CheckContacts(jason->getDefaultContacts(), 60)),
          WaitForEndOfTest
       );
       
@@ -1607,6 +1638,42 @@ class TestHolder : public Fixture
          jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), condition(bogusAuth,jason->digestRespond()))),
          optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
          jason->expect(INVITE/403,from(proxy),WaitForResponse,jason->ack()),
+         WaitForEndOfTest
+      
+      );
+      ExecuteSequences();  
+   }
+   
+   void testInviteBadNonce()
+   {
+      WarningLog(<<"*!testInviteBadNonce!*");
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+      
+      Seq
+      (
+         jason->invite(*derek),
+         optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+         jason->expect(INVITE/407, from(proxy), WaitForResponse, chain(jason->ack(), condition(badNonce,jason->digestRespond()))),
+         optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+         jason->expect(INVITE/407,from(proxy),WaitForResponse,chain(jason->ack(), jason->digestRespond())),
+          And
+          (
+            Sub
+            (
+               optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction()))
+            ),
+            Sub
+            (
+               derek->expect(INVITE, contact(jason), WaitForCommand, chain(derek->ring(), derek->answer())),
+               jason->expect(INVITE/180, from(derek), WaitFor100, jason->noAction()),
+               jason->expect(INVITE/200, contact(derek), WaitForResponse, jason->ack()),
+               derek->expect(ACK, from(jason), WaitForResponse, jason->noAction())
+            )
+         ),
          WaitForEndOfTest
       
       );
