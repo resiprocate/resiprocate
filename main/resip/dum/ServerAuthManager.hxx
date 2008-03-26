@@ -67,6 +67,7 @@ class ServerAuthManager : public DumFeature
       
       virtual bool useAuthInt() const;
       virtual bool proxyAuthenticationMode() const;
+      virtual bool rejectBadNonces() const;
       
       typedef std::map<Data, SipMessage*> MessageMap;
       MessageMap mMessages;

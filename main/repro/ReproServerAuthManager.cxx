@@ -15,12 +15,14 @@ using namespace repro;
 ReproServerAuthManager::ReproServerAuthManager(DialogUsageManager& dum,
                                                UserStore& userDb,
                                                AclStore& aclDb,
-                                               bool useAuthInt):
+                                               bool useAuthInt,
+                                               bool rejectBadNonces):
    ServerAuthManager(dum, dum.dumIncomingTarget()),
    mDum(dum),
    mUserDb(userDb),
    mAclDb(aclDb),
-   mUseAuthInt(useAuthInt)
+   mUseAuthInt(useAuthInt),
+   mRejectBadNonces(rejectBadNonces)
 {
 }
 
@@ -36,6 +38,11 @@ ReproServerAuthManager::useAuthInt() const
    return mUseAuthInt;
 }
 
+bool
+ReproServerAuthManager::rejectBadNonces() const
+{
+   return mRejectBadNonces;
+}
 
 ServerAuthManager::AsyncBool
 ReproServerAuthManager::requiresChallenge(const SipMessage& msg)

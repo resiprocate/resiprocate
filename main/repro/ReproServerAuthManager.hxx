@@ -26,7 +26,8 @@ class ReproServerAuthManager: public resip::ServerAuthManager
       ReproServerAuthManager(resip::DialogUsageManager& dum, 
                              UserStore& userDb, 
                              AclStore& aclDb,
-                             bool useAuthInt);
+                             bool useAuthInt,
+                             bool rejectBadNonces);
       
       ~ReproServerAuthManager();
       
@@ -39,6 +40,7 @@ class ReproServerAuthManager: public resip::ServerAuthManager
                                      const resip::Data& transactionId );
       
       virtual bool useAuthInt() const;
+      virtual bool rejectBadNonces() const;
       virtual AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
@@ -46,6 +48,7 @@ class ReproServerAuthManager: public resip::ServerAuthManager
       UserStore& mUserDb;
       AclStore&  mAclDb;
       bool mUseAuthInt;
+      bool mRejectBadNonces;
 };
 
  
