@@ -34,6 +34,7 @@ class CommandLineParser
       Data mDbPath;
       bool mNoChallenge;
       bool mNoAuthIntChallenge;
+      bool mRejectBadNonces;
       bool mNoWebChallenge;
       bool mNoRegistrar;
       bool mNoIdentityHeaders;

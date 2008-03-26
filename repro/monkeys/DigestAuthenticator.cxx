@@ -26,10 +26,12 @@ DigestAuthenticator::DigestAuthenticator( UserStore& userStore,
                                           resip::SipStack* stack, 
                                           bool noIdentityHeaders, 
                                           int httpPort,
-                                          bool useAuthInt) :
+                                          bool useAuthInt,
+                                          bool rejectBadNonces) :
             mNoIdentityHeaders(noIdentityHeaders),
             mHttpPort(httpPort),
-            mUseAuthInt(useAuthInt)
+            mUseAuthInt(useAuthInt),
+            mRejectBadNonces(rejectBadNonces)
 {
    std::auto_ptr<Worker> grabber(new UserAuthGrabber(userStore));
    mAuthRequestDispatcher= new Dispatcher(grabber,stack);
@@ -261,8 +263,15 @@ DigestAuthenticator::process(repro::RequestContext &rc)
 
          case Helper::BadlyFormed:
             InfoLog (<< "Authentication nonce badly formed for " << user);
-            rc.sendResponse(*auto_ptr<SipMessage>
+            if(mRejectBadNonces)
+            {
+               rc.sendResponse(*auto_ptr<SipMessage>
                             (Helper::makeResponse(*sipMessage, 403, "Where on earth did you get that nonce?")));
+            }
+            else
+            {
+               challengeRequest(rc, true);
+            }
             return SkipAllChains;
       }
    }

@@ -294,7 +294,8 @@ main(int argc, char** argv)
          DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
                                                            &stack,args.mNoIdentityHeaders,
                                                            args.mHttpPort,
-                                                           !args.mNoAuthIntChallenge /*useAuthInt*/);
+                                                           !args.mNoAuthIntChallenge /*useAuthInt*/,
+                                                           args.mRejectBadNonces);
          locators->addProcessor(std::auto_ptr<Processor>(da)); 
       }
 
@@ -460,7 +461,8 @@ main(int argc, char** argv)
             uasAuth( new ReproServerAuthManager(*dum,
                                                 store.mUserStore,
                                                 store.mAclStore,
-                                                !args.mNoAuthIntChallenge /*useAuthInt*/));
+                                                !args.mNoAuthIntChallenge /*useAuthInt*/,
+                                                args.mRejectBadNonces));
          dum->setServerAuthManager(uasAuth);
       }
       dum->setMessageFilterRuleList(ruleList);
