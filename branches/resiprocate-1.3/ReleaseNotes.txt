@@ -1,3 +1,107 @@
+= Release Notes v 1.3.0 =
+
+==Build System==
+===Bug fixes===
+* Fix when building under GCC4.3 - std::auto_ptr now requires <memory>
+header include, as per http://gcc.gnu.org/gcc-4.3/porting_to.html
+* Updated VS2003 project settings for TFM so that it now builds
+* Updates to VS.2005 project files
+** link using newer OpenSSL library names
+** use static OpenSSL libraries, so that DLL's are not required
+** remove iphlpapi from Repro Setup_8_0.vdproj
+* Fixed a compile issue in Timer.cxx under CE
+
+==rutil==
+===New features===
+* Improved doxygen
+* Host file lookup for A records
+
+===Bug fixes===
+* Fixed a bug in ThreadIf for Win32 to ensure we don't close an
+uninitialized thread handle
+* Better behavior in the DNS code when the network is unavailable
+* ThreadIf::waitForShutdown() returns immediately if the thread is already shutdown
+
+==stack==
+===New features===
+* Improved doxygen
+* Allow setting an external stats handler on a SipStack
+* The stack can now be configured to check for and fix bogus dialog identifiers in responses (ie, response contains different dialog identifiers than the request did)
+
+===Bug fixes===
+* Corrected some invalid diagnostic log messages related to certicates
+* Changes were made to SdpContents to ensure sdp attribute insert
+ordering on encode
+* Fixed SdpContents bug - the getValues() API would not correctly
+retrieve the session level attributes if the attribute was not found
+at the media level
+* Added missing Max-Forwards to cancel requests (and failure ACKs) - Helper.cxx
+* Fixed OS 10.5 sockets compatibility issues
+* Fixed bug where SdpContents::findFirstMatchingCodec() would sometimes not work correctly
+* Fixed a double free bug in SipMessage::releaseContents()
+* Fixed a CPU spin issue in client TLS connection establishment
+* Fixed a bug where a display-name starting with '*' would cause a name-addr to be parsed as an "all-contacts" name-addr
+* Fixed bugs where the transport param on Contact headers could be incorrect if DNS failover occurred
+* Fixed a bug in Uri::getAor() that would fail to include brackets around an IPV6 address
+* Fixed a case where openssl would operate on a socket that was not yet connected
+* Fixed a bug where copies of MultipartMixedContents could sometimes end up having two copies of each part from the original
+* Fixed a turn-related memory leak
+* Fixed a bug where TransactionState would send a simulated ACK/503 to the TU when no DNS results were present
+* Fixed an assert that could be triggered if the TU put a port in the topmost Via
+* Fixed DNS greylisting for INVITE transaction timeouts
+* Fixed an assert that could be caused by a reciprocal SYN
+
+==DUM==
+===New features===
+* You can now send a sip message body in a InviteSession REFER request
+* NIT requests (REFER, INFO, and MESSAGE) can be queued by the DUM -
+applications no longer need to be responsible for this
+* Improved debug dump methods on various classes
+* Path and outbound support in registrar code
+* Added a function to ServerAuthManager allowing subclasses to specify whether bad nonces should get a 403 or a 401
+
+===Bug fixes===
+* Fixed a condition where a short-term usage request (such as OPTIONS)
+during the setup phase of a UAC dialogset can cause to be prematurely
+destroyed
+* Fix in DialogSet state transition - for UAC dialogsets responses to
+requests that are not the original request could cause the dialogset
+state to change incorrectly.  2 examples that are now fixed:
+** Forked Call - before call is answered a BYE is sent to one leg of
+the call - the 200 to the BYE caused the dialogset to transition to
+Established incorrectly
+** PRACK - the 200 response to a PRACK request caused the DialogSet
+state to incorrectly transition to Established
+* Fixed systematic memory leaks in DUM caused by responses having different dialog identifiers than the requests (required a new feature in the stack)
+* Fixed a memory leak associated with invite sessions where multiple INVITE transactions are carried out rapidly
+* Fixed bugs where calling end() in a callback from ClientInviteSession or InviteSession could result in incorrect behavior
+* Fixed a memory leak in ServerAuthManager caused by sending a challenge or rejecting a request after doing an async auth lookup
+* Fixed a bug where the server publication code was generating garbage etags
+
+==repro==
+===New features===
+* added outbound support
+* added configuration for specifying whether bad nonces should cause a 403 or a 401
+
+===Bug fixes===
+* fail gracefully if a certificate that doesn't exist is requested by
+repro cert server
+* fix for repro crash when updating or erasing routes
+
+==DTLS wrapper==
+===New feature===
+* the dtls wrapper is new code that is seperate from the resiprocate
+stack, and provides wrapper logic for integrating DTLS/SRTP
+functionality into media stacks
+
+==reTurn==
+===New feature===
+* reTurn is a Stun/Turn server and client library implementation of
+the (almost) latest Stun/Turn drafts:  RFC3489bis13, and
+draft-ietf-behave-turn-05
+** for more information please see README.txt in the reTurn directory
+
+
 = Release Notes v 1.2 =
 
 ==Build System==
