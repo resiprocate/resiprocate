@@ -36,13 +36,7 @@ ordering on encode
 retrieve the session level attributes if the attribute was not found
 at the media level
 * Added missing Max-Forwards to cancel requests (and failure ACKs) - Helper.cxx
-* Fixed OS 10.5 sockets compatibility issues
-* Fixed bug where SdpContents::findFirstMatchingCodec() would sometimes not work correctly
-* Fixed a double free bug in SipMessage::releaseContents()
-* Fixed a CPU spin issue in client TLS connection establishment
-* Fixed a bug where a display-name starting with '*' would cause a name-addr to be parsed as an "all-contacts" name-addr
 * Fixed bugs where the transport param on Contact headers could be incorrect if DNS failover occurred
-* Fixed a bug in Uri::getAor() that would fail to include brackets around an IPV6 address
 * Fixed a case where openssl would operate on a socket that was not yet connected
 * Fixed a bug where copies of MultipartMixedContents could sometimes end up having two copies of each part from the original
 * Fixed a turn-related memory leak
@@ -73,8 +67,6 @@ Established incorrectly
 ** PRACK - the 200 response to a PRACK request caused the DialogSet
 state to incorrectly transition to Established
 * Fixed systematic memory leaks in DUM caused by responses having different dialog identifiers than the requests (required a new feature in the stack)
-* Fixed a memory leak associated with invite sessions where multiple INVITE transactions are carried out rapidly
-* Fixed bugs where calling end() in a callback from ClientInviteSession or InviteSession could result in incorrect behavior
 * Fixed a memory leak in ServerAuthManager caused by sending a challenge or rejecting a request after doing an async auth lookup
 * Fixed a bug where the server publication code was generating garbage etags
 
@@ -101,6 +93,44 @@ the (almost) latest Stun/Turn drafts:  RFC3489bis13, and
 draft-ietf-behave-turn-05
 ** for more information please see README.txt in the reTurn directory
 
+
+= Release Notes v 1.2.3 =
+
+==rutil==
+===Bug Fixes===
+* Fixed a memory-corruption bug caused by alignment issues within a memset call (in ares)
+
+= Release Notes v 1.2.2 =
+
+==Build System==
+===Bug fixes===
+* Fixed a few build errors/warnings
+* Disable cppunit doxygen build (in tfm)
+
+==rutil==
+===Bug fixes===
+* Fixed a bug in Timer under CE
+* fixed a bug in DnsUtil::getInterfaces() that occurs on 64Bit architectures, where no interface other than the local loopback is found, and therefore none is returned
+
+==stack==
+===Bug fixes===
+* Fixed a sockets incompatibility with OS 10.5 (Leopard)
+* Fixed bug where name-addr would be parsed as an "all-contacts" if the display name began with a '*' (ie, Contact: *bOb* <sip:bob@192.168.0.12:9645>)
+* fix Uri:::getAor() for IPV6 hostnames
+* fix for SdpContents::findFirstMatchingCodec - to ensure codec list is built before accessing
+* fix a double-free bug in SipMessage::releaseContents()
+* fix for a TLS client connection spin issue, when connection to endpoint can't be established
+
+==DUM==
+===Bug fixes===
+* handle cases where there is a missing Expires header in the 200 to a SUB
+* added missing copy of mTransactionId in copy constructor of DumTimeout
+* correctly handle some cases where application may call end() from a callback (in InviteSession)
+* fixed a bug where ACK/200 was not being retransmitted correctly
+
+==repro==
+===Bug fixes===
+* thread safety fixes to BerkeleyDb
 
 = Release Notes v 1.2 =
 
