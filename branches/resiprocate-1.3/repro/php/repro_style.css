@@ -1,0 +1,7 @@
+h1.title { text-align:center; background-color: rgb(192,0,192) }
+
+p.error { color:rgb(255,0,0); border-style:solid; padding:2px }
+
+input.readonly { background-color: rgb(192,192,192) }
+
+th.header { background-color: rgb(128,128,128) }
