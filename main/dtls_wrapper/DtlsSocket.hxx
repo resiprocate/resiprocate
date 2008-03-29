@@ -87,7 +87,7 @@ class DtlsSocket
       SrtpSessionKeys getSrtpSessionKeys();
 
       // Utility fn to compute a certificates fingerprint
-      static void DtlsSocket::computeFingerprint(X509 *cert, char *fingerprint);
+      static void computeFingerprint(X509 *cert, char *fingerprint);
      
       // Retrieves the DTLS negotiated SRTP profile - may return 0 if profile selection failed
       SRTP_PROTECTION_PROFILE* getSrtpProfile();      
