@@ -178,7 +178,11 @@ Security::Security(const CipherList& cipherSuite) : BaseSecurity(cipherSuite)
 #ifdef WIN32
    mPath = "C:\\sipCerts\\";
 #else
-   mPath = getenv("HOME");
+   const char* env=getenv("HOME");
+   if(env)
+   {
+      mPath = env;
+   }
    mPath += "/.sipCerts/";
 #endif
 }
