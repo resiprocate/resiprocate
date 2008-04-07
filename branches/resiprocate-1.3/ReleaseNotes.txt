@@ -44,6 +44,7 @@ at the media level
 * Fixed an assert that could be triggered if the TU put a port in the topmost Via
 * Fixed DNS greylisting for INVITE transaction timeouts
 * Fixed an assert that could be caused by a reciprocal SYN
+* Fixed a core in Security c'tor on *nix systems when HOME is not set
 
 ==DUM==
 ===New features===
