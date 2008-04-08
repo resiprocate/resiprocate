@@ -108,32 +108,6 @@
  * Hudson (tjh@cryptsoft.com).
  *
  */
-/* ====================================================================
- * Copyright 2005 Nokia. All rights reserved.
- *
- * The portions of the attached software ("Contribution") is developed by
- * Nokia Corporation and is licensed pursuant to the OpenSSL open source
- * license.
- *
- * The Contribution, originally written by Mika Kousa and Pasi Eronen of
- * Nokia Corporation, consists of the "PSK" (Pre-Shared Key) ciphersuites
- * support (see RFC 4279) to OpenSSL.
- *
- * No patent licenses or other rights except those expressly stated in
- * the OpenSSL open source license shall be deemed granted or received
- * expressly, by implication, estoppel, or otherwise.
- *
- * No assurances are provided by Nokia that the Contribution does not
- * infringe the patent or other intellectual property rights of any third
- * party or that the license provides you with all the necessary rights
- * to make use of the Contribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. IN
- * ADDITION TO THE DISCLAIMERS INCLUDED IN THE LICENSE, NOKIA
- * SPECIFICALLY DISCLAIMS ANY LIABILITY FOR CLAIMS BROUGHT BY YOU OR ANY
- * OTHER ENTITY BASED ON INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS OR
- * OTHERWISE.
- */
 
 #include <stdio.h>
 #include "ssl_locl.h"
@@ -293,6 +267,9 @@ int tls1_change_cipher_state(SSL *s, int which)
 			reuse_dd = 1;
 		else if ((s->enc_read_ctx=OPENSSL_malloc(sizeof(EVP_CIPHER_CTX))) == NULL)
 			goto err;
+		else
+			/* make sure it's intialized in case we exit later with an error */
+			EVP_CIPHER_CTX_init(s->enc_read_ctx);
 		dd= s->enc_read_ctx;
 		s->read_hash=m;
 #ifndef OPENSSL_NO_COMP
@@ -327,10 +304,9 @@ int tls1_change_cipher_state(SSL *s, int which)
 			reuse_dd = 1;
 		else if ((s->enc_write_ctx=OPENSSL_malloc(sizeof(EVP_CIPHER_CTX))) == NULL)
 			goto err;
-		if ((s->enc_write_ctx == NULL) &&
-			((s->enc_write_ctx=(EVP_CIPHER_CTX *)
-			OPENSSL_malloc(sizeof(EVP_CIPHER_CTX))) == NULL))
-			goto err;
+		else
+			/* make sure it's intialized in case we exit later with an error */
+			EVP_CIPHER_CTX_init(s->enc_write_ctx);
 		dd= s->enc_write_ctx;
 		s->write_hash=m;
 #ifndef OPENSSL_NO_COMP
@@ -357,7 +333,6 @@ int tls1_change_cipher_state(SSL *s, int which)
 
 	if (reuse_dd)
 		EVP_CIPHER_CTX_cleanup(dd);
-	EVP_CIPHER_CTX_init(dd);
 
 	p=s->s3->tmp.key_block;
 	i=EVP_MD_size(m);
@@ -474,10 +449,6 @@ int tls1_setup_key_block(SSL *s)
 	const EVP_MD *hash;
 	int num;
 	SSL_COMP *comp;
-#ifndef OPENSSL_NO_SRTP
-        int srtp_bytes=0;
-        int non_srtp_num;
-#endif        
 
 #ifdef KSSL_DEBUG
 	printf ("tls1_setup_key_block()\n");
@@ -500,28 +471,15 @@ int tls1_setup_key_block(SSL *s)
 
 	ssl3_cleanup_key_block(s);
 
-#ifndef OPENSSL_NO_SRTP
-        non_srtp_num=num;
-
-        if(s->srtp_profile)
-            {
-            srtp_bytes=2*((s->srtp_profile->master_key_bits+s->srtp_profile->salt_bits)/8);
-            }
-
-        num+=srtp_bytes;
-#endif
-        
 	if ((p1=(unsigned char *)OPENSSL_malloc(num)) == NULL)
 		goto err;
 	if ((p2=(unsigned char *)OPENSSL_malloc(num)) == NULL)
 		goto err;
-#ifndef OPENSSL_NO_SRTP
+
 	s->s3->tmp.key_block_length=num;
-#else
-	s->s3->tmp.key_block_length=non_srtp_num;
-#endif
 	s->s3->tmp.key_block=p1;
-            
+
+
 #ifdef TLS_DEBUG
 printf("client random\n");
 { int z; for (z=0; z<SSL3_RANDOM_SIZE; z++) printf("%02X%c",s->s3->client_random[z],((z+1)%16)?' ':'\n'); }
@@ -533,27 +491,6 @@ printf("pre-master\n");
 	tls1_generate_key_block(s,p1,p2,num);
 	OPENSSL_cleanse(p2,num);
 	OPENSSL_free(p2);
-#ifndef OPENSSL_NO_SRTP
-        if(srtp_bytes)
-            {
-            if(s->srtp_key_block)
-                {
-                OPENSSL_cleanse(s->srtp_key_block,s->srtp_key_block_length);
-                OPENSSL_free(s->srtp_key_block);
-                s->srtp_key_block=0;
-                }
-            if(!(s->srtp_key_block=OPENSSL_malloc(srtp_bytes)))
-                goto err;
-            memcpy(s->srtp_key_block,p1+non_srtp_num,srtp_bytes);
-            s->srtp_key_block_length=srtp_bytes;
-            
-            
-            OPENSSL_cleanse(p1+non_srtp_num,srtp_bytes);
-
-            num=non_srtp_num;
-            }
-
-#endif
 #ifdef TLS_DEBUG
 printf("\nkey block\n");
 { int z; for (z=0; z<num; z++) printf("%02X%c",p1[z],((z+1)%16)?' ':'\n'); }
@@ -801,15 +738,35 @@ int tls1_mac(SSL *ssl, unsigned char *md, int send)
 	md_size=EVP_MD_size(hash);
 
 	buf[0]=rec->type;
-	buf[1]=TLS1_VERSION_MAJOR;
-	buf[2]=TLS1_VERSION_MINOR;
+	if (ssl->version == DTLS1_VERSION && ssl->client_version == DTLS1_BAD_VER)
+		{
+		buf[1]=TLS1_VERSION_MAJOR;
+		buf[2]=TLS1_VERSION_MINOR;
+		}
+	else	{
+		buf[1]=(unsigned char)(ssl->version>>8);
+		buf[2]=(unsigned char)(ssl->version);
+		}
+
 	buf[3]=rec->length>>8;
 	buf[4]=rec->length&0xff;
 
 	/* I should fix this up TLS TLS TLS TLS TLS XXXXXXXX */
 	HMAC_CTX_init(&hmac);
 	HMAC_Init_ex(&hmac,mac_sec,EVP_MD_size(hash),hash,NULL);
-	HMAC_Update(&hmac,seq,8);
+
+	if (ssl->version == DTLS1_VERSION && ssl->client_version != DTLS1_BAD_VER)
+		{
+		unsigned char dtlsseq[8],*p=dtlsseq;
+
+		s2n(send?ssl->d1->w_epoch:ssl->d1->r_epoch, p);
+		memcpy (p,&seq[2],6);
+
+		HMAC_Update(&hmac,dtlsseq,8);
+		}
+	else
+		HMAC_Update(&hmac,seq,8);
+
 	HMAC_Update(&hmac,buf,5);
 	HMAC_Update(&hmac,rec->input,rec->length);
 	HMAC_Final(&hmac,md,&md_size);
@@ -826,8 +783,8 @@ printf("rec=");
 {unsigned int z; for (z=0; z<rec->length; z++) printf("%02X ",buf[z]); printf("\n"); }
 #endif
 
-    if ( SSL_version(ssl) != DTLS1_VERSION)
-	    {
+	if ( SSL_version(ssl) != DTLS1_VERSION)
+		{
 		for (i=7; i>=0; i--)
 			{
 			++seq[i];
@@ -895,16 +852,8 @@ int tls1_alert_code(int code)
 	case SSL_AD_INTERNAL_ERROR:	return(TLS1_AD_INTERNAL_ERROR);
 	case SSL_AD_USER_CANCELLED:	return(TLS1_AD_USER_CANCELLED);
 	case SSL_AD_NO_RENEGOTIATION:	return(TLS1_AD_NO_RENEGOTIATION);
-	case SSL_AD_UNSUPPORTED_EXTENSION: return(TLS1_AD_UNSUPPORTED_EXTENSION);
-	case SSL_AD_CERTIFICATE_UNOBTAINABLE: return(TLS1_AD_CERTIFICATE_UNOBTAINABLE);
-	case SSL_AD_UNRECOGNIZED_NAME:	return(TLS1_AD_UNRECOGNIZED_NAME);
-	case SSL_AD_BAD_CERTIFICATE_STATUS_RESPONSE: return(TLS1_AD_BAD_CERTIFICATE_STATUS_RESPONSE);
-	case SSL_AD_BAD_CERTIFICATE_HASH_VALUE: return(TLS1_AD_BAD_CERTIFICATE_HASH_VALUE);
-	case SSL_AD_UNKNOWN_PSK_IDENTITY:return(TLS1_AD_UNKNOWN_PSK_IDENTITY);
-#if 0 /* not appropriate for TLS, not used for DTLS */
 	case DTLS1_AD_MISSING_HANDSHAKE_MESSAGE: return 
 					  (DTLS1_AD_MISSING_HANDSHAKE_MESSAGE);
-#endif
 	default:			return(-1);
 		}
 	}

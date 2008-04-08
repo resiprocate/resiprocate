@@ -65,7 +65,7 @@
 	bl = ctx->cipher->block_size;\
 	if(inl < bl) return 1;\
 	inl -= bl; \
-	for(i=0; i <= inl; i+=bl) \
+	for(i=0; i <= inl; i+=bl) 
 
 #define BLOCK_CIPHER_func_ecb(cname, cprefix, kstruct, ksched) \
 static int cname##_ecb_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, unsigned int inl) \
@@ -92,7 +92,7 @@ static int cname##_cbc_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const uns
 #define BLOCK_CIPHER_func_cfb(cname, cprefix, cbits, kstruct, ksched) \
 static int cname##_cfb##cbits##_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, unsigned int inl) \
 {\
-	cprefix##_cfb##cbits##_encrypt(in, out, (long)inl, &((kstruct *)ctx->cipher_data)->ksched, ctx->iv, &ctx->num, ctx->encrypt);\
+	cprefix##_cfb##cbits##_encrypt(in, out, (long)(cbits==1?inl*8:inl), &((kstruct *)ctx->cipher_data)->ksched, ctx->iv, &ctx->num, ctx->encrypt);\
 	return 1;\
 }
 
@@ -234,80 +234,3 @@ const EVP_CIPHER *EVP_##cname##_ecb(void) { return &cname##_ecb; }
 			     EVP_CIPHER_set_asn1_iv, \
 			     EVP_CIPHER_get_asn1_iv, \
 			     NULL)
-
-struct evp_pkey_ctx_st
-	{
-	/* Method associated with this operation */
-	const EVP_PKEY_METHOD *pmeth;
-	/* Key: may be NULL */
-	EVP_PKEY *pkey;
-	/* Peer key for key agreement, may be NULL */
-	EVP_PKEY *peerkey;
-	/* Actual operation */
-	int operation;
-	/* Algorithm specific data */
-	void *data;
-	/* Application specific data */
-	void *app_data;
-	/* Keygen callback */
-	EVP_PKEY_gen_cb *pkey_gencb;
-	/* implementation specific keygen data */
-	int *keygen_info;
-	int keygen_info_count;
-	} /* EVP_PKEY_CTX */;
-
-#define EVP_PKEY_FLAG_DYNAMIC	1
-
-struct evp_pkey_method_st
-	{
-	int pkey_id;
-	int flags;
-
-	int (*init)(EVP_PKEY_CTX *ctx);
-	void (*cleanup)(EVP_PKEY_CTX *ctx);
-
-	int (*paramgen_init)(EVP_PKEY_CTX *ctx);
-	int (*paramgen)(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey);
-
-	int (*keygen_init)(EVP_PKEY_CTX *ctx);
-	int (*keygen)(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey);
-
-	int (*sign_init)(EVP_PKEY_CTX *ctx);
-	int (*sign)(EVP_PKEY_CTX *ctx, unsigned char *sig, int *siglen,
-					const unsigned char *tbs, int tbslen);
-
-	int (*verify_init)(EVP_PKEY_CTX *ctx);
-	int (*verify)(EVP_PKEY_CTX *ctx, const unsigned char *sig, int siglen,
-					const unsigned char *tbs, int tbslen);
-
-	int (*verify_recover_init)(EVP_PKEY_CTX *ctx);
-	int (*verify_recover)(EVP_PKEY_CTX *ctx,
-					unsigned char *rout, int *routlen,
-					const unsigned char *sig, int siglen);
-
-	int (*signctx_init)(EVP_PKEY_CTX *ctx, EVP_MD_CTX *mctx);
-	int (*signctx)(EVP_PKEY_CTX *ctx, unsigned char *sig, int *siglen,
-					EVP_MD_CTX *mctx);
-
-	int (*verifyctx_init)(EVP_PKEY_CTX *ctx, EVP_MD_CTX *mctx);
-	int (*verifyctx)(EVP_PKEY_CTX *ctx, const unsigned char *sig,int siglen,
-					EVP_MD_CTX *mctx);
-
-	int (*encrypt_init)(EVP_PKEY_CTX *ctx);
-	int (*encrypt)(EVP_PKEY_CTX *ctx, unsigned char *out, int *outlen,
-					const unsigned char *in, int inlen);
-
-	int (*decrypt_init)(EVP_PKEY_CTX *ctx);
-	int (*decrypt)(EVP_PKEY_CTX *ctx, unsigned char *out, int *outlen,
-					const unsigned char *in, int inlen);
-
-	int (*derive_init)(EVP_PKEY_CTX *ctx);
-	int (*derive)(EVP_PKEY_CTX *ctx, unsigned char *key, int *keylen);
-
-	int (*ctrl)(EVP_PKEY_CTX *ctx, int type, int p1, void *p2);
-	int (*ctrl_str)(EVP_PKEY_CTX *ctx, const char *type, const char *value);
-
-
-	} /* EVP_PKEY_METHOD */;
-
-void evp_pkey_set_cb_translate(BN_GENCB *cb, EVP_PKEY_CTX *ctx);

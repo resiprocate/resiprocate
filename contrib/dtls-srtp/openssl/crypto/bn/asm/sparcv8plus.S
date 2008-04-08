@@ -144,19 +144,6 @@
  *	    }
  */
 
-#if defined(__SUNPRO_C) && defined(__sparcv9)
-  /* They've said -xarch=v9 at command line */
-  .register	%g2,#scratch
-  .register	%g3,#scratch
-# define	FRAME_SIZE	-192
-#elif defined(__GNUC__) && defined(__arch64__)
-  /* They've said -m64 at command line */
-  .register	%g2,#scratch
-  .register	%g3,#scratch
-# define	FRAME_SIZE	-192
-#else 
-# define	FRAME_SIZE	-96
-#endif 
 /*
  * GNU assembler can't stand stuw:-(
  */
@@ -631,6 +618,8 @@ bn_sub_words:
  *
  *							Andy.
  */
+
+#define FRAME_SIZE	-96
 
 /*
  * Here is register usage map for *all* routines below.

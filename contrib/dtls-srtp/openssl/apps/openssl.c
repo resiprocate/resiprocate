@@ -56,7 +56,7 @@
  * [including the GNU Public Licence.]
  */
 /* ====================================================================
- * Copyright (c) 1998-2001 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 1998-2006 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -141,7 +141,6 @@ static unsigned long MS_CALLBACK hash(const void *a_void);
 static int MS_CALLBACK cmp(const void *a_void,const void *b_void);
 static LHASH *prog_init(void );
 static int do_cmd(LHASH *prog,int argc,char *argv[]);
-static void list_pkey(BIO *out);
 char *default_config_file=NULL;
 
 /* Make sure there is only one when MONOLITH is defined */
@@ -368,7 +367,6 @@ end:
 #define LIST_STANDARD_COMMANDS "list-standard-commands"
 #define LIST_MESSAGE_DIGEST_COMMANDS "list-message-digest-commands"
 #define LIST_CIPHER_COMMANDS "list-cipher-commands"
-#define LIST_PUBLIC_KEY_ALGORITHMS "list-public-key-algorithms"
 
 static int do_cmd(LHASH *prog, int argc, char *argv[])
 	{
@@ -411,8 +409,7 @@ static int do_cmd(LHASH *prog, int argc, char *argv[])
 		}
 	else if ((strcmp(argv[0],LIST_STANDARD_COMMANDS) == 0) ||
 		(strcmp(argv[0],LIST_MESSAGE_DIGEST_COMMANDS) == 0) ||
-		(strcmp(argv[0],LIST_CIPHER_COMMANDS) == 0) ||
-		(strcmp(argv[0],LIST_PUBLIC_KEY_ALGORITHMS) == 0))
+		(strcmp(argv[0],LIST_CIPHER_COMMANDS) == 0))
 		{
 		int list_type;
 		BIO *bio_stdout;
@@ -421,8 +418,6 @@ static int do_cmd(LHASH *prog, int argc, char *argv[])
 			list_type = FUNC_TYPE_GENERAL;
 		else if (strcmp(argv[0],LIST_MESSAGE_DIGEST_COMMANDS) == 0)
 			list_type = FUNC_TYPE_MD;
-		else if (strcmp(argv[0],LIST_PUBLIC_KEY_ALGORITHMS) == 0)
-			list_type = FUNC_TYPE_PKEY;
 		else /* strcmp(argv[0],LIST_CIPHER_COMMANDS) == 0 */
 			list_type = FUNC_TYPE_CIPHER;
 		bio_stdout = BIO_new_fp(stdout,BIO_NOCLOSE);
@@ -432,19 +427,10 @@ static int do_cmd(LHASH *prog, int argc, char *argv[])
 		bio_stdout = BIO_push(tmpbio, bio_stdout);
 		}
 #endif
-
-		if (!load_config(bio_err, NULL))
-			goto end;
-
-		if (list_type == FUNC_TYPE_PKEY)
-			list_pkey(bio_stdout);	
-		else
-			{
-			for (fp=functions; fp->name != NULL; fp++)
-				if (fp->type == list_type)
-					BIO_printf(bio_stdout, "%s\n",
-								fp->name);
-			}
+		
+		for (fp=functions; fp->name != NULL; fp++)
+			if (fp->type == list_type)
+				BIO_printf(bio_stdout, "%s\n", fp->name);
 		BIO_free_all(bio_stdout);
 		ret=0;
 		goto end;
@@ -459,7 +445,11 @@ static int do_cmd(LHASH *prog, int argc, char *argv[])
 		for (fp=functions; fp->name != NULL; fp++)
 			{
 			nl=0;
+#ifdef OPENSSL_NO_CAMELLIA
 			if (((i++) % 5) == 0)
+#else
+			if (((i++) % 4) == 0)
+#endif
 				{
 				BIO_printf(bio_err,"\n");
 				nl=1;
@@ -480,7 +470,11 @@ static int do_cmd(LHASH *prog, int argc, char *argv[])
 					BIO_printf(bio_err,"\nCipher commands (see the `enc' command for more details)\n");
 					}
 				}
+#ifdef OPENSSL_NO_CAMELLIA
 			BIO_printf(bio_err,"%-15s",fp->name);
+#else
+			BIO_printf(bio_err,"%-18s",fp->name);
+#endif
 			}
 		BIO_printf(bio_err,"\n\n");
 		ret=0;
@@ -498,39 +492,6 @@ static int SortFnByName(const void *_f1,const void *_f2)
 	return f1->type-f2->type;
     return strcmp(f1->name,f2->name);
     }
-
-static void list_pkey(BIO *out)
-	{
-	int i;
-	for (i = 0; i < EVP_PKEY_asn1_get_count(); i++)
-		{
-		const EVP_PKEY_ASN1_METHOD *ameth;
-		int pkey_id, pkey_base_id, pkey_flags;
-		const char *pinfo, *pem_str;
-		ameth = EVP_PKEY_asn1_get0(i);
-		EVP_PKEY_asn1_get0_info(&pkey_id, &pkey_base_id, &pkey_flags,
-						&pinfo, &pem_str, ameth);
-		if (pkey_flags & ASN1_PKEY_ALIAS)
-			{
-			BIO_printf(out, "Name: %s\n", 
-					OBJ_nid2ln(pkey_id));
-			BIO_printf(out, "\tType: Alias to %s\n",
-					OBJ_nid2ln(pkey_base_id));
-			}
-		else
-			{
-			BIO_printf(out, "Name: %s\n", pinfo);
-			BIO_printf(out, "\tType: %s Algorithm\n", 
-				pkey_flags & ASN1_PKEY_DYNAMIC ?
-					"External" : "Builtin");
-			BIO_printf(out, "\tOID: %s\n", OBJ_nid2ln(pkey_id));
-			if (pem_str == NULL)
-				pem_str = "(none)";
-			BIO_printf(out, "\tPEM string: %s\n", pem_str);
-			}
-					
-		}
-	}
 
 static LHASH *prog_init(void)
 	{

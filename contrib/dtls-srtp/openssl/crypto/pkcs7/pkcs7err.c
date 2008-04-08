@@ -76,29 +76,24 @@ static ERR_STRING_DATA PKCS7_str_functs[]=
 {ERR_FUNC(PKCS7_F_PKCS7_ADD_CERTIFICATE),	"PKCS7_add_certificate"},
 {ERR_FUNC(PKCS7_F_PKCS7_ADD_CRL),	"PKCS7_add_crl"},
 {ERR_FUNC(PKCS7_F_PKCS7_ADD_RECIPIENT_INFO),	"PKCS7_add_recipient_info"},
-{ERR_FUNC(PKCS7_F_PKCS7_ADD_SIGNATURE),	"PKCS7_add_signature"},
 {ERR_FUNC(PKCS7_F_PKCS7_ADD_SIGNER),	"PKCS7_add_signer"},
 {ERR_FUNC(PKCS7_F_PKCS7_BIO_ADD_DIGEST),	"PKCS7_BIO_ADD_DIGEST"},
-{ERR_FUNC(PKCS7_F_PKCS7_CTRL),	"PKCS7_CTRL"},
+{ERR_FUNC(PKCS7_F_PKCS7_CTRL),	"PKCS7_ctrl"},
 {ERR_FUNC(PKCS7_F_PKCS7_DATADECODE),	"PKCS7_dataDecode"},
 {ERR_FUNC(PKCS7_F_PKCS7_DATAFINAL),	"PKCS7_dataFinal"},
 {ERR_FUNC(PKCS7_F_PKCS7_DATAINIT),	"PKCS7_dataInit"},
 {ERR_FUNC(PKCS7_F_PKCS7_DATASIGN),	"PKCS7_DATASIGN"},
 {ERR_FUNC(PKCS7_F_PKCS7_DATAVERIFY),	"PKCS7_dataVerify"},
 {ERR_FUNC(PKCS7_F_PKCS7_DECRYPT),	"PKCS7_decrypt"},
-{ERR_FUNC(PKCS7_F_PKCS7_DECRYPT_RINFO),	"PKCS7_DECRYPT_RINFO"},
-{ERR_FUNC(PKCS7_F_PKCS7_ENCODE_RINFO),	"PKCS7_ENCODE_RINFO"},
 {ERR_FUNC(PKCS7_F_PKCS7_ENCRYPT),	"PKCS7_encrypt"},
 {ERR_FUNC(PKCS7_F_PKCS7_FIND_DIGEST),	"PKCS7_FIND_DIGEST"},
-{ERR_FUNC(PKCS7_F_PKCS7_GET0_SIGNERS),	"PKCS7_GET0_SIGNERS"},
-{ERR_FUNC(PKCS7_F_PKCS7_RECIP_INFO_SET),	"PKCS7_RECIP_INFO_set"},
+{ERR_FUNC(PKCS7_F_PKCS7_GET0_SIGNERS),	"PKCS7_get0_signers"},
 {ERR_FUNC(PKCS7_F_PKCS7_SET_CIPHER),	"PKCS7_set_cipher"},
 {ERR_FUNC(PKCS7_F_PKCS7_SET_CONTENT),	"PKCS7_set_content"},
 {ERR_FUNC(PKCS7_F_PKCS7_SET_DIGEST),	"PKCS7_set_digest"},
 {ERR_FUNC(PKCS7_F_PKCS7_SET_TYPE),	"PKCS7_set_type"},
 {ERR_FUNC(PKCS7_F_PKCS7_SIGN),	"PKCS7_sign"},
 {ERR_FUNC(PKCS7_F_PKCS7_SIGNATUREVERIFY),	"PKCS7_signatureVerify"},
-{ERR_FUNC(PKCS7_F_PKCS7_SIGNER_INFO_SET),	"PKCS7_SIGNER_INFO_set"},
 {ERR_FUNC(PKCS7_F_PKCS7_SIMPLE_SMIMECAP),	"PKCS7_simple_smimecap"},
 {ERR_FUNC(PKCS7_F_PKCS7_VERIFY),	"PKCS7_verify"},
 {ERR_FUNC(PKCS7_F_SMIME_READ_PKCS7),	"SMIME_read_PKCS7"},
@@ -112,13 +107,10 @@ static ERR_STRING_DATA PKCS7_str_reasons[]=
 {ERR_REASON(PKCS7_R_CIPHER_HAS_NO_OBJECT_IDENTIFIER),"cipher has no object identifier"},
 {ERR_REASON(PKCS7_R_CIPHER_NOT_INITIALIZED),"cipher not initialized"},
 {ERR_REASON(PKCS7_R_CONTENT_AND_DATA_PRESENT),"content and data present"},
-{ERR_REASON(PKCS7_R_CTRL_ERROR)          ,"ctrl error"},
 {ERR_REASON(PKCS7_R_DECODE_ERROR)        ,"decode error"},
 {ERR_REASON(PKCS7_R_DECRYPTED_KEY_IS_WRONG_LENGTH),"decrypted key is wrong length"},
 {ERR_REASON(PKCS7_R_DECRYPT_ERROR)       ,"decrypt error"},
 {ERR_REASON(PKCS7_R_DIGEST_FAILURE)      ,"digest failure"},
-{ERR_REASON(PKCS7_R_ENCRYPTION_CTRL_FAILURE),"encryption ctrl failure"},
-{ERR_REASON(PKCS7_R_ENCRYPTION_NOT_SUPPORTED_FOR_THIS_KEY_TYPE),"encryption not supported for this key type"},
 {ERR_REASON(PKCS7_R_ERROR_ADDING_RECIPIENT),"error adding recipient"},
 {ERR_REASON(PKCS7_R_ERROR_SETTING_CIPHER),"error setting cipher"},
 {ERR_REASON(PKCS7_R_INVALID_MIME_TYPE)   ,"invalid mime type"},
@@ -129,7 +121,6 @@ static ERR_STRING_DATA PKCS7_str_reasons[]=
 {ERR_REASON(PKCS7_R_MISSING_CERIPEND_INFO),"missing ceripend info"},
 {ERR_REASON(PKCS7_R_NO_CONTENT)          ,"no content"},
 {ERR_REASON(PKCS7_R_NO_CONTENT_TYPE)     ,"no content type"},
-{ERR_REASON(PKCS7_R_NO_DEFAULT_DIGEST)   ,"no default digest"},
 {ERR_REASON(PKCS7_R_NO_MULTIPART_BODY_FAILURE),"no multipart body failure"},
 {ERR_REASON(PKCS7_R_NO_MULTIPART_BOUNDARY),"no multipart boundary"},
 {ERR_REASON(PKCS7_R_NO_RECIPIENT_MATCHES_CERTIFICATE),"no recipient matches certificate"},
@@ -147,8 +138,6 @@ static ERR_STRING_DATA PKCS7_str_reasons[]=
 {ERR_REASON(PKCS7_R_PRIVATE_KEY_DOES_NOT_MATCH_CERTIFICATE),"private key does not match certificate"},
 {ERR_REASON(PKCS7_R_SIGNATURE_FAILURE)   ,"signature failure"},
 {ERR_REASON(PKCS7_R_SIGNER_CERTIFICATE_NOT_FOUND),"signer certificate not found"},
-{ERR_REASON(PKCS7_R_SIGNING_CTRL_FAILURE),"signing ctrl failure"},
-{ERR_REASON(PKCS7_R_SIGNING_NOT_SUPPORTED_FOR_THIS_KEY_TYPE),"signing not supported for this key type"},
 {ERR_REASON(PKCS7_R_SIG_INVALID_MIME_TYPE),"sig invalid mime type"},
 {ERR_REASON(PKCS7_R_SMIME_TEXT_ERROR)    ,"smime text error"},
 {ERR_REASON(PKCS7_R_UNABLE_TO_FIND_CERTIFICATE),"unable to find certificate"},
@@ -167,15 +156,12 @@ static ERR_STRING_DATA PKCS7_str_reasons[]=
 
 void ERR_load_PKCS7_strings(void)
 	{
-	static int init=1;
-
-	if (init)
-		{
-		init=0;
 #ifndef OPENSSL_NO_ERR
+
+	if (ERR_func_error_string(PKCS7_str_functs[0].error) == NULL)
+		{
 		ERR_load_strings(0,PKCS7_str_functs);
 		ERR_load_strings(0,PKCS7_str_reasons);
-#endif
-
 		}
+#endif
 	}

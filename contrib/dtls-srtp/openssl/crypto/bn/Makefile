@@ -67,31 +67,21 @@ bn86-elf.s:	asm/bn-586.pl ../perlasm/x86asm.pl
 	(cd asm; $(PERL) bn-586.pl elf $(CFLAGS) > ../$@)
 co86-elf.s:	asm/co-586.pl ../perlasm/x86asm.pl
 	(cd asm; $(PERL) co-586.pl elf $(CFLAGS) > ../$@)
-mo86-elf.s:	asm/x86-mont.pl ../perlasm/x86asm.pl
-	(cd asm; $(PERL) x86-mont.pl elf $(CFLAGS) > ../$@)
 # COFF
 bn86-cof.s: asm/bn-586.pl ../perlasm/x86asm.pl
 	(cd asm; $(PERL) bn-586.pl coff $(CFLAGS) > ../$@)
 co86-cof.s: asm/co-586.pl ../perlasm/x86asm.pl
 	(cd asm; $(PERL) co-586.pl coff $(CFLAGS) > ../$@)
-mo86-cof.s: asm/x86-mont.pl ../perlasm/x86asm.pl
-	(cd asm; $(PERL) x86-mont.pl coff $(CFLAGS) > ../$@)
 # a.out
 bn86-out.s: asm/bn-586.pl ../perlasm/x86asm.pl
 	(cd asm; $(PERL) bn-586.pl a.out $(CFLAGS) > ../$@)
 co86-out.s: asm/co-586.pl ../perlasm/x86asm.pl
 	(cd asm; $(PERL) co-586.pl a.out $(CFLAGS) > ../$@)
-mo86-out.s: asm/x86-mont.pl ../perlasm/x86asm.pl
-	(cd asm; $(PERL) x86-mont.pl a.out $(CFLAGS) > ../$@)
 
 sparcv8.o:	asm/sparcv8.S
 	$(CC) $(CFLAGS) -c asm/sparcv8.S
-bn-sparcv9.o:	asm/sparcv8plus.S
-	$(CC) $(CFLAGS) -c -o $@ asm/sparcv8plus.S
-sparcv9a-mont.s:	asm/sparcv9a-mont.pl
-	$(PERL) asm/sparcv9a-mont.pl $(CFLAGS) > $@
-sparcv9-mont.s:		asm/sparcv9-mont.pl
-	$(PERL) asm/sparcv9-mont.pl $(CFLAGS) > $@
+sparcv8plus.o:	asm/sparcv8plus.S
+	$(CC) $(CFLAGS) -c asm/sparcv8plus.S
 
 bn-mips3.o:	asm/mips3.s
 	@if [ "$(CC)" = "gcc" ]; then \
@@ -101,8 +91,6 @@ bn-mips3.o:	asm/mips3.s
 
 x86_64-gcc.o:	asm/x86_64-gcc.c
 	$(CC) $(CFLAGS) -c -o $@ asm/x86_64-gcc.c
-x86_64-mont.s:	asm/x86_64-mont.pl
-	$(PERL) asm/x86_64-mont.pl $@
 
 bn-ia64.s:	asm/ia64.S
 	$(CC) $(CFLAGS) -E asm/ia64.S > $@
@@ -120,14 +108,6 @@ linux_ppc64.s: asm/ppc.pl;	$(PERL) $< $@
 aix_ppc32.s: asm/ppc.pl;	$(PERL) asm/ppc.pl $@
 aix_ppc64.s: asm/ppc.pl;	$(PERL) asm/ppc.pl $@
 osx_ppc32.s: asm/ppc.pl;	$(PERL) $< $@
-osx_ppc64.s: asm/ppc.pl;	$(PERL) $< $@
-
-linux_ppc32-mont.s: asm/ppc-mont.pl;	$(PERL) $< $@
-linux_ppc64-mont.s: asm/ppc-mont.pl;	$(PERL) $< $@
-aix_ppc32-mont.s: asm/ppc-mont.pl;	$(PERL) asm/ppc-mont.pl $@
-aix_ppc64-mont.s: asm/ppc-mont.pl;	$(PERL) asm/ppc-mont.pl $@
-osx_ppc32-mont.s: asm/ppc-mont.pl;	$(PERL) $< $@
-osx_ppc64-mont.s: asm/ppc-mont.pl;	$(PERL) $< $@
 
 files:
 	$(PERL) $(TOP)/util/files.pl Makefile >> $(TOP)/MINFO

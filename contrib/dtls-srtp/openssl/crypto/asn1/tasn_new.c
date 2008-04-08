@@ -68,7 +68,7 @@ static int asn1_item_ex_combine_new(ASN1_VALUE **pval, const ASN1_ITEM *it,
 								int combine);
 static void asn1_item_clear(ASN1_VALUE **pval, const ASN1_ITEM *it);
 static void asn1_template_clear(ASN1_VALUE **pval, const ASN1_TEMPLATE *tt);
-static void asn1_primitive_clear(ASN1_VALUE **pval, const ASN1_ITEM *it);
+void asn1_primitive_clear(ASN1_VALUE **pval, const ASN1_ITEM *it);
 
 ASN1_VALUE *ASN1_item_new(const ASN1_ITEM *it)
 	{
@@ -146,7 +146,7 @@ static int asn1_item_ex_combine_new(ASN1_VALUE **pval, const ASN1_ITEM *it,
 		case ASN1_ITYPE_CHOICE:
 		if (asn1_cb)
 			{
-			i = asn1_cb(ASN1_OP_NEW_PRE, pval, it, NULL);
+			i = asn1_cb(ASN1_OP_NEW_PRE, pval, it);
 			if (!i)
 				goto auxerr;
 			if (i==2)
@@ -166,7 +166,7 @@ static int asn1_item_ex_combine_new(ASN1_VALUE **pval, const ASN1_ITEM *it,
 			memset(*pval, 0, it->size);
 			}
 		asn1_set_choice_selector(pval, -1, it);
-		if (asn1_cb && !asn1_cb(ASN1_OP_NEW_POST, pval, it, NULL))
+		if (asn1_cb && !asn1_cb(ASN1_OP_NEW_POST, pval, it))
 				goto auxerr;
 		break;
 
@@ -174,7 +174,7 @@ static int asn1_item_ex_combine_new(ASN1_VALUE **pval, const ASN1_ITEM *it,
 		case ASN1_ITYPE_SEQUENCE:
 		if (asn1_cb)
 			{
-			i = asn1_cb(ASN1_OP_NEW_PRE, pval, it, NULL);
+			i = asn1_cb(ASN1_OP_NEW_PRE, pval, it);
 			if (!i)
 				goto auxerr;
 			if (i==2)
@@ -201,7 +201,7 @@ static int asn1_item_ex_combine_new(ASN1_VALUE **pval, const ASN1_ITEM *it,
 			if (!ASN1_template_new(pseqval, tt))
 				goto memerr;
 			}
-		if (asn1_cb && !asn1_cb(ASN1_OP_NEW_POST, pval, it, NULL))
+		if (asn1_cb && !asn1_cb(ASN1_OP_NEW_POST, pval, it))
 				goto auxerr;
 		break;
 	}
@@ -345,7 +345,10 @@ int ASN1_primitive_new(ASN1_VALUE **pval, const ASN1_ITEM *it)
 		return 1;
 
 		case V_ASN1_BOOLEAN:
-		*(ASN1_BOOLEAN *)pval = it->size;
+		if (it)
+			*(ASN1_BOOLEAN *)pval = it->size;
+		else
+			*(ASN1_BOOLEAN *)pval = -1;
 		return 1;
 
 		case V_ASN1_NULL:
@@ -370,7 +373,7 @@ int ASN1_primitive_new(ASN1_VALUE **pval, const ASN1_ITEM *it)
 	return 0;
 	}
 
-static void asn1_primitive_clear(ASN1_VALUE **pval, const ASN1_ITEM *it)
+void asn1_primitive_clear(ASN1_VALUE **pval, const ASN1_ITEM *it)
 	{
 	int utype;
 	if (it && it->funcs)

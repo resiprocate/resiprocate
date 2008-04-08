@@ -71,7 +71,6 @@ static int purpose_smime(const X509 *x, int ca);
 static int check_purpose_smime_sign(const X509_PURPOSE *xp, const X509 *x, int ca);
 static int check_purpose_smime_encrypt(const X509_PURPOSE *xp, const X509 *x, int ca);
 static int check_purpose_crl_sign(const X509_PURPOSE *xp, const X509 *x, int ca);
-static int check_purpose_timestamp_sign(const X509_PURPOSE *xp, const X509 *x, int ca);
 static int no_check(const X509_PURPOSE *xp, const X509 *x, int ca);
 static int ocsp_helper(const X509_PURPOSE *xp, const X509 *x, int ca);
 
@@ -88,7 +87,6 @@ static X509_PURPOSE xstandard[] = {
 	{X509_PURPOSE_CRL_SIGN, X509_TRUST_COMPAT, 0, check_purpose_crl_sign, "CRL signing", "crlsign", NULL},
 	{X509_PURPOSE_ANY, X509_TRUST_DEFAULT, 0, no_check, "Any Purpose", "any", NULL},
 	{X509_PURPOSE_OCSP_HELPER, X509_TRUST_COMPAT, 0, ocsp_helper, "OCSP helper", "ocsphelper", NULL},
-	{X509_PURPOSE_TIMESTAMP_SIGN, X509_TRUST_TSA, 0, check_purpose_timestamp_sign, "Time Stamp signing", "timestampsign", NULL},
 };
 
 #define X509_PURPOSE_COUNT (sizeof(xstandard)/sizeof(X509_PURPOSE))
@@ -287,7 +285,12 @@ int X509_supported_extension(X509_EXTENSION *ex)
         	NID_key_usage,		/* 83 */
 		NID_subject_alt_name,	/* 85 */
 		NID_basic_constraints,	/* 87 */
+		NID_certificate_policies, /* 89 */
         	NID_ext_key_usage,	/* 126 */
+#ifndef OPENSSL_NO_RFC3779
+		NID_sbgp_ipAddrBlock,	/* 290 */
+		NID_sbgp_autonomousSysNum, /* 291 */
+#endif
 		NID_proxyCertInfo	/* 661 */
 	};
 
@@ -412,6 +415,11 @@ static void x509v3_cache_extensions(X509 *x)
 	}
 	x->skid =X509_get_ext_d2i(x, NID_subject_key_identifier, NULL, NULL);
 	x->akid =X509_get_ext_d2i(x, NID_authority_key_identifier, NULL, NULL);
+#ifndef OPENSSL_NO_RFC3779
+	x->rfc3779_addr =X509_get_ext_d2i(x, NID_sbgp_ipAddrBlock, NULL, NULL);
+	x->rfc3779_asid =X509_get_ext_d2i(x, NID_sbgp_autonomousSysNum,
+					  NULL, NULL);
+#endif
 	for (i = 0; i < X509_get_ext_count(x); i++)
 		{
 		ex = X509_get_ext(x, i);
@@ -581,41 +589,6 @@ static int ocsp_helper(const X509_PURPOSE *xp, const X509 *x, int ca)
 	   value (2)? */
 	if(ca) return check_ca(x);
 	/* leaf certificate is checked in OCSP_verify() */
-	return 1;
-}
-
-static int check_purpose_timestamp_sign(const X509_PURPOSE *xp, const X509 *x,
-					int ca)
-{
-	int i_ext;
-
-	/* If ca is true we must return if this is a valid CA certificate. */
-	if (ca) return check_ca(x);
-
-	/* 
-	 * Check the optional key usage field:
-	 * if Key Usage is present, it must be one of digitalSignature 
-	 * and/or nonRepudiation (other values are not consistent and shall
-	 * be rejected).
-	 */
-	if ((x->ex_flags & EXFLAG_KUSAGE)
-	    && ((x->ex_kusage & ~(KU_NON_REPUDIATION | KU_DIGITAL_SIGNATURE)) ||
-		!(x->ex_kusage & (KU_NON_REPUDIATION | KU_DIGITAL_SIGNATURE))))
-		return 0;
-
-	/* Only time stamp key usage is permitted and it's required. */
-	if (!(x->ex_flags & EXFLAG_XKUSAGE) || x->ex_xkusage != XKU_TIMESTAMP)
-		return 0;
-
-	/* Extended Key Usage MUST be critical */
-	i_ext = X509_get_ext_by_NID((X509 *) x, NID_ext_key_usage, 0);
-	if (i_ext >= 0)
-		{
-		X509_EXTENSION *ext = X509_get_ext((X509 *) x, i_ext);
-		if (!X509_EXTENSION_get_critical(ext))
-			return 0;
-		}
-
 	return 1;
 }
 

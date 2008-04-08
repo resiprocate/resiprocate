@@ -22,7 +22,7 @@ sub fcrypt_body
 	{
 	local($name,$do_ip)=@_;
 
-	&function_begin($name);
+	&function_begin($name,"EXTRN   _DES_SPtrans:DWORD");
 
 	&comment("");
 	&comment("Load the 2 words");

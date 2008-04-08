@@ -56,17 +56,6 @@
  *
  */
 
-/* We need to do this early, because stdio.h includes the header files
-   that handle _GNU_SOURCE and other similar macros.  Defining it later
-   is simply too late, because those headers are protected from re-
-   inclusion.  */
-#ifdef __linux
-# ifndef _GNU_SOURCE
-#  define _GNU_SOURCE	/* make sure dladdr is declared */
-# endif
-# define HAVE_DLINFO 1
-#endif
-
 #include <stdio.h>
 #include "cryptlib.h"
 #include <openssl/dso.h>
@@ -79,7 +68,6 @@ DSO_METHOD *DSO_METHOD_dlfcn(void)
 #else
 
 #ifdef HAVE_DLFCN_H
-
 #include <dlfcn.h>
 #endif
 
@@ -99,8 +87,6 @@ static long dlfcn_ctrl(DSO *dso, int cmd, long larg, void *parg);
 static char *dlfcn_name_converter(DSO *dso, const char *filename);
 static char *dlfcn_merger(DSO *dso, const char *filespec1,
 	const char *filespec2);
-static int dlfcn_pathbyaddr(void *addr,char *path,int sz);
-static void *dlfcn_globallookup(const char *name);
 
 static DSO_METHOD dso_meth_dlfcn = {
 	"OpenSSL 'dlfcn' shared library method",
@@ -117,9 +103,7 @@ static DSO_METHOD dso_meth_dlfcn = {
 	dlfcn_name_converter,
 	dlfcn_merger,
 	NULL, /* init */
-	NULL, /* finish */
-	dlfcn_pathbyaddr,
-	dlfcn_globallookup
+	NULL  /* finish */
 	};
 
 DSO_METHOD *DSO_METHOD_dlfcn(void)
@@ -134,7 +118,6 @@ DSO_METHOD *DSO_METHOD_dlfcn(void)
  * be hacked further relatively easily to deal with cases as we find
  * them. Initially this is to cope with OpenBSD. */
 #if defined(__OpenBSD__) || defined(__NetBSD__)
-#	define HAVE_DLINFO 1
 #	ifdef DL_LAZY
 #		define DLOPEN_FLAG DL_LAZY
 #	else
@@ -146,7 +129,6 @@ DSO_METHOD *DSO_METHOD_dlfcn(void)
 #	endif
 #else
 #	ifdef OPENSSL_SYS_SUNOS
-#		define HAVE_DLINFO 1
 #		define DLOPEN_FLAG 1
 #	else
 #		define DLOPEN_FLAG RTLD_NOW /* Hope this works everywhere else */
@@ -328,7 +310,7 @@ static char *dlfcn_merger(DSO *dso, const char *filespec1,
 		{
 		int spec2len, len;
 
-		spec2len = strlen(filespec2);
+		spec2len = (filespec2 ? strlen(filespec2) : 0);
 		len = spec2len + (filespec1 ? strlen(filespec1) : 0);
 
 		if(filespec2 && filespec2[spec2len - 1] == '/')
@@ -384,84 +366,4 @@ static char *dlfcn_name_converter(DSO *dso, const char *filename)
 	return(translated);
 	}
 
-#ifdef __sgi
-/*
-This is a quote from IRIX manual for dladdr(3c):
-
-     <dlfcn.h> does not contain a prototype for dladdr or definition of
-     Dl_info.  The #include <dlfcn.h>  in the SYNOPSIS line is traditional,
-     but contains no dladdr prototype and no IRIX library contains an
-     implementation.  Write your own declaration based on the code below.
-
-     The following code is dependent on internal interfaces that are not
-     part of the IRIX compatibility guarantee; however, there is no future
-     intention to change this interface, so on a practical level, the code
-     below is safe to use on IRIX.
-*/
-#define HAVE_DLINFO 1
-#include <rld_interface.h>
-#ifndef _RLD_INTERFACE_DLFCN_H_DLADDR
-#define _RLD_INTERFACE_DLFCN_H_DLADDR
-typedef struct Dl_info {
-    const char * dli_fname;
-    void       * dli_fbase;
-    const char * dli_sname;
-    void       * dli_saddr;
-    int          dli_version;
-    int          dli_reserved1;
-    long         dli_reserved[4];
-} Dl_info;
-#else
-typedef struct Dl_info Dl_info;
-#endif
-#define _RLD_DLADDR             14
-
-static int dladdr(void *address, Dl_info *dl)
-{
-	void *v;
-	v = _rld_new_interface(_RLD_DLADDR,address,dl);
-	return (int)v;
-}
-#endif /* __sgi */
-
-static int dlfcn_pathbyaddr(void *addr,char *path,int sz)
-	{
-#ifdef HAVE_DLINFO
-	Dl_info dli;
-	int len;
-
-	if (addr == NULL)
-		{
-		union	{ int(*f)(void*,char*,int); void *p; } t =
-			{ dlfcn_pathbyaddr };
-		addr = t.p;
-		}
-
-	if (dladdr(addr,&dli))
-		{
-		len = (int)strlen(dli.dli_fname);
-		if (sz <= 0) return len+1;
-		if (len >= sz) len=sz-1;
-		memcpy(path,dli.dli_fname,len);
-		path[len++]=0;
-		return len;
-		}
-
-	ERR_add_error_data(4, "dlfcn_pathbyaddr(): ", dlerror());
-#endif
-	return -1;
-	}
-
-static void *dlfcn_globallookup(const char *name)
-	{
-	void *ret = NULL,*handle = dlopen(NULL,RTLD_LAZY);
-	
-	if (handle)
-		{
-		ret = dlsym(handle,name);
-		dlclose(handle);
-		}
-
-	return ret;
-	}
 #endif /* DSO_DLFCN */

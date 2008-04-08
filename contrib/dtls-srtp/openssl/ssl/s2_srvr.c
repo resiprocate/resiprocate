@@ -117,7 +117,7 @@
 #include <openssl/objects.h>
 #include <openssl/evp.h>
 
-static const SSL_METHOD *ssl2_get_server_method(int ver);
+static SSL_METHOD *ssl2_get_server_method(int ver);
 static int get_client_master_key(SSL *s);
 static int get_client_hello(SSL *s);
 static int server_hello(SSL *s); 
@@ -129,7 +129,7 @@ static int ssl_rsa_private_decrypt(CERT *c, int len, unsigned char *from,
 	unsigned char *to,int padding);
 #define BREAK	break
 
-static const SSL_METHOD *ssl2_get_server_method(int ver)
+static SSL_METHOD *ssl2_get_server_method(int ver)
 	{
 	if (ver == SSL2_VERSION)
 		return(SSLv2_server_method());
@@ -607,7 +607,7 @@ static int get_client_hello(SSL *s)
 	else
 		{
 		i=ssl_get_prev_session(s,&(p[s->s2->tmp.cipher_spec_length]),
-			s->s2->tmp.session_id_length);
+			s->s2->tmp.session_id_length, NULL);
 		if (i == 1)
 			{ /* previous session */
 			s->hit=1;
@@ -657,7 +657,7 @@ static int get_client_hello(SSL *s)
 			{
 			if (sk_SSL_CIPHER_find(allow,sk_SSL_CIPHER_value(prio,z)) < 0)
 				{
-				sk_SSL_CIPHER_delete(prio,z);
+				(void)sk_SSL_CIPHER_delete(prio,z);
 				z--;
 				}
 			}

@@ -133,10 +133,6 @@ my $current_function;
     	my $self = shift;
 
 	if (!$masm) {
-	    # Solaris /usr/ccs/bin/as can't handle multiplications
-	    # in $self->{value}
-	    $self->{value} =~ s/(?<![0-9a-f])(0[x0-9a-f]+)/oct($1)/egi;
-	    $self->{value} =~ s/([0-9]+\s*[\*\/\%]\s*[0-9]+)/eval($1)/eg;
 	    sprintf "\$%s",$self->{value};
 	} else {
 	    $self->{value} =~ s/0x([0-9a-f]+)/0$1h/ig;
@@ -167,16 +163,14 @@ my $current_function;
     	my $self = shift;
 	my $sz = shift;
 
-	# Silently convert all EAs to 64-bit. This is required for
-	# elder GNU assembler and results in more compact code,
-	# *but* most importantly AES module depends on this feature!
-	$self->{index} =~ s/^[er](.?[0-9xpi])[d]?$/r\1/;
-	$self->{base}  =~ s/^[er](.?[0-9xpi])[d]?$/r\1/;
-
 	if (!$masm) {
+	    # elder GNU assembler insists on 64-bit EAs:-(
+	    # on pros side, this results in more compact code:-)
+	    $self->{index} =~ s/^[er](.?[0-9xp])[d]?$/r\1/;
+	    $self->{base}  =~ s/^[er](.?[0-9xp])[d]?$/r\1/;
 	    # Solaris /usr/ccs/bin/as can't handle multiplications
 	    # in $self->{label}
-	    $self->{label} =~ s/(?<![0-9a-f])(0[x0-9a-f]+)/oct($1)/egi;
+	    $self->{label} =~ s/(?<![0-9a-f])(0[x0-9a-f]+)/oct($1)/eg;
 	    $self->{label} =~ s/([0-9]+\s*[\*\/\%]\s*[0-9]+)/eval($1)/eg;
 
 	    if (defined($self->{index})) {
@@ -486,10 +480,7 @@ close STDOUT;
 # arguments passed to callee, *but* not less than 4! This means that
 # upon function entry point 5th argument resides at 40(%rsp), as well
 # as that 32 bytes from 8(%rsp) can always be used as temporal
-# storage [without allocating a frame]. One can actually argue that
-# one can assume a "red zone" above stack pointer under Win64 as well.
-# Point is that at apparently no occasion Windows kernel would alter
-# the area above user stack pointer in true asynchronous manner...
+# storage [without allocating a frame].
 #
 # All the above means that if assembler programmer adheres to Unix
 # register and stack layout, but disregards the "red zone" existense,

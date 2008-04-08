@@ -543,6 +543,7 @@ BIO *BIO_new_ssl_connect(SSL_CTX *ctx)
 	return(ret);
 err:
 	if (con != NULL) BIO_free(con);
+	if (ret != NULL) BIO_free(ret);
 	return(NULL);
 	}
 

@@ -1,4 +1,3 @@
-
 /* ssl/ssl_locl.h */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
@@ -57,7 +56,7 @@
  * [including the GNU Public Licence.]
  */
 /* ====================================================================
- * Copyright (c) 1998-2006 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 1998-2001 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -113,32 +112,6 @@
  * Copyright 2002 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
  * ECC cipher suite support in OpenSSL originally developed by 
  * SUN MICROSYSTEMS, INC., and contributed to the OpenSSL project.
- */
-/* ====================================================================
- * Copyright 2005 Nokia. All rights reserved.
- *
- * The portions of the attached software ("Contribution") is developed by
- * Nokia Corporation and is licensed pursuant to the OpenSSL open source
- * license.
- *
- * The Contribution, originally written by Mika Kousa and Pasi Eronen of
- * Nokia Corporation, consists of the "PSK" (Pre-Shared Key) ciphersuites
- * support (see RFC 4279) to OpenSSL.
- *
- * No patent licenses or other rights except those expressly stated in
- * the OpenSSL open source license shall be deemed granted or received
- * expressly, by implication, estoppel, or otherwise.
- *
- * No assurances are provided by Nokia that the Contribution does not
- * infringe the patent or other intellectual property rights of any third
- * party or that the license provides you with all the necessary rights
- * to make use of the Contribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. IN
- * ADDITION TO THE DISCLAIMERS INCLUDED IN THE LICENSE, NOKIA
- * SPECIFICALLY DISCLAIMS ANY LIABILITY FOR CLAIMS BROUGHT BY YOU OR ANY
- * OTHER ENTITY BASED ON INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS OR
- * OTHERWISE.
  */
 
 #ifndef HEADER_SSL_LOCL_H
@@ -276,7 +249,7 @@
  * that the different entities within are mutually exclusive:
  * ONLY ONE BIT PER MASK CAN BE SET AT A TIME.
  */
-#define SSL_MKEY_MASK		0x080000FFL
+#define SSL_MKEY_MASK		0x000000FFL
 #define SSL_kRSA		0x00000001L /* RSA key exchange */
 #define SSL_kDHr		0x00000002L /* DH cert RSA CA cert */
 #define SSL_kDHd		0x00000004L /* DH cert DSA CA cert */
@@ -286,9 +259,8 @@
 #define SSL_kECDH               0x00000040L /* ECDH w/ long-term keys */
 #define SSL_kECDHE              0x00000080L /* ephemeral ECDH */
 #define SSL_EDH			(SSL_kEDH|(SSL_AUTH_MASK^SSL_aNULL))
-#define SSL_kPSK                0x08000000L /* PSK */
 
-#define SSL_AUTH_MASK		0x10007f00L
+#define SSL_AUTH_MASK		0x00007F00L
 #define SSL_aRSA		0x00000100L /* Authenticate with RSA */
 #define SSL_aDSS 		0x00000200L /* Authenticate with DSS */
 #define SSL_DSS 		SSL_aDSS
@@ -297,7 +269,6 @@
 #define SSL_aDH 		0x00001000L /* no Authenticate, ADH */
 #define SSL_aKRB5               0x00002000L /* Authenticate with KRB5 */
 #define SSL_aECDSA              0x00004000L /* Authenticate with ECDSA */
-#define SSL_aPSK                0x10000000L /* PSK */
 
 #define SSL_NULL		(SSL_eNULL)
 #define SSL_ADH			(SSL_kEDH|SSL_aNULL)
@@ -306,9 +277,8 @@
 #define SSL_ECDH		(SSL_kECDH|SSL_kECDHE)
 #define SSL_FZA			(SSL_aFZA|SSL_kFZA|SSL_eFZA)
 #define SSL_KRB5                (SSL_kKRB5|SSL_aKRB5)
-#define SSL_PSK                 (SSL_kPSK|SSL_aPSK)
 
-#define SSL_ENC_MASK		0x043F8000L
+#define SSL_ENC_MASK		0x1C3F8000L
 #define SSL_DES			0x00008000L
 #define SSL_3DES		0x00010000L
 #define SSL_RC4			0x00020000L
@@ -317,6 +287,8 @@
 #define SSL_eFZA		0x00100000L
 #define SSL_eNULL		0x00200000L
 #define SSL_AES			0x04000000L
+#define SSL_CAMELLIA		0x08000000L
+#define SSL_SEED          	0x10000000L
 
 #define SSL_MAC_MASK		0x00c00000L
 #define SSL_MD5			0x00400000L
@@ -541,15 +513,18 @@ OPENSSL_EXTERN SSL_CIPHER ssl3_ciphers[];
 
 
 SSL_METHOD *ssl_bad_method(int ver);
+SSL_METHOD *sslv2_base_method(void);
+SSL_METHOD *sslv23_base_method(void);
+SSL_METHOD *sslv3_base_method(void);
 
 extern SSL3_ENC_METHOD TLSv1_enc_data;
 extern SSL3_ENC_METHOD SSLv3_enc_data;
 extern SSL3_ENC_METHOD DTLSv1_enc_data;
 
 #define IMPLEMENT_tls1_meth_func(func_name, s_accept, s_connect, s_get_meth) \
-const SSL_METHOD *func_name(void)  \
+SSL_METHOD *func_name(void)  \
 	{ \
-	static const SSL_METHOD func_name##_data= { \
+	static SSL_METHOD func_name##_data= { \
 		TLS1_VERSION, \
 		tls1_new, \
 		tls1_clear, \
@@ -584,9 +559,9 @@ const SSL_METHOD *func_name(void)  \
 	}
 
 #define IMPLEMENT_ssl3_meth_func(func_name, s_accept, s_connect, s_get_meth) \
-const SSL_METHOD *func_name(void)  \
+SSL_METHOD *func_name(void)  \
 	{ \
-	static const SSL_METHOD func_name##_data= { \
+	static SSL_METHOD func_name##_data= { \
 		SSL3_VERSION, \
 		ssl3_new, \
 		ssl3_clear, \
@@ -621,9 +596,9 @@ const SSL_METHOD *func_name(void)  \
 	}
 
 #define IMPLEMENT_ssl23_meth_func(func_name, s_accept, s_connect, s_get_meth) \
-const SSL_METHOD *func_name(void)  \
+SSL_METHOD *func_name(void)  \
 	{ \
-	static const SSL_METHOD func_name##_data= { \
+	static SSL_METHOD func_name##_data= { \
 	TLS1_VERSION, \
 	tls1_new, \
 	tls1_clear, \
@@ -658,9 +633,9 @@ const SSL_METHOD *func_name(void)  \
 	}
 
 #define IMPLEMENT_ssl2_meth_func(func_name, s_accept, s_connect, s_get_meth) \
-const SSL_METHOD *func_name(void)  \
+SSL_METHOD *func_name(void)  \
 	{ \
-	static const SSL_METHOD func_name##_data= { \
+	static SSL_METHOD func_name##_data= { \
 		SSL2_VERSION, \
 		ssl2_new,	/* local */ \
 		ssl2_clear,	/* local */ \
@@ -695,9 +670,9 @@ const SSL_METHOD *func_name(void)  \
 	}
 
 #define IMPLEMENT_dtls1_meth_func(func_name, s_accept, s_connect, s_get_meth) \
-const SSL_METHOD *func_name(void)  \
+SSL_METHOD *func_name(void)  \
 	{ \
-	static const SSL_METHOD func_name##_data= { \
+	static SSL_METHOD func_name##_data= { \
 		DTLS1_VERSION, \
 		dtls1_new, \
 		dtls1_clear, \
@@ -720,7 +695,7 @@ const SSL_METHOD *func_name(void)  \
 		ssl3_put_cipher_by_char, \
 		ssl3_pending, \
 		ssl3_num_ciphers, \
-		ssl3_get_cipher, \
+		dtls1_get_cipher, \
 		s_get_meth, \
 		dtls1_default_timeout, \
 		&DTLSv1_enc_data, \
@@ -741,7 +716,7 @@ SESS_CERT *ssl_sess_cert_new(void);
 void ssl_sess_cert_free(SESS_CERT *sc);
 int ssl_set_peer_cert_type(SESS_CERT *c, int type);
 int ssl_get_new_session(SSL *s, int session);
-int ssl_get_prev_session(SSL *s, unsigned char *session,int len);
+int ssl_get_prev_session(SSL *s, unsigned char *session,int len, const unsigned char *limit);
 int ssl_cipher_id_cmp(const SSL_CIPHER *a,const SSL_CIPHER *b);
 int ssl_cipher_ptr_id_cmp(const SSL_CIPHER * const *ap,
 			const SSL_CIPHER * const *bp);
@@ -801,6 +776,7 @@ SSL_CIPHER *ssl3_get_cipher_by_char(const unsigned char *p);
 int ssl3_put_cipher_by_char(const SSL_CIPHER *c,unsigned char *p);
 void ssl3_init_finished_mac(SSL *s);
 int ssl3_send_server_certificate(SSL *s);
+int ssl3_send_newsession_ticket(SSL *s);
 int ssl3_get_finished(SSL *s,int state_a,int state_b);
 int ssl3_setup_key_block(SSL *s);
 int ssl3_send_change_cipher_spec(SSL *s,int state_a,int state_b);
@@ -885,12 +861,15 @@ void dtls1_get_message_header(unsigned char *data, struct hm_header_st *msg_hdr)
 void dtls1_get_ccs_header(unsigned char *data, struct ccs_header_st *ccs_hdr);
 void dtls1_reset_seq_numbers(SSL *s, int rw);
 long dtls1_default_timeout(void);
+SSL_CIPHER *dtls1_get_cipher(unsigned int u);
+
 
 
 /* some client-only functions */
 int ssl3_client_hello(SSL *s);
 int ssl3_get_server_hello(SSL *s);
 int ssl3_get_certificate_request(SSL *s);
+int ssl3_get_new_session_ticket(SSL *s);
 int ssl3_get_server_done(SSL *s);
 int ssl3_send_client_verify(SSL *s);
 int ssl3_send_client_certificate(SSL *s);
@@ -935,6 +914,7 @@ void tls1_free(SSL *s);
 void tls1_clear(SSL *s);
 long tls1_ctrl(SSL *s,int cmd, long larg, void *parg);
 long tls1_callback_ctrl(SSL *s,int cmd, void (*fp)(void));
+SSL_METHOD *tlsv1_base_method(void );
 
 int dtls1_new(SSL *s);
 int	dtls1_accept(SSL *s);
@@ -942,6 +922,7 @@ int	dtls1_connect(SSL *s);
 void dtls1_free(SSL *s);
 void dtls1_clear(SSL *s);
 long dtls1_ctrl(SSL *s,int cmd, long larg, void *parg);
+SSL_METHOD *dtlsv1_base_method(void );
 
 long dtls1_get_message(SSL *s, int st1, int stn, int mt, long max, int *ok);
 int dtls1_get_record(SSL *s);
@@ -970,11 +951,6 @@ int check_srvr_ecc_cert_and_alg(X509 *x, SSL_CIPHER *cs);
 
 SSL_COMP *ssl3_comp_find(STACK_OF(SSL_COMP) *sk, int n);
 
-#ifndef OPENSSL_NO_EC
-int tls1_ec_curve_id2nid(int curve_id);
-int tls1_ec_nid2curve_id(int nid);
-#endif /* OPENSSL_NO_EC */
-
 #ifndef OPENSSL_NO_TLSEXT
 unsigned char *ssl_add_clienthello_tlsext(SSL *s, unsigned char *p, unsigned char *limit); 
 unsigned char *ssl_add_serverhello_tlsext(SSL *s, unsigned char *p, unsigned char *limit); 
@@ -984,5 +960,15 @@ int ssl_prepare_clienthello_tlsext(SSL *s);
 int ssl_prepare_serverhello_tlsext(SSL *s);
 int ssl_check_clienthello_tlsext(SSL *s);
 int ssl_check_serverhello_tlsext(SSL *s);
+#ifdef OPENSSL_NO_SHA256
+#define tlsext_tick_md	EVP_sha1
+#else
+#define tlsext_tick_md	EVP_sha256
 #endif
+int tls1_process_ticket(SSL *s, unsigned char *session_id, int len,
+				const unsigned char *limit, SSL_SESSION **ret);
+EVP_MD_CTX* ssl_replace_hash(EVP_MD_CTX **hash,const EVP_MD *md) ;
+void ssl_clear_hash_ctx(EVP_MD_CTX **hash);
+#endif
+
 #endif

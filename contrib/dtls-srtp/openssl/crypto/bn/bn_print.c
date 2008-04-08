@@ -62,7 +62,7 @@
 #include <openssl/buffer.h>
 #include "bn_lcl.h"
 
-static const char *Hex="0123456789ABCDEF";
+static const char Hex[]="0123456789ABCDEF";
 
 /* Must 'OPENSSL_free' the returned data */
 char *BN_bn2hex(const BIGNUM *a)
@@ -292,27 +292,6 @@ int BN_dec2bn(BIGNUM **bn, const char *a)
 err:
 	if (*bn == NULL) BN_free(ret);
 	return(0);
-	}
-
-int BN_asc2bn(BIGNUM **bn, const char *a)
-	{
-	const char *p = a;
-	if (*p == '-')
-		p++;
-
-	if (p[0] == '0' && (p[1] == 'X' || p[1] == 'x'))
-		{		
-		if (!BN_hex2bn(bn, p + 2))
-			return 0;
-		}
-	else
-		{
-		if (!BN_dec2bn(bn, p))
-			return 0;
-		}
-	if (*a == '-')
-		(*bn)->neg = 1;
-	return 1;
 	}
 
 #ifndef OPENSSL_NO_BIO

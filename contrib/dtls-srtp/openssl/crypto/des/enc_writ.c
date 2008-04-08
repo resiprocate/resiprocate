@@ -80,9 +80,6 @@
 int DES_enc_write(int fd, const void *_buf, int len,
 		  DES_key_schedule *sched, DES_cblock *iv)
 	{
-#if defined(OPENSSL_NO_POSIX_IO)
-	return (-1);
-#else
 #ifdef _LIBC
 	extern unsigned long time();
 	extern int write();
@@ -171,5 +168,4 @@ int DES_enc_write(int fd, const void *_buf, int len,
 		}
 
 	return(len);
-#endif /* OPENSSL_NO_POSIX_IO */
 	}

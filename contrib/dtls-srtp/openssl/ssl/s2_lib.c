@@ -63,7 +63,7 @@
 #include <openssl/evp.h>
 #include <openssl/md5.h>
 
-const char *ssl2_version_str="SSLv2" OPENSSL_VERSION_PTEXT;
+const char ssl2_version_str[]="SSLv2" OPENSSL_VERSION_PTEXT;
 
 #define SSL2_NUM_CIPHERS (sizeof(ssl2_ciphers)/sizeof(SSL_CIPHER))
 
@@ -215,6 +215,11 @@ long ssl2_default_timeout(void)
 	{
 	return(300);
 	}
+
+IMPLEMENT_ssl2_meth_func(sslv2_base_method,
+			ssl_undefined_function,
+			ssl_undefined_function,
+			ssl_bad_method)
 
 int ssl2_num_ciphers(void)
 	{

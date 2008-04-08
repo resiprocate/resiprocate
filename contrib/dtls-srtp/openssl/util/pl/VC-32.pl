@@ -83,10 +83,8 @@ elsif ($FLAVOR =~ /CE/)
     }
 
     $cc='$(CC)';
-    $base_cflags=' /W3 /WX /GF /Gy /nologo -DUNICODE -D_UNICODE -DOPENSSL_SYSNAME_WINCE -DWIN32_LEAN_AND_MEAN -DL_ENDIAN -DDSO_WIN32 -DNO_CHMOD -DOPENSSL_SMALL_FOOTPRINT';
+    $base_cflags=' /W3 /WX /GF /Gy /nologo -DUNICODE -D_UNICODE -DOPENSSL_SYSNAME_WINCE -DWIN32_LEAN_AND_MEAN -DL_ENDIAN -DDSO_WIN32 -DNO_CHMOD -I$(WCECOMPAT)/include -DOPENSSL_SMALL_FOOTPRINT';
     $base_cflags.=" $wcecdefs";
-    $base_cflags.=' -I$(WCECOMPAT)/include'		if (defined($ENV{'WCECOMPAT'}));
-    $base_cflags.=' -I$(PORTSDK_LIBPATH)/../../include'	if (defined($ENV{'PORTSDK_LIBPATH'}));
     $opt_cflags=' /MC /O1i';	# optimize for space, but with intrinsics...
     $dbg_clfags=' /MC /Od -DDEBUG -D_DEBUG';
     $lflags="/nologo /opt:ref $wcelflag";
@@ -131,8 +129,7 @@ else			{ $ex_libs='wsock32.lib'; }
 
 if ($FLAVOR =~ /CE/)
 	{
-	$ex_libs.=' $(WCECOMPAT)/lib/wcecompatex.lib'	if (defined($ENV{'WCECOMPAT'}));
-	$ex_libs.=' $(PORTSDK_LIBPATH)/portlib.lib'	if (defined($ENV{'PORTSDK_LIBPATH'}));
+	$ex_libs.=' $(WCECOMPAT)/lib/wcecompatex.lib';
 	$ex_libs.=' /nodefaultlib:oldnames.lib coredll.lib corelibc.lib' if ($ENV{'TARGETCPU'} eq "X86");
 	}
 else
@@ -176,8 +173,12 @@ $bf_enc_src='';
 
 if (!$no_asm)
 	{
+	$aes_asm_obj='crypto\aes\asm\a_win32.obj';
+	$aes_asm_src='crypto\aes\asm\a_win32.asm';
 	$bn_asm_obj='crypto\bn\asm\bn_win32.obj';
 	$bn_asm_src='crypto\bn\asm\bn_win32.asm';
+	$bnco_asm_obj='crypto\bn\asm\co_win32.obj';
+	$bnco_asm_src='crypto\bn\asm\co_win32.asm';
 	$des_enc_obj='crypto\des\asm\d_win32.obj crypto\des\asm\y_win32.obj';
 	$des_enc_src='crypto\des\asm\d_win32.asm crypto\des\asm\y_win32.asm';
 	$bf_enc_obj='crypto\bf\asm\b_win32.obj';
@@ -190,15 +191,13 @@ if (!$no_asm)
 	$rc5_enc_src='crypto\rc5\asm\r5_win32.asm';
 	$md5_asm_obj='crypto\md5\asm\m5_win32.obj';
 	$md5_asm_src='crypto\md5\asm\m5_win32.asm';
-	$sha1_asm_obj='crypto\sha\asm\s1_win32.obj';
-	$sha1_asm_src='crypto\sha\asm\s1_win32.asm';
+	$sha1_asm_obj='crypto\sha\asm\s1_win32.obj crypto\sha\asm\sha512-sse2.obj';
+	$sha1_asm_src='crypto\sha\asm\s1_win32.asm crypto\sha\asm\sha512-sse2.asm';
 	$rmd160_asm_obj='crypto\ripemd\asm\rm_win32.obj';
 	$rmd160_asm_src='crypto\ripemd\asm\rm_win32.asm';
-	$whirlpool_asm_obj='crypto\whrlpool\asm\wp_win32.obj';
-	$whirlpool_asm_src='crypto\whrlpool\asm\wp_win32.asm';
 	$cpuid_asm_obj='crypto\cpu_win32.obj';
 	$cpuid_asm_src='crypto\cpu_win32.asm';
-	$cflags.=" -DBN_ASM -DMD5_ASM -DSHA1_ASM -DRMD160_ASM -DWHIRLPOOL_ASM";
+	$cflags.=" -DOPENSSL_CPUID_OBJ -DOPENSSL_IA32_SSE2 -DAES_ASM -DBN_ASM -DOPENSSL_BN_ASM_PART_WORDS -DMD5_ASM -DSHA1_ASM -DRMD160_ASM";
 	}
 
 if ($shlib && $FLAVOR !~ /CE/)
@@ -236,7 +235,6 @@ ___
 elsif ($shlib && $FLAVOR =~ /CE/)
 	{
 	$mlflags.=" $lflags /dll";
-	$lflags.=' /entry:mainCRTstartup' if(defined($ENV{'PORTSDK_LIBPATH'}));
 	$lib_cflag=" -D_WINDLL -D_DLL";
 	$out_def='out32dll_$(TARGETCPU)';
 	$tmp_def='tmp32dll_$(TARGETCPU)';
@@ -273,9 +271,7 @@ sub do_lib_rule
 			}
 		elsif ($FLAVOR =~ /CE/)
 			{
-			$ex.=' winsock.lib';
-			$ex.=' $(WCECOMPAT)/lib/wcecompatex.lib' if (defined($ENV{'WCECOMPAT'}));
-			$ex.=' $(PORTSDK_LIBPATH)/portlib.lib'	 if (defined($ENV{'PORTSDK_LIBPATH'}));
+			$ex.=' winsock.lib $(WCECOMPAT)/lib/wcecompatex.lib';
 			}
 		else
 			{
@@ -285,7 +281,7 @@ sub do_lib_rule
 			}
 		$ex.=" $zlib_lib" if $zlib_opt == 1 && $target =~ /O_CRYPTO/;
 		$ret.="\t\$(LINK) \$(MLFLAGS) $efile$target $name @<<\n  \$(SHLIB_EX_OBJ) $objs $ex\n<<\n";
-        $ret.="\tIF EXIST \$@.manifest mt -manifest \$@.manifest -outputresource:\$@;2\n\n";
+        $ret.="\tIF EXIST \$@.manifest mt -nologo -manifest \$@.manifest -outputresource:\$@;2\n\n";
 		}
 	$ret.="\n";
 	return($ret);
@@ -301,7 +297,7 @@ sub do_link_rule
 	$ret.="$target: $files $dep_libs\n";
 	$ret.="\t\$(LINK) \$(LFLAGS) $efile$target @<<\n";
 	$ret.="  \$(APP_EX_OBJ) $files $libs\n<<\n";
-    $ret.="\tIF EXIST \$@.manifest mt -manifest \$@.manifest -outputresource:\$@;1\n\n";
+    $ret.="\tIF EXIST \$@.manifest mt -nologo -manifest \$@.manifest -outputresource:\$@;1\n\n";
 	return($ret);
 	}
 

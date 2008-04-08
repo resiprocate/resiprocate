@@ -231,11 +231,13 @@ static int ssl_sock_init(void)
 int init_client(int *sock, char *host, int port, int type)
 	{
 	unsigned char ip[4];
+	short p=0;
 
 	if (!host_ip(host,&(ip[0])))
 		{
 		return(0);
 		}
+	if (p != 0) port=p;
 	return(init_client_ip(sock,ip,port,type));
 	}
 
@@ -264,7 +266,7 @@ static int init_client_ip(int *sock, unsigned char ip[4], int port, int type)
 			
 	if (s == INVALID_SOCKET) { perror("socket"); return(0); }
 
-#if defined(SO_KEEPALIVE) && !defined(OPENSSL_SYS_MPE)
+#ifndef OPENSSL_SYS_MPE
 	if (type == SOCK_STREAM)
 		{
 		i=0;
@@ -274,7 +276,7 @@ static int init_client_ip(int *sock, unsigned char ip[4], int port, int type)
 #endif
 
 	if (connect(s,(struct sockaddr *)&them,sizeof(them)) == -1)
-		{ closesocket(s); perror("connect"); return(0); }
+		{ close(s); perror("connect"); return(0); }
 	*sock=s;
 	return(1);
 	}

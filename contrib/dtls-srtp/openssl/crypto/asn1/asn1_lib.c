@@ -64,7 +64,7 @@
 
 static int asn1_get_length(const unsigned char **pp,int *inf,long *rl,int max);
 static void asn1_put_length(unsigned char **pp, int length);
-const char *ASN1_version="ASN.1" OPENSSL_VERSION_PTEXT;
+const char ASN1_version[]="ASN.1" OPENSSL_VERSION_PTEXT;
 
 static int _asn1_check_infinite_end(const unsigned char **p, long len)
 	{
@@ -340,7 +340,7 @@ int asn1_GetSequence(ASN1_const_CTX *c, long *length)
 	return(1);
 	}
 
-ASN1_STRING *ASN1_STRING_dup(const ASN1_STRING *str)
+ASN1_STRING *ASN1_STRING_dup(ASN1_STRING *str)
 	{
 	ASN1_STRING *ret;
 
@@ -393,14 +393,6 @@ int ASN1_STRING_set(ASN1_STRING *str, const void *_data, int len)
 	return(1);
 	}
 
-void ASN1_STRING_set0(ASN1_STRING *str, void *data, int len)
-	{
-	if (str->data)
-		OPENSSL_free(str->data);
-	str->data = data;
-	str->length = len;
-	}
-
 ASN1_STRING *ASN1_STRING_new(void)
 	{
 	return(ASN1_STRING_type_new(V_ASN1_OCTET_STRING));
@@ -431,7 +423,7 @@ void ASN1_STRING_free(ASN1_STRING *a)
 	OPENSSL_free(a);
 	}
 
-int ASN1_STRING_cmp(const ASN1_STRING *a, const ASN1_STRING *b)
+int ASN1_STRING_cmp(ASN1_STRING *a, ASN1_STRING *b)
 	{
 	int i;
 
@@ -457,7 +449,7 @@ void asn1_add_error(const unsigned char *address, int offset)
 	ERR_add_error_data(4,"address=",buf1," offset=",buf2);
 	}
 
-int ASN1_STRING_length(const ASN1_STRING *x)
+int ASN1_STRING_length(ASN1_STRING *x)
 { return M_ASN1_STRING_length(x); }
 
 void ASN1_STRING_length_set(ASN1_STRING *x, int len)

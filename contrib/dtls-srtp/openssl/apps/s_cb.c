@@ -56,7 +56,7 @@
  * [including the GNU Public Licence.]
  */
 /* ====================================================================
- * Copyright (c) 1998-2006 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 1998-2001 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -504,21 +504,6 @@ void MS_CALLBACK msg_cb(int write_p, int version, int content_type, const void *
 				case 100:
 					str_details2 = " no_renegotiation";
 					break;
-				case 110:
-					str_details2 = " unsupported_extension";
-					break;
-				case 111:
-					str_details2 = " certificate_unobtainable";
-					break;
-				case 112:
-					str_details2 = " unrecognized_name";
-					break;
-				case 113:
-					str_details2 = " bad_certificate_status_response";
-					break;
-				case 114:
-					str_details2 = " bad_certificate_hash_value";
-					break;
 					}
 				}
 			}
@@ -588,5 +573,64 @@ void MS_CALLBACK msg_cb(int write_p, int version, int content_type, const void *
 			BIO_printf(bio, " ...");
 		BIO_printf(bio, "\n");
 		}
-	BIO_flush(bio);
+	(void)BIO_flush(bio);
+	}
+
+void MS_CALLBACK tlsext_cb(SSL *s, int client_server, int type,
+					unsigned char *data, int len,
+					void *arg)
+	{
+	BIO *bio = arg;
+	char *extname;
+
+	switch(type)
+		{
+		case TLSEXT_TYPE_server_name:
+		extname = "server name";
+		break;
+
+		case TLSEXT_TYPE_max_fragment_length:
+		extname = "max fragment length";
+		break;
+
+		case TLSEXT_TYPE_client_certificate_url:
+		extname = "client certificate URL";
+		break;
+
+		case TLSEXT_TYPE_trusted_ca_keys:
+		extname = "trusted CA keys";
+		break;
+
+		case TLSEXT_TYPE_truncated_hmac:
+		extname = "truncated HMAC";
+		break;
+
+		case TLSEXT_TYPE_status_request:
+		extname = "status request";
+		break;
+
+		case TLSEXT_TYPE_elliptic_curves:
+		extname = "elliptic curves";
+		break;
+
+		case TLSEXT_TYPE_ec_point_formats:
+		extname = "EC point formats";
+		break;
+
+		case TLSEXT_TYPE_session_ticket:
+		extname = "server ticket";
+		break;
+
+
+		default:
+		extname = "unknown";
+		break;
+
+		}
+	
+	BIO_printf(bio, "TLS %s extension \"%s\" (id=%d), len=%d\n",
+			client_server ? "server": "client",
+			extname, type, len);
+	BIO_dump(bio, (char *)data, len);
+	(void)BIO_flush(bio);
 	}

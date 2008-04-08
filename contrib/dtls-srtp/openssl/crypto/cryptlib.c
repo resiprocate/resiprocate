@@ -125,7 +125,7 @@ DECLARE_STACK_OF(CRYPTO_dynlock)
 IMPLEMENT_STACK_OF(CRYPTO_dynlock)
 
 /* real #defines in crypto.h, keep these upto date */
-static const char* lock_names[CRYPTO_NUM_LOCKS] =
+static const char* const lock_names[CRYPTO_NUM_LOCKS] =
 	{
 	"<<ERROR>>",
 	"err",
@@ -277,7 +277,7 @@ int CRYPTO_get_new_dynlockid(void)
 	else
 		/* If we found a place with a NULL pointer, put our pointer
 		   in it.  */
-		sk_CRYPTO_dynlock_set(dyn_locks,i,pointer);
+		(void)sk_CRYPTO_dynlock_set(dyn_locks,i,pointer);
 	CRYPTO_w_unlock(CRYPTO_LOCK_DYNLOCK);
 
 	if (i == -1)
@@ -319,7 +319,7 @@ void CRYPTO_destroy_dynlockid(int i)
 #endif
 			if (pointer->references <= 0)
 				{
-				sk_CRYPTO_dynlock_set(dyn_locks, i, NULL);
+				(void)sk_CRYPTO_dynlock_set(dyn_locks, i, NULL);
 				}
 			else
 				pointer = NULL;
@@ -436,8 +436,6 @@ unsigned long CRYPTO_thread_id(void)
 		ret=(unsigned long)GetCurrentThreadId();
 #elif defined(GETPID_IS_MEANINGLESS)
 		ret=1L;
-#elif defined(OPENSSL_SYS_BEOS)
-		ret=(unsigned long)find_thread(NULL);
 #else
 		ret=(unsigned long)getpid();
 #endif
@@ -574,7 +572,7 @@ void OPENSSL_cpuid_setup(void)
 unsigned long *OPENSSL_ia32cap_loc(void) { return NULL; }
 #endif
 int OPENSSL_NONPIC_relocated = 0;
-#if !defined(OPENSSL_CPUID_SETUP) && !defined(OPENSSL_CPUID_OBJ)
+#if !defined(OPENSSL_CPUID_SETUP)
 void OPENSSL_cpuid_setup(void) {}
 #endif
 

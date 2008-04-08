@@ -117,8 +117,7 @@ struct rsa_meth_st
 		unsigned char *sigret, unsigned int *siglen, const RSA *rsa);
 	int (*rsa_verify)(int dtype,
 		const unsigned char *m, unsigned int m_length,
-		const unsigned char *sigbuf, unsigned int siglen,
-								const RSA *rsa);
+		unsigned char *sigbuf, unsigned int siglen, const RSA *rsa);
 /* If this callback is NULL, the builtin software RSA key-gen will be used. This
  * is for behavioural compatibility whilst the code gets rewired, but one day
  * it would be nice to assume there are no such things as "builtin software"
@@ -160,6 +159,17 @@ struct rsa_st
 	BN_BLINDING *mt_blinding;
 	};
 
+#ifndef OPENSSL_RSA_MAX_MODULUS_BITS
+# define OPENSSL_RSA_MAX_MODULUS_BITS	16384
+#endif
+
+#ifndef OPENSSL_RSA_SMALL_MODULUS_BITS
+# define OPENSSL_RSA_SMALL_MODULUS_BITS	3072
+#endif
+#ifndef OPENSSL_RSA_MAX_PUBEXP_BITS
+# define OPENSSL_RSA_MAX_PUBEXP_BITS	64 /* exponent limit enforced for "large" modulus only */
+#endif
+
 #define RSA_3	0x3L
 #define RSA_F4	0x10001L
 
@@ -185,45 +195,33 @@ struct rsa_st
                                                 * default (ignoring RSA_FLAG_BLINDING),
                                                 * but other engines might not need it
                                                 */
-#define RSA_FLAG_NO_EXP_CONSTTIME	0x0100 /* new with 0.9.7h; the built-in RSA
+#define RSA_FLAG_NO_CONSTTIME		0x0100 /* new with 0.9.8f; the built-in RSA
+						* implementation now uses constant time
+						* operations by default in private key operations,
+						* e.g., constant time modular exponentiation, 
+                                                * modular inverse without leaking branches, 
+                                                * division without leaking branches. This 
+                                                * flag disables these constant time 
+                                                * operations and results in faster RSA 
+                                                * private key operations.
+                                                */ 
+#ifndef OPENSSL_NO_DEPRECATED
+#define RSA_FLAG_NO_EXP_CONSTTIME RSA_FLAG_NO_CONSTTIME /* deprecated name for the flag*/
+                                                /* new with 0.9.7h; the built-in RSA
                                                 * implementation now uses constant time
                                                 * modular exponentiation for secret exponents
                                                 * by default. This flag causes the
                                                 * faster variable sliding window method to
                                                 * be used for all exponents.
                                                 */
+#endif
 
-#define EVP_PKEY_CTX_set_rsa_padding(ctx, pad) \
-	EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING, \
-				pad, NULL)
-
-#define EVP_PKEY_CTX_set_rsa_pss_saltlen(ctx, len) \
-	EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA, \
-				(EVP_PKEY_OP_SIGN|EVP_PKEY_OP_VERIFY), \
-				EVP_PKEY_CTRL_RSA_PSS_SALTLEN, \
-				len, NULL)
-
-#define EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, bits) \
-	EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA, EVP_PKEY_OP_KEYGEN, \
-				EVP_PKEY_CTRL_RSA_KEYGEN_BITS, bits, NULL)
-
-#define EVP_PKEY_CTX_set_rsa_keygen_pubexp(ctx, pubexp) \
-	EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA, EVP_PKEY_OP_KEYGEN, \
-				EVP_PKEY_CTRL_RSA_KEYGEN_PUBEXP, 0, pubexp)
-
-#define EVP_PKEY_CTRL_RSA_PADDING	(EVP_PKEY_ALG_CTRL + 1)
-#define EVP_PKEY_CTRL_RSA_PSS_SALTLEN	(EVP_PKEY_ALG_CTRL + 2)
-
-#define EVP_PKEY_CTRL_RSA_KEYGEN_BITS	(EVP_PKEY_ALG_CTRL + 3)
-#define EVP_PKEY_CTRL_RSA_KEYGEN_PUBEXP	(EVP_PKEY_ALG_CTRL + 4)
 
 #define RSA_PKCS1_PADDING	1
 #define RSA_SSLV23_PADDING	2
 #define RSA_NO_PADDING		3
 #define RSA_PKCS1_OAEP_PADDING	4
 #define RSA_X931_PADDING	5
-/* EVP_PKEY_ only */
-#define RSA_PKCS1_PSS_PADDING	6
 
 #define RSA_PKCS1_PADDING_SIZE	11
 
@@ -302,7 +300,7 @@ RSA *d2i_Netscape_RSA(RSA **a, const unsigned char **pp, long length,
 int RSA_sign(int type, const unsigned char *m, unsigned int m_length,
 	unsigned char *sigret, unsigned int *siglen, RSA *rsa);
 int RSA_verify(int type, const unsigned char *m, unsigned int m_length,
-	const unsigned char *sigbuf, unsigned int siglen, RSA *rsa);
+	unsigned char *sigbuf, unsigned int siglen, RSA *rsa);
 
 /* The following 2 function sign and verify a ASN1_OCTET_STRING
  * object inside PKCS#1 padded RSA encryption */
@@ -370,12 +368,7 @@ void ERR_load_RSA_strings(void);
 /* Error codes for the RSA functions. */
 
 /* Function codes. */
-#define RSA_F_CHECK_PADDING_MD				 140
 #define RSA_F_MEMORY_LOCK				 100
-#define RSA_F_PKEY_RSA_CTRL				 143
-#define RSA_F_PKEY_RSA_CTRL_STR				 144
-#define RSA_F_PKEY_RSA_SIGN				 142
-#define RSA_F_PKEY_RSA_VERIFYRECOVER			 141
 #define RSA_F_RSA_BUILTIN_KEYGEN			 129
 #define RSA_F_RSA_CHECK_KEY				 123
 #define RSA_F_RSA_EAY_PRIVATE_DECRYPT			 101
@@ -406,9 +399,6 @@ void ERR_load_RSA_strings(void);
 #define RSA_F_RSA_PADDING_CHECK_X931			 128
 #define RSA_F_RSA_PRINT					 115
 #define RSA_F_RSA_PRINT_FP				 116
-#define RSA_F_RSA_PRIV_DECODE				 137
-#define RSA_F_RSA_PRIV_ENCODE				 138
-#define RSA_F_RSA_PUB_DECODE				 139
 #define RSA_F_RSA_SETUP_BLINDING			 136
 #define RSA_F_RSA_SIGN					 117
 #define RSA_F_RSA_SIGN_ASN1_OCTET_STRING		 118
@@ -435,20 +425,14 @@ void ERR_load_RSA_strings(void);
 #define RSA_R_DMQ1_NOT_CONGRUENT_TO_D			 125
 #define RSA_R_D_E_NOT_CONGRUENT_TO_1			 123
 #define RSA_R_FIRST_OCTET_INVALID			 133
-#define RSA_R_ILLEGAL_OR_UNSUPPORTED_PADDING_MODE	 144
-#define RSA_R_INVALID_DIGEST				 105
-#define RSA_R_INVALID_DIGEST_LENGTH			 143
 #define RSA_R_INVALID_HEADER				 137
-#define RSA_R_INVALID_KEYBITS				 145
 #define RSA_R_INVALID_MESSAGE_LENGTH			 131
 #define RSA_R_INVALID_PADDING				 138
-#define RSA_R_INVALID_PADDING_MODE			 141
-#define RSA_R_INVALID_PSS_SALTLEN			 146
 #define RSA_R_INVALID_TRAILER				 139
-#define RSA_R_INVALID_X931_DIGEST			 142
 #define RSA_R_IQMP_NOT_INVERSE_OF_Q			 126
 #define RSA_R_KEY_SIZE_TOO_SMALL			 120
 #define RSA_R_LAST_OCTET_INVALID			 134
+#define RSA_R_MODULUS_TOO_LARGE				 105
 #define RSA_R_NO_PUBLIC_EXPONENT			 140
 #define RSA_R_NULL_BEFORE_BLOCK_MISSING			 113
 #define RSA_R_N_DOES_NOT_EQUAL_P_Q			 127
@@ -463,7 +447,6 @@ void ERR_load_RSA_strings(void);
 #define RSA_R_THE_ASN1_OBJECT_IDENTIFIER_IS_NOT_KNOWN_FOR_THIS_MD 116
 #define RSA_R_UNKNOWN_ALGORITHM_TYPE			 117
 #define RSA_R_UNKNOWN_PADDING_TYPE			 118
-#define RSA_R_VALUE_MISSING				 147
 #define RSA_R_WRONG_SIGNATURE_LENGTH			 119
 
 #ifdef  __cplusplus

@@ -169,6 +169,7 @@ int main(int argc, char **argv)
 		}
 	BIO_printf(bio_err,"\ncounter=%d h=%ld\n",counter,h);
 		
+	if (dsa == NULL) goto end;
 	DSA_print(bio_err,dsa,0);
 	if (counter != 105) 
 		{

@@ -150,7 +150,7 @@ static int generate_key(DH *dh)
 			{
 			BN_init(&local_prk);
 			prk = &local_prk;
-			BN_with_flags(prk, priv_key, BN_FLG_EXP_CONSTTIME);
+			BN_with_flags(prk, priv_key, BN_FLG_CONSTTIME);
 			}
 		else
 			prk = priv_key;
@@ -173,11 +173,17 @@ err:
 
 static int compute_key(unsigned char *key, const BIGNUM *pub_key, DH *dh)
 	{
-	BN_CTX *ctx;
+	BN_CTX *ctx=NULL;
 	BN_MONT_CTX *mont=NULL;
 	BIGNUM *tmp;
 	int ret= -1;
         int check_result;
+
+	if (BN_num_bits(dh->p) > OPENSSL_DH_MAX_MODULUS_BITS)
+		{
+		DHerr(DH_F_COMPUTE_KEY,DH_R_MODULUS_TOO_LARGE);
+		goto err;
+		}
 
 	ctx = BN_CTX_new();
 	if (ctx == NULL) goto err;
@@ -197,7 +203,7 @@ static int compute_key(unsigned char *key, const BIGNUM *pub_key, DH *dh)
 		if ((dh->flags & DH_FLAG_NO_EXP_CONSTTIME) == 0)
 			{
 			/* XXX */
-			BN_set_flags(dh->priv_key, BN_FLG_EXP_CONSTTIME);
+			BN_set_flags(dh->priv_key, BN_FLG_CONSTTIME);
 			}
 		if (!mont)
 			goto err;

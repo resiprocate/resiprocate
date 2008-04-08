@@ -10,7 +10,7 @@ $OPTIONS="";
 $ssl_version="";
 $banner="\t\@echo Building OpenSSL";
 
-my $no_static_engine = 1;
+my $no_static_engine = 0;
 my $engines = "";
 local $zlib_opt = 0;	# 0 = no zlib, 1 = static, 2 = dynamic
 local $zlib_lib = "";
@@ -63,7 +63,7 @@ and [options] can be one of
 	no-md2 no-md4 no-md5 no-sha no-mdc2	- Skip this digest
 	no-ripemd
 	no-rc2 no-rc4 no-rc5 no-idea no-des     - Skip this symetric cipher
-	no-bf no-cast no-aes
+	no-bf no-cast no-aes no-camellia no-seed
 	no-rsa no-dsa no-dh			- Skip this public key cipher
 	no-ssl2 no-ssl3				- Skip this version of SSL
 	just-ssl				- remove all non-ssl keys/digest
@@ -197,6 +197,8 @@ $cflags= "$xcflags$cflags" if $xcflags ne "";
 
 $cflags.=" -DOPENSSL_NO_IDEA" if $no_idea;
 $cflags.=" -DOPENSSL_NO_AES"  if $no_aes;
+$cflags.=" -DOPENSSL_NO_CAMELLIA"  if $no_camellia;
+$cflags.=" -DOPENSSL_NO_SEED" if $no_seed;
 $cflags.=" -DOPENSSL_NO_RC2"  if $no_rc2;
 $cflags.=" -DOPENSSL_NO_RC4"  if $no_rc4;
 $cflags.=" -DOPENSSL_NO_RC5"  if $no_rc5;
@@ -213,10 +215,10 @@ $cflags.=" -DOPENSSL_NO_DES"  if $no_des;
 $cflags.=" -DOPENSSL_NO_RSA"  if $no_rsa;
 $cflags.=" -DOPENSSL_NO_DSA"  if $no_dsa;
 $cflags.=" -DOPENSSL_NO_DH"   if $no_dh;
-$cflags.=" -DOPENSSL_NO_WHIRLPOOL"   if $no_whirlpool;
 $cflags.=" -DOPENSSL_NO_SOCK" if $no_sock;
 $cflags.=" -DOPENSSL_NO_SSL2" if $no_ssl2;
 $cflags.=" -DOPENSSL_NO_SSL3" if $no_ssl3;
+$cflags.=" -DOPENSSL_NO_TLSEXT" if $no_tlsext;
 $cflags.=" -DOPENSSL_NO_ERR"  if $no_err;
 $cflags.=" -DOPENSSL_NO_KRB5" if $no_krb5;
 $cflags.=" -DOPENSSL_NO_EC"   if $no_ec;
@@ -394,6 +396,8 @@ LINK=$link
 LFLAGS=$lflags
 RSC=$rsc
 
+AES_ASM_OBJ=$aes_asm_obj
+AES_ASM_SRC=$aes_asm_src
 BN_ASM_OBJ=$bn_asm_obj
 BN_ASM_SRC=$bn_asm_src
 BNCO_ASM_OBJ=$bnco_asm_obj
@@ -414,8 +418,6 @@ SHA1_ASM_OBJ=$sha1_asm_obj
 SHA1_ASM_SRC=$sha1_asm_src
 RMD160_ASM_OBJ=$rmd160_asm_obj
 RMD160_ASM_SRC=$rmd160_asm_src
-WHIRLPOOL_ASM_OBJ=$whirlpool_asm_obj
-WHIRLPOOL_ASM_SRC=$whirlpool_asm_src
 CPUID_ASM_OBJ=$cpuid_asm_obj
 CPUID_ASM_SRC=$cpuid_asm_src
 
@@ -609,7 +611,12 @@ foreach (values %lib_nam)
 		$rules.="\$(O_SSL):\n\n"; 
 		next;
 		}
-
+	if (($aes_asm_obj ne "") && ($_ eq "CRYPTO"))
+		{
+		$lib_obj =~ s/\s(\S*\/aes_core\S*)/ \$(AES_ASM_OBJ)/;
+		$lib_obj =~ s/\s\S*\/aes_cbc\S*//;
+		$rules.=&do_asm_rule($aes_asm_obj,$aes_asm_src);
+		}
 	if (($bn_asm_obj ne "") && ($_ eq "CRYPTO"))
 		{
 		$lib_obj =~ s/\s\S*\/bn_asm\S*/ \$(BN_ASM_OBJ)/;
@@ -660,11 +667,6 @@ foreach (values %lib_nam)
 		{
 		$lib_obj =~ s/\s(\S*\/rmd_dgst\S*)/ $1 \$(RMD160_ASM_OBJ)/;
 		$rules.=&do_asm_rule($rmd160_asm_obj,$rmd160_asm_src);
-		}
-	if (($whirlpool_asm_obj ne "") && ($_ eq "CRYPTO"))
-		{
-		$lib_obj =~ s/\s(\S*\/wp_dgst\S*)/ $1 \$(WHIRLPOOL_ASM_OBJ)/;
-		$rules.=&do_asm_rule($whirlpool_asm_obj,$whirlpool_asm_src);
 		}
 	if (($cpuid_asm_obj ne "") && ($_ eq "CRYPTO"))
 		{
@@ -736,6 +738,8 @@ sub var_add
 	return("") if $no_hw   && $dir =~ /\/hw/;
 	return("") if $no_idea && $dir =~ /\/idea/;
 	return("") if $no_aes  && $dir =~ /\/aes/;
+	return("") if $no_camellia  && $dir =~ /\/camellia/;
+	return("") if $no_seed && $dir =~ /\/seed/;
 	return("") if $no_rc2  && $dir =~ /\/rc2/;
 	return("") if $no_rc4  && $dir =~ /\/rc4/;
 	return("") if $no_rc5  && $dir =~ /\/rc5/;
@@ -755,7 +759,6 @@ sub var_add
 	return("") if $no_sock && $dir =~ /\/proxy/;
 	return("") if $no_bf   && $dir =~ /\/bf/;
 	return("") if $no_cast && $dir =~ /\/cast/;
-	return("") if $no_whirlpool && $dir =~ /\/whrlpool/;
 
 	$val =~ s/^\s*(.*)\s*$/$1/;
 	@a=split(/\s+/,$val);
@@ -770,6 +773,8 @@ sub var_add
 	@a=grep(!/^e_.*_bf$/,@a) if $no_bf;
 	@a=grep(!/^e_.*_c$/,@a) if $no_cast;
 	@a=grep(!/^e_rc4$/,@a) if $no_rc4;
+	@a=grep(!/^e_camellia$/,@a) if $no_camellia;
+	@a=grep(!/^e_seed$/,@a) if $no_seed;
 
 	@a=grep(!/(^s2_)|(^s23_)/,@a) if $no_ssl2;
 	@a=grep(!/(^s3_)|(^s23_)/,@a) if $no_ssl3;
@@ -853,8 +858,8 @@ sub do_defs
 		elsif ($_ =~ /RC5_ENC/)	{ $t="$_ "; }
 		elsif ($_ =~ /MD5_ASM/)	{ $t="$_ "; }
 		elsif ($_ =~ /SHA1_ASM/){ $t="$_ "; }
+		elsif ($_ =~ /AES_ASM/){ $t="$_ "; }
 		elsif ($_ =~ /RMD160_ASM/){ $t="$_ "; }
-		elsif ($_ =~ /WHIRLPOOL_ASM/){ $t="$_ "; }
 		elsif ($_ =~ /CPUID_ASM/){ $t="$_ "; }
 		else	{ $t="$location${o}$_$pf "; }
 
@@ -982,6 +987,8 @@ sub read_options
 		"no-rc5" => \$no_rc5,
 		"no-idea" => \$no_idea,
 		"no-aes" => \$no_aes,
+		"no-camellia" => \$no_camellia,
+		"no-seed" => \$no_seed,
 		"no-des" => \$no_des,
 		"no-bf" => \$no_bf,
 		"no-cast" => \$no_cast,
@@ -992,14 +999,12 @@ sub read_options
 		"no-sha1" => \$no_sha1,
 		"no-ripemd" => \$no_ripemd,
 		"no-mdc2" => \$no_mdc2,
-		"no-whirlpool" => \$no_whirlpool,
 		"no-patents" => 
 			[\$no_rc2, \$no_rc4, \$no_rc5, \$no_idea, \$no_rsa],
 		"no-rsa" => \$no_rsa,
 		"no-dsa" => \$no_dsa,
 		"no-dh" => \$no_dh,
 		"no-hmac" => \$no_hmac,
-		"no-aes" => \$no_aes,
 		"no-asm" => \$no_asm,
 		"nasm" => \$nasm,
 		"nw-nasm" => \$nw_nasm,
@@ -1007,6 +1012,7 @@ sub read_options
 		"gaswin" => \$gaswin,
 		"no-ssl2" => \$no_ssl2,
 		"no-ssl3" => \$no_ssl3,
+		"no-tlsext" => \$no_tlsext,
 		"no-err" => \$no_err,
 		"no-sock" => \$no_sock,
 		"no-krb5" => \$no_krb5,
@@ -1019,7 +1025,7 @@ sub read_options
 			[\$no_rc2, \$no_idea, \$no_des, \$no_bf, \$no_cast,
 			  \$no_md2, \$no_sha, \$no_mdc2, \$no_dsa, \$no_dh,
 			  \$no_ssl2, \$no_err, \$no_ripemd, \$no_rc5,
-			  \$no_aes],
+			  \$no_aes, \$no_camellia, \$no_seed],
 		"rsaref" => 0,
 		"gcc" => \$gcc,
 		"debug" => \$debug,
@@ -1028,6 +1034,7 @@ sub read_options
 		"dll" => \$shlib,
 		"shared" => 0,
 		"no-gmp" => 0,
+		"no-rfc3779" => 0,
 		"no-shared" => 0,
 		"no-zlib" => 0,
 		"no-zlib-dynamic" => 0,

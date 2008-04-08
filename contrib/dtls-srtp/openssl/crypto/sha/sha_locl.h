@@ -115,22 +115,16 @@
 # endif
 
 # ifdef SHA1_ASM
-#  if defined(__i386) || defined(__i386__) || defined(_M_IX86) || defined(__INTEL__) \
-   || defined(__x86_64) || defined(__x86_64__) || defined(_M_AMD64) || defined(_M_X64)
-#   define sha1_block_host_order		sha1_block_asm_host_order
-#   define DONT_IMPLEMENT_BLOCK_HOST_ORDER
-#   define sha1_block_data_order		sha1_block_asm_data_order
-#   define DONT_IMPLEMENT_BLOCK_DATA_ORDER
-#   define HASH_BLOCK_DATA_ORDER_ALIGNED	sha1_block_asm_data_order
+#  if defined(__i386) || defined(__i386__) || defined(_M_IX86) || defined(__INTEL__)
+#   if !defined(B_ENDIAN)
+#    define sha1_block_host_order		sha1_block_asm_host_order
+#    define DONT_IMPLEMENT_BLOCK_HOST_ORDER
+#    define sha1_block_data_order		sha1_block_asm_data_order
+#    define DONT_IMPLEMENT_BLOCK_DATA_ORDER
+#    define HASH_BLOCK_DATA_ORDER_ALIGNED	sha1_block_asm_data_order
+#   endif
 #  elif defined(__ia64) || defined(__ia64__) || defined(_M_IA64)
 #   define sha1_block_host_order		sha1_block_asm_host_order
-#   define DONT_IMPLEMENT_BLOCK_HOST_ORDER
-#   define sha1_block_data_order		sha1_block_asm_data_order
-#   define DONT_IMPLEMENT_BLOCK_DATA_ORDER
-#  elif defined(_ARCH_PPC) || defined(_ARCH_PPC64) || \
-	defined(__ppc) || defined(__ppc__) || defined(__powerpc) || \
-	defined(__ppc64) || defined(__ppc64__) || defined(__powerpc64)
-#   define sha1_block_host_order		sha1_block_asm_data_order
 #   define DONT_IMPLEMENT_BLOCK_HOST_ORDER
 #   define sha1_block_data_order		sha1_block_asm_data_order
 #   define DONT_IMPLEMENT_BLOCK_DATA_ORDER

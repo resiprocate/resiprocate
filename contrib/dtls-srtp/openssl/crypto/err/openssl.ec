@@ -31,7 +31,6 @@ L COMP		crypto/comp/comp.h		crypto/comp/comp_err.c
 L ECDSA		crypto/ecdsa/ecdsa.h		crypto/ecdsa/ecs_err.c
 L ECDH		crypto/ecdh/ecdh.h		crypto/ecdh/ech_err.c
 L STORE		crypto/store/store.h		crypto/store/str_err.c
-L TS		crypto/ts/ts.h			crypto/ts/ts_err.c
 
 # additional header files to be scanned for function names
 L NONE		crypto/x509/x509_vfy.h		NONE
@@ -68,11 +67,6 @@ R SSL_R_TLSV1_ALERT_INSUFFICIENT_SECURITY	1071
 R SSL_R_TLSV1_ALERT_INTERNAL_ERROR		1080
 R SSL_R_TLSV1_ALERT_USER_CANCELLED		1090
 R SSL_R_TLSV1_ALERT_NO_RENEGOTIATION		1100
-R SSL_R_TLSV1_UNSUPPORTED_EXTENSION		1110
-R SSL_R_TLSV1_CERTIFICATE_UNOBTAINABLE		1111
-R SSL_R_TLSV1_UNRECOGNIZED_NAME			1112
-R SSL_R_TLSV1_BAD_CERTIFICATE_STATUS_RESPONSE	1113
-R SSL_R_TLSV1_BAD_CERTIFICATE_HASH_VALUE	1114
 
 R RSAREF_R_CONTENT_ENCODING			0x0400
 R RSAREF_R_DATA					0x0401

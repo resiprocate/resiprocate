@@ -439,7 +439,7 @@ static int parse_tagging(const char *vstart, int vlen, int *ptag, int *pclass)
 
 static ASN1_TYPE *asn1_multi(int utype, const char *section, X509V3_CTX *cnf)
 	{
-	ASN1_TYPE *ret = NULL;
+	ASN1_TYPE *ret = NULL, *typ = NULL;
 	STACK_OF(ASN1_TYPE) *sk = NULL;
 	STACK_OF(CONF_VALUE) *sect = NULL;
 	unsigned char *der = NULL, *p;
@@ -455,10 +455,11 @@ static ASN1_TYPE *asn1_multi(int utype, const char *section, X509V3_CTX *cnf)
 			goto bad;
 		for (i = 0; i < sk_CONF_VALUE_num(sect); i++)
 			{
-			ASN1_TYPE *typ = ASN1_generate_v3(sk_CONF_VALUE_value(sect, i)->value, cnf);
+			typ = ASN1_generate_v3(sk_CONF_VALUE_value(sect, i)->value, cnf);
 			if (!typ)
 				goto bad;
 			sk_ASN1_TYPE_push(sk, typ);
+			typ = NULL;
 			}
 		}
 
@@ -497,6 +498,8 @@ static ASN1_TYPE *asn1_multi(int utype, const char *section, X509V3_CTX *cnf)
 
 	if (sk)
 		sk_ASN1_TYPE_pop_free(sk, ASN1_TYPE_free);
+	if (typ)
+		ASN1_TYPE_free(typ);
 	if (sect)
 		X509V3_section_free(cnf, sect);
 
@@ -581,8 +584,6 @@ static int asn1_str2tag(const char *tagstr, int len)
 		ASN1_GEN_STR("TELETEXSTRING", V_ASN1_T61STRING),
 		ASN1_GEN_STR("GeneralString", V_ASN1_GENERALSTRING),
 		ASN1_GEN_STR("GENSTR", V_ASN1_GENERALSTRING),
-		ASN1_GEN_STR("NUMERIC", V_ASN1_NUMERICSTRING),
-		ASN1_GEN_STR("NUMERICSTRING", V_ASN1_NUMERICSTRING),
 
 		/* Special cases */
 		ASN1_GEN_STR("SEQUENCE", V_ASN1_SEQUENCE),
@@ -728,7 +729,6 @@ static ASN1_TYPE *asn1_str2type(const char *str, int format, int utype)
 		case V_ASN1_VISIBLESTRING:
 		case V_ASN1_UNIVERSALSTRING:
 		case V_ASN1_GENERALSTRING:
-		case V_ASN1_NUMERICSTRING:
 
 		if (format == ASN1_GEN_FORMAT_ASCII)
 			format = MBSTRING_ASC;

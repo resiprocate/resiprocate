@@ -58,7 +58,7 @@
  * [including the GNU Public Licence.]
  */
 /* ====================================================================
- * Copyright (c) 1998-2006 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 1998-2001 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -115,32 +115,6 @@
  * ECC cipher suite support in OpenSSL originally developed by 
  * SUN MICROSYSTEMS, INC., and contributed to the OpenSSL project.
  */
-/* ====================================================================
- * Copyright 2005 Nokia. All rights reserved.
- *
- * The portions of the attached software ("Contribution") is developed by
- * Nokia Corporation and is licensed pursuant to the OpenSSL open source
- * license.
- *
- * The Contribution, originally written by Mika Kousa and Pasi Eronen of
- * Nokia Corporation, consists of the "PSK" (Pre-Shared Key) ciphersuites
- * support (see RFC 4279) to OpenSSL.
- *
- * No patent licenses or other rights except those expressly stated in
- * the OpenSSL open source license shall be deemed granted or received
- * expressly, by implication, estoppel, or otherwise.
- *
- * No assurances are provided by Nokia that the Contribution does not
- * infringe the patent or other intellectual property rights of any third
- * party or that the license provides you with all the necessary rights
- * to make use of the Contribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. IN
- * ADDITION TO THE DISCLAIMERS INCLUDED IN THE LICENSE, NOKIA
- * SPECIFICALLY DISCLAIMS ANY LIABILITY FOR CLAIMS BROUGHT BY YOU OR ANY
- * OTHER ENTITY BASED ON INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS OR
- * OTHERWISE.
- */
 
 #ifdef REF_CHECK
 #  include <assert.h>
@@ -151,6 +125,7 @@
 #include <openssl/objects.h>
 #include <openssl/lhash.h>
 #include <openssl/x509v3.h>
+#include <openssl/rand.h>
 #ifndef OPENSSL_NO_DH
 #include <openssl/dh.h>
 #endif
@@ -245,7 +220,7 @@ int SSL_clear(SSL *s)
 	}
 
 /** Used to change an SSL_CTXs default SSL method type */
-int SSL_CTX_set_ssl_version(SSL_CTX *ctx,const SSL_METHOD *meth)
+int SSL_CTX_set_ssl_version(SSL_CTX *ctx,SSL_METHOD *meth)
 	{
 	STACK_OF(SSL_CIPHER) *sk;
 
@@ -329,15 +304,16 @@ SSL *SSL_new(SSL_CTX *ctx)
 	s->trust = ctx->trust;
 #endif
 	s->quiet_shutdown=ctx->quiet_shutdown;
-	s->max_send_fragment = ctx->max_send_fragment;
 
 	CRYPTO_add(&ctx->references,1,CRYPTO_LOCK_SSL_CTX);
 	s->ctx=ctx;
 #ifndef OPENSSL_NO_TLSEXT
+	s->tlsext_debug_cb = 0;
+	s->tlsext_debug_arg = NULL;
+	s->tlsext_ticket_expected = 0;
 	CRYPTO_add(&ctx->references,1,CRYPTO_LOCK_SSL_CTX);
 	s->initial_ctx=ctx;
 #endif
-
 	s->verify_result=X509_V_OK;
 
 	s->method=ctx->method;
@@ -351,11 +327,6 @@ SSL *SSL_new(SSL_CTX *ctx)
 	SSL_clear(s);
 
 	CRYPTO_new_ex_data(CRYPTO_EX_INDEX_SSL, s, &s->ex_data);
-
-#ifndef OPENSSL_NO_PSK
-	s->psk_client_callback=ctx->psk_client_callback;
-	s->psk_server_callback=ctx->psk_server_callback;
-#endif
 
 	return(s);
 err:
@@ -530,12 +501,7 @@ void SSL_free(SSL *s)
 	if (s->ctx) SSL_CTX_free(s->ctx);
 #ifndef OPENSSL_NO_TLSEXT
 	if (s->initial_ctx) SSL_CTX_free(s->initial_ctx);
-#ifndef OPENSSL_NO_EC
-	if (s->tlsext_ecpointformatlist) OPENSSL_free(s->tlsext_ecpointformatlist);
-	if (s->tlsext_ellipticcurvelist) OPENSSL_free(s->tlsext_ellipticcurvelist);
-#endif /* OPENSSL_NO_EC */
 #endif
-
 	if (s->client_CA != NULL)
 		sk_X509_NAME_pop_free(s->client_CA,X509_NAME_free);
 
@@ -556,6 +522,7 @@ void SSL_free(SSL *s)
             s->srtp_key_block=0;
             }
 #endif        
+
 	OPENSSL_free(s);
 	}
 
@@ -1026,11 +993,6 @@ long SSL_ctrl(SSL *s,int cmd,long larg,void *parg)
 			return larg;
 			}
 		return 0;
-	case SSL_CTRL_SET_MAX_SEND_FRAGMENT:
-		if (larg < 512 || larg > SSL3_RT_MAX_PLAIN_LENGTH)
-			return 0;
-		s->max_send_fragment = larg;
-		return 1;
 	default:
 		return(s->method->ssl_ctrl(s,cmd,larg,parg));
 		}
@@ -1119,11 +1081,6 @@ long SSL_CTX_ctrl(SSL_CTX *ctx,int cmd,long larg,void *parg)
 		return(ctx->options|=larg);
 	case SSL_CTRL_MODE:
 		return(ctx->mode|=larg);
-	case SSL_CTRL_SET_MAX_SEND_FRAGMENT:
-		if (larg < 512 || larg > SSL3_RT_MAX_PLAIN_LENGTH)
-			return 0;
-		ctx->max_send_fragment = larg;
-		return 1;
 	default:
 		return(ctx->method->ssl_ctx_ctrl(ctx,cmd,larg,parg));
 		}
@@ -1264,7 +1221,6 @@ int SSL_set_cipher_list(SSL *s,const char *str)
 char *SSL_get_shared_ciphers(const SSL *s,char *buf,int len)
 	{
 	char *p;
-	const char *cp;
 	STACK_OF(SSL_CIPHER) *sk;
 	SSL_CIPHER *c;
 	int i;
@@ -1277,20 +1233,21 @@ char *SSL_get_shared_ciphers(const SSL *s,char *buf,int len)
 	sk=s->session->ciphers;
 	for (i=0; i<sk_SSL_CIPHER_num(sk); i++)
 		{
-		/* Decrement for either the ':' or a '\0' */
-		len--;
+		int n;
+
 		c=sk_SSL_CIPHER_value(sk,i);
-		for (cp=c->name; *cp; )
+		n=strlen(c->name);
+		if (n+1 > len)
 			{
-			if (len-- == 0)
-				{
-				*p='\0';
-				return(buf);
-				}
-			else
-				*(p++)= *(cp++);
+			if (p != buf)
+				--p;
+			*p='\0';
+			return buf;
 			}
+		strcpy(p,c->name);
+		p+=n;
 		*(p++)=':';
+		len-=n+1;
 		}
 	p[-1]='\0';
 	return(buf);
@@ -1316,11 +1273,7 @@ int ssl_cipher_list_to_bytes(SSL *s,STACK_OF(SSL_CIPHER) *sk,unsigned char *p,
                 if ((c->algorithms & SSL_KRB5) && nokrb5)
                     continue;
 #endif /* OPENSSL_NO_KRB5 */                    
-#ifndef OPENSSL_NO_PSK
-		/* with PSK there must be client callback set */
-		if ((c->algorithms & SSL_PSK) && s->psk_client_callback == NULL)
-			continue;
-#endif /* OPENSSL_NO_PSK */
+
 		j = put_cb ? put_cb(c,p) : ssl_put_cipher_by_char(s,c,p);
 		p+=j;
 		}
@@ -1371,9 +1324,8 @@ err:
 	return(NULL);
 	}
 
-
-#ifndef OPENSSL_TLSEXT
-/** return a servername extension value if provided in Client Hello, or NULL. 
+#ifndef OPENSSL_NO_TLSEXT
+/** return a servername extension value if provided in Client Hello, or NULL.
  * So far, only host_name types are defined (RFC 3546).
  */
 
@@ -1389,7 +1341,7 @@ const char *SSL_get_servername(const SSL *s, const int type)
 
 int SSL_get_servername_type(const SSL *s)
 	{
-	if (s->session && (!s->tlsext_hostname ? s->session->tlsext_hostname : s->tlsext_hostname)) 
+	if (s->session && (!s->tlsext_hostname ? s->session->tlsext_hostname : s->tlsext_hostname))
 		return TLSEXT_NAMETYPE_host_name;
 	return -1;
 	}
@@ -1428,7 +1380,7 @@ int SSL_SESSION_cmp(const SSL_SESSION *a,const SSL_SESSION *b)
 static IMPLEMENT_LHASH_HASH_FN(SSL_SESSION_hash, SSL_SESSION *)
 static IMPLEMENT_LHASH_COMP_FN(SSL_SESSION_cmp, SSL_SESSION *)
 
-SSL_CTX *SSL_CTX_new(const SSL_METHOD *meth)
+SSL_CTX *SSL_CTX_new(SSL_METHOD *meth)
 	{
 	SSL_CTX *ret=NULL;
 	
@@ -1544,17 +1496,17 @@ SSL_CTX *SSL_CTX_new(const SSL_METHOD *meth)
 	ret->extra_certs=NULL;
 	ret->comp_methods=SSL_COMP_get_compression_methods();
 
-	ret->max_send_fragment = SSL3_RT_MAX_PLAIN_LENGTH;
-
 #ifndef OPENSSL_NO_TLSEXT
 	ret->tlsext_servername_callback = 0;
 	ret->tlsext_servername_arg = NULL;
+	/* Setup RFC4507 ticket keys */
+	if ((RAND_pseudo_bytes(ret->tlsext_tick_key_name, 16) <= 0)
+		|| (RAND_bytes(ret->tlsext_tick_hmac_key, 16) <= 0)
+		|| (RAND_bytes(ret->tlsext_tick_aes_key, 16) <= 0))
+		ret->options |= SSL_OP_NO_TICKET;
+
 #endif
-#ifndef OPENSSL_NO_PSK
-	ret->psk_identity_hint=NULL;
-	ret->psk_client_callback=NULL;
-	ret->psk_server_callback=NULL;
-#endif
+
 	return(ret);
 err:
 	SSLerr(SSL_F_SSL_CTX_NEW,ERR_R_MALLOC_FAILURE);
@@ -1626,14 +1578,11 @@ void SSL_CTX_free(SSL_CTX *a)
 	a->comp_methods = NULL;
 #endif
 
-#ifndef OPENSSL_NO_PSK
-	if (a->psk_identity_hint)
-		OPENSSL_free(a->psk_identity_hint);
-#endif
 #ifndef OPENSSL_NO_SRTP
         if (a->srtp_profiles)
                 sk_SRTP_PROTECTION_PROFILE_free(a->srtp_profiles);
 #endif
+
 	OPENSSL_free(a);
 	}
 
@@ -1826,12 +1775,6 @@ void ssl_set_cert_masks(CERT *c, SSL_CIPHER *cipher)
 		emask|=SSL_kECDHE;
 		}
 #endif
-
-#ifndef OPENSSL_NO_PSK
-	mask  |= SSL_kPSK | SSL_aPSK;
-	emask |= SSL_kPSK | SSL_aPSK;
-#endif
-
 	c->mask=mask;
 	c->export_mask=emask;
 	c->valid=1;
@@ -1999,14 +1942,14 @@ void ssl_update_cache(SSL *s,int mode)
 	 * and it would be rather hard to do anyway :-) */
 	if (s->session->session_id_length == 0) return;
 
-	i=s->session_ctx->session_cache_mode;
+	i=s->ctx->session_cache_mode;
 	if ((i & mode) && (!s->hit)
 		&& ((i & SSL_SESS_CACHE_NO_INTERNAL_STORE)
-		    || SSL_CTX_add_session(s->session_ctx,s->session))
-		&& (s->session_ctx->new_session_cb != NULL))
+		    || SSL_CTX_add_session(s->ctx,s->session))
+		&& (s->ctx->new_session_cb != NULL))
 		{
 		CRYPTO_add(&s->session->references,1,CRYPTO_LOCK_SSL_SESSION);
-		if (!s->session_ctx->new_session_cb(s,s->session))
+		if (!s->ctx->new_session_cb(s,s->session))
 			SSL_SESSION_free(s->session);
 		}
 
@@ -2015,20 +1958,20 @@ void ssl_update_cache(SSL *s,int mode)
 		((i & mode) == mode))
 		{
 		if (  (((mode & SSL_SESS_CACHE_CLIENT)
-			?s->session_ctx->stats.sess_connect_good
-			:s->session_ctx->stats.sess_accept_good) & 0xff) == 0xff)
+			?s->ctx->stats.sess_connect_good
+			:s->ctx->stats.sess_accept_good) & 0xff) == 0xff)
 			{
-			SSL_CTX_flush_sessions(s->session_ctx,(unsigned long)time(NULL));
+			SSL_CTX_flush_sessions(s->ctx,(unsigned long)time(NULL));
 			}
 		}
 	}
 
-const SSL_METHOD *SSL_get_ssl_method(SSL *s)
+SSL_METHOD *SSL_get_ssl_method(SSL *s)
 	{
 	return(s->method);
 	}
 
-int SSL_set_ssl_method(SSL *s, const SSL_METHOD *meth)
+int SSL_set_ssl_method(SSL *s,SSL_METHOD *meth)
 	{
 	int conn= -1;
 	int ret=1;
@@ -2521,10 +2464,12 @@ SSL_CTX *SSL_get_SSL_CTX(const SSL *ssl)
 
 SSL_CTX *SSL_set_SSL_CTX(SSL *ssl, SSL_CTX* ctx)
 	{
-	if (ssl->ctx == ctx) 
+	if (ssl->ctx == ctx)
 		return ssl->ctx;
+#ifndef OPENSSL_NO_TLSEXT
 	if (ctx == NULL)
 		ctx = ssl->initial_ctx;
+#endif
 	if (ssl->cert != NULL)
 		ssl_cert_free(ssl->cert);
 	ssl->cert = ssl_cert_dup(ctx->cert);
@@ -2549,14 +2494,14 @@ int SSL_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
 #endif
 
 void SSL_set_info_callback(SSL *ssl,
-			   void (*cb)(const SSL *ssl,int type,int val))
+	void (*cb)(const SSL *ssl,int type,int val))
 	{
 	ssl->info_callback=cb;
 	}
 
 /* One compiler (Diab DCC) doesn't like argument names in returned
    function pointer.  */
-void (*SSL_get_info_callback(const SSL *ssl))(const SSL * /*ssl*/,int /*type*/,int /*val*/)
+void (*SSL_get_info_callback(const SSL *ssl))(const SSL * /*ssl*/,int /*type*/,int /*val*/) 
 	{
 	return ssl->info_callback;
 	}
@@ -2703,67 +2648,6 @@ void SSL_set_tmp_ecdh_callback(SSL *ssl,EC_KEY *(*ecdh)(SSL *ssl,int is_export,
 	}
 #endif
 
-#ifndef OPENSSL_NO_PSK
-int SSL_CTX_use_psk_identity_hint(SSL_CTX *ctx, const char *identity_hint)
-	{
-	if (identity_hint != NULL && strlen(identity_hint) > PSK_MAX_IDENTITY_LEN)
-		{
-		SSLerr(SSL_F_SSL_CTX_USE_PSK_IDENTITY_HINT, SSL_R_DATA_LENGTH_TOO_LONG);
-		return 0;
-		}
-	if (ctx->psk_identity_hint != NULL)
-		OPENSSL_free(ctx->psk_identity_hint);
-	if (identity_hint != NULL)
-		{
-		ctx->psk_identity_hint = BUF_strdup(identity_hint);
-		if (ctx->psk_identity_hint == NULL)
-			return 0;
-		}
-	else
-		ctx->psk_identity_hint = NULL;
-	return 1;
-	}
-
-int SSL_use_psk_identity_hint(SSL *s, const char *identity_hint)
-	{
-	if (s == NULL)
-		return 0;
-
-	if (s->session == NULL)
-		return 1; /* session not created yet, ignored */
-
-	if (identity_hint != NULL && strlen(identity_hint) > PSK_MAX_IDENTITY_LEN)
-		{
-		SSLerr(SSL_F_SSL_USE_PSK_IDENTITY_HINT, SSL_R_DATA_LENGTH_TOO_LONG);
-		return 0;
-		}
-	if (s->session->psk_identity_hint != NULL)
-		OPENSSL_free(s->session->psk_identity_hint);
-	if (identity_hint != NULL)
-		{
-		s->session->psk_identity_hint = BUF_strdup(identity_hint);
-		if (s->session->psk_identity_hint == NULL)
-			return 0;
-		}
-	else
-		s->session->psk_identity_hint = NULL;
-	return 1;
-	}
-
-const char *SSL_get_psk_identity_hint(const SSL *s)
-	{
-	if (s == NULL || s->session == NULL)
-		return NULL;
-	return(s->session->psk_identity_hint);
-	}
-
-const char *SSL_get_psk_identity(const SSL *s)
-	{
-	if (s == NULL || s->session == NULL)
-		return NULL;
-	return(s->session->psk_identity);
-	}
-#endif
 
 void SSL_CTX_set_msg_callback(SSL_CTX *ctx, void (*cb)(int write_p, int version, int content_type, const void *buf, size_t len, SSL *ssl, void *arg))
 	{

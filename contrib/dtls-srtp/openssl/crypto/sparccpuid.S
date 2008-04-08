@@ -34,8 +34,7 @@ OPENSSL_wipe_cpu:
 	nop
 	call	.PIC.zero.up
 	mov	.zero-(.-4),%o0
-	ld	[%o0],%f0
-	ld	[%o0],%f1
+	ldd	[%o0],%f0
 
 	subcc	%g0,1,%o0
 	! Following is V9 "rd %ccr,%o0" instruction. However! V8
@@ -167,7 +166,6 @@ walk_reg_wins:
 
 .global	OPENSSL_atomic_add
 .type	OPENSSL_atomic_add,#function
-.align	32
 OPENSSL_atomic_add:
 #ifndef ABI64
 	subcc	%g0,1,%o2
@@ -215,23 +213,27 @@ OPENSSL_atomic_add:
 	sra	%o0,%g0,%o0	! we return signed int, remember?
 .size	OPENSSL_atomic_add,.-OPENSSL_atomic_add
 
-.global	_sparcv9_rdtick
-.align	32
-_sparcv9_rdtick:
+.global	OPENSSL_rdtsc
 	subcc	%g0,1,%o0
 	.word	0x91408000	!rd	%ccr,%o0
 	cmp	%o0,0x99
-	bne	.notick
+	bne	.notsc
 	xor	%o0,%o0,%o0
-	.word	0x91410000	!rd	%tick,%o0
-	retl
-	.word	0x93323020	!srlx	%o2,32,%o1
-.notick:
-	retl
-	xor	%o1,%o1,%o1
-.type	_sparcv9_rdtick,#function
-.size	_sparcv9_rdtick,.-_sparcv9_rdtick
+	save	%sp,FRAME-16,%sp
+	mov	513,%o0		!SI_PLATFORM
+	add	%sp,BIAS+16,%o1
+	call	sysinfo
+	mov	256,%o2
 
-.section	".init",#alloc,#execinstr
-	call	OPENSSL_cpuid_setup
+	add	%sp,BIAS-16,%o1
+	ld	[%o1],%l0
+	ld	[%o1+4],%l1
+	ld	[%o1+8],%l2
+	mov	%lo('SUNW'),%l3
+	ret
+	restore
+.notsc:
+	retl
 	nop
+.type	OPENSSL_rdtsc,#function
+.size	OPENSSL_rdtsc,.-OPENSSL_atomic_add

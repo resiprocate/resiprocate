@@ -3,7 +3,7 @@
  * project 2000.
  */
 /* ====================================================================
- * Copyright (c) 2000-2005 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 2000 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -99,7 +99,7 @@ extern "C" {
 #define ASN1_ITEM_start(itname) \
 	const ASN1_ITEM * itname##_it(void) \
 	{ \
-		static const ASN1_ITEM local_it = { \
+		static const ASN1_ITEM local_it = { 
 
 #define ASN1_ITEM_end(itname) \
 		}; \
@@ -644,10 +644,6 @@ typedef int ASN1_ex_i2d(ASN1_VALUE **pval, unsigned char **out, const ASN1_ITEM 
 typedef int ASN1_ex_new_func(ASN1_VALUE **pval, const ASN1_ITEM *it);
 typedef void ASN1_ex_free_func(ASN1_VALUE **pval, const ASN1_ITEM *it);
 
-typedef int ASN1_ex_print_func(BIO *out, ASN1_VALUE **pval, 
-						int indent, const char *fname, 
-						const ASN1_PCTX *pctx);
-
 typedef int ASN1_primitive_i2c(ASN1_VALUE **pval, unsigned char *cont, int *putype, const ASN1_ITEM *it);
 typedef int ASN1_primitive_c2i(ASN1_VALUE **pval, const unsigned char *cont, int len, int utype, char *free_cont, const ASN1_ITEM *it);
 
@@ -665,7 +661,6 @@ typedef struct ASN1_EXTERN_FUNCS_st {
 	ASN1_ex_free_func *asn1_ex_clear;
 	ASN1_ex_d2i *asn1_ex_d2i;
 	ASN1_ex_i2d *asn1_ex_i2d;
-	ASN1_ex_print_func *asn1_ex_print;
 } ASN1_EXTERN_FUNCS;
 
 typedef struct ASN1_PRIMITIVE_FUNCS_st {
@@ -695,8 +690,7 @@ typedef struct ASN1_PRIMITIVE_FUNCS_st {
  * then an external type is more appropriate.
  */
 
-typedef int ASN1_aux_cb(int operation, ASN1_VALUE **in, const ASN1_ITEM *it,
-				void *exarg);
+typedef int ASN1_aux_cb(int operation, ASN1_VALUE **in, const ASN1_ITEM *it);
 
 typedef struct ASN1_AUX_st {
 	void *app_data;
@@ -706,13 +700,6 @@ typedef struct ASN1_AUX_st {
 	ASN1_aux_cb *asn1_cb;
 	int enc_offset;		/* Offset of ASN1_ENCODING structure */
 } ASN1_AUX;
-
-/* For print related callbacks exarg points to this structure */
-typedef struct ASN1_PRINT_ARG_st {
-	BIO *out;
-	int indent;
-	const ASN1_PCTX *pctx;
-} ASN1_PRINT_ARG;
 
 /* Flags in ASN1_AUX */
 
@@ -733,8 +720,6 @@ typedef struct ASN1_PRINT_ARG_st {
 #define ASN1_OP_D2I_POST	5
 #define ASN1_OP_I2D_PRE		6
 #define ASN1_OP_I2D_POST	7
-#define ASN1_OP_PRINT_PRE	8
-#define ASN1_OP_PRINT_POST	9
 
 /* Macro to implement a primitive type */
 #define IMPLEMENT_ASN1_TYPE(stname) IMPLEMENT_ASN1_TYPE_ex(stname, stname, 0)
@@ -841,17 +826,6 @@ typedef struct ASN1_PRINT_ARG_st {
         { \
         return ASN1_item_dup(ASN1_ITEM_rptr(stname), x); \
         }
-
-#define IMPLEMENT_ASN1_PRINT_FUNCTION(stname) \
-	IMPLEMENT_ASN1_PRINT_FUNCTION_fname(stname, stname, stname)
-
-#define IMPLEMENT_ASN1_PRINT_FUNCTION_fname(stname, itname, fname) \
-	int fname##_print_ctx(BIO *out, stname *x, int indent, \
-						const ASN1_PCTX *pctx) \
-	{ \
-		return ASN1_item_print(out, (ASN1_VALUE *)x, indent, \
-			ASN1_ITEM_rptr(itname), pctx); \
-	} 
 
 #define IMPLEMENT_ASN1_FUNCTIONS_const(name) \
 		IMPLEMENT_ASN1_FUNCTIONS_const_fname(name, name, name)

@@ -95,7 +95,6 @@ RC5_ENC= rc5_enc.o
 MD5_ASM_OBJ= 
 SHA1_ASM_OBJ= 
 RMD160_ASM_OBJ= 
-WP_ASM_OBJ=
 
 # KRB5 stuff
 KRB5_INCLUDES=
@@ -111,12 +110,12 @@ SHLIBDIRS= crypto ssl
 # dirs in crypto to build
 SDIRS=  \
 	objects \
-	md2 md4 md5 sha mdc2 hmac ripemd whrlpool \
-	des aes rc2 rc4 rc5 idea bf cast \
+	md2 md4 md5 sha mdc2 hmac ripemd \
+	des aes rc2 rc4 rc5 idea bf cast camellia seed \
 	bn ec rsa dsa ecdsa dh ecdh dso engine \
 	buffer bio stack lhash rand err \
 	evp asn1 pem x509 x509v3 conf txt_db pkcs7 pkcs12 comp ocsp ui krb5 \
-	store pqueue ts
+	store pqueue
 # keep in mind that the above list is adjusted by ./Configure
 # according to no-xxx arguments...
 
@@ -130,8 +129,6 @@ MANDIR=$(OPENSSLDIR)/man
 MAN1=1
 MAN3=3
 MANSUFFIX=
-HTMLSUFFIX=html
-HTMLDIR=$(OPENSSLDIR)/html
 SHELL=/bin/sh
 
 TOP=    .
@@ -194,7 +191,6 @@ BUILDENV=	PLATFORM='${PLATFORM}' PROCESSOR='${PROCESSOR}' \
 		SHA1_ASM_OBJ='${SHA1_ASM_OBJ}'			\
 		MD5_ASM_OBJ='${MD5_ASM_OBJ}'			\
 		RMD160_ASM_OBJ='${RMD160_ASM_OBJ}'		\
-		WP_ASM_OBJ='${WP_ASM_OBJ}'			\
 		THIS=$${THIS:-$@} MAKEFILE=Makefile MAKEOVERRIDES=
 # MAKEOVERRIDES= effectively "equalizes" GNU-ish and SysV-ish make flavors,
 # which in turn eliminates ambiguities in variable treatment with -e.
@@ -379,7 +375,7 @@ gentests:
 	$(CLEARENV) && $(MAKE) -e $(BUILDENV) TESTS='${TESTS}' OPENSSL_DEBUG_MEMORY=on generate );
 
 dclean:
-	rm -rf *.bak include/openssl certs/.0
+	rm -f *.bak
 	@set -e; target=dclean; $(RECURSIVE_BUILD_CMD)
 
 rehash: rehash.time
@@ -428,8 +424,6 @@ crypto/objects/obj_dat.h: crypto/objects/obj_dat.pl crypto/objects/obj_mac.h
 	$(PERL) crypto/objects/obj_dat.pl crypto/objects/obj_mac.h crypto/objects/obj_dat.h
 crypto/objects/obj_mac.h: crypto/objects/objects.pl crypto/objects/objects.txt crypto/objects/obj_mac.num
 	$(PERL) crypto/objects/objects.pl crypto/objects/objects.txt crypto/objects/obj_mac.num crypto/objects/obj_mac.h
-crypto/objects/obj_xref.h: crypto/objects/objxref.pl crypto/objects/obj_xref.txt crypto/objects/obj_mac.num
-	$(PERL) crypto/objects/objxref.pl > crypto/objects/obj_xref.h
 
 apps/openssl-vms.cnf: apps/openssl.cnf
 	$(PERL) VMS/VMSify-conf.pl < apps/openssl.cnf > apps/openssl-vms.cnf
@@ -442,7 +436,7 @@ TABLE: Configure
 	(echo 'Output of `Configure TABLE'"':"; \
 	$(PERL) Configure TABLE) > TABLE
 
-update: errors stacks util/libeay.num util/ssleay.num crypto/objects/obj_dat.h crypto/objects/obj_xref.h apps/openssl-vms.cnf crypto/bn/bn_prime.h TABLE depend
+update: errors stacks util/libeay.num util/ssleay.num crypto/objects/obj_dat.h apps/openssl-vms.cnf crypto/bn/bn_prime.h TABLE depend
 
 # Build distribution tar-file. As the list of files returned by "find" is
 # pretty long, on several platforms a "too many arguments" error or similar
@@ -543,27 +537,6 @@ install_sw:
 	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/lib/pkgconfig/libssl.pc
 	cp openssl.pc $(INSTALL_PREFIX)$(INSTALLTOP)/lib/pkgconfig
 	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/lib/pkgconfig/openssl.pc
-
-install_html_docs:
-	here="`pwd`"; \
-	for subdir in apps crypto ssl; do \
-		mkdir -p $(INSTALL_PREFIX)$(HTMLDIR)/$$subdir; \
-		for i in doc/$$subdir/*.pod; do \
-			fn=`basename $$i .pod`; \
-			echo "installing html/$$fn.$(HTMLSUFFIX)"; \
-			cat $$i \
-			| sed -r 's/L<([^)]*)(\([0-9]\))?\|([^)]*)(\([0-9]\))?>/L<\1|\3>/g' \
-			| pod2html --podroot=doc --htmlroot=.. --podpath=apps:crypto:ssl \
-			| sed -r 's/<!DOCTYPE.*//g' \
-			> $(INSTALL_PREFIX)$(HTMLDIR)/$$subdir/$$fn.$(HTMLSUFFIX); \
-			$(PERL) util/extract-names.pl < $$i | \
-				grep -v $$filecase "^$$fn\$$" | \
-				(cd $(INSTALL_PREFIX)$(HTMLDIR)/$$subdir; \
-				 while read n; do \
-					$$here/util/point.sh $$fn.$(HTMLSUFFIX) "$$n".$(HTMLSUFFIX); \
-				 done); \
-		done; \
-	done
 
 install_docs:
 	@$(PERL) $(TOP)/util/mkdir-p.pl \
