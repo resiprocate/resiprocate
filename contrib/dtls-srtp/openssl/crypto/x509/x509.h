@@ -155,12 +155,12 @@ typedef struct X509_val_st
 	ASN1_TIME *notAfter;
 	} X509_VAL;
 
-struct X509_pubkey_st
+typedef struct X509_pubkey_st
 	{
 	X509_ALGOR *algor;
 	ASN1_BIT_STRING *public_key;
 	EVP_PKEY *pkey;
-	};
+	} X509_PUBKEY;
 
 typedef struct X509_sig_st
 	{
@@ -288,6 +288,10 @@ struct x509_st
 	ASN1_OCTET_STRING *skid;
 	struct AUTHORITY_KEYID_st *akid;
 	X509_POLICY_CACHE *policy_cache;
+#ifndef OPENSSL_NO_RFC3779
+	STACK_OF(IPAddressFamily) *rfc3779_addr;
+	struct ASIdentifiers_st *rfc3779_asid;
+#endif
 #ifndef OPENSSL_NO_SHA
 	unsigned char sha1_hash[SHA_DIGEST_LENGTH];
 #endif
@@ -326,11 +330,10 @@ typedef struct x509_cert_pair_st {
 #define X509_TRUST_OBJECT_SIGN	5
 #define X509_TRUST_OCSP_SIGN	6
 #define X509_TRUST_OCSP_REQUEST	7
-#define X509_TRUST_TSA		8
 
 /* Keep these up to date! */
 #define X509_TRUST_MIN		1
-#define X509_TRUST_MAX		8
+#define X509_TRUST_MAX		7
 
 
 /* trust_flags values */
@@ -545,7 +548,7 @@ X509_ALGOR *prf;
 
 /* PKCS#8 private key info structure */
 
-struct pkcs8_priv_key_info_st
+typedef struct pkcs8_priv_key_info_st
         {
         int broken;     /* Flag for various broken formats */
 #define PKCS8_OK		0
@@ -556,7 +559,7 @@ struct pkcs8_priv_key_info_st
         X509_ALGOR *pkeyalg;
         ASN1_TYPE *pkey; /* Should be OCTET STRING but some are broken */
         STACK_OF(X509_ATTRIBUTE) *attributes;
-        };
+        } PKCS8_PRIV_KEY_INFO;
 
 #ifdef  __cplusplus
 }
@@ -859,10 +862,6 @@ X509_EXTENSION *X509_EXTENSION_dup(X509_EXTENSION *ex);
 X509_CRL *X509_CRL_dup(X509_CRL *crl);
 X509_REQ *X509_REQ_dup(X509_REQ *req);
 X509_ALGOR *X509_ALGOR_dup(X509_ALGOR *xn);
-int X509_ALGOR_set0(X509_ALGOR *alg, ASN1_OBJECT *aobj, int ptype, void *pval);
-void X509_ALGOR_get0(ASN1_OBJECT **paobj, int *pptype, void **ppval,
-						X509_ALGOR *algor);
-
 X509_NAME *X509_NAME_dup(X509_NAME *xn);
 X509_NAME_ENTRY *X509_NAME_ENTRY_dup(X509_NAME_ENTRY *ne);
 
@@ -1248,22 +1247,6 @@ PKCS8_PRIV_KEY_INFO *EVP_PKEY2PKCS8(EVP_PKEY *pkey);
 PKCS8_PRIV_KEY_INFO *EVP_PKEY2PKCS8_broken(EVP_PKEY *pkey, int broken);
 PKCS8_PRIV_KEY_INFO *PKCS8_set_broken(PKCS8_PRIV_KEY_INFO *p8, int broken);
 
-int PKCS8_pkey_set0(PKCS8_PRIV_KEY_INFO *priv, ASN1_OBJECT *aobj,
-			int version, int ptype, void *pval,
-				unsigned char *penc, int penclen);
-int PKCS8_pkey_get0(ASN1_OBJECT **ppkalg,
-		const unsigned char **pk, int *ppklen,
-		X509_ALGOR **pa,
-		PKCS8_PRIV_KEY_INFO *p8);
-
-int X509_PUBKEY_set0_param(X509_PUBKEY *pub, ASN1_OBJECT *aobj,
-					int ptype, void *pval,
-					unsigned char *penc, int penclen);
-int X509_PUBKEY_get0_param(ASN1_OBJECT **ppkalg,
-		const unsigned char **pk, int *ppklen,
-		X509_ALGOR **pa,
-		X509_PUBKEY *pub);
-
 int X509_check_trust(X509 *x, int id, int flags);
 int X509_TRUST_get_count(void);
 X509_TRUST * X509_TRUST_get0(int idx);
@@ -1343,10 +1326,7 @@ void ERR_load_X509_strings(void);
 #define X509_R_KEY_VALUES_MISMATCH			 116
 #define X509_R_LOADING_CERT_DIR				 103
 #define X509_R_LOADING_DEFAULTS				 104
-#define X509_R_METHOD_NOT_SUPPORTED			 124
 #define X509_R_NO_CERT_SET_FOR_US_TO_VERIFY		 105
-#define X509_R_PUBLIC_KEY_DECODE_ERROR			 125
-#define X509_R_PUBLIC_KEY_ENCODE_ERROR			 126
 #define X509_R_SHOULD_RETRY				 106
 #define X509_R_UNABLE_TO_FIND_PARAMETERS_IN_CHAIN	 107
 #define X509_R_UNABLE_TO_GET_CERTS_PUBLIC_KEY		 108

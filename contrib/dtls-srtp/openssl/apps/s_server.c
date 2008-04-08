@@ -1,14 +1,3 @@
-/**
-s_server.c
-
-Copyright (C) 2006, Network Resonance, Inc.
-All Rights Reserved.
-
-ekr@networkresonance.com  Mon May 15 17:24:45 2006
- */
-
-
-static char *RCSSTRING="$Id$";
 /* apps/s_server.c */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
@@ -67,7 +56,7 @@ static char *RCSSTRING="$Id$";
  * [including the GNU Public Licence.]
  */
 /* ====================================================================
- * Copyright (c) 1998-2006 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 1998-2001 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -124,32 +113,6 @@ static char *RCSSTRING="$Id$";
  * ECC cipher suite support in OpenSSL originally developed by 
  * SUN MICROSYSTEMS, INC., and contributed to the OpenSSL project.
  */
-/* ====================================================================
- * Copyright 2005 Nokia. All rights reserved.
- *
- * The portions of the attached software ("Contribution") is developed by
- * Nokia Corporation and is licensed pursuant to the OpenSSL open source
- * license.
- *
- * The Contribution, originally written by Mika Kousa and Pasi Eronen of
- * Nokia Corporation, consists of the "PSK" (Pre-Shared Key) ciphersuites
- * support (see RFC 4279) to OpenSSL.
- *
- * No patent licenses or other rights except those expressly stated in
- * the OpenSSL open source license shall be deemed granted or received
- * expressly, by implication, estoppel, or otherwise.
- *
- * No assurances are provided by Nokia that the Contribution does not
- * infringe the patent or other intellectual property rights of any third
- * party or that the license provides you with all the necessary rights
- * to make use of the Contribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. IN
- * ADDITION TO THE DISCLAIMERS INCLUDED IN THE LICENSE, NOKIA
- * SPECIFICALLY DISCLAIMS ANY LIABILITY FOR CLAIMS BROUGHT BY YOU OR ANY
- * OTHER ENTITY BASED ON INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS OR
- * OTHERWISE.
- */
 
 /* Until the key-gen callbacks are modified to use newer prototypes, we allow
  * deprecated functions for openssl-internal code */
@@ -158,11 +121,11 @@ static char *RCSSTRING="$Id$";
 #endif
 
 #include <assert.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/stat.h>
 #include <openssl/e_os2.h>
 #ifdef OPENSSL_NO_STDIO
 #define APPS_WIN16
@@ -199,13 +162,17 @@ typedef unsigned int u_int;
 #include "s_apps.h"
 #include "timeouts.h"
 
+#ifdef OPENSSL_SYS_WINCE
+/* Windows CE incorrectly defines fileno as returning void*, so to avoid problems below... */
+#ifdef fileno
+#undef fileno
+#endif
+#define fileno(a) (int)_fileno(a)
+#endif
+
 #if (defined(OPENSSL_SYS_VMS) && __VMS_VER < 70000000)
 /* FIONBIO used as a switch to enable ioctl, and that isn't in VMS < 7.0 */
 #undef FIONBIO
-#endif
-
-#if defined(OPENSSL_SYS_BEOS_R5)
-#include <fcntl.h>
 #endif
 
 #ifndef OPENSSL_NO_RSA
@@ -226,6 +193,14 @@ static DH *get_dh512(void);
 
 #ifdef MONOLITH
 static void s_server_init(void);
+#endif
+
+#ifndef S_ISDIR
+# if defined(_S_IFMT) && defined(_S_IFDIR)
+#  define S_ISDIR(a)	(((a) & _S_IFMT) == _S_IFDIR)
+# else
+#  define S_ISDIR(a)	(((a) & S_IFMT) == S_IFDIR)
+# endif
 #endif
 
 #ifndef OPENSSL_NO_DH
@@ -292,6 +267,9 @@ static int www=0;
 
 static BIO *bio_s_out=NULL;
 static int s_debug=0;
+#ifndef OPENSSL_NO_TLSEXT
+static int s_tlsextdebug=0;
+#endif
 static int s_msg=0;
 static int s_quiet=0;
 
@@ -302,73 +280,12 @@ static char *engine_id=NULL;
 static const char *session_id_prefix=NULL;
 
 static int enable_timeouts = 0;
-static long socket_mtu;
+#ifdef mtu
+#undef mtu
+#endif
+static long mtu;
 static int cert_chain = 0;
 
-#ifndef OPENSSL_NO_PSK
-static char *psk_identity="Client_identity";
-static char *psk_key=NULL; /* by default PSK is not used */
-
-static unsigned int psk_server_cb(SSL *ssl, const char *identity,
-	unsigned char *psk, unsigned int max_psk_len)
-	{
-	unsigned int psk_len = 0;
-	int ret;
-	BIGNUM *bn = NULL;
-
-	if (s_debug)
-		BIO_printf(bio_s_out,"psk_server_cb\n");
-	if (!identity)
-		{
-		BIO_printf(bio_err,"Error: client did not send PSK identity\n");
-		goto out_err;
-		}
-	if (s_debug)
-		BIO_printf(bio_s_out,"identity_len=%d identity=%s\n",
-			identity ? strlen(identity) : 0, identity);
-
-	/* here we could lookup the given identity e.g. from a database */
-  	if (strcmp(identity, psk_identity) != 0)
-		{
-                BIO_printf(bio_s_out, "PSK error: client identity not found\n");
-		goto out_err;
-                }
-	if (s_debug)
-		BIO_printf(bio_s_out, "PSK client identity found\n");
-
-	/* convert the PSK key to binary */
-	ret = BN_hex2bn(&bn, psk_key);
-	if (!ret)
-		{
-		BIO_printf(bio_err,"Could not convert PSK key '%s' to BIGNUM\n", psk_key);
-		if (bn)
-			BN_free(bn);
-		return 0;
-		}
-	if (BN_num_bytes(bn) > (int)max_psk_len)
-		{
-		BIO_printf(bio_err,"psk buffer of callback is too small (%d) for key (%d)\n",
-			max_psk_len, BN_num_bytes(bn));
-		BN_free(bn);
-		return 0;
-		}
-
-	ret = BN_bn2bin(bn, psk);
-	BN_free(bn);
-
-	if (ret < 0)
-		goto out_err;
-	psk_len = (unsigned int)ret;
-
-	if (s_debug)
-		BIO_printf(bio_s_out, "fetched PSK len=%d\n", psk_len);
-        return psk_len;
- out_err:
-	if (s_debug)
-		BIO_printf(bio_err, "Error in PSK server callback\n");
-	return 0;
-        }
-#endif
 
 #ifdef MONOLITH
 static void s_server_init(void)
@@ -428,7 +345,7 @@ static void sv_usage(void)
 #ifndef OPENSSL_NO_ECDH
 	BIO_printf(bio_err," -named_curve arg  - Elliptic curve name to use for ephemeral ECDH keys.\n" \
 	                   "                 Use \"openssl ecparam -list_curves\" for all names\n" \
-	                   "                 (default is nistp256).\n");
+	                   "                 (default is sect163r2).\n");
 #endif
 #ifdef FIONBIO
 	BIO_printf(bio_err," -nbio         - Run with non-blocking IO\n");
@@ -445,10 +362,6 @@ static void sv_usage(void)
 	BIO_printf(bio_err," -serverpref   - Use server's cipher preferences\n");
 	BIO_printf(bio_err," -quiet        - No server output\n");
 	BIO_printf(bio_err," -no_tmp_rsa   - Do not generate a tmp RSA key\n");
-#ifndef OPENSSL_NO_PSK
-	BIO_printf(bio_err," -psk_hint arg - PSK identity hint to use\n");
-	BIO_printf(bio_err," -psk arg      - PSK in hex (without 0x)\n");
-#endif
 	BIO_printf(bio_err," -ssl2         - Just talk SSLv2\n");
 	BIO_printf(bio_err," -ssl3         - Just talk SSLv3\n");
 	BIO_printf(bio_err," -tls1         - Just talk TLSv1\n");
@@ -482,6 +395,8 @@ static void sv_usage(void)
 	BIO_printf(bio_err,"                 (default is %s)\n",TEST_CERT2);
 	BIO_printf(bio_err," -key2 arg     - Private Key file to use for servername, in cert file if\n");
 	BIO_printf(bio_err,"                 not specified (default is %s)\n",TEST_CERT2);
+	BIO_printf(bio_err," -tlsextdebug  - hex dump of all TLS extensions received\n");
+	BIO_printf(bio_err," -no_ticket    - disable use of RFC4507bis session tickets\n");
 #ifndef OPENSSL_NO_SRTP
 	BIO_printf(bio_err," -use_srtp profiles - Offer SRTP key management with a colon-separated profile list");
 #endif
@@ -650,6 +565,7 @@ typedef struct tlsextctx_st {
    int extension_error;
 } tlsextctx;
 
+
 static int MS_CALLBACK ssl_servername_cb(SSL *s, int *ad, void *arg)
 	{
 	tlsextctx * p = (tlsextctx *) arg;
@@ -672,12 +588,11 @@ static int MS_CALLBACK ssl_servername_cb(SSL *s, int *ad, void *arg)
 		}
 	return SSL_TLSEXT_ERR_OK;
 }
-
 #ifndef OPENSSL_NO_SRTP
         char *srtp_profiles = NULL;
 #endif        
-#endif
 
+#endif
 int MAIN(int, char **);
 
 int MAIN(int argc, char *argv[])
@@ -696,8 +611,8 @@ int MAIN(int argc, char *argv[])
 	int off=0;
 	int no_tmp_rsa=0,no_dhe=0,no_ecdhe=0,nocert=0;
 	int state=0;
-	const SSL_METHOD *meth=NULL;
-	int socket_type=SOCK_STREAM;
+	SSL_METHOD *meth=NULL;
+        int socket_type=SOCK_STREAM;
 #ifndef OPENSSL_NO_ENGINE
 	ENGINE *e=NULL;
 #endif
@@ -716,10 +631,7 @@ int MAIN(int argc, char *argv[])
 #ifndef OPENSSL_NO_TLSEXT
         tlsextctx tlsextcbp = {NULL, NULL, SSL_TLSEXT_ERR_ALERT_WARNING};
 #endif
-#ifndef OPENSSL_NO_PSK
-	/* by default do not send a PSK identity hint */
-	static char *psk_identity_hint=NULL;
-#endif
+
 #if !defined(OPENSSL_NO_SSL2) && !defined(OPENSSL_NO_SSL3)
 	meth=SSLv23_server_method();
 #elif !defined(OPENSSL_NO_SSL3)
@@ -884,6 +796,10 @@ int MAIN(int argc, char *argv[])
 			}
 		else if	(strcmp(*argv,"-debug") == 0)
 			{ s_debug=1; }
+#ifndef OPENSSL_NO_TLSEXT
+		else if	(strcmp(*argv,"-tlsextdebug") == 0)
+			s_tlsextdebug=1;
+#endif
 		else if	(strcmp(*argv,"-msg") == 0)
 			{ s_msg=1; }
 		else if	(strcmp(*argv,"-hack") == 0)
@@ -902,27 +818,6 @@ int MAIN(int argc, char *argv[])
 			{ no_dhe=1; }
 		else if	(strcmp(*argv,"-no_ecdhe") == 0)
 			{ no_ecdhe=1; }
-#ifndef OPENSSL_NO_PSK
-                else if (strcmp(*argv,"-psk_hint") == 0)
-			{
-                        if (--argc < 1) goto bad;
-                        psk_identity_hint= *(++argv);
-                        }
-                else if (strcmp(*argv,"-psk") == 0)
-			{
-			size_t i;
-
-			if (--argc < 1) goto bad;
-			psk_key=*(++argv);
-			for (i=0; i<strlen(psk_key); i++)
-				{
-				if (isxdigit((int)psk_key[i]))
-					continue;
-				BIO_printf(bio_err,"Not a hex number '%s'\n",*argv);
-				goto bad;
-				}
-			}
-#endif
 		else if	(strcmp(*argv,"-www") == 0)
 			{ www=1; }
 		else if	(strcmp(*argv,"-WWW") == 0)
@@ -935,8 +830,10 @@ int MAIN(int argc, char *argv[])
 			{ off|=SSL_OP_NO_SSLv3; }
 		else if	(strcmp(*argv,"-no_tls1") == 0)
 			{ off|=SSL_OP_NO_TLSv1; }
-		else if	(strcmp(*argv,"-no_comp") == 0)
-			{ off|=SSL_OP_NO_COMPRESSION; }
+#ifndef OPENSSL_NO_TLSEXT
+		else if	(strcmp(*argv,"-no_ticket") == 0)
+			{ off|=SSL_OP_NO_TICKET; }
+#endif
 #ifndef OPENSSL_NO_SSL2
 		else if	(strcmp(*argv,"-ssl2") == 0)
 			{ meth=SSLv2_server_method(); }
@@ -960,7 +857,7 @@ int MAIN(int argc, char *argv[])
 		else if (strcmp(*argv,"-mtu") == 0)
 			{
 			if (--argc < 1) goto bad;
-			socket_mtu = atol(*(++argv));
+			mtu = atol(*(++argv));
 			}
 		else if (strcmp(*argv, "-chain") == 0)
 			cert_chain = 1;
@@ -1086,8 +983,6 @@ bad:
 			}
 #endif
 		}
-
-
 	if (s_dcert_file)
 		{
 
@@ -1206,7 +1101,6 @@ bad:
 		}
 	store = SSL_CTX_get_cert_store(ctx);
 	X509_STORE_set_flags(store, vflags);
-
 #ifndef OPENSSL_NO_TLSEXT
 	if (s_cert2)
 		{
@@ -1242,10 +1136,12 @@ bad:
 		if (bugs) SSL_CTX_set_options(ctx2,SSL_OP_ALL);
 		if (hack) SSL_CTX_set_options(ctx2,SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG);
 		SSL_CTX_set_options(ctx2,off);
+
 		/* DTLS: partial reads end up discarding unread UDP bytes :-( 
 		 * Setting read ahead solves this problem.
 		 */
 		if (socket_type == SOCK_DGRAM) SSL_CTX_set_read_ahead(ctx2, 1);
+
 
 		if (state) SSL_CTX_set_info_callback(ctx2,apps_ssl_info_callback);
 
@@ -1266,6 +1162,7 @@ bad:
                 }
 #endif        
 #endif 
+
 
 #ifndef OPENSSL_NO_DH
 	if (!no_dhe)
@@ -1342,10 +1239,10 @@ bad:
 		else
 			{
 			BIO_printf(bio_s_out,"Using default temp ECDH parameters\n");
-			ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+			ecdh = EC_KEY_new_by_curve_name(NID_sect163r2);
 			if (ecdh == NULL) 
 				{
-				BIO_printf(bio_err, "unable to create curve (nistp256)\n");
+				BIO_printf(bio_err, "unable to create curve (sect163r2)\n");
 				goto end;
 				}
 			}
@@ -1380,7 +1277,7 @@ bad:
 #ifndef OPENSSL_NO_TLSEXT
 		if (ctx2) 
 			SSL_CTX_set_tmp_rsa_callback(ctx2,tmp_rsa_cb);
-#endif		
+#endif	
 		}
 #else
 	if (!no_tmp_rsa && SSL_CTX_need_tmp_RSA(ctx))
@@ -1413,30 +1310,11 @@ bad:
 #endif
 #endif
 
-#ifndef OPENSSL_NO_PSK
-	if (psk_key != NULL)
-		{
-		if (s_debug)
-			BIO_printf(bio_s_out, "PSK key given, setting server callback\n");
-		SSL_CTX_set_psk_server_callback(ctx, psk_server_cb);
-		}
-
-	if (!SSL_CTX_use_psk_identity_hint(ctx, psk_identity_hint))
-		{
-		BIO_printf(bio_err,"error setting PSK identity hint to context\n");
+	if (cipher != NULL)
+		if(!SSL_CTX_set_cipher_list(ctx,cipher)) {
+		BIO_printf(bio_err,"error setting cipher list\n");
 		ERR_print_errors(bio_err);
 		goto end;
-		}
-#endif
-
-	if (cipher != NULL)
-		{
-		if(!SSL_CTX_set_cipher_list(ctx,cipher))
-			{
-			BIO_printf(bio_err,"error setting cipher list\n");
-			ERR_print_errors(bio_err);
-			goto end;
-			}
 #ifndef OPENSSL_NO_TLSEXT
 		if (ctx2 && !SSL_CTX_set_cipher_list(ctx2,cipher))
 			{
@@ -1445,7 +1323,7 @@ bad:
 			goto end;
 			}
 #endif
-		}
+	}
 	SSL_CTX_set_verify(ctx,s_server_verify,verify_callback);
 	SSL_CTX_set_session_id_context(ctx,(void*)&s_server_session_id_context,
 		sizeof s_server_session_id_context);
@@ -1464,7 +1342,6 @@ bad:
 		SSL_CTX_set_tlsext_servername_arg(ctx, &tlsextcbp);
 		}
 #endif
-
 	if (CAfile != NULL)
 		{
 		SSL_CTX_set_client_CA_list(ctx,SSL_load_client_CA_file(CAfile));
@@ -1473,7 +1350,6 @@ bad:
 			SSL_CTX_set_client_CA_list(ctx2,SSL_load_client_CA_file(CAfile));
 #endif
 		}
-
 	BIO_printf(bio_s_out,"ACCEPT\n");
 	if (www)
 		do_server(port,socket_type,&accept_socket,www_body, context);
@@ -1545,7 +1421,7 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 	unsigned long l;
 	SSL *con=NULL;
 	BIO *sbio;
-#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_NETWARE) || defined(OPENSSL_SYS_BEOS_R5)
+#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_NETWARE)
 	struct timeval tv;
 #endif
 
@@ -1568,6 +1444,13 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 
 	if (con == NULL) {
 		con=SSL_new(ctx);
+#ifndef OPENSSL_NO_TLSEXT
+	if (s_tlsextdebug)
+		{
+		SSL_set_tlsext_debug_callback(con, tlsext_cb);
+		SSL_set_tlsext_debug_arg(con, bio_s_out);
+		}
+#endif
 #ifndef OPENSSL_NO_KRB5
 		if ((con->kssl_ctx = kssl_ctx_new()) != NULL)
                         {
@@ -1589,7 +1472,7 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 
 		sbio=BIO_new_dgram(s,BIO_NOCLOSE);
 
-		if (enable_timeouts)
+		if ( enable_timeouts)
 			{
 			timeout.tv_sec = 0;
 			timeout.tv_usec = DGRAM_RCV_TIMEOUT;
@@ -1600,10 +1483,11 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 			BIO_ctrl(sbio, BIO_CTRL_DGRAM_SET_SEND_TIMEOUT, 0, &timeout);
 			}
 
-		if (socket_mtu > 0)
+		
+		if ( mtu > 0)
 			{
 			SSL_set_options(con, SSL_OP_NO_QUERY_MTU);
-			SSL_set_mtu(con, socket_mtu);
+			SSL_set_mtu(con, mtu);
 			}
 		else
 			/* want to do MTU discovery */
@@ -1630,13 +1514,20 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 		{
 		con->debug=1;
 		BIO_set_callback(SSL_get_rbio(con),bio_dump_callback);
-		BIO_set_callback_arg(SSL_get_rbio(con),bio_s_out);
+		BIO_set_callback_arg(SSL_get_rbio(con),(char *)bio_s_out);
 		}
 	if (s_msg)
 		{
 		SSL_set_msg_callback(con, msg_cb);
 		SSL_set_msg_callback_arg(con, bio_s_out);
 		}
+#ifndef OPENSSL_NO_TLSEXT
+	if (s_tlsextdebug)
+		{
+		SSL_set_tlsext_debug_callback(con, tlsext_cb);
+		SSL_set_tlsext_debug_arg(con, bio_s_out);
+		}
+#endif
 
 	width=s+1;
 	for (;;)
@@ -1650,10 +1541,10 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 		if (!read_from_sslcon)
 			{
 			FD_ZERO(&readfds);
-#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_MSDOS) && !defined(OPENSSL_SYS_NETWARE) && !defined(OPENSSL_SYS_BEOS_R5)
-			openssl_fdset(fileno(stdin),&readfds);
+#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_MSDOS) && !defined(OPENSSL_SYS_NETWARE)
+			FD_SET(fileno(stdin),&readfds);
 #endif
-			openssl_fdset(s,&readfds);
+			FD_SET(s,&readfds);
 			/* Note: under VMS with SOCKETSHR the second parameter is
 			 * currently of type (int *) whereas under other systems
 			 * it is (void *) if you don't have a cast it will choke
@@ -1672,17 +1563,6 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 			if((i < 0) || (!i && !_kbhit() ) )continue;
 			if(_kbhit())
 				read_from_terminal = 1;
-#elif defined(OPENSSL_SYS_BEOS_R5)
-			/* Under BeOS-R5 the situation is similar to DOS */
-			tv.tv_sec = 1;
-			tv.tv_usec = 0;
-			(void)fcntl(fileno(stdin), F_SETFL, O_NONBLOCK);
-			i=select(width,(void *)&readfds,NULL,NULL,&tv);
-			if ((i < 0) || (!i && read(fileno(stdin), buf, 0) < 0))
-				continue;
-			if (read(fileno(stdin), buf, 0) >= 0)
-				read_from_terminal = 1;
-			(void)fcntl(fileno(stdin), F_SETFL, 0);
 #else
 			i=select(width,(void *)&readfds,NULL,NULL,NULL);
 			if (i <= 0) continue;
@@ -1698,7 +1578,7 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 				{
 				int j, lf_num;
 
-				i=raw_read_stdin(buf, bufsize/2);
+				i=read(fileno(stdin), buf, bufsize/2);
 				lf_num = 0;
 				/* both loops are skipped when i <= 0 */
 				for (j = 0; j < i; j++)
@@ -1717,7 +1597,7 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 				assert(lf_num == 0);
 				}
 			else
-				i=raw_read_stdin(buf,bufsize);
+				i=read(fileno(stdin),buf,bufsize);
 			if (!s_quiet)
 				{
 				if ((i <= 0) || (buf[0] == 'Q'))
@@ -1737,7 +1617,6 @@ static int sv_body(char *hostname, int s, unsigned char *context)
 					ret= -11;*/
 					goto err;
 					}
-
 				if ((buf[0] == 'r') && 
 					((buf[1] == '\n') || (buf[1] == '\r')))
 					{
@@ -1834,7 +1713,7 @@ again:
 #ifdef CHARSET_EBCDIC
 					ascii2ebcdic(buf,buf,i);
 #endif
-					raw_write_stdout(buf,
+					write(fileno(stdout),buf,
 						(unsigned int)i);
 					if (SSL_pending(con)) goto again;
 					break;
@@ -1858,16 +1737,13 @@ again:
 			}
 		}
 err:
-	if (con != NULL)
-		{
-		BIO_printf(bio_s_out,"shutting down SSL\n");
+	BIO_printf(bio_s_out,"shutting down SSL\n");
 #if 1
-		SSL_set_shutdown(con,SSL_SENT_SHUTDOWN|SSL_RECEIVED_SHUTDOWN);
+	SSL_set_shutdown(con,SSL_SENT_SHUTDOWN|SSL_RECEIVED_SHUTDOWN);
 #else
-		SSL_shutdown(con);
+	SSL_shutdown(con);
 #endif
-		SSL_free(con);
-		}
+	if (con != NULL) SSL_free(con);
 	BIO_printf(bio_s_out,"CONNECTION CLOSED\n");
 	if (buf != NULL)
 		{
@@ -1934,7 +1810,6 @@ static int init_ssl_connection(SSL *con)
 		BIO_printf(bio_s_out,"Shared ciphers:%s\n",buf);
 	str=SSL_CIPHER_get_name(SSL_get_current_cipher(con));
 	BIO_printf(bio_s_out,"CIPHER is %s\n",(str != NULL)?str:"(NONE)");
-        
 #ifndef OPENSSL_NO_SRTP
         {
         SRTP_PROTECTION_PROFILE *srtp_profile=SSL_get_selected_srtp_profile(con);
@@ -1984,7 +1859,6 @@ static int init_ssl_connection(SSL *con)
         
         }
 #endif        
-        
 	if (con->hit) BIO_printf(bio_s_out,"Reused session-id\n");
 	if (SSL_ctrl(con,SSL_CTRL_GET_FLAGS,0,NULL) &
 		TLS1_FLAGS_TLS_PADDING_BUG)
@@ -2040,6 +1914,7 @@ static int www_body(char *hostname, int s, unsigned char *context)
 	char *buf=NULL;
 	int ret=1;
 	int i,j,k,blank,dot;
+	struct stat st_buf;
 	SSL *con;
 	SSL_CIPHER *c;
 	BIO *io,*ssl_bio,*sbio;
@@ -2067,6 +1942,13 @@ static int www_body(char *hostname, int s, unsigned char *context)
 	if (!BIO_set_write_buffer_size(io,bufsize)) goto err;
 
 	if ((con=SSL_new(ctx)) == NULL) goto err;
+#ifndef OPENSSL_NO_TLSEXT
+		if (s_tlsextdebug)
+			{
+			SSL_set_tlsext_debug_callback(con, tlsext_cb);
+			SSL_set_tlsext_debug_arg(con, bio_s_out);
+			}
+#endif
 #ifndef OPENSSL_NO_KRB5
 	if ((con->kssl_ctx = kssl_ctx_new()) != NULL)
 		{
@@ -2099,7 +1981,7 @@ static int www_body(char *hostname, int s, unsigned char *context)
 		{
 		con->debug=1;
 		BIO_set_callback(SSL_get_rbio(con),bio_dump_callback);
-		BIO_set_callback_arg(SSL_get_rbio(con),bio_s_out);
+		BIO_set_callback_arg(SSL_get_rbio(con),(char *)bio_s_out);
 		}
 	if (s_msg)
 		{
@@ -2304,7 +2186,14 @@ static int www_body(char *hostname, int s, unsigned char *context)
 #endif
 
 			/* if a directory, do the index thang */
-			if (app_isdir(p)>0)
+			if (stat(p,&st_buf) < 0)
+				{
+				BIO_puts(io,text);
+				BIO_printf(io,"Error accessing '%s'\r\n",p);
+				ERR_print_errors(io);
+				break;
+				}
+			if (S_ISDIR(st_buf.st_mode))
 				{
 #if 0 /* must check buffer size */
 				strcat(p,"/index.html");

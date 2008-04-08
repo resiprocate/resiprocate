@@ -62,7 +62,15 @@
 #include <openssl/evp.h>
 #include <openssl/objects.h>
 #include <openssl/asn1.h>
-#include "asn1_locl.h"
+#ifndef OPENSSL_NO_RSA
+#include <openssl/rsa.h>
+#endif
+#ifndef OPENSSL_NO_DSA
+#include <openssl/dsa.h>
+#endif
+#ifndef OPENSSL_NO_EC
+#include <openssl/ec.h>
+#endif
 
 EVP_PKEY *d2i_PrivateKey(int type, EVP_PKEY **a, const unsigned char **pp,
 	     long length)
@@ -81,18 +89,39 @@ EVP_PKEY *d2i_PrivateKey(int type, EVP_PKEY **a, const unsigned char **pp,
 
 	ret->save_type=type;
 	ret->type=EVP_PKEY_type(type);
-	ret->ameth = EVP_PKEY_asn1_find(type);
-	if (ret->ameth)
+	switch (ret->type)
 		{
-		if (!ret->ameth->old_priv_decode ||
-			!ret->ameth->old_priv_decode(ret, pp, length))
+#ifndef OPENSSL_NO_RSA
+	case EVP_PKEY_RSA:
+		if ((ret->pkey.rsa=d2i_RSAPrivateKey(NULL,
+			(const unsigned char **)pp,length)) == NULL) /* TMP UGLY CAST */
 			{
 			ASN1err(ASN1_F_D2I_PRIVATEKEY,ERR_R_ASN1_LIB);
 			goto err;
 			}
-		}
-	else
-		{
+		break;
+#endif
+#ifndef OPENSSL_NO_DSA
+	case EVP_PKEY_DSA:
+		if ((ret->pkey.dsa=d2i_DSAPrivateKey(NULL,
+			(const unsigned char **)pp,length)) == NULL) /* TMP UGLY CAST */
+			{
+			ASN1err(ASN1_F_D2I_PRIVATEKEY,ERR_R_ASN1_LIB);
+			goto err;
+			}
+		break;
+#endif
+#ifndef OPENSSL_NO_EC
+	case EVP_PKEY_EC:
+		if ((ret->pkey.ec = d2i_ECPrivateKey(NULL, 
+			(const unsigned char **)pp, length)) == NULL)
+			{
+			ASN1err(ASN1_F_D2I_PRIVATEKEY, ERR_R_ASN1_LIB);
+			goto err;
+			}
+		break;
+#endif
+	default:
 		ASN1err(ASN1_F_D2I_PRIVATEKEY,ASN1_R_UNKNOWN_PUBLIC_KEY_TYPE);
 		goto err;
 		/* break; */

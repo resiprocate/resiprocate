@@ -340,7 +340,7 @@ bad:
 			}
 
 		/* It must be large enough for a base64 encoded line */
-		if (n < 80) n=80;
+		if (base64 && n < 80) n=80;
 
 		bsize=(int)n;
 		if (verbose) BIO_printf(bio_err,"bufsize=%d\n",bsize);
@@ -365,12 +365,16 @@ bad:
 		{
 		BIO_set_callback(in,BIO_debug_callback);
 		BIO_set_callback(out,BIO_debug_callback);
-		BIO_set_callback_arg(in,bio_err);
-		BIO_set_callback_arg(out,bio_err);
+		BIO_set_callback_arg(in,(char *)bio_err);
+		BIO_set_callback_arg(out,(char *)bio_err);
 		}
 
 	if (inf == NULL)
+	        {
+		if (bufsize != NULL)
+			setvbuf(stdin, (char *)NULL, _IONBF, 0);
 		BIO_set_fp(in,stdin,BIO_NOCLOSE);
+	        }
 	else
 		{
 		if (BIO_read_filename(in,inf) <= 0)
@@ -421,6 +425,8 @@ bad:
 	if (outf == NULL)
 		{
 		BIO_set_fp(out,stdout,BIO_NOCLOSE);
+		if (bufsize != NULL)
+			setvbuf(stdout, (char *)NULL, _IONBF, 0);
 #ifdef OPENSSL_SYS_VMS
 		{
 		BIO *tmpbio = BIO_new(BIO_f_linebuffer());
@@ -447,7 +453,7 @@ bad:
 		if (debug)
 			{
 			BIO_set_callback(b64,BIO_debug_callback);
-			BIO_set_callback_arg(b64,bio_err);
+			BIO_set_callback_arg(b64,(char *)bio_err);
 			}
 		if (olb64)
 			BIO_set_flags(b64,BIO_FLAGS_BASE64_NO_NL);
@@ -565,7 +571,7 @@ bad:
 		if (debug)
 			{
 			BIO_set_callback(benc,BIO_debug_callback);
-			BIO_set_callback_arg(benc,bio_err);
+			BIO_set_callback_arg(benc,(char *)bio_err);
 			}
 
 		if (printkey)

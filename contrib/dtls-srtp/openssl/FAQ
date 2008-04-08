@@ -32,7 +32,6 @@ OpenSSL  -  Frequently Asked Questions
 * How do I install a CA certificate into a browser?
 * Why is OpenSSL x509 DN output not conformant to RFC2253?
 * What is a "128 bit certificate"? Can I create one with OpenSSL?
-* Why does OpenSSL set the authority key identifier extension incorrectly?
 
 [BUILD] Questions about building and testing OpenSSL
 
@@ -67,6 +66,7 @@ OpenSSL  -  Frequently Asked Questions
 * Why doesn't my server application receive a client certificate?
 * Why does compilation fail due to an undefined symbol NID_uniqueIdentifier?
 * I think I've detected a memory leak, is this a bug?
+* Why does Valgrind complain about the use of uninitialized data?
 
 ===============================================================================
 
@@ -75,7 +75,7 @@ OpenSSL  -  Frequently Asked Questions
 * Which is the current version of OpenSSL?
 
 The current version is available from <URL: http://www.openssl.org>.
-OpenSSL 0.9.8b was released on May 4th, 2006.
+OpenSSL 0.9.8g was released on October 19th, 2007.
 
 In addition to the current stable release, you can also access daily
 snapshots of the OpenSSL development version at <URL:
@@ -402,10 +402,10 @@ You can't generally create such a certificate using OpenSSL but there is no
 need to any more. Nowadays web browsers using unrestricted strong encryption
 are generally available.
 
-When there were tight restrictions on the export of strong encryption
+When there were tight export restrictions on the export of strong encryption
 software from the US only weak encryption algorithms could be freely exported
 (initially 40 bit and then 56 bit). It was widely recognised that this was
-inadequate. A relaxation of the rules allowed the use of strong encryption but
+inadequate. A relaxation the rules allowed the use of strong encryption but
 only to an authorised server.
 
 Two slighly different techniques were developed to support this, one used by
@@ -424,25 +424,6 @@ be recognized.
 
 The export laws were later changed to allow almost unrestricted use of strong
 encryption so these certificates are now obsolete.
-
-
-* Why does OpenSSL set the authority key identifier (AKID) extension incorrectly?
-
-It doesn't: this extension is often the cause of confusion.
-
-Consider a certificate chain A->B->C so that A signs B and B signs C. Suppose
-certificate C contains AKID.
-
-The purpose of this extension is to identify the authority certificate B. This
-can be done either by including the subject key identifier of B or its issuer
-name and serial number.
-
-In this latter case because it is identifying certifcate B it must contain the
-issuer name and serial number of B.
-
-It is often wrongly assumed that it should contain the subject name of B. If it
-did this would be redundant information because it would duplicate the issuer
-name of C.
 
 
 [BUILD] =======================================================================
@@ -699,8 +680,9 @@ libraries.  If your platform is not one of these, consult the INSTALL
 file.
 
 Multi-threaded applications must provide two callback functions to
-OpenSSL.  This is described in the threads(3) manpage.
-
+OpenSSL by calling CRYPTO_set_locking_callback() and
+CRYPTO_set_id_callback().  This is described in the threads(3)
+manpage.
 
 * I've compiled a program under Windows and it crashes: why?
 
@@ -911,6 +893,16 @@ thread-safe):
 "Brutal" (thread-unsafe) Application-global cleanup functions:
 
   ERR_free_strings(), EVP_cleanup() and CRYPTO_cleanup_all_ex_data().
+
+
+* Why does Valgrind complain about the use of uninitialized data?
+
+When OpenSSL's PRNG routines are called to generate random numbers the supplied
+buffer contents are mixed into the entropy pool: so it technically does not
+matter whether the buffer is initialized at this point or not.  Valgrind (and
+other test tools) will complain about this. When using Valgrind, make sure the
+OpenSSL library has been compiled with the PURIFY macro defined (-DPURIFY)
+to get rid of these warnings.
 
 
 ===============================================================================

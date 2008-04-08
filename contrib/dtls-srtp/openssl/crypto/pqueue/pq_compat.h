@@ -1,4 +1,3 @@
-#error "to be deleted"
 /* crypto/pqueue/pqueue_compat.h */
 /* 
  * DTLS implementation written by Nagendra Modadugu
@@ -58,7 +57,7 @@
  *
  */
 
-#include "opensslconf.h"
+#include <openssl/opensslconf.h>
 #include <openssl/bn.h>
 
 /* 

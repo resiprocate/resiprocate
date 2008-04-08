@@ -229,7 +229,7 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp, BIGNUM **rp)
 	while (BN_is_zero(&k));
 	if ((dsa->flags & DSA_FLAG_NO_EXP_CONSTTIME) == 0)
 		{
-		BN_set_flags(&k, BN_FLG_EXP_CONSTTIME);
+		BN_set_flags(&k, BN_FLG_CONSTTIME);
 		}
 
 	if (dsa->flags & DSA_FLAG_CACHE_MONT_P)
@@ -281,10 +281,11 @@ err:
 	if (!ret)
 		{
 		DSAerr(DSA_F_DSA_SIGN_SETUP,ERR_R_BN_LIB);
-		if (r != NULL)
-			BN_clear_free(r);
+		if (kinv != NULL) BN_clear_free(kinv);
+		if (r != NULL) BN_clear_free(r);
 		}
 	if (ctx_in == NULL) BN_CTX_free(ctx);
+	if (kinv != NULL) BN_clear_free(kinv);
 	BN_clear_free(&k);
 	BN_clear_free(&kq);
 	return(ret);
@@ -300,6 +301,18 @@ static int dsa_do_verify(const unsigned char *dgst, int dgst_len, DSA_SIG *sig,
 	if (!dsa->p || !dsa->q || !dsa->g)
 		{
 		DSAerr(DSA_F_DSA_DO_VERIFY,DSA_R_MISSING_PARAMETERS);
+		return -1;
+		}
+
+	if (BN_num_bits(dsa->q) != 160)
+		{
+		DSAerr(DSA_F_DSA_DO_VERIFY,DSA_R_BAD_Q_VALUE);
+		return -1;
+		}
+
+	if (BN_num_bits(dsa->p) > OPENSSL_DSA_MAX_MODULUS_BITS)
+		{
+		DSAerr(DSA_F_DSA_DO_VERIFY,DSA_R_MODULUS_TOO_LARGE);
 		return -1;
 		}
 

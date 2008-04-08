@@ -74,8 +74,7 @@ ASN1_SEQUENCE(X509_REVOKED) = {
  * Since we cache the original encoding the signature wont be affected by
  * reordering of the revoked field.
  */
-static int crl_inf_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
-								void *exarg)
+static int crl_inf_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it)
 {
 	X509_CRL_INFO *a = (X509_CRL_INFO *)*pval;
 
@@ -85,7 +84,7 @@ static int crl_inf_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
 		 * would affect the output of X509_CRL_print().
 		 */
 		case ASN1_OP_D2I_POST:
-		sk_X509_REVOKED_set_cmp_func(a->revoked,X509_REVOKED_cmp);
+		(void)sk_X509_REVOKED_set_cmp_func(a->revoked,X509_REVOKED_cmp);
 		break;
 	}
 	return 1;

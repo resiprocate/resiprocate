@@ -63,6 +63,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <openssl/conf.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
@@ -825,6 +826,7 @@ bad:
 	/* lookup where to write new certificates */
 	if ((outdir == NULL) && (req))
 		{
+		struct stat sb;
 
 		if ((outdir=NCONF_get_string(conf,section,ENV_NEW_CERTS_DIR))
 			== NULL)
@@ -850,12 +852,20 @@ bad:
 			goto err;
 			}
 
-		if (app_isdir(outdir)<=0)
+		if (stat(outdir,&sb) != 0)
+			{
+			BIO_printf(bio_err,"unable to stat(%s)\n",outdir);
+			perror(outdir);
+			goto err;
+			}
+#ifdef S_IFDIR
+		if (!(sb.st_mode & S_IFDIR))
 			{
 			BIO_printf(bio_err,"%s need to be a directory\n",outdir);
 			perror(outdir);
 			goto err;
 			}
+#endif
 #endif
 		}
 
@@ -1014,17 +1024,6 @@ bad:
 		{
 		lookup_fail(section,ENV_DEFAULT_MD);
 		goto err;
-		}
-
-	if (!strcmp(md, "default"))
-		{
-		int def_nid;
-		if (EVP_PKEY_get_default_digest_nid(pkey, &def_nid) <= 0)
-			{
-			BIO_puts(bio_err,"no default digest\n");
-			goto err;
-			}
-		md = (char *)OBJ_nid2sn(def_nid);
 		}
 
 	if ((dgst=EVP_get_digestbyname(md)) == NULL)
@@ -1423,6 +1422,15 @@ bad:
 
 		/* we now have a CRL */
 		if (verbose) BIO_printf(bio_err,"signing CRL\n");
+#ifndef OPENSSL_NO_DSA
+		if (pkey->type == EVP_PKEY_DSA) 
+			dgst=EVP_dss1();
+		else
+#endif
+#ifndef OPENSSL_NO_ECDSA
+		if (pkey->type == EVP_PKEY_EC)
+			dgst=EVP_ecdsa();
+#endif
 
 		/* Add any extensions asked for */
 
@@ -1512,6 +1520,7 @@ err:
 	if (x509) X509_free(x509);
 	X509_CRL_free(crl);
 	NCONF_free(conf);
+	NCONF_free(extconf);
 	OBJ_cleanup();
 	apps_shutdown();
 	OPENSSL_EXIT(ret);
@@ -2101,11 +2110,25 @@ again2:
 			}
 		}
 
+
+#ifndef OPENSSL_NO_DSA
+	if (pkey->type == EVP_PKEY_DSA) dgst=EVP_dss1();
 	pktmp=X509_get_pubkey(ret);
 	if (EVP_PKEY_missing_parameters(pktmp) &&
 		!EVP_PKEY_missing_parameters(pkey))
 		EVP_PKEY_copy_parameters(pktmp,pkey);
 	EVP_PKEY_free(pktmp);
+#endif
+#ifndef OPENSSL_NO_ECDSA
+	if (pkey->type == EVP_PKEY_EC)
+		dgst = EVP_ecdsa();
+	pktmp = X509_get_pubkey(ret);
+	if (EVP_PKEY_missing_parameters(pktmp) &&
+		!EVP_PKEY_missing_parameters(pkey))
+		EVP_PKEY_copy_parameters(pktmp, pkey);
+	EVP_PKEY_free(pktmp);
+#endif
+
 
 	if (!X509_sign(ret,pkey,dgst))
 		goto err;

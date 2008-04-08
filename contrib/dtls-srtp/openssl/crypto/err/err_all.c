@@ -94,14 +94,9 @@
 #include <openssl/ui.h>
 #include <openssl/ocsp.h>
 #include <openssl/err.h>
-#include <openssl/ts.h>
 
 void ERR_load_crypto_strings(void)
 	{
-	static int done=0;
-
-	if (done) return;
-	done=1;
 #ifndef OPENSSL_NO_ERR
 	ERR_load_ERR_strings(); /* include error strings for SYSerr */
 	ERR_load_BN_strings();
@@ -138,7 +133,6 @@ void ERR_load_crypto_strings(void)
 	ERR_load_PKCS12_strings();
 	ERR_load_RAND_strings();
 	ERR_load_DSO_strings();
-	ERR_load_TS_strings();
 #ifndef OPENSSL_NO_ENGINE
 	ERR_load_ENGINE_strings();
 #endif

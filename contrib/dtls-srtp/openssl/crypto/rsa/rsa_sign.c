@@ -142,10 +142,8 @@ int RSA_sign(int type, const unsigned char *m, unsigned int m_len,
 	return(ret);
 	}
 
-int int_rsa_verify(int dtype, const unsigned char *m, unsigned int m_len,
-		unsigned char *rm, unsigned int *prm_len,
-		const unsigned char *sigbuf, unsigned int siglen,
-		RSA *rsa)
+int RSA_verify(int dtype, const unsigned char *m, unsigned int m_len,
+	     unsigned char *sigbuf, unsigned int siglen, RSA *rsa)
 	{
 	int i,ret=0,sigtype;
 	unsigned char *s;
@@ -157,14 +155,10 @@ int int_rsa_verify(int dtype, const unsigned char *m, unsigned int m_len,
 		return(0);
 		}
 
-	if((dtype == NID_md5_sha1) && rm)
+	if((rsa->flags & RSA_FLAG_SIGN_VER) && rsa->meth->rsa_verify)
 		{
-		i = RSA_public_decrypt((int)siglen,
-					sigbuf,rm,rsa,RSA_PKCS1_PADDING);
-		if (i <= 0)
-			return 0;
-		*prm_len = i;
-		return 1;
+		return rsa->meth->rsa_verify(dtype, m, m_len,
+			sigbuf, siglen, rsa);
 		}
 
 	s=(unsigned char *)OPENSSL_malloc((unsigned int)siglen);
@@ -191,6 +185,23 @@ int int_rsa_verify(int dtype, const unsigned char *m, unsigned int m_len,
 		sig=d2i_X509_SIG(NULL,&p,(long)i);
 
 		if (sig == NULL) goto err;
+
+		/* Excess data can be used to create forgeries */
+		if(p != s+i)
+			{
+			RSAerr(RSA_F_RSA_VERIFY,RSA_R_BAD_SIGNATURE);
+			goto err;
+			}
+
+		/* Parameters to the signature algorithm can also be used to
+		   create forgeries */
+		if(sig->algor->parameter
+		   && ASN1_TYPE_get(sig->algor->parameter) != V_ASN1_NULL)
+			{
+			RSAerr(RSA_F_RSA_VERIFY,RSA_R_BAD_SIGNATURE);
+			goto err;
+			}
+
 		sigtype=OBJ_obj2nid(sig->algor->algorithm);
 
 
@@ -218,22 +229,7 @@ int int_rsa_verify(int dtype, const unsigned char *m, unsigned int m_len,
 				goto err;
 				}
 			}
-		if (rm)
-			{
-			const EVP_MD *md;
-			md = EVP_get_digestbynid(dtype);
-			if (md && (EVP_MD_size(md) != sig->digest->length))
-				RSAerr(RSA_F_RSA_VERIFY,
-						RSA_R_INVALID_DIGEST_LENGTH);
-			else
-				{
-				memcpy(rm, sig->digest->data,
-							sig->digest->length);
-				*prm_len = sig->digest->length;
-				ret = 1;
-				}
-			}
-		else if (((unsigned int)sig->digest->length != m_len) ||
+		if (	((unsigned int)sig->digest->length != m_len) ||
 			(memcmp(m,sig->digest->data,m_len) != 0))
 			{
 			RSAerr(RSA_F_RSA_VERIFY,RSA_R_BAD_SIGNATURE);
@@ -251,16 +247,3 @@ err:
 	return(ret);
 	}
 
-int RSA_verify(int dtype, const unsigned char *m, unsigned int m_len,
-		const unsigned char *sigbuf, unsigned int siglen,
-		RSA *rsa)
-	{
-
-	if((rsa->flags & RSA_FLAG_SIGN_VER) && rsa->meth->rsa_verify)
-		{
-		return rsa->meth->rsa_verify(dtype, m, m_len,
-			sigbuf, siglen, rsa);
-		}
-
-	return int_rsa_verify(dtype, m, m_len, NULL, NULL, sigbuf, siglen, rsa);
-	}

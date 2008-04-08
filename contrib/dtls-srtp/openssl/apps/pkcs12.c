@@ -3,7 +3,7 @@
  * project.
  */
 /* ====================================================================
- * Copyright (c) 1999-2002 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 1999-2006 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -88,7 +88,6 @@ int print_attribs(BIO *out, STACK_OF(X509_ATTRIBUTE) *attrlst,const char *name);
 void hex_prin(BIO *out, unsigned char *buf, int len);
 int alg_print(BIO *x, X509_ALGOR *alg);
 int cert_load(BIO *in, STACK_OF(X509) *sk);
-static int set_pbe(BIO *err, int *ppbe, const char *str);
 
 int MAIN(int, char **);
 
@@ -154,14 +153,22 @@ int MAIN(int argc, char **argv)
     			cert_pbe = NID_pbe_WithSHA1And3_Key_TripleDES_CBC;
 		else if (!strcmp (*args, "-export")) export_cert = 1;
 		else if (!strcmp (*args, "-des")) enc=EVP_des_cbc();
+		else if (!strcmp (*args, "-des3")) enc = EVP_des_ede3_cbc();
 #ifndef OPENSSL_NO_IDEA
 		else if (!strcmp (*args, "-idea")) enc=EVP_idea_cbc();
 #endif
-		else if (!strcmp (*args, "-des3")) enc = EVP_des_ede3_cbc();
+#ifndef OPENSSL_NO_SEED
+		else if (!strcmp(*args, "-seed")) enc=EVP_seed_cbc();
+#endif
 #ifndef OPENSSL_NO_AES
 		else if (!strcmp(*args,"-aes128")) enc=EVP_aes_128_cbc();
 		else if (!strcmp(*args,"-aes192")) enc=EVP_aes_192_cbc();
 		else if (!strcmp(*args,"-aes256")) enc=EVP_aes_256_cbc();
+#endif
+#ifndef OPENSSL_NO_CAMELLIA
+		else if (!strcmp(*args,"-camellia128")) enc=EVP_camellia_128_cbc();
+		else if (!strcmp(*args,"-camellia192")) enc=EVP_camellia_192_cbc();
+		else if (!strcmp(*args,"-camellia256")) enc=EVP_camellia_256_cbc();
 #endif
 		else if (!strcmp (*args, "-noiter")) iter = 1;
 		else if (!strcmp (*args, "-maciter"))
@@ -172,11 +179,31 @@ int MAIN(int argc, char **argv)
 					 maciter = -1;
 		else if (!strcmp (*args, "-nodes")) enc=NULL;
 		else if (!strcmp (*args, "-certpbe")) {
-			if (!set_pbe(bio_err, &cert_pbe, *++args))
-				badarg = 1;
+			if (args[1]) {
+				args++;
+				if (!strcmp(*args, "NONE"))
+					cert_pbe = -1;
+				else
+					cert_pbe=OBJ_txt2nid(*args);
+				if(cert_pbe == NID_undef) {
+					BIO_printf(bio_err,
+						 "Unknown PBE algorithm %s\n", *args);
+					badarg = 1;
+				}
+			} else badarg = 1;
 		} else if (!strcmp (*args, "-keypbe")) {
-			if (!set_pbe(bio_err, &key_pbe, *++args))
-				badarg = 1;
+			if (args[1]) {
+				args++;
+				if (!strcmp(*args, "NONE"))
+					key_pbe = -1;
+				else
+					key_pbe=OBJ_txt2nid(*args);
+				if(key_pbe == NID_undef) {
+					BIO_printf(bio_err,
+						 "Unknown PBE algorithm %s\n", *args);
+					badarg = 1;
+				}
+			} else badarg = 1;
 		} else if (!strcmp (*args, "-rand")) {
 		    if (args[1]) {
 			args++;	
@@ -282,9 +309,16 @@ int MAIN(int argc, char **argv)
 #ifndef OPENSSL_NO_IDEA
 	BIO_printf (bio_err, "-idea         encrypt private keys with idea\n");
 #endif
+#ifndef OPENSSL_NO_SEED
+	BIO_printf (bio_err, "-seed         encrypt private keys with seed\n");
+#endif
 #ifndef OPENSSL_NO_AES
 	BIO_printf (bio_err, "-aes128, -aes192, -aes256\n");
 	BIO_printf (bio_err, "              encrypt PEM output with cbc aes\n");
+#endif
+#ifndef OPENSSL_NO_CAMELLIA
+	BIO_printf (bio_err, "-camellia128, -camellia192, -camellia256\n");
+	BIO_printf (bio_err, "              encrypt PEM output with cbc camellia\n");
 #endif
 	BIO_printf (bio_err, "-nodes        don't encrypt private keys\n");
 	BIO_printf (bio_err, "-noiter       don't use encryption iteration\n");
@@ -443,7 +477,7 @@ int MAIN(int argc, char **argv)
 					X509_keyid_set1(ucert, NULL, 0);
 					X509_alias_set1(ucert, NULL, 0);
 					/* Remove from list */
-					sk_X509_delete(certs, i);
+					(void)sk_X509_delete(certs, i);
 					break;
 					}
 				}
@@ -508,8 +542,11 @@ int MAIN(int argc, char **argv)
 		    X509_free(sk_X509_value(chain2, 0));
 		    sk_X509_free(chain2);
 		} else {
-			BIO_printf (bio_err, "Error %s getting chain.\n",
+			if (vret >= 0)
+				BIO_printf (bio_err, "Error %s getting chain.\n",
 					X509_verify_cert_error_string(vret));
+			else
+				ERR_print_errors(bio_err);
 			goto export_end;
 		}			
     	}
@@ -783,7 +820,7 @@ int get_cert_chain (X509 *cert, X509_STORE *store, STACK_OF(X509) **chain)
 {
 	X509_STORE_CTX store_ctx;
 	STACK_OF(X509) *chn;
-	int i;
+	int i = 0;
 
 	/* FIXME: Should really check the return status of X509_STORE_CTX_init
 	 * for an error, but how that fits into the return value of this
@@ -791,13 +828,17 @@ int get_cert_chain (X509 *cert, X509_STORE *store, STACK_OF(X509) **chain)
 	X509_STORE_CTX_init(&store_ctx, store, cert, NULL);
 	if (X509_verify_cert(&store_ctx) <= 0) {
 		i = X509_STORE_CTX_get_error (&store_ctx);
+		if (i == 0)
+			/* avoid returning 0 if X509_verify_cert() did not
+			 * set an appropriate error value in the context */
+			i = -1;
+		chn = NULL;
 		goto err;
-	}
-	chn =  X509_STORE_CTX_get1_chain(&store_ctx);
-	i = 0;
-	*chain = chn;
+	} else
+		chn = X509_STORE_CTX_get1_chain(&store_ctx);
 err:
 	X509_STORE_CTX_cleanup(&store_ctx);
+	*chain = chn;
 	
 	return i;
 }	
@@ -807,12 +848,14 @@ int alg_print (BIO *x, X509_ALGOR *alg)
 	PBEPARAM *pbe;
 	const unsigned char *p;
 	p = alg->parameter->value.sequence->data;
-	pbe = d2i_PBEPARAM (NULL, &p, alg->parameter->value.sequence->length);
+	pbe = d2i_PBEPARAM(NULL, &p, alg->parameter->value.sequence->length);
+	if (!pbe)
+		return 1;
 	BIO_printf (bio_err, "%s, Iteration %ld\n", 
 		OBJ_nid2ln(OBJ_obj2nid(alg->algorithm)),
 		ASN1_INTEGER_get(pbe->iter));
 	PBEPARAM_free (pbe);
-	return 0;
+	return 1;
 }
 
 /* Load all certificates from a given file */
@@ -905,22 +948,4 @@ void hex_prin(BIO *out, unsigned char *buf, int len)
 	for (i = 0; i < len; i++) BIO_printf (out, "%02X ", buf[i]);
 }
 
-static int set_pbe(BIO *err, int *ppbe, const char *str)
-	{
-	if (!str)
-		return 0;
-	if (!strcmp(str, "NONE"))
-		{
-		*ppbe = -1;
-		return 1;
-		}
-	*ppbe=OBJ_txt2nid(str);
-	if (*ppbe == NID_undef)
-		{
-		BIO_printf(bio_err, "Unknown PBE algorithm %s\n", str);
-		return 0;
-		}
-	return 1;
-	}
-			
 #endif

@@ -117,7 +117,7 @@
 #include <openssl/objects.h>
 #include <openssl/evp.h>
 
-static const SSL_METHOD *ssl2_get_client_method(int ver);
+static SSL_METHOD *ssl2_get_client_method(int ver);
 static int get_server_finished(SSL *s);
 static int get_server_verify(SSL *s);
 static int get_server_hello(SSL *s);
@@ -129,7 +129,7 @@ static int ssl_rsa_public_encrypt(SESS_CERT *sc, int len, unsigned char *from,
 	unsigned char *to,int padding);
 #define BREAK	break
 
-static const SSL_METHOD *ssl2_get_client_method(int ver)
+static SSL_METHOD *ssl2_get_client_method(int ver)
 	{
 	if (ver == SSL2_VERSION)
 		return(SSLv2_client_method());
@@ -466,11 +466,11 @@ static int get_server_hello(SSL *s)
 			return(-1);
 			}
 
-		sk_SSL_CIPHER_set_cmp_func(sk,ssl_cipher_ptr_id_cmp);
+		(void)sk_SSL_CIPHER_set_cmp_func(sk,ssl_cipher_ptr_id_cmp);
 
 		/* get the array of ciphers we will accept */
 		cl=SSL_get_ciphers(s);
-		sk_SSL_CIPHER_set_cmp_func(cl,ssl_cipher_ptr_id_cmp);
+		(void)sk_SSL_CIPHER_set_cmp_func(cl,ssl_cipher_ptr_id_cmp);
 
 		/*
 		 * If server preference flag set, choose the first
@@ -520,7 +520,8 @@ static int get_server_hello(SSL *s)
 		CRYPTO_add(&s->session->peer->references, 1, CRYPTO_LOCK_X509);
 		}
 
-	if (s->session->peer != s->session->sess_cert->peer_key->x509)
+	if (s->session->sess_cert == NULL 
+      || s->session->peer != s->session->sess_cert->peer_key->x509)
 		/* can't happen */
 		{
 		ssl2_return_error(s, SSL2_PE_UNDEFINED_ERROR);

@@ -338,7 +338,6 @@ rsadsi 2 2		: MD2			: md2
 rsadsi 2 4		: MD4			: md4
 rsadsi 2 5		: MD5			: md5
 			: MD5-SHA1		: md5-sha1
-rsadsi 2 6		:			: hmacWithMD5
 rsadsi 2 7		:			: hmacWithSHA1
 rsadsi 3 2		: RC2-CBC		: rc2-cbc
 			: RC2-ECB		: rc2-ecb
@@ -658,6 +657,8 @@ X500algorithms 3 100	: RSA-MDC2		: mdc2WithRSA
 X500algorithms 3 101	: MDC2			: mdc2
 
 X500 29			: id-ce
+!Cname subject-directory-attributes
+id-ce 9			: subjectDirectoryAttributes : X509v3 Subject Directory Attributes
 !Cname subject-key-identifier
 id-ce 14		: subjectKeyIdentifier	: X509v3 Subject Key Identifier
 !Cname key-usage
@@ -679,7 +680,9 @@ id-ce 24		: invalidityDate	: Invalidity Date
 !Cname delta-crl
 id-ce 27		: deltaCRL		: X509v3 Delta CRL Indicator
 !Cname issuing-distribution-point
-id-ce 28	: issuingDistributionPoint : X509v3 Issuing Distrubution Point
+id-ce 28		: issuingDistributionPoint : X509v3 Issuing Distrubution Point
+!Cname certificate-issuer
+id-ce 29		: certificateIssuer	: X509v3 Certificate Issuer
 !Cname name-constraints
 id-ce 30		: nameConstraints	: X509v3 Name Constraints
 !Cname crl-distribution-points
@@ -1051,79 +1054,50 @@ rsadsi 1 1 6		: rsaOAEPEncryptionSET
 			: Oakley-EC2N-3		: ipsec3
 			: Oakley-EC2N-4		: ipsec4
 
-iso 0 10118 3 0 55	: whirlpool
 
-# GOST OIDs
+# Definitions for Camellia cipher - CBC MODE
+1 2 392 200011 61 1 1 1 2 : CAMELLIA-128-CBC		: camellia-128-cbc
+1 2 392 200011 61 1 1 1 3 : CAMELLIA-192-CBC		: camellia-192-cbc
+1 2 392 200011 61 1 1 1 4 : CAMELLIA-256-CBC		: camellia-256-cbc
 
-member-body 643 2 2	: cryptopro
-member-body 643 2 9	: cryptocom
+# Definitions for Camellia cipher - ECB, CFB, OFB MODE
+!Alias ntt-ds 0 3 4401 5
+!Alias camellia ntt-ds 3 1 9 
 
-cryptopro 3		: id-GostR3411-94-with-GostR3410-2001 : GOST R 34.11-94 with GOST R 34.10-2001
-cryptopro 4		: id-GostR3411-94-with-GostR3410-94 : GOST R 34.11-94 with GOST R 34.10-94
-!Cname id-GostR3411-94
-cryptopro 9		: md_gost94		: GOST R 34.11-94
-cryptopro 10		: id-HMACGostR3411-94	: HMAC GOST 34.11-94
-!Cname id-GostR3410-2001
-cryptopro 19		: gost2001	: GOST R 34.10-2001
-!Cname id-GostR3410-94
-cryptopro 20		: gost94	: GOST R 34.10-94
-!Cname id-Gost28147-89
-cryptopro 21		: gost89 		: GOST 28147-89
-cryptopro 22		: id-Gost28147-89-MAC	: GOST 28147-89 MAC
-!Cname id-GostR3411-94-prf
-cryptopro 23		: prf-gostr3411-94	: GOST R 34.11-94 PRF
-cryptopro 98		: id-GostR3410-2001DH	: GOST R 34.10-2001 DH
-cryptopro 99		: id-GostR3410-94DH	: GOST R 34.10-94 DH
+camellia 1		: CAMELLIA-128-ECB		: camellia-128-ecb
+!Cname camellia-128-ofb128
+camellia 3		: CAMELLIA-128-OFB		: camellia-128-ofb
+!Cname camellia-128-cfb128
+camellia 4		: CAMELLIA-128-CFB		: camellia-128-cfb
 
-cryptopro 14 1		: id-Gost28147-89-CryptoPro-KeyMeshing
-cryptopro 14 0		: id-Gost28147-89-None-KeyMeshing
+camellia 21		: CAMELLIA-192-ECB		: camellia-192-ecb
+!Cname camellia-192-ofb128
+camellia 23		: CAMELLIA-192-OFB		: camellia-192-ofb
+!Cname camellia-192-cfb128
+camellia 24		: CAMELLIA-192-CFB		: camellia-192-cfb
 
-# GOST parameter set OIDs
+camellia 41		: CAMELLIA-256-ECB		: camellia-256-ecb
+!Cname camellia-256-ofb128
+camellia 43		: CAMELLIA-256-OFB		: camellia-256-ofb
+!Cname camellia-256-cfb128
+camellia 44		: CAMELLIA-256-CFB		: camellia-256-cfb
 
-cryptopro 30 0		: id-GostR3411-94-TestParamSet
-cryptopro 30 1		: id-GostR3411-94-CryptoProParamSet
+# There are no OIDs for these modes...
 
-cryptopro 31 0		: id-Gost28147-89-TestParamSet
-cryptopro 31 1		: id-Gost28147-89-CryptoPro-A-ParamSet
-cryptopro 31 2		: id-Gost28147-89-CryptoPro-B-ParamSet
-cryptopro 31 3		: id-Gost28147-89-CryptoPro-C-ParamSet
-cryptopro 31 4		: id-Gost28147-89-CryptoPro-D-ParamSet
-cryptopro 31 5		: id-Gost28147-89-CryptoPro-Oscar-1-1-ParamSet
-cryptopro 31 6		: id-Gost28147-89-CryptoPro-Oscar-1-0-ParamSet
-cryptopro 31 7		: id-Gost28147-89-CryptoPro-RIC-1-ParamSet
+			: CAMELLIA-128-CFB1		: camellia-128-cfb1
+			: CAMELLIA-192-CFB1		: camellia-192-cfb1
+			: CAMELLIA-256-CFB1		: camellia-256-cfb1
+			: CAMELLIA-128-CFB8		: camellia-128-cfb8
+			: CAMELLIA-192-CFB8		: camellia-192-cfb8
+			: CAMELLIA-256-CFB8		: camellia-256-cfb8
 
-cryptopro 32 0		: id-GostR3410-94-TestParamSet
-cryptopro 32 2		: id-GostR3410-94-CryptoPro-A-ParamSet
-cryptopro 32 3		: id-GostR3410-94-CryptoPro-B-ParamSet
-cryptopro 32 4		: id-GostR3410-94-CryptoPro-C-ParamSet
-cryptopro 32 5		: id-GostR3410-94-CryptoPro-D-ParamSet
 
-cryptopro 33 1		: id-GostR3410-94-CryptoPro-XchA-ParamSet
-cryptopro 33 2		: id-GostR3410-94-CryptoPro-XchB-ParamSet
-cryptopro 33 3		: id-GostR3410-94-CryptoPro-XchC-ParamSet
+# Definitions for SEED cipher - ECB, CBC, OFB mode
 
-cryptopro 35 0		: id-GostR3410-2001-TestParamSet
-cryptopro 35 1		: id-GostR3410-2001-CryptoPro-A-ParamSet
-cryptopro 35 2		: id-GostR3410-2001-CryptoPro-B-ParamSet
-cryptopro 35 3		: id-GostR3410-2001-CryptoPro-C-ParamSet
-
-cryptopro 36 0		: id-GostR3410-2001-CryptoPro-XchA-ParamSet
-cryptopro 36 1		: id-GostR3410-2001-CryptoPro-XchB-ParamSet
-
-id-GostR3410-94 1	: id-GostR3410-94-a
-id-GostR3410-94 2	: id-GostR3410-94-aBis
-id-GostR3410-94 3	: id-GostR3410-94-b
-id-GostR3410-94 4	: id-GostR3410-94-bBis
-
-# Cryptocom LTD GOST OIDs
-
-cryptocom 1 6 1		: id-Gost28147-89-cc	: GOST 28147-89 Cryptocom ParamSet
-!Cname id-GostR3410-94-cc
-cryptocom 1 5 3		: gost94cc	: GOST 34.10-94 Cryptocom
-!Cname id-GostR3410-2001-cc
-cryptocom 1 5 4		: gost2001cc	: GOST 34.10-2001 Cryptocom
-
-cryptocom 1 3 3		: id-GostR3411-94-with-GostR3410-94-cc : GOST R 34.11-94 with GOST R 34.10-94 Cryptocom
-cryptocom 1 3 4		: id-GostR3411-94-with-GostR3410-2001-cc : GOST R 34.11-94 with GOST R 34.10-2001 Cryptocom
-
-cryptocom 1 8 1		: id-GostR3410-2001-ParamSet-cc : GOST R 3410-2001 Parameter Set Cryptocom
+member-body 410 200004  : KISA          : kisa
+kisa 1 3                : SEED-ECB      : seed-ecb
+kisa 1 4                : SEED-CBC      : seed-cbc
+!Cname seed-cfb128
+kisa 1 5                : SEED-CFB      : seed-cfb
+!Cname seed-ofb128
+kisa 1 6                : SEED-OFB      : seed-ofb

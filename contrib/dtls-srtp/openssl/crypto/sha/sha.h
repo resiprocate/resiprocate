@@ -60,6 +60,7 @@
 #define HEADER_SHA_H
 
 #include <openssl/e_os2.h>
+#include <stddef.h>
 
 #ifdef  __cplusplus
 extern "C" {
@@ -80,7 +81,7 @@ extern "C" {
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 
-#if defined(__LP32__)
+#if defined(OPENSSL_SYS_WIN16) || defined(__LP32__)
 #define SHA_LONG unsigned long
 #elif defined(OPENSSL_SYS_CRAY) || defined(__ILP64__)
 #define SHA_LONG unsigned long

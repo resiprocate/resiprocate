@@ -121,48 +121,18 @@
  * Vipul Gupta and Sumit Gupta of Sun Microsystems Laboratories.
  *
  */
-/* ====================================================================
- * Copyright 2005 Nokia. All rights reserved.
- *
- * The portions of the attached software ("Contribution") is developed by
- * Nokia Corporation and is licensed pursuant to the OpenSSL open source
- * license.
- *
- * The Contribution, originally written by Mika Kousa and Pasi Eronen of
- * Nokia Corporation, consists of the "PSK" (Pre-Shared Key) ciphersuites
- * support (see RFC 4279) to OpenSSL.
- *
- * No patent licenses or other rights except those expressly stated in
- * the OpenSSL open source license shall be deemed granted or received
- * expressly, by implication, estoppel, or otherwise.
- *
- * No assurances are provided by Nokia that the Contribution does not
- * infringe the patent or other intellectual property rights of any third
- * party or that the license provides you with all the necessary rights
- * to make use of the Contribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. IN
- * ADDITION TO THE DISCLAIMERS INCLUDED IN THE LICENSE, NOKIA
- * SPECIFICALLY DISCLAIMS ANY LIABILITY FOR CLAIMS BROUGHT BY YOU OR ANY
- * OTHER ENTITY BASED ON INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS OR
- * OTHERWISE.
- */
 
 #include <stdio.h>
 #include <openssl/objects.h>
 #include "ssl_locl.h"
 #include "kssl_lcl.h"
-#ifndef OPENSSL_NO_TLSEXT
-#ifndef OPENSSL_NO_EC
-#include "../crypto/ec/ec_lcl.h"
-#endif /* OPENSSL_NO_EC */
-#endif /* OPENSSL_NO_TLSEXT */
 #include <openssl/md5.h>
 #ifndef OPENSSL_NO_DH
 #include <openssl/dh.h>
 #endif
+#include <openssl/pq_compat.h>
 
-const char *ssl3_version_str="SSLv3" OPENSSL_VERSION_PTEXT;
+const char ssl3_version_str[]="SSLv3" OPENSSL_VERSION_PTEXT;
 
 #define SSL3_NUM_CIPHERS	(sizeof(ssl3_ciphers)/sizeof(SSL_CIPHER))
 
@@ -572,11 +542,8 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 #endif
 
 #ifndef OPENSSL_NO_KRB5
-/* The Kerberos ciphers
-** 20000107 VRS: And the first shall be last,
-** in hopes of avoiding the lynx ssl renegotiation problem.
-*/
-/* Cipher 1E VRS */
+/* The Kerberos ciphers */
+/* Cipher 1E */
 	{
 	1,
 	SSL3_TXT_KRB5_DES_64_CBC_SHA,
@@ -590,7 +557,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 1F VRS */
+/* Cipher 1F */
 	{
 	1,
 	SSL3_TXT_KRB5_DES_192_CBC3_SHA,
@@ -598,13 +565,13 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_kKRB5|SSL_aKRB5|  SSL_3DES|SSL_SHA1  |SSL_SSLV3,
 	SSL_NOT_EXP|SSL_HIGH,
 	0,
-	112,
+	168,
 	168,
 	SSL_ALL_CIPHERS,
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 20 VRS */
+/* Cipher 20 */
 	{
 	1,
 	SSL3_TXT_KRB5_RC4_128_SHA,
@@ -618,7 +585,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 21 VRS */
+/* Cipher 21 */
 	{
 	1,
 	SSL3_TXT_KRB5_IDEA_128_CBC_SHA,
@@ -632,7 +599,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 22 VRS */
+/* Cipher 22 */
 	{
 	1,
 	SSL3_TXT_KRB5_DES_64_CBC_MD5,
@@ -646,7 +613,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 23 VRS */
+/* Cipher 23 */
 	{
 	1,
 	SSL3_TXT_KRB5_DES_192_CBC3_MD5,
@@ -654,13 +621,13 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_kKRB5|SSL_aKRB5|  SSL_3DES|SSL_MD5   |SSL_SSLV3,
 	SSL_NOT_EXP|SSL_HIGH,
 	0,
-	112,
+	168,
 	168,
 	SSL_ALL_CIPHERS,
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 24 VRS */
+/* Cipher 24 */
 	{
 	1,
 	SSL3_TXT_KRB5_RC4_128_MD5,
@@ -674,7 +641,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 25 VRS */
+/* Cipher 25 */
 	{
 	1,
 	SSL3_TXT_KRB5_IDEA_128_CBC_MD5,
@@ -688,7 +655,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 26 VRS */
+/* Cipher 26 */
 	{
 	1,
 	SSL3_TXT_KRB5_DES_40_CBC_SHA,
@@ -702,7 +669,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 27 VRS */
+/* Cipher 27 */
 	{
 	1,
 	SSL3_TXT_KRB5_RC2_40_CBC_SHA,
@@ -716,7 +683,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 28 VRS */
+/* Cipher 28 */
 	{
 	1,
 	SSL3_TXT_KRB5_RC4_40_SHA,
@@ -724,13 +691,13 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_kKRB5|SSL_aKRB5|  SSL_RC4|SSL_SHA1   |SSL_SSLV3,
 	SSL_EXPORT|SSL_EXP40,
 	0,
-	128,
+	40,
 	128,
 	SSL_ALL_CIPHERS,
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 29 VRS */
+/* Cipher 29 */
 	{
 	1,
 	SSL3_TXT_KRB5_DES_40_CBC_MD5,
@@ -744,7 +711,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 2A VRS */
+/* Cipher 2A */
 	{
 	1,
 	SSL3_TXT_KRB5_RC2_40_CBC_MD5,
@@ -758,7 +725,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-/* Cipher 2B VRS */
+/* Cipher 2B */
 	{
 	1,
 	SSL3_TXT_KRB5_RC4_40_MD5,
@@ -766,14 +733,14 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_kKRB5|SSL_aKRB5|  SSL_RC4|SSL_MD5    |SSL_SSLV3,
 	SSL_EXPORT|SSL_EXP40,
 	0,
-	128,
+	40,
 	128,
 	SSL_ALL_CIPHERS,
 	SSL_ALL_STRENGTHS,
 	},
 #endif	/* OPENSSL_NO_KRB5 */
-/* New AES ciphersuites */
 
+/* New AES ciphersuites */
 /* Cipher 2F */
 	{
 	1,
@@ -932,6 +899,89 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
+#ifndef OPENSSL_NO_CAMELLIA
+	/* Camellia ciphersuites from RFC4132 (128-bit portion) */
+
+	/* Cipher 41 */
+	{
+	1,
+	TLS1_TXT_RSA_WITH_CAMELLIA_128_CBC_SHA,
+	TLS1_CK_RSA_WITH_CAMELLIA_128_CBC_SHA,
+	SSL_kRSA|SSL_aRSA|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	128,
+	128,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 42 */
+	{
+	0, /* not implemented (non-ephemeral DH) */
+	TLS1_TXT_DH_DSS_WITH_CAMELLIA_128_CBC_SHA,
+	TLS1_CK_DH_DSS_WITH_CAMELLIA_128_CBC_SHA,
+	SSL_kDHd|SSL_aDH|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	128,
+	128,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 43 */
+	{
+	0, /* not implemented (non-ephemeral DH) */
+	TLS1_TXT_DH_RSA_WITH_CAMELLIA_128_CBC_SHA,
+	TLS1_CK_DH_RSA_WITH_CAMELLIA_128_CBC_SHA,
+	SSL_kDHr|SSL_aDH|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	128,
+	128,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 44 */
+	{
+	1,
+	TLS1_TXT_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,
+	TLS1_CK_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,
+	SSL_kEDH|SSL_aDSS|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	128,
+	128,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 45 */
+	{
+	1,
+	TLS1_TXT_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
+	TLS1_CK_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
+	SSL_kEDH|SSL_aRSA|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	128,
+	128,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 46 */
+	{
+	1,
+	TLS1_TXT_ADH_WITH_CAMELLIA_128_CBC_SHA,
+	TLS1_CK_ADH_WITH_CAMELLIA_128_CBC_SHA,
+	SSL_kEDH|SSL_aNULL|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	128,
+	128,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+#endif /* OPENSSL_NO_CAMELLIA */
+
 #if TLS1_ALLOW_EXPERIMENTAL_CIPHERSUITES
 	/* New TLS Export CipherSuites from expired ID */
 #if 0
@@ -1028,13 +1078,99 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	    SSL_ALL_STRENGTHS
 	    },
 #endif
-#ifndef OPENSSL_NO_PSK
-	/* Cipher 8A */
+
+#ifndef OPENSSL_NO_CAMELLIA
+	/* Camellia ciphersuites from RFC4132 (256-bit portion) */
+
+	/* Cipher 84 */
 	{
 	1,
-	TLS1_TXT_PSK_WITH_RC4_128_SHA,
-	TLS1_CK_PSK_WITH_RC4_128_SHA,
-	SSL_kPSK|SSL_aPSK|SSL_RC4|SSL_SHA|SSL_TLSV1,
+	TLS1_TXT_RSA_WITH_CAMELLIA_256_CBC_SHA,
+	TLS1_CK_RSA_WITH_CAMELLIA_256_CBC_SHA,
+	SSL_kRSA|SSL_aRSA|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	256,
+	256,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 85 */
+	{
+	0, /* not implemented (non-ephemeral DH) */
+	TLS1_TXT_DH_DSS_WITH_CAMELLIA_256_CBC_SHA,
+	TLS1_CK_DH_DSS_WITH_CAMELLIA_256_CBC_SHA,
+	SSL_kDHd|SSL_aDH|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	256,
+	256,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 86 */
+	{
+	0, /* not implemented (non-ephemeral DH) */
+	TLS1_TXT_DH_RSA_WITH_CAMELLIA_256_CBC_SHA,
+	TLS1_CK_DH_RSA_WITH_CAMELLIA_256_CBC_SHA,
+	SSL_kDHr|SSL_aDH|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	256,
+	256,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 87 */
+	{
+	1,
+	TLS1_TXT_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA,
+	TLS1_CK_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA,
+	SSL_kEDH|SSL_aDSS|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	256,
+	256,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 88 */
+	{
+	1,
+	TLS1_TXT_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
+	TLS1_CK_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
+	SSL_kEDH|SSL_aRSA|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	256,
+	256,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+	/* Cipher 89 */
+	{
+	1,
+	TLS1_TXT_ADH_WITH_CAMELLIA_256_CBC_SHA,
+	TLS1_CK_ADH_WITH_CAMELLIA_256_CBC_SHA,
+	SSL_kEDH|SSL_aNULL|SSL_CAMELLIA|SSL_SHA|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_HIGH,
+	0,
+	256,
+	256,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS
+	},
+#endif /* OPENSSL_NO_CAMELLIA */
+
+#ifndef OPENSSL_NO_SEED
+	/* SEED ciphersuites from RFC4162 */
+
+	/* Cipher 96 */
+	{
+	1,
+	TLS1_TXT_RSA_WITH_SEED_SHA,
+	TLS1_CK_RSA_WITH_SEED_SHA,
+	SSL_kRSA|SSL_aRSA|SSL_SEED|SSL_SHA1|SSL_TLSV1,
 	SSL_NOT_EXP|SSL_MEDIUM,
 	0,
 	128,
@@ -1043,26 +1179,12 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-	/* Cipher 8B */
+	/* Cipher 97 */
 	{
-	1,
-	TLS1_TXT_PSK_WITH_3DES_EDE_CBC_SHA,
-	TLS1_CK_PSK_WITH_3DES_EDE_CBC_SHA,
-	SSL_kPSK|SSL_aPSK|SSL_3DES|SSL_SHA|SSL_TLSV1,
-	SSL_NOT_EXP|SSL_HIGH,
-	0,
-	168,
-	168,
-	SSL_ALL_CIPHERS,
-	SSL_ALL_STRENGTHS,
-	},
-
-	/* Cipher 8C */
-	{
-	1,
-	TLS1_TXT_PSK_WITH_AES_128_CBC_SHA,
-	TLS1_CK_PSK_WITH_AES_128_CBC_SHA,
-	SSL_kPSK|SSL_aPSK|SSL_AES|SSL_SHA|SSL_TLSV1,
+	0, /* not implemented (non-ephemeral DH) */
+	TLS1_TXT_DH_DSS_WITH_SEED_SHA,
+	TLS1_CK_DH_DSS_WITH_SEED_SHA,
+	SSL_kDHd|SSL_aDH|SSL_SEED|SSL_SHA1|SSL_TLSV1,
 	SSL_NOT_EXP|SSL_MEDIUM,
 	0,
 	128,
@@ -1071,20 +1193,64 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
 	SSL_ALL_STRENGTHS,
 	},
 
-	/* Cipher 8D */
+	/* Cipher 98 */
 	{
-	1,
-	TLS1_TXT_PSK_WITH_AES_256_CBC_SHA,
-	TLS1_CK_PSK_WITH_AES_256_CBC_SHA,
-	SSL_kPSK|SSL_aPSK|SSL_AES|SSL_SHA|SSL_TLSV1,
-	SSL_NOT_EXP|SSL_HIGH,
+	0, /* not implemented (non-ephemeral DH) */
+	TLS1_TXT_DH_RSA_WITH_SEED_SHA,
+	TLS1_CK_DH_RSA_WITH_SEED_SHA,
+	SSL_kDHr|SSL_aDH|SSL_SEED|SSL_SHA1|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_MEDIUM,
 	0,
-	256,
-	256,
+	128,
+	128,
 	SSL_ALL_CIPHERS,
 	SSL_ALL_STRENGTHS,
 	},
-#endif  /* OPENSSL_NO_PSK */
+
+	/* Cipher 99 */
+	{
+	1,
+	TLS1_TXT_DHE_DSS_WITH_SEED_SHA,
+	TLS1_CK_DHE_DSS_WITH_SEED_SHA,
+	SSL_kEDH|SSL_aDSS|SSL_SEED|SSL_SHA1|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_MEDIUM,
+	0,
+	128,
+	128,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS,
+	},
+
+	/* Cipher 9A */
+	{
+	1,
+	TLS1_TXT_DHE_RSA_WITH_SEED_SHA,
+	TLS1_CK_DHE_RSA_WITH_SEED_SHA,
+	SSL_kEDH|SSL_aRSA|SSL_SEED|SSL_SHA1|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_MEDIUM,
+	0,
+	128,
+	128,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS,
+	},
+
+	/* Cipher 9B */
+	{
+	1,
+	TLS1_TXT_ADH_WITH_SEED_SHA,
+	TLS1_CK_ADH_WITH_SEED_SHA,
+	SSL_kEDH|SSL_aNULL|SSL_SEED|SSL_SHA1|SSL_TLSV1,
+	SSL_NOT_EXP|SSL_MEDIUM,
+	0,
+	128,
+	128,
+	SSL_ALL_CIPHERS,
+	SSL_ALL_STRENGTHS,
+	},
+
+#endif /* OPENSSL_NO_SEED */
+
 #ifndef OPENSSL_NO_ECDH
 	/* Cipher C001 */
 	    {
@@ -1437,6 +1603,7 @@ OPENSSL_GLOBAL SSL_CIPHER ssl3_ciphers[]={
             },
 #endif	/* OPENSSL_NO_ECDH */
 
+
 /* end of list */
 	};
 
@@ -1460,6 +1627,11 @@ long ssl3_default_timeout(void)
 	 * is way too long for http, the cache would over fill */
 	return(60*60*2);
 	}
+
+IMPLEMENT_ssl3_meth_func(sslv3_base_method,
+			ssl_undefined_function,
+			ssl_undefined_function,
+			ssl_bad_method)
 
 int ssl3_num_ciphers(void)
 	{
@@ -1490,8 +1662,8 @@ int ssl3_new(SSL *s)
 	memset(s3,0,sizeof *s3);
 	EVP_MD_CTX_init(&s3->finish_dgst1);
 	EVP_MD_CTX_init(&s3->finish_dgst2);
-	memset(s3->rrec.seq_num,0,sizeof(s3->rrec.seq_num));
-	memset(s3->wrec.seq_num,0,sizeof(s3->wrec.seq_num));
+	pq_64bit_init(&(s3->rrec.seq_num));
+	pq_64bit_init(&(s3->wrec.seq_num));
 
 	s->s3=s3;
 
@@ -1526,6 +1698,8 @@ void ssl3_free(SSL *s)
 		sk_X509_NAME_pop_free(s->s3->tmp.ca_names,X509_NAME_free);
 	EVP_MD_CTX_cleanup(&s->s3->finish_dgst1);
 	EVP_MD_CTX_cleanup(&s->s3->finish_dgst2);
+	pq_64bit_free(&(s->s3->rrec.seq_num));
+	pq_64bit_free(&(s->s3->wrec.seq_num));
 
 	OPENSSL_cleanse(s->s3,sizeof *s->s3);
 	OPENSSL_free(s->s3);
@@ -1757,8 +1931,11 @@ long ssl3_ctrl(SSL *s, int cmd, long larg, void *parg)
 			SSLerr(SSL_F_SSL3_CTRL, SSL_R_SSL3_EXT_INVALID_SERVERNAME_TYPE);
 			return 0;
 			}
-		s->options |= SSL_OP_NO_SSLv2; /* can't use extension w/ SSL 2.0 format */
  		break;
+	case SSL_CTRL_SET_TLSEXT_DEBUG_ARG:
+		s->tlsext_debug_arg=parg;
+		ret = 1;
+		break;
 #endif /* !OPENSSL_NO_TLSEXT */
 	default:
 		break;
@@ -1809,6 +1986,12 @@ long ssl3_callback_ctrl(SSL *s, int cmd, void (*fp)(void))
 		{
 		s->cert->ecdh_tmp_cb = (EC_KEY *(*)(SSL *, int, int))fp;
 		}
+		break;
+#endif
+#ifndef OPENSSL_NO_TLSEXT
+	case SSL_CTRL_SET_TLSEXT_DEBUG_CB:
+		s->tlsext_debug_cb=(void (*)(SSL *,int ,int,
+					unsigned char *, int, void *))fp;
 		break;
 #endif
 	default:
@@ -1948,6 +2131,31 @@ long ssl3_ctx_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg)
 	case SSL_CTRL_SET_TLSEXT_SERVERNAME_ARG:
 		ctx->tlsext_servername_arg=parg;
 		break;
+	case SSL_CTRL_SET_TLSEXT_TICKET_KEYS:
+	case SSL_CTRL_GET_TLSEXT_TICKET_KEYS:
+		{
+		unsigned char *keys = parg;
+		if (!keys)
+			return 48;
+		if (larg != 48)
+			{
+			SSLerr(SSL_F_SSL3_CTX_CTRL, SSL_R_INVALID_TICKET_KEYS_LENGTH);
+			return 0;
+			}
+		if (cmd == SSL_CTRL_SET_TLSEXT_TICKET_KEYS)
+			{
+			memcpy(ctx->tlsext_tick_key_name, keys, 16);
+			memcpy(ctx->tlsext_tick_hmac_key, keys + 16, 16);
+			memcpy(ctx->tlsext_tick_aes_key, keys + 32, 16);
+			}
+		else
+			{
+			memcpy(keys, ctx->tlsext_tick_key_name, 16);
+			memcpy(keys + 16, ctx->tlsext_tick_hmac_key, 16);
+			memcpy(keys + 32, ctx->tlsext_tick_aes_key, 16);
+			}
+		return 1;
+		}
 #endif /* !OPENSSL_NO_TLSEXT */
 	/* A Thawte special :-) */
 	case SSL_CTRL_EXTRA_CHAIN_CERT:
@@ -2043,14 +2251,8 @@ SSL_CIPHER *ssl3_choose_cipher(SSL *s, STACK_OF(SSL_CIPHER) *clnt,
 	{
 	SSL_CIPHER *c,*ret=NULL;
 	STACK_OF(SSL_CIPHER) *prio, *allow;
-	int i,ok;
-	unsigned int j;
-#ifndef OPENSSL_NO_TLSEXT
-#ifndef OPENSSL_NO_EC
-	int ec_ok, ec_nid;
-	unsigned char ec_search1, ec_search2;
-#endif /* OPENSSL_NO_EC */
-#endif /* OPENSSL_NO_TLSEXT */
+	int i,j,ok;
+
 	CERT *cert;
 	unsigned long alg,mask,emask;
 
@@ -2113,12 +2315,6 @@ SSL_CIPHER *ssl3_choose_cipher(SSL *s, STACK_OF(SSL_CIPHER) *clnt,
                             continue;
                         }
 #endif /* OPENSSL_NO_KRB5 */
-#ifndef OPENSSL_NO_PSK
-		/* with PSK there must be server callback set */
-		if ((alg & SSL_PSK) && s->psk_server_callback == NULL)
-			continue;
-#endif /* OPENSSL_NO_PSK */
-
 		if (SSL_C_IS_EXPORT(c))
 			{
 			ok=((alg & emask) == alg)?1:0;
@@ -2135,160 +2331,6 @@ SSL_CIPHER *ssl3_choose_cipher(SSL *s, STACK_OF(SSL_CIPHER) *clnt,
 			       c->name);
 #endif
 			}
-
-#ifndef OPENSSL_NO_TLSEXT
-#ifndef OPENSSL_NO_EC
-		if (
-			/* if we are considering an ECC cipher suite that uses our certificate */
-			(alg & SSL_aECDSA)
-			/* and we have an ECC certificate */
-			&& (s->cert->pkeys[SSL_PKEY_ECC].x509 != NULL)
-			/* and the client specified a Supported Point Formats extension */
-			&& ((s->session->tlsext_ecpointformatlist_length > 0) && (s->session->tlsext_ecpointformatlist != NULL))
-			/* and our certificate's point is compressed */
-			&& (
-				(s->cert->pkeys[SSL_PKEY_ECC].x509->cert_info != NULL)
-				&& (s->cert->pkeys[SSL_PKEY_ECC].x509->cert_info->key != NULL)
-				&& (s->cert->pkeys[SSL_PKEY_ECC].x509->cert_info->key->public_key != NULL)
-				&& (s->cert->pkeys[SSL_PKEY_ECC].x509->cert_info->key->public_key->data != NULL)
-				&& (
-					(*(s->cert->pkeys[SSL_PKEY_ECC].x509->cert_info->key->public_key->data) == POINT_CONVERSION_COMPRESSED)
-					|| (*(s->cert->pkeys[SSL_PKEY_ECC].x509->cert_info->key->public_key->data) == POINT_CONVERSION_COMPRESSED + 1)
-					)
-				)
-		)
-			{
-			ec_ok = 0;
-			/* if our certificate's curve is over a field type that the client does not support
-			 * then do not allow this cipher suite to be negotiated */
-			if (
-				(s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec != NULL)
-				&& (s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec->group != NULL)
-				&& (s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec->group->meth != NULL)
-				&& (EC_METHOD_get_field_type(s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec->group->meth) == NID_X9_62_prime_field)
-			)
-				{
-				for (j = 0; j < s->session->tlsext_ecpointformatlist_length; j++)
-					{
-					if (s->session->tlsext_ecpointformatlist[j] == TLSEXT_ECPOINTFORMAT_ansiX962_compressed_prime)
-						{
-						ec_ok = 1;
-						break;
-						}
-					}
-				}
-			else if (EC_METHOD_get_field_type(s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec->group->meth) == NID_X9_62_characteristic_two_field)
-				{
-				for (j = 0; j < s->session->tlsext_ecpointformatlist_length; j++)
-					{
-					if (s->session->tlsext_ecpointformatlist[j] == TLSEXT_ECPOINTFORMAT_ansiX962_compressed_char2)
-						{
-						ec_ok = 1;
-						break;
-						}
-					}
-				}
-			ok = ok && ec_ok;
-			}
-		if (
-			/* if we are considering an ECC cipher suite that uses our certificate */
-			(alg & SSL_aECDSA)
-			/* and we have an ECC certificate */
-			&& (s->cert->pkeys[SSL_PKEY_ECC].x509 != NULL)
-			/* and the client specified an EllipticCurves extension */
-			&& ((s->session->tlsext_ellipticcurvelist_length > 0) && (s->session->tlsext_ellipticcurvelist != NULL))
-		)
-			{
-			ec_ok = 0;
-			if (
-				(s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec != NULL)
-				&& (s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec->group != NULL)
-			)
-				{
-				ec_nid = EC_GROUP_get_curve_name(s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec->group);
-				if ((ec_nid == 0)
-					&& (s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec->group->meth != NULL)
-				)
-					{
-					if (EC_METHOD_get_field_type(s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec->group->meth) == NID_X9_62_prime_field)
-						{
-						ec_search1 = 0xFF;
-						ec_search2 = 0x01;
-						}
-					else if (EC_METHOD_get_field_type(s->cert->pkeys[SSL_PKEY_ECC].privatekey->pkey.ec->group->meth) == NID_X9_62_characteristic_two_field)
-						{
-						ec_search1 = 0xFF;
-						ec_search2 = 0x02;
-						}
-					}
-				else
-					{
-					ec_search1 = 0x00;
-					ec_search2 = tls1_ec_nid2curve_id(ec_nid);
-					}
-				if ((ec_search1 != 0) || (ec_search2 != 0))
-					{
-					for (j = 0; j < s->session->tlsext_ellipticcurvelist_length / 2; j++)
-						{
-						if ((s->session->tlsext_ellipticcurvelist[2*j] == ec_search1) && (s->session->tlsext_ellipticcurvelist[2*j+1] == ec_search2))
-							{
-							ec_ok = 1;
-							break;
-							}
-						}
-					}
-				}
-			ok = ok && ec_ok;
-			}
-		if (
-			/* if we are considering an ECC cipher suite that uses an ephemeral EC key */
-			((alg & SSL_kECDH) || (alg & SSL_kECDHE))
-			/* and we have an ephemeral EC key */
-			&& (s->cert->ecdh_tmp != NULL)
-			/* and the client specified an EllipticCurves extension */
-			&& ((s->session->tlsext_ellipticcurvelist_length > 0) && (s->session->tlsext_ellipticcurvelist != NULL))
-		)
-			{
-			ec_ok = 0;
-			if (s->cert->ecdh_tmp->group != NULL)
-				{
-				ec_nid = EC_GROUP_get_curve_name(s->cert->ecdh_tmp->group);
-				if ((ec_nid == 0)
-					&& (s->cert->ecdh_tmp->group->meth != NULL)
-				)
-					{
-					if (EC_METHOD_get_field_type(s->cert->ecdh_tmp->group->meth) == NID_X9_62_prime_field)
-						{
-						ec_search1 = 0xFF;
-						ec_search2 = 0x01;
-						}
-					else if (EC_METHOD_get_field_type(s->cert->ecdh_tmp->group->meth) == NID_X9_62_characteristic_two_field)
-						{
-						ec_search1 = 0xFF;
-						ec_search2 = 0x02;
-						}
-					}
-				else
-					{
-					ec_search1 = 0x00;
-					ec_search2 = tls1_ec_nid2curve_id(ec_nid);
-					}
-				if ((ec_search1 != 0) || (ec_search2 != 0))
-					{
-					for (j = 0; j < s->session->tlsext_ellipticcurvelist_length / 2; j++)
-						{
-						if ((s->session->tlsext_ellipticcurvelist[2*j] == ec_search1) && (s->session->tlsext_ellipticcurvelist[2*j+1] == ec_search2))
-							{
-							ec_ok = 1;
-							break;
-							}
-						}
-					}
-				}
-			ok = ok && ec_ok;
-			}
-#endif /* OPENSSL_NO_EC */
-#endif /* OPENSSL_NO_TLSEXT */
 
 		if (!ok) continue;
 		j=sk_SSL_CIPHER_find(allow,c);

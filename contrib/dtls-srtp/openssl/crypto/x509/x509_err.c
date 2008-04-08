@@ -132,10 +132,7 @@ static ERR_STRING_DATA X509_str_reasons[]=
 {ERR_REASON(X509_R_KEY_VALUES_MISMATCH)  ,"key values mismatch"},
 {ERR_REASON(X509_R_LOADING_CERT_DIR)     ,"loading cert dir"},
 {ERR_REASON(X509_R_LOADING_DEFAULTS)     ,"loading defaults"},
-{ERR_REASON(X509_R_METHOD_NOT_SUPPORTED) ,"method not supported"},
 {ERR_REASON(X509_R_NO_CERT_SET_FOR_US_TO_VERIFY),"no cert set for us to verify"},
-{ERR_REASON(X509_R_PUBLIC_KEY_DECODE_ERROR),"public key decode error"},
-{ERR_REASON(X509_R_PUBLIC_KEY_ENCODE_ERROR),"public key encode error"},
 {ERR_REASON(X509_R_SHOULD_RETRY)         ,"should retry"},
 {ERR_REASON(X509_R_UNABLE_TO_FIND_PARAMETERS_IN_CHAIN),"unable to find parameters in chain"},
 {ERR_REASON(X509_R_UNABLE_TO_GET_CERTS_PUBLIC_KEY),"unable to get certs public key"},
@@ -153,15 +150,12 @@ static ERR_STRING_DATA X509_str_reasons[]=
 
 void ERR_load_X509_strings(void)
 	{
-	static int init=1;
-
-	if (init)
-		{
-		init=0;
 #ifndef OPENSSL_NO_ERR
+
+	if (ERR_func_error_string(X509_str_functs[0].error) == NULL)
+		{
 		ERR_load_strings(0,X509_str_functs);
 		ERR_load_strings(0,X509_str_reasons);
-#endif
-
 		}
+#endif
 	}

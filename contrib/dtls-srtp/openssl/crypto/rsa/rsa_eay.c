@@ -56,7 +56,7 @@
  * [including the GNU Public Licence.]
  */
 /* ====================================================================
- * Copyright (c) 1998-2005 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 1998-2006 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -168,6 +168,28 @@ static int RSA_eay_public_encrypt(int flen, const unsigned char *from,
 	unsigned char *buf=NULL;
 	BN_CTX *ctx=NULL;
 
+	if (BN_num_bits(rsa->n) > OPENSSL_RSA_MAX_MODULUS_BITS)
+		{
+		RSAerr(RSA_F_RSA_EAY_PUBLIC_ENCRYPT, RSA_R_MODULUS_TOO_LARGE);
+		return -1;
+		}
+
+	if (BN_ucmp(rsa->n, rsa->e) <= 0)
+		{
+		RSAerr(RSA_F_RSA_EAY_PUBLIC_ENCRYPT, RSA_R_BAD_E_VALUE);
+		return -1;
+		}
+
+	/* for large moduli, enforce exponent limit */
+	if (BN_num_bits(rsa->n) > OPENSSL_RSA_SMALL_MODULUS_BITS)
+		{
+		if (BN_num_bits(rsa->e) > OPENSSL_RSA_MAX_PUBEXP_BITS)
+			{
+			RSAerr(RSA_F_RSA_EAY_PUBLIC_ENCRYPT, RSA_R_BAD_E_VALUE);
+			return -1;
+			}
+		}
+	
 	if ((ctx=BN_CTX_new()) == NULL) goto err;
 	BN_CTX_start(ctx);
 	f = BN_CTX_get(ctx);
@@ -238,40 +260,63 @@ err:
 	return(r);
 	}
 
-static BN_BLINDING *rsa_get_blinding(RSA *rsa, BIGNUM **r, int *local, BN_CTX *ctx)
+static BN_BLINDING *rsa_get_blinding(RSA *rsa, int *local, BN_CTX *ctx)
 {
 	BN_BLINDING *ret;
+	int got_write_lock = 0;
+
+	CRYPTO_r_lock(CRYPTO_LOCK_RSA);
 
 	if (rsa->blinding == NULL)
 		{
+		CRYPTO_r_unlock(CRYPTO_LOCK_RSA);
+		CRYPTO_w_lock(CRYPTO_LOCK_RSA);
+		got_write_lock = 1;
+
 		if (rsa->blinding == NULL)
-			{
-			CRYPTO_w_lock(CRYPTO_LOCK_RSA);
-			if (rsa->blinding == NULL)
-				rsa->blinding = RSA_setup_blinding(rsa, ctx);
-			CRYPTO_w_unlock(CRYPTO_LOCK_RSA);
-			}
+			rsa->blinding = RSA_setup_blinding(rsa, ctx);
 		}
 
 	ret = rsa->blinding;
 	if (ret == NULL)
-		return NULL;
+		goto err;
 
-	if (BN_BLINDING_get_thread_id(ret) != CRYPTO_thread_id())
+	if (BN_BLINDING_get_thread_id(ret) == CRYPTO_thread_id())
 		{
-		*local = 0;
+		/* rsa->blinding is ours! */
+
+		*local = 1;
+		}
+	else
+		{
+		/* resort to rsa->mt_blinding instead */
+
+		*local = 0; /* instructs rsa_blinding_convert(), rsa_blinding_invert()
+		             * that the BN_BLINDING is shared, meaning that accesses
+		             * require locks, and that the blinding factor must be
+		             * stored outside the BN_BLINDING
+		             */
+
 		if (rsa->mt_blinding == NULL)
 			{
-			CRYPTO_w_lock(CRYPTO_LOCK_RSA);
+			if (!got_write_lock)
+				{
+				CRYPTO_r_unlock(CRYPTO_LOCK_RSA);
+				CRYPTO_w_lock(CRYPTO_LOCK_RSA);
+				got_write_lock = 1;
+				}
+			
 			if (rsa->mt_blinding == NULL)
 				rsa->mt_blinding = RSA_setup_blinding(rsa, ctx);
-			CRYPTO_w_unlock(CRYPTO_LOCK_RSA);
 			}
 		ret = rsa->mt_blinding;
 		}
-	else
-		*local = 1;
 
+ err:
+	if (got_write_lock)
+		CRYPTO_w_unlock(CRYPTO_LOCK_RSA);
+	else
+		CRYPTO_r_unlock(CRYPTO_LOCK_RSA);
 	return ret;
 }
 
@@ -358,7 +403,7 @@ static int RSA_eay_private_encrypt(int flen, const unsigned char *from,
 
 	if (!(rsa->flags & RSA_FLAG_NO_BLINDING))
 		{
-		blinding = rsa_get_blinding(rsa, &br, &local_blinding, ctx);
+		blinding = rsa_get_blinding(rsa, &local_blinding, ctx);
 		if (blinding == NULL)
 			{
 			RSAerr(RSA_F_RSA_EAY_PRIVATE_ENCRYPT, ERR_R_INTERNAL_ERROR);
@@ -384,11 +429,11 @@ static int RSA_eay_private_encrypt(int flen, const unsigned char *from,
 		BIGNUM local_d;
 		BIGNUM *d = NULL;
 		
-		if (!(rsa->flags & RSA_FLAG_NO_EXP_CONSTTIME))
+		if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
 			{
 			BN_init(&local_d);
 			d = &local_d;
-			BN_with_flags(d, rsa->d, BN_FLG_EXP_CONSTTIME);
+			BN_with_flags(d, rsa->d, BN_FLG_CONSTTIME);
 			}
 		else
 			d = rsa->d;
@@ -479,7 +524,7 @@ static int RSA_eay_private_decrypt(int flen, const unsigned char *from,
 
 	if (!(rsa->flags & RSA_FLAG_NO_BLINDING))
 		{
-		blinding = rsa_get_blinding(rsa, &br, &local_blinding, ctx);
+		blinding = rsa_get_blinding(rsa, &local_blinding, ctx);
 		if (blinding == NULL)
 			{
 			RSAerr(RSA_F_RSA_EAY_PRIVATE_DECRYPT, ERR_R_INTERNAL_ERROR);
@@ -506,10 +551,10 @@ static int RSA_eay_private_decrypt(int flen, const unsigned char *from,
 		BIGNUM local_d;
 		BIGNUM *d = NULL;
 		
-		if (!(rsa->flags & RSA_FLAG_NO_EXP_CONSTTIME))
+		if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
 			{
 			d = &local_d;
-			BN_with_flags(d, rsa->d, BN_FLG_EXP_CONSTTIME);
+			BN_with_flags(d, rsa->d, BN_FLG_CONSTTIME);
 			}
 		else
 			d = rsa->d;
@@ -574,6 +619,28 @@ static int RSA_eay_public_decrypt(int flen, const unsigned char *from,
 	unsigned char *buf=NULL;
 	BN_CTX *ctx=NULL;
 
+	if (BN_num_bits(rsa->n) > OPENSSL_RSA_MAX_MODULUS_BITS)
+		{
+		RSAerr(RSA_F_RSA_EAY_PUBLIC_DECRYPT, RSA_R_MODULUS_TOO_LARGE);
+		return -1;
+		}
+
+	if (BN_ucmp(rsa->n, rsa->e) <= 0)
+		{
+		RSAerr(RSA_F_RSA_EAY_PUBLIC_DECRYPT, RSA_R_BAD_E_VALUE);
+		return -1;
+		}
+
+	/* for large moduli, enforce exponent limit */
+	if (BN_num_bits(rsa->n) > OPENSSL_RSA_SMALL_MODULUS_BITS)
+		{
+		if (BN_num_bits(rsa->e) > OPENSSL_RSA_MAX_PUBEXP_BITS)
+			{
+			RSAerr(RSA_F_RSA_EAY_PUBLIC_DECRYPT, RSA_R_BAD_E_VALUE);
+			return -1;
+			}
+		}
+	
 	if((ctx = BN_CTX_new()) == NULL) goto err;
 	BN_CTX_start(ctx);
 	f = BN_CTX_get(ctx);
@@ -648,8 +715,9 @@ err:
 static int RSA_eay_mod_exp(BIGNUM *r0, const BIGNUM *I, RSA *rsa, BN_CTX *ctx)
 	{
 	BIGNUM *r1,*m1,*vrfy;
-	BIGNUM local_dmp1, local_dmq1;
-	BIGNUM *dmp1, *dmq1;
+	BIGNUM local_dmp1,local_dmq1,local_c,local_r1;
+	BIGNUM *dmp1,*dmq1,*c,*pr1;
+	int bn_flags;
 	int ret=0;
 
 	BN_CTX_start(ctx);
@@ -657,26 +725,72 @@ static int RSA_eay_mod_exp(BIGNUM *r0, const BIGNUM *I, RSA *rsa, BN_CTX *ctx)
 	m1 = BN_CTX_get(ctx);
 	vrfy = BN_CTX_get(ctx);
 
+	/* Make sure mod_inverse in montgomerey intialization use correct 
+	 * BN_FLG_CONSTTIME flag.
+	 */
+	bn_flags = rsa->p->flags;
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
+		{
+		rsa->p->flags |= BN_FLG_CONSTTIME;
+		}
 	MONT_HELPER(rsa, ctx, p, rsa->flags & RSA_FLAG_CACHE_PRIVATE, goto err);
+	/* We restore bn_flags back */
+	rsa->p->flags = bn_flags;
+
+        /* Make sure mod_inverse in montgomerey intialization use correct
+         * BN_FLG_CONSTTIME flag.
+         */
+	bn_flags = rsa->q->flags;
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
+		{
+		rsa->q->flags |= BN_FLG_CONSTTIME;
+		}
 	MONT_HELPER(rsa, ctx, q, rsa->flags & RSA_FLAG_CACHE_PRIVATE, goto err);
+	/* We restore bn_flags back */
+	rsa->q->flags = bn_flags;	
+
 	MONT_HELPER(rsa, ctx, n, rsa->flags & RSA_FLAG_CACHE_PUBLIC, goto err);
 
-	if (!BN_mod(r1,I,rsa->q,ctx)) goto err;
-	if (!(rsa->flags & RSA_FLAG_NO_EXP_CONSTTIME))
+	/* compute I mod q */
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
+		{
+		c = &local_c;
+		BN_with_flags(c, I, BN_FLG_CONSTTIME);
+		if (!BN_mod(r1,c,rsa->q,ctx)) goto err;
+		}
+	else
+		{
+		if (!BN_mod(r1,I,rsa->q,ctx)) goto err;
+		}
+
+	/* compute r1^dmq1 mod q */
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
 		{
 		dmq1 = &local_dmq1;
-		BN_with_flags(dmq1, rsa->dmq1, BN_FLG_EXP_CONSTTIME);
+		BN_with_flags(dmq1, rsa->dmq1, BN_FLG_CONSTTIME);
 		}
 	else
 		dmq1 = rsa->dmq1;
 	if (!rsa->meth->bn_mod_exp(m1,r1,dmq1,rsa->q,ctx,
 		rsa->_method_mod_q)) goto err;
 
-	if (!BN_mod(r1,I,rsa->p,ctx)) goto err;
-	if (!(rsa->flags & RSA_FLAG_NO_EXP_CONSTTIME))
+	/* compute I mod p */
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
+		{
+		c = &local_c;
+		BN_with_flags(c, I, BN_FLG_CONSTTIME);
+		if (!BN_mod(r1,c,rsa->p,ctx)) goto err;
+		}
+	else
+		{
+		if (!BN_mod(r1,I,rsa->p,ctx)) goto err;
+		}
+
+	/* compute r1^dmp1 mod p */
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
 		{
 		dmp1 = &local_dmp1;
-		BN_with_flags(dmp1, rsa->dmp1, BN_FLG_EXP_CONSTTIME);
+		BN_with_flags(dmp1, rsa->dmp1, BN_FLG_CONSTTIME);
 		}
 	else
 		dmp1 = rsa->dmp1;
@@ -690,7 +804,17 @@ static int RSA_eay_mod_exp(BIGNUM *r0, const BIGNUM *I, RSA *rsa, BN_CTX *ctx)
 		if (!BN_add(r0,r0,rsa->p)) goto err;
 
 	if (!BN_mul(r1,r0,rsa->iqmp,ctx)) goto err;
-	if (!BN_mod(r0,r1,rsa->p,ctx)) goto err;
+
+	/* Turn BN_FLG_CONSTTIME flag on before division operation */
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
+		{
+		pr1 = &local_r1;
+		BN_with_flags(pr1, r1, BN_FLG_CONSTTIME);
+		}
+	else
+		pr1 = r1;
+	if (!BN_mod(r0,pr1,rsa->p,ctx)) goto err;
+
 	/* If p < q it is occasionally possible for the correction of
          * adding 'p' if r0 is negative above to leave the result still
 	 * negative. This can break the private key operations: the following
@@ -723,10 +847,10 @@ static int RSA_eay_mod_exp(BIGNUM *r0, const BIGNUM *I, RSA *rsa, BN_CTX *ctx)
 			BIGNUM local_d;
 			BIGNUM *d = NULL;
 		
-			if (!(rsa->flags & RSA_FLAG_NO_EXP_CONSTTIME))
+			if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME))
 				{
 				d = &local_d;
-				BN_with_flags(d, rsa->d, BN_FLG_EXP_CONSTTIME);
+				BN_with_flags(d, rsa->d, BN_FLG_CONSTTIME);
 				}
 			else
 				d = rsa->d;

@@ -108,32 +108,6 @@
  * Hudson (tjh@cryptsoft.com).
  *
  */
-/* ====================================================================
- * Copyright 2005 Nokia. All rights reserved.
- *
- * The portions of the attached software ("Contribution") is developed by
- * Nokia Corporation and is licensed pursuant to the OpenSSL open source
- * license.
- *
- * The Contribution, originally written by Mika Kousa and Pasi Eronen of
- * Nokia Corporation, consists of the "PSK" (Pre-Shared Key) ciphersuites
- * support (see RFC 4279) to OpenSSL.
- *
- * No patent licenses or other rights except those expressly stated in
- * the OpenSSL open source license shall be deemed granted or received
- * expressly, by implication, estoppel, or otherwise.
- *
- * No assurances are provided by Nokia that the Contribution does not
- * infringe the patent or other intellectual property rights of any third
- * party or that the license provides you with all the necessary rights
- * to make use of the Contribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. IN
- * ADDITION TO THE DISCLAIMERS INCLUDED IN THE LICENSE, NOKIA
- * SPECIFICALLY DISCLAIMS ANY LIABILITY FOR CLAIMS BROUGHT BY YOU OR ANY
- * OTHER ENTITY BASED ON INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS OR
- * OTHERWISE.
- */
 
 #include <stdio.h>
 #include "ssl_locl.h"
@@ -247,6 +221,9 @@ int ssl3_change_cipher_state(SSL *s, int which)
 			reuse_dd = 1;
 		else if ((s->enc_read_ctx=OPENSSL_malloc(sizeof(EVP_CIPHER_CTX))) == NULL)
 			goto err;
+		else
+			/* make sure it's intialized in case we exit later with an error */
+			EVP_CIPHER_CTX_init(s->enc_read_ctx);
 		dd= s->enc_read_ctx;
 		s->read_hash=m;
 #ifndef OPENSSL_NO_COMP
@@ -280,6 +257,9 @@ int ssl3_change_cipher_state(SSL *s, int which)
 			reuse_dd = 1;
 		else if ((s->enc_write_ctx=OPENSSL_malloc(sizeof(EVP_CIPHER_CTX))) == NULL)
 			goto err;
+		else
+			/* make sure it's intialized in case we exit later with an error */
+			EVP_CIPHER_CTX_init(s->enc_write_ctx);
 		dd= s->enc_write_ctx;
 		s->write_hash=m;
 #ifndef OPENSSL_NO_COMP
@@ -305,7 +285,6 @@ int ssl3_change_cipher_state(SSL *s, int which)
 
 	if (reuse_dd)
 		EVP_CIPHER_CTX_cleanup(dd);
-	EVP_CIPHER_CTX_init(dd);
 
 	p=s->s3->tmp.key_block;
 	i=EVP_MD_size(m);
@@ -735,12 +714,6 @@ int ssl3_alert_code(int code)
 	case SSL_AD_INTERNAL_ERROR:	return(SSL3_AD_HANDSHAKE_FAILURE);
 	case SSL_AD_USER_CANCELLED:	return(SSL3_AD_HANDSHAKE_FAILURE);
 	case SSL_AD_NO_RENEGOTIATION:	return(-1); /* Don't send it :-) */
-	case SSL_AD_UNSUPPORTED_EXTENSION: return(SSL3_AD_HANDSHAKE_FAILURE);
-	case SSL_AD_CERTIFICATE_UNOBTAINABLE: return(SSL3_AD_HANDSHAKE_FAILURE);
-	case SSL_AD_UNRECOGNIZED_NAME:	return(SSL3_AD_HANDSHAKE_FAILURE);
-	case SSL_AD_BAD_CERTIFICATE_STATUS_RESPONSE: return(SSL3_AD_HANDSHAKE_FAILURE);
-	case SSL_AD_BAD_CERTIFICATE_HASH_VALUE: return(SSL3_AD_HANDSHAKE_FAILURE);
-	case SSL_AD_UNKNOWN_PSK_IDENTITY:return(TLS1_AD_UNKNOWN_PSK_IDENTITY);
 	default:			return(-1);
 		}
 	}

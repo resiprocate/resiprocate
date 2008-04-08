@@ -94,11 +94,9 @@ extern "C" {
 /* #define BN_DEBUG */
 /* #define BN_DEBUG_RAND */
 
-#ifndef OPENSSL_SMALL_FOOTPRINT
 #define BN_MUL_COMBA
 #define BN_SQR_COMBA
 #define BN_RECURSION
-#endif
 
 /* This next option uses the C libraries (2 word)/(1 word) function.
  * If it is not defined, I use my C version (which is slower).
@@ -139,8 +137,6 @@ extern "C" {
 #define BN_DEC_FMT1	"%lu"
 #define BN_DEC_FMT2	"%019lu"
 #define BN_DEC_NUM	19
-#define BN_HEX_FMT1	"%lX"
-#define BN_HEX_FMT2	"%016lX"
 #endif
 
 /* This is where the long long data type is 64 bits, but long is 32.
@@ -166,45 +162,101 @@ extern "C" {
 #define BN_DEC_FMT1	"%llu"
 #define BN_DEC_FMT2	"%019llu"
 #define BN_DEC_NUM	19
-#define BN_HEX_FMT1	"%llX"
-#define BN_HEX_FMT2	"%016llX"
 #endif
 
 #ifdef THIRTY_TWO_BIT
 #ifdef BN_LLONG
-# if defined(_WIN32) && !defined(__GNUC__)
+# if defined(OPENSSL_SYS_WIN32) && !defined(__GNUC__)
 #  define BN_ULLONG	unsigned __int64
-#  define BN_MASK	(0xffffffffffffffffI64)
 # else
 #  define BN_ULLONG	unsigned long long
-#  define BN_MASK	(0xffffffffffffffffLL)
 # endif
 #endif
-#define BN_ULONG	unsigned int
-#define BN_LONG		int
+#define BN_ULONG	unsigned long
+#define BN_LONG		long
 #define BN_BITS		64
 #define BN_BYTES	4
 #define BN_BITS2	32
 #define BN_BITS4	16
+#ifdef OPENSSL_SYS_WIN32
+/* VC++ doesn't like the LL suffix */
+#define BN_MASK		(0xffffffffffffffffL)
+#else
+#define BN_MASK		(0xffffffffffffffffLL)
+#endif
 #define BN_MASK2	(0xffffffffL)
 #define BN_MASK2l	(0xffff)
 #define BN_MASK2h1	(0xffff8000L)
 #define BN_MASK2h	(0xffff0000L)
 #define BN_TBIT		(0x80000000L)
 #define BN_DEC_CONV	(1000000000L)
-#define BN_DEC_FMT1	"%u"
-#define BN_DEC_FMT2	"%09u"
+#define BN_DEC_FMT1	"%lu"
+#define BN_DEC_FMT2	"%09lu"
 #define BN_DEC_NUM	9
-#define BN_HEX_FMT1	"%X"
-#define BN_HEX_FMT2	"%08X"
+#endif
+
+#ifdef SIXTEEN_BIT
+#ifndef BN_DIV2W
+#define BN_DIV2W
+#endif
+#define BN_ULLONG	unsigned long
+#define BN_ULONG	unsigned short
+#define BN_LONG		short
+#define BN_BITS		32
+#define BN_BYTES	2
+#define BN_BITS2	16
+#define BN_BITS4	8
+#define BN_MASK		(0xffffffff)
+#define BN_MASK2	(0xffff)
+#define BN_MASK2l	(0xff)
+#define BN_MASK2h1	(0xff80)
+#define BN_MASK2h	(0xff00)
+#define BN_TBIT		(0x8000)
+#define BN_DEC_CONV	(100000)
+#define BN_DEC_FMT1	"%u"
+#define BN_DEC_FMT2	"%05u"
+#define BN_DEC_NUM	5
+#endif
+
+#ifdef EIGHT_BIT
+#ifndef BN_DIV2W
+#define BN_DIV2W
+#endif
+#define BN_ULLONG	unsigned short
+#define BN_ULONG	unsigned char
+#define BN_LONG		char
+#define BN_BITS		16
+#define BN_BYTES	1
+#define BN_BITS2	8
+#define BN_BITS4	4
+#define BN_MASK		(0xffff)
+#define BN_MASK2	(0xff)
+#define BN_MASK2l	(0xf)
+#define BN_MASK2h1	(0xf8)
+#define BN_MASK2h	(0xf0)
+#define BN_TBIT		(0x80)
+#define BN_DEC_CONV	(100)
+#define BN_DEC_FMT1	"%u"
+#define BN_DEC_FMT2	"%02u"
+#define BN_DEC_NUM	2
 #endif
 
 #define BN_DEFAULT_BITS	1280
 
 #define BN_FLG_MALLOCED		0x01
 #define BN_FLG_STATIC_DATA	0x02
-#define BN_FLG_EXP_CONSTTIME	0x04 /* avoid leaking exponent information through timings
-                            	      * (BN_mod_exp_mont() will call BN_mod_exp_mont_consttime) */
+#define BN_FLG_CONSTTIME	0x04 /* avoid leaking exponent information through timing,
+                                      * BN_mod_exp_mont() will call BN_mod_exp_mont_consttime,
+                                      * BN_div() will call BN_div_no_branch,
+                                      * BN_mod_inverse() will call BN_mod_inverse_no_branch.
+                                      */
+
+#ifndef OPENSSL_NO_DEPRECATED
+#define BN_FLG_EXP_CONSTTIME BN_FLG_CONSTTIME /* deprecated name for the flag */
+                                      /* avoid leaking exponent information through timings
+                                      * (BN_mod_exp_mont() will call BN_mod_exp_mont_consttime) */
+#endif
+
 #ifndef OPENSSL_NO_DEPRECATED
 #define BN_FLG_FREE		0x8000	/* used for debuging */
 #endif
@@ -251,7 +303,7 @@ struct bn_mont_ctx_st
 	BIGNUM N;      /* The modulus */
 	BIGNUM Ni;     /* R*(1/R mod N) - N*Ni = 1
 	                * (Ni is only stored for bignum algorithm) */
-	BN_ULONG n0[2];/* least significant word(s) of Ni */
+	BN_ULONG n0;   /* least significant word of Ni */
 	int flags;
 	};
 
@@ -447,7 +499,6 @@ char *	BN_bn2hex(const BIGNUM *a);
 char *	BN_bn2dec(const BIGNUM *a);
 int 	BN_hex2bn(BIGNUM **a, const char *str);
 int 	BN_dec2bn(BIGNUM **a, const char *str);
-int	BN_asc2bn(BIGNUM **a, const char *str);
 int	BN_gcd(BIGNUM *r,const BIGNUM *a,const BIGNUM *b,BN_CTX *ctx);
 int	BN_kronecker(const BIGNUM *a,const BIGNUM *b,BN_CTX *ctx); /* returns -2 for error */
 BIGNUM *BN_mod_inverse(BIGNUM *ret,
@@ -493,7 +544,7 @@ BN_MONT_CTX *BN_MONT_CTX_set_locked(BN_MONT_CTX **pmont, int lock,
 #define	BN_BLINDING_NO_UPDATE	0x00000001
 #define	BN_BLINDING_NO_RECREATE	0x00000002
 
-BN_BLINDING *BN_BLINDING_new(const BIGNUM *A, const BIGNUM *Ai, BIGNUM *mod);
+BN_BLINDING *BN_BLINDING_new(const BIGNUM *A, const BIGNUM *Ai, /* const */ BIGNUM *mod);
 void BN_BLINDING_free(BN_BLINDING *b);
 int BN_BLINDING_update(BN_BLINDING *b,BN_CTX *ctx);
 int BN_BLINDING_convert(BIGNUM *n, BN_BLINDING *b, BN_CTX *ctx);
@@ -505,7 +556,7 @@ void BN_BLINDING_set_thread_id(BN_BLINDING *, unsigned long);
 unsigned long BN_BLINDING_get_flags(const BN_BLINDING *);
 void BN_BLINDING_set_flags(BN_BLINDING *, unsigned long);
 BN_BLINDING *BN_BLINDING_create_param(BN_BLINDING *b,
-	const BIGNUM *e, BIGNUM *m, BN_CTX *ctx,
+	const BIGNUM *e, /* const */ BIGNUM *m, BN_CTX *ctx,
 	int (*bn_mod_exp)(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
 			  const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx),
 	BN_MONT_CTX *m_ctx);
@@ -734,6 +785,7 @@ void ERR_load_BN_strings(void);
 #define BN_F_BN_CTX_NEW					 106
 #define BN_F_BN_CTX_START				 129
 #define BN_F_BN_DIV					 107
+#define BN_F_BN_DIV_NO_BRANCH				 138
 #define BN_F_BN_DIV_RECP				 130
 #define BN_F_BN_EXP					 123
 #define BN_F_BN_EXPAND2					 108
@@ -752,6 +804,7 @@ void ERR_load_BN_strings(void);
 #define BN_F_BN_MOD_EXP_RECP				 125
 #define BN_F_BN_MOD_EXP_SIMPLE				 126
 #define BN_F_BN_MOD_INVERSE				 110
+#define BN_F_BN_MOD_INVERSE_NO_BRANCH			 139
 #define BN_F_BN_MOD_LSHIFT_QUICK			 119
 #define BN_F_BN_MOD_MUL_RECIPROCAL			 111
 #define BN_F_BN_MOD_SQRT				 121

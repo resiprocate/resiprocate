@@ -98,8 +98,7 @@ ASN1_NDEF_SEQUENCE(PKCS7_SIGNED) = {
 IMPLEMENT_ASN1_FUNCTIONS(PKCS7_SIGNED)
 
 /* Minor tweak to operation: free up EVP_PKEY */
-static int si_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
-							void *exarg)
+static int si_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it)
 {
 	if(operation == ASN1_OP_FREE_POST) {
 		PKCS7_SIGNER_INFO *si = (PKCS7_SIGNER_INFO *)*pval;
@@ -141,8 +140,7 @@ ASN1_NDEF_SEQUENCE(PKCS7_ENVELOPE) = {
 IMPLEMENT_ASN1_FUNCTIONS(PKCS7_ENVELOPE)
 
 /* Minor tweak to operation: free up X509 */
-static int ri_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
-								void *exarg)
+static int ri_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it)
 {
 	if(operation == ASN1_OP_FREE_POST) {
 		PKCS7_RECIP_INFO *ri = (PKCS7_RECIP_INFO *)*pval;
@@ -214,5 +212,3 @@ ASN1_ITEM_TEMPLATE(PKCS7_ATTR_VERIFY) =
 	ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF | ASN1_TFLG_IMPTAG | ASN1_TFLG_UNIVERSAL,
 				V_ASN1_SET, PKCS7_ATTRIBUTES, X509_ATTRIBUTE)
 ASN1_ITEM_TEMPLATE_END(PKCS7_ATTR_VERIFY)
-
-IMPLEMENT_ASN1_PRINT_FUNCTION(PKCS7)

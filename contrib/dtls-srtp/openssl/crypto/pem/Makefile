@@ -18,10 +18,10 @@ APPS=
 
 LIB=$(TOP)/libcrypto.a
 LIBSRC= pem_sign.c pem_seal.c pem_info.c pem_lib.c pem_all.c pem_err.c \
-	pem_x509.c pem_xaux.c pem_oth.c pem_pk8.c pem_pkey.c pvkfmt.c
+	pem_x509.c pem_xaux.c pem_oth.c pem_pk8.c pem_pkey.c
 
 LIBOBJ=	pem_sign.o pem_seal.o pem_info.o pem_lib.o pem_all.o pem_err.o \
-	pem_x509.o pem_xaux.o pem_oth.o pem_pk8.o pem_pkey.o pvkfmt.o
+	pem_x509.o pem_xaux.o pem_oth.o pem_pk8.o pem_pkey.o
 
 SRC= $(LIBSRC)
 
@@ -136,7 +136,7 @@ pem_lib.o: ../../include/openssl/safestack.h ../../include/openssl/sha.h
 pem_lib.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
 pem_lib.o: ../../include/openssl/ui.h ../../include/openssl/ui_compat.h
 pem_lib.o: ../../include/openssl/x509.h ../../include/openssl/x509_vfy.h
-pem_lib.o: ../asn1/asn1_locl.h ../cryptlib.h pem_lib.c
+pem_lib.o: ../cryptlib.h pem_lib.c
 pem_oth.o: ../../e_os.h ../../include/openssl/asn1.h
 pem_oth.o: ../../include/openssl/bio.h ../../include/openssl/buffer.h
 pem_oth.o: ../../include/openssl/crypto.h ../../include/openssl/e_os2.h
@@ -180,8 +180,7 @@ pem_pkey.o: ../../include/openssl/pkcs12.h ../../include/openssl/pkcs7.h
 pem_pkey.o: ../../include/openssl/rand.h ../../include/openssl/safestack.h
 pem_pkey.o: ../../include/openssl/sha.h ../../include/openssl/stack.h
 pem_pkey.o: ../../include/openssl/symhacks.h ../../include/openssl/x509.h
-pem_pkey.o: ../../include/openssl/x509_vfy.h ../asn1/asn1_locl.h ../cryptlib.h
-pem_pkey.o: pem_pkey.c
+pem_pkey.o: ../../include/openssl/x509_vfy.h ../cryptlib.h pem_pkey.c
 pem_seal.o: ../../e_os.h ../../include/openssl/asn1.h
 pem_seal.o: ../../include/openssl/bio.h ../../include/openssl/buffer.h
 pem_seal.o: ../../include/openssl/crypto.h ../../include/openssl/e_os2.h
@@ -240,17 +239,3 @@ pem_xaux.o: ../../include/openssl/pkcs7.h ../../include/openssl/safestack.h
 pem_xaux.o: ../../include/openssl/sha.h ../../include/openssl/stack.h
 pem_xaux.o: ../../include/openssl/symhacks.h ../../include/openssl/x509.h
 pem_xaux.o: ../../include/openssl/x509_vfy.h ../cryptlib.h pem_xaux.c
-pvkfmt.o: ../../e_os.h ../../include/openssl/asn1.h ../../include/openssl/bio.h
-pvkfmt.o: ../../include/openssl/buffer.h ../../include/openssl/crypto.h
-pvkfmt.o: ../../include/openssl/e_os2.h ../../include/openssl/ec.h
-pvkfmt.o: ../../include/openssl/ecdh.h ../../include/openssl/ecdsa.h
-pvkfmt.o: ../../include/openssl/err.h ../../include/openssl/evp.h
-pvkfmt.o: ../../include/openssl/lhash.h ../../include/openssl/obj_mac.h
-pvkfmt.o: ../../include/openssl/objects.h ../../include/openssl/opensslconf.h
-pvkfmt.o: ../../include/openssl/opensslv.h ../../include/openssl/ossl_typ.h
-pvkfmt.o: ../../include/openssl/pem.h ../../include/openssl/pem2.h
-pvkfmt.o: ../../include/openssl/pkcs7.h ../../include/openssl/rand.h
-pvkfmt.o: ../../include/openssl/safestack.h ../../include/openssl/sha.h
-pvkfmt.o: ../../include/openssl/stack.h ../../include/openssl/symhacks.h
-pvkfmt.o: ../../include/openssl/x509.h ../../include/openssl/x509_vfy.h
-pvkfmt.o: ../cryptlib.h pvkfmt.c

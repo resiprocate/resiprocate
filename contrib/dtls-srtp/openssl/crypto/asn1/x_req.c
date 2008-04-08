@@ -79,8 +79,7 @@
  *
  */
 
-static int rinf_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
-							void *exarg)
+static int rinf_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it)
 {
 	X509_REQ_INFO *rinf = (X509_REQ_INFO *)*pval;
 
@@ -103,7 +102,7 @@ ASN1_SEQUENCE_enc(X509_REQ_INFO, enc, rinf_cb) = {
 
 IMPLEMENT_ASN1_FUNCTIONS(X509_REQ_INFO)
 
-ASN1_SEQUENCE_ref(X509_REQ, 0, CRYPTO_LOCK_X509_INFO) = {
+ASN1_SEQUENCE_ref(X509_REQ, 0, CRYPTO_LOCK_X509_REQ) = {
 	ASN1_SIMPLE(X509_REQ, req_info, X509_REQ_INFO),
 	ASN1_SIMPLE(X509_REQ, sig_alg, X509_ALGOR),
 	ASN1_SIMPLE(X509_REQ, signature, ASN1_BIT_STRING)

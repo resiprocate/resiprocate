@@ -342,19 +342,11 @@
 #undef STORE_method_get_unlock_store_function
 #define STORE_method_get_unlock_store_function	STORE_meth_get_unlock_store_fn
 
-/* Hack som long TS names */
-#undef TS_RESP_CTX_set_status_info_cond
-#define TS_RESP_CTX_set_status_info_cond	TS_RESP_CTX_set_stat_info_cond
-#undef TS_RESP_CTX_set_clock_precision_digits
-#define TS_RESP_CTX_set_clock_precision_digits	TS_RESP_CTX_set_clk_prec_digits
-#undef TS_CONF_set_clock_precision_digits
-#define TS_CONF_set_clock_precision_digits	TS_CONF_set_clk_prec_digits
-
 #endif /* defined OPENSSL_SYS_VMS */
 
 
 /* Case insensiteve linking causes problems.... */
-#if defined(OPENSSL_SYS_VMS) || defined(OPENSSL_SYS_OS2)
+#if defined(OPENSSL_SYS_WIN16) || defined(OPENSSL_SYS_VMS) || defined(OPENSSL_SYS_OS2)
 #undef ERR_load_CRYPTO_strings
 #define ERR_load_CRYPTO_strings			ERR_load_CRYPTOlib_strings
 #undef OCSP_crlID_new

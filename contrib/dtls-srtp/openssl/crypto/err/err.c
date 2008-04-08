@@ -147,7 +147,6 @@ static ERR_STRING_DATA ERR_str_libraries[]=
 {ERR_PACK(ERR_LIB_PKCS12,0,0)		,"PKCS12 routines"},
 {ERR_PACK(ERR_LIB_RAND,0,0)		,"random number generator"},
 {ERR_PACK(ERR_LIB_DSO,0,0)		,"DSO support routines"},
-{ERR_PACK(ERR_LIB_TS,0,0)		,"time stamp routines"},
 {ERR_PACK(ERR_LIB_ENGINE,0,0)		,"engine routines"},
 {ERR_PACK(ERR_LIB_OCSP,0,0)		,"OCSP routines"},
 {0,NULL},
@@ -196,7 +195,6 @@ static ERR_STRING_DATA ERR_str_reasons[]=
 {ERR_R_DSO_LIB				,"DSO lib"},
 {ERR_R_ENGINE_LIB			,"ENGINE lib"},
 {ERR_R_OCSP_LIB				,"OCSP lib"},
-{ERR_R_TS_LIB				,"TS lib"},
 
 {ERR_R_NESTED_ASN1_ERROR		,"nested asn1 error"},
 {ERR_R_BAD_ASN1_OBJECT_HEADER		,"bad asn1 object header"},
@@ -550,9 +548,20 @@ static void build_SYS_str_reasons(void)
 	int i;
 	static int init = 1;
 
-	if (!init) return;
-
+	CRYPTO_r_lock(CRYPTO_LOCK_ERR);
+	if (!init)
+		{
+		CRYPTO_r_unlock(CRYPTO_LOCK_ERR);
+		return;
+		}
+	
+	CRYPTO_r_unlock(CRYPTO_LOCK_ERR);
 	CRYPTO_w_lock(CRYPTO_LOCK_ERR);
+	if (!init)
+		{
+		CRYPTO_w_unlock(CRYPTO_LOCK_ERR);
+		return;
+		}
 
 	for (i = 1; i <= NUM_SYS_STR_REASONS; i++)
 		{
