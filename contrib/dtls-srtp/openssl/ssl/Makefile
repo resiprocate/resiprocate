@@ -45,8 +45,8 @@ LIBOBJ= \
 
 SRC= $(LIBSRC)
 
-EXHEADER= ssl.h ssl2.h ssl3.h ssl23.h tls1.h dtls1.h kssl.h 
-HEADER=	$(EXHEADER) ssl_locl.h kssl_lcl.h srtp.h
+EXHEADER= ssl.h ssl2.h ssl3.h ssl23.h tls1.h dtls1.h kssl.h srtp.h
+HEADER=	$(EXHEADER) ssl_locl.h kssl_lcl.h
 
 ALL=    $(GENERAL) $(SRC) $(HEADER)
 
