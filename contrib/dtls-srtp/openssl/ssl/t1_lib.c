@@ -269,7 +269,6 @@ unsigned char *ssl_add_serverhello_tlsext(SSL *s, unsigned char *p, unsigned cha
                 }
         
 #endif
-		
 	if ((extdatalen = ret-p-2)== 0) 
 		return p;
 
