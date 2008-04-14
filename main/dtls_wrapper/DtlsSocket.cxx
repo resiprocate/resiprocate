@@ -25,6 +25,11 @@ class dtls::DtlsSocketTimer : public DtlsTimer
      DtlsSocket *mSocket;
 };
 
+int dummy_cb(int d, X509_STORE_CTX *x)
+{
+   return 1;
+}
+
 DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFactory* factory, enum SocketType type):
    mSocketContext(socketContext),
    mFactory(factory),
@@ -45,7 +50,7 @@ DtlsSocket::DtlsSocket(std::auto_ptr<DtlsSocketContext> socketContext, DtlsFacto
       break;
    case Server:
       SSL_set_accept_state(mSsl);
-      //SSL_set_verify(mSsl,SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,0);
+      SSL_set_verify(mSsl,SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, dummy_cb);
       break;
    default:
       assert(0);
