@@ -9,10 +9,6 @@
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 
-extern "C" {
-#include <openssl/srtp.h>
-}
-
 using namespace dtls;
 const char* DtlsFactory::DefaultSrtpProfile = "SRTP_AES128_CM_SHA1_80:SRTP_AES128_CM_SHA1_32";
 
