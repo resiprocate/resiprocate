@@ -826,7 +826,7 @@ Helper::advancedAuthenticateRequest(const SipMessage& request,
                        << " received=" << i->param(p_nonce)
                        << " then=" << then);
                
-               return make_pair(Failed,username);
+               return make_pair(BadlyFormed,username);
             }
          
             if (i->exists(p_qop))
