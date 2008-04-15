@@ -511,6 +511,12 @@ Proxy::decorateMessage(resip::SipMessage &request,
    // same is if the target and source were the same entity.
    if (!rt.uri().host().empty())
    {
+      if(request.mIsDecorated)
+      {
+         // If we've already decordated this message - remove the record-route we added last time
+         assert(request.exists(h_RecordRoutes) && !request.header(h_RecordRoutes).empty());
+         request.header(h_RecordRoutes).pop_front();
+      }
       request.header(h_RecordRoutes).push_front(rt);
       InfoLog (<< "Added outbound Record-Route: " << rt);
    }

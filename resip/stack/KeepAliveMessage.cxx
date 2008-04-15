@@ -10,9 +10,9 @@ KeepAliveMessage::KeepAliveMessage()
 KeepAliveMessage::KeepAliveMessage(const KeepAliveMessage& message)
    : SipMessage(message)
 {
-   header(h_RequestLine).method() = OPTIONS;
-   Via via;
-   header(h_Vias).push_back(via);
+   //header(h_RequestLine).method() = OPTIONS;
+   //Via via;
+   //header(h_Vias).push_back(via);
 }
 
 KeepAliveMessage::~KeepAliveMessage()
