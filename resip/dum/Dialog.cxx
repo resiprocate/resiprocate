@@ -276,16 +276,22 @@ Dialog::end()
    }
 
    // End Subscriptions
-   for (list<ClientSubscription*>::iterator it = mClientSubscriptions.begin();
-        it != mClientSubscriptions.end(); it++)
+   // !jrm! WARN ClientSubscription and ServerSubscription have access to this dialog and will remove themselves
+   // from the m<client|server>Subscriptions collections in the call to end().
+   for (list<ClientSubscription*>::iterator it(mClientSubscriptions.begin());
+        it != mClientSubscriptions.end();)
    {
-      (*it)->end();
+	   ClientSubscription* c = *it;
+       it++;       
+	   c->end();
    }
 
-   for (list<ServerSubscription*>::iterator it2 = mServerSubscriptions.begin();
-        it2 != mServerSubscriptions.end(); it2++)
+   for (list<ServerSubscription*>::iterator it2(mServerSubscriptions.begin());
+        it2 != mServerSubscriptions.end();)
    {
-      (*it2)->end();
+	   ServerSubscription* s = *it2;
+       it2++;       
+	   s->end();
    }
 }
 
