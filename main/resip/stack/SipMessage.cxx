@@ -28,8 +28,9 @@ using namespace std;
 bool SipMessage::checkContentLength=true;
 
 SipMessage::SipMessage(const Transport* fromWire)
-   : mIsBadAck200(false),
-      mIsExternal(fromWire != 0),
+   : mIsDecorated(false),
+     mIsBadAck200(false),     
+     mIsExternal(fromWire != 0),
      mTransport(fromWire),
      mStartLine(0),
      mContentsHfv(0),
@@ -76,6 +77,7 @@ SipMessage::operator=(const SipMessage& rhs)
    {
       this->cleanUp();
 
+      mIsDecorated = rhs.mIsDecorated;
       mIsBadAck200 = rhs.mIsBadAck200;
       mIsExternal = rhs.mIsExternal;
       mTransport = rhs.mTransport;
@@ -1586,6 +1588,7 @@ SipMessage::callOutboundDecorators(const Tuple &src, const Tuple &dest)
   {
     (*i)->decorateMessage(*this, src, dest);
   }
+  mIsDecorated = true;
 }
 
 /* ====================================================================
