@@ -1830,14 +1830,31 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
          mController.mTransportSelector.transmit(sip, target);
       }
    }
-   else if (sip->getDestination().mFlowKey)
+   else if (sip->getDestination().mFlowKey || mTarget.mFlowKey)
    {
-      // !bwc! We have the FlowKey. This completely specifies our Transport
-      // (and Connection, if applicable)
-      DebugLog(<< "Sending to tuple: " << sip->getDestination());
-      mTarget = sip->getDestination();
-      processReliability(mTarget.getType());
-      mController.mTransportSelector.transmit(sip, mTarget); // dns not used
+      if (resend)
+      {
+         if (mTarget.transport)
+         {
+            mController.mTransportSelector.retransmit(sip, mTarget);
+         }
+         else
+         {
+            DebugLog (<< "No transport found(network could be down) for " << sip->brief());
+         }
+      }
+      else
+      {
+         // !bwc! We have the FlowKey. This completely specifies our Transport
+         // (and Connection, if applicable)
+         if(!mTarget.mFlowKey)
+         {
+            DebugLog(<< "Sending to tuple: " << sip->getDestination());
+            mTarget = sip->getDestination();
+            processReliability(mTarget.getType());
+         }
+         mController.mTransportSelector.transmit(sip, mTarget); // dns not used
+      }
    }
    else if (mDnsResult == 0 && !mIsCancel) // no dns query yet
    {
