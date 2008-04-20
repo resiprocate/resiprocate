@@ -74,14 +74,14 @@ int main(int argc, char* argv[])
    {
       if (argc != 3)
       {
-         std::cerr << "Usage: stunTestClient <host> <port>\n";
+         std::cerr << "Usage: TestClient <turn host> <turn port>\n";
          return 1;
       }
       unsigned int port = resip::Data(argv[2]).convertUnsignedLong();
 
       asio::error_code rc;
-      char username[256] = "";
-      char password[256] = "";
+      char username[256] = "test";
+      char password[256] = "1234";
       TurnPeer turnPeer;
       turnPeer.run();
 
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
       rc = turnSocket.bindRequest();
       if(rc)
       {
-         std::cout << "CLIENT: Error calling bindRequest: rc=" << rc.message() << std::endl;
+         std::cout << "CLIENT: Error calling bindRequest: rc=" << rc.message() << ", value=" << rc.value() << std::endl;
          return 1;
       }
       else
