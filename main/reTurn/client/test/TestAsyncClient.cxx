@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
   {
     if (argc != 3)
     {
-      std::cerr << "Usage: stunTestClient <host> <port>\n";
+      std::cerr << "Usage: TestAsyncClient <turn host> <turn port>\n";
       return 1;
     }
     unsigned int port = resip::Data(argv[2]).convertUnsignedLong();
