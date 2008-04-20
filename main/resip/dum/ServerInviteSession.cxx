@@ -339,8 +339,8 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
       case UAS_ReceivedUpdateWaitingAnswer:
          // send::2XXU-answer
          // send::2XXI
-         handler->onConnected(getSessionHandle(), *mInvite200);
          transition(Connected);
+         handler->onConnected(getSessionHandle(), *mInvite200);
          break;
 
       case UAS_Accepted:
