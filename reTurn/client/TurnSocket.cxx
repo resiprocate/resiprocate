@@ -1,6 +1,7 @@
 #include "TurnSocket.hxx"
 #include "ErrorCode.hxx"
 #include <boost/bind.hpp>
+#include <rutil/MD5Stream.hxx>
 #include <rutil/Lock.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
@@ -9,6 +10,7 @@
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
 using namespace std;
+using namespace resip;
 
 #define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
                      // Should also be calculation this on the fly
@@ -57,7 +59,7 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
    request.createHeader(StunMessage::StunClassRequest, StunMessage::SharedSecretMethod);
 
    // Get Response
-   StunMessage* response = sendRequestAndGetResponse(request, errorCode);
+   StunMessage* response = sendRequestAndGetResponse(request, errorCode, false);
    if(response == 0)
    {
       return errorCode;
@@ -98,10 +100,15 @@ TurnSocket::requestSharedSecret(char* username, unsigned int usernameSize,
 }
 
 void 
-TurnSocket::setUsernameAndPassword(const char* username, const char* password)
+TurnSocket::setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth)
 {
    mUsername = username;
    mPassword = password;
+   if(shortTermAuth)
+   {
+      // If we are using short term auth, then use short term password as HMAC key
+      mHmacKey = password;
+   }
 }
 
 asio::error_code 
@@ -119,13 +126,6 @@ TurnSocket::bindRequest()
    // Form Stun Bind request
    StunMessage request;
    request.createHeader(StunMessage::StunClassRequest, StunMessage::BindMethod);
-
-   if(!mUsername.empty())
-   {
-      request.mHasMessageIntegrity = true;
-      request.setUsername(mUsername.c_str()); 
-      request.mHmacKey = mPassword;
-   }
 
    StunMessage* response = sendRequestAndGetResponse(request, errorCode);
    if(response == 0)
@@ -225,9 +225,6 @@ TurnSocket::createAllocation(unsigned int lifetime,
       request.mTurnRequestedPortProps.props = mRequestedPortProps;
       request.mTurnRequestedPortProps.port = mRequestedPort;
    }
-   request.mHasMessageIntegrity = true;
-   request.setUsername(mUsername.data()); 
-   request.mHmacKey = mPassword;
 
    StunMessage* response = sendRequestAndGetResponse(request, errorCode);
    if(response == 0)
@@ -299,9 +296,6 @@ TurnSocket::refreshAllocation()
       request.mHasTurnBandwidth = true;
       request.mTurnBandwidth = mRequestedBandwidth;
    }
-   request.mHasMessageIntegrity = true;
-   request.setUsername(mUsername.data()); 
-   request.mHmacKey = mPassword;
 
    StunMessage* response = sendRequestAndGetResponse(request, errorCode);
    if(response == 0)
@@ -891,15 +885,31 @@ TurnSocket::checkIfAllocationRefreshRequired()
 }
 
 StunMessage* 
-TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode)
+TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode, bool addAuthInfo)
 {
-   unsigned int writesize = request.stunEncodeFramedMessage(mWriteBuffer, sizeof(mWriteBuffer));
    bool sendRequest = true;
    bool reliableTransport = mLocalBinding.getTransportType() != StunTuple::UDP;
    unsigned int timeout = reliableTransport ? TCP_RESPONSE_TIME : UDP_RT0;
    unsigned int totalTime = 0;
    unsigned int requestsSent = 0;
    unsigned int readsize = 0;
+
+   if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
+   {
+      request.mHasMessageIntegrity = true;
+      request.setUsername(mUsername.c_str()); 
+      request.mHmacKey = mHmacKey;
+      if(!mRealm.empty())
+      {
+         request.setRealm(mRealm.c_str());
+      }
+      if(!mNonce.empty())
+      {
+         request.setNonce(mNonce.c_str());
+      }
+   }
+
+   unsigned int writesize = request.stunEncodeFramedMessage(mWriteBuffer, sizeof(mWriteBuffer));
 
    while(true)
    {
@@ -976,6 +986,28 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
                   continue;  // read next message
                }
    
+               // If response is a 401, then store Realm, nonce, and hmac key
+               // If a realm and nonce attributes are present and the response is a 401 or 438 (Nonce Expired), 
+               // then re-issue request with new auth attributes
+               if(response->mHasRealm &&
+                  response->mHasNonce &&
+                  response->mHasErrorCode && 
+                  response->mErrorCode.errorClass == 4 &&
+                  ((response->mErrorCode.number == 1 && mHmacKey.empty()) ||  // Note if 401 error then ensure we haven't already tried once - if we've tried then mHmacKey will be populated
+                    response->mErrorCode.number == 38))
+               {
+                  mNonce = *response->mNonce;
+                  mRealm = *response->mRealm;
+                  MD5Stream r;
+                  r << mUsername << ":" << mRealm << ":" << mPassword;
+                  mHmacKey = r.getHex();
+
+                  // Re-Issue reques (with new TID)
+                  request.createHeader(request.mClass, request.mMethod);  // updates TID
+                  delete response;
+                  return sendRequestAndGetResponse(request, errorCode, true);
+               }
+
                errorCode = asio::error_code(reTurn::Success, asio::error::misc_category);
                return response;
             }

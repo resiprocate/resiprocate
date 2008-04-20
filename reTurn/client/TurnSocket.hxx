@@ -33,7 +33,7 @@ public:
                                         char* password, unsigned int passwordSize);
 
    // Set the username and password for all future requests
-   void setUsernameAndPassword(const char* username, const char* password);
+   void setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth=false);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    asio::error_code bindRequest();
@@ -79,6 +79,9 @@ protected:
    // Authentication Info
    resip::Data mUsername;
    resip::Data mPassword;
+   resip::Data mHmacKey;
+   resip::Data mRealm;
+   resip::Data mNonce;
 
    // Turn Allocation Properties used in request
    unsigned int mRequestedLifetime;
@@ -117,7 +120,7 @@ protected:
 private:
    resip::Mutex mMutex;
    asio::error_code checkIfAllocationRefreshRequired();
-   StunMessage* sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode);
+   StunMessage* sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode, bool addAuthInfo=true);
    asio::error_code sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size);
    asio::error_code handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned int& size, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
    asio::error_code handleRawData(char* data, unsigned int dataSize,  unsigned int expectedSize, char* buffer, unsigned int& bufferSize);
