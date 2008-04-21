@@ -10,6 +10,7 @@ KeepAliveMessage::KeepAliveMessage()
 KeepAliveMessage::KeepAliveMessage(const KeepAliveMessage& message)
    : SipMessage(message)
 {
+   // .slg. these lines are required in order for transport selector to work
    header(h_RequestLine).method() = OPTIONS;
    Via via;
    header(h_Vias).push_back(via);
