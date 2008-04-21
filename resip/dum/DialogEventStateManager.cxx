@@ -24,7 +24,7 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
    eventInfo->mDirection = DialogEventInfo::Recipient;
    eventInfo->mCreationTime = Timer::getTimeSecs();
    eventInfo->mInviteSession = InviteSessionHandle::NotValid();
-   eventInfo->mRemoteSdp = std::auto_ptr<SdpContents>((SdpContents*)invite.getContents()->clone());
+   eventInfo->mRemoteSdp = (dynamic_cast<SdpContents*>(invite.getContents()) != NULL ? std::auto_ptr<SdpContents>((SdpContents*)invite.getContents()->clone()) : std::auto_ptr<SdpContents>());
    eventInfo->mLocalIdentity = dialog.getLocalNameAddr();
    eventInfo->mLocalTarget = dialog.getLocalContact().uri();
    eventInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
@@ -34,7 +34,6 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
 
    if (invite.exists(h_Replaces))
    {
-      // !jjg! need to check that this is right...
       eventInfo->mReplacesId = std::auto_ptr<DialogId>(new DialogId(invite.header(h_Replaces).value(), 
          invite.header(h_Replaces).param(p_toTag),
          invite.header(h_Replaces).param(p_fromTag)));
@@ -74,7 +73,7 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
       }
    }
 
-      eventInfo = new DialogEventInfo();
+   eventInfo = new DialogEventInfo();
    eventInfo->mDialogEventId = Random::getVersion4UuidUrn();
    eventInfo->mDialogId = DialogId(dialogSet.getId(), Data::Empty);
    eventInfo->mDirection = DialogEventInfo::Initiator;
@@ -83,7 +82,7 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
    eventInfo->mLocalIdentity = invite.header(h_From);
    eventInfo->mLocalTarget = invite.header(h_Contacts).front().uri();
    eventInfo->mRemoteIdentity = invite.header(h_To);
-   eventInfo->mLocalSdp = std::auto_ptr<SdpContents>((SdpContents*)invite.getContents()->clone());
+   eventInfo->mLocalSdp = (dynamic_cast<SdpContents*>(invite.getContents()) != NULL ? std::auto_ptr<SdpContents>((SdpContents*)invite.getContents()->clone()) : std::auto_ptr<SdpContents>());
    eventInfo->mState = DialogEventInfo::Trying;
 
    if (invite.exists(h_ReferredBy))
@@ -134,10 +133,8 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
    }
 }
 
-// UAC: we've received a 1xx response WITH a remote tag, OR
-//      ?jjg? (uncertain) we've sent an UPDATE? or we've recieved a 200 OK response to an UPDATE?
-// UAS: we've sent a 1xx response WITH a local tag, OR
-//      ?jjg? (uncertain) we've received an UPDATE? or we've sent a 200 OK response to an UPDATE?
+// UAC: we've received a 1xx response WITH a remote tag
+// UAS: we've sent a 1xx response WITH a local tag
 void
 DialogEventStateManager::onEarly(const Dialog& dialog, InviteSessionHandle is)
 {
