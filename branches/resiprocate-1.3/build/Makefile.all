@@ -91,6 +91,8 @@ endif
 # Detect and normalize the OSTYPE
 ifndef OSTYPE
 OSTYPE       := $(shell uname)
+endif
+ifndef OSVER
 OSVER        := $(shell uname -r)
 endif
 
