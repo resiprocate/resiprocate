@@ -1,3 +1,25 @@
+= Release Notes v 1.3.1 =
+
+==Build System==
+===Bug fixes===
+* fixed an issue where OSTYPE wasn't set properly (under tcsh)
+
+==stack==
+===Bug fixes===
+* fixed a bug where badly formed nonces were not reported as badly formed, but as bad credentials
+* fixed a bug where outbound decorators could be called twice when flow tokens were being used (this manifested in the proxy, primarily)
+* fixed bug where outbound decorators would be called twice if DNS failover occurred
+* fixed bug where ACK/failure wasn't being sent down the same flow as the INVITE
+
+==DUM==
+===Bug fixes===
+* fixed an iterator corruption bug caused when ending a Dialog that had multiple subscription usages in it
+* fixed a bug in ServerInviteSession where onConnected() would be called before the state transition to Connected
+
+==repro==
+===Bug fixes===
+* fixed a couple of bugs that would cause extra Record-Route headers to be added to outgoing traffic
+
 = Release Notes v 1.3.0 =
 
 ==Build System==
