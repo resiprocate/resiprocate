@@ -32,8 +32,11 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
    eventInfo->mRouteSet = dialog.getRouteSet();
    eventInfo->mState = DialogEventInfo::Trying;
 
-   if (invite.exists(h_Replaces))
+   if (invite.exists(h_Replaces) &&
+         invite.header(h_Replaces).isWellFormed())
    {
+      // !bwc! Unsafe param access. If not present, do we treat as an error, or
+      // an empty string?
       eventInfo->mReplacesId = std::auto_ptr<DialogId>(new DialogId(invite.header(h_Replaces).value(), 
          invite.header(h_Replaces).param(p_toTag),
          invite.header(h_Replaces).param(p_fromTag)));
@@ -44,7 +47,8 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
          it->second->mReplaced = true;
       }
    }
-   if (invite.exists(h_ReferredBy))
+   if (invite.exists(h_ReferredBy) && 
+         invite.header(h_ReferredBy).isWellFormed())
    {
       eventInfo->mReferredBy = std::auto_ptr<NameAddr>(new NameAddr(invite.header(h_ReferredBy)));
    }
@@ -80,12 +84,18 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
    eventInfo->mCreationTimeSeconds = Timer::getTimeSecs();
    eventInfo->mInviteSession = InviteSessionHandle::NotValid();
    eventInfo->mLocalIdentity = invite.header(h_From);
+   // ?bwc? Has something already checked for well-formedness here? 
+   // Maybe DialogSet? We need to be absolutely certain that this exists and is
+   // well-formed. Assert for now.
+   assert(!invite.empty(h_Contacts));
+   assert(invite.header(h_Contacts).front().isWellFormed());
    eventInfo->mLocalTarget = invite.header(h_Contacts).front().uri();
    eventInfo->mRemoteIdentity = invite.header(h_To);
    eventInfo->mLocalSdp = (dynamic_cast<SdpContents*>(invite.getContents()) != NULL ? std::auto_ptr<SdpContents>((SdpContents*)invite.getContents()->clone()) : std::auto_ptr<SdpContents>());
    eventInfo->mState = DialogEventInfo::Trying;
 
-   if (invite.exists(h_ReferredBy))
+   if (invite.exists(h_ReferredBy) &&
+         invite.header(h_ReferredBy).isWellFormed())
    {
       eventInfo->mReferredBy = std::auto_ptr<NameAddr>(new NameAddr(invite.header(h_ReferredBy)));
    }
@@ -109,8 +119,11 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
          // happy day case; no forks yet; e.g INVITE/1xx (no tag)/1xx (no tag)
          DialogEventInfo* eventInfo = it->second;
          eventInfo->mState = DialogEventInfo::Proceeding;
-         if (response.exists(h_Contacts))
+         if (!response.empty(h_Contacts))
          {
+            // ?bwc? Has something already checked for well-formedness here? 
+            // Maybe DialogSet? Assert for now.
+            assert(response.header(h_Contacts).front().isWellFormed());
             eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(response.header(h_Contacts).front().uri()));
          }
          mDialogEventHandler->onProceeding(*eventInfo);
@@ -124,8 +137,11 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
          newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
          newForkInfo->mDialogId = DialogId(dialogSet.getId(), Data::Empty);
          newForkInfo->mRemoteIdentity = response.header(h_To);
-         if (response.exists(h_Contacts))
+         if (!response.empty(h_Contacts))
          {
+            // ?bwc? Has something already checked for well-formedness here? 
+            // Maybe DialogSet? Assert for now.
+            assert(response.header(h_Contacts).front().isWellFormed());
             newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(response.header(h_Contacts).front().uri()));
          }
          mDialogIdToEventInfo[newForkInfo->mDialogId] = newForkInfo;
@@ -226,8 +242,11 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
       if (msg.isResponse())
       {
          respCode = msg.header(h_StatusLine).responseCode();
-         if (msg.exists(h_Contacts))
+         if (!msg.empty(h_Contacts))
          {
+            // ?bwc? Has something already checked for well-formedness here? 
+            // Maybe DialogSet? Assert for now.
+            assert(msg.header(h_Contacts).front().isWellFormed());
             eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(msg.header(h_Contacts).front().uri()));
          }
       }
