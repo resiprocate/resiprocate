@@ -2,7 +2,8 @@
 #include "rutil/Random.hxx"
 #include "rutil/Logger.hxx"
 
-using namespace resip;
+namespace resip
+{
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 
@@ -332,6 +333,8 @@ DialogEventStateManager::findOrCreateDialogInfo(const Dialog& dialog)
 
    return eventInfo;
 }
+
+} // namespace resip
 
 /* ====================================================================
 * The Vovida Software License, Version 1.0 
