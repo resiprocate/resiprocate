@@ -262,9 +262,9 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                //!dcm! -- really, really horrible.  Should make a don't die
                //scoped guard
                mState = Initial;               
-               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); ++it)
+               for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end();)
                {
-                  it->second->redirected(msg);         
+                  (it++)->second->redirected(msg);
                }
 
                if (mDialogs.size() == 0)
