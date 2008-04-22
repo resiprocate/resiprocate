@@ -56,14 +56,42 @@ DialogEventInfo::operator=(const DialogEventInfo& dialogEventInfo)
       mDirection = dialogEventInfo.mDirection;
       mInviteSession = dialogEventInfo.mInviteSession;
       mLocalIdentity = dialogEventInfo.mLocalIdentity;
-      mLocalSdp = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(dialogEventInfo.mLocalSdp->clone()));
+
+      mLocalSdp.reset(0);
+      mReferredBy.reset(0);
+      mRemoteSdp.reset(0);
+      mRemoteTarget.reset(0);
+      mReplacesId.reset(0);
+
+      if(dialogEventInfo.mLocalSdp.get())
+      {
+         mLocalSdp.reset((SdpContents*)(dialogEventInfo.mLocalSdp->clone()));
+      }
+
+      if(dialogEventInfo.mReferredBy.get())
+      {
+         mReferredBy.reset((NameAddr*)(dialogEventInfo.mReferredBy->clone()));
+      }
+
+      if(dialogEventInfo.mRemoteSdp.get())
+      {
+         mRemoteSdp.reset((SdpContents*)dialogEventInfo.mRemoteSdp->clone());
+      }
+
+      if(dialogEventInfo.mRemoteTarget.get())
+      {
+         mRemoteTarget.reset((Uri*)dialogEventInfo.mRemoteTarget->clone());
+      }
+
+      if(dialogEventInfo.mReplacesId.get())
+      {
+         mReplacesId.reset(
+                  new DialogId(dialogEventInfo.mReplacesId->getDialogSetId(), 
+                  dialogEventInfo.mReplacesId->getRemoteTag()));
+      }
+
       mLocalTarget = dialogEventInfo.mLocalTarget;
-      mReferredBy = std::auto_ptr<NameAddr>(static_cast<NameAddr*>(dialogEventInfo.mReferredBy->clone()));
       mRemoteIdentity = dialogEventInfo.mRemoteIdentity;
-      mRemoteSdp = std::auto_ptr<SdpContents>(static_cast<SdpContents*>(dialogEventInfo.mRemoteSdp->clone()));
-      mRemoteTarget = std::auto_ptr<Uri>(static_cast<Uri*>(dialogEventInfo.mRemoteTarget->clone()));
-      mReplacesId = std::auto_ptr<DialogId>(new DialogId(dialogEventInfo.mReplacesId->getDialogSetId(), 
-         dialogEventInfo.mReplacesId->getRemoteTag()));
       mRouteSet = dialogEventInfo.mRouteSet;
       mReplaced = dialogEventInfo.mReplaced;
    }
