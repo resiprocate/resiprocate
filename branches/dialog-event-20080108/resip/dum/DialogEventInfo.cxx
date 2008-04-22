@@ -1,7 +1,8 @@
 #include "resip/dum/DialogEventInfo.hxx"
 #include "resip/dum/InviteSession.hxx"
 
-using namespace resip;
+namespace resip
+{
 
 DialogEventInfo::DialogEventInfo()
 : mState(DialogEventInfo::Trying),
@@ -271,7 +272,7 @@ DialogEventInfo::getDirection() const
    return mDirection;
 }
 
-
+} // namespace resip
 
 /* ====================================================================
 * The Vovida Software License, Version 1.0 
