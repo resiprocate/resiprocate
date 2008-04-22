@@ -22,7 +22,7 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
    eventInfo->mDialogEventId = Random::getVersion4UuidUrn(); // !jjg! is this right?
    eventInfo->mDialogId = dialog.getId();
    eventInfo->mDirection = DialogEventInfo::Recipient;
-   eventInfo->mCreationTime = Timer::getTimeSecs();
+   eventInfo->mCreationTimeSeconds = Timer::getTimeSecs();
    eventInfo->mInviteSession = InviteSessionHandle::NotValid();
    eventInfo->mRemoteSdp = (dynamic_cast<SdpContents*>(invite.getContents()) != NULL ? std::auto_ptr<SdpContents>((SdpContents*)invite.getContents()->clone()) : std::auto_ptr<SdpContents>());
    eventInfo->mLocalIdentity = dialog.getLocalNameAddr();
@@ -77,7 +77,7 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
    eventInfo->mDialogEventId = Random::getVersion4UuidUrn();
    eventInfo->mDialogId = DialogId(dialogSet.getId(), Data::Empty);
    eventInfo->mDirection = DialogEventInfo::Initiator;
-   eventInfo->mCreationTime = Timer::getTimeSecs();
+   eventInfo->mCreationTimeSeconds = Timer::getTimeSecs();
    eventInfo->mInviteSession = InviteSessionHandle::NotValid();
    eventInfo->mLocalIdentity = invite.header(h_From);
    eventInfo->mLocalTarget = invite.header(h_Contacts).front().uri();
@@ -101,9 +101,10 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
 {
    DialogId fakeId(dialogSet.getId(), Data::Empty);
    std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.lower_bound(fakeId);
-   if (it != mDialogIdToEventInfo.end())
+   if (it != mDialogIdToEventInfo.end() &&
+      it->first.getDialogSetId() == dialogSet.getId())
    {
-      if (it->first.getRemoteTag() == Data::Empty)
+      if (it->first.getRemoteTag().empty())
       {
          // happy day case; no forks yet; e.g INVITE/1xx (no tag)/1xx (no tag)
          DialogEventInfo* eventInfo = it->second;
@@ -114,13 +115,13 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
          }
          mDialogEventHandler->onProceeding(*eventInfo);
       }
-      else if (it->first.getDialogSetId() == dialogSet.getId())
+      else
       {
          // forking; e.g. INVITE/180 (tag #1)/180 (no tag)
          // clone and initialize with a new id and creation time 
          DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
          newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
-         newForkInfo->mCreationTime = Timer::getTimeSecs();
+         newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
          newForkInfo->mDialogId = DialogId(dialogSet.getId(), Data::Empty);
          newForkInfo->mRemoteIdentity = response.header(h_To);
          if (response.exists(h_Contacts))
@@ -275,31 +276,34 @@ DialogEventStateManager::findOrCreateDialogInfo(const Dialog& dialog)
       DialogId fakeId(dialog.getId().getDialogSetId(), Data::Empty);
       std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.lower_bound(fakeId);
 
-      if (it->first.getRemoteTag() == Data::Empty)
+      if (it != mDialogIdToEventInfo.end() && 
+            it->first.getDialogSetId() == dialog.getId().getDialogSetId())
       {
-         // convert this bad boy into a full on Dialog
-         eventInfo = it->second;
-         mDialogIdToEventInfo.erase(it);
-         eventInfo->mDialogId = dialog.getId();
+         if (it->first.getRemoteTag().empty())
+         {
+            // convert this bad boy into a full on Dialog
+            eventInfo = it->second;
+            mDialogIdToEventInfo.erase(it);
+            eventInfo->mDialogId = dialog.getId();
+         }
+         else
+         {
+            // clone this fellow member dialog, initializing it with a new id and creation time 
+            DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
+            newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
+            newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
+            newForkInfo->mDialogId = dialog.getId();
+            newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
+            newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
+            newForkInfo->mRouteSet = dialog.getRouteSet();
+            eventInfo = newForkInfo;
+         }
       }
       else
       {
          // .jjg. this can happen if onTryingUax(..) wasn't called yet for this dialog (set) id
-         if (it->first.getDialogSetId() != dialog.getId().getDialogSetId())
-         {
-            DebugLog(<< "DialogSetId " << fakeId << " was not found! This indicates a bug; onTryingUax() should have been called first!");
-            return 0;
-         }
-
-         // clone this fellow member dialog, initializing it with a new id and creation time 
-         DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
-         newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
-         newForkInfo->mCreationTime = Timer::getTimeSecs();
-         newForkInfo->mDialogId = dialog.getId();
-         newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
-         newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
-         newForkInfo->mRouteSet = dialog.getRouteSet();
-         eventInfo = newForkInfo;
+         DebugLog(<< "DialogSetId " << fakeId << " was not found! This indicates a bug; onTryingUax() should have been called first!");
+         return 0;
       }
    }
 

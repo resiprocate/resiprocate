@@ -4,19 +4,19 @@
 using namespace resip;
 
 DialogEventInfo::DialogEventInfo()
-: mDialogId(Data::Empty, Data::Empty, Data::Empty),
-  mState(DialogEventInfo::Trying),
+: mState(DialogEventInfo::Trying),
+  mDialogId(Data::Empty, Data::Empty, Data::Empty),
   mDirection(DialogEventInfo::Initiator),
-  mCreationTime(0),
   mInviteSession(InviteSessionHandle::NotValid()),
+  mCreationTimeSeconds(0),
   mReplaced(false)
 {
 }
 
 DialogEventInfo::DialogEventInfo(const DialogEventInfo& rhs)
-: mDialogId(rhs.mDialogId),
-  mState(rhs.mState),
+: mState(rhs.mState),
   mDialogEventId(rhs.mDialogEventId),
+  mDialogId(rhs.mDialogId),
   mDirection(rhs.mDirection),
   mInviteSession(rhs.mInviteSession),
   mReferredBy(rhs.mReferredBy.get() ? new NameAddr(*rhs.mReferredBy) : 0),
@@ -25,7 +25,7 @@ DialogEventInfo::DialogEventInfo(const DialogEventInfo& rhs)
   mRemoteIdentity(rhs.mRemoteIdentity),
   mLocalTarget(rhs.mLocalTarget),
   mRemoteTarget(rhs.mRemoteTarget.get() ? new Uri(*rhs.mRemoteTarget) : 0),
-  mCreationTime(rhs.mCreationTime),
+  mCreationTimeSeconds(rhs.mCreationTimeSeconds),
   mReplaced(rhs.mReplaced)
 {
    if (rhs.mReplacesId.get())
@@ -51,7 +51,7 @@ DialogEventInfo::operator=(const DialogEventInfo& dialogEventInfo)
    {
       mDialogId = dialogEventInfo.mDialogId;
       mState = dialogEventInfo.mState;
-      mCreationTime = dialogEventInfo.mCreationTime;
+      mCreationTimeSeconds = dialogEventInfo.mCreationTimeSeconds;
       mDialogEventId = dialogEventInfo.mDialogEventId;
       mDirection = dialogEventInfo.mDirection;
       mInviteSession = dialogEventInfo.mInviteSession;
@@ -219,9 +219,9 @@ DialogEventInfo::hasRemoteSdp() const
 }
 
 UInt64
-DialogEventInfo::getDuration() const
+DialogEventInfo::getDurationSeconds() const
 {
-   UInt64 delta = Timer::getTimeSecs() - mCreationTime;
+   UInt64 delta = Timer::getTimeSecs() - mCreationTimeSeconds;
    return delta;
 }
 
