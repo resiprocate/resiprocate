@@ -121,7 +121,7 @@ DialogSet::~DialogSet()
    }
 
    DebugLog ( << " ********** DialogSet::~DialogSet: " << mId << "*************" );
-   //!dcm! -- very delicate code, change the order things go horribly wrong
+   // !dcm! -- very delicate code, change the order things go horribly wrong
 
    mDum.removeDialogSet(this->getId());
    if (mAppDialogSet) 
@@ -204,7 +204,7 @@ DialogSet::findDialog(const SipMessage& msg)
       {
          if (it->second->mRemoteTarget.uri() == msg.header(h_Contacts).front().uri())
          {
-            //!dcm! in the vonage case, the to tag should be updated to match the fake
+            // !dcm! in the vonage case, the to tag should be updated to match the fake
             //vonage tag introduced in the 200 which is also used for the BYE.
             //find out how deep this rabbit hole goes, may just have a pugabble
             //filter api that can be added for dialog matching if things get any
@@ -234,7 +234,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 {
    if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd || mState == Destroying))
    {
-      //!dcm! -- multiple usage grief...only one of each method type allowed
+      // !dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
           msg.header(h_CSeq) == getCreator()->getLastRequest()->header(h_CSeq))
       {
@@ -250,7 +250,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
                return true;                     
             }
          }
-         //!dcm! -- need to protect against 3xx highjacking a dialogset which
+         // !dcm! -- need to protect against 3xx highjacking a dialogset which
          //has a fully established dialog. also could case strange behaviour
          //by sending 401/407 at the wrong time.
          if (mDum.mRedirectManager.get() && mState != Established)  // !slg! for now don't handle redirect in established dialogs - alternatively we could treat as a target referesh (using 1st Contact) and reissue request
@@ -259,7 +259,7 @@ DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
             {
                //terminating existing dialogs(branches) as this is a final
                //response--?dcm?--merge w/ forking logic somehow?                              
-               //!dcm! -- really, really horrible.  Should make a don't die
+               // !dcm! -- really, really horrible.  Should make a don't die
                //scoped guard
                mState = Initial;               
                for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end();)
@@ -365,9 +365,9 @@ DialogSet::dispatch(const SipMessage& msg)
                   dialog.makeRequest(*bye, BYE);
                   dialog.send(bye);
                   
-                  //!dcm!--should we add another overload to
-                  //!DialogEventStateManager::onTerminated so we have the to tag, or is
-                  //!the DialogSet enough?
+                  // !dcm!--should we add another overload to
+                  // !DialogEventStateManager::onTerminated so we have the to 
+                  // !tag, or is the DialogSet enough?
                   if (mDum.mDialogEventStateManager)
                   {
                      mDum.mDialogEventStateManager->onTerminated(*this, *bye, InviteSessionHandler::LocalBye);
