@@ -65,7 +65,7 @@ class DialogEventInfo
       bool hasLocalSdp() const;
       bool hasRemoteSdp() const;
 
-      UInt64 getDuration() const; // in seconds
+      UInt64 getDurationSeconds() const; // in seconds
 
       bool hasReplacesId() const;
       const DialogId& getReplacesId() const;
@@ -94,7 +94,7 @@ class DialogEventInfo
       Uri mLocalTarget;
       std::auto_ptr<Uri> mRemoteTarget;
 
-      UInt64 mCreationTime;
+      UInt64 mCreationTimeSeconds;
 
       std::auto_ptr<SdpContents> mLocalSdp;
       std::auto_ptr<SdpContents> mRemoteSdp;
