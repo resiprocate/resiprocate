@@ -75,6 +75,8 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
       {
          return;
       }
+      // ?bwc? What should we do if we didn't return here? We will leak the 
+      // DialogEventInfo that is already in the map...
    }
 
    eventInfo = new DialogEventInfo();
