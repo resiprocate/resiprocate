@@ -49,6 +49,7 @@ SRC = \
 	Embedded.cxx \
 	ExtensionParameter.cxx \
 	ExtensionHeader.cxx \
+	ExistsOrDataParameter.cxx \
 	ExistsParameter.cxx \
 	ExternalBodyContents.cxx \
 	QValue.cxx \
