@@ -173,17 +173,22 @@ ServerAuthManager::handleUserAuthInfo(UserAuthInfo* userAuth)
             // digestAccepted = false;   // already false by default
             break;
          case Helper::BadlyFormed:
-         {
-            InfoLog (<< "Authentication nonce badly formed for " << userAuth->getUser());
-
-            SharedPtr<SipMessage> response(new SipMessage);
-            Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid nonce");
-            mDum.send(response);
-            onAuthFailure(InvalidRequest, *requestWithAuth);
-            delete requestWithAuth;
-            return 0;
+            if(rejectBadNonces())
+            {
+               InfoLog (<< "Authentication nonce badly formed for " << userAuth->getUser());
+   
+               SharedPtr<SipMessage> response(new SipMessage);
+               Helper::makeResponse(*response, *requestWithAuth, 403, "Invalid nonce");
+               mDum.send(response);
+               onAuthFailure(InvalidRequest, *requestWithAuth);
+               delete requestWithAuth;
+               return 0;
+            }
+            else
+            {
+               stale=true;
+            }
             break;
-         }
          case Helper::Expired:
             stale = true;
             break;
@@ -251,6 +256,13 @@ ServerAuthManager::useAuthInt() const
 
 bool
 ServerAuthManager::proxyAuthenticationMode() const
+{
+   return true;
+}
+
+
+bool
+ServerAuthManager::rejectBadNonces() const
 {
    return true;
 }
