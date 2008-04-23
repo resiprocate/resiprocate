@@ -84,43 +84,43 @@ ParameterHash::hash (register const char *str, register unsigned int len)
   switch (hval)
     {
       default:
-        hval += asso_values[(unsigned char)str[12]];
+        hval += asso_values[(unsigned char)tolower(str[12])];
       /*FALLTHROUGH*/
       case 12:
-        hval += asso_values[(unsigned char)str[11]];
+        hval += asso_values[(unsigned char)tolower(str[11])];
       /*FALLTHROUGH*/
       case 11:
-        hval += asso_values[(unsigned char)str[10]];
+        hval += asso_values[(unsigned char)tolower(str[10])];
       /*FALLTHROUGH*/
       case 10:
-        hval += asso_values[(unsigned char)str[9]];
+        hval += asso_values[(unsigned char)tolower(str[9])];
       /*FALLTHROUGH*/
       case 9:
-        hval += asso_values[(unsigned char)str[8]];
+        hval += asso_values[(unsigned char)tolower(str[8])];
       /*FALLTHROUGH*/
       case 8:
-        hval += asso_values[(unsigned char)str[7]];
+        hval += asso_values[(unsigned char)tolower(str[7])];
       /*FALLTHROUGH*/
       case 7:
-        hval += asso_values[(unsigned char)str[6]];
+        hval += asso_values[(unsigned char)tolower(str[6])];
       /*FALLTHROUGH*/
       case 6:
-        hval += asso_values[(unsigned char)str[5]];
+        hval += asso_values[(unsigned char)tolower(str[5])];
       /*FALLTHROUGH*/
       case 5:
-        hval += asso_values[(unsigned char)str[4]];
+        hval += asso_values[(unsigned char)tolower(str[4])];
       /*FALLTHROUGH*/
       case 4:
-        hval += asso_values[(unsigned char)str[3]];
+        hval += asso_values[(unsigned char)tolower(str[3])];
       /*FALLTHROUGH*/
       case 3:
-        hval += asso_values[(unsigned char)str[2]];
+        hval += asso_values[(unsigned char)tolower(str[2])];
       /*FALLTHROUGH*/
       case 2:
-        hval += asso_values[(unsigned char)str[1]];
+        hval += asso_values[(unsigned char)tolower(str[1])];
       /*FALLTHROUGH*/
       case 1:
-        hval += asso_values[(unsigned char)str[0]];
+        hval += asso_values[(unsigned char)tolower(str[0])];
         break;
     }
   return hval;
@@ -354,7 +354,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
             {
               register const char *s = wordlist[index].name;
 
-              if (*str == *s && !strncmp (str + 1, s + 1, len - 1) && s[len] == '\0')
+              if (tolower(*str) == *s && !strncasecmp (str + 1, s + 1, len - 1) && s[len] == '\0')
                 return &wordlist[index];
             }
         }

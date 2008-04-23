@@ -173,7 +173,7 @@ class SipMessage : public TransactionMessage
       defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
       defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
       defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
-      defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
+      defineHeader(Identity, "Identity", StringCategory, "RFC 4474");
       defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261");
       defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261");
       defineMultiHeader(Allow, "Allow", Token, "RFC 3261");
@@ -189,7 +189,7 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
       defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
       defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
-      defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03");
+      defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488");
       defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
       defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
@@ -199,7 +199,7 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");
       defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC 3261");
       defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261");
-      defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03");
+      defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474");
 
       defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC 3261");
       defineMultiHeader(Route, "Route", NameAddr, "RFC 3261");
@@ -217,7 +217,7 @@ class SipMessage : public TransactionMessage
       defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
       defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
       defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
-      defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04");
+      defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
 
       defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?");
       defineHeader(Organization, "Organization", StringCategory, "RFC 3261");
@@ -239,10 +239,10 @@ class SipMessage : public TransactionMessage
       defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
 
       defineHeader(CallID, "Call-ID", CallID, "RFC 3261");
-      defineHeader(Replaces, "Replaces", CallID, "RFC 3261");
+      defineHeader(Replaces, "Replaces", CallID, "RFC 3891");
       defineHeader(InReplyTo, "In-Reply-To", CallID, "RFC 3261");
       defineHeader(Join, "Join", CallId, "RFC 3911");
-      defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft");
+      defineHeader(TargetDialog, "Target-Dialog", CallId, "RFC 4538");
 
       defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC 3261");
       defineMultiHeader(Authorization, "Authorization", Auth, "RFC 3261");
@@ -333,6 +333,7 @@ class SipMessage : public TransactionMessage
 
       void addOutboundDecorator(MessageDecorator *md){mOutboundDecorators.push_back(md);}
       void callOutboundDecorators(const Tuple &src, const Tuple &dest);
+      bool mIsDecorated;
 
       bool mIsBadAck200;
 

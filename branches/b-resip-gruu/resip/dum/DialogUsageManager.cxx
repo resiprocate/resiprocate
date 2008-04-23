@@ -1839,10 +1839,10 @@ DialogUsageManager::processPublish(const SipMessage& request)
    }
    else
    {
-      Data etag = Random::getCryptoRandom(8);
+      Data etag = Random::getCryptoRandomHex(8);
       while (mServerPublications.find(etag) != mServerPublications.end())
       {
-         etag = Random::getCryptoRandom(8);
+         etag = Random::getCryptoRandomHex(8);
       }
 
       if (request.getContents())

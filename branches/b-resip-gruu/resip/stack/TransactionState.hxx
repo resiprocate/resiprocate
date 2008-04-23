@@ -72,6 +72,7 @@ class TransactionState : public DnsHandler
       void add(const Data& tid);
       void erase(const Data& tid);
       
+      bool isClient() const;
    private:
       bool isRequest(TransactionMessage* msg) const;
       bool isInvite(TransactionMessage* msg) const;
