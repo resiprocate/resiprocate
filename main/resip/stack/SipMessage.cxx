@@ -308,7 +308,7 @@ SipMessage::parseAllHeaders()
 const Data& 
 SipMessage::getTransactionId() const
 {
-   if (!this->exists(h_Vias) || this->header(h_Vias).empty())
+   if (empty(h_Vias))
    {
       InfoLog (<< "Bad message with no Vias: " << *this);
       throw Exception("No Via in message", __FILE__,__LINE__);
@@ -383,7 +383,7 @@ SipMessage::compute2543TransactionHash() const
       strm << header(h_RequestLine).uri().password();
       strm << header(h_RequestLine).uri().commutativeParameterHash();
 #endif
-      if (exists(h_Vias) && !header(h_Vias).empty())
+      if (!empty(h_Vias))
       {
          strm << header(h_Vias).front().protocolName();
          strm << header(h_Vias).front().protocolVersion();
@@ -434,9 +434,9 @@ SipMessage::compute2543TransactionHash() const
 const Data&
 SipMessage::getRFC2543TransactionId() const
 {
-   if(!( exists(h_Vias) && !header(h_Vias).empty() && 
-         header(h_Vias).front().exists(p_branch) &&
-         header(h_Vias).front().param(p_branch).hasMagicCookie() ) )
+   if(!empty(h_Vias) &&
+      header(h_Vias).front().exists(p_branch) &&
+      header(h_Vias).front().param(p_branch).hasMagicCookie() )
    {
       if (mRFC2543TransactionId.empty())
       {
@@ -470,7 +470,7 @@ SipMessage::getCanonicalIdentityString() const
    strm << Symbols::BAR;
    
    // if there is no date, it will throw 
-   if ( !exists(h_Date) )
+   if ( empty(h_Date) )
    {
       WarningLog( << "Computing Identity on message with no Date header" );
       // TODO FIX - should it have a throw here ???? Help ???
@@ -479,7 +479,7 @@ SipMessage::getCanonicalIdentityString() const
    header(h_Date).encodeParsed( strm );
    strm << Symbols::BAR;
    
-   if ( exists(h_Contacts) )
+   if ( !empty(h_Contacts) )
    { 
       if ( header(h_Contacts).front().isAllContacts() )
       {
@@ -588,7 +588,7 @@ SipMessage::encodeBrief(std::ostream& str) const
       str << response;
       str << header(h_StatusLine).responseCode();
    }
-   if (exists(h_Vias) && !this->header(h_Vias).empty())
+   if (!empty(h_Vias))
    {
       str << tid;
       try
@@ -617,7 +617,7 @@ SipMessage::encodeBrief(std::ostream& str) const
 
    try
    {
-      if (exists(h_Contacts) && !header(h_Contacts).empty())
+      if (!empty(h_Contacts))
       {
          str << contact;
          str << header(h_Contacts).front().uri().getAor();
@@ -989,19 +989,19 @@ SipMessage::getContents() const
       assert( mContents );
       
       // copy contents headers into the contents
-      if (exists(h_ContentDisposition))
+      if (!empty(h_ContentDisposition))
       {
          mContents->header(h_ContentDisposition) = header(h_ContentDisposition);
       }
-      if (exists(h_ContentTransferEncoding))
+      if (!empty(h_ContentTransferEncoding))
       {
          mContents->header(h_ContentTransferEncoding) = header(h_ContentTransferEncoding);
       }
-      if (exists(h_ContentLanguages))
+      if (!empty(h_ContentLanguages))
       {
          mContents->header(h_ContentLanguages) = header(h_ContentLanguages);
       }
-      if (exists(h_ContentType))
+      if (!empty(h_ContentType))
       {
          mContents->header(h_ContentType) = header(h_ContentType);
       }
