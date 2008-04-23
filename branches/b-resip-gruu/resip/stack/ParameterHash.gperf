@@ -93,7 +93,7 @@ document, ParameterTypes::document
 app-id, ParameterTypes::appId
 network-user, ParameterTypes::networkUser
 url, ParameterTypes::url
-addTransport, ParameterTypes::addTransport
+addtransport, ParameterTypes::addTransport
 sigcomp-id, ParameterTypes::sigcompId
 %%
 }
