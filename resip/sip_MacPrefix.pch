@@ -1,0 +1,25 @@
+//
+// Prefix header for all source files of the 'sip' target in the 'sip' project.
+//
+
+// set up TARGET_OS_MAC
+#include <TargetConditionals.h>
+
+// set up MAC_OS_X_VERSION_MIN_REQUIRED
+#include <AvailabilityMacros.h>
+
+// defaults so that we don't have to use config.hxx
+#define USE_ARES 1
+#define USE_IPV6 1
+#define USE_SSL 1
+#define VONAGE_FIX 1
+
+// Darwin defines assert() to use printf, oddly enough
+#include <stdio.h>
+
+// trying to get rid of tolower() link conflict
+#include <ctype.h>
+
+// For some reason, if we don't have at least one framework then GCC
+// starts having problem with having a C pch in a a C++ file.
+#include <CoreFoundation/CoreFoundation.h>
