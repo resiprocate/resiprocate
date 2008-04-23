@@ -108,7 +108,17 @@ TcpBaseTransport::processListen(FdSet& fdset)
       
       
       DebugLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
-      createConnection(tuple, sock, true);
+
+      if(!mConnectionManager.findConnection(tuple))
+      {
+         createConnection(tuple, sock, true);
+      }
+      else
+      {
+         InfoLog(<<"Someone probably sent a reciprocal SYN at us.");
+         // ?bwc? Can we call this right after calling accept()?
+         closeSocket(sock);
+      }
    }
 }
 
@@ -184,9 +194,10 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
                }
             }
          }
-         
+
          // This will add the connection to the manager
          conn = createConnection(data->destination, sock, false);
+
          assert(conn);
          assert(conn->getSocket() >= 0);
          data->destination.mFlowKey = conn->getSocket(); // !jf!

@@ -134,7 +134,7 @@ defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903");
 defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903");
 defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 
-defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
+defineHeader(Identity, "Identity", StringCategory, "RFC 4474");
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 // explicitly declare to avoid h_AllowEventss, ugh
@@ -161,7 +161,7 @@ defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
 H_Privacys resip::h_Privacies;
 
 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
-defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03");
+defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488");
 defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
 defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
@@ -176,7 +176,7 @@ defineHeader(ContentType, "Content-Type", Mime, "RFC 3261");
 //====================
 // GenericUris:
 //====================
-defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03");
+defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474");
 
 typedef ParserContainer<GenericUri> GenericUris;
 defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");
@@ -212,7 +212,7 @@ H_PAssertedIdentitys resip::h_PAssertedIdentities;
 defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
 defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
 defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
-defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04");
+defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
 
 //====================
 // String:
@@ -247,10 +247,10 @@ defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028");
 //====================
 defineHeader(CallID, "Call-ID", CallId, "RFC 3261");
 H_CallId resip::h_CallId; // code convention compatible
-defineHeader(Replaces, "Replaces", CallId, "RFC 3261");
+defineHeader(Replaces, "Replaces", CallId, "RFC 3891");
 defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC 3261");
 defineHeader(Join, "Join", CallId, "RFC 3911");
-defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft");
+defineHeader(TargetDialog, "Target-Dialog", CallId, "RFC 4538");
 
 
 //====================

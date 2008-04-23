@@ -49,8 +49,8 @@ class Headers
          defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608"),
          defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC 3261"),
          defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC 3261"),
-         defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03"),
-         defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03"),
+         defineHeader(Identity, "Identity", StringCategory, "RFC 4474"),
+         defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474"),
          defineMultiHeader(Require, "Require", Token, "RFC 3261"),
          defineMultiHeader(Contact, "Contact", NameAddr, "RFC 3261"),
 
@@ -113,7 +113,7 @@ class Headers
          defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841"),
          defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313"),
          defineHeader(Join, "Join", CallId, "RFC 3911"),
-         defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft"),
+         defineHeader(TargetDialog, "Target-Dialog", CallId, "RFC 4538"),
          defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325"),
          defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325"),
          defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841"),
@@ -122,10 +122,10 @@ class Headers
          defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455"),
 
          defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261"),
-         defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03"),
+         defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488"),
          defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01"),
          defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01"),
-         defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"),
+         defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"), // ?bwc? Not in 3323, should we keep?
 
          defineMultiHeader(RESIP_DO_NOT_USE, "ShouldNotSeeThis", StringCategory, "N/A"),
          MAX_HEADERS,
