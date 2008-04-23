@@ -76,8 +76,8 @@ main(int argc, char* argv[])
 
        cout << *msg << endl;
 
-       Uri s1("sip:alice@example.com;gruu=\"foo@example.com\"");
-       Uri s2("sip:alice@example.com;gruu=\"foo@example.com\"");
+       Uri s1("sip:alice@example.com;gr=\"foo@example.com\"");
+       Uri s2("sip:alice@example.com;gr=\"foo@example.com\"");
        assert(s1.param(p_gr) == Data("foo@example.com"));
        assert(s2.param(p_gr) == Data("foo@example.com"));
        cout << s1 << endl;
