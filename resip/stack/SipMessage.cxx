@@ -961,7 +961,8 @@ SipMessage::getContents() const
 {
    if (mContents == 0 && mContentsHfv != 0)
    {
-      if (!exists(h_ContentType))
+      if (!exists(h_ContentType) ||
+            !header(h_ContentType).isWellFormed())
       {
          StackLog(<< "SipMessage::getContents: ContentType header does not exist - implies no contents");
          return 0;
