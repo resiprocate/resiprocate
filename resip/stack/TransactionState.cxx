@@ -1795,111 +1795,115 @@ TransactionState::sendToWire(TransactionMessage* msg, bool resend)
 
    if(mController.mStack.statisticsManagerEnabled())
    {
+      // ?bwc? What if we have to drop the message below?
       mController.mStatsManager.sent(sip, resend);
    }
 
-   // !jf! for responses, go back to source always (not RFC exactly)
-   if (mMachine == ServerNonInvite || mMachine == ServerInvite || mMachine == ServerStale)
+   if(resend)
    {
-      assert(mDnsResult == 0);
-      assert(sip->exists(h_Vias));
-      assert(!sip->header(h_Vias).empty());
-
-      Tuple target(mResponseTarget);
-      if (sip->hasForceTarget())
+      if(isClient())
       {
-         target = simpleTupleForUri(sip->getForceTarget());
-         StackLog(<<"!ah! response with force target going to : "<<target);
-      }
-      else if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
-      {
-         target.setPort(sip->header(h_Vias).front().param(p_rport).port());
-         StackLog(<< "rport present in response, sending to " << target);
+         // .bwc. mTarget will almost always be set here, _except_ when DNS 
+         // resolution hasn't finished yet.
+         if(mTarget.getType() == UNKNOWN_TRANSPORT)
+         {
+            // .bwc. DNS isn't done yet, and it is time to retransmit. Oh well...
+            assert(mDnsResult);
+            assert(mWaitingForDnsResult);
+            return;
+         }
+         mController.mTransportSelector.retransmit(sip, mTarget);
       }
       else
       {
-         StackLog(<< "tid=" << sip->getTransactionId() << " sending to : " << target);
-      }
-
-      if (resend)
-      {
-         mController.mTransportSelector.retransmit(sip, target);
-      }
-      else
-      {
-         mController.mTransportSelector.transmit(sip, target);
+         assert(mResponseTarget.getType() != UNKNOWN_TRANSPORT);
+         mController.mTransportSelector.retransmit(sip, mResponseTarget);
       }
    }
-   else if (sip->getDestination().mFlowKey || mTarget.mFlowKey)
+   else // initial transmission; need to determine target
    {
-      if (resend)
+      if(isClient())
       {
-         if (mTarget.transport)
-         {
-            mController.mTransportSelector.retransmit(sip, mTarget);
-         }
-         else
-         {
-            DebugLog (<< "No transport found(network could be down) for " << sip->brief());
-         }
-      }
-      else
-      {
-         // !bwc! We have the FlowKey. This completely specifies our Transport
-         // (and Connection, if applicable)
-         if(!mTarget.mFlowKey)
-         {
-            DebugLog(<< "Sending to tuple: " << sip->getDestination());
-            mTarget = sip->getDestination();
-            processReliability(mTarget.getType());
-         }
-         mController.mTransportSelector.transmit(sip, mTarget); // dns not used
-      }
-   }
-   else if (mDnsResult == 0 && !mIsCancel) // no dns query yet
-   {
-      StackLog (<< "sendToWire with no dns result: " << *this);
-      assert(sip->isRequest());
-      assert(!mIsCancel);
-      mDnsResult = mController.mTransportSelector.createDnsResult(this);
-      mWaitingForDnsResult=true;
-      mController.mTransportSelector.dnsResolve(mDnsResult, sip);
-   }
-   else // reuse the last dns tuple
-   {
-      assert(sip->isRequest());
-      if(mTarget.getType() != UNKNOWN_TRANSPORT)
-      {
-         if (resend)
-         {
-            if (mTarget.transport)
-            {
-               mController.mTransportSelector.retransmit(sip, mTarget);
-            }
-            else
-            {
-               DebugLog (<< "No transport found(network could be down) for " << sip->brief());
-            }
-         }
-         else
+         if(mTarget.getType() != UNKNOWN_TRANSPORT) // mTarget is set, so just send.
          {
             mController.mTransportSelector.transmit(sip, mTarget);
          }
+         else // mTarget isn't set...
+         {
+            if (sip->getDestination().mFlowKey) //...but sip->getDestination() will work
+            {
+               // ?bwc? Maybe we should be nice to the TU and do DNS in this case?
+               assert(sip->getDestination().getType() != UNKNOWN_TRANSPORT);
+
+               // .bwc. We have the FlowKey. This completely specifies our 
+               // Transport (and Connection, if applicable). No DNS required.
+               DebugLog(<< "Sending to tuple: " << sip->getDestination());
+               mTarget = sip->getDestination();
+               processReliability(mTarget.getType());
+               mController.mTransportSelector.transmit(sip, mTarget);
+            }
+            else // ...so DNS is required...
+            {
+               if(mDnsResult == 0) // ... and we haven't started a DNS query yet.
+               {
+                  StackLog (<< "sendToWire with no dns result: " << *this);
+                  assert(sip->isRequest());
+                  assert(!mIsCancel); // .bwc. mTarget should be set in this case.
+                  mDnsResult = mController.mTransportSelector.createDnsResult(this);
+                  mWaitingForDnsResult=true;
+                  mController.mTransportSelector.dnsResolve(mDnsResult, sip);
+               }
+               else // ... but our DNS query isn't done yet.
+               {
+                  // .bwc. While the resolver was attempting to find a target, another
+                  // request came down from the TU. This could be a bug in the TU, or 
+                  // could be a retransmission of an ACK/200. Either way, we cannot
+                  // expect to ever be able to send this request (nowhere to store it
+                  // temporarily).
+                  // ?bwc? Higher log-level?
+                  DebugLog(<< "Received a second request from the TU for a transaction"
+                           " that already existed, before the DNS subsystem was done "
+                           "resolving the target for the first request. Either the TU"
+                           " has messed up, or it is retransmitting ACK/200 (the only"
+                           " valid case for this to happen)");
+               }
+            }
+         }
       }
-      else
+      else // server transaction
       {
-         // .bwc. While the resolver was attempting to find a target, another
-         // request came down from the TU. This could be a bug in the TU, or 
-         // could be a retransmission of an ACK/200. Either way, we cannot
-         // expect to ever be able to send this request (nowhere to store it
-         // temporarily).
-         DebugLog(<< "Received a second request from the TU for a transaction"
-                     " that already existed, before the DNS subsystem was done "
-                     "resolving the target for the first request. Either the TU"
-                     " has messed up, or it is retransmitting ACK/200 (the only"
-                     " valid case for this to happen)");
+         assert(mDnsResult == 0);
+         assert(sip->exists(h_Vias));
+         assert(!sip->header(h_Vias).empty());
+
+         // .bwc. Code that tweaks mResponseTarget based on stuff in the SipMessage.
+         // ?bwc? Why?
+         if (sip->hasForceTarget())
+         {
+            // ?bwc? Override the target for a single response? Should we even
+            // allow this? What about client transactions? Should we overwrite 
+            // mResponseTarget here? I don't think this has been thought out properly.
+            Tuple target = simpleTupleForUri(sip->getForceTarget());
+            StackLog(<<"!ah! response with force target going to : "<<target);
+            mController.mTransportSelector.transmit(sip, target);
+            return;
+         }
+         else if (sip->header(h_Vias).front().exists(p_rport) && sip->header(h_Vias).front().param(p_rport).hasValue())
+         {
+            // ?bwc? This was not setting the port in mResponseTarget before. Why would
+            // the rport be different than the port in mResponseTarget? Didn't we 
+            // already set this? Maybe the TU messed with it? If so, why should we pay 
+            // attention to it? Again, this hasn't been thought out.
+            mResponseTarget.setPort(sip->header(h_Vias).front().param(p_rport).port());
+            StackLog(<< "rport present in response: " << mResponseTarget.getPort());
+         }
+
+         StackLog(<< "tid=" << sip->getTransactionId() << " sending to : " << mResponseTarget);
+         mController.mTransportSelector.transmit(sip, mResponseTarget);
       }
+      
    }
+
 }
 
 void
@@ -1969,7 +1973,7 @@ TransactionState::make100(SipMessage* request) const
 void
 TransactionState::add(const Data& tid)
 {
-   if (mMachine == ClientNonInvite || mMachine == ClientInvite || mMachine == ClientStale || mMachine == Stateless )
+   if (isClient())
    {
       mController.mClientTransactionMap.add(tid, this);
    }
@@ -1982,7 +1986,7 @@ TransactionState::add(const Data& tid)
 void
 TransactionState::erase(const Data& tid)
 {
-   if (mMachine == ClientNonInvite || mMachine == ClientInvite || mMachine == ClientStale || mMachine == Stateless)
+   if (isClient())
    {
       mController.mClientTransactionMap.erase(tid);
    }
@@ -2079,6 +2083,26 @@ TransactionState::terminateServerTransaction(const Data& tid)
       //StackLog (<< "Terminate server transaction " << tid);
       sendToTU(new TransactionTerminated(tid, false, mTransactionUser));
    }
+}
+
+bool 
+TransactionState::isClient() const
+{
+   switch(mMachine)
+   {
+      case ClientNonInvite:
+      case ClientInvite:
+      case ClientStale:
+      case Stateless:
+         return true;
+      case ServerNonInvite:
+      case ServerInvite:
+      case ServerStale:
+         return false;
+      default:
+         assert(0);
+   }
+   return false;
 }
 
 std::ostream& 
