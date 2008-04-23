@@ -53,9 +53,9 @@ defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840");
 defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"); // principal|msg-taker|attendant|information
 defineParam(text, "text", ExistsParameter, "RFC 3840");
 defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"); //list
+defineParam(Instance, "+sip.instance", QuotedDataParameter, "outbound");  // <> quoted
 defineParam(regid, "reg-id", UInt32Parameter, "outbound");
 defineParam(ob,"ob",ExistsParameter,"outbound-05");
-defineParam(Instance, "+sip.instance", QuotedDataParameter, "outbound");  // <> quoted
 defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "gruu");
 defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "gruu");
 defineParam(gr, "gr", ExistsOrDataParameter, "gruu");
