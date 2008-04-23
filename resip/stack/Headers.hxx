@@ -125,7 +125,7 @@ defineHeader(ContentId, "Content-ID", Token, "RFC 2045");
 
 defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265");
 
-defineHeader(Identity, "Identity", StringCategory, "draft-sip-identity-03");
+defineHeader(Identity, "Identity", StringCategory, "RFC 4474");
 // explicitly declare to avoid h_AllowEventss, ugh
 extern H_AllowEventss h_AllowEvents;
 
@@ -151,7 +151,7 @@ extern H_Privacys h_Privacies;
 
 defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
 
-defineHeader(ReferSub, "Refer-Sub", Token, "draft-ietf-sip-refer-with-norefersub-03");
+defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488");
 defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
 defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01");
 
@@ -170,7 +170,7 @@ typedef ParserContainer<GenericUri> GenericUris;
 defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261");
 defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC 3261");
 defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261");
-defineHeader(IdentityInfo, "Identity-Info", GenericUri, "draft-sip-identity-03");
+defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474");
 
 //====================
 // NameAddr:
@@ -200,7 +200,7 @@ extern H_PAssertedIdentitys h_PAssertedIdentities;
 defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455");
 defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
 defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
-defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04");
+defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
 
 //====================
 // StringCategory:
@@ -239,14 +239,14 @@ defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261");
 // CallId:
 //====================
 defineHeader(CallID, "Call-ID", CallID, "RFC 3261");
-defineHeader(Replaces, "Replaces", CallID, "RFC 3261");
+defineHeader(Replaces, "Replaces", CallID, "RFC 3891");
 defineHeader(InReplyTo, "In-Reply-To", CallID, "RFC 3261");
 
 typedef H_CallID H_CallId; // code convention compatible
 extern H_CallId h_CallId; // code convention compatible
 
 defineHeader(Join, "Join", CallId, "RFC 3911");
-defineHeader(TargetDialog, "Target-Dialog", CallId, "Target Dialog draft");
+defineHeader(TargetDialog, "Target-Dialog", CallId, "RFC 4538");
 
 
 //====================
