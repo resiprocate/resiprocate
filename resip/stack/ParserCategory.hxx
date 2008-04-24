@@ -10,10 +10,6 @@
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
 
-#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
-      const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType)
-
 namespace resip
 {
 class UnknownParameter;
@@ -73,96 +69,11 @@ class ParserCategory : public LazyParser
             const char* name() const { return "ParserCategory::Exception"; }
       };
 
-      defineParam(data, "data", ExistsParameter, "callee-caps");
-      defineParam(control, "control", ExistsParameter, "callee-caps");
-      defineParam(mobility, "mobility", QuotedDataParameter, "callee-caps"); // mobile|fixed
-      defineParam(description, "description", QuotedDataParameter, "callee-caps"); // <> quoted
-      defineParam(events, "events", QuotedDataParameter, "callee-caps"); // list
-      defineParam(priority, "priority", QuotedDataParameter, "callee-caps"); // non-urgent|normal|urgent|emergency
-      defineParam(methods, "methods", QuotedDataParameter, "callee-caps"); // list
-      defineParam(schemes, "schemes", QuotedDataParameter, "callee-caps"); // list
-      defineParam(application, "application", ExistsParameter, "callee-caps");
-      defineParam(video, "video", ExistsParameter, "callee-caps");
-      defineParam(language, "language", QuotedDataParameter, "callee-caps"); // list
-      defineParam(type, "type", QuotedDataParameter, "callee-caps"); // list
-      defineParam(isFocus, "isfocus", ExistsParameter, "callee-caps");
-      defineParam(actor, "actor", QuotedDataParameter, "callee-caps"); // principal|msg-taker|attendant|information
-      defineParam(text, "text", ExistsParameter, "callee-caps");
-      defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"); //list
-      defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
-      defineParam(regid, "reg-id", UInt32Parameter, "outbound");
-      defineParam(ob,"ob",ExistsParameter,"outbound-05");
-      defineParam(gruu, "gruu", QuotedDataParameter, "gruu");
+#include "resip/stack/ParserCategory.hxx.ixx"
 
-      defineParam(accessType, "access-type", DataParameter, "RFC 2046");
-      defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
-      defineParam(boundary, "boundary", DataParameter, "RFC 2046");
-      defineParam(branch, "branch", BranchParameter, "RFC ????");
-      defineParam(charset, "charset", DataParameter, "RFC 2045");
-      defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
-      defineParam(comp, "comp", DataParameter, "RFC ????");
-      defineParam(dAlg, "d-alg", DataParameter, "RFC 3329");
-      defineParam(dQop, "d-qop", DataParameter, "RFC ????");
-      defineParam(dVer, "d-ver", QuotedDataParameter, "RFC ????");
-      defineParam(directory, "directory", DataParameter, "RFC 2046");
-      defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
-      defineParam(duration, "duration", UInt32Parameter, "RFC ????");
-      defineParam(expiration, "expiration", QuotedDataParameter, "RFC 2046");
-      defineParam(expires, "expires", UInt32Parameter, "RFC ????");
-      defineParam(filename, "filename", DataParameter, "RFC ????");
-      defineParam(fromTag, "from-tag", DataParameter, "RFC ????");
-      defineParam(handling, "handling", DataParameter, "RFC ????");
-      defineParam(id, "id", DataParameter, "RFC ????");
-      defineParam(lr, "lr", ExistsParameter, "RFC ????");
-      defineParam(maddr, "maddr", DataParameter, "RFC ????");
-      defineParam(method, "method", DataParameter, "RFC ????");
-      defineParam(micalg, "micalg", DataParameter, "RFC 1847");
-      defineParam(mode, "mode", DataParameter, "RFC 2046");
-      defineParam(name, "name", DataParameter, "RFC 2046");
-      defineParam(nc, "nc", DataParameter, "RFC ????");
-      defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
-      defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
-      defineParam(permission, "permission", DataParameter, "RFC 2046");
-      defineParam(protocol, "protocol", QuotedDataParameter, "RFC 1847");
-      defineParam(purpose, "purpose", DataParameter, "RFC ????");
-      defineParam(q, "q", QValueParameter, "RFC 3261");
-
-      defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
-      defineParam(reason, "reason", DataParameter, "RFC ????");
-      defineParam(received, "received", DataParameter, "RFC ????");
-      defineParam(response, "response", QuotedDataParameter, "RFC ????");
-      defineParam(retryAfter, "retry-after", UInt32Parameter, "RFC ????");
-      defineParam(rinstance, "rinstance", DataParameter, "");
-      defineParam(rport, "rport", RportParameter, "RFC ????");
-      defineParam(server, "server", DataParameter, "RFC 2046");
-      defineParam(site, "site", DataParameter, "RFC 2046");
-      defineParam(size, "size", DataParameter, "RFC 2046");
-      defineParam(smimeType, "smime-type", DataParameter, "RFC 2633");
-      defineParam(stale, "stale", DataParameter, "RFC ????");
-      defineParam(tag, "tag", DataParameter, "RFC ????");
-      defineParam(toTag, "to-tag", DataParameter, "RFC ????");
-      defineParam(transport, "transport", DataParameter, "RFC ????");
-      defineParam(ttl, "ttl", UInt32Parameter, "RFC ????");
-      defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
-      defineParam(user, "user", DataParameter, "RFC ????");
-      defineParam(extension, "ext", DataParameter, "RFC ????");
-      defineParam(username, "username", DataParameter, "RFC ????");
-      defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
-      defineParam(refresher, "refresher", DataParameter, "RFC 4028");
-
-      defineParam(profileType, "profile-type", DataParameter, "draft-ietf-sipping-config-framework");
-      defineParam(vendor, "vendor", DataParameter, "draft-ietf-sipping-config-framework");
-      defineParam(model, "model", DataParameter, "draft-ietf-sipping-config-framework");
-      defineParam(version, "version", DataParameter, "draft-ietf-sipping-config-framework");
-      defineParam(effectiveBy, "effective-by", UInt32Parameter, "draft-ietf-sipping-config-framework");
-      defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework");
-      defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework");
-      defineParam(networkUser, "network-user", DataParameter, "draft-ietf-sipping-config-framework");
-
-      defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
-
-      defineParam(addTransport, "addTransport", ExistsParameter, "");
-      defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
+      // .bwc. Alternate accessor/type for qop that uses a quoted string.
+      const qopOptions_Param::DType& param(const qopOptions_Param& paramType) const;
+      qopOptions_Param::DType& param(const qopOptions_Param& paramType);
 
       void parseParameters(ParseBuffer& pb);
       std::ostream& encodeParameters(std::ostream& str) const;
@@ -201,8 +112,6 @@ std::ostream&
 operator<<(std::ostream&, const ParserCategory& category);
 
 }
-
-#undef defineParam
 
 #endif
 
