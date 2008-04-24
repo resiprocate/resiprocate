@@ -58,7 +58,7 @@ DataParameter::DataParameter(ParameterTypes::Type type,
 DataParameter::DataParameter(ParameterTypes::Type type)
    : Parameter(type),
      mValue(),
-     mQuoted(false)
+     mQuoted(false) // .bwc. Please don't change the default behavior here.
 {
 }
 
