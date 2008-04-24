@@ -3,27 +3,6 @@
 
 #include "rutil/Data.hxx"
 
-//****************************************************************************
-//
-// !dlb! until automated, must ensure that this set is consistent with
-//
-// ************ PLEASE RUN testParserCategories AFTER CHANGING ***************
-//
-// HeaderTypes.hxx
-// Headers.hxx
-// HeaderHash.gperf
-// Headers.cxx
-// SipMessage.hxx
-// SipMessage.cxx
-//
-//****************************************************************************
-
-// eventually use these macros to automate Headers.hxx, Headers.cxx+gperf
-#define UNUSED_defineHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
-#define UNUSED_defineMultiHeader(_enum, _name, _type, _rfc) SAVE##_enum, _enum = UNKNOWN, RESET##enum = SAVE##_enum-1
-#define defineHeader(_enum, _name, _type, _rfc) _enum
-#define defineMultiHeader(_enum, _name, _type, _rfc) _enum
-
 namespace resip
 {
 
@@ -41,93 +20,8 @@ class Headers
       enum Type
       {
          UNKNOWN = -1,
-         defineMultiHeader(Via, "Via", Via, "RFC 3261"), // rjs says must be first
-         defineHeader(MaxForwards, "Max-Forwards", UInt32Category, "RFC 3261"),
-         defineMultiHeader(Route, "Route", NameAddr, "RFC 3261"),
-         defineMultiHeader(RecordRoute, "Record-Route", NameAddr, "RFC 3261"),
-         defineMultiHeader(Path, "Path", NameAddr, "RFC 3327"),
-         defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608"),
-         defineMultiHeader(ProxyRequire, "Proxy-Require", Token, "RFC 3261"),
-         defineMultiHeader(ProxyAuthenticate, "Proxy-Authenticate", Auth, "RFC 3261"),
-         defineHeader(Identity, "Identity", StringCategory, "RFC 4474"),
-         defineHeader(IdentityInfo, "Identity-Info", GenericUri, "RFC 4474"),
-         defineMultiHeader(Require, "Require", Token, "RFC 3261"),
-         defineMultiHeader(Contact, "Contact", NameAddr, "RFC 3261"),
-
-         defineHeader(To, "To", NameAddr, "RFC 3261"), 
-         defineHeader(From, "From", NameAddr, "RFC 3261"),
-         defineHeader(CallID, "Call-ID", CallId, "RFC 3261"),
-         defineHeader(CSeq, "CSeq", CSeqCategory, "RFC 3261"),
-         defineHeader(Subject, "Subject", StringCategory, "RFC 3261"),
-         defineHeader(Expires, "Expires", ExpiresCategory, "RFC 3261"),
-         defineHeader(SessionExpires, "Session-Expires", ExpiresCategory, "RFC 4028"),
-         defineHeader(MinSE, "Min-SE", ExpiresCategory, "RFC 4028"),
-         defineMultiHeader(Accept, "Accept", Mime, "RFC 3261"),
-         defineMultiHeader(AcceptEncoding, "Accept-Encoding", Token, "RFC 3261"),
-         defineMultiHeader(AcceptLanguage, "Accept-Language", Token, "RFC 3261"),
-         defineMultiHeader(AlertInfo, "Alert-Info", GenericUri, "RFC 3261"),
-         defineMultiHeader(Allow, "Allow", Token, "RFC 3261"),
-         defineHeader(AuthenticationInfo, "Authentication-Info", Auth, "RFC 3261"),
-         defineMultiHeader(CallInfo, "Call-Info", GenericUri, "RFC 3261"),
-         defineHeader(ContentDisposition, "Content-Disposition", Token, "RFC ?"),
-         defineHeader(ContentEncoding, "Content-Encoding", Token, "RFC ?"),
-         defineHeader(ContentId, "Content-ID", Token, "RFC 2045"),
-         defineMultiHeader(ContentLanguage, "Content-Language", Token, "RFC ?"),
-// i really think that Content-Transfer-Encoding should be a Token   !rwm
-         defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?"), // !dlb! defineMultiHeader
-         defineHeader(ContentType, "Content-Type", Mime, "RFC 3261"),
-         defineHeader(Date, "Date", DateCategory, "RFC 3261"),
-         defineMultiHeader(ErrorInfo, "Error-Info", GenericUri, "RFC 3261"),
-         defineHeader(InReplyTo, "In-Reply-To", CallId, "RFC 3261"),
-         defineHeader(MinExpires, "Min-Expires", UInt32Category, "RFC 3261"),
-         defineHeader(MIMEVersion, "MIME-Version", Token, "RFC 3261"),
-         defineHeader(Organization, "Organization", StringCategory, "RFC 3261"),
-         defineHeader(Priority, "Priority", Token, "RFC 3261"),
-         defineMultiHeader(ProxyAuthorization, "Proxy-Authorization", Auth, "RFC 3261"),
-         defineHeader(ReplyTo, "Reply-To", NameAddr, "RFC 3261"),
-         defineHeader(RetryAfter, "Retry-After", UInt32Category, "RFC 3261"),
-         defineHeader(Server, "Server", StringCategory, "RFC 3261"),
-         defineHeader(SIPETag, "SIP-ETag", Token, "RFC 3903"),
-         defineHeader(SIPIfMatch, "SIP-If-Match", Token, "RFC 3903"),
-         defineMultiHeader(Supported, "Supported", Token, "RFC 3261"),
-         defineHeader(Timestamp, "Timestamp", StringCategory, "RFC 3261"),
-         defineMultiHeader(Unsupported, "Unsupported", Token, "RFC 3261"),
-         defineHeader(UserAgent, "User-Agent", StringCategory, "RFC 3261"),
-         defineMultiHeader(Warning, "Warning", WarningCategory, "RFC 3261"),
-         defineMultiHeader(WWWAuthenticate, "WWW-Authenticate", Auth, "RFC 3261"),
-         defineHeader(SubscriptionState, "Subscription-State", Token, "RFC 3265"),
-         defineHeader(ReferTo, "Refer-To", NameAddr, "RFC 3515"),
-         defineHeader(ReferredBy, "Referred-By", NameAddr, "RFC 3892"),
-         defineMultiHeader(Authorization, "Authorization", Auth, "RFC 3261"),
-         defineHeader(Replaces, "Replaces", CallId, "RFC 3891"),
-         defineHeader(Event, "Event", Token, "RFC 3265"),
-         defineMultiHeader(AllowEvents, "Allow-Events", Token, "RFC 3265"),
-         defineMultiHeader(SecurityClient, "Security-Client", Token, "RFC 3329"),
-         defineMultiHeader(SecurityServer, "Security-Server", Token, "RFC 3329"),
-         defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC 3329"),
-         defineHeader(RSeq, "RSeq", UInt32Category, "RFC 3262"),
-         defineHeader(RAck, "RAck", RAckCategory, "RFC 3262"),
-
-         defineMultiHeader(Reason, "Reason", Token, "RFC 3326"),
-         defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323"),
-         defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841"),
-         defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313"),
-         defineHeader(Join, "Join", CallId, "RFC 3911"),
-         defineHeader(TargetDialog, "Target-Dialog", CallId, "RFC 4538"),
-         defineMultiHeader(PAssertedIdentity, "P-Asserted-Identity", NameAddr, "RFC 3325"),
-         defineMultiHeader(PPreferredIdentity, "P-Preferred-Identity", NameAddr, "RFC 3325"),
-         defineMultiHeader(AcceptContact, "Accept-Contact", NameAddr, "RFC 3841"),
-         defineMultiHeader(RejectContact, "Reject-Contact", NameAddr, "RFC 3841"),
-         defineHeader(PCalledPartyId, "P-Called-Party-ID", NameAddr, "RFC 3455"),
-         defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455"),
-
-         defineHeader(ContentLength, "Content-Length", UInt32Category, "RFC 3261"),
-         defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488"),
-         defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01"),
-         defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01"),
-         defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"), // ?bwc? Not in 3323, should we keep?
-
-         defineMultiHeader(RESIP_DO_NOT_USE, "ShouldNotSeeThis", StringCategory, "N/A"),
+#include "HeaderTypes.hxx.ixx"
+         RESIP_DO_NOT_USE,
          MAX_HEADERS,
          NONE
       };
@@ -147,11 +41,6 @@ class Headers
 };
  
 }
-
-#undef UNUSED_defineHeader
-#undef UNUSED_defineMultiHeader
-#undef defineHeader
-#undef defineMultiHeader
 
 #endif
 

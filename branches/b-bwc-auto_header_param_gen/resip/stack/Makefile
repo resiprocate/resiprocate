@@ -135,29 +135,6 @@ SRC = \
 	StatelessHandler.cxx \
 	InvalidContents.cxx
 
-SUFFIXES += .gperf .cxx
-GPERFOPTS = -D -E -L C++ -t -k '*' --compare-strncmp
-#GPERFVER="GNU gperf 2.7.2"
-
-code *Hash.cxx: .firstrun
-
-.firstrun:
-	touch .firstrun MethodHash.cxx *Hash.cxx
-
-# rule for case sensitive sorts of hash
-MethodHash.cxx: MethodHash.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@ || echo "gperf not installed, touching $@" && touch $@
-
-# rule for insensitive clods
-#${SRC}: ${@:%.cxx=%.gperf} -- more portable?
-%.cxx: %.gperf
-	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo $* | sed -e 's/.*\///'` $< | \
-	sed -e 's/str\[\([0-9][0-9]*\)\]/tolower(str[\1])/g' | \
-	sed -e 's/^\([	]*\)if *(\*\([a-z][a-z]*\) *== *\*\([a-z][a-z]*\) *\&\& *!strncmp *(\([^)]*\)).*/\1if (tolower(*\2) == *\3 \&\& !strncasecmp( \4 ))/g' | \
-	sed -e 's/\*str ==/tolower(*str) ==/' | \
-	sed -e 's/\!strncmp/\!strncasecmp/' > $@ || \
-	echo "gperf not installed, touching $@" && touch $@
-
 include $(BUILD)/Makefile.post
 INSTALL_INCDIR := $(DESTDIR)$(INSTALL_PREFIX)/include/resip/stack
 
