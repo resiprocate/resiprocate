@@ -1,5 +1,16 @@
 #!/bin/sh
 
+# !!!!AVERT YOUR EYES!!!!
+
+# No, seriously, I advise that you avoid looking too much at this file, for the
+# sake of your mental health. It is the distillation of a great deal of 
+# Cthulhu-level insanity, and I have gone to great lengths to sequester it here, 
+# where no-one ever has to look at it again.
+
+# Why are you still here?
+
+# Ok, fine. Your funeral...
+
 # Make ParameterHash.gperf
 
 echo "%{
