@@ -10,21 +10,6 @@
 #    define HashMap __gnu_cxx::hash_map
 #    define HashSet __gnu_cxx::hash_set
 
-// this allows us to hash on a pointer as the key 
-namespace HASH_MAP_NAMESPACE
-{
-
-template <class T>
-struct hash<T*>
-{
-      size_t operator()(const T* t) const
-      {
-         return size_t(t);
-      }
-};
- 
-}
-
 #define HashValue(type)                           \
 namespace HASH_MAP_NAMESPACE                      \
 {                                                 \
