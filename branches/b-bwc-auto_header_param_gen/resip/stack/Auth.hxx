@@ -8,11 +8,6 @@
 namespace resip
 {
 
-#define defineParam(_enum, _name, _type, _RFC_ref_ignored)  \
-      _enum##_Param::DType& param(const _enum##_Param& paramType); \
-      const _enum##_Param::DType& param(const _enum##_Param& paramType) const
-
-
 /**
    @ingroup sip_grammar
    @brief Represents the "credentials" and "challenge" elements in the SIP 
@@ -38,26 +33,10 @@ class Auth : public ParserCategory
       Data& scheme();
       const Data& scheme() const;
 
-      defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
-      defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
-      defineParam(nonce, "nonce", QuotedDataParameter, "RFC ????");
-      defineParam(domain, "domain", QuotedDataParameter, "RFC ????");
-      defineParam(nc, "nc", DataParameter, "RFC ????");
-      defineParam(opaque, "opaque", QuotedDataParameter, "RFC ????");
-      defineParam(qop, "qop", DataParameter, "RFC ????");
-      defineParam(qopOptions, "qop-options", DataParameter, "RFC ????");
-      defineParam(realm, "realm", QuotedDataParameter, "RFC ????");
-      defineParam(response, "response", QuotedDataParameter, "RFC ????");
-      defineParam(stale, "stale", DataParameter, "RFC ????");
-      defineParam(uri, "uri", QuotedDataParameter, "RFC ????");
-      defineParam(username, "username", QuotedDataParameter, "RFC ????");
-
    private:
       mutable Data mScheme;
 };
 
-#undef defineParam
- 
 }
 
 

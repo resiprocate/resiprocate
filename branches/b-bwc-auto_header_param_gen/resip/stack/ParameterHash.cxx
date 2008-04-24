@@ -60,7 +60,7 @@ ParameterHash::hash (register const char *str, register unsigned int len)
       246, 246, 246, 246, 246, 246, 246, 246, 246, 246,
       246, 246, 246, 246, 246, 246, 246, 246, 246, 246,
       246, 246, 246, 246, 246, 246, 246, 246, 246, 246,
-      246, 246, 246, 246,   0, 246, 246, 246, 246, 246,
+      246, 246, 246, 246, 246, 246, 246, 246, 246, 246,
       246, 246, 246, 246, 246, 246, 246,  15,  50,   0,
        25,   0,   5,   0,  40,   0, 246,   0,  20,  20,
         5,   0,   0,  50,   0,   0,   0,  35,   0,   0,
@@ -131,7 +131,7 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 86,
+      TOTAL_KEYWORDS = 88,
       MIN_WORD_LENGTH = 1,
       MAX_WORD_LENGTH = 13,
       MIN_HASH_VALUE = 4,
@@ -140,91 +140,91 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
 
   static struct params wordlist[] =
     {
-#line 79 "ParameterHash.gperf"
+#line 72 "ParameterHash.gperf"
       {"site", ParameterTypes::site},
-#line 50 "ParameterHash.gperf"
+#line 70 "ParameterHash.gperf"
       {"rport", ParameterTypes::rport},
-#line 82 "ParameterHash.gperf"
+#line 71 "ParameterHash.gperf"
       {"server", ParameterTypes::server},
-#line 56 "ParameterHash.gperf"
+#line 57 "ParameterHash.gperf"
       {"nc", ParameterTypes::nc},
-#line 77 "ParameterHash.gperf"
+#line 73 "ParameterHash.gperf"
       {"size", ParameterTypes::size},
 #line 14 "ParameterHash.gperf"
       {"events", ParameterTypes::events},
-#line 88 "ParameterHash.gperf"
+#line 89 "ParameterHash.gperf"
       {"version", ParameterTypes::version},
-#line 59 "ParameterHash.gperf"
+#line 67 "ParameterHash.gperf"
       {"response", ParameterTypes::response},
-#line 55 "ParameterHash.gperf"
+#line 58 "ParameterHash.gperf"
       {"nonce", ParameterTypes::nonce},
-#line 52 "ParameterHash.gperf"
+#line 37 "ParameterHash.gperf"
       {"cnonce", ParameterTypes::cnonce},
-#line 45 "ParameterHash.gperf"
+#line 76 "ParameterHash.gperf"
       {"tag", ParameterTypes::tag},
 #line 23 "ParameterHash.gperf"
       {"actor", ParameterTypes::actor},
-#line 37 "ParameterHash.gperf"
+#line 51 "ParameterHash.gperf"
       {"lr", ParameterTypes::lr},
-#line 35 "ParameterHash.gperf"
+#line 79 "ParameterHash.gperf"
       {"ttl", ParameterTypes::ttl},
-#line 49 "ParameterHash.gperf"
+#line 38 "ParameterHash.gperf"
       {"comp", ParameterTypes::comp},
-#line 67 "ParameterHash.gperf"
+#line 65 "ParameterHash.gperf"
       {"reason", ParameterTypes::reason},
-#line 54 "ParameterHash.gperf"
+#line 50 "ParameterHash.gperf"
       {"id", ParameterTypes::id},
-#line 73 "ParameterHash.gperf"
+#line 61 "ParameterHash.gperf"
       {"protocol", ParameterTypes::protocol},
-#line 31 "ParameterHash.gperf"
+#line 78 "ParameterHash.gperf"
       {"transport", ParameterTypes::transport},
 #line 19 "ParameterHash.gperf"
       {"video", ParameterTypes::video},
 #line 11 "ParameterHash.gperf"
       {"control", ParameterTypes::control},
-#line 47 "ParameterHash.gperf"
+#line 66 "ParameterHash.gperf"
       {"received", ParameterTypes::received},
-#line 48 "ParameterHash.gperf"
+#line 69 "ParameterHash.gperf"
       {"rinstance", ParameterTypes::rinstance},
-#line 78 "ParameterHash.gperf"
-      {"permission", ParameterTypes::permission},
-#line 86 "ParameterHash.gperf"
-      {"vendor", ParameterTypes::vendor},
-#line 65 "ParameterHash.gperf"
-      {"uri", ParameterTypes::uri},
-#line 32 "ParameterHash.gperf"
-      {"user", ParameterTypes::user},
 #line 60 "ParameterHash.gperf"
+      {"permission", ParameterTypes::permission},
+#line 87 "ParameterHash.gperf"
+      {"vendor", ParameterTypes::vendor},
+#line 80 "ParameterHash.gperf"
+      {"uri", ParameterTypes::uri},
+#line 81 "ParameterHash.gperf"
+      {"user", ParameterTypes::user},
+#line 75 "ParameterHash.gperf"
       {"stale", ParameterTypes::stale},
 #line 13 "ParameterHash.gperf"
       {"description", ParameterTypes::description},
-#line 39 "ParameterHash.gperf"
+#line 62 "ParameterHash.gperf"
       {"purpose", ParameterTypes::purpose},
 #line 26 "ParameterHash.gperf"
       {"+sip.instance", ParameterTypes::Instance},
-#line 30 "ParameterHash.gperf"
+#line 56 "ParameterHash.gperf"
       {"name", ParameterTypes::name},
 #line 22 "ParameterHash.gperf"
       {"isfocus", ParameterTypes::isFocus},
-#line 81 "ParameterHash.gperf"
+#line 55 "ParameterHash.gperf"
       {"mode", ParameterTypes::mode},
-#line 38 "ParameterHash.gperf"
+#line 63 "ParameterHash.gperf"
       {"q", ParameterTypes::q},
 #line 28 "ParameterHash.gperf"
       {"ob", ParameterTypes::ob},
-#line 64 "ParameterHash.gperf"
+#line 95 "ParameterHash.gperf"
       {"qop", ParameterTypes::qop},
-#line 63 "ParameterHash.gperf"
+#line 85 "ParameterHash.gperf"
       {"refresher", ParameterTypes::refresher},
-#line 93 "ParameterHash.gperf"
+#line 94 "ParameterHash.gperf"
       {"url", ParameterTypes::url},
 #line 10 "ParameterHash.gperf"
       {"data", ParameterTypes::data},
-#line 58 "ParameterHash.gperf"
+#line 64 "ParameterHash.gperf"
       {"realm", ParameterTypes::realm},
-#line 74 "ParameterHash.gperf"
+#line 54 "ParameterHash.gperf"
       {"micalg", ParameterTypes::micalg},
-#line 83 "ParameterHash.gperf"
+#line 36 "ParameterHash.gperf"
       {"charset", ParameterTypes::charset},
 #line 21 "ParameterHash.gperf"
       {"type", ParameterTypes::type},
@@ -234,83 +234,87 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       {"schemes", ParameterTypes::schemes},
 #line 15 "ParameterHash.gperf"
       {"priority", ParameterTypes::priority},
-#line 87 "ParameterHash.gperf"
+#line 88 "ParameterHash.gperf"
       {"model", ParameterTypes::model},
-#line 53 "ParameterHash.gperf"
+#line 43 "ParameterHash.gperf"
       {"domain", ParameterTypes::domain},
-#line 72 "ParameterHash.gperf"
+#line 47 "ParameterHash.gperf"
       {"filename", ParameterTypes::filename},
-#line 29 "ParameterHash.gperf"
+#line 31 "ParameterHash.gperf"
       {"gruu", ParameterTypes::gruu},
-#line 40 "ParameterHash.gperf"
+#line 77 "ParameterHash.gperf"
       {"to-tag", ParameterTypes::toTag},
-#line 33 "ParameterHash.gperf"
+#line 82 "ParameterHash.gperf"
       {"ext", ParameterTypes::extension},
 #line 24 "ParameterHash.gperf"
       {"text", ParameterTypes::text},
-#line 43 "ParameterHash.gperf"
+#line 46 "ParameterHash.gperf"
       {"expires", ParameterTypes::expires},
-#line 61 "ParameterHash.gperf"
+#line 83 "ParameterHash.gperf"
       {"username", ParameterTypes::username},
-#line 70 "ParameterHash.gperf"
+#line 41 "ParameterHash.gperf"
       {"d-ver", ParameterTypes::dVer},
 #line 27 "ParameterHash.gperf"
       {"reg-id", ParameterTypes::regid},
-#line 42 "ParameterHash.gperf"
+#line 44 "ParameterHash.gperf"
       {"duration", ParameterTypes::duration},
-#line 36 "ParameterHash.gperf"
+#line 52 "ParameterHash.gperf"
       {"maddr", ParameterTypes::maddr},
-#line 34 "ParameterHash.gperf"
+#line 53 "ParameterHash.gperf"
       {"method", ParameterTypes::method},
 #line 16 "ParameterHash.gperf"
       {"methods", ParameterTypes::methods},
-#line 90 "ParameterHash.gperf"
+#line 91 "ParameterHash.gperf"
       {"document", ParameterTypes::document},
-#line 80 "ParameterHash.gperf"
+#line 42 "ParameterHash.gperf"
       {"directory", ParameterTypes::directory},
 #line 25 "ParameterHash.gperf"
       {"extensions", ParameterTypes::extensions},
-#line 94 "ParameterHash.gperf"
-      {"addTransport", ParameterTypes::addTransport},
+#line 97 "ParameterHash.gperf"
+      {"addtransport", ParameterTypes::addTransport},
 #line 20 "ParameterHash.gperf"
       {"language", ParameterTypes::language},
-#line 91 "ParameterHash.gperf"
-      {"app-id", ParameterTypes::appId},
-#line 41 "ParameterHash.gperf"
-      {"from-tag", ParameterTypes::fromTag},
-#line 51 "ParameterHash.gperf"
-      {"algorithm", ParameterTypes::algorithm},
-#line 76 "ParameterHash.gperf"
-      {"expiration", ParameterTypes::expiration},
-#line 57 "ParameterHash.gperf"
-      {"opaque", ParameterTypes::opaque},
 #line 92 "ParameterHash.gperf"
+      {"app-id", ParameterTypes::appId},
+#line 48 "ParameterHash.gperf"
+      {"from-tag", ParameterTypes::fromTag},
+#line 33 "ParameterHash.gperf"
+      {"algorithm", ParameterTypes::algorithm},
+#line 45 "ParameterHash.gperf"
+      {"expiration", ParameterTypes::expiration},
+#line 59 "ParameterHash.gperf"
+      {"opaque", ParameterTypes::opaque},
+#line 93 "ParameterHash.gperf"
       {"network-user", ParameterTypes::networkUser},
-#line 95 "ParameterHash.gperf"
+#line 96 "ParameterHash.gperf"
       {"sigcomp-id", ParameterTypes::sigcompId},
-#line 46 "ParameterHash.gperf"
+#line 35 "ParameterHash.gperf"
       {"branch", ParameterTypes::branch},
-#line 44 "ParameterHash.gperf"
+#line 49 "ParameterHash.gperf"
       {"handling", ParameterTypes::handling},
-#line 68 "ParameterHash.gperf"
+#line 39 "ParameterHash.gperf"
       {"d-alg", ParameterTypes::dAlg},
-#line 69 "ParameterHash.gperf"
+#line 40 "ParameterHash.gperf"
       {"d-qop", ParameterTypes::dQop},
-#line 84 "ParameterHash.gperf"
+#line 32 "ParameterHash.gperf"
       {"access-type", ParameterTypes::accessType},
-#line 66 "ParameterHash.gperf"
+#line 68 "ParameterHash.gperf"
       {"retry-after", ParameterTypes::retryAfter},
-#line 85 "ParameterHash.gperf"
+#line 86 "ParameterHash.gperf"
       {"profile-type", ParameterTypes::profileType},
+#line 30 "ParameterHash.gperf"
+      {"temp-gruu", ParameterTypes::tempGruu},
 #line 12 "ParameterHash.gperf"
       {"mobility", ParameterTypes::mobility},
-#line 71 "ParameterHash.gperf"
+#line 74 "ParameterHash.gperf"
       {"smime-type", ParameterTypes::smimeType},
-#line 89 "ParameterHash.gperf"
+#line 90 "ParameterHash.gperf"
       {"effective-by", ParameterTypes::effectiveBy},
-#line 75 "ParameterHash.gperf"
+#line 34 "ParameterHash.gperf"
       {"boundary", ParameterTypes::boundary},
-#line 62 "ParameterHash.gperf"
+#line 29 "ParameterHash.gperf"
+      {"pub-gruu", ParameterTypes::pubGruu},
+#line 84 "ParameterHash.gperf"
       {"early-only", ParameterTypes::earlyOnly}
     };
 
@@ -327,13 +331,13 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
       -1, -1, -1, -1, 74, -1, 75, -1, 76, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, 77, -1, -1, -1, -1,
       -1, 78, -1, -1, -1, -1, 79, -1, -1, -1, -1, -1, 80, -1,
-      -1, -1, -1, -1, 81, -1, -1, -1, -1, -1, -1, 82, -1, -1,
+      81, -1, -1, -1, 82, -1, -1, -1, -1, -1, -1, 83, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, 83, -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, 84, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, 84, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, 85, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, 86, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, 85
+      -1, -1, -1, -1, -1, -1, -1, 87
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -355,6 +359,6 @@ ParameterHash::in_word_set (register const char *str, register unsigned int len)
     }
   return 0;
 }
-#line 96 "ParameterHash.gperf"
+#line 98 "ParameterHash.gperf"
 
 }
