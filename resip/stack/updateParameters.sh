@@ -35,7 +35,7 @@ echo "
    extern _enum##_Param p_##_enum;
 " > ParameterTypes.hxx.ixx.temp
 
-cat ParameterTypes.in >> ParameterTypes.hxx.ixx.temp
+cat ParameterTypes.in | grep "^defineParam" >> ParameterTypes.hxx.ixx.temp
 
 # run preprocessor on ParameterTypes.hxx.ixx.temp
 echo "// !bwc! I apologize that this is so ugly. If you know of a standard GNU utility that will re-indent uglified c++ code (like this), let me know..." > ParameterTypes.hxx.ixx;
@@ -59,7 +59,7 @@ _enum##_Param::_enum##_Param()                                                  
 _enum##_Param resip::p_##_enum;
 " > ParameterTypes.cxx.ixx.temp
 
-cat ParameterTypes.in >> ParameterTypes.cxx.ixx.temp
+cat ParameterTypes.in | grep "^defineParam" >> ParameterTypes.cxx.ixx.temp
 
 echo "// !bwc! I apologize that this is so ugly. If you know of a standard GNU utility that will re-indent uglified c++ code (like this), let me know..." > ParameterTypes.cxx.ixx;
 
@@ -73,7 +73,7 @@ echo "#define defineParam(_enum, _name, _type, _RFC_ref_ignored)                
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \\
       _enum##_Param::DType& param(const _enum##_Param& paramType);" >> ParserCategory.hxx.ixx.temp
 
-cat ParameterTypes.in >> ParserCategory.hxx.ixx.temp
+cat ParameterTypes.in | grep "^defineParam" >> ParserCategory.hxx.ixx.temp
 
 echo "// !bwc! I apologize that this is so ugly. If you know of a standard GNU utility that will re-indent uglified c++ code (like this), let me know..." > ParserCategory.hxx.ixx;
 
@@ -113,7 +113,7 @@ ParserCategory::param(const _enum##_Param& paramType) const                     
    return p->value();                                                                                           \\
 };" >> ParserCategory.cxx.ixx.temp
 
-cat ParameterTypes.in >> ParserCategory.cxx.ixx.temp
+cat ParameterTypes.in | grep "^defineParam" >> ParserCategory.cxx.ixx.temp
 
 echo "// !bwc! I apologize that this is so ugly. If you know of a standard GNU utility that will re-indent uglified c++ code (like this), let me know..." > ParserCategory.cxx.ixx;
 
@@ -123,5 +123,20 @@ gcc -E -x c++ ParserCategory.cxx.ixx.temp | sed -Ee 's/#.*//' >> ParserCategory.
 rm ParserCategory.cxx.ixx.temp
 
 
-cat ParameterTypes.in | sed -Ee 's/defineParam\(([a-zA-Z0-9]+).*/\1,/'> ParameterTypeEnums.hxx.ixx
+cat ParameterTypes.in | grep "^defineParam" | sed -Ee 's/defineParam\(([a-zA-Z0-9]+).*/\1,/'> ParameterTypeEnums.hxx.ixx
+
+# regenerate ParameterHash.cxx
+
+if ! gperf -v > /dev/null 2>&1; then
+   echo "gperf not installed. You need gperf to be able to update the set of supported parameters.";
+   exit;
+fi
+
+if ! gperf --ignore-case -D -E -L C++ -t -k '*' --compare-strncmp -Z ParameterHash ParameterHash.gperf > ParameterHash.cxx.try; then
+   echo "Your version of gperf does not support the options we need.";
+   exit;
+fi
+
+cp ParameterHash.cxx.try ParameterHash.cxx
+rm ParameterHash.cxx.try
 
