@@ -36,11 +36,12 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
    if (invite.exists(h_Replaces) &&
          invite.header(h_Replaces).isWellFormed())
    {
-      // !bwc! Unsafe param access. If not present, do we treat as an error, or
-      // an empty string?
+      Data replacesToTag = invite.header(h_Replaces).exists(p_toTag) ? invite.header(h_Replaces).param(p_toTag) : Data::Empty;
+      Data replacesFromTag = invite.header(h_Replaces).exists(p_fromTag) ? invite.header(h_Replaces).param(p_fromTag) : Data::Empty;
+
       eventInfo->mReplacesId = std::auto_ptr<DialogId>(new DialogId(invite.header(h_Replaces).value(), 
-         invite.header(h_Replaces).param(p_toTag),
-         invite.header(h_Replaces).param(p_fromTag)));
+         replacesToTag,
+         replacesFromTag));
 
       std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.find(*(eventInfo->mReplacesId));
       if (it != mDialogIdToEventInfo.end())
@@ -76,11 +77,12 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
       {
          return;
       }
-      // ?bwc? What should we do if we didn't return here? We will leak the 
-      // DialogEventInfo that is already in the map...
+   }
+   else
+   {
+      eventInfo = new DialogEventInfo();
    }
 
-   eventInfo = new DialogEventInfo();
    eventInfo->mDialogEventId = Random::getVersion4UuidUrn();
    eventInfo->mDialogId = DialogId(dialogSet.getId(), Data::Empty);
    eventInfo->mDirection = DialogEventInfo::Initiator;
@@ -134,21 +136,9 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
       else
       {
          // forking; e.g. INVITE/180 (tag #1)/180 (no tag)
-         // clone and initialize with a new id and creation time 
-         DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
-         newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
-         newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
-         newForkInfo->mDialogId = DialogId(dialogSet.getId(), Data::Empty);
-         newForkInfo->mRemoteIdentity = response.header(h_To);
-         if (!response.empty(h_Contacts))
-         {
-            // ?bwc? Has something already checked for well-formedness here? 
-            // Maybe DialogSet? Assert for now.
-            assert(response.header(h_Contacts).front().isWellFormed());
-            newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(response.header(h_Contacts).front().uri()));
-         }
-         mDialogIdToEventInfo[newForkInfo->mDialogId] = newForkInfo;
-         mDialogEventHandler->onProceeding(*newForkInfo);
+
+         // .jjg. The remote sender of the 180 (no tag) should either 'put up or shut up' as Byron put it
+         // so we'll just ignore this...
       }
    }
 }
@@ -197,17 +187,36 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
 void
 DialogEventStateManager::onTerminated(const Dialog& dialog, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason)
 {
-   onTerminatedImpl(dialog.getId().getDialogSetId(), msg, reason);
+   std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.find(dialog.getId());
+   if (it != mDialogIdToEventInfo.end())
+   {
+      if (it->second->getState() == DialogEventInfo::Confirmed)
+      {
+         // .jjg. we're killing a *specific* dialog *after* the successful completion of the initial INVITE transaction;
+         // so just elminate this dialog, not the entire dialogset
+         onDialogTerminatedImpl(it->second, msg, reason);
+         delete it->second;
+         mDialogIdToEventInfo.erase(it++);
+      }
+      else
+      {
+         onDialogSetTerminatedImpl(dialog.getId().getDialogSetId(), msg, reason);
+      }
+   }
+   else
+   {
+      onDialogSetTerminatedImpl(dialog.getId().getDialogSetId(), msg, reason);
+   }
 }
 
 void
 DialogEventStateManager::onTerminated(const DialogSet& dialogSet, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason)
 {
-   onTerminatedImpl(dialogSet.getId(), msg, reason);
+   onDialogSetTerminatedImpl(dialogSet.getId(), msg, reason);
 }
 
 void
-DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason)
+DialogEventStateManager::onDialogSetTerminatedImpl(const DialogSetId& dialogSetId, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason)
 {
    DialogEventInfo* eventInfo = NULL;
 
@@ -228,36 +237,43 @@ DialogEventStateManager::onTerminatedImpl(const DialogSetId& dialogSetId, const 
           it->first.getDialogSetId() == dialogSetId)
    {
       eventInfo = it->second;
-      eventInfo->mState = DialogEventInfo::Terminated;
+      onDialogTerminatedImpl(eventInfo, msg, reason);
 
-      // .jjg. when we get an INVITE w/Replaces, we mark the replaced dialog event info 
-      // as 'replaced' (see onTryingUas);
-      // when the replaced dialog is ended, it will be ended normally with a BYE or CANCEL, 
-      // but since we've marked it as 'replaced' we can update the termination reason
-      InviteSessionHandler::TerminatedReason actualReason = reason;
-
-      if (eventInfo->mReplaced)
-      {
-         actualReason = InviteSessionHandler::Replaced;
-      }
-
-      int respCode = 0;
-      if (msg.isResponse())
-      {
-         respCode = msg.header(h_StatusLine).responseCode();
-         if (!msg.empty(h_Contacts))
-         {
-            // ?bwc? Has something already checked for well-formedness here? 
-            // Maybe DialogSet? Assert for now.
-            assert(msg.header(h_Contacts).front().isWellFormed());
-            eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(msg.header(h_Contacts).front().uri()));
-         }
-      }
-
-      mDialogEventHandler->onTerminated(*eventInfo, actualReason, respCode);
       delete it->second;
       mDialogIdToEventInfo.erase(it++);
    }
+}
+
+void
+DialogEventStateManager::onDialogTerminatedImpl(DialogEventInfo* eventInfo, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason)
+{
+   eventInfo->mState = DialogEventInfo::Terminated;
+
+   // .jjg. when we get an INVITE w/Replaces, we mark the replaced dialog event info 
+   // as 'replaced' (see onTryingUas);
+   // when the replaced dialog is ended, it will be ended normally with a BYE or CANCEL, 
+   // but since we've marked it as 'replaced' we can update the termination reason
+   InviteSessionHandler::TerminatedReason actualReason = reason;
+
+   if (eventInfo->mReplaced)
+   {
+      actualReason = InviteSessionHandler::Replaced;
+   }
+
+   int respCode = 0;
+   if (msg.isResponse())
+   {
+      respCode = msg.header(h_StatusLine).responseCode();
+      if (!msg.empty(h_Contacts))
+      {
+         // ?bwc? Has something already checked for well-formedness here? 
+         // Maybe DialogSet? Assert for now.
+         assert(msg.header(h_Contacts).front().isWellFormed());
+         eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(msg.header(h_Contacts).front().uri()));
+      }
+   }
+
+   mDialogEventHandler->onTerminated(*eventInfo, actualReason, respCode);
 }
 
 DialogEventStateManager::DialogEventInfos 
