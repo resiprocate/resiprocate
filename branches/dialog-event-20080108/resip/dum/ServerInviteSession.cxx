@@ -67,12 +67,12 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          response->header(h_Contacts) = contacts;
          send(response);
 
-         transition(Terminated);
-
          if (mDum.mDialogEventStateManager)
          {
             mDum.mDialogEventStateManager->onTerminated(mDialog, *response, InviteSessionHandler::Rejected);
          }
+
+         transition(Terminated);
 
          mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Referred); 
          mDum.destroy(this);

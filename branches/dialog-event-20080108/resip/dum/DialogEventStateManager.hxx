@@ -61,7 +61,8 @@ private:
 
    DialogEventInfo* findOrCreateDialogInfo(const Dialog& dialog);
 
-   void onTerminatedImpl(const DialogSetId& dialogSetId, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
+   void onDialogSetTerminatedImpl(const DialogSetId& dialogSetId, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
+   void onDialogTerminatedImpl(DialogEventInfo* eventInfo, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
 
 private:
 
