@@ -844,11 +844,11 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
                }
                else
                {
-               mDialogEventStateManager->onTryingUac(*ds, *msg);
+                  mDialogEventStateManager->onTryingUac(*ds, *msg);
+               }
             }
          }
       }
-   }
    }
 
    DebugLog (<< "SEND: " << std::endl << std::endl << *msg);

@@ -365,12 +365,9 @@ DialogSet::dispatch(const SipMessage& msg)
                   dialog.makeRequest(*bye, BYE);
                   dialog.send(bye);
                   
-                  // !dcm!--should we add another overload to
-                  // !DialogEventStateManager::onTerminated so we have the to 
-                  // !tag, or is the DialogSet enough?
                   if (mDum.mDialogEventStateManager)
                   {
-                     mDum.mDialogEventStateManager->onTerminated(*this, *bye, InviteSessionHandler::LocalBye);
+                     mDum.mDialogEventStateManager->onTerminated(dialog, *bye, InviteSessionHandler::LocalBye);
                   }
                   // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
                }
@@ -917,6 +914,11 @@ DialogSet::end()
          }
          else
          {
+            if (mDum.mDialogEventStateManager)
+            {
+               mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
+            }
+
             //need to lag and do last element ouside of look as this DialogSet will be
             //deleted if all dialogs are destroyed
             for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
@@ -924,10 +926,6 @@ DialogSet::end()
                try
                {
                   it->second->cancel();
-                  if (mDum.mDialogEventStateManager)
-                  {
-                     mDum.mDialogEventStateManager->onTerminated(*(it->second), *cancel, InviteSessionHandler::LocalCancel);
-                  }
                }
                catch(UsageUseException& e)
                {
