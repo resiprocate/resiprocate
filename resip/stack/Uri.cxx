@@ -40,6 +40,15 @@ Uri::Uri()
 {
 }
 
+Uri::Uri(HeaderFieldValue* hfv, Headers::Type type) :
+   ParserCategory(hfv, type),
+     mScheme(Data::Share, Symbols::DefaultSipScheme),
+     mPort(0),
+     mOldPort(0),
+     mEmbeddedHeaders(0)
+{
+}
+
 static const Data parseContext("Uri constructor");
 Uri::Uri(const Data& data)
    : ParserCategory(), 

@@ -1,9 +1,12 @@
 #if !defined(RESIP_PARAMETERTYPES_HXX)
 #define RESIP_PARAMETERTYPES_HXX 
 
+#include "resip/stack/BooleanFeatureParameter.hxx"
 #include "resip/stack/BranchParameter.hxx"
 #include "resip/stack/DataParameter.hxx"
+#include "resip/stack/NumericFeatureParameter.hxx"
 #include "resip/stack/QuotedDataParameter.hxx"
+#include "resip/stack/QuotedListParameter.hxx"
 #include "resip/stack/QopParameter.hxx"
 #include "resip/stack/IntegerParameter.hxx"
 #include "resip/stack/UInt32Parameter.hxx"
