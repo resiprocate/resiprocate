@@ -7,6 +7,10 @@ using namespace std;
 %}
 struct params { char *name; ParameterTypes::Type type; };
 %%
+audio, ParameterTypes::audio
+automata, ParameterTypes::automata
+class, ParameterTypes::Class
+duplex, ParameterTypes::duplex
 data, ParameterTypes::data
 control, ParameterTypes::control
 mobility, ParameterTypes::mobility
@@ -14,15 +18,13 @@ description, ParameterTypes::description
 events, ParameterTypes::events
 priority, ParameterTypes::priority
 methods, ParameterTypes::methods
+extensions, ParameterTypes::extensions
 schemes, ParameterTypes::schemes
 application, ParameterTypes::application
 video, ParameterTypes::video
 language, ParameterTypes::language
-type, ParameterTypes::type
 isfocus, ParameterTypes::isFocus
 actor, ParameterTypes::actor
-text, ParameterTypes::text
-extensions, ParameterTypes::extensions
 +sip.instance, ParameterTypes::Instance
 reg-id, ParameterTypes::regid
 ob, ParameterTypes::ob
