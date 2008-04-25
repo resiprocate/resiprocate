@@ -388,7 +388,7 @@ main(int argc, char** argv)
    }
    
    {
-      char buf[] = "17 ";
+      char buf[] = "17";
       ParseBuffer pb(buf, strlen(buf));   
       assert(pb.integer() == 17);
    }
@@ -399,6 +399,17 @@ main(int argc, char** argv)
       assert(pb.integer() == -17);
    }
 
+   {
+      char buf[] ="17.2346";
+      ParseBuffer pb(buf, strlen(buf));
+      assert(pb.floatVal()==17.2346f);
+   }
+
+   {
+      char buf[] ="-17.2346";
+      ParseBuffer pb(buf, strlen(buf));
+      assert(pb.floatVal()==-17.2346f);
+   }
 #ifndef WIN32
    {
       char buf[] = "2890844526";
