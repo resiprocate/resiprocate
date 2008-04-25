@@ -16,9 +16,12 @@ class SipMessage;
 class Uri : public ParserCategory
 {
    public:
+      enum {commaHandling = CommasAllowedOutputMulti};
+
       RESIP_HeapCount(Uri);
       
       Uri();
+      Uri(HeaderFieldValue* hfv, Headers::Type type);
       Uri(const Uri&);
       explicit Uri(const Data& data);
 

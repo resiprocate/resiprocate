@@ -8,22 +8,24 @@
 //    4: A reference to where the param was defined
 // If you have edited this file, you then need to run updateParameters.sh.
 
-defineParam(data, "data", ExistsParameter, "callee-caps")
-defineParam(control, "control", ExistsParameter, "callee-caps")
-defineParam(mobility, "mobility", QuotedDataParameter, "callee-caps") // mobile|fixed
-defineParam(description, "description", QuotedDataParameter, "callee-caps") // <> quoted
-defineParam(events, "events", QuotedDataParameter, "callee-caps") // list
-defineParam(priority, "priority", QuotedDataParameter, "callee-caps") // non-urgent|normal|urgent|emergency
-defineParam(methods, "methods", QuotedDataParameter, "callee-caps") // list
-defineParam(schemes, "schemes", QuotedDataParameter, "callee-caps") // list
-defineParam(application, "application", ExistsParameter, "callee-caps")
-defineParam(video, "video", ExistsParameter, "callee-caps")
-defineParam(language, "language", QuotedDataParameter, "callee-caps") // list
-defineParam(type, "type", QuotedDataParameter, "callee-caps") // list
-defineParam(isFocus, "isfocus", ExistsParameter, "callee-caps")
-defineParam(actor, "actor", QuotedDataParameter, "callee-caps") // principal|msg-taker|attendant|information
-defineParam(text, "text", ExistsParameter, "callee-caps")
-defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps") //list
+defineParam(audio, "audio", BooleanFeatureParameter , "RFC 3840")
+defineParam(automata, "automata", BooleanFeatureParameter , "RFC 3840")
+defineParam(Class, "class", QuotedListParameter , "RFC 3840")
+defineParam(duplex, "duplex", QuotedDataParameter , "RFC 3840")
+defineParam(data, "data", BooleanFeatureParameter , "RFC 3840")
+defineParam(control, "control", BooleanFeatureParameter , "RFC 3840")
+defineParam(mobility, "mobility", QuotedDataParameter , "RFC 3840")
+defineParam(description, "description", QuotedDataParameter , "RFC 3840") // <> quoted
+defineParam(events, "events", QuotedListParameter , "RFC 3840")
+defineParam(priority, "priority", NumericFeatureParameter , "RFC 3840")
+defineParam(methods, "methods", QuotedListParameter , "RFC 3840")
+defineParam(extensions, "extensions", QuotedListParameter , "RFC 3840")
+defineParam(schemes, "schemes", QuotedListParameter , "RFC 3840")
+defineParam(application, "application", BooleanFeatureParameter , "RFC 3840")
+defineParam(video, "video", BooleanFeatureParameter , "RFC 3840")
+defineParam(language, "language", QuotedListParameter , "RFC 3840")
+defineParam(isFocus, "isfocus", BooleanFeatureParameter , "RFC 3840")
+defineParam(actor, "actor", QuotedListParameter, "RFC 3840") // principal|msg-defineParam(text, "text", BooleanFeatureParameter , "RFC 3840")
 defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu")  // <> quoted
 defineParam(regid, "reg-id", UInt32Parameter, "outbound")  
 defineParam(ob,"ob",ExistsParameter,"outbound-05")

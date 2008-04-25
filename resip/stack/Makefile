@@ -33,6 +33,7 @@ SRC = \
 	ApiCheck.cxx \
 	ApplicationSip.cxx \
 	BasicNonceHelper.cxx \
+	BooleanFeatureParameter.cxx \
 	BranchParameter.cxx \
 	Connection.cxx \
 	ConnectionBase.cxx \
@@ -51,6 +52,7 @@ SRC = \
 	ExtensionHeader.cxx \
 	ExistsParameter.cxx \
 	ExternalBodyContents.cxx \
+	QuotedListParameter.cxx \
 	QValue.cxx \
 	QValueParameter.cxx \
 	GenericContents.cxx \
@@ -73,6 +75,7 @@ SRC = \
 	MultipartMixedContents.cxx \
 	MultipartRelatedContents.cxx \
 	MultipartSignedContents.cxx \
+	NumericFeatureParameter.cxx \
 	NonceHelper.cxx \
 	OctetContents.cxx \
 	Parameter.cxx \

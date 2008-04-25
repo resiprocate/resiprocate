@@ -47,6 +47,7 @@ Min-SE, Headers::MinSE
 Accept, Headers::Accept
 Accept-Encoding, Headers::AcceptEncoding
 Accept-Language, Headers::AcceptLanguage
+Accept-Resource-Priority, Headers::AcceptResourcePriority
 Alert-Info, Headers::AlertInfo
 Allow, Headers::Allow
 Authentication-Info, Headers::AuthenticationInfo
@@ -59,12 +60,15 @@ Content-Transfer-Encoding, Headers::ContentTransferEncoding
 Content-Type, Headers::ContentType
 Date, Headers::Date
 Error-Info, Headers::ErrorInfo
+History-Info, Headers::HistoryInfo
 In-Reply-To, Headers::InReplyTo
 Min-Expires, Headers::MinExpires
 MIME-Version, Headers::MIMEVersion
 Organization, Headers::Organization
+Permission-Missing, Headers::PermissionMissing
 Priority, Headers::Priority
 Proxy-Authorization, Headers::ProxyAuthorization
+Resource-Priority, Headers::ResourcePriority
 Reply-To, Headers::ReplyTo
 Retry-After, Headers::RetryAfter
 Server, Headers::Server
@@ -72,6 +76,7 @@ SIP-ETag, Headers::SIPETag
 SIP-If-Match, Headers::SIPIfMatch
 Supported, Headers::Supported
 Timestamp, Headers::Timestamp
+Trigger-Consent, Headers::TriggerConsent
 Unsupported, Headers::Unsupported
 User-Agent, Headers::UserAgent
 Warning, Headers::Warning
