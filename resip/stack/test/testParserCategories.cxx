@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string.h>
 #include <string>
+#include <float.h>
 #include "resip/stack/HeaderFieldValue.hxx"
 #include "resip/stack/HeaderTypes.hxx"
 #include "resip/stack/Headers.hxx"
@@ -2039,6 +2040,356 @@ main(int arc, char** argv)
       assert(str.cSequence() == 4294967295);
       assert(str.method() == INVITE);
       assert(Data::from(str) == rackString);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 1");
+      Data header("<sip:bob@foo>;priority=\"#>=10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==10.3332f);
+      assert(addr.param(p_priority).getMax()==DBL_MAX);
+      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==3);
+      assert(addr.param(p_priority).matches(10.3335f));
+      assert(addr.param(p_priority).matches(10.3332f));
+      assert(addr.param(p_priority).matches(20));
+      assert(!addr.param(p_priority).matches(-10.3335f));
+      assert(!addr.param(p_priority).matches(0));
+      Data reEncoded(Data::from(addr));
+      assert(reEncoded==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 2");
+      Data header("<sip:bob@foo>;priority=\"#<=10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-DBL_MAX);
+      assert(addr.param(p_priority).getMax()==10.3332f);
+      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==3);
+      assert(addr.param(p_priority).getMaxPrecision()==4);
+      assert(!addr.param(p_priority).matches(10.3335f));
+      assert(addr.param(p_priority).matches(10.3332f));
+      assert(!addr.param(p_priority).matches(20));
+      assert(addr.param(p_priority).matches(-10.3335f));
+      assert(addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 3");
+      Data header("<sip:bob@foo>;priority=\"#=10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==10.3332f);
+      assert(addr.param(p_priority).getMax()==10.3332f);
+      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==4);
+      assert(!addr.param(p_priority).matches(10.3335f));
+      assert(addr.param(p_priority).matches(10.3332f));
+      assert(!addr.param(p_priority).matches(20));
+      assert(!addr.param(p_priority).matches(-10.3335f));
+      assert(!addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 4");
+      Data header("<sip:bob@foo>;priority=\"#10.3332:12.332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==10.3332f);
+      assert(addr.param(p_priority).getMax()==12.332f);
+      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==3);
+      assert(addr.param(p_priority).matches(10.3335f));
+      assert(addr.param(p_priority).matches(10.3332f));
+      assert(addr.param(p_priority).matches(12.332f));
+      assert(!addr.param(p_priority).matches(20));
+      assert(!addr.param(p_priority).matches(-10.3335f));
+      assert(!addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 5");
+      Data header("<sip:bob@foo>;priority=\"!#>=10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==10.3332f);
+      assert(addr.param(p_priority).getMax()==DBL_MAX);
+      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==3);
+      assert(!addr.param(p_priority).matches(10.3335f));
+      assert(!addr.param(p_priority).matches(10.3332f));
+      assert(!addr.param(p_priority).matches(20));
+      assert(addr.param(p_priority).matches(-10.3335f));
+      assert(addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 6");
+      Data header("<sip:bob@foo>;priority=\"!#<=10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-DBL_MAX);
+      assert(addr.param(p_priority).getMax()==10.3332f);
+      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==3);
+      assert(addr.param(p_priority).getMaxPrecision()==4);
+      assert(addr.param(p_priority).matches(10.3335f));
+      assert(!addr.param(p_priority).matches(10.3332f));
+      assert(addr.param(p_priority).matches(20));
+      assert(!addr.param(p_priority).matches(-10.3335f));
+      assert(!addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 7");
+      Data header("<sip:bob@foo>;priority=\"!#=10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==10.3332f);
+      assert(addr.param(p_priority).getMax()==10.3332f);
+      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==4);
+      assert(addr.param(p_priority).matches(10.3335f));
+      assert(!addr.param(p_priority).matches(10.3332f));
+      assert(addr.param(p_priority).matches(20));
+      assert(addr.param(p_priority).matches(-10.3335f));
+      assert(addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 8");
+      Data header("<sip:bob@foo>;priority=\"!#10.3332:12.332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==10.3332f);
+      assert(addr.param(p_priority).getMax()==12.332f);
+      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==3);
+      assert(!addr.param(p_priority).matches(10.3335f));
+      assert(!addr.param(p_priority).matches(10.3332f));
+      assert(!addr.param(p_priority).matches(12.332f));
+      assert(addr.param(p_priority).matches(20));
+      assert(addr.param(p_priority).matches(-10.3335f));
+      assert(addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 9");
+      Data header("<sip:bob@foo>;priority=\"#>=-10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-10.3332f);
+      assert(addr.param(p_priority).getMax()==DBL_MAX);
+      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==3);
+      assert(addr.param(p_priority).matches(10.3335f));
+      assert(addr.param(p_priority).matches(10.3332f));
+      assert(addr.param(p_priority).matches(20));
+      assert(!addr.param(p_priority).matches(-10.3335f));
+      assert(addr.param(p_priority).matches(-10.3332f));
+      assert(addr.param(p_priority).matches(0));
+      Data reEncoded(Data::from(addr));
+      assert(reEncoded==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 10");
+      Data header("<sip:bob@foo>;priority=\"#<=-10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-DBL_MAX);
+      assert(addr.param(p_priority).getMax()==-10.3332f);
+      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==3);
+      assert(addr.param(p_priority).getMaxPrecision()==4);
+      assert(!addr.param(p_priority).matches(10.3335f));
+      assert(!addr.param(p_priority).matches(10.3332f));
+      assert(!addr.param(p_priority).matches(20));
+      assert(addr.param(p_priority).matches(-10.3335f));
+      assert(!addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 11");
+      Data header("<sip:bob@foo>;priority=\"#=-10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-10.3332f);
+      assert(addr.param(p_priority).getMax()==-10.3332f);
+      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==4);
+      assert(!addr.param(p_priority).matches(10.3335f));
+      assert(!addr.param(p_priority).matches(10.3332f));
+      assert(!addr.param(p_priority).matches(20));
+      assert(!addr.param(p_priority).matches(-10.3335f));
+      assert(addr.param(p_priority).matches(-10.3332f));
+      assert(!addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 12");
+      Data header("<sip:bob@foo>;priority=\"#-10.3332:12.332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-10.3332f);
+      assert(addr.param(p_priority).getMax()==12.332f);
+      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==3);
+      assert(addr.param(p_priority).matches(10.3335f));
+      assert(addr.param(p_priority).matches(10.3332f));
+      assert(addr.param(p_priority).matches(12.332f));
+      assert(!addr.param(p_priority).matches(20));
+      assert(!addr.param(p_priority).matches(-10.3335f));
+      assert(addr.param(p_priority).matches(-10.3332f));
+      assert(addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 13");
+      Data header("<sip:bob@foo>;priority=\"!#>=-10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-10.3332f);
+      assert(addr.param(p_priority).getMax()==DBL_MAX);
+      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==3);
+      assert(!addr.param(p_priority).matches(10.3335f));
+      assert(!addr.param(p_priority).matches(10.3332f));
+      assert(!addr.param(p_priority).matches(20));
+      assert(addr.param(p_priority).matches(-10.3335f));
+      assert(!addr.param(p_priority).matches(-10.3332f));
+      assert(!addr.param(p_priority).matches(0));
+      Data reEncoded(Data::from(addr));
+      assert(reEncoded==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 14");
+      Data header("<sip:bob@foo>;priority=\"!#<=-10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-DBL_MAX);
+      assert(addr.param(p_priority).getMax()==-10.3332f);
+      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==3);
+      assert(addr.param(p_priority).getMaxPrecision()==4);
+      assert(addr.param(p_priority).matches(10.3335f));
+      assert(addr.param(p_priority).matches(10.3332f));
+      assert(addr.param(p_priority).matches(20));
+      assert(!addr.param(p_priority).matches(-10.3335f));
+      assert(addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 15");
+      Data header("<sip:bob@foo>;priority=\"!#=-10.3332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-10.3332f);
+      assert(addr.param(p_priority).getMax()==-10.3332f);
+      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==4);
+      assert(addr.param(p_priority).matches(10.3335f));
+      assert(addr.param(p_priority).matches(10.3332f));
+      assert(addr.param(p_priority).matches(20));
+      assert(addr.param(p_priority).matches(-10.3335f));
+      assert(!addr.param(p_priority).matches(-10.3332f));
+      assert(addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 16");
+      Data header("<sip:bob@foo>;priority=\"!#-10.3332:12.332\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+      assert(addr.param(p_priority).getMin()==-10.3332f);
+      assert(addr.param(p_priority).getMax()==12.332f);
+      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getMinPrecision()==4);
+      assert(addr.param(p_priority).getMaxPrecision()==3);
+      assert(!addr.param(p_priority).matches(10.3335f));
+      assert(!addr.param(p_priority).matches(10.3332f));
+      assert(!addr.param(p_priority).matches(12.332f));
+      assert(addr.param(p_priority).matches(20));
+      assert(addr.param(p_priority).matches(-10.3335f));
+      assert(!addr.param(p_priority).matches(-10.3332f));
+      assert(!addr.param(p_priority).matches(0));
+      assert(Data::from(addr)==header);
    }
 
    cerr << "\nTEST OK" << endl;
