@@ -15,7 +15,7 @@
 namespace resip
 {
 NumericPredicate::NumericPredicate() :
-   mMin(DBL_MIN),
+   mMin(-DBL_MAX),
    mMax(DBL_MAX),
    mNegated(false),
    mMinPrecision(3),
@@ -52,7 +52,7 @@ NumericFeatureParameter::NumericFeatureParameter(ParameterTypes::Type type,
    {
       case '-':
       case '+':
-      case '0':
+      case '0':// .bwc. Leading 0s aren't really allowed, but who cares.
       case '1':
       case '2':
       case '3':
@@ -70,8 +70,8 @@ NumericFeatureParameter::NumericFeatureParameter(ParameterTypes::Type type,
          // .bwc. Different from countDecimals since we might grab the decimal
          // from the _lower_ bound.
          const char* end=pb.position();
-         pb.skipBackToOneOf(".:");
-         if(pb.bof() || *pb.position()==':')
+         const char* found=pb.skipBackToOneOf(".:");
+         if(pb.bof() || *found==':')
          {
             mValue.setMaxPrecision(0);
          }
@@ -134,9 +134,16 @@ NumericFeatureParameter::clone() const
 std::ostream& 
 NumericFeatureParameter::encode(std::ostream& stream) const 
 {
-   stream << getName() << "=\"#";
+   stream << getName() << "=\"";
+   if(mValue.getNegated())
+   {
+      stream << "!";
+   }
+   stream << "#";
+
    std::ios_base::fmtflags oldFlags(stream.flags());
-   if(mValue.getMin()==DBL_MIN)
+   stream << std::fixed;
+   if(mValue.getMin()==-DBL_MAX)
    {
       if(mValue.getMax()==DBL_MAX)
       {
@@ -183,7 +190,15 @@ UInt8
 NumericFeatureParameter::countDecimals(ParseBuffer& pb) const
 {
    const char* const end=pb.position();
+   // 10.19
+   //      e
+   //      ^
+
    pb.skipBackToChar('.');
+
+   // 10.19
+   //      e
+   //    ^
    if(!pb.bof())
    {
       const char* const begin=pb.position();
