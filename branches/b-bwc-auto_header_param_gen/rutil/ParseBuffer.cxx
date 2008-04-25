@@ -750,7 +750,7 @@ ParseBuffer::integer()
    {
       last=num;
       num = num*10 + (*mPosition-'0');
-      if(signum*last > signum*num)
+      if(last > num)
       {
          fail(__FILE__, __LINE__,"Overflow detected.");
       }
@@ -883,14 +883,22 @@ ParseBuffer::floatVal()
       {
          skipChar();
          const char* pos = mPosition;
-         mant = float(integer());
+         mant = float(uInt32());
          int s = mPosition - pos;
          while (s--)
          {
             mant /= 10.0;
          }
       }
-      return num + mant;
+
+      if(num >= 0)
+      {
+         return num + mant;
+      }
+      else
+      {
+         return num - mant;
+      }
    }
    catch (ParseException&)
    {
