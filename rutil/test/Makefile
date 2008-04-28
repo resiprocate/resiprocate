@@ -21,6 +21,7 @@ TESTPROGRAMS += \
 	testFileSystem.cxx \
 	testInserter.cxx \
 	testIntrusiveList.cxx \
+	testLameFloat.cxx \
 	testLogger.cxx \
 	testMD5Stream.cxx \
 	testParseBuffer.cxx \
