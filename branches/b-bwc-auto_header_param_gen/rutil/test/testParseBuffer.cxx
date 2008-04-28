@@ -1,6 +1,7 @@
 #include "rutil/ParseBuffer.hxx"
 #include <string.h>
 #include <assert.h>
+#include "rutil/LameFloat.hxx"
 #include "rutil/Logger.hxx"
 
 using namespace resip;
@@ -402,50 +403,50 @@ main(int argc, char** argv)
    {
       char buf[] = "17.71";
       ParseBuffer pb(buf, strlen(buf));   
-      std::pair<long, short> val = pb.fixedPointVal();
-      assert(val.first == 1771 && val.second == -2);
+      LameFloat val = pb.lameFloat();
+      assert(val.getBase() == 1771 && val.getNegExp() == 2);
    }
 
    {
       char buf[] ="17.2346";
       ParseBuffer pb(buf, strlen(buf));
-      std::pair<long, short> val = pb.fixedPointVal();
-      assert(val.first == 172346 && val.second == -4);
+      LameFloat val = pb.lameFloat();
+      assert(val.getBase() == 172346 && val.getNegExp() == 4);
    }
 
    {
       char buf[] ="-17.2346";
       ParseBuffer pb(buf, strlen(buf));
-      std::pair<long, short> val = pb.fixedPointVal();
-      assert(val.first == -172346 && val.second == -4);
+      LameFloat val = pb.lameFloat();
+      assert(val.getBase() == -172346 && val.getNegExp() == 4);
    }
 
    {
       char buf[] ="0.2346";
       ParseBuffer pb(buf, strlen(buf));
-      std::pair<long, short> val = pb.fixedPointVal();
-      assert(val.first == 2346 && val.second == -4);
+      LameFloat val = pb.lameFloat();
+      assert(val.getBase() == 2346 && val.getNegExp() == 4);
    }
 
    {
       char buf[] ="-0.2346";
       ParseBuffer pb(buf, strlen(buf));
-      std::pair<long, short> val = pb.fixedPointVal();
-      assert(val.first == -2346 && val.second == -4);
+      LameFloat val = pb.lameFloat();
+      assert(val.getBase() == -2346 && val.getNegExp() == 4);
    }
 
    {
       char buf[] = "17";
       ParseBuffer pb(buf, strlen(buf));   
-      std::pair<long, short> val = pb.fixedPointVal();
-      assert(val.first == 17 && val.second == 0);
+      LameFloat val = pb.lameFloat();
+      assert(val.getBase() == 17 && val.getNegExp() == 0);
    }
    
    {
       char buf[] = "-17";
       ParseBuffer pb(buf, strlen(buf));   
-      std::pair<long, short> val = pb.fixedPointVal();
-      assert(val.first == -17 && val.second == 0);
+      LameFloat val = pb.lameFloat();
+      assert(val.getBase() == -17 && val.getNegExp() == 0);
    }
 
 #ifndef WIN32
