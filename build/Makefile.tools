@@ -96,13 +96,16 @@ endif
 ifndef CROSS_PLATFORM
 CROSS_PLATFORM = arm-linux
 endif
+ifndef CROSS_TOOL_PREFIX
+CROSS_TOOL_PREFIX = arm-linux
+endif
 
-CC		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-gcc
-CXX		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-g++
+CC		:= $(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-gcc
+CXX		:= $(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-g++
 MKSHLIB		:= $(CC) -fPIC -shared 
 DEP		:= $(CXX) 
 LINKER		:= $(CXX) 
-AR		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ar
+AR		:= $(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-ar
 ARFLAGS		= rv
 DFLAGS		= -MM
 DMANGLE		=
@@ -115,9 +118,15 @@ COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
 LD_STATIC       = -Wl,-Bstatic
 LD_DYNAMIC      = -Wl,-Bdynamic
 ARCH		= arm
-CONFIGURE_ARGS	+= --host=$(CROSS_PLATFORM)
 DFLAG_INTEGRATED = -MMD
-RANLIB		= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ranlib
+RANLIB		= $(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-ranlib
+
+# Pass the relevant parameters down to autotools configure scripts
+CONFIGURE_ARGS	+= --host=$(CROSS_PLATFORM)
+CONFIGURE_ARGS	+= CC=$(CC)
+CONFIGURE_ARGS	+= CXX=$(CXX)
+CONFIGURE_ARGS	+= AR=$(AR)
+CONFIGURE_ARGS	+= RANLIB=$(RANLIB)
 
 Z = $(shell $(CC) -v 2>&1 | perl -ne 'if(/version ([0-9\.]+)/ && ($$1 eq "2.96" || int($$1) > 2) ) {print "1\n";}')
 ifneq ($(Z),1)
@@ -134,13 +143,16 @@ endif
 ifndef CROSS_PLATFORM
 CROSS_PLATFORM = arm-unknown-linux-gnu
 endif
+ifndef CROSS_TOOL_PREFIX
+CROSS_TOOL_PREFIX = arm-unknown-linux-gnu
+endif
 
-CC		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-gcc
-CXX		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-g++
+CC		:= $(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-gcc
+CXX		:= $(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-g++
 MKSHLIB		:= $(CC) -fPIC -shared 
 DEP		:= $(CXX) 
 LINKER		:= $(CXX) 
-AR		:= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ar
+AR		:= $(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-ar
 ARFLAGS		= rv
 DFLAGS		= -MM
 DMANGLE		=
@@ -152,9 +164,17 @@ DEBUG_FLAG	= -g
 COMPILE_SMALL_FLAG = -Os -fno-inline -fno-keep-static-consts
 LD_STATIC       = -Wl,-Bstatic
 LD_DYNAMIC      = -Wl,-Bdynamic
-CONFIGURE_ARGS	+= --host=$(CROSS_PLATFORM)
 DFLAG_INTEGRATED = -MMD
-RANLIB		= $(VOCAL_CROSS_ROOT)/$(CROSS_PLATFORM)-ranlib
+RANLIB		= $(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-ranlib
+
+# Pass the relevant parameters down to autotools configure scripts
+CONFIGURE_ARGS	+= --host=$(CROSS_PLATFORM)
+CONFIGURE_ARGS	+= CC=$(CC)
+CONFIGURE_ARGS	+= CXX=$(CXX)
+CONFIGURE_ARGS	+= AR=$(AR)
+CONFIGURE_ARGS	+= RANLIB=$(RANLIB)
+
+export CROSS_COMPILE=$(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-
 
 Z = $(shell $(CC) -v 2>&1 | perl -ne 'if(/version ([0-9\.]+)/ && ($$1 eq "2.96" || int($$1) > 2) ) {print "1\n";}')
 ifneq ($(Z),1)
