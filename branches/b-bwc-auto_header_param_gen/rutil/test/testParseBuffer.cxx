@@ -400,16 +400,54 @@ main(int argc, char** argv)
    }
 
    {
+      char buf[] = "17.71";
+      ParseBuffer pb(buf, strlen(buf));   
+      std::pair<long, short> val = pb.fixedPointVal();
+      assert(val.first == 1771 && val.second == -2);
+   }
+
+   {
       char buf[] ="17.2346";
       ParseBuffer pb(buf, strlen(buf));
-      assert(pb.floatVal()==17.2346f);
+      std::pair<long, short> val = pb.fixedPointVal();
+      assert(val.first == 172346 && val.second == -4);
    }
 
    {
       char buf[] ="-17.2346";
       ParseBuffer pb(buf, strlen(buf));
-      assert(pb.floatVal()==-17.2346f);
+      std::pair<long, short> val = pb.fixedPointVal();
+      assert(val.first == -172346 && val.second == -4);
    }
+
+   {
+      char buf[] ="0.2346";
+      ParseBuffer pb(buf, strlen(buf));
+      std::pair<long, short> val = pb.fixedPointVal();
+      assert(val.first == 2346 && val.second == -4);
+   }
+
+   {
+      char buf[] ="-0.2346";
+      ParseBuffer pb(buf, strlen(buf));
+      std::pair<long, short> val = pb.fixedPointVal();
+      assert(val.first == -2346 && val.second == -4);
+   }
+
+   {
+      char buf[] = "17";
+      ParseBuffer pb(buf, strlen(buf));   
+      std::pair<long, short> val = pb.fixedPointVal();
+      assert(val.first == 17 && val.second == 0);
+   }
+   
+   {
+      char buf[] = "-17";
+      ParseBuffer pb(buf, strlen(buf));   
+      std::pair<long, short> val = pb.fixedPointVal();
+      assert(val.first == -17 && val.second == 0);
+   }
+
 #ifndef WIN32
    {
       char buf[] = "2890844526";
@@ -423,8 +461,35 @@ main(int argc, char** argv)
       char buf[] = "17.71";
       ParseBuffer pb(buf, strlen(buf));   
       float val = pb.floatVal();
-      assert(val > 17.70 && val < 17.72);
+      assert(val > 17.70999 && val < 17.710001);
    }
+
+   {
+      char buf[] ="17.2346";
+      ParseBuffer pb(buf, strlen(buf));
+      assert(pb.floatVal()==17.2346f);
+   }
+
+   {
+      char buf[] ="-17.2346";
+      ParseBuffer pb(buf, strlen(buf));
+      assert(pb.floatVal()==-17.2346f);
+   }
+
+   {
+      char buf[] ="0.2346";
+      ParseBuffer pb(buf, strlen(buf));
+      float val = pb.floatVal();
+      assert(val > 0.2345999f && val < 0.2346001f);
+   }
+
+   {
+      char buf[] ="-0.2346";
+      ParseBuffer pb(buf, strlen(buf));
+      float val = pb.floatVal();
+      assert(val < -0.2345999f && val > -0.2346001f);
+   }
+
 #endif
 
    {

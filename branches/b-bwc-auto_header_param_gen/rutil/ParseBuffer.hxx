@@ -123,6 +123,8 @@ class ParseBuffer
 #ifndef RESIP_FIXED_POINT		
       float floatVal();
 #endif
+      std::pair<long, short> fixedPointVal();
+
       int qVal();
       static const char* Whitespace;
       static const char* ParamTerm;
