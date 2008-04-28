@@ -873,11 +873,22 @@ ParseBuffer::uInt64()
 float
 ParseBuffer::floatVal()
 {
-   const char* s = mPosition;
+   const char* c = mPosition;
    try
    {
+      int signum = 1;
+      if (*c == '-')
+      {
+         signum = -1;
+         skipChar();
+      }
+      else if (*c == '+')
+      {
+         skipChar();
+      }
+
       float mant = 0.0;
-      int num = integer();
+      int num = uInt32();
 
       if (*mPosition == '.')
       {
@@ -891,24 +902,64 @@ ParseBuffer::floatVal()
          }
       }
 
-      if(num >= 0)
-      {
-         return num + mant;
-      }
-      else
-      {
-         return num - mant;
-      }
+      return (signum)*((float)num + mant);
    }
    catch (ParseException&)
    {
       Data msg("Expected a floating point value, got: ");
-      msg += Data(s, mPosition - s);
+      msg += Data(c, mPosition - c);
       fail(__FILE__, __LINE__,msg);
       return 0.0;
    }
 }
 #endif
+
+std::pair<long, short> 
+ParseBuffer::fixedPointVal()
+{
+   const char* c = mPosition;
+   try
+   {
+      int signum = 1;
+      if (*c == '-')
+      {
+         signum = -1;
+         skipChar();
+      }
+      else if (*c == '+')
+      {
+         skipChar();
+      }
+
+      short exp = 0;
+      long num = uInt32();
+      int afterExp = 0;
+
+      if (*mPosition == '.')
+      {
+         skipChar();
+         const char* pos = mPosition;
+         afterExp = uInt32();
+         int s = mPosition - pos;
+
+         while (s--)
+         {
+            num *= 10.0;
+            --exp;
+         }
+      }
+
+      return std::make_pair<long, short>(signum*(num + afterExp), exp);
+   }
+   catch (ParseException&)
+   {
+      Data msg("Expected a floating point value, got: ");
+      msg += Data(c, mPosition - c);
+      fail(__FILE__, __LINE__,msg);
+      return std::make_pair<long, short>(0,0);
+   }
+}
+
 
 int
 ParseBuffer::qVal()
