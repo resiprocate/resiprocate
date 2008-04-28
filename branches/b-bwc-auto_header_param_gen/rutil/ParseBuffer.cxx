@@ -1,5 +1,6 @@
 #include <cassert>
 
+#include "rutil/LameFloat.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/ParseException.hxx"
@@ -914,8 +915,8 @@ ParseBuffer::floatVal()
 }
 #endif
 
-std::pair<long, short> 
-ParseBuffer::fixedPointVal()
+LameFloat 
+ParseBuffer::lameFloat()
 {
    const char* c = mPosition;
    try
@@ -931,32 +932,58 @@ ParseBuffer::fixedPointVal()
          skipChar();
       }
 
-      short exp = 0;
-      long num = uInt32();
-      int afterExp = 0;
+      UInt8 exp = 0;
+      long long num = uInt32();
 
       if (*mPosition == '.')
       {
          skipChar();
-         const char* pos = mPosition;
-         afterExp = uInt32();
-         int s = mPosition - pos;
-
-         while (s--)
+         long long last = num;
+         while (!eof() && isdigit(*mPosition))
          {
-            num *= 10.0;
-            --exp;
+            last = num;
+            num = num*10 + (*mPosition-'0');
+            ++exp;
+
+            if(last>num)
+            {
+               // Overflow while parsing way out past the decimal point; just
+               // round and bail.
+               num=last;
+               --exp;
+
+               if(*mPosition-'0' >= 5)
+               {
+                  ++num;
+               }
+
+               if(last > num)
+               {
+                  // Rounding kicked us over the edge.
+                  num = last;
+                  int lastd = num%10;
+                  num /= 10;
+                  --exp;
+                  if(lastd >= 5)
+                  {
+                     ++num;
+                  }
+               }
+
+               return LameFloat(signum*num, exp);
+            }
+            skipChar();
          }
       }
 
-      return std::make_pair<long, short>(signum*(num + afterExp), exp);
+      return LameFloat(signum*num, exp);
    }
    catch (ParseException&)
    {
       Data msg("Expected a floating point value, got: ");
       msg += Data(c, mPosition - c);
       fail(__FILE__, __LINE__,msg);
-      return std::make_pair<long, short>(0,0);
+      return LameFloat(0,0);
    }
 }
 

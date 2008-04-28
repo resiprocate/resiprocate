@@ -6,6 +6,7 @@
 
 namespace resip
 {
+class LameFloat;
 
 /**
    @brief Provides string-parsing functionality with protection from buffer
@@ -123,7 +124,7 @@ class ParseBuffer
 #ifndef RESIP_FIXED_POINT		
       float floatVal();
 #endif
-      std::pair<long, short> fixedPointVal();
+      LameFloat lameFloat();
 
       int qVal();
       static const char* Whitespace;

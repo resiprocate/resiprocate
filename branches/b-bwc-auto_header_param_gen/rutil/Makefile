@@ -22,6 +22,7 @@ SRC = \
 	FileSystem.cxx \
 	HeapInstanceCounter.cxx \
 	Lock.cxx \
+	LameFloat.cxx \
 	Log.cxx \
 	Logger.cxx \
 	MD5Stream.cxx \
