@@ -86,6 +86,9 @@ endif
 ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu-cross)
 ARCH            := $(shell echo '$(CROSS_PLATFORM)' | sed 's/-.*//')
 OSTYPE          := $(shell echo '$(CROSS_PLATFORM)' | cut -f3- -d-)
+ifndef OSTYPE
+OSTYPE          := $(shell echo '$(CROSS_PLATFORM)' | cut -f2- -d-)
+endif
 endif
 
 # Detect and normalize the OSTYPE

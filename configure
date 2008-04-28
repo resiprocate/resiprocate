@@ -25,6 +25,7 @@ then
 VOCAL_COMPILE_TYPE := debug
 VOCAL_CROSS_ROOT := /skiff/local/bin
 CROSS_PLATFORM := arm-linux
+CROSS_TOOL_PREFIX := arm-linux
 BUILD_SHARED_LIBS := no
 USE_DISTCC := no
 USE_CCACHE := no
@@ -85,6 +86,8 @@ $uname = `uname`;
 #
 #   default     - Value to use by default
 #
+#   evaldefault - Flag: if set, default is evaluated as perl statement
+#
 #   validate    - Optional array of allowed values
 #
 #   predicate   - Optional logical test; if false, the user
@@ -124,6 +127,14 @@ $uname = `uname`;
     default     => "arm-linux",
     predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
     option      => 'with-cross-platform',
+  },
+  {
+    name        => "CROSS_TOOL_PREFIX",
+    description => "What is the prefix for the cross-compiler binaries?",
+    default     => "\$config{CROSS_PLATFORM}",
+    evaldefault => 1,
+    predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
+    option      => 'with-cross-tool-prefix',
   },
   {
     name        => "BUILD_SHARED_LIBS",
@@ -281,7 +292,14 @@ foreach $parameter (@parameters)
 {
   if (!exists($config{$parameter->{name}}))
   {
-    $config{$parameter->{name}} = $parameter->{default};
+    if ($parameter->{evaldefault})
+    {
+      $config{$parameter->{name}} = eval($parameter->{default});
+    }
+    else
+    {
+      $config{$parameter->{name}} = $parameter->{default};
+    }
   }
 
   if (exists($parameter->{predicate}) && !eval($parameter->{predicate}))
