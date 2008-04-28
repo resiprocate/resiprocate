@@ -4,6 +4,10 @@
 
 namespace resip
 {
+
+const LameFloat LameFloat::lf_min(1,255);
+const LameFloat LameFloat::lf_max(LLONG_MAX,0);
+
 LameFloat::LameFloat(const Data& num) :
    mBase(0),
    mNegExp(0)
@@ -39,37 +43,49 @@ LameFloat::operator<(const LameFloat& rhs) const
    if(mNegExp >= rhs.mNegExp)
    {
       UInt8 diff=mNegExp-rhs.mNegExp;
-      int div=1;
+      long long shiftedBase=mBase;
+      UInt64 modulus=0;
       for(;diff>0;--diff)
       {
-         div*=10;
+         modulus = modulus*10 + shiftedBase%10;
+         shiftedBase/=10;
+         if(shiftedBase==0)
+         {
+            break;
+         }
       }
 
-      if(mBase/div == rhs.mBase && mBase%div !=0)
+      if(shiftedBase == rhs.mBase && modulus !=0)
       {
          return mBase < 0;
       }
       else
       {
-         return mBase/div < rhs.mBase;
+         return shiftedBase < rhs.mBase;
       }
    }
    else
    {
       UInt8 diff=rhs.mNegExp-mNegExp;
-      int div=1;
+      long long shiftedBase=rhs.mBase;
+      UInt64 modulus=0;
       for(;diff>0;--diff)
       {
-         div*=10;
+         modulus = modulus*10 + shiftedBase%10;
+         shiftedBase/=10;
+         if(shiftedBase==0)
+         {
+            break;
+         }
       }
 
-      if(mBase == rhs.mBase/div && rhs.mBase%div !=0)
+      if(mBase == shiftedBase && modulus !=0)
       {
          return rhs.mBase > 0;
       }
       else
       {
-         return mBase < rhs.mBase/div;
+         return mBase < shiftedBase;
       }
    }
 }
@@ -80,37 +96,49 @@ LameFloat::operator>(const LameFloat& rhs) const
    if(mNegExp >= rhs.mNegExp)
    {
       UInt8 diff=mNegExp-rhs.mNegExp; //1
-      int div=1; // 10
+      long long shiftedBase=mBase;
+      UInt64 modulus=0;
       for(;diff>0;--diff)
       {
-         div*=10;
+         modulus = modulus*10 + shiftedBase%10;
+         shiftedBase/=10;
+         if(shiftedBase==0)
+         {
+            break;
+         }
       }
 
-      if(mBase/div == rhs.mBase && mBase%div !=0)
+      if(shiftedBase == rhs.mBase && modulus !=0)
       {
          return mBase > 0;
       }
       else
       {
-         return mBase/div > rhs.mBase;
+         return shiftedBase > rhs.mBase;
       }
    }
    else
    {
       UInt8 diff=rhs.mNegExp-mNegExp;
-      int div=1;
+      long long shiftedBase=rhs.mBase;
+      UInt64 modulus=0;
       for(;diff>0;--diff)
       {
-         div*=10;
+         modulus = modulus*10 + shiftedBase%10;
+         shiftedBase/=10;
+         if(shiftedBase==0)
+         {
+            break;
+         }
       }
 
-      if(mBase == rhs.mBase/div && rhs.mBase%div !=0)
+      if(mBase == shiftedBase && modulus !=0)
       {
          return rhs.mBase < 0;
       }
       else
       {
-         return mBase > rhs.mBase/div;
+         return mBase > shiftedBase;
       }
    }
 }
@@ -125,25 +153,82 @@ LameFloat::operator==(const LameFloat& rhs) const
    else if(mNegExp > rhs.mNegExp)
    {
       UInt8 diff=mNegExp-rhs.mNegExp;
-      int div=1;
+      long long shiftedBase=mBase;
+      UInt64 modulus=0;
       for(;diff>0;--diff)
       {
-         div*=10;
+         modulus = modulus*10 + shiftedBase%10;
+         shiftedBase/=10;
+         if(shiftedBase==0)
+         {
+            break;
+         }
       }
 
-      return mBase/div == rhs.mBase && mBase%div == 0;
+      return shiftedBase == rhs.mBase && modulus == 0;
    }
    else
    {
       UInt8 diff=rhs.mNegExp-mNegExp;
-      int div=1;
+      long long shiftedBase=rhs.mBase;
+      UInt64 modulus=0;
       for(;diff>0;--diff)
       {
-         div*=10;
+         modulus = modulus*10 + shiftedBase%10;
+         shiftedBase/=10;
+         if(shiftedBase==0)
+         {
+            break;
+         }
       }
 
-      return mBase == rhs.mBase/div && rhs.mBase%div == 0;
+      return mBase == shiftedBase && modulus == 0;
    }
+}
+
+LameFloat 
+LameFloat::operator-() const
+{
+   return LameFloat(-mBase, mNegExp);
+}
+
+std::ostream& 
+LameFloat::encode(std::ostream& str) const
+{
+   Data temp(Data::from(mBase < 0 ? -mBase : mBase));
+   if(mBase < 0)
+   {
+      str << '-';
+   }
+
+   if(temp.size()<=mNegExp)
+   {
+      str << "0.";
+      short decPlacement = temp.size() - mNegExp;
+      while(decPlacement<0)
+      {
+         str << '0';
+         ++decPlacement;
+      }
+      str << temp;
+   }
+   else
+   {
+      str.write(temp.data(), temp.size()-mNegExp);
+      if(mNegExp)
+      {
+         str << '.';
+         str.write(temp.data()+(temp.size()-mNegExp), mNegExp);
+      }
+   }
+
+   return str;
+}
+
+
+std::ostream& operator<<(std::ostream& str, const LameFloat& val)
+{
+   return val.encode(str);
 }
 
 } // of namespace resip

@@ -25,17 +25,23 @@ class LameFloat
       bool operator<(const LameFloat& rhs) const;
       bool operator>(const LameFloat& rhs) const;
       bool operator==(const LameFloat& rhs) const;
+      LameFloat operator-() const;
 
       inline long long getBase() const { return mBase;} 
       inline void setBase(long long pBase) { mBase = pBase;}
       inline UInt8 getNegExp() const { return mNegExp;} 
       inline void setNegExp(UInt8 pNegExp) { mNegExp = pNegExp;}
 
+      std::ostream& encode(std::ostream& str) const;
+      const static LameFloat lf_min;
+      const static LameFloat lf_max;
+
    private:
       long long mBase;
       UInt8 mNegExp;
 };
 
+std::ostream& operator<<(std::ostream& str, const LameFloat& val);
 }
 
 #endif

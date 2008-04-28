@@ -17,6 +17,7 @@ for i in \
 	testFileSystem \
 	testInserter \
 	testIntrusiveList \
+	testLameFloat \
 	testLogger \
 	testMD5Stream \
 	testRandomHex \
