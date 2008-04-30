@@ -2,6 +2,8 @@
 
 #include "rutil/ParseBuffer.hxx"
 
+#include <math.h>
+
 namespace resip
 {
 
@@ -185,6 +187,15 @@ LameFloat::operator==(const LameFloat& rhs) const
       return mBase == shiftedBase && modulus == 0;
    }
 }
+
+#ifndef RESIP_FIXED_POINT
+
+LameFloat::operator double() const
+{
+   return mBase*pow(10, -mNegExp);
+}
+
+#endif
 
 LameFloat 
 LameFloat::operator-() const
