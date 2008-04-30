@@ -17,7 +17,9 @@ QuotedListParameter::QuotedListParameter(ParameterTypes::Type type,
    Parameter(type)
 {
    pb.skipWhitespace();
-   if(*pb.position() != Symbols::DOUBLE_QUOTE[0])
+   pb.skipChar('=');
+   pb.skipWhitespace();
+   if(*pb.position() != '\"')
    {
       throw ParseException("Expected '\"', got " + *pb.position(), 
                            "QuotedListParameter", 
@@ -25,8 +27,7 @@ QuotedListParameter::QuotedListParameter(ParameterTypes::Type type,
                            __LINE__);
    }
 
-   // tag-value-list or string value
-   while(*pb.position() != Symbols::DOUBLE_QUOTE[0])
+   do
    {
       pb.skipChar(); // Skips over the '"' for the first value, and ',' after.
       const char* start = pb.position();
@@ -41,6 +42,7 @@ QuotedListParameter::QuotedListParameter(ParameterTypes::Type type,
       // ?bwc? Do unescaping here?
       mValues.push_back( pb.data(start) );
    }
+   while(*pb.position() != Symbols::DOUBLE_QUOTE[0]);
 
    pb.skipChar(Symbols::DOUBLE_QUOTE[0]);
    // ?bwc? Should we fail if the next char is not a ';' or eof?
