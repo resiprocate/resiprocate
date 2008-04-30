@@ -27,6 +27,10 @@ class LameFloat
       bool operator==(const LameFloat& rhs) const;
       LameFloat operator-() const;
 
+#ifndef RESIP_FIXED_POINT
+      operator double() const;
+#endif
+
       inline long long getBase() const { return mBase;} 
       inline void setBase(long long pBase) { mBase = pBase;}
       inline UInt8 getNegExp() const { return mNegExp;} 
