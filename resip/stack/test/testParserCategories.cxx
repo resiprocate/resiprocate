@@ -2050,9 +2050,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat::lf_max);
-      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat::lf_max);
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
 
       assert(addr.param(p_priority).matches(LameFloat("10.3335")));
       assert(addr.param(p_priority).matches(LameFloat("10.3332")));
@@ -2072,9 +2072,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-LameFloat::lf_max);
-      assert(addr.param(p_priority).getMax()==LameFloat("10.3332"));
-      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==-LameFloat::lf_max);
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("10.3332"));
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
 
       assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
       assert(addr.param(p_priority).matches(LameFloat("10.3331999")));
@@ -2093,9 +2093,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat("10.3332"));
-      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("10.3332"));
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2115,9 +2115,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat("12.332"));
-      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("12.332"));
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2138,9 +2138,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat::lf_max);
-      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat::lf_max);
+      assert(addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2161,9 +2161,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-LameFloat::lf_max);
-      assert(addr.param(p_priority).getMax()==LameFloat("10.3332"));
-      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==-LameFloat::lf_max);
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2183,9 +2183,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat("10.3332"));
-      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2205,9 +2205,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat("12.332"));
-      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("12.332"));
+      assert(addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2228,9 +2228,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat::lf_max);
-      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat::lf_max);
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2252,9 +2252,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-LameFloat::lf_max);
-      assert(addr.param(p_priority).getMax()==LameFloat("-10.3332"));
-      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==-LameFloat::lf_max);
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("-10.3332"));
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2274,9 +2274,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat("-10.3332"));
-      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("-10.3332"));
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2297,9 +2297,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat("12.332"));
-      assert(!addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("12.332"));
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2321,9 +2321,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat::lf_max);
-      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat::lf_max);
+      assert(addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2345,9 +2345,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-LameFloat::lf_max);
-      assert(addr.param(p_priority).getMax()==LameFloat("-10.3332"));
-      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==-LameFloat::lf_max);
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2367,9 +2367,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat("-10.3332"));
-      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2390,9 +2390,9 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
-      assert(addr.param(p_priority).getMax()==LameFloat("12.332"));
-      assert(addr.param(p_priority).getNegated());
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("12.332"));
+      assert(addr.param(p_priority).getPredicates().front().getNegated());
 
 
       assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
@@ -2404,6 +2404,213 @@ main(int arc, char** argv)
       assert(addr.param(p_priority).matches(20));
       assert(!addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 17");
+      Data header("<sip:bob@foo>;priority=\"#1.57079632679489:4.71238898038469,#-4.71238898038469:-1.57079632679489\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+
+      assert(addr.param(p_priority).getPredicates().front().getMin()==LameFloat("1.57079632679489"));
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("4.71238898038469"));
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
+
+      assert(addr.param(p_priority).getPredicates().back().getMin()==LameFloat("-4.71238898038469"));
+      assert(addr.param(p_priority).getPredicates().back().getMax()==LameFloat("-1.57079632679489"));
+      assert(!addr.param(p_priority).getPredicates().back().getNegated());
+
+
+      assert(!addr.param(p_priority).matches(LameFloat("-6.28318530717959")));
+      assert(!addr.param(p_priority).matches(LameFloat("-5.49778714378214")));
+      assert(addr.param(p_priority).matches(LameFloat("-4.71238898038469")));
+      assert(addr.param(p_priority).matches(LameFloat("-3.92699081698724")));
+      assert(addr.param(p_priority).matches(LameFloat("-3.14159265358979")));
+      assert(addr.param(p_priority).matches(LameFloat("-2.35619449019235")));
+      assert(addr.param(p_priority).matches(LameFloat("-1.57079632679489")));
+      assert(!addr.param(p_priority).matches(LameFloat("-0.78539816339745")));
+      assert(!addr.param(p_priority).matches(LameFloat("0")));
+      assert(!addr.param(p_priority).matches(LameFloat("0.78539816339745")));
+      assert(addr.param(p_priority).matches(LameFloat("1.57079632679489")));
+      assert(addr.param(p_priority).matches(LameFloat("2.35619449019235")));
+      assert(addr.param(p_priority).matches(LameFloat("3.14159265358979")));
+      assert(addr.param(p_priority).matches(LameFloat("3.92699081698724")));
+      assert(addr.param(p_priority).matches(LameFloat("4.71238898038469")));
+      assert(!addr.param(p_priority).matches(LameFloat("5.49778714378214")));
+      assert(!addr.param(p_priority).matches(LameFloat("6.28318530717959")));
+
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 18");
+      Data header("<sip:bob@foo>;priority=\"#<=-1.4142135623731,#0:1.4142135623731\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+
+      assert(addr.param(p_priority).getPredicates().front().getMin()==-LameFloat::lf_max);
+      assert(addr.param(p_priority).getPredicates().front().getMax()==LameFloat("-1.4142135623731"));
+      assert(!addr.param(p_priority).getPredicates().front().getNegated());
+
+      assert(addr.param(p_priority).getPredicates().back().getMin()==LameFloat("0"));
+      assert(addr.param(p_priority).getPredicates().back().getMax()==LameFloat("1.4142135623731"));
+      assert(!addr.param(p_priority).getPredicates().back().getNegated());
+
+
+      assert(addr.param(p_priority).matches(LameFloat("-2")));
+      assert(addr.param(p_priority).matches(LameFloat("-1.4142135623731")));
+      assert(!addr.param(p_priority).matches(LameFloat("-1")));
+      assert(addr.param(p_priority).matches(LameFloat("0")));
+      assert(addr.param(p_priority).matches(LameFloat("1")));
+      assert(addr.param(p_priority).matches(LameFloat("1.4142135623731")));
+      assert(!addr.param(p_priority).matches(LameFloat("2")));
+
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 19");
+      Data header("<sip:bob@foo>;priority=\"!#-1.57079632679489:1.57079632679489,#<=-1.4142135623731,#0:1.4142135623731\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_priority));
+
+
+      assert(addr.param(p_priority).matches(LameFloat("-6.28318530717959")));
+      assert(addr.param(p_priority).matches(LameFloat("-5.49778714378214")));
+      assert(addr.param(p_priority).matches(LameFloat("-4.71238898038469")));
+      assert(addr.param(p_priority).matches(LameFloat("-3.92699081698724")));
+      assert(addr.param(p_priority).matches(LameFloat("-3.14159265358979")));
+      assert(addr.param(p_priority).matches(LameFloat("-2.35619449019235")));
+      assert(addr.param(p_priority).matches(LameFloat("-2")));
+      assert(addr.param(p_priority).matches(LameFloat("-1.57079632679489")));
+      assert(addr.param(p_priority).matches(LameFloat("-1.57")));
+      assert(addr.param(p_priority).matches(LameFloat("-1.4142135623731")));
+      assert(!addr.param(p_priority).matches(LameFloat("-1")));
+      assert(!addr.param(p_priority).matches(LameFloat("-0.78539816339745")));
+      assert(addr.param(p_priority).matches(LameFloat("0")));
+      assert(addr.param(p_priority).matches(LameFloat("0.78539816339745")));
+      assert(addr.param(p_priority).matches(LameFloat("1")));
+      assert(addr.param(p_priority).matches(LameFloat("1.4142135623731")));
+      assert(!addr.param(p_priority).matches(LameFloat("1.57")));
+      assert(!addr.param(p_priority).matches(LameFloat("1.57079632679489")));
+      assert(addr.param(p_priority).matches(LameFloat("2")));
+      assert(addr.param(p_priority).matches(LameFloat("2.35619449019235")));
+      assert(addr.param(p_priority).matches(LameFloat("3.14159265358979")));
+      assert(addr.param(p_priority).matches(LameFloat("3.92699081698724")));
+      assert(addr.param(p_priority).matches(LameFloat("4.71238898038469")));
+      assert(addr.param(p_priority).matches(LameFloat("5.49778714378214")));
+      assert(addr.param(p_priority).matches(LameFloat("6.28318530717959")));
+
+      assert(Data::from(addr)==header);
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 20");
+      Data header("<sip:bob@foo>;priority=\"\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(!addr.isWellFormed());
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 21");
+      Data header("<sip:bob@foo>;priority=\",\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(!addr.isWellFormed());
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 22");
+      Data header("<sip:bob@foo>;priority=\"!#-1.57079632679489:1.57079632679489,\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(!addr.isWellFormed());
+   }
+
+   {
+      TR _tr("Test NumericFeatureParameter parse code 23");
+      Data header("<sip:bob@foo>;priority=\"!#-1.57079632679489:1.57079632679489,#<=-1.4142135623731,,#0:1.4142135623731\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(!addr.isWellFormed());
+   }
+
+   {
+      TR _tr("Test QuotedListParameter parse code 1");
+      Data header("<sip:bob@foo>;methods=\"INVITE,CANCEL,ACK,PRACK,BYE,OPTIONS,MESSAGE\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_methods));
+
+      std::vector<Data>& methods(addr.param(p_methods));
+      assert(methods.size()==7);
+      assert(methods.back()=="MESSAGE");
+      methods.pop_back();
+      assert(methods.back()=="OPTIONS");
+      methods.pop_back();
+      assert(methods.back()=="BYE");
+      methods.pop_back();
+      assert(methods.back()=="PRACK");
+      methods.pop_back();
+      assert(methods.back()=="ACK");
+      methods.pop_back();
+      assert(methods.back()=="CANCEL");
+      methods.pop_back();
+      assert(methods.back()=="INVITE");
+      methods.pop_back();
+      assert(methods.empty());
+   }
+
+   {
+      TR _tr("Test QuotedListParameter parse code 2");
+      Data header("<sip:bob@foo>;methods=\"\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(!addr.isWellFormed());
+   }
+
+   {
+      TR _tr("Test QuotedListParameter parse code 3");
+      Data header("<sip:bob@foo>;methods=\",\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(!addr.isWellFormed());
+   }
+
+   {
+      TR _tr("Test QuotedListParameter parse code 4");
+      Data header("<sip:bob@foo>;methods=\"INVITE,\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(!addr.isWellFormed());
+   }
+
+   {
+      TR _tr("Test QuotedListParameter parse code 5");
+      Data header("<sip:bob@foo>;methods=\"INVITE,BYE,,ACK\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(!addr.isWellFormed());
    }
 
    cerr << "\nTEST OK" << endl;

@@ -38,10 +38,26 @@ class NumericPredicate
       bool mNegated;
 };
 
+class NumericPredicateDisjunction
+{
+   public:
+      NumericPredicateDisjunction();
+      ~NumericPredicateDisjunction();
+
+      bool matches(int test) const;
+      bool matches(const LameFloat& test) const;
+      inline const std::vector<NumericPredicate>& getPredicates() const { return mPredicates;} 
+      inline std::vector<NumericPredicate>& getPredicates() { return mPredicates;} 
+      void addPredicate(const NumericPredicate& pred);
+
+   private:
+      std::vector<NumericPredicate> mPredicates;
+};
+
 class NumericFeatureParameter : public Parameter
 {
    public:
-      typedef NumericPredicate Type;
+      typedef NumericPredicateDisjunction Type;
       NumericFeatureParameter(ParameterTypes::Type, 
                               ParseBuffer& pb, 
                               const char* terminators);
@@ -67,7 +83,7 @@ class NumericFeatureParameter : public Parameter
       Type& value() {return mValue;}
 
    private:
-      NumericPredicate mValue;
+      NumericPredicateDisjunction mValue;
 }; // class NumericFeatureParameter
 
 } // namespace resip
