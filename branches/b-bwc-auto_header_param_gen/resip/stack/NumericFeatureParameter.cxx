@@ -20,6 +20,14 @@ NumericPredicate::NumericPredicate() :
    mNegated(false)
 {}
 
+NumericPredicate::NumericPredicate(const LameFloat& min, 
+                                    const LameFloat& max, 
+                                    bool negate) :
+   mMin(min),
+   mMax(max),
+   mNegated(negate)
+{}
+
 NumericPredicate::~NumericPredicate()
 {}
 
@@ -34,6 +42,44 @@ bool
 NumericPredicate::matches(const LameFloat& test) const
 {
    return mNegated ^ (!(test > mMax) && !(test < mMin));
+}
+
+bool 
+NumericPredicate::matches(const NumericPredicate& pred) const
+{
+   if(mNegated)
+   {
+      if(pred.mNegated)
+      {
+         return !(mMin < pred.mMin) && !(mMax > pred.mMax);
+      }
+      else
+      {
+         return mMin > pred.mMax || mMax < pred.mMin;
+      }
+   }
+   else
+   {
+      if(pred.mNegated)
+      {
+         // This is more complicated... this _only_ works if:
+         // 1) pred is a <= type, and we are a >= type, and our min is less than 
+         //    or equal to pred's max.
+         // 2) pred is a >= type, and we are a <= type, and our max is greater 
+         //    than or equal to pred's min.
+         return (mMax == LameFloat::lf_max && 
+                  pred.mMin == -LameFloat::lf_max &&
+                  !(pred.mMax < mMin)) 
+                     || 
+                  (mMin == -LameFloat::lf_max && 
+                  pred.mMax == LameFloat::lf_max &&
+                  !(pred.mMin > mMax));
+      }
+      else
+      {
+         return !(mMin > pred.mMin) && !(mMax < pred.mMax);
+      }
+   }
 }
 
 NumericPredicateDisjunction::NumericPredicateDisjunction()
@@ -56,6 +102,20 @@ NumericPredicateDisjunction::matches(const LameFloat& test) const
          i!=mPredicates.end(); ++i)
    {
       if(i->matches(test))
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+bool 
+NumericPredicateDisjunction::matches(const NumericPredicate& pred) const
+{
+   for(std::vector<NumericPredicate>::const_iterator i=mPredicates.begin();
+         i!=mPredicates.end(); ++i)
+   {
+      if(i->matches(pred))
       {
          return true;
       }

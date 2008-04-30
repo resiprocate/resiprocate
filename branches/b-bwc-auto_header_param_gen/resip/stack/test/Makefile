@@ -38,6 +38,7 @@ testLockStep.cxx \
 testMessageWaiting.cxx \
 testMultipartMixedContents.cxx \
 testMultipartRelated.cxx \
+testNumericPredicate.cxx \
 testParserCategories.cxx \
 testPidf.cxx \
 testPksc7.cxx \
