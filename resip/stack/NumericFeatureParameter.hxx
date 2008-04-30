@@ -15,6 +15,7 @@ class NumericPredicate
 {
    public:
       NumericPredicate();
+      NumericPredicate(const LameFloat& min, const LameFloat& max, bool negate);
       ~NumericPredicate();
 
       bool matches(int test) const;
@@ -24,6 +25,7 @@ class NumericPredicate
 #endif
 
       bool matches(const LameFloat& num) const;
+      bool matches(const NumericPredicate& pred) const;
       inline const LameFloat& getMin() const { return mMin;} 
       inline void setMin(const LameFloat& pMin) { mMin = pMin;}
       inline const LameFloat& getMax() const { return mMax;} 
@@ -46,6 +48,7 @@ class NumericPredicateDisjunction
 
       bool matches(int test) const;
       bool matches(const LameFloat& test) const;
+      bool matches(const NumericPredicate& pred) const;
       inline const std::vector<NumericPredicate>& getPredicates() const { return mPredicates;} 
       inline std::vector<NumericPredicate>& getPredicates() { return mPredicates;} 
       void addPredicate(const NumericPredicate& pred);
