@@ -25,7 +25,7 @@ BooleanFeatureParameter::BooleanFeatureParameter(ParameterTypes::Type type,
       pb.skipWhitespace();
       pb.skipChar('\"');
       bool bang=false;
-      if(*pb.position() == '!');
+      if(*pb.position() == '!')
       {
          bang=true;
          pb.skipChar();

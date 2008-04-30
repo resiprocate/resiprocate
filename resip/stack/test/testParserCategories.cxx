@@ -2613,6 +2613,61 @@ main(int arc, char** argv)
       assert(!addr.isWellFormed());
    }
 
+   {
+      TR _tr("Test BooleanFeatureParameter parse code 1");
+      Data header("<sip:bob@foo>;video=\"FALSE\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_video));
+      assert(!addr.param(p_video));
+   }
+
+   {
+      TR _tr("Test BooleanFeatureParameter parse code 2");
+      Data header("<sip:bob@foo>;video=\"TRUE\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_video));
+      assert(addr.param(p_video));
+   }
+
+   {
+      TR _tr("Test BooleanFeatureParameter parse code 3");
+      Data header("<sip:bob@foo>;video");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_video));
+      assert(addr.param(p_video));
+   }
+
+   {
+      TR _tr("Test BooleanFeatureParameter parse code 4");
+      Data header("<sip:bob@foo>;video=\"!FALSE\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_video));
+      assert(addr.param(p_video));
+   }
+
+   {
+      TR _tr("Test BooleanFeatureParameter parse code 5");
+      Data header("<sip:bob@foo>;video=\"!TRUE\"");
+      HeaderFieldValue hfv(header.data(), header.size());
+
+      NameAddr addr(&hfv, Headers::Contact);
+      assert(addr.isWellFormed());
+      assert(addr.exists(p_video));
+      assert(!addr.param(p_video));
+   }
+
    cerr << "\nTEST OK" << endl;
 
    return 0;
