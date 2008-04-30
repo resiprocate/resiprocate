@@ -103,4 +103,22 @@ main(int argc, char** argv)
    assert((-LameFloat("-1"))==LameFloat("1"));
    assert((-LameFloat(LameFloat::lf_min))<LameFloat(LameFloat::lf_min));
    assert((-LameFloat(LameFloat::lf_max))<LameFloat(LameFloat::lf_max));
+
+#ifndef RESIP_FIXED_POINT
+   assert(double(LameFloat("1.0"))==1.0f);
+   assert(double(LameFloat("-1.0"))==-1.0f);
+   assert(double(LameFloat("1"))==1);
+   assert(double(LameFloat("-1"))==-1);
+   assert(double(LameFloat("0"))==0);
+   assert(double(LameFloat("-0"))==0);
+#define checkRange(_quoted, _num) \
+   assert(double(LameFloat(_quoted)) > 0.99999f*_num); \
+   assert(double(LameFloat(_quoted)) < 1.00001f*_num);
+   checkRange("0.000101",0.000101f);
+   checkRange("0.101",0.101f);
+   checkRange("231.9082645",231.9082645f);
+   checkRange("9223372.03685477581",9223372.03685477581f);
+#undef checkRange
+#endif
+
 }
