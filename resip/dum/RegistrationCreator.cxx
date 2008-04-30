@@ -25,7 +25,11 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum,
 
    if (userProfile->getMethodsParamEnabled())
    {
-      mLastRequest->header(h_Contacts).front().param(p_methods) = dum.getMasterProfile()->getAllowedMethodsData();
+      const Tokens& methods(dum.getMasterProfile()->getAllowedMethods());
+      for (Tokens::const_iterator i = methods.begin(); i != methods.end(); ++i)
+      {
+         mLastRequest->header(h_Contacts).front().param(p_methods).push_back(i->value());
+      }
    }
    
    DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
