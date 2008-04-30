@@ -15,21 +15,25 @@
 namespace resip
 {
 NumericPredicate::NumericPredicate() :
-   mMin(-DBL_MAX),
-   mMax(DBL_MAX),
-   mNegated(false),
-   mMinPrecision(3),
-   mMaxPrecision(3)
+   mMin(-LameFloat::lf_max),
+   mMax(LameFloat::lf_max),
+   mNegated(false)
 {}
 
 NumericPredicate::~NumericPredicate()
 {}
 
 bool 
-NumericPredicate::matches(double test) const
+NumericPredicate::matches(int t) const
 {
-   // !bwc! Need to make this consistent with the precision reqs...
-   return mNegated ^ ((test <= mMax) && (test >= mMin));
+   LameFloat test(t, 0);
+   return matches(test);
+}
+
+bool 
+NumericPredicate::matches(const LameFloat& test) const
+{
+   return mNegated ^ (!(test > mMax) && !(test < mMin));
 }
 
 NumericFeatureParameter::NumericFeatureParameter(ParameterTypes::Type type, 
@@ -52,7 +56,7 @@ NumericFeatureParameter::NumericFeatureParameter(ParameterTypes::Type type,
    {
       case '-':
       case '+':
-      case '0':// .bwc. Leading 0s aren't really allowed, but who cares.
+      case '0':
       case '1':
       case '2':
       case '3':
@@ -63,45 +67,25 @@ NumericFeatureParameter::NumericFeatureParameter(ParameterTypes::Type type,
       case '8':
       case '9':
          // range type.
-         mValue.setMin(pb.floatVal());
-         mValue.setMinPrecision(countDecimals(pb));
+         mValue.setMin(pb.lameFloat());
          pb.skipChar(':');
-         mValue.setMax(pb.floatVal());
-         // .bwc. Different from countDecimals since we might grab the decimal
-         // from the _lower_ bound.
-         const char* end=pb.position();
-         const char* found=pb.skipBackToOneOf(".:");
-         if(pb.bof() || *found==':')
-         {
-            mValue.setMaxPrecision(0);
-         }
-         else
-         {
-            mValue.setMaxPrecision(end-pb.position());
-         }
-         pb.reset(end);
+         mValue.setMax(pb.lameFloat());
          break;
       case '>':
          // Greater than or equal to type
          pb.skipChars(">=");
-         mValue.setMin(pb.floatVal());
-         mValue.setMinPrecision(countDecimals(pb));
+         mValue.setMin(pb.lameFloat());
          break;
       case '<':
          // Less than or equal to type
          pb.skipChars("<=");
-         mValue.setMax(pb.floatVal());
-         mValue.setMaxPrecision(countDecimals(pb));
+         mValue.setMax(pb.lameFloat());
          break;
       case '=':
          // Equal to type
          pb.skipChar();
-         float value = pb.floatVal();
-         UInt8 precision=countDecimals(pb);
-         mValue.setMax(value);
-         mValue.setMin(value);
-         mValue.setMaxPrecision(precision);
-         mValue.setMinPrecision(precision);
+         mValue.setMin(pb.lameFloat());
+         mValue.setMax(mValue.getMin());
          break;
       default:
          throw ParseException("Illegal starting character for BNF element "
@@ -141,11 +125,9 @@ NumericFeatureParameter::encode(std::ostream& stream) const
    }
    stream << "#";
 
-   std::ios_base::fmtflags oldFlags(stream.flags());
-   stream << std::fixed;
-   if(mValue.getMin()==-DBL_MAX)
+   if(mValue.getMin()==-LameFloat::lf_max)
    {
-      if(mValue.getMax()==DBL_MAX)
+      if(mValue.getMax()==LameFloat::lf_max)
       {
          ErrLog(<< "Accessing defaulted NumericFeatureParam: '" 
                   << getName() << "'");
@@ -154,60 +136,33 @@ NumericFeatureParameter::encode(std::ostream& stream) const
       else
       {
          // LTE type
-         stream << "<=" << std::setprecision(mValue.getMaxPrecision()) << mValue.getMax();
+         stream << "<=" << mValue.getMax();
       }
    }
    else
    {
-      if(mValue.getMax()==DBL_MAX)
+      if(mValue.getMax()==LameFloat::lf_max)
       {
          // GTE type
-         stream << ">=" << std::setprecision(mValue.getMinPrecision()) << mValue.getMin();
+         stream << ">=" << mValue.getMin();
       }
       else
       {
          if(mValue.getMax() == mValue.getMin())
          {
             // Equal type
-            stream << "=" << std::setprecision(mValue.getMaxPrecision()) << mValue.getMax();
+            stream << "=" << mValue.getMax();
          }
          else
          {
             // Range type
-            stream << std::setprecision(mValue.getMinPrecision()) 
-                  << mValue.getMin() 
+            stream << mValue.getMin() 
                   << ":" 
-                  << std::setprecision(mValue.getMaxPrecision()) 
                   << mValue.getMax();
          }
       }
    }
-   stream.flags(oldFlags);
    return stream << "\"";
-}
-
-UInt8 
-NumericFeatureParameter::countDecimals(ParseBuffer& pb) const
-{
-   const char* const end=pb.position();
-   // 10.19
-   //      e
-   //      ^
-
-   pb.skipBackToChar('.');
-
-   // 10.19
-   //      e
-   //    ^
-   if(!pb.bof())
-   {
-      const char* const begin=pb.position();
-      pb.reset(end);
-      return end - begin;
-   }
-
-   pb.reset(end);
-   return 0;
 }
 
 } // of namespace resip

@@ -2050,15 +2050,15 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==10.3332f);
-      assert(addr.param(p_priority).getMax()==DBL_MAX);
+      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat::lf_max);
       assert(!addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==3);
-      assert(addr.param(p_priority).matches(10.3335f));
-      assert(addr.param(p_priority).matches(10.3332f));
+
+      assert(addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(addr.param(p_priority).matches(20));
-      assert(!addr.param(p_priority).matches(-10.3335f));
       assert(!addr.param(p_priority).matches(0));
       Data reEncoded(Data::from(addr));
       assert(reEncoded==header);
@@ -2072,15 +2072,15 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-DBL_MAX);
-      assert(addr.param(p_priority).getMax()==10.3332f);
+      assert(addr.param(p_priority).getMin()==-LameFloat::lf_max);
+      assert(addr.param(p_priority).getMax()==LameFloat("10.3332"));
       assert(!addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==3);
-      assert(addr.param(p_priority).getMaxPrecision()==4);
-      assert(!addr.param(p_priority).matches(10.3335f));
-      assert(addr.param(p_priority).matches(10.3332f));
+
+      assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("10.3331999")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(!addr.param(p_priority).matches(20));
-      assert(addr.param(p_priority).matches(-10.3335f));
       assert(addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2093,15 +2093,16 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==10.3332f);
-      assert(addr.param(p_priority).getMax()==10.3332f);
+      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat("10.3332"));
       assert(!addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==4);
-      assert(!addr.param(p_priority).matches(10.3335f));
-      assert(addr.param(p_priority).matches(10.3332f));
+
+
+      assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(!addr.param(p_priority).matches(20));
-      assert(!addr.param(p_priority).matches(-10.3335f));
       assert(!addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2114,16 +2115,17 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==10.3332f);
-      assert(addr.param(p_priority).getMax()==12.332f);
+      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat("12.332"));
       assert(!addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==3);
-      assert(addr.param(p_priority).matches(10.3335f));
-      assert(addr.param(p_priority).matches(10.3332f));
-      assert(addr.param(p_priority).matches(12.332f));
+
+
+      assert(addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(addr.param(p_priority).matches(LameFloat("12.332")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(!addr.param(p_priority).matches(20));
-      assert(!addr.param(p_priority).matches(-10.3335f));
       assert(!addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2136,15 +2138,16 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==10.3332f);
-      assert(addr.param(p_priority).getMax()==DBL_MAX);
+      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat::lf_max);
       assert(addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==3);
-      assert(!addr.param(p_priority).matches(10.3335f));
-      assert(!addr.param(p_priority).matches(10.3332f));
+
+
+      assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(!addr.param(p_priority).matches(20));
-      assert(addr.param(p_priority).matches(-10.3335f));
       assert(addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
 
@@ -2158,15 +2161,16 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-DBL_MAX);
-      assert(addr.param(p_priority).getMax()==10.3332f);
+      assert(addr.param(p_priority).getMin()==-LameFloat::lf_max);
+      assert(addr.param(p_priority).getMax()==LameFloat("10.3332"));
       assert(addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==3);
-      assert(addr.param(p_priority).getMaxPrecision()==4);
-      assert(addr.param(p_priority).matches(10.3335f));
-      assert(!addr.param(p_priority).matches(10.3332f));
+
+
+      assert(addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(addr.param(p_priority).matches(20));
-      assert(!addr.param(p_priority).matches(-10.3335f));
       assert(!addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2179,15 +2183,16 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==10.3332f);
-      assert(addr.param(p_priority).getMax()==10.3332f);
+      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat("10.3332"));
       assert(addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==4);
-      assert(addr.param(p_priority).matches(10.3335f));
-      assert(!addr.param(p_priority).matches(10.3332f));
+
+
+      assert(addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(addr.param(p_priority).matches(20));
-      assert(addr.param(p_priority).matches(-10.3335f));
       assert(addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2200,16 +2205,17 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==10.3332f);
-      assert(addr.param(p_priority).getMax()==12.332f);
+      assert(addr.param(p_priority).getMin()==LameFloat("10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat("12.332"));
       assert(addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==3);
-      assert(!addr.param(p_priority).matches(10.3335f));
-      assert(!addr.param(p_priority).matches(10.3332f));
-      assert(!addr.param(p_priority).matches(12.332f));
+
+
+      assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(!addr.param(p_priority).matches(LameFloat("12.332")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(addr.param(p_priority).matches(20));
-      assert(addr.param(p_priority).matches(-10.3335f));
       assert(addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2222,16 +2228,17 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-10.3332f);
-      assert(addr.param(p_priority).getMax()==DBL_MAX);
+      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat::lf_max);
       assert(!addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==3);
-      assert(addr.param(p_priority).matches(10.3335f));
-      assert(addr.param(p_priority).matches(10.3332f));
+
+
+      assert(addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3332")));
+
       assert(addr.param(p_priority).matches(20));
-      assert(!addr.param(p_priority).matches(-10.3335f));
-      assert(addr.param(p_priority).matches(-10.3332f));
       assert(addr.param(p_priority).matches(0));
       Data reEncoded(Data::from(addr));
       assert(reEncoded==header);
@@ -2245,15 +2252,16 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-DBL_MAX);
-      assert(addr.param(p_priority).getMax()==-10.3332f);
+      assert(addr.param(p_priority).getMin()==-LameFloat::lf_max);
+      assert(addr.param(p_priority).getMax()==LameFloat("-10.3332"));
       assert(!addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==3);
-      assert(addr.param(p_priority).getMaxPrecision()==4);
-      assert(!addr.param(p_priority).matches(10.3335f));
-      assert(!addr.param(p_priority).matches(10.3332f));
+
+
+      assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(!addr.param(p_priority).matches(20));
-      assert(addr.param(p_priority).matches(-10.3335f));
       assert(!addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2266,16 +2274,17 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-10.3332f);
-      assert(addr.param(p_priority).getMax()==-10.3332f);
+      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat("-10.3332"));
       assert(!addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==4);
-      assert(!addr.param(p_priority).matches(10.3335f));
-      assert(!addr.param(p_priority).matches(10.3332f));
+
+
+      assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(!addr.param(p_priority).matches(20));
-      assert(!addr.param(p_priority).matches(-10.3335f));
-      assert(addr.param(p_priority).matches(-10.3332f));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3332")));
       assert(!addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2288,17 +2297,18 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-10.3332f);
-      assert(addr.param(p_priority).getMax()==12.332f);
+      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat("12.332"));
       assert(!addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==3);
-      assert(addr.param(p_priority).matches(10.3335f));
-      assert(addr.param(p_priority).matches(10.3332f));
-      assert(addr.param(p_priority).matches(12.332f));
+
+
+      assert(addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(addr.param(p_priority).matches(LameFloat("12.332")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3332")));
+
       assert(!addr.param(p_priority).matches(20));
-      assert(!addr.param(p_priority).matches(-10.3335f));
-      assert(addr.param(p_priority).matches(-10.3332f));
       assert(addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2311,16 +2321,17 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-10.3332f);
-      assert(addr.param(p_priority).getMax()==DBL_MAX);
+      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat::lf_max);
       assert(addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==3);
-      assert(!addr.param(p_priority).matches(10.3335f));
-      assert(!addr.param(p_priority).matches(10.3332f));
+
+
+      assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3332")));
+
       assert(!addr.param(p_priority).matches(20));
-      assert(addr.param(p_priority).matches(-10.3335f));
-      assert(!addr.param(p_priority).matches(-10.3332f));
       assert(!addr.param(p_priority).matches(0));
       Data reEncoded(Data::from(addr));
       assert(reEncoded==header);
@@ -2334,15 +2345,16 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-DBL_MAX);
-      assert(addr.param(p_priority).getMax()==-10.3332f);
+      assert(addr.param(p_priority).getMin()==-LameFloat::lf_max);
+      assert(addr.param(p_priority).getMax()==LameFloat("-10.3332"));
       assert(addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==3);
-      assert(addr.param(p_priority).getMaxPrecision()==4);
-      assert(addr.param(p_priority).matches(10.3335f));
-      assert(addr.param(p_priority).matches(10.3332f));
+
+
+      assert(addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3335")));
+
       assert(addr.param(p_priority).matches(20));
-      assert(!addr.param(p_priority).matches(-10.3335f));
       assert(addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2355,16 +2367,17 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-10.3332f);
-      assert(addr.param(p_priority).getMax()==-10.3332f);
+      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat("-10.3332"));
       assert(addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==4);
-      assert(addr.param(p_priority).matches(10.3335f));
-      assert(addr.param(p_priority).matches(10.3332f));
+
+
+      assert(addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3332")));
+
       assert(addr.param(p_priority).matches(20));
-      assert(addr.param(p_priority).matches(-10.3335f));
-      assert(!addr.param(p_priority).matches(-10.3332f));
       assert(addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
@@ -2377,17 +2390,18 @@ main(int arc, char** argv)
       NameAddr addr(&hfv, Headers::Contact);
       assert(addr.isWellFormed());
       assert(addr.exists(p_priority));
-      assert(addr.param(p_priority).getMin()==-10.3332f);
-      assert(addr.param(p_priority).getMax()==12.332f);
+      assert(addr.param(p_priority).getMin()==LameFloat("-10.3332"));
+      assert(addr.param(p_priority).getMax()==LameFloat("12.332"));
       assert(addr.param(p_priority).getNegated());
-      assert(addr.param(p_priority).getMinPrecision()==4);
-      assert(addr.param(p_priority).getMaxPrecision()==3);
-      assert(!addr.param(p_priority).matches(10.3335f));
-      assert(!addr.param(p_priority).matches(10.3332f));
-      assert(!addr.param(p_priority).matches(12.332f));
+
+
+      assert(!addr.param(p_priority).matches(LameFloat("10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("10.3332")));
+      assert(!addr.param(p_priority).matches(LameFloat("12.332")));
+      assert(addr.param(p_priority).matches(LameFloat("-10.3335")));
+      assert(!addr.param(p_priority).matches(LameFloat("-10.3332")));
+
       assert(addr.param(p_priority).matches(20));
-      assert(addr.param(p_priority).matches(-10.3335f));
-      assert(!addr.param(p_priority).matches(-10.3332f));
       assert(!addr.param(p_priority).matches(0));
       assert(Data::from(addr)==header);
    }
