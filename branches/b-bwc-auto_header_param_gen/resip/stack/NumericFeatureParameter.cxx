@@ -36,6 +36,39 @@ NumericPredicate::matches(const LameFloat& test) const
    return mNegated ^ (!(test > mMax) && !(test < mMin));
 }
 
+NumericPredicateDisjunction::NumericPredicateDisjunction()
+{}
+
+NumericPredicateDisjunction::~NumericPredicateDisjunction()
+{}
+
+bool 
+NumericPredicateDisjunction::matches(int t) const
+{
+   LameFloat test(t,0);
+   return matches(test);
+}
+
+bool 
+NumericPredicateDisjunction::matches(const LameFloat& test) const
+{
+   for(std::vector<NumericPredicate>::const_iterator i=mPredicates.begin();
+         i!=mPredicates.end(); ++i)
+   {
+      if(i->matches(test))
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+void 
+NumericPredicateDisjunction::addPredicate(const NumericPredicate& pred)
+{
+   mPredicates.push_back(pred);
+}
+
 NumericFeatureParameter::NumericFeatureParameter(ParameterTypes::Type type, 
                                              ParseBuffer& pb, 
                                              const char* terminators) :
@@ -45,54 +78,66 @@ NumericFeatureParameter::NumericFeatureParameter(ParameterTypes::Type type,
    pb.skipChar('=');
    pb.skipWhitespace();
    pb.skipChar('\"');
-   if(*pb.position()=='!')
+   while(true)
    {
-      mValue.setNegated(true);
-      pb.skipChar();
-   }
-   pb.skipChar('#');
-
-   switch(*pb.position())
-   {
-      case '-':
-      case '+':
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-         // range type.
-         mValue.setMin(pb.lameFloat());
-         pb.skipChar(':');
-         mValue.setMax(pb.lameFloat());
-         break;
-      case '>':
-         // Greater than or equal to type
-         pb.skipChars(">=");
-         mValue.setMin(pb.lameFloat());
-         break;
-      case '<':
-         // Less than or equal to type
-         pb.skipChars("<=");
-         mValue.setMax(pb.lameFloat());
-         break;
-      case '=':
-         // Equal to type
+      NumericPredicate pred;
+      if(*pb.position()=='!')
+      {
+         pred.setNegated(true);
          pb.skipChar();
-         mValue.setMin(pb.lameFloat());
-         mValue.setMax(mValue.getMin());
+      }
+      pb.skipChar('#');
+   
+      switch(*pb.position())
+      {
+         case '-':
+         case '+':
+         case '0':
+         case '1':
+         case '2':
+         case '3':
+         case '4':
+         case '5':
+         case '6':
+         case '7':
+         case '8':
+         case '9':
+            // range type.
+            pred.setMin(pb.lameFloat());
+            pb.skipChar(':');
+            pred.setMax(pb.lameFloat());
+            break;
+         case '>':
+            // Greater than or equal to type
+            pb.skipChars(">=");
+            pred.setMin(pb.lameFloat());
+            break;
+         case '<':
+            // Less than or equal to type
+            pb.skipChars("<=");
+            pred.setMax(pb.lameFloat());
+            break;
+         case '=':
+            // Equal to type
+            pb.skipChar();
+            pred.setMin(pb.lameFloat());
+            pred.setMax(pred.getMin());
+            break;
+         default:
+            throw ParseException("Illegal starting character for BNF element "
+                                 " <numeric-relation> : " + *pb.position(),
+                                 "NumericFeatureParameter",
+                                 __FILE__,
+                                 __LINE__);
+      }
+
+      mValue.addPredicate(pred);
+
+      if(*pb.position() != ',')
+      {
          break;
-      default:
-         throw ParseException("Illegal starting character for BNF element "
-                              " <numeric-relation> : " + *pb.position(),
-                              "NumericFeatureParameter",
-                              __FILE__,
-                              __LINE__);
+      }
+      pb.skipChar();
    }
    pb.skipChar('\"');
 }
@@ -119,46 +164,56 @@ std::ostream&
 NumericFeatureParameter::encode(std::ostream& stream) const 
 {
    stream << getName() << "=\"";
-   if(mValue.getNegated())
+   const std::vector<NumericPredicate>& preds(mValue.getPredicates());
+   bool first=true;
+   for(std::vector<NumericPredicate>::const_iterator p=preds.begin();
+         p!=preds.end(); ++p)
    {
-      stream << "!";
-   }
-   stream << "#";
+      if(!first)
+      {
+         stream << ',';
+      }
+      first=false;
 
-   if(mValue.getMin()==-LameFloat::lf_max)
-   {
-      if(mValue.getMax()==LameFloat::lf_max)
+      if(p->getNegated())
       {
-         ErrLog(<< "Accessing defaulted NumericFeatureParam: '" 
-                  << getName() << "'");
-         // ?bwc? Bail?
+         stream << "!";
       }
-      else
+      stream << "#";
+   
+      if(p->getMin()==-LameFloat::lf_max)
       {
-         // LTE type
-         stream << "<=" << mValue.getMax();
-      }
-   }
-   else
-   {
-      if(mValue.getMax()==LameFloat::lf_max)
-      {
-         // GTE type
-         stream << ">=" << mValue.getMin();
-      }
-      else
-      {
-         if(mValue.getMax() == mValue.getMin())
+         if(p->getMax()==LameFloat::lf_max)
          {
-            // Equal type
-            stream << "=" << mValue.getMax();
+            ErrLog(<< "Accessing defaulted NumericFeatureParam: '" 
+                     << getName() << "'");
+            // ?bwc? Bail?
          }
          else
          {
-            // Range type
-            stream << mValue.getMin() 
-                  << ":" 
-                  << mValue.getMax();
+            // LTE type
+            stream << "<=" << p->getMax();
+         }
+      }
+      else
+      {
+         if(p->getMax()==LameFloat::lf_max)
+         {
+            // GTE type
+            stream << ">=" << p->getMin();
+         }
+         else
+         {
+            if(p->getMax() == p->getMin())
+            {
+               // Equal type
+               stream << "=" << p->getMax();
+            }
+            else
+            {
+               // Range type
+               stream << p->getMin() << ":" << p->getMax();
+            }
          }
       }
    }
