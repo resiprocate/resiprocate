@@ -49,7 +49,7 @@ class UserProfile : public Profile
       
 
       // !cj! - this GRUU stuff looks very suspect
-      //!dcm! -- yep, I don't think you can adda gruu..and disabling is weird.
+      // !dcm! -- yep, I don't think you can adda gruu..and disabling is weird.
       //Anon should be on a per-call level...all of these will prob. go away.
       //.dcm. anonymous gruu's will be used by making annon userprofile where
       //one is avail. Up to the ap to keep the req'd reg up.
