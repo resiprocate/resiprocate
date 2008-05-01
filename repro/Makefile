@@ -54,6 +54,7 @@ SRC 	+=   \
 	ReproServerAuthManager.cxx \
 	RequestContext.cxx \
 	ResponseContext.cxx \
+	RRDecorator.cxx \
         Processor.cxx \
         ProcessorChain.cxx \
 	Target.cxx \
