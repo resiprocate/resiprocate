@@ -569,6 +569,11 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
 {
    assert(msg);
 
+   if(msg->mIsDecorated)
+   {
+      msg->rollbackOutboundDecorators();
+   }
+
    try
    {
       // !ah! You NEED to do this for responses too -- the transport doesn't

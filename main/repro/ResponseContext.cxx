@@ -664,7 +664,7 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,Target* target)
       && (  !inboundFlowToken.empty() 
             || needsOutboundFlowToken) )
    {
-      outgoing.addOutboundDecorator(&mRequestContext.mProxy);
+      outgoing.addOutboundDecorator(mRequestContext.mProxy.makeRRDecorator());
    }
 }
 
