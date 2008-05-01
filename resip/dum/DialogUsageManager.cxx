@@ -825,7 +825,7 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       SharedPtr<MessageDecorator> outboundDecorator = userProfile->getOutboundDecorator();
       if (outboundDecorator.get())
       {
-         msg->addOutboundDecorator(outboundDecorator.get());
+         msg->addOutboundDecorator(std::auto_ptr<MessageDecorator>(outboundDecorator->clone()));
       }
    }
 

@@ -19,7 +19,7 @@ namespace repro
 class UserStore;
 class ProcessorChain;
 
-class Proxy : public resip::TransactionUser, public resip::ThreadIf, public resip::MessageDecorator
+class Proxy : public resip::TransactionUser, public resip::ThreadIf
 {
    public:
       Proxy(resip::SipStack&,
@@ -35,7 +35,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf, public resi
       virtual bool isShutDown() const ;
       virtual void thread();
       
-      bool isMyUri(const resip::Uri& uri);      
+      bool isMyUri(const resip::Uri& uri) const;
       const resip::NameAddr& getRecordRoute() const;
       bool getRecordRouteEnabled() const;
       
@@ -50,9 +50,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf, public resi
 
       int mTimerC;
       
-      virtual void decorateMessage(resip::SipMessage &msg,
-                                   const resip::Tuple &source, 
-                                   const resip::Tuple &destination);
+      std::auto_ptr<resip::MessageDecorator> makeRRDecorator() const;
 
    protected:
       virtual const resip::Data& name() const;

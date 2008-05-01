@@ -331,8 +331,9 @@ class SipMessage : public TransactionMessage
       void setSecurityAttributes(std::auto_ptr<SecurityAttributes>) const;
       const SecurityAttributes* getSecurityAttributes() const { return mSecurityAttributes.get(); }
 
-      void addOutboundDecorator(MessageDecorator *md){mOutboundDecorators.push_back(md);}
+      void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
       void callOutboundDecorators(const Tuple &src, const Tuple &dest);
+      void rollbackOutboundDecorators();
       bool mIsDecorated;
 
       bool mIsBadAck200;

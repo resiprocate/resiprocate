@@ -161,7 +161,10 @@ SipMessage::operator=(const SipMessage& rhs)
             mSecurityAttributes.reset();
          }
       }
-      mOutboundDecorators = rhs.mOutboundDecorators;
+      for(std::vector<MessageDecorator*>::const_iterator i=rhs.mOutboundDecorators.begin(); i!=rhs.mOutboundDecorators.end(); ++i)
+      {
+         mOutboundDecorators.push_back((*i)->clone());
+      }
    }
 
    return *this;
@@ -203,6 +206,12 @@ SipMessage::cleanUp()
    mContentsHfv = 0;
    delete mForceTarget;
    mForceTarget = 0;
+
+   while(!mOutboundDecorators.empty())
+   {
+      delete mOutboundDecorators.back();
+      mOutboundDecorators.pop_back();
+   }
 }
 
 SipMessage*
@@ -1583,6 +1592,11 @@ SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec) const
 void
 SipMessage::callOutboundDecorators(const Tuple &src, const Tuple &dest)
 {
+   if(mIsDecorated)
+   {
+      rollbackOutboundDecorators();
+   }
+
   std::vector<MessageDecorator*>::iterator i;
   for (i = mOutboundDecorators.begin();
        i != mOutboundDecorators.end(); i++)
@@ -1591,6 +1605,18 @@ SipMessage::callOutboundDecorators(const Tuple &src, const Tuple &dest)
   }
   mIsDecorated = true;
 }
+
+void 
+SipMessage::rollbackOutboundDecorators()
+{
+   std::vector<MessageDecorator*>::reverse_iterator r;
+   for(r=mOutboundDecorators.rbegin(); r!=mOutboundDecorators.rend(); ++r)
+   {
+      (*r)->rollbackMessage(*this);
+   }
+   mIsDecorated = false;
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
