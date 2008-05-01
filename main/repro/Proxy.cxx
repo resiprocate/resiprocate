@@ -4,6 +4,7 @@
 
 #include "repro/ProcessorChain.hxx"
 #include "repro/Proxy.hxx"
+#include "repro/RRDecorator.hxx"
 #include "repro/Ack200DoneMessage.hxx"
 #include "repro/UserStore.hxx"
 #include "repro/Dispatcher.hxx"
@@ -438,7 +439,7 @@ Proxy::name() const
 }
 
 bool 
-Proxy::isMyUri(const Uri& uri)
+Proxy::isMyUri(const Uri& uri) const
 {
    bool ret = isMyDomain(uri.host());
    if(ret) 
@@ -471,55 +472,10 @@ Proxy::getRecordRouteEnabled() const
    return mRecordRouteEnabled;
 }
 
-void
-Proxy::decorateMessage(resip::SipMessage &request,
-                        const resip::Tuple &source,
-                        const resip::Tuple &destination)
+std::auto_ptr<resip::MessageDecorator> 
+Proxy::makeRRDecorator() const
 {
-   DebugLog(<<"Proxy::decorateMessage called.");
-   NameAddr rt;
-   
-   if(destination.onlyUseExistingConnection 
-      || resip::InteropHelper::getRRTokenHackEnabled())
-   {
-      rt=getRecordRoute();
-      // .bwc. If our target has an outbound flow to us, we need to put a flow
-      // token in a Record-Route.
-      Helper::massageRoute(request,rt);
-      resip::Data binaryFlowToken;
-      Tuple::writeBinaryToken(destination,binaryFlowToken);
-      
-      // !bwc! TODO encrypt this binary token to self.
-      rt.uri().user()=binaryFlowToken.base64encode();
-   }
-   else if(!request.empty(h_RecordRoutes) 
-            && isMyUri(request.header(h_RecordRoutes).front().uri())
-            && !request.header(h_RecordRoutes).front().uri().user().empty())
-   {
-      // .bwc. If we Record-Routed earlier with a flow-token, we need to
-      // add a second Record-Route (to make in-dialog stuff work both ways)
-      rt = getRecordRoute();
-      Helper::massageRoute(request,rt);
-   }
-   
-   // This pushes the Record-Route that represents the interface from
-   // which the request is being sent
-   //
-   // .bwc. This shouldn't duplicate the previous Record-Route, since rt only
-   // gets defined if we need to double-record-route. (ie, the source or the
-   // target had an outbound flow to us). The only way these could end up the
-   // same is if the target and source were the same entity.
-   if (!rt.uri().host().empty())
-   {
-      if(request.mIsDecorated)
-      {
-         // If we've already decordated this message - remove the record-route we added last time
-         assert(request.exists(h_RecordRoutes) && !request.header(h_RecordRoutes).empty());
-         request.header(h_RecordRoutes).pop_front();
-      }
-      request.header(h_RecordRoutes).push_front(rt);
-      InfoLog (<< "Added outbound Record-Route: " << rt);
-   }
+   return std::auto_ptr<resip::MessageDecorator>(new RRDecorator(*this));
 }
 
 

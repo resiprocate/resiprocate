@@ -10,12 +10,14 @@ class Tuple;
 class MessageDecorator
 {
    public:
-     virtual ~MessageDecorator() {;}
-     virtual void decorateMessage(SipMessage &msg, 
+      virtual ~MessageDecorator() {;}
+      virtual void decorateMessage(SipMessage &msg, 
                                   const Tuple &source,
                                   const Tuple &destination) = 0;
+      virtual void rollbackMessage(SipMessage& msg) = 0;
+      virtual MessageDecorator* clone() const = 0;
 };
-      
+
 }
 
 #endif
