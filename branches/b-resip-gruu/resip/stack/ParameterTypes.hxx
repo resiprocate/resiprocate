@@ -128,9 +128,9 @@ defineParam(url, "url", QuotedDataParameter, "RFC 4483");
 
 defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
 defineParam(qop,"qop",DataParameter,"RFC3261");
-defineParam(qopOptions,"qop",DataParameter,"RFC3261");
 
 // Internal use only
+defineParam(qopOptions,"qop",DataParameter,"RFC3261");
 defineParam(addTransport, "addTransport", ExistsParameter, "RESIP INTERNAL");
 
 }

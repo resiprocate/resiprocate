@@ -10,8 +10,8 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-using namespace resip;
-using namespace std;
+namespace resip
+{
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -33,7 +33,7 @@ ExistsOrDataParameter::ExistsOrDataParameter(ParameterTypes::Type type)
 {
 }
 
-//!dcm! stole from parsebuffer.cxx -- clean up, did't want to recomplie the world
+// !dcm! stole from parsebuffer.cxx -- clean up, did't want to recomplie the world
 bool oneOf2(char c, const Data& cs)
 {
    for (Data::size_type i = 0; i < cs.size(); i++)
@@ -66,8 +66,8 @@ ExistsOrDataParameter::clone() const
    return new ExistsOrDataParameter(*this);
 }
 
-ostream& 
-ExistsOrDataParameter::encode(ostream& stream) const
+std::ostream& 
+ExistsOrDataParameter::encode(std::ostream& stream) const
 {
    if (mValue.empty())
    {
@@ -78,3 +78,5 @@ ExistsOrDataParameter::encode(ostream& stream) const
       return DataParameter::encode(stream);
    }
 }
+
+} // namespace resip
