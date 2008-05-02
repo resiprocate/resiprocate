@@ -2,6 +2,8 @@
 #include "resip/stack/config.hxx"
 #endif
 
+#include "resip/stack/AbandonServerTransaction.hxx"
+#include "resip/stack/CancelClientInviteTransaction.hxx"
 #include "resip/stack/ConnectionTerminated.hxx"
 #include "resip/stack/DnsInterface.hxx"
 #include "resip/stack/DnsResult.hxx"
@@ -41,6 +43,7 @@ TransactionState::TransactionState(TransactionController& controller, Machine m,
    mMachine(m), 
    mState(s),
    mIsCancel(false),
+   mIsAbandoned(false),
    mIsReliable(true), // !jf! 
    mMsgToRetransmit(0),
    mDnsResult(0),
@@ -70,6 +73,16 @@ TransactionState::makeCancelTransaction(TransactionState* tr, Machine machine, c
    // the sip message which needs to get sent to the TU
    cancel->processReliability(tr->mTarget.getType());
    return cancel;
+}
+
+void 
+TransactionState::handleInternalCancel(SipMessage* cancel,
+                                       TransactionState& clientInvite)
+{
+   TransactionState* state = TransactionState::makeCancelTransaction(&clientInvite, ClientNonInvite, clientInvite.mId+"cancel");
+   state->processClientNonInvite(cancel);
+   // for the INVITE in case we never get a 487
+   clientInvite.mController.mTimers.add(Timer::TimerCleanUp, clientInvite.mId, 128*Timer::T1);
 }
 
 bool
@@ -470,6 +483,7 @@ TransactionState::process(TransactionController& controller)
             else if (sip->method() == CANCEL)
             {
                TransactionState* matchingInvite = controller.mClientTransactionMap.find(sip->getTransactionId());
+               
                if (matchingInvite == 0)
                {
                   InfoLog (<< "No matching INVITE for incoming (from TU) CANCEL to uac");
@@ -482,19 +496,8 @@ TransactionState::process(TransactionController& controller)
                   StackLog (<< *matchingInvite);
                   StackLog (<< *sip);
 
-                  // if no INVITE had been sent out yet. -- i.e. dns result not
-                  // processed yet 
-
-                  // The CANCEL was received before the INVITE was sent
-                  // This can happen in odd cases. Too common to assert.
-                  // Be graceful.
-                  TransactionState::sendToTU(tu, controller, Helper::makeResponse(*sip, 200));
-                  matchingInvite->sendToTU(Helper::makeResponse(*matchingInvite->mMsgToRetransmit, 487));
-                  matchingInvite->terminateClientTransaction(matchingInvite->mId);
-
-                  delete matchingInvite;
+                  matchingInvite->mIsAbandoned = true;
                   delete sip;
-
                }
                else if (matchingInvite->mState == Completed)
                {
@@ -504,12 +507,7 @@ TransactionState::process(TransactionController& controller)
                }
                else
                {
-                  assert(matchingInvite);
-                  state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite, tid);
-                  state->processClientNonInvite(sip);
-                  
-                  // for the INVITE in case we never get a 487
-                  matchingInvite->mController.mTimers.add(Timer::TimerCleanUp, sip->getTransactionId(), 128*Timer::T1);
+                  handleInternalCancel(sip, *matchingInvite);
                }
             }
             else 
@@ -819,6 +817,12 @@ TransactionState::processClientInvite(TransactionMessage* msg)
                if (mState == Calling || mState == Proceeding)
                {
                   mState = Proceeding;
+                  if(mIsAbandoned)
+                  {
+                     SipMessage* cancel = Helper::makeCancel(*mMsgToRetransmit);
+                     handleInternalCancel(cancel, *this);
+                     mIsAbandoned=false;
+                  }
                   sendToTU(sip); // don't delete msg
                }
                else
@@ -835,6 +839,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             */
             else if (code >= 200 && code < 300)
             {
+               mIsAbandoned=false;
                sendToTU(sip); // don't delete msg
                //terminateClientTransaction(mId);
                mMachine = ClientStale;
@@ -844,6 +849,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             }
             else if (code >= 300)
             {
+               mIsAbandoned=false;
                // When in either the "Calling" or "Proceeding" states, reception of a
                // response with status code from 300-699 MUST cause the client
                // transaction to transition to "Completed".
@@ -976,6 +982,22 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       processTransportFailure(msg);
       delete msg;
    }
+   else if (isCancelClientTransaction(msg))
+   {
+      // TU wants to CANCEL this transaction. See if we can...
+      if(mState==Proceeding)
+      {
+         // We can send the CANCEL now.
+         SipMessage* cancel=Helper::makeCancel(*mMsgToRetransmit);
+         TransactionState::handleInternalCancel(cancel, *this);
+      }
+      else if(mState==Calling)
+      {
+         // We can't send the CANCEL yet, remember to.
+         mIsAbandoned = true;
+      }
+      delete msg;
+   }
    else
    {
       //StackLog ( << "TransactionState::processClientInvite: message unhandled");
@@ -998,7 +1020,20 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
       }
       else if (mState == Proceeding || mState == Completed)
       {
-         sendToWire(mMsgToRetransmit, true);
+         if(mIsAbandoned)
+         {
+            assert(mState == Completed);
+            mIsAbandoned=false;
+            // put a 500 in mMsgToRetransmit
+            delete mMsgToRetransmit;
+            SipMessage* req = dynamic_cast<SipMessage*>(msg);
+            mMsgToRetransmit=Helper::makeResponse(*req, 500);
+            sendToWire(mMsgToRetransmit);
+         }
+         else
+         {
+            sendToWire(mMsgToRetransmit, true);
+         }
          delete msg;
       }
       else
@@ -1052,7 +1087,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
             else if (mState == Completed)
             {
                // ignore
-               delete msg;               
+               delete msg;
             }
             else
             {
@@ -1067,7 +1102,7 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
       else
       {
          // ignore
-         delete msg;               
+         delete msg;
       }
    }
    else if (isTimer(msg))
@@ -1105,6 +1140,42 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
       processTransportFailure(msg);
       delete msg;
    }
+   else if (isAbandonServerTransaction(msg))
+   {
+      if(mState==Trying || mState==Proceeding)
+      {
+         mIsAbandoned = true;
+
+         // We need to schedule teardown, and 500 the next retransmission.
+         if(mMsgToRetransmit)
+         {
+            // hey, we had a 100 laying around! Turn it into a 500 and send.
+            assert(mMsgToRetransmit->isResponse());
+            assert(mMsgToRetransmit->header(h_StatusLine).statusCode()==100);
+            mMsgToRetransmit->header(h_StatusLine).statusCode()=500;
+            mMsgToRetransmit->header(h_StatusLine).reason()="Server Error";
+            sendToWire(mMsgToRetransmit);
+            mIsAbandoned=false; // Only leave this set if we haven't sent a 500
+         }
+
+         if (mIsReliable)
+         {
+            // If we haven't sent a 500 yet, we never will (no retransmissions 
+            // to make the response with).
+            terminateServerTransaction(mId);
+            delete this;
+         }
+         else
+         {
+            // If we haven't sent a 500 yet, we'll do so when the next
+            // retransmission comes in. In the meantime, set up timers for
+            // transaction termination.
+            mState = Completed;
+            mController.mTimers.add(Timer::TimerJ, mId, 64*Timer::T1 );
+         }
+      }
+      delete msg;
+   }
    else
    {
       //StackLog (<< "TransactionState::processServerNonInvite: message unhandled");
@@ -1124,6 +1195,23 @@ TransactionState::processServerInvite(TransactionMessage* msg)
       {
          case INVITE:
             // note: handling of initial INVITE message is done in TransactionState:process
+            if(mIsAbandoned)
+            {
+               mIsAbandoned=false;
+               mAckIsValid=true;
+               delete mMsgToRetransmit; 
+               mMsgToRetransmit=Helper::makeResponse(*sip, 500);
+               mState = Completed;
+               mController.mTimers.add(Timer::TimerH, mId, Timer::TH );
+               if (!mIsReliable)
+               {
+                  mController.mTimers.add(Timer::TimerG, mId, Timer::T1 );
+               }
+               sendToWire(mMsgToRetransmit);
+               delete msg;
+               return;
+            }
+
             if (mState == Proceeding || mState == Completed)
             {
                /*
@@ -1353,6 +1441,47 @@ TransactionState::processServerInvite(TransactionMessage* msg)
    else if (isTransportError(msg))
    {
       processTransportFailure(msg);
+      delete msg;
+   }
+   else if (isAbandonServerTransaction(msg))
+   {
+      if((mState == Trying || mState == Proceeding) && !mIsAbandoned)
+      {
+         // We need to schedule teardown, and 500 the next retransmission.
+         if(mMsgToRetransmit)
+         {
+            // hey, we had a 1xx laying around! Turn it into a 500 and send.
+            assert(mMsgToRetransmit->isResponse());
+            assert(mMsgToRetransmit->header(h_StatusLine).statusCode()/100==1);
+            mMsgToRetransmit->header(h_StatusLine).statusCode()=500;
+            mMsgToRetransmit->header(h_StatusLine).reason()="Server Error";
+            sendToWire(mMsgToRetransmit);
+            mAckIsValid=true;
+            StackLog (<< "Received failed response in Trying or Proceeding. Start Timer H, move to completed." << *this);
+            mState = Completed;
+            mController.mTimers.add(Timer::TimerH, mId, Timer::TH );
+            if (!mIsReliable)
+            {
+               mController.mTimers.add(Timer::TimerG, mId, Timer::T1 );
+            }
+         }
+         else
+         {
+            if(mIsReliable)
+            {
+               // We will never see another retransmission of the INVITE. We
+               // need to bail.
+               terminateServerTransaction(mId);
+               delete this;
+            }
+            else
+            {
+               // We should see a retransmission of the INVITE shortly, or we
+               // will time out eventually. Be patient...
+               mIsAbandoned = true;
+            }
+         }
+      }
       delete msg;
    }
    else
@@ -2051,6 +2180,19 @@ TransactionState::isTransportError(TransactionMessage* msg) const
 {
    return dynamic_cast<TransportFailure*>(msg) != 0;
 }
+
+bool 
+TransactionState::isAbandonServerTransaction(TransactionMessage* msg) const
+{
+   return dynamic_cast<AbandonServerTransaction*>(msg) != 0;
+}
+
+bool 
+TransactionState::isCancelClientTransaction(TransactionMessage* msg) const
+{
+   return dynamic_cast<CancelClientInviteTransaction*>(msg) != 0;
+}
+
 
 const Data&
 TransactionState::tid(SipMessage* sip) const

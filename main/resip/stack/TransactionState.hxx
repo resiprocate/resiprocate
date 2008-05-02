@@ -85,6 +85,8 @@ class TransactionState : public DnsHandler
       bool isSentUnreliable(TransactionMessage* msg) const;
       bool isReliabilityIndication(TransactionMessage* msg) const;
       bool isSentIndication(TransactionMessage* msg) const;
+      bool isAbandonServerTransaction(TransactionMessage* msg) const;
+      bool isCancelClientTransaction(TransactionMessage* msg) const;
       void sendToTU(TransactionMessage* msg) const;
       static void sendToTU(TransactionUser* tu, TransactionController& controller, TransactionMessage* msg);
       void sendToWire(TransactionMessage* msg, bool retransmit=false);
@@ -96,7 +98,8 @@ class TransactionState : public DnsHandler
       void startServerNonInviteTimerTrying(SipMessage& sip, Data& tid);
 
       static TransactionState* makeCancelTransaction(TransactionState* tran, Machine machine, const Data& tid);
-      
+      static void handleInternalCancel(SipMessage* cancel,
+                                       TransactionState& clientInvite);
       /**
          Attempts to responds to a malformed non-ACK request.
          @param badReq MUST be a non-ACK request. This function will assert
@@ -113,6 +116,7 @@ class TransactionState : public DnsHandler
       Machine mMachine;
       State mState;
       bool mIsCancel;
+      bool mIsAbandoned; // TU doesn't care about this transaction anymore.
       
       // Indicates that the message has been sent with a reliable protocol. Set
       // by the TransportSelector
