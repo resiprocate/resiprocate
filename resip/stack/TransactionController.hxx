@@ -61,6 +61,10 @@ class TransactionController
          mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
       }
 
+      void abandonServerTransaction(const Data& tid);
+
+      void cancelClientInviteTransaction(const Data& tid);
+
    private:
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);

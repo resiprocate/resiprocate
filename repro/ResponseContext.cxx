@@ -7,6 +7,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "resip/stack/SipStack.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/stack/Helper.hxx"
@@ -93,7 +94,7 @@ ResponseContext::addTarget(repro::Target& target, bool beginImmediately, bool ad
       mTargetList.push_back(target.rec());
       
       beginClientTransaction(&target);
-      target.status()=Target::Trying;
+      target.status()=Target::Started;
       mActiveTransactionMap[target.tid()]=target.clone();
    }
    else
@@ -632,7 +633,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
       // - sending the request
       sendRequest(request); 
 
-      target->status() = Target::Trying;
+      target->status() = Target::Started;
 }
 
 void
@@ -888,32 +889,14 @@ ResponseContext::processResponse(SipMessage& response)
       }
       return;
    }
-   
-   Target* target = i->second;
 
    switch (code / 100)
    {
       case 1:
          mRequestContext.updateTimerC();
-         
-         // .bwc. We need to send CANCEL regardless of whether we have sent
-         // back a final response.
-         if (target->status() == Target::WaitingToCancel)
-         {
-            DebugLog(<< "Canceling a transaction with uri: " 
-                     << resip::Data::from(target->uri()) << " , to host: " 
-                     << target->via().sentHost());
-            target->status() = Target::ReadyToCancel;
-            cancelClientTransaction(target);
-         }
-         
+
          if  (!mRequestContext.mHaveSentFinalResponse)
          {
-            if (target->status() == Target::Trying)
-            {
-               target->status() = Target::Proceeding;
-            }
-            
             if (code == 100)
             {
                return;  // stop processing 100 responses
@@ -1053,31 +1036,15 @@ ResponseContext::processResponse(SipMessage& response)
 void
 ResponseContext::cancelClientTransaction(repro::Target* target)
 {
-   if (target->status() == Target::Proceeding || 
-         target->status() == Target::ReadyToCancel)
+   if (target->status() == Target::Started)
    {
       InfoLog (<< "Cancel client transaction: " << target);
-      
-      SipMessage request(mRequestContext.getOriginalRequest());
-      request.header(h_Vias).push_front(target->via());
-      request.header(h_RequestLine).uri() = target->uri();
-      
-      std::auto_ptr<SipMessage> cancel(Helper::makeCancel(request));
-      sendRequest(*cancel);
+      mRequestContext.getProxy().getStack().cancelClientInviteTransaction(target->via().param(p_branch).getTransactionId());
 
       DebugLog(<< "Canceling a transaction with uri: " 
                << resip::Data::from(target->uri()) << " , to host: " 
                << target->via().sentHost());
       target->status() = Target::Cancelled;
-   }
-   else if (target->status() == Target::Trying)
-   {
-      target->status() = Target::WaitingToCancel;
-      DebugLog(<< "Setting transaction status to "
-               << "WaitingToCancel with uri: " 
-               << resip::Data::from(target->uri()) << " , to host: " 
-               << target->via().sentHost());
-
    }
    else if (target->status() == Target::Candidate)
    {
