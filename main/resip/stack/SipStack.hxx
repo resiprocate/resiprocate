@@ -504,6 +504,16 @@ class SipStack
          mTransactionController.mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
       }
 
+      inline bool getFixBadCSeqNumbers() const
+      {
+         return mTransactionController.getFixBadCSeqNumbers();
+      }
+
+      inline void setFixBadCSeqNumbers(bool pFixBadCSeqNumbers)
+      {
+         mTransactionController.setFixBadCSeqNumbers(pFixBadCSeqNumbers);
+      }
+
       void setContentLengthChecking(bool check)
       {
          SipMessage::checkContentLength=check;
