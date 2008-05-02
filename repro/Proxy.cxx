@@ -96,6 +96,7 @@ Proxy::thread()
             {
                if (sip->isRequest())
                {
+                  resip::Data tid(sip->getTransactionId());
                   // Verify that the request has all the mandatory headers
                   // (To, From, Call-ID, CSeq)  Via is already checked by stack.  
                   // See RFC 3261 Section 16.3 Step 1
@@ -191,8 +192,9 @@ Proxy::thread()
                            // This is very bad; we cannot form a response 
                            // at this point because we do not know
                            // whether the original request still exists.
-                           ErrLog(<<"Uncaught exception in process on a CANCEL request: " << e
-                                          << std::endl << "This has a high probability of leaking memory!");
+                           ErrLog(<<"Uncaught exception in process on a CANCEL "
+                                    "request: " << e);
+                           mStack.abandonServerTransaction(tid);
                         }
                      }
                   }
@@ -237,8 +239,8 @@ Proxy::thread()
                      catch(resip::BaseException& e)
                      {
                         // .bwc. Some sort of unhandled error in process.
-                        ErrLog(<<"Uncaught exception in process on an ACK request: " << e
-                                       << std::endl << "This has a high probability of leaking memory!");
+                        ErrLog(<<"Uncaught exception in process on an ACK "
+                                 "request: " << e);
                      }
                   }
                   else
@@ -266,8 +268,9 @@ Proxy::thread()
                            // This is very bad; we cannot form a response 
                            // at this point because we do not know
                            // whether the original request still exists.
-                           ErrLog(<<"Uncaught exception in process on a new request: " << e
-                                          << std::endl << "This has a high probability of leaking memory!");
+                           ErrLog(<<"Uncaught exception in process on a new "
+                                    "request: " << e);
+                           mStack.abandonServerTransaction(tid);
                         }
                      }
                      else
