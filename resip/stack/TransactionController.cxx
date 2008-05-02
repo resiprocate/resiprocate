@@ -28,6 +28,7 @@ TransactionController::TransactionController(SipStack& stack) :
    mStack(stack),
    mDiscardStrayResponses(true),
    mFixBadDialogIdentifiers(true),
+   mFixBadCSeqNumbers(true),
    mStateMacFifo(),
    mTuSelector(stack.mTuSelector),
    mTransportSelector(mStateMacFifo,

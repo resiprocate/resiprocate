@@ -61,6 +61,12 @@ class TransactionController
          mFixBadDialogIdentifiers = pFixBadDialogIdentifiers;
       }
 
+      inline bool getFixBadCSeqNumbers() const { return mFixBadCSeqNumbers;} 
+      inline void setFixBadCSeqNumbers(bool pFixBadCSeqNumbers)
+      {
+         mFixBadCSeqNumbers = pFixBadCSeqNumbers;
+      }
+
       void abandonServerTransaction(const Data& tid);
 
       void cancelClientInviteTransaction(const Data& tid);
@@ -77,6 +83,7 @@ class TransactionController
 
       bool mFixBadDialogIdentifiers;
 
+      bool mFixBadCSeqNumbers;
       // fifo used to communicate to the transaction state machine within the
       // stack. Not for external use by the application. May contain, sip
       // messages (requests and responses), timers (used by state machines),
