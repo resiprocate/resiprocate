@@ -331,6 +331,28 @@ class SipStack
                   TransactionUser* tu=0);
 
       /**
+         Tells the stack that the TU has abandoned a server transaction. This
+         is provided to allow better behavior in cases where an exception is 
+         thrown due to garbage in the request, and the code catching the 
+         exception has no way of telling whether the original request is still
+         around. This frees the TU of the obligation to respond to the request.
+         @param tid The transaction identifier for the server transaction.
+         @note This function is distinct from cancelClientInviteTransaction().
+      */
+      void abandonServerTransaction(const Data& tid);
+
+      /**
+         Tells the stack that the TU wishes to CANCEL an INVITE request. This 
+         frees the TU of the obligation to keep state on whether a 1xx has come 
+         in yet before actually sending a CANCEL request, and also the 
+         obligation of forming the CANCEL request itself. This _does_ _not_ free
+         the TU of the obligation to handle any INVITE/200 that come in (usually
+         by sending an ACK to the 200, and then a BYE).
+         @param tid The transaction identifier of the INVITE request sent.
+      */
+      void cancelClientInviteTransaction(const Data& tid);
+
+      /**
           Return true if the stack has new messages for the TU.  Since the addition 
           of TransactionUsers, this method is deprecated.  This only looks into the 
           old TuFifo that is not associated with any TransactionUser.
