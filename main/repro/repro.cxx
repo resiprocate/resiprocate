@@ -470,9 +470,10 @@ main(int argc, char** argv)
    }
 
    stack.registerTransactionUser(proxy);
-   // .bwc. If, in the future, we do anything client-side using DUM with this 
+   // !bwc! If, in the future, we do anything client-side using DUM with this 
    // stack, we'll need to rework things (maybe use two stacks).
    stack.setFixBadDialogIdentifiers(false);
+   stack.setFixBadCSeqNumbers(false);
 
    /* Make it all go */
    stackThread.run();
