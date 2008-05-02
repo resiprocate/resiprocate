@@ -437,6 +437,18 @@ SipStack::postMS( std::auto_ptr<ApplicationMessage> message,
    checkAsyncProcessHandler();
 }
 
+void 
+SipStack::abandonServerTransaction(const Data& tid)
+{
+   mTransactionController.abandonServerTransaction(tid);
+}
+
+void 
+SipStack::cancelClientInviteTransaction(const Data& tid)
+{
+   mTransactionController.cancelClientInviteTransaction(tid);
+}
+
 
 bool
 SipStack::hasMessage() const

@@ -2,7 +2,9 @@
 #include "resip/stack/config.hxx"
 #endif
 
+#include "resip/stack/AbandonServerTransaction.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
+#include "resip/stack/CancelClientInviteTransaction.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionController.hxx"
@@ -159,6 +161,18 @@ TransactionController::registerMarkListener(MarkListener* listener)
 void TransactionController::unregisterMarkListener(MarkListener* listener)
 {
    mTransportSelector.unregisterMarkListener(listener);
+}
+
+void 
+TransactionController::abandonServerTransaction(const Data& tid)
+{
+   mStateMacFifo.add(new AbandonServerTransaction(tid));
+}
+
+void 
+TransactionController::cancelClientInviteTransaction(const Data& tid)
+{
+   mStateMacFifo.add(new CancelClientInviteTransaction(tid));
 }
 
 
