@@ -12,6 +12,7 @@
 #define _s2c_native_h
 
 #include <iostream>
+#include <vector>
 #include <string>
 
 namespace s2c {

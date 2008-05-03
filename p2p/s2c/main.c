@@ -46,10 +46,13 @@
 
 static char *RCSSTRING="$Id: main.c,v 1.2 2000/10/17 16:10:01 ekr Exp $";
 
+extern int yydebug;
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <ctype.h>
 #include "parser.h"
+#include "gen.h"
 #include "r_log.h"
 
 extern int yydebug;
@@ -93,12 +96,16 @@ int main(argc,argv)
 
     decl=STAILQ_FIRST(&public_decls);
     
+    
+    s2c_gen_hdr_h(stdout);
 
     while(decl){
-      printf("DECL %s\n",decl->name);
-      
+      s2c_gen_pdu_h(decl, stdout);
+
       decl=STAILQ_NEXT(decl,entry);
     }
+
+    s2c_gen_ftr_h(stdout);
 
     exit(0);
   }
