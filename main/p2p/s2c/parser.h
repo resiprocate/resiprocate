@@ -31,6 +31,7 @@ typedef struct p_decl_ {
 #define TYPE_FWDREF     8
   union {
     struct {
+      char *type;
       int bits;
     } primitive_;
     struct {
