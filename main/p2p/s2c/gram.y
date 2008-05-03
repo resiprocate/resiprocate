@@ -118,6 +118,7 @@ struct_start: STRUCT_
     decl->type=TYPE_STRUCT;
     STAILQ_INIT(&decl->u.struct_.members);    
     push_decl(decl);
+  STAILQ_INSERT_TAIL(&public_decls,decl,entry);  // All decls public here
 };
               | PUBLIC_ STRUCT_
 {
@@ -172,9 +173,12 @@ declaration : NAME_ NAME_ ';'
     if(r=r_assoc_fetch(types,$1, strlen($1), &v)){
       r_log(LOG_GENERIC,LOG_DEBUG,"Unknown type %s\n",$1);
 
-      v=make_fwd_ref($1);
+      nr_verr_exit("Unknown type %s",$1);
 
+      //v=make_fwd_ref($1);
+      
     }
+
     decl=RCALLOC(sizeof(p_decl));
 
     decl->name=r_strdup($2);
@@ -189,11 +193,14 @@ declaration : NAME_ NAME_ ';'
     p_decl *decl;
     void *v;
 
+
     if(r=r_assoc_fetch(types,$1, strlen($1), &v)){
       r_log(LOG_GENERIC,LOG_DEBUG,"Unknown type %s\n",$1);
 
-      v=make_fwd_ref($1);
+      nr_verr_exit("Unknown type %s",$1);
+      // v=make_fwd_ref($1);
     }
+
 
     decl=RCALLOC(sizeof(p_decl));
     decl->name=r_strdup($2);
@@ -203,6 +210,7 @@ declaration : NAME_ NAME_ ';'
 
     $$=decl;
   };
+
 
 primitive : PRIMITIVE_ NAME_ NUM_ ';'
   {
@@ -273,6 +281,7 @@ select_start: SELECT_
     decl->type=TYPE_SELECT;
     STAILQ_INIT(&decl->u.select_.arms);    
     push_decl(decl);
+    STAILQ_INSERT_TAIL(&public_decls,decl,entry);  // All decls public here
 };
         | PUBLIC_ SELECT_ 
 {
