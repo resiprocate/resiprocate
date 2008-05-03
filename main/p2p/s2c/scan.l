@@ -26,15 +26,15 @@ CODE            "{@"[^@]+"@}"
 ".."			{RETURN(DOT_DOT_);}
 "enum"			{RETURN(ENUM_);}
 "struct"		{RETURN(STRUCT_);}
-"COMMENTEDopaque"		{mkname();RETURN(OPAQUE_);}
 "select"		{RETURN(SELECT_);}
 "constant"              {RETURN(CONSTANT_);}
 "digitally-signed"	{/* Do nothing*/}
 "public-key-encrypted"  {/* Do nothing*/}
 "case"			{RETURN(CASE_);}
-"primitive"		{RETURN(PRIMITIVE_);}
 "public"		{RETURN(PUBLIC_);}
+"primitive"		{RETURN(PRIMITIVE_);}
 "typedef"		{RETURN(TYPEDEF_);}
+
 
 {COMMENT}		{ /*Do nothing*/}
 {CODE}          { strcpy(yylval.str,yytext); RETURN(CODE_);}
