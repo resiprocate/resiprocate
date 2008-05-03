@@ -61,7 +61,6 @@ p_decl *make_fwd_ref (char *type)
 %token <val> STRUCT_
 %token <val> SELECT_
 %token <str> OPAQUE_
-%token <val> SELECT_
 %token <val> ENUM_
 %token <val> DIGITALLY_SIGNED_
 %token <val> COMMENT_START_
@@ -76,14 +75,15 @@ p_decl *make_fwd_ref (char *type)
 %type <val> module
 %type <val> typelist
 %type <val> definition
-%type <val> selecttype
-%type <val> constant_type
-%type <val> selecterateds
-%type <val> selectmax
-%type <val> constval
+ /*%type <val> selecttype */
+ /* %type <val> constant_type */
+ /* %type <val> selecterateds*/
+ /* %type <val> selectmax*/
+ /* %type <val> constval*/
 %type <decl> declaration
 %type <decl> select_arm
-%type <decl> select;
+%type <decl> select
+%type <str> p_type
 
 /*%type <val> selecterated*/
 %%
@@ -97,7 +97,6 @@ definition typelist {}
 definition: 
           | primitive
           | struct_type
-          | constant_type
           | enum
           | select
           | typedef
@@ -212,14 +211,25 @@ declaration : NAME_ NAME_ ';'
   };
 
 
-primitive : PRIMITIVE_ NAME_ NUM_ ';'
+p_type : NAME_
+  { 
+    strcpy($$,$1);
+  }
+  | p_type NAME_
+  {
+    sprintf($$,"%s %s",$1, $2);
+  }
+      
+primitive : PRIMITIVE_ NAME_ p_type  NUM_ ';'
   {
     p_decl *decl=0;
     int r;
     decl=RCALLOC(sizeof(p_decl));
 
     decl->name=r_strdup($2);
-    decl->u.primitive_.bits=$3;
+    decl->u.primitive_.bits=$4;
+    decl->u.primitive_.type=r_strdup($3);
+
     decl->type=TYPE_PRIMITIVE;
 
     if(r=r_assoc_insert(types,decl->name,strlen(decl->name),
