@@ -9,6 +9,8 @@
 
 //static char *RCSSTRING __UNUSED__="$Id$";
 
+#include <string.h>
+#include <stdlib.h>
 #include "parser.h"
 
 
