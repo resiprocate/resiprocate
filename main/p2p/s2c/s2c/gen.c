@@ -67,13 +67,15 @@ static char *type2class(char *name)
 
 static char *s2c_decl2type(p_decl *decl)
   {
-    char *buf;
+    char *buf=RMALLOC(100);
 
     if(decl->type==TYPE_PRIMITIVE){
       return(decl->u.primitive_.type);
     }
-    else
-      return(type2class(decl->name));
+    else{
+      snprintf(buf,100,"%s%c",type2class(decl->name),'*');
+      return(buf);
+    }
   }
 
 static char *name2var(char *name)
@@ -294,7 +296,7 @@ static int s2c_gen_encode_c_simple_type(p_decl *decl, char *reference, FILE *out
       fprintf(out,"   encode_uintX(out, %d, %s);\n",
         decl->u.primitive_.bits,reference);
     else
-      fprintf(out,"   %s.encode(out);\n",reference);
+      fprintf(out,"   %s->encode(out);\n",reference);
 
     return(0);
   }
