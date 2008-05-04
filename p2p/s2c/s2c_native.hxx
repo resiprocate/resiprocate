@@ -15,8 +15,20 @@
 #include <vector>
 #include <string>
 
-namespace s2c {
+/* Typedefs for integral types */
+typedef unsigned char u_char;
+typedef unsigned short u_int8;
+typedef unsigned short u_int16;
+typedef unsigned int u_int32;
+typedef unsigned long long u_int64;
 
+typedef signed char int8;
+typedef signed short int16;
+typedef signed int int32;
+typedef signed long long int64;
+
+
+namespace s2c {
 
 class PDU {
    public:
