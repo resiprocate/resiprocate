@@ -112,6 +112,8 @@ int main(argc,argv)
     while(decl){
       s2c_gen_pdu_h(decl, doth);
 
+      s2c_gen_pdu_c(decl, dotc);
+
       decl=STAILQ_NEXT(decl,entry);
     }
 

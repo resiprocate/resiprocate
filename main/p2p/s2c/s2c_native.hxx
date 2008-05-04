@@ -27,22 +27,25 @@ typedef signed short int16;
 typedef signed int int32;
 typedef signed long long int64;
 
-
 namespace s2c {
 
 class PDU {
    public:
       std::string mName;
 
-      virtual void print(std::iostream out);
-      virtual void encode(std::iostream out)=0;
-      virtual void decode(std::iostream in)=0;
+      virtual void print(std::iostream *out);
+      virtual void encode(std::iostream *out)=0;
+      virtual void decode(std::iostream *in)=0;
 };
 
 #define PDUMemberFunctions \
-  virtual void print(std::iostream out); virtual void encode(std::iostream out); virtual void decode(std::iostream in);
+  virtual void print(std::iostream *out); virtual void encode(std::iostream *out); virtual void decode(std::iostream *in);
 
-#endif
+
+/* Functions for primitive integral types */
+void encode_uintX(std::iostream *out, const unsigned int bits, const u_int64 value);
 
 
 }
+
+#endif
