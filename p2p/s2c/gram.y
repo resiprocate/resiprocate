@@ -7,7 +7,7 @@
    ekr@rtfm.com  Fri Dec 25 20:33:47 1998
  */
 
-%error-verbose
+/* %error-verbose */
 
 %{
 
