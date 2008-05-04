@@ -44,7 +44,7 @@ ConversationManager::ConversationManager()
   mBridgeMixer(*this)
 {
 #ifdef _DEBUG
-   UtlString codecPaths[] = {".", "../../../sipXtapi/sipXmediaLib/bin"};
+   UtlString codecPaths[] = {".", "../../../../sipXtapi/sipXmediaLib/bin"};
 #else
    UtlString codecPaths[] = {"."};
 #endif
