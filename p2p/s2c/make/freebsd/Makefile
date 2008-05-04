@@ -1,5 +1,6 @@
 PLATFORM=freebsd
 CC=gcc -g
+CXX=g++ -g
 BINARY_PATH=$(PWD)/
 
 #all: programs
