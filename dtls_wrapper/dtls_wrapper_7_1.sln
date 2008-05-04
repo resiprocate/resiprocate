@@ -1,0 +1,60 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dtls_wrapper", "dtls_wrapper_7_1.vcproj", "{C8154710-846F-4B9F-A394-3420720A1DAD}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testDtlsClient", "test\testDtlsClient_7_1.vcproj", "{44225649-C937-4BD8-A6AF-C53477BBD7F3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8154710-846F-4B9F-A394-3420720A1DAD} = {C8154710-846F-4B9F-A394-3420720A1DAD}
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testDtlsServer", "test\testDtlsServer_7_1.vcproj", "{EBDC3586-55A6-442F-B779-7372FF7B0DE4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8154710-846F-4B9F-A394-3420720A1DAD} = {C8154710-846F-4B9F-A394-3420720A1DAD}
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rutil", "..\rutil\rutil_7_1.vcproj", "{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\contrib\ares\ares_7_1.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{C8154710-846F-4B9F-A394-3420720A1DAD}.Debug.ActiveCfg = Debug|Win32
+		{C8154710-846F-4B9F-A394-3420720A1DAD}.Debug.Build.0 = Debug|Win32
+		{C8154710-846F-4B9F-A394-3420720A1DAD}.Release.ActiveCfg = Release|Win32
+		{C8154710-846F-4B9F-A394-3420720A1DAD}.Release.Build.0 = Release|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Debug.ActiveCfg = Debug|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Debug.Build.0 = Debug|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Release.ActiveCfg = Release|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Release.Build.0 = Release|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Debug.ActiveCfg = Debug|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Debug.Build.0 = Debug|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Release.ActiveCfg = Release|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Release.Build.0 = Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Debug.ActiveCfg = SSL-Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Debug.Build.0 = SSL-Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Release.ActiveCfg = SSL-Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Release.Build.0 = SSL-Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug.ActiveCfg = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug.Build.0 = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release.ActiveCfg = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

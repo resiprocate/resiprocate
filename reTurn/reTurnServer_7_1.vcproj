@@ -33,7 +33,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MDd.lib&quot;"
+				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\out32.dbg\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32.dbg\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/reTurnServer.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -81,7 +81,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MD.lib&quot;"
+				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\out32\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/reTurnServer.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
