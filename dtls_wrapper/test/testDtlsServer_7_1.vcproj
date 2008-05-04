@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="testDtlsClient"
-	ProjectGUID="{44225649-C937-4BD8-A6AF-C53477BBD7F3}"
+	Name="testDtlsServer"
+	ProjectGUID="{EBDC3586-55A6-442F-B779-7372FF7B0DE4}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -33,11 +33,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib dtls_wrapper.lib libsrtp.lib Iphlpapi.lib Dnsapi.lib rutil.lib"
-				OutputFile="$(OutDir)/testDtlsClient.exe"
+				OutputFile="$(OutDir)/testDtlsServer.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\out32.dbg&quot;;..\..\rutil\Debug;..\Debug;&quot;..\..\..\contrib\dtls-srtp\srtp\Debug&quot;"
+				AdditionalLibraryDirectories="..\..\contrib\openssl\out32.dbg;..\..\rutil\Debug;..\Debug;..\..\contrib\srtp\Debug"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/testDtlsClient.pdb"
+				ProgramDatabaseFile="$(OutDir)/dtls_wrapper_server_test.pdb"
 				SubSystem="1"
 				TargetMachine="1"/>
 			<Tool
@@ -80,9 +80,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib dtls_wrapper.lib libsrtp.lib Iphlpapi.lib Dnsapi.lib rutil.lib"
-				OutputFile="$(OutDir)/testDtlsClient.exe"
+				OutputFile="$(OutDir)/dtls_wrapper_server_test.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\out32&quot;;..\..\rutil\Release;..\Release;&quot;..\..\..\contrib\dtls-srtp\srtp\Release&quot;"
+				AdditionalLibraryDirectories="..\..\contrib\openssl\out32;..\..\rutil\Release;..\Release;..\..\contrib\srtp\Release"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -121,7 +121,7 @@
 				RelativePath=".\CreateCert.cxx">
 			</File>
 			<File
-				RelativePath=".\testDtlsClient.cxx">
+				RelativePath=".\testDtlsServer.cxx">
 			</File>
 			<File
 				RelativePath=".\TestDtlsUdp.cxx">
