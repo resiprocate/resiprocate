@@ -2,7 +2,7 @@
 
 %{
 #include "parser.h"
-#include "y.tab.h"
+#include "gram.h"
 
 #if 0
 #define RETURN(x) printf("TOK:%s\n",#x);  return(x)
