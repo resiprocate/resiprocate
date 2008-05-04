@@ -1,11 +1,11 @@
 # nrappkit is Network Resonance's application development kit.
 # See http://nrappkit.sourceforge.net
 
-#NRAPPKIT_SRC = /users/ekr/src/nrappkit/src/
-#NRAPPKIT_MAKE=$(NRAPPKIT_SRC)make/freebsd
+NRAPPKIT_SRC = /users/ekr/src/nrappkit/src/
+NRAPPKIT_MAKE=$(NRAPPKIT_SRC)make/freebsd
 
-NRAPPKIT_SRC = /Users/ekr/src/nrappkit/src/
-NRAPPKIT_MAKE=$(NRAPPKIT_SRC)make/darwin
+#NRAPPKIT_SRC = /Users/ekr/src/nrappkit/src/
+#NRAPPKIT_MAKE=$(NRAPPKIT_SRC)make/darwin
 
 
 YFLAGS	= -dv
@@ -15,10 +15,13 @@ LDFLAGS	= -L$(NRAPPKIT_MAKE) -lnrappkit
 
 
 SRC	= gram.y scan.l 
-OBJ	= gram.o scan.o main.o gen.o
+OBJ	= gram.o scan.o gen.o
 
-s2c:	$(OBJ)
-	cc $(CFLAGS) -g -o $@ $(OBJ)  $(LDFLAGS)
+s2c:	main.o $(OBJ)
+	cc $(CFLAGS) -g -o $@ main.o $(OBJ) $(LDFLAGS)
+
+test:   test_driver.o test.o s2c_native.o 
+	cc $(CFLAGS) -g -o $@ test_driver.o test.o s2c_native.o $(LDFLAGS)
 
 $(OBJ): y.tab.h
 
