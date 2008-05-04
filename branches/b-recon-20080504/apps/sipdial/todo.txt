@@ -1,0 +1,10 @@
+
+Must pick random SIP port
+
+Correct SDP generation
+
+Remove FIXMEs
+
+Create a namespace
+
+
