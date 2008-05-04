@@ -11,9 +11,12 @@
 #ifndef _gen_h
 #define _gen_h
 
-int s2c_gen_hdr_h(FILE *out);
+int s2c_gen_hdr_h(char *name, FILE *out);
 int s2c_gen_ftr_h(FILE *out);
+int s2c_gen_hdr_c(char *name,FILE *out);
+int s2c_gen_ftr_c(FILE *out);
 int s2c_gen_pdu_h(p_decl *decl, FILE *out);
+
 
 #endif
 
