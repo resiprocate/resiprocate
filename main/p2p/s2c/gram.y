@@ -7,12 +7,15 @@
    ekr@rtfm.com  Fri Dec 25 20:33:47 1998
  */
 
+%error-verbose
 
 %{
 
 #include "parser.h"
 #include "r_log.h"
 #include <stdio.h>
+
+
  
 extern FILE *dotc;
 extern FILE *doth;
@@ -38,14 +41,14 @@ p_decl *make_fwd_ref (char *type)
 
     decl->type=TYPE_FWDREF;
     decl->u.fwd_ref_.type=r_strdup(type);
-
+    
     return(decl);
   }
 
 #define CURRENT_DECL current_decl[current_decl_depth]
 %}
 %union {
-     int val;
+     unsigned int val;
      unsigned char str[8192];
      p_decl *decl;
 }
@@ -84,6 +87,7 @@ p_decl *make_fwd_ref (char *type)
 %type <decl> select_arm
 %type <decl> select
 %type <str> p_type
+%type <val> varray_size
 
 /*%type <val> selecterated*/
 %%
@@ -186,7 +190,7 @@ declaration : NAME_ NAME_ ';'
 
     $$=decl;
   };
-  | NAME_ NAME_ '<' NUM_ '>' ';'
+  | NAME_ NAME_ '<' varray_size '>' ';'
   {
     int r;
     p_decl *decl;
@@ -234,6 +238,31 @@ declaration : NAME_ NAME_ ';'
   };
 
 
+varray_size: 
+            NUM_ '^' NUM_ '-' NUM_ 
+            {
+              unsigned long long l;
+              int i;
+              
+              if($3 <= 0)
+                nr_verr_exit("Bogus exponent %d in size expression",$3);
+              l=$1;
+
+              for(i = 1; i<$3;i++){
+                l *= $1;
+              }
+              
+              l -= $5;
+              
+              if(l > 0xffffffffu)
+                nr_verr_exit("Overflow value in size expression");
+
+              $$=(unsigned int)l;
+            }
+            | NUM_
+            {
+              $$=$1;
+            }
 
 p_type : NAME_
   { 
@@ -351,6 +380,7 @@ select_arm_start: CASE_ NAME_ ':'
     int r;
 
     decl=RCALLOC(sizeof(p_decl));
+    
 
     if(r=r_assoc_fetch(types,$2, strlen($2), &v)){
       nr_verr_exit("Unknown value %s\n",$2);
@@ -360,8 +390,10 @@ select_arm_start: CASE_ NAME_ ':'
     if(value->type != TYPE_ENUM)
       nr_verr_exit("%s is not a constant/enum",value->name);
 
+    decl->type=TYPE_SELECT_ARM;
     decl->name=r_strdup($2);
-    
+    decl->u.select_arm_.value=value->u.enum_.value;
+
     STAILQ_INIT(&decl->u.select_arm_.members);
     
     push_decl(decl);

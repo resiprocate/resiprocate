@@ -75,8 +75,11 @@ int main(argc,argv)
   int argc;
   char **argv;
   {
-    char name[100];
+    char namec[100],nameh[100];
     FILE *in;
+    FILE *dotc;
+    FILE *doth;
+
     p_decl *decl;
 
     parser_preload();
@@ -91,21 +94,29 @@ int main(argc,argv)
     else{
       fprintf(stderr,"usage: s2c <input-file>");
     }
+    snprintf(nameh,sizeof(nameh),"%s.hxx",argv[1]);
+    if(!(doth=fopen(nameh,"w")))
+      nr_verr_exit("Couldn't open %s",nameh); 
+
+    snprintf(namec,sizeof(namec),"%s.cxx",argv[1]);
+    if(!(dotc=fopen(namec,"w")))
+      nr_verr_exit("Couldn't open %s",namec);
     
     yyparse();
 
     decl=STAILQ_FIRST(&public_decls);
-    
-    
-    s2c_gen_hdr_h(stdout);
+        
+    s2c_gen_hdr_h(argv[1],doth);
+    s2c_gen_hdr_c(argv[1],dotc);
 
     while(decl){
-      s2c_gen_pdu_h(decl, stdout);
+      s2c_gen_pdu_h(decl, doth);
 
       decl=STAILQ_NEXT(decl,entry);
     }
 
-    s2c_gen_ftr_h(stdout);
+    s2c_gen_ftr_h(doth);
+    s2c_gen_ftr_c(dotc);
 
     exit(0);
   }
