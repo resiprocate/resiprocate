@@ -11,10 +11,11 @@
 
 %{
 
+#include <stdlib.h>
+#include <string.h>
 #include "parser.h"
 #include "r_log.h"
 #include <stdio.h>
-
 
  
 extern FILE *dotc;
@@ -49,7 +50,7 @@ p_decl *make_fwd_ref (char *type)
 %}
 %union {
      unsigned int val;
-     unsigned char str[8192];
+     char str[8192];
      p_decl *decl;
 }
 
