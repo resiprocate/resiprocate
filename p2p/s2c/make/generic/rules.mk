@@ -38,6 +38,10 @@ CP=cp
 
 COMPILE.c     = $(CC) $(CFLAGS) $(CPPFLAGS) -c -o
 LINK.c        = $(CC) $(LDFLAGS) -o
+COMPILE.cxx   = $(CC) $(CFLAGS) $(CPPFLAGS) -c -o
+LINK.cxx        = $(CC) $(LDFLAGS) -o
+
 COMPILE.clic  = ../../tools/clic/clic $< -- $(COMPILE.c)
 COMPILE.y     = perl ../generic/compile_wrap "yacc -dv -o  $(<:.y=.c)" $< $(<:.y=.c) $(COMPILE.c)
-COMPILE.l     = perl ../generic/compile_wrap "lex -o$(<:.l=.c)" $< $(<:.l=.c) $(COMPILE.c)
+COMPILE.l     = perl ../generic/compile_wrap "lex -oa$(<:.l=.c)" $< $(<:.l=.c) $(COMPILE.c)
+COMPILE.s2c   = perl ../generic/compile_wrap "./s2c -b $(<:.s2c=) " $< $(<:.s2c=.cxx) $(COMPILE.c)
