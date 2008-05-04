@@ -39,6 +39,9 @@ class PDU {
       virtual void decode(std::iostream in)=0;
 };
 
+#define PDUMemberFunctions \
+  virtual void print(std::iostream out); virtual void encode(std::iostream out); virtual void decode(std::iostream in);
+
 #endif
 
 

@@ -102,10 +102,12 @@ static char *name2enum(char *name)
 
 static int s2c_gen_member_fxns_h(FILE *out)
   {
-      fprintf(out,"\n\n");
-      fprintf(out,"   virtual void print(std::iostream out);\n");
+    /* fprintf(out,"   virtual void print(std::iostream out);\n");
       fprintf(out,"   virtual void encode(std::iostream out);\n");
-      fprintf(out,"   virtual void decode(std::iostream in);\n");
+      fprintf(out,"   virtual void decode(std::iostream in);\n");*/
+
+    fprintf(out,"\n\n");
+    fprintf(out,"   PDUMemberFunctions\n");
       
       return(0);
   }
