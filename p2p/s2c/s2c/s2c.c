@@ -79,26 +79,47 @@ int main(argc,argv)
     FILE *in;
     FILE *dotc;
     FILE *doth;
+    char base_name[100]={0};
+    int c;
+    extern char *optarg;
+    extern int optind;
 
     p_decl *decl;
 
     parser_preload();
-    
-    if(argc==1){
-      ;
+
+    while((c=getopt(argc,argv,"b:"))!=-1){
+      switch(c){
+        case 'b':
+          strcpy(base_name,optarg);
+          break;
+        default:
+          nr_verr_exit("Bogus argument");
+      }
     }
-    if(argc==2){
-      if(!(in=freopen(argv[1],"r",stdin)))
-      nr_verr_exit("Couldn't open input file %s\n",argv[1]);
+    
+    argc-=optind;
+    argv+=optind;
+
+    if(argc==1){
+      if(!(in=freopen(argv[0],"r",stdin)))
+        nr_verr_exit("Couldn't open input file %s\n",argv[0]);
+    
+      if(strlen(base_name)==0){
+        strncpy(base_name,argv[0],sizeof(base_name));
+        if(strcmp(base_name + strlen(base_name)-4,".s2c"))
+          nr_verr_exit("Wrong file type %s",base_name);
+        base_name[strlen(base_name)-4]=0;
+      }
     }
     else{
-      fprintf(stderr,"usage: s2c <input-file>");
+      nr_verr_exit("usage: s2c [-b base_name] <input-file>");
     }
-    snprintf(nameh,sizeof(nameh),"%s.hxx",argv[1]);
+    snprintf(nameh,sizeof(nameh),"%s.hxx",base_name);
     if(!(doth=fopen(nameh,"w")))
       nr_verr_exit("Couldn't open %s",nameh); 
 
-    snprintf(namec,sizeof(namec),"%s.cxx",argv[1]);
+    snprintf(namec,sizeof(namec),"%s.cxx",base_name);
     if(!(dotc=fopen(namec,"w")))
       nr_verr_exit("Couldn't open %s",namec);
     
@@ -106,8 +127,8 @@ int main(argc,argv)
 
     decl=STAILQ_FIRST(&public_decls);
         
-    s2c_gen_hdr_h(argv[1],doth);
-    s2c_gen_hdr_c(argv[1],dotc);
+    s2c_gen_hdr_h(base_name,doth);
+    s2c_gen_hdr_c(base_name,dotc);
 
     while(decl){
       s2c_gen_pdu_h(decl, doth);
