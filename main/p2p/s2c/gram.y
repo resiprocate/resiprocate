@@ -209,6 +209,30 @@ declaration : NAME_ NAME_ ';'
 
     $$=decl;
   };
+  | NAME_ NAME_ '[' NUM_ ']' ';'
+  {
+    int r;
+    p_decl *decl;
+    void *v;
+
+
+    if(r=r_assoc_fetch(types,$1, strlen($1), &v)){
+      r_log(LOG_GENERIC,LOG_DEBUG,"Unknown type %s\n",$1);
+
+      nr_verr_exit("Unknown type %s",$1);
+      // v=make_fwd_ref($1);
+    }
+
+
+    decl=RCALLOC(sizeof(p_decl));
+    decl->name=r_strdup($2);
+    decl->type = TYPE_ARRAY;
+    decl->u.varray_.ref = v;
+    decl->u.varray_.length = $4;
+
+    $$=decl;
+  };
+
 
 
 p_type : NAME_
@@ -319,12 +343,13 @@ select_arms : {};
                STAILQ_INSERT_TAIL(&CURRENT_DECL->u.select_.arms,decl,entry);
              };
 
-select_arm: CASE_ NAME_ ':' declaration
+select_arm_start: CASE_ NAME_ ':'
   {
     void *v;
     p_decl *decl=0;
     p_decl *value;
     int r;
+
     decl=RCALLOC(sizeof(p_decl));
 
     if(r=r_assoc_fetch(types,$2, strlen($2), &v)){
@@ -336,14 +361,36 @@ select_arm: CASE_ NAME_ ':' declaration
       nr_verr_exit("%s is not a constant/enum",value->name);
 
     decl->name=r_strdup($2);
-    decl->u.select_arm_.ref=$4;
-    decl->u.select_arm_.value=value->u.enum_.value;
-
-    decl->type=TYPE_SELECT_ARM;
-
-    $$=decl;
+    
+    STAILQ_INIT(&decl->u.select_arm_.members);
+    
+    push_decl(decl);
   }
-           
+
+
+select_arm: select_arm_start select_arm_decls
+  {
+    void *v;
+    p_decl *decl=0;
+    p_decl *value;
+    int r;
+
+    
+    $$=CURRENT_DECL;
+
+    pop_decl();
+  }
+  
+select_arm_decls: {};
+                | select_arm_decls declaration
+  {
+    p_decl *decl=$2;
+    
+    r_log(LOG_GENERIC,LOG_DEBUG,"Adding type %s to %s",decl->name,CURRENT_DECL->name);
+    
+    STAILQ_INSERT_TAIL(&CURRENT_DECL->u.select_arm_.members,decl,entry);
+  }
+    
 
 typedef: TYPEDEF_ declaration
   {
