@@ -29,6 +29,7 @@ typedef struct p_decl_ {
 #define TYPE_SELECT    6
 #define TYPE_SELECT_ARM 7
 #define TYPE_FWDREF     8
+#define TYPE_ARRAY     9
   union {
     struct {
       char *type;
@@ -52,11 +53,15 @@ typedef struct p_decl_ {
     } select_;
     struct {
       int value;
-      struct p_decl_ *ref;
+      p_decl_head members;
     } select_arm_;
     struct {
       char *type;
     } fwd_ref_;
+    struct {
+      int length;
+      struct p_decl_ *ref;
+    } array_;
   } u;
   
   STAILQ_ENTRY(p_decl_) entry;
