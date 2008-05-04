@@ -33,7 +33,11 @@ class PDU {
    public:
       std::string mName;
 
-      virtual void print(std::iostream *out);
+      virtual void print(std::iostream *out) 
+      {
+        (*out) << mName << "\n";
+      }
+          
       virtual void encode(std::iostream *out)=0;
       virtual void decode(std::iostream *in)=0;
 };

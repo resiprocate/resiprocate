@@ -349,6 +349,16 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent)
 
   }
 
+static int s2c_gen_print_c_struct(p_decl *decl, FILE *out)
+  {
+
+    fprintf(out,"void %s :: print(std::iostream *out)\n{\n",type2class(decl->name));
+    fprintf(out,"   ;\n");
+    fprintf(out,"};\n\n");
+
+    return(0);
+  }
+
 static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
   {
     p_decl *entry;
@@ -368,13 +378,23 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
     return(0);
   }
 
+static int s2c_gen_decode_c_struct(p_decl *decl, FILE *out)
+  {
+
+    fprintf(out,"void %s :: decode(std::iostream *in)\n{\n",type2class(decl->name));
+    fprintf(out,"   ;\n");
+    fprintf(out,"};\n\n");
+
+    return(0);
+  }
+
 
 static int s2c_gen_pdu_c_struct(p_decl *decl, FILE *out)
   {
     fprintf(out,"\n\n// Classes for %s */\n\n",type2class(decl->name));
 
-    // s2c_gen_print_c_struct(decl, out);
-    // s2c_gen_decode_c_struct(decl, out);
+    s2c_gen_print_c_struct(decl, out);
+    s2c_gen_decode_c_struct(decl, out);
     s2c_gen_encode_c_struct(decl, out);
     
     return(0);

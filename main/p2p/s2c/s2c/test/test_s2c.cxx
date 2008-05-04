@@ -13,7 +13,7 @@
 
 int main(int argc, char **argv)
   {
-    // s2c::test::FooPdu *f=new s2c::test::FooPdu();
-    s2c::PDU *f=new s2c::PDU();
+    s2c::test::FooPdu *f=new s2c::test::FooPdu();
+    // s2c::PDU *f=new s2c::PDU();
   }
 
