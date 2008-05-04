@@ -102,11 +102,27 @@ int main(argc,argv)
     argv+=optind;
 
     if(argc==1){
+      char *ptr,*sl=0;
       if(!(in=freopen(argv[0],"r",stdin)))
         nr_verr_exit("Couldn't open input file %s\n",argv[0]);
-    
+
       if(strlen(base_name)==0){
-        strncpy(base_name,argv[0],sizeof(base_name));
+        ptr=argv[0]+strlen(argv[0])-1;
+        while(ptr >= argv[0]){
+          if(*ptr=='/'){
+            sl=ptr;
+            break;
+          }
+          ptr--;
+        }
+        if(sl){
+          sl++;
+          strncpy(base_name,sl,sizeof(base_name));
+        }
+        else{
+          strncpy(base_name,argv[0],sizeof(base_name));
+        }
+
         if(strcmp(base_name + strlen(base_name)-4,".s2c"))
           nr_verr_exit("Wrong file type %s",base_name);
         base_name[strlen(base_name)-4]=0;
