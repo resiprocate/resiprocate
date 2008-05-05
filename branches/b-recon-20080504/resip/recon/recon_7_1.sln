@@ -24,11 +24,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dum", "..\dum\dum_7_1.vcpro
 		{2A8BE839-6466-4001-B224-8F1C3168D04A} = {2A8BE839-6466-4001-B224-8F1C3168D04A}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dtls_wrapper", "..\..\dtls_wrapper\dtls_wrapper_7_1.vcproj", "{C8154710-846F-4B9F-A394-3420720A1DAD}"
-	ProjectSection(ProjectDependencies) = postProject
-		{7E1E1308-F82E-4DD3-B25C-CD12756A1DD9} = {7E1E1308-F82E-4DD3-B25C-CD12756A1DD9}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reflow", "..\..\reflow\reflow_7_1.vcproj", "{D2AB531B-86AC-43DD-A330-9809B4F1BB53}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C8154710-846F-4B9F-A394-3420720A1DAD} = {C8154710-846F-4B9F-A394-3420720A1DAD}
@@ -107,6 +102,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libSRTP", "..\..\contrib\sr
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dtls_wrapper", "..\..\reflow\dtls_wrapper\dtls_wrapper_7_1.vcproj", "{C8154710-846F-4B9F-A394-3420720A1DAD}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -135,10 +134,6 @@ Global
 		{31B0654F-E08E-405F-909F-80F86CB14B9D}.Debug.Build.0 = SSL-Debug|Win32
 		{31B0654F-E08E-405F-909F-80F86CB14B9D}.Release.ActiveCfg = SSL-Release|Win32
 		{31B0654F-E08E-405F-909F-80F86CB14B9D}.Release.Build.0 = SSL-Release|Win32
-		{C8154710-846F-4B9F-A394-3420720A1DAD}.Debug.ActiveCfg = Debug|Win32
-		{C8154710-846F-4B9F-A394-3420720A1DAD}.Debug.Build.0 = Debug|Win32
-		{C8154710-846F-4B9F-A394-3420720A1DAD}.Release.ActiveCfg = Release|Win32
-		{C8154710-846F-4B9F-A394-3420720A1DAD}.Release.Build.0 = Release|Win32
 		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Debug.ActiveCfg = Debug|Win32
 		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Debug.Build.0 = Debug|Win32
 		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Release.ActiveCfg = Release|Win32
@@ -199,6 +194,10 @@ Global
 		{7E1E1308-F82E-4DD3-B25C-CD12756A1DD9}.Debug.Build.0 = Debug|Win32
 		{7E1E1308-F82E-4DD3-B25C-CD12756A1DD9}.Release.ActiveCfg = Release|Win32
 		{7E1E1308-F82E-4DD3-B25C-CD12756A1DD9}.Release.Build.0 = Release|Win32
+		{C8154710-846F-4B9F-A394-3420720A1DAD}.Debug.ActiveCfg = Debug|Win32
+		{C8154710-846F-4B9F-A394-3420720A1DAD}.Debug.Build.0 = Debug|Win32
+		{C8154710-846F-4B9F-A394-3420720A1DAD}.Release.ActiveCfg = Release|Win32
+		{C8154710-846F-4B9F-A394-3420720A1DAD}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
