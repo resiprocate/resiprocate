@@ -280,7 +280,7 @@ int s2c_gen_ftr_h(FILE *out)
 /* Generate C files */
 int s2c_gen_hdr_c(char *name,FILE *out)
   {
-    fprintf(out,"#include \"%s.hxx\"\n\nnamespace s2c {\nnamespace %s {\n\n",name,
+    fprintf(out,"#include \"rutil/Logger.hxx\"\n#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST\n#include \"%s.hxx\"\n\nnamespace s2c {\nnamespace %s {\n\n",name,
       name2namespace(name));
     
     return(0);
@@ -365,6 +365,7 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
 
     fprintf(out,"void %s :: encode(std::iostream *out)\n{\n",type2class(decl->name));
     
+    fprintf(out," CritLog(<< \"Encoding %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
 
     while(entry){

@@ -61,8 +61,8 @@ S2C_S2C_COPY                      = s2c_native.hxx
 S2C_S2C_GLOBAL_CFLAGS             =
 S2C_S2C_GLOBAL_LDFLAGS            =
 S2C_S2C_LINK                      = s2c.c
-S2C_S2C_LOCAL_CFLAGS              =
-S2C_S2C_LOCAL_LDFLAGS             = -L. -ls2c
+S2C_S2C_LOCAL_CFLAGS              = -I$(RESIPROCATE_SRCDIR) -I$(RESIPROCATE_SRCDIR)rutil
+S2C_S2C_LOCAL_LDFLAGS             = -L. -ls2c -L$(RESIPROCATE_SRCDIR)rutil/obj.$(RESIPROCATE_DEBUG)$(RESIPROCATE_PLATFORM) -lrutil 
 S2C_S2C_PREFIX                    = S2C_S2C
 S2C_S2C_SUBDIRS                   =
 
