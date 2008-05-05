@@ -36,7 +36,7 @@ typedef struct p_decl_ {
       int bits;
     } primitive_;
     struct {
-      int length;
+      UINT4 length;
       struct p_decl_ *ref;
     } varray_;
     struct {
@@ -59,7 +59,7 @@ typedef struct p_decl_ {
       char *type;
     } fwd_ref_;
     struct {
-      int length;
+      UINT4 length;
       struct p_decl_ *ref;
     } array_;
   } u;
