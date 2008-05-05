@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)/..&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXMediaAdapterLib/interface&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXPortLib/include&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXtackLib/include&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXsdpLib/include&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXMediaLib/include&quot;;&quot;$(ProjectDir)/../reTurn&quot;;&quot;$(ProjectDir)/../contrib/asio&quot;;&quot;$(ProjectDir)/../contrib/boost_1_34_1&quot;;&quot;$(ProjectDir)/../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)/../contrib/srtp/include&quot;;&quot;$(ProjectDir)/../contrib/srtp/crypto/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)/..&quot;;&quot;$(ProjectDir)/../reTurn&quot;;&quot;$(ProjectDir)/../contrib/asio&quot;;&quot;$(ProjectDir)/../contrib/boost_1_34_1&quot;;&quot;$(ProjectDir)/../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)/../contrib/srtp/include&quot;;&quot;$(ProjectDir)/../contrib/srtp/crypto/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_WIN32_WINNT=0x0501;USE_IPV6;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL;LEAK_CHECK"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -62,7 +62,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)/..&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXMediaAdapterLib/sipXmediaMediaProcessing/include&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXMediaAdapterLib/interface&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXPortLib/include&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXtackLib/include&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXsdpLib/include&quot;;&quot;$(ProjectDir)/../../sipXtapi/sipXMediaLib/include&quot;;&quot;$(ProjectDir)/../reTurn&quot;;&quot;$(ProjectDir)/../contrib/asio&quot;;&quot;$(ProjectDir)/../contrib/boost_1_34_1&quot;;&quot;$(ProjectDir)/../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)/../contrib/srtp/include&quot;;&quot;$(ProjectDir)/../contrib/srtp/crypto/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)/..&quot;;&quot;$(ProjectDir)/../reTurn&quot;;&quot;$(ProjectDir)/../contrib/asio&quot;;&quot;$(ProjectDir)/../contrib/boost_1_34_1&quot;;&quot;$(ProjectDir)/../contrib/openssl/inc32&quot;;&quot;$(ProjectDir)/../contrib/srtp/include&quot;;&quot;$(ProjectDir)/../contrib/srtp/crypto/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_WIN32_WINNT=0x0501;USE_ARES;BOOST_ALL_NO_LIB;USE_SSL"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="TRUE"
@@ -103,6 +103,18 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath=".\dtls_wrapper\bf_dwrap.c">
+			</File>
+			<File
+				RelativePath=".\dtls_wrapper\DtlsFactory.cxx">
+			</File>
+			<File
+				RelativePath=".\dtls_wrapper\DtlsSocket.cxx">
+			</File>
+			<File
+				RelativePath=".\dtls_wrapper\DtlsTimer.cxx">
+			</File>
+			<File
 				RelativePath=".\FakeSelectSocketDescriptor.cxx">
 			</File>
 			<File
@@ -128,6 +140,18 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			<File
+				RelativePath=".\dtls_wrapper\bf_dwrap.h">
+			</File>
+			<File
+				RelativePath=".\dtls_wrapper\DtlsFactory.hxx">
+			</File>
+			<File
+				RelativePath=".\dtls_wrapper\DtlsSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\dtls_wrapper\DtlsTimer.hxx">
+			</File>
 			<File
 				RelativePath=".\ErrorCode.hxx">
 			</File>

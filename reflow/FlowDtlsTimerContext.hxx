@@ -3,7 +3,7 @@
 
 #include <rutil/SharedPtr.hxx>
 #include <asio.hpp>
-#include <dtls_wrapper/DtlsTimer.hxx>
+#include "dtls_wrapper/DtlsTimer.hxx"
 
 /**
   This class is used to provide timer logic to the dtls
