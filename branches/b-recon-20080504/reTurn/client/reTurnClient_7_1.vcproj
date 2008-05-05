@@ -218,6 +218,9 @@
 				RelativePath=".\TurnSocket.hxx">
 			</File>
 			<File
+				RelativePath=".\TurnTcpSocket.hxx">
+			</File>
+			<File
 				RelativePath=".\TurnTlsSocket.hxx">
 			</File>
 			<File

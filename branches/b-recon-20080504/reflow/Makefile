@@ -1,10 +1,10 @@
 BUILD := ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += ASIO RUTIL ARES OPENSSL PTHREAD
+PACKAGES += ASIO RUTIL ARES OPENSSL SRTP PTHREAD
 TARGET_LIBRARY = libreflow
-CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1 -I../dtls_wrapper -I../reTurn \
-            -I../../contrib/dtls-srtp/srtp/include -I../../contrib/dtls-srtp/srtp/crypto/include
+CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1 -I../reTurn \
+            -I../contrib/srtp/include -I../contrib/srtp/crypto/include
           
 
 LDFLAGS += -ldl
@@ -16,7 +16,11 @@ SRC += \
         FlowDtlsTimerContext.cxx \
         FlowManager.cxx \
         FlowManagerSubsystem.cxx \
-        MediaStream.cxx
+        MediaStream.cxx \
+        dtls_wrapper/DtlsTimer.cxx \
+	  dtls_wrapper/DtlsSocket.cxx \
+	  dtls_wrapper/DtlsFactory.cxx \
+	  dtls_wrapper/bf_dwrap.c
 
 include $(BUILD)/Makefile.post
 
