@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="testDtlsClient"
-	ProjectGUID="{44225649-C937-4BD8-A6AF-C53477BBD7F3}"
+	Name="testDtlsServer"
+	ProjectGUID="{EBDC3586-55A6-442F-B779-7372FF7B0DE4}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\inc32&quot;;&quot;..\..\..\contrib\dtls-srtp\srtp\include&quot;;&quot;..\..\..\contrib\dtls-srtp\srtp\crypto\include&quot;;&quot;..\..\..\contrib\dtls-srtp&quot;;..\..\dtls_wrapper;..\..\"
+				AdditionalIncludeDirectories="..\..\..\contrib\openssl\inc32;..\..\..\contrib\srtp\include;..\..\..\contrib\srtp\crypto\include;..\;..\..\..\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -33,11 +33,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib dtls_wrapper.lib libsrtp.lib Iphlpapi.lib Dnsapi.lib rutil.lib"
-				OutputFile="$(OutDir)/testDtlsClient.exe"
+				OutputFile="$(OutDir)/testDtlsServer.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\contrib\openssl\out32.dbg;..\..\rutil\Debug;..\Debug;..\..\contrib\srtp\Debug"
+				AdditionalLibraryDirectories="..\..\..\contrib\openssl\out32.dbg;..\..\..\rutil\Debug;..\Debug;..\..\..\contrib\srtp\Debug"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/testDtlsClient.pdb"
+				ProgramDatabaseFile="$(OutDir)/dtls_wrapper_server_test.pdb"
 				SubSystem="1"
 				TargetMachine="1"/>
 			<Tool
@@ -69,9 +69,10 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\contrib\openssl\inc32;..\..\..\contrib\srtp\include;..\..\..\contrib\srtp\crypto\include;..\;..\..\..\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="3"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
 				DebugInformationFormat="3"/>
@@ -80,9 +81,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib dtls_wrapper.lib libsrtp.lib Iphlpapi.lib Dnsapi.lib rutil.lib"
-				OutputFile="$(OutDir)/testDtlsClient.exe"
+				OutputFile="$(OutDir)/dtls_wrapper_server_test.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\contrib\openssl\out32;..\..\rutil\Release;..\Release;..\..\contrib\srtp\Release"
+				AdditionalLibraryDirectories="..\..\..\contrib\openssl\out32;..\..\..\rutil\Release;..\Debug;..\..\..\contrib\srtp\Release"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -121,7 +122,7 @@
 				RelativePath=".\CreateCert.cxx">
 			</File>
 			<File
-				RelativePath=".\testDtlsClient.cxx">
+				RelativePath=".\testDtlsServer.cxx">
 			</File>
 			<File
 				RelativePath=".\TestDtlsUdp.cxx">
