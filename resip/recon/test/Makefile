@@ -1,21 +1,20 @@
 BUILD := ../../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RETURNCLIENT ASIO RUTIL ARES OPENSSL PTHREAD 
+PACKAGES += RECON DUM RESIP REFLOW RETURNCLIENT RUTIL ARES ASIO OPENSSL SRTP SIPX PTHREAD
 CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1
-LDLIBS += -ldl
+LDFLAGS += -ldl -lpcre -lresolv
 
 TESTPROGRAMS += \
-	TestClient.cxx \
-	TestAsyncClient.cxx \
-	TestRtpLoad.cxx
+	testUA.cxx \
+	unitTests.cxx
 
 include $(BUILD)/Makefile.post
 
 
 ####################################################################
 #
-# Original contribution Copyright (C) 2007 Plantronics, Inc.
+# Original contribution Copyright (C) 2008 Plantronics, Inc.
 # Provided under the terms of the Vovida Software License, Version 2.0.
 #
 # The Vovida Software License, Version 2.0 
@@ -47,4 +46,3 @@ include $(BUILD)/Makefile.post
 # DAMAGE.
 #
 ####################################################################
-
