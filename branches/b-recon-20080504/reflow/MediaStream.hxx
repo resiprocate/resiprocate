@@ -61,7 +61,7 @@ public:
                unsigned short natTraversalServerPort = 0, 
                const char* stunUsername = 0,
                const char* stunPassword = 0); 
-   ~MediaStream();
+   virtual ~MediaStream();
 
    Flow* getRtpFlow() { return mRtpFlow; }
    Flow* getRtcpFlow() { return mRtcpFlow; }
