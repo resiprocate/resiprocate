@@ -1,9 +1,10 @@
 # $Id: Makefile,v 1.144 2004/05/18 01:40:48 jason Exp $
 
-BUILD = ../../build
+BUILD = ../../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += REFLOW RUTIL OPENSSL PTHREAD SRTP ARES
+CXXFLAGS += -I../ -I../../../contrib/srtp/include -I../../../contrib/srtp/crypto/include
 
 CODE_SUBDIRS = 
 
