@@ -21,8 +21,8 @@
 
 extern "C" 
 {
-#include <srtp/include/srtp.h>
-#include <srtp/include/srtp_priv.h>
+#include <srtp.h>
+#include <srtp_priv.h>
 }
 
 void DumpHexa2(const unsigned char* pInMsg, unsigned long ulInMsgLen, std::string &rOutDump)

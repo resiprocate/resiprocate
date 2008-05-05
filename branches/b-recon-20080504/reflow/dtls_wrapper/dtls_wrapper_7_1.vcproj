@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="testDtlsServer"
-	ProjectGUID="{EBDC3586-55A6-442F-B779-7372FF7B0DE4}"
+	Name="dtls_wrapper"
+	ProjectGUID="{C8154710-846F-4B9F-A394-3420720A1DAD}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -14,13 +14,13 @@
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
-			ConfigurationType="1"
+			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\contrib\dtls-srtp\openssl\inc32&quot;;&quot;..\..\..\contrib\dtls-srtp\srtp\include&quot;;&quot;..\..\..\contrib\dtls-srtp\srtp\crypto\include&quot;;&quot;..\..\..\contrib\dtls-srtp&quot;;..\..\dtls_wrapper;..\..\"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;USE_SSL"
+				AdditionalIncludeDirectories="..\..\contrib\srtp\include;..\..\contrib\srtp\crypto\include;..\..\contrib\srtp;..\..\contrib\openssl\inc32;..\..\"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;USE_SSL"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -31,15 +31,7 @@
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib dtls_wrapper.lib libsrtp.lib Iphlpapi.lib Dnsapi.lib rutil.lib"
-				OutputFile="$(OutDir)/testDtlsServer.exe"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\contrib\openssl\out32.dbg;..\..\rutil\Debug;..\Debug;..\..\contrib\srtp\Debug"
-				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/dtls_wrapper_server_test.pdb"
-				SubSystem="1"
-				TargetMachine="1"/>
+				Name="VCLibrarianTool"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -54,8 +46,6 @@
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCWebDeploymentTool"/>
 			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
@@ -65,29 +55,21 @@
 			Name="Release|Win32"
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
-			ConfigurationType="1"
+			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="..\..\contrib\srtp\include;..\..\contrib\srtp\crypto\include;..\..\contrib\srtp;..\..\contrib\openssl\inc32;..\..\"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				RuntimeLibrary="2"
-				UsePrecompiledHeader="3"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
 				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="libeay32.lib ssleay32.lib Ws2_32.lib dtls_wrapper.lib libsrtp.lib Iphlpapi.lib Dnsapi.lib rutil.lib"
-				OutputFile="$(OutDir)/dtls_wrapper_server_test.exe"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\contrib\openssl\out32;..\..\rutil\Release;..\Release;..\..\contrib\srtp\Release"
-				GenerateDebugInformation="TRUE"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"/>
+				Name="VCLibrarianTool"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -102,8 +84,6 @@
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCWebDeploymentTool"/>
 			<Tool
 				Name="VCManagedWrapperGeneratorTool"/>
 			<Tool
@@ -118,30 +98,32 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\CreateCert.cxx">
+				RelativePath=".\bf_dwrap.c">
 			</File>
 			<File
-				RelativePath=".\testDtlsServer.cxx">
+				RelativePath=".\DtlsFactory.cxx">
 			</File>
 			<File
-				RelativePath=".\TestDtlsUdp.cxx">
+				RelativePath=".\DtlsSocket.cxx">
 			</File>
 			<File
-				RelativePath=".\TestTimerContext.cxx">
+				RelativePath=".\DtlsTimer.cxx">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
+			Filter="">
 			<File
-				RelativePath=".\CreateCert.hxx">
+				RelativePath=".\bf_dwrap.h">
 			</File>
 			<File
-				RelativePath=".\TestDtlsUdp.hxx">
+				RelativePath=".\DtlsFactory.hxx">
 			</File>
 			<File
-				RelativePath=".\TestTimerContext.hxx">
+				RelativePath=".\DtlsSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\DtlsTimer.hxx">
 			</File>
 		</Filter>
 		<Filter
