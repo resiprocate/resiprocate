@@ -39,7 +39,9 @@
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+				Description="Creating windows build configuration"
+				CommandLine="copy config.h_win32vc7 crypto\include\config.h"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -79,7 +81,9 @@
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+				Description="Creating windows build configuration"
+				CommandLine="copy config.h_win32vc7 crypto\include\config.h"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
