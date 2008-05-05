@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\contrib\ares\are
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestClient", "client\test\TestClient_7_1.vcproj", "{73151749-13F0-4093-97F1-A6952ECECDBF}"
 	ProjectSection(ProjectDependencies) = postProject
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8} = {67B5906C-5C9D-4D09-AC7E-AF71D72175F8}
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
 	EndProjectSection
 EndProject
 Global

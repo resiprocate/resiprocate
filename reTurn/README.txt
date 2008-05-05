@@ -14,7 +14,7 @@ Stun/Turn drafts:  RFC3489bis13, and draft-ietf-behave-turn-05
 Current External Library Usage
 ------------------------------
 - currently uses ASIO, BOOST and RUTIL
-- ASIO - 0.3.8 
+- ASIO - 1.0.0
        - Used for server sockets and transports
        - Tuple information used in StunMessage uses asio::ip::udp::endpoint - easily changed
        - StunMessage, TurnAllocation and RequestHandler use asio::ip:address to manipulate IPV6, 
