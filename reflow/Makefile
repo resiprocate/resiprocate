@@ -3,6 +3,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += ASIO RUTIL ARES OPENSSL SRTP PTHREAD
 TARGET_LIBRARY = libreflow
+CODE_SUBDIRS = dtls_wrapper
 CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1 -I../reTurn \
             -I../contrib/srtp/include -I../contrib/srtp/crypto/include
           
@@ -18,9 +19,9 @@ SRC += \
         FlowManagerSubsystem.cxx \
         MediaStream.cxx \
         dtls_wrapper/DtlsTimer.cxx \
-	  dtls_wrapper/DtlsSocket.cxx \
-	  dtls_wrapper/DtlsFactory.cxx \
-	  dtls_wrapper/bf_dwrap.c
+        dtls_wrapper/DtlsSocket.cxx \
+        dtls_wrapper/DtlsFactory.cxx \
+        dtls_wrapper/bf_dwrap.c
 
 include $(BUILD)/Makefile.post
 
