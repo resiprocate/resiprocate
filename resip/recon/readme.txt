@@ -110,9 +110,49 @@ Building reflow
 2.  make
 
 
+Building sipXtapi
+-----------------
+1.  Go to sipXtapi root
+2.  Apply resip/resip/recon/sipXtapi-10645-recon.patch to sipXtapi
+3.  To build sipXportLib:
+    cd sipXtapi/sipXportLib
+    autoreconf -fi
+    ./configure --prefix=/tmp/stage
+    make
+4.  To build sipXsdpLib:
+    cd sipXtapi/sipXsdpLib
+    autoreconf -fi
+    ./configure --prefix=/tmp/stage
+    make
+5.  To build sipXtackLib:
+    cd sipXtapi/sipXtackLib
+    autoreconf -fi
+    ./configure --prefix=/tmp/stage --disable-sipviewer
+    make
+6.  To build sipXmediaLib:
+    cd sipXtapi/sipXmediaLib
+    autoreconf -fi
+    ./configure --prefix=/tmp/stage --enable-local-audio
+    make
+7.  To build sipXmediaAdapterLib:
+    cd sipXtapi/sipXmediaAdapterLib
+    autoreconf -fi
+    ./configure --prefix=/tmp/stage CXXFLAGS="-DDISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY -DENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY"
+    make
+
+
 Building recon
 --------------
 1.  Go to main/resip/recon
 2.  make
+
+
+Building testua
+---------------
+1.  Go to main/resip/recon/test
+2.  make
+3.  To run testUA ensure the codec plugins are in the same directory as the executable:
+    cp ../../../../sipXtapi/sipXmediaLib/bin/*.so ./
+4.  To run ./testUA
 
 
