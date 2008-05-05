@@ -71,22 +71,8 @@ endif
 #OPENSSL_LDLIBS_LAST := /usr/local/ssl/lib/libssl.a /usr/local/ssl/lib/libcrypto.a
 #OPENSSL_INCLUDEDIRS := /usr/local/ssl/include
 
-ifeq ($(USE_DTLS),yes)
-DTLS_WRAPPER_INCLUDEDIRS := $(ROOT)/dtls_wrapper
-DTLS_WRAPPER_LIBDIRS := $(ROOT)/dtls_wrapper/obj.$(TARGET_NAME)
-DTLS_WRAPPER_LIBNAME := dtls_wrapper
-
-DTLS_WRAPPER_DEPENDS := $(ROOT)/dtls_wrapper/obj.$(TARGET_NAME)/libdtls_wrapper.$(LIBSUFFIX)
-$(DTLS_WRAPPER_DEPENDS): 
-	cd $(ROOT)/dtls_wrapper; $(MAKE)
-
-OPENSSL_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/openssl/include
-OPENSSL_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/openssl
-OPENSSL_LIBNAME = ssl crypto dl
-endif
-
-SRTP_INCLUDEDIRS := $(ROOT)/../contrib/dtls-srtp/srtp/include $(ROOT)/../contrib/dtls-srtp/srtp/crypto/include/
-SRTP_LIBDIRS := $(ROOT)/../contrib/dtls-srtp/srtp/
+SRTP_INCLUDEDIRS := $(ROOT)/contrib/srtp/include $(ROOT)/contrib/srtp/crypto/include/
+SRTP_LIBDIRS := $(ROOT)/contrib/srtp/
 SRTP_LIBNAME := srtp
 
 ifeq ($(USE_MYSQL),yes)
@@ -206,6 +192,27 @@ TFM_DEPENDS := $(ROOT)/tfm/obj.$(TARGET_NAME)/libtfm.$(LIBSUFFIX)
 $(TFM_DEPENDS): 
 	cd $(ROOT)/tfm; $(MAKE) 
 
+RETURNCLIENT_INCLUDEDIRS := $(ROOT)/reTurn
+RETURNCLIENT_LIBDIRS := $(ROOT)/reTurn/client/obj.$(TARGET_NAME)
+RETURNCLIENT_LIBNAME := reTurnClient
+RETURNCLIENT_DEPENDS := $(ROOT)/reTurn/client/obj.$(TARGET_NAME)/libreTurnClient.$(LIBSUFFIX)
+$(RETURNCLIENT_DEPENDS):
+	cd $(ROOT)/reTurn/client; $(MAKE)
+
+REFLOW_INCLUDEDIRS := $(ROOT)/reflow
+REFLOW_LIBDIRS := $(ROOT)/reflow/obj.$(TARGET_NAME)
+REFLOW_LIBNAME := reflow
+REFLOW_DEPENDS := $(ROOT)/reflow/obj.$(TARGET_NAME)/libreflow.$(LIBSUFFIX)
+$(REFLOW_DEPENDS):
+	cd $(ROOT)/reflow; $(MAKE)
+
+RECON_INCLUDEDIRS := $(ROOT)/resip/recon
+RECON_LIBDIRS := $(ROOT)/resip/recon/obj.$(TARGET_NAME)
+RECON_LIBNAME := recon
+RECON_DEPENDS := $(ROOT)/resip/recon/obj.$(TARGET_NAME)/librecon.$(LIBSUFFIX)
+$(RECON_DEPENDS):
+	cd $(ROOT)/resip/recon; $(MAKE)
+
 DEFINES += USE_ARES
 ifeq ($(USE_IPV6),yes)
 DEFINES += USE_IPV6
@@ -246,13 +253,19 @@ ifeq ($(OSTYPE),MinGW)
 endif
 
 ifndef SIPXBASE
-SIPXBASE := $(ROOT)/sipX
+SIPXBASE := $(ROOT)/../sipXtapi
 endif
 
-SIPX_INCLUDEDIRS := $(SIPXBASE)/bbridge/include $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/include  $(SIPXBASE)/sipXmediaAdapterLib/interface  $(SIPXBASE)/sipXmediaLib/include $(SIPXBASE)/sipXtackLib/include $(SIPXBASE)/sipXportLib/include $(SIPXBASE)
-SIPX_LIBDIRS := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs $(SIPXBASE)/sipXmediaLib/src/.libs $(SIPXBASE)/sipXtackLib/src/.libs $(SIPXBASE)/sipXportLib/src/.libs
-SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack sipXport
-SIPX_DEFINES := __pingtel_on_posix__
+SIPX_INCLUDEDIRS := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/include  $(SIPXBASE)/sipXmediaAdapterLib/interface  $(SIPXBASE)/sipXmediaLib/include $(SIPXBASE)/sipXtackLib/include $(SIPXBASE)/sipXsdpLib/include $(SIPXBASE)/sipXportLib/include $(SIPXBASE)
+#SIPX_LIBDIRS := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs $(SIPXBASE)/sipXmediaLib/src/.libs $(SIPXBASE)/sipXtackLib/src/.libs $(SIPXBASE)/sipXsdpLib/src/.libs $(SIPXBASE)/sipXportLib/src/.libs
+#SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack  sipXsdp sipXport
+SIPX_LDLIBS_LAST := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs/libsipXmediaProcessing.a
+SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXmediaLib/src/.libs/libsipXmedia.a
+SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXtackLib/src/.libs/libsipXtack.a
+SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXsdpLib/src/.libs/libsipXsdp.a
+SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXportLib/src/.libs/libsipXport.a
+SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXmediaLib/src/.libs/libsipXmedia.a
+SIPX_DEFINES := __pingtel_on_posix__ DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10
 
 BOOSTSER_LIBNAME = boost_serialization boost_wserialization
 
