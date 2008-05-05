@@ -523,9 +523,6 @@
 				RelativePath=".\TransportType.hxx">
 			</File>
 			<File
-				RelativePath="..\reTurn\client\TurnTcpSocket.hxx">
-			</File>
-			<File
 				RelativePath=".\stun\Udp.hxx">
 			</File>
 			<File

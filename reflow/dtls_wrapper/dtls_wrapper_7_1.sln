@@ -15,12 +15,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testDtlsServer", "test\test
 		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rutil", "..\rutil\rutil_7_1.vcproj", "{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rutil", "..\..\rutil\rutil_7_1.vcproj", "{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
 	ProjectSection(ProjectDependencies) = postProject
 		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\contrib\ares\ares_7_1.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\..\contrib\ares\ares_7_1.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
