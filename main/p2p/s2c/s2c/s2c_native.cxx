@@ -12,7 +12,7 @@
 #include <assert.h>
 #include "s2c_native.hxx"
 
-void s2c::encode_uintX(std::iostream *out, const unsigned int bits, const u_int64 value)
+void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64 value)
   {
     int size;
 

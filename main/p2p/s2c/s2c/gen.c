@@ -103,6 +103,17 @@ static char *name2enum(char *name)
     return buf;
   }
 
+static int max2bytes(UINT4 max)
+  {
+    int b=0;
+
+    while(max){
+      b++;
+      max >>=8;
+    }
+    
+    return b;
+  }
 
 
 
@@ -116,13 +127,10 @@ int s2c_gen_hdr_h(char *name, FILE *out)
     return(0);
   }
 
-static int s2c_gen_member_fxns_h(FILE *out)
+static int s2c_gen_member_fxns_h(char *classname, char *name, FILE *out)
   {
-    /* fprintf(out,"   virtual void print(std::iostream out);\n");
-      fprintf(out,"   virtual void encode(std::iostream out);\n");
-      fprintf(out,"   virtual void decode(std::iostream in);\n");*/
-
     fprintf(out,"\n\n");
+    fprintf(out,"   %s() {mName = \"%s\";}\n", classname, name);
     fprintf(out,"   PDUMemberFunctions\n");
       
       return(0);
@@ -161,7 +169,7 @@ static int s2c_gen_pdu_h_member(p_decl *member, FILE *out)
         break;
       case TYPE_VARRAY:
         snprintf(buf,sizeof(buf),"std::vector<%s>",
-          s2c_decl2type(member->u.array_.ref));
+          s2c_decl2type(member->u.varray_.ref));
         s2c_print_a_b_indent(buf,name2var(member->name),out);
         break;
       case TYPE_ARRAY:
@@ -206,7 +214,7 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out)
         fprintf(out,"\n   };\n");
     }
 
-    s2c_gen_member_fxns_h(out);
+    s2c_gen_member_fxns_h(type2class(decl->name),decl->name,out);
 
     fprintf(out,"};\n\n");
 
@@ -214,15 +222,19 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out)
     /* Now emit the class for each select arm */
     for(arm=STAILQ_FIRST(&decl->u.select_.arms);arm;arm=STAILQ_NEXT(arm,entry)){
       p_decl *member;
+      char classname[100];
+      
+      snprintf(classname,100,"%s__%s",type2class(decl->name), 
+        camelback(arm->name));
 
-      fprintf(out,"class %s__%s : public %s {\npublic:\n", type2class(decl->name), 
-        camelback(arm->name), type2class(decl->name));
+      fprintf(out,"class %s : public %s {\npublic:\n", classname,
+        type2class(decl->name));
       
       for(member=STAILQ_FIRST(&arm->u.select_arm_.members);member;member=STAILQ_NEXT(member,entry)){
         s2c_gen_pdu_h_member(member, out);
       }
 
-      s2c_gen_member_fxns_h(out);
+      s2c_gen_member_fxns_h(classname,arm->name,out);
 
       fprintf(out,"};\n\n\n");
     }
@@ -238,6 +250,7 @@ static int s2c_gen_pdu_h_struct(p_decl *decl, FILE *out)
 
     fprintf(out,"class %s : public PDU {\npublic:\n", type2class(decl->name));
     
+
     entry=STAILQ_FIRST(&decl->u.struct_.members);
     while(entry){
       s2c_gen_pdu_h_member(entry, out);
@@ -245,7 +258,7 @@ static int s2c_gen_pdu_h_struct(p_decl *decl, FILE *out)
       entry=STAILQ_NEXT(entry,entry);
     }
 
-    s2c_gen_member_fxns_h(out);
+    s2c_gen_member_fxns_h(type2class(decl->name),decl->name, out);
 
     fprintf(out,"};\n\n\n");
 
@@ -316,12 +329,22 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent)
       case TYPE_VARRAY:
         {
           char reference[100];
+          int lengthbytes=max2bytes(member->u.varray_.length);
+
+          fprintf(out,"   long pos1=out->tellp();\n");
+          fprintf(out,"   out->seekp(pos1 + %d);\n",lengthbytes);
           
           fprintf(out,"   for(int i=0;i<%s.size();i++)\n",name2var(member->name));
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
           s2c_gen_encode_c_simple_type(member->u.varray_.ref,reference,out);
+
+          fprintf(out,"   long pos2=out->tellp();\n");
+          fprintf(out,"   out->seekp(pos1);\n");
+          fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
+            lengthbytes*8, lengthbytes);
+          fprintf(out,"   out->seekp(pos2);\n");
 
           break;
         }
@@ -352,7 +375,7 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent)
 static int s2c_gen_print_c_struct(p_decl *decl, FILE *out)
   {
 
-    fprintf(out,"void %s :: print(std::iostream *out)\n{\n",type2class(decl->name));
+    fprintf(out,"void %s :: print(std::ostream *out)\n{\n",type2class(decl->name));
     fprintf(out,"   ;\n");
     fprintf(out,"};\n\n");
 
@@ -363,14 +386,15 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
   {
     p_decl *entry;
 
-    fprintf(out,"void %s :: encode(std::iostream *out)\n{\n",type2class(decl->name));
+    fprintf(out,"void %s :: encode(std::ostream *out)\n{\n",type2class(decl->name));
     
-    fprintf(out," CritLog(<< \"Encoding %s\");\n",type2class(decl->name));
+    fprintf(out," DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
 
     while(entry){
       s2c_gen_encode_c_member(entry, out, 0);
-    
+      
+      fprintf(out,"\n");
       entry=STAILQ_NEXT(entry,entry);
     }
 
@@ -382,7 +406,7 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
 static int s2c_gen_decode_c_struct(p_decl *decl, FILE *out)
   {
 
-    fprintf(out,"void %s :: decode(std::iostream *in)\n{\n",type2class(decl->name));
+    fprintf(out,"void %s :: decode(std::istream *in)\n{\n",type2class(decl->name));
     fprintf(out,"   ;\n");
     fprintf(out,"};\n\n");
 

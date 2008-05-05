@@ -4,7 +4,7 @@ primitive uint32 unsigned int 32;
 primitive opaque unsigned char 8;
 
 struct {
-	opaque Id<255>;
+	opaque Id[16];
 } peer_id;
 
 
@@ -25,13 +25,13 @@ struct {
 
 public struct {
        uint8 bar;
+       uint8 variable<16384>; 
        baz_type mumble;
        peer_id id; 
        uint16 zulu;
        uint8 www[5];
        uint16 wwx[6];
        
-       uint8 variable<16384>; 
 /*       select_example sss;*/
 } foo;
 

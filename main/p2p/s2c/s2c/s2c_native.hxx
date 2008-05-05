@@ -33,21 +33,21 @@ class PDU {
    public:
       std::string mName;
 
-      virtual void print(std::iostream *out) 
+      virtual void print(std::ostream *out) 
       {
         (*out) << mName << "\n";
       }
           
-      virtual void encode(std::iostream *out)=0;
-      virtual void decode(std::iostream *in)=0;
+      virtual void encode(std::ostream *out)=0;
+      virtual void decode(std::istream *in)=0;
 };
 
 #define PDUMemberFunctions \
-  virtual void print(std::iostream *out); virtual void encode(std::iostream *out); virtual void decode(std::iostream *in);
+  virtual void print(std::ostream *out); virtual void encode(std::ostream *out); virtual void decode(std::istream *in);
 
 
 /* Functions for primitive integral types */
-void encode_uintX(std::iostream *out, const unsigned int bits, const u_int64 value);
+void encode_uintX(std::ostream *out, const unsigned int bits, const u_int64 value);
 
 
 }
