@@ -210,7 +210,7 @@ declaration : NAME_ NAME_ ';'
     decl->name=r_strdup($2);
     decl->type = TYPE_VARRAY;
     decl->u.varray_.ref = v;
-    decl->u.varray_.length = -1 * $4;
+    decl->u.varray_.length = $4;
 
     $$=decl;
   };
