@@ -2,7 +2,7 @@
 // error.hpp
 // ~~~~~~~~~
 //
-// Copyright (c) 2003-2007 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -69,6 +69,11 @@ enum basic_errors
 
   /// Operation already in progress.
   already_started = ASIO_SOCKET_ERROR(EALREADY),
+
+  /// Broken pipe.
+  broken_pipe = ASIO_WIN_OR_POSIX(
+      ASIO_NATIVE_ERROR(ERROR_BROKEN_PIPE),
+      ASIO_NATIVE_ERROR(EPIPE)),
 
   /// A connection has been aborted.
   connection_aborted = ASIO_SOCKET_ERROR(ECONNABORTED),
