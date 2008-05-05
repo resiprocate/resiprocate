@@ -1,9 +1,10 @@
+#include "UserAgent.hxx"
+#include "UserAgentSubsystem.hxx"
+
 #include <signal.h>
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
-#include "UserAgent.hxx"
-#include "UserAgentSubsystem.hxx"
 
 ///////////////////////////////////////////////////////////////////////////
 // SCENARIOS UNDER TEST

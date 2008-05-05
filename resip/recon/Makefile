@@ -1,20 +1,9 @@
 BUILD := ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += ASIO RUTIL ARES OPENSSL PTHREAD
+PACKAGES += ASIO RUTIL ARES OPENSSL SRTP RETURNCLIENT REFLOW SIPX PTHREAD
 TARGET_LIBRARY = librecon
-CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1 -I../dtls_wrapper -I../reTurn \
-            -I../../contrib/dtls-srtp/srtp/include -I../../contrib/dtls-srtp/srtp/crypto/include
-          
-#Note: This Makefile is not complete
-# hard-coded to where the sipX path
-#RTPDIR = $(LIBDIR)
-#RTPINC = $(RTPDIR)include
-#RTPLIB = $(RTPDIR)lib/libsipXmediaProcessing.a -L$(RTPDIR)lib -lsipezRtlLib $(RTPDIR)lib/libsipXmedia.a $(RTPDIR)lib/libsipXtack.a $(RTPDIR)lib/libsipXsdp.a $(RTPDIR)lib/libsipXport.a $(RTPDIR)lib/libpcre.so -lresolv
-#RTPLIB = $(RTPDIR)lib/libsipXmediaProcessing.a -L$(RTPDIR)lib $(RTPDIR)lib/libsipXmedia.a $(RTPDIR)lib/libsipXtack.a $(RTPDIR)lib/libsipXsdp.a $(RTPDIR)lib/libsipXport.a $(RTPDIR)lib/libpcre.so -lresolv -ldl
-#RTPLIBDIR = $(RTPDIR)lib
-
-LDFLAGS += -ldl
+CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1
 
 SRC += \
         BridgeMixer.cxx \
