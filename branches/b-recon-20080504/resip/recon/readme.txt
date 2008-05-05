@@ -29,11 +29,9 @@ Setting up build environment:
 2.  svn checkout https://svn.resiprocate.org/rep/resiprocate/branches/b-recon-20080504 resip
 3.  svn checkout https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi sipXtapi
 4.  cd resip/contrib
-5.  svn checkout https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/srtp srtp
-6.  svn checkout https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl openssl
+5.  svn checkout https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl openssl
 
 /resip-main/                <- https://svn.resiprocate.org/rep/resiprocate/main
-/resip-main/contrib/srtp    <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/srtp
 /resip-main/contrib/openssl <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
 /main/contrib/boost_1_34_1  <- BOOST 1.34.1 (required in this location for Windows builds only)
 /sipXtapi                   <- https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi
@@ -77,40 +75,44 @@ to run testUA.exe on another machine you will need the following:
 
 Building OpenSSL for Generic Linux
 ----------------------------------
-1.  Go to resip/contrib/openssl
+1.  Go to main/contrib/openssl
 2.  ./Configure linux-generic32 --openssldir=/usr enable-tlsext
 3.  make depend
 4.  make
 
+
 Building libSRTP for Generic Linux
 ----------------------------------
-1.  Go to resip/contrib/srtp
+1.  Go to main/contrib/srtp
 2.  ./configure
 3.  make
 
+
 Building base resiprocate libraries for Generic Linux
 -----------------------------------------------------
-1.  Go to resip/
+1.  Go to main/
 2.  ./configure - select options as desired
     defaults are good: just be sure to point openssl path to:
     {localtion of build env}/resip/contrib/openssl
 3.  make
 4.  make reTurn
 
+
 Building reTurn
 ---------------
-1.  Go to resip/
+1.  Go to main/
 2.  make reTurn
 
-STEPS BELOW ARE STILL A WORK IN PROGRESS!!!
 
 Building reflow
 ---------------
-1.  Go to resip/reflow
+1.  Go to main/reflow
 2.  make
+
 
 Building recon
 --------------
-...
+1.  Go to main/resip/recon
+2.  make
 
 
