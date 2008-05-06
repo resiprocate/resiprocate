@@ -40,8 +40,6 @@ USE_SSL := yes
 USE_DTLS := no
 SSL_LOCATION := 
 BOOST_INCDIR_CONFIG := /usr/local/include
-LIBSRTP_LIBDIR_CONFIG := /usr/local/lib
-LIBSRTP_INCDIR_CONFIG := /usr/local/include
 SIPX_INSTALLED := no
 SIPX_ROOT := ../sipXtapi
 SIPX_LIBDIR := /usr/local/lib
@@ -226,14 +224,15 @@ $uname = `uname`;
   },  
   {
     name        => "USE_SSL",
-    description => "Do you want to include SIP over TLS support?",
+    description => "Do you want to include SIP over TLS, SMIME or Identity header support? (Requires OpenSSL)",
     default     => "yes",
     validate    => [@yesno],
+    predicate   => "(\$config{BUILD_RETURN_CLIENT} ne 'yes') or (\$config{BUILD_RETURN_SERVER} ne 'yes')",
     flag        => 'ssl',
   },
   {
     name        => "USE_DTLS",
-    description => "Do you want to include SIP over DTLS support?",
+    description => "Do you want to include SIP over DTLS support? (Requires OpenSSL 0.9.8+)",
     default     => "no",
     validate    => [@yesno],
     predicate   => "\$config{USE_SSL} eq 'yes'",
@@ -242,9 +241,8 @@ $uname = `uname`;
   {
     name        => "SSL_LOCATION",
     description => "Where is OpenSSL? (leave blank to use installed copy)",
-#    default     => "",
-    default     => &whichSSL,
-    predicate   => "(\$config{USE_SSL} eq 'yes') and (\$config{BUILD_RECON} ne 'yes')",
+    default     => "",
+    predicate   => "(\$config{USE_SSL} eq 'yes')",
     option      => 'with-ssl-location',
   },
   {
@@ -253,22 +251,6 @@ $uname = `uname`;
     default     => &findBoostInclude,
     predicate   => "(\$config{BUILD_RETURN_CLIENT} eq 'yes') or (\$config{BUILD_RETURN_SERVER} eq 'yes')",
     option      => "boost-headers",
-  },
-  {
-    name        => "LIBSRTP_LIBDIR_CONFIG",
-    description => "Where is libsrtp?",
-    default     => "/usr/local/lib",
-#    default     => &findLibsrtpLib,
-    predicate    => "\$config{BUILD_RECON} eq 'yes'",
-    option      => "libsrtp-lib",
-  },
-  {
-    name        => "LIBSRTP_INCDIR_CONFIG",
-    description => "Where is srtp.h?",
-    default     => "/usr/local/include",
-#    default     => &findLibsrtpInclude,
-    predicate   => "\$config{BUILD_RECON} eq 'yes'",
-    option      => "libsrtp-include",
   },
   {
     name        => "SIPX_INSTALLED",
@@ -728,14 +710,6 @@ sub findBoostInclude
   $candidates[0];
 }
 
-sub whichSSL
-{
-  if ($config{BUILD_RECON} eq 'yes')
-  {
-    return "../contrib/dtls-srtp/openssl";
-  }
-  return "";
-}
 __END__
 
 ##############################################################################
