@@ -7,9 +7,29 @@ BUILD 	=	build
 -include $(BUILD)/Makefile.tools
 -include $(BUILD)/Makefile.osarch
 
-stack: repro dum tests
+DEFAULTS := stack
+ifeq ($(BUILD_REPRO),yes)
+DEFAULTS += repro
+endif
+ifeq ($(BUILD_RECON),yes)
+DEFAULTS += recon
+endif
+ifeq ($(BUILD_RETURN_CLIENT),yes)
+DEFAULTS += return-client
+endif
+ifeq ($(BUILD_RETURN_SERVER),yes)
+DEFAULTS += return-server
+endif
+ifeq ($(BUILD_TFM),yes)
+DEFAULTS += tfm
+endif
 
-all: repro dum tests tfm apps
+default: $(DEFAULTS)
+#default: repro dum tests
+
+stack: dum tests
+
+all: repro dum tests tfm apps recon
 
 tfm: tfmcontrib
 	cd tfm; $(MAKE)
@@ -39,11 +59,27 @@ presSvr: resiprocate
 
 apps: dum
 	cd apps; $(MAKE)
+
+return: return-server return-client
+
+reTurn: return
+
+reTURN: return
 	
-reTurn: rutil
+return-server: rutil
 	cd reTurn; $(MAKE)
+
+return-client: rutil
 	cd reTurn/client; $(MAKE)
 	cd reTurn/client/test; $(MAKE)
+
+recon: dum
+	reflow
+	cd resip/recon; $(MAKE)
+	cd resip/recon/test; $(MAKE)
+
+reflow: return-client
+	cd reflow; $(MAKE)
 
 ifeq (${BUILD_SHARED_LIBS},no)
    NETXX_USE_SHARED_LIBS=--disable-shared
