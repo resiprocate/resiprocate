@@ -1360,7 +1360,7 @@ Helper::makeChallengeResponseAuth(SipMessage& request,
       auth.param(p_algorithm) = "MD5";
    }
 
-   if (challenge.exists(p_opaque))
+   if (challenge.exists(p_opaque) && challenge.param(p_opaque).size() > 0)
    {
       auth.param(p_opaque) = challenge.param(p_opaque);
    }
@@ -1474,7 +1474,7 @@ Helper::makeChallengeResponseAuthWithA1(const SipMessage& request,
       auth.param(p_algorithm) = "MD5";
    }
 
-   if (challenge.exists(p_opaque))
+   if (challenge.exists(p_opaque) && challenge.param(p_opaque).size() > 0)
    {
       auth.param(p_opaque) = challenge.param(p_opaque);
    }

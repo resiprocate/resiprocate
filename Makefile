@@ -23,6 +23,9 @@ resiprocate: rutil
 dum: resiprocate
 	cd resip/dum; $(MAKE)
 
+b2bua: resiprocate
+	cd b2bua; $(MAKE)
+
 repro: dum
 	cd repro; $(MAKE)
 
