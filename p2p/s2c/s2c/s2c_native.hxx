@@ -17,7 +17,7 @@
 
 /* Typedefs for integral types */
 typedef unsigned char u_char;
-typedef unsigned short u_int8;
+typedef unsigned char u_int8;
 typedef unsigned short u_int16;
 typedef unsigned int u_int32;
 typedef unsigned long long u_int64;
@@ -33,9 +33,13 @@ class PDU {
    public:
       std::string mName;
 
-      virtual void print(std::ostream *out) 
+      virtual void print(std::ostream *out) {
+        print(out, 0);
+      }
+    
+      virtual void print(std::ostream *out, int indent) 
       {
-        (*out) << mName << "\n";
+        (*out) << mName << "(empty)" << "\n";
       }
           
       virtual void encode(std::ostream *out)=0;
@@ -43,13 +47,21 @@ class PDU {
 };
 
 #define PDUMemberFunctions \
-  virtual void print(std::ostream *out); virtual void encode(std::ostream *out); virtual void decode(std::istream *in);
+  virtual void print(std::ostream *out, int indent); virtual void encode(std::ostream *out); virtual void decode(std::istream *in);
 
 
 /* Functions for primitive integral types */
 void encode_uintX(std::ostream *out, const unsigned int bits, const u_int64 value);
+void decode_uintX(std::istream *in, const unsigned int bits, u_char &value);
+//void decode_uintX(std::istream *in, const unsigned int bits, u_int8 &value);
+void decode_uintX(std::istream *in, const unsigned int bits, u_int16 &value);
+void decode_uintX(std::istream *in, const unsigned int bits, u_int32 &value);
+void decode_uintX(std::istream *in, const unsigned int bits, u_int64 &value);
 
 
-}
+void do_indent(std::ostream *out, int indent);
+void read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf);
+
+} /* Close of namespace */
 
 #endif
