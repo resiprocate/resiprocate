@@ -1,5 +1,5 @@
 primitive uint8 unsigned char 8;
-primitive uint16 short 16;
+primitive uint16 unsigned short 16;
 primitive uint32 unsigned int 32;
 primitive opaque unsigned char 8;
 
