@@ -10,6 +10,8 @@
 
 
 #include <assert.h>
+#include "rutil/Data.hxx"
+#include "rutil/DataStream.hxx"
 #include "s2c_native.hxx"
 
 void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64 value)
@@ -44,3 +46,125 @@ void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64
     }
   }
   
+
+
+void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_char &value)
+  {
+    int size;
+    int c;      
+    
+    assert(bits==8);
+
+    size=bits/8;
+    
+    value=0;
+
+    while(size--){
+      value <<=8;
+      c=in->get();
+      value |= c;
+    }
+  }
+
+
+/*void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int8 &value)
+  {
+    int size;
+    int c;      
+    
+    assert(bits==8);
+
+    size=bits/8;
+    
+    value=0;
+
+    while(size--){
+      value <<=8;
+      c=in->get();
+      value |= c;
+    }
+  }
+*/
+void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int16 &value)
+  {
+    int size;
+    int c;
+    
+    assert(bits==16);
+
+    size=bits/8;
+    
+    value=0;
+
+    while(size--){
+      value <<=8;
+      c=in->get();
+      value |= c;
+    }
+  }
+
+void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int32 &value)
+  {
+    int size;
+    int c;
+    
+    assert(bits==32);
+
+    size=bits/8;
+    
+    value=0;
+
+    while(size--){
+      value <<=8;
+      c=in->get();
+      value |= c;
+    }
+  }
+
+void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int64 &value)
+  {
+    int size;
+    int c;
+    
+    assert(bits==64);
+
+    size=bits/8;
+    
+    value=0;
+
+    while(size--){
+      value <<=8;
+      c=in->get();
+      value |= c;
+    }
+  }
+    
+void s2c::do_indent(std::ostream *out, int indent)
+ {
+   while(indent--)  *out  << ' ';
+ }
+
+// This is really clumsy, but I don't understand rutil
+// TODO: !ekr! cleanup
+void s2c::read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf)
+  {
+    u_int64 len=0;
+    int c;
+    
+    // First read the length
+    assert(lenlen<=8);
+    while(lenlen--){
+      len<<8;
+      c=in->get();
+      len|=c;
+    }
+    
+    resip::DataStream out(buf);
+    
+    while(len--){
+      c=in->get();
+      out.put(c);
+    }
+    
+    out.flush();
+  }
