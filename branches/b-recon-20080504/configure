@@ -183,7 +183,7 @@ $uname = `uname`;
     default     => "berkeley-db4",
     validate    => [@whichdb],
     predicate   => "\$config{BUILD_REPRO} eq 'yes'",
-    option      => '--with-repro-db'
+    option      => 'repro-db'
   },
   {
     name        => "DB_HEADERS",
