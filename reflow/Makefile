@@ -1,14 +1,9 @@
 BUILD := ../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += ASIO RUTIL ARES OPENSSL SRTP PTHREAD
+PACKAGES += RETURNCLIENT ASIO RUTIL ARES OPENSSL SRTP BOOST PTHREAD
 TARGET_LIBRARY = libreflow
 CODE_SUBDIRS = dtls_wrapper
-CXXFLAGS += -DBOOST_ALL_NO_LIB -I/usr/local/include/boost-1_34_1 -I../reTurn \
-            -I../contrib/srtp/include -I../contrib/srtp/crypto/include
-          
-
-LDFLAGS += -ldl
 
 SRC += \
         FakeSelectSocketDescriptor.cxx \

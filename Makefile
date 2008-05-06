@@ -7,7 +7,11 @@ BUILD 	=	build
 -include $(BUILD)/Makefile.tools
 -include $(BUILD)/Makefile.osarch
 
-DEFAULTS := stack
+DEFAULTS :=
+ifeq ($(BUILD_RECON), yes)
+DEFAULTS += dtls-srtp-openssl
+endif
+DEFAULTS += stack
 ifeq ($(BUILD_REPRO),yes)
 DEFAULTS += repro
 endif
@@ -73,12 +77,11 @@ return-client: rutil
 	cd reTurn/client; $(MAKE)
 	cd reTurn/client/test; $(MAKE)
 
-recon: dum
-	reflow
+recon: dum reflow
 	cd resip/recon; $(MAKE)
 	cd resip/recon/test; $(MAKE)
 
-reflow: return-client
+reflow: dtls-srtp-openssl return-client srtp 
 	cd reflow; $(MAKE)
 
 ifeq (${BUILD_SHARED_LIBS},no)
@@ -135,13 +138,21 @@ configure_ares: contrib/ares-build.$(OS_ARCH)/Makefile
 ares: configure_ares
 	cd contrib/ares-build.$(OS_ARCH) && $(MAKE)
 
-contrib/dtls/Makefile:
-	cd contrib/dtls && ./config
+contrib/srtp/Makefile:
+	cd contrib/srtp && ./configure ${CONFIGURE_ARGS}
 
-configure_dtls: contrib/dtls/Makefile
+configure_srtp: contrib/srtp/Makefile
 
-dtls: configure_dtls
-	cd contrib/dtls && $(MAKE)
+srtp: configure_srtp
+	cd contrib/srtp && $(MAKE)
+
+contrib/openssl/Makefile:
+	cd $(SSL_LOCATION) && ./Configure linux-generic32 --openssldir=/usr enable-tlsext ${CONFIGURE_ARGS} && $(MAKE) depend
+
+configure_dtls-srtp-openssl: contrib/openssl/Makefile
+
+dtls-srtp-openssl: configure_dtls-srtp-openssl
+	cd $(SSL_LOCATION) && $(MAKE)
 
 tfmcontrib: cppunit netxx
 
@@ -260,7 +271,7 @@ cleanpkg:
 $(BUILD)/Makefile.conf:
 	./configure -y
 
-.PHONY: resiprocate tests contrib ares dtls
+.PHONY: resiprocate tests contrib ares srtp dtls-srtp-openssl
 .PHONY: install install-ares install-rutil install-resip install-repro install-dum
 .PHONY: SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
 .PHONY: repro dum tests tfm tfmcontrib contrib rutil check presSvr
