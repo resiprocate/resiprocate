@@ -169,6 +169,7 @@ RANLIB		= $(VOCAL_CROSS_ROOT)/$(CROSS_TOOL_PREFIX)-ranlib
 
 # Pass the relevant parameters down to autotools configure scripts
 CONFIGURE_ARGS	+= --host=$(CROSS_PLATFORM)
+CONFIGURE_ARGS	+= --build=$(shell uname -p)
 CONFIGURE_ARGS	+= CC=$(CC)
 CONFIGURE_ARGS	+= CXX=$(CXX)
 CONFIGURE_ARGS	+= AR=$(AR)
