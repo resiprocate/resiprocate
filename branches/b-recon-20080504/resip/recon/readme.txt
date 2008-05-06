@@ -37,16 +37,6 @@ Setting up build environment:
 /sipXtapi                   <- https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi
 
 
-Build Notes
------------
-
--You must build the sipXmediaAdpapterLib with the following defines
--DDISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY
--DENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY
--Apply the sipXtapi-10645-recon.patch file to the SVN checked out version of 
- sipXtapi before building
-
-
 Building dtls-srtp version of OpenSSL on Windows
 ------------------------------------------------
 /resip-main/contrib/openssl <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
@@ -64,6 +54,18 @@ To build openSSL for windows:
 7.  Run: nmake -f 32.mak
 
 
+Building recon on Windows
+-------------------------
+1.  Ensure the build environment is setup as indicated above.
+2.  Use the recon_7_1.sln Visual Studio 2003 solution file
+3.  Ensure you apply sipXtapi-10645-recon.patch file to the SVN checked out version of 
+    sipXtapi before building
+4.  Open the sipXmediaAdapterLib project settings and enable the following defines:
+    DISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY
+    ENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY
+5.  Build solution.
+
+
 Running on Windows
 ------------------
 A note on testUA executable requirements:
@@ -73,45 +75,10 @@ to run testUA.exe on another machine you will need the following:
 - VS 2003 - C-runtime libaries present on the destination system
 
 
-Building OpenSSL for Generic Linux
+
+
+Building sipXtapi on Generic Linux
 ----------------------------------
-1.  Go to main/contrib/openssl
-2.  ./Configure linux-generic32 --openssldir=/usr enable-tlsext
-3.  make depend
-4.  make
-
-
-Building libSRTP for Generic Linux
-----------------------------------
-1.  Go to main/contrib/srtp
-2.  ./configure
-3.  make
-
-
-Building base resiprocate libraries for Generic Linux
------------------------------------------------------
-1.  Go to main/
-2.  ./configure - select options as desired
-    defaults are good: just be sure to point openssl path to:
-    {localtion of build env}/resip/contrib/openssl
-3.  make
-4.  make reTurn
-
-
-Building reTurn
----------------
-1.  Go to main/
-2.  make reTurn
-
-
-Building reflow
----------------
-1.  Go to main/reflow
-2.  make
-
-
-Building sipXtapi
------------------
 1.  Go to sipXtapi root
 2.  Apply resip/resip/recon/sipXtapi-10645-recon.patch to sipXtapi
 3.  To build sipXportLib:
@@ -141,18 +108,28 @@ Building sipXtapi
     make
 
 
-Building recon
+Building recon on Generic Linux
+-------------------------------
+1.  Ensure the build environment is setup as indicated above.
+2.  Build sipXtapi as described above first.
+3.  If you don't need to cross compile openssl - proceed to step 3, otherwise:
+    Go to main/contrib/openssl
+    ./Configure {place-target-platform-here} --openssldir=/usr enable-tlsext
+    make depend
+    make
+4.  Go to main/
+5.  ./configure 
+    - answer 'yes' to prompt to build reCon - Conversation Manager
+    - make sure you enter the path to the dtls-srtp version of OpenSSL when it asks
+      (ie: ....main/contrib/openssl)
+6.  make
+
+
+Running testua
 --------------
-1.  Go to main/resip/recon
-2.  make
-
-
-Building testua
----------------
 1.  Go to main/resip/recon/test
-2.  make
-3.  To run testUA ensure the codec plugins are in the same directory as the executable:
+2.  To run testUA ensure the codec plugins are in the same directory as the executable:
     cp ../../../../sipXtapi/sipXmediaLib/bin/*.so ./
-4.  To run ./testUA
+3.  ./testUA
 
 
