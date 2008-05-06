@@ -48,10 +48,10 @@ DataParameter::DataParameter(ParameterTypes::Type type,
       // .bwc. We can't let this happen, because we throw if we try to encode
       // when we have an empty value. If that behavior stops, this can be 
       // removed.
-      throw ParseException("DataParameter c'tor parsed empty param!", 
+     /* throw ParseException("DataParameter c'tor parsed empty param!", 
                            "DataParameter",
                            __FILE__,
-                           __LINE__);
+                           __LINE__); */
    }
 }
 
