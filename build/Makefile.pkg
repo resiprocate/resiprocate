@@ -49,6 +49,7 @@ ifeq ($(USE_SSL),yes)
 
   ifneq ($(SSL_LOCATION),)
     OPENSSL_LIBNAME :=
+    OPENSSL_LDFLAGS := -ldl
     OPENSSL_INCLUDEDIRS := $(SSL_LOCATION)/include
     OPENSSL_LDLIBS_LAST := $(SSL_LOCATION)/libssl.a
     OPENSSL_LDLIBS_LAST += $(SSL_LOCATION)/libcrypto.a
@@ -252,20 +253,43 @@ ifeq ($(OSTYPE),MinGW)
   TFMLIBS_LDLIBS_LAST := $(MINGW_BOOST_DIR)/lib/libboost_regex-mgw-s.lib
 endif
 
-ifndef SIPXBASE
-SIPXBASE := $(ROOT)/../sipXtapi
+ifndef SIPX_ROOT
+SIPX_ROOT := ../sipXtapi
 endif
 
-SIPX_INCLUDEDIRS := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/include  $(SIPXBASE)/sipXmediaAdapterLib/interface  $(SIPXBASE)/sipXmediaLib/include $(SIPXBASE)/sipXtackLib/include $(SIPXBASE)/sipXsdpLib/include $(SIPXBASE)/sipXportLib/include $(SIPXBASE)
-#SIPX_LIBDIRS := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs $(SIPXBASE)/sipXmediaLib/src/.libs $(SIPXBASE)/sipXtackLib/src/.libs $(SIPXBASE)/sipXsdpLib/src/.libs $(SIPXBASE)/sipXportLib/src/.libs
-#SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack  sipXsdp sipXport
-SIPX_LDLIBS_LAST := $(SIPXBASE)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs/libsipXmediaProcessing.a
-SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXmediaLib/src/.libs/libsipXmedia.a
-SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXtackLib/src/.libs/libsipXtack.a
-SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXsdpLib/src/.libs/libsipXsdp.a
-SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXportLib/src/.libs/libsipXport.a
-SIPX_LDLIBS_LAST += $(SIPXBASE)/sipXmediaLib/src/.libs/libsipXmedia.a
+ifeq ($(SIPX_INSTALLED),yes)
+
+SIPX_INCLUDEDIRS := $(SIPX_INCDIR)
+SIPX_LIBDIRS := $(SIPX_LIBDIR)
+SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack  sipXsdp sipXport
+#SIPX_LDLIBS_LAST := $(SIPX_LIBDIR)/libsipXmediaProcessing.a
+#SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXmedia.a
+#SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXtack.a
+#SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXsdp.a
+#SIPX_LDLIBS_LAST += $(SIPX_LIBIDR)/libsipXport.a
+#SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXmedia.a
+#SIPX_LDFLAGS := -lpcre -lresolv
 SIPX_DEFINES := __pingtel_on_posix__ DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10
+
+else
+
+SIPX_ROOT := $(ROOT)/$(SIPX_ROOT)
+SIPX_INCLUDEDIRS := $(SIPX_ROOT)/sipXmediaAdapterLib/sipXmediaMediaProcessing/include  $(SIPX_ROOT)/sipXmediaAdapterLib/interface  $(SIPX_ROOT)/sipXmediaLib/include $(SIPX_ROOT)/sipXtackLib/include $(SIPX_ROOT)/sipXsdpLib/include $(SIPX_ROOT)/sipXportLib/include $(SIPX_ROOT)
+#SIPX_LIBDIRS := $(SIPX_ROOT)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs $(SIPX_ROOT)/sipXmediaLib/src/.libs $(SIPX_ROOT)/sipXtackLib/src/.libs $(SIPX_ROOT)/sipXsdpLib/src/.libs $(SIPX_ROOT)/sipXportLib/src/.libs
+#SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack  sipXsdp sipXport
+SIPX_LDLIBS_LAST := $(SIPX_ROOT)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs/libsipXmediaProcessing.a
+SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXmediaLib/src/.libs/libsipXmedia.a
+SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXtackLib/src/.libs/libsipXtack.a
+SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXsdpLib/src/.libs/libsipXsdp.a
+SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXportLib/src/.libs/libsipXport.a
+SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXmediaLib/src/.libs/libsipXmedia.a
+SIPX_LDFLAGS := -lpcre -lresolv
+SIPX_DEFINES := __pingtel_on_posix__ DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10
+
+endif
+
+BOOST_INCLUDEDIRS := $(BOOST_INCDIR_CONFIG)
+BOOST_DEFINES := BOOST_ALL_NO_LIB
 
 BOOSTSER_LIBNAME = boost_serialization boost_wserialization
 

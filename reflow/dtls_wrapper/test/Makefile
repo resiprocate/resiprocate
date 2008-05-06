@@ -4,13 +4,16 @@ BUILD = ../../../build
 include $(BUILD)/Makefile.pre
 
 PACKAGES += REFLOW RUTIL OPENSSL PTHREAD SRTP ARES
-CXXFLAGS += -I../ -I../../../contrib/srtp/include -I../../../contrib/srtp/crypto/include
+CXXFLAGS += -I../
 
-CODE_SUBDIRS = 
+SRC = CreateCert.cxx \
+      TestDtlsUdp.cxx \
+      TestTimerContext.cxx
 
-SRC = CreateCert.cxx  TestDtlsUdp.cxx TestTimerContext.cxx
-
-TESTPROGRAMS = testDtlsWrapper.cxx testDtlsClient.cxx testDtlsServer.cxx 
+TESTPROGRAMS = \
+      testDtlsWrapper.cxx \
+      testDtlsClient.cxx \
+      testDtlsServer.cxx 
 
 include $(BUILD)/Makefile.post
 
