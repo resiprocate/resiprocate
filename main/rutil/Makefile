@@ -30,6 +30,7 @@ SRC = \
 	ParseBuffer.cxx \
 	ParseException.cxx \
 	Poll.cxx \
+	RADIUSDigestAuthenticator.cxx \
 	RWMutex.cxx \
 	Random.cxx \
 	RecursiveMutex.cxx \
