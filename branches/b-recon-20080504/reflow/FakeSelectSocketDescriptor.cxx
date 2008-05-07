@@ -1,6 +1,3 @@
-#include "FlowManagerSubsystem.hxx"
-#include "FakeSelectSocketDescriptor.hxx"
-
 #if defined(WIN32)
 #include <winsock2.h>
 #include <WS2TCPIP.H>
@@ -11,6 +8,9 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <assert.h>
+
+#include "FlowManagerSubsystem.hxx"
+#include "FakeSelectSocketDescriptor.hxx"
 
 using namespace flowmanager;
 using namespace std;

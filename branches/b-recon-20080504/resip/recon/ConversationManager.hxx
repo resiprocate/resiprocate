@@ -1,6 +1,14 @@
 #if !defined(ConversationManager_hxx)
 #define ConversationManager_hxx
 
+#ifdef WIN32
+#define BOOST__STDC_CONSTANT_MACROS_DEFINED  // elminate duplicate define warnings under windows
+#endif
+
+// sipX includes
+#include <mi/CpMediaInterfaceFactoryFactory.h>
+#include <mi/CpMediaInterface.h>
+
 #include "BridgeMixer.hxx"
 
 #include <resip/stack/Uri.hxx>
@@ -13,14 +21,7 @@
 
 #include "MediaResourceCache.hxx"
 
-#ifdef WIN32
-#define BOOST__STDC_CONSTANT_MACROS_DEFINED  // elminate duplicate define warnings under windows
-#endif
 #include "FlowManager.hxx"
-
-// sipX includes
-#include <mi/CpMediaInterfaceFactoryFactory.h>
-#include <mi/CpMediaInterface.h>
 
 namespace resip
 {

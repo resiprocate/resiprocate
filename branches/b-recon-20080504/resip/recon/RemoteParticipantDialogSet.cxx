@@ -1,3 +1,6 @@
+// sipX includes
+#include <CpTopologyGraphInterface.h>
+
 #include "ConversationManager.hxx"
 #include "UserAgentSubsystem.hxx"
 #include "RemoteParticipantDialogSet.hxx"
@@ -19,9 +22,6 @@
 #include <resip/stack/SipFrag.hxx>
 #include <resip/dum/DialogUsageManager.hxx>
 #include <resip/dum/ServerInviteSession.hxx>
-
-// sipX includes
-#include <CpTopologyGraphInterface.h>
 
 //#define DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
 #include <rutil/WinLeakCheck.hxx>

@@ -1,10 +1,9 @@
+#include <rutil/Log.hxx>
+#include <rutil/Logger.hxx>
+
 #include "FlowManagerSubsystem.hxx"
 #include "FlowManager.hxx"
 #include "MediaStream.hxx"
-
-#include <rutil/Log.hxx>
-#include <rutil/Logger.hxx>
-#include <rutil/WinLeakCheck.hxx>
 
 using namespace flowmanager;
 using namespace dtls;
