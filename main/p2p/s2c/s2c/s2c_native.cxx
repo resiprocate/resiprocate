@@ -47,7 +47,6 @@ void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64
   }
   
 
-
 void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_char &value)
   {
     int size;
