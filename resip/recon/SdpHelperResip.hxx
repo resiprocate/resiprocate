@@ -19,9 +19,9 @@
 #define BUILD_RESIP_SDP_HELPER
 
 #ifdef BUILD_RESIP_SDP_HELPER
-#include <resip/stack/SdpContents.hxx>
 #include <sdp/Sdp.h>
 #include <sdp/SdpMediaLine.h>
+#include <resip/stack/SdpContents.hxx>
 
 // DEFINES
 // MACROS

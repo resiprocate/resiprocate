@@ -1,14 +1,17 @@
 #include <iostream>
 
+#include <openssl/ssl.h>
+#include <openssl/srtp.h>
+
+#include <rutil/Data.hxx>
+#include <rutil/Socket.hxx>
+
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
 #include "TestTimerContext.hxx"
 #include "TestDtlsUdp.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
 #include "CreateCert.hxx"
 
-#include <openssl/srtp.h>
 
 using namespace std;
 using namespace dtls;
