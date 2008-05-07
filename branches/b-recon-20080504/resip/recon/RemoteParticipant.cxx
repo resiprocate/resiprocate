@@ -1,8 +1,9 @@
+#include "ConversationManager.hxx"
+
 // sipX includes
 #include "SdpHelperResip.hxx"
 #include <sdp/Sdp.h>
 
-#include "ConversationManager.hxx"
 #include "RemoteParticipant.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
