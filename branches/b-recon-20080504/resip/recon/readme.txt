@@ -57,9 +57,10 @@ To build openSSL for windows:
 Building recon on Windows
 -------------------------
 1.  Ensure the build environment is setup as indicated above.
-2.  Use the recon_7_1.sln Visual Studio 2003 solution file
-3.  Ensure you apply sipXtapi-10645-recon.patch file to the SVN checked out version of 
+2.  Ensure you apply sipXtapi-10645-recon.patch file to the SVN checked out version of 
     sipXtapi before building
+3.  Use the recon_7_1.sln Visual Studio 2003 or recon_8_0.sln Visual Studio 2005 
+    solution file
 4.  Open the sipXmediaAdapterLib project settings and enable the following defines:
     DISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY
     ENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY
@@ -72,7 +73,7 @@ A note on testUA executable requirements:
 By default you will be able to run testUA from the VS debugger, but if you decide
 to run testUA.exe on another machine you will need the following:
 - codec_*.dll from sipXtapi/sipXmediaLib/bin directory
-- VS 2003 - C-runtime libaries present on the destination system
+- VS 2003/2005 - C-runtime libaries present on the destination system
 
 
 
@@ -132,4 +133,51 @@ Running testua
     cp ../../../../sipXtapi/sipXmediaLib/bin/*.so ./
 3.  ./testUA
 
+
+
+TODO List
+---------
+In order for recon to appeal to the widest audience possible, some changes
+should be made in order to provide a better layer between the underlying
+media stack (currently sipXtapi) and the Conversation Manager.  The following
+tasks are required:
+1.  Re-write the SDP library.  The SDP library provides a semantic representation 
+    of the information conveyed in the Session Description Protocol (SDP), 
+    including ICE candidates and components.  It is currently created in sipX 
+    style code and reside in the sipXtapi repository (sipXsdpLib).  This library
+    should be port/rewritten in resip style containers.  Once this is complete we 
+    can modify the offer/answer logic in recon to only be dependant on resip.
+2.  Provide a media access API/thin layer so that sipX API's are not accessed directly
+    from different areas in recon source code.  Currently sipX API's are access 
+    in the following locations:
+    ConversationManager.cxx - contains main sipXmediaFactory and sipXmediaInterface - the interface into sipX library
+      - createMediaInterface
+      - setVolume
+      - setMicrophoneGain
+      - muteMicrophone
+      - enableEchoCancel
+      - enableAutoGainControl
+      - enableNoiseReduction
+ 
+    BridgeMixer.cxx - API's to control the sipX bridge mixing matrix
+      - setMixWeightsForOutput
+      - setMixWeightsForInput
+ 
+    MediaResourceParticipant.cxx - API's to play tones, files, media
+      - start/stopTone
+      - start/stopAudio
+      - playBuffer
+      - createPlayer (deprecated in latest sipX)
+ 
+    RemoteParticipantDialogSet - API's to create local socket/connection
+      - create/deleteConnection
+      - getCapabilities
+      - getConnectionPortOnBridge
+ 
+    RemoteParticipant.cxx - API's to start/stop RTP
+      - setConnectionDestination
+      - start/stopRtpSend
+      - start/stopRtpReceive
+      - isReceivingRtpAudio
+      - isSendingRtpAudio    
 
