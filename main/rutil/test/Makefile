@@ -5,7 +5,7 @@ CONTRIB = ../../../contrib
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RUTIL ARES OPENSSL PTHREAD POPT
+PACKAGES += RUTIL ARES OPENSSL PTHREAD POPT RADIUSCLIENTNG
 
 SRC = \
 	TestSubsystemLogLevel.cxx
