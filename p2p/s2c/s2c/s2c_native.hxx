@@ -58,7 +58,6 @@ void decode_uintX(std::istream *in, const unsigned int bits, u_int16 &value);
 void decode_uintX(std::istream *in, const unsigned int bits, u_int32 &value);
 void decode_uintX(std::istream *in, const unsigned int bits, u_int64 &value);
 
-
 void do_indent(std::ostream *out, int indent);
 void read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf);
 
