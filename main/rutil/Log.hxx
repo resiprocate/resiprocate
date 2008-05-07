@@ -19,7 +19,7 @@
 // since some logging takes place during static initialization we can't
 // be sure all the pthread stuff is ready to go. this eventually causes
 // crashes in the Mac OS native API.
-#if !defined(WIN32) && !defined(TARGET_OS_MAC)
+#if !defined(WIN32) && !defined(TARGET_OS_MAC) && !defined(__FreeBSD__)
 #define LOG_ENABLE_THREAD_SETTING
 // defining hash function in mac os (non-sdk api) because pthread_t 
 // is a pointer,  (this assumes it's always the same pointer)
