@@ -1,6 +1,13 @@
 #if !defined(Flow_hxx)
 #define Flow_hxx
 
+#include <map>
+#include <rutil/TimeLimitFifo.hxx>
+#include <rutil/Mutex.hxx>
+
+#include <srtp.h>
+#include <boost/shared_ptr.hpp>
+
 #include "client/TurnAsyncUdpSocket.hxx"
 #include "client/TurnAsyncTcpSocket.hxx"
 #include "client/TurnAsyncTlsSocket.hxx"
@@ -9,11 +16,6 @@
 #include "FakeSelectSocketDescriptor.hxx"
 #include "dtls_wrapper/DtlsSocket.hxx"
 
-#include <map>
-#include <rutil/TimeLimitFifo.hxx>
-#include <rutil/Mutex.hxx>
-
-#include <srtp.h>
 
 using namespace reTurn;
 
