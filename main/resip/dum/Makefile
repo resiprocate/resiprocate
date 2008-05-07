@@ -53,6 +53,7 @@ SRC =   \
 	UserProfile.cxx \
 	Profile.cxx \
 	PublicationCreator.cxx \
+	RADIUSServerAuthManager.cxx \
 	RedirectManager.cxx \
 	RegistrationCreator.cxx \
 	ServerAuthManager.cxx \
