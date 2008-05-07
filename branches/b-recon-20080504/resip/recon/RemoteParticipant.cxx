@@ -1,3 +1,7 @@
+// sipX includes
+#include "SdpHelperResip.hxx"
+#include <sdp/Sdp.h>
+
 #include "ConversationManager.hxx"
 #include "RemoteParticipant.hxx"
 #include "Conversation.hxx"
@@ -17,10 +21,6 @@
 #include <resip/dum/ClientSubscription.hxx>
 #include <resip/dum/ServerOutOfDialogReq.hxx>
 #include <resip/dum/ServerSubscription.hxx>
-
-// sipX includes
-#include "SdpHelperResip.hxx"
-#include <sdp/Sdp.h>
 
 #include <rutil/WinLeakCheck.hxx>
 

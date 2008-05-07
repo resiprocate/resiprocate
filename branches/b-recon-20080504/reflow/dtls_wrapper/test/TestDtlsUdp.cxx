@@ -10,14 +10,16 @@
 
 #include <memory.h>
 
+#include <openssl/ssl.h>
+#include <openssl/srtp.h>
+
+#include <rutil/Data.hxx>
+#include <rutil/Socket.hxx>
 
 #include "DtlsFactory.hxx"
 #include "DtlsSocket.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
 #include "CreateCert.hxx"
 #include "TestDtlsUdp.hxx"
-#include <openssl/srtp.h>
 
 extern "C" 
 {

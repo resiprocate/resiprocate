@@ -1,11 +1,10 @@
-#include "FlowDtlsTimerContext.hxx"
-#include "FlowManagerSubsystem.hxx"
-
 #include <boost/bind.hpp>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
-#include <rutil/WinLeakCheck.hxx>
+
+#include "FlowDtlsTimerContext.hxx"
+#include "FlowManagerSubsystem.hxx"
 
 using namespace flowmanager;
 using namespace resip;
