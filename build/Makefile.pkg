@@ -260,15 +260,15 @@ endif
 ifeq ($(SIPX_INSTALLED),yes)
 
 SIPX_INCLUDEDIRS := $(SIPX_INCDIR)
-SIPX_LIBDIRS := $(SIPX_LIBDIR)
-SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack  sipXsdp sipXport
-#SIPX_LDLIBS_LAST := $(SIPX_LIBDIR)/libsipXmediaProcessing.a
-#SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXmedia.a
-#SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXtack.a
-#SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXsdp.a
-#SIPX_LDLIBS_LAST += $(SIPX_LIBIDR)/libsipXport.a
-#SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXmedia.a
-#SIPX_LDFLAGS := -lpcre -lresolv
+#SIPX_LIBDIRS := $(SIPX_LIBDIR)
+#SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack  sipXsdp sipXport
+SIPX_LDLIBS_LAST := $(SIPX_LIBDIR)/libsipXmediaProcessing.a
+SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXmedia.a
+SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXtack.a
+SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXsdp.a
+SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXport.a
+SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXmedia.a
+SIPX_LDFLAGS := -lpcre -lresolv
 SIPX_DEFINES := __pingtel_on_posix__ DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10
 
 else
