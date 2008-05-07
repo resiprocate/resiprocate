@@ -258,6 +258,8 @@ BOOSTSER_LIBNAME = boost_serialization boost_wserialization
 
 ASIO_INCLUDEDIRS := $(ROOT)/contrib/asio
 
+RADIUSCLIENTNG_LIBNAME = radiusclient-ng
+
 ##############################################################################
 # 
 # The Vovida Software License, Version 1.0 
