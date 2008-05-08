@@ -39,19 +39,32 @@ Setting up build environment:
 
 Building dtls-srtp version of OpenSSL on Windows
 ------------------------------------------------
+recon currently uses a branch of OpenSSL that contains modification to do dtls-srtp.
+
 /resip-main/contrib/openssl <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
 
-recon currently uses a branch of OpenSSL that contains modification to do dtls-srtp.
-To build openSSL for windows:
+You will need ActiveState Perl, available from http://www.activestate.com/ActivePerl - there
+is a free version available for download.
+
+To build openSSL for windows using VS2003:
 1.  Use VS2003 Command Prompt window - Note: 0.9.8g will not build 
-    Crypto ASM fns with VS2003 MASM - since we use static libs and until we upgrade 
-    all projects to VS2005 - we will build openssl with no ASM
+    Crypto ASM fns with VS2003 MASM - we will build openssl with no ASM
 2.  From openssl root run: perl Configure VC-WIN32 enable-tlsext
 3.  Run: perl util\mkfiles.pl >MINFO
 4.  Run: perl util\mk1mf.pl no-asm debug VC-WIN32 > d32.mak
 5.  Run: perl util\mk1mf.pl no-asm VC-WIN32 > 32.mak
 6.  Run: nmake -f d32.mak
 7.  Run: nmake -f 32.mak
+
+To build openSSL for windows using VS2005:
+1.  Use VS2005 Command Prompt window
+2.  From openssl root run: perl Configure VC-WIN32 enable-tlsext
+3.  Run: ms\do_masm
+4.  Run: perl util\mkfiles.pl >MINFO
+5.  Run: perl util\mk1mf.pl no-asm debug VC-WIN32 > d32.mak
+6.  Run: perl util\mk1mf.pl no-asm VC-WIN32 > 32.mak
+7.  Run: nmake -f d32.mak
+8.  Run: nmake -f 32.mak
 
 
 Building recon on Windows
