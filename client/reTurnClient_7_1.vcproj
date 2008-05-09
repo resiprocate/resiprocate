@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;../../contrib/asio&quot;;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../"
+				AdditionalIncludeDirectories="../../contrib/asio;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../contrib/OpenSSL/inc32;../../"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL;LEAK_CHECK"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -61,7 +61,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;../../contrib/asio&quot;;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../"
+				AdditionalIncludeDirectories="../../contrib/asio;../../contrib/boost_1_34_1;../../contrib/OpenSSL/include;../../contrib/OpenSSL/inc32;../../"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="TRUE"
@@ -216,6 +216,9 @@
 			</File>
 			<File
 				RelativePath=".\TurnSocket.hxx">
+			</File>
+			<File
+				RelativePath=".\TurnTcpSocket.hxx">
 			</File>
 			<File
 				RelativePath=".\TurnTlsSocket.hxx">
