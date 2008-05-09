@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;../contrib/asio&quot;;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../"
+				AdditionalIncludeDirectories="../contrib/asio;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL;LEAK_CHECK"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -33,7 +33,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MDd.lib&quot;"
+				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\out32.dbg\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32.dbg\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/reTurnServer.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -69,7 +69,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;../contrib/asio&quot;;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../"
+				AdditionalIncludeDirectories="../contrib/asio;../contrib/boost_1_34_1;../contrib/OpenSSL/include;../contrib/OpenSSL/inc32;../"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;BOOST_ALL_NO_LIB;_WIN32_WINNT=0x0500;USE_SSL"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="TRUE"
@@ -81,7 +81,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MD.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MD.lib&quot;"
+				AdditionalDependencies="&quot;$(ProjectDir)..\contrib\openssl\out32\libeay32.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\out32\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/reTurnServer.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
