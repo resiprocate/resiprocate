@@ -7,9 +7,33 @@ BUILD 	=	build
 -include $(BUILD)/Makefile.tools
 -include $(BUILD)/Makefile.osarch
 
-stack: repro dum tests
+DEFAULTS :=
+ifeq ($(BUILD_RECON), yes)
+DEFAULTS += dtls-srtp-openssl
+endif
+DEFAULTS += stack
+ifeq ($(BUILD_REPRO),yes)
+DEFAULTS += repro
+endif
+ifeq ($(BUILD_RECON),yes)
+DEFAULTS += recon
+endif
+ifeq ($(BUILD_RETURN_CLIENT),yes)
+DEFAULTS += return-client
+endif
+ifeq ($(BUILD_RETURN_SERVER),yes)
+DEFAULTS += return-server
+endif
+ifeq ($(BUILD_TFM),yes)
+DEFAULTS += tfm
+endif
 
-all: repro dum tests tfm apps
+default: $(DEFAULTS)
+#default: repro dum tests
+
+stack: dum tests
+
+all: repro dum tests tfm apps recon
 
 tfm: tfmcontrib
 	cd tfm; $(MAKE)
@@ -42,11 +66,26 @@ presSvr: resiprocate
 
 apps: dum
 	cd apps; $(MAKE)
+
+return: return-server return-client
+
+reTurn: return
+
+reTURN: return
 	
-reTurn: rutil
+return-server: rutil
 	cd reTurn; $(MAKE)
+
+return-client: rutil
 	cd reTurn/client; $(MAKE)
 	cd reTurn/client/test; $(MAKE)
+
+recon: dum reflow
+	cd resip/recon; $(MAKE)
+	cd resip/recon/test; $(MAKE)
+
+reflow: dtls-srtp-openssl return-client srtp 
+	cd reflow; $(MAKE)
 
 ifeq (${BUILD_SHARED_LIBS},no)
    NETXX_USE_SHARED_LIBS=--disable-shared
@@ -102,13 +141,21 @@ configure_ares: contrib/ares-build.$(OS_ARCH)/Makefile
 ares: configure_ares
 	cd contrib/ares-build.$(OS_ARCH) && $(MAKE)
 
-contrib/dtls/Makefile:
-	cd contrib/dtls && ./config
+contrib/srtp/Makefile:
+	cd contrib/srtp && ./configure ${CONFIGURE_ARGS}
 
-configure_dtls: contrib/dtls/Makefile
+configure_srtp: contrib/srtp/Makefile
 
-dtls: configure_dtls
-	cd contrib/dtls && $(MAKE)
+srtp: configure_srtp
+	cd contrib/srtp && $(MAKE)
+
+contrib/openssl/Makefile:
+	cd $(SSL_LOCATION) && ./Configure linux-generic32 --openssldir=/usr enable-tlsext ${CONFIGURE_ARGS} && $(MAKE) depend
+
+configure_dtls-srtp-openssl: contrib/openssl/Makefile
+
+dtls-srtp-openssl: configure_dtls-srtp-openssl
+	cd $(SSL_LOCATION) && $(MAKE)
 
 tfmcontrib: cppunit netxx
 
@@ -227,7 +274,7 @@ cleanpkg:
 $(BUILD)/Makefile.conf:
 	./configure -y
 
-.PHONY: resiprocate tests contrib ares dtls
+.PHONY: resiprocate tests contrib ares srtp dtls-srtp-openssl
 .PHONY: install install-ares install-rutil install-resip install-repro install-dum
 .PHONY: SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
 .PHONY: repro dum tests tfm tfmcontrib contrib rutil check presSvr

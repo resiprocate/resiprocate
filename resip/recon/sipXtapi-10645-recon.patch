@@ -1,0 +1,470 @@
+Index: sipXmediaAdapterLib/interface/mi/CpMediaInterface.h
+===================================================================
+--- sipXmediaAdapterLib/interface/mi/CpMediaInterface.h	(revision 10643)
++++ sipXmediaAdapterLib/interface/mi/CpMediaInterface.h	(working copy)
+@@ -514,7 +514,8 @@
+                                UtlBoolean remote,
+                                OsProtectedEvent* event = NULL,
+                                UtlBoolean mixWithMic = false,
+-                               int downScaling = 100) = 0 ;
++                               int downScaling = 100,
++                               OsNotification *notifevent = NULL) = 0 ;
+      /**<
+      *
+      *  @TODO This method should also specify the audio format (e.g. samples/per 
+Index: sipXmediaAdapterLib/sipXmediaAdapterLib.vcproj
+===================================================================
+--- sipXmediaAdapterLib/sipXmediaAdapterLib.vcproj	(revision 10643)
++++ sipXmediaAdapterLib/sipXmediaAdapterLib.vcproj	(working copy)
+@@ -20,7 +20,7 @@
+ 				Name="VCCLCompilerTool"
+ 				Optimization="0"
+ 				AdditionalIncludeDirectories="sipXmediaMediaProcessing\include;..\sipXportLib\include;..\sipXsdpLib\include;..\sipXmediaLib\include;..\sipXcallLib\include;..\sipXtackLib\include;interface"
+-				PreprocessorDefinitions="SIPX_VIDEO;WIN32;_DEBUG;_LIB;xDISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY;xENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY"
++				PreprocessorDefinitions="HAVE_SPEEX;SIPX_VIDEO;WIN32;_DEBUG;_LIB;DISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY;ENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY"
+ 				MinimalRebuild="TRUE"
+ 				BasicRuntimeChecks="3"
+ 				RuntimeLibrary="3"
+Index: sipXmediaAdapterLib/sipXmediaMediaProcessing/include/CpPhoneMediaInterface.h
+===================================================================
+--- sipXmediaAdapterLib/sipXmediaMediaProcessing/include/CpPhoneMediaInterface.h	(revision 10643)
++++ sipXmediaAdapterLib/sipXmediaMediaProcessing/include/CpPhoneMediaInterface.h	(working copy)
+@@ -169,12 +169,13 @@
+                                unsigned long bufSize,
+                                uint32_t bufRate, 
+                                int type, 
+-                               UtlBoolean repeat,
+-                               UtlBoolean local, 
+-                               UtlBoolean remote,
+-                               OsProtectedEvent* event = NULL,
+-                               UtlBoolean mixWithMic = false,
+-                               int downScaling = 100);
++                              UtlBoolean repeat,
++                              UtlBoolean local, 
++                              UtlBoolean remote,
++                              OsProtectedEvent* event = NULL,
++                              UtlBoolean mixWithMic = false,
++                              int downScaling = 100,
++                              OsNotification *notifevent = NULL);
+ 
+      /// @copydoc CpMediaInterface::pauseAudio()
+    virtual OsStatus pauseAudio();
+Index: sipXmediaAdapterLib/sipXmediaMediaProcessing/include/CpTopologyGraphInterface.h
+===================================================================
+--- sipXmediaAdapterLib/sipXmediaMediaProcessing/include/CpTopologyGraphInterface.h	(revision 10643)
++++ sipXmediaAdapterLib/sipXmediaMediaProcessing/include/CpTopologyGraphInterface.h	(working copy)
+@@ -36,6 +36,7 @@
+ class MpTopologyGraph;
+ class MpResourceTopology;
+ class MpResourceFactory;
++class OsSocket;
+ 
+ 
+ /** Subsystem manager and creator of CpTopologyGraphInterfaces specialization of CpMediaInterface
+@@ -87,10 +88,14 @@
+                                      IMediaEventListener* pMediaEventListener = NULL,
+                                      const RtpTransportOptions rtpTransportOptions=RTP_TRANSPORT_UDP);
+ 
++   virtual OsStatus createConnection(int& connectionId,
++                                     OsSocket* rtpSocket,
++                                     OsSocket* rtcpSocket);
++
+      /// @copydoc CpMediaInterface::setPlcMethod()
+    virtual OsStatus setPlcMethod(int connectionId,
+                                  const UtlString &methodName="");
+-
++                                 
+      /// @copydoc CpMediaInterface::setNotificationDispatcher()
+    virtual
+    OsMsgDispatcher* setNotificationDispatcher(OsMsgDispatcher* pNotificationDispatcher);
+@@ -151,16 +156,17 @@
+ 
+ 
+      /// @copydoc CpMediaInterface::playBuffer()
+-   virtual OsStatus playBuffer(char* buf, 
++    virtual OsStatus playBuffer(char* buf, 
+                                unsigned long bufSize,
+-                               uint32_t bufRate, 
+-                               int type, 
+-                               UtlBoolean repeat,
+-                               UtlBoolean local, 
+-                               UtlBoolean remote,
+-                               OsProtectedEvent* event = NULL,
+-                               UtlBoolean mixWithMic = false,
+-                               int downScaling = 100);
++                                uint32_t bufRate, 
++                                int type, 
++                                UtlBoolean repeat,
++                                UtlBoolean local, 
++                                UtlBoolean remote,
++                                OsProtectedEvent* event = NULL,
++                                UtlBoolean mixWithMic = false,
++                              int downScaling = 100,
++                              OsNotification *notifevent = NULL);
+ 
+      /// @copydoc CpMediaInterface::pauseAudio()
+    virtual OsStatus pauseAudio();
+@@ -523,8 +529,8 @@
+     OsStatus createRtpSocketPair(UtlString localAddress,
+                                  int localPort,
+                                  SIPX_CONTACT_TYPE contactType,
+-                                 OsDatagramSocket* &rtpSocket,
+-                                 OsDatagramSocket* &rtcpSocket);
++                                 OsSocket* &rtpSocket,
++                                 OsSocket* &rtcpSocket);
+       /**<
+       *  For RTP/RTCP port pair will be set next free port pair.
+       *  
+Index: sipXmediaAdapterLib/sipXmediaMediaProcessing/src/CpPhoneMediaInterface.cpp
+===================================================================
+--- sipXmediaAdapterLib/sipXmediaMediaProcessing/src/CpPhoneMediaInterface.cpp	(revision 10643)
++++ sipXmediaAdapterLib/sipXmediaMediaProcessing/src/CpPhoneMediaInterface.cpp	(working copy)
+@@ -1221,7 +1221,8 @@
+                                            UtlBoolean remote, 
+                                            OsProtectedEvent* pEvent,
+                                            UtlBoolean mixWithMic,
+-                                           int downScaling)
++                                           int downScaling,
++                                           OsNotification* notifevent)
+ {
+     OsStatus returnCode = OS_NOT_FOUND;
+     if(mpFlowGraph && buf)
+Index: sipXmediaAdapterLib/sipXmediaMediaProcessing/src/CpTopologyGraphInterface.cpp
+===================================================================
+--- sipXmediaAdapterLib/sipXmediaMediaProcessing/src/CpTopologyGraphInterface.cpp	(revision 10643)
++++ sipXmediaAdapterLib/sipXmediaMediaProcessing/src/CpTopologyGraphInterface.cpp	(working copy)
+@@ -132,8 +132,8 @@
+     UtlString mRtpSendHostAddress;
+     UtlBoolean mDestinationSet;
+     UtlBoolean mIsMulticast;
+-    OsDatagramSocket* mpRtpAudioSocket;
+-    OsDatagramSocket* mpRtcpAudioSocket;
++    OsSocket* mpRtpAudioSocket;
++    OsSocket* mpRtcpAudioSocket;
+     int mRtpAudioSendHostPort;
+     int mRtcpAudioSendHostPort;
+     int mRtpAudioReceivePort;
+@@ -332,7 +332,8 @@
+    // Create the sockets for audio stream
+    retValue = createRtpSocketPair(mediaConnection->mLocalAddress, localPort,
+                                   mediaConnection->mContactType,
+-                                  mediaConnection->mpRtpAudioSocket, mediaConnection->mpRtcpAudioSocket);
++                                  mediaConnection->mpRtpAudioSocket, 
++                                  mediaConnection->mpRtcpAudioSocket);
+    if (retValue != OS_SUCCESS)
+    {
+        return retValue;
+@@ -367,9 +368,69 @@
+             "CpTopologyGraphInterface::createConnection creating a new mpCodecFactory %p",
+             mediaConnection->mpCodecFactory);
+ 
++    mpTopologyGraph->synchronize();
+     return retValue;
+ }
+ 
++OsStatus CpTopologyGraphInterface::createConnection(int& connectionId,
++                                                      OsSocket* rtpSocket,
++                                                      OsSocket* rtcpSocket)
++{
++    OsStatus retValue = OS_SUCCESS;
++    CpTopologyMediaConnection* mediaConnection=NULL;
++    CpTopologyGraphFactoryImpl* pTopologyFactoryImpl = (CpTopologyGraphFactoryImpl*)mpFactoryImpl;
++
++    connectionId = getNextConnectionId();
++    if (connectionId == -1)
++    {
++       return OS_LIMIT_REACHED;
++    }
++    mpTopologyGraph->addResources(*pTopologyFactoryImpl->getConnectionResourceTopology(),
++                                 pTopologyFactoryImpl->getResourceFactory(),
++                                 connectionId);
++
++    mediaConnection = new CpTopologyMediaConnection(connectionId);
++    OsSysLog::add(FAC_CP, PRI_DEBUG,
++                  "CpTopologyGraphInterface::createConnection "
++                  "creating a new connection %p",
++                  mediaConnection);
++    mMediaConnections.append(mediaConnection);
++
++    // Create the sockets for audio stream
++    mediaConnection->mpRtpAudioSocket = rtpSocket;
++    mediaConnection->mpRtcpAudioSocket = rtcpSocket;
++    mediaConnection->mDestinationSet = TRUE;
++    mediaConnection->mRtpSendHostAddress = "127.0.0.1";  // dummy address so that startRtpSend will work
++
++    // Start the audio packet pump
++    UtlString inConnectionName(DEFAULT_RTP_INPUT_RESOURCE_NAME);
++    MpResourceTopology::replaceNumInName(inConnectionName, connectionId);
++    MpRtpInputAudioConnection::startReceiveRtp(*(mpTopologyGraph->getMsgQ()),
++                                               inConnectionName,
++                                               NULL,
++                                               0,
++                                               *(mediaConnection->mpRtpAudioSocket),
++                                               *(mediaConnection->mpRtcpAudioSocket));
++
++    OsSysLog::add(FAC_CP, PRI_DEBUG, 
++             "CpTopologyGraphInterface::createConnection creating a new RTP socket: %p descriptor: %d",
++             mediaConnection->mpRtpAudioSocket, mediaConnection->mpRtpAudioSocket->getSocketDescriptor());
++    OsSysLog::add(FAC_CP, PRI_DEBUG, 
++             "CpTopologyGraphInterface::createConnection creating a new RTCP socket: %p descriptor: %d",
++             mediaConnection->mpRtcpAudioSocket, mediaConnection->mpRtcpAudioSocket->getSocketDescriptor());
++
++    // Set codec factory
++    mediaConnection->mpCodecFactory = new SdpCodecList(mSupportedCodecs);
++    mediaConnection->mpCodecFactory->bindPayloadTypes();
++    OsSysLog::add(FAC_CP, PRI_DEBUG, 
++             "CpTopologyGraphInterface::createConnection creating a new mpCodecFactory %p",
++             mediaConnection->mpCodecFactory);
++
++    mpTopologyGraph->synchronize();
++
++    return retValue;
++}
++
+ OsStatus CpTopologyGraphInterface::setPlcMethod(int connectionId,
+                                                 const UtlString &methodName)
+ {
+@@ -483,9 +544,13 @@
+ 
+     if (pMediaConn)
+     {
++        OsDatagramSocket* rtpAudioDatagramSocket = dynamic_cast<OsDatagramSocket*>(pMediaConn->mpRtpAudioSocket);
++        OsDatagramSocket* rtcpAudioDatagramSocket = dynamic_cast<OsDatagramSocket*>(pMediaConn->mpRtcpAudioSocket);
++
+         // Audio RTP
+-        if (pMediaConn->mpRtpAudioSocket)
++        if (rtpAudioDatagramSocket)
+         {
++            OsNatDatagramSocket* rtpAudioNatDatagramSocket = dynamic_cast<OsNatDatagramSocket*>(pMediaConn->mpRtpAudioSocket);
+             // The "rtpHostAddress" is used for the first RTP stream -- 
+             // others are ignored.  They *SHOULD* be the same as the first.  
+             // Possible exceptions: STUN worked for the first, but not the
+@@ -493,8 +558,8 @@
+             if (pMediaConn->mContactType == CONTACT_RELAY)
+             {
+                 assert(!pMediaConn->mIsMulticast);
+-                if (!((OsNatDatagramSocket*)pMediaConn->mpRtpAudioSocket)->
+-                                            getRelayIp(&rtpHostAddress, &rtpAudioPort))
++                assert(rtpAudioNatDatagramSocket);
++                if (rtpAudioNatDatagramSocket && !rtpAudioNatDatagramSocket->getRelayIp(&rtpHostAddress, &rtpAudioPort))
+                 {
+                     rtpAudioPort = pMediaConn->mRtpAudioReceivePort ;
+                     rtpHostAddress = mRtpReceiveHostAddress ;
+@@ -504,7 +569,7 @@
+             else if (pMediaConn->mContactType == CONTACT_AUTO || pMediaConn->mContactType == CONTACT_NAT_MAPPED)
+             {
+                 assert(!pMediaConn->mIsMulticast);
+-                if (!pMediaConn->mpRtpAudioSocket->getMappedIp(&rtpHostAddress, &rtpAudioPort))
++                if (!rtpAudioDatagramSocket->getMappedIp(&rtpHostAddress, &rtpAudioPort))
+                 {
+                     rtpAudioPort = pMediaConn->mRtpAudioReceivePort ;
+                     rtpHostAddress = pMediaConn->mLocalAddress ;
+@@ -527,14 +592,17 @@
+         }
+ 
+         // Audio RTCP
+-        if (pMediaConn->mpRtcpAudioSocket)
++        if (rtcpAudioDatagramSocket)
+         {
++            OsNatDatagramSocket* rtcpAudioNatDatagramSocket = dynamic_cast<OsNatDatagramSocket*>(pMediaConn->mpRtcpAudioSocket);
++
+             if (pMediaConn->mContactType == CONTACT_RELAY)
+             {
+                 UtlString tempHostAddress;
+                 assert(!pMediaConn->mIsMulticast);
+-                if (!((OsNatDatagramSocket*)pMediaConn->mpRtcpAudioSocket)->
+-                                            getRelayIp(&tempHostAddress, &rtcpAudioPort))
++                assert(rtcpAudioNatDatagramSocket);
++                if (rtcpAudioNatDatagramSocket && 
++                    !rtcpAudioNatDatagramSocket->getRelayIp(&tempHostAddress, &rtcpAudioPort))
+                 {
+                     rtcpAudioPort = pMediaConn->mRtcpAudioReceivePort ;
+                 }
+@@ -548,7 +616,7 @@
+             {
+                 UtlString tempHostAddress;
+                 assert(!pMediaConn->mIsMulticast);
+-                if (!pMediaConn->mpRtcpAudioSocket->getMappedIp(&tempHostAddress, &rtcpAudioPort))
++                if (!rtcpAudioDatagramSocket->getMappedIp(&tempHostAddress, &rtcpAudioPort))
+                 {
+                     rtcpAudioPort = pMediaConn->mRtcpAudioReceivePort ;
+                 }
+@@ -716,7 +784,8 @@
+         pMediaConnection->mRtpAudioSendHostPort = remoteAudioRtpPort;
+         pMediaConnection->mRtcpAudioSendHostPort = remoteAudioRtcpPort;
+ 
+-        if(pMediaConnection->mpRtpAudioSocket)
++        OsDatagramSocket* rtpDatagramSocket = dynamic_cast<OsDatagramSocket*>(pMediaConnection->mpRtpAudioSocket);
++        if(rtpDatagramSocket)
+         {
+             if (!pMediaConnection->mIsMulticast)
+             {
+@@ -726,13 +795,14 @@
+             }
+             else
+             {
+-                pMediaConnection->mpRtpAudioSocket->doConnect(remoteAudioRtpPort,
+-                                                              remoteRtpHostAddress,
+-                                                              TRUE);
++                rtpDatagramSocket->doConnect(remoteAudioRtpPort,
++                                             remoteRtpHostAddress,
++                                             TRUE);
+             }
+         }
+ 
+-        if(pMediaConnection->mpRtcpAudioSocket && (remoteAudioRtcpPort > 0))
++        OsDatagramSocket* rtcpDatagramSocket = dynamic_cast<OsDatagramSocket*>(pMediaConnection->mpRtcpAudioSocket);
++        if(rtcpDatagramSocket && (remoteAudioRtcpPort > 0))
+         {
+             if (!pMediaConnection->mIsMulticast)
+             {
+@@ -742,9 +812,9 @@
+             }
+             else
+             {
+-                pMediaConnection->mpRtcpAudioSocket->doConnect(remoteAudioRtpPort,
+-                                                               remoteRtpHostAddress,
+-                                                               TRUE);
++                rtcpDatagramSocket->doConnect(remoteAudioRtpPort,
++                                              remoteRtpHostAddress,
++                                              TRUE);
+             }
+         }
+         else
+@@ -756,7 +826,8 @@
+          * Video Setup
+          */
+ #ifdef VIDEO
+-        if (pMediaConnection->mpRtpVideoSocket)
++        OsDatagramSocket* rtpDatagramVideoSocket = dynamic_cast<OsDatagramSocket*>(pMediaConnection->mpRtpVideoSocket);
++        if (rtpDatagramVideoSocket)
+         {
+             pMediaConnection->mRtpVideoSendHostPort = remoteVideoRtpPort ;                   
+             if (!pMediaConnection->mIsMulticast)
+@@ -767,12 +838,13 @@
+             }
+             else
+             {
+-                pMediaConnection->mpRtcpAudioSocket->doConnect(remoteAudioRtpPort,
+-                                                               remoteRtpHostAddress,
+-                                                               TRUE);
++                rtpDatagramVideoSocket->doConnect(remoteAudioRtpPort,
++                                                  remoteRtpHostAddress,
++                                                  TRUE);
+             }
+ 
+-            if(pMediaConnection->mpRtcpVideoSocket && (remoteVideoRtcpPort > 0))
++            OsDatagramSocket* rtcpDatagramVideoSocket = dynamic_cast<OsDatagramSocket*>(pMediaConnection->mpRtcpVideoSocket);
++            if(rtcpDatagramVideoSocket && (remoteVideoRtcpPort > 0))
+             {
+                 pMediaConnection->mRtcpVideoSendHostPort = remoteVideoRtcpPort ;               
+                 if (!pMediaConnection->mIsMulticast)
+@@ -783,9 +855,9 @@
+                 }
+                 else
+                 {
+-                   pMediaConnection->mpRtcpAudioSocket->doConnect(remoteAudioRtpPort,
+-                                                                  remoteRtpHostAddress,
+-                                                                  TRUE);
++                   rtcpDatagramVideoSocket->doConnect(remoteAudioRtpPort,
++                                                      remoteRtpHostAddress,
++                                                      TRUE);
+                 }
+             }
+             else
+@@ -1375,7 +1447,8 @@
+                                            UtlBoolean remote, 
+                                            OsProtectedEvent* pEvent,
+                                            UtlBoolean mixWithMic,
+-                                           int downScaling)
++                                           int downScaling,
++                                           OsNotification *notifevent)
+ {
+     OsStatus stat = OS_NOT_FOUND;
+     if(mpTopologyGraph && buf)
+@@ -1385,7 +1458,7 @@
+        // I also don't know what to do with this blasted protected event.. sending NULL now.
+        // If it was an OsNotification -- no problem..
+        stat = MprFromFile::playBuffer(DEFAULT_FROM_FILE_RESOURCE_NAME, 
+-          *mpTopologyGraph->getMsgQ(), buf, bufSize, bufRate, fgRate, type, repeat, NULL);
++          *mpTopologyGraph->getMsgQ(), buf, bufSize, bufRate, fgRate, type, repeat, notifevent);
+ 
+        /*
+          old stuff:
+@@ -2073,9 +2146,10 @@
+     if (pMediaConn)
+     {
+         // Audio rtp port (must exist)
+-        if (pMediaConn->mpRtpAudioSocket)
++        OsDatagramSocket* rtpDatagramSocket = dynamic_cast<OsDatagramSocket*>(pMediaConn->mpRtpAudioSocket);
++        if (rtpDatagramSocket)
+         {
+-            if (pMediaConn->mpRtpAudioSocket->getMappedIp(&host, &port))
++            if (rtpDatagramSocket->getMappedIp(&host, &port))
+             {
+                 if (port > 0)
+                 {
+@@ -2086,9 +2160,10 @@
+                 }
+             
+                 // Audio rtcp port (optional) 
+-                if (pMediaConn->mpRtcpAudioSocket && bRC)
++                OsDatagramSocket* rtcpDatagramSocket = dynamic_cast<OsDatagramSocket*>(pMediaConn->mpRtcpAudioSocket);
++                if (rtcpDatagramSocket && bRC)
+                 {
+-                    if (pMediaConn->mpRtcpAudioSocket->getMappedIp(&host, &port))
++                    if (rtcpDatagramSocket->getMappedIp(&host, &port))
+                     {
+                         rtcpAudioPort = port ;
+                         if (host.compareTo(hostIp) != 0)
+@@ -2165,9 +2240,10 @@
+         }
+ 
+         // Audio rtp port (must exist)
+-        if (pMediaConn->mpRtpAudioSocket)
++        OsNatDatagramSocket* rtpNatDatagramSocket = dynamic_cast<OsNatDatagramSocket*>(pMediaConn->mpRtpAudioSocket);
++        if (rtpNatDatagramSocket)
+         {
+-            if (((OsNatDatagramSocket*)pMediaConn->mpRtpAudioSocket)->getRelayIp(&host, &port))
++            if (rtpNatDatagramSocket->getRelayIp(&host, &port))
+             {
+                 if (port > 0)
+                 {
+@@ -2178,9 +2254,10 @@
+                 }
+             
+                 // Audio rtcp port (optional) 
+-                if (pMediaConn->mpRtcpAudioSocket && bRC)
++                OsNatDatagramSocket* rtcpNatDatagramSocket = dynamic_cast<OsNatDatagramSocket*>(pMediaConn->mpRtcpAudioSocket);
++                if (rtcpNatDatagramSocket && bRC)
+                 {
+-                    if (((OsNatDatagramSocket*)pMediaConn->mpRtcpAudioSocket)->getRelayIp(&host, &port))
++                    if (rtcpNatDatagramSocket->getRelayIp(&host, &port))
+                     {
+                         rtcpAudioPort = port ;
+                         if (host.compareTo(hostIp) != 0)
+@@ -2584,8 +2661,8 @@
+ OsStatus CpTopologyGraphInterface::createRtpSocketPair(UtlString localAddress,
+                                                        int localPort,
+                                                        SIPX_CONTACT_TYPE contactType,
+-                                                       OsDatagramSocket* &rtpSocket,
+-                                                       OsDatagramSocket* &rtcpSocket)
++                                                       OsSocket* &rtpSocket,
++                                                       OsSocket* &rtcpSocket)
+ {
+    int firstRtpPort;
+    bool localPortGiven = (localPort != 0); // Does user specified the local port?
+Index: sipXmediaLib/src/mp/MprToneGen.cpp
+===================================================================
+--- sipXmediaLib/src/mp/MprToneGen.cpp	(revision 10643)
++++ sipXmediaLib/src/mp/MprToneGen.cpp	(working copy)
+@@ -153,7 +153,8 @@
+       case OS_WAIT_TIMEOUT: /* one-shot tone completed */
+           // TODO: remove reference to MpCallFlowGraph
+           // MprToneGen::stopTone(mName, getFloGraph()->getMsgQ());
+-         ((MpCallFlowGraph*)getFlowGraph())->stopTone();
++          //((MpCallFlowGraph*)getFlowGraph())->stopTone();
++         stopTone();
+          out->setSpeechType(MpAudioBuf::MP_SPEECH_TONE);
+          break;
+ 

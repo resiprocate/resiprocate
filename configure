@@ -29,20 +29,32 @@ CROSS_TOOL_PREFIX := arm-linux
 BUILD_SHARED_LIBS := no
 USE_DISTCC := no
 USE_CCACHE := no
-USE_DTLS := no
+BUILD_REPRO := yes
+REPRO_DB := berkeley-db4
+DB_HEADERS := /usr/include/db4
+BUILD_TFM := no
+BUILD_RECON := no
+BUILD_RETURN_CLIENT := no
+BUILD_RETURN_SERVER := no
 USE_SSL := yes
-# USE_SIGCOMP := no
-# SIGCOMP_BASEDIR:= /usr/local
+USE_DTLS := no
+SSL_LOCATION := 
+BOOST_INCDIR_CONFIG := /usr/local/include
+SIPX_INSTALLED := no
+SIPX_ROOT := ../sipXtapi
+SIPX_LIBDIR := /usr/local/lib
+SIPX_INCDIR := /usr/local/include
 USE_POPT := yes
 USE_CURL := no
 USE_GOOGLE_MALLOC := no
 USE_GOOGLE_CPUPERF := no
 USE_IPV6 := no
-DB_HEADERS := /usr/include/db4
-POPT_LIBDIR_CONFIG := /usr/lib
 POPT_INCDIR_CONFIG := /usr/include
+POPT_LIBDIR_CONFIG := /usr/lib
 RESIP_FIXED_POINT := no
 PEDANTIC_STACK := no
+# USE_SIGCOMP := no
+# SIGCOMP_BASEDIR:= /usr/local
 INSTALL_PREFIX := /usr/local
 ARES_PREFIX := /usr/local " > build/Makefile.conf
     exit
@@ -75,6 +87,7 @@ $uname = `uname`;
 @yesno = ('yes','no');
 @toolchains = ('gnu','intel','sunpro','msgnu', 'gnu-cross');
 @compiletypes = ('debug','nodebug','opt','gopt','prof','small');
+@whichdb = ('berkeley-db4');
 
 ######################################################################
 # The entries in the following array have the following
@@ -157,26 +170,118 @@ $uname = `uname`;
     validate    => [@yesno],
     flag        => 'ccache',
   },
-  {
-    name        => "USE_DTLS",
-    description => "Do you want to include DTLS support?",
-    default     => "no",
-    validate    => [@yesno],
-    flag        => 'dtls',
-  },
-  {
-    name        => "USE_SSL",
-    description => "Do you want to include SSL support?",
+    {
+    name        => "BUILD_REPRO",
+    description => "Build the Repro proxy server?",
     default     => "yes",
     validate    => [@yesno],
+    flag        => 'repro',
+  },
+  {
+    name        => "REPRO_DB",
+    description => "Which database should be used with Repro?",
+    default     => "berkeley-db4",
+    validate    => [@whichdb],
+    predicate   => "\$config{BUILD_REPRO} eq 'yes'",
+    option      => 'repro-db'
+  },
+  {
+    name        => "DB_HEADERS",
+    description => "Where is db_cxx.h?",
+    default     => &findDb4,
+    predicate   => "(\$config{BUILD_REPRO} eq 'yes') and (\$config{REPRO_DB} eq 'berkeley-db4')",
+    option      => "db4-headers",
+  },
+  {
+    name        => "BUILD_TFM",
+    description => "Build the TFM test framework?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'tfm',
+  },
+  {
+    name        => "BUILD_RECON",
+    description => "Build the reCon Conversation Manager?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'recon',
+  },
+  {
+    name        => "BUILD_RETURN_CLIENT",
+    description => "Build the reTurn client?",
+    default     => "\$config{BUILD_RECON}",
+    evaldefault => 1,
+    validate    => [@yesno],
+    predicate   => "\$config{BUILD_RECON} eq 'no'",
+    flag        => 'return-client',
+  },
+  {
+    name        => "BUILD_RETURN_SERVER",
+    description => "Build the reTurn server?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'return-server',
+  },  
+  {
+    name        => "USE_SSL",
+    description => "Do you want to include SIP over TLS, SMIME or Identity header support? (Requires OpenSSL)",
+    default     => "yes",
+    validate    => [@yesno],
+    predicate   => "(\$config{BUILD_RETURN_CLIENT} ne 'yes') or (\$config{BUILD_RETURN_SERVER} ne 'yes')",
     flag        => 'ssl',
+  },
+  {
+    name        => "USE_DTLS",
+    description => "Do you want to include SIP over DTLS support? (Requires OpenSSL 0.9.8+)",
+    default     => "no",
+    validate    => [@yesno],
+    predicate   => "\$config{USE_SSL} eq 'yes'",
+    flag        => 'dtls',
   },
   {
     name        => "SSL_LOCATION",
     description => "Where is OpenSSL? (leave blank to use installed copy)",
     default     => "",
-    predicate   => "\$config{USE_SSL} eq 'yes'",
+    predicate   => "(\$config{USE_SSL} eq 'yes')",
     option      => 'with-ssl-location',
+  },
+  {
+    name        => "BOOST_INCDIR_CONFIG",
+    description => "Where is boost/config.hpp?",
+    default     => &findBoostInclude,
+    predicate   => "(\$config{BUILD_RETURN_CLIENT} eq 'yes') or (\$config{BUILD_RETURN_SERVER} eq 'yes')",
+    option      => "boost-headers",
+  },
+  {
+    name        => "SIPX_INSTALLED",
+    description => "Are the sipX libraries and headers installed?",
+    default     => "no",
+    validate    => [@yesno],
+    predicate   => "\$config{BUILD_RECON} eq 'yes'",
+    flag        => "sipx-installed",
+  },
+  {
+    name        => "SIPX_ROOT",
+    description => "Where is the common root of the sipX libraries?",
+    default     => "../sipXtapi",
+    predicate   => "(\$config{BUILD_RECON} eq 'yes') and (\$config{SIPX_INSTALLED} eq 'no')",
+    option      => "libsipx-lib",
+  },
+  {
+    name        => "SIPX_LIBDIR",
+    description => "Where are the sipX libraries installed?",
+    default     => "/usr/local/lib",
+#    default     => &findSipXLibs,
+    predicate   => "(\$config{BUILD_RECON} eq 'yes') and (\$config{SIPX_INSTALLED} eq 'yes')",
+    option      => "sipx-libdir",
+  },
+  {
+    name        => "SIPX_INCDIR",
+    description => "Where are the sipX header files installed?",
+    default     => "/usr/local/include",
+#    default     => &findSipXIncludes,
+    predicate   => "(\$config{BUILD_RECON} eq 'yes') and (\$config{SIPX_INSTALLED} eq 'yes')",
+    option      => "sipx-incdir",
   },
 #  {
 #    name        => "USE_SIGCOMP",
@@ -228,12 +333,6 @@ $uname = `uname`;
     flag        => 'ipv6',
   },
   {
-    name        => "DB_HEADERS",
-    description => "Where is db_cxx.h?",
-    default     => &findDb4,
-    option      => "db4-headers",
-  },
-  {
     name        => "POPT_INCDIR_CONFIG",
     description => "Where is popt.h?",
     default     => &findPoptInclude,
@@ -246,18 +345,18 @@ $uname = `uname`;
     option      => "popt-lib",
   },
   {
-    name	=> "RESIP_FIXED_POINT",
+    name	    => "RESIP_FIXED_POINT",
     description => "Compile with no floating point functions?",
-    default	=> "no",
+    default	    => "no",
     validate	=> [@yesno],
-    flag	=> 'resip-fixed-point',
+    flag	    => 'resip-fixed-point',
   },
   {
-    name	=> "PEDANTIC_STACK",
+    name	    => "PEDANTIC_STACK",
     description => "Force stack to fully parse every message it receives?",
-    default	=> "no",
+    default	    => "no",
     validate	=> [@yesno],
-    flag	=> 'pedantic-stack',
+    flag        => 'pedantic-stack',
   },
   {
     name        => "INSTALL_PREFIX",
@@ -580,6 +679,37 @@ sub findPoptLib
 
   $candidates[0];
 }
+
+sub findBoostInclude
+{
+#  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+#  {
+#    ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+#    return "$crossPath/include";
+#  }
+
+  my (@candidates) =
+  (
+    '/usr/include',
+    '/usr/local/include',
+    '/include',
+    '/opt/include',
+    '/opt/local/include',
+    '/sw/include',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/boost/config.hpp")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
+}
+
 __END__
 
 ##############################################################################
