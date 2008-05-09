@@ -2,6 +2,8 @@
 #ifndef __RADIUSDigestAuthenticator_h
 #define __RADIUSDigestAuthenticator_h
 
+#ifdef BUILD_RADIUS
+
 #include <radiusclient-ng.h>
 
 #include "rutil/Data.hxx"
@@ -156,6 +158,8 @@ protected:
 
 
 }
+
+#endif
 
 #endif
 
