@@ -32,6 +32,7 @@ USE_CCACHE := no
 BUILD_REPRO := yes
 REPRO_DB := berkeley-db4
 DB_HEADERS := /usr/include/db4
+BUILD_RADIUS := no
 BUILD_TFM := no
 BUILD_RECON := no
 BUILD_RETURN_CLIENT := no
@@ -196,6 +197,13 @@ $uname = `uname`;
     default     => &findDb4,
     predicate   => "(\$config{BUILD_REPRO} eq 'yes') and (\$config{REPRO_DB} eq 'berkeley-db4')",
     option      => "db4-headers",
+  },
+    {
+    name        => "BUILD_RADIUS",
+    description => "Build the RADIUS authentication module (requires radiusclient-ng?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'radius',
   },
   {
     name        => "BUILD_TFM",
