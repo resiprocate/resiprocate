@@ -553,6 +553,7 @@ sub simpleTextQuestionnaire
 sub simpleTextMenu
 {
   my ($termwidth) = 80;
+  my ($termheight) = 24;
   my ($parameter);
   my ($max_label_length) = 0;
   my ($value_length);
@@ -569,6 +570,8 @@ sub simpleTextMenu
   my ($vt_reverse)      = "\033[7m";
   my ($vt_normal)       = "\033[0m";
 
+  $SIG{'WINCH'} = 'queryWindowSize';
+
   print "${vt_clear_screen}";
 
   # We want to capture each key as it is pressed.
@@ -583,6 +586,8 @@ sub simpleTextMenu
   }
   $max_label_length += 4;
   $value_length = $termwidth-$max_label_length;
+
+  &queryWindowSize;
 
   # Print the currently available options and their values
   while (1)
@@ -648,11 +653,26 @@ sub simpleTextMenu
     # Input remaining bytes if an arrow key is pressed
     if ($key eq "\033")
     {
+      my ($tmp);
       $key = getc(STDIN);
       if ($key eq '[')
       {
-        $key .= getc(STDIN);
+        do
+        {
+          $tmp = getc(STDIN);
+          $key .= $tmp;
+        }
+        while $tmp =~ /[0-9;]/;
       }
+    }
+
+    # Adjust for screen resizing
+    if ($key =~ /\[([0-9]+);([0-9]+)R/)
+    {
+      $termheight = $1;
+      $termwidth = $2;
+      $value_length = $termwidth-$max_label_length;
+      if ($value_length < 0) { $value_length = 0; }
     }
 
     $key =~ y/a-z/A-Z/;
@@ -752,6 +772,18 @@ sub simpleTextMenu
 
   # Return keyboard functioning to normal  
   system "stty", 'icanon' && system 'stty','eol',"\000";
+}
+
+######################################################################
+sub queryWindowSize
+{
+  my ($tmp) = $|;
+  $| = 1;
+  print "\0337"; # Save Cursor Position
+  print "\033[999;999H"; # Move to lower right corner
+  print "\033[6n"; # Request position report
+  print "\0338"; # Restore Cursor Position
+  $| = $tmp;
 }
 
 ######################################################################
