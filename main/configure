@@ -562,7 +562,7 @@ sub simpleTextMenu
   my ($indent);
   
   my ($vt_clear_eos)    = "\033[0J";
-  my ($vt_home)         = "\033[;H";
+  my ($vt_home)         = "\033[0;0H";
   my ($vt_clear_line)   = "\033[2K";
   my ($vt_clear_eol)    = "\033[0K";
   my ($vt_clear_screen) = "\033[2J${vt_home}";
