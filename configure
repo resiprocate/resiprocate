@@ -199,8 +199,8 @@ $uname = `uname`;
     option      => "db4-headers",
   },
     {
-    name        => "BUILD_RADIUS",
-    description => "Build the RADIUS authentication module (requires radiusclient-ng?",
+    name        => "USE_RADIUS_CLIENT",
+    description => "Build the RADIUS authentication module? (requires radiusclient-ng)",
     default     => "no",
     validate    => [@yesno],
     flag        => 'radius',

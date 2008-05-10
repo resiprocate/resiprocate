@@ -1,5 +1,5 @@
 
-#ifdef BUILD_RADIUS
+#ifdef USE_RADIUS_CLIENT
 
 #include "Logger.hxx"
 #include "RADIUSDigestAuthenticator.hxx"

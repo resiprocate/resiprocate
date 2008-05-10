@@ -12,7 +12,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/MD5Stream.hxx"
 
-#ifdef BUILD_RADIUS
+#ifdef USE_RADIUS_CLIENT
 
 using namespace resip;
 using namespace std;
