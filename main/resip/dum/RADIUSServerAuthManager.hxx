@@ -2,7 +2,7 @@
 #ifndef __RADIUSServerAuthManager_h
 #define __RADIUSServerAuthManager_h
 
-#ifdef BUILD_RADIUS
+#ifdef USE_RADIUS_CLIENT
 
 #include "rutil/RADIUSDigestAuthenticator.hxx"
 #include "resip/dum/ServerAuthManager.hxx"

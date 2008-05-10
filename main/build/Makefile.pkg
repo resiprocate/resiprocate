@@ -295,7 +295,10 @@ BOOSTSER_LIBNAME = boost_serialization boost_wserialization
 
 ASIO_INCLUDEDIRS := $(ROOT)/contrib/asio
 
-RADIUSCLIENTNG_LIBNAME = radiusclient-ng
+ifeq ($(USE_RADIUS_CLIENT),yes)
+  RADIUSCLIENTNG_LIBNAME = radiusclient-ng
+  DEFINES += USE_RADIUS_CLIENT
+endif
 
 ##############################################################################
 # 

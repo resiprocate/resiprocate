@@ -2,7 +2,7 @@
 #ifndef __RADIUSDigestAuthenticator_h
 #define __RADIUSDigestAuthenticator_h
 
-#ifdef BUILD_RADIUS
+#ifdef USE_RADIUS_CLIENT
 
 #include <radiusclient-ng.h>
 
