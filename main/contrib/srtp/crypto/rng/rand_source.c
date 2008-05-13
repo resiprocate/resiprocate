@@ -109,7 +109,7 @@ rand_source_get_octet_string(void *dest, uint32_t len) {
   if (read(dev_random_fdes, dest, len) != len)
     return err_status_fail;
 #elif (_MSC_VER >= 1400)
-  unsigned int *dst = dest;
+  uint8_t *dst = dest;
   while (len)
   {
       unsigned int val = 0;
