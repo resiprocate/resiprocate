@@ -8,6 +8,7 @@
 // sipX includes
 #include <mi/CpMediaInterfaceFactoryFactory.h>
 #include <mi/CpMediaInterface.h>
+#include <os/OsMsgDispatcher.h>
 
 #include "BridgeMixer.hxx"
 
@@ -20,6 +21,7 @@
 #include <rutil/Mutex.hxx>
 
 #include "MediaResourceCache.hxx"
+#include "MediaEvent.hxx"
 
 #include "FlowManager.hxx"
 
@@ -60,7 +62,8 @@ class ConversationManager  : public resip::InviteSessionHandler,
                              public resip::OutOfDialogHandler,
                              public resip::ClientSubscriptionHandler,
                              public resip::ServerSubscriptionHandler,
-                             public resip::RedirectHandler
+                             public resip::RedirectHandler,
+                             public OsMsgDispatcher
 {
 public:  
    ConversationManager();
@@ -525,6 +528,9 @@ private:
    friend class UserAgent;
    void setUserAgent(UserAgent *userAgent);
 
+   friend class MediaEvent;
+   void onMediaEvent(MediaEvent::MediaEventType eventType);
+
    friend class RemoteParticipantDialogSet;
    friend class MediaResourceParticipant;
    friend class BridgeMixer;
@@ -581,6 +587,7 @@ private:
    flowmanager::FlowManager mFlowManager;
 
    // sipX Media related members
+   virtual OsStatus post(const OsMsg& msg);
    CpMediaInterfaceFactory* mMediaFactory;
    CpMediaInterface* mMediaInterface;  
    BridgeMixer mBridgeMixer;

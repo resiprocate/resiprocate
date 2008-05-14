@@ -198,6 +198,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MediaEvent.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\MediaResourceCache.cxx"
 				>
 			</File>
@@ -300,6 +304,10 @@
 			</File>
 			<File
 				RelativePath=".\LocalParticipant.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\MediaEvent.hxx"
 				>
 			</File>
 			<File
