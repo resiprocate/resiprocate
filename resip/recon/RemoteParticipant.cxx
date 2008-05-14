@@ -1645,10 +1645,6 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
          }
           
          mConversationManager.getMediaInterface()->startRtpReceive(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
-
-         //mConversationManager.getMediaInterface()->enableRtpReadNotification(mDialogSet.getMediaConnectionId());  // Not implemented yet in sipX
-         //mConversationManager.getMediaInterface()->addToneListener(this, mDialogSet.getMediaConnectionId());  // deprecated
-
          delete codecs;
       }
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", receiving...");
@@ -1662,21 +1658,6 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
       //}
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", stop receiving (mLocalHold=" << mLocalHold << ").");
    }
-}
-
-OsStatus 
-RemoteParticipant::signal(const int eventData)
-{
-   int tone = ((eventData >> 16) & 0x3fff);
-   bool up = (eventData & 0x80000000) != 0;
-   int duration = eventData & 0xFFFF;
-   char tonec = (char)tone + '0';
-
-   // Get event into dum queue, so that callback is on dum thread
-   DtmfEvent* devent = new DtmfEvent(*this, tonec, duration, up);
-   mDum.post(devent);
-
-   return OS_SUCCESS;
 }
 
 void

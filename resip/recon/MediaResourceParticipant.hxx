@@ -7,7 +7,6 @@
 #include "Participant.hxx"
 
 // sipX includes
-#include "os/OsNotification.h"
 #include "mp/MpPlayerListener.h"
 
 class MpStreamPlayer;
@@ -25,9 +24,19 @@ class ConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class MediaResourceParticipant : public Participant, public OsNotification, public MpPlayerListener
+class MediaResourceParticipant : public Participant, public MpPlayerListener
 {
 public:  
+   typedef enum
+   {
+      Invalid,
+      Tone,
+      File,
+      Cache,
+      Http,
+      Https
+   } ResourceType;
+
    MediaResourceParticipant(ConversationManager::ParticipantHandle partHandle,
       ConversationManager& conversationManager,
       resip::Uri& mediaUrl);  
@@ -35,10 +44,8 @@ public:
 
    virtual void startPlay();
    virtual int getConnectionPortOnBridge();
+   virtual ResourceType getResourceType() { return mResourceType; }
    virtual void destroyParticipant();
-
-   // For PlayTone and PlayAudio callbacks
-   virtual OsStatus signal(const int eventData);
 
    // For Stream Player callbacks
    virtual void playerRealized(MpPlayerEvent& event);
@@ -52,15 +59,6 @@ protected:
 
 private:
    resip::Uri mMediaUrl;
-   typedef enum
-   {
-      Invalid,
-      Tone,
-      File,
-      Cache,
-      Http,
-      Https
-   } ResourceType;
    ResourceType mResourceType;
    MpStreamPlayer* mStreamPlayer;
 
