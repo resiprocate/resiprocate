@@ -11,9 +11,6 @@
 #include <resip/dum/DialogSetHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
 
-// sipX includes
-#include "os/OsNotification.h"
-
 namespace resip
 {
 class DialogUsageManager;
@@ -35,7 +32,7 @@ class ConversationManager;
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class RemoteParticipant : public Participant, public resip::AppDialog, public OsNotification
+class RemoteParticipant : public Participant, public resip::AppDialog
 {
 public:
    RemoteParticipant(ConversationManager::ParticipantHandle partHandle,   // UAC
@@ -75,8 +72,7 @@ public:
    // Called by RemoteParticipantDialogSet when Related Conversations should be destroyed
    virtual void destroyConversations();
 
-   // sipX DTMF Handler
-   virtual OsStatus signal(const int eventData);
+   // DTMF Handler
    virtual void onDtmfEvent(char tone, int duration, bool up);
 
    // Invite Session Handler /////////////////////////////////////////////////////

@@ -10,6 +10,8 @@
 #include <resip/stack/ExtensionParameter.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
+#include "ConversationManagerCmds.hxx"
+
 // sipX includes
 #include "mp/dtmflib.h"
 #include "mp/MprFromFile.h"
@@ -46,26 +48,6 @@ static const Data loudfastbusyTone("loudfastbusy");
 
 namespace useragent
 {
-// Used to destroy a media participant after a timer expires
-class MediaResourceParticipantDestroyer : public DumCommand
-{
-   public:
-      MediaResourceParticipantDestroyer(ConversationManager& conversationManager, ConversationManager::ParticipantHandle participantHandle) :
-         mConversationManager(conversationManager), mParticipantHandle(participantHandle) {}
-      MediaResourceParticipantDestroyer(const MediaResourceParticipantDestroyer& rhs) :
-         mConversationManager(rhs.mConversationManager), mParticipantHandle(rhs.mParticipantHandle) {}
-      ~MediaResourceParticipantDestroyer() {}
-
-      void executeCommand() { mConversationManager.destroyParticipant(mParticipantHandle); }
-
-      Message* clone() const { return new MediaResourceParticipantDestroyer(*this); }
-      std::ostream& encode(std::ostream& strm) const { strm << "MediaResourceParticipantDestroyer: partHandle=" << mParticipantHandle; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
-      
-   private:
-      ConversationManager& mConversationManager;
-      ConversationManager::ParticipantHandle mParticipantHandle;
-};
 
 // Used to delete a resource, from a sipX thread
 class MediaResourceParticipantDeleterCmd : public DumCommand
@@ -245,8 +227,7 @@ MediaResourceParticipant::startPlay()
                                                                                mRemoteOnly ? FALSE : TRUE /* local */, 
                                                                                mLocalOnly ? FALSE : TRUE /* remote */,
                                                                                FALSE /* mixWithMic */,
-                                                                               100 /* downScaling */,
-                                                                               this);
+                                                                               100 /* downScaling */);
          if(status == OS_SUCCESS)
          {
             mPlaying = true;
@@ -274,8 +255,7 @@ MediaResourceParticipant::startPlay()
                                                                                    mLocalOnly ? FALSE : TRUE /* remote */,
                                                                                    NULL /* OsProtectedEvent */,
                                                                                    FALSE /* mixWithMic */,
-                                                                                   100 /* downScaling */,
-                                                                                   this);
+                                                                                   100 /* downScaling */);
             if(status == OS_SUCCESS)
             {
                mPlaying = true;
@@ -347,7 +327,7 @@ MediaResourceParticipant::startPlay()
       if(mDurationMs > 0)
       {
          // Start timer to destroy media resource participant automatically
-         MediaResourceParticipantDestroyer destroyer(mConversationManager, mHandle);
+         DestroyParticipantCmd destroyer(&mConversationManager, mHandle);
          mConversationManager.getUserAgent()->post(destroyer, mDurationMs);
       }
    }
@@ -408,10 +388,6 @@ MediaResourceParticipant::destroyParticipant()
             {
                WarningLog(<< "MediaResourceParticipant::destroyParticipant error calling stopAudio: " << status);
             }
-            else
-            {
-               deleteNow = false;  // Wait for play finished event to come in
-            }
          }
          break;
       case Http:
@@ -435,53 +411,6 @@ MediaResourceParticipant::destroyParticipant()
       }
    }
    if(deleteNow) delete this;
-}
-
-OsStatus 
-MediaResourceParticipant::signal(const int eventData)
-{
-   switch(eventData)
-   {
-   case MprFromFile::PLAY_FINISHED:
-      InfoLog(<< "MediaResourceParticipant::signal eventData: PLAY_FINISHED handle=" << mHandle);
-      {
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
-      }
-      break;
-   case MprFromFile::PLAY_STOPPED:
-      InfoLog(<< "MediaResourceParticipant::signal eventData: PLAY_STOPPED handle=" << mHandle);
-      mPlaying = false;
-      break;
-   case MprFromFile::PLAYING:
-      InfoLog(<< "MediaResourceParticipant::signal eventData: PLAYING handle=" << mHandle);
-      mPlaying = true;
-      break;
-   case MprFromFile::READ_ERROR:
-      InfoLog(<< "MediaResourceParticipant::signal eventData: READ_ERROR handle=" << mHandle);
-      {
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
-      }
-      break;
-   case MprFromFile::PLAY_IDLE:
-      InfoLog(<< "MediaResourceParticipant::signal eventData: PLAY_IDLE handle=" << mHandle);
-      mPlaying = false;
-      // ?SLG? Should we do anything here?
-      break;
-   case MprFromFile::INVALID_SETUP:
-      InfoLog(<< "MediaResourceParticipant::signal eventData: INVALID_SETUP handle=" << mHandle);
-      {
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
-      }
-      break;
-   default:
-      WarningLog(<< "MediaResourceParticipant::signal eventData unrecognized: " << eventData << " handle=" << mHandle);
-      break;
-   }
-
-   return OS_SUCCESS;
 }
 
 void 

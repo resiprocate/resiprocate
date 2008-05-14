@@ -208,8 +208,9 @@ class DestroyParticipantCmd  : public resip::DumCommand
    public:  
       DestroyParticipantCmd(ConversationManager* conversationManager, 
                             ConversationManager::ParticipantHandle partHandle) 
-         : mConversationManager(conversationManager),
-           mPartHandle(partHandle) {}
+         : mConversationManager(conversationManager), mPartHandle(partHandle) {}
+      DestroyParticipantCmd(const DestroyParticipantCmd& rhs) 
+         : mConversationManager(rhs.mConversationManager), mPartHandle(rhs.mPartHandle) {}
       virtual void executeCommand()
       {
          Participant* participant = mConversationManager->getParticipant(mPartHandle);
@@ -218,7 +219,7 @@ class DestroyParticipantCmd  : public resip::DumCommand
             participant->destroyParticipant();
          }
       }
-      resip::Message* clone() const { assert(0); return 0; }
+      resip::Message* clone() const { return new DestroyParticipantCmd(*this); }
       std::ostream& encode(std::ostream& strm) const { strm << " DestroyParticipantCmd: "; return strm; }
       std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
    private:

@@ -269,7 +269,7 @@ setCodecs                <'setcodecs'|'sc'> <codecId>[,<codecId>]+ (comma separa
     97  - Speex NB,  5,950bps
     98  - Speex NB, 15,000bps
     99  - Speex NB, 24,600bps
-    108 - Internet Low Bit Rate Codec (RFC3951)
+    108 - Internet Low Bit Rate Codec - iLBC (RFC3951)
     109 - AVT/DTMF Tones, RFC 2833
 
 setSecureMediaMode       <'securemedia'|'sm'> <'None'|'Srtp'|'SrtpReq'|'SrtpDtls'|'SrtpDtlsReq'>

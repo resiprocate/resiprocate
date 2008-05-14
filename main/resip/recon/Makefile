@@ -14,6 +14,7 @@ SRC += \
         DtmfEvent.cxx \
         FlowManagerSipXSocket.cxx \
         LocalParticipant.cxx \
+        MediaEvent.cxx \
         MediaResourceParticipant.cxx \
         MediaResourceCache.cxx \
         MediaStreamEvent.cxx \
