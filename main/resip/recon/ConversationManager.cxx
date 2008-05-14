@@ -3,6 +3,8 @@
 #include <mp/MpCodecFactory.h>
 #include <mp/MprBridge.h>
 #include <mp/MpResourceTopology.h>
+#include <mi/MiNotification.h>
+#include <mi/MiDtmfNotf.h>
 
 // resip includes
 #include <rutil/Log.hxx>
@@ -33,7 +35,6 @@ using namespace resip;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
-
 
 ConversationManager::ConversationManager() 
 : mUserAgent(0),
@@ -96,8 +97,16 @@ ConversationManager::ConversationManager()
                << " Channels: " << codecInfoArray[i]->numChannels);
    }
 
+   // Register the conversation manager class (derived from OsMsgDispatcher)
+   // as the sipX notification dispatcher
+   mMediaInterface->setNotificationDispatcher(this);
+
+   // Turn on notifications for all resources...
+   mMediaInterface->setNotificationsEnabled(true);
+
    // This is the one and only media interface - give it focus
    mMediaInterface->giveFocus();
+
 #endif
 }
 
@@ -556,6 +565,102 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
 
    session.addMedium(medium);
    sessionCaps.session() = session;
+}
+
+void 
+ConversationManager::onMediaEvent(MediaEvent::MediaEventType eventType)
+{
+   assert(eventType == MediaEvent::PLAY_FINISHED);
+
+   if(eventType == MediaEvent::PLAY_FINISHED)
+   {
+      // Using current sipX architecture is it only possible to have one active media participant
+      // actually playing a file (or from cache) at a time, so for now it is sufficient to have
+      // this event indicate that any active media participants (playing a file/cache) should be destroyed.
+      ParticipantMap::iterator it;
+      for(it = mParticipants.begin(); it != mParticipants.end();)
+      {
+         MediaResourceParticipant* mrPart = dynamic_cast<MediaResourceParticipant*>(it->second);
+         it++;  // increment iterator here, since destroy may end up calling unregisterParticipant
+         if(mrPart)
+         {
+            if(mrPart->getResourceType() == MediaResourceParticipant::File ||
+               mrPart->getResourceType() == MediaResourceParticipant::Cache)
+            {
+               mrPart->destroyParticipant();
+            }
+         }
+      }
+   }
+}
+
+OsStatus 
+ConversationManager::post(const OsMsg& msg)
+{
+   if((OsMsg::MsgTypes)msg.getMsgType() == OsMsg::MI_NOTF_MSG)
+   {
+      MiNotification* pNotfMsg = (MiNotification*)&msg;
+      switch((MiNotification::NotfType)pNotfMsg->getType())
+      {
+      case MiNotification::MI_NOTF_PLAY_STARTED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_PLAY_PAUSED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_PAUSED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_PLAY_RESUMED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_RESUMED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_PLAY_STOPPED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_PLAY_FINISHED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         {
+            // Queue event to conversation manager thread
+            MediaEvent* mevent = new MediaEvent(*this, MediaEvent::PLAY_FINISHED);
+            mUserAgent->getDialogUsageManager().post(mevent);
+         }
+         break;
+      case MiNotification::MI_NOTF_PROGRESS:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_PROGRESS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_RECORD_STOPPED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_RECORD_FINISHED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_RECORD_NOINPUTDATA:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_NOINPUTDATA, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_DTMF_RECEIVED:
+         {
+            MiDtmfNotf* pDtmfNotfMsg = (MiDtmfNotf*)&msg;
+
+            // Note: sipXtapi is returning the correct connectionId here in order for us to associate the tone event
+            //       with a particular RemoteParticipant - once this is fixed we should be able to find the 
+            //       applicable RemoteParticipant handle to generate the callback to the application.
+
+            // Get event into dum queue, so that callback is on dum thread
+            //DtmfEvent* devent = new DtmfEvent(*this, tonec, duration, up);
+            //mDum.post(devent);
+
+            InfoLog( << "NotificationDispatcher: received MI_NOTF_DTMF_RECEIVED, keyCode=" << pDtmfNotfMsg->getKeyCode() << 
+               ", state=" << pDtmfNotfMsg->getKeyPressState() << 
+               ", duration=" << pDtmfNotfMsg->getDuration() <<
+               ", connectionId=" << pNotfMsg->getConnectionId());
+         }
+         break;
+      default:
+         InfoLog(<< "NotificationDispatcher: unrecognized MiNotification type = " << pNotfMsg->getType());
+      }
+   }
+   else
+   {
+      InfoLog(<< "NotificationDispatcher: unrecognized message type = " << msg.getMsgType());
+   }
+   return OS_SUCCESS;
 }
 
 void

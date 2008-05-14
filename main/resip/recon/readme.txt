@@ -31,6 +31,8 @@ Setting up build environment:
 4.  cd resip/contrib
 5.  svn checkout https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl openssl
 
+Note:  Ensure you use at least SVN revision 10651 of sipXtapi.
+
 /resip-main/                <- https://svn.resiprocate.org/rep/resiprocate/main
 /resip-main/contrib/openssl <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
 /main/contrib/boost_1_34_1  <- BOOST 1.34.1 (required in this location for Windows builds only)
@@ -70,13 +72,13 @@ To build openSSL for windows using VS2005:
 Building recon on Windows
 -------------------------
 1.  Ensure the build environment is setup as indicated above.
-2.  Ensure you apply sipXtapi-10645-recon.patch file to the SVN checked out version of 
-    sipXtapi before building
-3.  Use the recon_7_1.sln Visual Studio 2003 or recon_8_0.sln Visual Studio 2005 
+2.  Use the recon_7_1.sln Visual Studio 2003 or recon_8_0.sln Visual Studio 2005 
     solution file
 4.  Open the sipXmediaAdapterLib project settings and enable the following defines:
     DISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY
     ENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY
+    by removing the 'xx' characters from the Preprocessor defines.
+    You should do this for both Debug and Release project settings.
 5.  Build solution.
 
 
