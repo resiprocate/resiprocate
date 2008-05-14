@@ -1,6 +1,6 @@
+#include "ConversationManager.hxx"
 #include "MediaEvent.hxx"
 
-#include "ConversationManager.hxx"
 #include <rutil/Logger.hxx>
 
 using namespace useragent;
