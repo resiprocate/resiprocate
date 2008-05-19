@@ -26,12 +26,12 @@ and 1 remote participant.
 Setting up build environment:
 -----------------------------
 1.  Go to directory where you want to create build env.
-2.  svn checkout https://svn.resiprocate.org/rep/resiprocate/branches/b-recon-20080504 resip
+2.  svn checkout https://svn.resiprocate.org/rep/resiprocate/main resip
 3.  svn checkout https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi sipXtapi
 4.  cd resip/contrib
 5.  svn checkout https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl openssl
 
-Note:  Ensure you use at least SVN revision 10651 of sipXtapi.
+Note:  Ensure you use at least SVN revision 10660 of sipXtapi.
 
 /resip-main/                <- https://svn.resiprocate.org/rep/resiprocate/main
 /resip-main/contrib/openssl <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
@@ -79,7 +79,10 @@ Building recon on Windows
     ENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY
     by removing the 'xx' characters from the Preprocessor defines.
     You should do this for both Debug and Release project settings.
-5.  Build solution.
+5.  Open the sipXmediaAdapterLib and sipXmediaLib project settings and add the 
+    following define:  DISABLE_STREAM_PLAYER to the Preprocessor defines.
+    You should do this for both Debug and Release project settings.
+6.  Build solution.
 
 
 Running on Windows
@@ -95,6 +98,7 @@ to run testUA.exe on another machine you will need the following:
 
 Building sipXtapi on Generic Linux
 ----------------------------------
+Note:  sipXtackLib is no longer required with the addition of the DISABLE_STREAM_PLAYER define
 1.  Go to sipXtapi root
 2.  Apply resip/resip/recon/sipXtapi-10645-recon.patch to sipXtapi
 3.  To build sipXportLib:
@@ -107,20 +111,15 @@ Building sipXtapi on Generic Linux
     autoreconf -fi
     ./configure --prefix=/tmp/stage
     make
-5.  To build sipXtackLib:
-    cd sipXtapi/sipXtackLib
-    autoreconf -fi
-    ./configure --prefix=/tmp/stage --disable-sipviewer
-    make
-6.  To build sipXmediaLib:
+5.  To build sipXmediaLib:
     cd sipXtapi/sipXmediaLib
     autoreconf -fi
-    ./configure --prefix=/tmp/stage --enable-local-audio
+    ./configure --prefix=/tmp/stage --enable-local-audio CXXFLAGS="-DDISABLE_STREAM_PLAYER"
     make
-7.  To build sipXmediaAdapterLib:
+6.  To build sipXmediaAdapterLib:
     cd sipXtapi/sipXmediaAdapterLib
     autoreconf -fi
-    ./configure --prefix=/tmp/stage CXXFLAGS="-DDISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY -DENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY"
+    ./configure --prefix=/tmp/stage CXXFLAGS="-DDISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY -DENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY -DDISABLE_STREAM_PLAYER"
     make
 
 
