@@ -100,23 +100,22 @@ Building sipXtapi on Generic Linux
 ----------------------------------
 Note:  sipXtackLib is no longer required with the addition of the DISABLE_STREAM_PLAYER define
 1.  Go to sipXtapi root
-2.  Apply resip/resip/recon/sipXtapi-10645-recon.patch to sipXtapi
-3.  To build sipXportLib:
+2.  To build sipXportLib:
     cd sipXtapi/sipXportLib
     autoreconf -fi
     ./configure --prefix=/tmp/stage
     make
-4.  To build sipXsdpLib:
+3.  To build sipXsdpLib:
     cd sipXtapi/sipXsdpLib
     autoreconf -fi
     ./configure --prefix=/tmp/stage
     make
-5.  To build sipXmediaLib:
+4.  To build sipXmediaLib:
     cd sipXtapi/sipXmediaLib
     autoreconf -fi
     ./configure --prefix=/tmp/stage --enable-local-audio CXXFLAGS="-DDISABLE_STREAM_PLAYER"
     make
-6.  To build sipXmediaAdapterLib:
+5.  To build sipXmediaAdapterLib:
     cd sipXtapi/sipXmediaAdapterLib
     autoreconf -fi
     ./configure --prefix=/tmp/stage CXXFLAGS="-DDISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY -DENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY -DDISABLE_STREAM_PLAYER"
