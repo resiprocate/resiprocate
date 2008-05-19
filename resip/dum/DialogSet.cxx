@@ -601,11 +601,8 @@ DialogSet::dispatch(const SipMessage& msg)
                }
                else
                {
-                  if (mDialogs.empty())
-                  {
-                     mState = Established;
-                  }
-                  else
+                  mState = Established;
+                  if (!mDialogs.empty())
                   {
                      dispatchToAllDialogs(msg);
                      return;
@@ -630,11 +627,8 @@ DialogSet::dispatch(const SipMessage& msg)
                }
                else // failure response
                {
-                  if (mDialogs.empty())
-                  {
-                     mState = Established;
-                  }
-                  else
+                  mState = Established;
+                  if (!mDialogs.empty())
                   {
                      dispatchToAllDialogs(msg);
                      return;
