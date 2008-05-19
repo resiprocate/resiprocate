@@ -261,28 +261,24 @@ ifeq ($(SIPX_INSTALLED),yes)
 
 SIPX_INCLUDEDIRS := $(SIPX_INCDIR)
 #SIPX_LIBDIRS := $(SIPX_LIBDIR)
-#SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack  sipXsdp sipXport
+#SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXsdp sipXport
 SIPX_LDLIBS_LAST := $(SIPX_LIBDIR)/libsipXmediaProcessing.a
 SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXmedia.a
-SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXtack.a
 SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXsdp.a
 SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXport.a
-SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXmedia.a
 SIPX_LDFLAGS := -lpcre -lresolv
 SIPX_DEFINES := __pingtel_on_posix__ DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10
 
 else
 
 SIPX_ROOT := $(ROOT)/$(SIPX_ROOT)
-SIPX_INCLUDEDIRS := $(SIPX_ROOT)/sipXmediaAdapterLib/sipXmediaMediaProcessing/include  $(SIPX_ROOT)/sipXmediaAdapterLib/interface  $(SIPX_ROOT)/sipXmediaLib/include $(SIPX_ROOT)/sipXtackLib/include $(SIPX_ROOT)/sipXsdpLib/include $(SIPX_ROOT)/sipXportLib/include $(SIPX_ROOT)
+SIPX_INCLUDEDIRS := $(SIPX_ROOT)/sipXmediaAdapterLib/sipXmediaMediaProcessing/include $(SIPX_ROOT)/sipXmediaAdapterLib/interface $(SIPX_ROOT)/sipXmediaLib/include $(SIPX_ROOT)/sipXtackLib/include  $(SIPX_ROOT)/sipXsdpLib/include $(SIPX_ROOT)/sipXportLib/include $(SIPX_ROOT)
 #SIPX_LIBDIRS := $(SIPX_ROOT)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs $(SIPX_ROOT)/sipXmediaLib/src/.libs $(SIPX_ROOT)/sipXtackLib/src/.libs $(SIPX_ROOT)/sipXsdpLib/src/.libs $(SIPX_ROOT)/sipXportLib/src/.libs
-#SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXtack  sipXsdp sipXport
+#SIPX_LIBNAME := sipXmediaProcessing sipXmedia sipXsdp sipXport
 SIPX_LDLIBS_LAST := $(SIPX_ROOT)/sipXmediaAdapterLib/sipXmediaMediaProcessing/src/.libs/libsipXmediaProcessing.a
 SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXmediaLib/src/.libs/libsipXmedia.a
-SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXtackLib/src/.libs/libsipXtack.a
 SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXsdpLib/src/.libs/libsipXsdp.a
 SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXportLib/src/.libs/libsipXport.a
-SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXmediaLib/src/.libs/libsipXmedia.a
 SIPX_LDFLAGS := -lpcre -lresolv
 SIPX_DEFINES := __pingtel_on_posix__ DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10
 
