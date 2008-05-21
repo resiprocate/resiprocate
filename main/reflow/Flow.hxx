@@ -81,9 +81,21 @@ public:
    asio::error_code receive(char* buffer, unsigned int& size, unsigned int timeout, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);
    asio::error_code receiveFrom(const asio::ip::address& address, unsigned short port, char* buffer, unsigned int& size, unsigned int timeout);
 
+   /// Used to set where this flow should be sending to
    void setActiveDestination(const char* address, unsigned short port);
+
+   /// Dtls-Srtp Methods
+
+   /// Starts the dtls client handshake process - (must call setActiveDestination first)
+   /// Call this method if this client has negotiated the "Active" role via SDP
    void startDtlsClient(const char* address, unsigned short port);
+
+   /// This method should be called when remote fingerprint is discovered
+   /// via SDP negotiation.  After this is called only dtls-srtp connections
+   /// with a matching fingerprint will be maintained.
    void setRemoteSDPFingerprint(const resip::Data& fingerprint);
+
+   /// Retrieves the stored remote SDP Fingerprint.
    const resip::Data getRemoteSDPFingerprint();
 
    const StunTuple& getLocalTuple();
