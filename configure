@@ -23,9 +23,9 @@ then
     echo "*** Please install perl and re-run $0"
     echo "VOCAL_TOOLCHAIN_TYPE := gnu
 VOCAL_COMPILE_TYPE := debug
-VOCAL_CROSS_ROOT := /skiff/local/bin
-CROSS_PLATFORM := arm-linux
-CROSS_TOOL_PREFIX := arm-linux
+CROSS_PLATFORM := arm-unknown-linux-gnu
+CROSS_TOOL_PREFIX := arm-unknown-linux-gnu
+VOCAL_CROSS_ROOT := /opt/crosstool/current/arm-unknown-linux-gnu/bin
 BUILD_SHARED_LIBS := no
 USE_DISTCC := no
 USE_CCACHE := no
@@ -70,7 +70,7 @@ echo <<__END__
 
 ######################################################################
 # Usage:
-#   ./configure [-y]
+#   ./configure [-y] [-m]
 #
 #   Options:
 #     -y  Run non-interactively
@@ -92,6 +92,16 @@ $uname = `uname`;
 @whichdb = ('berkeley-db4');
 
 ######################################################################
+# NOTE: Any configuration variables that contain path information
+#       must be added to the following array for proper behavior.
+
+@pathoptions = ("DB_HEADERS", "BOOST_INCDIR_CONFIG",
+                "POPT_INCDIR_CONFIG", "POPT_LIBDIR_CONFIG",
+                "SIPX_ROOT", "SIPX_LIBDIR", "SIPX_INCDIR",
+                "SSL_LOCATION", "INSTALL_PREFIX", "ARES_PREFIX");
+
+
+######################################################################
 # The entries in the following array have the following
 # fields:
 #
@@ -109,8 +119,11 @@ $uname = `uname`;
 #                 will not be asked to configure the value
 #
 #   forcedefault - If set, any questions hidden by the predicate
-#                  will be set to their default values every
+#                  will be reset to their default values every
 #                  time the script is run
+#
+#   recalc       - List of options to recalculate and reset to defaults
+#                  when value is updated
 #
 #   flag         - For "yes/no" entries, adds commandline
 #                  flags of "--enable-foo" and "--disable-foo"
@@ -124,20 +137,15 @@ $uname = `uname`;
     description => "Which toolchain do you want to use?",
     default     => &detectToolchain,
     validate    => [@toolchains],
+    recalc      => [@pathoptions],
     option      => 'with-toolchain',
-  },
-  {
-    name        => "VOCAL_CROSS_ROOT",
-    description => "Where is your cross compiler installed?",
-    default     => "/skiff/local/bin",
-    predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
-    option      => 'with-cross-compiler-dir',
   },
   {
     name        => "CROSS_PLATFORM",
     description => "What is the name your toolchain uses for the cross platform?",
-    default     => "arm-linux",
+    default     => "arm-unknown-linux-gnu",
     predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
+    recalc      => ["CROSS_TOOL_PREFIX","VOCAL_CROSS_ROOT",@pathoptions],
     option      => 'with-cross-platform',
   },
   {
@@ -146,7 +154,16 @@ $uname = `uname`;
     default     => "\$config{CROSS_PLATFORM}",
     evaldefault => 1,
     predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
+    recalc      => ["VOCAL_CROSS_ROOT"],
     option      => 'with-cross-tool-prefix',
+  },
+  {
+    name        => "VOCAL_CROSS_ROOT",
+    description => "Where is your cross compiler installed?",
+    default     => "&findCrossRoot",
+    evaldefault => 1,
+    predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
+    option      => 'with-cross-compiler-dir',
   },
   {
     name        => "VOCAL_COMPILE_TYPE",
@@ -194,7 +211,8 @@ $uname = `uname`;
   {
     name        => "DB_HEADERS",
     description => "Where is db_cxx.h?",
-    default     => &findDb4,
+    default     => "&findDb4",
+    evaldefault => 1,
     predicate   => "(\$config{BUILD_REPRO} eq 'yes') and (\$config{REPRO_DB} eq 'berkeley-db4')",
     option      => "db4-headers",
   },
@@ -239,7 +257,8 @@ $uname = `uname`;
   {
     name        => "BOOST_INCDIR_CONFIG",
     description => "Where is boost/config.hpp?",
-    default     => &findBoostInclude,
+    default     => "&findBoostInclude",
+    evaldefault => 1,
     predicate   => "(\$config{BUILD_RETURN_CLIENT} eq 'yes') or (\$config{BUILD_RETURN_SERVER} eq 'yes')",
     option      => "boost-headers",
   },
@@ -294,7 +313,8 @@ $uname = `uname`;
   {
     name        => "SSL_LOCATION",
     description => "Where is OpenSSL? (leave blank to use installed copy)",
-    default     => "",
+    default     => "&guessSslLocation",
+    evaldefault => 1,
     predicate   => "(\$config{USE_SSL} eq 'yes')",
     option      => 'with-ssl-location',
   },
@@ -350,41 +370,45 @@ $uname = `uname`;
   {
     name        => "POPT_INCDIR_CONFIG",
     description => "Where is popt.h?",
-    default     => &findPoptInclude,
+    default     => "&findPoptInclude",
+    evaldefault => 1,
     option      => "popt-headers",
     predicate   => "\$config{USE_POPT} eq 'yes'",
   },
   {
     name        => "POPT_LIBDIR_CONFIG",
     description => "Where is libpopt?",
-    default     => &findPoptLib,
+    default     => "&findPoptLib",
+    evaldefault => 1,
     option      => "popt-lib",
     predicate   => "\$config{USE_POPT} eq 'yes'",
   },
   {
-    name	    => "RESIP_FIXED_POINT",
+    name        => "RESIP_FIXED_POINT",
     description => "Compile with no floating point functions?",
-    default	    => "no",
-    validate	=> [@yesno],
-    flag	    => 'resip-fixed-point',
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'resip-fixed-point',
   },
   {
-    name	    => "PEDANTIC_STACK",
+    name        => "PEDANTIC_STACK",
     description => "Force stack to fully parse every message it receives?",
-    default	    => "no",
-    validate	=> [@yesno],
+    default     => "no",
+    validate    => [@yesno],
     flag        => 'pedantic-stack',
   },
   {
     name        => "INSTALL_PREFIX",
     description => "Where should the libraries be installed?",
-    default     => "/usr/local",
+    default     => "&guessInstallPath",
+    evaldefault => 1,
     option      => "prefix",
   },
   {
     name        => "ARES_PREFIX",
     description => "Where should ares be installed?",
-    default     => "/usr/local",
+    default     => "&guessInstallPath",
+    evaldefault => 1,
     option      => "ares-prefix",
   },
 );
@@ -433,6 +457,8 @@ close (CONF);
 
 system "rm -Rf contrib/ares-build*";
 
+&checkForWarnings;
+
 ######################################################################
 # Initialize any empty or invalid entries to their default values
 ######################################################################
@@ -452,7 +478,7 @@ sub setAllDefaults
 }
 
 ######################################################################
-# Initalizes a single configuration paremeter to its initial value
+# Initalizes a single configuration parameter to its initial value
 # unless it already contains a valid value
 ######################################################################
 
@@ -483,6 +509,17 @@ sub setSingleDefault
 }
 
 ######################################################################
+sub recalcDefault
+{
+  my (@params) = @{$_[0]};
+  my ($param);
+  foreach $param(@params)
+  {
+    delete $config{$param};
+  }
+}
+
+######################################################################
 sub inputParameter
 {
   my ($parameter) = shift;
@@ -510,6 +547,10 @@ sub inputParameter
       if (length($userinput))
       {
         $config{$parameter->{name}} = $userinput;
+        if (exists($parameter->{recalc}))
+        {
+          &recalcDefault($parameter->{recalc});
+        }
       }
       print "\n";
     }
@@ -541,7 +582,6 @@ sub simpleTextQuestionnaire
 # at some point, but doing so will be a non-trivial effort.
 #
 # Currently, this makes a number of assumptions, including:
-#  - The terminal is at least 80 columns wide
 #  - The terminal is at least tall enough to display all the options
 #  - The terminal implements at least a minimal subset of VT-100
 #    command codes
@@ -575,7 +615,7 @@ sub simpleTextMenu
   print "${vt_clear_screen}";
 
   # We want to capture each key as it is pressed.
-  system ("stty", '-icanon') && system ('stty','eol',"\001");
+  &cbreak;
 
   foreach $parameter (@parameters)
   {
@@ -687,6 +727,7 @@ sub simpleTextMenu
     elsif ($key eq 'Q')
     {
       print "$vt_clear_line\nExiting without saving\n";
+      &nocbreak;
       exit;
     }
 
@@ -695,6 +736,10 @@ sub simpleTextMenu
     {
       delete $config{$current_parameter->{name}};
       &setSingleDefault($current_parameter);
+      if (exists($current_parameter->{recalc}))
+      {
+        &recalcDefault($current_parameter->{recalc});
+      }
     }
 
     # Arrow Up
@@ -721,10 +766,15 @@ sub simpleTextMenu
       }
       else
       {
-        system "stty", 'icanon' && system 'stty','eol',"\000";
+        &nocbreak;
         print "$vt_clear_line\n";
         &inputParameter($current_parameter);
-        system ("stty", '-icanon') && system ('stty','eol',"\001");
+        &cbreak;
+      }
+
+      if (exists($current_parameter->{recalc}))
+      {
+        &recalcDefault($current_parameter->{recalc});
       }
     }
 
@@ -746,6 +796,11 @@ sub simpleTextMenu
         $prev = $p;
       }
       $config{$current_parameter->{name}} = $new_value;
+
+      if (exists($current_parameter->{recalc}))
+      {
+        &recalcDefault($current_parameter->{recalc});
+      }
     }
 
     # Any other key (mostly to let y/n change yes/no values)
@@ -763,6 +818,10 @@ sub simpleTextMenu
           if ($v2 eq $key)
           {
             $config{$current_parameter->{name}} = $v;
+            if (exists($current_parameter->{recalc}))
+            {
+              &recalcDefault($current_parameter->{recalc});
+            }
           }
         }
       }
@@ -771,7 +830,18 @@ sub simpleTextMenu
   print "$vt_clear_line\n";
 
   # Return keyboard functioning to normal  
-  system "stty", 'icanon' && system 'stty','eol',"\000";
+  &nocbreak;
+}
+
+sub cbreak
+{
+  system ("stty", '-icanon') && system ('stty','eol',"\001");
+}
+
+sub nocbreak
+{
+  system "reset" || 
+    (system "stty", 'icanon' && system 'stty','eol',"\000");
 }
 
 ######################################################################
@@ -934,6 +1004,12 @@ sub sigcompInstalled
 
 sub findDb4
 {
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/include/db4";
+  }
+
   my (@candidates) = 
   (
     '/usr/include/db4',
@@ -956,6 +1032,12 @@ sub findDb4
 
 sub findPoptInclude
 {
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/include";
+  }
+
   if ($uname =~ /MinGW/i)
   {
     return "\$\(ROOT\)/contrib/popt/win32/include";
@@ -983,6 +1065,12 @@ sub findPoptInclude
 
 sub findPoptLib
 {
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/lib";
+  }
+
   if ($uname =~ /MinGW/i)
   {
     return "\$\(ROOT\)/contrib/popt/win32/lib";
@@ -1012,11 +1100,11 @@ sub findPoptLib
 
 sub findBoostInclude
 {
-#  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
-#  {
-#    ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
-#    return "$crossPath/include";
-#  }
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/include";
+  }
 
   my (@candidates) =
   (
@@ -1038,6 +1126,78 @@ sub findBoostInclude
   }
 
   $candidates[0];
+}
+
+sub findCrossRoot
+{
+  my (@candidates) = reverse sort 
+    glob("/opt/crosstool/*/".$config{CROSS_PLATFORM}."/bin/");
+
+  if (@candidates)
+  {
+    return $candidates[0];
+  }
+
+  return "/opt/crosstool/current/".$config{CROSS_PLATFORM}."/bin/";
+}
+
+sub guessInstallPath
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath";
+  }
+
+  return "/usr/local";
+}
+
+sub guessSslLocation
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/OpenSSL";
+  }
+
+  return "";
+}
+
+sub checkForWarnings
+{
+  my ($option);
+  my ($parameters);
+
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    print ("\n".('*!' x 30)."\n\n");
+    print "  WARNING: when cross-compiling, the paths for include\n".
+          "  files and libraries must point to directories that\n".
+          "  contain information appropriate to the target platform.\n".
+          "  please double-check that the following paths contain\n".
+          "  information *ONLY* for the $config{CROSS_PLATFORM}\n".
+          "  environment:\n\n";
+
+    foreach $option (@pathoptions)
+    {
+      foreach $parameter (@parameters)
+      {
+        if ($parameter->{name} eq $option
+            && (!exists($parameter->{predicate}) || 
+                eval($parameter->{predicate}))
+           )
+        {
+          print ("    ".$parameter->{name}." := ".$config{$parameter->{name}}."\n");
+        }
+      }
+    }
+
+    print "\n  You may be able to eliminate some of these paths by\n".
+          "  turning off features you don't plan to use; examples\n".
+          "  include SSL and popt.\n";
+
+    print ("\n".('*!' x 30)."\n");
+  }
 }
 
 __END__
