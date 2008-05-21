@@ -66,7 +66,7 @@ public:
    Flow* getRtpFlow() { return mRtpFlow; }
    Flow* getRtcpFlow() { return mRtcpFlow; }
 
-   // SRTP methods
+   // SRTP methods - should be called before sending or receiving on RTP or RTCP flows
    bool createOutboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
    bool createInboundSRTPSession(SrtpCryptoSuite cryptoSuite, const char* key, unsigned int keyLen);
 
