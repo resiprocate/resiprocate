@@ -23,6 +23,44 @@ A typical phone conversation consists of 3 components: 1 conversation, 1 local p
 and 1 remote participant.
 
 
+Some Existing Limitations with sipX media Integration
+-----------------------------------------------------
+1.  In order get bridge mixer capabilities across all conversations, one sipX media 
+    interface was used for all conversations created.  This has the following limitations:
+
+    a.  The sipX compiled default is to allow 10 connections per media interface.  Thus there 
+        is currently a limit of 7 remote participants in recon.  
+
+	Note:  When Bridge In/Outputs are set to 10, 3 of the bridge connections are used for 
+               the local speaker/mic, the file player and the tone player, so their are 7 left 
+               for remote participants.
+
+        The compile time flag: DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10
+        can be used to change this maximum - it must be defined for both the recon and the 
+        sipXmediaLib projects.
+
+    b.  The default topology media interface has one tone player and one file player, thus 
+        only one media participant of each type can exist at a time.  For example, if you 
+        create a media participant that is playing a file, and before it is finished, you 
+        create a second media participant that is playing a file, then the output from the 
+        second media participant will override the first and both media participants will 
+        be destroyed when the second file has completed playing.
+
+2.  The newer Topology Graph interface is used in recon to get Bridge Mixing support.  The
+    following is a list of features that have either been deprecated or are not yet 
+    implemented in this interface.
+
+    a.  Streaming media from an http URL has been deperecated - thus http URLs are not 
+        supported in the createMediaParticipant interface.
+   
+    b.  When playing media tones and files, the local-only and remote-only flags have not 
+        yet been implemented, and will not currently work.
+
+3.  RFC2833 DTMF detection is currently not working.
+
+
+
+
 Setting up build environment:
 -----------------------------
 1.  Go to directory where you want to create build env.
