@@ -60,6 +60,31 @@ Some Existing Limitations with sipX media Integration
 
 
 
+SRTP Implementation Notes
+-------------------------
+
+http://tools.ietf.org/html/draft-ietf-sip-dtls-srtp-framework
+http://www.faqs.org/rfcs/rfc3711.html
+http://tools.ietf.org/id/draft-ietf-mmusic-sdescriptions-12.txt
+
+SDES Implementation Notes:
+- default offer crypto suite is AES_CM_128_HMAC_SHA1_80 
+- secure media required setting:
+  enabled:  then SAVP transport protocol is signalled in SDP offers,
+  disabled: then AVP transport portocol is signalled in SDP offers and encryption=optional attribute is added
+- No f8 crypto suite - libsrtp limitation
+- no MKI implementation
+- no custom master key lifetime implementation
+- no master key lifetime, re-keying when expired
+- no Key Derivation Rate (KDR) implementation - libsrtp limitation
+- no support for SDES SRTP Session parameters: Unencrypted/Unauthenticated, FEC_ORDER, FEC_KEY, WSH
+
+DTLS Implementation Notes:
+1. Only SHA-1 fingerprint is supported (not SHA-224, SHA-256, SHA-384, SHA-512, MD5 or MD2)
+2. Passive side must do a STUN connectivity check - text in draft is inconsistent
+3. Does not currently require that Identity header be present/validated.
+
+
 
 Setting up build environment:
 -----------------------------
