@@ -2138,6 +2138,51 @@ main(int argc, char** argv)
       assert(msg->header(UnknownHeaderType("FooBarBaz")).size()==1);
    }
 
+   {
+      resip::Data invBuf;
+      {
+         resip::DataStream ds(invBuf);
+
+         ds << "INVITE sip:7003@192.122.24.94:20060?REQUIRE=replaces SIP/2.0\r\n";
+         ds << "Via: SIP/2.0/UDP 192.122.24.109;branch=z9hG4bKfc4a20db5EC58FB8\r\n";
+         ds << "From: \"7006 601\" <sip:7006@scsuk.europe.nortel.com>;tag=29C49D21-D9FDBDBC\r\n";
+         ds << "To: <sip:7003@192.122.24.94:20060?REQUIRE=replaces>\r\n";
+         ds << "CSeq: 1 INVITE\r\n";
+         ds << "Call-ID: a9ad18fd-5fd391bf-309febea@192.122.24.109\r\n";
+         ds << "Contact: <sip:7006@192.122.24.109>\r\n";
+         ds << "Allow: INVITE, ACK, BYE, CANCEL, OPTIONS, INFO, MESSAGE, SUBSCRIBE, NOTIFY, PRACK, UPDATE, REFER\r\n";
+         ds << "User-Agent: PolycomSoundPointIP-SPIP_601-UA/2.1.1.0052\r\n";
+         ds << "Supported: 100rel,replaces\r\n";
+         ds << "Allow-Events: talk,hold,conference\r\n";
+         ds << "Replaces: MDQ5MDJmZGEyYTkyNTBhZjBhNDg0NjUyMzE1MTc2Mjk.;to-tag=cf71d002;from-tag=1394930945\r\n";
+         ds << "Referred-By: <sip:7776@scsuk.europe.nortel.com>\r\n";
+         ds << "Max-Forwards: 70\r\n";
+         ds << "Content-Type: application/sdp\r\n";
+         ds << "Content-Length: 253\r\n";
+         ds << "\r\n";
+         ds << "v=0\r\n";
+         ds << "o=- 1210601497 1210601497 IN IP4 192.122.24.109\r\n";
+         ds << "s=Polycom IP Phone\r\n";
+         ds << "c=IN IP4 192.122.24.109\r\n";
+         ds << "t=0 0\r\n";
+         ds << "m=audio 2224 RTP/AVP 0 8 18 101\r\n";
+         ds << "a=sendrecv\r\n";
+         ds << "a=rtpmap:0 PCMU/8000\r\n";
+         ds << "a=rtpmap:8 PCMA/8000\r\n";
+         ds << "a=rtpmap:18 G729/8000\r\n";
+         ds << "a=rtpmap:101 telephone-event/8000\r\n";
+      }
+
+      auto_ptr<SipMessage> testMsg(TestSupport::makeMessage(invBuf));
+      assert(testMsg->header(h_RequestLine).isWellFormed());
+      assert(testMsg->header(h_RequestLine).method() == INVITE);
+      assert(testMsg->header(h_RequestLine).getSipVersion() == "SIP/2.0");
+      assert(testMsg->header(h_RequestLine).uri().hasEmbedded());
+      SipMessage& embeddedMsg = testMsg->header(h_RequestLine).uri().embedded();
+      assert(embeddedMsg.exists(h_Requires));
+      assert(embeddedMsg.header(h_Requires).find(Token(Symbols::Replaces)));
+   }
+
    cerr << "\nTEST OK" << endl;
    return 0;
 }
