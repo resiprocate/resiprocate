@@ -21,6 +21,7 @@ using resip::h_ContentTransferEncoding;
 
 int main(int argc, char* argv[])
 {
+#if defined(USE_SSL)
    Log::initialize(Log::Cout, Log::Info, argv[0]);
 
    if(argc != 4)
@@ -140,4 +141,9 @@ int main(int argc, char* argv[])
    }
 
    return 0;
+#else
+// No SSL
+   std::cout << "Compiled without SSL support -- S/MIME Cannot be tested" << std::endl;
+   return -1;
+#endif
 }
