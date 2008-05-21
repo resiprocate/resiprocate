@@ -2181,6 +2181,10 @@ main(int argc, char** argv)
       SipMessage& embeddedMsg = testMsg->header(h_RequestLine).uri().embedded();
       assert(embeddedMsg.exists(h_Requires));
       assert(embeddedMsg.header(h_Requires).find(Token(Symbols::Replaces)));
+      assert(testMsg->header(h_To).uri().hasEmbedded());
+      SipMessage& embeddedMsg2 = testMsg->header(h_To).uri().embedded();
+      assert(embeddedMsg2.exists(h_Requires));
+      assert(embeddedMsg2.header(h_Requires).find(Token(Symbols::Replaces)));
    }
 
    cerr << "\nTEST OK" << endl;
