@@ -20,12 +20,10 @@ namespace reTurn {
 TlsConnection::TlsConnection(asio::io_service& ioService,
                              ConnectionManager& manager, 
                              RequestHandler& handler, 
-                             bool turnFraming,
                              asio::ssl::context& context)
   : AsyncTlsSocketBase(ioService, context),
     mConnectionManager(manager),
-    mRequestHandler(handler),
-    mTurnFraming(turnFraming)
+    mRequestHandler(handler)
 {
 }
 
@@ -52,7 +50,8 @@ void
 TlsConnection::stop()
 {
   asio::error_code ec;
-  mSocket.shutdown(ec);
+  //mSocket.shutdown(ec);  // !slg! note: this fn gives a stack overflow since ASIO 1.0.0 for some reason
+  mSocket.lowest_layer().close();
   if(ec)
   {
      WarningLog(<< "TlsConnection shutdown, error=" << ec.value() << "-" << ec.message());
@@ -84,10 +83,6 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
 {
    if (data->size() > 4)
    {
-      char* stunMessageBuffer = 0;
-      unsigned int stunMessageSize = 0;
-
-      bool treatAsData=false;
       /*
       std::cout << "Read " << bytesTransferred << " bytes from tls socket (" << address.to_string() << ":" << port << "): " << std::endl;
       cout << std::hex;
@@ -97,89 +92,53 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
       }
       std::cout << std::dec << std::endl;
       */
-      unsigned short channelNumber;
-      memcpy(&channelNumber, &(*data)[0], 2);
-      channelNumber = ntohs(channelNumber);
 
-      if(mTurnFraming)  // TODO - If TURN Server (vs STUN server - no framing)
+      if(((*data)[0] & 0xC0) == 0)  // Stun/Turn Messages always have bits 0 and 1 as 00 - otherwise ChannelData message
       {
-         // All Turn messaging will be framed
-         if(channelNumber == 0) // Stun/Turn Request
+         // Try to parse stun message
+         StunMessage request(StunTuple(StunTuple::TLS, mSocket.lowest_layer().local_endpoint().address(), mSocket.lowest_layer().local_endpoint().port()),
+                             StunTuple(StunTuple::TLS, address, port),
+                             (char*)&(*data)[0], data->size());
+         if(request.isValid())
          {
-            stunMessageBuffer = (char*)&(*data)[4];
-            stunMessageSize = (unsigned int)data->size()-4;
-         }
-         else  
-         {
-            // Turn Data
-            treatAsData = true;
-         }
-      }
-      else
-      {
-         stunMessageBuffer = (char*)&(*data)[0];
-         stunMessageSize = data->size();
-      }
+            StunMessage response;
+            RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
 
-      if(!treatAsData)
-      {
-         if(stunMessageBuffer && stunMessageSize)
-         {
-            // Try to parse stun message
-            StunMessage request(StunTuple(StunTuple::TLS, mSocket.lowest_layer().local_endpoint().address(), mSocket.lowest_layer().local_endpoint().port()),
-                                StunTuple(StunTuple::TLS, address, port),
-                                stunMessageBuffer, stunMessageSize);
-            if(request.isValid())
+            switch(result)
             {
-               StunMessage response;
-               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, response);
-
-               switch(result)
-               {
-               case RequestHandler::NoResponseToSend:
-                  // No response to send - just receive next message
-                  doFramedReceive();
-                  return;
-               case RequestHandler::RespondFromAlternatePort:
-               case RequestHandler::RespondFromAlternateIp:
-               case RequestHandler::RespondFromAlternateIpPort:
-                  // These only happen for UDP server for RFC3489 backwards compatibility
-                  assert(false);
-                  break;
-               case RequestHandler::RespondFromReceiving:
-               default:
-                  break;
-               }
-
+            case RequestHandler::NoResponseToSend:
+               // No response to send - just receive next message
+               doFramedReceive();
+               return;
+            case RequestHandler::RespondFromAlternatePort:
+            case RequestHandler::RespondFromAlternateIp:
+            case RequestHandler::RespondFromAlternateIpPort:
+               // These only happen for UDP server for RFC3489 backwards compatibility
+               assert(false);
+               break;
+            case RequestHandler::RespondFromReceiving:
+            default:
+               break;
+            }
 #define RESPONSE_BUFFER_SIZE 1024
-               boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
-               unsigned int responseSize;
-               if(mTurnFraming) 
-               {
-                  responseSize = response.stunEncodeFramedMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
-               }
-               else
-               {
-                  responseSize = response.stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
-               }
-               buffer->truncate(responseSize);  // set size to real size
+            boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+            unsigned int responseSize;
+            responseSize = response.stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
+            buffer->truncate(responseSize);  // set size to real size
 
-               doSend(response.mRemoteTuple, buffer);
-            }
-            else
-            {
-               WarningLog(<< "Received invalid StunMessage.  Dropping.");
-            }
+            doSend(response.mRemoteTuple, buffer);
          }
          else
          {
-            WarningLog(<< "Received invalid data.  Closing connection.");
-            close();
-            return;
+            WarningLog(<< "Received invalid StunMessage.  Dropping.");
          }
-      } 
-      else
+      }
+      else // ChannelData message
       {
+         unsigned short channelNumber;
+         memcpy(&channelNumber, &(*data)[0], 2);
+         channelNumber = ntohs(channelNumber);
+
          mRequestHandler.processTurnData(channelNumber,
                                          StunTuple(StunTuple::TLS, mSocket.lowest_layer().local_endpoint().address(), mSocket.lowest_layer().local_endpoint().port()),
                                          StunTuple(StunTuple::TLS, address, port),
@@ -188,7 +147,7 @@ TlsConnection::onReceiveSuccess(const asio::ip::address& address, unsigned short
    }
    else
    {
-      WarningLog(<< "Not enough data for framed message.  Closing connection.");
+      WarningLog(<< "Not enough data for stun message or framed message.  Closing connection.");
       close();
       return;
    }

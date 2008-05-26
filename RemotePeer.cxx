@@ -4,12 +4,10 @@ using namespace std;
 
 namespace reTurn {
 
-RemotePeer::RemotePeer(const StunTuple& peerTuple, unsigned short clientToServerChannel, unsigned short serverToClientChannel) : 
+RemotePeer::RemotePeer(const StunTuple& peerTuple, unsigned short channel) : 
    mPeerTuple(peerTuple), 
-   mClientToServerChannel(clientToServerChannel),
-   mClientToServerChannelConfirmed(false),
-   mServerToClientChannel(serverToClientChannel),
-   mServerToClientChannelConfirmed(false)
+   mChannel(channel),
+   mChannelConfirmed(false)
 {
 }
 
