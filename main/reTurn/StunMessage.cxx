@@ -133,9 +133,9 @@ StunMessage::init()
    mHasTurnPeerAddress = false;
    mHasTurnData = false;
    mHasTurnRelayAddress = false;
-   mHasTurnRequestedPortProps = false;
+   mHasTurnRequestedProps = false;
    mHasTurnRequestedTransport = false;
-   mHasTurnRequestedIp = false;
+   mHasTurnReservationToken = false;
    mHasTurnConnectStat = false;
    mErrorCode.reason = 0;
    mUsername = 0;
@@ -366,19 +366,14 @@ StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddres
 }
 
 bool 
-StunMessage::stunParseAtrRequestedPortProps( char* body, unsigned int hdrLen,  TurnAtrRequestedPortProps& result )
+StunMessage::stunParseAtrRequestedProps( char* body, unsigned int hdrLen,  TurnAtrRequestedProps& result )
 {
    if ( hdrLen != 4 )
    {
-      WarningLog(<< "hdrLen wrong for PortProps");
+      WarningLog(<< "hdrLen wrong for RequestedProps");
       return false;
    }
-   body++;  // Skip pad
-   result.props = *body++ & 0x3;
-
-   UInt16 nport;
-   memcpy(&nport, body, 2); body+=2;
-   result.port = ntohs(nport);
+   result.propType = *body;  // copy first 8 bits into propType
 	
    return true;
 }
@@ -395,6 +390,21 @@ StunMessage::stunParseAtrUInt32( char* body, unsigned int hdrLen,  UInt32& resul
    {
       memcpy(&result, body, 4);
       result = ntohl(result);
+      return true;
+   }
+}
+
+bool 
+StunMessage::stunParseAtrUInt64( char* body, unsigned int hdrLen,  UInt64& result )
+{
+   if ( hdrLen != 8 )
+   {
+      WarningLog(<< "hdrLen wrong for UInt64 attribute");
+      return false;
+   }
+   else
+   {
+      memcpy(&result, body, 8);
       return true;
    }
 }
@@ -774,34 +784,36 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             StackLog(<< "Turn Relay Address = " << mTurnRelayAddress);
             break;
 
-         case TurnRequestedPortProps:
-            mHasTurnRequestedPortProps = true;
-            if (stunParseAtrRequestedPortProps( body, attrLen, mTurnRequestedPortProps) == false)
+         case TurnRequestedProps:
+            mHasTurnRequestedProps = true;
+            if (stunParseAtrRequestedProps( body, attrLen, mTurnRequestedProps) == false)
             {
-               WarningLog(<< "problem parsing turn requested port props");
+               WarningLog(<< "problem parsing turn requested props");
                return false;
             }
-            StackLog(<< "Turn Requested Port Props = " << (int)mTurnRequestedPortProps.props << ", port = " << mTurnRequestedPortProps.port);
+            StackLog(<< "Turn Requested Props = " << (int)mTurnRequestedProps.propType);
             break;
 
          case TurnRequestedTransport:
             mHasTurnRequestedTransport = true;
-            if (stunParseAtrUInt32( body, attrLen, mTurnRequestedTransport) == false)
+            UInt32 requestedTransport;
+            if (stunParseAtrUInt32( body, attrLen, requestedTransport) == false)
             {
                WarningLog(<< "problem parsing turn requested transport");
                return false;
             }
-            StackLog(<< "Turn Requested Transport = " << mTurnRequestedTransport);
+            mTurnRequestedTransport = requestedTransport >> 24;
+            StackLog(<< "Turn Requested Transport = " << (int)mTurnRequestedTransport);
             break;
 
-         case TurnRequestedIp:
-            mHasTurnRequestedIp = true;
-            if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRequestedIp ) == false )
+         case TurnReservationToken:
+            mHasTurnReservationToken = true;
+            if ( stunParseAtrUInt64(  body,  attrLen,  mTurnReservationToken ) == false )
             {
-               WarningLog(<< "problem parsing turn requested ip");
+               WarningLog(<< "problem parsing turn reservation token");
                return false;
             }
-            StackLog(<< "Turn Requested IP Address = " << mTurnRequestedIp);
+            StackLog(<< "Turn Reservation Token = " << mTurnReservationToken);
             break;
 
          case TurnConnectStat:
@@ -893,9 +905,6 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
       case StunMessage::TurnDataMethod:
          os << "Data";
          break;
-      case StunMessage::TurnChannelConfirmationMethod:
-         os << "ChannelConfirmation";
-         break;
       default:
          os << "Unknown ind method (" << int(h.msgType & 0x000F) << ")";
          break;
@@ -926,6 +935,9 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
 			break;
 		case StunMessage::TurnRefreshMethod:
             os << "Refresh";
+			break;
+		case StunMessage::TurnChannelBindMethod:
+            os << "ChannelBind";
 			break;
       default:
          os << "Unknown method (" << int(h.msgType & 0x000F) << ")";
@@ -987,6 +999,15 @@ StunMessage::encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value)
    ptr = encode16(ptr, 4);
    ptr = encode32(ptr, value);
    return ptr;
+}
+
+char*
+StunMessage::encodeAtrUInt64(char* ptr, UInt16 type, UInt64 value)
+{
+   ptr = encode16(ptr, type);
+   ptr = encode16(ptr, 8);
+   memcpy(ptr, reinterpret_cast<void*>(&value), sizeof(UInt64));
+   return ptr + sizeof(UInt64);
 }
 
 char*
@@ -1075,13 +1096,13 @@ StunMessage::encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr)
 }
 
 char* 
-StunMessage::encodeAtrRequestedPortProps(char* ptr, const TurnAtrRequestedPortProps& atr)
+StunMessage::encodeAtrRequestedProps(char* ptr, const TurnAtrRequestedProps& atr)
 {
-   ptr = encode16(ptr, TurnRequestedPortProps);
+   ptr = encode16(ptr, TurnRequestedProps);
    ptr = encode16(ptr, 4);
-   *ptr++ = (UInt8)0;  // pad
-   *ptr++ = atr.props & 0x3;
-   ptr = encode16(ptr, atr.port);
+   *ptr++ = atr.propType;  
+   *ptr++ = 0; // pad
+   ptr = encode16(ptr, 0); // pad
    return ptr;
 }
 
@@ -1237,20 +1258,20 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       StackLog(<< "Encoding Turn RelayAddress: " << mTurnRelayAddress);
       ptr = encodeAtrXorAddress (ptr, TurnRelayAddress, mTurnRelayAddress);
    }
-   if (mHasTurnRequestedPortProps)
+   if (mHasTurnRequestedProps)
    {
-      StackLog(<< "Encoding Turn RequestedPortProps: " << (int)mTurnRequestedPortProps.props << ", port=" << mTurnRequestedPortProps.port);
-      ptr = encodeAtrRequestedPortProps(ptr, mTurnRequestedPortProps);
+      StackLog(<< "Encoding Turn RequestedProps: " << (int)mTurnRequestedProps.propType);
+      ptr = encodeAtrRequestedProps(ptr, mTurnRequestedProps);
    }   
    if (mHasTurnRequestedTransport)
    {
-      StackLog(<< "Encoding Turn RequestedTransport: " << mTurnRequestedTransport);
-      ptr = encodeAtrUInt32(ptr, TurnRequestedTransport, mTurnRequestedTransport);
+      StackLog(<< "Encoding Turn RequestedTransport: " << (int)mTurnRequestedTransport);
+      ptr = encodeAtrUInt32(ptr, TurnRequestedTransport, UInt32(mTurnRequestedTransport << 24));
    }   
-   if (mHasTurnRequestedIp)
+   if (mHasTurnReservationToken)
    {
-      StackLog(<< "Encoding Turn RequestedIp: " << mTurnRequestedIp);
-      ptr = encodeAtrXorAddress (ptr, TurnRequestedIp, mTurnRequestedIp);
+      StackLog(<< "Encoding Turn ReservationToken: " << mTurnReservationToken);
+      ptr = encodeAtrUInt64 (ptr, TurnReservationToken, mTurnReservationToken);
    }
    if (mHasTurnConnectStat)
    {
@@ -1259,7 +1280,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    }   
 
    // Update Length in header now - needed in message integrity and fingerprint calculations
-   UInt16 msgSize = ptr - buf - sizeof(StunMsgHdr);
+   UInt16 msgSize = unsigned int(ptr - buf) - sizeof(StunMsgHdr);
    if(mHasMessageIntegrity) msgSize += 24;  // 20 (attribute value) + 4 (attribute header)
    if(mHasFingerprint) msgSize += 8;        // 4 (attribute value) + 4 (attribute header)
    encode16(lengthp, msgSize);

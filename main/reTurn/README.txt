@@ -8,7 +8,7 @@ Original Author: Scott Godin
 What is reTurn?
 ---------------
 reTurn is a Stun/Turn server and client library implementation of the latest 
-Stun/Turn drafts:  RFC3489bis13, and draft-ietf-behave-turn-05
+Stun/Turn drafts:  RFC3489bis13, and draft-ietf-behave-turn-07
 
 
 Current External Library Usage
@@ -42,21 +42,24 @@ Finger Print Insertion and Validation  yes          yes     Uses BOOST:crc_optim
 Checking for unknown attributes        no           no
 Bandwidth Check                        no           no
 Turn Allocation                        yes          yes     Only UDP Relay's are implemented
-Requested Port Props (Even, Odd, etc)  yes          yes
+Requested Props (Even, Odd, etc)       yes          yes
 Turn Permissions                       yes          yes      
 Turn Relay                             yes          yes     UDP Peers only
 Asyncronous Client APIs                yes          yes
+Channel Binding                        yes          yes
 
 
 General TODO
 -------------
-- Complete Turn Implementation - TCP/TLS relay - Implement Connect Request and Connect Status Indication
 - reduce library use - remove BOOST and/or rutil requirement - remove ASIO for client??
 - allow multiple interfaces to be used for relay
 - per user allocation quota enforcement
 - move TLS server settings to configuration
 - cleanup stun message class so that there are accessors for all data members
 - Check for unknown attributes
+- Timeout Channel Bindings - currently binding last until the allocation is destroyed
+- The server is supposed to prevent a relayed transport address and the 5-tuple from being
+  reused in different allocations for 2 minutes after the allocation expires
 - from chart above
  - Configuration Framework
  - Multi-threaded support
@@ -85,11 +88,15 @@ Current Asynchronous Implementation:
 - When Async sockets are created a callback handler class is passed in to receive callback notifications when 
   operations are complete
 
-Synchronous API Set - Wrapping in a TurnSocket - TurnUdpSocket, TurnTcpSocket, TurnTlsSocket - bound to local socket
-Note: API with a * are implemented
+API Set - Wrapping in a Turn(Async)Socket - Turn(Async)UdpSocket, Turn(Async)TcpSocket, Turn(Async)TlsSocket 
+        - bound to local socket
  * setUsernameAndPassword()
  * requestSharedSecret() - username and password are returned
- * createAllocation(lifetime, bandwidth, requestedPortProps, requestedPort, requestedTransportType, requestedIpAddress)
+ * createAllocation(lifetime, 
+                    bandwidth, 
+                    requestedPortProps, 
+                    reservationToken, 
+                    requestedTransportType)
  * refreshAllocation(lifetime)
  * destroyAllocation() 
  * getRelayTuple() - (SYNC API ONLY) used to retrieve info about the allocation
@@ -98,27 +105,39 @@ Note: API with a * are implemented
  * getBandwidth() - (SYNC API ONLY) used to retrieve info about the allocation
  * setActiveDestination(destinationIP, destinationPort)
  * clearActiveDestination()
- - connectAllocation(destinationIP, destinationPort)
- - listenAllocation(destinationIP, destinationPort)
  * bindRequest() - full 3489 not yet supported
  * send(bufferToSend, bufferSize);      
  * sendTo(destinationIP, destinationPort, bufferToSend, bufferSize)
- * receive(bufferToReceiveIn, bufferSize[in/out], senderIPAddress, senderPort) - last 2 args are return args - if receive is non-blocking the this data is returned in callback instead 
- * receiveFrom(bufferToReceiveIn, bufferSize[in/out], senderIPAddress, senderPort) - in this case last 2 args are input and specify endpoint we want to receive from
+ * receive(bufferToReceiveIn, bufferSize[in/out], senderIPAddress, senderPort) 
+   - last 2 args are return args - if receive is non-blocking the this data is returned in callback instead 
+ * receiveFrom(bufferToReceiveIn, bufferSize[in/out], senderIPAddress, senderPort) 
+   - in this case last 2 args are input and specify endpoint we want to receive from
+
 NOTE:  could also add a binding discovery API for attempting to detect NAT type using RFC3489 methods
  
 Asynchronous Callbacks:
 
-onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port) = 0;
+onConnectSuccess(unsigned int socketDesc, 
+                 const asio::ip::address& address, 
+                 unsigned short port) = 0;
 onConnectFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
-onSharedSecretSuccess(unsigned int socketDesc, const char* username, unsigned int usernameSize, const char* password, unsigned int passwordSize) = 0;  
+onSharedSecretSuccess(unsigned int socketDesc, 
+                      const char* username, 
+                      unsigned int usernameSize, 
+                      const char* password, 
+                      unsigned int passwordSize) = 0;  
 onSharedSecretFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
 onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple) = 0; 
 onBindFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
-onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth) = 0; 
+onAllocationSuccess(unsigned int socketDesc, 
+                    const StunTuple& reflexiveTuple, 
+                    const StunTuple& relayTuple, 
+                    unsigned int lifetime, 
+                    unsigned int bandwidth, 
+                    UInt64& reservationToken) = 0; 
 onAllocationFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
 onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime) = 0;
@@ -129,7 +148,11 @@ onSetActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e
 onClearActiveDestinationSuccess(unsigned int socketDesc) = 0;
 onClearActiveDestinationFailure(unsigned int socketDesc, const asio::error_code &e) = 0;
 
-onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, const char* buffer, unsigned int size) = 0;
+onReceiveSuccess(unsigned int socketDesc, 
+                 const asio::ip::address& address, 
+                 unsigned short port, 
+                 const char* buffer, 
+                 unsigned int size) = 0;
 onReceiveFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
 onSendSuccess(unsigned int socketDesc) = 0;

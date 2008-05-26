@@ -113,7 +113,8 @@ TurnTcpSocket::readBody(unsigned int len)
 void
 TurnTcpSocket::cancelSocket()
 {
-   mSocket.cancel();
+   asio::error_code ec;
+   mSocket.cancel(ec);
 }
 
 void 
@@ -134,6 +135,11 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
       UInt16 dataLen;
       memcpy(&dataLen, &mReadBuffer[2], 2);
       dataLen = ntohs(dataLen);
+
+      if((mReadBuffer[0] & 0xC0) == 0)  // If first 2 bits are 00 then this is a stun message
+      {
+         dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
+      }
 
       readBody(dataLen);
    }

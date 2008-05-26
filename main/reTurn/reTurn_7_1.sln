@@ -24,6 +24,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestClient", "client\test\T
 		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestAsyncClient", "client\test\TestAsyncClient_7_1.vcproj", "{73151749-13F0-4093-97F1-A6952ECECDCF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8} = {67B5906C-5C9D-4D09-AC7E-AF71D72175F8}
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -51,6 +58,10 @@ Global
 		{73151749-13F0-4093-97F1-A6952ECECDBF}.Debug.Build.0 = Debug|Win32
 		{73151749-13F0-4093-97F1-A6952ECECDBF}.Release.ActiveCfg = Release|Win32
 		{73151749-13F0-4093-97F1-A6952ECECDBF}.Release.Build.0 = Release|Win32
+		{73151749-13F0-4093-97F1-A6952ECECDCF}.Debug.ActiveCfg = Debug|Win32
+		{73151749-13F0-4093-97F1-A6952ECECDCF}.Debug.Build.0 = Debug|Win32
+		{73151749-13F0-4093-97F1-A6952ECECDCF}.Release.ActiveCfg = Release|Win32
+		{73151749-13F0-4093-97F1-A6952ECECDCF}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

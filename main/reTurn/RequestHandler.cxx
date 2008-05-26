@@ -30,8 +30,9 @@ const char authenticationPassword[] = "1234";
 
 #define NONCE_LIFETIME 3600    // 1 hour - ?slg? what do we want as a default here? 
 //#define NONCE_LIFETIME 10    // for TESTING
-#define SERVER_STRING "reTURN 0.1"
+#define SERVER_STRING "reTURN 0.2 - turn-07"
 #define DEFAULT_LIFETIME 600   // 10 minutes
+#define MAX_LIFETIME     3600  // 1 hour
 //#define DEFAULT_LIFETIME 30  // for TESTING
 #define DEFAULT_BANDWIDTH 100  // 100 kbit/s - enough for G711 RTP ?slg? what do we want this to be?
 
@@ -92,6 +93,10 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
             result = processTurnRefreshRequest(request, response);
             break;
 
+         case StunMessage::TurnChannelBindMethod:
+            result = processTurnChannelBindRequest(request, response);
+            break;
+
          default:
             buildErrorResponse(response, 400, "Invalid Request Method");  
             break;
@@ -105,10 +110,6 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
          case StunMessage::TurnSendMethod:
             processTurnSendIndication(request);
             break;
-
-         case StunMessage::TurnChannelConfirmationMethod:
-            processTurnChannelConfirmationIndication(request);
-            break;     
 
          case StunMessage::BindMethod:
             // A Bind indication is simply a keepalive with no response required
@@ -366,7 +367,6 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
       changeTuple.setPort(request.mLocalTuple.getPort() == mPrim3489Port ? mAlt3489Port : mPrim3489Port);
       UInt32 changeRequest = request.mHasChangeRequest ? request.mChangeRequest : 0;
 
-
       if(changeRequest & StunMessage::ChangeIpFlag && changeRequest & StunMessage::ChangePortFlag)
       {
          result = RespondFromAlternateIpPort;
@@ -480,94 +480,110 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
       return RespondFromReceiving;
    }
 
-   // TODO - add a check that a per-user quota for number of allowed TurnAllocations has not been exceeded
-
-   // Check if bandwidth is available
-   if(request.mHasTurnBandwidth)
-   {
-      // TODO - bandwidth check
-   }
+   // TODO - add a check that a per-user quota for number of allowed TurnAllocations 
+   // has not been exceeded - if so send 486 (Allocation Quota Reached)
 
    // Build the Allocation Tuple
    StunTuple allocationTuple(request.mLocalTuple.getTransportType(), // Default to receiving transport
                              request.mLocalTuple.getAddress(),   // default ip address is at the discretion of the server
                              0);  // port to be populated later
-                                
+
    // Check for requested properties
    if(request.mHasTurnRequestedTransport)
    {
-      if(request.mTurnRequestedTransport == StunMessage::RequestedTransportTcp && 
-         request.mLocalTuple.getTransportType() == StunTuple::UDP)  // Don't allow UDP traffic to request TCP transport
+      if(request.mTurnRequestedTransport != StunMessage::RequestedTransportUdp)  // We only support UDP allocations right now
       {
          WarningLog(<< "Invalid transport requested.  Sending 442.");
          buildErrorResponse(response, 442, "Unsupported Transport Protocol");  
          return RespondFromReceiving;
       }
-      allocationTuple.setTransportType(request.mTurnRequestedTransport == StunMessage::RequestedTransportTcp ? StunTuple::TCP : StunTuple::UDP);
-   }
-   if(request.mHasTurnRequestedIp)
-   {
-      StunMessage::setTupleFromStunAtrAddress(allocationTuple, request.mTurnRequestedIp);
-
-      // Validate that requested interface is valid
-      if(allocationTuple.getAddress() != request.mLocalTuple.getAddress())  // TODO - for now only allow receiving interface
-      {
-         WarningLog(<< "Invalid ip address requested.  Sending 443.");
-         buildErrorResponse(response, 443, "Invalid IP Address");  
-         return RespondFromReceiving;
-      }
-   }
-   unsigned short port = 0;  // Default to Any free port
-   UInt8 portprops = StunMessage::PortPropsNone;
-   if(request.mHasTurnRequestedPortProps)
-   {
-      port = request.mTurnRequestedPortProps.port;
-      portprops = request.mTurnRequestedPortProps.props;
-   }
-
-   // If there is a specific requested port - then check if it is allocated
-   if(port != 0)
-   {
-      // Note:  Port could be reserved temporarily as an adjacent pair of ports
-      if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), port))
-      {
-         // If the specific port is not available deny request
-         port = 0;
-      }
+      allocationTuple.setTransportType(StunTuple::UDP);
    }
    else
    {
-      if(portprops == StunMessage::PortPropsOdd)
+      WarningLog(<< "Missing requested transport header.  Sending 400.");
+      buildErrorResponse(response, 400, "Bad Request - Missing requested transport");  
+      return RespondFromReceiving;
+   }
+
+   // Check if bandwidth is available
+   if(request.mHasTurnBandwidth)
+   {
+      // TODO - bandwidth check - if insufficient send 507 (Insufficient Bandwidth Capacity)
+   }
+                                
+   unsigned short port = 0;  // Default to Any free port
+   UInt8 props = StunMessage::PropsNone;
+   if(request.mHasTurnRequestedProps)
+   {
+      if(request.mHasTurnReservationToken)
       {
-         // Attempt to allocate an odd port
-         port = mTurnManager.allocateOddPort(allocationTuple.getTransportType());
+         WarningLog(<< "Both Requested Props and Reservation Token headers are present.  Sending 400.");
+         buildErrorResponse(response, 400, "Bad request - both Requested Props and Reservation Token present");  
+         return RespondFromReceiving;
       }
-      else if(portprops == StunMessage::PortPropsEven)
+      if(request.mTurnRequestedProps.propType == StunMessage::PropsPortEven)
       {
          // Attempt to allocate an even port
          port = mTurnManager.allocateEvenPort(allocationTuple.getTransportType());
       }
-      else if(portprops == StunMessage::PortPropsEvenPair)
+      else if(request.mTurnRequestedProps.propType == StunMessage::PropsPortPair)
       {
          // Attempt to allocate an even port, with a free adjacent odd port
          port = mTurnManager.allocateEvenPortPair(allocationTuple.getTransportType());
+
+         // Add Reservation Token to response - for now just use reserved port number as token
+         response.mHasTurnReservationToken = true;
+         response.mTurnReservationToken = port + 1;
       }
-      else
+      if(port == 0)
       {
-         // Allocate any available port
-         port = mTurnManager.allocateAnyPort(allocationTuple.getTransportType());
+         WarningLog(<< "Unable to allocate requested port.  Sending 508.");
+         buildErrorResponse(response, 508, "Insufficient Port Capacity");  
+         return RespondFromReceiving;
       }
    }
 
-   // If finding a port failed - send error
-   if(port < 1024)
+   if(request.mHasTurnReservationToken)
    {
-      WarningLog(<< "Can't allocate port.  Sending 444.");
-      buildErrorResponse(response, 444, "Invalid Port");  
-      return RespondFromReceiving;
+      // Try to allocate reserved port - for now reservation token is reserved port number
+      port = (unsigned short)request.mTurnReservationToken;
+      if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), (unsigned short)request.mTurnReservationToken))
+      {
+         WarningLog(<< "Unable to allocate requested port.  Sending 508.");
+         buildErrorResponse(response, 508, "Insufficient Port Capacity");  
+         return RespondFromReceiving;
+      }      
+   }
+
+   if(port == 0)
+   {
+      // Allocate any available port
+      port = mTurnManager.allocateAnyPort(allocationTuple.getTransportType());      
+      if(port == 0)
+      {
+         WarningLog(<< "Unable to allocate port.  Sending 508.");
+         buildErrorResponse(response, 508, "Insufficient Port Capacity");  
+         return RespondFromReceiving;
+      }      
    }
 
    allocationTuple.setPort(port);
+
+   UInt32 lifetime = DEFAULT_LIFETIME;
+   if(request.mHasTurnLifetime)
+   {
+      // Check if the requested value is greater than the server max
+      if(request.mTurnLifetime > MAX_LIFETIME)
+      {
+         lifetime = MAX_LIFETIME;
+      }
+      // The server should ignore requests for a lifetime less than it's default
+      else if(request.mTurnLifetime > DEFAULT_LIFETIME)
+      {
+         lifetime = request.mTurnLifetime;
+      }
+   }
 
    // We now have an internal 5-Tuple and an allocation tuple - create the allocation
 
@@ -579,13 +595,11 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
                                       request.mRemoteTuple, 
                                       StunAuth(*request.mUsername, hmacKey), 
                                       allocationTuple, 
-                                      request.mHasTurnLifetime ? request.mTurnLifetime : DEFAULT_LIFETIME,  
-                                      request.mHasTurnRequestedPortProps ? request.mTurnRequestedPortProps.port : 0,  // should we pass in actual port requested too?
-                                      request.mHasTurnRequestedTransport ? request.mTurnRequestedTransport : StunTuple::None,
-                                      request.mHasTurnRequestedIp ? (asio::ip::address*)&allocationTuple.getAddress() : 0);
+                                      lifetime);
    }
    catch(asio::system_error e)
    {
+      // TODO - handle port in use error better - try to allocate a new port or something?
       ErrLog(<< "Error allocating socket for allocation.  Sending 500.");
       buildErrorResponse(response, 500, "Server Error");  
       return RespondFromReceiving;
@@ -598,7 +612,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    response.mClass = StunMessage::StunClassSuccessResponse;
 
    response.mHasTurnLifetime = true;
-   response.mTurnLifetime = request.mHasTurnLifetime ? request.mTurnLifetime : DEFAULT_LIFETIME;
+   response.mTurnLifetime = lifetime;
 
    response.mHasTurnRelayAddress = true;
    StunMessage::setStunAtrAddressFromTuple(response.mTurnRelayAddress, allocation->getRequestedTuple());
@@ -641,14 +655,14 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
    // If allocation was found, then ensure that the same shared secret was used
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
-      WarningLog(<< "Refresh requested with username not matching allocation.  Sending 436.");
-      buildErrorResponse(response, 436, "Unknown Username");  
+      WarningLog(<< "Refresh requested with username not matching allocation.  Sending 438.");
+      buildErrorResponse(response, 438, "Wrong Credentials");  
       return RespondFromReceiving;
    }
    if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
-      WarningLog(<< "Refresh requested with shared secret not matching allocation.  Sending 431.");
-      buildErrorResponse(response, 431, "Integrity Check Failure");   
+      WarningLog(<< "Refresh requested with shared secret not matching allocation.  Sending 438.");
+      buildErrorResponse(response, 438, "Wrong Credentials");   
       return RespondFromReceiving;
    }
 
@@ -670,14 +684,31 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
       return RespondFromReceiving;
    }
 
+   UInt32 lifetime = DEFAULT_LIFETIME;
+   if(request.mHasTurnLifetime)
+   {
+      // Check if the requested value is greater than the server max
+      if(request.mTurnLifetime > MAX_LIFETIME)
+      {
+         lifetime = MAX_LIFETIME;
+      }
+      // The server should ignore requests for a lifetime less than it's default
+      else if(request.mTurnLifetime > DEFAULT_LIFETIME)
+      {
+         lifetime = request.mTurnLifetime;
+      }
+   }
+
+   // TODO - if bandwidth header is present then check if it is OK
+
    // Check if this is a subsequent allocate request 
-   allocation->refresh(request.mHasTurnLifetime ? request.mTurnLifetime : DEFAULT_LIFETIME);
+   allocation->refresh(lifetime);
 
    // form the outgoing success response
    response.mClass = StunMessage::StunClassSuccessResponse;
 
    response.mHasTurnLifetime = true;
-   response.mTurnLifetime = request.mHasTurnLifetime ? request.mTurnLifetime : DEFAULT_LIFETIME;
+   response.mTurnLifetime = lifetime;
   
    response.mHasTurnBandwidth = true;
    response.mTurnBandwidth = request.mHasTurnBandwidth ? request.mTurnBandwidth : DEFAULT_BANDWIDTH;
@@ -688,12 +719,12 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
 }
 
 RequestHandler::ProcessResult 
-RequestHandler::processTurnListenPermissionRequest(StunMessage& request, StunMessage& response)
+RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage& response)
 {
    // Turn Allocate requests must be authenticated
    if(!request.mHasMessageIntegrity)
    {
-      WarningLog(<< "Turn listen permission request without authentication.  Send 401.");
+      WarningLog(<< "Turn channel bind request without authentication.  Send 401.");
       buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
       return RespondFromReceiving;
    }
@@ -706,34 +737,52 @@ RequestHandler::processTurnListenPermissionRequest(StunMessage& request, StunMes
 
    if(!allocation)
    {
-      WarningLog(<< "Turn listen permission request for non-existing allocation.  Send 437."); 
+      WarningLog(<< "Turn channel bind request for non-existing allocation.  Send 437."); 
       buildErrorResponse(response, 437, "No Allocation");  
       return RespondFromReceiving;
    }
 
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
-      WarningLog(<< "Listen permission requested with username not matching allocation.  Sending 436.");
-      buildErrorResponse(response, 436, "Unknown Username");  
+      WarningLog(<< "Channel bind requested with username not matching allocation.  Sending 438.");
+      buildErrorResponse(response, 438, "Wrong Credentials");  
       return RespondFromReceiving;
    }
    if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
-      WarningLog(<< "Listen permission requested with shared secret not matching allocation.  Sending 431.");
-      buildErrorResponse(response, 431, "Integrity Check Failure");   
+      WarningLog(<< "Channel bind requested with shared secret not matching allocation.  Sending 438.");
+      buildErrorResponse(response, 438, "Wrong Credentials");   
       return RespondFromReceiving;
    }
 
-   response.mClass = StunMessage::StunClassSuccessResponse;
-
-   if(request.mHasTurnPeerAddress)
+   if(request.mHasTurnPeerAddress && request.mHasTurnChannelNumber)
    {
-      // !SLG! TODO
+      StunTuple remoteAddress;
+      remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
+      StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnPeerAddress);
+
+      if(!allocation->addChannelBinding(remoteAddress, request.mTurnChannelNumber))
+      {
+         WarningLog(<< "Channel bind request invalid.  Sending 400.");
+         buildErrorResponse(response, 400, "Bad Request");   
+         return RespondFromReceiving;
+      }
    }
    else
    {
-      // !SLG! send error - no remote address
+      WarningLog(<< "Channel bind request missing peer address and/or channel number.  Sending 400.");
+      buildErrorResponse(response, 400, "Bad Request - missing headers");   
+      return RespondFromReceiving;
    }
+
+   // form the outgoing success response
+   response.mClass = StunMessage::StunClassSuccessResponse;
+
+   // Add the channel number to make the clients job easier
+   response.mHasTurnChannelNumber = true;
+   response.mTurnChannelNumber = request.mTurnChannelNumber;
+
+   // Note: Message Integrity added by handleAuthentication
 
    return RespondFromReceiving;
 }
@@ -746,12 +795,6 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
    if(!allocation)
    {
       WarningLog(<< "Turn send indication for non-existing allocation.  Dropping.");
-      return;
-   }
-
-   if(!request.mHasTurnChannelNumber)
-   {
-      WarningLog(<< "Turn send indication with no channel number.  Dropping.");
       return;
    }
 
@@ -768,43 +811,17 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
    if(request.mHasTurnData)  
    {
       boost::shared_ptr<DataBuffer> data(new DataBuffer(request.mTurnData->data(), request.mTurnData->size()));
-      allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, data, false /* framed? */);
+      allocation->sendDataToPeer(remoteAddress, data, false /* isFramed? */);
    }
    else
    {
-      boost::shared_ptr<DataBuffer> empty(new DataBuffer((const char*)0, 0));
-      allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, empty, false /* framed? */);
+      // Refresh the permission only
+      allocation->refreshPermission(remoteAddress.getAddress());
+
+      // Send empty packet?  (note: if this goes back in the above permission refresh is not required)
+      //boost::shared_ptr<DataBuffer> empty(new DataBuffer((const char*)0, 0));
+      //allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, empty, false /* isFramed? */);
    }
-}
-
-void
-RequestHandler::processTurnChannelConfirmationIndication(StunMessage& request)
-{
-   TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
-
-   if(!allocation)
-   {
-      WarningLog(<< "Turn channel confirmation for non-existing allocation.  Dropping.");
-      return;
-   }
-
-   if(!request.mHasTurnChannelNumber)
-   {
-      WarningLog(<< "Turn channel confirmation indication with no channel number.  Dropping.");
-      return;
-   }
-
-   if(!request.mHasTurnPeerAddress)
-   {
-      WarningLog(<< "Turn channel confirmation indication with no remote address.  Dropping.");
-      return;
-   }
-
-   StunTuple remoteAddress;
-   remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
-   StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnPeerAddress);
-
-   allocation->serverToClientChannelConfirmed(request.mTurnChannelNumber, remoteAddress);
 }
 
 void 
@@ -818,7 +835,7 @@ RequestHandler::processTurnData(unsigned short channelNumber, const StunTuple& l
       return;
    }
 
-   allocation->sendDataToPeer(channelNumber, data, true /* framed? */);
+   allocation->sendDataToPeer(channelNumber, data, true /* isFramed? */);
 }
 
 } // namespace

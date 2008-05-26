@@ -16,8 +16,7 @@ public:
                                asio::ssl::context& sslContext,
                                TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                const asio::ip::address& address = UnspecifiedIpAddress, 
-                               unsigned short port = 0,
-                               bool turnFraming = true);
+                               unsigned short port = 0);
 
    virtual unsigned int getSocketDescriptor() { return mSocket.lowest_layer().native(); }
 
