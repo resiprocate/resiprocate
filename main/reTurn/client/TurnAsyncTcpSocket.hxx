@@ -14,8 +14,7 @@ public:
    explicit TurnAsyncTcpSocket(asio::io_service& ioService, 
                                TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                const asio::ip::address& address = UnspecifiedIpAddress, 
-                               unsigned short port = 0,
-                               bool turnFraming = true);
+                               unsigned short port = 0);
 
    virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
 

@@ -1,6 +1,7 @@
 #ifndef TURNASYNCSOCKETHANDLER_HXX
 #define TURNASYNCSOCKETHANDLER_HXX
 
+#include <rutil/compat.hxx>
 #include <asio.hpp>
 #include "../AsyncSocketBaseHandler.hxx"
 #include "../DataBuffer.hxx"
@@ -23,7 +24,7 @@ public:
    virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple) = 0; 
    virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth) = 0; 
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken) = 0; 
    virtual void onAllocationFailure(unsigned int socketDesc, const asio::error_code& e) = 0;
 
    virtual void onRefreshSuccess(unsigned int socketDesc, unsigned int lifetime) = 0;

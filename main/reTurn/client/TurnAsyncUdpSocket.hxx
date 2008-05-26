@@ -14,8 +14,7 @@ public:
    explicit TurnAsyncUdpSocket(asio::io_service& ioService,
                                TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                const asio::ip::address& address, 
-                               unsigned short port, 
-                               bool turnFraming=true);  // If Turn framing is disabled then straight stun messaging is used with no framing
+                               unsigned short port); 
 
    virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
 

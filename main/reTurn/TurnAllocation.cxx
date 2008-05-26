@@ -15,7 +15,7 @@
 using namespace std;
 using namespace resip;
 
-#define TURN_PERMISSION_INACTIVITY_SECONDS 60   // .slg. move to configuration
+#define TURN_PERMISSION_INACTIVITY_SECONDS 300   // 5 minuntes - .slg. TODO - move to configuration
 
 namespace reTurn {
 
@@ -25,24 +25,14 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
                                const StunTuple& clientRemoteTuple,
                                const StunAuth& clientAuth, 
                                const StunTuple& requestedTuple, 
-                               unsigned int lifetime,
-                               UInt32 requestedPortProps, 
-                               UInt32 requestedTransport, 
-                               asio::ip::address* requestedIpAddress) :
+                               unsigned int lifetime) :
    mKey(clientLocalTuple, clientRemoteTuple),
    mClientAuth(clientAuth),
    mRequestedTuple(requestedTuple),
-   mRequestedPortProps(requestedPortProps),
-   mRequestedTransport(requestedTransport),
    mTurnManager(turnManager),
    mAllocationTimer(turnManager.getIOService()),
    mLocalTurnSocket(localTurnSocket)
 {
-   if(requestedIpAddress)
-   {
-      mRequestedIpAddress = *requestedIpAddress;
-   }
-
    InfoLog(<< "TurnAllocation created: clientLocal=" << clientLocalTuple << " clientRemote=" << 
            clientRemoteTuple << " requested=" << requestedTuple << " lifetime=" << lifetime);
 
@@ -143,13 +133,13 @@ TurnAllocation::onSocketDestroyed()
 }
 
 void 
-TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer>& data, bool framed)
+TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer>& data, bool isFramed)
 {
-   RemotePeer* remotePeer = mChannelManager.findRemotePeerByClientToServerChannel(channelNumber);
+   RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
    if(remotePeer)
    {
       // channel found - send Data
-      sendDataToPeer(remotePeer->getPeerTuple(), data, framed);
+      sendDataToPeer(remotePeer->getPeerTuple(), data, isFramed);
    }
    else
    {
@@ -159,52 +149,7 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<D
 }
 
 void 
-TurnAllocation::sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool framed)
-{
-   // Find RemotePeer
-   RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(peerAddress);
-   if(remotePeer)
-   {
-      // Found Remote Peer - ensure channel number matches
-      if(channelNumber != remotePeer->getClientToServerChannel())
-      {
-         WarningLog(<< "sendDataToPeer channel number mismatch - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-            mKey.getClientRemoteTuple() << " requested=" <<  mRequestedTuple << " oldChannelNumber=" << remotePeer->getClientToServerChannel() <<
-            " newChannelNumber=" << channelNumber);
-         // drop message
-         return;
-      }
-   }
-   else
-   {
-      RemotePeer* remotePeer = mChannelManager.createRemotePeer(peerAddress, channelNumber, 0);
-      assert(remotePeer);
-      remotePeer->setClientToServerChannelConfirmed();
-   }
-
-   if(mKey.getClientLocalTuple().getTransportType() == StunTuple::UDP)
-   {
-      // If UDP, then send TurnChannelConfirmationInd
-      StunMessage channelConfirmationInd;
-      channelConfirmationInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnChannelConfirmationMethod);
-      channelConfirmationInd.mHasTurnPeerAddress = true;
-      StunMessage::setStunAtrAddressFromTuple(channelConfirmationInd.mTurnPeerAddress, peerAddress);
-      channelConfirmationInd.mHasTurnChannelNumber = true;
-      channelConfirmationInd.mTurnChannelNumber = channelNumber;
-
-      // send channelConfirmationInd to local client
-      unsigned int bufferSize = 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnChannelNumber */ + 4 /* Turn Frame size */;
-      boost::shared_ptr<DataBuffer> buffer = AsyncSocketBase::allocateBuffer(bufferSize);
-      unsigned int size = channelConfirmationInd.stunEncodeFramedMessage((char*)buffer->data(), bufferSize);
-      buffer->truncate(size);  // Set size to proper size
-      mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), buffer);
-   }      
-
-   sendDataToPeer(peerAddress, data, framed);
-}
-
-void 
-TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool framed)
+TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool isFramed)
 {
    DebugLog(<< "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress);
@@ -215,7 +160,7 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<D
    if(mRequestedTuple.getTransportType() == StunTuple::UDP)
    {
       assert(mUdpRelayServer);
-      mUdpRelayServer->doSend(peerAddress, data, framed ? 4 /* bufferStartPos is 4 so that framing is skipped */ : 0);
+      mUdpRelayServer->doSend(peerAddress, data, isFramed ? 4 /* bufferStartPos is 4 so that framing is skipped */ : 0);
    }
    else
    {
@@ -242,24 +187,11 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr
    }
 
    // Use DataInd if channel is not yet confirmed
-   bool useDataInd = !remotePeer->isServerToClientChannelConfirmed();
-
-   // If channel number is not allocated yet, allocate one
-   if(remotePeer->getServerToClientChannel() == 0)
-   {
-      remotePeer->setServerToClientChannel(mChannelManager.getNextChannelNumber());
-      if(mKey.getClientLocalTuple().getTransportType() != StunTuple::UDP)
-      {
-         // Set channel to confirmed for TCP and TLS transports
-         remotePeer->setServerToClientChannelConfirmed();
-      }
-      // Add to lookup map
-      mChannelManager.addRemotePeerServerToClientChannelLookup(remotePeer);
-   }
+   bool useDataInd = !remotePeer->isChannelConfirmed();
 
    DebugLog(<< "TurnAllocation sendDataToClient: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
                mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << 
-               " channelNumber=" << (int)remotePeer->getServerToClientChannel());
+               " channelNumber=" << (int)remotePeer->getChannel());
 
    if(useDataInd)
    {
@@ -267,45 +199,53 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr
       dataInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnDataMethod);
       dataInd.mHasTurnPeerAddress = true;
       StunMessage::setStunAtrAddressFromTuple(dataInd.mTurnPeerAddress, peerAddress);
-      dataInd.mHasTurnChannelNumber = true;
-      dataInd.mTurnChannelNumber = remotePeer->getServerToClientChannel();
       dataInd.setTurnData(data->data(), (unsigned int)data->size());
 
       // send DataInd to local client
-      unsigned int bufferSize = (unsigned int)data->size() + 8 /* Stun Header */ + 36 /* Remote Address (v6) */ +8 /* Channel Number */ + 8 /* TurnData Header + potential pad */ + 4 /* Turn Frame size */;
+      unsigned int bufferSize = (unsigned int)data->size() + 8 /* Stun Header */ + 36 /* Remote Address (v6) */ + 8 /* TurnData Header + potential pad */;
       boost::shared_ptr<DataBuffer> buffer = AsyncSocketBase::allocateBuffer(bufferSize);
-      unsigned int size = dataInd.stunEncodeFramedMessage((char*)buffer->data(), bufferSize);
+      unsigned int size = dataInd.stunEncodeMessage((char*)buffer->data(), bufferSize);
       buffer->truncate(size);  // Set size to proper size
       mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), buffer);
    }
    else
    {
       // send data to local client
-      mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), remotePeer->getServerToClientChannel(), data);
+      mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), remotePeer->getChannel(), data);
    }
 }
 
-void TurnAllocation::serverToClientChannelConfirmed(unsigned short channelNumber,  const StunTuple& peerAddress)
+bool 
+TurnAllocation::addChannelBinding(const StunTuple& peerAddress, unsigned short channelNumber)
 {
-   RemotePeer* remotePeer = mChannelManager.findRemotePeerByServerToClientChannel(channelNumber);
+   // Add or refresh permission
+   refreshPermission(peerAddress.getAddress());
+
+   RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
    if(remotePeer)
    {
-      if(remotePeer->getPeerTuple() == peerAddress)
+      if(remotePeer->getPeerTuple() != peerAddress)
       {
-         remotePeer->setServerToClientChannelConfirmed();
+         WarningLog(<< "addChannelBinding failed since channel is alredy in use: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+                    mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress);
+         return false;
       }
-      else
-      {
-         WarningLog(<< "serverToClientChannelConfirmed bad peer address - discarding confirmed indication: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress);
-      }
+      // TODO - refresh binding??
    }
    else
    {
-      WarningLog(<< "serverToClientChannelConfirmed bad channel number - discarding confirmed indication: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-         mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber);
+      remotePeer = mChannelManager.findRemotePeerByPeerAddress(peerAddress);
+      if(remotePeer)
+      {
+         WarningLog(<< "addChannelBinding failed since peerAddress is alredy in use: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+                    mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress);
+         return false;
+      }
+      mChannelManager.createChannelBinding(peerAddress, channelNumber);
    }
+   return true;
 }
+
 
 } // namespace
 

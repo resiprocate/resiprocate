@@ -8,9 +8,8 @@ namespace reTurn {
 TurnAsyncUdpSocket::TurnAsyncUdpSocket(asio::io_service& ioService,
                                        TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                        const asio::ip::address& address, 
-                                       unsigned short port, 
-                                       bool turnFraming) : 
-   TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port, turnFraming),
+                                       unsigned short port) : 
+   TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port),
    AsyncUdpSocketBase(ioService)
 {
    mLocalBinding.setTransportType(StunTuple::UDP);

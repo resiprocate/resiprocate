@@ -14,23 +14,19 @@ public:
    explicit ChannelManager();
    ~ChannelManager();
 
-   RemotePeer* createRemotePeer(const StunTuple& peerTuple, unsigned short clientToServerChannel, unsigned short serverToClientChannel);
-   void addRemotePeerServerToClientChannelLookup(RemotePeer* remotePeer);
-   void addRemotePeerClientToServerChannelLookup(RemotePeer* remotePeer);
+   RemotePeer* createChannelBinding(const StunTuple& peerTuple);
+   RemotePeer* createChannelBinding(const StunTuple& peerTuple, unsigned short channel);
 
-   RemotePeer* findRemotePeerByServerToClientChannel(unsigned short channelNumber);
-   RemotePeer* findRemotePeerByClientToServerChannel(unsigned short channelNumber);
+   RemotePeer* findRemotePeerByChannel(unsigned short channelNumber);
    RemotePeer* findRemotePeerByPeerAddress(const StunTuple& peerAddress);
-
-   unsigned short getNextChannelNumber();
 
 private:
    typedef std::map<unsigned short,RemotePeer*> ChannelRemotePeerMap;
    typedef std::map<StunTuple,RemotePeer*> TupleRemotePeerMap;
-   ChannelRemotePeerMap mClientToServerChannelRemotePeerMap;
-   ChannelRemotePeerMap mServerToClientChannelRemotePeerMap;
+   ChannelRemotePeerMap mChannelRemotePeerMap;
    TupleRemotePeerMap mTupleRemotePeerMap;
 
+   unsigned short getNextChannelNumber();
    unsigned short mNextChannelNumber;
 };
 

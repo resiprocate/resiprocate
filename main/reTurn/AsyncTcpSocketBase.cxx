@@ -147,7 +147,7 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
 {
    if (!e)
    {
-      /*
+      /*      
       std::cout << "Read header from tcp socket: " << std::endl;
       for(unsigned int i = 0; i < 4; i++)
       {
@@ -160,6 +160,10 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
       memcpy(&dataLen, &(*mReceiveBuffer)[2], 2);
       dataLen = ntohs(dataLen);
 
+      if(((*mReceiveBuffer)[0] & 0xC0) == 0)  // If first 2 bits are 00 then this is a stun message
+      {
+         dataLen += 16;  // There are 20 bytes in total in the header, and we have already read 4 - read the rest of the header + the body
+      }
       if(dataLen+4 < RECEIVE_BUFFER_SIZE)
       {
          asio::async_read(mSocket, asio::buffer(&(*mReceiveBuffer)[4], dataLen),

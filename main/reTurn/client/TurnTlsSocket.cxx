@@ -98,7 +98,8 @@ TurnTlsSocket::readBody(unsigned int len)
 void
 TurnTlsSocket::cancelSocket()
 {
-   mSocket.lowest_layer().cancel();
+   asio::error_code ec;
+   mSocket.lowest_layer().cancel(ec);
 }
 
 } // namespace

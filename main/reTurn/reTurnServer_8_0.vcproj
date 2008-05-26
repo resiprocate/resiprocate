@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="reTurnServer"
 	ProjectGUID="{EFA91988-1A0C-4739-9FF1-7471E933515C}"
+	RootNamespace="reTurnServer"
 	Keyword="Win32Proj"
 	>
 	<Platforms>

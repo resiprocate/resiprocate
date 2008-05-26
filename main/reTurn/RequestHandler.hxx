@@ -63,11 +63,10 @@ private:
    ProcessResult processStunSharedSecretRequest(StunMessage& request, StunMessage& response);
    ProcessResult processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response);
    ProcessResult processTurnRefreshRequest(StunMessage& request, StunMessage& response);
-   ProcessResult processTurnListenPermissionRequest(StunMessage& request, StunMessage& response);
+   ProcessResult processTurnChannelBindRequest(StunMessage& request, StunMessage& response);
 
    // Specific Indication processors
    void processTurnSendIndication(StunMessage& request);
-   void processTurnChannelConfirmationIndication(StunMessage& request);
 
    // Utility methods
    void buildErrorResponse(StunMessage& response, unsigned short errorCode, const char* msg, const char* realm = 0);
