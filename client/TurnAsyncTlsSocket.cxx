@@ -9,9 +9,8 @@ TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,
                                        asio::ssl::context& sslContext,
                                        TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                        const asio::ip::address& address, 
-                                       unsigned short port,
-                                       bool turnFraming) : 
-   TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port, turnFraming),
+                                       unsigned short port) : 
+   TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port),
    AsyncTlsSocketBase(ioService, sslContext)
 {
    mLocalBinding.setTransportType(StunTuple::TLS);

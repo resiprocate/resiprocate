@@ -7,6 +7,7 @@
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 #include <rutil/ThreadIf.hxx>
+#include <rutil/Logger.hxx>
 
 #include "../../StunTuple.hxx"
 #include "../../StunMessage.hxx"
@@ -16,6 +17,8 @@
 
 using namespace reTurn;
 using namespace std;
+
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
 #define NO_AUTHENTICATION
 
@@ -49,7 +52,7 @@ public:
                turnSocket.connect(sourceAddress.to_string(), sourcePort);
                connected = true;
             }
-            std::cout << "PEER: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
+            InfoLog( << "PEER: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
             turnSocket.send(buffer, size);
          }
          size = sizeof(buffer);
@@ -60,7 +63,7 @@ public:
       {
          if(rc.value() != asio::error::operation_aborted)
          {
-            std::cout << "PEER: Receive error: " << rc.message() << std::endl;
+            ErrLog( << "PEER: Receive error: " << rc.message());
          }
       }
    }
@@ -106,8 +109,6 @@ int main(int argc, char* argv[])
 #endif
 
       TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
-      //TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0, true /* disable turn framing */); port--;
-      //TurnUdpSocket turnSocket(asio::ip::address::from_string("192.168.1.106"), 0, true /* disable turn framing */); port--; port=3478;
       //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
       //TurnTlsSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0); port++;
 
@@ -126,31 +127,30 @@ int main(int argc, char* argv[])
       rc = turnSocket.bindRequest();
       if(rc)
       {
-         std::cout << "CLIENT: Error calling bindRequest: rc=" << rc.message() << ", value=" << rc.value() << std::endl;
+         InfoLog(<< "CLIENT: Error calling bindRequest: rc=" << rc.message() << ", value=" << rc.value());
          return 1;
       }
       else
       {
-         std::cout << "CLIENT: Bind Successful!  Reflexive=" << turnSocket.getReflexiveTuple() << std::endl;
+         InfoLog( << "CLIENT: Bind Successful!  Reflexive=" << turnSocket.getReflexiveTuple());
       }
 
       // Test allocation
       rc = turnSocket.createAllocation(30,       // TurnSocket::UnspecifiedLifetime, 
-         TurnSocket::UnspecifiedBandwidth, 
-         StunMessage::PortPropsEvenPair,
-         TurnSocket::UnspecifiedPort,
-         StunTuple::UDP);
+                                       TurnSocket::UnspecifiedBandwidth, 
+                                       StunMessage::PropsPortPair,
+                                       TurnSocket::UnspecifiedToken,
+                                       StunTuple::UDP);
       if(rc)
       {
-         std::cout << "CLIENT: Error creating allocation: rc=" << rc.message() << std::endl;
+         InfoLog( << "CLIENT: Error creating allocation: rc=" << rc.message());
       }
       else
       {
-         std::cout << "CLIENT: Allocation Successful!  Relay=" << turnSocket.getRelayTuple() 
+         InfoLog( << "CLIENT: Allocation Successful!  Relay=" << turnSocket.getRelayTuple() 
             << " Reflexive=" << turnSocket.getReflexiveTuple() 
             << " Lifetime=" << turnSocket.getLifetime() 
-            << " Bandwidth=" << turnSocket.getBandwidth() 
-            << std::endl;
+            << " Bandwidth=" << turnSocket.getBandwidth());
 
          char buffer[1024];
          unsigned int size = sizeof(buffer);
@@ -159,43 +159,43 @@ int main(int argc, char* argv[])
 
          // Test Data sending and receiving over allocation
          resip::Data turnData("This test is for wrapped Turn Data!");
-         cout << "CLIENT: Sending: " << turnData << endl;
+         InfoLog(<< "CLIENT: Sending: " << turnData);
          turnSocket.sendTo(asio::ip::address::from_string("127.0.0.1"), 2000, turnData.c_str(), turnData.size());
 
-         turnData = "This test should be framed in TCP/TLS but not in UDP - since ChannelConfirmed is not yet received.";
-         cout << "CLIENT: Sending: " << turnData << endl;
+         turnData = "This test should be a Channel Data message in TCP/TLS but not in UDP - since ChannelBindResponse is not yet received.";
+         InfoLog( << "CLIENT: Sending: " << turnData);
          turnSocket.setActiveDestination(asio::ip::address::from_string("127.0.0.1"), 2000);
          turnSocket.send(turnData.c_str(), turnData.size());
 
          // Receive Data
          while(!(rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)))
          {
-            std::cout << "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
+            InfoLog(<< "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
             size = sizeof(buffer);
          }
          if(rc)
          {
             if(rc.value() != asio::error::operation_aborted)
             {
-               std::cout << "CLIENT: Receive error: [" << rc.value() << "] " << rc.message() << std::endl;
+               InfoLog( << "CLIENT: Receive error: [" << rc.value() << "] " << rc.message());
             }          
          }
 
-         turnData = "This test is for framed turn data!";
-         cout << "CLIENT: Sending: " << turnData << endl;
+         turnData = "This test is for ChannelData message!";
+         InfoLog( << "CLIENT: Sending: " << turnData);
          turnSocket.send(turnData.c_str(), turnData.size());       
 
 
          while(!(rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)))
          {
-            std::cout << "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]" << std::endl;
+            InfoLog(<< "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
             size = sizeof(buffer);
          }
          if(rc)
          {
             if(rc.value() != asio::error::operation_aborted)
             {
-               std::cout << "CLIENT: Receive error: [" << rc.value() << "] " << rc.message() << std::endl;
+               InfoLog( << "CLIENT: Receive error: [" << rc.value() << "] " << rc.message());
             }
          }
 

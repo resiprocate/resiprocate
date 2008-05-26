@@ -10,13 +10,14 @@ using namespace std;
 
 namespace reTurn {
 
-#define MAX_CHANNEL_NUM 65534
+#define MIN_CHANNEL_NUM 0x4000
+#define MAX_CHANNEL_NUM 0xFFFF
 
 ChannelManager::ChannelManager()
 {
    // make starting channel number random
    int randInt = resip::Random::getRandom();
-   mNextChannelNumber = (unsigned short)(randInt % (MAX_CHANNEL_NUM+1));
+   mNextChannelNumber = MIN_CHANNEL_NUM + (unsigned short)(randInt % (MAX_CHANNEL_NUM-MIN_CHANNEL_NUM+1));
 }
 
 ChannelManager::~ChannelManager()
@@ -34,7 +35,7 @@ ChannelManager::getNextChannelNumber()
 { 
    if(mNextChannelNumber == MAX_CHANNEL_NUM)
    {
-      mNextChannelNumber = 1;
+      mNextChannelNumber = MIN_CHANNEL_NUM;
    }
    else
    {
@@ -44,58 +45,30 @@ ChannelManager::getNextChannelNumber()
 }
 
 RemotePeer*
-ChannelManager::createRemotePeer(const StunTuple& peerTuple, unsigned short clientToServerChannel, unsigned short serverToClientChannel)
+ChannelManager::createChannelBinding(const StunTuple& peerTuple)
+{
+   return createChannelBinding(peerTuple, getNextChannelNumber());
+}
+
+RemotePeer*
+ChannelManager::createChannelBinding(const StunTuple& peerTuple, unsigned short channel)
 {
    assert(findRemotePeerByPeerAddress(peerTuple) == 0);
 
    // Create New RemotePeer
-   RemotePeer* remotePeer = new RemotePeer(peerTuple, clientToServerChannel, serverToClientChannel);
+   RemotePeer* remotePeer = new RemotePeer(peerTuple, channel);
 
    // Add RemoteAddress to the appropriate maps
    mTupleRemotePeerMap[peerTuple] = remotePeer;
-   if(clientToServerChannel != 0)
-   {
-      addRemotePeerClientToServerChannelLookup(remotePeer);
-   }
-   if(serverToClientChannel != 0)
-   {
-      addRemotePeerServerToClientChannelLookup(remotePeer);
-   }
+   mChannelRemotePeerMap[channel] = remotePeer;
    return remotePeer;
 }
 
-void 
-ChannelManager::addRemotePeerServerToClientChannelLookup(RemotePeer* remotePeer)
-{
-   assert(remotePeer->getServerToClientChannel() != 0);
-   assert(findRemotePeerByServerToClientChannel(remotePeer->getServerToClientChannel()) == 0);
-   mServerToClientChannelRemotePeerMap[remotePeer->getServerToClientChannel()] = remotePeer;
-}
-
-void 
-ChannelManager::addRemotePeerClientToServerChannelLookup(RemotePeer* remotePeer)
-{
-   assert(remotePeer->getClientToServerChannel() != 0);
-   assert(findRemotePeerByClientToServerChannel(remotePeer->getClientToServerChannel()) == 0);
-   mClientToServerChannelRemotePeerMap[remotePeer->getClientToServerChannel()] = remotePeer;
-}
-
 RemotePeer* 
-ChannelManager::findRemotePeerByServerToClientChannel(unsigned short channelNumber)
+ChannelManager::findRemotePeerByChannel(unsigned short channelNumber)
 {
-   ChannelRemotePeerMap::iterator it = mServerToClientChannelRemotePeerMap.find(channelNumber);
-   if(it != mServerToClientChannelRemotePeerMap.end())
-   {
-      return it->second;
-   }
-   return 0;
-}
-
-RemotePeer* 
-ChannelManager::findRemotePeerByClientToServerChannel(unsigned short channelNumber)
-{
-   ChannelRemotePeerMap::iterator it = mClientToServerChannelRemotePeerMap.find(channelNumber);
-   if(it != mClientToServerChannelRemotePeerMap.end())
+   ChannelRemotePeerMap::iterator it = mChannelRemotePeerMap.find(channelNumber);
+   if(it != mChannelRemotePeerMap.end())
    {
       return it->second;
    }

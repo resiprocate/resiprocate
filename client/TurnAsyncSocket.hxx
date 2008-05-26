@@ -1,6 +1,12 @@
 #ifndef TURNASYNCSOCKET_HXX
 #define TURNASYNCSOCKET_HXX
 
+#if defined(BOOST_MSVC) && (BOOST_MSVC >= 1400) \
+  && (!defined(_WIN32_WINNT) || _WIN32_WINNT < 0x0600) \
+  && !defined(ASIO_ENABLE_CANCELIO)
+#error You must define ASIO_ENABLE_CANCELIO in your build settings.
+#endif
+
 #include <map>
 #include <queue>
 #include <asio.hpp>
@@ -20,15 +26,14 @@ class TurnAsyncSocket
 public:
    static unsigned int UnspecifiedLifetime;
    static unsigned int UnspecifiedBandwidth;
-   static unsigned short UnspecifiedPort;
+   static unsigned short UnspecifiedToken;
    static asio::ip::address UnspecifiedIpAddress;
 
    explicit TurnAsyncSocket(asio::io_service& ioService,
                             AsyncSocketBase& asyncSocketBase,
                             TurnAsyncSocketHandler* turnAsyncSocketHandler,
                             const asio::ip::address& address = UnspecifiedIpAddress, 
-                            unsigned short port = 0, 
-                            bool turnFraming = true);
+                            unsigned short port = 0);
    virtual ~TurnAsyncSocket();
 
    virtual void disableTurnAsyncHandler();
@@ -40,7 +45,7 @@ public:
 
    // Set the username and password for all future requests
    void setUsernameAndPassword(const char* username, const char* password, bool shortTermAuth=false);
-   void connect(const std::string& address, unsigned short port, bool turnFraming);
+   void connect(const std::string& address, unsigned short port);
 
    // Stun Binding Method - use getReflexiveTuple() to get binding info
    void bindRequest();
@@ -48,10 +53,9 @@ public:
    // Turn Allocation Methods
    void createAllocation(unsigned int lifetime = UnspecifiedLifetime,
                          unsigned int bandwidth = UnspecifiedBandwidth,
-                         unsigned short requestedPortProps = StunMessage::PortPropsNone, 
-                         unsigned short requestedPort = UnspecifiedPort,
-                         StunTuple::TransportType requestedTransportType = StunTuple::None, 
-                         const asio::ip::address &requestedIpAddress = UnspecifiedIpAddress);
+                         unsigned char requestedPortProps = StunMessage::PropsNone, 
+                         UInt64 reservationToken = UnspecifiedToken,
+                         StunTuple::TransportType requestedTransportType = StunTuple::None);
    void refreshAllocation(unsigned int lifetime);
    void destroyAllocation();
 
@@ -79,7 +83,6 @@ protected:
 
    asio::io_service& mIOService;
    TurnAsyncSocketHandler* mTurnAsyncSocketHandler;
-   bool mTurnFraming;
 
    // Local Binding Info
    StunTuple mLocalBinding;
@@ -152,10 +155,9 @@ private:
    void doBindRequest();
    void doCreateAllocation(unsigned int lifetime = UnspecifiedLifetime,
                            unsigned int bandwidth = UnspecifiedBandwidth,
-                           unsigned short requestedPortProps = StunMessage::PortPropsNone, 
-                           unsigned short requestedPort = UnspecifiedPort,
-                           StunTuple::TransportType requestedTransportType = StunTuple::None, 
-                           const asio::ip::address &requestedIpAddress = UnspecifiedIpAddress);
+                           unsigned char requestedPortProps = StunMessage::PropsNone, 
+                           UInt64 reservationToken = 0,
+                           StunTuple::TransportType requestedTransportType = StunTuple::None);
    void doRefreshAllocation(unsigned int lifetime);
    void doDestroyAllocation();
    void doSetActiveDestination(const asio::ip::address& address, unsigned short port);
@@ -164,6 +166,7 @@ private:
    void doSendTo(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
    void doClose();
    void actualClose();
+   RemotePeer* doChannelBinding(const StunTuple& remoteTuple);
 
    StunMessage* createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo=true);
    void sendStunMessage(StunMessage* request, bool reTransmission=false);
@@ -173,7 +176,7 @@ private:
 
    asio::error_code handleStunMessage(StunMessage& stunMessage);
    asio::error_code handleDataInd(StunMessage& stunMessage);
-   asio::error_code handleChannelConfirmation(StunMessage &stunMessage);
+   asio::error_code handleChannelBindResponse(StunMessage &stunMessage);
    asio::error_code handleSharedSecretResponse(StunMessage& stunMessage);
    asio::error_code handleBindRequest(StunMessage& stunMessage);
    asio::error_code handleBindResponse(StunMessage& stunMessage);
