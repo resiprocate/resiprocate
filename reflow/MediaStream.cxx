@@ -50,7 +50,7 @@ MediaStream::MediaStream(asio::io_service& ioService,
                            localRtcpBinding, 
                            *this);
 
-      mRtpFlow->activateFlow(StunMessage::PortPropsEvenPair);
+      mRtpFlow->activateFlow(StunMessage::PropsPortPair);
 
       // If doing an allocation then wait until RTP flow is allocated, then activate RTCP flow
       if(natTraversalMode != TurnAllocation)
@@ -65,7 +65,7 @@ MediaStream::MediaStream(asio::io_service& ioService,
                           RTP_COMPONENT_ID,
                           localRtpBinding, 
                           *this);
-      mRtpFlow->activateFlow(StunMessage::PortPropsEven);
+      mRtpFlow->activateFlow(StunMessage::PropsPortEven);
       mRtcpFlow = 0;
    }
 }
@@ -263,10 +263,8 @@ MediaStream::onFlowReady(unsigned int componentId)
 {
    if(componentId == RTP_COMPONENT_ID && mNatTraversalMode == TurnAllocation && mRtcpFlow)
    {
-      // RTP Flow is ready - we can now activate RTCP flow
-      StunTuple requestedTuple = mRtpFlow->getRelayTuple();
-      requestedTuple.setPort(requestedTuple.getPort()+1);  // Set RTCP Port
-      mRtcpFlow->activateFlow(StunMessage::PortPropsOdd, requestedTuple);
+      // RTP Flow is ready - we can now activate RTCP flow using the reservation token
+      mRtcpFlow->activateFlow(mRtpFlow->getReservationToken());
    }
    else
    {

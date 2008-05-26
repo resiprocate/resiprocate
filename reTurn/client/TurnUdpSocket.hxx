@@ -10,7 +10,7 @@ namespace reTurn {
    class TurnUdpSocket : public TurnSocket
 {
 public:
-   explicit TurnUdpSocket(const asio::ip::address& address, unsigned short port, bool turnFramingDisabled=false);  // If Turn is disabled then straight stun messaging is used with no framing
+   explicit TurnUdpSocket(const asio::ip::address& address, unsigned short port);  
 
    virtual unsigned int getSocketDescriptor() { return mSocket.native(); }
 
@@ -24,7 +24,6 @@ protected:
 
 private:
    asio::ip::udp::socket mSocket;
-   bool mTurnFramingDisabled;
 
    // Remote binding info
    asio::ip::udp::endpoint mRemoteEndpoint;

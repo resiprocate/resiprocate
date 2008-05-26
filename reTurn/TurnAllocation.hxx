@@ -30,10 +30,7 @@ public:
                            const StunTuple& clientRemoteTuple,
                            const StunAuth& clientAuth, 
                            const StunTuple& requestedTuple, 
-                           unsigned int lifetime=0,
-                           UInt32 requestedPortProps=0,      // requested props are only store for comparison later
-                           UInt32 requestedTransport=StunTuple::None, 
-                           asio::ip::address* requestedIpAddress=0);
+                           unsigned int lifetime);
    ~TurnAllocation();
 
    const TurnAllocationKey& getKey() { return mKey; }
@@ -51,29 +48,23 @@ public:
    void onSocketDestroyed();
 
    // Used when framed data is received from client, to forward data to peer
-   void sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer>& data, bool framed);
+   void sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<DataBuffer>& data, bool isFramed);
    // Used when Send Indication is received from client, to forward data to peer
-   void sendDataToPeer(unsigned short channelNumber, const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool framed);  
+   void sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool isFramed);  
    // Used when Data is received from peer, to forward data to client
    void sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data); 
 
-   // Called when a ChannelConfirmed Indication is received
-   void serverToClientChannelConfirmed(unsigned short channelNumber, const StunTuple& peerAddress);
+   // Called when a ChannelBind Request is received
+   bool addChannelBinding(const StunTuple& peerAddress, unsigned short channelNumber);
 
    const StunTuple& getRequestedTuple() const { return mRequestedTuple; }
    time_t getExpires() const { return mExpires; }
    const StunAuth& getClientAuth() const { return mClientAuth; }
 
 private:
-   // Used when there is any data to send to the peer, after channel has been identified
-   void sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool framed);  
-
    TurnAllocationKey mKey;  // contains ClientLocalTuple and clientRemoteTuple
    StunAuth  mClientAuth;
    StunTuple mRequestedTuple;
-   UInt32    mRequestedPortProps;
-   UInt32    mRequestedTransport;
-   asio::ip::address mRequestedIpAddress;
 
    time_t    mExpires;
    //unsigned int mBandwidth; // future use

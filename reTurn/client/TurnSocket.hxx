@@ -1,6 +1,12 @@
 #ifndef TURNSOCKET_HXX
 #define TURNSOCKET_HXX
 
+#if defined(BOOST_MSVC) && (BOOST_MSVC >= 1400) \
+  && (!defined(_WIN32_WINNT) || _WIN32_WINNT < 0x0600) \
+  && !defined(ASIO_ENABLE_CANCELIO)
+#error You must define ASIO_ENABLE_CANCELIO in your build settings.
+#endif
+
 #include <vector>
 #include <asio.hpp>
 #include <rutil/Data.hxx>
@@ -17,7 +23,7 @@ class TurnSocket
 public:
    static unsigned int UnspecifiedLifetime;
    static unsigned int UnspecifiedBandwidth;
-   static unsigned short UnspecifiedPort;
+   static unsigned short UnspecifiedToken;
    static asio::ip::address UnspecifiedIpAddress;
 
    explicit TurnSocket(const asio::ip::address& address = UnspecifiedIpAddress, 
@@ -41,10 +47,9 @@ public:
    // Turn Allocation Methods
    asio::error_code createAllocation(unsigned int lifetime = UnspecifiedLifetime,
                                      unsigned int bandwidth = UnspecifiedBandwidth,
-                                     unsigned short requestedPortProps = StunMessage::PortPropsNone, 
-                                     unsigned short requestedPort = UnspecifiedPort,
-                                     StunTuple::TransportType requestedTransportType = StunTuple::None, 
-                                     const asio::ip::address &requestedIpAddress = UnspecifiedIpAddress);
+                                     unsigned char requestedProps = StunMessage::PropsNone, 
+                                     UInt64 reservationToken = UnspecifiedToken,
+                                     StunTuple::TransportType requestedTransportType = StunTuple::None);
    asio::error_code refreshAllocation();
    asio::error_code destroyAllocation();
 
@@ -86,10 +91,9 @@ protected:
    // Turn Allocation Properties used in request
    unsigned int mRequestedLifetime;
    unsigned int mRequestedBandwidth;
-   unsigned int mRequestedPortProps;
-   unsigned short mRequestedPort;
+   unsigned char mRequestedProps;
+   UInt64 mReservationToken;
    StunTuple::TransportType mRequestedTransportType;
-   asio::ip::address mRequestedIpAddress;
 
    // Turn Allocation Properties from response
    bool mHaveAllocation;
@@ -119,6 +123,7 @@ protected:
 
 private:
    resip::Mutex mMutex;
+   RemotePeer* channelBind(StunTuple& remoteTuple, asio::error_code& errorCode);
    asio::error_code checkIfAllocationRefreshRequired();
    StunMessage* sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode, bool addAuthInfo=true);
    asio::error_code sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size);

@@ -16,7 +16,7 @@ class TlsServer
 {
 public:
   /// Create the server to listen on the specified TCP address and port
-  explicit TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming);
+  explicit TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port);
 
   void start();
 
@@ -44,8 +44,6 @@ private:
 
   /// The handler for all incoming requests.
   RequestHandler& mRequestHandler;
-
-  bool mTurnFraming;
 };
 
 }

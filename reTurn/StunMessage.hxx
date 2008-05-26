@@ -37,7 +37,7 @@ public:
    bool isValid() { return mIsValid; }
 
    unsigned int stunEncodeMessage(char* buf, unsigned int bufLen);
-   unsigned int stunEncodeFramedMessage(char* buf, unsigned int bufLen);
+   unsigned int stunEncodeFramedMessage(char* buf, unsigned int bufLen);  // Used for TURN-05 framing only
 
    void setErrorCode(unsigned short errorCode, const char* reason);
    void setUsername(const char* username);
@@ -59,13 +59,14 @@ public:
    const static UInt8  IPv4Family = 0x01;
    const static UInt8  IPv6Family = 0x02;
 
-   const static UInt8 PortPropsNone     = 0;
-   const static UInt8 PortPropsOdd      = 1;
-   const static UInt8 PortPropsEven     = 2;
-   const static UInt8 PortPropsEvenPair = 3;
+   const static UInt8 PropsNone     = 0;
+   const static UInt8 PropsPortEven = 1;
+   const static UInt8 PropsPortPair = 2;
 
-   const static UInt32 RequestedTransportUdp = 0;
-   const static UInt32 RequestedTransportTcp = 1;
+   // The following are codepoints used in the requested transport header, they
+   // are the same values used in the IPv4 and IPv6 headers
+   const static UInt32 RequestedTransportUdp = 17;
+   const static UInt32 RequestedTransportTcp = 6;
 
    // define  flags  
    const static UInt32 ChangeIpFlag   = 0x04;
@@ -99,13 +100,13 @@ public:
    const static UInt16 BindMethod                  = 0x001;
    const static UInt16 SharedSecretMethod          = 0x002;  // deprecated by RFC3289-bis-11 (used for backwards compatibility to 3489 only)
 
-   // define types for a turn message - per behave-turn-05
+   // define types for a turn message - per behave-turn-07
    const static UInt16 TurnAllocateMethod          = 0x003;
    const static UInt16 TurnRefreshMethod           = 0x004;
+   const static UInt16 TurnChannelBindMethod       = 0x009;
    // define types for a turn indication - per behave-turn-05
    const static UInt16 TurnSendMethod              = 0x006;
    const static UInt16 TurnDataMethod              = 0x007;
-   const static UInt16 TurnChannelConfirmationMethod= 0x009;
 
    // define  stun attribute
    // RFC3489-bis-11
@@ -133,20 +134,20 @@ public:
    const static UInt16 SecondaryAddress = 0x8050;  // Non standard extension
 
    // TURN specific message attributes - from behave-turn-05
-   const static UInt16 TurnChannelNumber = 0x000C;
-   const static UInt16 TurnLifetime     = 0x000D;
-   const static UInt16 TurnAlternateServer = 0x000E; // deprecated
-   const static UInt16 TurnMagicCookie  = 0x000f;    // deprecated
-   const static UInt16 TurnBandwidth    = 0x0010;
+   const static UInt16 TurnChannelNumber      = 0x000C;
+   const static UInt16 TurnLifetime           = 0x000D;
+   const static UInt16 TurnAlternateServer    = 0x000E; // deprecated
+   const static UInt16 TurnMagicCookie        = 0x000f; // deprecated
+   const static UInt16 TurnBandwidth          = 0x0010;
    const static UInt16 TurnDestinationAddress = 0x0011; // deprecated
-   const static UInt16 TurnPeerAddress  = 0x0012;
-   const static UInt16 TurnData         = 0x0013;
-   const static UInt16 TurnRelayAddress = 0x0016;
-   const static UInt16 TurnRequestedPortProps = 0x0018;
+   const static UInt16 TurnPeerAddress        = 0x0012;
+   const static UInt16 TurnData               = 0x0013;
+   const static UInt16 TurnRelayAddress       = 0x0016;
+   const static UInt16 TurnRequestedProps     = 0x0018;
    const static UInt16 TurnRequestedTransport = 0x0019;
-   //const static UInt16 TurnTimerVal     = 0x0021; 
-   const static UInt16 TurnRequestedIp  = 0x0022;
-   const static UInt16 TurnConnectStat  = 0x0023;
+   //const static UInt16 TurnTimerVal         = 0x0021; 
+   const static UInt16 TurnReservationToken   = 0x0022;
+   const static UInt16 TurnConnectStat        = 0x0023; // tcp allocations
 
    const static UInt32 StunMagicCookie  = 0x2112A442;
    typedef struct 
@@ -203,9 +204,8 @@ public:
 
    typedef struct
    {
-      UInt8 props;
-      UInt16 port;
-   } TurnAtrRequestedPortProps;
+      UInt8 propType;
+   } TurnAtrRequestedProps;
 
    enum StunHmacStatus
    {
@@ -286,7 +286,7 @@ public:
 
    // Turn Attributes
    bool mHasTurnChannelNumber;
-   unsigned short mTurnChannelNumber;
+   UInt16 mTurnChannelNumber;
 
    bool mHasTurnLifetime;
    UInt32 mTurnLifetime;
@@ -312,14 +312,14 @@ public:
    bool mHasTurnRelayAddress;
    StunAtrAddress mTurnRelayAddress;
 
-   bool mHasTurnRequestedPortProps;
-   TurnAtrRequestedPortProps mTurnRequestedPortProps;
+   bool mHasTurnRequestedProps;
+   TurnAtrRequestedProps mTurnRequestedProps;
 
    bool mHasTurnRequestedTransport;
-   UInt32 mTurnRequestedTransport;
+   UInt8 mTurnRequestedTransport;
 
-   bool mHasTurnRequestedIp;
-   StunAtrAddress mTurnRequestedIp;
+   bool mHasTurnReservationToken;
+   UInt64 mTurnReservationToken;
 
    bool mHasTurnConnectStat;
    UInt32 mTurnConnectStat;
@@ -337,10 +337,11 @@ private:
    bool stunParseAtrXorAddress( char* body, unsigned int hdrLen, StunAtrAddress& result );
    bool stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddress& result );
    bool stunParseAtrUInt32( char* body, unsigned int hdrLen, UInt32& result );
+   bool stunParseAtrUInt64( char* body, unsigned int hdrLen, UInt64& result );
    bool stunParseAtrError( char* body, unsigned int hdrLen, StunAtrError& result );
    bool stunParseAtrUnknown( char* body, unsigned int hdrLen, StunAtrUnknown& result );
    bool stunParseAtrIntegrity( char* body, unsigned int hdrLen, StunAtrIntegrity& result );
-   bool stunParseAtrRequestedPortProps( char* body, unsigned int hdrLen, TurnAtrRequestedPortProps& result );
+   bool stunParseAtrRequestedProps( char* body, unsigned int hdrLen, TurnAtrRequestedProps& result );
 
    bool stunParseMessage( char* buf, unsigned int bufLen);
 
@@ -349,13 +350,14 @@ private:
    char* encode(char* buf, const char* data, unsigned int length);
    char* encodeTurnData(char *ptr, const resip::Data* td);
    char* encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value);
+   char* encodeAtrUInt64(char* ptr, UInt16 type, UInt64 value);
    char* encodeAtrXorAddress(char* ptr, UInt16 type, const StunAtrAddress& atr);
    char* encodeAtrAddress(char* ptr, UInt16 type, const StunAtrAddress& atr);
    char* encodeAtrError(char* ptr, const StunAtrError& atr);
    char* encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr);
    char* encodeAtrString(char* ptr, UInt16 type, const resip::Data* atr);
    char* encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr);
-   char* encodeAtrRequestedPortProps(char* ptr, const TurnAtrRequestedPortProps& atr);
+   char* encodeAtrRequestedProps(char* ptr, const TurnAtrRequestedProps& atr);
    void computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey);
 
    bool mIsValid;
