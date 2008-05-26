@@ -115,6 +115,8 @@ Flow::Flow(asio::io_service& ioService,
     mComponentId(componentId),
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
+    mAllocationProps(StunMessage::PropsNone),
+    mReservationToken(0),
     mFlowState(Unconnected),
     mReceivedDataFifo(MAX_RECEIVE_FIFO_DURATION,MAX_RECEIVE_FIFO_SIZE)
 {
@@ -123,13 +125,13 @@ Flow::Flow(asio::io_service& ioService,
    switch(mLocalBinding.getTransportType())
    {
    case StunTuple::UDP:
-      mTurnSocket.reset(new TurnAsyncUdpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort(), mMediaStream.mNatTraversalMode == MediaStream::TurnAllocation /* turn framing? */));
+      mTurnSocket.reset(new TurnAsyncUdpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
       break;
    case StunTuple::TCP:
-      mTurnSocket.reset(new TurnAsyncTcpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort(), mMediaStream.mNatTraversalMode == MediaStream::TurnAllocation /* turn framing? */));
+      mTurnSocket.reset(new TurnAsyncTcpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
       break;
    case StunTuple::TLS:
-      mTurnSocket.reset(new TurnAsyncTlsSocket(mIOService, mSslContext, this, mLocalBinding.getAddress(), mLocalBinding.getPort(), mMediaStream.mNatTraversalMode == MediaStream::TurnAllocation /* turn framing? */));
+      mTurnSocket.reset(new TurnAsyncTlsSocket(mIOService, mSslContext, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
       break;
    default:
       // Bad Transport type!
@@ -168,17 +170,16 @@ Flow::~Flow()
 }
 
 void 
-Flow::activateFlow(UInt8 allocationPortProps,
-                   const StunTuple& requestedAllocationTuple)
+Flow::activateFlow(UInt64 reservationToken)
 {
-   mRequestedAllocationTuple = requestedAllocationTuple;
-   activateFlow(allocationPortProps);
+   mReservationToken = reservationToken;
+   activateFlow(StunMessage::PropsNone);
 }
 
 void 
-Flow::activateFlow(UInt8 allocationPortProps)
+Flow::activateFlow(UInt8 allocationProps)
 {
-   mAllocationPortProps = allocationPortProps;
+   mAllocationProps = allocationProps;
 
    if(mTurnSocket.get())
    {
@@ -187,8 +188,7 @@ Flow::activateFlow(UInt8 allocationPortProps)
       {
          changeFlowState(ConnectingServer);
          mTurnSocket->connect(mMediaStream.mNatTraversalServerHostname.c_str(), 
-                              mMediaStream.mNatTraversalServerPort, 
-                              mMediaStream.mNatTraversalMode == MediaStream::TurnAllocation /* turn framing? */);
+                              mMediaStream.mNatTraversalServerPort);
       }
       else 
       {
@@ -455,7 +455,7 @@ Flow::setActiveDestination(const char* address, unsigned short port)
       if(mMediaStream.mNatTraversalMode != MediaStream::TurnAllocation)
       {         
          changeFlowState(Connecting);
-         mTurnSocket->connect(address, port, false);
+         mTurnSocket->connect(address, port);
       }
       else
       {
@@ -537,6 +537,14 @@ Flow::getReflexiveTuple()
    return mReflexiveTuple; 
 } 
 
+UInt64 
+Flow::getReservationToken()
+{
+   assert(mFlowState == Ready);
+   Lock lock(mMutex);
+   return mReservationToken; 
+}
+
 void 
 Flow::onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port)
 {
@@ -561,10 +569,9 @@ Flow::onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address
       changeFlowState(Allocating);
       mTurnSocket->createAllocation(TurnAsyncSocket::UnspecifiedLifetime,
                                     TurnAsyncSocket::UnspecifiedBandwidth,
-                                    mAllocationPortProps, 
-                                    mRequestedAllocationTuple.getPort() != 0 ? mRequestedAllocationTuple.getPort() : TurnAsyncSocket::UnspecifiedPort,
-                                    StunTuple::UDP,   // Always relay as UDP
-                                    mRequestedAllocationTuple.getPort() != 0 ? mRequestedAllocationTuple.getAddress() : TurnAsyncSocket::UnspecifiedIpAddress);
+                                    mAllocationProps, 
+                                    mReservationToken != 0 ? mReservationToken : TurnAsyncSocket::UnspecifiedToken,
+                                    StunTuple::UDP);   // Always relay as UDP
       break;
    case MediaStream::NoNatTraversal:
    default:
@@ -615,17 +622,20 @@ Flow::onBindFailure(unsigned int socketDesc, const asio::error_code& e)
 }
 
 void 
-Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth)
+Flow::onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
 {
    InfoLog(<< "Flow::onAllocationSuccess: socketDesc=" << socketDesc << 
       ", reflexive=" << reflexiveTuple << 
       ", relay=" << relayTuple <<
       ", lifetime=" << lifetime <<
-      ", bandwidth=" << bandwidth << ", componentId=" << mComponentId);
+      ", bandwidth=" << bandwidth << 
+      ", reservationToken=" << reservationToken <<
+      ", componentId=" << mComponentId);
    {
       Lock lock(mMutex);
       mReflexiveTuple = reflexiveTuple; 
       mRelayTuple = relayTuple;
+      mReservationToken = reservationToken;
    }
    changeFlowState(Ready);
    mMediaStream.onFlowReady(mComponentId);

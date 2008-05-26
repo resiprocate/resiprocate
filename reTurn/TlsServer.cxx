@@ -8,13 +8,12 @@
 
 namespace reTurn {
 
-TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming)
+TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
   mContext(ioService, asio::ssl::context::tlsv1),
   mConnectionManager(),
-  mRequestHandler(requestHandler),
-  mTurnFraming(turnFraming)
+  mRequestHandler(requestHandler)
 {
    // Set Context options - TODO make into configuration settings
    asio::error_code ec;
@@ -48,13 +47,13 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
-   InfoLog(<< (mTurnFraming ? "TURN" : "STUN") << " TlsServer started.  Listening on " << address << ":" << port);
+   InfoLog(<< "TlsServer started.  Listening on " << address << ":" << port);
 }
 
 void
 TlsServer::start()
 {
-   mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mTurnFraming, mContext));
+   mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
    mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
 }
 
@@ -71,7 +70,7 @@ TlsServer::handleAccept(const asio::error_code& e)
    {
       mConnectionManager.start(mNewConnection);
 
-      mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mTurnFraming, mContext));
+      mNewConnection.reset(new TlsConnection(mIOService, mConnectionManager, mRequestHandler, mContext));
       mAcceptor.async_accept(((TlsConnection*)mNewConnection.get())->socket(), boost::bind(&TlsServer::handleAccept, this, asio::placeholders::error));
    }
    else

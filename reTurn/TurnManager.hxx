@@ -14,6 +14,7 @@ class TurnManager
 {
 public:
    explicit TurnManager(asio::io_service& ioService);  // ioService used to start timers
+   ~TurnManager();
 
    void addTurnAllocation(TurnAllocation* turnAllocation);
    void removeTurnAllocation(const TurnAllocationKey& turnAllocationKey);

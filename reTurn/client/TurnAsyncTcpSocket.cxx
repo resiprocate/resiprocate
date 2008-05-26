@@ -8,9 +8,8 @@ namespace reTurn {
 TurnAsyncTcpSocket::TurnAsyncTcpSocket(asio::io_service& ioService,
                                        TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                        const asio::ip::address& address, 
-                                       unsigned short port,
-                                       bool turnFraming) : 
-   TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port, turnFraming),
+                                       unsigned short port) : 
+   TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port),
    AsyncTcpSocketBase(ioService)
 {
    mLocalBinding.setTransportType(StunTuple::TCP);

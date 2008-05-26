@@ -15,7 +15,7 @@ class TcpServer
 {
 public:
   /// Create the server to listen on the specified TCP address and port
-  explicit TcpServer(asio::io_service& ioService, RequestHandler& rqeuestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming);
+  explicit TcpServer(asio::io_service& ioService, RequestHandler& rqeuestHandler, const asio::ip::address& address, unsigned short port);
 
   void start();
 
@@ -37,8 +37,6 @@ private:
 
   /// The handler for all incoming requests.
   RequestHandler& mRequestHandler;
-
-  bool mTurnFraming;
 };
 
 }
