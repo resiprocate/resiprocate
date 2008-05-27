@@ -1280,7 +1280,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    }   
 
    // Update Length in header now - needed in message integrity and fingerprint calculations
-   UInt16 msgSize = unsigned int(ptr - buf) - sizeof(StunMsgHdr);
+   UInt16 msgSize = ptr - buf - sizeof(StunMsgHdr);
    if(mHasMessageIntegrity) msgSize += 24;  // 20 (attribute value) + 4 (attribute header)
    if(mHasFingerprint) msgSize += 8;        // 4 (attribute value) + 4 (attribute header)
    encode16(lengthp, msgSize);
