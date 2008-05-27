@@ -114,13 +114,14 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth)
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onAllocationSuccess: socketDest=" << socketDesc << 
               ", reflexive=" << reflexiveTuple << 
               ", relay=" << relayTuple <<
               ", lifetime=" << lifetime <<
-              ", bandwidth=" << bandwidth);
+              ", bandwidth=" << bandwidth <<
+              ", reservationToken=" << reservationToken);
 
        // Test Data sending and receiving over allocation
        resip::Data turnData("This test is for wrapped Turn Data!");
