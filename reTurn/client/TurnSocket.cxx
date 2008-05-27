@@ -443,11 +443,8 @@ TurnSocket::channelBind(StunTuple& remoteTuple, asio::error_code& errorCode)
       return 0;
    }
 
-   // If not using UDP - then mark channel as confirmed
-   if(mLocalBinding.getTransportType() != StunTuple::UDP)
-   {
-      remotePeer->setChannelConfirmed();
-   }
+   remotePeer->setChannelConfirmed();
+
    return remotePeer;
 }
 
@@ -761,38 +758,6 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             *sourcePort = remoteTuple.getPort();
          }
       }
-      /* TODO - DELETE ME!!!  turn into ChannelBind Response?
-      else if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnChannelConfirmationMethod)
-      {
-         if(!stunMessage.mHasTurnPeerAddress || !stunMessage.mHasTurnChannelNumber)
-         {
-            // Missing RemoteAddress or ChannelNumber attribute
-            WarningLog(<< "DataInd missing attributes.");
-            return asio::error_code(reTurn::MissingAttributes, asio::error::misc_category);
-         }
-
-         StunTuple remoteTuple;
-         remoteTuple.setTransportType(mRelayTuple.getTransportType());
-         StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnPeerAddress);
-
-         RemotePeer* remotePeer = mChannelManager.findRemotePeerByClientToServerChannel(stunMessage.mTurnChannelNumber);
-         if(!remotePeer)
-         {
-            // Remote Peer not found - discard
-            WarningLog(<< "Received ChannelConfirmationInd for unknown channel (" << stunMessage.mTurnChannelNumber << ") - discarding");
-            return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
-         }
-
-         if(remotePeer->getPeerTuple() != remoteTuple)
-         {
-            // Mismatched remote address
-            WarningLog(<< "RemoteAddress associated with channel (" << remotePeer->getPeerTuple() << ") does not match ChannelConfirmationInd (" << remoteTuple << ").");
-            return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
-         }
-
-         remotePeer->setClientToServerChannelConfirmed();
-         size = 0;
-      }*/
       else if(stunMessage.mClass == StunMessage::StunClassRequest && stunMessage.mMethod == StunMessage::BindMethod)
       {
          // Note: handling of BindRequest is not fully backwards compatible with RFC3489 - it is inline with bis11
