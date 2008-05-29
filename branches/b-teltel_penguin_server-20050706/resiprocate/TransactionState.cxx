@@ -148,7 +148,12 @@ TransactionState::process(TransactionController& controller)
             break;
          case ClientInvite:
             // ACK from TU will be Stateless
-            assert (!(state->isFromTU(sip) &&  sip->isRequest() && sip->header(h_RequestLine).getMethod() == ACK));
+            if (state->isFromTU(sip) && sip->isRequest() && sip->header(h_RequestLine).getMethod() == ACK)
+            {
+               WarningLog(<<"received ACK from TU in stateful mode: " << sip->brief());
+               delete message;
+               return;
+            }
             state->processClientInvite(message);
             break;
          case ServerNonInvite:
@@ -220,7 +225,6 @@ TransactionState::process(TransactionController& controller)
 	       }
                else
                {
-                  assert(matchingInvite);
                   state = TransactionState::makeCancelTransaction(matchingInvite, ServerNonInvite, tid);
                }
             }
@@ -291,7 +295,6 @@ TransactionState::process(TransactionController& controller)
                }
                else
                {
-                  assert(matchingInvite);
                   state = TransactionState::makeCancelTransaction(matchingInvite, ClientNonInvite, tid);
                   state->processClientNonInvite(sip);
                   
