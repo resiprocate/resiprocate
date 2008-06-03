@@ -11,6 +11,7 @@
 #include <termios.h>
 #include <stropts.h>
 #include <sys/ioctl.h>
+
 int _kbhit() {
     static const int STDIN = 0;
     static bool initialized = false;
@@ -892,6 +893,10 @@ void processKeyboard(char input, MyConversationManager& myConversationManager, M
       {
 #ifdef WIN32
          cout << input << ' ' << input;
+#else
+         // note:  This is bit of a hack and may not be portable to all linux terminal types
+         cout << input << input << input << "   " << input << input << input;
+         fflush(stdout);
 #endif
          bufferpos--;
       }
