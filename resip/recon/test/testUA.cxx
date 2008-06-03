@@ -895,7 +895,7 @@ void processKeyboard(char input, MyConversationManager& myConversationManager, M
          cout << input << ' ' << input;
 #else
          // note:  This is bit of a hack and may not be portable to all linux terminal types
-         cout << input << input << input << "   " << input << input << input;
+         cout << "\b\b\b   \b\b\b";
          fflush(stdout);
 #endif
          bufferpos--;
