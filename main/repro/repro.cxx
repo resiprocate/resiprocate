@@ -146,6 +146,7 @@ main(int argc, char** argv)
    CommandLineParser args(argc, argv);
    if(args.mLogType.lowercase() == "file")
    {
+      GenericLogImpl::MaxLineCount = 50000; // 50000 about 5M size - should make this configurable
       Log::initialize("file", args.mLogLevel, argv[0], "repro_log.txt");
    }
    else
