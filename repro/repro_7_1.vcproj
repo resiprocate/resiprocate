@@ -384,6 +384,9 @@ endlocal
 				RelativePath=".\RouteStore.cxx">
 			</File>
 			<File
+				RelativePath=".\RRDecorator.cxx">
+			</File>
+			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.cxx">
 			</File>
 			<File
@@ -516,6 +519,9 @@ endlocal
 			</File>
 			<File
 				RelativePath=".\RouteStore.hxx">
+			</File>
+			<File
+				RelativePath=".\RRDecorator.hxx">
 			</File>
 			<File
 				RelativePath=".\monkeys\SimpleStaticRoute.hxx">
