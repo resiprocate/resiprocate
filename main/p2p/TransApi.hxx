@@ -13,15 +13,29 @@
 //Dignature operations are hidden; signature check methods are expsoed where
 //apropriate.
 
+class MessageFactory() // some sort sort of factory sigleton for pasing data from the
+                       // wire and forming a new message of the correc type
+                       // (like FetchReq for example)
+{
+  public:
+   static ReloadMeassage* parseData( Data msg );
+}
+
+// Show me what the elements of a DestinationList look like given they are a
+// variant record
+
 class ReloadMessage
 {
    public:
       DestinationList destinationList();
-      ViaList viaList(); //is this useful or just diagnostic?
+      ViaList viaList(); //is this useful or just diagnostic? (CJ - have to use it )
       TransactionId transactionId(); //populated at const. time(for requests)
       MessageContents contents();
+      virtual Data encode();
 };
 
+
+   
 //note that signature is not exposed
 class MessageContents
 {
@@ -31,13 +45,24 @@ class MessageContents
   private:
 };
 
+// needs classes simular to this for all the message types 
+class FetchReq : public ReloadMessage // Should we derive off ReloadMessage or
+                                      // MEssageContents ????
+{
+   public:
+}
+class FetchAns : public ReloadMessage
+{
+   public:
+}
+
 //base class for MessageContents which can hint at routing?
 //shared ptr. for poly. list? Ownership should be clear.
-class StoreQ : public MessageContents
+class StoreReq : public MessageContents
 {
    public:
       typedef std::list<StoreKindData*> StoreList();
-      Resource resource();      
+      ResourceID resource();      
       StoreList storeList();
 };
 
