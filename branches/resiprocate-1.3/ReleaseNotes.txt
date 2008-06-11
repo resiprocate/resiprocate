@@ -1,3 +1,13 @@
+= Release Notes v 1.3.2 =
+
+==rutil==
+===Bug fixes===
+* fixed a bug where an FD (and some memory) would be leaked when a log-file rolled over
+
+==DUM==
+===Bug fixes===
+* fixed a memory leak that occurred when a dialog-creating provisional was followed by a failure response
+
 = Release Notes v 1.3.1 =
 
 ==Build System==
