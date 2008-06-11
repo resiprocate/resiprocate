@@ -20,7 +20,7 @@ using namespace resip;
 
 namespace reTurn {
 
-// !slg! these need to be made into settings
+// !slg! TODO these need to be made into settings
 //RequestHandler::AuthenticationMode authenticationMode = RequestHandler::NoAuthentication;
 //RequestHandler::AuthenticationMode authenticationMode = RequestHandler::ShortTermPassword;
 RequestHandler::AuthenticationMode authenticationMode = RequestHandler::LongTermPassword;
