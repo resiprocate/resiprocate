@@ -96,9 +96,9 @@ Setting up build environment:
 
 Note:  Ensure you use at least SVN revision 10660 of sipXtapi.
 
-/resip-main/                <- https://svn.resiprocate.org/rep/resiprocate/main
-/resip-main/contrib/openssl <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
-/main/contrib/boost_1_34_1  <- BOOST 1.34.1 (required in this location for Windows builds only)
+/resip/                     <- https://svn.resiprocate.org/rep/resiprocate/main
+/resip/contrib/openssl      <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
+/resip/contrib/boost_1_34_1 <- BOOST 1.34.1 (required in this location for Windows builds only)
 /sipXtapi                   <- https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi
 
 
@@ -106,7 +106,7 @@ Building dtls-srtp version of OpenSSL on Windows
 ------------------------------------------------
 recon currently uses a branch of OpenSSL that contains modification to do dtls-srtp.
 
-/resip-main/contrib/openssl <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
+/resip/contrib/openssl <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
 
 You will need ActiveState Perl, available from http://www.activestate.com/ActivePerl - there
 is a free version available for download.
@@ -126,8 +126,8 @@ To build openSSL for windows using VS2005:
 2.  From openssl root run: perl Configure VC-WIN32 enable-tlsext
 3.  Run: ms\do_masm
 4.  Run: perl util\mkfiles.pl >MINFO
-5.  Run: perl util\mk1mf.pl no-asm debug VC-WIN32 > d32.mak
-6.  Run: perl util\mk1mf.pl no-asm VC-WIN32 > 32.mak
+5.  Run: perl util\mk1mf.pl debug VC-WIN32 > d32.mak
+6.  Run: perl util\mk1mf.pl VC-WIN32 > 32.mak
 7.  Run: nmake -f d32.mak
 8.  Run: nmake -f 32.mak
 
@@ -189,22 +189,22 @@ Building recon on Generic Linux
 -------------------------------
 1.  Ensure the build environment is setup as indicated above.
 2.  Build sipXtapi as described above first.
-3.  If you don't need to cross compile openssl - proceed to step 3, otherwise:
-    Go to main/contrib/openssl
+3.  If you don't need to cross compile openssl - proceed to step 4, otherwise:
+    Go to resip/contrib/openssl
     ./Configure {place-target-platform-here} --openssldir=/usr enable-tlsext
     make depend
     make
-4.  Go to main/
+4.  Go to resip/
 5.  ./configure 
     - answer 'yes' to prompt to build reCon - Conversation Manager
     - make sure you enter the path to the dtls-srtp version of OpenSSL when it asks
-      (ie: ....main/contrib/openssl)
+      (ie: ....resip/contrib/openssl)
 6.  make
 
 
-Running testua
---------------
-1.  Go to main/resip/recon/test
+Running testua on Generic Linux
+-------------------------------
+1.  Go to resip/resip/recon/test
 2.  To run testUA ensure the codec plugins are in the same directory as the executable:
     cp ../../../../sipXtapi/sipXmediaLib/bin/*.so ./
 3.  ./testUA
@@ -221,10 +221,10 @@ tasks are required:
     of the information conveyed in the Session Description Protocol (SDP), 
     including ICE candidates and components.  It is currently created in sipX 
     style code and reside in the sipXtapi repository (sipXsdpLib).  This library
-    should be port/rewritten in resip style containers.  Once this is complete we 
+    should be ported/rewritten in resip style containers.  Once this is complete we 
     can modify the offer/answer logic in recon to only be dependant on resip.
 2.  Provide a media access API/thin layer so that sipX API's are not accessed directly
-    from different areas in recon source code.  Currently sipX API's are access 
+    from different areas in recon source code.  Currently sipX API's are accessed 
     in the following locations:
     ConversationManager.cxx - contains main sipXmediaFactory and sipXmediaInterface - the interface into sipX library
       - createMediaInterface
