@@ -8,7 +8,7 @@ Original Author: Scott Godin
 What is reTurn?
 ---------------
 reTurn is a Stun/Turn server and client library implementation of the latest 
-Stun/Turn drafts:  RFC3489bis13, and draft-ietf-behave-turn-07
+Stun/Turn drafts:  RFC3489bis-15, and draft-ietf-behave-turn-07
 
 
 Current External Library Usage
@@ -42,7 +42,7 @@ Finger Print Insertion and Validation  yes          yes     Uses BOOST:crc_optim
 Checking for unknown attributes        no           no
 Bandwidth Check                        no           no
 Turn Allocation                        yes          yes     Only UDP Relay's are implemented
-Requested Props (Even, Odd, etc)       yes          yes
+Requested Props (Even, Pair)           yes          yes
 Turn Permissions                       yes          yes      
 Turn Relay                             yes          yes     UDP Peers only
 Asyncronous Client APIs                yes          yes
@@ -60,6 +60,7 @@ General TODO
 - Timeout Channel Bindings - currently binding last until the allocation is destroyed
 - The server is supposed to prevent a relayed transport address and the 5-tuple from being
   reused in different allocations for 2 minutes after the allocation expires
+- SASL Prep for unicode passwords (RFC4013)
 - from chart above
  - Configuration Framework
  - Multi-threaded support
@@ -105,11 +106,11 @@ API Set - Wrapping in a Turn(Async)Socket - Turn(Async)UdpSocket, Turn(Async)Tcp
  * getBandwidth() - (SYNC API ONLY) used to retrieve info about the allocation
  * setActiveDestination(destinationIP, destinationPort)
  * clearActiveDestination()
- * bindRequest() - full 3489 not yet supported
+ * bindRequest() 
  * send(bufferToSend, bufferSize);      
  * sendTo(destinationIP, destinationPort, bufferToSend, bufferSize)
  * receive(bufferToReceiveIn, bufferSize[in/out], senderIPAddress, senderPort) 
-   - last 2 args are return args - if receive is non-blocking the this data is returned in callback instead 
+   - last 2 args are return args - if receive is non-blocking then this data is returned in callback instead 
  * receiveFrom(bufferToReceiveIn, bufferSize[in/out], senderIPAddress, senderPort) 
    - in this case last 2 args are input and specify endpoint we want to receive from
 
