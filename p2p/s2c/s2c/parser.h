@@ -49,6 +49,7 @@ typedef struct p_decl_ {
       int value;
     } enum_;
     struct {
+      char *switch_on;
       p_decl_head arms;
     } select_;
     struct {
