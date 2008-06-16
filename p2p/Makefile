@@ -13,7 +13,9 @@ TARGET_LIBRARY := libp2p
 
 TESTPROGRAMS :=
 
-SRC 	+= 
+SRC 	+= \
+		TransporterMessage.cxx
+
 
 include $(BUILD)/Makefile.post
 
