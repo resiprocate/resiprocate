@@ -1,25 +1,17 @@
 #ifndef __P2P_CANDIDATE_HXX
 #define __P2P_CANDIDATE_HXX 1
 
-#include "rutil/Data.hxx"
-#include "rutil/Fifo.hxx"
+#include "rutil/TransportType.hxx"
 
 namespace p2p
 {
 
 class Candidate
 {
-   typedef enum
-   {
-      TransportTypeNone,
-      TransportTypeDtls,             
-      TransportTypeTls
-   } TransportType;
-
-   Candidate(TransportType type, resip::GenericIpAddress& address);
+   Candidate(resip::TransportType type, resip::GenericIpAddress& address);
 
 private:
-   TransportType           mTranportType;
+   resip::TransportType    mTranportType;
    resip::GenericIpAddress mAddress;
    // TODO add ice specific members
 };
