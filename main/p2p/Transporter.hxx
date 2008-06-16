@@ -8,6 +8,7 @@ namespace p2p
 {
 
 class TransporterMessage;
+class Candidate;
 
 class Transporter
 {
@@ -16,9 +17,19 @@ class Transporter
    bool addListener(resip::TrasnportType transport,
                     resip::GenericIPAddress &address);
 
-   bool send(NodeId nodeId, rutil::Data data);
+   bool send(NodeId nodeId, ReloadMessage &msg);
+   bool send(NodeId nodeId, unsigned short application, resip::Data data);
 
-   bool connect(NodeId nodeId, resip::GenericIPAddress &address);
+   std::vector<Candidates> getLocalCandidates();
+
+   bool connect(NodeId nodeId, 
+                std::vector<...> remoteCandidates,
+                resip::GenericIPAddress &stunTurnServer);
+
+   bool connect(NodeId nodeId, 
+                std::vector<Candidates> remoteCandidates,
+                unsigned short application,
+                resip::GenericIPAddress &stunTurnServer);
 };
 
 }
