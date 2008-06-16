@@ -1,14 +1,19 @@
-#ifndef __P2P_TRANSPORT_HXX
-#define __P2P_TRANSPORT_HXX 1
+#ifndef __P2P_TRANSPORTER_HXX
+#define __P2P_TRANSPORTER_HXX 1
 
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
+#include "rutil/TransportType.hxx"
+#include "rutil/GenericIPAddress.hxx"
+
+#include "p2p/NodeId.hxx"
 
 namespace p2p
 {
 
 class TransporterMessage;
 class Candidate;
+class ReloadMessage;
 
 class Transporter
 {
@@ -23,7 +28,7 @@ class Transporter
    std::vector<Candidate> getLocalCandidates();
 
    bool connect(NodeId nodeId, 
-                std::vector<...> remoteCandidates,
+                std::vector<Candidate> remoteCandidates,
                 resip::GenericIPAddress &stunTurnServer);
 
    bool connect(NodeId nodeId, 
