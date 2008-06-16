@@ -4,8 +4,14 @@
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 
+#include "p2p/ConfigObject.hxx"
+#include "p2p/NodeId.hxx"
+
 namespace p2p
 {
+
+class ResourceId;
+class ReloadMessage;
 
 /// This is an abstract base class from which to derive the actually topology plugins
 class TopologyAPI
@@ -16,25 +22,25 @@ class TopologyAPI
       // need a fifo to receive timer events 
 
       // Messages that the forwarding layer sends to this object
-      void newConnectionFormed( NodeID& node );
-      void connectionLost( NodeID& node );
+      void newConnectionFormed( NodeId& node );
+      void connectionLost( NodeId& node );
        
       // deal with topoogy change messages 
-      void processJoin( message );
-      void processUpdate( message );
-      void processLeave( message );
+      void processJoin( ReloadMessage& message );
+      void processUpdate( ReloadMessage& message );
+      void processLeave( ReloadMessage& message );
       
       // Deal with routing querries 
-      NodeID& findNextHop( NodeID& node );
-      NodeID& findNextHop( ResourceID& resource );
+      NodeId& findNextHop( NodeId& node );
+      NodeId& findNextHop( ResourceId& resource );
       
       // Deal with replication for storage 
-      std::vector<NodeID> getReplicationSet(  ResourceID& resource );
+      std::vector<NodeId> getReplicationSet(  ResourceId& resource );
       ///    Returns list of nodes to replicate on
 
       // Functions to find out if this peer is responsible for something
-      bool isResponsible( NodeID& node );
-      bool isResponsible( ResourceID& resource );
+      bool isResponsible( NodeId& node );
+      bool isResponsible( ResourceId& resource );
       
 };
 
