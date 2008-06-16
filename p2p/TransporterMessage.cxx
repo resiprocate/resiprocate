@@ -23,12 +23,22 @@ TransporterMessage::castClosedConnection()
    return 0;
 }
 
-IncomingMessage*
-TransporterMessage::castIncomingMessage()
+IncomingApplicationMessage*
+TransporterMessage::castIncomingApplicationMessage()
 {
-   if (getMessageType() == IncomingMessageType)
+   if (getMessageType() == IncomingApplicationMessageType)
    {
-      return static_cast<IncomingMessage*>(this);
+      return static_cast<IncomingApplicationMessage*>(this);
+   }
+   return 0;
+}
+
+IncomingReloadMessage*
+TransporterMessage::castIncomingReloadMessage()
+{
+   if (getMessageType() == IncomingReloadMessageType)
+   {
+      return static_cast<IncomingReloadMessage*>(this);
    }
    return 0;
 }
