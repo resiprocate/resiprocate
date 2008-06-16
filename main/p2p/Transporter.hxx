@@ -14,20 +14,20 @@ class Transporter
 {
    Transporter(resip::Fifo<TransporterMessage>& rxFifo);
 
-   bool addListener(resip::TrasnportType transport,
+   bool addListener(resip::TransportType transport,
                     resip::GenericIPAddress &address);
 
    bool send(NodeId nodeId, ReloadMessage &msg);
    bool send(NodeId nodeId, unsigned short application, resip::Data data);
 
-   std::vector<Candidates> getLocalCandidates();
+   std::vector<Candidate> getLocalCandidates();
 
    bool connect(NodeId nodeId, 
                 std::vector<...> remoteCandidates,
                 resip::GenericIPAddress &stunTurnServer);
 
    bool connect(NodeId nodeId, 
-                std::vector<Candidates> remoteCandidates,
+                std::vector<Candidate> remoteCandidates,
                 unsigned short application,
                 resip::GenericIPAddress &stunTurnServer);
 };
