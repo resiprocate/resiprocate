@@ -11,7 +11,9 @@ namespace p2p
 
 class NewConnection;
 class ClosedConnection;
-class IncomingMessage;
+class IncomingApplicationMessage;
+class IncomingReloadMessage;
+class ReloadMessage;
 
 class TransporterMessage
 {
@@ -20,7 +22,8 @@ class TransporterMessage
 
       virtual NewConnection* castNewConnection();
       virtual ClosedConnection* castClosedConnection();
-      virtual IncomingMessage* castIncomingMessage();
+      virtual IncomingApplicationMessage* castIncomingApplicationMessage();
+      virtual IncomingReloadMessage* castIncomingReloadMessage();
 
    protected:
 
@@ -28,7 +31,8 @@ class TransporterMessage
       {
          NewConnectionType,
          ClosedConnectionType,
-         IncomingMessageType
+         IncomingApplicationMessageType,
+         IncomingReloadMessageType
       } MessageType;
 
       virtual MessageType getMessageType() = 0;
@@ -38,6 +42,8 @@ class NewConnection : public TransporterMessage
 {
    public:
       NodeId getNodeId();
+      unsigned short getApplication();
+      ... getCertificate();
 
    protected:
       virtual MessageType getMessageType() {return NewConnectionType;}
@@ -47,15 +53,27 @@ class ClosedConnection : public TransporterMessage
 {
    public:
       NodeId getNodeId();
+      unsigned short getApplicationId();
 
    protected:
       virtual MessageType getMessageType() {return ClosedConnectionType;}
 };
 
-class IncomingMessage : public TransporterMessage
+class IncomingReloadMessage : public TransporterMessage
 {
    public:
       NodeId getNodeId();
+      ReloadMessage getReloadMessage();
+
+   protected:
+      virtual MessageType getMessageType() {return IncomingMessageType;}
+};
+
+class IncomingApplicationMessage : public TransporterMessage
+{
+   public:
+      NodeId getNodeId();
+      unsigned short getApplication();
       resip::Data &getData();
 
    protected:
