@@ -12,76 +12,79 @@
 namespace p2p
 {
 
-class NewConnection;
-class ClosedConnection;
-class IncomingApplicationMessage;
-class IncomingReloadMessage;
+class ConnectionOpened;
+class ConnectionClosed;
+class ApplicationMessageArrived;
+class ReloadMessageArrived;
+class LocalCandidatesCollected;
+
 class ReloadMessage;
+class FlowId;
 
 class TransporterMessage
 {
    public:
       virtual ~TransporterMessage() {;}
 
-      virtual NewConnection* castNewConnection();
-      virtual ClosedConnection* castClosedConnection();
-      virtual IncomingApplicationMessage* castIncomingApplicationMessage();
-      virtual IncomingReloadMessage* castIncomingReloadMessage();
+      virtual ConnectionOpened* castConnectionOpened();
+      virtual ConnectionClosed* castConnectionClosed();
+      virtual ApplicationMessageArrived* castApplicationMessageArrived();
+      virtual ReloadMessageArrived* castReloadMessageArrived();
 
    protected:
 
       typedef enum
       {
-         NewConnectionType,
-         ClosedConnectionType,
-         IncomingApplicationMessageType,
-         IncomingReloadMessageType
+         ConnectionOpenedType,
+         ConnectionClosedType,
+         ApplicationMessageArrivedType,
+         ReloadMessageArrivedType
       } MessageType;
 
       virtual MessageType getMessageType() = 0;
 };
 
-class NewConnection : public TransporterMessage
+class ConnectionOpened : public TransporterMessage
 {
    public:
       NodeId getNodeId();
       unsigned short getApplication();
+      FlowId getFlowId();
       X509 *getCertificate();
       resip::TransportType getTransportType();
 
    protected:
-      virtual MessageType getMessageType() {return NewConnectionType;}
+      virtual MessageType getMessageType() {return ConnectionOpenedType;}
 };
 
-class ClosedConnection : public TransporterMessage
+class ConnectionClosed : public TransporterMessage
 {
    public:
       NodeId getNodeId();
       unsigned short getApplicationId();
 
    protected:
-      virtual MessageType getMessageType() {return ClosedConnectionType;}
+      virtual MessageType getMessageType() {return ConnectionClosedType;}
 };
 
-class IncomingReloadMessage : public TransporterMessage
+class ReloadMessageArrived : public TransporterMessage
 {
    public:
       NodeId getNodeId();
       ReloadMessage getReloadMessage();
 
    protected:
-      virtual MessageType getMessageType() {return IncomingReloadMessageType;}
+      virtual MessageType getMessageType() {return ReloadMessageArrivedType;}
 };
 
-class IncomingApplicationMessage : public TransporterMessage
+class ApplicationMessageArrived : public TransporterMessage
 {
    public:
-      NodeId getNodeId();
-      unsigned short getApplication();
+      FlowId getFlowId();
       resip::Data &getData();
 
    protected:
-      virtual MessageType getMessageType() {return IncomingApplicationMessageType;}
+      virtual MessageType getMessageType() {return ApplicationMessageArrivedType;}
 };
 
 }
