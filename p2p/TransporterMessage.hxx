@@ -1,8 +1,11 @@
 #ifndef __P2P_TRANSPORTER_MESSAGE_HXX
 #define __P2P_TRANSPORTER_MESSAGE_HXX 1
 
+#include "openssl/ssl.h"
+
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
+#include "rutil/TransportType.hxx"
 
 #include "p2p/NodeId.hxx"
 
@@ -43,7 +46,8 @@ class NewConnection : public TransporterMessage
    public:
       NodeId getNodeId();
       unsigned short getApplication();
-      ... getCertificate();
+      X509 *getCertificate();
+      resip::TransportType getTransportType();
 
    protected:
       virtual MessageType getMessageType() {return NewConnectionType;}
@@ -66,7 +70,7 @@ class IncomingReloadMessage : public TransporterMessage
       ReloadMessage getReloadMessage();
 
    protected:
-      virtual MessageType getMessageType() {return IncomingMessageType;}
+      virtual MessageType getMessageType() {return IncomingReloadMessageType;}
 };
 
 class IncomingApplicationMessage : public TransporterMessage
@@ -77,7 +81,7 @@ class IncomingApplicationMessage : public TransporterMessage
       resip::Data &getData();
 
    protected:
-      virtual MessageType getMessageType() {return IncomingMessageType;}
+      virtual MessageType getMessageType() {return IncomingApplicationMessageType;}
 };
 
 }
