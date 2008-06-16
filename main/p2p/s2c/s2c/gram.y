@@ -334,7 +334,7 @@ select: select_start '{' select_arms '}' NAME_ ';'
     pop_decl();
 };
 
-select_start: SELECT_ 
+select_start: SELECT_ '(' NAME_ ')'
 {
     p_decl *decl=0;
 
