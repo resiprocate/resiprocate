@@ -3,42 +3,42 @@
 namespace p2p
 {
 
-NewConnection*
-TransporterMessage::castNewConnection()
+ConnectionOpened*
+TransporterMessage::castConnectionOpened()
 {
-   if (getMessageType() == NewConnectionType)
+   if (getMessageType() == ConnectionOpenedType)
    {
-      return static_cast<NewConnection*>(this);
+      return static_cast<ConnectionOpened*>(this);
    }
    return 0;
 }
 
-ClosedConnection*
-TransporterMessage::castClosedConnection()
+ConnectionClosed*
+TransporterMessage::castConnectionClosed()
 {
-   if (getMessageType() == ClosedConnectionType)
+   if (getMessageType() == ConnectionClosedType)
    {
-      return static_cast<ClosedConnection*>(this);
+      return static_cast<ConnectionClosed*>(this);
    }
    return 0;
 }
 
-IncomingApplicationMessage*
-TransporterMessage::castIncomingApplicationMessage()
+ApplicationMessageArrived*
+TransporterMessage::castApplicationMessageArrived()
 {
-   if (getMessageType() == IncomingApplicationMessageType)
+   if (getMessageType() == ApplicationMessageArrivedType)
    {
-      return static_cast<IncomingApplicationMessage*>(this);
+      return static_cast<ApplicationMessageArrived*>(this);
    }
    return 0;
 }
 
-IncomingReloadMessage*
-TransporterMessage::castIncomingReloadMessage()
+ReloadMessageArrived*
+TransporterMessage::castReloadMessageArrived()
 {
-   if (getMessageType() == IncomingReloadMessageType)
+   if (getMessageType() == ReloadMessageArrivedType)
    {
-      return static_cast<IncomingReloadMessage*>(this);
+      return static_cast<ReloadMessageArrived*>(this);
    }
    return 0;
 }

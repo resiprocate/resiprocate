@@ -14,18 +14,21 @@ namespace p2p
 class TransporterMessage;
 class Candidate;
 class ReloadMessage;
+class ConfigObject;
+class FlowId;
 
 class Transporter
 {
-   Transporter(resip::Fifo<TransporterMessage>& rxFifo);
+   Transporter(resip::Fifo<TransporterMessage>& rxFifo,
+               ConfigObject &configuration);
 
    bool addListener(resip::TransportType transport,
                     resip::GenericIPAddress &address);
 
    bool send(NodeId nodeId, ReloadMessage &msg);
-   bool send(NodeId nodeId, unsigned short application, resip::Data data);
+   bool send(FlowId flowId, resip::Data data);
 
-   std::vector<Candidate> getLocalCandidates();
+   void collectLocalCandidates();
 
    bool connect(NodeId nodeId, 
                 std::vector<Candidate> remoteCandidates,
