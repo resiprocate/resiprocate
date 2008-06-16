@@ -375,7 +375,7 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
 
     fprintf(out,"void %s :: encode(std::ostream *out)\n{\n",type2class(decl->name));
     
-    fprintf(out," DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
+    fprintf(out,"   DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
 
     while(entry){

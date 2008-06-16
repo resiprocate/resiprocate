@@ -10,7 +10,8 @@ struct {
 
 enum { abc(5), bcd(10) } exx;
 
-select {
+select ( blahblah)
+{
 	   case abc:
 	    uint8 jjj;
            case bcd:
