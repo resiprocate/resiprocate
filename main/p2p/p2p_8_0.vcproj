@@ -149,6 +149,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\TopologyAPI.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Transporter.cxx"
 				>
 			</File>
@@ -172,6 +176,10 @@
 			</File>
 			<File
 				RelativePath=".\NodeId.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TopologyAPI.hxx"
 				>
 			</File>
 			<File
