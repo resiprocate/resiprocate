@@ -18,6 +18,7 @@ SRC 	+= \
 	ChordTopology.cxx \
 	ChordUpdate.cxx \
 	Connect.cxx \
+	EventConsumer.cxx \
 	Join.cxx \
 	Find.cxx \
 	Leave.cxx \

@@ -11,7 +11,7 @@ class Postable
 {
    public:
       virtual ~Postable(){}
-      virtual void post(std::auto_ptr<T>)=0;
+      virtual void post(std::auto_ptr<T> posted)=0;
 };
 
 }
