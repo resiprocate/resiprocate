@@ -11,36 +11,36 @@ namespace s2c {
 
 // Classes for ForwardingHdrStruct */
 
-void ForwardingHdrStruct :: print(std::ostream *out, int indent) const
+void ForwardingHdrStruct :: print(std::ostream& out, int indent) const
 {
    do_indent(out,indent);
-   (*out) << "ForwardingHdr:\n";
+   (out) << "ForwardingHdr:\n";
    indent+=2;
    do_indent(out, indent);
-   (*out)  << "relo_token:" << std::hex << (unsigned long long)mReloToken << "\n"; 
+   (out)  << "relo_token:" << std::hex << (unsigned long long)mReloToken << "\n"; 
    do_indent(out, indent);
-   (*out)  << "overlay:" << std::hex << (unsigned long long)mOverlay << "\n"; 
+   (out)  << "overlay:" << std::hex << (unsigned long long)mOverlay << "\n"; 
    do_indent(out, indent);
-   (*out)  << "ttl:" << std::hex << (unsigned long long)mTtl << "\n"; 
+   (out)  << "ttl:" << std::hex << (unsigned long long)mTtl << "\n"; 
    do_indent(out, indent);
-   (*out)  << "reserved:" << std::hex << (unsigned long long)mReserved << "\n"; 
+   (out)  << "reserved:" << std::hex << (unsigned long long)mReserved << "\n"; 
    do_indent(out, indent);
-   (*out)  << "fragment:" << std::hex << (unsigned long long)mFragment << "\n"; 
+   (out)  << "fragment:" << std::hex << (unsigned long long)mFragment << "\n"; 
    do_indent(out, indent);
-   (*out)  << "version:" << std::hex << (unsigned long long)mVersion << "\n"; 
+   (out)  << "version:" << std::hex << (unsigned long long)mVersion << "\n"; 
    do_indent(out, indent);
-   (*out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
+   (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
    do_indent(out, indent);
-   (*out)  << "transaction_id:" << std::hex << (unsigned long long)mTransactionId << "\n"; 
+   (out)  << "transaction_id:" << std::hex << (unsigned long long)mTransactionId << "\n"; 
    do_indent(out, indent);
-   (*out)  << "flags:" << std::hex << (unsigned long long)mFlags << "\n"; 
+   (out)  << "flags:" << std::hex << (unsigned long long)mFlags << "\n"; 
    do_indent(out, indent);
-   (*out)  << "via_list_length:" << std::hex << (unsigned long long)mViaListLength << "\n"; 
+   (out)  << "via_list_length:" << std::hex << (unsigned long long)mViaListLength << "\n"; 
    do_indent(out, indent);
-   (*out)  << "destination_list_length:" << std::hex << (unsigned long long)mDestinationListLength << "\n"; 
+   (out)  << "destination_list_length:" << std::hex << (unsigned long long)mDestinationListLength << "\n"; 
 };
 
-void ForwardingHdrStruct :: decode(std::istream *in)
+void ForwardingHdrStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ForwardingHdrStruct");
    decode_uintX(in, 8, mReloToken);
@@ -78,7 +78,7 @@ void ForwardingHdrStruct :: decode(std::istream *in)
 
 };
 
-void ForwardingHdrStruct :: encode(std::ostream *out)
+void ForwardingHdrStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding ForwardingHdrStruct");
    encode_uintX(out, 8, mReloToken);
