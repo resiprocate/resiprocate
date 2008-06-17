@@ -42,7 +42,10 @@ class TopologyAPI
       // Functions to find out if this peer is responsible for something
       virtual bool isResponsible( NodeId& node )=0;
       virtual bool isResponsible( ResourceId& resource )=0;
-  
+
+      // Function to hash resource names into resourceID 
+      ResourceId resourceId( Data& resourceName )=0;
+        
       virtual ~TopologyAPI();
       
    private:
