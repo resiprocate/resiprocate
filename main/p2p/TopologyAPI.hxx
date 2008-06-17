@@ -12,12 +12,13 @@ namespace p2p
 {
 
 class ReloadMessage;
+class TransactionLayer;
 
 /// This is an abstract base class from which to derive the actually topology plugins
 class TopologyAPI
 {
    public:
-      TopologyAPI(ConfigObject& config, TranscationLayer& transactionProcessor );
+      TopologyAPI(ConfigObject& config, TransactionLayer& transactionProcessor );
       
       // need a fifo to receive timer events 
 
