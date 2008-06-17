@@ -122,8 +122,8 @@ class ErrorResponse : public Message
 
 class RouteQueryAnsMessage : public Message
 {
-   public:
-      virtual MessageType getMessageType() const { return RouteQueryAns; }
+public:
+	virtual MessageType getMessageType() const { return RouteQueryAns; }
 };
 
 class RouteQueryReqMessage : public Message
@@ -131,33 +131,6 @@ class RouteQueryReqMessage : public Message
    public:
       virtual MessageType getMessageType() const { return RouteQueryReq; }
 };
-
-class LeaveAnsMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return LeaveAns; }
-};
-
-
-class LeaveReqMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return LeaveReq; }
-};
-
-class FindAnsMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return FindAns; }
-};
-
-
-class FindReqMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return FindReq; }
-};
-
 
 class RemoveAnsMessage : public Message
 {
