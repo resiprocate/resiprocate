@@ -82,6 +82,21 @@ class Transporter
    private:
 };
 
+/// This class is used internally by Transporter. Don't get any crazy ideas.
+class TransporterCommand
+{
+   public:
+     TransporterCommand(Transporter *transporter) : mTransporter(transporter) {;}
+
+     virtual ~TransporterCommand();
+
+     virtual void operator()() = 0;
+
+   protected:
+      Transporter *mTransporter;
+};
+
+
 }
 
 #endif
