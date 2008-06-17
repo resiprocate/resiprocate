@@ -13,8 +13,6 @@ class LeaveAns: public Message
 
 	virtual MessageType getMessageType() const { return Message::LeaveAns; }
     virtual void getPayload(resip::Data &data) const;
-    virtual Message *makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const;
-
 };
 
 
@@ -25,7 +23,6 @@ class LeaveReq : public Message
 
 	virtual MessageType getMessageType() const { return Message::LeaveReq; }
     virtual void getPayload(resip::Data &data) const;
-    virtual Message *makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const;
 protected:
 	NodeId mNode;
 };
