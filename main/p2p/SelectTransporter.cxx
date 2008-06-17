@@ -118,7 +118,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
 
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
    // Blow our node ID out on the wire (because there is no cert)
-   ::send((i->second).getSocket(), (void *)(mConfiguration.myNodeId()), 
+   ::send((i->second).getSocket(), (void *)(mConfiguration.nodeId()), 
           sizeof(NodeId), 0);
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 }
