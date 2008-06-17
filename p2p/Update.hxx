@@ -6,18 +6,25 @@
 namespace p2p
 {
 
-class UpdateAnsMessage : public Message
+class UpdateAns : public Message
 {
 public:
-	virtual MessageType getMessageType() const { return UpdateAns; }
+	virtual MessageType getMessageType() const { return Message::UpdateAns; }
+    virtual void getPayload(resip::Data &data) const;
+	virtual Message *makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const;
+
 };
 
 
-class UpdateReqMessage : public Message
+class UpdateReq : public Message
 {
 public:
-	UpdateReqMessage(resip::Data overlaySpecificBlob);
-	virtual MessageType getMessageType() const { return UpdateReq; }
+	UpdateReq(resip::Data overlaySpecificBlob);
+	virtual MessageType getMessageType() const { return Message::UpdateReq; }
+
+    virtual void getPayload(resip::Data &data) const;
+	virtual Message *makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const;
+
 protected:
 	resip::Data mOverlaySpecific;
 };
