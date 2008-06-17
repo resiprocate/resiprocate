@@ -19,7 +19,7 @@ class TransactionLayer;
 
 
 /// This is an abstract base class from which to derive the actually topology plugins
-class Chord : public  TopologyAPI
+class Chord : public TopologyAPI
 {
    public:
       Chord(ConfigObject& config, TransactionLayer& transactionProcessor );
@@ -30,11 +30,17 @@ class Chord : public  TopologyAPI
       virtual void newConnectionFormed( NodeId& node );
       virtual void connectionLost( NodeId& node );
        
-      // deal with topoogy change messages 
-      virtual void processJoin( Message& message );
-      virtual void processUpdate( Message& message );
-      virtual void processLeave( Message& message );
-      
+      // deal with topology change messages 
+      virtual void consume(EventWrapper<JoinReq>& event);
+      virtual void consume(EventWrapper<UpdateReq>& event);
+      virtual void consume(EventWrapper<LeaveReq>& event);
+      //virtual void processJoin( EventWrapper<StoreAns>& event);
+      //virtual void processUpdate( Message& message );
+      //virtual void processLeave( Message& message );
+
+      // called when store set completes, cases update to get sent
+      // virtual void consume(EventWrapper<StoreSetFoo>& event);
+
       // Deal with routing querries 
       virtual NodeId& findNextHop( NodeId& node );
       virtual NodeId& findNextHop( ResourceId& resource );
