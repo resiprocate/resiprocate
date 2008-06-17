@@ -24,17 +24,35 @@ namespace p2p
 void Chord::newConnectionFormed( NodeId& node ){}
 
 
-void Chord::connectionLost( NodeId& node ){}
+void Chord::connectionLost( NodeId& node )
+{
+   // if this is in the finger table, remove it 
+}
 
 
 // deal with topoogy change messages 
-void Chord::processJoin( Message& message ){}
+void Chord::processJoin( Message& message )
+{
+   // check we are reponsivle for the data from this node 
+
+   // send the data over to the new node 
+
+   // update the replicated data storage 
+
+   // somehow wait for stores then when all done send the updates 
+}
 
 
-void Chord::processUpdate( Message& message ){}
+void Chord::processUpdate( Message& message )
+{
+   // see if this changes the neighbor tables and if it does send updates
+}
 
 
-void Chord::processLeave( Message& message ){}
+void Chord::processLeave( Message& message )
+{
+   // if this is in the neigbor table, remove it and send updates 
+}
 
 
 // Deal with routing querries 
@@ -115,19 +133,18 @@ bool Chord::isResponsible( ResourceId& resource )
 
 
 // Function to hash resource names into resourceID 
-ResourceId 
-Chord::resourceId( resip::Data& resourceName )
+ResourceId Chord::resourceId( resip::Data& resourceName )
 {
    // call sha1, truncate to 128 bits, and return 
-   resip::SHA1Stream strm;
-   strm << resourceName;
-   resip::ParseBuffer pb(strm.getBin());
-   const char* anchor = pb.position();
-   pb.skipN(128);
-   resip::Data result;
-   pb.data(result, anchor);
-
-   return ResourceId(result);
+    resip::SHA1Stream strm;
+    strm << resourceName;
+    resip::ParseBuffer pb(strm.getBin());
+    const char* anchor = pb.position();
+    pb.skipN(128);
+    resip::Data result;
+    pb.data(result, anchor);
+ 
+    return ResourceId(result);
 }
 
 
