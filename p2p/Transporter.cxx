@@ -1,4 +1,5 @@
 #include "rutil/GenericIPAddress.hxx"
+#include "rutil/DnsUtil.hxx"
 
 #include "p2p/Transporter.hxx"
 #include "p2p/ConfigObject.hxx"
@@ -141,7 +142,22 @@ Transporter::Transporter (resip::Fifo<TransporterMessage>& rxFifo,
 {
    // We really shouldn't do this in the constructor -- but it goes
    // away when we add ICE.
+   resip::Data localIp = resip::DnsUtil::getLocalIpAddress();
+   resip::DnsUtil::inet_pton(localIp, mLocalAddress.sin_addr);
+   mLocalAddress.sin_len = sizeof(struct sockaddr_in);
+   mLocalAddress.sin_family = AF_INET;
+   mLocalAddress.sin_port = 39835;
+   memset(mLocalAddress.sin_zero, 0, sizeof(mLocalAddress.sin_zero));
+
    mTcpDescriptor = ::socket(AF_INET, SOCK_STREAM, 0);
+   ::bind(mTcpDescriptor, reinterpret_cast<sockaddr *>(&mLocalAddress),
+          sizeof(struct sockaddr_in));
+   ::listen(mTcpDescriptor, 20);
+}
+
+Transporter::~Transporter()
+{
+   ::close(mTcpDescriptor);
 }
 
 void
@@ -262,7 +278,6 @@ Transporter::process(int ms)
 }
 
 }
-
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
