@@ -12,8 +12,8 @@ class EventConsumer
 {
    public:
       virtual ~EventConsumer();
-      virtual void consume(CertDoneEvent& certdone);
-      virtual void consume(EventWrapper<StoreAns>& storeAns);
+      virtual void consume(CertDoneEvent& certdone) { assert(0); }
+      virtual void consume(EventWrapper<StoreAns>& storeAns) { assert(0); }
 };
 
 }
