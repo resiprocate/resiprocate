@@ -19,6 +19,14 @@ Message::~Message()
 
 }
 
+Message *
+Message::makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const
+{
+	assert(0);
+	return 0;
+}
+
+
 bool
 Message::isRequest() const
 {
