@@ -10,7 +10,8 @@ namespace p2p
 // the moment.
 class ResourceId
 {
-   public:
+   public:	
+      ResourceId() {} // just as wrong, but lets it compile
       resip::Data value();
       bool operator= ( const ResourceId& foo );
 };

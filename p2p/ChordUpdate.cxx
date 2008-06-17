@@ -1,63 +1,6 @@
-#include "p2p/Message.hxx"
-#include "p2p/Join.hxx"
-
-#include <assert.h>
+#include "p2p/ChordUpdate.hxx"
 
 using namespace p2p;
-
-Message::Message(ResourceId rid, const resip::Data& overlayName) :
-	mResourceId(rid),
-	mOverlayName(overlayName)
-{
-
-}
-
-Message::~Message() 
-{
-
-}
-
-bool
-Message::isRequest() const
-{
-	unsigned int reqValue = static_cast<unsigned int>(getMessageType());
-	return ((reqValue % 2) == 1);
-}
-
-Message *
-Message::parse(const resip::Data &message, NodeId senderID)
-{
-	// placeholder
-	Message::MessageType messageType = UpdateReq; // remove me
-	Message *newMessage = 0;
-	
-	// parse the forwarding header
-	
-	switch(messageType)
-	{
-		case UpdateReq:
-			break;
-		case UpdateAns:
-			break;
-		case JoinReq:
-			break;
-		case JoinAns:
-			break;
-		default:
-			assert(0); // unknown value
-	}
-	
-	return newMessage;
-}
-
-resip::Data
-Message::encode() const
-{
-	resip::Data encodedData;
-	
-	assert(0);
-	return encodedData;
-}
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

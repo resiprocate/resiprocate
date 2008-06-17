@@ -21,6 +21,7 @@ SRC 	+= Join.cxx \
 		TopologyAPI.cxx \
 		ChordTopology.cxx \
 		SelectTransporter.cxx \
+		ChordUpdate.cxx \
 		Update.cxx
 
 
