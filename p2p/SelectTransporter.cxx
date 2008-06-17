@@ -18,14 +18,14 @@ SelectTransporter::SelectTransporter (resip::Fifo<TransporterMessage>& rxFifo,
 {
    resip::Data localIp = resip::DnsUtil::getLocalIpAddress();
    resip::DnsUtil::inet_pton(localIp, mLocalAddress);
-
+   mNextPort = 30000;
 }
 
 SelectTransporter::~SelectTransporter()
 {
-   resip::closeSocket(mTcpDescriptor);
+   // XXX Tear down any of the listening sockets we have hanging around.   
 
-   // Tear down any of the sockets we have hanging around.   
+   // Tear down any of the open sockets we have hanging around.   
    std::map<NodeId, FlowId>::iterator i;
    for (i = mNodeFlowMap.begin(); i != mNodeFlowMap.end(); i++)
    {
@@ -84,32 +84,50 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
   // For right now, we just return one candidate: a single TCP
   // listener. And we return it right away.
 
-  std::vector<Candidate> candidates;
 
   ListenerMap::iterator i;
+  resip::GenericIPAddress addrPort;
 
-#if 0
+  i = mListenerMap.find(std::make_pair(nodeId, appId));
+
+  // If we don't already have a listener, we need to create
+  // a new one and throw it in the listener map
+  if (i == mListenerMap.end())
+  {
+     struct sockaddr_in addr;
+     resip::Socket s;
 #ifndef WIN32
-   mLocalAddress.sin_len = sizeof(struct sockaddr_in);
+     addr.sin_len = sizeof(struct sockaddr_in);
 #endif
-   mLocalAddress.sin_family = AF_INET;
-   mLocalAddress.sin_port = 39835;
-   memset(mLocalAddress.sin_zero, 0, sizeof(mLocalAddress.sin_zero));
+     addr.sin_family = AF_INET;
+     addr.sin_port = mNextPort++;
+     memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
 
-   mTcpDescriptor = ::socket(AF_INET, SOCK_STREAM, 0);
-   ::bind(mTcpDescriptor, reinterpret_cast<sockaddr *>(&mLocalAddress),
-          sizeof(struct sockaddr_in));
-   ::listen(mTcpDescriptor, 20);
-#endif
+     s = ::socket(AF_INET, SOCK_STREAM, 0);
+     ::bind(s, reinterpret_cast<sockaddr *>(&addr),
+            sizeof(struct sockaddr_in));
+     ::listen(s, 20);
 
-#if 0
-  resip::GenericIPAddress addr(mLocalAddress);
-  Candidate c(resip::TCP, addr); // XXX -- SHOULD BE TLS
-  candidates.push_back(c);
+     addrPort.v4Address = addr;
 
-  LocalCandidatesCollected *lcc = new LocalCandidatesCollected(candidates);
-  mRxFifo.add(lcc);
-#endif
+     mListenerMap.insert(ListenerMap::value_type(
+        std::make_pair(nodeId, appId),
+        std::make_pair(s,addrPort)));
+
+     i = mListenerMap.find(std::make_pair(nodeId, appId));
+     assert(i != mListenerMap.end());
+   }
+   else
+   {
+     addrPort = i->second.second;
+   }
+
+   std::vector<Candidate> candidates;
+   Candidate c(resip::TCP, addrPort); // XXX -- SHOULD BE TLS
+   candidates.push_back(c);
+
+   LocalCandidatesCollected *lcc = new LocalCandidatesCollected(candidates);
+   mRxFifo.add(lcc);
 }
 
 void
@@ -177,40 +195,62 @@ SelectTransporter::process(int ms)
    resip::FdSet fdSet;
    TransporterCommand *cmd;
 
+
    // First, we do the socket descriptors...
-   fdSet.setRead(mTcpDescriptor);
+
    std::map<NodeId, FlowId>::iterator i;
    for (i = mNodeFlowMap.begin(); i != mNodeFlowMap.end(); i++)
    {
       fdSet.setRead((i->second).getSocket());
    }
 
+   ListenerMap::iterator j;
+   for (j = mListenerMap.begin(); j != mListenerMap.end(); j++)
+   {
+      fdSet.setRead(j->second.first);
+   }
+
+   // TODO -- add bootstrap listener socket
+
    fdSet.selectMilliSeconds(ms);
 
-   if (fdSet.readyToRead(mTcpDescriptor))
+   // Check for new incoming connections
+   for (j = mListenerMap.begin(); j != mListenerMap.end(); j++)
    {
-      // New incoming connection. Yaay!
+      if (fdSet.readyToRead(j->second.first))
+      {
+        // New incoming connection. Yaay!
+        NodeId nodeId = j->first.first;
+        unsigned short application = j->first.second;
 
-      resip::Socket s;
-      struct sockaddr addr;
-      socklen_t addrlen;
+        resip::Socket s;
+        struct sockaddr addr;
+        socklen_t addrlen;
 
-      s = accept(mTcpDescriptor, &addr, &addrlen);
+        s = accept(j->second.first, &addr, &addrlen);
 
-#if 0
-      FlowId flowId(nodeId, application, s);
+        FlowId flowId(nodeId, application, s);
 
-      mNodeFlowMap.insert(
-        std::map<NodeId, FlowId>::value_type(nodeId, flowId));
+        mNodeFlowMap.insert(
+          std::map<NodeId, FlowId>::value_type(nodeId, flowId));
 
-      ConnectionOpened *co = new ConnectionOpened(flowId,
+        assert(mConfiguration.nodeId().getSize() == 16);
+        unsigned char buffer[16];
+        ::read(s, buffer, mConfiguration.nodeId().getSize());
+
+        // Ideally, we'd check that the nodeId we just read
+        // actually matches the nodeId we were expecting.
+
+        ConnectionOpened *co = new ConnectionOpened(flowId,
                                                   application,
-                                                  candidate.getTransportType(),
+                                                  resip::TCP,
                                                   0 /* no cert for you */);
-      mRxFifo.add(co);
-#endif
+        mRxFifo.add(co);
+      }
    }
-   
+
+
+   // Check for new incoming data   
    for (i = mNodeFlowMap.begin(); i != mNodeFlowMap.end(); i++)
    {
       FlowId &flowId = i->second;
@@ -223,6 +263,7 @@ SelectTransporter::process(int ms)
          }
          else
          {
+            // Application data is sent as-is.
             char *buffer = new char[4096];
             size_t bytesRead;
             bytesRead = ::read(flowId.getSocket(), buffer, 4096);
