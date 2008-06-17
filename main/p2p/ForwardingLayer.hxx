@@ -12,14 +12,15 @@ namespace p2p
 {
 
 /// This is an abstract base class from which to derive the actually topology plugins
-class ForwardingLayer
+class ForwardingLayer: public  public Postable<Message>
 {
    public:
-      ForwardingLayer(TransactionLayer& transactionProcessor , Transporter& transport  );
+      ForwardingLayer(TransactionLayer& transactionProcessor , Transporter& transport, TopologyAPI& topology  );
 
    private:
-      
-
+      TransactionLayer& mTransactionProcessor;
+      Transporter& mTransport;
+      TopologyAPI& mTopology;
 };
 
 }
