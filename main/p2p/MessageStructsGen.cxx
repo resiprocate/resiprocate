@@ -99,6 +99,35 @@ void DestinationDataStruct :: print(std::ostream& out, int indent) const
 void DestinationDataStruct :: decode(std::istream& in)
 {
    DebugLog(<< "Decoding DestinationDataStruct");
+   switch(mType){
+      case 1:
+            mPeer.mNodeId = new NodeIdStruct();
+   mPeer.mNodeId->decode(in);
+          break;
+
+      case 2:
+            mResource.mResourceId = new ResourceIdStruct();
+   mResource.mResourceId->decode(in);
+          break;
+
+      case 3:
+            {
+   resip::Data d;
+   read_varray1(in, 1, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mCompressed.mCompressedId.push_back(0);
+               decode_uintX(in2, 8, mCompressed.mCompressedId[i++]);
+ DebugLog( << "mCompressed.mCompressedId[i++]");
+   }
+;   }
+          break;
+
+       default: /* User error */ 
+          assert(1==0);
+   }
+
 };
 void DestinationDataStruct :: encode(std::ostream& out)
 {
@@ -176,12 +205,165 @@ void DestinationStruct :: encode(std::ostream& out)
 
 
 
-// Classes for ForwardingHdrStruct */
+// Classes for SignerIdentityStruct */
 
-void ForwardingHdrStruct :: print(std::ostream& out, int indent) const 
+void SignerIdentityStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
-   (out) << "ForwardingHdr:\n";
+   (out) << "SignerIdentity:\n";
+   indent+=2;
+   do_indent(out, indent);
+   (out)  << "identity_type:" << std::hex << (unsigned long long) mIdentityType << "\n"; 
+   for(unsigned int i=0;i<mSignerIdentity.size();i++){
+      do_indent(out, indent);
+   (out)  << "opaque:" << std::hex << (unsigned long long) mSignerIdentity[i] << "\n"; 
+   }
+};
+
+void SignerIdentityStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding SignerIdentityStruct");
+   {
+      u_int32 v;
+      decode_uintX(in, 8, v);
+      mIdentityType=(SignerIdentityType)v;
+   }
+
+   {
+   resip::Data d;
+   read_varray1(in, 2, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mSignerIdentity.push_back(0);
+      decode_uintX(in2, 8, mSignerIdentity[i++]);
+ DebugLog( << "mSignerIdentity[i++]");
+   }
+;   }
+
+};
+
+void SignerIdentityStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding SignerIdentityStruct");
+   encode_uintX(out, 8, (u_int64)(mIdentityType));
+
+   {
+   long pos1=out.tellp();
+   out.seekp(pos1 + 2);
+   for(unsigned int i=0;i<mSignerIdentity.size();i++)
+      encode_uintX(out, 8, mSignerIdentity[i]);
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 16, (pos2 - pos1) - 2);
+   out.seekp(pos2);
+   }
+
+};
+
+
+
+// Classes for SignatureAndHashAlgorithmStruct */
+
+void SignatureAndHashAlgorithmStruct :: print(std::ostream& out, int indent) const 
+{
+   do_indent(out,indent);
+   (out) << "SignatureAndHashAlgorithm:\n";
+   indent+=2;
+   do_indent(out, indent);
+   (out)  << "sig:" << std::hex << (unsigned long long)mSig << "\n"; 
+   do_indent(out, indent);
+   (out)  << "hash:" << std::hex << (unsigned long long)mHash << "\n"; 
+};
+
+void SignatureAndHashAlgorithmStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding SignatureAndHashAlgorithmStruct");
+   decode_uintX(in, 8, mSig);
+ DebugLog( << "mSig");
+
+   decode_uintX(in, 8, mHash);
+ DebugLog( << "mHash");
+
+};
+
+void SignatureAndHashAlgorithmStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding SignatureAndHashAlgorithmStruct");
+   encode_uintX(out, 8, mSig);
+
+   encode_uintX(out, 8, mHash);
+
+};
+
+
+
+// Classes for SignatureStruct */
+
+void SignatureStruct :: print(std::ostream& out, int indent) const 
+{
+   do_indent(out,indent);
+   (out) << "Signature:\n";
+   indent+=2;
+   mAlgorithm->print(out, indent);
+   mIdentity->print(out, indent);
+   for(unsigned int i=0;i<mSignatureValue.size();i++){
+      do_indent(out, indent);
+   (out)  << "opaque:" << std::hex << (unsigned long long) mSignatureValue[i] << "\n"; 
+   }
+};
+
+void SignatureStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding SignatureStruct");
+   mAlgorithm = new SignatureAndHashAlgorithmStruct();
+   mAlgorithm->decode(in);
+
+   mIdentity = new SignerIdentityStruct();
+   mIdentity->decode(in);
+
+   {
+   resip::Data d;
+   read_varray1(in, 2, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mSignatureValue.push_back(0);
+      decode_uintX(in2, 8, mSignatureValue[i++]);
+ DebugLog( << "mSignatureValue[i++]");
+   }
+;   }
+
+};
+
+void SignatureStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding SignatureStruct");
+   mAlgorithm->encode(out);
+
+   mIdentity->encode(out);
+
+   {
+   long pos1=out.tellp();
+   out.seekp(pos1 + 2);
+   for(unsigned int i=0;i<mSignatureValue.size();i++)
+      encode_uintX(out, 8, mSignatureValue[i]);
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 16, (pos2 - pos1) - 2);
+   out.seekp(pos2);
+   }
+
+};
+
+
+
+// Classes for ForwardingLayerMessageStruct */
+
+void ForwardingLayerMessageStruct :: print(std::ostream& out, int indent) const 
+{
+   do_indent(out,indent);
+   (out) << "ForwardingLayerMessage:\n";
    indent+=2;
    do_indent(out, indent);
    (out)  << "relo_token:" << std::hex << (unsigned long long)mReloToken << "\n"; 
@@ -209,11 +391,17 @@ void ForwardingHdrStruct :: print(std::ostream& out, int indent) const
    }
    do_indent(out, indent);
    (out)  << "route_log_len_dummy:" << std::hex << (unsigned long long)mRouteLogLenDummy << "\n"; 
+   do_indent(out, indent);
+   (out)  << "message_code:" << std::hex << (unsigned long long)mMessageCode << "\n"; 
+   for(unsigned int i=0;i<mPayload.size();i++){
+      do_indent(out, indent);
+   (out)  << "opaque:" << std::hex << (unsigned long long) mPayload[i] << "\n"; 
+   }
 };
 
-void ForwardingHdrStruct :: decode(std::istream& in)
+void ForwardingLayerMessageStruct :: decode(std::istream& in)
 {
- DebugLog(<< "Decoding ForwardingHdrStruct");
+ DebugLog(<< "Decoding ForwardingLayerMessageStruct");
    decode_uintX(in, 8, mReloToken);
  DebugLog( << "mReloToken");
 
@@ -268,11 +456,26 @@ void ForwardingHdrStruct :: decode(std::istream& in)
    decode_uintX(in, 16, mRouteLogLenDummy);
  DebugLog( << "mRouteLogLenDummy");
 
+   decode_uintX(in, 16, mMessageCode);
+ DebugLog( << "mMessageCode");
+
+   {
+   resip::Data d;
+   read_varray1(in, 3, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mPayload.push_back(0);
+      decode_uintX(in2, 8, mPayload[i++]);
+ DebugLog( << "mPayload[i++]");
+   }
+;   }
+
 };
 
-void ForwardingHdrStruct :: encode(std::ostream& out)
+void ForwardingLayerMessageStruct :: encode(std::ostream& out)
 {
-   DebugLog(<< "Encoding ForwardingHdrStruct");
+   DebugLog(<< "Encoding ForwardingLayerMessageStruct");
    encode_uintX(out, 8, mReloToken);
 
    encode_uintX(out, 32, mOverlay);
@@ -314,6 +517,19 @@ void ForwardingHdrStruct :: encode(std::ostream& out)
    }
 
    encode_uintX(out, 16, mRouteLogLenDummy);
+
+   encode_uintX(out, 16, mMessageCode);
+
+   {
+   long pos1=out.tellp();
+   out.seekp(pos1 + 3);
+   for(unsigned int i=0;i<mPayload.size();i++)
+      encode_uintX(out, 8, mPayload[i]);
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 24, (pos2 - pos1) - 3);
+   out.seekp(pos2);
+   }
 
 };
 
