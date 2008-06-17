@@ -31,13 +31,16 @@ namespace s2c {
 
 class PDU {
    public:
+      virtual ~PDU()=0;
+      
       std::string mName;
 
-      virtual void print(std::ostream *out) {
+      virtual void print(std::ostream *out) const
+      {
         print(out, 0);
       }
     
-      virtual void print(std::ostream *out, int indent) 
+      virtual void print(std::ostream *out, int indent)  const
       {
         (*out) << mName << "(empty)" << "\n";
       }
@@ -46,8 +49,10 @@ class PDU {
       virtual void decode(std::istream *in)=0;
 };
 
-#define PDUMemberFunctions \
-  virtual void print(std::ostream *out, int indent); virtual void encode(std::ostream *out); virtual void decode(std::istream *in);
+#define PDUMemberFunctions                                  \
+virtual void print(std::ostream *out, int indent) const;    \
+virtual void encode(std::ostream *out);                     \
+virtual void decode(std::istream *in);
 
 
 /* Functions for primitive integral types */
@@ -62,5 +67,7 @@ void do_indent(std::ostream *out, int indent);
 void read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf);
 
 } /* Close of namespace */
+
+std::ostream& operator<<(std::ostream& strm, const s2c::PDU& pdu);
 
 #endif
