@@ -101,12 +101,12 @@ void processCommandLine(Data& commandline)
    }   
    if(isEqualNoCase(command, "store") || isEqualNoCase(command, "st"))
    {
-      // TODO
+      // TODO - resource name and value
       return;
    }
    if(isEqualNoCase(command, "fetch") || isEqualNoCase(command, "ft"))
    {
-      // TODO
+      // TODO - resource name
       return;
    }
 
@@ -294,6 +294,7 @@ main (int argc, char** argv)
    while(true)
    {
       // TODO - Call Process on P2P Componenets
+      transporter.process(1);
 
       while(_kbhit() != 0)
       {
