@@ -179,11 +179,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\AbstractValue.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ArrayValue.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Candidate.hxx"
 				>
 			</File>
 			<File
 				RelativePath=".\ConfigObject.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\DictionaryValue.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\EventConsumer.hxx"
 				>
 			</File>
 			<File
@@ -216,6 +232,10 @@
 			</File>
 			<File
 				RelativePath=".\SignatureContext.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SingleValue.hxx"
 				>
 			</File>
 			<File
