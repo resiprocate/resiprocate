@@ -24,7 +24,8 @@ SRC 	+= Join.cxx \
 		SelectTransporter.cxx \
 		MessageStructsGen.cxx \
 		ChordUpdate.cxx \
-		Update.cxx
+		Update.cxx \
+                NodeId.cxx
 
 include $(BUILD)/Makefile.post
 
