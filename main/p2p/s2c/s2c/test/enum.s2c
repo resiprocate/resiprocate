@@ -1,7 +1,7 @@
-enum { false (0), true(1), (255) } Boolean;
+enum { abel (0), baker(1), (255) } Dual;
 
 struct {    
-       Boolean frob;
+       Dual frob;
 } BooleanContainer;
 
 
