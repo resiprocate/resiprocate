@@ -13,20 +13,24 @@ TARGET_LIBRARY := libp2p
 
 TESTPROGRAMS := ParsingTest.cxx
 
-SRC 	+= Join.cxx \
-		Message.cxx \
-		SignatureContext.cxx \
-		TransporterMessage.cxx \
-		Transporter.cxx \
-		TestMake.cxx \
-		TopologyAPI.cxx \
-		ChordTopology.cxx \
-		SelectTransporter.cxx \
-		MessageStructsGen.cxx \
-		Connect.cxx \
-		ChordUpdate.cxx \
-		Update.cxx \
-                NodeId.cxx
+SRC 	+= \
+	ChordNodeId.cxx \
+	ChordTopology.cxx \
+	ChordUpdate.cxx \
+	Connect.cxx \
+	Join.cxx \
+	Message.cxx \
+	MessageStructsGen.cxx \
+	P2PSubsystem.cxx \
+	ResourceId.cxx \
+	SelectTransporter.cxx \
+	SignatureContext.cxx \
+	TestMake.cxx \
+	TopologyAPI.cxx \
+	Transporter.cxx \
+	TransporterMessage.cxx \
+	Update.cxx \
+        NodeId.cxx 
 
 include $(BUILD)/Makefile.post
 
