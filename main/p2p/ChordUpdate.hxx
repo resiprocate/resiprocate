@@ -25,17 +25,19 @@ public:
 	UpdateType getUpdateType() const { return mUpdateType; }
 	void setUpdateType(UpdateType updateType);
 	
+	// empties NodeId vectors
 	void clear();
 	
+	// these will assert if mUpdateType is incorrect?
 	const std::vector<NodeId> &getFingers();
 	const std::vector<NodeId> &getSuccessors();
 	const std::vector<NodeId> &getPredecessors();
 	
-	// these will assert if mUpdateType is incorrect?
 	void setFingers(const std::vector<NodeId> &fingers);  
 	void setSuccessors(const std::vector<NodeId> &successors);
 	void setPredecessors(const std::vector<NodeId> &predecessors);
 	
+	resip::Data encode() const; // encodes into a blob
 protected:
 	resip::Data mUpdateBody;
 	UpdateType mUpdateType;
