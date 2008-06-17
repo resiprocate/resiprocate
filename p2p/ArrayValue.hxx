@@ -2,29 +2,34 @@
 #define P2P_ArrayValue_hxx
 
 #include "rutil/Data.hxx"
-#include <vector>
+#include "AbstractValue.hxx"
+#include "SingleValue.hxx"
+#include "DataSpecifier.hxx"
+
+#include <map>
 
 namespace p2p
 {
 
 class ArrayValue : public AbstractValue 
 {
-  public:
-
-   void sign();
-   bool isValid() const;
-
-   const resip::Data& get(size_t i);
-   void set(size_t i, const resip::Data& value);
-   void clear(size_t i);
-
-  protected:
-   std::vector<const resip::Data> collectSignableData() const = 0;
-   std::vector<SingleValue> mValues;
+   public:
+      static const UInt32 Last = SpecifyArray::Last;
+      typedef std::map<int, SingleValue> ArrayMap;
+      void sign();
+      bool isValid() const;
+      
+      ArrayMap& arrayMap() { return mArrayMap; }
+      const ArrayMap& arrayMap() const { return mArrayMap; }
+   protected:
+      std::vector<resip::Data> collectSignableData() const = 0;
+   private:
+      ArrayMap mArrayMap;      
 };
 
 } // p2p
 
+#endif // P2P_ArrayValue_hxx
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
@@ -59,3 +64,4 @@ class ArrayValue : public AbstractValue
  *  IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *  THE POSSIBILITY OF SUCH DAMAGE.
  *====================================================================== */
+

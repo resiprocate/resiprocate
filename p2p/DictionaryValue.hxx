@@ -7,49 +7,47 @@
 namespace p2p
 {
 
-class DictionaryValue public: AbstractValue 
+class DictionaryValue : public AbstractValue 
 {
-  public:
-   DictionaryValue()
-      : mMap()
-   {}
+   public:
+      DictionaryValue()
+         : mMap()
+      {}
       
-   virtual std::vector<const resip::Data> collectSignableData() const
-   {
-      assert(0);
-   }
-
-//    const resip::Data& get(const resip::Data& key) const;
-//    void set(const resip::Data& key, const resip::Data& value);
-//    void clear(const resip::Data& key);
-   std::map<const resip::Data, const Entry>& dictionary();
-
-  private:
-   std::map<const resip::Data, const Entry> mMap;
-
-   class Entry public: Signable {
-      Entry(const resip::Data& key, const resip::Data& value)
-         : mKey(key),
-         mValue(value)
-         {}
-      
-      virtual std::vector<const resip::Data> collectSignableData() const
+      virtual std::vector<resip::Data> collectSignableData() const
       {
-         std::vector<const resip::Data> result;
-         result.add(resip::Data(resip::Data::Borrow, mKey));
-         result.add(resip::Data(resip::Data::Borrow, mValue));
-         return result;
-      }
-
-      bool exists() 
-      {
-         return mValue == SingleValue::NoValue;
+         assert(0);
       }
       
-     private:
-      const resip::Data mKey;
-      const resip::Data mValue;
-  };
+   private:
+      class Entry : public Signable {
+         Entry(const resip::Data& key, const resip::Data& value)
+            : mKey(key),
+            mValue(value)
+            {}
+      
+         virtual std::vector<resip::Data> collectSignableData() const
+         {
+            std::vector<resip::Data> result;
+            result.push_back(resip::Data(resip::Data::Borrow, mKey));
+            result.push_back(resip::Data(resip::Data::Borrow, mValue));
+            return result;
+         }
+
+         bool exists() 
+         {
+            return mValue == SingleValue::NoValue;
+         }
+         
+        private:
+         const resip::Data mKey;
+         const resip::Data mValue;
+      };
+
+      std::map<resip::Data, Entry> mMap;
+
+   public:
+      std::map<resip::Data, Entry>& value();
 };
 
 } // p2p
