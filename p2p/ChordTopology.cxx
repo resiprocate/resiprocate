@@ -32,27 +32,28 @@ void Chord::connectionLost( NodeId& node )
 
 
 // deal with topoogy change messages 
-void Chord::processJoin( Message& message )
+void Chord::consume(EventWrapper<JoinReq>& event)
 {
    // check we are reponsivle for the data from this node 
 
-   // send the data over to the new node 
+   // send the data using multiple store messages over to the new node 
+   // use a StoreSet to monitor 
 
    // update the replicated data storage 
 
-   // somehow wait for stores then when all done send the updates 
+   
 }
 
 
-void Chord::processUpdate( Message& message )
+void Chord::consume(EventWrapper<UpdateReq>& event)
 {
    // see if this changes the neighbor tables and if it does send updates
 }
 
 
-void Chord::processLeave( Message& message )
+void Chord::consume(EventWrapper<LeaveReq>& event)
 {
-   // if this is in the neighbor table, remove it and send updates 
+   // if this is in the prev/next table, remove it and send updates 
    assert(0);
 }
 
@@ -118,7 +119,8 @@ bool Chord::isResponsible( NodeId& pNode )
 {
    ChordNodeId node(pNode);
    
-   if (mPrevTable.size() < 1) return false;
+   if (mPrevTable.size() == 0) return false;
+
    if (  (mPrevTable[0]<node) && (node<=myNodeId) )
    {
       return true;
