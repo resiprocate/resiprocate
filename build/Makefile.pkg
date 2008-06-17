@@ -86,6 +86,11 @@ ARES_LIBDIRS := $(ROOT)/contrib/ares-build.$(OS_ARCH)
 ARES_LIBNAME := ares
 ARES_DEFINES := 
 
+S2C_INCLUDEDIRS := $(ROOT)/p2c/s2c/s2c
+S2C_LIBDIRS := $(ROOT)/p2p/s2c/s2c/obj.$(TARGET_NAME)
+S2C_LIBNAME := s2c
+S2C_DEFINES := 
+
 ifeq ($(OSTYPE),FreeBSD)
   DB42_LIBNAME := db-4.2
   DB4CXX_LIBNAME := db_cxx-4.2
