@@ -6,23 +6,31 @@
 namespace p2p 
 {
 
-class JoinAnsMessage : public Message
+class JoinAns : public Message
 {
 public:
-    JoinAnsMessage(resip::Data overlaySpecific);
-    virtual MessageType getMessageType() const { return JoinAns; }
+    JoinAns(const resip::Data &overlaySpecific);
+    virtual MessageType getMessageType() const { return Message::JoinAns; }
+
+	virtual void getPayload(resip::Data &data) const;
+	virtual Message *makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const;
+
 protected:
     resip::Data mOverlaySpecific;
 };
 
 
-class JoinReqMessage : public Message
+class JoinReq : public Message
 {
-   public:
-      JoinReqMessage(NodeId nodeID, const resip::Data &overlaySpecific);
+public:
+      JoinReq(NodeId nodeID, const resip::Data &overlaySpecific);
 
-      virtual MessageType getMessageType() const { return JoinReq; }
+      virtual MessageType getMessageType() const { return Message::JoinReq; }
       NodeId getNodeID() const { return mNodeID; }
+
+	  virtual void getPayload(resip::Data &data) const;
+      virtual Message *makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const;
+
 protected:
       NodeId mNodeID;
       resip::Data mOverlaySpecific;
