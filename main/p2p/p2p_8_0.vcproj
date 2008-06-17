@@ -157,6 +157,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Connect.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Join.cxx"
 				>
 			</File>
@@ -248,6 +252,10 @@
 			</File>
 			<File
 				RelativePath=".\ConfigObject.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Connect.hxx"
 				>
 			</File>
 			<File
