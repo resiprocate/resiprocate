@@ -47,18 +47,11 @@ class SpecifyDictionary
       std::vector<resip::Data>& keys();
 };
    
-class FetchReq
-{
-   public:
-      //resoure
-      typedef std::list<DataSpecifier> Specifiers;
-};
-   
-class DeleteReq
-{
-   public:
-      typedef std::list<DataSpecifier> Specifiers;
-};
+// class DeleteReq
+// {
+//    public:
+//       typedef std::list<DataSpecifier> Specifiers;
+// };
 
 } // p2p
 

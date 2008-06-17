@@ -20,3 +20,6 @@
 #include "Transporter.hxx"
 #include "TransporterMessage.hxx"
 #include "UserName.hxx"
+#include "FetchReq.hxx"
+#include "FetchAns.hxx"
+
