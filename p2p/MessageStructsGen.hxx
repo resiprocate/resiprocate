@@ -2,6 +2,71 @@
 
 namespace s2c {
 
+class NodeIdStruct : public PDU {
+public:
+   unsigned char                 mId[16];
+
+
+   NodeIdStruct() {mName = "NodeId";}
+   PDUMemberFunctions
+};
+
+
+class ResourceIdStruct : public PDU {
+public:
+   std::vector<unsigned char>    mId;
+
+
+   ResourceIdStruct() {mName = "ResourceId";}
+   PDUMemberFunctions
+};
+
+
+enum {
+   reserved = 0,
+   peer = 2,
+   resource = 2,
+   compressed = 3
+} DestinationType;
+
+class DestinationDataStruct : public PDU {
+public:
+   int  mType;
+   enum { 
+          tPeer=2,
+          tResource=2,
+          tCompressed=3
+   };
+
+   union {
+     struct {
+          NodeIdStruct*                 mNodeId;
+     } mPeer;
+     struct {
+          ResourceIdStruct*             mResourceId;
+     } mResource;
+     struct {
+          std::vector<unsigned char>    mCompressedId;
+     } mCompressed;
+   } u;
+
+
+   DestinationDataStruct() {mName = "DestinationData";}
+   PDUMemberFunctions
+};
+
+class DestinationStruct : public PDU {
+public:
+   DestinationType               mType;
+   UInt8                         mLength;
+   DestinationDataStruct*        mDestinationData;
+
+
+   DestinationStruct() {mName = "Destination";}
+   PDUMemberFunctions
+};
+
+
 class ForwardingHdrStruct : public PDU {
 public:
    UInt8                         mReloToken;
@@ -13,8 +78,9 @@ public:
    UInt32                        mLength;
    UInt64                        mTransactionId;
    UInt16                        mFlags;
-   UInt16                        mViaListLength;
-   UInt16                        mDestinationListLength;
+   std::vector<DestinationStruct*>  mViaList;
+   std::vector<DestinationStruct*>  mDestinationList;
+   UInt16                        mRouteLogLenDummy;
 
 
    ForwardingHdrStruct() {mName = "ForwardingHdr";}

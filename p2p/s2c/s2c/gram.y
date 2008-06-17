@@ -237,6 +237,10 @@ declaration : NAME_ NAME_ ';'
 
     $$=decl;
   };
+  | select 
+  {
+    $$ = $1;
+  }
 
 
 varray_size: 
