@@ -6,7 +6,6 @@
 #include "rutil/SharedPtr.hxx"
 #include "Message.hxx"
 
-
 namespace p2p
 {
 
