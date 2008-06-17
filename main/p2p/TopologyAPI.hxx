@@ -28,15 +28,9 @@ class TopologyAPI
       void connectionLost( NodeId& node );
        
       // deal with topoogy change messages 
-<<<<<<< .mine
-      void processJoin( Message& message );
-      void processUpdate(  Message& message );
-      void processLeave(  Message& message );
-=======
       void processJoin( ReloadMessage& message );
       void processUpdate( ReloadMessage& message );
       void processLeave( ReloadMessage& message );
->>>>>>> .r7783
       
       // Deal with routing querries 
       NodeId& findNextHop( NodeId& node );
