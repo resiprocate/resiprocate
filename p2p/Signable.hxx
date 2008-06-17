@@ -30,4 +30,5 @@ class Signable
       resip::Data mSignature;
 };
 
+}
 #endif
