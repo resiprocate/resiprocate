@@ -1,5 +1,7 @@
 
 #include "rutil/Data.hxx"
+#include "rutil/ParseBuffer.hxx"
+#include "rutil/SHA1Stream.hxx"
 
 #include "p2p/ChordTopology.hxx"
 #include "p2p/ConfigObject.hxx"
@@ -113,12 +115,19 @@ bool Chord::isResponsible( ResourceId& resource )
 
 
 // Function to hash resource names into resourceID 
-ResourceId Chord::resourceId( resip::Data& resourceName )
+ResourceId 
+Chord::resourceId( resip::Data& resourceName )
 {
    // call sha1, truncate to 128 bits, and return 
-   assert(0);  // TODO FIX NEXT LINE
-   ResourceId foo;
-   return foo;
+   resip::SHA1Stream strm;
+   strm << resourceName;
+   resip::ParseBuffer pb(strm.getBin());
+   const char* anchor = pb.position();
+   pb.skipN(128);
+   resip::Data result;
+   pb.data(result, anchor);
+
+   return ResourceId(result);
 }
 
 
