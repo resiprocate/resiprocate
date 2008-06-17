@@ -10,6 +10,7 @@ namespace p2p
 class Signable 
 {
    public:
+   	  virtual ~Signable() {}
       void sign();
       bool isValid() const;
       
@@ -19,14 +20,14 @@ class Signable
       }
       
    protected:         
-      virtual std::vector<const Data> collectSignableData() const = 0;
+      virtual std::vector<const resip::Data> collectSignableData() const = 0;
       void setSignature(const resip::Data& signature) 
       {
          mSignature = signature;
       }
 
    private:
-      Data mSignature;
+      resip::Data mSignature;
 };
 
 #endif
