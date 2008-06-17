@@ -14,7 +14,7 @@
 #include "rutil/DataStream.hxx"
 #include "s2c_native.hxx"
 
-void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64 value)
+void s2c::encode_uintX(std::ostream& out, const unsigned int bits, const u_int64 value)
   {
     int size;
 
@@ -25,21 +25,21 @@ void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64
     
     switch(size){
       case 8:
-        out->put(((value>>56)&0xff));
+        out.put(((value>>56)&0xff));
       case 7:
-        out->put(((value>>48)&0xff));
+        out.put(((value>>48)&0xff));
       case 6:
-        out->put(((value>>40)&0xff));
+        out.put(((value>>40)&0xff));
       case 5:
-        out->put(((value>>32)&0xff));
+        out.put(((value>>32)&0xff));
       case 4:
-        out->put(((value>>24)&0xff));
+        out.put(((value>>24)&0xff));
       case 3:
-        out->put(((value>>16)&0xff));
+        out.put(((value>>16)&0xff));
       case 2:
-        out->put(((value>>8)&0xff));
+        out.put(((value>>8)&0xff));
       case 1:
-        out->put(value&0xff);
+        out.put(value&0xff);
         break;
       default:
         assert(1==0);
@@ -47,7 +47,7 @@ void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64
   }
   
 
-void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_char &value)
+void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_char &value)
   {
     int size;
     int c;      
@@ -60,13 +60,13 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_char &value)
 
     while(size--){
       value <<=8;
-      c=in->get();
+      c=in.get();
       value |= c;
     }
   }
 
 
-/*void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int8 &value)
+/*void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int8 &value)
   {
     int size;
     int c;      
@@ -84,7 +84,7 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_char &value)
     }
   }
 */
-void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int16 &value)
+void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int16 &value)
   {
     int size;
     int c;
@@ -97,12 +97,12 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int16 &value
 
     while(size--){
       value <<=8;
-      c=in->get();
+      c=in.get();
       value |= c;
     }
   }
 
-void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int32 &value)
+void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int32 &value)
   {
     int size;
     int c;
@@ -115,12 +115,12 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int32 &value
 
     while(size--){
       value <<=8;
-      c=in->get();
+      c=in.get();
       value |= c;
     }
   }
 
-void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int64 &value)
+void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int64 &value)
   {
     int size;
     int c;
@@ -133,19 +133,19 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int64 &value
 
     while(size--){
       value <<=8;
-      c=in->get();
+      c=in.get();
       value |= c;
     }
   }
     
-void s2c::do_indent(std::ostream *out, int indent)
+void s2c::do_indent(std::ostream& out, int indent)
  {
-   while(indent--)  *out  << ' ';
+   while(indent--)  out  << ' ';
  }
 
 // This is really clumsy, but I don't understand rutil
 // TODO: !ekr! cleanup
-void s2c::read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf)
+void s2c::read_varray1(std::istream& in, unsigned int lenlen, resip::Data &buf)
   {
     u_int64 len=0;
     int c;
@@ -154,14 +154,14 @@ void s2c::read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf)
     assert(lenlen<=8);
     while(lenlen--){
       len<<=8;
-      c=in->get();
+      c=in.get();
       len|=c;
     }
     
     resip::DataStream out(buf);
     
     while(len--){
-      c=in->get();
+      c=in.get();
       out.put(c);
     }
     
@@ -175,7 +175,7 @@ s2c::PDU::~PDU()
 std::ostream& 
 operator<<(std::ostream& strm, const s2c::PDU& pdu)
 {
-   pdu.print(&strm);
+   pdu.print(strm);
    return strm;
 }
 
