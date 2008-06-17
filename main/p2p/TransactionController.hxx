@@ -2,11 +2,24 @@
 #define P2P_TRANSACTION_CONTROLLER_HXX
 
 #include <map>
+#include "rutil/Fifo.hxx"
 
 namespace p2p
 {
 
 class TransactionState;
+
+class TransactionMessage
+{
+public:
+private:
+};
+
+class TimerMessage : public TransactionMessage
+{
+public:
+private:
+};
 
 class TransactionController
 {
@@ -18,7 +31,11 @@ class TransactionController
       TransactionController(const TransactionController& rhs);
       TransactionController& operator=(const TransactionController& rhs);
       
-      //Fifo<TransactionMessage> mStateMacFifo;
+      /// Get a message into the transaction controller
+      void send(TransactionMessage* msg);
+      void process();
+
+      resip::Fifo<TransactionMessage> mStateMacFifo;
 
       // stores all of the transactions that are currently active in this stack 
       typedef std::map<UInt64, TransactionState*> TransactionMap;

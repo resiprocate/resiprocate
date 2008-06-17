@@ -211,6 +211,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FetchKind.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\FlowId.hxx"
 				>
 			</File>
