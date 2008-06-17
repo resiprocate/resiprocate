@@ -11,7 +11,7 @@
 namespace p2p
 {
 
-class ReloadMessage;
+class Message;
 class TransactionLayer;
 
 /// This is an abstract base class from which to derive the actually topology plugins
@@ -27,9 +27,9 @@ class TopologyAPI
       void connectionLost( NodeId& node );
        
       // deal with topoogy change messages 
-      void processJoin( ReloadMessage& message );
-      void processUpdate( ReloadMessage& message );
-      void processLeave( ReloadMessage& message );
+      void processJoin( Message& message );
+      void processUpdate( Message& message );
+      void processLeave( Message& message );
       
       // Deal with routing querries 
       NodeId& findNextHop( NodeId& node );

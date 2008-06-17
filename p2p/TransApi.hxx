@@ -24,7 +24,7 @@ class MessageFactory() // some sort sort of factory sigleton for pasing data fro
 // Show me what the elements of a DestinationList look like given they are a
 // variant record
 
-class ReloadMessage
+class Message
 {
    public:
       DestinationList destinationList();
@@ -46,12 +46,12 @@ class MessageContents
 };
 
 // needs classes simular to this for all the message types 
-class FetchReq : public ReloadMessage // Should we derive off ReloadMessage or
+class FetchReq : public Message // Should we derive off Message or
                                       // MEssageContents ????
 {
    public:
 }
-class FetchAns : public ReloadMessage
+class FetchAns : public Message
 {
    public:
 }

@@ -58,7 +58,7 @@ Transporter::addListener(resip::TransportType transport,
 }
 /*  
 void
-Transporter::send(NodeId nodeId, std::auto_ptr<ReloadMessage> msg)
+Transporter::send(NodeId nodeId, std::auto_ptr<Message> msg)
 {
   mCmdFifo.add(new SendReloadCommand(this, nodeId, msg));
 }
