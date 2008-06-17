@@ -11,19 +11,23 @@
 
 using namespace p2p;
 
+
 //Chord::Chord(ConfigObject& config, TransactionLayer& transactionProcessor )
 //{
 //}
-
       
 
 // Messages that the forwarding layer sends to this object
-void Chord::newConnectionFormed( NodeId& node ){}
+void Chord::newConnectionFormed( NodeId& node )
+{
+   // go and add this to the finger table
+}
 
 
 void Chord::connectionLost( NodeId& node )
 {
    // if this is in the finger table, remove it 
+   assert(0);
 }
 
 
@@ -48,7 +52,8 @@ void Chord::processUpdate( Message& message )
 
 void Chord::processLeave( Message& message )
 {
-   // if this is in the neigbor table, remove it and send updates 
+   // if this is in the neighbor table, remove it and send updates 
+   assert(0);
 }
 
 
@@ -156,36 +161,58 @@ bool Chord::addNewNeighbors(  std::vector<NodeId> nodes )
    // tables. If anything changes, it sends updates 
 
    assert( nodes.size() > 0 );
-   
-   ChordNodeId node(nodes[0] );
-   
    bool changed=false;
    
-   if (mNextTable.size() == 0)
+   for (unsigned int n=0; n<nodes.size(); n++ )
    {
-      mNextTable[0] = node; changed=true;
+      ChordNodeId node(nodes[n]);
+      
+      if (mNextTable.size() == 0)
+      {
+         mNextTable[0] = node; changed=true;
+      }
+      else if ( (myNodeId<node) && (node<mNextTable[0]) )
+      {
+         mNextTable[0] = node; changed=true;
+      }
+      
+      if (mPrevTable.size() == 0)
+      {
+         mPrevTable[0] = node; changed=true;
+      }
+      else if ( (mPrevTable[0]<node) && (node<myNodeId) )
+      {
+         mPrevTable[0] = node; changed=true;
+      }   
    }
-   else if ( (myNodeId<node) && (node<mNextTable[0]) )
-   {
-      mNextTable[0] = node; changed=true;
-   }
-
-   if (mPrevTable.size() == 0)
-   {
-      mPrevTable[0] = node; changed=true;
-   }
-   else if ( (mPrevTable[0]<node) && (node<myNodeId) )
-   {
-      mPrevTable[0] = node; changed=true;
-   }   
-
+   
    return changed;
 }
 
 
 bool Chord::addNewFingers( std::vector<NodeId> nodes )
 {
-   return false;
+   assert( nodes.size() > 0 );
+   bool changed=false;
+  
+/* 
+   std::vector<NodeId> set = mFingerTable;
+   set.append( nodes );
+   sort( set.begin() , set.end() );
+   unique( set.begin() , set.end() );
+   
+   // TODO filter the finger for log 2 stuff 
+
+   if ( set == mFingerTable )
+   {
+      // no change happened 
+      return false;
+   }
+
+   mFingerTable = set;
+*/
+
+   return true;
 }
 
 
