@@ -71,7 +71,7 @@ class Message : public Signable, private s2c::ForwardingHdrStruct
 
       // copies via list to dest. list in reverse order
       virtual Message *makeErrorResponse(ErrorResponseCode code, 
-                                         const resip::Data& reason) const = 0; 
+                                         const resip::Data& reason) const;
 
 	  p2p::JoinAns *makeJoinResponse(const resip::Data &overlaySpecific);
 	  p2p::UpdateAns *makeUpdateResponse();

@@ -8,27 +8,11 @@ UpdateReq::getPayload(resip::Data &data) const
 	assert(0);
 }
 
-Message *
-UpdateReq::makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const
-{
-	assert(0);
-	return 0;
-}
-
 void 
 UpdateAns::getPayload(resip::Data &data) const
 {
 	assert(0);
 }
-
-Message *
-UpdateAns::makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const
-{
-	assert(0);
-	return 0;
-}
-
-
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

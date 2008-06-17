@@ -13,7 +13,6 @@ public:
     virtual MessageType getMessageType() const { return Message::JoinAns; }
 
 	virtual void getPayload(resip::Data &data) const;
-	virtual Message *makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const;
 
 protected:
     resip::Data mOverlaySpecific;
@@ -29,7 +28,6 @@ public:
       NodeId getNodeID() const { return mNodeID; }
 
 	  virtual void getPayload(resip::Data &data) const;
-      virtual Message *makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const;
 
 protected:
       NodeId mNodeID;
