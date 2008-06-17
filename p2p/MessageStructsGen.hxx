@@ -24,7 +24,7 @@ public:
 
 enum DestinationType{
    reserved = 0,
-   peer = 2,
+   peer = 1,
    resource = 2,
    compressed = 3
 };
@@ -40,18 +40,15 @@ public:
           tResource=2,
           tCompressed=3
    };
-
    struct {
-     struct {
-          NodeIdStruct*                 mNodeId;
-     } mPeer;
-     struct {
-          ResourceIdStruct*             mResourceId;
-     } mResource;
-     struct {
-          std::vector<unsigned char>    mCompressedId;
-     } mCompressed;
-   } u;
+        NodeIdStruct*                 mNodeId;
+   } mPeer;
+   struct {
+        ResourceIdStruct*             mResourceId;
+   } mResource;
+   struct {
+        std::vector<unsigned char>    mCompressedId;
+   } mCompressed;
 
 
 };

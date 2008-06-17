@@ -6,7 +6,7 @@
         opaque       id<0..2^8-1>;
       } ResourceId;
       
-      enum {reserved(0), peer(2), resource(2), compressed(3), (255) }
+      enum {reserved(0), peer(1), resource(2), compressed(3), (255) }
            DestinationType;
      
       select (destination_type) {

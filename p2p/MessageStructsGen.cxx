@@ -12,7 +12,7 @@ namespace s2c {
 
 // Classes for NodeIdStruct */
 
-void NodeIdStruct :: print(std::ostream& out, int indent) const
+void NodeIdStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
    (out) << "NodeId:\n";
@@ -44,7 +44,7 @@ void NodeIdStruct :: encode(std::ostream& out)
 
 // Classes for ResourceIdStruct */
 
-void ResourceIdStruct :: print(std::ostream& out, int indent) const
+void ResourceIdStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
    (out) << "ResourceId:\n";
@@ -92,11 +92,41 @@ void ResourceIdStruct :: encode(std::ostream& out)
 
 // Classes for DestinationDataStruct */
 
+void DestinationDataStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding DestinationDataStruct");
+   switch(mType) {
+      case 1:
+            mPeer.mNodeId->encode(out);
+          break;
+
+      case 2:
+            mResource.mResourceId->encode(out);
+          break;
+
+      case 3:
+            {
+   long pos1=out.tellp();
+   out.seekp(pos1 + 1);
+   for(unsigned int i=0;i<mCompressed.mCompressedId.size();i++)
+               encode_uintX(out, 8, mCompressed.mCompressedId[i]);
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 8, (pos2 - pos1) - 1);
+   out.seekp(pos2);
+   }
+          break;
+
+       default: /* User error */ 
+          assert(1==0);
+   }
+
+};
 
 
 // Classes for DestinationStruct */
 
-void DestinationStruct :: print(std::ostream& out, int indent) const
+void DestinationStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
    (out) << "Destination:\n";
@@ -105,7 +135,7 @@ void DestinationStruct :: print(std::ostream& out, int indent) const
    (out)  << "type:" << std::hex << (unsigned long long) mType << "\n"; 
    do_indent(out, indent);
    (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
-   //mDestinationData->print(out, indent);
+   mDestinationData->print(out, indent);
 };
 
 void DestinationStruct :: decode(std::istream& in)
@@ -121,18 +151,18 @@ void DestinationStruct :: decode(std::istream& in)
  DebugLog( << "mLength");
 
    mDestinationData = new DestinationDataStruct();
-   //mDestinationData->decode(in);
+   mDestinationData->decode(in);
 
 };
 
 void DestinationStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding DestinationStruct");
-   encode_uintX(out, 8, (u_int64)mType);
+   encode_uintX(out, 8, (u_int64)(mType));
 
    encode_uintX(out, 8, mLength);
 
-   //mDestinationData->encode(out);
+   mDestinationData->encode(out);
 
 };
 
@@ -140,7 +170,7 @@ void DestinationStruct :: encode(std::ostream& out)
 
 // Classes for ForwardingHdrStruct */
 
-void ForwardingHdrStruct :: print(std::ostream& out, int indent) const
+void ForwardingHdrStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
    (out) << "ForwardingHdr:\n";
