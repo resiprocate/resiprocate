@@ -175,6 +175,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FlowId.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Message.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\NodeId.hxx"
 				>
 			</File>
