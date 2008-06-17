@@ -1,6 +1,7 @@
 #ifndef __P2P_FLOW_ID_HXX
 #define __P2P_FLOW_ID_HXX 1
 
+#include "rutil/Socket.hxx"
 #include "p2p/NodeId.hxx"
 
 namespace p2p
@@ -16,7 +17,7 @@ class FlowId
 
       // This is descriptor for now; it changes to something else
       // when we add ICE
-      int mDescriptor;
+      resip::Socket mDescriptor;
 };
 
 }
