@@ -13,7 +13,7 @@ ChordUpdate::ChordUpdate(const resip::Data &chordUpdateBody) :
 	mUpdateBody(chordUpdateBody),
 	mUpdateType(NotSpecified)
 {
-
+	parse();
 }
 
 void 
@@ -75,6 +75,13 @@ ChordUpdate::encode() const
 	// not complete
 	assert(0);
    return resip::Data::Empty;
+}
+
+void
+ChordUpdate::parse()
+{
+	// parse the blob and fill the member variables
+	assert(0);
 }
 
 /* ======================================================================
