@@ -1,6 +1,9 @@
 #ifndef __P2P_TRANSPORTER_HXX
 #define __P2P_TRANSPORTER_HXX 1
 
+#include <vector>
+#include <map>
+
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/TransportType.hxx"
@@ -16,28 +19,66 @@ class Candidate;
 class ReloadMessage;
 class ConfigObject;
 class FlowId;
+class TransporterCommand;
 
 class Transporter
 {
-   Transporter(resip::Fifo<TransporterMessage>& rxFifo,
-               ConfigObject &configuration);
+   public:
+      friend class AddListenerCommand;
+      friend class SendReloadCommand;
+      friend class SendApplicationCommand;
+      friend class CollectLocalCandidatesCommand;
+      friend class ConectReloadCommand;
+      friend class ConnectApplicationCommand;
 
-   bool addListener(resip::TransportType transport,
-                    resip::GenericIPAddress &address);
+      Transporter(resip::Fifo<TransporterMessage>& rxFifo,
+                  ConfigObject &configuration);
 
-   bool send(NodeId nodeId, ReloadMessage &msg);
-   bool send(FlowId flowId, resip::Data data);
+      bool process(int seconds=0);
+   
+      void addListener(resip::TransportType transport,
+                       resip::GenericIPAddress &address);
+   
+      void send(NodeId nodeId, std::auto_ptr<ReloadMessage> msg);
+      void send(FlowId flowId, std::auto_ptr<resip::Data> data);
+   
+      void collectLocalCandidates();
+   
+      void connect(NodeId nodeId, 
+                   std::vector<Candidate> remoteCandidates,
+                   resip::GenericIPAddress &stunTurnServer);
+   
+      void connect(NodeId nodeId, 
+                   std::vector<Candidate> remoteCandidates,
+                   unsigned short application,
+                   resip::GenericIPAddress &stunTurnServer);
 
-   void collectLocalCandidates();
+   protected:
+      void addListenerImpl(resip::TransportType transport,
+                           resip::GenericIPAddress &address);
+   
+      void sendImpl(NodeId nodeId, std::auto_ptr<ReloadMessage> msg);
+      void sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data);
+   
+      void collectLocalCandidatesImpl();
+   
+      void connectImpl(NodeId nodeId, 
+                       std::vector<Candidate> remoteCandidates,
+                       resip::GenericIPAddress &stunTurnServer);
+   
+      void connectImpl(NodeId nodeId, 
+                       std::vector<Candidate> remoteCandidates,
+                       unsigned short application,
+                       resip::GenericIPAddress &stunTurnServer);
 
-   bool connect(NodeId nodeId, 
-                std::vector<Candidate> remoteCandidates,
-                resip::GenericIPAddress &stunTurnServer);
+   private:
+     resip::Fifo<TransporterCommand> mCmdFifo;
+     resip::Fifo<TransporterMessage> &mRxFifo;
 
-   bool connect(NodeId nodeId, 
-                std::vector<Candidate> remoteCandidates,
-                unsigned short application,
-                resip::GenericIPAddress &stunTurnServer);
+     std::map<NodeId, FlowId> mNodeFlowMap;
+
+     // This will change when we add ice
+     std::map<int, FlowId> mDescriptorFlowMap;
 };
 
 }
