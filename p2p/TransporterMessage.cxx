@@ -43,6 +43,16 @@ TransporterMessage::castMessageArrived()
    return 0;
 }
 
+LocalCandidatesCollected*
+TransporterMessage::castLocalCandidatesCollected()
+{
+   if (getMessageType() == LocalCandidatesCollectedType)
+   {
+      return static_cast<LocalCandidatesCollected*>(this);
+   }
+   return 0;
+}
+
 }
 
 
