@@ -103,6 +103,13 @@ int main(argc,argv)
     argc-=optind;
     argv+=optind;
 
+    /* Read the prologue */
+    if(!(in=freopen("./decls.s2c","r",stdin))){
+      nr_verr_exit("Couldn't read decls");
+    }
+    yyparse();
+    fclose(in);
+
     if(argc==1){
       char *ptr,*sl=0;
       if(!(in=freopen(argv[0],"r",stdin)))

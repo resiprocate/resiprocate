@@ -240,17 +240,17 @@ declaration : NAME_ NAME_ ';'
 
 
 varray_size: 
-            NUM_ '^' NUM_ '-' NUM_ 
+            NUM_ DOT_DOT_ NUM_ '^' NUM_ '-' NUM_ 
             {
               unsigned long long l;
               int i;
               
-              if($3 <= 0)
-                nr_verr_exit("Bogus exponent %d in size expression",$3);
-              l=$1;
+              if($5 <= 0)
+                nr_verr_exit("Bogus exponent %d in size expression",$5);
+              l=$3;
 
-              for(i = 1; i<$3;i++){
-                l *= $1;
+              for(i = 1; i<$5;i++){
+                l *= $3;
               }
               
               l -= $5;
@@ -293,8 +293,37 @@ primitive : PRIMITIVE_ NAME_ p_type  NUM_ ';'
     }
   }    
 
-enum: ENUM_ '{' enumerateds '}' NAME_ ';'
+enum_start: ENUM_
+  {
+    p_decl *decl=0;
+
+    r_log(LOG_GENERIC,LOG_DEBUG,"enums start\n");
+
+    decl=RCALLOC(sizeof(p_decl));
+
+    decl->type=TYPE_ENUM;
+    STAILQ_INIT(&decl->u.enum_.members);    
+    push_decl(decl);
+    STAILQ_INSERT_TAIL(&public_decls,decl,entry);  // All decls public here
+  }
+
+enum: enum_start '{' enumerateds '}' NAME_ ';'
+{
+  int r;
+
+  CURRENT_DECL->name=r_strdup($5);
   
+  r_log(LOG_GENERIC,LOG_DEBUG,"Finished with enum %s\n",$5);
+  
+  if(r=r_assoc_insert(types,CURRENT_DECL->name,strlen(CURRENT_DECL->name),
+      CURRENT_DECL,0,0,R_ASSOC_NEW)){
+    r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert enum %s. Exists?\n",$5);
+    exit(1);
+  }
+
+  pop_decl;
+}
+
 enumerateds: enumerated {};
              | enumerated ',' enumerateds {};
 
@@ -305,16 +334,16 @@ enumerated: NAME_ '(' NUM_ ')'
     decl=RCALLOC(sizeof(p_decl));
 
     decl->name=r_strdup($1);
-    decl->u.enum_.value=$3;
+    decl->u.enum_value_.value=$3;
     decl->type=TYPE_ENUM;
-
-    if(r=r_assoc_insert(types,decl->name,strlen(decl->name),
-         decl,0,0,R_ASSOC_NEW)){
-      r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert enum %s. Exists?\n",decl->name);
-      exit(1);
-    }
+    
+    STAILQ_INSERT_TAIL(&CURRENT_DECL->u.enum_.members,decl,entry);
   }    
+| '(' NUM_ ')'
 
+  {
+    CURRENT_DECL->u.enum_.max=$2;
+  }
 
 select: select_start '{' select_arms '}' NAME_ ';' 
 {
@@ -388,12 +417,12 @@ select_arm_start: CASE_ NAME_ ':'
       exit(1);
     }
     value=v;
-    if(value->type != TYPE_ENUM)
+    if(value->type != TYPE_ENUM_VALUE)
       nr_verr_exit("%s is not a constant/enum",value->name);
 
     decl->type=TYPE_SELECT_ARM;
     decl->name=r_strdup($2);
-    decl->u.select_arm_.value=value->u.enum_.value;
+    decl->u.select_arm_.value=value->u.enum_value_.value;
 
     STAILQ_INIT(&decl->u.select_arm_.members);
     

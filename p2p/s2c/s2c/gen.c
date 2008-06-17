@@ -61,7 +61,7 @@ static char *type2class(char *name)
 
     buf=RCALLOC(strlen(name)+10);
 
-    sprintf(buf,"%sPdu",camelback(name));
+    sprintf(buf,"%sStruct",camelback(name));
     
     return buf;
   }
@@ -73,6 +73,9 @@ static char *s2c_decl2type(p_decl *decl)
 
     if(decl->type==TYPE_PRIMITIVE){
       return(decl->u.primitive_.type);
+    }
+    else if(decl->type==TYPE_ENUM){
+      return(camelback(decl->name));
     }
     else{
       snprintf(buf,100,"%s%c",type2class(decl->name),'*');
@@ -163,9 +166,10 @@ static int s2c_gen_pdu_h_member(p_decl *member, FILE *out)
 
     switch(member->type){
       case TYPE_REF:
-        s2c_print_a_b_indent(s2c_decl2type(member->u.ref_.ref),
+        if(member->u.ref_.ref->type == TYPE_ENUM){
+          s2c_print_a_b_indent(s2c_decl2type(member->u.ref_.ref),
             name2var(member->name),out);
-
+        }
         break;
       case TYPE_VARRAY:
         snprintf(buf,sizeof(buf),"std::vector<%s>",
@@ -214,30 +218,33 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out)
         fprintf(out,"\n   };\n");
     }
 
+
+    fprintf(out, "\n   union {\n");
+    
+    /* Now emit the class for each select arm */
+    for(arm=STAILQ_FIRST(&decl->u.select_.arms);arm;arm=STAILQ_NEXT(arm,entry)){
+      p_decl *member;
+      char armname[100];
+      
+      snprintf(armname,100,"m%s",camelback(arm->name));
+
+      fprintf(out,"     struct {\n");
+
+      for(member=STAILQ_FIRST(&arm->u.select_arm_.members);member;member=STAILQ_NEXT(member,entry)){
+              fprintf(out,"       ");
+              s2c_gen_pdu_h_member(member, out);
+      }
+      
+      fprintf(out,"     } %s;\n",armname);
+    }
+
+    fprintf(out, "   } u;\n");
+
     s2c_gen_member_fxns_h(type2class(decl->name),decl->name,out);
 
     fprintf(out,"};\n\n");
 
 
-    /* Now emit the class for each select arm */
-    for(arm=STAILQ_FIRST(&decl->u.select_.arms);arm;arm=STAILQ_NEXT(arm,entry)){
-      p_decl *member;
-      char classname[100];
-      
-      snprintf(classname,100,"%s__%s",type2class(decl->name), 
-        camelback(arm->name));
-
-      fprintf(out,"class %s : public %s {\npublic:\n", classname,
-        type2class(decl->name));
-      
-      for(member=STAILQ_FIRST(&arm->u.select_arm_.members);member;member=STAILQ_NEXT(member,entry)){
-        s2c_gen_pdu_h_member(member, out);
-      }
-
-      s2c_gen_member_fxns_h(classname,arm->name,out);
-
-      fprintf(out,"};\n\n\n");
-    }
 
     return(0);
   }
@@ -265,6 +272,28 @@ static int s2c_gen_pdu_h_struct(p_decl *decl, FILE *out)
     return(0);
   }
 
+static int s2c_gen_pdu_h_enum(p_decl *decl, FILE *out)
+  {
+    p_decl *entry;
+
+    fprintf(out,"enum {\n");
+    
+    entry=STAILQ_FIRST(&decl->u.enum_.members);
+    while(entry){
+      fprintf(out,"   %s = %d",entry->name,entry->u.enum_value_.value);
+      entry=STAILQ_NEXT(entry,entry);
+      if(entry){
+        fprintf(out,",\n");
+      }
+      else{
+        fprintf(out,"\n");
+      }
+    }
+    
+    fprintf(out,"} %s;\n\n",camelback(decl->name));
+    
+    return(0);
+  }
 
 int s2c_gen_pdu_h(p_decl *decl, FILE *out)
   {
@@ -273,6 +302,9 @@ int s2c_gen_pdu_h(p_decl *decl, FILE *out)
     }
     else if(decl->type==TYPE_SELECT){
       return(s2c_gen_pdu_h_select(decl, out));
+    }
+    else if(decl->type==TYPE_ENUM){
+      return(s2c_gen_pdu_h_enum(decl,out));
     }
     else 
       nr_verr_exit("Internal error: can't generate .h for PDU %s",decl->name);
@@ -576,13 +608,12 @@ static int s2c_gen_pdu_c_struct(p_decl *decl, FILE *out)
 
 static int s2c_gen_pdu_c_select(p_decl *decl, FILE *out)
   {
-#if 0
     fprintf(out,"\n\n// Classes for %s */\n\n",type2class(decl->name));
 
     // s2c_gen_print_c_struct(decl, out);
     // s2c_gen_decode_c_struct(decl, out);
     s2c_gen_encode_c_struct(decl, out);
-#endif    
+
     return(0);
   }
 
@@ -593,6 +624,9 @@ int s2c_gen_pdu_c(p_decl *decl, FILE *out)
     }
     else if(decl->type==TYPE_SELECT){
       return(s2c_gen_pdu_c_select(decl, out));
+    }
+    else if(decl->type==TYPE_ENUM){
+      // Do nothing
     }
     else 
       nr_verr_exit("Internal error: can't generate .c for PDU %s",decl->name);
