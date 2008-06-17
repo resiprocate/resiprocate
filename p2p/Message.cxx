@@ -50,12 +50,42 @@ Message::parse(const resip::Data &message, NodeId senderID)
 	return newMessage;
 }
 
+UInt8 
+Message::getTTL() const
+{
+	return mTtl;
+}
+
+UInt32 
+Message::getOverlay() const
+{
+	return mOverlay;
+}
+
+UInt64 
+Message::getTransactionID() const
+{
+	return mTransactionId;
+}
+
+UInt16 
+Message::getFlags() const 
+{
+	return mFlags;
+}
+
+
 resip::Data
 Message::encode() const
 {
 	resip::Data encodedData;
-	
-	assert(0);
+
+	// encode forwarding header
+
+	// ask message type to encode it's payload
+	encodePayload(encodedData);
+
+	// we should optimize this eventually to avoid this copy
 	return encodedData;
 }
 
