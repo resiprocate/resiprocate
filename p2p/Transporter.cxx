@@ -144,7 +144,9 @@ Transporter::Transporter (resip::Fifo<TransporterMessage>& rxFifo,
    // away when we add ICE.
    resip::Data localIp = resip::DnsUtil::getLocalIpAddress();
    resip::DnsUtil::inet_pton(localIp, mLocalAddress.sin_addr);
+#ifndef WIN32
    mLocalAddress.sin_len = sizeof(struct sockaddr_in);
+#endif
    mLocalAddress.sin_family = AF_INET;
    mLocalAddress.sin_port = 39835;
    memset(mLocalAddress.sin_zero, 0, sizeof(mLocalAddress.sin_zero));
@@ -157,7 +159,7 @@ Transporter::Transporter (resip::Fifo<TransporterMessage>& rxFifo,
 
 Transporter::~Transporter()
 {
-   ::close(mTcpDescriptor);
+   resip::closeSocket(mTcpDescriptor);
 }
 
 void
