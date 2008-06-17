@@ -1,6 +1,7 @@
 #ifndef __P2P_CANDIDATE_HXX
 #define __P2P_CANDIDATE_HXX 1
 
+#include "rutil/GenericIPAddress.hxx"
 #include "rutil/TransportType.hxx"
 
 namespace p2p
@@ -8,11 +9,11 @@ namespace p2p
 
 class Candidate
 {
-   Candidate(resip::TransportType type, resip::GenericIpAddress& address);
+   Candidate(resip::TransportType type, resip::GenericIPAddress& address);
 
 private:
    resip::TransportType    mTranportType;
-   resip::GenericIpAddress mAddress;
+   resip::GenericIPAddress mAddress;
    // TODO add ice specific members
 };
 
