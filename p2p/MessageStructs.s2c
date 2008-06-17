@@ -30,6 +30,26 @@
         DestinationData         destination_data;
       } Destination;
 
+       enum {reserved1(0), signer_identity_peer (1), 
+             signer_identity_name (2), signer_identity_certificate (3), 
+             (255)} SignerIdentityType;
+
+       struct {
+         SignerIdentityType     identity_type;
+         opaque			signer_identity<0..2^16-1>;
+       } SignerIdentity;
+
+       struct {
+          uint8 sig;
+          uint8 hash;
+       }  SignatureAndHashAlgorithm;	
+
+       struct  {
+          SignatureAndHashAlgorithm     algorithm;
+          SignerIdentity                identity;
+          opaque                        signature_value<0..2^16-1>;
+       } Signature;
+
 struct {
        uint8   relo_token;
        uint32  overlay;
@@ -44,4 +64,6 @@ struct {
        Destination via_list<0..2^16-1>;
        Destination destination_list<0..2^16-1>;
        uint16  route_log_len_dummy;
-} ForwardingHdr;
+       uint16  message_code;
+       opaque  payload<0..2^24-1>;
+} ForwardingLayerMessage;
