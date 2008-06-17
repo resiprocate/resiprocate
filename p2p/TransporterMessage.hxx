@@ -20,6 +20,7 @@ class LocalCandidatesCollected;
 
 class ReloadMessage;
 class FlowId;
+class Candidate;
 
 class TransporterMessage
 {
@@ -30,6 +31,7 @@ class TransporterMessage
       virtual ConnectionClosed* castConnectionClosed();
       virtual ApplicationMessageArrived* castApplicationMessageArrived();
       virtual ReloadMessageArrived* castReloadMessageArrived();
+      virtual LocalCandidatesCollected* castLocalCandidatesCollected();
 
    protected:
 
@@ -38,7 +40,8 @@ class TransporterMessage
          ConnectionOpenedType,
          ConnectionClosedType,
          ApplicationMessageArrivedType,
-         ReloadMessageArrivedType
+         ReloadMessageArrivedType,
+         LocalCandidatesCollectedType
       } MessageType;
 
       virtual MessageType getMessageType() = 0;
@@ -85,6 +88,15 @@ class ApplicationMessageArrived : public TransporterMessage
 
    protected:
       virtual MessageType getMessageType() {return ApplicationMessageArrivedType;}
+};
+
+class LocalCandidatesCollected : public TransporterMessage
+{
+   public:
+      std::vector<Candidate> &getCandidates();
+
+   protected:
+      virtual MessageType getMessageType() {return LocalCandidatesCollectedType;}
 };
 
 }
