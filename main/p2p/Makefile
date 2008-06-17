@@ -22,7 +22,7 @@ SRC 	+= Join.cxx \
 		TopologyAPI.cxx \
 		ChordTopology.cxx \
 		SelectTransporter.cxx \
-		ForwardingGen.cxx \
+		MessageStructsGen.cxx \
 		ChordUpdate.cxx \
 		Update.cxx
 
