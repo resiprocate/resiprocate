@@ -1,31 +1,6 @@
-#ifndef __P2P_FORWARDINGLAYER_HXX
-#define __P2P_FORWARDINGLAYER_HXX 1
-
-#include "rutil/Data.hxx"
-#include "rutil/Fifo.hxx"
-
-#include "p2p/NodeId.hxx"
-#include "p2p/ResourceId.hxx"
-#include "p2p/Message.hxx"
-
+#include "p2p/ForwardingLayer.hxx"
 namespace p2p
 {
-class Dispatcher;
-
-class ForwardingLayer: public Postable<Message>
-{
-   public:
-      ForwardingLayer(Dispatcher& dispatcher, 
-                      Transporter& transport,
-                      TopologyAPI& topology)
-         : mDispatcher(dispatcher),
-           mTransport(transport),
-           mTopology(topology) {;}
-   private:
-      Dispatcher& mDispatcher;
-      Transporter& mTransport;
-      TopologyAPI& mTopology;
-};
 
 }
 
