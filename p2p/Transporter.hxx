@@ -35,6 +35,8 @@ class Transporter
       Transporter(resip::Fifo<TransporterMessage>& rxFifo,
                   ConfigObject &configuration);
 
+      ~Transporter();
+
       bool process(int seconds=0);
    
       void addListener(resip::TransportType transport,
@@ -87,6 +89,8 @@ class Transporter
      resip::Socket mTcpDescriptor;
      unsigned short mTcpSocket;
      resip::GenericIPAddress mTcpAddress;
+
+     struct sockaddr_in mLocalAddress;
 };
 
 }
