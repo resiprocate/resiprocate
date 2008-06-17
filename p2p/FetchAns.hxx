@@ -2,7 +2,7 @@
 #define P2P_FetchAns_hxx
 
 #include "Message.hxx"
-#include "DataSpecifier.hxx"
+#include "AbstractValue.hxx"
 #include "rutil/SharedPtr.hxx"
 
 namespace p2p
