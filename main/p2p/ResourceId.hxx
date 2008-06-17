@@ -1,22 +1,28 @@
 #ifndef __P2P_RESOURCE_ID_HXX
 #define __P2P_RESOURCE_ID_HXX 1
 
-#include "rutil/Data.hxx"
+namespace resip
+{
+class Data;
+}
 
 namespace p2p
 {
 
-// This is pretty much wrong, but it serves as a good placeholder at
-// the moment.
 class ResourceId
 {
    public:	
-      ResourceId() {} // just as wrong, but lets it compile
-      resip::Data value();
-      bool operator= ( const ResourceId& foo );
-};
+      ResourceId(const resip::Data& rid);
+      ResourceId(const ResourceId& rhs);
+      
+      const resip::Data& value() const;
+      bool operator= ( const ResourceId& rhs );
 
-   
+   private:
+      ResourceId();
+
+      const resip::Data mResourceId;
+};
 
 }
 
