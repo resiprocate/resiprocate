@@ -217,7 +217,7 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out)
     }
 
 
-    fprintf(out, "\n   union {\n");
+    fprintf(out, "\n   struct {\n");
     
     /* Now emit the union for each select arm */
     for(arm=STAILQ_FIRST(&decl->u.select_.arms);arm;arm=STAILQ_NEXT(arm,entry)){
@@ -274,7 +274,7 @@ static int s2c_gen_pdu_h_enum(p_decl *decl, FILE *out)
   {
     p_decl *entry;
 
-    fprintf(out,"enum {\n");
+    fprintf(out,"enum %s{\n", camelback(decl->name));
     
     entry=STAILQ_FIRST(&decl->u.enum_.members);
     while(entry){
@@ -288,7 +288,7 @@ static int s2c_gen_pdu_h_enum(p_decl *decl, FILE *out)
       }
     }
     
-    fprintf(out,"} %s;\n\n",camelback(decl->name));
+    fprintf(out,"};\n\n");
     
     return(0);
   }
@@ -334,9 +334,13 @@ static int s2c_gen_encode_c_simple_type(p_decl *decl, char *reference, FILE *out
   {
     /* We can get a primitive as a ref or directly here because of arrays versus
      simple declarations*/
-    if(decl->u.ref_.ref->type==TYPE_PRIMITIVE)
+    if(decl->u.ref_.ref->type==TYPE_PRIMITIVE){
       fprintf(out,"   encode_uintX(out, %d, %s);\n",
         decl->u.ref_.ref->u.primitive_.bits,reference);
+    }
+    else if(decl->u.ref_.ref->type==TYPE_ENUM_VALUE){
+      fprintf(stderr,"XXX\n");
+    }
     else if(decl->type==TYPE_PRIMITIVE)
       fprintf(out,"   encode_uintX(out, %d, %s);\n",
         decl->u.primitive_.bits,reference);
@@ -361,20 +365,20 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent)
           char reference[100];
           int lengthbytes=max2bytes(member->u.varray_.length);
 
-          fprintf(out,"   long pos1=out->tellp();\n");
-          fprintf(out,"   out->seekp(pos1 + %d);\n",lengthbytes);
+          fprintf(out,"   long pos1=out.tellp();\n");
+          fprintf(out,"   out.seekp(pos1 + %d);\n",lengthbytes);
           
-          fprintf(out,"   for(int i=0;i<%s.size();i++)\n",name2var(member->name));
+          fprintf(out,"   for(unsigned int i=0;i<%s.size();i++)\n",name2var(member->name));
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
           s2c_gen_encode_c_simple_type(member->u.varray_.ref,reference,out);
 
-          fprintf(out,"   long pos2=out->tellp();\n");
-          fprintf(out,"   out->seekp(pos1);\n");
+          fprintf(out,"   long pos2=out.tellp();\n");
+          fprintf(out,"   out.seekp(pos1);\n");
           fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
             lengthbytes*8, lengthbytes);
-          fprintf(out,"   out->seekp(pos2);\n");
+          fprintf(out,"   out.seekp(pos2);\n");
 
           break;
         }
@@ -384,7 +388,7 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent)
           char reference[100];
           int ct=(member->u.array_.length*8) / (member->u.array_.ref->u.primitive_.bits);
           
-          fprintf(out,"   for(int i=0;i<%d;i++)\n",ct);
+          fprintf(out,"   for(unsigned int i=0;i<%d;i++)\n",ct);
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
@@ -416,6 +420,37 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
     }
 
     fprintf(out,"};\n\n");
+
+    return(0);
+  }
+
+static int s2c_gen_encode_c_select(p_decl *decl, FILE *out)
+  {
+#if 0
+    p_decl *arm,*entry;
+
+    fprintf(out,"void %s :: encode(std::ostream& out)\n{\n",type2class(decl->name));
+    
+    fprintf(out,"   DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
+
+    fprintf(out,"   switch(mType) {\n");
+    arm=STAILQ_FIRST(&decl->u.select_.arms);
+    while(arm){
+      fprintf(out,"      case %d:\n",arm->u.select_arm_.value);
+      entry=STAILQ_FIRST(&arm->u.select_arm_.members);
+      while(entry){
+        s2c_gen_encode_c_member(entry, out, 9);
+        entry=STAILQ_NEXT(entry,entry);
+      }
+      fprintf(out,"          break;\n\n");
+      arm=STAILQ_NEXT(arm,entry);
+      fprintf(out,"       default: /* User error */ \n");
+      fprintf(out,"          assert(1==0);\n");
+      fprintf(out,"   }\n");
+    }
+
+    fprintf(out,"};\n\n");
+#endif
 
     return(0);
   }
@@ -452,7 +487,7 @@ static int s2c_gen_print_c_member(p_decl *member, FILE *out)
         break;
       case TYPE_VARRAY:
         {
-          fprintf(out,"   for(int i=0;i<%s.size();i++){\n",name2var(member->name));
+          fprintf(out,"   for(unsigned int i=0;i<%s.size();i++){\n",name2var(member->name));
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
 
           for(i=0;i<3;i++) fputc(' ',out);
@@ -466,7 +501,7 @@ static int s2c_gen_print_c_member(p_decl *member, FILE *out)
           char reference[100];
           int ct=(member->u.array_.length*8) / (member->u.array_.ref->u.primitive_.bits);
           
-          fprintf(out,"   for(int i=0;i<%d;i++) {\n",ct);
+          fprintf(out,"   for(unsigned int i=0;i<%d;i++) {\n",ct);
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
           for(i=0;i<3;i++) fputc(' ',out);
           s2c_gen_print_c_simple_type(member->u.array_.ref,reference,out);
@@ -547,7 +582,7 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent)
           fprintf(out,"      %s.push_back(0);\n",name2var(member->name));
           snprintf(reference,sizeof(reference),"%s[i++]",name2var(member->name));
           for(i=0;i<indent+3;i++) fputc(' ',out);
-          s2c_gen_decode_c_simple_type(member->u.varray_.ref,reference,"&in2",out);
+          s2c_gen_decode_c_simple_type(member->u.varray_.ref,reference,"in2",out);
           fprintf(out,"   }\n;");
         }
         break;
@@ -556,7 +591,7 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent)
           char reference[100];
           int ct=(member->u.array_.length*8) / (member->u.array_.ref->u.primitive_.bits);
           
-          fprintf(out,"   for(int i=0;i<%d;i++)\n",ct);
+          fprintf(out,"   for(unsigned int i=0;i<%d;i++)\n",ct);
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
@@ -610,7 +645,7 @@ static int s2c_gen_pdu_c_select(p_decl *decl, FILE *out)
 
     // s2c_gen_print_c_struct(decl, out);
     // s2c_gen_decode_c_struct(decl, out);
-    s2c_gen_encode_c_struct(decl, out);
+    s2c_gen_encode_c_select(decl, out);
 
     return(0);
   }

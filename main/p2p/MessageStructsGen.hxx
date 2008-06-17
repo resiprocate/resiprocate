@@ -22,9 +22,9 @@ public:
 };
 
 
-enum DestinationType {
+enum DestinationType{
    reserved = 0,
-   peer = 1,
+   peer = 2,
    resource = 2,
    compressed = 3
 };
@@ -39,7 +39,7 @@ public:
    };
 
    struct {
-     struct A3 {
+     struct {
           NodeIdStruct*                 mNodeId;
      } mPeer;
      struct {
