@@ -109,6 +109,7 @@ int main(argc,argv)
     }
     yyparse();
     fclose(in);
+    yyset_lineno(1);
 
     if(argc==1){
       char *ptr,*sl=0;
@@ -140,11 +141,11 @@ int main(argc,argv)
     else{
       nr_verr_exit("usage: s2c [-b base_name] <input-file>");
     }
-    snprintf(nameh,sizeof(nameh),"%s.hxx",base_name);
+    snprintf(nameh,sizeof(nameh),"%sGen.hxx",base_name);
     if(!(doth=fopen(nameh,"w")))
       nr_verr_exit("Couldn't open %s",nameh); 
 
-    snprintf(namec,sizeof(namec),"%s.cxx",base_name);
+    snprintf(namec,sizeof(namec),"%sGen.cxx",base_name);
     if(!(dotc=fopen(namec,"w")))
       nr_verr_exit("Couldn't open %s",namec);
     

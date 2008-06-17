@@ -1,5 +1,35 @@
 #include "SignatureContext.hxx"
 
+#if 0
+#include <openssl/evp.h>
+
+namespace p2p {
+  SignatureContext::SignatureContext(ConfigObject &config)
+    : mConfig(config)
+    {
+      ;
+    }
+
+
+  // Private commands
+  void digestData(const vector<const Data> toBeSigned, 
+    unsigned char digest[32])
+    {
+      
+    }
+  
+  Data SignatureContext::computeSignature(const vector<const Data> toBeSigned)
+    {
+      UCHAR digest[32];
+
+    }
+
+
+  
+
+}
+#endif
+
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
  *  All rights reserved.

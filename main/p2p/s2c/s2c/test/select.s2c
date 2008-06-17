@@ -1,9 +1,9 @@
 enum { false (0), true(1), (255) } Boolean;
 
-struct {
-       
-
-
-
-
-} SelectStruct;
+       select (Boolean) {
+         case false:
+           uint8    false_arm;
+         case true:
+           uint16   true_arm1;
+           opaque   true_arm2[10];
+       } named;
