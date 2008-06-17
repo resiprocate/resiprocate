@@ -2,7 +2,7 @@
 #include <iomanip>
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
-#include "Forwarding.hxx"
+#include "ForwardingGen.hxx"
 
 namespace s2c {
 
