@@ -1,7 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include "rutil/Logger.hxx"
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
+#include "P2PSubsystem.hxx"
+#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 #include "MessageStructsGen.hxx"
 
 namespace s2c {
@@ -57,6 +58,7 @@ void ResourceIdStruct :: print(std::ostream& out, int indent) const
 void ResourceIdStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ResourceIdStruct");
+   {
    resip::Data d;
    read_varray1(in, 1, d);
    resip::DataStream in2(d);
@@ -66,12 +68,14 @@ void ResourceIdStruct :: decode(std::istream& in)
       decode_uintX(in2, 8, mId[i++]);
  DebugLog( << "mId[i++]");
    }
-;
+;   }
+
 };
 
 void ResourceIdStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding ResourceIdStruct");
+   {
    long pos1=out.tellp();
    out.seekp(pos1 + 1);
    for(unsigned int i=0;i<mId.size();i++)
@@ -80,6 +84,7 @@ void ResourceIdStruct :: encode(std::ostream& out)
    out.seekp(pos1);
    encode_uintX(out, 8, (pos2 - pos1) - 1);
    out.seekp(pos2);
+   }
 
 };
 
@@ -96,8 +101,8 @@ void DestinationStruct :: print(std::ostream& out, int indent) const
    do_indent(out,indent);
    (out) << "Destination:\n";
    indent+=2;
-   
-   //mType->print(out, indent);
+   do_indent(out, indent);
+   (out)  << "type:" << std::hex << (unsigned long long) mType << "\n"; 
    do_indent(out, indent);
    (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
    mDestinationData->print(out, indent);
@@ -106,12 +111,24 @@ void DestinationStruct :: print(std::ostream& out, int indent) const
 void DestinationStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding DestinationStruct");
+   {
+      u_int32 v;
+      decode_uintX(in, 8, v);
+      mType=(DestinationType)v;
+   }
+
+   decode_uintX(in, 8, mLength);
+ DebugLog( << "mLength");
+
+   mDestinationData = new DestinationDataStruct();
+   mDestinationData->decode(in);
+
 };
 
 void DestinationStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding DestinationStruct");
-   //mType->encode(out);
+   encode_uintX(out, 8, (u_int64)mType);
 
    encode_uintX(out, 8, mLength);
 
@@ -158,10 +175,108 @@ void ForwardingHdrStruct :: print(std::ostream& out, int indent) const
 
 void ForwardingHdrStruct :: decode(std::istream& in)
 {
-}
+ DebugLog(<< "Decoding ForwardingHdrStruct");
+   decode_uintX(in, 8, mReloToken);
+ DebugLog( << "mReloToken");
+
+   decode_uintX(in, 32, mOverlay);
+ DebugLog( << "mOverlay");
+
+   decode_uintX(in, 8, mTtl);
+ DebugLog( << "mTtl");
+
+   decode_uintX(in, 8, mReserved);
+ DebugLog( << "mReserved");
+
+   decode_uintX(in, 16, mFragment);
+ DebugLog( << "mFragment");
+
+   decode_uintX(in, 8, mVersion);
+ DebugLog( << "mVersion");
+
+   decode_uintX(in, 24, mLength);
+ DebugLog( << "mLength");
+
+   decode_uintX(in, 64, mTransactionId);
+ DebugLog( << "mTransactionId");
+
+   decode_uintX(in, 16, mFlags);
+ DebugLog( << "mFlags");
+
+   {
+   resip::Data d;
+   read_varray1(in, 2, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mViaList.push_back(0);
+      mViaList[i++] = new DestinationStruct();
+   mViaList[i++]->decode(in2);
+   }
+;   }
+
+   {
+   resip::Data d;
+   read_varray1(in, 2, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mDestinationList.push_back(0);
+      mDestinationList[i++] = new DestinationStruct();
+   mDestinationList[i++]->decode(in2);
+   }
+;   }
+
+   decode_uintX(in, 16, mRouteLogLenDummy);
+ DebugLog( << "mRouteLogLenDummy");
+
+};
 
 void ForwardingHdrStruct :: encode(std::ostream& out)
 {
+   DebugLog(<< "Encoding ForwardingHdrStruct");
+   encode_uintX(out, 8, mReloToken);
+
+   encode_uintX(out, 32, mOverlay);
+
+   encode_uintX(out, 8, mTtl);
+
+   encode_uintX(out, 8, mReserved);
+
+   encode_uintX(out, 16, mFragment);
+
+   encode_uintX(out, 8, mVersion);
+
+   encode_uintX(out, 24, mLength);
+
+   encode_uintX(out, 64, mTransactionId);
+
+   encode_uintX(out, 16, mFlags);
+
+   {
+   long pos1=out.tellp();
+   out.seekp(pos1 + 2);
+   for(unsigned int i=0;i<mViaList.size();i++)
+      mViaList[i]->encode(out);
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 16, (pos2 - pos1) - 2);
+   out.seekp(pos2);
+   }
+
+   {
+   long pos1=out.tellp();
+   out.seekp(pos1 + 2);
+   for(unsigned int i=0;i<mDestinationList.size();i++)
+      mDestinationList[i]->encode(out);
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 16, (pos2 - pos1) - 2);
+   out.seekp(pos2);
+   }
+
+   encode_uintX(out, 16, mRouteLogLenDummy);
+
 };
 
 }
