@@ -10,15 +10,15 @@
 
 namespace p2p
 {
+class Dispatcher;
 
 /// This is an abstract base class from which to derive the actually topology plugins
-class ForwardingLayer: public  public Postable<Message>
+class ForwardingLayer: public Postable<Message>
 {
    public:
-      ForwardingLayer(TransactionLayer& transactionProcessor , Transporter& transport, TopologyAPI& topology  );
-
+      ForwardingLayer(Dispatcher& dispatcher, Transporter& transport, TopologyAPI& topology);
    private:
-      TransactionLayer& mTransactionProcessor;
+      Dispatcher& mDispatcher;
       Transporter& mTransport;
       TopologyAPI& mTopology;
 };
