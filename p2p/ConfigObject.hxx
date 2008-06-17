@@ -18,17 +18,26 @@ enum {RELOAD_APPLICATION_ID = 8675};
 class ConfigObject
 {
    public:
-      const X509        *getCertificate();
-      const EVP_PKEY    *getPrivateKey();
+      virtual const X509        *getCertificate();
+      virtual const EVP_PKEY    *getPrivateKey();
 
-      const resip::Data& overlayName();
+      virtual resip::Data& overlayName() { return mOverlayName; }
+      virtual const resip::Data& overlayName() const { return mOverlayName; }
 
-      const NodeId& myNodeId();
+      virtual NodeId& nodeId() { return mNodeId; }
+      virtual const NodeId& nodeId() const { return mNodeId; }
 
-      const UserName& myUserName(); 
+      virtual UserName& userName() { return mUserName; }
+      virtual const UserName& userName() const { return mUserName; }
+
+      virtual std::vector<resip::GenericIPAddress>& bootstrapNodes() { return mBootstrapNodes; }
+      virtual const std::vector<resip::GenericIPAddress>& bootstrapNodes() const { return mBootstrapNodes; }
       
-      const std::vector<resip::GenericIPAddress> bootstrapNodes();
-      
+private:
+   resip::Data mOverlayName;
+   NodeId      mNodeId;
+   UserName    mUserName;
+   std::vector<resip::GenericIPAddress> mBootstrapNodes;
 };
 
 }
