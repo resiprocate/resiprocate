@@ -1,47 +1,34 @@
-#ifndef P2P_StoreAns_hxx
-#define P2P_StoreAns_hxx
+#ifndef P2P_StoreSet_hxx
+#define P2P_StoreSet_hxx
 
-#include "Message.hxx"
-#include <vector>
+#include "p2p/EventConsumer.hxx"
 
 namespace p2p
 {
 
-class StoreAns : public ResourceMessage
+class TopologyApi;
+class Dispatcher;
+
+class StoreSet : public EventConsumer,
+                 public Postable<Event>
 {
-   public:
-      typedef std::vector<NodeId> NodeIds;
-      
-      virtual MessageType getMessageType() const { return Message::StoreAns; }
+  public:
+      StoreSet(Dispatcher& dispatcher,
+               TopologyApi& topology,
+               std::vector<auto_ptr<StoreReq> > stores);
 
-      KindId getKindId() const 
+      virtual void consume(EventWrapper<StoreAns>& event);
+      virtual void post(std::auto_ptr<Event> event)
       {
-         return mKindId;
+         event->dispatch(this);
       }
-
-      Generation getGeneration() const 
-      {
-         return mGeneration;
-      }
-
-      EventWrapper<StoreAns>* event();
-      
-//       {
-//          return EventWrapper::wrap(this);
-//       }
-
-      NodeIds& nodeIds();
-      const NodeIds& nodeIds() const;
-   private:
-      KindId mKindId;
-      Generation mGeneration;
-      NodeIds mNodeIds;
 };
 
 } // p2p
 
-#endif // P2P_StoreAns_hxx
-   
+#endif // P2P_StoreSet_hxx
+
+
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
  *  All rights reserved.
@@ -75,4 +62,3 @@ class StoreAns : public ResourceMessage
  *  IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *  THE POSSIBILITY OF SUCH DAMAGE.
  *====================================================================== */
-
