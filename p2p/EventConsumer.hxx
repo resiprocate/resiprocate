@@ -1,22 +1,24 @@
-#ifndef P2P_Event_hxx
-#define P2P_Event_hxx
+#ifndef P2P_EventConsumer_hxx
+#define P2P_EventConsumer_hxx
 
 namespace p2p
 {
 
 class CertDoneEvent;
+class StoreAns;
+template<class T> class EventWrapper;
 
 class EventConsumer
 {
    public:
       virtual ~EventConsumer();
-      virtual void consumer(CertDoneEvent& certdone);
+      virtual void consume(CertDoneEvent& certdone);
+      virtual void consume(EventWrapper<StoreAns>& storeAns);
 };
 
 }
 
-#endif
-
+#endif // P2P_EventConsumer_hxx
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
