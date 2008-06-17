@@ -33,12 +33,12 @@ TransporterMessage::castApplicationMessageArrived()
    return 0;
 }
 
-ReloadMessageArrived*
-TransporterMessage::castReloadMessageArrived()
+MessageArrived*
+TransporterMessage::castMessageArrived()
 {
-   if (getMessageType() == ReloadMessageArrivedType)
+   if (getMessageType() == MessageArrivedType)
    {
-      return static_cast<ReloadMessageArrived*>(this);
+      return static_cast<MessageArrived*>(this);
    }
    return 0;
 }

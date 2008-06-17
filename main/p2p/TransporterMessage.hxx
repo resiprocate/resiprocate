@@ -15,10 +15,10 @@ namespace p2p
 class ConnectionOpened;
 class ConnectionClosed;
 class ApplicationMessageArrived;
-class ReloadMessageArrived;
+class MessageArrived;
 class LocalCandidatesCollected;
 
-class ReloadMessage;
+class Message;
 class FlowId;
 class Candidate;
 
@@ -30,7 +30,7 @@ class TransporterMessage
       virtual ConnectionOpened* castConnectionOpened();
       virtual ConnectionClosed* castConnectionClosed();
       virtual ApplicationMessageArrived* castApplicationMessageArrived();
-      virtual ReloadMessageArrived* castReloadMessageArrived();
+      virtual MessageArrived* castMessageArrived();
       virtual LocalCandidatesCollected* castLocalCandidatesCollected();
 
    protected:
@@ -40,7 +40,7 @@ class TransporterMessage
          ConnectionOpenedType,
          ConnectionClosedType,
          ApplicationMessageArrivedType,
-         ReloadMessageArrivedType,
+         MessageArrivedType,
          LocalCandidatesCollectedType
       } MessageType;
 
@@ -70,14 +70,14 @@ class ConnectionClosed : public TransporterMessage
       virtual MessageType getMessageType() {return ConnectionClosedType;}
 };
 
-class ReloadMessageArrived : public TransporterMessage
+class MessageArrived : public TransporterMessage
 {
    public:
       NodeId getNodeId();
-      ReloadMessage getReloadMessage();
+      Message getMessage();
 
    protected:
-      virtual MessageType getMessageType() {return ReloadMessageArrivedType;}
+      virtual MessageType getMessageType() {return MessageArrivedType;}
 };
 
 class ApplicationMessageArrived : public TransporterMessage
