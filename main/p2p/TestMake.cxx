@@ -22,4 +22,6 @@
 #include "UserName.hxx"
 #include "FetchReq.hxx"
 #include "FetchAns.hxx"
+#include "StoreReq.hxx"
+#include "StoreAns.hxx"
 
