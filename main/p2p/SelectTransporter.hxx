@@ -61,12 +61,17 @@ class SelectTransporter : public Transporter
    private:
      std::map<NodeId, FlowId> mNodeFlowMap;
 
+     typedef std::map<std::pair<NodeId,unsigned short>,
+                      std::pair<resip::Socket, resip::GenericIPAddress> > 
+             ListenerMap;
+
+     ListenerMap mListenerMap;
+
      // This will also change -- or really, go away -- when we add ice
      resip::Socket mTcpDescriptor;
-     unsigned short mTcpSocket;
      resip::GenericIPAddress mTcpAddress;
 
-     struct sockaddr_in mLocalAddress;
+     in_addr mLocalAddress;
 };
 
 }
