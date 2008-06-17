@@ -11,7 +11,7 @@ namespace fwding {
 
 // Classes for ForwardingHdrStruct */
 
-void ForwardingHdrStruct :: print(std::ostream *out, int indent)
+void ForwardingHdrStruct :: print(std::ostream *out, int indent) const
 {
    do_indent(out,indent);
    (*out) << "ForwardingHdr:\n";
