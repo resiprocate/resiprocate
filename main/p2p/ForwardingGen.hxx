@@ -1,4 +1,4 @@
-#include "s2c/s2c_native.hxx"
+#include "p2p/s2c/s2c/s2c_native.hxx"
 
 namespace s2c {
 namespace fwding {

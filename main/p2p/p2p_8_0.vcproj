@@ -157,6 +157,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ForwardingGen.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Join.cxx"
 				>
 			</File>
@@ -256,6 +260,10 @@
 			</File>
 			<File
 				RelativePath=".\FlowId.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ForwardingGen.hxx"
 				>
 			</File>
 			<File

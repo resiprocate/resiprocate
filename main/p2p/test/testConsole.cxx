@@ -187,7 +187,7 @@ main (int argc, char** argv)
 
    // Defaults
    Data address = DnsUtil::getLocalIpAddress();
-   Data bootstrapHostname;
+   Data bootstrapAddress;
    unsigned short bootstrapPort=0;
    Data logLevel("INFO");
 
@@ -231,7 +231,7 @@ main (int argc, char** argv)
             pb.skipToOneOf(ParseBuffer::Whitespace, ":");  // white space or ":" 
             Data hostname;
             pb.data(hostname, start);
-            bootstrapHostname = hostname;
+            bootstrapAddress = hostname;
             if(!pb.eof())
             {
                pb.skipChar(':');
@@ -259,7 +259,7 @@ main (int argc, char** argv)
    initNetwork();
 
    InfoLog( << "testConsole settings:");
-   InfoLog( << "  Bootstrap server = " << bootstrapHostname << ":" << bootstrapPort);
+   InfoLog( << "  Bootstrap server = " << bootstrapAddress << ":" << bootstrapPort);
    InfoLog( << "  Log Level = " << logLevel);
    
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
@@ -269,11 +269,15 @@ main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
    ConfigObject config;
    config.overlayName() = "p2poverlay.com";
-   config.nodeId() = resip::Random::getCryptoRandom(8).convertUInt64();
+   memcpy(&config.nodeId(),  resip::Random::getCryptoRandom(8).data(), 8);
    config.userName().value() = "test";
 
    struct in_addr addr;
-   resip::DnsUtil::inet_pton(bootstrapHostname, addr);
+   if(resip::DnsUtil::inet_pton(bootstrapAddress, addr)==0)
+   {
+      cerr << "Invalid bootstrap address:" << bootstrapAddress << endl;
+      exit(-1);
+   }
    sockaddr_in addr_in;
    addr_in.sin_family = AF_INET;
    addr_in.sin_addr = addr;
