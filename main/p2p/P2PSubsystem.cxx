@@ -1,47 +1,6 @@
-#ifndef __P2P_SIGNATURE_CONTEXT_HXX
-#define __P2P_SIGNATURE_CONTEXT_HXX 1
+#include "P2PSubsystem.hxx"
 
-#include "rutil/Data.hxx"
-
-#include "NodeId.hxx"
-#include "Postable.hxx"
-#include "ResourceId.hxx"
-#include "UserName.hxx"
-#include "ConfigObject.hxx"
-
-using resip::Data;
-using std::vector; 
-
-namespace p2p
-{
-
-class SignatureContext
-{
-   public:
-      SignatureContext(ConfigObject &config);
-      
-      // Compute signatures, one function for each signature type
-      // Returns an encoded "Signature" object
-      Data computeSignatureWithPeerIdentity(const vector<const Data> toBeSigned);
-      Data computeSignatureWithUserName(const vector<const Data> toBeSigned);
-      Data computeSignatureWithCertificate(const vector<const Data> toBeSigned);
-
-
-      // Fetch all the certificates corresponding to this set of
-      // signatures, works in terms of encoded "Signature" objects
-  void fetchCertificates(const vector<Data> signatures, Postable<bool> done);
-      // Validate a signature, comparing to the expected NodeId node
-      bool validateSignature(const vector<const Data> toBeSigned, 
-        const Data &signature, NodeId node);
-      // Validate a signature, comparing to the expected UserName name
-      bool validateSignature(const vector<const Data> toBeSigned, 
-        const Data &signature, UserName user);
-};
-}
-
-
-#endif
-
+P2PSubsystem P2PSubsystem::P2P("P2P");
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
