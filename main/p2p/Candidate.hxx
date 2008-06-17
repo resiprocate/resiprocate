@@ -9,12 +9,13 @@ namespace p2p
 
 class Candidate
 {
-   Candidate(resip::TransportType type, resip::GenericIPAddress& address);
+   public:
+      Candidate(resip::TransportType type, resip::GenericIPAddress& address);
 
-private:
-   resip::TransportType    mTranportType;
-   resip::GenericIPAddress mAddress;
-   // TODO add ice specific members
+   private:
+      resip::TransportType    mTranportType;
+      resip::GenericIPAddress mAddress;
+      // TODO add ice specific members
 };
 
 }
