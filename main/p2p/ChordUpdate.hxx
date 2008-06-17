@@ -20,6 +20,8 @@ public:
 	};
 	
 	ChordUpdate();
+
+	// parses immediately
 	ChordUpdate(const resip::Data &chordUpdateBody);
 	
 	UpdateType getUpdateType() const { return mUpdateType; }

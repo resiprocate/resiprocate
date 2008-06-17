@@ -91,6 +91,8 @@ protected:
 	resip::Data mEncodedData;
 
 	virtual void encodePayload(resip::Data &data) const = 0;
+	Message() {}
+	
 };
 
 class MessageContents 
@@ -108,18 +110,6 @@ class ErrorResponse : public Message
 
    protected:
       virtual std::vector<resip::Data> collectSignableData() const;
-};
-
-class ConnectReqMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return ConnectReq; }
-};
-
-class ConnectAnsMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return ConnectAns; }
 };
 
 class RouteQueryAnsMessage : public Message
@@ -173,8 +163,6 @@ class RemoveReqMessage : public Message
    public:
       virtual MessageType getMessageType() const { return RemoveReq; }
 };
-
-
 
 
 class TunnelAnsMessage : public Message
