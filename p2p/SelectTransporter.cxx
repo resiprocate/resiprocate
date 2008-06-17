@@ -8,6 +8,7 @@
 #include "p2p/FlowId.hxx"
 #include "p2p/Message.hxx"
 #include "p2p/Candidate.hxx"
+#include "p2p/p2p.hxx"
 
 namespace p2p
 {
@@ -23,14 +24,20 @@ SelectTransporter::SelectTransporter (resip::Fifo<TransporterMessage>& rxFifo,
 
 SelectTransporter::~SelectTransporter()
 {
-   // XXX Tear down any of the listening sockets we have hanging around.   
-
    // Tear down any of the open sockets we have hanging around.   
    std::map<NodeId, FlowId>::iterator i;
    for (i = mNodeFlowMap.begin(); i != mNodeFlowMap.end(); i++)
    {
       resip::closeSocket((i->second).getSocket());
    }
+
+   // And kill the listeners
+   ListenerMap::iterator j;
+   for (j = mListenerMap.begin(); j != mListenerMap.end(); j++)
+   {
+      resip::closeSocket(j->second.first);
+   }
+
 }
 
 //----------------------------------------------------------------------
@@ -106,7 +113,7 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
      s = ::socket(AF_INET, SOCK_STREAM, 0);
      ::bind(s, reinterpret_cast<sockaddr *>(&addr),
             sizeof(struct sockaddr_in));
-     ::listen(s, 20);
+     ::listen(s, 1);
 
      addrPort.v4Address = addr;
 
@@ -245,6 +252,11 @@ SelectTransporter::process(int ms)
                                                   resip::TCP,
                                                   0 /* no cert for you */);
         mRxFifo.add(co);
+
+        // Open Issue -- should we close and remove the listener here?
+        // Adam and ekr say "probably"; fluffy says "hell no".
+        resip::closeSocket(j->second.first);
+        mListenerMap.erase(j++);
       }
    }
 
@@ -258,7 +270,34 @@ SelectTransporter::process(int ms)
          // There's data waiting to be read
          if (flowId.getApplication() == RELOAD_APPLICATION_ID)
          {
-           // XXX
+            //**************************************************
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // XXX XXX THIS IS NAIVE AND WRONG -- WE ASSUME ALL
+            // THE BYTES FOR THIS MESSAGE ARE ALREADY IN THE
+            // LOCAL TCP BUFFER. THIS MUST BE FIXED.
+            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //**************************************************
+            char *buffer = new char[16384];
+            UInt32 *int_buffer = reinterpret_cast<UInt32*>(buffer);
+            // Suck in the header
+            ::read(flowId.getSocket(), buffer, 30);
+            if (int_buffer[0] == htonl(0x80000000 | 0x52454C4F))
+            {
+               int length = ntohl(int_buffer[3]) & 0xFFFFFF;
+               ::read(flowId.getSocket(), buffer+30, length-30);
+               resip::Data data(resip::Data::Take, buffer, length);
+               std::auto_ptr<p2p::Message> msg(Message::parse(data, i->first));
+
+               MessageArrived *ma = new MessageArrived(flowId.getNodeId(), msg);
+
+               mRxFifo.add(ma);
+            }
+            else
+            {
+               delete(buffer);
+               // Yikes! This isn't a reload message!
+            }
+            
          }
          else
          {

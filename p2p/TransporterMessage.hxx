@@ -10,6 +10,7 @@
 #include "p2p/NodeId.hxx"
 #include "p2p/FlowId.hxx"
 #include "p2p/Candidate.hxx"
+#include "p2p/Message.hxx"
 
 namespace p2p
 {
@@ -82,11 +83,17 @@ class ConnectionClosed : public TransporterMessage
 class MessageArrived : public TransporterMessage
 {
    public:
-      NodeId getNodeId();
-      p2p::Message &getMessage();
+      MessageArrived (NodeId nodeId, std::auto_ptr<p2p::Message> message)
+        : mNodeId(nodeId), mMessage(message) {;}
+
+      NodeId getNodeId() {return mNodeId;}
+      std::auto_ptr<p2p::Message> getMessage() { return mMessage; }
 
    protected:
       virtual MessageType getMessageType() {return MessageArrivedType;}
+
+      NodeId mNodeId;
+      std::auto_ptr<p2p::Message> mMessage;
 };
 
 class ApplicationMessageArrived : public TransporterMessage
