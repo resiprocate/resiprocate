@@ -3,6 +3,13 @@
 
 #include <openssl/ssl.h>
 
+#include "rutil/Data.hxx"
+#include "rutil/GenericIPAddress.hxx"
+
+#include "p2p/NodeId.hxx"
+#include "p2p/UserName.hxx"
+
+
 namespace p2p
 {
 
@@ -13,9 +20,16 @@ class ConfigObject
       const X509        *getCertificate();
       const EVP_PKEY    *getPrivateKey();
 
+      const resip::Data& overlayName();
 
+      const NodeId& myNodeId();
 
+      const UserName& myUserName(); 
+      
+      const std::vector<resip::GenericIPAddress> bootstrapNodes();
+      
 };
+
 }
 
 

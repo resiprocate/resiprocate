@@ -16,7 +16,8 @@ TESTPROGRAMS :=
 SRC 	+= Message.cxx \
 		SignatureContext.cxx \
 		TransporterMessage.cxx \
-		Transporter.cxx
+		Transporter.cxx \
+		TopologyAPI.cxx
 
 
 include $(BUILD)/Makefile.post
