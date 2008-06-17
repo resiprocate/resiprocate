@@ -17,12 +17,10 @@ class ChordNodeId: public  NodeId
 
       bool operator<( const ChordNodeId& other );
       bool operator<=( const ChordNodeId& other );
-      bool operator>( const ChordNodeId& other );
-      bool operator>=( const ChordNodeId& other );
+      //bool operator>( const ChordNodeId& other );
+      //bool operator>=( const ChordNodeId& other );
       bool operator!=( const ChordNodeId& other );
-      bool operator==( const ChordNodeId& other );
-      
-      
+      bool operator==( const ChordNodeId& other );    
 };
    
 
