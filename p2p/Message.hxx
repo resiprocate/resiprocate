@@ -36,24 +36,24 @@ class Message : public Signable
       {
          PingReq = 1,
          PingAns = 2,
-         ConnectReq = 3,
-         ConnectAns = 4,
+         ConnectReq = 3, //
+         ConnectAns = 4, //
          TunnelReq = 5,
          TunnelAns = 6,
-         StoreReq = 7,
-         StoreAns = 8,
-         FetchReq = 9,
-         FetchAns = 10,
+         StoreReq = 7, //
+         StoreAns = 8, //
+         FetchReq = 9, //
+         FetchAns = 10, //
          RemoveReq = 11,
          RemoveAns = 12,
          FindReq = 13,
          FindAns = 14,
-         JoinReq = 15,
-         JoinAns = 16,
+         JoinReq = 15, //
+         JoinAns = 16, //
          LeaveReq = 17,
          LeaveAns = 18,
-         UpdateReq = 19,
-         UpdateAns = 20,
+         UpdateReq = 19, //
+         UpdateAns = 20, //
          RouteQueryReq = 21,
          RouteQueryAns = 22,
          FailureRequest = 0xFFFE,
@@ -119,6 +119,13 @@ class ConnectAnsMessage : public Message
       virtual MessageType getMessageType() const { return ConnectAns; }
 };
 
+class FetchAnsMessage : public Message
+{
+   public:
+      virtual MessageType getMessageType() const { return FetchAns; }
+};
+
+
 
    
 class RouteQueryAnsMessage : public Message
@@ -175,32 +182,6 @@ class RemoveReqMessage : public Message
 };
 
 
-class FetchAnsMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return FetchAns; }
-};
-
-
-class FetchReqMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return FetchReq; }
-};
-
-
-class StoreAnsMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return StoreAns; }
-};
-
-
-class StoreReqMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return StoreReq; }
-};
 
 
 class TunnelAnsMessage : public Message

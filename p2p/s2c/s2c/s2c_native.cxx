@@ -153,7 +153,7 @@ void s2c::read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf)
     // First read the length
     assert(lenlen<=8);
     while(lenlen--){
-      len<<8;
+      len<<=8;
       c=in->get();
       len|=c;
     }
@@ -167,3 +167,15 @@ void s2c::read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf)
     
     out.flush();
   }
+
+s2c::PDU::~PDU()
+{
+}
+
+std::ostream& 
+operator<<(std::ostream& strm, const s2c::PDU& pdu)
+{
+   pdu.print(&strm);
+   return strm;
+}
+
