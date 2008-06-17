@@ -6,7 +6,7 @@
 namespace p2p
 {
 
-typedef ::UInt64 UInt64;
+// Reload types
 typedef ::UInt32 KindId;
 typedef ::UInt32 Generation;
 

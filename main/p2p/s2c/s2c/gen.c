@@ -124,7 +124,7 @@ static int max2bytes(UINT4 max)
 int s2c_gen_hdr_h(char *name, FILE *out)
   {
 
-    fprintf(out,"#include \"s2c_native.hxx\"\n\nnamespace s2c {\nnamespace %s {\n\n",
+    fprintf(out,"#include \"s2c/s2c_native.hxx\"\n\nnamespace s2c {\n\n",
       name2namespace(name));
     
     return(0);
@@ -166,10 +166,8 @@ static int s2c_gen_pdu_h_member(p_decl *member, FILE *out)
 
     switch(member->type){
       case TYPE_REF:
-        if(member->u.ref_.ref->type == TYPE_ENUM){
-          s2c_print_a_b_indent(s2c_decl2type(member->u.ref_.ref),
-            name2var(member->name),out);
-        }
+        s2c_print_a_b_indent(s2c_decl2type(member->u.ref_.ref),
+          name2var(member->name),out);
         break;
       case TYPE_VARRAY:
         snprintf(buf,sizeof(buf),"std::vector<%s>",
@@ -221,7 +219,7 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out)
 
     fprintf(out, "\n   union {\n");
     
-    /* Now emit the class for each select arm */
+    /* Now emit the union for each select arm */
     for(arm=STAILQ_FIRST(&decl->u.select_.arms);arm;arm=STAILQ_NEXT(arm,entry)){
       p_decl *member;
       char armname[100];
@@ -315,7 +313,7 @@ int s2c_gen_pdu_h(p_decl *decl, FILE *out)
 
 int s2c_gen_ftr_h(FILE *out)
   {
-    fprintf(out,"}\n}\n");
+    fprintf(out,"}\n");
  
     return(0);
   }
@@ -325,7 +323,7 @@ int s2c_gen_ftr_h(FILE *out)
 /* Generate C files */
 int s2c_gen_hdr_c(char *name,FILE *out)
   {
-    fprintf(out,"#include <iostream>\n#include <iomanip>\n#include \"rutil/Logger.hxx\"\n#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST\n#include \"%s.hxx\"\n\nnamespace s2c {\nnamespace %s {\n\n",name,
+    fprintf(out,"#include <iostream>\n#include <iomanip>\n#include \"rutil/Logger.hxx\"\n#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST\n#include \"%sGen.hxx\"\n\nnamespace s2c {\n\n\n",name,
       name2namespace(name));
     
     return(0);
@@ -405,7 +403,7 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
   {
     p_decl *entry;
 
-    fprintf(out,"void %s :: encode(std::ostream *out)\n{\n",type2class(decl->name));
+    fprintf(out,"void %s :: encode(std::ostream& out)\n{\n",type2class(decl->name));
     
     fprintf(out,"   DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
@@ -430,11 +428,11 @@ static int s2c_gen_print_c_simple_type(p_decl *decl, char *reference, FILE *out)
     
     if(decl->u.ref_.ref->type==TYPE_PRIMITIVE){
       fprintf(out,"   do_indent(out, indent);\n");
-      fprintf(out,"   (*out)  << \"%s:\" << std::hex << (unsigned long long)%s << \"\\n\"; \n", decl->name, reference);
+      fprintf(out,"   (out)  << \"%s:\" << std::hex << (unsigned long long)%s << \"\\n\"; \n", decl->name, reference);
     }
     else if(decl->type==TYPE_PRIMITIVE){
       fprintf(out,"   do_indent(out, indent);\n");
-      fprintf(out,"   (*out)  << \"%s:\" << std::hex << (unsigned long long) %s << \"\\n\"; \n", decl->name, reference);
+      fprintf(out,"   (out)  << \"%s:\" << std::hex << (unsigned long long) %s << \"\\n\"; \n", decl->name, reference);
     }
     else
       fprintf(out,"   %s->print(out, indent);\n",reference);
@@ -488,9 +486,9 @@ static int s2c_gen_print_c_struct(p_decl *decl, FILE *out)
   {
     p_decl *entry;
 
-    fprintf(out,"void %s :: print(std::ostream *out, int indent)\n{\n",type2class(decl->name));
+    fprintf(out,"void %s :: print(std::ostream& out, int indent) const\n{\n",type2class(decl->name));
     fprintf(out,"   do_indent(out,indent);\n");
-    fprintf(out,"   (*out) << \"%s:\\n\";\n",decl->name);
+    fprintf(out,"   (out) << \"%s:\\n\";\n",decl->name);
     fprintf(out,"   indent+=2;\n");
 
     entry=STAILQ_FIRST(&decl->u.struct_.members);
@@ -576,7 +574,7 @@ static int s2c_gen_decode_c_struct(p_decl *decl, FILE *out)
   {
     p_decl *entry;
 
-    fprintf(out,"void %s :: decode(std::istream *in)\n{\n",type2class(decl->name));
+    fprintf(out,"void %s :: decode(std::istream& in)\n{\n",type2class(decl->name));
     
     fprintf(out," DebugLog(<< \"Decoding %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
@@ -637,7 +635,7 @@ int s2c_gen_pdu_c(p_decl *decl, FILE *out)
 
 int s2c_gen_ftr_c(FILE *out)
   {
-    fprintf(out,"}\n}\n");
+    fprintf(out,"}\n");
  
     return(0);
   }

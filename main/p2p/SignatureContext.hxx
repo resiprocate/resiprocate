@@ -1,6 +1,7 @@
 #ifndef __P2P_SIGNATURE_CONTEXT_HXX
 #define __P2P_SIGNATURE_CONTEXT_HXX 1
 
+#include <map>
 #include "rutil/Data.hxx"
 
 #include "NodeId.hxx"
@@ -20,6 +21,13 @@ class SignatureContext
    public:
       SignatureContext(ConfigObject &config);
       
+      // The types of hash function we support
+      enum {
+         sha1 = 1,
+         sha256 = 2
+      } HashAlgorithm;
+
+      
       // Compute signatures, one function for each signature type
       // Returns an encoded "Signature" object
       Data computeSignatureWithPeerIdentity(const vector<const Data> toBeSigned);
@@ -29,13 +37,48 @@ class SignatureContext
 
       // Fetch all the certificates corresponding to this set of
       // signatures, works in terms of encoded "Signature" objects
-  void fetchCertificates(const vector<Data> signatures, Postable<bool> done);
+      void fetchCertificates(const vector<Data> signatures, Postable<bool> done);
+
       // Validate a signature, comparing to the expected NodeId node
       bool validateSignature(const vector<const Data> toBeSigned, 
         const Data &signature, NodeId node);
+
       // Validate a signature, comparing to the expected UserName name
       bool validateSignature(const vector<const Data> toBeSigned, 
         const Data &signature, UserName user);
+
+      
+   private:
+      void digestData(const vector<const Data> toBeSigned, unsigned char digest[32]);
+      Data computeSignature(const vector<const Data> toBeSigned);
+      
+      ConfigObject &mConfig;
+
+      class CachedCertificate 
+      {
+         public:
+            CachedCertificate(X509 *x, bool isValid, UInt64 expires)
+            {
+               mCertificate=x;
+               mValid=isValid;
+               mExpiryTime=expires;
+            }
+            
+            ~CachedCertificate()
+            {
+               X509_free(mCertificate);
+            }
+            
+            
+            X509        *mCertificate;    // The certificate
+            bool        mValid;           // Is this entry valid
+            UInt64      mExpiryTime;      // How long is this entry
+                                          // trustable for
+      };
+         
+      std::map<Data,CachedCertificate> mCertificateCache;
+
+      
 };
 }
 

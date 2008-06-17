@@ -1,7 +1,8 @@
 #ifndef __P2P_CONFIG_OBJECT_HXX
 #define __P2P_CONFIG_OBJECT_HXX 1
 
-#include <openssl/ssl.h>
+#include <openssl/evp.h>
+#include <openssl/x509.h>
 
 #include "rutil/Data.hxx"
 #include "rutil/GenericIPAddress.hxx"
