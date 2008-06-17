@@ -1,3 +1,12 @@
+#ifndef P2P_DataSpecifier_hxx
+#define P2P_DataSpecifier_hxx
+
+#include <list>
+#include <vector>
+
+namespace p2p 
+{
+
 class DataSpecifier
 {
    public: 
@@ -6,35 +15,36 @@ class DataSpecifier
       //encoding?
 };
 
-class SpecifySingle : public FetchKind
+class SpecifySingle :public DataSpecifier
 {
   public:
 };
 
 //defualt to entire array
-class SpecifyArray : public FetchKind
+class SpecifyArray :public DataSpecifier
 {
    public:
-      const static Uint32 Last = INT_MAX;
+      const static UInt32 Last = INT_MAX;
       
       class Range
       {
          public:
-            Uint32 first;
-            Uint32 last;
+            UInt32 first;
+            UInt32 last;
       };
       
-      void addRange(const RangeEntry& r);
-      
-      vector<Range>& ranges();
-      const vector<Range>& ranges() const;
+      std::vector<Range>& ranges();
+      const std::vector<Range>& ranges() const;
+
+   private:
+      std::vector<Range>& mRange;
 };
 
 //empty is entire dictionary, th default
 class SpecifyDictionary
 {
    public:
-      std::vector<Data>& keys();
+      std::vector<resip::Data>& keys();
 };
    
 class FetchReq
@@ -49,3 +59,7 @@ class DeleteReq
    public:
       typedef std::list<DataSpecifier> Specifiers;
 };
+
+} // p2p
+
+#endif P2P_DataSpecifier_hxx

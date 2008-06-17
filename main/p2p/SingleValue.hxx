@@ -1,15 +1,15 @@
-#ifndef P2P_ArrayValue_hxx
-#define P2P_ArrayValue_hxx
+#ifndef P2P_SingleValue_hxx
+#define P2P_SingleValue_hxx
 
-#include "rutil/Data.hxx"
+#include "AbstractValue.hxx"
 
 namespace p2p
 {
 
-class SingleValue :public AbstractValue
+class SingleValue : public AbstractValue
 {
    public:
-      static const resip::Data NoValue = "";
+      static const resip::Data NoValue;
       
       SingleValue(const resip::Data& value)
          : mValue(value),
@@ -22,7 +22,7 @@ class SingleValue :public AbstractValue
          {
             return mValue;
          } else {
-            return NO_VALUE;
+            return NoValue;
          }
       }
       
@@ -38,7 +38,7 @@ class SingleValue :public AbstractValue
 
       bool isSet() const 
       {
-         return mExists
+         return mExists;
       }
 
    private:
@@ -46,6 +46,9 @@ class SingleValue :public AbstractValue
       bool mExists;
 };
 
+} // p2p
+
+#endif // P2P_SingleValue_hxx
    
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
@@ -80,3 +83,4 @@ class SingleValue :public AbstractValue
  *  IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *  THE POSSIBILITY OF SUCH DAMAGE.
  *====================================================================== */
+
