@@ -43,21 +43,49 @@ class AddListenerCommand : public TransporterCommand
      resip::GenericIPAddress mAddress;
 };
 
-class SendReloadCommand : public TransporterCommand
+class SendP2pCommand : public TransporterCommand
 {
    public:
-      SendReloadCommand(Transporter *transporter,
+      SendP2pCommand(Transporter *transporter,
                         NodeId nodeId,
                         std::auto_ptr<p2p::Message> message)
         : TransporterCommand(transporter), 
           mNodeId(nodeId),
           mMessage(message) {;}
 
-      void operator()() { mTransporter->send(mNodeId, mMessage); }
+      void operator()() { mTransporter->sendImpl(mNodeId, mMessage); }
 
    private:
       NodeId mNodeId;
       std::auto_ptr<p2p::Message> mMessage;
+};
+
+class SendApplicationCommand : public TransporterCommand
+{
+   public:
+      SendApplicationCommand(Transporter *transporter,
+                        FlowId flowId,
+                        std::auto_ptr<resip::Data> message)
+        : TransporterCommand(transporter), 
+          mFlowId(flowId),
+          mMessage(message) {;}
+
+      void operator()() { mTransporter->sendImpl(mFlowId, mMessage); }
+
+   private:
+      FlowId mFlowId;
+      std::auto_ptr<resip::Data> mMessage;
+};
+
+class CollectCandidatesCommand : public TransporterCommand
+{
+   public:
+      CollectCandidatesCommand(Transporter *transporter)
+        : TransporterCommand(transporter) {;}
+
+      void operator()() { mTransporter->collectCandidatesImpl(); }
+
+   private:
 };
 
 //----------------------------------------------------------------------
@@ -78,28 +106,28 @@ Transporter::addListener(resip::TransportType transport,
 void
 Transporter::send(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
 {
-  mCmdFifo.add(new SendReloadCommand(this, nodeId, msg));
+  mCmdFifo.add(new SendP2pCommand(this, nodeId, msg));
 }
 
-/*  
 void
-Transporter::send(FlowId flowId, std::auto_ptr<resip::Data> data)
+Transporter::send(FlowId flowId, std::auto_ptr<resip::Data> msg)
 {
   mCmdFifo.add(new SendApplicationCommand(this, flowId, msg));
 }
   
 void
-Transporter::collectLocalCandidates()
+Transporter::collectCandidates()
 {
-  mCmdFifo.add(new CollectLocalCandidatesCommand(this));
+  mCmdFifo.add(new CollectCandidatesCommand(this));
 }
   
+/*  
 void
 Transporter::connect(NodeId nodeId,
                    std::vector<Candidate> remoteCandidates,
                    resip::GenericIPAddress &stunTurnServer)
 {
-  mCmdFifo.add(new ConnectReloadComand(noteId, remoteCandidates, stunTurnServer));
+  mCmdFifo.add(new ConnectP2pComand(noteId, remoteCandidates, stunTurnServer));
 }
   
 void
