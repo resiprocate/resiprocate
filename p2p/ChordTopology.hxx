@@ -10,7 +10,6 @@
 #include "p2p/ConfigObject.hxx"
 #include "p2p/Message.hxx"
 #include "p2p/TopologyAPI.hxx"
-#include "p2p/ChordNodeId.hxx"
 
 namespace p2p
 {
@@ -61,15 +60,15 @@ class Chord : public TopologyAPI
       
    private:
       
-      std::set<ChordNodeId> mFingerTable;
-      std::vector<ChordNodeId> mPrevTable;
-      std::vector<ChordNodeId> mNextTable;
+      std::set<NodeId> mFingerTable;
+      std::vector<NodeId> mPrevTable;
+      std::vector<NodeId> mNextTable;
 
-      bool addNewNeighbors(  std::vector<NodeId> nodes ); // return true if
+      bool addNewNeighbors(  std::vector<NodeId>& nodes ); // return true if
                                                           // anything changed
-      bool addNewFingers( std::vector<NodeId> nodes ); // return true if changed
+      bool addNewFingers( std::vector<NodeId>& nodes ); // return true if changed
       
-      ChordNodeId myNodeId;
+      NodeId mMyNodeId;
 };
 
 }
