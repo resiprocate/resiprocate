@@ -10,6 +10,7 @@ namespace p2p
 class NodeId
 {
    public:
+      long long value();
       
    private:
       long long mValue[2];
