@@ -144,9 +144,9 @@ SelectTransporter::connectImpl(NodeId nodeId,
 
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
    // Blow our node ID out on the wire (because there is no cert)
+   const resip::Data nid = mConfiguration.nodeId().getValue();
     ::send((i->second).getSocket(),
-           (const char *)mConfiguration.nodeId().getValue(), 
-           mConfiguration.nodeId().getSize(), 0);
+           nid.c_str(), nid.size(), 0);
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 }
 
@@ -234,10 +234,9 @@ SelectTransporter::process(int ms)
         mNodeFlowMap.insert(
           std::map<NodeId, FlowId>::value_type(nodeId, flowId));
 
-        assert(mConfiguration.nodeId().getSize() == 16);
         unsigned char buffer[16];
-        ::read(s, buffer, mConfiguration.nodeId().getSize());
-
+        ::read(s, buffer, sizeof(buffer));
+        
         // Ideally, we'd check that the nodeId we just read
         // actually matches the nodeId we were expecting.
 

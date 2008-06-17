@@ -9,10 +9,7 @@
 #include "p2p/Message.hxx"
 #include "p2p/ChordNodeId.hxx"
 
-namespace p2p
-{
-
-
+using namespace p2p;
 
 //Chord::Chord(ConfigObject& config, TransactionLayer& transactionProcessor )
 //{
@@ -190,10 +187,6 @@ bool Chord::addNewFingers( std::vector<NodeId> nodes )
 {
    return false;
 }
-
-
-}
-
 
 
 /* ======================================================================

@@ -3,6 +3,11 @@
 
 #include "rutil/Compat.hxx"
 
+namespace resip
+{
+class Data;
+}
+
 namespace p2p
 {
 
@@ -12,13 +17,18 @@ namespace p2p
 class NodeId
 {
    public:
-      unsigned char *getValue() { return reinterpret_cast<unsigned char *>(mValue);}
-      size_t getSize() { return sizeof(mValue); }
+      NodeId(const resip::Data& data);
+      NodeId& operator=(const resip::Data& data);
+      NodeId& operator=(const NodeId& data);
+      
+      const resip::Data getValue() const;
 
-      bool operator<(const NodeId &rhs) const;
+      bool operator<(const NodeId& rhs) const;
+      bool operator==(const NodeId& rhs) const;
       
    private:
-      long long mValue[2];
+      // NOTE: this should be 128 bits
+      UInt64 mValue[2];
 };
    
 
