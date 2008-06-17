@@ -19,6 +19,7 @@ SRC 	+= \
 	ChordUpdate.cxx \
 	Connect.cxx \
 	Join.cxx \
+	Leave.cxx \
 	Message.cxx \
 	MessageStructsGen.cxx \
 	P2PSubsystem.cxx \
