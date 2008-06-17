@@ -58,34 +58,32 @@ void Chord::consume(EventWrapper<LeaveReq>& event)
 }
 
 
-// Deal with routing querries 
+// Deal with routing queries 
 NodeId& Chord::findNextHop( NodeId& pNode )
 {
    ChordNodeId node(pNode);
    
    assert( !isResponsible(pNode) );
    
-   // find if one of the finger table entries is the best one 
-   for ( unsigned int i=0; i<mFingerTable.size()-1; i++)
+   if(mFingerTable.size() == 0)
    {
-      if ( (mFingerTable[i] <= node ) && ( node < mFingerTable[i+1] ) )
+      // return the next pointer and increment around slowly 
+      assert( mNextTable.size() > 0 );
+      return mNextTable[0];
+   }
+
+   std::set<ChordNodeId>::iterator it = mFingerTable.begin();
+   for(;it != mFingerTable.end(); it++)
+   {      
+      std::set<ChordNodeId>::iterator nextIt = it;
+      nextIt++;
+      if(nextIt == mFingerTable.end()) break;
+      if((*it <= node) && (node < *nextIt))
       {
-         return mFingerTable[i];
+         return *it;
       }
    }
-   
-   // find if the last finger table entry is the best one 
-   if ( mFingerTable.size() > 0 )
-   {
-      if ( (mFingerTable[mFingerTable.size()-1] <= node ) && ( node < myNodeId ) )
-      {
-         return mFingerTable[mFingerTable.size()-1];
-      }
-   }
-   
-   // nothing found, return the next pointer and increment around slowly 
-   assert( mNextTable.size() > 0 );
-   return mNextTable[0];
+   return *it;    
 }
 
 
@@ -196,25 +194,19 @@ bool Chord::addNewFingers( std::vector<NodeId> nodes )
 {
    assert( nodes.size() > 0 );
    bool changed=false;
-  
-/* 
-   std::vector<NodeId> set = mFingerTable;
-   set.append( nodes );
-   sort( set.begin() , set.end() );
-   unique( set.begin() , set.end() );
-   
-   // TODO filter the finger for log 2 stuff 
 
-   if ( set == mFingerTable )
+   // iterate through finger table and check if we are actually adding new nodes
+   std::vector<NodeId>::iterator it = nodes.begin();
+   for(;it != nodes.end(); it++)
    {
-      // no change happened 
-      return false;
+      std::set<ChordNodeId>::iterator it2 = mFingerTable.find(*it);
+      if(it2 == mFingerTable.end())
+      {
+         changed = true;
+         mFingerTable.insert(*it);
+      }
    }
-
-   mFingerTable = set;
-*/
-
-   return true;
+   return changed;
 }
 
 
