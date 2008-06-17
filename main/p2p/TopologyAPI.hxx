@@ -4,8 +4,10 @@
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 
-#include "p2p/ConfigObject.hxx"
 #include "p2p/NodeId.hxx"
+#include "p2p/ResourceId.hxx"
+#include "p2p/ConfigObject.hxx"
+
 
 namespace p2p
 {
@@ -17,7 +19,7 @@ class ReloadMessage;
 class TopologyAPI
 {
    public:
-      TopologyAPI(ConfigObject& config);
+      TopologyAPI(ConfigObject& config, TranscationLayer& transactionProcessor );
       
       // need a fifo to receive timer events 
 
@@ -26,9 +28,15 @@ class TopologyAPI
       void connectionLost( NodeId& node );
        
       // deal with topoogy change messages 
+<<<<<<< .mine
+      void processJoin( Message& message );
+      void processUpdate(  Message& message );
+      void processLeave(  Message& message );
+=======
       void processJoin( ReloadMessage& message );
       void processUpdate( ReloadMessage& message );
       void processLeave( ReloadMessage& message );
+>>>>>>> .r7783
       
       // Deal with routing querries 
       NodeId& findNextHop( NodeId& node );
