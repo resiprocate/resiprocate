@@ -119,21 +119,11 @@ class ConnectAnsMessage : public Message
       virtual MessageType getMessageType() const { return ConnectAns; }
 };
 
-class FetchAnsMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return FetchAns; }
-};
-
-
-
-   
 class RouteQueryAnsMessage : public Message
 {
    public:
       virtual MessageType getMessageType() const { return RouteQueryAns; }
 };
-
 
 class RouteQueryReqMessage : public Message
 {
@@ -210,7 +200,23 @@ class PingReqMessage : public Message
       virtual MessageType getMessageType() const { return PingReq; }
 };
 
-}
+class ResourceMessage : public Message
+{
+   public:
+      resip::Data& getResourceId();
+      const resip::Data& getResourceId() const;
+      void setResourceId(const resip::Data& resourceId);
+
+      resip::Data& getResourceName();
+      const resip::Data& getResourceName() const;
+      void setResourceName(const resip::Data& resorceName);
+      
+   private:
+      resip::Data mResourceId;
+      resip::Data mResourceName;
+};
+
+}   
 
 #endif
 
