@@ -1,5 +1,7 @@
-#ifndef __P2P_NODE_ID_HXX
-#define __P2P_NODE_ID_HXX 1
+#ifndef __P2P_CHORDNODE_ID_HXX
+#define __P2P_CHORDNODE_ID_HXX 1
+
+#include "p2p/NodeId.hxx"
 
 namespace p2p
 {
@@ -7,23 +9,22 @@ namespace p2p
 // This is pretty much wrong, but it serves as a good placeholder at
 // the moment.
 
-class NodeId
+class ChordNodeId: public  NodeId
 {
    public:
+      ChordNodeId( const resip::Data& data );
+      ChordNodeId( const NodeId node );
+
+      bool operator<( const ChordNodeId& other );
+      bool operator<=( const ChordNodeId& other );
+      bool operator>( const ChordNodeId& other );
+      bool operator>=( const ChordNodeId& other );
+      bool operator!=( const ChordNodeId& other );
+      bool operator==( const ChordNodeId& other );
       
-   private:
-      long long mValue[2];
+      
 };
    
-
-class CompressedId
-{
-};
-
-// Either a CompressedId, NodeId or ResourceId
-class DestinationId
-{
-};
 
 }
 
