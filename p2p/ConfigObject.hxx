@@ -3,6 +3,10 @@
 
 #include <openssl/ssl.h>
 
+namespace p2p
+{
+
+
 class ConfigObject
 {
    public:
@@ -12,7 +16,7 @@ class ConfigObject
 
 
 };
-
+}
 
 
 #endif
