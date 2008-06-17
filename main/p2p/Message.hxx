@@ -12,6 +12,7 @@ namespace p2p
 
 class MessageContents;
 class ErrorResponse;
+class Event;
 
 enum ErrorResponseCode
 {
@@ -30,7 +31,7 @@ class Message : public Signable, private s2c::ForwardingHdrStruct
       // Used to make a request. Will populate the rid into the destination list.  
       Message(ResourceId rid, const resip::Data& overlayName);
       
-      virtual ~Message()=0;
+      virtual ~Message() = 0;
 
       enum MessageType
       {
@@ -85,6 +86,13 @@ class Message : public Signable, private s2c::ForwardingHdrStruct
       
       DestinationId nextDestination() const;
       void popNextDestinationId(); 
+
+      Event* event() 
+      {
+         assert(0);
+         return 0;
+      }
+      
 protected:
 	ResourceId mResourceId;
 	resip::Data mOverlayName;
