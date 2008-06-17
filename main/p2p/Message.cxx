@@ -122,6 +122,8 @@ std::vector<resip::Data>
 Message::collectSignableData() const
 {
 	assert(0);
+   std::vector<resip::Data> list;
+   return list;
 }
 
 
