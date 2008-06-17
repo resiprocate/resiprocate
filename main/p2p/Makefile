@@ -19,6 +19,7 @@ SRC 	+= \
 	ChordUpdate.cxx \
 	Connect.cxx \
 	Join.cxx \
+	Find.cxx \
 	Leave.cxx \
 	Message.cxx \
 	MessageStructsGen.cxx \
