@@ -49,6 +49,8 @@ class TopologyAPI
       virtual ~TopologyAPI();
       
    private:
+
+      NodeId& myNodeId();
 };
 
 }

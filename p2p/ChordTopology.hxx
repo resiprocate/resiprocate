@@ -9,11 +9,14 @@
 #include "p2p/ConfigObject.hxx"
 #include "p2p/Message.hxx"
 #include "p2p/TopologyAPI.hxx"
+#include "p2p/ChordNodeId.hxx"
 
 namespace p2p
 {
 
 class TransactionLayer;
+
+
 
 /// This is an abstract base class from which to derive the actually topology plugins
 class Chord : public  TopologyAPI
@@ -50,6 +53,16 @@ class Chord : public  TopologyAPI
       virtual ~Chord();
       
    private:
+      
+      std::vector<ChordNodeId> mFingerTable;
+      std::vector<ChordNodeId> mPrevTable;
+      std::vector<ChordNodeId> mNextTable;
+
+      bool addNewNeighbors(  std::vector<NodeId> nodes ); // return true if
+                                                          // anything changed
+      bool addNewFingers( std::vector<NodeId> nodes ); // return true if changed
+      
+      ChordNodeId myNodeId;
 };
 
 }
