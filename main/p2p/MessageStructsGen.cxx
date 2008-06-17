@@ -16,7 +16,7 @@ void NodeIdStruct :: print(std::ostream& out, int indent) const
    do_indent(out,indent);
    (out) << "NodeId:\n";
    indent+=2;
-   for(int i=0;i<16;i++) {
+   for(unsigned int i=0;i<16;i++) {
       do_indent(out, indent);
    (out)  << "opaque:" << std::hex << (unsigned long long) mId[i] << "\n"; 
    }
@@ -25,7 +25,7 @@ void NodeIdStruct :: print(std::ostream& out, int indent) const
 void NodeIdStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding NodeIdStruct");
-   for(int i=0;i<16;i++)
+   for(unsigned int i=0;i<16;i++)
       decode_uintX(in, 8, mId[i]);
  DebugLog( << "mId[i]");
 
@@ -34,7 +34,7 @@ void NodeIdStruct :: decode(std::istream& in)
 void NodeIdStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding NodeIdStruct");
-   for(int i=0;i<16;i++)
+   for(unsigned int i=0;i<16;i++)
       encode_uintX(out, 8, mId[i]);
 
 };
@@ -48,7 +48,7 @@ void ResourceIdStruct :: print(std::ostream& out, int indent) const
    do_indent(out,indent);
    (out) << "ResourceId:\n";
    indent+=2;
-   for(int i=0;i<mId.size();i++){
+   for(unsigned int i=0;i<mId.size();i++){
       do_indent(out, indent);
    (out)  << "opaque:" << std::hex << (unsigned long long) mId[i] << "\n"; 
    }
@@ -72,25 +72,20 @@ void ResourceIdStruct :: decode(std::istream& in)
 void ResourceIdStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding ResourceIdStruct");
-   long pos1=out->tellp();
-   out->seekp(pos1 + 1);
-   for(int i=0;i<mId.size();i++)
+   long pos1=out.tellp();
+   out.seekp(pos1 + 1);
+   for(unsigned int i=0;i<mId.size();i++)
       encode_uintX(out, 8, mId[i]);
-   long pos2=out->tellp();
-   out->seekp(pos1);
+   long pos2=out.tellp();
+   out.seekp(pos1);
    encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out->seekp(pos2);
+   out.seekp(pos2);
 
 };
 
 
 
 // Classes for DestinationDataStruct */
-
-void DestinationDataStruct :: encode(std::ostream& out)
-{
-   DebugLog(<< "Encoding DestinationDataStruct");
-};
 
 
 
@@ -159,10 +154,10 @@ void ForwardingHdrStruct :: print(std::ostream& out, int indent) const
    (out)  << "transaction_id:" << std::hex << (unsigned long long)mTransactionId << "\n"; 
    do_indent(out, indent);
    (out)  << "flags:" << std::hex << (unsigned long long)mFlags << "\n"; 
-   for(int i=0;i<mViaList.size();i++){
+   for(unsigned int i=0;i<mViaList.size();i++){
       mViaList[i]->print(out, indent);
    }
-   for(int i=0;i<mDestinationList.size();i++){
+   for(unsigned int i=0;i<mDestinationList.size();i++){
       mDestinationList[i]->print(out, indent);
    }
    do_indent(out, indent);
@@ -206,7 +201,7 @@ void ForwardingHdrStruct :: decode(std::istream& in)
    while(in2.peek()!=EOF){
       mViaList.push_back(0);
       mViaList[i++] = new TypeStruct();
-   mViaList[i++]->decode(&in2);
+   mViaList[i++]->decode(in2);
    }
 ;
    resip::Data d;
@@ -216,7 +211,7 @@ void ForwardingHdrStruct :: decode(std::istream& in)
    while(in2.peek()!=EOF){
       mDestinationList.push_back(0);
       mDestinationList[i++] = new TypeStruct();
-   mDestinationList[i++]->decode(&in2);
+   mDestinationList[i++]->decode(in2);
    }
 ;
    decode_uintX(in, 16, mRouteLogLenDummy);
@@ -245,23 +240,23 @@ void ForwardingHdrStruct :: encode(std::ostream& out)
 
    encode_uintX(out, 16, mFlags);
 
-   long pos1=out->tellp();
-   out->seekp(pos1 + 2);
-   for(int i=0;i<mViaList.size();i++)
+   long pos1=out.tellp();
+   out.seekp(pos1 + 2);
+   for(unsigned int i=0;i<mViaList.size();i++)
       mViaList[i]->encode(out);
-   long pos2=out->tellp();
-   out->seekp(pos1);
+   long pos2=out.tellp();
+   out.seekp(pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out->seekp(pos2);
+   out.seekp(pos2);
 
-   long pos1=out->tellp();
-   out->seekp(pos1 + 2);
-   for(int i=0;i<mDestinationList.size();i++)
+   long pos1=out.tellp();
+   out.seekp(pos1 + 2);
+   for(unsigned int i=0;i<mDestinationList.size();i++)
       mDestinationList[i]->encode(out);
-   long pos2=out->tellp();
-   out->seekp(pos1);
+   long pos2=out.tellp();
+   out.seekp(pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out->seekp(pos2);
+   out.seekp(pos2);
 
    encode_uintX(out, 16, mRouteLogLenDummy);
 
