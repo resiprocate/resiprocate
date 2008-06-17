@@ -81,7 +81,7 @@ class Transporter
      std::map<NodeId, FlowId> mNodeFlowMap;
 
      // This will change when we add ice
-     std::map<int, FlowId> mDescriptorFlowMap;
+     std::map<resip::Socket, FlowId> mDescriptorFlowMap;
 
      // This will also change -- or really, go away -- when we add ice
      resip::Socket mTcpDescriptor;
