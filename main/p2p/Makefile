@@ -13,7 +13,7 @@ TARGET_LIBRARY := libp2p
 
 TESTPROGRAMS :=
 
-SRC 	+= \
+SRC 	+=      SignatureContext.cxx \
 		TransporterMessage.cxx \
 		Transporter.cxx
 
