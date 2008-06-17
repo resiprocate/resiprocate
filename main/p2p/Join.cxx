@@ -2,6 +2,40 @@
 
 using namespace p2p;
 
+JoinAns::JoinAns(const resip::Data &overlaySpecific) :
+	mOverlaySpecific(overlaySpecific)
+{
+
+}
+
+void 
+JoinAns::getPayload(resip::Data &data) const
+{
+
+}
+
+Message *
+JoinAns::makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const
+{
+	assert(0);
+	return 0;
+}
+
+
+void
+JoinReq::getPayload(resip::Data &data) const
+{
+
+
+}
+
+Message *
+JoinReq::makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const
+{
+	assert(0);
+	return 0;
+}
+
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

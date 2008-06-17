@@ -1,5 +1,6 @@
 #include "p2p/Message.hxx"
 #include "p2p/Join.hxx"
+#include "p2p/Update.hxx"
 
 #include <assert.h>
 
@@ -74,6 +75,19 @@ Message::getFlags() const
 	return mFlags;
 }
 
+JoinAns *
+Message::makeJoinResponse(const resip::Data &overlaySpecific)
+{
+	p2p::JoinAns *response = new p2p::JoinAns(overlaySpecific);
+	return response;
+}
+
+UpdateAns *
+Message::makeUpdateResponse()
+{
+	p2p::UpdateAns *response = new p2p::UpdateAns;
+	return response;
+}
 
 resip::Data
 Message::encode() const
@@ -83,11 +97,18 @@ Message::encode() const
 	// encode forwarding header
 
 	// ask message type to encode it's payload
-	encodePayload(encodedData);
+	getPayload(encodedData);
 
 	// we should optimize this eventually to avoid this copy
 	return encodedData;
 }
+
+std::vector<resip::Data> 
+Message::collectSignableData() const
+{
+	assert(0);
+}
+
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
