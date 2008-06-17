@@ -1,6 +1,7 @@
 #include "p2p/Message.hxx"
 #include "p2p/Join.hxx"
 #include "p2p/Update.hxx"
+#include "p2p/Leave.hxx"
 
 #include <assert.h>
 
@@ -80,6 +81,12 @@ Message::makeJoinResponse(const resip::Data &overlaySpecific)
 {
 	p2p::JoinAns *response = new p2p::JoinAns(overlaySpecific);
 	return response;
+}
+
+LeaveAns *
+Message::makeLeaveResponse() 
+{
+	return new p2p::LeaveAns();
 }
 
 UpdateAns *
