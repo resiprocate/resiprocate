@@ -1,44 +1,19 @@
-#ifndef __P2P_SIGNATURE_CONTEXT_HXX
-#define __P2P_SIGNATURE_CONTEXT_HXX 1
+#if !defined(P2P_SUBSYSTEM_HXX)
+#define P2P_SUBSYSTEM_HXX 
 
-#include "rutil/Data.hxx"
+#include <iostream>
+#include <rutil/Subsystem.hxx>
 
-#include "NodeId.hxx"
-#include "Postable.hxx"
-#include "ResourceId.hxx"
-#include "UserName.hxx"
-#include "ConfigObject.hxx"
-
-using resip::Data;
-using std::vector; 
-
-namespace p2p
-{
-
-class SignatureContext
+class P2PSubsystem : public resip::Subsystem
 {
    public:
-      SignatureContext(ConfigObject &config);
-      
-      // Compute signatures, one function for each signature type
-      // Returns an encoded "Signature" object
-      Data computeSignatureWithPeerIdentity(const vector<const Data> toBeSigned);
-      Data computeSignatureWithUserName(const vector<const Data> toBeSigned);
-      Data computeSignatureWithCertificate(const vector<const Data> toBeSigned);
+      static P2PSubsystem P2P;
 
-
-      // Fetch all the certificates corresponding to this set of
-      // signatures, works in terms of encoded "Signature" objects
-  void fetchCertificates(const vector<Data> signatures, Postable<bool> done);
-      // Validate a signature, comparing to the expected NodeId node
-      bool validateSignature(const vector<const Data> toBeSigned, 
-        const Data &signature, NodeId node);
-      // Validate a signature, comparing to the expected UserName name
-      bool validateSignature(const vector<const Data> toBeSigned, 
-        const Data &signature, UserName user);
+   private:
+      explicit P2PSubsystem(const char* rhs) : resip::Subsystem(rhs) {};
+      explicit P2PSubsystem(const resip::Data& rhs);
+      P2PSubsystem& operator=(const resip::Data& rhs);
 };
-}
-
 
 #endif
 
