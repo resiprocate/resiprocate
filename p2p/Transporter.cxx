@@ -8,6 +8,10 @@
 namespace p2p
 {
 
+//----------------------------------------------------------------------
+// Command Objects from here to the next line -- Transporter methods
+// come after that.
+
 class TransporterCommand
 {
    public:
@@ -37,6 +41,8 @@ class AddListenerCommand : public TransporterCommand
      resip::TransportType mTransport;
      resip::GenericIPAddress mAddress;
 };
+
+//----------------------------------------------------------------------
 
 Transporter::Transporter (resip::Fifo<TransporterMessage>& rxFifo,
                           ConfigObject &configuration)
