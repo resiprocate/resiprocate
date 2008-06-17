@@ -29,12 +29,9 @@ enum DestinationType{
    compressed = 3
 };
 
-class DestinationDataStruct {
+class DestinationDataStruct : public PDU {
 public:
-
    int  mType;
-
-
    enum { 
           tPeer=1,
           tResource=2,
@@ -51,6 +48,8 @@ public:
    } mCompressed;
 
 
+   DestinationDataStruct() {mName = "DestinationData";}
+   PDUMemberFunctions
 };
 
 class DestinationStruct : public PDU {
