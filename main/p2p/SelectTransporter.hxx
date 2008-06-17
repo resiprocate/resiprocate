@@ -70,6 +70,10 @@ class SelectTransporter : public Transporter
      // This will also change -- or really, go away -- when we add ice
      in_addr mLocalAddress;
      unsigned short mNextPort;
+
+     bool mHasBootstrapSocket;
+     resip::GenericIPAddress mBootstrapAddress;
+     resip::Socket mBootstrapSocket;
 };
 
 }
