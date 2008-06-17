@@ -1,3 +1,35 @@
+      struct {
+        opaque id[16];
+      } NodeId;
+
+      struct {
+        opaque       id<0..2^8-1>;
+      } ResourceId;
+      
+      enum {reserved(0), peer(2), resource(2), compressed(3), (255) }
+           DestinationType;
+     
+      select (destination_type) {
+        case peer:
+           NodeId               node_id;
+        
+        case resource:
+           ResourceId           resource_id;
+      
+        case compressed:
+           opaque               compressed_id<0..2^8-1>;
+         
+        /* This structure may be extended with new types */
+      
+      } DestinationData;
+
+
+      struct {
+        DestinationType         type;
+        uint8                   length;
+        DestinationData         destination_data;
+      } Destination;
+
 struct {
        uint8   relo_token;
        uint32  overlay;
@@ -8,6 +40,8 @@ struct {
        uint24  length;
        uint64  transaction_id;
        uint16  flags;
-       uint16  via_list_length;
-       uint16  destination_list_length;
+
+       Destination via_list<0..2^16-1>;
+       Destination destination_list<0..2^16-1>;
+       uint16  route_log_len_dummy;
 } ForwardingHdr;

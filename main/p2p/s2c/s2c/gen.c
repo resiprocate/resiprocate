@@ -124,7 +124,7 @@ static int max2bytes(UINT4 max)
 int s2c_gen_hdr_h(char *name, FILE *out)
   {
 
-    fprintf(out,"#include \"s2c/s2c_native.hxx\"\n\nnamespace s2c {\n\n",
+    fprintf(out,"#include \"p2p/s2c/s2c/s2c_native.hxx\"\n\nnamespace s2c {\n\n",
       name2namespace(name));
     
     return(0);
