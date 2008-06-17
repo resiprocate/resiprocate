@@ -16,6 +16,12 @@ TransactionController::~TransactionController()
 {
 }
 
+void 
+TransactionController::send(TransactionMessage* msg)
+{
+   mStateMacFifo.add(msg);
+}
+
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
