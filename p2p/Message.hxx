@@ -13,6 +13,17 @@ typedef NodeId ThingId;
 class MessageContents;
 class ErrorResponse;
 
+enum ErrorResponseCode
+{
+   EMovedTemporarily = 302,
+   EUnauthorized = 401,
+   EForbidden = 403,
+   ENotFound = 404,
+   ERequestTimeout = 408,
+   EPreconditionFailed = 412,
+   EIncompatibleWithOVerlay = 498
+};
+
 class Message : public Signable
 {
    public:
@@ -54,8 +65,8 @@ class Message : public Signable
       // copies via list to dest. list in reverse order
       virtual Message *makeResponse() const = 0;
 
-      /*virtual Message *makeErrorResponse(ErrorResponse::Code code, 
-                                         const resip::Data& reason) const = 0; */
+      virtual Message *makeErrorResponse(ErrorResponseCode code, 
+                                         const resip::Data& reason) const = 0; 
       
       // encoding/parsing methods
       resip::Data encode() const;	
@@ -82,20 +93,9 @@ class MessageContents
 class ErrorResponse : public Message
 {
    public:
-      enum Code
-      {
-         EMovedTemporarily = 302,
-         EUnauthorized = 401,
-         EForbidden = 403,
-         ENotFound = 404,
-         ERequestTimeout = 408,
-         EPreconditionFailed = 412,
-         EIncompatibleWithOVerlay = 498
-      };
-
       virtual MessageType getMessageType() const { return FailureResponse; }
       
-      Code getErrorCode() const;
+      ErrorResponseCode getErrorCode() const;
       const resip::Data& getReasonPhrase() const;
 
    protected:
