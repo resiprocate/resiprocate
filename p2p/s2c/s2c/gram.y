@@ -335,8 +335,14 @@ enumerated: NAME_ '(' NUM_ ')'
 
     decl->name=r_strdup($1);
     decl->u.enum_value_.value=$3;
-    decl->type=TYPE_ENUM;
-    
+    decl->type=TYPE_ENUM_VALUE;
+  
+  if(r=r_assoc_insert(types,decl->name,strlen(decl->name),
+      decl,0,0,R_ASSOC_NEW)){
+    r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert enum value %s. Exists?\n",$1);
+    exit(1);
+  }
+
     STAILQ_INSERT_TAIL(&CURRENT_DECL->u.enum_.members,decl,entry);
   }    
 | '(' NUM_ ')'
@@ -362,6 +368,7 @@ select: select_start '{' select_arms '}' NAME_ ';'
 
     pop_decl();
 };
+
 
 select_start: SELECT_ '(' NAME_ ')'
 {
