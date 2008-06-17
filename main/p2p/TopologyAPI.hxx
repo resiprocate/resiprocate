@@ -8,11 +8,9 @@
 #include "p2p/ResourceId.hxx"
 #include "p2p/ConfigObject.hxx"
 
-
 namespace p2p
 {
 
-class ResourceId;
 class ReloadMessage;
 
 /// This is an abstract base class from which to derive the actually topology plugins

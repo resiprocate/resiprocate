@@ -1,6 +1,8 @@
 #ifndef __P2P_RESOURCE_ID_HXX
 #define __P2P_RESOURCE_ID_HXX 1
 
+#include "rutil/Data.hxx"
+
 namespace p2p
 {
 
@@ -9,8 +11,8 @@ namespace p2p
 class ResourceId
 {
    public:
-      Data value();
-      bool operator = ( const ResourceID& foo );
+      resip::Data value();
+      bool operator= ( const ResourceId& foo );
 };
 
    
