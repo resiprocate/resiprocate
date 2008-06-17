@@ -1,23 +1,22 @@
-#ifndef __P2P_CONFIG_OBJECT_HXX
-#define __P2P_CONFIG_OBJECT_HXX 1
+#ifndef __P2P_USERNAME_HXX
+#define __P2P_USERNAME_HXX 1
 
-#include <openssl/ssl.h>
+#include "rutil/Data.hxx"
 
 namespace p2p
 {
 
-
-class ConfigObject
+// This is pretty much wrong, but it serves as a good placeholder at
+// the moment.
+class UserName
 {
    public:
-      const X509        *getCertificate();
-      const EVP_PKEY    *getPrivateKey();
-
-
-
+      resip::Data value();
+      bool operator= ( const ResourceId& foo );
 };
-}
+   
 
+}
 
 #endif
 
