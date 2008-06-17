@@ -1,14 +1,13 @@
 #ifndef __P2P_RELOADMESSAGE_HXX
 #define __P2P_RELOADMESSAGE_HXX
 
-#include <rutil/Data.hxx>
-#include "Signable.hxx"
-#include "ResourceId.hxx"
+#include "rutil/Data.hxx"
+#include "p2p/Signable.hxx"
+#include "p2p/ResourceId.hxx"
+#include "p2p/NodeId.hxx"
 
 namespace p2p 
 {
-
-typedef NodeId ThingId;
 
 class MessageContents;
 class ErrorResponse;
@@ -21,7 +20,7 @@ enum ErrorResponseCode
    ENotFound = 404,
    ERequestTimeout = 408,
    EPreconditionFailed = 412,
-   EIncompatibleWithOVerlay = 498
+   EIncompatibleWithOverlay = 498
 };
 
 class Message : public Signable
@@ -241,9 +240,6 @@ class TunnelReqMessage : public Message
    public:
       virtual MessageType getMessageType() const { return TunnelReq; }
 };
-
-
-
 
 class PingAnsMessage : public Message
 {
