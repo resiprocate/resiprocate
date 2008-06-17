@@ -28,7 +28,7 @@ class Transporter
       friend class SendP2pCommand;
       friend class SendApplicationCommand;
       friend class CollectCandidatesCommand;
-      friend class ConectP2pCommand;
+      friend class ConnectP2pCommand;
       friend class ConnectApplicationCommand;
 
       Transporter(resip::Fifo<TransporterMessage>& rxFifo,
