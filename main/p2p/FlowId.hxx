@@ -10,11 +10,14 @@ namespace p2p
 class FlowId
 {
    public:
+      FlowId(NodeId nodeId, unsigned short application, resip::Socket &socket)
+         : mNodeId(nodeId), mApplication(application), mDescriptor(socket) {;}
+
       resip::Socket &getSocket();
 
    private:
       NodeId mNodeId;
-      short mApplication;
+      unsigned short mApplication;
 
       // This is descriptor for now; it changes to something else
       // when we add ICE

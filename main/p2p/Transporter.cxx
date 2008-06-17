@@ -15,19 +15,6 @@ namespace p2p
 // Command Objects from here to the next line -- Transporter methods
 // come after that.
 
-class TransporterCommand
-{
-   public:
-     TransporterCommand(Transporter *transporter) : mTransporter(transporter) {;}
-
-     virtual ~TransporterCommand();
-
-     virtual void operator()() = 0;
-
-   protected:
-      Transporter *mTransporter;
-};
-
 class AddListenerCommand : public TransporterCommand
 {
    public:
