@@ -8,6 +8,7 @@
 #include "rutil/TransportType.hxx"
 
 #include "p2p/NodeId.hxx"
+#include "p2p/Candidate.hxx"
 
 namespace p2p
 {
@@ -93,10 +94,16 @@ class ApplicationMessageArrived : public TransporterMessage
 class LocalCandidatesCollected : public TransporterMessage
 {
    public:
+      LocalCandidatesCollected(std::vector<Candidate> &c) : 
+         mCandidates(c) {;}
+
       std::vector<Candidate> &getCandidates();
 
    protected:
       virtual MessageType getMessageType() {return LocalCandidatesCollectedType;}
+
+   private:
+      std::vector<Candidate> mCandidates;
 };
 
 }
