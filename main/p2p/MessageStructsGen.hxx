@@ -121,6 +121,7 @@ public:
    UInt16                        mRouteLogLenDummy;
    UInt16                        mMessageCode;
    std::vector<unsigned char>    mPayload;
+   SignatureStruct*              mSig;
 
 
    ForwardingLayerMessageStruct() {mName = "ForwardingLayerMessage";}

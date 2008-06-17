@@ -397,6 +397,7 @@ void ForwardingLayerMessageStruct :: print(std::ostream& out, int indent) const
       do_indent(out, indent);
    (out)  << "opaque:" << std::hex << (unsigned long long) mPayload[i] << "\n"; 
    }
+   mSig->print(out, indent);
 };
 
 void ForwardingLayerMessageStruct :: decode(std::istream& in)
@@ -471,6 +472,9 @@ void ForwardingLayerMessageStruct :: decode(std::istream& in)
    }
 ;   }
 
+   mSig = new SignatureStruct();
+   mSig->decode(in);
+
 };
 
 void ForwardingLayerMessageStruct :: encode(std::ostream& out)
@@ -530,6 +534,8 @@ void ForwardingLayerMessageStruct :: encode(std::ostream& out)
    encode_uintX(out, 24, (pos2 - pos1) - 3);
    out.seekp(pos2);
    }
+
+   mSig->encode(out);
 
 };
 
