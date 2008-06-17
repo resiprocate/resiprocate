@@ -220,25 +220,47 @@ Transporter::addListenerImpl(resip::TransportType transport,
 void
 Transporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
 {
-  // XXX
-  assert(0);
+   std::map<NodeId, FlowId>::iterator i;
+   i = mNodeFlowMap.find(nodeId);
+
+   if (i == mNodeFlowMap.end())
+   {
+      // XXX FIX ME -- should send error to application
+      return;
+   }
+
+   //**********************************************************************
+   // XXX For datagram transports, we would need to fragment here.
+   //**********************************************************************
+
+   resip::Data data;
+   data = msg->encode();
+
+   ::send((i->second).getSocket(), data.c_str(), data.size(), 0);
+   // XXX should check send response, and inform app of error if fail
 }
 
 void
 Transporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
 {
-  // XXX
-  assert(0);
+   ::send(flowId.getSocket(), data->c_str(), data->size(), 0);
+   // XXX should check send response, and inform app of error if fail
 }
 
 void
 Transporter::collectCandidatesImpl()
 {
   // For right now, we just return one candidate: a single TCP
-  // listener.
+  // listener. And we return it right away.
 
-  // XXX
-  assert(0);
+  std::vector<Candidate> candidates;
+  resip::GenericIPAddress addr(mLocalAddress);
+  Candidate c(resip::TCP, addr); // XXX -- SHOULD BE TLS
+  candidates.push_back(c);
+
+  LocalCandidatesCollected *lcc = new LocalCandidatesCollected(candidates);
+
+  mRxFifo.add(lcc);
 }
 
 void
