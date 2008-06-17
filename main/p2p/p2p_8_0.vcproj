@@ -149,6 +149,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\Join.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Message.cxx"
 				>
 			</File>
@@ -157,7 +161,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SelectTransporter.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\SignatureContext.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\test\testConsole.cxx"
 				>
 			</File>
 			<File
@@ -180,6 +192,10 @@
 				RelativePath=".\TransporterMessage.cxx"
 				>
 			</File>
+			<File
+				RelativePath=".\Update.cxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -199,11 +215,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CertDoneEvent.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ConfigObject.hxx"
 				>
 			</File>
 			<File
+				RelativePath=".\DataSpecifier.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\DictionaryValue.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Event.hxx"
 				>
 			</File>
 			<File
@@ -216,6 +244,10 @@
 			</File>
 			<File
 				RelativePath=".\FlowId.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Join.hxx"
 				>
 			</File>
 			<File
@@ -236,6 +268,10 @@
 			</File>
 			<File
 				RelativePath=".\ResourceId.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SelectTransporter.hxx"
 				>
 			</File>
 			<File
@@ -272,6 +308,10 @@
 			</File>
 			<File
 				RelativePath=".\TransporterMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Update.hxx"
 				>
 			</File>
 			<File
