@@ -4,6 +4,7 @@
 #include "p2p/ConfigObject.hxx"
 #include "p2p/TransporterMessage.hxx"
 #include "p2p/FlowId.hxx"
+#include "p2p/Message.hxx"
 
 namespace p2p
 {
@@ -42,6 +43,23 @@ class AddListenerCommand : public TransporterCommand
      resip::GenericIPAddress mAddress;
 };
 
+class SendReloadCommand : public TransporterCommand
+{
+   public:
+      SendReloadCommand(Transporter *transporter,
+                        NodeId nodeId,
+                        std::auto_ptr<p2p::Message> message)
+        : TransporterCommand(transporter), 
+          mNodeId(nodeId),
+          mMessage(message) {;}
+
+      void operator()() { mTransporter->send(mNodeId, mMessage); }
+
+   private:
+      NodeId mNodeId;
+      std::auto_ptr<p2p::Message> mMessage;
+};
+
 //----------------------------------------------------------------------
 
 Transporter::Transporter (resip::Fifo<TransporterMessage>& rxFifo,
@@ -56,13 +74,14 @@ Transporter::addListener(resip::TransportType transport,
 {
   mCmdFifo.add(new AddListenerCommand(this, transport, address));
 }
-/*  
+
 void
-Transporter::send(NodeId nodeId, std::auto_ptr<Message> msg)
+Transporter::send(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
 {
   mCmdFifo.add(new SendReloadCommand(this, nodeId, msg));
 }
 
+/*  
 void
 Transporter::send(FlowId flowId, std::auto_ptr<resip::Data> data)
 {
