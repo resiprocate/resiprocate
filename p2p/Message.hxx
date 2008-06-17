@@ -2,6 +2,8 @@
 #define __P2P_RELOADMESSAGE_HXX
 
 #include <rutil/Data.hxx>
+#include "Signable.hxx"
+#include "ResourceId.hxx"
 
 namespace p2p 
 {
@@ -9,15 +11,16 @@ namespace p2p
 typedef NodeId ThingId;
 
 class MessageContents;
+class ErrorResponse;
 
 class Message : public Signable
 {
    public:
       // Used to make a request. Will populate the rid into the destination
       // list. 
-      Message(ResourceId rid, const Data& overlayName);
+      Message(ResourceId rid, const resip::Data& overlayName);
       
-      virtual ~Message()=0 {}
+      virtual ~Message()=0;
 
       enum MessageType
       {
@@ -51,8 +54,8 @@ class Message : public Signable
       // copies via list to dest. list in reverse order
       virtual Message *makeResponse() const = 0;
 
-      virtual Message *makeErrorResponse(ErrorResponse::Code code, 
-                                         const Data& reason) const = 0;
+      /*virtual Message *makeErrorResponse(ErrorResponse::Code code, 
+                                         const resip::Data& reason) const = 0; */
       
       // encoding/parsing methods
       resip::Data encode() const;	
@@ -90,16 +93,16 @@ class ErrorResponse : public Message
          EIncompatibleWithOVerlay = 498
       };
 
-      virtual MessageType getMessageType() const { return ErrorResponse; }
+      virtual MessageType getMessageType() const { return FailureResponse; }
       
       Code getErrorCode() const;
-      const Data& getReasonPhrase() const;
+      const resip::Data& getReasonPhrase() const;
 
    protected:
-      virtual std::vector<const Data> collectSignableData() const;
+      virtual std::vector<const resip::Data> collectSignableData() const;
 };
 
-class ConnectReqMessage : public Message, public ConnectReqPdu
+class ConnectReqMessage : public Message
 {
    public:
       virtual MessageType getMessageType() const { return ConnectReq; }
