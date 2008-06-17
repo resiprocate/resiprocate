@@ -11,8 +11,8 @@ namespace p2p
 class UserName
 {
    public:
-      resip::Data value();
-      bool operator= ( const ResourceId& foo );
+      resip::Data value(); // looks like fluffy@example.com not fluffy
+      bool operator= ( const UserName& foo );
 };
    
 

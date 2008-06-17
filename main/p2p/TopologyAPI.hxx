@@ -23,26 +23,29 @@ class TopologyAPI
       // need a fifo to receive timer events 
 
       // Messages that the forwarding layer sends to this object
-      void newConnectionFormed( NodeId& node );
-      void connectionLost( NodeId& node );
+      virtual void newConnectionFormed( NodeId& node )=0;
+      virtual void connectionLost( NodeId& node )=0;
        
       // deal with topoogy change messages 
-      void processJoin( Message& message );
-      void processUpdate( Message& message );
-      void processLeave( Message& message );
+      virtual void processJoin( Message& message )=0;
+      virtual void processUpdate( Message& message )=0;
+      virtual void processLeave( Message& message )=0;
       
       // Deal with routing querries 
-      NodeId& findNextHop( NodeId& node );
-      NodeId& findNextHop( ResourceId& resource );
+      virtual NodeId& findNextHop( NodeId& node )=0;
+      virtual NodeId& findNextHop( ResourceId& resource )=0;
       
       // Deal with replication for storage 
-      std::vector<NodeId> getReplicationSet(  ResourceId& resource );
+      virtual std::vector<NodeId> getReplicationSet(  ResourceId& resource )=0;
       ///    Returns list of nodes to replicate on
 
       // Functions to find out if this peer is responsible for something
-      bool isResponsible( NodeId& node );
-      bool isResponsible( ResourceId& resource );
+      virtual bool isResponsible( NodeId& node )=0;
+      virtual bool isResponsible( ResourceId& resource )=0;
+  
+      virtual ~TopologyAPI();
       
+   private:
 };
 
 }
