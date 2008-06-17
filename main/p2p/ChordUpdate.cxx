@@ -2,6 +2,79 @@
 
 using namespace p2p;
 
+ChordUpdate::ChordUpdate() :	
+	mUpdateType(NotSpecified)
+{
+	
+}
+
+ChordUpdate::ChordUpdate(const resip::Data &chordUpdateBody) :
+	mUpdateBody(chordUpdateBody),
+	mUpdateType(NotSpecified)
+{
+
+}
+
+void 
+ChordUpdate::setUpdateType(UpdateType updateType)
+{
+	mUpdateType = updateType;
+}
+
+void 
+ChordUpdate::clear()
+{
+	mPredecessors.clear();
+	mSuccessors.clear();
+	mFingers.clear();
+}
+
+const std::vector<NodeId> &
+ChordUpdate::getFingers()
+{
+	assert(mUpdateType == Full);
+	return mFingers;
+}
+
+const std::vector<NodeId> &
+ChordUpdate::getSuccessors()
+{
+	assert(mUpdateType == Neighbors || mUpdateType == Full);
+	return mSuccessors;
+}
+
+const std::vector<NodeId> &
+ChordUpdate::getPredecessors()
+{
+	assert(mUpdateType == Neighbors || mUpdateType == Full);
+	return mPredecessors;	
+}
+
+void 
+ChordUpdate::setFingers(const std::vector<NodeId> &fingers)
+{
+	mFingers = fingers;
+}
+
+void 
+ChordUpdate::setSuccessors(const std::vector<NodeId> &successors)
+{
+	mSuccessors = successors;
+}
+
+void 
+ChordUpdate::setPredecessors(const std::vector<NodeId> &predecessors)
+{
+	mPredecessors = predecessors;
+}
+
+resip::Data
+ChordUpdate::encode() const
+{
+	// not complete
+	assert(0);
+}
+
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
  *  All rights reserved.
