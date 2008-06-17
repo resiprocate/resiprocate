@@ -1,30 +1,19 @@
 # $Id: Makefile,v 1.9 2004/05/10 01:12:46 jason Exp $
 
-BUILD = ../build
+BUILD = ../../../build
 include $(BUILD)/Makefile.pre
 
-CXXFLAGS += -I.. -I./s2c
+CXXFLAGS += -I.. 
 
-PACKAGES += RUTIL OPENSSL PTHREAD POPT S2C
+PACKAGES += RUTIL OPENSSL PTHREAD POPT
 
 CODE_SUBDIRS := 
 
-TARGET_LIBRARY := libp2p
+TARGET_LIBRARY := libs2c
 
-TESTPROGRAMS := ParsingTest.cxx
+TESTPROGRAMS := 
 
-SRC 	+= Join.cxx \
-		Message.cxx \
-		SignatureContext.cxx \
-		TransporterMessage.cxx \
-		Transporter.cxx \
-		TestMake.cxx \
-		TopologyAPI.cxx \
-		ChordTopology.cxx \
-		SelectTransporter.cxx \
-		ForwardingGen.cxx \
-		ChordUpdate.cxx \
-		Update.cxx
+SRC 	+= s2c_native.cxx 
 
 include $(BUILD)/Makefile.post
 

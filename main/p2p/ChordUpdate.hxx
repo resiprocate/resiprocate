@@ -28,7 +28,7 @@ public:
 	// empties NodeId vectors
 	void clear();
 	
-	// these will assert if mUpdateType is incorrect?
+	// these will assert if mUpdateType is incorrect, assumes it's already ben parsed (handled in ctor)
 	const std::vector<NodeId> &getFingers();
 	const std::vector<NodeId> &getSuccessors();
 	const std::vector<NodeId> &getPredecessors();
@@ -45,6 +45,8 @@ protected:
 	std::vector<NodeId> mPredecessors;
 	std::vector<NodeId> mSuccessors;
 	std::vector<NodeId> mFingers;
+private:
+	void parse();
 	
 };
 
