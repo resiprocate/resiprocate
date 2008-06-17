@@ -63,7 +63,7 @@ void ResourceIdStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mId.push_back(0);
-      decode_uintX(&in2, 8, mId[i++]);
+      decode_uintX(in2, 8, mId[i++]);
  DebugLog( << "mId[i++]");
    }
 ;
