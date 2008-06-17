@@ -34,6 +34,12 @@ NodeId::operator<(const NodeId &r) const
 }
 
 bool
+NodeId::operator<=(const NodeId& rhs) const
+{
+   return *this == rhs || *this < rhs;
+}
+
+bool
 NodeId::operator==(const NodeId& r) const
 {
    return mValue[0] == r.mValue[0] && mValue[1] == r.mValue[1];

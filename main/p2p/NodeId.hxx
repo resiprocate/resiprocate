@@ -24,6 +24,7 @@ class NodeId
       const resip::Data getValue() const;
 
       bool operator<(const NodeId& rhs) const;
+      bool operator<=(const NodeId& rhs) const;
       bool operator==(const NodeId& rhs) const;
       
    private:
