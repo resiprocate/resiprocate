@@ -6,7 +6,7 @@
 
 using namespace p2p;
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::P@P
+#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 TransactionController::TransactionController()
 {
