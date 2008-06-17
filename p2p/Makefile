@@ -18,8 +18,9 @@ SRC 	+= Join.cxx \
 		SignatureContext.cxx \
 		TransporterMessage.cxx \
 		Transporter.cxx \
-		SelectTransporter.cxx \
 		TopologyAPI.cxx \
+		ChordTopology.cxx \
+		SelectTransporter.cxx \
 		Update.cxx
 
 
