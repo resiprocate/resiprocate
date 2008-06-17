@@ -3,6 +3,7 @@
 
 #include <openssl/evp.h>
 #include <openssl/x509.h>
+#include <arpa/inet.h> // For htonl
 
 #include "rutil/Data.hxx"
 #include "rutil/GenericIPAddress.hxx"
