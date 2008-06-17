@@ -13,6 +13,7 @@
 namespace p2p
 {
 
+enum {RELOAD_APPLICATION_ID = 8675};
 
 class ConfigObject
 {

@@ -3,7 +3,7 @@
 
 #include "p2p/SelectTransporter.hxx"
 #include "p2p/ConfigObject.hxx"
-#include "p2p/SelectTransporterMessage.hxx"
+#include "p2p/TransporterMessage.hxx"
 #include "p2p/FlowId.hxx"
 #include "p2p/Message.hxx"
 #include "p2p/Candidate.hxx"
@@ -11,7 +11,7 @@
 namespace p2p
 {
 
-SelectTransporter::SelectTransporter (resip::Fifo<SelectTransporterMessage>& rxFifo,
+SelectTransporter::SelectTransporter (resip::Fifo<TransporterMessage>& rxFifo,
                           ConfigObject &configuration)
   : Transporter(rxFifo, configuration)
 {
@@ -35,48 +35,6 @@ SelectTransporter::SelectTransporter (resip::Fifo<SelectTransporterMessage>& rxF
 SelectTransporter::~SelectTransporter()
 {
    resip::closeSocket(mTcpDescriptor);
-}
-
-void
-SelectTransporter::addListener(resip::TransportType transport,
-                 resip::GenericIPAddress &address)
-{
-  mCmdFifo.add(new AddListenerCommand(this, transport, address));
-}
-
-void
-SelectTransporter::send(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
-{
-  mCmdFifo.add(new SendP2pCommand(this, nodeId, msg));
-}
-
-void
-SelectTransporter::send(FlowId flowId, std::auto_ptr<resip::Data> msg)
-{
-  mCmdFifo.add(new SendApplicationCommand(this, flowId, msg));
-}
-  
-void
-SelectTransporter::collectCandidates()
-{
-  mCmdFifo.add(new CollectCandidatesCommand(this));
-}
-  
-void
-SelectTransporter::connect(NodeId nodeId,
-                   std::vector<Candidate> remoteCandidates,
-                   resip::GenericIPAddress &stunTurnServer)
-{
-  mCmdFifo.add(new ConnectP2pCommand(this, nodeId, remoteCandidates, stunTurnServer));
-}
-  
-void
-SelectTransporter::connect(NodeId nodeId,
-                   std::vector<Candidate> remoteCandidates,
-                   unsigned short application,
-                   resip::GenericIPAddress &stunTurnServer)
-{
-  mCmdFifo.add(new ConnectApplicationCommand(this, nodeId, remoteCandidates, application, stunTurnServer));
 }
 
 //----------------------------------------------------------------------
@@ -142,11 +100,26 @@ SelectTransporter::collectCandidatesImpl()
 
 void
 SelectTransporter::connectImpl(NodeId nodeId,
-                         std::vector<Candidate> remoteCandidates,
-                         resip::GenericIPAddress &stunTurnServer)
+                               std::vector<Candidate> remoteCandidates,
+                               resip::GenericIPAddress &stunTurnServer)
 {
-  // XXX
-  assert(0);
+   // XXX Right now, we just grab the first candidate out of the array
+   // and connect to it. Whee!
+
+   resip::Socket s;
+   Candidate candidate = remoteCandidates.front();
+
+   // Right now, we're only implementing stream stuff.
+   // Later on, we'll have to have different processing
+   // based on the transports -- but this will likely be
+   // hidden from us by the ICE library
+   assert (candidate.getTransportType() == resip::TCP
+           || candidate.getTransportType() == resip::TLS);
+
+   s = ::socket(AF_INET, SOCK_STREAM, 0);
+   ::connect(s, &(candidate.getAddress().address), sizeof(sockaddr_in));
+
+   FlowId flowId(nodeId, RELOAD_APPLICATION_ID, s);
 }
 
 void
