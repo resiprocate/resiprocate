@@ -2,6 +2,10 @@
 
 using namespace p2p;
 
+ResourceId::ResourceId()
+{
+
+}
 
 ResourceId::ResourceId(const resip::Data& rid) : 
    mResourceId(rid)

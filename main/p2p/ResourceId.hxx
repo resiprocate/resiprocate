@@ -9,6 +9,7 @@ namespace p2p
 class ResourceId
 {
    public:	
+      ResourceId();
       ResourceId(const resip::Data& rid);
       ResourceId(const ResourceId& rhs);
       
@@ -16,7 +17,6 @@ class ResourceId
       resip::Data& operator= ( const ResourceId& rhs );
 
    private:
-      ResourceId();
 
       resip::Data mResourceId;
 };
