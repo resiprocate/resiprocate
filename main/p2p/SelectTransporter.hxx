@@ -68,10 +68,8 @@ class SelectTransporter : public Transporter
      ListenerMap mListenerMap;
 
      // This will also change -- or really, go away -- when we add ice
-     resip::Socket mTcpDescriptor;
-     resip::GenericIPAddress mTcpAddress;
-
      in_addr mLocalAddress;
+     unsigned short mNextPort;
 };
 
 }
