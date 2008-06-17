@@ -22,12 +22,12 @@ public:
 };
 
 
-enum {
+enum DestinationType {
    reserved = 0,
-   peer = 2,
+   peer = 1,
    resource = 2,
    compressed = 3
-} DestinationType;
+};
 
 class DestinationDataStruct : public PDU {
 public:
@@ -38,8 +38,8 @@ public:
           tCompressed=3
    };
 
-   union {
-     struct {
+   struct {
+     struct A3 {
           NodeIdStruct*                 mNodeId;
      } mPeer;
      struct {

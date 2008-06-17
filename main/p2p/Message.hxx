@@ -5,6 +5,7 @@
 #include "p2p/Signable.hxx"
 #include "p2p/ResourceId.hxx"
 #include "p2p/NodeId.hxx"
+#include "p2p/MessageStructsGen.hxx"
 
 namespace p2p 
 {
@@ -24,7 +25,7 @@ enum ErrorResponseCode
 };
 
 
-class Message : public Signable
+class Message : public Signable, private s2c::ForwardingHdrStruct
 {
    public:
       // Used to make a request. Will populate the rid into the destination list.  
@@ -88,6 +89,9 @@ class Message : public Signable
 protected:
 	ResourceId mResourceId;
 	resip::Data mOverlayName;
+	resip::Data mEncodedData;
+
+	virtual void encodePayload(resip::Data &data) const = 0;
 };
 
 class MessageContents 
