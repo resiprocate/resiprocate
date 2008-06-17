@@ -11,9 +11,10 @@ CODE_SUBDIRS :=
 
 TARGET_LIBRARY := libp2p
 
-TESTPROGRAMS :=
+TESTPROGRAMS := 
 
-SRC 	+=      SignatureContext.cxx \
+SRC 	+= Message.cxx \
+		SignatureContext.cxx \
 		TransporterMessage.cxx \
 		Transporter.cxx
 
