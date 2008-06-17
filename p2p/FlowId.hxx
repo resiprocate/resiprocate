@@ -13,7 +13,7 @@ class FlowId
       FlowId(NodeId nodeId, unsigned short application, resip::Socket &socket)
          : mNodeId(nodeId), mApplication(application), mDescriptor(socket) {;}
 
-      resip::Socket &getSocket();
+      resip::Socket &getSocket() { return mDescriptor; }
 
       unsigned short getApplication() const {return mApplication;}
 

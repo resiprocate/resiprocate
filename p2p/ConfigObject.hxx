@@ -19,8 +19,8 @@ class ConfigObject
    public:
       virtual ~ConfigObject() {;}
 
-      virtual const X509        *getCertificate();
-      virtual const EVP_PKEY    *getPrivateKey();
+      virtual const X509        *getCertificate() { return 0; }
+      virtual const EVP_PKEY    *getPrivateKey() { return 0; }
 
       virtual resip::Data& overlayName() { return mOverlayName; }
       virtual const resip::Data& overlayName() const { return mOverlayName; }
