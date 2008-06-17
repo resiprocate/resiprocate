@@ -10,7 +10,8 @@ namespace p2p
 class Candidate
 {
    public:
-      Candidate(resip::TransportType type, resip::GenericIPAddress& address);
+      Candidate(resip::TransportType type, resip::GenericIPAddress& address) : 
+         mTransportType(type), mAddress(address) {}
 
       const resip::TransportType    &getTransportType() const 
          { return mTransportType; }

@@ -57,7 +57,7 @@ class ConnectionOpened : public TransporterMessage
                        unsigned short application,
                        resip::TransportType transportType,
                        X509 *cert
-                      );
+                       ) {}
 
       FlowId getFlowId();
       unsigned short getApplication();
@@ -112,7 +112,7 @@ class LocalCandidatesCollected : public TransporterMessage
       LocalCandidatesCollected(std::vector<Candidate> &c) : 
          mCandidates(c) {;}
 
-      std::vector<Candidate> &getCandidates();
+         std::vector<Candidate> &getCandidates() { return mCandidates; }
 
    protected:
       virtual MessageType getMessageType() {return LocalCandidatesCollectedType;}
