@@ -8,15 +8,15 @@ ResourceId::ResourceId(const resip::Data& rid) :
 {
 }
 
-ResourceId::ResourceId(const resip::ResourceId& rhs) : 
+ResourceId::ResourceId(const ResourceId& rhs) : 
    mResourceId(rhs.mResourceId)
 {
 }
 
-const resip::Data&
+resip::Data&
 ResourceId::operator=(const ResourceId& rhs)
 {
-   mResourceId = rhs.mResourceId;
+   return mResourceId = rhs.mResourceId;
 }
 
 const resip::Data& 
