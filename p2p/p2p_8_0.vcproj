@@ -169,6 +169,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\NodeId.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\P2PSubsystem.cxx"
 				>
 			</File>

@@ -1,7 +1,7 @@
 #ifndef __P2P_NODE_ID_HXX
 #define __P2P_NODE_ID_HXX 1
 
-#include <unistd.h>
+#include "rutil/Compat.hxx"
 
 namespace p2p
 {
@@ -15,7 +15,7 @@ class NodeId
       unsigned char *getValue() { return reinterpret_cast<unsigned char *>(mValue);}
       size_t getSize() { return sizeof(mValue); }
 
-      bool operator<(const NodeId &rhs) const { return memcmp(&mValue, &rhs.mValue, sizeof(mValue)) < 0; }
+      bool operator<(const NodeId &rhs) const;
       
    private:
       long long mValue[2];
