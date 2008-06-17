@@ -3,6 +3,7 @@
 
 #include "rutil/Data.hxx"
 #include "NodeId.hxx"
+#include "Postable.hxx"
 #include "ResourceId.hxx"
 #include "UserName.hxx"
 #include "ConfigObject.hxx"
@@ -27,7 +28,7 @@ class SignatureContext
 
       // Fetch all the certificates corresponding to this set of
       // signatures, works in terms of encoded "Signature" objects
-      void fetchCertificates(const vector<Data> signatures, Postable &done);
+  void fetchCertificates(const vector<Data> signatures, Postable<bool> done);
       // Validate a signature, comparing to the expected NodeId node
       bool validateSignature(const vector<const Data> toBeSigned, 
         const Data &signature, NodeId node);
