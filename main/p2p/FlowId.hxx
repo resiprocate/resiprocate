@@ -10,6 +10,7 @@ namespace p2p
 class FlowId
 {
    public:
+      resip::Socket &getSocket();
 
    private:
       NodeId mNodeId;
