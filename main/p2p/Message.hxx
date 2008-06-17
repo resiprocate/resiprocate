@@ -23,6 +23,7 @@ enum ErrorResponseCode
    EIncompatibleWithOverlay = 498
 };
 
+
 class Message : public Signable
 {
    public:
