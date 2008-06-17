@@ -10,6 +10,7 @@
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/Socket.hxx"
 
+#include "p2p/ConfigObject.hxx"
 #include "p2p/NodeId.hxx"
 
 namespace p2p
@@ -45,7 +46,8 @@ class Transporter
       void send(NodeId nodeId, std::auto_ptr<p2p::Message> msg);
       void send(FlowId flowId, std::auto_ptr<resip::Data> data);
    
-      void collectCandidates();
+      void collectCandidates(NodeId nodeId,
+                             unsigned short appId = RELOAD_APPLICATION_ID);
    
       void connect(NodeId nodeId, 
                    std::vector<Candidate> remoteCandidates,
@@ -63,7 +65,7 @@ class Transporter
       virtual void sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg) = 0;
       virtual void sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data) = 0;
    
-      virtual void collectCandidatesImpl() = 0;
+      virtual void collectCandidatesImpl(NodeId, unsigned short appId) = 0;
    
       virtual void connectImpl(NodeId nodeId, 
                        std::vector<Candidate> remoteCandidates,
