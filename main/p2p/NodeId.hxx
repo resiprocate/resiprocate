@@ -15,7 +15,7 @@ class NodeId
       unsigned char *getValue() { return reinterpret_cast<unsigned char *>(mValue);}
       size_t getSize() { return sizeof(mValue); }
 
-      bool operator<(const NodeId &) const;
+      bool operator<(const NodeId &rhs) const { return memcmp(&mValue, &rhs.mValue, sizeof(mValue)) < 0; }
       
    private:
       long long mValue[2];
