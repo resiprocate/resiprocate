@@ -3,7 +3,10 @@
 
 #include <openssl/evp.h>
 #include <openssl/x509.h>
+
+#ifndef WIN32
 #include <arpa/inet.h> // For htonl
+#endif
 
 #include "rutil/Data.hxx"
 #include "rutil/GenericIPAddress.hxx"
@@ -18,23 +21,24 @@ enum {RELOAD_APPLICATION_ID = 8675};
 
 class ConfigObject
 {
-   public:
-      virtual ~ConfigObject() {;}
+public:
+   ConfigObject() : mNodeId(resip::Data::Empty) {}
+   virtual ~ConfigObject() {;}
 
-      virtual const X509        *getCertificate() { return 0; }
-      virtual const EVP_PKEY    *getPrivateKey() { return 0; }
+   virtual const X509        *getCertificate() { return 0; }
+   virtual const EVP_PKEY    *getPrivateKey() { return 0; }
 
-      virtual resip::Data& overlayName() { return mOverlayName; }
-      virtual const resip::Data& overlayName() const { return mOverlayName; }
+   virtual resip::Data& overlayName() { return mOverlayName; }
+   virtual const resip::Data& overlayName() const { return mOverlayName; }
 
-      virtual NodeId& nodeId() { return mNodeId; }
-      virtual const NodeId nodeId() const { return mNodeId; }
+   virtual NodeId& nodeId() { return mNodeId; }
+   virtual const NodeId nodeId() const { return mNodeId; }
 
-      virtual UserName& userName() { return mUserName; }
-      virtual const UserName& userName() const { return mUserName; }
+   virtual UserName& userName() { return mUserName; }
+   virtual const UserName& userName() const { return mUserName; }
 
-      virtual std::vector<resip::GenericIPAddress>& bootstrapNodes() { return mBootstrapNodes; }
-      virtual const std::vector<resip::GenericIPAddress>& bootstrapNodes() const { return mBootstrapNodes; }
+   virtual std::vector<resip::GenericIPAddress>& bootstrapNodes() { return mBootstrapNodes; }
+   virtual const std::vector<resip::GenericIPAddress>& bootstrapNodes() const { return mBootstrapNodes; }
       
 private:
    resip::Data mOverlayName;

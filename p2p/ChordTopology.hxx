@@ -1,6 +1,7 @@
 #ifndef __P2P_CHORDTOPOLOGY_HXX
 #define __P2P_CHORDTOPOLOGY_HXX 1
 
+#include <set>
 #include "rutil/Data.hxx"
 #include "rutil/Fifo.hxx"
 
@@ -60,7 +61,7 @@ class Chord : public TopologyAPI
       
    private:
       
-      std::vector<ChordNodeId> mFingerTable;
+      std::set<ChordNodeId> mFingerTable;
       std::vector<ChordNodeId> mPrevTable;
       std::vector<ChordNodeId> mNextTable;
 

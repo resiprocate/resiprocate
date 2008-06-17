@@ -149,6 +149,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\ChordNodeId.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ChordTopology.cxx"
 				>
 			</File>
@@ -161,7 +165,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Find.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Join.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Leave.cxx"
 				>
 			</File>
 			<File
@@ -243,6 +255,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ChordNodeId.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ChordTopology.hxx"
 				>
 			</File>
@@ -279,6 +295,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Find.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\FlowId.hxx"
 				>
 			</File>
@@ -288,6 +308,10 @@
 			</File>
 			<File
 				RelativePath=".\Join.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Leave.hxx"
 				>
 			</File>
 			<File
@@ -336,6 +360,10 @@
 			</File>
 			<File
 				RelativePath=".\SingleValue.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StoreSet.hxx"
 				>
 			</File>
 			<File
