@@ -39,9 +39,10 @@ int _kbhit() {
 #include <rutil/ParseBuffer.hxx>
 #include <rutil/BaseException.hxx>
 
-#include "../P2PSubsystem.hxx"
-#include "../ConfigObject.hxx"
-#include "../SelectTransporter.hxx"
+#include "p2p/P2PSubsystem.hxx"
+#include "p2p/TransporterMessage.hxx"
+#include "p2p/ConfigObject.hxx"
+#include "p2p/SelectTransporter.hxx"
 
 using namespace p2p;
 using namespace resip;
@@ -282,7 +283,8 @@ main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
    // Setup Transporter
    //////////////////////////////////////////////////////////////////////////////
-   
+   resip::Fifo<TransporterMessage> rxFifo;
+   SelectTransporter transporter(rxFifo, config);
 
    int input;
    while(true)
