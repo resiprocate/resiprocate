@@ -20,7 +20,7 @@ class SpecifySingle :public DataSpecifier
   public:
 };
 
-//defualt to entire array
+//default to entire array
 class SpecifyArray :public DataSpecifier
 {
    public:
