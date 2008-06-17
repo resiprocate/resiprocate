@@ -9,6 +9,7 @@ namespace p2p
 // Reload types
 typedef ::UInt32 KindId;
 typedef ::UInt32 Generation;
+typedef ::UInt8 ReplicaNumber;
 
 } // p2p
 
