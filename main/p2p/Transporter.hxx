@@ -8,6 +8,7 @@
 #include "rutil/Fifo.hxx"
 #include "rutil/TransportType.hxx"
 #include "rutil/GenericIPAddress.hxx"
+#include "rutil/Socket.hxx"
 
 #include "p2p/NodeId.hxx"
 
@@ -83,7 +84,7 @@ class Transporter
      std::map<int, FlowId> mDescriptorFlowMap;
 
      // This will also change -- or really, go away -- when we add ice
-     int mTcpDescriptor;
+     resip::Socket mTcpDescriptor;
      unsigned short mTcpSocket;
      resip::GenericIPAddress mTcpAddress;
 };
