@@ -1,5 +1,5 @@
-#ifndef __P2P_TRANSPORTER_HXX
-#define __P2P_TRANSPORTER_HXX 1
+#ifndef __P2P_SELECT_TRANSPORTER_HXX
+#define __P2P_SELECT_TRANSPORTER_HXX 1
 
 #include <vector>
 #include <map>
@@ -23,7 +23,7 @@ class ConfigObject;
 class FlowId;
 class TransporterCommand;
 
-class SelectTransporter : public class Transporter
+class SelectTransporter : public Transporter
 {
    public:
       friend class AddListenerCommand;
@@ -60,9 +60,6 @@ class SelectTransporter : public class Transporter
 
    private:
      std::map<NodeId, FlowId> mNodeFlowMap;
-
-     // This will change when we add ice
-     std::map<resip::Socket, FlowId> mDescriptorFlowMap;
 
      // This will also change -- or really, go away -- when we add ice
      resip::Socket mTcpDescriptor;

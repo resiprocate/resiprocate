@@ -12,8 +12,14 @@ class Candidate
    public:
       Candidate(resip::TransportType type, resip::GenericIPAddress& address);
 
+      const resip::TransportType    &getTransportType() const 
+         { return mTransportType; }
+
+      const resip::GenericIPAddress &getAddress() const
+         { return mAddress; }
+
    private:
-      resip::TransportType    mTranportType;
+      resip::TransportType    mTransportType;
       resip::GenericIPAddress mAddress;
       // TODO add ice specific members
 };
