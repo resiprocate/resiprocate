@@ -72,7 +72,7 @@ namespace p2p
 	UInt64 getTransactionID() const;
 	void setTransactionID(UInt64 transactionID);
 
-	UInt16 getFlags() cosnt;
+	UInt16 getFlags() const;
 	void setFlags(UInt16 flags);
 
 	UInt16 getViaLength() const;

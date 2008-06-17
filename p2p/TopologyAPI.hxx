@@ -7,11 +7,11 @@
 #include "p2p/NodeId.hxx"
 #include "p2p/ResourceId.hxx"
 #include "p2p/ConfigObject.hxx"
+#include "p2p/Message.hxx"
 
 namespace p2p
 {
 
-class Message;
 class TransactionLayer;
 
 /// This is an abstract base class from which to derive the actually topology plugins
