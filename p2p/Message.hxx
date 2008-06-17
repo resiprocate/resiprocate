@@ -60,7 +60,7 @@ class Message : public Signable
          FailureResponse = 0xFFFF
       };
 
-	  bool isRequest() const;  // might not be needed
+	  bool isRequest() const;  // convenience function
 
       virtual MessageType getMessageType() const = 0;
 
@@ -85,6 +85,9 @@ class Message : public Signable
       
       DestinationId nextDestination() const;
       void popNextDestinationId(); 
+protected:
+	ResourceId mResourceId;
+	resip::Data mOverlayName;
 };
 
 class MessageContents 

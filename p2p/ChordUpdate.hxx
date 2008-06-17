@@ -1,63 +1,54 @@
-#include "p2p/Message.hxx"
-#include "p2p/Join.hxx"
+#ifndef P2P_CHORDUPDATE_HXX
+#define P2P_CHORDUPDATE_HXX
 
-#include <assert.h>
+#include "rutil/Data.hxx"
+#include "p2p/NodeId.hxx"
 
-using namespace p2p;
-
-Message::Message(ResourceId rid, const resip::Data& overlayName) :
-	mResourceId(rid),
-	mOverlayName(overlayName)
+namespace p2p
 {
 
-}
-
-Message::~Message() 
+class ChordUpdate
 {
-
-}
-
-bool
-Message::isRequest() const
-{
-	unsigned int reqValue = static_cast<unsigned int>(getMessageType());
-	return ((reqValue % 2) == 1);
-}
-
-Message *
-Message::parse(const resip::Data &message, NodeId senderID)
-{
-	// placeholder
-	Message::MessageType messageType = UpdateReq; // remove me
-	Message *newMessage = 0;
-	
-	// parse the forwarding header
-	
-	switch(messageType)
+public:
+	enum UpdateType
 	{
-		case UpdateReq:
-			break;
-		case UpdateAns:
-			break;
-		case JoinReq:
-			break;
-		case JoinAns:
-			break;
-		default:
-			assert(0); // unknown value
-	}
+		Reserved = 0,
+		PeerReady = 1,
+		Neighbors = 2,
+		Full = 3,
+		NotSpecified = 0xff
+	};
 	
-	return newMessage;
+	ChordUpdate();
+	ChordUpdate(const resip::Data &chordUpdateBody);
+	
+	UpdateType getUpdateType() const { return mUpdateType; }
+	void setUpdateType(UpdateType updateType);
+	
+	void clear();
+	
+	const std::vector<NodeId> &getFingers();
+	const std::vector<NodeId> &getSuccessors();
+	const std::vector<NodeId> &getPredecessors();
+	
+	// these will assert if mUpdateType is incorrect?
+	void setFingers(const std::vector<NodeId> &fingers);  
+	void setSuccessors(const std::vector<NodeId> &successors);
+	void setPredecessors(const std::vector<NodeId> &predecessors);
+	
+protected:
+	resip::Data mUpdateBody;
+	UpdateType mUpdateType;
+	
+	std::vector<NodeId> mPredecessors;
+	std::vector<NodeId> mSuccessors;
+	std::vector<NodeId> mFingers;
+	
+};
+
 }
 
-resip::Data
-Message::encode() const
-{
-	resip::Data encodedData;
-	
-	assert(0);
-	return encodedData;
-}
+#endif
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
@@ -92,6 +83,4 @@ Message::encode() const
  *  IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *  THE POSSIBILITY OF SUCH DAMAGE.
  *====================================================================== */
-
-
 
