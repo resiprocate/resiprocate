@@ -26,14 +26,14 @@
 int main(int argc, char **argv)
   {
 
-
+#if 0
     /* TESTS */
     std::vector<int> v(2);
     v[1]=0;
 
 
 
-    s2c::test::FooPdu *f=new s2c::test::FooPdu();
+    s2c::test::FooStruct *f=new s2c::test::FooStruct();
 
     
     std::ofstream fout;
@@ -46,9 +46,9 @@ int main(int argc, char **argv)
 
 
     f->mBar='X';
-    f->mMumble=new s2c::test::BazTypePdu();
+    f->mMumble=new s2c::test::BazTypeStruct();
     f->mMumble->mZzz=0x9988;
-    f->mId=new s2c::test::PeerIdPdu();
+    f->mId=new s2c::test::PeerIdStruct();
     memset(f->mId->mId, 0x65, 16);
     f->mZulu=0xffff;
     f->mVariable.push_back(0x11);
@@ -63,10 +63,11 @@ int main(int argc, char **argv)
     std::ifstream fin;
     fin.open("test.out");
     
-    s2c::test::FooPdu *f2=new s2c::test::FooPdu();
+    s2c::test::FooStruct *f2=new s2c::test::FooStruct();
     
     f2->decode(&fin);
 
     f2->print(&std::cout, 0);
+#endif
   }
 
