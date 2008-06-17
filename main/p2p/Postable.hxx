@@ -1,6 +1,8 @@
 #ifndef P2P_Postable_hxx
 #define P2P_Postable_hxx
 
+#include <memory>
+
 namespace p2p
 {
 
@@ -9,7 +11,7 @@ class Postable
 {
    public:
       virtual ~Postable(){}
-      virtual void post(T*)=0;
+      virtual void post(std::auto_ptr<T>)=0;
 };
 
 }
