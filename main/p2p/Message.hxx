@@ -57,6 +57,7 @@ class Message : public Signable
          UpdateAns = 20,
          RouteQueryReq = 21,
          RouteQueryAns = 22,
+         FailureRequest = 0xFFFE,
          FailureResponse = 0xFFFF
       };
 

@@ -137,8 +137,11 @@ class ConnectApplicationCommand : public TransporterCommand
 
 Transporter::Transporter (resip::Fifo<TransporterMessage>& rxFifo,
                           ConfigObject &configuration)
-  : mRxFifo(rxFifo)
+  : mRxFifo(rxFifo), mConfiguration(configuration)
 {
+   // We really shouldn't do this in the constructor -- but it goes
+   // away when we add ICE.
+   mTcpDescriptor = ::socket(AF_INET, SOCK_STREAM, 0);
 }
 
 void
@@ -183,6 +186,68 @@ Transporter::connect(NodeId nodeId,
   mCmdFifo.add(new ConnectApplicationCommand(this, nodeId, remoteCandidates, application, stunTurnServer));
 }
 
+//----------------------------------------------------------------------
+// Impls follow
+
+/**
+  @note This method is to be called by bootstrap nodes only -- all other
+        modes need to use ICE-allocated addresses.
+*/
+void
+Transporter::addListenerImpl(resip::TransportType transport,
+                             resip::GenericIPAddress &address)
+{
+  // XXX
+  assert(0);
+}
+
+void
+Transporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
+{
+  // XXX
+  assert(0);
+}
+
+void
+Transporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
+{
+  // XXX
+  assert(0);
+}
+
+void
+Transporter::collectCandidatesImpl()
+{
+  // For right now, we just return one candidate: a single TCP
+  // listener.
+
+  // XXX
+  assert(0);
+}
+
+void
+Transporter::connectImpl(NodeId nodeId,
+                         std::vector<Candidate> remoteCandidates,
+                         resip::GenericIPAddress &stunTurnServer)
+{
+  // XXX
+  assert(0);
+}
+
+void
+Transporter::connectImpl(NodeId nodeId,
+                         std::vector<Candidate> remoteCandidates,
+                         unsigned short application,
+                         resip::GenericIPAddress &stunTurnServer)
+{
+  // XXX
+  assert(0);
+}
+
+//----------------------------------------------------------------------
+
+// This isn't anything like finished yet -- need to wait for data on our
+// descriptors also.
 bool
 Transporter::process(int ms)
 {
@@ -190,6 +255,7 @@ Transporter::process(int ms)
   if ((cmd = mCmdFifo.getNext(ms)) != 0)
   {
     (*cmd)();
+    delete cmd;
     return true;
   }
   return false;

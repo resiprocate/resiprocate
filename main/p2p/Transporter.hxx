@@ -75,10 +75,17 @@ class Transporter
      resip::Fifo<TransporterCommand> mCmdFifo;
      resip::Fifo<TransporterMessage> &mRxFifo;
 
+     ConfigObject &mConfiguration;
+
      std::map<NodeId, FlowId> mNodeFlowMap;
 
      // This will change when we add ice
      std::map<int, FlowId> mDescriptorFlowMap;
+
+     // This will also change -- or really, go away -- when we add ice
+     int mTcpDescriptor;
+     unsigned short mTcpSocket;
+     resip::GenericIPAddress mTcpAddress;
 };
 
 }
