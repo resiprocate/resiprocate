@@ -165,6 +165,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TransactionController.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TransactionState.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Transporter.cxx"
 				>
 			</File>
@@ -240,6 +248,14 @@
 			</File>
 			<File
 				RelativePath=".\TopologyAPI.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TransactionController.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TransactionState.hxx"
 				>
 			</File>
 			<File
