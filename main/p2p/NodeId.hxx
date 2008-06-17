@@ -1,6 +1,8 @@
 #ifndef __P2P_NODE_ID_HXX
 #define __P2P_NODE_ID_HXX 1
 
+#include <unistd.h>
+
 namespace p2p
 {
 
