@@ -179,6 +179,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ResourceId.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\SignatureContext.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\TopologyAPI.hxx"
 				>
 			</File>
