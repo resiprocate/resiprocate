@@ -74,7 +74,7 @@ class MessageArrived : public TransporterMessage
 {
    public:
       NodeId getNodeId();
-      Message getMessage();
+      p2p::Message &getMessage();
 
    protected:
       virtual MessageType getMessageType() {return MessageArrivedType;}
