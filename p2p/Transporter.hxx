@@ -25,10 +25,10 @@ class Transporter
 {
    public:
       friend class AddListenerCommand;
-      friend class SendReloadCommand;
+      friend class SendP2pCommand;
       friend class SendApplicationCommand;
-      friend class CollectLocalCandidatesCommand;
-      friend class ConectReloadCommand;
+      friend class CollectCandidatesCommand;
+      friend class ConectP2pCommand;
       friend class ConnectApplicationCommand;
 
       Transporter(resip::Fifo<TransporterMessage>& rxFifo,
@@ -42,7 +42,7 @@ class Transporter
       void send(NodeId nodeId, std::auto_ptr<p2p::Message> msg);
       void send(FlowId flowId, std::auto_ptr<resip::Data> data);
    
-      void collectLocalCandidates();
+      void collectCandidates();
    
       void connect(NodeId nodeId, 
                    std::vector<Candidate> remoteCandidates,
@@ -60,7 +60,7 @@ class Transporter
       void sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg);
       void sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data);
    
-      void collectLocalCandidatesImpl();
+      void collectCandidatesImpl();
    
       void connectImpl(NodeId nodeId, 
                        std::vector<Candidate> remoteCandidates,
