@@ -14,7 +14,6 @@ TARGET_LIBRARY := libp2p
 TESTPROGRAMS := ParsingTest.cxx
 
 SRC 	+= \
-	ChordNodeId.cxx \
 	ChordTopology.cxx \
 	ChordUpdate.cxx \
 	Connect.cxx \
