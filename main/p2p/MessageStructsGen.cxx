@@ -9,6 +9,131 @@ namespace s2c {
 
 
 
+// Classes for NodeIdStruct */
+
+void NodeIdStruct :: print(std::ostream& out, int indent) const
+{
+   do_indent(out,indent);
+   (out) << "NodeId:\n";
+   indent+=2;
+   for(int i=0;i<16;i++) {
+      do_indent(out, indent);
+   (out)  << "opaque:" << std::hex << (unsigned long long) mId[i] << "\n"; 
+   }
+};
+
+void NodeIdStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding NodeIdStruct");
+   for(int i=0;i<16;i++)
+      decode_uintX(in, 8, mId[i]);
+ DebugLog( << "mId[i]");
+
+};
+
+void NodeIdStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding NodeIdStruct");
+   for(int i=0;i<16;i++)
+      encode_uintX(out, 8, mId[i]);
+
+};
+
+
+
+// Classes for ResourceIdStruct */
+
+void ResourceIdStruct :: print(std::ostream& out, int indent) const
+{
+   do_indent(out,indent);
+   (out) << "ResourceId:\n";
+   indent+=2;
+   for(int i=0;i<mId.size();i++){
+      do_indent(out, indent);
+   (out)  << "opaque:" << std::hex << (unsigned long long) mId[i] << "\n"; 
+   }
+};
+
+void ResourceIdStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding ResourceIdStruct");
+   resip::Data d;
+   read_varray1(in, 1, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mId.push_back(0);
+      decode_uintX(&in2, 8, mId[i++]);
+ DebugLog( << "mId[i++]");
+   }
+;
+};
+
+void ResourceIdStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding ResourceIdStruct");
+   long pos1=out->tellp();
+   out->seekp(pos1 + 1);
+   for(int i=0;i<mId.size();i++)
+      encode_uintX(out, 8, mId[i]);
+   long pos2=out->tellp();
+   out->seekp(pos1);
+   encode_uintX(out, 8, (pos2 - pos1) - 1);
+   out->seekp(pos2);
+
+};
+
+
+
+// Classes for DestinationDataStruct */
+
+void DestinationDataStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding DestinationDataStruct");
+};
+
+
+
+// Classes for DestinationStruct */
+
+void DestinationStruct :: print(std::ostream& out, int indent) const
+{
+   do_indent(out,indent);
+   (out) << "Destination:\n";
+   indent+=2;
+   mType->print(out, indent);
+   do_indent(out, indent);
+   (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
+   mDestinationData->print(out, indent);
+};
+
+void DestinationStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding DestinationStruct");
+   mType = new DestinationTypeStruct();
+   mType->decode(in);
+
+   decode_uintX(in, 8, mLength);
+ DebugLog( << "mLength");
+
+   mDestinationData = new DestinationDataStruct();
+   mDestinationData->decode(in);
+
+};
+
+void DestinationStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding DestinationStruct");
+   mType->encode(out);
+
+   encode_uintX(out, 8, mLength);
+
+   mDestinationData->encode(out);
+
+};
+
+
+
 // Classes for ForwardingHdrStruct */
 
 void ForwardingHdrStruct :: print(std::ostream& out, int indent) const
@@ -34,10 +159,14 @@ void ForwardingHdrStruct :: print(std::ostream& out, int indent) const
    (out)  << "transaction_id:" << std::hex << (unsigned long long)mTransactionId << "\n"; 
    do_indent(out, indent);
    (out)  << "flags:" << std::hex << (unsigned long long)mFlags << "\n"; 
+   for(int i=0;i<mViaList.size();i++){
+      mViaList[i]->print(out, indent);
+   }
+   for(int i=0;i<mDestinationList.size();i++){
+      mDestinationList[i]->print(out, indent);
+   }
    do_indent(out, indent);
-   (out)  << "via_list_length:" << std::hex << (unsigned long long)mViaListLength << "\n"; 
-   do_indent(out, indent);
-   (out)  << "destination_list_length:" << std::hex << (unsigned long long)mDestinationListLength << "\n"; 
+   (out)  << "route_log_len_dummy:" << std::hex << (unsigned long long)mRouteLogLenDummy << "\n"; 
 };
 
 void ForwardingHdrStruct :: decode(std::istream& in)
@@ -70,11 +199,28 @@ void ForwardingHdrStruct :: decode(std::istream& in)
    decode_uintX(in, 16, mFlags);
  DebugLog( << "mFlags");
 
-   decode_uintX(in, 16, mViaListLength);
- DebugLog( << "mViaListLength");
-
-   decode_uintX(in, 16, mDestinationListLength);
- DebugLog( << "mDestinationListLength");
+   resip::Data d;
+   read_varray1(in, 2, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mViaList.push_back(0);
+      mViaList[i++] = new TypeStruct();
+   mViaList[i++]->decode(&in2);
+   }
+;
+   resip::Data d;
+   read_varray1(in, 2, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mDestinationList.push_back(0);
+      mDestinationList[i++] = new TypeStruct();
+   mDestinationList[i++]->decode(&in2);
+   }
+;
+   decode_uintX(in, 16, mRouteLogLenDummy);
+ DebugLog( << "mRouteLogLenDummy");
 
 };
 
@@ -99,9 +245,25 @@ void ForwardingHdrStruct :: encode(std::ostream& out)
 
    encode_uintX(out, 16, mFlags);
 
-   encode_uintX(out, 16, mViaListLength);
+   long pos1=out->tellp();
+   out->seekp(pos1 + 2);
+   for(int i=0;i<mViaList.size();i++)
+      mViaList[i]->encode(out);
+   long pos2=out->tellp();
+   out->seekp(pos1);
+   encode_uintX(out, 16, (pos2 - pos1) - 2);
+   out->seekp(pos2);
 
-   encode_uintX(out, 16, mDestinationListLength);
+   long pos1=out->tellp();
+   out->seekp(pos1 + 2);
+   for(int i=0;i<mDestinationList.size();i++)
+      mDestinationList[i]->encode(out);
+   long pos2=out->tellp();
+   out->seekp(pos1);
+   encode_uintX(out, 16, (pos2 - pos1) - 2);
+   out->seekp(pos2);
+
+   encode_uintX(out, 16, mRouteLogLenDummy);
 
 };
 
