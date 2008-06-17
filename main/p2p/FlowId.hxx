@@ -15,6 +15,8 @@ class FlowId
 
       resip::Socket &getSocket();
 
+      const NodeId &getNodeId() const {return mNodeId;}
+
    private:
       NodeId mNodeId;
       unsigned short mApplication;
