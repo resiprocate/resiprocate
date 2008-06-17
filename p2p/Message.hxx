@@ -27,6 +27,7 @@ enum ErrorResponseCode
 
 class JoinAns;
 class UpdateAns;
+class LeaveAns;
 
 class Message : public Signable, private s2c::ForwardingHdrStruct
 {
@@ -74,6 +75,7 @@ class Message : public Signable, private s2c::ForwardingHdrStruct
 
 	  p2p::JoinAns *makeJoinResponse(const resip::Data &overlaySpecific);
 	  p2p::UpdateAns *makeUpdateResponse();
+	  p2p::LeaveAns *makeLeaveResponse();
 
 	  //virtual JoinResponse *makeJoinResponse();
       
