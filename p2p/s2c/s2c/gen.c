@@ -657,12 +657,26 @@ static int s2c_gen_pdu_c_struct(p_decl *decl, FILE *out)
   }
 
 
+static int s2c_gen_print_c_select(p_decl *decl, FILE *out)
+  {
+    fprintf(out,"void %s :: print(std::ostream& out, int indent) const \n{\n",type2class(decl->name));
+    fprintf(out,"}\n");
+  }
+
+static int s2c_gen_decode_c_select(p_decl *decl, FILE *out)
+  {
+    fprintf(out,"void %s :: decode(std::istream& in)\n{\n",type2class(decl->name));
+    
+    fprintf(out," DebugLog(<< \"Decoding %s\");\n",type2class(decl->name));
+    fprintf(out,"}\n");
+  }
+
 static int s2c_gen_pdu_c_select(p_decl *decl, FILE *out)
   {
     fprintf(out,"\n\n// Classes for %s */\n\n",type2class(decl->name));
 
-    // s2c_gen_print_c_struct(decl, out);
-    // s2c_gen_decode_c_struct(decl, out);
+    s2c_gen_print_c_select(decl, out);
+    s2c_gen_decode_c_select(decl, out);
     s2c_gen_encode_c_select(decl, out);
 
     return(0);

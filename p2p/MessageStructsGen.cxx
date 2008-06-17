@@ -92,6 +92,13 @@ void ResourceIdStruct :: encode(std::ostream& out)
 
 // Classes for DestinationDataStruct */
 
+void DestinationDataStruct :: print(std::ostream& out, int indent) const 
+{
+}
+void DestinationDataStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding DestinationDataStruct");
+}
 void DestinationDataStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding DestinationDataStruct");
