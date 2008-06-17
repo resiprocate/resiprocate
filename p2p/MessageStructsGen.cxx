@@ -105,7 +105,7 @@ void DestinationStruct :: print(std::ostream& out, int indent) const
    (out)  << "type:" << std::hex << (unsigned long long) mType << "\n"; 
    do_indent(out, indent);
    (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
-   mDestinationData->print(out, indent);
+   //mDestinationData->print(out, indent);
 };
 
 void DestinationStruct :: decode(std::istream& in)
@@ -121,7 +121,7 @@ void DestinationStruct :: decode(std::istream& in)
  DebugLog( << "mLength");
 
    mDestinationData = new DestinationDataStruct();
-   mDestinationData->decode(in);
+   //mDestinationData->decode(in);
 
 };
 
@@ -132,7 +132,7 @@ void DestinationStruct :: encode(std::ostream& out)
 
    encode_uintX(out, 8, mLength);
 
-   mDestinationData->encode(out);
+   //mDestinationData->encode(out);
 
 };
 
