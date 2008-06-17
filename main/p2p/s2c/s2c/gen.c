@@ -323,7 +323,7 @@ int s2c_gen_ftr_h(FILE *out)
 /* Generate C files */
 int s2c_gen_hdr_c(char *name,FILE *out)
   {
-    fprintf(out,"#include <iostream>\n#include <iomanip>\n#include \"rutil/Logger.hxx\"\n#define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST\n#include \"%sGen.hxx\"\n\nnamespace s2c {\n\n\n",name,
+    fprintf(out,"#include <iostream>\n#include <iomanip>\n#include \"rutil/Logger.hxx\"\n#include \"P2PSubsystem.hxx\"\n#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P\n#include \"%sGen.hxx\"\n\nnamespace s2c {\n\n\n",name,
       name2namespace(name));
     
     return(0);
@@ -338,8 +338,9 @@ static int s2c_gen_encode_c_simple_type(p_decl *decl, char *reference, FILE *out
       fprintf(out,"   encode_uintX(out, %d, %s);\n",
         decl->u.ref_.ref->u.primitive_.bits,reference);
     }
-    else if(decl->u.ref_.ref->type==TYPE_ENUM_VALUE){
-      fprintf(stderr,"XXX\n");
+    else if(decl->u.ref_.ref->type==TYPE_ENUM){
+      fprintf(out,"   encode_uintX(out, %d, (u_int64)%s);\n",
+        8*max2bytes(decl->u.ref_.ref->u.enum_.max),reference);
     }
     else if(decl->type==TYPE_PRIMITIVE)
       fprintf(out,"   encode_uintX(out, %d, %s);\n",
@@ -365,6 +366,7 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent)
           char reference[100];
           int lengthbytes=max2bytes(member->u.varray_.length);
 
+          fprintf(out,"   {\n");
           fprintf(out,"   long pos1=out.tellp();\n");
           fprintf(out,"   out.seekp(pos1 + %d);\n",lengthbytes);
           
@@ -379,7 +381,7 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent)
           fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
             lengthbytes*8, lengthbytes);
           fprintf(out,"   out.seekp(pos2);\n");
-
+          fprintf(out,"   }\n");
           break;
         }
         break;
@@ -465,6 +467,11 @@ static int s2c_gen_print_c_simple_type(p_decl *decl, char *reference, FILE *out)
       fprintf(out,"   do_indent(out, indent);\n");
       fprintf(out,"   (out)  << \"%s:\" << std::hex << (unsigned long long)%s << \"\\n\"; \n", decl->name, reference);
     }
+    else if(decl->u.ref_.ref->type==TYPE_ENUM){
+      fprintf(out,"   do_indent(out, indent);\n");
+      fprintf(out,"   (out)  << \"%s:\" << std::hex << (unsigned long long) %s << \"\\n\"; \n", decl->name, reference);
+    }
+    
     else if(decl->type==TYPE_PRIMITIVE){
       fprintf(out,"   do_indent(out, indent);\n");
       fprintf(out,"   (out)  << \"%s:\" << std::hex << (unsigned long long) %s << \"\\n\"; \n", decl->name, reference);
@@ -548,13 +555,28 @@ static int s2c_gen_decode_c_simple_type(p_decl *decl, char *reference, char *ins
         instream,decl->u.ref_.ref->u.primitive_.bits,reference);
       fprintf(out," DebugLog( << \"%s\");\n",reference);
     }
+    else if(decl->u.ref_.ref->type==TYPE_ENUM){
+      fprintf(out,"   {\n");
+      fprintf(out,"      u_int32 v;\n");
+      fprintf(out,"      decode_uintX(%s, %d, v);\n",instream,
+        8*max2bytes(decl->u.ref_.ref->u.enum_.max));
+      fprintf(out,"      %s=(%s)v;\n",reference,decl->u.ref_.ref->name);
+      fprintf(out,"   }\n");
+      
+    }
     else if(decl->type==TYPE_PRIMITIVE){
       fprintf(out,"   decode_uintX(%s, %d, %s);\n",
         instream,decl->u.primitive_.bits,reference);
       fprintf(out," DebugLog( << \"%s\");\n",reference);
     }
     else{
-      fprintf(out,"   %s = new %s();\n",reference,type2class(decl->u.ref_.ref->name));
+      if(decl->type==TYPE_REF){
+        fprintf(out,"   %s = new %s();\n",reference,type2class(decl->u.ref_.ref->name));
+      }
+      else{
+        fprintf(out,"   %s = new %s();\n",reference,type2class(decl->name));
+      }
+
       fprintf(out,"   %s->decode(%s);\n",reference,instream);
     }
     return(0);
@@ -574,6 +596,7 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent)
         {
           char reference[100];
           
+          fprintf(out,"   {\n");
           fprintf(out,"   resip::Data d;\n");
           fprintf(out,"   read_varray1(in, %d, d);\n",max2bytes(member->u.varray_.length));
           fprintf(out,"   resip::DataStream in2(d);\n");
@@ -584,6 +607,7 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent)
           for(i=0;i<indent+3;i++) fputc(' ',out);
           s2c_gen_decode_c_simple_type(member->u.varray_.ref,reference,"in2",out);
           fprintf(out,"   }\n;");
+          fprintf(out,"   }\n");
         }
         break;
       case TYPE_ARRAY:
