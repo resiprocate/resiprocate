@@ -66,4 +66,5 @@ struct {
        uint16  route_log_len_dummy;
        uint16  message_code;
        opaque  payload<0..2^24-1>;
+       Signature sig;
 } ForwardingLayerMessage;
