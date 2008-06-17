@@ -8,6 +8,15 @@ namespace p2p
 // the moment.
 typedef long long NodeId;
 
+class CompressedId
+{
+};
+
+// Either a CompressedId, NodeId or ResourceId
+class DestinationId
+{
+};
+
 }
 
 #endif

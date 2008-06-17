@@ -19,11 +19,12 @@ class Signable
       }
       
    protected:         
-      std::vector<const Data> collectSignableData() const = 0;
+      virtual std::vector<const Data> collectSignableData() const = 0;
       void setSignature(const resip::Data& signature) 
       {
          mSignature = signature;
       }
+
    private:
       Data mSignature;
 };
