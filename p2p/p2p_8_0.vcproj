@@ -149,6 +149,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\ChordTopology.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ChordUpdate.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Join.cxx"
 				>
 			</File>
@@ -219,6 +227,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ChordTopology.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ChordUpdate.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ConfigObject.hxx"
 				>
 			</File>
@@ -247,6 +263,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ForwardingLayer.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Join.hxx"
 				>
 			</File>
@@ -256,6 +276,10 @@
 			</File>
 			<File
 				RelativePath=".\NodeId.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\p2p.hxx"
 				>
 			</File>
 			<File

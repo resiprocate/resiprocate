@@ -24,8 +24,8 @@ class ConfigObject
       virtual resip::Data& overlayName() { return mOverlayName; }
       virtual const resip::Data& overlayName() const { return mOverlayName; }
 
-      virtual NodeId& nodeId() { return mNodeId; }
-      virtual const NodeId& nodeId() const { return mNodeId; }
+      virtual NodeId nodeId() { return mNodeId; }
+      virtual const NodeId nodeId() const { return mNodeId; }
 
       virtual UserName& userName() { return mUserName; }
       virtual const UserName& userName() const { return mUserName; }
