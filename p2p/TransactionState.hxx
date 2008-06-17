@@ -2,7 +2,6 @@
 #define P2P_TRANSACTIONSTATE_HXX
 
 #include "rutil/Data.hxx"
-#include "p2p/p2p.hxx"
 
 namespace p2p
 {
@@ -32,14 +31,14 @@ class TransactionState
       TransactionState(TransactionController& controller, 
                        Machine m, 
                        State s, 
-                       p2p::UInt64 tid);
+                       UInt64 tid);
       
       void processClientRequest(Message* msg);
       void processServerRequest(Message* msg);
       
       bool isClient() const;
-      void add(p2p::UInt64 tid);
-      void erase(p2p::UInt64 tid);
+      void add(UInt64 tid);
+      void erase(UInt64 tid);
       
    private:
       
@@ -50,7 +49,7 @@ class TransactionState
 
       Message* mMsgToRetransmit;
 
-      p2p::UInt64 mTid;
+      UInt64 mTid;
       
       friend std::ostream& operator<<(std::ostream& strm, const TransactionState& state);
       friend class TransactionController;

@@ -12,7 +12,7 @@ using namespace p2p;
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 TransactionState::TransactionState(TransactionController& controller, Machine m, 
-                                   State s, p2p::UInt64 tid) : 
+                                   State s, UInt64 tid) : 
    mController(controller),
    mMachine(m), 
    mState(s),
@@ -35,7 +35,7 @@ TransactionState::~TransactionState()
 
 
 void
-TransactionState::add(p2p::UInt64 tid)
+TransactionState::add(UInt64 tid)
 {
    if (isClient())
    {
@@ -48,7 +48,7 @@ TransactionState::add(p2p::UInt64 tid)
 }
 
 void
-TransactionState::erase(p2p::UInt64 tid)
+TransactionState::erase(UInt64 tid)
 {
    if (isClient())
    {

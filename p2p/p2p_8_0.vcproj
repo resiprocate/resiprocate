@@ -157,15 +157,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ForwardingGen.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\Join.cxx"
 				>
 			</File>
 			<File
 				RelativePath=".\Message.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\MessageStructsGen.cxx"
 				>
 			</File>
 			<File
@@ -263,10 +263,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ForwardingGen.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\ForwardingLayer.hxx"
 				>
 			</File>
@@ -276,6 +272,10 @@
 			</File>
 			<File
 				RelativePath=".\Message.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\MessageStructsGen.hxx"
 				>
 			</File>
 			<File
