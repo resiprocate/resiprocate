@@ -10,7 +10,10 @@ namespace p2p
 class NodeId
 {
    public:
-      long long value();
+      unsigned char *getValue() { return reinterpret_cast<unsigned char *>(mValue);}
+      size_t getSize() { return sizeof(mValue); }
+
+      bool operator<(const NodeId &) const;
       
    private:
       long long mValue[2];
