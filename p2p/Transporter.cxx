@@ -69,12 +69,16 @@ class SendApplicationCommand : public TransporterCommand
 class CollectCandidatesCommand : public TransporterCommand
 {
    public:
-      CollectCandidatesCommand(Transporter *transporter)
-        : TransporterCommand(transporter) {;}
+      CollectCandidatesCommand(Transporter *transporter,
+                               NodeId &nodeId,
+                               unsigned short appId)
+        : TransporterCommand(transporter), mNodeId(nodeId), mAppId(appId) {;}
 
-      void operator()() { mTransporter->collectCandidatesImpl(); }
+      void operator()() { mTransporter->collectCandidatesImpl(mNodeId, mAppId); }
 
    private:
+      NodeId mNodeId;
+      unsigned short mAppId;
 };
 
 class ConnectP2pCommand : public TransporterCommand

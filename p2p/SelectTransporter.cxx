@@ -79,12 +79,14 @@ SelectTransporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
 }
 
 void
-SelectTransporter::collectCandidatesImpl()
+SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
 {
   // For right now, we just return one candidate: a single TCP
   // listener. And we return it right away.
 
   std::vector<Candidate> candidates;
+
+  ListenerMap::iterator i;
 
 #if 0
 #ifndef WIN32

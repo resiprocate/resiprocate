@@ -47,7 +47,7 @@ class SelectTransporter : public Transporter
       void sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg);
       void sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data);
    
-      void collectCandidatesImpl();
+      void collectCandidatesImpl(NodeId nodeId, unsigned short appId);
    
       void connectImpl(NodeId nodeId, 
                        std::vector<Candidate> remoteCandidates,
