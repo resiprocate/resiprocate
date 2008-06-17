@@ -16,21 +16,9 @@ SelectTransporter::SelectTransporter (resip::Fifo<TransporterMessage>& rxFifo,
                           ConfigObject &configuration)
   : Transporter(rxFifo, configuration)
 {
-   // We really shouldn't do this in the constructor -- but it goes
-   // away when we add ICE.
    resip::Data localIp = resip::DnsUtil::getLocalIpAddress();
-   resip::DnsUtil::inet_pton(localIp, mLocalAddress.sin_addr);
-#ifndef WIN32
-   mLocalAddress.sin_len = sizeof(struct sockaddr_in);
-#endif
-   mLocalAddress.sin_family = AF_INET;
-   mLocalAddress.sin_port = 39835;
-   memset(mLocalAddress.sin_zero, 0, sizeof(mLocalAddress.sin_zero));
+   resip::DnsUtil::inet_pton(localIp, mLocalAddress);
 
-   mTcpDescriptor = ::socket(AF_INET, SOCK_STREAM, 0);
-   ::bind(mTcpDescriptor, reinterpret_cast<sockaddr *>(&mLocalAddress),
-          sizeof(struct sockaddr_in));
-   ::listen(mTcpDescriptor, 20);
 }
 
 SelectTransporter::~SelectTransporter()
@@ -54,7 +42,7 @@ SelectTransporter::~SelectTransporter()
 */
 void
 SelectTransporter::addListenerImpl(resip::TransportType transport,
-                             resip::GenericIPAddress &address)
+                                   resip::GenericIPAddress &address)
 {
   // XXX
   assert(0);
@@ -97,12 +85,29 @@ SelectTransporter::collectCandidatesImpl()
   // listener. And we return it right away.
 
   std::vector<Candidate> candidates;
+
+#if 0
+#ifndef WIN32
+   mLocalAddress.sin_len = sizeof(struct sockaddr_in);
+#endif
+   mLocalAddress.sin_family = AF_INET;
+   mLocalAddress.sin_port = 39835;
+   memset(mLocalAddress.sin_zero, 0, sizeof(mLocalAddress.sin_zero));
+
+   mTcpDescriptor = ::socket(AF_INET, SOCK_STREAM, 0);
+   ::bind(mTcpDescriptor, reinterpret_cast<sockaddr *>(&mLocalAddress),
+          sizeof(struct sockaddr_in));
+   ::listen(mTcpDescriptor, 20);
+#endif
+
+#if 0
   resip::GenericIPAddress addr(mLocalAddress);
   Candidate c(resip::TCP, addr); // XXX -- SHOULD BE TLS
   candidates.push_back(c);
 
   LocalCandidatesCollected *lcc = new LocalCandidatesCollected(candidates);
   mRxFifo.add(lcc);
+#endif
 }
 
 void
@@ -119,8 +124,9 @@ SelectTransporter::connectImpl(NodeId nodeId,
 
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
    // Blow our node ID out on the wire (because there is no cert)
-    ::send((i->second).getSocket(), (const char *)(mConfiguration.nodeId().value()), 
-          sizeof(NodeId), 0);
+    ::send((i->second).getSocket(),
+           mConfiguration.nodeId().getValue(), 
+           mConfiguration.nodeId().getSize(), 0);
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 }
 
@@ -182,6 +188,25 @@ SelectTransporter::process(int ms)
    if (fdSet.readyToRead(mTcpDescriptor))
    {
       // New incoming connection. Yaay!
+
+      resip::Socket s;
+      struct sockaddr addr;
+      socklen_t addrlen;
+
+      s = accept(mTcpDescriptor, &addr, &addrlen);
+
+#if 0
+      FlowId flowId(nodeId, application, s);
+
+      mNodeFlowMap.insert(
+        std::map<NodeId, FlowId>::value_type(nodeId, flowId));
+
+      ConnectionOpened *co = new ConnectionOpened(flowId,
+                                                  application,
+                                                  candidate.getTransportType(),
+                                                  0 /* no cert for you */);
+      mRxFifo.add(co);
+#endif
    }
    
    for (i = mNodeFlowMap.begin(); i != mNodeFlowMap.end(); i++)
