@@ -4,6 +4,7 @@
 #include "P2PSubsystem.hxx"
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 #include "MessageStructsGen.hxx"
+#include <assert.h>
 
 namespace s2c {
 
@@ -97,8 +98,8 @@ void DestinationDataStruct :: print(std::ostream& out, int indent) const
 }
 void DestinationDataStruct :: decode(std::istream& in)
 {
- DebugLog(<< "Decoding DestinationDataStruct");
-}
+   DebugLog(<< "Decoding DestinationDataStruct");
+};
 void DestinationDataStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding DestinationDataStruct");
