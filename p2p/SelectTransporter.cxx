@@ -15,7 +15,7 @@ namespace p2p
 
 SelectTransporter::SelectTransporter (resip::Fifo<TransporterMessage>& rxFifo,
                           ConfigObject &configuration)
-  : Transporter(rxFifo, configuration)
+  : Transporter(rxFifo, configuration), mHasBootstrapSocket(false)
 {
    resip::Data localIp = resip::DnsUtil::getLocalIpAddress();
    resip::DnsUtil::inet_pton(localIp, mLocalAddress);
@@ -51,8 +51,18 @@ void
 SelectTransporter::addListenerImpl(resip::TransportType transport,
                                    resip::GenericIPAddress &address)
 {
-  // XXX
-  assert(0);
+   assert(!mHasBootstrapSocket);
+   assert(transport == resip::TCP);
+
+   struct sockaddr_in addr = address.v4Address;
+
+   mBootstrapSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+   ::bind(mBootstrapSocket, reinterpret_cast<sockaddr *>(&addr),
+          sizeof(struct sockaddr_in));
+
+   ::listen(mBootstrapSocket, 120);
+
+   mHasBootstrapSocket = true;
 }
 
 void
@@ -202,7 +212,6 @@ SelectTransporter::process(int ms)
    resip::FdSet fdSet;
    TransporterCommand *cmd;
 
-
    // First, we do the socket descriptors...
 
    std::map<NodeId, FlowId>::iterator i;
@@ -217,9 +226,44 @@ SelectTransporter::process(int ms)
       fdSet.setRead(j->second.first);
    }
 
+   if (mHasBootstrapSocket)
+   {
+      fdSet.setRead(mBootstrapSocket);
+   }
+
    // TODO -- add bootstrap listener socket
 
    fdSet.selectMilliSeconds(ms);
+
+   if (mHasBootstrapSocket && fdSet.readyToRead(mBootstrapSocket))
+   {
+      // New incoming BOOTSTRAP connection. Yaay!!!
+      unsigned short application = RELOAD_APPLICATION_ID;
+
+      resip::Socket s;
+      struct sockaddr addr;
+      socklen_t addrlen;
+
+      s = accept(j->second.first, &addr, &addrlen);
+
+      // Get the remote node ID from the incoming socket
+      unsigned char buffer[16];
+      ::read(s, buffer, sizeof(buffer));
+
+      NodeId nodeId = resip::Data(buffer, sizeof(buffer));
+
+      FlowId flowId(nodeId, application, s);
+
+      mNodeFlowMap.insert(
+        std::map<NodeId, FlowId>::value_type(nodeId, flowId));
+
+      ConnectionOpened *co = new ConnectionOpened(flowId,
+                                                application,
+                                                resip::TCP,
+                                                0 /* no cert for you */);
+      mRxFifo.add(co);
+      
+   }
 
    // Check for new incoming connections
    for (j = mListenerMap.begin(); j != mListenerMap.end(); j++)
