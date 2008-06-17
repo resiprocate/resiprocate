@@ -7,7 +7,12 @@
 namespace p2p
 {
 
+<<<<<<< .mine
+//!dcm! less than right
+class ArrayValue public : AbstractValue 
+=======
 class ArrayValue : public AbstractValue 
+>>>>>>> .r7825
 {
   public:
 
