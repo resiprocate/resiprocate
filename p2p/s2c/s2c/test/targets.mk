@@ -61,7 +61,8 @@ S2C_S2C_TEST_COPY                 =
 S2C_S2C_TEST_GLOBAL_CFLAGS        =
 S2C_S2C_TEST_GLOBAL_LDFLAGS       =
 S2C_S2C_TEST_LINK                 = test_s2c.cxx
-S2C_S2C_TEST_LOCAL_CFLAGS         = -I$(RESIPROCATE_SRCDIR)
+S2C_S2C_TEST_LOCAL_CFLAGS         = -I$(RESIPROCATE_SRCDIR) \
+                                    -I$(RESIPROCATE_SRCDIR)/p2p/
 S2C_S2C_TEST_LOCAL_LDFLAGS        = -L$(RESIPROCATE_SRCDIR)rutil/obj.$(RESIPROCATE_DEBUG)$(RESIPROCATE_PLATFORM) \
                                     -L. -lrutil -ls2ctest s2c_native.o
 S2C_S2C_TEST_PREFIX               = S2C_S2C_TEST
