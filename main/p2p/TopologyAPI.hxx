@@ -44,7 +44,7 @@ class TopologyAPI
       virtual bool isResponsible( ResourceId& resource )=0;
 
       // Function to hash resource names into resourceID 
-      ResourceId resourceId( Data& resourceName )=0;
+      virtual ResourceId resourceId( resip::Data& resourceName )=0;
         
       virtual ~TopologyAPI();
       

@@ -13,11 +13,13 @@ TARGET_LIBRARY := libp2p
 
 TESTPROGRAMS := 
 
-SRC 	+= Message.cxx \
+SRC 	+= Join.cxx \
+		Message.cxx \
 		SignatureContext.cxx \
 		TransporterMessage.cxx \
 		Transporter.cxx \
-		TopologyAPI.cxx
+		TopologyAPI.cxx \
+		Update.cxx
 
 
 include $(BUILD)/Makefile.post

@@ -1,6 +1,8 @@
 #include "p2p/Message.hxx"
+#include "p2p/Join.hxx"
 
 using namespace p2p;
+
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

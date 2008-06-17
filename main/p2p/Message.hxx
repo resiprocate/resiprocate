@@ -27,8 +27,7 @@ enum ErrorResponseCode
 class Message : public Signable
 {
    public:
-      // Used to make a request. Will populate the rid into the destination
-      // list. 
+      // Used to make a request. Will populate the rid into the destination list.  
       Message(ResourceId rid, const resip::Data& overlayName);
       
       virtual ~Message()=0;
@@ -60,6 +59,8 @@ class Message : public Signable
          FailureRequest = 0xFFFE,
          FailureResponse = 0xFFFF
       };
+
+	  bool isRequest() const;  // might not be needed
 
       virtual MessageType getMessageType() const = 0;
 
@@ -130,21 +131,6 @@ class RouteQueryReqMessage : public Message
       virtual MessageType getMessageType() const { return RouteQueryReq; }
 };
 
-
-class UpdateAnsMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return UpdateAns; }
-};
-
-
-class UpdateReqMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return UpdateReq; }
-};
-
-
 class LeaveAnsMessage : public Message
 {
    public:
@@ -157,21 +143,6 @@ class LeaveReqMessage : public Message
    public:
       virtual MessageType getMessageType() const { return LeaveReq; }
 };
-
-
-class JoinAnsMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return JoinAns; }
-};
-
-
-class JoinReqMessage : public Message
-{
-   public:
-      virtual MessageType getMessageType() const { return JoinReq; }
-};
-
 
 class FindAnsMessage : public Message
 {
