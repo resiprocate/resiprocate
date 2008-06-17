@@ -1,3 +1,4 @@
+#include <cassert>
 #include "p2p/ChordNodeId.hxx"
 
 using namespace p2p;

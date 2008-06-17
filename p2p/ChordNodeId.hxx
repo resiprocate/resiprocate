@@ -13,7 +13,7 @@ class ChordNodeId: public  NodeId
 {
    public:
       ChordNodeId( const resip::Data& data );
-      ChordNodeId( const NodeId node );
+      ChordNodeId( const NodeId& node );
 
       bool operator<( const ChordNodeId& other ) const;
       bool operator<=( const ChordNodeId& other ) const;
