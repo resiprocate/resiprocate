@@ -18,12 +18,12 @@ SRC 	+= Join.cxx \
 		SignatureContext.cxx \
 		TransporterMessage.cxx \
 		Transporter.cxx \
+		TestMake.cxx \
 		TopologyAPI.cxx \
 		ChordTopology.cxx \
 		SelectTransporter.cxx \
 		ChordUpdate.cxx \
 		Update.cxx
-
 
 include $(BUILD)/Makefile.post
 

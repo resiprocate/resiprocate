@@ -1,3 +1,11 @@
+#ifndef P2P_FetchKind_hxx
+#define P2P_FetchKind_hxx
+
+#include "p2p.hxx"
+
+namespace p2p
+{
+
 class DataSpecifier
 {
    public: 
@@ -53,10 +61,14 @@ class DeleteReq
       typedef std::list<DataSpecifier> Specifiers;
 };
 
+} // p2p
+
+#endif // P2P_FetchKind_hxx
 
 //this is boring, no special foo required...stay close to defn.
 //are these potential replicas or committed replicas? Seems that timing would be
 //an issue.     
+/*
 struct {
       KindId                  kind;
       uint64                  generation_counter;
@@ -67,3 +79,4 @@ struct {
 struct {
       StoreKindResponse       kind_responses<0..2^16-1>;
 } StoreAns;
+*/

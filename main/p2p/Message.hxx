@@ -104,7 +104,7 @@ class ErrorResponse : public Message
       const resip::Data& getReasonPhrase() const;
 
    protected:
-      virtual std::vector<const resip::Data> collectSignableData() const;
+      virtual std::vector<resip::Data> collectSignableData() const;
 };
 
 class ConnectReqMessage : public Message

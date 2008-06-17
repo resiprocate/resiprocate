@@ -4,9 +4,12 @@
 namespace p2p
 {
 
+class CertDoneEvent;
+
 class EventConsumer
 {
    public:
+      virtual ~EventConsumer();
       virtual void consumer(CertDoneEvent& certdone);
 };
 
