@@ -25,6 +25,9 @@ enum ErrorResponseCode
    EIncompatibleWithOverlay = 498
 };
 
+class JoinAns;
+class UpdateAns;
+
 class Message : public Signable, private s2c::ForwardingHdrStruct
 {
    public:
@@ -66,10 +69,13 @@ class Message : public Signable, private s2c::ForwardingHdrStruct
       virtual MessageType getMessageType() const = 0;
 
       // copies via list to dest. list in reverse order
-      virtual Message *makeResponse() const = 0;
-
       virtual Message *makeErrorResponse(ErrorResponseCode code, 
                                          const resip::Data& reason) const = 0; 
+
+	  p2p::JoinAns *makeJoinResponse(const resip::Data &overlaySpecific);
+	  p2p::UpdateAns *makeUpdateResponse();
+
+	  //virtual JoinResponse *makeJoinResponse();
       
       // encoding/parsing methods
       resip::Data encode() const;	
@@ -98,9 +104,10 @@ protected:
 	resip::Data mOverlayName;
 	resip::Data mEncodedData;
 
-	virtual void encodePayload(resip::Data &data) const = 0;
+	virtual void getPayload(resip::Data &data) const = 0;
+	virtual std::vector<resip::Data> collectSignableData() const;
+
 	Message() {}
-	
 };
 
 class MessageContents 
