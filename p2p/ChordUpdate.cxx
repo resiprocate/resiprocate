@@ -1,4 +1,5 @@
 #include "p2p/ChordUpdate.hxx"
+#include <assert.h>
 
 using namespace p2p;
 
@@ -73,6 +74,7 @@ ChordUpdate::encode() const
 {
 	// not complete
 	assert(0);
+   return resip::Data::Empty;
 }
 
 /* ======================================================================

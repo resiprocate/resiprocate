@@ -9,7 +9,6 @@
 #include "p2p/NodeId.hxx"
 #include "p2p/UserName.hxx"
 
-
 namespace p2p
 {
 
@@ -24,7 +23,7 @@ class ConfigObject
       virtual resip::Data& overlayName() { return mOverlayName; }
       virtual const resip::Data& overlayName() const { return mOverlayName; }
 
-      virtual NodeId nodeId() { return mNodeId; }
+      virtual NodeId& nodeId() { return mNodeId; }
       virtual const NodeId nodeId() const { return mNodeId; }
 
       virtual UserName& userName() { return mUserName; }
