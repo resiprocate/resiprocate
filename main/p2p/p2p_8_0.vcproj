@@ -149,6 +149,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\SignatureContext.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\TopologyAPI.cxx"
 				>
 			</File>
@@ -187,7 +191,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Postable.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ResourceId.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Signable.hxx"
 				>
 			</File>
 			<File
@@ -208,6 +220,10 @@
 			</File>
 			<File
 				RelativePath=".\TransporterMessage.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\UserName.hxx"
 				>
 			</File>
 		</Filter>
