@@ -23,6 +23,7 @@ SRC 	+= Join.cxx \
 		ChordTopology.cxx \
 		SelectTransporter.cxx \
 		MessageStructsGen.cxx \
+		Connect.cxx \
 		ChordUpdate.cxx \
 		Update.cxx \
                 NodeId.cxx
