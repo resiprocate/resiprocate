@@ -64,7 +64,48 @@ public:
 };
 
 
-class ForwardingHdrStruct : public PDU {
+enum SignerIdentityType{
+   reserved1 = 0,
+   signer_identity_peer = 1,
+   signer_identity_name = 2,
+   signer_identity_certificate = 3
+};
+
+class SignerIdentityStruct : public PDU {
+public:
+   SignerIdentityType            mIdentityType;
+   std::vector<unsigned char>    mSignerIdentity;
+
+
+   SignerIdentityStruct() {mName = "SignerIdentity";}
+   PDUMemberFunctions
+};
+
+
+class SignatureAndHashAlgorithmStruct : public PDU {
+public:
+   UInt8                         mSig;
+   UInt8                         mHash;
+
+
+   SignatureAndHashAlgorithmStruct() {mName = "SignatureAndHashAlgorithm";}
+   PDUMemberFunctions
+};
+
+
+class SignatureStruct : public PDU {
+public:
+   SignatureAndHashAlgorithmStruct*  mAlgorithm;
+   SignerIdentityStruct*         mIdentity;
+   std::vector<unsigned char>    mSignatureValue;
+
+
+   SignatureStruct() {mName = "Signature";}
+   PDUMemberFunctions
+};
+
+
+class ForwardingLayerMessageStruct : public PDU {
 public:
    UInt8                         mReloToken;
    UInt32                        mOverlay;
@@ -78,9 +119,11 @@ public:
    std::vector<DestinationStruct*>  mViaList;
    std::vector<DestinationStruct*>  mDestinationList;
    UInt16                        mRouteLogLenDummy;
+   UInt16                        mMessageCode;
+   std::vector<unsigned char>    mPayload;
 
 
-   ForwardingHdrStruct() {mName = "ForwardingHdr";}
+   ForwardingLayerMessageStruct() {mName = "ForwardingLayerMessage";}
    PDUMemberFunctions
 };
 
