@@ -17,6 +17,8 @@ enum {RELOAD_APPLICATION_ID = 8675};
 class ConfigObject
 {
    public:
+      virtual ~ConfigObject() {;}
+
       virtual const X509        *getCertificate();
       virtual const EVP_PKEY    *getPrivateKey();
 

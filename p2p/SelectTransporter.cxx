@@ -1,5 +1,6 @@
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/DnsUtil.hxx"
+#include "rutil/Socket.hxx"
 
 #include "p2p/SelectTransporter.hxx"
 #include "p2p/ConfigObject.hxx"
@@ -158,19 +159,71 @@ SelectTransporter::connectImpl(NodeId nodeId,
 
 //----------------------------------------------------------------------
 
-// This isn't anything like finished yet -- need to wait for data on our
-// descriptors also.
+
+// XXX FIXME -- Currently, we spin between waiting for the
+// descriptor and waiting for the command queue. This should be
+// fixed later to have a unified wait.
 bool
 SelectTransporter::process(int ms)
 {
-  TransporterCommand *cmd;
-  if ((cmd = mCmdFifo.getNext(ms)) != 0)
-  {
-    (*cmd)();
-    delete cmd;
-    return true;
-  }
-  return false;
+   resip::FdSet fdSet;
+   TransporterCommand *cmd;
+
+   // First, we do the socket descriptors...
+   fdSet.setRead(mTcpDescriptor);
+   std::map<NodeId, FlowId>::iterator i;
+   for (i = mNodeFlowMap.begin(); i != mNodeFlowMap.end(); i++)
+   {
+      fdSet.setRead((i->second).getSocket());
+   }
+
+   fdSet.selectMilliSeconds(ms);
+
+   if (fdSet.readyToRead(mTcpDescriptor))
+   {
+      // New incoming connection. Yaay!
+   }
+   
+   for (i = mNodeFlowMap.begin(); i != mNodeFlowMap.end(); i++)
+   {
+      FlowId &flowId = i->second;
+      if (fdSet.readyToRead(flowId.getSocket()))
+      {
+         // There's data waiting to be read
+         if (flowId.getApplication() == RELOAD_APPLICATION_ID)
+         {
+           // XXX
+         }
+         else
+         {
+            char *buffer = new char[4096];
+            size_t bytesRead;
+            bytesRead = ::read(flowId.getSocket(), buffer, 4096);
+            if (bytesRead > 0)
+            {
+               resip::Data data(resip::Data::Take, buffer, bytesRead);
+
+               ApplicationMessageArrived *ama = new
+                  ApplicationMessageArrived(flowId, data);
+
+               mRxFifo.add(ama);
+            }
+            else
+            {
+              delete [] buffer;
+            }
+         }
+      }
+   }
+
+   // ...then, we do the command FIFO
+   if ((cmd = mCmdFifo.getNext(ms)) != 0)
+   {
+      (*cmd)();
+      delete cmd;
+      return true;
+   }
+   return false;
 }
 
 }

@@ -92,11 +92,18 @@ class MessageArrived : public TransporterMessage
 class ApplicationMessageArrived : public TransporterMessage
 {
    public:
-      FlowId getFlowId();
-      resip::Data &getData();
+      ApplicationMessageArrived(FlowId flowId, resip::Data &data)
+        : mFlowId(flowId), mData(data) {;}
+
+      FlowId getFlowId() const { return mFlowId; }
+      const resip::Data &getData() const { return mData; }
 
    protected:
       virtual MessageType getMessageType() {return ApplicationMessageArrivedType;}
+
+   private:
+     FlowId mFlowId;
+     resip::Data mData;
 };
 
 class LocalCandidatesCollected : public TransporterMessage
