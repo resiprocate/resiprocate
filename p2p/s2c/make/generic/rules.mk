@@ -44,4 +44,4 @@ LINK.cxx        = $(CXX) $(LDFLAGS) -o
 COMPILE.clic  = ../../tools/clic/clic $< -- $(COMPILE.c)
 COMPILE.y     = perl ../generic/compile_wrap "yacc -dv -o  $(<:.y=.c)" $< $(<:.y=.c) $(COMPILE.c)
 COMPILE.l     = perl ../generic/compile_wrap "lex -o$(<:.l=.c)" $< $(<:.l=.c) $(COMPILE.c)
-COMPILE.s2c   = perl ../generic/compile_wrap "./s2c " $< `basename $(<:.s2c=.cxx)` $(COMPILE.c)
+COMPILE.s2c   = perl ../generic/compile_wrap "./s2c " $< `basename $(<:.s2c=Gen.cxx)` $(COMPILE.c)
