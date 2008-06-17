@@ -181,6 +181,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\s2c\s2c\s2c_native.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\SelectTransporter.cxx"
 				>
 			</File>
@@ -304,6 +308,10 @@
 			</File>
 			<File
 				RelativePath=".\ResourceId.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\s2c\s2c\s2c_native.hxx"
 				>
 			</File>
 			<File
