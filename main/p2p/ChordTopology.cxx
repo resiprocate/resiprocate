@@ -7,7 +7,6 @@
 #include "p2p/ConfigObject.hxx"
 #include "p2p/FlowId.hxx"
 #include "p2p/Message.hxx"
-#include "p2p/ChordNodeId.hxx"
 
 using namespace p2p;
 
@@ -59,11 +58,9 @@ void Chord::consume(EventWrapper<LeaveReq>& event)
 
 
 // Deal with routing queries 
-NodeId& Chord::findNextHop( NodeId& pNode )
+NodeId& Chord::findNextHop( NodeId& node )
 {
-   ChordNodeId node(pNode);
-   
-   assert( !isResponsible(pNode) );
+   assert( !isResponsible(node) );
    
    if(mFingerTable.size() == 0)
    {
@@ -72,10 +69,10 @@ NodeId& Chord::findNextHop( NodeId& pNode )
       return mNextTable[0];
    }
 
-   std::set<ChordNodeId>::iterator it = mFingerTable.begin();
+   std::set<NodeId>::iterator it = mFingerTable.begin();
    for(;it != mFingerTable.end(); it++)
    {      
-      std::set<ChordNodeId>::iterator nextIt = it;
+      std::set<NodeId>::iterator nextIt = it;
       nextIt++;
       if(nextIt == mFingerTable.end()) break;
       if((*it <= node) && (node < *nextIt))
@@ -89,7 +86,7 @@ NodeId& Chord::findNextHop( NodeId& pNode )
 
 NodeId& Chord::findNextHop( ResourceId& resource )
 {
-   ChordNodeId node( resource.value() );
+   NodeId node( resource.value() );
    return findNextHop( node );
 }
 
@@ -113,13 +110,11 @@ std::vector<NodeId> Chord::getReplicationSet(  ResourceId& resource )
 
 
 // Functions to find out if this peer is responsible for something
-bool Chord::isResponsible( NodeId& pNode )
+bool Chord::isResponsible( NodeId& node )
 {
-   ChordNodeId node(pNode);
-   
    if (mPrevTable.size() == 0) return false;
 
-   if (  (mPrevTable[0]<node) && (node<=myNodeId) )
+   if (  (mPrevTable[0]<node) && (node<=mMyNodeId) )
    {
       return true;
    }
@@ -129,7 +124,7 @@ bool Chord::isResponsible( NodeId& pNode )
 
 bool Chord::isResponsible( ResourceId& resource )
 {
-  ChordNodeId node( resource.value() );
+  NodeId node( resource.value() );
   return isResponsible( node );
 }
 
@@ -155,7 +150,7 @@ Chord::~Chord()
 }
 
 
-bool Chord::addNewNeighbors(  std::vector<NodeId> nodes )
+bool Chord::addNewNeighbors(std::vector<NodeId>& nodes)
 {
    // This function takes a list of nodes and merges them into next and prev
    // tables. If anything changes, it sends updates 
@@ -165,13 +160,13 @@ bool Chord::addNewNeighbors(  std::vector<NodeId> nodes )
    
    for (unsigned int n=0; n<nodes.size(); n++ )
    {
-      ChordNodeId node(nodes[n]);
+      NodeId node(nodes[n]);
       
       if (mNextTable.size() == 0)
       {
          mNextTable[0] = node; changed=true;
       }
-      else if ( (myNodeId<node) && (node<mNextTable[0]) )
+      else if ( (mMyNodeId<node) && (node<mNextTable[0]) )
       {
          mNextTable[0] = node; changed=true;
       }
@@ -180,7 +175,7 @@ bool Chord::addNewNeighbors(  std::vector<NodeId> nodes )
       {
          mPrevTable[0] = node; changed=true;
       }
-      else if ( (mPrevTable[0]<node) && (node<myNodeId) )
+      else if ( (mPrevTable[0]<node) && (node<mMyNodeId) )
       {
          mPrevTable[0] = node; changed=true;
       }   
@@ -190,7 +185,7 @@ bool Chord::addNewNeighbors(  std::vector<NodeId> nodes )
 }
 
 
-bool Chord::addNewFingers( std::vector<NodeId> nodes )
+bool Chord::addNewFingers(std::vector<NodeId>& nodes)
 {
    assert( nodes.size() > 0 );
    bool changed=false;
@@ -199,7 +194,7 @@ bool Chord::addNewFingers( std::vector<NodeId> nodes )
    std::vector<NodeId>::iterator it = nodes.begin();
    for(;it != nodes.end(); it++)
    {
-      std::set<ChordNodeId>::iterator it2 = mFingerTable.find(*it);
+      std::set<NodeId>::iterator it2 = mFingerTable.find(*it);
       if(it2 == mFingerTable.end())
       {
          changed = true;
