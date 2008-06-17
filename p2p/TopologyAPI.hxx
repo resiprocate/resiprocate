@@ -8,6 +8,12 @@
 #include "p2p/ResourceId.hxx"
 #include "p2p/ConfigObject.hxx"
 #include "p2p/Message.hxx"
+#include "p2p/EventConsumer.hxx"
+#include "p2p/Postable.hxx"
+#include "p2p/Join.hxx"
+#include "p2p/Update.hxx"
+#include "p2p/Leave.hxx"
+#include "p2p/Message.hxx"
 
 namespace p2p
 {
@@ -15,7 +21,7 @@ namespace p2p
 class TransactionLayer;
 
 /// This is an abstract base class from which to derive the actually topology plugins
-class TopologyAPI
+class TopologyAPI :  public EventConsumer, public Postable<Event>
 {
    public:
       TopologyAPI(ConfigObject& config, TransactionLayer& transactionProcessor );
@@ -26,10 +32,13 @@ class TopologyAPI
       virtual void newConnectionFormed( NodeId& node )=0;
       virtual void connectionLost( NodeId& node )=0;
        
-      // deal with topoogy change messages 
-      virtual void processJoin( Message& message )=0;
-      virtual void processUpdate( Message& message )=0;
-      virtual void processLeave( Message& message )=0;
+      // deal with topology change messages 
+      virtual void consume(EventWrapper<JoinReq>& event)=0;
+      virtual void consume(EventWrapper<UpdateReq>& event)=0;
+      virtual void consume(EventWrapper<LeaveReq>& event)=0;
+      //virtual void processJoin( Message& message )=0;
+      //virtual void processUpdate( Message& message )=0;
+      //virtual void processLeave( Message& message )=0;
       
       // Deal with routing querries 
       virtual NodeId& findNextHop( NodeId& node )=0;

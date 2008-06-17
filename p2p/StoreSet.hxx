@@ -22,6 +22,9 @@ class StoreSet : public EventConsumer,
       {
          event->dispatch(this);
       }
+   private:
+      
+      int mStoreRequestsOutstanding;
 };
 
 } // p2p
