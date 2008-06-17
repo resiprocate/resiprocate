@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\;&quot;$(ProjectDir)/../contrib/openssl/inc32&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;USE_SSL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -104,7 +104,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\;&quot;$(ProjectDir)/../contrib/openssl/inc32&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_SSL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -174,6 +174,10 @@
 			</File>
 			<File
 				RelativePath=".\P2PSubsystem.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\ResourceId.cxx"
 				>
 			</File>
 			<File
