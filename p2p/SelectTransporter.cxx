@@ -35,6 +35,13 @@ SelectTransporter::SelectTransporter (resip::Fifo<TransporterMessage>& rxFifo,
 SelectTransporter::~SelectTransporter()
 {
    resip::closeSocket(mTcpDescriptor);
+
+   // Tear down any of the sockets we have hanging around.   
+   std::map<NodeId, FlowId>::iterator i;
+   for (i = mNodeFlowMap.begin(); i != mNodeFlowMap.end(); i++)
+   {
+      resip::closeSocket((i->second).getSocket());
+   }
 }
 
 //----------------------------------------------------------------------
@@ -94,7 +101,6 @@ SelectTransporter::collectCandidatesImpl()
   candidates.push_back(c);
 
   LocalCandidatesCollected *lcc = new LocalCandidatesCollected(candidates);
-
   mRxFifo.add(lcc);
 }
 
@@ -102,6 +108,26 @@ void
 SelectTransporter::connectImpl(NodeId nodeId,
                                std::vector<Candidate> remoteCandidates,
                                resip::GenericIPAddress &stunTurnServer)
+{
+   connectImpl(nodeId, remoteCandidates, RELOAD_APPLICATION_ID,
+                 stunTurnServer);
+
+   std::map<NodeId, FlowId>::iterator i;
+   i = mNodeFlowMap.find(nodeId);
+   assert (i != mNodeFlowMap.end());
+
+   // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
+   // Blow our node ID out on the wire (because there is no cert)
+   ::send((i->second).getSocket(), (void *)(mConfiguration.myNodeId()), 
+          sizeof(NodeId), 0);
+   // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
+}
+
+void
+SelectTransporter::connectImpl(NodeId nodeId,
+                         std::vector<Candidate> remoteCandidates,
+                         unsigned short application,
+                         resip::GenericIPAddress &stunTurnServer)
 {
    // XXX Right now, we just grab the first candidate out of the array
    // and connect to it. Whee!
@@ -119,17 +145,15 @@ SelectTransporter::connectImpl(NodeId nodeId,
    s = ::socket(AF_INET, SOCK_STREAM, 0);
    ::connect(s, &(candidate.getAddress().address), sizeof(sockaddr_in));
 
-   FlowId flowId(nodeId, RELOAD_APPLICATION_ID, s);
-}
+   FlowId flowId(nodeId, application, s);
 
-void
-SelectTransporter::connectImpl(NodeId nodeId,
-                         std::vector<Candidate> remoteCandidates,
-                         unsigned short application,
-                         resip::GenericIPAddress &stunTurnServer)
-{
-  // XXX
-  assert(0);
+   mNodeFlowMap.insert(std::map<NodeId, FlowId>::value_type(nodeId, flowId));
+
+   ConnectionOpened *co = new ConnectionOpened(flowId,
+                                               application,
+                                               candidate.getTransportType(),
+                                               0 /* no cert for you */);
+   mRxFifo.add(co);
 }
 
 //----------------------------------------------------------------------

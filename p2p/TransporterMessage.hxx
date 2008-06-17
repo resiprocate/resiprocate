@@ -8,6 +8,7 @@
 #include "rutil/TransportType.hxx"
 
 #include "p2p/NodeId.hxx"
+#include "p2p/FlowId.hxx"
 #include "p2p/Candidate.hxx"
 
 namespace p2p
@@ -51,11 +52,18 @@ class TransporterMessage
 class ConnectionOpened : public TransporterMessage
 {
    public:
-      NodeId getNodeId();
-      unsigned short getApplication();
+      ConnectionOpened(
+                       FlowId flowId,
+                       unsigned short application,
+                       resip::TransportType transportType,
+                       X509 *cert
+                      );
+
       FlowId getFlowId();
-      X509 *getCertificate();
+      unsigned short getApplication();
+      NodeId getNodeId() { return getFlowId().getNodeId(); }
       resip::TransportType getTransportType();
+      X509 *getCertificate();
 
    protected:
       virtual MessageType getMessageType() {return ConnectionOpenedType;}
