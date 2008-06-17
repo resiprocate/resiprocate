@@ -1,10 +1,22 @@
 #ifndef P2P_AbstractValue_hxx
 #define P2P_AbstractValue_hxx
 
-class AbstractValue : public Signable 
+#include "Signable.hxx"
+
+namespace p2p
 {
-   
+
+class AbstractValue :public Signable 
+{
+  public:
+   int getKind() const;
+   UInt64 getGeneration() const;
+
+   void setKind(int kind) const;
+   void getGeneration(UInt64 generation) const;
 };
+
+} // p2p
 
 #endif // P2P_AbstractValue_hxx
 
