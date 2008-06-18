@@ -12,6 +12,7 @@
 #include <assert.h>
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
+#include "rutil/ParseException.hxx"
 #include "s2c_native.hxx"
 
 void s2c::encode_uintX(std::ostream& out, const unsigned int bits, const u_int64 value)
@@ -61,8 +62,9 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_char &value)
     while(size--){
       value <<=8;
       c=in.get();
-      if(in.eof())
-        assert(0); // TODO: throw exception
+     
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
       value |= c;
     }
   }
@@ -100,8 +102,9 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int16 &value
     while(size--){
       value <<=8;
       c=in.get();
-      if(in.eof())
-        assert(0); // TODO: throw exception
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
+
 
       value |= c;
     }
@@ -120,9 +123,10 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int32 &value
 
     while(size--){
       value <<=8;
+      
       c=in.get();
-      if(in.eof())
-        assert(0); // TODO: throw exception
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
 
       value |= c;
     }
@@ -142,8 +146,8 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int64 &value
     while(size--){
       value <<=8;
       c=in.get();
-      if(in.eof())
-        assert(0);
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
       value |= c;
     }
   }
@@ -165,9 +169,8 @@ void s2c::read_varray1(std::istream& in, unsigned int lenlen, resip::Data &buf)
     while(lenlen--){
       len<<=8;
       c=in.get();
-      if(in.eof())
-        assert(0); /* TODO: throw exception */
-        
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
       len|=c;
     }
     
@@ -175,8 +178,8 @@ void s2c::read_varray1(std::istream& in, unsigned int lenlen, resip::Data &buf)
     
     while(len--){
       c=in.get();
-      if(in.eof())
-        assert(0); /* TODO: throw exception */
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
 
       out.put(c);
     }
