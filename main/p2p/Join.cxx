@@ -2,29 +2,34 @@
 
 using namespace p2p;
 
-JoinAns::JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific) :
-	mOverlaySpecific(overlaySpecific)
+JoinAns::JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific)
 {
-	copyForwardingData(*request);
+   mOverlaySpecificData.resize(overlaySpecific.size());
+   std::copy(overlaySpecific.begin(), overlaySpecific.end(), mOverlaySpecificData.begin());
+   
+   copyForwardingData(*request);
 }
 
 void 
-JoinAns::getEncodedPayload(resip::DataStream &data) const
+JoinAns::getEncodedPayload(resip::DataStream &strm) 
 {
-
+   encode(strm);
 }
 
 JoinReq::JoinReq(const NodeId &node, const resip::Data &overlaySpecific) :
 	mNodeID(node)
 {
+   mJoiningPeerId = new s2c::NodeIdStruct;
+   memcpy(mJoiningPeerId->mId, node.getValue().c_str(), sizeof(mJoiningPeerId->mId));
 
+   mOverlaySpecificData.resize(overlaySpecific.size());
+   std::copy(overlaySpecific.begin(), overlaySpecific.end(), mOverlaySpecificData.begin());
 }
 
 void
-JoinReq::getEncodedPayload(resip::DataStream &data) const
+JoinReq::getEncodedPayload(resip::DataStream &strm) 
 {
-
-
+   encode(strm);
 }
 
 /* ======================================================================

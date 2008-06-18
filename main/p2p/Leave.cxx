@@ -8,13 +8,13 @@ LeaveAns::LeaveAns(LeaveReq *request)
 }
 
 void 
-LeaveAns::getEncodedPayload(resip::DataStream &data) const 
+LeaveAns::getEncodedPayload(resip::DataStream &data) 
 {
 	assert(0);
 }
 
 void 
-LeaveReq::getEncodedPayload(resip::DataStream &data) const
+LeaveReq::getEncodedPayload(resip::DataStream &data) 
 {
 	assert(0);
 }
