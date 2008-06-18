@@ -24,6 +24,8 @@ class Chord : public TopologyAPI
    public:
       Chord(Profile& config, TransactionLayer& transactionProcessor );
       
+      virtual void joinOverlay( resip::GenericIPAddress& bootstrapNode );
+      
       // need a fifo to receive timer events 
 
       // Messages that the forwarding layer sends to this object
