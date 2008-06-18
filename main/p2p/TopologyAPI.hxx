@@ -6,7 +6,7 @@
 
 #include "p2p/NodeId.hxx"
 #include "p2p/ResourceId.hxx"
-#include "p2p/ConfigObject.hxx"
+#include "p2p/Profile.hxx"
 #include "p2p/Message.hxx"
 #include "p2p/EventConsumer.hxx"
 #include "p2p/Postable.hxx"
@@ -24,7 +24,7 @@ class TransactionLayer;
 class TopologyAPI :  public EventConsumer, public Postable<Event>
 {
    public:
-      TopologyAPI(ConfigObject& config, TransactionLayer& transactionProcessor );
+      TopologyAPI(Profile& config, TransactionLayer& transactionProcessor );
       
       // need a fifo to receive timer events 
 

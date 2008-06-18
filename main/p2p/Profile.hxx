@@ -1,5 +1,5 @@
-#ifndef __P2P_CONFIG_OBJECT_HXX
-#define __P2P_CONFIG_OBJECT_HXX 1
+#ifndef __P2P_PROFILE_HXX
+#define __P2P_PROFILE_HXX 1
 
 #include <openssl/evp.h>
 #include <openssl/x509.h>
@@ -19,11 +19,11 @@ namespace p2p
 
 enum {RELOAD_APPLICATION_ID = 8675};
 
-class ConfigObject
+class Profile
 {
 public:
-   ConfigObject() : mNodeId(resip::Data::Empty) {}
-   virtual ~ConfigObject() {;}
+   Profile() : mNodeId(resip::Data::Empty) {}
+   virtual ~Profile() {;}
 
    virtual const X509        *getCertificate() { return 0; }
    virtual const EVP_PKEY    *getPrivateKey() { return 0; }

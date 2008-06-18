@@ -8,7 +8,7 @@
 #include "Postable.hxx"
 #include "ResourceId.hxx"
 #include "UserName.hxx"
-#include "ConfigObject.hxx"
+#include "Profile.hxx"
 
 using resip::Data;
 using std::vector; 
@@ -19,7 +19,7 @@ namespace p2p
 class SignatureContext
 {
    public:
-      SignatureContext(ConfigObject &config);
+      SignatureContext(Profile &config);
       
       // The types of hash function we support
       enum {
@@ -52,7 +52,7 @@ class SignatureContext
       void digestData(const vector<const Data> toBeSigned, unsigned char digest[32]);
       Data computeSignature(const vector<const Data> toBeSigned);
       
-      ConfigObject &mConfig;
+      Profile &mConfig;
 
       class CachedCertificate 
       {
