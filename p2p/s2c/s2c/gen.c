@@ -225,7 +225,7 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out, int do_inline)
       
       snprintf(armname,100,"m%s",camelback(arm->name));
 
-      fprintf(out,"   struct {\n");
+      fprintf(out,"   struct %s_ {\n", armname);
 
       for(member=STAILQ_FIRST(&arm->u.select_arm_.members);member;member=STAILQ_NEXT(member,entry)){
               fprintf(out,"     ");

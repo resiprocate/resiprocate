@@ -63,10 +63,10 @@ public:
    IpAddressAndPortStruct();
    AddressType                   mType;
    UInt8                         mLength;
-   struct {
+   struct mIpv4Address_ {
         IPv4AddrPortStruct*           mV4addrPort;
    } mIpv4Address;
-   struct {
+   struct mIpv6Address_ {
         IPv6AddrPortStruct*           mV6addrPort;
    } mIpv6Address;
 
@@ -87,13 +87,13 @@ public:
    DestinationStruct();
    DestinationType               mType;
    UInt8                         mLength;
-   struct {
+   struct mPeer_ {
         NodeIdStruct*                 mNodeId;
    } mPeer;
-   struct {
+   struct mResource_ {
         ResourceIdStruct*             mResourceId;
    } mResource;
-   struct {
+   struct mCompressed_ {
         std::vector<unsigned char>    mCompressedId;
    } mCompressed;
 
@@ -242,11 +242,11 @@ class FramedMessageStruct : public PDU {
 public:
    FramedMessageStruct();
    FramedMessageType             mType;
-   struct {
+   struct mData_ {
         UInt32                        mSequence;
         std::vector<unsigned char>    mMessage;
    } mData;
-   struct {
+   struct mAck_ {
         UInt32                        mAckSequence;
         UInt32                        mReceived;
    } mAck;
@@ -299,10 +299,10 @@ class PingInformationStruct : public PDU {
 public:
    PingInformationStruct();
    PingInformationType           mType;
-   struct {
+   struct mResponsibleSet_ {
         UInt32                        mResponsiblePpb;
    } mResponsibleSet;
-   struct {
+   struct mNumResources_ {
         UInt32                        mNumResources;
    } mNumResources;
 
@@ -388,13 +388,13 @@ class StoredDataValueStruct : public PDU {
 public:
    StoredDataValueStruct();
    DataModel                     mModel;
-   struct {
+   struct mSingleValue_ {
         DataValueStruct*              mSingleValueEntry;
    } mSingleValue;
-   struct {
+   struct mArray_ {
         ArrayEntryStruct*             mArrayEntry;
    } mArray;
-   struct {
+   struct mDictionary_ {
         DictionaryEntryStruct*        mDictionaryEntry;
    } mDictionary;
 
@@ -482,12 +482,12 @@ public:
    DataModel                     mModel;
    UInt64                        mGeneration;
    UInt16                        mLength;
-   struct {
+   struct mSingleValue_ {
    } mSingleValue;
-   struct {
+   struct mArray_ {
         std::vector<ArrayRangeStruct*>  mIndices;
    } mArray;
-   struct {
+   struct mDictionary_ {
         std::vector<DictionaryKeyStruct*>  mKeys;
    } mDictionary;
 
@@ -603,10 +603,10 @@ public:
    SipRegistrationStruct();
    SipRegistrationType           mType;
    UInt16                        mLength;
-   struct {
+   struct mSipRegistrationUri_ {
         std::vector<unsigned char>    mUri;
    } mSipRegistrationUri;
-   struct {
+   struct mSipRegistrationRoute_ {
         std::vector<unsigned char>    mContactPrefs;
         std::vector<DestinationStruct*>  mDestinationList;
    } mSipRegistrationRoute;
@@ -627,13 +627,13 @@ class ChordUpdateStruct : public PDU {
 public:
    ChordUpdateStruct();
    ChordUpdateType               mType;
-   struct {
+   struct mPeerReady_ {
    } mPeerReady;
-   struct {
+   struct mNeighbors_ {
         std::vector<NodeIdStruct*>    mPredecessors;
         std::vector<NodeIdStruct*>    mSuccessors;
    } mNeighbors;
-   struct {
+   struct mFull_ {
         std::vector<NodeIdStruct*>    mPredecessors;
         std::vector<NodeIdStruct*>    mSuccessors;
         std::vector<NodeIdStruct*>    mFingers;
