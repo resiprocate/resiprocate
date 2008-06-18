@@ -30,6 +30,7 @@ class ChordTopology : public TopologyAPI
       // Messages that the forwarding layer sends to this object
       virtual void newConnectionFormed( NodeId& node );
       virtual void connectionLost( NodeId& node );
+      virtual void candidatesCollected( NodeId& node, std::vector<Candidate>& candidates)=0;
        
       // deal with topology change messages 
       virtual void consume(JoinReq& msg);
@@ -52,6 +53,9 @@ class ChordTopology : public TopologyAPI
       // Functions to find out if this peer is responsible for something
       virtual bool isResponsible( NodeId& node );
       virtual bool isResponsible( ResourceId& resource );
+
+      // Function to determine if we are connected to a node
+      virtual bool isConnected( NodeId& node );
 
       // Function to hash resource names into resourceID 
       virtual ResourceId resourceId( resip::Data& resourceName );

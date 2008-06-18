@@ -180,7 +180,7 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
    Candidate c(resip::TCP, addrPort); // XXX -- SHOULD BE TLS
    candidates.push_back(c);
 
-   LocalCandidatesCollected *lcc = new LocalCandidatesCollected(candidates);
+   LocalCandidatesCollected *lcc = new LocalCandidatesCollected(nodeId, appId, candidates);
    mRxFifo->add(lcc);
 }
 
