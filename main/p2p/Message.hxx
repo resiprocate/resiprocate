@@ -24,7 +24,7 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
 {
    public:
       // Used to make a request. Will populate the rid into the destination list.  
-      Message(ResourceId rid, const resip::Data& overlayName);
+      Message(ResourceId rid);
       
       virtual ~Message() = 0;
       
@@ -56,6 +56,8 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
          FailureResponseType = 0xFFFF
       };
 
+	  void setOverlayName(const resip::Data &overlayName);
+
       struct Error 
       {
             enum Code
@@ -82,19 +84,19 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
 	  UpdateAns* makeUpdateResponse();
 	  LeaveAns* makeLeaveResponse();
       
-	  //virtual JoinResponse *makeJoinResponse();
-      
       // encoding/parsing methods
-      resip::Data encode() const;	
+      resip::Data encodePayload();
       static Message *parse(const resip::Data &message, NodeId senderID);
 
       // Forwarding Header
       UInt8 getTTL() const;
+	  void decrementTTL();
+
       UInt32 getOverlay() const;
       UInt64 getTransactionID() const;
       UInt16 getFlags() const; 
-      //void setFlags(UInt16 flags);
       void pushVia(NodeId node);
+
       // placeholder for doing via list compression
       
       DestinationId nextDestination() const;
@@ -111,10 +113,12 @@ protected:
 	resip::Data mOverlayName;
 	resip::Data mEncodedData;
 
-	virtual void getPayload(resip::Data &data) const = 0;
+	virtual void getEncodedPayload(resip::DataStream &dataStream) const = 0;
 	virtual std::vector<resip::Data> collectSignableData() const;
 
 	Message() {}
+protected:
+	void copyForwardingData(const Message &header);
 };
 
 class MessageContents 

@@ -2,20 +2,20 @@
 
 using namespace p2p;
 
-JoinAns::JoinAns(const resip::Data &overlaySpecific) :
+JoinAns::JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific) :
 	mOverlaySpecific(overlaySpecific)
 {
-
+	copyForwardingData(*request);
 }
 
 void 
-JoinAns::getPayload(resip::Data &data) const
+JoinAns::getEncodedPayload(resip::DataStream &data) const
 {
 
 }
 
 void
-JoinReq::getPayload(resip::Data &data) const
+JoinReq::getEncodedPayload(resip::DataStream &data) const
 {
 
 
