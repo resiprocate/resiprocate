@@ -11,9 +11,10 @@
 using namespace p2p;
 
 
-//ChordTopology::ChordTopology(Profile& config, TransactionLayer& transactionProcessor )
-//{
-//}
+ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
+   TopologyAPI(config, dispatcher, transporter) 
+{
+}
       
 void 
 ChordTopology::joinOverlay( resip::GenericIPAddress& bootstrap )
@@ -173,7 +174,7 @@ ChordTopology::isResponsible( NodeId& node )
 {
    if (mPrevTable.size() == 0) return false;
 
-   if (  (mPrevTable[0]<node) && (node<=mMyNodeId) )
+   if (  (mPrevTable[0] < node) && (node <= mProfile.nodeId()) )
    {
       return true;
    }
@@ -228,7 +229,7 @@ ChordTopology::addNewNeighbors(std::vector<NodeId>& nodes)
       {
          mNextTable[0] = node; changed=true;
       }
-      else if ( (mMyNodeId<node) && (node<mNextTable[0]) )
+      else if ( (mProfile.nodeId() < node) && (node < mNextTable[0]) )
       {
          mNextTable[0] = node; changed=true;
       }
@@ -237,7 +238,7 @@ ChordTopology::addNewNeighbors(std::vector<NodeId>& nodes)
       {
          mPrevTable[0] = node; changed=true;
       }
-      else if ( (mPrevTable[0]<node) && (node<mMyNodeId) )
+      else if ( (mPrevTable[0] < node) && (node < mProfile.nodeId()) )
       {
          mPrevTable[0] = node; changed=true;
       }   

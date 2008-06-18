@@ -21,7 +21,8 @@ class ChordTopology : public TopologyAPI
 {
    public:
       ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter);
-      
+      virtual ~ChordTopology();
+
       virtual void joinOverlay( resip::GenericIPAddress& bootstrapNode );
       
       // need a fifo to receive timer events 
@@ -55,9 +56,7 @@ class ChordTopology : public TopologyAPI
 
       // Function to hash resource names into resourceID 
       virtual ResourceId resourceId( resip::Data& resourceName );
-        
-      virtual ~ChordTopology();
-      
+              
    private:
       
       std::set<NodeId> mFingerTable;
@@ -67,8 +66,6 @@ class ChordTopology : public TopologyAPI
       bool addNewNeighbors(  std::vector<NodeId>& nodes ); // return true if
                                                           // anything changed
       bool addNewFingers( std::vector<NodeId>& nodes ); // return true if changed
-      
-      NodeId mMyNodeId;
 };
 
 }
