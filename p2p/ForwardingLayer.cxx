@@ -21,7 +21,7 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
    // get the destination node from m 
   redo:
    DestinationId did = m->nextDestination();
-   if (did.isCompressed())
+   if (did.isCompressedId())
    {
       assert(0);
    }

@@ -8,6 +8,7 @@
 #include "p2p/Signable.hxx"
 #include "p2p/ResourceId.hxx"
 #include "p2p/NodeId.hxx"
+#include "p2p/DestinationId.hxx"
 #include "p2p/MessageStructsGen.hxx"
 
 namespace p2p 
