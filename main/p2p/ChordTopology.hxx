@@ -32,13 +32,12 @@ class ChordTopology : public TopologyAPI
       virtual void connectionLost( NodeId& node );
        
       // deal with topology change messages 
-      virtual void consume(EventWrapper<JoinReq>& event);
-      virtual void consume(EventWrapper<UpdateReq>& event);
-      virtual void consume(EventWrapper<LeaveReq>& event);
-      //virtual void processJoin( EventWrapper<StoreAns>& event);
-      //virtual void processUpdate( Message& message );
-      //virtual void processLeave( Message& message );
+      virtual void consume(JoinReq& msg);
+      virtual void consume(UpdateReq& msg);
+      virtual void consume(LeaveReq& msg);
 
+      virtual void consume(ConnectAns& msg);
+   
       // called when store set completes, cases update to get sent
       // virtual void consume(EventWrapper<StoreSetFoo>& event);
 

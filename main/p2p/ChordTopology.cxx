@@ -44,7 +44,7 @@ ChordTopology::newConnectionFormed( NodeId& node )
 // callback here 
       // sent connect reqest to NNP
 
-      // send connected to bunch of fingers 
+      // send connect to bunch of fingers 
 
       // send join to AP 
    }
@@ -89,7 +89,7 @@ ChordTopology::connectionLost( NodeId& node )
 
 // deal with topoogy change messages 
 void 
-ChordTopology::consume(EventWrapper<JoinReq>& event)
+ChordTopology::consume(JoinReq& msg)
 {
    // check we are reponsible for the data from this node 
 
@@ -105,7 +105,7 @@ ChordTopology::consume(EventWrapper<JoinReq>& event)
 
 
 void 
-ChordTopology::consume(EventWrapper<UpdateReq>& event)
+ChordTopology::consume(UpdateReq& msg)
 {
    // if our, prev empty, then this update will have the prev and need to
    // connect to them and set the prev 
@@ -116,9 +116,16 @@ ChordTopology::consume(EventWrapper<UpdateReq>& event)
 
 
 void 
-ChordTopology::consume(EventWrapper<LeaveReq>& event)
+ChordTopology::consume(LeaveReq& msg)
 {
    // if this is in the prev/next table, remove it and send updates 
+   assert(0);
+}
+
+
+void 
+ChordTopology::consume(ConnectAns& msg)
+{
    assert(0);
 }
 
