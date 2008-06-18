@@ -13,14 +13,14 @@ public:
 	ConnectReq() {}
 
 	virtual MessageType getType() const { return ConnectReqType; }
-	virtual void getEncodedPayload(resip::DataStream &dataStream) const { }
+	virtual void getEncodedPayload(resip::DataStream &dataStream) { }
 };
 
 class ConnectAns : public Message
 {
 public:
 	virtual MessageType getType() const { return ConnectAnsType; }
-	virtual void getEncodedPayload(resip::DataStream &dataStream) const { }
+	virtual void getEncodedPayload(resip::DataStream &dataStream) { }
 };
 
 
