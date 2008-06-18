@@ -18,7 +18,7 @@ namespace p2p
 class Dispatcher;
 class TransporterMessage;
 
-class ForwardingLayer: public Postable<p2p::Message>
+class ForwardingLayer: public EventConsumer, public Postable<p2p::Message>
 {
    public:
       ForwardingLayer(Dispatcher& dispatcher, 
@@ -33,12 +33,18 @@ class ForwardingLayer: public Postable<p2p::Message>
 
       void process(int ms);
 
+      virtual void consume(ConnectionOpened& m);
+      virtual void consume(ConnectionClosed& m);
+      virtual void consume(MessageArrived& m);
+      virtual void consume(ApplicationMessageArrived& m);
+      virtual void consume(LocalCandidatesCollected& m);
+
    private:
       Dispatcher& mDispatcher;
       Transporter& mTransporter;
       TopologyAPI& mTopology;
 
-      resip::Fifo<TransporterMessage> mRxFifo;
+      resip::Fifo<Event> mRxFifo;
 };
 
 }

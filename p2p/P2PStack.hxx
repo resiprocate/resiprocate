@@ -20,8 +20,8 @@ class P2PStack
       Profile mConfig;
 
       Dispatcher mDispatcher;
-      Chord mChord;
       SelectTransporter mTransporter;
+      Chord mChord;
       ForwardingLayer mForwarder;
 };
 

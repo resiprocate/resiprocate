@@ -1,9 +1,38 @@
 #include "p2p/TransporterMessage.hxx"
+#include "p2p/EventConsumer.hxx"
 
-namespace p2p
+using namespace p2p;
+
+void
+ConnectionOpened::dispatch(EventConsumer& consumer)
 {
-
+   consumer.consume(*this);
 }
+
+void
+ConnectionClosed::dispatch(EventConsumer& consumer)
+{
+   consumer.consume(*this);
+}
+
+void
+MessageArrived::dispatch(EventConsumer& consumer)
+{
+   consumer.consume(*this);
+}
+
+void
+ApplicationMessageArrived::dispatch(EventConsumer& consumer)
+{
+   consumer.consume(*this);
+}
+
+void
+LocalCandidatesCollected::dispatch(EventConsumer& consumer)
+{
+   consumer.consume(*this);
+}
+
 
 
 /* ======================================================================
