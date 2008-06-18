@@ -203,9 +203,11 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    {
       ErrLog( << "Cannot ::read -- returned " << bytesRead); 
    }
+   s2c::NodeIdStruct nid;
+   //nid.mHigh = *((UInt64*)(buffer));
+   //nid.mLow = *((UInt64*)(buffer+sizeof(UInt64)));
 
-   NodeId nodeId = resip::Data(buffer, sizeof(buffer));
-
+   NodeId nodeId(nid);
    FlowId flowId(nodeId, application, s, *mRxFifo);
 
    mNodeFlowMap.insert(std::map<NodeId, FlowId>::value_type(nodeId, flowId));

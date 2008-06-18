@@ -22,7 +22,7 @@ enum {RELOAD_APPLICATION_ID = 8675};
 class Profile
 {
 public:
-   Profile() : mNodeId(resip::Data::Empty), mNumInitialFingers(8) {}
+      Profile() : mNodeId(), mNumInitialFingers(8) {}
    virtual ~Profile() {;}
 
    virtual const X509        *getCertificate() { return 0; }

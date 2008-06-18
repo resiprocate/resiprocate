@@ -26,7 +26,7 @@ DestinationId::asNodeId() const
 }
 
 bool
-DestinationId::isCompressed()const
+DestinationId::isCompressedId()const
 {
    return (mType == s2c::compressed);
 }
@@ -35,8 +35,7 @@ CompressedId
 DestinationId::asCompressedId() const
 {
    assert(isCompressedId());
-   assert(mResource->mCompressedId);
-   return CompressedId(*mResource->mCompressedId);
+   return CompressedId(mCompressed.mCompressedId);
 }
 
 bool
@@ -49,14 +48,14 @@ ResourceId
 DestinationId::asResourceId() const
 {
    assert(isResourceId());
-   assert(mResource->mResourceId);
-   return ResourceId(*mResource->mResourceId);
+   assert(mResource.mResourceId);
+   return ResourceId(mResource.mResourceId->mId);
 }
 
 bool
 DestinationId::operator==(const NodeId& nid) const
 {
-   return (isNodeId() && nid == asNodeId())
+   return (isNodeId() && nid == asNodeId());
 }
 
 
