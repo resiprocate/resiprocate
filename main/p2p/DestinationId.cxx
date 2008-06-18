@@ -1,63 +1,62 @@
 #include <algorithm>
 
 #include "rutil/Data.hxx"
-#include "p2p/NodeId.hxx"
+#include "p2p/DestinationId.hxx"
 
 using namespace p2p;
 
-NodeId::NodeId() : mA(0), mB(0)
+DestinationId::DestinationId(s2c::DestinationStruct s) 
 {
-}
-
-NodeId::NodeId(const s2c::NodeIdStruct& nid) : mNodeId(nid)
-{
-}
-
-NodeId& NodeId::operator=(const NodeId& rhs)
-{
-   mNodeId = rhs.mNodeId;
-   return *this;
-}
-
-bool 
-NodeId::operator<(const NodeId &r) const
-{
-   return mHigh < r.mHigh || (mHigh == r.mHigh && mLow < r.mLow);
+   // copy it into DestinationStruct
+   assert(0);
 }
 
 bool
-NodeId::operator<=(const NodeId& rhs) const
+DestinationId::isNodeId() const
 {
-   return *this == rhs || *this < rhs;
-}
-
-bool
-NodeId::operator==(const NodeId& rhs) const
-{
-   return mHigh == rhs.mHigh && mLow == rhs.mLow;
+   return (mType == s2c::peer);
 }
 
 NodeId
-NodeId::add2Pow( int power ) const
+DestinationId::asNodeId() const
 {
-   assert( power < 128 );
-   assert( power > 0 );
-   NodeId ret;
-/*
-   ret = *this;
-   
-   int byte = 15-power/8;
-   assert( byte >= 0 );
-   assert( byte < 16 );
-   
-   int val = 1<<(power%8);
-   assert( val >= 1 );
-   assert( val <= 128 );
-   
-   ret.mValue[byte] += val;
+   assert(isNodeId());
+   assert(mPeer.mNodeId);
+   return NodeId(*mPeer.mNodeId);
+}
 
-*/
-   return ret;
+bool
+DestinationId::isCompressed()const
+{
+   return (mType == s2c::compressed);
+}
+
+CompressedId
+DestinationId::asCompressedId() const
+{
+   assert(isCompressedId());
+   assert(mResource->mCompressedId);
+   return CompressedId(*mResource->mCompressedId);
+}
+
+bool
+DestinationId::isResourceId()const
+{
+   return (mType == s2c::resource);
+}
+
+ResourceId
+DestinationId::asResourceId() const
+{
+   assert(isResourceId());
+   assert(mResource->mResourceId);
+   return ResourceId(*mResource->mResourceId);
+}
+
+bool
+DestinationId::operator==(const NodeId& nid) const
+{
+   return (isNodeId() && nid == asNodeId())
 }
 
 

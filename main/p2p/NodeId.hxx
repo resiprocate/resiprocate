@@ -2,6 +2,7 @@
 #define __P2P_NODE_ID_HXX 1
 
 #include "rutil/Compat.hxx"
+#include "p2p/MessageStructsGen.hxx"
 
 namespace resip
 {
@@ -11,19 +12,13 @@ class Data;
 namespace p2p
 {
 
-// This is pretty much wrong, but it serves as a good placeholder at
-// the moment.
-
 class NodeId
 {
    public:
-      NodeId();
-      NodeId(const resip::Data& data);
-      NodeId& operator=(const resip::Data& data);
+	  NodeId();
+	  NodeId(const s2c::NodeIdStruct& nid);
       NodeId& operator=(const NodeId& data);
       
-      const resip::Data getValue() const;
-
       bool operator<(const NodeId& rhs) const;
       bool operator<=(const NodeId& rhs) const;
       bool operator==(const NodeId& rhs) const;
@@ -33,8 +28,7 @@ class NodeId
       NodeId add2Pow( int power ) const; 
       
    private:
-      // NOTE: this should be 128 bits
-      unsigned char mValue[16];
+      s2c::NodeIdStruct mNodeId;
 };
    
 
@@ -43,16 +37,20 @@ class CompressedId
 };
 
 // Either a CompressedId, NodeId or ResourceId
-class DestinationId
+class DestinationId : private s2c::DestinationStruct
 {
    public:
+      DestinationId(s2c::DestinationStruct);
+      
+      bool isNodeId() const;
       NodeId asNodeId() const;
       
       bool isCompressed() const;
-      bool isDestinationId() const;
-      bool isNodeId() const;
+      CompressedId asCompressedId() const;
+      
       bool isResourceId() const;
-
+      ResourceId asResourceId() const;
+      
       bool operator==(const NodeId& nid) const;
 };
 
