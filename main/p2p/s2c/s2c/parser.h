@@ -21,6 +21,8 @@ typedef STAILQ_HEAD(p_decl_head_,p_decl_) p_decl_head;
 typedef struct p_decl_ {
   char *name;
   int type;
+  int auto_len;
+
 #define TYPE_PRIMITIVE 1
 #define TYPE_VARRAY     2
 #define TYPE_STRUCT    3
