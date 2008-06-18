@@ -6,16 +6,16 @@ UpdateAns::UpdateAns()
 {
 }
 
-UpdateAns::UpdateAns(UpdateReq *request)
+UpdateAns::UpdateAns(UpdateReq *request, const resip::Data &overlaySpecificData) :
+	mOverlaySpecificData(overlaySpecificData)
 {
-    copyForwardingData(*request);
-	assert(0);
+	copyForwardingData(*request);
 }
 
 void 
 UpdateAns::getEncodedPayload(resip::DataStream &data)
 {
-	assert(0);
+	data << mOverlaySpecificData;
 }
 
 void 
@@ -29,10 +29,16 @@ UpdateReq::UpdateReq()
 
 }
 
+UpdateReq::UpdateReq(const resip::Data &overlaySpecificData) :
+	mOverlaySpecificData(overlaySpecificData)
+{
+
+}
+
 void 
 UpdateReq::getEncodedPayload(resip::DataStream &data) 
 {
-	assert(0);
+	data << mOverlaySpecificData;
 }
 
 
