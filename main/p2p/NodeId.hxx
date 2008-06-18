@@ -40,7 +40,7 @@ class CompressedId
 {
    public:
       CompressedId(const resip::Data& cid);
-      
+      bool operator==(const CompressedId& rhs) const;
 };
 
 }
