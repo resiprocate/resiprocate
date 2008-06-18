@@ -124,7 +124,6 @@ DestinationId::operator==(const NodeId& nid) const
 }
 
 
->>>>>>> .r8002
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
  *  All rights reserved.
