@@ -21,16 +21,21 @@
 extern FILE *dotc;
 extern FILE *doth;
 
-p_decl *current_decl[10]={0};
+#define CURRENT_DECL current_decl[current_decl_depth]
+
+p_decl *current_decl[50]={0};
 int current_decl_depth=0;
  
 void push_decl(p_decl *decl)
   {
+    r_log(LOG_GENERIC,LOG_DEBUG,"Pushing decl");
     current_decl[++current_decl_depth]=decl;
   }
 
 void pop_decl()
   {
+    r_log(LOG_GENERIC,LOG_DEBUG,"Popping decl %s, depth=%d",CURRENT_DECL->name,
+      current_decl_depth);
     current_decl_depth--;
   }
 
@@ -46,7 +51,6 @@ p_decl *make_fwd_ref (char *type)
     return(decl);
   }
 
-#define CURRENT_DECL current_decl[current_decl_depth]
 %}
 %union {
      unsigned int val;
@@ -325,7 +329,7 @@ enum: enum_start '{' enumerateds '}' NAME_ ';'
     exit(1);
   }
 
-  pop_decl;
+  pop_decl();
 }
 
 enumerateds: enumerated {};
@@ -469,11 +473,14 @@ select_arm_decls: {};
   {
     p_decl *decl=$2;
     
-    r_log(LOG_GENERIC,LOG_DEBUG,"Adding type %s to %s",decl->name,CURRENT_DECL->name);
+//    r_log(LOG_GENERIC,LOG_DEBUG,"Adding type %s to %s",decl->name,CURRENT_DECL->name);
     
     STAILQ_INSERT_TAIL(&CURRENT_DECL->u.select_arm_.members,decl,entry);
   }
-    
+ | ';'
+  {
+  }
+  
 
 typedef: TYPEDEF_ declaration
   {
