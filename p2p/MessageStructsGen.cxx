@@ -29,7 +29,7 @@ void NodeIdStruct :: decode(std::istream& in)
  DebugLog(<< "Decoding NodeIdStruct");
    for(unsigned int i=0;i<16;i++)
       decode_uintX(in, 8, mId[i]);
- DebugLog( << "mId[i]");
+   DebugLog( << "mId[i]");
 
 };
 
@@ -67,7 +67,7 @@ void ResourceIdStruct :: decode(std::istream& in)
    while(in2.peek()!=EOF){
       mId.push_back(0);
       decode_uintX(in2, 8, mId[i++]);
- DebugLog( << "mId[i++]");
+   DebugLog( << "mId[i++]");
    }
 ;   }
 
@@ -91,14 +91,31 @@ void ResourceIdStruct :: encode(std::ostream& out)
 
 
 
-// Classes for DestinationDataStruct */
+// Classes for DestinationStruct */
 
-void DestinationDataStruct :: print(std::ostream& out, int indent) const 
+void DestinationStruct :: print(std::ostream& out, int indent) const 
 {
-}
-void DestinationDataStruct :: decode(std::istream& in)
+   do_indent(out,indent);
+   (out) << "Destination:\n";
+   indent+=2;
+   do_indent(out, indent);
+   (out)  << "type:" << std::hex << (unsigned long long) mType << "\n"; 
+   do_indent(out, indent);
+   (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
+};
+
+void DestinationStruct :: decode(std::istream& in)
 {
-   DebugLog(<< "Decoding DestinationDataStruct");
+ DebugLog(<< "Decoding DestinationStruct");
+   {
+      u_int32 v;
+      decode_uintX(in, 8, v);
+      mType=(DestinationType)v;
+   }
+
+   decode_uintX(in, 8, mLength);
+   DebugLog( << "mLength");
+
    switch(mType){
       case 1:
             mPeer.mNodeId = new NodeIdStruct();
@@ -119,7 +136,7 @@ void DestinationDataStruct :: decode(std::istream& in)
    while(in2.peek()!=EOF){
       mCompressed.mCompressedId.push_back(0);
                decode_uintX(in2, 8, mCompressed.mCompressedId[i++]);
- DebugLog( << "mCompressed.mCompressedId[i++]");
+   DebugLog( << "mCompressed.mCompressedId[i++]");
    }
 ;   }
           break;
@@ -128,10 +145,16 @@ void DestinationDataStruct :: decode(std::istream& in)
           assert(1==0);
    }
 
+
 };
-void DestinationDataStruct :: encode(std::ostream& out)
+
+void DestinationStruct :: encode(std::ostream& out)
 {
-   DebugLog(<< "Encoding DestinationDataStruct");
+   DebugLog(<< "Encoding DestinationStruct");
+   encode_uintX(out, 8, (u_int64)(mType));
+
+   encode_uintX(out, 8, mLength);
+
    switch(mType) {
       case 1:
             mPeer.mNodeId->encode(out);
@@ -158,48 +181,6 @@ void DestinationDataStruct :: encode(std::ostream& out)
           assert(1==0);
    }
 
-};
-
-
-// Classes for DestinationStruct */
-
-void DestinationStruct :: print(std::ostream& out, int indent) const 
-{
-   do_indent(out,indent);
-   (out) << "Destination:\n";
-   indent+=2;
-   do_indent(out, indent);
-   (out)  << "type:" << std::hex << (unsigned long long) mType << "\n"; 
-   do_indent(out, indent);
-   (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
-   mDestinationData->print(out, indent);
-};
-
-void DestinationStruct :: decode(std::istream& in)
-{
- DebugLog(<< "Decoding DestinationStruct");
-   {
-      u_int32 v;
-      decode_uintX(in, 8, v);
-      mType=(DestinationType)v;
-   }
-
-   decode_uintX(in, 8, mLength);
- DebugLog( << "mLength");
-
-   mDestinationData = new DestinationDataStruct();
-   mDestinationData->decode(in);
-
-};
-
-void DestinationStruct :: encode(std::ostream& out)
-{
-   DebugLog(<< "Encoding DestinationStruct");
-   encode_uintX(out, 8, (u_int64)(mType));
-
-   encode_uintX(out, 8, mLength);
-
-   mDestinationData->encode(out);
 
 };
 
@@ -237,7 +218,7 @@ void SignerIdentityStruct :: decode(std::istream& in)
    while(in2.peek()!=EOF){
       mSignerIdentity.push_back(0);
       decode_uintX(in2, 8, mSignerIdentity[i++]);
- DebugLog( << "mSignerIdentity[i++]");
+   DebugLog( << "mSignerIdentity[i++]");
    }
 ;   }
 
@@ -280,10 +261,10 @@ void SignatureAndHashAlgorithmStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding SignatureAndHashAlgorithmStruct");
    decode_uintX(in, 8, mSig);
- DebugLog( << "mSig");
+   DebugLog( << "mSig");
 
    decode_uintX(in, 8, mHash);
- DebugLog( << "mHash");
+   DebugLog( << "mHash");
 
 };
 
@@ -330,7 +311,7 @@ void SignatureStruct :: decode(std::istream& in)
    while(in2.peek()!=EOF){
       mSignatureValue.push_back(0);
       decode_uintX(in2, 8, mSignatureValue[i++]);
- DebugLog( << "mSignatureValue[i++]");
+   DebugLog( << "mSignatureValue[i++]");
    }
 ;   }
 
@@ -404,31 +385,31 @@ void ForwardingLayerMessageStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ForwardingLayerMessageStruct");
    decode_uintX(in, 8, mReloToken);
- DebugLog( << "mReloToken");
+   DebugLog( << "mReloToken");
 
    decode_uintX(in, 32, mOverlay);
- DebugLog( << "mOverlay");
+   DebugLog( << "mOverlay");
 
    decode_uintX(in, 8, mTtl);
- DebugLog( << "mTtl");
+   DebugLog( << "mTtl");
 
    decode_uintX(in, 8, mReserved);
- DebugLog( << "mReserved");
+   DebugLog( << "mReserved");
 
    decode_uintX(in, 16, mFragment);
- DebugLog( << "mFragment");
+   DebugLog( << "mFragment");
 
    decode_uintX(in, 8, mVersion);
- DebugLog( << "mVersion");
+   DebugLog( << "mVersion");
 
    decode_uintX(in, 24, mLength);
- DebugLog( << "mLength");
+   DebugLog( << "mLength");
 
    decode_uintX(in, 64, mTransactionId);
- DebugLog( << "mTransactionId");
+   DebugLog( << "mTransactionId");
 
    decode_uintX(in, 16, mFlags);
- DebugLog( << "mFlags");
+   DebugLog( << "mFlags");
 
    {
    resip::Data d;
@@ -455,10 +436,10 @@ void ForwardingLayerMessageStruct :: decode(std::istream& in)
 ;   }
 
    decode_uintX(in, 16, mRouteLogLenDummy);
- DebugLog( << "mRouteLogLenDummy");
+   DebugLog( << "mRouteLogLenDummy");
 
    decode_uintX(in, 16, mMessageCode);
- DebugLog( << "mMessageCode");
+   DebugLog( << "mMessageCode");
 
    {
    resip::Data d;
@@ -468,7 +449,7 @@ void ForwardingLayerMessageStruct :: decode(std::istream& in)
    while(in2.peek()!=EOF){
       mPayload.push_back(0);
       decode_uintX(in2, 8, mPayload[i++]);
- DebugLog( << "mPayload[i++]");
+   DebugLog( << "mPayload[i++]");
    }
 ;   }
 

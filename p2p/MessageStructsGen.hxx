@@ -22,21 +22,17 @@ public:
 };
 
 
-enum DestinationType{
+typedef enum {
    reserved = 0,
    peer = 1,
    resource = 2,
    compressed = 3
-};
+} DestinationType;
 
-class DestinationDataStruct : public PDU {
+class DestinationStruct : public PDU {
 public:
-   int  mType;
-   enum { 
-          tPeer=1,
-          tResource=2,
-          tCompressed=3
-   };
+   DestinationType               mType;
+   UInt8                         mLength;
    struct {
         NodeIdStruct*                 mNodeId;
    } mPeer;
@@ -48,28 +44,17 @@ public:
    } mCompressed;
 
 
-   DestinationDataStruct() {mName = "DestinationData";}
-   PDUMemberFunctions
-};
-
-class DestinationStruct : public PDU {
-public:
-   DestinationType               mType;
-   UInt8                         mLength;
-   DestinationDataStruct*        mDestinationData;
-
-
    DestinationStruct() {mName = "Destination";}
    PDUMemberFunctions
 };
 
 
-enum SignerIdentityType{
+typedef enum {
    reserved1 = 0,
    signer_identity_peer = 1,
    signer_identity_name = 2,
    signer_identity_certificate = 3
-};
+} SignerIdentityType;
 
 class SignerIdentityStruct : public PDU {
 public:
