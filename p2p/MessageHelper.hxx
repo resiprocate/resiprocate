@@ -10,6 +10,7 @@ class MessageHelper
 {
 public:	
 	static std::vector<unsigned char> convert(const resip::Data &data);
+	static void convert(const resip::Data &data, std::vector<unsigned char> &output);
 };
 
 }

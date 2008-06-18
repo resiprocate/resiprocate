@@ -13,14 +13,14 @@ ConnectReq::ConnectReq()
 /// ***********
 /// ConnectReq
 
-ConnectReq::ConnectReq(const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates) :
-	ConnectBase(frag, password, port, role, candidates)
+ConnectReq::ConnectReq(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates) :
+	ConnectBase(frag, password, application, role, candidates)
 {
 
 }
 
-ConnectAns::ConnectAns(const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates) :
-	ConnectBase(frag, password, port, role, candidates)
+ConnectAns::ConnectAns(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates) :
+	ConnectBase(frag, password, application, role, candidates)
 {
 
 }
