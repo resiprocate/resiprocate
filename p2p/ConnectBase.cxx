@@ -22,17 +22,17 @@ ConnectBase::getEncodedPayload(resip::DataStream &dataStream)
 	encode(dataStream);
 }
 
-ConnectBase::ConnectBase(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates)
+ConnectBase::ConnectBase(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates) 
 {
-	MessageHelper::convert(frag, mUfrag);
-	MessageHelper::convert(password, mPassword);
+	mUfrag = frag;
+	mPassword = password;
 	mApplication = application;
-	mRole = MessageHelper::convert(role);
+	mRole = role;
 
 	for (std::vector<resip::Data>::const_iterator iter = candidates.begin(); iter != candidates.end(); iter++) 
 	{
 		IceCandidateStruct *iceStruct = new IceCandidateStruct;
-		iceStruct->mCandidate = MessageHelper::convert(*iter);
+		iceStruct->mCandidate = *iter;
 		mCandidates.push_back(iceStruct);
 	}
 }

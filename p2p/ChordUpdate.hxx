@@ -3,11 +3,12 @@
 
 #include "rutil/Data.hxx"
 #include "p2p/NodeId.hxx"
+#include "p2p/MessageStructsGen.hxx"
 
 namespace p2p
 {
 
-class ChordUpdate
+class ChordUpdate : private s2c::ChordUpdateStruct
 {
 public:
 	enum UpdateType
@@ -39,7 +40,7 @@ public:
 	void setSuccessors(const std::vector<NodeId> &successors);
 	void setPredecessors(const std::vector<NodeId> &predecessors);
 	
-	resip::Data encode() const; // encodes into a blob
+	resip::Data encode(); // encodes into a blob
 protected:
 	resip::Data mUpdateBody;
 	UpdateType mUpdateType;

@@ -10,7 +10,6 @@ SignatureContext::SignatureContext(Profile &profile)
    ;
 }
 
-<<<<<<< .mine
 #if 0
 void SignatureContext::digestData(const vector<Data> toBeSigned, 
                                   unsigned char digest[32],unsigned int *digest_len)
@@ -22,12 +21,10 @@ void SignatureContext::digestData(const vector<Data> toBeSigned,
    
    if(!EVP_DigestInit(&md, digest_ptr))
       assert(0); // OpenSSL MD creation should succeed? TODO: ekr?
-=======
   void digestData(const vector<Data> toBeSigned, 
     unsigned char digest[32])
     {
        //EVP_MD_CTX md;
->>>>>>> .r8001
       
    for(unsigned int i=0;i<toBeSigned.size();i++)
    {
@@ -101,3 +98,4 @@ Data SignatureContext::computeSignature(const vector<Data> toBeSigned)
  *  IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  *  THE POSSIBILITY OF SUCH DAMAGE.
  *====================================================================== */
+
