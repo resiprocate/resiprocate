@@ -165,6 +165,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ForwardingLayer.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Join.cxx"
 				>
 			</File>
@@ -279,7 +283,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\EventWrapper.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\FetchAns.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\FetchKind.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\FetchReq.hxx"
 				>
 			</File>
 			<File
@@ -352,6 +368,14 @@
 			</File>
 			<File
 				RelativePath=".\SingleValue.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StoreAns.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\StoreReq.hxx"
 				>
 			</File>
 			<File
