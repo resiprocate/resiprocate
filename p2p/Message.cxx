@@ -44,7 +44,7 @@ Message::isRequest() const
 }
 
 Message *
-Message::parse(const resip::Data &message, NodeId senderID)
+Message::parse(const resip::Data &message)
 {
 	// placeholder
 	Message::MessageType messageType = UpdateReqType; // remove me
@@ -188,6 +188,12 @@ Message::event()
 {
    assert(0);
    return std::auto_ptr<Event>(0);
+}
+
+void
+Message::pushVia(NodeId id)
+{
+   assert(0);
 }
 
 /* ======================================================================
