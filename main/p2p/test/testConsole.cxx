@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <sys/select.h>
 #include <termios.h>
-#include <stropts.h>
+//#include <stropts.h>
 #include <sys/ioctl.h>
 
 int _kbhit() {
@@ -304,7 +304,7 @@ main (int argc, char** argv)
          input = fgetc(stdin);
          fflush(stdin);
          //cout << "input: " << input << endl;
-         processKeyboard(input, myConversationManager, ua);
+         processKeyboard(input);
 #endif
       }
       if(finished) break;
