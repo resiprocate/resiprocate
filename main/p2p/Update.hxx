@@ -34,7 +34,7 @@ protected:
 class UpdateReq : public Message
 {
 public:
-	UpdateReq(const resip::Data &overlaySpecificBlob);
+	UpdateReq(const DestinationId &dest, const resip::Data &overlaySpecificBlob);
 	virtual MessageType getType() const { return Message::UpdateReqType; }
 
 	virtual void getEncodedPayload(resip::DataStream &data);

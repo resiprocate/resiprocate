@@ -29,7 +29,7 @@ UpdateReq::UpdateReq()
 
 }
 
-UpdateReq::UpdateReq(const resip::Data &overlaySpecificData) :
+UpdateReq::UpdateReq(const DestinationId &dest, const resip::Data &overlaySpecificData) :
 	mOverlaySpecificData(overlaySpecificData)
 {
 

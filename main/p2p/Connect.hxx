@@ -10,7 +10,7 @@ namespace p2p
 class ConnectReq : public ConnectBase
 {
 public:
-	ConnectReq(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates);
+	ConnectReq(const DestinationId &dest, const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates);
 	virtual MessageType getType() const { return ConnectReqType; }
 
 protected:
