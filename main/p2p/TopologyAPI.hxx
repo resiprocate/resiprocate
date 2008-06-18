@@ -38,6 +38,7 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       // Messages that the forwarding layer sends to this object
       virtual void newConnectionFormed( NodeId& node )=0;
       virtual void connectionLost( NodeId& node )=0;
+      virtual void candidatesCollected( NodeId& node, std::vector<Candidate>& candidates )=0;
        
       // deal with topology change messages 
       virtual void consume(JoinReq& event)=0;
@@ -55,6 +56,9 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       // Functions to find out if this peer is responsible for something
       virtual bool isResponsible( NodeId& node )=0;
       virtual bool isResponsible( ResourceId& resource )=0;
+
+      // Function to determine if we are connected to a node
+      virtual bool isConnected( NodeId& node )=0;
 
       // Function to hash resource names into resourceID 
       virtual ResourceId resourceId( resip::Data& resourceName )=0;
