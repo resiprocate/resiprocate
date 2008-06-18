@@ -78,6 +78,14 @@ SelectTransporter::addListenerImpl(resip::TransportType transport,
 void
 SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
 {
+   if (msg->getTTL() <= 1)
+   {
+      InfoLog(<< "TTL Exhausted -- dropping message.");
+      return;
+   }
+
+   msg->decrementTTL();
+
    std::map<NodeId, FlowId>::iterator i;
    i = mNodeFlowMap.find(nodeId);
 
