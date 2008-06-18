@@ -6,20 +6,21 @@
 namespace p2p
 {
 
-class ConnectReqMessage : public Message
+class ConnectReq : public Message
 {
-   public:
-      ~ConnectReqMessage() {}
-      virtual MessageType getType() const { return ConnectReqType; }
-      virtual void getEncodedPayload(resip::DataStream &dataStream) const { }
+public:
+//	ConnectReq(const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates);
+	ConnectReq() {}
+
+	virtual MessageType getType() const { return ConnectReqType; }
+	virtual void getEncodedPayload(resip::DataStream &dataStream) const { }
 };
 
-class ConnectAnsMessage : public Message
+class ConnectAns : public Message
 {
-   public:
-      ~ConnectAnsMessage() {}
-      virtual MessageType getType() const { return ConnectAnsType; }
-      virtual void getEncodedPayload(resip::DataStream &dataStream) const { }
+public:
+	virtual MessageType getType() const { return ConnectAnsType; }
+	virtual void getEncodedPayload(resip::DataStream &dataStream) const { }
 };
 
 

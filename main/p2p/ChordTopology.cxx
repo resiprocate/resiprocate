@@ -38,7 +38,7 @@ ChordTopology::newConnectionFormed( NodeId& node )
       mNextTable[0] = node;
 
       // send the ConnectReq to our NodeID to get NP 
-      std::auto_ptr<Message> connectReq(new ConnectReqMessage);
+      std::auto_ptr<Message> connectReq(new ConnectReq);
       mDispatcher.send(connectReq);
       
 // callback here 
