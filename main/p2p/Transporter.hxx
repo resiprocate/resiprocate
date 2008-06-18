@@ -33,7 +33,7 @@ class Transporter
       friend class ConnectP2pCommand;
       friend class ConnectApplicationCommand;
 
-      Transporter(ConfigObject &configuration);
+      Transporter(Profile &configuration);
 
       virtual ~Transporter();
 

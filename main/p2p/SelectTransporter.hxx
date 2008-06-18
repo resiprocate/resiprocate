@@ -33,7 +33,7 @@ class SelectTransporter : public Transporter
       friend class ConnectP2pCommand;
       friend class ConnectApplicationCommand;
 
-      SelectTransporter( ConfigObject &configuration );
+      SelectTransporter( Profile &configuration );
 
       ~SelectTransporter();
 
