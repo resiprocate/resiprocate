@@ -8,29 +8,27 @@ namespace p2p
 
 class JoinReq;
 
-class JoinAns : public Message
+class JoinAns : public Message, private s2c::JoinAnsStruct
 {
-public:
-    JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific);
-    virtual MessageType getType() const { return Message::JoinAnsType; }
+   public:
+      JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific);
+      virtual MessageType getType() const { return Message::JoinAnsType; }
 
-	virtual void getEncodedPayload(resip::DataStream &data) const;
+      virtual void getEncodedPayload(resip::DataStream &data);
 
-protected:
-    resip::Data mOverlaySpecific;
 };
 
-class JoinReq : public Message
+class JoinReq : public Message, private s2c::JoinReqStruct
 {
-public:
+   public:
       JoinReq(const NodeId &nodeID, const resip::Data &overlaySpecific);
 
       virtual MessageType getType() const { return Message::JoinReqType; }
       NodeId getNodeID() const { return mNodeID; }
 
-	  virtual void getEncodedPayload(resip::DataStream &data) const;
+	  virtual void getEncodedPayload(resip::DataStream &data);
 
-protected:
+   protected:
       NodeId mNodeID;
       resip::Data mOverlaySpecific;
 };

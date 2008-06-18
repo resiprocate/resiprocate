@@ -11,22 +11,23 @@ class LeaveReq;
 class LeaveAns: public Message
 {
    public:
-	LeaveAns(p2p::LeaveReq *request);
+      LeaveAns(p2p::LeaveReq *request);
 
-	virtual MessageType getType() const { return Message::LeaveAnsType; }
-    virtual void getEncodedPayload(resip::DataStream &data) const;
+      virtual MessageType getType() const { return Message::LeaveAnsType; }
+      virtual void getEncodedPayload(resip::DataStream &data);
 };
 
 
 class LeaveReq : public Message
 {
    public:
-   	LeaveReq(NodeId node);
+      LeaveReq(NodeId node);
+      
+      virtual MessageType getType() const { return Message::LeaveReqType; }
+      virtual void getEncodedPayload(resip::DataStream &data);
 
-	virtual MessageType getType() const { return Message::LeaveReqType; }
-    virtual void getEncodedPayload(resip::DataStream &data) const;
-protected:
-	NodeId mNode;
+   protected:
+      NodeId mNode;
 };
 
 }

@@ -14,7 +14,7 @@ class UpdateAns : public Message
    public:
       virtual MessageType getType() const { return Message::UpdateAnsType; }
       UpdateAns(p2p::UpdateReq *request);
-      virtual void getEncodedPayload(resip::DataStream &data) const;
+      virtual void getEncodedPayload(resip::DataStream &data);
 
       std::auto_ptr<Event> event()
       {
@@ -30,7 +30,7 @@ class UpdateReq : public Message
       UpdateReq(resip::Data overlaySpecificBlob);
       virtual MessageType getType() const { return Message::UpdateReqType; }
 
-      virtual void getEncodedPayload(resip::DataStream &data) const;
+      virtual void getEncodedPayload(resip::DataStream &data);
 
       std::auto_ptr<Event> event()
       {

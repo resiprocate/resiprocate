@@ -30,7 +30,7 @@ class NodeId
       
    private:
       // NOTE: this should be 128 bits
-      UInt64 mValue[2];
+      unsigned char mValue[16];
 };
    
 
