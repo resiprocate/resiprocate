@@ -42,6 +42,12 @@ Message::Message(const DestinationId &dest)
 	// add to the destination list here
 }
 
+void
+Message::dump() const
+{
+	DebugLog(<< "type: " << mPDU.mHeader->mMessageCode << ", txid: " << mPDU.mHeader->mTransactionId);
+}
+
 NodeId 
 Message::getResponseNodeId() const
 {
@@ -75,20 +81,24 @@ Message::compareDestinationLists(const std::vector<DestinationStruct *> &l1, con
 bool 
 Message::operator==(const Message& msg) const
 {
+	DebugLog(<< "txid1: " << mPDU.mHeader->mTransactionId << ", txid2: " << msg.mPDU.mHeader->mTransactionId);
+
 	bool headerPayloadOk =  
 		(mPDU.mHeader->mReloToken == msg.mPDU.mHeader->mReloToken) &&
 		(mPDU.mHeader->mOverlay == msg.mPDU.mHeader->mOverlay) &&
 		(mPDU.mHeader->mTtl == msg.mPDU.mHeader->mTtl) &&
 		(mPDU.mHeader->mReserved == msg.mPDU.mHeader->mReserved) &&
 		(mPDU.mHeader->mFragment == msg.mPDU.mHeader->mFragment) &&
-		(mPDU.mHeader->mLength == msg.mPDU.mHeader->mLength) &&
+		(mPDU.mHeader->mLength == msg.mPDU.mHeader->mLength); /*  && 
 		(mPDU.mHeader->mTransactionId == msg.mPDU.mHeader->mTransactionId) &&
 		(mPDU.mHeader->mFlags == msg.mPDU.mHeader->mFlags) &&
-		(mPDU.mHeader->mRouteLogLenDummy == msg.mPDU.mHeader->mRouteLogLenDummy) &&
+		(mPDU.mHeader->mRouteLogLenDummy == msg.mPDU.mHeader->mRouteLogLenDummy)  &&
 		(getType() == msg.getType()) &&
 		(mPDU.mHeader->mViaList.size() == msg.mPDU.mHeader->mViaList.size()) &&
 		(mPDU.mHeader->mDestinationList.size() == msg.mPDU.mHeader->mDestinationList.size()) &&
-		(mPDU.mPayload == msg.mPDU.mPayload);
+		(mPDU.mPayload == msg.mPDU.mPayload); */
+
+	DebugLog(<< "operator state " << headerPayloadOk);
 
 	// check Vias
 	if (headerPayloadOk)
@@ -96,10 +106,14 @@ Message::operator==(const Message& msg) const
 		headerPayloadOk = (headerPayloadOk && compareDestinationLists(mPDU.mHeader->mDestinationList, msg.mPDU.mHeader->mDestinationList));
 	}
 
+	DebugLog(<< "operator state 2 " << headerPayloadOk);
+
 	if (headerPayloadOk)
 	{
 		headerPayloadOk = (headerPayloadOk && compareDestinationLists(mPDU.mHeader->mViaList, msg.mPDU.mHeader->mViaList));
 	}
+
+	DebugLog(<< "operator state 3 " << headerPayloadOk);
 
 	// check sig
 	return headerPayloadOk;
