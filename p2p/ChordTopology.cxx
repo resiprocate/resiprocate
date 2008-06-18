@@ -16,7 +16,7 @@
 using namespace p2p;
 
 ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
-   TopologyAPI(config, dispatcher, transporter) 
+   TopologyAPI(config, dispatcher, transporter), mJoined(false) 
 {
 }
 
@@ -48,6 +48,15 @@ ChordTopology::newConnectionFormed( const NodeId& node )
 
       // Build finger table
       buildFingerTable();
+   }
+
+   // If we are not joined yet and this connection is to our Admitting Peer (next peer)
+   // the send a join
+   if(mNextTable.size() == 1 && node == mNextTable[0])
+   {
+   	DestinationId destination(node);
+      std::auto_ptr<Message> joinReq(new JoinReq(destination, mProfile.nodeId()));
+      mDispatcher.send(joinReq, *this);      
    }
 
    // go and add this to the finger table
@@ -170,6 +179,28 @@ ChordTopology::consume(ConnectAns& msg)
    // Socket connect
    resip::GenericIPAddress stunTurnServer;
    mTransporter.connect(msg.getResponseNodeId(), msg.getCandidates(), stunTurnServer /* stunTurnServer */);
+}
+
+
+void 
+ChordTopology::consume(JoinAns& msg)
+{
+   // TODO check response code?
+   mJoined = true;
+}
+
+
+void 
+ChordTopology::consume(UpdateAns& msg)
+{
+   // TODO check response - and log?
+}
+
+
+void 
+ChordTopology::consume(LeaveAns& msg)
+{
+   // TODO check response - and log?
 }
 
 
