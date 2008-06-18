@@ -143,9 +143,9 @@ public:
 };
 
 
-class ForwardingLayerMessageStruct : public PDU {
+class ForwardingHeaderStruct : public PDU {
 public:
-   ForwardingLayerMessageStruct();
+   ForwardingHeaderStruct();
    UInt8                         mReloToken;
    UInt32                        mOverlay;
    UInt8                         mTtl;
@@ -159,6 +159,16 @@ public:
    std::vector<DestinationStruct*>  mDestinationList;
    UInt16                        mRouteLogLenDummy;
    UInt16                        mMessageCode;
+
+
+   PDUMemberFunctions
+};
+
+
+class ForwardingLayerMessageStruct : public PDU {
+public:
+   ForwardingLayerMessageStruct();
+   ForwardingHeaderStruct*       mHeader;
    std::vector<unsigned char>    mPayload;
    SignatureStruct*              mSig;
 
