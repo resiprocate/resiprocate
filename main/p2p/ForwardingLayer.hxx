@@ -25,6 +25,9 @@ class ForwardingLayer: public Postable<Message>
            {
               mDispatcher.setRxFifo(&mRxFifo);
            }
+
+      void process();
+
    private:
       Dispatcher& mDispatcher;
       Transporter& mTransport;
