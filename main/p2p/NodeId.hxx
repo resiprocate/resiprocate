@@ -1,25 +1,21 @@
 #ifndef __P2P_NODE_ID_HXX
-#define __P2P_NODE_ID_HXX 1
+#define __P2P_NODE_ID_HXX
 
-#include "rutil/Compat.hxx"
 #include "p2p/MessageStructsGen.hxx"
-
-
-namespace resip
-{
-class Data;
-}
 
 namespace p2p
 {
+
+class ResourceId;
 
 class NodeId
 {
    public:
 	  NodeId();
 	  NodeId(const s2c::NodeIdStruct& nid);
+	  NodeId(const ResourceId& rid);
       NodeId& operator=(const NodeId& data);
-      
+
       bool operator<(const NodeId& rhs) const;
       bool operator<=(const NodeId& rhs) const;
       bool operator==(const NodeId& rhs) const;
@@ -27,6 +23,8 @@ class NodeId
       // returns a node ID that is the value of this node plus 2^power passed
       // in. In chord terms, add2Pow( 127 ) is half way around the ring 
       NodeId add2Pow( int power ) const; 
+
+      const s2c::NodeIdStruct& getNodeIdStruct() const;
       
    private:
       // NOTE: this should be 128 bits
@@ -39,24 +37,9 @@ std::istream& operator>>( std::istream& strm, const NodeId& node );
 
 class CompressedId
 {
-};
-
-// Either a CompressedId, NodeId or ResourceId
-class DestinationId : private s2c::DestinationStruct
-{
    public:
-      DestinationId(s2c::DestinationStruct);
+      CompressedId(const resip::Data& cid);
       
-      bool isNodeId() const;
-      NodeId asNodeId() const;
-      
-      bool isCompressed() const;
-      CompressedId asCompressedId() const;
-      
-      bool isResourceId() const;
-      ResourceId asResourceId() const;
-      
-      bool operator==(const NodeId& nid) const;
 };
 
 }

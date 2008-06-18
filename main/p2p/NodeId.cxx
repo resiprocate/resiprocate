@@ -6,7 +6,7 @@
 
 using namespace p2p;
 
-NodeId::NodeId() : mHigh(0), mLow(0)
+NodeId::NodeId() 
 {
 }
 
@@ -23,7 +23,8 @@ NodeId& NodeId::operator=(const NodeId& rhs)
 bool 
 NodeId::operator<(const NodeId &r) const
 {
-   return mHigh < r.mHigh || (mHigh == r.mHigh && mLow < r.mLow);
+   return ( (mNodeId.mHigh < r.mNodeId.mHigh) || 
+            (mNodeId.mHigh == r.mNodeId.mHigh && mNodeId.mLow < r.mNodeId.mLow));
 }
 
 bool
@@ -35,7 +36,7 @@ NodeId::operator<=(const NodeId& rhs) const
 bool
 NodeId::operator==(const NodeId& rhs) const
 {
-   return mHigh == rhs.mHigh && mLow == rhs.mLow;
+   return !(*this < rhs) && !(rhs < *this);
 }
 
 NodeId
@@ -68,6 +69,11 @@ NodeId::add2Pow( int power ) const
    return ret;
 }
 
+const s2c::NodeIdStruct& 
+NodeId::getNodeIdStruct() const
+{
+   return mNodeId;
+}
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

@@ -322,25 +322,22 @@ Message::collectSignableData() const
 bool 
 Message::isDestinationListEmpty() const
 {
-   assert(0);
-   return true;
+   return mPDU.mHeader->mDestinationList.empty();
 }
 
 DestinationId 
 Message::nextDestination() const
 {
-   assert(0);
-   DestinationId did;
-   return did;
+   assert(!isDestinationListEmpty());
+   return DestinationId(*mPDU.mHeader->mDestinationList.front());
 }
 
 void 
 Message::popNextDestinationId()
 {
-   assert(0);
+   assert(!isDestinationListEmpty());
+   mPDU.mHeader->mDestinationList.erase(mPDU.mHeader->mDestinationList.begin());
 }
-
-
 
 std::auto_ptr<Event> 
 Message::event()
