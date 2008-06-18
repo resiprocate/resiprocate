@@ -15,6 +15,26 @@ using namespace p2p;
 //{
 //}
       
+void 
+Chord::joinOverlay( resip::GenericIPAddress& bootstrap )
+{
+   // tell the transport layer to form a connection to bootstrap node (special
+   // bootstrap connect ). This needs to give up the address of the BP node 
+
+// callback here 
+
+   // add the bootstrap node to our next table 
+
+   // send the ConnectReq to our NodeID to get NP 
+
+// callback here 
+   // sent connect reqest to NNP
+
+   // send connected to bunch of figners 
+
+   // send join to AP 
+}
+
 
 // Messages that the forwarding layer sends to this object
 void 
@@ -66,13 +86,21 @@ Chord::consume(EventWrapper<JoinReq>& event)
    // use a StoreSet to monitor 
 
    // update the replicated data storage    
+
+// wait for all data to be stored 
+
+   // send them an update to put the joining node in the ring 
 }
 
 
 void 
 Chord::consume(EventWrapper<UpdateReq>& event)
 {
-   // see if this changes the neighbor tables and if it does send updates
+   // if our, prev empty, then this update will have the prev and need to
+   // connect to them and set the prev 
+
+   // see if this changes the neighbor tables and if it does send updates to all
+   // peers in prev/next table 
 }
 
 
