@@ -5,13 +5,35 @@ namespace p2p
 {
 
 class CertDoneEvent;
-class StoreAns;
 class ConnectionOpened;
 class ConnectionClosed;
 class MessageArrived;
 class ApplicationMessageArrived;
 class LocalCandidatesCollected;
+
+class PingReq;
+class PingAns;
+class ConnectReq;
+class ConnectAns;
+class TunnelReq;
+class TunnelAns;
+class StoreReq;
 class StoreAns;
+class FetchReq;
+class FetchAns;
+class RemoveReq;
+class RemoveAns;
+class FindReq;
+class FindAns;
+class JoinReq;
+class JoinAns;
+class LeaveReq;
+class LeaveAns;
+class UpdateReq;
+class UpdateAns;
+class RouteQueryReq;
+class RouteQueryAns;
+class FailureResponse;
 
 template<class T> class EventWrapper;
 
@@ -27,8 +49,29 @@ class EventConsumer
       virtual void consume(MessageArrived& m) { assert(0); }
       virtual void consume(ApplicationMessageArrived& m) { assert(0); }
       virtual void consume(LocalCandidatesCollected& m) { assert(0); }
+
+      virtual void consume(PingReq& m) { assert(0); }
+      virtual void consume(PingAns& m) { assert(0); }
+      virtual void consume(ConnectReq& m) { assert(0); }
+      virtual void consume(ConnectAns& m) { assert(0); }
+      virtual void consume(TunnelReq& m) { assert(0); }
+      virtual void consume(TunnelAns& m) { assert(0); }
+      virtual void consume(StoreReq& m) { assert(0); }
       virtual void consume(StoreAns& m) { assert(0); }
-      
+      virtual void consume(FetchReq& m) { assert(0); }
+      virtual void consume(FetchAns& m) { assert(0); }
+      virtual void consume(RemoveReq& m) { assert(0); }
+      virtual void consume(RemoveAns& m) { assert(0); }
+      virtual void consume(FindAns& m) { assert(0); }
+      virtual void consume(JoinReq& m) { assert(0); }
+      virtual void consume(JoinAns& m) { assert(0); }
+      virtual void consume(LeaveReq& m) { assert(0); }
+      virtual void consume(LeaveAns& m) { assert(0); }
+      virtual void consume(UpdateReq& m) { assert(0); }
+      virtual void consume(UpdateAns& m) { assert(0); }
+      virtual void consume(RouteQueryReq& m) { assert(0); }
+      virtual void consume(RouteQueryAns& m) { assert(0); }
+      virtual void consume(FailureResponse& m) { assert(0); }
 };
 
 }
