@@ -2,7 +2,6 @@
 #define RESIP_DataStream_hxx
 
 #include <iostream>
-#include "rutil/rutildll.h"
 
 namespace resip
 {
