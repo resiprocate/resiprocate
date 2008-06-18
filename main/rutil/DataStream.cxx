@@ -1,6 +1,9 @@
 #include <cassert>
 #include "rutil/DataStream.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/DataException.hxx"
+
+#include <iostream>
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)
@@ -28,12 +31,18 @@ DataBuffer::sync()
    if (len > 0)
    {
       size_t pos = gptr() - eback();  // remember the get position
-      mStr.mSize += len;
+      
+
+      int delta = pptr() - (mStr.data() + mStr.mSize);
+      if (delta > 0)
+      {
+         mStr.mSize += delta;
+      }
       char* gbuf = const_cast<char*>(mStr.data());
       // reset the get buffer
       setg(gbuf, gbuf+pos, gbuf+mStr.size());
       // reset the put buffer
-      setp(gbuf + mStr.mSize, gbuf + mStr.mCapacity);
+      setp((char*)pptr(), (char*)(mStr.data() + mStr.size() + 1));
    }
    return 0;
 }
@@ -41,23 +50,27 @@ DataBuffer::sync()
 int
 DataBuffer::overflow(int c)
 {
-   // sync, but reallocate
-   size_t len = pptr() - pbase();
-   if (len >= 0)
+   if (pptr() > pbase())
    {
-      size_t pos = gptr() - eback();  // remember the get position
-
-      // update the length
-      mStr.mSize += len;
-
-      // resize the underlying Data and reset the input buffer
-      mStr.resize(((mStr.mCapacity+16)*3)/2, true);
-
-      char* gbuf = const_cast<char*>(mStr.mBuf);
-      // reset the get buffer
-      setg(gbuf, gbuf+pos, gbuf+mStr.mSize);
-      // reset the put buffer
-      setp(gbuf + mStr.mSize, gbuf + mStr.mCapacity);
+      int delta = pptr() - (mStr.data() + mStr.mSize);
+      
+      int distance = pptr() - mStr.data();
+      if (delta >= 0)
+      {
+         size_t pos = gptr() - eback();  // remember the get position
+         
+         // update the length
+         mStr.mSize += delta;
+         
+         // resize the underlying Data and reset the input buffer
+         mStr.resize(((mStr.mCapacity+16)*3)/2, true);
+         
+         char* gbuf = const_cast<char*>(mStr.mBuf);
+         // reset the get buffer
+         setg(gbuf, gbuf+pos, gbuf+mStr.mSize);
+         // reset the put buffer
+         setp(gbuf + distance, gbuf + mStr.mCapacity);
+      }
    }
    if (c != -1)
    {
@@ -113,6 +126,35 @@ DataStream::DataStream(Data& str)
 DataStream::~DataStream()
 {
    flush();
+}
+
+std::iostream::pos_type
+DataStream::tellp() 
+{
+   flush();
+   return pptr() - mStr.data();
+}
+
+DataStream&
+DataStream::seekp(std::iostream::pos_type pos)
+{
+   flush();
+   std::iostream::pos_type p = tellp();
+
+   if (pos > mStr.size()) 
+   {
+      throw DataException("Seek past DataStream end not supported",
+                          __FILE__, __LINE__);
+   }
+   if (pos < 0) 
+   {
+      throw DataException("Seek before DataStream begin not supported",
+                          __FILE__, __LINE__);
+   }
+   
+   setp((char*)(pos + mStr.data()), 
+        (char*)(mStr.data() + mStr.mCapacity + 1));
+   return *this;
 }
 
 /* ====================================================================

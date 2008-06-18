@@ -2,10 +2,10 @@
 #define RESIP_DataStream_hxx
 
 #include <iostream>
+#include "rutil/rutildll.h"
 
 namespace resip
 {
-
 class Data;
 
 /** @brief Implementation of std::streambuf used to back the DataStream, 
@@ -33,7 +33,9 @@ class DataBuffer : public std::streambuf
    The data written to the stream is appended to the reference passed to the
    constructor.  The data is valid after DataStream's destructor is called. 
    Data read from the stream is read from the reference passed to the
-   constructor.
+   constructor. 
+
+   Reading and writing to the same stream with seekp operations is untested.
  */
 class DataStream : private DataBuffer, public std::iostream
 {
@@ -46,6 +48,9 @@ class DataStream : private DataBuffer, public std::iostream
         passed into the constructor.
        */
       ~DataStream();
+
+      std::iostream::pos_type tellp();
+      DataStream& seekp(std::iostream::pos_type pos);
 
    private:
       DataStream(const DataStream&);

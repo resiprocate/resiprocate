@@ -4,6 +4,7 @@
 #include <exception>
 #include <iostream>
 
+#include "rutil/rutildll.h"
 #include "rutil/Data.hxx"
 
 namespace resip
