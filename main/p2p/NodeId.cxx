@@ -13,13 +13,13 @@ NodeId::NodeId(const resip::Data& data)
 
 NodeId& NodeId::operator=(const resip::Data& data)
 {
-   std::copy(data.begin(), data.end(), (char*)&mValue[0], (char*)&mValue[16]);
+   std::copy(data.begin(), data.end(), &mValue[0]);
    return *this;
 }
 
 NodeId& NodeId::operator=(const NodeId& rhs)
 {
-   std::copy(rhs.mValue[0], rhs.mValue[16], mValue[0], mValue[16]);
+   std::copy(&rhs.mValue[0], &rhs.mValue[16], &mValue[0]);
    return *this;
 }
 
