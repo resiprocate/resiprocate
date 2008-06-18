@@ -20,20 +20,36 @@ using namespace p2p;
 
 void
 TestUpdate()
-{
+{	
+	NodeId node;
+	DestinationId dest(node);
+
+	// Test Update Request
 	resip::Data noData;
-	UpdateReq *update = new UpdateReq(noData);
+	UpdateReq *update = new UpdateReq(dest, noData);
+	assert(update->getType() == Message::UpdateReqType);
+
 	resip::Data encodedMessage = update->encodePayload();
 
 	Message *compareMessage = Message::parse(encodedMessage);
 	assert(*compareMessage == *update);
+
+	// Test responses
+	UpdateAns *updateAns = update->makeUpdateResponse(noData);
+	assert(updateAns->getType() == Message::UpdateAnsType);
+
+	// Check transaction ID
+	assert(updateAns->getTransactionId() == update->getTransactionId());
 }
 
 void
 TestChordUpdate()
 {
+	NodeId node;
+	DestinationId dest(node);
+
 	ChordUpdate update;
-	UpdateReq *updateReq = new UpdateReq(update.encode());
+	UpdateReq *updateReq = new UpdateReq(dest, update.encode());
 	resip::Data encodedMessage = updateReq->encodePayload();
 
 	Message *compareMessage = Message::parse(encodedMessage);
@@ -42,6 +58,17 @@ TestChordUpdate()
 	resip::Data reqBlob = updateReq->getRequestMessageBody();
 	ChordUpdate update2(reqBlob);
 	assert(update2 == update);
+
+	UpdateAns *updateAns = updateReq->makeUpdateResponse(update.encode());
+	assert(updateAns);
+
+	assert(updateAns->getTransactionId() == updateReq->getTransactionId());
+}
+
+void
+TestJoin()
+{
+
 }
 
 void
@@ -60,12 +87,15 @@ int main()
 	ForwardingLayerMessageStruct hdr;
 	std::cout << "done" << std::endl;
 
+	NodeId node;
+	DestinationId dest(node);
+
 	resip::Data d;
 	std::vector<Candidate> v;
-	Message *m2 = new ConnectReq(d, d, 0, d, v);
+	Message *m2 = new ConnectReq(dest, d, d, 0, d, v);
 
 	p2p::NodeId n;
-	p2p::Message *m = new p2p::JoinReq(n,d);
+	p2p::Message *m = new p2p::JoinReq(dest, n,d);
 	m->setOverlayName("duane");
 	resip::Data encodedMessage = m->encodePayload();
 

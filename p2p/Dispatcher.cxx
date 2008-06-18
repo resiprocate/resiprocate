@@ -37,7 +37,7 @@ void
 Dispatcher::send(std::auto_ptr<Message> message, Postable<Event>& postable)
 {
    //.dcm. more with timers
-   mTidMap[message->getTransactionID()] = &postable;
+   mTidMap[message->getTransactionId()] = &postable;
    mForwardingLayer->forward(message);
 }
 
@@ -57,7 +57,7 @@ Dispatcher::post(std::auto_ptr<Message> message)
       } 
       else 
       {
-         TidMap::iterator id = mTidMap.find(message->getTransactionID());
+         TidMap::iterator id = mTidMap.find(message->getTransactionId());
          if (id !=  mTidMap.end())
          {
             id->second->post(message->event());

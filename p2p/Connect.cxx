@@ -13,7 +13,7 @@ ConnectReq::ConnectReq()
 /// ***********
 /// ConnectReq
 
-ConnectReq::ConnectReq(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates) :
+ConnectReq::ConnectReq(const DestinationId &dest, const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates) :
 	ConnectBase(frag, password, application, role, candidates)
 {
 

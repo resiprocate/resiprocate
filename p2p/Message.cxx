@@ -34,6 +34,14 @@ Message::Message()
 	initForwardingData();
 }
 
+Message::Message(const DestinationId &dest)
+{
+	// this is the constructor for requests
+	initForwardingData();
+
+	// add to the destination list here
+}
+
 NodeId 
 Message::getResponseNodeId() const
 {
@@ -257,7 +265,7 @@ Message::getOverlay() const
 }
 
 UInt64 
-Message::getTransactionID() const
+Message::getTransactionId() const
 {
 	return mPDU.mHeader->mTransactionId;
 }
@@ -301,13 +309,13 @@ Message::makeLeaveResponse()
 }
 
 UpdateAns *
-Message::makeUpdateResponse()
+Message::makeUpdateResponse(const resip::Data &overlaySpecific)
 {
 	assert(getType() == UpdateReqType);
 	
-	resip::Data d;
 	UpdateReq *req = static_cast<UpdateReq *>(this);
-	UpdateAns *response = new UpdateAns(req,d);
+	UpdateAns *response = new UpdateAns(req,overlaySpecific);
+
 	return response;
 }
 
