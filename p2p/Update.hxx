@@ -11,34 +11,44 @@ class UpdateReq;
 
 class UpdateAns : public Message
 {
-   public:
-      virtual MessageType getType() const { return Message::UpdateAnsType; }
-      UpdateAns(p2p::UpdateReq *request);
-      virtual void getEncodedPayload(resip::DataStream &data);
+public:
+	friend class Message;
 
-      std::auto_ptr<Event> event()
-      {
-         return wrap(this);
-      }
+	virtual MessageType getType() const { return Message::UpdateAnsType; }
+	UpdateAns(p2p::UpdateReq *request);
+	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual void decodePayload(resip::DataStream &dataStream);
 
+	std::auto_ptr<Event> event()
+	{
+		return wrap(this);
+	}
+protected:
+	UpdateAns();
 };
 
 
 class UpdateReq : public Message
 {
-   public:
-      UpdateReq(resip::Data overlaySpecificBlob);
-      virtual MessageType getType() const { return Message::UpdateReqType; }
+public:
+	friend class Message;
 
-      virtual void getEncodedPayload(resip::DataStream &data);
+	UpdateReq(resip::Data overlaySpecificBlob);
+	virtual MessageType getType() const { return Message::UpdateReqType; }
 
-      std::auto_ptr<Event> event()
-      {
-         return wrap(this);
-      }
+	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual void decodePayload(resip::DataStream &dataStream);
 
-   protected:
-      resip::Data mOverlaySpecific;
+	std::auto_ptr<Event> event()
+	{
+		return wrap(this);
+	}
+
+protected:
+	resip::Data mOverlaySpecific;
+
+	UpdateReq();
+
 };
 
 }

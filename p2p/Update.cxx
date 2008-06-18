@@ -2,10 +2,31 @@
 
 using namespace p2p;
 
+UpdateAns::UpdateAns()
+{
+}
+
 UpdateAns::UpdateAns(UpdateReq *request)
 {
     copyForwardingData(*request);
 	assert(0);
+}
+
+void 
+UpdateAns::getEncodedPayload(resip::DataStream &data)
+{
+	assert(0);
+}
+
+void 
+UpdateAns::decodePayload(resip::DataStream &dataStream) 
+{
+	assert(0);
+}
+
+UpdateReq::UpdateReq()
+{
+
 }
 
 void 
@@ -14,8 +35,9 @@ UpdateReq::getEncodedPayload(resip::DataStream &data)
 	assert(0);
 }
 
+
 void 
-UpdateAns::getEncodedPayload(resip::DataStream &data)
+UpdateReq::decodePayload(resip::DataStream &dataStream) 
 {
 	assert(0);
 }
