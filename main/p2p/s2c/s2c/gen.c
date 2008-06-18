@@ -319,7 +319,7 @@ int s2c_gen_ftr_h(FILE *out)
 /* Generate C files */
 int s2c_gen_hdr_c(char *name,FILE *out)
   {
-    fprintf(out,"#include <iostream>\n#include <iomanip>\n#include \"rutil/Logger.hxx\"\n#include \"P2PSubsystem.hxx\"\n#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P\n#include \"%sGen.hxx\"\n\nnamespace s2c {\n\n\n",name,
+    fprintf(out,"#include <iostream>\n#include <iomanip>\n#include \"rutil/Logger.hxx\"\n#include \"P2PSubsystem.hxx\"\n#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P\n#include \"%sGen.hxx\"\n#include <assert.h>\n\nnamespace s2c {\n\n\n",name,
       name2namespace(name));
     
     return(0);
@@ -540,43 +540,43 @@ static int s2c_gen_print_c_struct(p_decl *decl, FILE *out)
     return(0);
   }
 
-static int s2c_gen_decode_c_simple_type(p_decl *decl, char *reference, char *instream, FILE *out)
+static int s2c_gen_decode_c_simple_type(p_decl *decl, char *prefix, char *reference, char *instream, FILE *out)
   {
     /* We can get a primitive as a ref or directly here because of arrays versus
      simple declarations*/
     if(decl->u.ref_.ref->type==TYPE_PRIMITIVE){
-      fprintf(out,"   decode_uintX(%s, %d, %s);\n",
-        instream,decl->u.ref_.ref->u.primitive_.bits,reference);
-      fprintf(out," DebugLog( << \"%s\");\n",reference);
+      fprintf(out,"   decode_uintX(%s, %d, %s%s);\n",
+        instream,decl->u.ref_.ref->u.primitive_.bits,prefix,reference);
+      fprintf(out,"   DebugLog( << \"%s%s\");\n",prefix,reference);
     }
     else if(decl->u.ref_.ref->type==TYPE_ENUM){
       fprintf(out,"   {\n");
       fprintf(out,"      u_int32 v;\n");
       fprintf(out,"      decode_uintX(%s, %d, v);\n",instream,
         8*max2bytes(decl->u.ref_.ref->u.enum_.max));
-      fprintf(out,"      %s=(%s)v;\n",reference,decl->u.ref_.ref->name);
+      fprintf(out,"      %s%s=(%s)v;\n",prefix,reference,decl->u.ref_.ref->name);
       fprintf(out,"   }\n");
       
     }
     else if(decl->type==TYPE_PRIMITIVE){
-      fprintf(out,"   decode_uintX(%s, %d, %s);\n",
-        instream,decl->u.primitive_.bits,reference);
-      fprintf(out," DebugLog( << \"%s\");\n",reference);
+      fprintf(out,"   decode_uintX(%s, %d, %s%s);\n",
+        instream,decl->u.primitive_.bits,prefix,reference);
+      fprintf(out,"   DebugLog( << \"%s%s\");\n",prefix,reference);
     }
     else{
       if(decl->type==TYPE_REF){
-        fprintf(out,"   %s = new %s();\n",reference,type2class(decl->u.ref_.ref->name));
+        fprintf(out,"   %s%s = new %s();\n",prefix,reference,type2class(decl->u.ref_.ref->name));
       }
       else{
-        fprintf(out,"   %s = new %s();\n",reference,type2class(decl->name));
+        fprintf(out,"   %s%s = new %s();\n",prefix,reference,type2class(decl->name));
       }
 
-      fprintf(out,"   %s->decode(%s);\n",reference,instream);
+      fprintf(out,"   %s%s->decode(%s);\n",prefix,reference,instream);
     }
     return(0);
   }
 
-static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent)
+static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent, char *prefix)
   {
     int i;
 
@@ -584,7 +584,7 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent)
 
     switch(member->type){
       case TYPE_REF:
-        s2c_gen_decode_c_simple_type(member,name2var(member->name),"in",out);
+        s2c_gen_decode_c_simple_type(member,prefix,name2var(member->name),"in",out);
         break;
       case TYPE_VARRAY:
         {
@@ -596,10 +596,10 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent)
           fprintf(out,"   resip::DataStream in2(d);\n");
           fprintf(out,"   int i=0;\n");
           fprintf(out,"   while(in2.peek()!=EOF){\n");
-          fprintf(out,"      %s.push_back(0);\n",name2var(member->name));
+          fprintf(out,"      %s%s.push_back(0);\n",prefix,name2var(member->name));
           snprintf(reference,sizeof(reference),"%s[i++]",name2var(member->name));
           for(i=0;i<indent+3;i++) fputc(' ',out);
-          s2c_gen_decode_c_simple_type(member->u.varray_.ref,reference,"in2",out);
+          s2c_gen_decode_c_simple_type(member->u.varray_.ref,prefix,reference,"in2",out);
           fprintf(out,"   }\n;");
           fprintf(out,"   }\n");
         }
@@ -613,12 +613,12 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent)
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
-          s2c_gen_decode_c_simple_type(member->u.array_.ref,reference,"in",out);
+          s2c_gen_decode_c_simple_type(member->u.array_.ref,prefix,reference,"in",out);
 
           break;
         }
       default:
-        nr_verr_exit("Don't know how to render element %s",member->name);
+        nr_verr_exit("Don't know how to render element %s%s",prefix,member->name);
     }
     return(0);
   }
@@ -633,7 +633,7 @@ static int s2c_gen_decode_c_struct(p_decl *decl, FILE *out)
     entry=STAILQ_FIRST(&decl->u.struct_.members);
 
     while(entry){
-      s2c_gen_decode_c_member(entry, out, 0);
+      s2c_gen_decode_c_member(entry, out, 0, "");
       
       fprintf(out,"\n");
       entry=STAILQ_NEXT(entry,entry);
@@ -665,10 +665,34 @@ static int s2c_gen_print_c_select(p_decl *decl, FILE *out)
 
 static int s2c_gen_decode_c_select(p_decl *decl, FILE *out)
   {
+    p_decl *arm;
+    p_decl *entry;
+    char prefix[100];
     fprintf(out,"void %s :: decode(std::istream& in)\n{\n",type2class(decl->name));
     
-    fprintf(out," DebugLog(<< \"Decoding %s\");\n",type2class(decl->name));
-    fprintf(out,"}\n");
+    fprintf(out,"   DebugLog(<< \"Decoding %s\");\n",type2class(decl->name));
+
+    // TODO: need to automatically find this
+    fprintf(out,"   switch(mType){\n");
+    
+    arm=STAILQ_FIRST(&decl->u.select_.arms);
+    while(arm){
+      fprintf(out,"      case %d:\n",arm->u.select_arm_.value);
+      entry=STAILQ_FIRST(&arm->u.select_arm_.members);
+      while(entry){
+        snprintf(prefix,100,"m%s.",camelback(arm->name));
+        s2c_gen_decode_c_member(entry, out, 9, prefix);
+        entry=STAILQ_NEXT(entry,entry);
+      }
+      fprintf(out,"          break;\n\n");
+      arm=STAILQ_NEXT(arm,entry);
+    }
+    fprintf(out,"       default: /* User error */ \n");
+    fprintf(out,"          assert(1==0);\n");
+    fprintf(out,"   }\n\n");
+
+    fprintf(out,"};\n");
+    return(0);
   }
 
 static int s2c_gen_pdu_c_select(p_decl *decl, FILE *out)
