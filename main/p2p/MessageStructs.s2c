@@ -82,6 +82,7 @@
           opaque                        signature_value<0..2^16-1>;
        } Signature;
 
+       
       struct {
              uint8   relo_token;
              uint32  overlay;
@@ -97,6 +98,10 @@
              Destination destination_list<0..2^16-1>;
              uint16  route_log_len_dummy;
              uint16  message_code;
+      } ForwardingHeader;
+     
+      struct {
+             ForwardingHeader header;
              opaque  payload<0..2^24-1>;
              Signature sig;
       } ForwardingLayerMessage;
