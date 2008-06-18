@@ -229,7 +229,32 @@ ChordTopology::isResponsible( ResourceId& resource )
 bool 
 ChordTopology::isConnected( NodeId& node )
 {
-   // TODO
+   // Check if node is in finger table
+   if(mFingerTable.find(node) != mFingerTable.end())
+   {
+      return true;
+   }
+
+   // Check if node is in the mPrevTable
+   std::vector<NodeId>::iterator it = mPrevTable.begin();
+   for(; it != mPrevTable.end(); it++)
+   {
+      if(*it == node) 
+      {
+         return true;
+      }
+   }
+
+   // Check if node is in the mNextTable
+   it = mNextTable.begin();
+   for(; it != mNextTable.end(); it++)
+   {
+      if(*it == node) 
+      {
+         return true;
+      }
+   }
+
    return false;
 }
 
