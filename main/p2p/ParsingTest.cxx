@@ -34,6 +34,7 @@ TestUpdate()
 	assert(encodedMessage.size());
 
 	Message *compareMessage = Message::parse(encodedMessage);
+	assert(compareMessage->getType() == Message::UpdateReqType);
 
 	// check that messages are equal
 	assert(*compareMessage == *update);
@@ -90,6 +91,8 @@ int main()
 {
 	resip::Log::initialize(resip::Data("cerr"),
 	resip::Data("DEBUG"),resip::Data("ParsingTest"));
+
+#if 0
       
 	std::cout << "ctor" << std::endl;
 	ForwardingLayerMessageStruct hdr;
@@ -116,6 +119,8 @@ int main()
 	ForwardingLayerMessageStruct hdr2;
 	resip::DataStream is(encodedMessage);
 	hdr2.decode(is);
+
+#endif
 
 	TestMessages();
 
