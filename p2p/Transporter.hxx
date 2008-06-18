@@ -30,6 +30,7 @@ class Transporter
       friend class SendP2pCommand;
       friend class SendApplicationCommand;
       friend class CollectCandidatesCommand;
+      friend class ConnectBootstrapCommand;
       friend class ConnectP2pCommand;
       friend class ConnectApplicationCommand;
 
@@ -50,6 +51,8 @@ class Transporter
       void collectCandidates(NodeId nodeId,
                              unsigned short appId = RELOAD_APPLICATION_ID);
    
+      void connect(resip::GenericIPAddress &);
+
       void connect(NodeId nodeId, 
                    std::vector<Candidate> remoteCandidates,
                    resip::GenericIPAddress &stunTurnServer);
@@ -67,6 +70,8 @@ class Transporter
       virtual void sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data) = 0;
    
       virtual void collectCandidatesImpl(NodeId, unsigned short appId) = 0;
+
+      virtual void connectImpl(resip::GenericIPAddress) = 0;
    
       virtual void connectImpl(NodeId nodeId, 
                        std::vector<Candidate> remoteCandidates,
