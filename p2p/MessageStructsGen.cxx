@@ -58,8 +58,6 @@ ResourceIdStruct :: ResourceIdStruct ()
 {
    mName = "ResourceIdStruct";
  DebugLog(<< "Constructing ResourceIdStruct");
-   for(unsigned int i=0;i<248;i++)
-      mId[i]=0;
 
 };
 
@@ -121,8 +119,6 @@ DestinationStruct :: DestinationStruct ()
 
    mPeer.mNodeId=0;
    mResource.mResourceId=0;
-   for(unsigned int i=0;i<248;i++)
-               mCompressed.mCompressedId[i]=0;
 
 };
 
@@ -227,8 +223,6 @@ SignerIdentityStruct :: SignerIdentityStruct ()
  DebugLog(<< "Constructing SignerIdentityStruct");
    mIdentityType=(SignerIdentityType)0;
 
-   for(unsigned int i=0;i<65520;i++)
-      mSignerIdentity[i]=0;
 
 };
 
@@ -343,8 +337,6 @@ SignatureStruct :: SignatureStruct ()
 
    mIdentity=0;
 
-   for(unsigned int i=0;i<65520;i++)
-      mSignatureValue[i]=0;
 
 };
 
@@ -430,18 +422,12 @@ ForwardingLayerMessageStruct :: ForwardingLayerMessageStruct ()
 
    mFlags=0;
 
-   for(unsigned int i=0;i<0;i++)
-      mViaList[i]=0;
 
-   for(unsigned int i=0;i<0;i++)
-      mDestinationList[i]=0;
 
    mRouteLogLenDummy=0;
 
    mMessageCode=0;
 
-   for(unsigned int i=0;i<16777192;i++)
-      mPayload[i]=0;
 
    mSig=0;
 
