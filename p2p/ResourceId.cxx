@@ -23,6 +23,12 @@ ResourceId::operator=(const ResourceId& rhs)
    return mResourceId = rhs.mResourceId;
 }
 
+bool
+ResourceId::operator==(const ResourceId& rhs) const
+{
+   return mResourceId == rhs.mResourceId;
+}
+
 const resip::Data& 
 ResourceId::value() const
 {

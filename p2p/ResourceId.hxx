@@ -15,7 +15,8 @@ class ResourceId
       
       const resip::Data& value() const;
       resip::Data& operator= ( const ResourceId& rhs );
-
+      bool operator==(const ResourceId& rhs) const;
+      
    private:
 
       resip::Data mResourceId;
