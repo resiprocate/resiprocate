@@ -1,14 +1,106 @@
+
 #include "rutil/DataStream.hxx"
 
 #include "rutil/Data.hxx"
+#include "rutil/DataException.hxx"
 #include "assert.h"
 #include <iostream>
+#include <string>
 
 using namespace resip;
 using namespace std;
 
 int main()
 {
+{
+      Data d;
+      
+      {
+         DataStream ds(d);
+         ds << "   some data";
+         iostream::pos_type pos = ds.tellp();
+         ds.seekp(0);
+         ds << "100";
+      }
+
+      assert(d == "100some data");
+   }
+   {
+      Data d;
+      {
+         DataStream ds(d);
+         ds << "   some data ";
+         iostream::pos_type pos = ds.tellp();
+         ds.seekp(0);
+         ds << "10 ";
+         ds.seekp(pos);
+         ds << "   more data";
+         ds.seekp(pos);
+         ds << "20";
+      }
+      assert(d == "10 some data 20 more data");
+   }
+
+   {
+      Data d;
+      
+      {
+         DataStream ds(d);
+         ds << "   some data";
+         ds.seekp(0);
+         ds << "100";
+      }
+
+      assert(d == "100some data");
+   }
+
+   {
+      Data d;
+      
+      {
+         DataStream ds(d);
+         ds << "11";
+         ds.seekp(1);
+
+         ds << "2222";
+         ds.seekp(2);
+
+         ds << "33333333";
+         ds.seekp(4);
+
+         ds << "4444444444444444";
+         ds.seekp(8);
+
+         ds << "55555555555555555555555555555555";
+         ds.seekp(16);
+
+         ds << "6666666666666666666666666666666666666666666666666666666666666666";
+         ds.seekp(32);
+
+         ds << "7";
+      }
+
+   }
+   
+   // seek past end
+   {
+      Data d;
+      
+      {
+         DataStream ds(d);
+         iostream::pos_type p = ds.tellp();
+         ds << "some data";
+         try 
+         {
+            ds.seekp(p + iostream::pos_type(100));
+            assert(0);
+         } catch (DataException& e) 
+         {
+            // expected
+         }
+      }
+   }
+
    {
       // test overflow and synch with flush
       char buf[16];
