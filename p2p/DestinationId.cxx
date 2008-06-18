@@ -6,11 +6,25 @@
 
 using namespace p2p;
 
-DestinationId::DestinationId(s2c::DestinationStruct s) 
+DestinationId::DestinationId(s2c::DestinationStruct s) : s2c::DestinationStruct(s)
 {
-   // copy it into DestinationStruct
-   assert(0);
 }
+
+DestinationId::DestinationId(const NodeId& nid)  
+{
+   mPeer.mNodeId = new s2c::NodeIdStruct;
+   *(mPeer.mNodeId) = nid.getNodeIdStruct();
+   mResource.mResourceId = 0;
+}
+
+DestinationId::DestinationId(const ResourceId& rid)
+{
+   mPeer.mNodeId = 0;
+   mResource.mResourceId = new s2c::ResourceIdStruct;
+   mResource.mResourceId->mId = rid.value();
+}
+
+
 
 bool
 DestinationId::isNodeId() const
