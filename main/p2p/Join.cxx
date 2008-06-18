@@ -14,6 +14,12 @@ JoinAns::getEncodedPayload(resip::DataStream &data) const
 
 }
 
+JoinReq::JoinReq(const NodeId &node, const resip::Data &overlaySpecific) :
+	mNodeID(node)
+{
+
+}
+
 void
 JoinReq::getEncodedPayload(resip::DataStream &data) const
 {
