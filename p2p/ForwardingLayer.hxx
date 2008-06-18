@@ -11,6 +11,7 @@
 namespace p2p
 {
 class Dispatcher;
+class TransporterMessage;
 
 class ForwardingLayer: public Postable<Message>
 {
@@ -20,11 +21,16 @@ class ForwardingLayer: public Postable<Message>
                       TopologyAPI& topology)
          : mDispatcher(dispatcher),
            mTransport(transport),
-           mTopology(topology) {;}
+           mTopology(topology) 
+           {
+              mDispatcher.setRxFifo(&mRxFifo);
+           }
    private:
       Dispatcher& mDispatcher;
       Transporter& mTransport;
       TopologyAPI& mTopology;
+
+      resip::Fifo<TransporterMessage> mRxFifo;
 };
 
 }

@@ -33,8 +33,7 @@ class SelectTransporter : public Transporter
       friend class ConnectP2pCommand;
       friend class ConnectApplicationCommand;
 
-      SelectTransporter(resip::Fifo<TransporterMessage>& rxFifo,
-                        Profile &configuration);
+      SelectTransporter( ConfigObject &configuration );
 
       ~SelectTransporter();
 

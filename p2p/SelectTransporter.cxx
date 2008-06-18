@@ -13,9 +13,8 @@
 namespace p2p
 {
 
-SelectTransporter::SelectTransporter (resip::Fifo<TransporterMessage>& rxFifo,
-                          Profile &configuration)
-  : Transporter(rxFifo, configuration), mHasBootstrapSocket(false)
+SelectTransporter::SelectTransporter ( ConfigObject &configuration )
+  : Transporter(configuration), mHasBootstrapSocket(false)
 {
    resip::Data localIp = resip::DnsUtil::getLocalIpAddress();
    resip::DnsUtil::inet_pton(localIp, mLocalAddress);
@@ -144,7 +143,7 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
    candidates.push_back(c);
 
    LocalCandidatesCollected *lcc = new LocalCandidatesCollected(candidates);
-   mRxFifo.add(lcc);
+   mRxFifo->add(lcc);
 }
 
 void
@@ -197,7 +196,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
                                                application,
                                                candidate.getTransportType(),
                                                0 /* no cert for you */);
-   mRxFifo.add(co);
+   mRxFifo->add(co);
 }
 
 //----------------------------------------------------------------------
@@ -261,7 +260,7 @@ SelectTransporter::process(int ms)
                                                 application,
                                                 resip::TCP,
                                                 0 /* no cert for you */);
-      mRxFifo.add(co);
+      mRxFifo->add(co);
       
    }
 
@@ -295,7 +294,7 @@ SelectTransporter::process(int ms)
                                                   application,
                                                   resip::TCP,
                                                   0 /* no cert for you */);
-        mRxFifo.add(co);
+        mRxFifo->add(co);
 
         // Open Issue -- should we close and remove the listener here?
         // Adam and ekr say "probably"; fluffy says "hell no".
@@ -334,7 +333,7 @@ SelectTransporter::process(int ms)
 
                MessageArrived *ma = new MessageArrived(flowId.getNodeId(), msg);
 
-               mRxFifo.add(ma);
+               mRxFifo->add(ma);
             }
             else
             {
@@ -356,7 +355,7 @@ SelectTransporter::process(int ms)
                ApplicationMessageArrived *ama = new
                   ApplicationMessageArrived(flowId, data);
 
-               mRxFifo.add(ama);
+               mRxFifo->add(ama);
             }
             else
             {
