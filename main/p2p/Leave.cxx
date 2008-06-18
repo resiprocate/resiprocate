@@ -5,7 +5,6 @@ using namespace p2p;
 LeaveAns::LeaveAns(LeaveReq *request)
 {
     copyForwardingData(*request);
-	assert(0);
 }
 
 void 

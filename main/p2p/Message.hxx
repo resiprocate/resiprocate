@@ -91,6 +91,7 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
       // Forwarding Header
       UInt8 getTTL() const;
 	  void decrementTTL();
+	  void setTTL(UInt8 ttl);
 
       UInt32 getOverlay() const;
       UInt64 getTransactionID() const;
@@ -109,7 +110,6 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
          assert(0);
          return resip::Data::Empty;
       }
-      
 protected:
 	ResourceId mResourceId;
 	resip::Data mOverlayName;
@@ -118,7 +118,7 @@ protected:
 	virtual void getEncodedPayload(resip::DataStream &dataStream) const = 0;
 	virtual std::vector<resip::Data> collectSignableData() const;
 
-	Message() {}
+	Message();
 protected:
 	void copyForwardingData(const Message &header);
 };
