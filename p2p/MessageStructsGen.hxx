@@ -23,7 +23,7 @@ public:
 class ResourceIdStruct : public PDU {
 public:
    ResourceIdStruct();
-   std::vector<unsigned char>    mId;
+   resip::Data                   mId;
 
 
    PDUMemberFunctions
@@ -93,7 +93,7 @@ public:
         ResourceIdStruct*             mResourceId;
    } mResource;
    struct mCompressed_ {
-        std::vector<unsigned char>    mCompressedId;
+        resip::Data                   mCompressedId;
    } mCompressed;
 
 
@@ -112,7 +112,7 @@ class SignerIdentityStruct : public PDU {
 public:
    SignerIdentityStruct();
    SignerIdentityType            mIdentityType;
-   std::vector<unsigned char>    mSignerIdentity;
+   resip::Data                   mSignerIdentity;
 
 
    PDUMemberFunctions
@@ -135,7 +135,7 @@ public:
    SignatureStruct();
    SignatureAndHashAlgorithmStruct*  mAlgorithm;
    SignerIdentityStruct*         mIdentity;
-   std::vector<unsigned char>    mSignatureValue;
+   resip::Data                   mSignatureValue;
 
 
    PDUMemberFunctions
@@ -168,7 +168,7 @@ class ForwardingLayerMessageStruct : public PDU {
 public:
    ForwardingLayerMessageStruct();
    ForwardingHeaderStruct*       mHeader;
-   std::vector<unsigned char>    mPayload;
+   resip::Data                   mPayload;
    SignatureStruct*              mSig;
 
 
@@ -180,8 +180,8 @@ class ErrorResponseStruct : public PDU {
 public:
    ErrorResponseStruct();
    UInt16                        mErrorCode;
-   std::vector<unsigned char>    mReasonPhrase;
-   std::vector<unsigned char>    mErrorInfo;
+   resip::Data                   mReasonPhrase;
+   resip::Data                   mErrorInfo;
 
 
    PDUMemberFunctions
@@ -192,7 +192,7 @@ class JoinReqStruct : public PDU {
 public:
    JoinReqStruct();
    NodeIdStruct*                 mJoiningPeerId;
-   std::vector<unsigned char>    mOverlaySpecificData;
+   resip::Data                   mOverlaySpecificData;
 
 
    PDUMemberFunctions
@@ -202,7 +202,7 @@ public:
 class JoinAnsStruct : public PDU {
 public:
    JoinAnsStruct();
-   std::vector<unsigned char>    mOverlaySpecificData;
+   resip::Data                   mOverlaySpecificData;
 
 
    PDUMemberFunctions
@@ -213,7 +213,7 @@ class LeaveReqStruct : public PDU {
 public:
    LeaveReqStruct();
    NodeIdStruct*                 mLeavingPeerId;
-   std::vector<unsigned char>    mOverlaySpecificData;
+   resip::Data                   mOverlaySpecificData;
 
 
    PDUMemberFunctions
@@ -225,7 +225,7 @@ public:
    RouteQueryReqStruct();
    Boolean                       mSendUpdate;
    DestinationStruct*            mDestination;
-   std::vector<unsigned char>    mOverlaySpecificData;
+   resip::Data                   mOverlaySpecificData;
 
 
    PDUMemberFunctions
@@ -243,7 +243,7 @@ public:
    FramedMessageType             mType;
    struct mData_ {
         UInt32                        mSequence;
-        std::vector<unsigned char>    mMessage;
+        resip::Data                   mMessage;
    } mData;
    struct mAck_ {
         UInt32                        mAckSequence;
@@ -258,7 +258,7 @@ public:
 class IceCandidateStruct : public PDU {
 public:
    IceCandidateStruct();
-   std::vector<unsigned char>    mCandidate;
+   resip::Data                   mCandidate;
 
 
    PDUMemberFunctions
@@ -268,10 +268,10 @@ public:
 class ConnectReqAnsStruct : public PDU {
 public:
    ConnectReqAnsStruct();
-   std::vector<unsigned char>    mUfrag;
-   std::vector<unsigned char>    mPassword;
+   resip::Data                   mUfrag;
+   resip::Data                   mPassword;
    UInt16                        mApplication;
-   std::vector<unsigned char>    mRole;
+   resip::Data                   mRole;
    std::vector<IceCandidateStruct*>  mCandidates;
 
 
@@ -325,8 +325,8 @@ class TunnelReqStruct : public PDU {
 public:
    TunnelReqStruct();
    UInt16                        mApplication;
-   std::vector<unsigned char>    mDialogId;
-   std::vector<unsigned char>    mApplicationPdu;
+   resip::Data                   mDialogId;
+   resip::Data                   mApplicationPdu;
 
 
    PDUMemberFunctions
@@ -344,7 +344,7 @@ class DataValueStruct : public PDU {
 public:
    DataValueStruct();
    Boolean                       mExists;
-   std::vector<unsigned char>    mValue;
+   resip::Data                   mValue;
 
 
    PDUMemberFunctions
@@ -365,7 +365,7 @@ public:
 class DictionaryKeyStruct : public PDU {
 public:
    DictionaryKeyStruct();
-   std::vector<unsigned char>    mKey;
+   resip::Data                   mKey;
 
 
    PDUMemberFunctions
@@ -600,10 +600,10 @@ public:
    SipRegistrationStruct();
    SipRegistrationType           mType;
    struct mSipRegistrationUri_ {
-        std::vector<unsigned char>    mUri;
+        resip::Data                   mUri;
    } mSipRegistrationUri;
    struct mSipRegistrationRoute_ {
-        std::vector<unsigned char>    mContactPrefs;
+        resip::Data                   mContactPrefs;
         std::vector<DestinationStruct*>  mDestinationList;
    } mSipRegistrationRoute;
 

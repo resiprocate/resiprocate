@@ -1,6 +1,9 @@
 #include <iostream>
 #include <iomanip>
 #include "rutil/Logger.hxx"
+#include "rutil/ParseException.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/DataStream.hxx"
 #include "P2PSubsystem.hxx"
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 #include "MessageStructsGen.hxx"
@@ -66,42 +69,33 @@ void ResourceIdStruct :: print(std::ostream& out, int indent) const
    do_indent(out,indent);
    (out) << "ResourceId:\n";
    indent+=2;
-   for(unsigned int i=0;i<mId.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mId[i] << "\n"; 
-   }
+    out << mId.hex();
 };
 
 void ResourceIdStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ResourceIdStruct");
    {
-   resip::Data d;
-   read_varray1(in, 1, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mId.push_back(0);
-      decode_uintX(in2, 8, mId[i++]);
-   DebugLog( << "mId[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 8, len);
+      resip::DataStream strm(mId);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "id",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
 void ResourceIdStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding ResourceIdStruct");
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<1;i++) out.put(0);
-   for(unsigned int i=0;i<mId.size();i++)
-      encode_uintX(out, 8, mId[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 8, mId.size());
+    out << mId;
 
 };
 
@@ -333,16 +327,18 @@ void DestinationStruct :: decode(std::istream& in)
 
       case 3:
             {
-   resip::Data d;
-   read_varray1(in, 1, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mCompressed.mCompressedId.push_back(0);
-               decode_uintX(in2, 8, mCompressed.mCompressedId[i++]);
-   DebugLog( << "mCompressed.mCompressedId[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in_auto, 8, len);
+      resip::DataStream strm(mCompressed.mCompressedId);
+      while(len--){
+        c=in_auto.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "compressed_id",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
           break;
 
        default: /* User error */ 
@@ -350,7 +346,9 @@ void DestinationStruct :: decode(std::istream& in)
    }
 
 
-   if(in_auto.peek()!=EOF) assert(0);
+   if(in_auto.peek()!=EOF)
+      throw resip::ParseException("Inner encoded value too long",
+      "Destination",__FILE__,__LINE__);
    }
 };
 
@@ -372,16 +370,8 @@ void DestinationStruct :: encode(std::ostream& out)
           break;
 
       case 3:
-            {
-   long pos1=out.tellp();
-   for(int i=0;i<1;i++) out.put(0);
-   for(unsigned int i=0;i<mCompressed.mCompressedId.size();i++)
-               encode_uintX(out, 8, mCompressed.mCompressedId[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
-   }
+             encode_uintX(out, 8, mCompressed.mCompressedId.size());
+    out << mCompressed.mCompressedId;
           break;
 
        default: /* User error */ 
@@ -415,10 +405,7 @@ void SignerIdentityStruct :: print(std::ostream& out, int indent) const
    indent+=2;
    do_indent(out, indent);
    (out)  << "identity_type:" << std::hex << (unsigned long long) mIdentityType << "\n"; 
-   for(unsigned int i=0;i<mSignerIdentity.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mSignerIdentity[i] << "\n"; 
-   }
+    out << mSignerIdentity.hex();
 };
 
 void SignerIdentityStruct :: decode(std::istream& in)
@@ -431,16 +418,18 @@ void SignerIdentityStruct :: decode(std::istream& in)
    }
 
    {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mSignerIdentity.push_back(0);
-      decode_uintX(in2, 8, mSignerIdentity[i++]);
-   DebugLog( << "mSignerIdentity[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 16, len);
+      resip::DataStream strm(mSignerIdentity);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "signer_identity",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
@@ -449,16 +438,8 @@ void SignerIdentityStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding SignerIdentityStruct");
    encode_uintX(out, 8, (u_int64)(mIdentityType));
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mSignerIdentity.size();i++)
-      encode_uintX(out, 8, mSignerIdentity[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 16, mSignerIdentity.size());
+    out << mSignerIdentity;
 
 };
 
@@ -529,10 +510,7 @@ void SignatureStruct :: print(std::ostream& out, int indent) const
    indent+=2;
    mAlgorithm->print(out, indent);
    mIdentity->print(out, indent);
-   for(unsigned int i=0;i<mSignatureValue.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mSignatureValue[i] << "\n"; 
-   }
+    out << mSignatureValue.hex();
 };
 
 void SignatureStruct :: decode(std::istream& in)
@@ -545,16 +523,18 @@ void SignatureStruct :: decode(std::istream& in)
    mIdentity->decode(in);
 
    {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mSignatureValue.push_back(0);
-      decode_uintX(in2, 8, mSignatureValue[i++]);
-   DebugLog( << "mSignatureValue[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 16, len);
+      resip::DataStream strm(mSignatureValue);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "signature_value",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
@@ -565,16 +545,8 @@ void SignatureStruct :: encode(std::ostream& out)
 
    mIdentity->encode(out);
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mSignatureValue.size();i++)
-      encode_uintX(out, 8, mSignatureValue[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 16, mSignatureValue.size());
+    out << mSignatureValue;
 
 };
 
@@ -779,10 +751,7 @@ void ForwardingLayerMessageStruct :: print(std::ostream& out, int indent) const
    (out) << "ForwardingLayerMessage:\n";
    indent+=2;
    mHeader->print(out, indent);
-   for(unsigned int i=0;i<mPayload.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mPayload[i] << "\n"; 
-   }
+    out << mPayload.hex();
    mSig->print(out, indent);
 };
 
@@ -793,16 +762,18 @@ void ForwardingLayerMessageStruct :: decode(std::istream& in)
    mHeader->decode(in);
 
    {
-   resip::Data d;
-   read_varray1(in, 3, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mPayload.push_back(0);
-      decode_uintX(in2, 8, mPayload[i++]);
-   DebugLog( << "mPayload[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 24, len);
+      resip::DataStream strm(mPayload);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "payload",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
    mSig = new SignatureStruct();
    mSig->decode(in);
@@ -814,16 +785,8 @@ void ForwardingLayerMessageStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding ForwardingLayerMessageStruct");
    mHeader->encode(out);
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<3;i++) out.put(0);
-   for(unsigned int i=0;i<mPayload.size();i++)
-      encode_uintX(out, 8, mPayload[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 24, (pos2 - pos1) - 3);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 24, mPayload.size());
+    out << mPayload;
 
    mSig->encode(out);
 
@@ -850,14 +813,8 @@ void ErrorResponseStruct :: print(std::ostream& out, int indent) const
    indent+=2;
    do_indent(out, indent);
    (out)  << "error_code:" << std::hex << (unsigned long long)mErrorCode << "\n"; 
-   for(unsigned int i=0;i<mReasonPhrase.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mReasonPhrase[i] << "\n"; 
-   }
-   for(unsigned int i=0;i<mErrorInfo.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mErrorInfo[i] << "\n"; 
-   }
+    out << mReasonPhrase.hex();
+    out << mErrorInfo.hex();
 };
 
 void ErrorResponseStruct :: decode(std::istream& in)
@@ -867,28 +824,32 @@ void ErrorResponseStruct :: decode(std::istream& in)
    DebugLog( << "mErrorCode");
 
    {
-   resip::Data d;
-   read_varray1(in, 1, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mReasonPhrase.push_back(0);
-      decode_uintX(in2, 8, mReasonPhrase[i++]);
-   DebugLog( << "mReasonPhrase[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 8, len);
+      resip::DataStream strm(mReasonPhrase);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "reason_phrase",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
    {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mErrorInfo.push_back(0);
-      decode_uintX(in2, 8, mErrorInfo[i++]);
-   DebugLog( << "mErrorInfo[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 16, len);
+      resip::DataStream strm(mErrorInfo);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "error_info",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
@@ -897,27 +858,11 @@ void ErrorResponseStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding ErrorResponseStruct");
    encode_uintX(out, 16, mErrorCode);
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<1;i++) out.put(0);
-   for(unsigned int i=0;i<mReasonPhrase.size();i++)
-      encode_uintX(out, 8, mReasonPhrase[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 8, mReasonPhrase.size());
+    out << mReasonPhrase;
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mErrorInfo.size();i++)
-      encode_uintX(out, 8, mErrorInfo[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 16, mErrorInfo.size());
+    out << mErrorInfo;
 
 };
 
@@ -940,10 +885,7 @@ void JoinReqStruct :: print(std::ostream& out, int indent) const
    (out) << "JoinReq:\n";
    indent+=2;
    mJoiningPeerId->print(out, indent);
-   for(unsigned int i=0;i<mOverlaySpecificData.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mOverlaySpecificData[i] << "\n"; 
-   }
+    out << mOverlaySpecificData.hex();
 };
 
 void JoinReqStruct :: decode(std::istream& in)
@@ -953,16 +895,18 @@ void JoinReqStruct :: decode(std::istream& in)
    mJoiningPeerId->decode(in);
 
    {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mOverlaySpecificData.push_back(0);
-      decode_uintX(in2, 8, mOverlaySpecificData[i++]);
-   DebugLog( << "mOverlaySpecificData[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 16, len);
+      resip::DataStream strm(mOverlaySpecificData);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "overlay_specific_data",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
@@ -971,16 +915,8 @@ void JoinReqStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding JoinReqStruct");
    mJoiningPeerId->encode(out);
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mOverlaySpecificData.size();i++)
-      encode_uintX(out, 8, mOverlaySpecificData[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 16, mOverlaySpecificData.size());
+    out << mOverlaySpecificData;
 
 };
 
@@ -1000,42 +936,33 @@ void JoinAnsStruct :: print(std::ostream& out, int indent) const
    do_indent(out,indent);
    (out) << "JoinAns:\n";
    indent+=2;
-   for(unsigned int i=0;i<mOverlaySpecificData.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mOverlaySpecificData[i] << "\n"; 
-   }
+    out << mOverlaySpecificData.hex();
 };
 
 void JoinAnsStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding JoinAnsStruct");
    {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mOverlaySpecificData.push_back(0);
-      decode_uintX(in2, 8, mOverlaySpecificData[i++]);
-   DebugLog( << "mOverlaySpecificData[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 16, len);
+      resip::DataStream strm(mOverlaySpecificData);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "overlay_specific_data",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
 void JoinAnsStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding JoinAnsStruct");
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mOverlaySpecificData.size();i++)
-      encode_uintX(out, 8, mOverlaySpecificData[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 16, mOverlaySpecificData.size());
+    out << mOverlaySpecificData;
 
 };
 
@@ -1058,10 +985,7 @@ void LeaveReqStruct :: print(std::ostream& out, int indent) const
    (out) << "LeaveReq:\n";
    indent+=2;
    mLeavingPeerId->print(out, indent);
-   for(unsigned int i=0;i<mOverlaySpecificData.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mOverlaySpecificData[i] << "\n"; 
-   }
+    out << mOverlaySpecificData.hex();
 };
 
 void LeaveReqStruct :: decode(std::istream& in)
@@ -1071,16 +995,18 @@ void LeaveReqStruct :: decode(std::istream& in)
    mLeavingPeerId->decode(in);
 
    {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mOverlaySpecificData.push_back(0);
-      decode_uintX(in2, 8, mOverlaySpecificData[i++]);
-   DebugLog( << "mOverlaySpecificData[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 16, len);
+      resip::DataStream strm(mOverlaySpecificData);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "overlay_specific_data",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
@@ -1089,16 +1015,8 @@ void LeaveReqStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding LeaveReqStruct");
    mLeavingPeerId->encode(out);
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mOverlaySpecificData.size();i++)
-      encode_uintX(out, 8, mOverlaySpecificData[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 16, mOverlaySpecificData.size());
+    out << mOverlaySpecificData;
 
 };
 
@@ -1125,10 +1043,7 @@ void RouteQueryReqStruct :: print(std::ostream& out, int indent) const
    do_indent(out, indent);
    (out)  << "send_update:" << std::hex << (unsigned long long) mSendUpdate << "\n"; 
    mDestination->print(out, indent);
-   for(unsigned int i=0;i<mOverlaySpecificData.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mOverlaySpecificData[i] << "\n"; 
-   }
+    out << mOverlaySpecificData.hex();
 };
 
 void RouteQueryReqStruct :: decode(std::istream& in)
@@ -1144,16 +1059,18 @@ void RouteQueryReqStruct :: decode(std::istream& in)
    mDestination->decode(in);
 
    {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mOverlaySpecificData.push_back(0);
-      decode_uintX(in2, 8, mOverlaySpecificData[i++]);
-   DebugLog( << "mOverlaySpecificData[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 16, len);
+      resip::DataStream strm(mOverlaySpecificData);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "overlay_specific_data",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
@@ -1164,16 +1081,8 @@ void RouteQueryReqStruct :: encode(std::ostream& out)
 
    mDestination->encode(out);
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mOverlaySpecificData.size();i++)
-      encode_uintX(out, 8, mOverlaySpecificData[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 16, mOverlaySpecificData.size());
+    out << mOverlaySpecificData;
 
 };
 
@@ -1216,16 +1125,18 @@ void FramedMessageStruct :: decode(std::istream& in)
             decode_uintX(in, 24, mData.mSequence);
    DebugLog( << "mData.mSequence");
             {
-   resip::Data d;
-   read_varray1(in, 3, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mData.mMessage.push_back(0);
-               decode_uintX(in2, 8, mData.mMessage[i++]);
-   DebugLog( << "mData.mMessage[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 24, len);
+      resip::DataStream strm(mData.mMessage);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "message",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
           break;
 
       case 129:
@@ -1250,16 +1161,8 @@ void FramedMessageStruct :: encode(std::ostream& out)
    switch(mType) {
       case 128:
             encode_uintX(out, 24, mData.mSequence);
-            {
-   long pos1=out.tellp();
-   for(int i=0;i<3;i++) out.put(0);
-   for(unsigned int i=0;i<mData.mMessage.size();i++)
-               encode_uintX(out, 8, mData.mMessage[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 24, (pos2 - pos1) - 3);
-   out.seekp(pos2);
-   }
+             encode_uintX(out, 24, mData.mMessage.size());
+    out << mData.mMessage;
           break;
 
       case 129:
@@ -1290,42 +1193,33 @@ void IceCandidateStruct :: print(std::ostream& out, int indent) const
    do_indent(out,indent);
    (out) << "IceCandidate:\n";
    indent+=2;
-   for(unsigned int i=0;i<mCandidate.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mCandidate[i] << "\n"; 
-   }
+    out << mCandidate.hex();
 };
 
 void IceCandidateStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding IceCandidateStruct");
    {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mCandidate.push_back(0);
-      decode_uintX(in2, 8, mCandidate[i++]);
-   DebugLog( << "mCandidate[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 16, len);
+      resip::DataStream strm(mCandidate);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "candidate",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
 void IceCandidateStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding IceCandidateStruct");
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mCandidate.size();i++)
-      encode_uintX(out, 8, mCandidate[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 16, mCandidate.size());
+    out << mCandidate;
 
 };
 
@@ -1350,20 +1244,11 @@ void ConnectReqAnsStruct :: print(std::ostream& out, int indent) const
    do_indent(out,indent);
    (out) << "ConnectReqAns:\n";
    indent+=2;
-   for(unsigned int i=0;i<mUfrag.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mUfrag[i] << "\n"; 
-   }
-   for(unsigned int i=0;i<mPassword.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mPassword[i] << "\n"; 
-   }
+    out << mUfrag.hex();
+    out << mPassword.hex();
    do_indent(out, indent);
    (out)  << "application:" << std::hex << (unsigned long long)mApplication << "\n"; 
-   for(unsigned int i=0;i<mRole.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mRole[i] << "\n"; 
-   }
+    out << mRole.hex();
    for(unsigned int i=0;i<mCandidates.size();i++){
       mCandidates[i]->print(out, indent);
    }
@@ -1373,43 +1258,49 @@ void ConnectReqAnsStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ConnectReqAnsStruct");
    {
-   resip::Data d;
-   read_varray1(in, 1, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mUfrag.push_back(0);
-      decode_uintX(in2, 8, mUfrag[i++]);
-   DebugLog( << "mUfrag[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 8, len);
+      resip::DataStream strm(mUfrag);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "ufrag",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
    {
-   resip::Data d;
-   read_varray1(in, 1, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mPassword.push_back(0);
-      decode_uintX(in2, 8, mPassword[i++]);
-   DebugLog( << "mPassword[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 8, len);
+      resip::DataStream strm(mPassword);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "password",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
    decode_uintX(in, 16, mApplication);
    DebugLog( << "mApplication");
 
    {
-   resip::Data d;
-   read_varray1(in, 1, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mRole.push_back(0);
-      decode_uintX(in2, 8, mRole[i++]);
-   DebugLog( << "mRole[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 8, len);
+      resip::DataStream strm(mRole);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "role",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
    {
    resip::Data d;
@@ -1428,40 +1319,16 @@ void ConnectReqAnsStruct :: decode(std::istream& in)
 void ConnectReqAnsStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding ConnectReqAnsStruct");
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<1;i++) out.put(0);
-   for(unsigned int i=0;i<mUfrag.size();i++)
-      encode_uintX(out, 8, mUfrag[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 8, mUfrag.size());
+    out << mUfrag;
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<1;i++) out.put(0);
-   for(unsigned int i=0;i<mPassword.size();i++)
-      encode_uintX(out, 8, mPassword[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 8, mPassword.size());
+    out << mPassword;
 
    encode_uintX(out, 16, mApplication);
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<1;i++) out.put(0);
-   for(unsigned int i=0;i<mRole.size();i++)
-      encode_uintX(out, 8, mRole[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 8, mRole.size());
+    out << mRole;
 
    {
    long pos1=out.tellp();
@@ -1687,14 +1554,8 @@ void TunnelReqStruct :: print(std::ostream& out, int indent) const
    indent+=2;
    do_indent(out, indent);
    (out)  << "application:" << std::hex << (unsigned long long)mApplication << "\n"; 
-   for(unsigned int i=0;i<mDialogId.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mDialogId[i] << "\n"; 
-   }
-   for(unsigned int i=0;i<mApplicationPdu.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mApplicationPdu[i] << "\n"; 
-   }
+    out << mDialogId.hex();
+    out << mApplicationPdu.hex();
 };
 
 void TunnelReqStruct :: decode(std::istream& in)
@@ -1704,28 +1565,32 @@ void TunnelReqStruct :: decode(std::istream& in)
    DebugLog( << "mApplication");
 
    {
-   resip::Data d;
-   read_varray1(in, 1, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mDialogId.push_back(0);
-      decode_uintX(in2, 8, mDialogId[i++]);
-   DebugLog( << "mDialogId[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 8, len);
+      resip::DataStream strm(mDialogId);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "dialog_id",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
    {
-   resip::Data d;
-   read_varray1(in, 3, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mApplicationPdu.push_back(0);
-      decode_uintX(in2, 8, mApplicationPdu[i++]);
-   DebugLog( << "mApplicationPdu[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 24, len);
+      resip::DataStream strm(mApplicationPdu);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "application_pdu",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
@@ -1734,27 +1599,11 @@ void TunnelReqStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding TunnelReqStruct");
    encode_uintX(out, 16, mApplication);
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<1;i++) out.put(0);
-   for(unsigned int i=0;i<mDialogId.size();i++)
-      encode_uintX(out, 8, mDialogId[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 8, mDialogId.size());
+    out << mDialogId;
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<3;i++) out.put(0);
-   for(unsigned int i=0;i<mApplicationPdu.size();i++)
-      encode_uintX(out, 8, mApplicationPdu[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 24, (pos2 - pos1) - 3);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 24, mApplicationPdu.size());
+    out << mApplicationPdu;
 
 };
 
@@ -1778,10 +1627,7 @@ void DataValueStruct :: print(std::ostream& out, int indent) const
    indent+=2;
    do_indent(out, indent);
    (out)  << "exists:" << std::hex << (unsigned long long) mExists << "\n"; 
-   for(unsigned int i=0;i<mValue.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mValue[i] << "\n"; 
-   }
+    out << mValue.hex();
 };
 
 void DataValueStruct :: decode(std::istream& in)
@@ -1794,16 +1640,18 @@ void DataValueStruct :: decode(std::istream& in)
    }
 
    {
-   resip::Data d;
-   read_varray1(in, 4, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mValue.push_back(0);
-      decode_uintX(in2, 8, mValue[i++]);
-   DebugLog( << "mValue[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 32, len);
+      resip::DataStream strm(mValue);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "value",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
@@ -1812,16 +1660,8 @@ void DataValueStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding DataValueStruct");
    encode_uintX(out, 8, (u_int64)(mExists));
 
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<4;i++) out.put(0);
-   for(unsigned int i=0;i<mValue.size();i++)
-      encode_uintX(out, 8, mValue[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 32, (pos2 - pos1) - 4);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 32, mValue.size());
+    out << mValue;
 
 };
 
@@ -1885,42 +1725,33 @@ void DictionaryKeyStruct :: print(std::ostream& out, int indent) const
    do_indent(out,indent);
    (out) << "DictionaryKey:\n";
    indent+=2;
-   for(unsigned int i=0;i<mKey.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mKey[i] << "\n"; 
-   }
+    out << mKey.hex();
 };
 
 void DictionaryKeyStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding DictionaryKeyStruct");
    {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mKey.push_back(0);
-      decode_uintX(in2, 8, mKey[i++]);
-   DebugLog( << "mKey[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in, 16, len);
+      resip::DataStream strm(mKey);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "key",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
 
 };
 
 void DictionaryKeyStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding DictionaryKeyStruct");
-   {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mKey.size();i++)
-      encode_uintX(out, 8, mKey[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+    encode_uintX(out, 16, mKey.size());
+    out << mKey;
 
 };
 
@@ -2101,7 +1932,9 @@ void StoredDataStruct :: decode(std::istream& in)
    mSignature = new SignatureStruct();
    mSignature->decode(in_auto);
 
-   if(in_auto.peek()!=EOF) assert(0);
+   if(in_auto.peek()!=EOF)
+      throw resip::ParseException("Inner encoded value too long",
+      "StoredData",__FILE__,__LINE__);
    }
 };
 
@@ -2539,7 +2372,9 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
    }
 
 
-   if(in_auto.peek()!=EOF) assert(0);
+   if(in_auto.peek()!=EOF)
+      throw resip::ParseException("Inner encoded value too long",
+      "StoredDataSpecifier",__FILE__,__LINE__);
    }
 };
 
@@ -3145,30 +2980,34 @@ void SipRegistrationStruct :: decode(std::istream& in)
    switch(mType){
       case 1:
             {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mSipRegistrationUri.mUri.push_back(0);
-               decode_uintX(in2, 8, mSipRegistrationUri.mUri[i++]);
-   DebugLog( << "mSipRegistrationUri.mUri[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in_auto, 16, len);
+      resip::DataStream strm(mSipRegistrationUri.mUri);
+      while(len--){
+        c=in_auto.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "uri",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
           break;
 
       case 2:
             {
-   resip::Data d;
-   read_varray1(in, 2, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mSipRegistrationRoute.mContactPrefs.push_back(0);
-               decode_uintX(in2, 8, mSipRegistrationRoute.mContactPrefs[i++]);
-   DebugLog( << "mSipRegistrationRoute.mContactPrefs[i++]");
+      UInt32 len;
+      int c;
+      decode_uintX(in_auto, 16, len);
+      resip::DataStream strm(mSipRegistrationRoute.mContactPrefs);
+      while(len--){
+        c=in_auto.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "contact_prefs",__FILE__,__LINE__);
+          strm.put(c);
+      };
    }
-;   }
             {
    resip::Data d;
    read_varray1(in, 2, d);
@@ -3187,7 +3026,9 @@ void SipRegistrationStruct :: decode(std::istream& in)
    }
 
 
-   if(in_auto.peek()!=EOF) assert(0);
+   if(in_auto.peek()!=EOF)
+      throw resip::ParseException("Inner encoded value too long",
+      "SipRegistration",__FILE__,__LINE__);
    }
 };
 
@@ -3201,29 +3042,13 @@ void SipRegistrationStruct :: encode(std::ostream& out)
 
    switch(mType) {
       case 1:
-            {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mSipRegistrationUri.mUri.size();i++)
-               encode_uintX(out, 8, mSipRegistrationUri.mUri[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+             encode_uintX(out, 16, mSipRegistrationUri.mUri.size());
+    out << mSipRegistrationUri.mUri;
           break;
 
       case 2:
-            {
-   long pos1=out.tellp();
-   for(int i=0;i<2;i++) out.put(0);
-   for(unsigned int i=0;i<mSipRegistrationRoute.mContactPrefs.size();i++)
-               encode_uintX(out, 8, mSipRegistrationRoute.mContactPrefs[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
-   encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
-   }
+             encode_uintX(out, 16, mSipRegistrationRoute.mContactPrefs.size());
+    out << mSipRegistrationRoute.mContactPrefs;
             {
    long pos1=out.tellp();
    for(int i=0;i<2;i++) out.put(0);

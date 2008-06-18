@@ -4,29 +4,68 @@
 #include <openssl/evp.h>
 
 namespace p2p {
-  SignatureContext::SignatureContext(Profile &profile)
-    : mProfile(profile)
-    {
-      ;
-    }
+SignatureContext::SignatureContext(Profile &profile)
+   : mProfile(profile)
+{
+   ;
+}
 
+<<<<<<< .mine
+#if 0
+void SignatureContext::digestData(const vector<Data> toBeSigned, 
+                                  unsigned char digest[32],unsigned int *digest_len)
+{
+   EVP_MD_CTX md;
+   const EVP_MD *digest_ptr=EVP_get_digestbyname(mProfile.signatureDigest().c_str());
+   
+   assert(digest_ptr!=0);
+   
+   if(!EVP_DigestInit(&md, digest_ptr))
+      assert(0); // OpenSSL MD creation should succeed? TODO: ekr?
+=======
   void digestData(const vector<Data> toBeSigned, 
     unsigned char digest[32])
     {
        //EVP_MD_CTX md;
+>>>>>>> .r8001
       
+   for(unsigned int i=0;i<toBeSigned.size();i++)
+   {
+      EVP_DigestUpdate(&md,toBeSigned[i].data(),toBeSigned[i].size());
+   }
       
-      
-      
-      
-    }
-  
-  Data SignatureContext::computeSignature(const vector<Data> toBeSigned)
-    {
-      Data d;
-      
-      return d;
-    }
+   EVP_DigestFinal(&md,digest,digest_len);
+}
+
+Data SignatureContext::computeSignature(const vector<Data> toBeSigned)
+{
+   EVP_MD_CTX md;
+   
+   const EVP_MD *digest_ptr=EVP_get_digestbyname(mProfile.signatureDigest().c_str());
+   
+   assert(digest_ptr!=0);
+   
+   if(!EVP_SignInit(md,digest_ptr))
+      assert(0); // This should not fail
+   
+   for(unsigned int i=0;i<toBeSigned.size();i++)
+   {
+      EVP_DigestUpdate(&md,toBeSigned[i].data(),toBeSigned[i].size());
+   }
+
+
+   unsigned char *sig_buf sig_buf=new unsigned char[EVP_PKEY_size(size)];
+   unsigned int sig_len;
+   
+   if(!EVP_SignFinal(&md,sig_buf,&sig_len,mProfile.getPrivateKey()))
+   {
+      delete sig_buf[];
+   }
+   
+   return resip::Data(resip::Data::Take,sig_buf,sig_len);
+}
+#endif  
+
 }
 
 /* ======================================================================

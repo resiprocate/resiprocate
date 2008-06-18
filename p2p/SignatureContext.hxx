@@ -49,7 +49,8 @@ class SignatureContext
 
       
    private:
-      void digestData(const vector<Data> toBeSigned, unsigned char digest[32]);
+     void digestData(const vector<Data> toBeSigned, unsigned char digest[32],
+        unsigned int *digest_len);
       Data computeSignature(const vector<Data> toBeSigned);
       
       Profile &mProfile;
