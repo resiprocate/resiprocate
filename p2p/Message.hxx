@@ -10,6 +10,7 @@
 #include "p2p/NodeId.hxx"
 #include "p2p/DestinationId.hxx"
 #include "p2p/MessageStructsGen.hxx"
+#include "p2p/Candidate.hxx"
 
 namespace p2p 
 {
@@ -90,7 +91,7 @@ class Message : public Signable
       JoinAns* makeJoinResponse(const resip::Data &overlaySpecific);
       UpdateAns* makeUpdateResponse();
       LeaveAns* makeLeaveResponse();
-      ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates);
+      ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates);
 
       resip::Data getRequestMessageBody() const;
       
