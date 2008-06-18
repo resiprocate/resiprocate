@@ -30,24 +30,13 @@ class TransporterMessage
    public:
       virtual ~TransporterMessage() {;}
 
-      virtual ConnectionOpened* castConnectionOpened();
-      virtual ConnectionClosed* castConnectionClosed();
-      virtual ApplicationMessageArrived* castApplicationMessageArrived();
-      virtual MessageArrived* castMessageArrived();
-      virtual LocalCandidatesCollected* castLocalCandidatesCollected();
+      virtual ConnectionOpened* castConnectionOpened() { return 0; }
+      virtual ConnectionClosed* castConnectionClosed() { return 0; }
+      virtual ApplicationMessageArrived* castApplicationMessageArrived() { return 0; }
+      virtual MessageArrived* castMessageArrived() { return 0; }
+      virtual LocalCandidatesCollected* castLocalCandidatesCollected() { return 0; }
 
    protected:
-
-      typedef enum
-      {
-         ConnectionOpenedType,
-         ConnectionClosedType,
-         ApplicationMessageArrivedType,
-         MessageArrivedType,
-         LocalCandidatesCollectedType
-      } MessageType;
-
-      virtual MessageType getMessageType() = 0;
 };
 
 class ConnectionOpened : public TransporterMessage
@@ -60,6 +49,8 @@ class ConnectionOpened : public TransporterMessage
                        X509 *cert
                        ) {}
 
+      virtual ConnectionOpened* castConnectionOpened() { return this; }
+
       FlowId getFlowId();
       unsigned short getApplication();
       NodeId getNodeId() { return getFlowId().getNodeId(); }
@@ -67,7 +58,6 @@ class ConnectionOpened : public TransporterMessage
       X509 *getCertificate();
 
    protected:
-      virtual MessageType getMessageType() {return ConnectionOpenedType;}
 };
 
 class ConnectionClosed : public TransporterMessage
@@ -75,9 +65,9 @@ class ConnectionClosed : public TransporterMessage
    public:
       NodeId getNodeId();
       unsigned short getApplicationId();
+      virtual ConnectionClosed* castConnectionClosed() { return this; }
 
    protected:
-      virtual MessageType getMessageType() {return ConnectionClosedType;}
 };
 
 class MessageArrived : public TransporterMessage
@@ -86,11 +76,12 @@ class MessageArrived : public TransporterMessage
       MessageArrived (NodeId nodeId, std::auto_ptr<p2p::Message> message)
         : mNodeId(nodeId), mMessage(message) {;}
 
+      virtual MessageArrived* castMessageArrived() { return this; }
+
       NodeId getNodeId() {return mNodeId;}
       std::auto_ptr<p2p::Message> getMessage() { return mMessage; }
 
    protected:
-      virtual MessageType getMessageType() {return MessageArrivedType;}
 
       NodeId mNodeId;
       std::auto_ptr<p2p::Message> mMessage;
@@ -102,11 +93,12 @@ class ApplicationMessageArrived : public TransporterMessage
       ApplicationMessageArrived(FlowId flowId, resip::Data &data)
         : mFlowId(flowId), mData(data) {;}
 
+      virtual ApplicationMessageArrived* castApplicationMessageArrived() { return this;}
+
       FlowId getFlowId() const { return mFlowId; }
       const resip::Data &getData() const { return mData; }
 
    protected:
-      virtual MessageType getMessageType() {return ApplicationMessageArrivedType;}
 
    private:
      FlowId mFlowId;
@@ -119,10 +111,11 @@ class LocalCandidatesCollected : public TransporterMessage
       LocalCandidatesCollected(std::vector<Candidate> &c) : 
          mCandidates(c) {;}
 
-         std::vector<Candidate> &getCandidates() { return mCandidates; }
+      virtual LocalCandidatesCollected* castLocalCandidatesCollected() { return this; }
+
+      std::vector<Candidate> &getCandidates() { return mCandidates; }
 
    protected:
-      virtual MessageType getMessageType() {return LocalCandidatesCollectedType;}
 
    private:
       std::vector<Candidate> mCandidates;

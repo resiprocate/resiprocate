@@ -31,7 +31,7 @@ class ForwardingLayer: public Postable<p2p::Message>
               mTransporter.setRxFifo(&mRxFifo);
            }
 
-      void process();
+      void process(int ms);
 
    private:
       Dispatcher& mDispatcher;
