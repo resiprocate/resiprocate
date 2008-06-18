@@ -2,6 +2,7 @@
 #include <assert.h>
 
 using namespace p2p;
+using namespace s2c;
 
 ChordUpdate::ChordUpdate() :	
 	mUpdateType(NotSpecified)
@@ -70,18 +71,27 @@ ChordUpdate::setPredecessors(const std::vector<NodeId> &predecessors)
 }
 
 resip::Data
-ChordUpdate::encode() const
+ChordUpdate::encode()
 {
-	// not complete
-	assert(0);
-   return resip::Data::Empty;
+	resip::Data encodedData;
+
+	{
+		resip::DataStream encodedStream(encodedData);
+
+		mType = static_cast<ChordUpdateType>(mUpdateType);
+		s2c::ChordUpdateStruct::encode(encodedStream);
+	}
+
+	return encodedData;
 }
 
 void
 ChordUpdate::parse()
 {
-	// parse the blob and fill the member variables
-	assert(0);
+	resip::DataStream encodedStream(mUpdateBody);
+	decode(encodedStream);
+
+	mUpdateType = static_cast<UpdateType>(mType);
 }
 
 /* ======================================================================

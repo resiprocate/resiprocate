@@ -21,6 +21,7 @@ class Event;
 class JoinAns;
 class UpdateAns;
 class LeaveAns;
+class ConnectAns;
 
 class Message : public Signable
 {
@@ -88,6 +89,7 @@ class Message : public Signable
 	  JoinAns* makeJoinResponse(const resip::Data &overlaySpecific);
 	  UpdateAns* makeUpdateResponse();
 	  LeaveAns* makeLeaveResponse();
+	  ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates);
       
       // encoding/parsing methods
       resip::Data encodePayload();

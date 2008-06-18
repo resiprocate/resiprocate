@@ -2,6 +2,7 @@
 #include "rutil/Logger.hxx"
 #include "rutil/Data.hxx"
 #include "p2p/Join.hxx"
+#include "p2p/Connect.hxx"
 #include "p2p/MessageStructsGen.hxx"
 #include "rutil/DataStream.hxx"
 
@@ -24,6 +25,9 @@ int main()
 	std::cout << "done" << std::endl;
 
 	resip::Data d;
+	std::vector<resip::Data> v;
+	Message *m2 = new ConnectReq(d, d, 0, d, v);
+
 	p2p::NodeId n;
 	p2p::Message *m = new p2p::JoinReq(n,d);
 	m->setOverlayName("duane");
