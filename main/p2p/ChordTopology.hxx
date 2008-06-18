@@ -30,7 +30,7 @@ class ChordTopology : public TopologyAPI
       // Messages that the forwarding layer sends to this object
       virtual void newConnectionFormed( NodeId& node );
       virtual void connectionLost( NodeId& node );
-      virtual void candidatesCollected( NodeId& node, std::vector<Candidate>& candidates)=0;
+      virtual void candidatesCollected( NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)=0;
        
       // deal with topology change messages 
       virtual void consume(JoinReq& msg);

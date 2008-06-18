@@ -38,7 +38,7 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       // Messages that the forwarding layer sends to this object
       virtual void newConnectionFormed( NodeId& node )=0;
       virtual void connectionLost( NodeId& node )=0;
-      virtual void candidatesCollected( NodeId& node, std::vector<Candidate>& candidates )=0;
+      virtual void candidatesCollected( NodeId& node, unsigned short appId, std::vector<Candidate>& candidates )=0;
        
       // deal with topology change messages 
       virtual void consume(JoinReq& event)=0;
