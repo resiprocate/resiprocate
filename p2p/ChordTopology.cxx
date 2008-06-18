@@ -15,6 +15,7 @@ using namespace p2p;
 ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
    TopologyAPI(config, dispatcher, transporter) 
 {
+   // TODO - need to register with dispatcher for events
 }
       
 void 
