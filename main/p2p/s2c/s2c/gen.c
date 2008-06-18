@@ -502,7 +502,7 @@ static int s2c_gen_print_c_member(p_decl *member, FILE *out)
         {
           fprintf(out,"   for(unsigned int i=0;i<%s.size();i++){\n",name2var(member->name));
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
-
+          
           for(i=0;i<3;i++) fputc(' ',out);
           s2c_gen_print_c_simple_type(member->u.varray_.ref,reference,out);
           fprintf(out,"   }\n");

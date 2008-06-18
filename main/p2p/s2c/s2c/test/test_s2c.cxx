@@ -40,7 +40,9 @@ int main(int argc, char **argv)
     ns1.mZero.mZeroArm=9;
     ns1.mOne.mOneArm1=99;
     memset(ns1.mOne.mOneArm2,0xff,10);
-
+    unsigned char blahblah=0x11;
+    ns1.mOne.mOneArm3.push_back(blahblah);
+    
     // Now choose one
 //    ns1.mSwitchtype=s2c::zero;
     ns1.mSwitchtype=s2c::one;
