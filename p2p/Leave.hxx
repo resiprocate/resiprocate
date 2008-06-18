@@ -11,7 +11,7 @@ class LeaveAns: public Message
    public:
 	LeaveAns() {}
 
-	virtual MessageType getMessageType() const { return Message::LeaveAns; }
+	virtual MessageType getMessageType() const { return Message::LeaveAnsType; }
     virtual void getPayload(resip::Data &data) const;
 };
 
@@ -21,7 +21,7 @@ class LeaveReq : public Message
    public:
    	LeaveReq(NodeId node);
 
-	virtual MessageType getMessageType() const { return Message::LeaveReq; }
+	virtual MessageType getMessageType() const { return Message::LeaveReqType; }
     virtual void getPayload(resip::Data &data) const;
 protected:
 	NodeId mNode;

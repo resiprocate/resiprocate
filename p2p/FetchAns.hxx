@@ -12,7 +12,7 @@ class FetchAns : public Message
 {
    public:
       typedef std::list<resip::SharedPtr<AbstractValue> > AbstractValues;
-      virtual MessageType getMessageType() const { return Message::FetchAns; }
+      virtual MessageType getMessageType() const { return Message::FetchAnsType; }
 
       AbstractValues& values();
       const AbstractValues& values() const;

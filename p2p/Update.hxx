@@ -9,7 +9,7 @@ namespace p2p
 class UpdateAns : public Message
 {
 public:
-	virtual MessageType getMessageType() const { return Message::UpdateAns; }
+	virtual MessageType getMessageType() const { return Message::UpdateAnsType; }
     virtual void getPayload(resip::Data &data) const;
 };
 
@@ -18,7 +18,7 @@ class UpdateReq : public Message
 {
 public:
 	UpdateReq(resip::Data overlaySpecificBlob);
-	virtual MessageType getMessageType() const { return Message::UpdateReq; }
+	virtual MessageType getMessageType() const { return Message::UpdateReqType; }
 
     virtual void getPayload(resip::Data &data) const;
 protected:

@@ -9,13 +9,13 @@ namespace p2p
 class ConnectReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return ConnectReq; }
+      virtual MessageType getMessageType() const { return ConnectReqType; }
 };
 
 class ConnectAnsMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return ConnectAns; }
+      virtual MessageType getMessageType() const { return ConnectAnsType; }
 };
 
 
