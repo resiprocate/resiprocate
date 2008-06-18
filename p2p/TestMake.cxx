@@ -2,7 +2,7 @@
 #include "ArrayValue.hxx"
 #include "Candidate.hxx"
 #include "CertDoneEvent.hxx"
-#include "ConfigObject.hxx"
+#include "Profile.hxx"
 #include "DataSpecifier.hxx"
 #include "DictionaryValue.hxx"
 #include "Event.hxx"

@@ -4,14 +4,14 @@
 #include "rutil/SHA1Stream.hxx"
 
 #include "p2p/ChordTopology.hxx"
-#include "p2p/ConfigObject.hxx"
+#include "p2p/Profile.hxx"
 #include "p2p/FlowId.hxx"
 #include "p2p/Message.hxx"
 
 using namespace p2p;
 
 
-//Chord::Chord(ConfigObject& config, TransactionLayer& transactionProcessor )
+//Chord::Chord(Profile& config, TransactionLayer& transactionProcessor )
 //{
 //}
       
