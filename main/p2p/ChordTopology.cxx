@@ -7,6 +7,8 @@
 #include "p2p/Profile.hxx"
 #include "p2p/FlowId.hxx"
 #include "p2p/Message.hxx"
+#include "p2p/Dispatcher.hxx"
+#include "p2p/Connect.hxx"
 
 using namespace p2p;
 
@@ -16,23 +18,11 @@ ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporte
 }
       
 void 
-ChordTopology::joinOverlay( resip::GenericIPAddress& bootstrap )
+ChordTopology::joinOverlay()
 {
    // tell the transport layer to form a connection to bootstrap node (special
    // bootstrap connect ). This needs to give up the address of the BP node 
-
-// callback here 
-
-   // add the bootstrap node to our next table 
-
-   // send the ConnectReq to our NodeID to get NP 
-
-// callback here 
-   // sent connect reqest to NNP
-
-   // send connected to bunch of figners 
-
-   // send join to AP 
+   mTransporter.connect(mProfile.bootstrapNodes().front());
 }
 
 
@@ -40,9 +30,30 @@ ChordTopology::joinOverlay( resip::GenericIPAddress& bootstrap )
 void 
 ChordTopology::newConnectionFormed( NodeId& node )
 {
-   // go and add this to the finger table
-   assert(mFingerTable.find(node) == mFingerTable.end());
-   mFingerTable.insert(node);
+   // If this is the first connection we ever have - then it must be the connection to
+   // the bootstrap node
+   if(mFingerTable.size() == 0 && mNextTable.size() == 0)
+   {
+      // add the bootstrap node to our next table 
+      mNextTable[0] = node;
+
+      // send the ConnectReq to our NodeID to get NP 
+      std::auto_ptr<Message> connectReq(new ConnectReqMessage);
+      mDispatcher.send(connectReq);
+      
+// callback here 
+      // sent connect reqest to NNP
+
+      // send connected to bunch of fingers 
+
+      // send join to AP 
+   }
+   else
+   {
+      // go and add this to the finger table
+      assert(mFingerTable.find(node) == mFingerTable.end());
+      mFingerTable.insert(node);
+   }
 }
 
 

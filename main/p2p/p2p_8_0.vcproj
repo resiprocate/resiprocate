@@ -205,6 +205,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Signable.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\SignatureContext.cxx"
 				>
 			</File>

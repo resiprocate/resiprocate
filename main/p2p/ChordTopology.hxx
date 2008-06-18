@@ -23,7 +23,7 @@ class ChordTopology : public TopologyAPI
       ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter);
       virtual ~ChordTopology();
 
-      virtual void joinOverlay( resip::GenericIPAddress& bootstrapNode );
+      virtual void joinOverlay();
       
       // need a fifo to receive timer events 
 
