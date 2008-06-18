@@ -93,10 +93,10 @@ class Message : public Signable
       resip::Data encodePayload();
       static Message *parse(const resip::Data &message);
 
-      // Forwarding Header
+		// TTL
       UInt8 getTTL() const;
-	  void decrementTTL();
-	  void setTTL(UInt8 ttl);
+		void decrementTTL();
+		void setTTL(UInt8 ttl);
 
       UInt32 getOverlay() const;
       UInt64 getTransactionID() const;

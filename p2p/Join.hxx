@@ -17,9 +17,9 @@ public:
 	virtual MessageType getType() const { return Message::JoinAnsType; }
 
 	virtual void getEncodedPayload(resip::DataStream &data);
-	virtual void decodePayload(resip::DataStream &dataStream);
 
 protected:
+	virtual void decodePayload(resip::DataStream &dataStream);
 	JoinAns();
 };
 
@@ -34,9 +34,9 @@ public:
 	NodeId getNodeID() const { return mNodeID; }
 
 	virtual void getEncodedPayload(resip::DataStream &data);
-	virtual void decodePayload(resip::DataStream &dataStream);
 
 protected:
+	virtual void decodePayload(resip::DataStream &dataStream);
 	JoinReq();
 
 	NodeId mNodeID;

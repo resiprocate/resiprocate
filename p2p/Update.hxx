@@ -17,13 +17,13 @@ public:
 	virtual MessageType getType() const { return Message::UpdateAnsType; }
 	UpdateAns(p2p::UpdateReq *request);
 	virtual void getEncodedPayload(resip::DataStream &data);
-	virtual void decodePayload(resip::DataStream &dataStream);
 
 	std::auto_ptr<Event> event()
 	{
 		return wrap(this);
 	}
 protected:
+	virtual void decodePayload(resip::DataStream &dataStream);
 	UpdateAns();
 };
 
@@ -37,7 +37,6 @@ public:
 	virtual MessageType getType() const { return Message::UpdateReqType; }
 
 	virtual void getEncodedPayload(resip::DataStream &data);
-	virtual void decodePayload(resip::DataStream &dataStream);
 
 	std::auto_ptr<Event> event()
 	{
@@ -47,6 +46,7 @@ public:
 protected:
 	resip::Data mOverlaySpecific;
 
+	virtual void decodePayload(resip::DataStream &dataStream);
 	UpdateReq();
 
 };
