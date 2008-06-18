@@ -41,7 +41,7 @@ int _kbhit() {
 
 #include "p2p/P2PSubsystem.hxx"
 #include "p2p/TransporterMessage.hxx"
-#include "p2p/ConfigObject.hxx"
+#include "p2p/Profile.hxx"
 #include "p2p/SelectTransporter.hxx"
 
 using namespace p2p;
@@ -267,10 +267,10 @@ main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
    // Setup Config Object
    //////////////////////////////////////////////////////////////////////////////
-   ConfigObject config;
-   config.overlayName() = "p2poverlay.com";
-   memcpy(&config.nodeId(),  resip::Random::getCryptoRandom(8).data(), 8);
-   config.userName().value() = "test";
+   Profile profile;
+   profile.overlayName() = "p2poverlay.com";
+   memcpy(&profile.nodeId(),  resip::Random::getCryptoRandom(8).data(), 8);
+   profile.userName().value() = "test";
 
    struct in_addr addr;
    if(resip::DnsUtil::inet_pton(bootstrapAddress, addr)==0)
@@ -282,13 +282,12 @@ main (int argc, char** argv)
    addr_in.sin_family = AF_INET;
    addr_in.sin_addr = addr;
    addr_in.sin_port = bootstrapPort;      
-   config.bootstrapNodes().push_back(resip::GenericIPAddress(addr_in));    
+   profile.bootstrapNodes().push_back(resip::GenericIPAddress(addr_in));    
 
    //////////////////////////////////////////////////////////////////////////////
    // Setup Transporter
    //////////////////////////////////////////////////////////////////////////////
-   resip::Fifo<TransporterMessage> rxFifo;
-   SelectTransporter transporter(rxFifo, config);
+   SelectTransporter transporter(profile);
 
    int input;
    while(true)
