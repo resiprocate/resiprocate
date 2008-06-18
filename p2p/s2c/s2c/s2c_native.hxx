@@ -44,14 +44,14 @@ class PDU {
       {
          out << mName << "(empty)" << "\n";
       }
-          
-      virtual void encode(std::ostream& out)=0;
+
+      virtual void encode(std::ostream& out) const=0;
       virtual void decode(std::istream& in)=0;
 };
 
 #define PDUMemberFunctions                                  \
 virtual void print(std::ostream& out, int indent) const;    \
-virtual void encode(std::ostream& out);                     \
+virtual void encode(std::ostream& out) const;                     \
 virtual void decode(std::istream& in);
 
 

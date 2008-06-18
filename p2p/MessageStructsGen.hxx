@@ -13,6 +13,7 @@ typedef enum {
 class NodeIdStruct : public PDU {
 public:
    NodeIdStruct();
+   NodeIdStruct(const NodeIdStruct&);
    UInt64                        mHigh;
    UInt64                        mLow;
 
@@ -24,6 +25,7 @@ public:
 class ResourceIdStruct : public PDU {
 public:
    ResourceIdStruct();
+   ResourceIdStruct(const ResourceIdStruct&);
    resip::Data                   mId;
 
 
@@ -40,6 +42,7 @@ typedef enum {
 class IPv4AddrPortStruct : public PDU {
 public:
    IPv4AddrPortStruct();
+   IPv4AddrPortStruct(const IPv4AddrPortStruct&);
    UInt32                        mAddr;
    UInt16                        mPort;
 
@@ -51,6 +54,7 @@ public:
 class IPv6AddrPortStruct : public PDU {
 public:
    IPv6AddrPortStruct();
+   IPv6AddrPortStruct(const IPv6AddrPortStruct&);
    unsigned char                 mAddr[16];
    UInt16                        mPort;
 
@@ -62,6 +66,7 @@ public:
 class IpAddressAndPortStruct : public PDU {
 public:
    IpAddressAndPortStruct();
+   IpAddressAndPortStruct(const IpAddressAndPortStruct&);
    AddressType                   mType;
    UInt8                         mLength;
    struct mIpv4Address_ {
@@ -86,6 +91,7 @@ typedef enum {
 class DestinationStruct : public PDU {
 public:
    DestinationStruct();
+   DestinationStruct(const DestinationStruct&);
    DestinationType               mType;
    struct mPeer_ {
         NodeIdStruct*                 mNodeId;
@@ -112,6 +118,7 @@ typedef enum {
 class SignerIdentityStruct : public PDU {
 public:
    SignerIdentityStruct();
+   SignerIdentityStruct(const SignerIdentityStruct&);
    SignerIdentityType            mIdentityType;
    resip::Data                   mSignerIdentity;
 
@@ -123,6 +130,7 @@ public:
 class SignatureAndHashAlgorithmStruct : public PDU {
 public:
    SignatureAndHashAlgorithmStruct();
+   SignatureAndHashAlgorithmStruct(const SignatureAndHashAlgorithmStruct&);
    UInt8                         mSig;
    UInt8                         mHash;
 
@@ -134,6 +142,7 @@ public:
 class SignatureStruct : public PDU {
 public:
    SignatureStruct();
+   SignatureStruct(const SignatureStruct&);
    SignatureAndHashAlgorithmStruct*  mAlgorithm;
    SignerIdentityStruct*         mIdentity;
    resip::Data                   mSignatureValue;
@@ -146,6 +155,7 @@ public:
 class ForwardingHeaderStruct : public PDU {
 public:
    ForwardingHeaderStruct();
+   ForwardingHeaderStruct(const ForwardingHeaderStruct&);
    UInt8                         mReloToken;
    UInt32                        mOverlay;
    UInt8                         mTtl;
@@ -168,6 +178,7 @@ public:
 class ForwardingLayerMessageStruct : public PDU {
 public:
    ForwardingLayerMessageStruct();
+   ForwardingLayerMessageStruct(const ForwardingLayerMessageStruct&);
    ForwardingHeaderStruct*       mHeader;
    resip::Data                   mPayload;
    SignatureStruct*              mSig;
@@ -180,6 +191,7 @@ public:
 class MessagePayloadStruct : public PDU {
 public:
    MessagePayloadStruct();
+   MessagePayloadStruct(const MessagePayloadStruct&);
    resip::Data                   mPayload;
 
 
@@ -190,6 +202,7 @@ public:
 class ErrorResponseStruct : public PDU {
 public:
    ErrorResponseStruct();
+   ErrorResponseStruct(const ErrorResponseStruct&);
    UInt16                        mErrorCode;
    resip::Data                   mReasonPhrase;
    resip::Data                   mErrorInfo;
@@ -202,6 +215,7 @@ public:
 class JoinReqStruct : public PDU {
 public:
    JoinReqStruct();
+   JoinReqStruct(const JoinReqStruct&);
    NodeIdStruct*                 mJoiningPeerId;
    resip::Data                   mOverlaySpecificData;
 
@@ -213,6 +227,7 @@ public:
 class JoinAnsStruct : public PDU {
 public:
    JoinAnsStruct();
+   JoinAnsStruct(const JoinAnsStruct&);
    resip::Data                   mOverlaySpecificData;
 
 
@@ -223,6 +238,7 @@ public:
 class LeaveReqStruct : public PDU {
 public:
    LeaveReqStruct();
+   LeaveReqStruct(const LeaveReqStruct&);
    NodeIdStruct*                 mLeavingPeerId;
    resip::Data                   mOverlaySpecificData;
 
@@ -234,6 +250,7 @@ public:
 class RouteQueryReqStruct : public PDU {
 public:
    RouteQueryReqStruct();
+   RouteQueryReqStruct(const RouteQueryReqStruct&);
    Boolean                       mSendUpdate;
    DestinationStruct*            mDestination;
    resip::Data                   mOverlaySpecificData;
@@ -251,6 +268,7 @@ typedef enum {
 class FramedMessageStruct : public PDU {
 public:
    FramedMessageStruct();
+   FramedMessageStruct(const FramedMessageStruct&);
    FramedMessageType             mType;
    struct mData_ {
         UInt32                        mSequence;
@@ -269,6 +287,7 @@ public:
 class IceCandidateStruct : public PDU {
 public:
    IceCandidateStruct();
+   IceCandidateStruct(const IceCandidateStruct&);
    resip::Data                   mCandidate;
 
 
@@ -279,6 +298,7 @@ public:
 class ConnectReqAnsStruct : public PDU {
 public:
    ConnectReqAnsStruct();
+   ConnectReqAnsStruct(const ConnectReqAnsStruct&);
    resip::Data                   mUfrag;
    resip::Data                   mPassword;
    UInt16                        mApplication;
@@ -298,6 +318,7 @@ typedef enum {
 class PingReqStruct : public PDU {
 public:
    PingReqStruct();
+   PingReqStruct(const PingReqStruct&);
    std::vector<UInt8>            mRequestedInfo;
 
 
@@ -308,6 +329,7 @@ public:
 class PingInformationStruct : public PDU {
 public:
    PingInformationStruct();
+   PingInformationStruct(const PingInformationStruct&);
    PingInformationType           mType;
    struct mResponsibleSet_ {
         UInt32                        mResponsiblePpb;
@@ -324,6 +346,7 @@ public:
 class PingAnsStruct : public PDU {
 public:
    PingAnsStruct();
+   PingAnsStruct(const PingAnsStruct&);
    UInt64                        mResponseId;
    std::vector<PingInformationStruct*>  mPingInfo;
 
@@ -335,6 +358,7 @@ public:
 class TunnelReqStruct : public PDU {
 public:
    TunnelReqStruct();
+   TunnelReqStruct(const TunnelReqStruct&);
    UInt16                        mApplication;
    resip::Data                   mDialogId;
    resip::Data                   mApplicationPdu;
@@ -354,6 +378,7 @@ typedef enum {
 class DataValueStruct : public PDU {
 public:
    DataValueStruct();
+   DataValueStruct(const DataValueStruct&);
    Boolean                       mExists;
    resip::Data                   mValue;
 
@@ -365,6 +390,7 @@ public:
 class ArrayEntryStruct : public PDU {
 public:
    ArrayEntryStruct();
+   ArrayEntryStruct(const ArrayEntryStruct&);
    UInt32                        mIndex;
    DataValueStruct*              mValue;
 
@@ -376,6 +402,7 @@ public:
 class DictionaryKeyStruct : public PDU {
 public:
    DictionaryKeyStruct();
+   DictionaryKeyStruct(const DictionaryKeyStruct&);
    resip::Data                   mKey;
 
 
@@ -386,6 +413,7 @@ public:
 class DictionaryEntryStruct : public PDU {
 public:
    DictionaryEntryStruct();
+   DictionaryEntryStruct(const DictionaryEntryStruct&);
    DictionaryKeyStruct*          mKey;
    DataValueStruct*              mValue;
 
@@ -397,6 +425,7 @@ public:
 class StoredDataValueStruct : public PDU {
 public:
    StoredDataValueStruct();
+   StoredDataValueStruct(const StoredDataValueStruct&);
    DataModel                     mModel;
    struct mSingleValue_ {
         DataValueStruct*              mSingleValueEntry;
@@ -416,6 +445,7 @@ public:
 class StoredDataStruct : public PDU {
 public:
    StoredDataStruct();
+   StoredDataStruct(const StoredDataStruct&);
    UInt64                        mStorageTime;
    UInt32                        mLifetime;
    StoredDataValueStruct*        mValue;
@@ -429,6 +459,7 @@ public:
 class StoreKindDataStruct : public PDU {
 public:
    StoreKindDataStruct();
+   StoreKindDataStruct(const StoreKindDataStruct&);
    UInt32                        mKind;
    DataModel                     mDataModel;
    UInt64                        mGenerationCounter;
@@ -442,6 +473,7 @@ public:
 class StoreReqStruct : public PDU {
 public:
    StoreReqStruct();
+   StoreReqStruct(const StoreReqStruct&);
    ResourceIdStruct*             mResource;
    UInt8                         mReplicaNumber;
    std::vector<StoreKindDataStruct*>  mKindData;
@@ -454,6 +486,7 @@ public:
 class StoreKindResponseStruct : public PDU {
 public:
    StoreKindResponseStruct();
+   StoreKindResponseStruct(const StoreKindResponseStruct&);
    UInt32                        mKind;
    UInt64                        mGenerationCounter;
    std::vector<NodeIdStruct*>    mReplicas;
@@ -466,6 +499,7 @@ public:
 class StoreAnsStruct : public PDU {
 public:
    StoreAnsStruct();
+   StoreAnsStruct(const StoreAnsStruct&);
    std::vector<StoreKindResponseStruct*>  mKindResponses;
 
 
@@ -476,6 +510,7 @@ public:
 class ArrayRangeStruct : public PDU {
 public:
    ArrayRangeStruct();
+   ArrayRangeStruct(const ArrayRangeStruct&);
    UInt32                        mFirst;
    UInt32                        mLast;
 
@@ -487,6 +522,7 @@ public:
 class StoredDataSpecifierStruct : public PDU {
 public:
    StoredDataSpecifierStruct();
+   StoredDataSpecifierStruct(const StoredDataSpecifierStruct&);
    UInt32                        mKind;
    DataModel                     mModel;
    UInt64                        mGeneration;
@@ -507,6 +543,7 @@ public:
 class FetchReqStruct : public PDU {
 public:
    FetchReqStruct();
+   FetchReqStruct(const FetchReqStruct&);
    ResourceIdStruct*             mResource;
    std::vector<StoredDataSpecifierStruct*>  mSpecifiers;
 
@@ -518,6 +555,7 @@ public:
 class FetchKindResponseStruct : public PDU {
 public:
    FetchKindResponseStruct();
+   FetchKindResponseStruct(const FetchKindResponseStruct&);
    UInt32                        mKind;
    UInt64                        mGeneration;
    std::vector<StoredDataStruct*>  mValues;
@@ -530,6 +568,7 @@ public:
 class FetchAnsStruct : public PDU {
 public:
    FetchAnsStruct();
+   FetchAnsStruct(const FetchAnsStruct&);
    std::vector<FetchKindResponseStruct*>  mKindResponses;
 
 
@@ -540,6 +579,7 @@ public:
 class RemoveReqStruct : public PDU {
 public:
    RemoveReqStruct();
+   RemoveReqStruct(const RemoveReqStruct&);
    ResourceIdStruct*             mResource;
    std::vector<StoredDataSpecifierStruct*>  mSpecifiers;
 
@@ -551,6 +591,7 @@ public:
 class RemoveAnsStruct : public PDU {
 public:
    RemoveAnsStruct();
+   RemoveAnsStruct(const RemoveAnsStruct&);
    std::vector<StoreKindResponseStruct*>  mKindResponses;
 
 
@@ -561,6 +602,7 @@ public:
 class FindReqStruct : public PDU {
 public:
    FindReqStruct();
+   FindReqStruct(const FindReqStruct&);
    ResourceIdStruct*             mResource;
    std::vector<UInt32>           mKinds;
 
@@ -572,6 +614,7 @@ public:
 class FindKindDataStruct : public PDU {
 public:
    FindKindDataStruct();
+   FindKindDataStruct(const FindKindDataStruct&);
    UInt32                        mKind;
    ResourceIdStruct*             mClosest;
 
@@ -583,6 +626,7 @@ public:
 class FindAnsStruct : public PDU {
 public:
    FindAnsStruct();
+   FindAnsStruct(const FindAnsStruct&);
    std::vector<FindKindDataStruct*>  mResults;
 
 
@@ -593,6 +637,7 @@ public:
 class TurnServerStruct : public PDU {
 public:
    TurnServerStruct();
+   TurnServerStruct(const TurnServerStruct&);
    UInt8                         mIteration;
    IpAddressAndPortStruct*       mServerAddress;
 
@@ -609,6 +654,7 @@ typedef enum {
 class SipRegistrationStruct : public PDU {
 public:
    SipRegistrationStruct();
+   SipRegistrationStruct(const SipRegistrationStruct&);
    SipRegistrationType           mType;
    struct mSipRegistrationUri_ {
         resip::Data                   mUri;
@@ -633,6 +679,7 @@ typedef enum {
 class ChordUpdateStruct : public PDU {
 public:
    ChordUpdateStruct();
+   ChordUpdateStruct(const ChordUpdateStruct&);
    ChordUpdateType               mType;
    struct mPeerReady_ {
    } mPeerReady;
@@ -654,6 +701,7 @@ public:
 class ChordRouteQueryAnsStruct : public PDU {
 public:
    ChordRouteQueryAnsStruct();
+   ChordRouteQueryAnsStruct(const ChordRouteQueryAnsStruct&);
    NodeIdStruct*                 mNextId;
 
 
