@@ -2,6 +2,7 @@
 #define P2P_UPDATE_HXX
 
 #include "p2p/Message.hxx"
+#include "p2p/EventWrapper.hxx"
 
 namespace p2p
 {
@@ -10,22 +11,34 @@ class UpdateReq;
 
 class UpdateAns : public Message
 {
-public:
-	virtual MessageType getType() const { return Message::UpdateAnsType; }
-	UpdateAns(p2p::UpdateReq *request);
-    virtual void getEncodedPayload(resip::DataStream &data) const;
+   public:
+      virtual MessageType getType() const { return Message::UpdateAnsType; }
+      UpdateAns(p2p::UpdateReq *request);
+      virtual void getEncodedPayload(resip::DataStream &data) const;
+
+      std::auto_ptr<Event> event()
+      {
+         return wrap(this);
+      }
+
 };
 
 
 class UpdateReq : public Message
 {
-public:
-	UpdateReq(resip::Data overlaySpecificBlob);
-	virtual MessageType getType() const { return Message::UpdateReqType; }
+   public:
+      UpdateReq(resip::Data overlaySpecificBlob);
+      virtual MessageType getType() const { return Message::UpdateReqType; }
 
-    virtual void getEncodedPayload(resip::DataStream &data) const;
-protected:
-	resip::Data mOverlaySpecific;
+      virtual void getEncodedPayload(resip::DataStream &data) const;
+
+      std::auto_ptr<Event> event()
+      {
+         return wrap(this);
+      }
+
+   protected:
+      resip::Data mOverlaySpecific;
 };
 
 }

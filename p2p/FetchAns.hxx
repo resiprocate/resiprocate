@@ -16,6 +16,12 @@ class FetchAns : public Message
 
       AbstractValues& values();
       const AbstractValues& values() const;
+
+      std::auto_ptr<Event> event()
+      {
+         return wrap(this);
+      }
+
    private:
       AbstractValues mValues;
 };
