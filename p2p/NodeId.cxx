@@ -3,8 +3,7 @@
 #include "rutil/Data.hxx"
 #include "p2p/NodeId.hxx"
 
-namespace p2p
-{
+using namespace p2p;
 
 NodeId::NodeId(const resip::Data& data) 
 {
@@ -48,7 +47,49 @@ NodeId::getValue() const
    return result;
 }
 
+NodeId
+DestinationId::asNodeId() const
+{
+   NodeId id;
+   assert(0);
+   return id;
 }
+
+bool
+DestinationId::isCompressed()const
+{
+   assert(0);
+   return true;
+}
+
+bool
+DestinationId::isDestinationId()const
+{
+   assert(0);
+   return true;
+}
+
+bool
+DestinationId::isNodeId()const
+{
+   assert(0);
+   return true;
+}
+
+bool
+DestinationId::isResourceId()const
+{
+   assert(0);
+   return true;
+}
+
+bool
+DestinationId::operator==(const NodeId& nid) const
+{
+   assert(0);
+   return true;
+}
+
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

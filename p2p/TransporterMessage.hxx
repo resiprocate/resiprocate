@@ -29,32 +29,42 @@ class Candidate;
 class ConnectionOpened : public Event
 {
    public:
-      ConnectionOpened(
-                       FlowId flowId,
+      ConnectionOpened(FlowId flowId,
                        unsigned short application,
                        resip::TransportType transportType,
-                       X509 *cert
-                       ) {}
+                       X509 *cert);
       ~ConnectionOpened();
       
       virtual void dispatch(EventConsumer& consumer);
          
-      FlowId getFlowId();
-      unsigned short getApplication();
-      NodeId getNodeId() { return getFlowId().getNodeId(); }
-      resip::TransportType getTransportType();
-      X509 *getCertificate();
+      FlowId getFlowId() const;
+      unsigned short getApplication() const;
+      NodeId getNodeId() const;
+      resip::TransportType getTransportType() const;
+      X509 *getCertificate() const;
+
+   private:
+      FlowId mFlowId;
+      unsigned short mApplication;
+      resip::TransportType mTransportType;
+      X509* mCert;
 };
 
 class ConnectionClosed : public Event
 {
    public:
+      ConnectionClosed(FlowId flowId, 
+                       unsigned short application);
       ~ConnectionClosed();
-      NodeId getNodeId();
-      unsigned short getApplicationId();
+
+      NodeId getNodeId() const;
+      unsigned short getApplicationId() const;
       virtual void dispatch(EventConsumer& consumer);
 
    protected:
+      FlowId mFlowId;
+      unsigned short mApplication;
+      
 };
 
 class MessageArrived : public Event

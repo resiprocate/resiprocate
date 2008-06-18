@@ -2,6 +2,20 @@
 #include "p2p/EventConsumer.hxx"
 
 using namespace p2p;
+ConnectionOpened::ConnectionOpened(FlowId flowId,
+                                   unsigned short application,
+                                   resip::TransportType transportType,
+                                   X509 *cert) : 
+   mFlowId(flowId),
+   mApplication(application),
+   mTransportType(transportType),
+   mCert(cert)
+{
+}
+
+ConnectionOpened::~ConnectionOpened()
+{
+}
 
 void
 ConnectionOpened::dispatch(EventConsumer& consumer)
@@ -9,8 +23,52 @@ ConnectionOpened::dispatch(EventConsumer& consumer)
    consumer.consume(*this);
 }
 
-ConnectionOpened::~ConnectionOpened()
+FlowId 
+ConnectionOpened::getFlowId() const
 {
+   return mFlowId;
+}
+
+unsigned short
+ConnectionOpened::getApplication() const
+{
+   return mApplication;
+}
+
+NodeId
+ConnectionOpened::getNodeId() const
+{
+   return mFlowId.getNodeId();
+}
+
+resip::TransportType
+ConnectionOpened::getTransportType() const
+{
+   return mTransportType;
+}
+
+X509*
+ConnectionOpened::getCertificate() const
+{
+   return mCert;
+}
+
+ConnectionClosed::ConnectionClosed(FlowId flowId, unsigned short appId) : 
+   mFlowId(flowId),
+   mApplication(appId)
+{
+}
+
+NodeId
+ConnectionClosed::getNodeId() const
+{
+   return mFlowId.getNodeId();
+}
+
+unsigned short
+ConnectionClosed::getApplicationId() const
+{
+   return mApplication;
 }
 
 void
