@@ -8,6 +8,7 @@ using namespace p2p;
 
 NodeId::NodeId() 
 {
+   assert( sizeof(mNodeId.mHigh) == 8 );
 }
 
 NodeId::NodeId(const s2c::NodeIdStruct& nid) : mNodeId(nid)
@@ -55,7 +56,9 @@ NodeId::add2Pow( int power ) const
       power -= 64;
       if (power>0) 
       {
-         ret.mNodeId.mHigh += 1<<(power-1);
+         long long inc = 1;
+         inc <<= (power-1);
+         ret.mNodeId.mHigh += inc;
       }
    }
    else
@@ -63,7 +66,9 @@ NodeId::add2Pow( int power ) const
       // working on low word
        if (power>0) 
       {
-         ret.mNodeId.mLow += 1<<(power-1);
+         long long inc = 1;
+         inc <<= (power-1);
+         ret.mNodeId.mLow += inc;
       }
    }
    
