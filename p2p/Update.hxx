@@ -11,9 +11,8 @@ class UpdateReq;
 class UpdateAns : public Message
 {
 public:
+	virtual MessageType getType() const { return Message::UpdateAnsType; }
 	UpdateAns(p2p::UpdateReq *request);
-
-	virtual MessageType getMessageType() const { return Message::UpdateAnsType; }
     virtual void getEncodedPayload(resip::DataStream &data) const;
 };
 
@@ -22,7 +21,7 @@ class UpdateReq : public Message
 {
 public:
 	UpdateReq(resip::Data overlaySpecificBlob);
-	virtual MessageType getMessageType() const { return Message::UpdateReqType; }
+	virtual MessageType getType() const { return Message::UpdateReqType; }
 
     virtual void getEncodedPayload(resip::DataStream &data) const;
 protected:

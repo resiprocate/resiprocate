@@ -74,7 +74,7 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
          
 	  bool isRequest() const;  // convenience function
 
-      virtual MessageType getMessageType() const = 0;
+      virtual MessageType getType() const = 0;
 
       // copies via list to dest. list in reverse order
       virtual Message *makeErrorResponse(Error::Code code, 
@@ -102,10 +102,12 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
       DestinationId nextDestination() const;
       void popNextDestinationId(); 
 
-      Event* event() 
+      virtual std::auto_ptr<Event> event();
+      
+      virtual resip::Data brief() const 
       {
          assert(0);
-         return 0;
+         return resip::Data::Empty;
       }
       
 protected:
@@ -129,7 +131,7 @@ class MessageContents
 class ErrorResponse : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return FailureResponseType; }
+      virtual MessageType getType() const { return FailureResponseType; }
       
       Error::Code getErrorCode() const;
       const resip::Data& getReasonPhrase() const;
@@ -141,53 +143,53 @@ class ErrorResponse : public Message
 class RouteQueryAnsMessage : public Message
 {
 public:
-	virtual MessageType getMessageType() const { return RouteQueryAnsType; }
+	virtual MessageType getType() const { return RouteQueryAnsType; }
 };
 
 class RouteQueryReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return RouteQueryReqType; }
+      virtual MessageType getType() const { return RouteQueryReqType; }
 };
 
 class RemoveAnsMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return RemoveAnsType; }
+      virtual MessageType getType() const { return RemoveAnsType; }
 };
 
 
 class RemoveReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return RemoveReqType; }
+      virtual MessageType getType() const { return RemoveReqType; }
 };
 
 
 class TunnelAnsMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return TunnelAnsType; }
+      virtual MessageType getType() const { return TunnelAnsType; }
 };
 
 
 class TunnelReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return TunnelReqType; }
+      virtual MessageType getType() const { return TunnelReqType; }
 };
 
 class PingAnsMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return PingAnsType; }
+      virtual MessageType getType() const { return PingAnsType; }
 };
 
 
 class PingReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return PingReqType; }
+      virtual MessageType getType() const { return PingReqType; }
 };
 
 class ResourceMessage : public Message

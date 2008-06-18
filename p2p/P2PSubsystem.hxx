@@ -1,8 +1,9 @@
-#if !defined(P2P_SUBSYSTEM_HXX)
+#ifndef P2P_SUBSYSTEM_HXX
 #define P2P_SUBSYSTEM_HXX 
 
 #include <iostream>
-#include <rutil/Subsystem.hxx>
+#include "rutil/Subsystem.hxx"
+#include "rutil/Logger.hxx"
 
 class P2PSubsystem : public resip::Subsystem
 {

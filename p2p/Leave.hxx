@@ -13,7 +13,7 @@ class LeaveAns: public Message
    public:
 	LeaveAns(p2p::LeaveReq *request);
 
-	virtual MessageType getMessageType() const { return Message::LeaveAnsType; }
+	virtual MessageType getType() const { return Message::LeaveAnsType; }
     virtual void getEncodedPayload(resip::DataStream &data) const;
 };
 
@@ -23,7 +23,7 @@ class LeaveReq : public Message
    public:
    	LeaveReq(NodeId node);
 
-	virtual MessageType getMessageType() const { return Message::LeaveReqType; }
+	virtual MessageType getType() const { return Message::LeaveReqType; }
     virtual void getEncodedPayload(resip::DataStream &data) const;
 protected:
 	NodeId mNode;
