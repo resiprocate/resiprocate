@@ -30,7 +30,7 @@ class JoinAns;
 class UpdateAns;
 class LeaveAns;
 
-class Message : public Signable, private s2c::ForwardingHdrStruct
+class Message : public Signable, private s2c::ForwardingLayerMessageStruct
 {
    public:
       // Used to make a request. Will populate the rid into the destination list.  
