@@ -16,13 +16,11 @@ namespace p2p
 
 class TransactionLayer;
 
-
-
 /// This is an abstract base class from which to derive the actually topology plugins
-class Chord : public TopologyAPI
+class ChordTopology : public TopologyAPI
 {
    public:
-      Chord(Profile& config, TransactionLayer& transactionProcessor );
+      ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter);
       
       virtual void joinOverlay( resip::GenericIPAddress& bootstrapNode );
       
@@ -58,7 +56,7 @@ class Chord : public TopologyAPI
       // Function to hash resource names into resourceID 
       virtual ResourceId resourceId( resip::Data& resourceName );
         
-      virtual ~Chord();
+      virtual ~ChordTopology();
       
    private:
       
