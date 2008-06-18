@@ -3,20 +3,27 @@
 #include "p2p/Update.hxx"
 #include "p2p/Leave.hxx"
 
+#include "rutil/SHA1Stream.hxx"
+
 #include <assert.h>
 
 using namespace p2p;
 
-Message::Message(ResourceId rid, const resip::Data& overlayName) :
-	mResourceId(rid),
-	mOverlayName(overlayName)
+Message::Message(ResourceId rid) :
+	mResourceId(rid)
 {
-
+	mVersion = 0x1; // set by the draft
 }
 
 Message::~Message() 
 {
 
+}
+
+void
+Message::setOverlayName(const resip::Data &overlayName)
+{
+	mOverlayName = overlayName;
 }
 
 Message *
@@ -60,6 +67,21 @@ Message::parse(const resip::Data &message, NodeId senderID)
 	return newMessage;
 }
 
+void 
+Message::copyForwardingData(const Message &header)
+{
+	mOverlay = header.mOverlay;
+	mTransactionId = header.mTransactionId;
+}
+
+
+void 
+Message::decrementTTL()
+{
+	assert(mTtl);
+	mTtl--;
+}
+
 UInt8 
 Message::getTTL() const
 {
@@ -87,32 +109,66 @@ Message::getFlags() const
 JoinAns *
 Message::makeJoinResponse(const resip::Data &overlaySpecific)
 {
-	p2p::JoinAns *response = new p2p::JoinAns(overlaySpecific);
+	assert(getMessageType() == JoinReqType);
+
+	JoinReq *req = static_cast<JoinReq *>(this);
+	JoinAns *response = new JoinAns(req, overlaySpecific);
+
 	return response;
 }
 
 LeaveAns *
 Message::makeLeaveResponse() 
 {
-	return new p2p::LeaveAns();
+	assert(getMessageType() == LeaveReqType);
+
+	LeaveReq *req = static_cast<LeaveReq *>(this);
+	return new LeaveAns(req);
 }
 
 UpdateAns *
 Message::makeUpdateResponse()
 {
-	p2p::UpdateAns *response = new p2p::UpdateAns;
+	assert(getMessageType() == UpdateReqType);
+
+	UpdateReq *req = static_cast<UpdateReq *>(this);
+	UpdateAns *response = new UpdateAns(req);
 	return response;
 }
 
 resip::Data
-Message::encode() const
+Message::encodePayload()
 {
+	assert(mOverlayName.size());	// user needs to call setOverlayName
+	
+	// create the overlay field from the overlay name
+	resip::SHA1Stream stream;
+	stream << mOverlayName;
+	resip::Data sha1 = stream.getBin(32);
+	mOverlay = ntohl(*reinterpret_cast<const UInt32 *>(sha1.c_str()));
+
+	mMessageCode = static_cast<UInt16>(getMessageType());
+
 	resip::Data encodedData;
+	resip::DataStream encodedStream(encodedData);
 
 	// encode forwarding header
+	encode(encodedStream);
 
-	// ask message type to encode it's payload
-	getPayload(encodedData);
+	encodedStream.flush();
+	size_t startOfPayload = encodedData.size();
+
+	// encode specific message payload
+	getEncodedPayload(encodedStream);
+
+	encodedStream.flush();
+	size_t endOfPayload = encodedData.size();
+
+	// compute signature block
+    std::vector<resip::Data> sigChunks;
+	sigChunks.push_back(resip::Data(resip::Data::Borrow, encodedData.data() + 4, 4));	// overlay
+	sigChunks.push_back(resip::Data(resip::Data::Borrow, encodedData.data() + 16, 8));	// transaction id
+	sigChunks.push_back(resip::Data(resip::Data::Borrow, encodedData.data() + startOfPayload, endOfPayload - startOfPayload));	// transaction id
 
 	// we should optimize this eventually to avoid this copy
 	return encodedData;

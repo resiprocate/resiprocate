@@ -6,11 +6,15 @@
 namespace p2p
 {
 
+class UpdateReq;
+
 class UpdateAns : public Message
 {
 public:
+	UpdateAns(p2p::UpdateReq *request);
+
 	virtual MessageType getMessageType() const { return Message::UpdateAnsType; }
-    virtual void getPayload(resip::Data &data) const;
+    virtual void getEncodedPayload(resip::DataStream &data) const;
 };
 
 
@@ -20,7 +24,7 @@ public:
 	UpdateReq(resip::Data overlaySpecificBlob);
 	virtual MessageType getMessageType() const { return Message::UpdateReqType; }
 
-    virtual void getPayload(resip::Data &data) const;
+    virtual void getEncodedPayload(resip::DataStream &data) const;
 protected:
 	resip::Data mOverlaySpecific;
 };

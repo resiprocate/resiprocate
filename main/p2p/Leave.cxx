@@ -2,14 +2,20 @@
 
 using namespace p2p;
 
+LeaveAns::LeaveAns(LeaveReq *request)
+{
+    copyForwardingData(*request);
+	assert(0);
+}
+
 void 
-LeaveAns::getPayload(resip::Data &data) const 
+LeaveAns::getEncodedPayload(resip::DataStream &data) const 
 {
 	assert(0);
 }
 
 void 
-LeaveReq::getPayload(resip::Data &data) const
+LeaveReq::getEncodedPayload(resip::DataStream &data) const
 {
 	assert(0);
 }

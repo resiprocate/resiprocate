@@ -6,13 +6,15 @@
 namespace p2p
 {
 
+class LeaveReq;
+
 class LeaveAns: public Message
 {
    public:
-	LeaveAns() {}
+	LeaveAns(p2p::LeaveReq *request);
 
 	virtual MessageType getMessageType() const { return Message::LeaveAnsType; }
-    virtual void getPayload(resip::Data &data) const;
+    virtual void getEncodedPayload(resip::DataStream &data) const;
 };
 
 
@@ -22,7 +24,7 @@ class LeaveReq : public Message
    	LeaveReq(NodeId node);
 
 	virtual MessageType getMessageType() const { return Message::LeaveReqType; }
-    virtual void getPayload(resip::Data &data) const;
+    virtual void getEncodedPayload(resip::DataStream &data) const;
 protected:
 	NodeId mNode;
 };
