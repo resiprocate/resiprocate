@@ -47,6 +47,8 @@ class SelectTransporter : public Transporter
       void sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data);
    
       void collectCandidatesImpl(NodeId nodeId, unsigned short appId);
+
+      virtual void connectImpl(resip::GenericIPAddress &);
    
       void connectImpl(NodeId nodeId, 
                        std::vector<Candidate> remoteCandidates,
