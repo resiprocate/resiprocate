@@ -1,5 +1,7 @@
+#include <algorithm>
+
+#include "rutil/Data.hxx"
 #include "p2p/NodeId.hxx"
-#include "rutil/ParseBuffer.hxx"
 
 namespace p2p
 {
@@ -11,26 +13,20 @@ NodeId::NodeId(const resip::Data& data)
 
 NodeId& NodeId::operator=(const resip::Data& data)
 {
-   resip::ParseBuffer pb(data);
-   mValue[0] = pb.uInt64();
-   pb.skipN(8);
-   mValue[1] = pb.uInt64();
-   
+   std::copy(data.begin(), data.end(), (char*)&mValue[0], (char*)&mValue[16]);
    return *this;
 }
 
 NodeId& NodeId::operator=(const NodeId& rhs)
 {
-   mValue[0] = rhs.mValue[0];
-   mValue[1] = rhs.mValue[1];
+   std::copy(rhs.mValue[0], rhs.mValue[16], mValue[0], mValue[16]);
    return *this;
 }
 
 bool 
 NodeId::operator<(const NodeId &r) const
 {
-   return ( (mValue[0] < r.mValue[0]) ||
-            ((mValue[0] == r.mValue[0]) && (mValue[1] < r.mValue[1])));
+   return memcmp(mValue, r.mValue, 16) < 0;
 }
 
 bool
@@ -42,7 +38,7 @@ NodeId::operator<=(const NodeId& rhs) const
 bool
 NodeId::operator==(const NodeId& r) const
 {
-   return mValue[0] == r.mValue[0] && mValue[1] == r.mValue[1];
+   return memcmp(mValue, r.mValue, 16) == 0;   
 }
 
 const resip::Data
