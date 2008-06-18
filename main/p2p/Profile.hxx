@@ -28,6 +28,9 @@ public:
    virtual const X509        *getCertificate() { return 0; }
    virtual const EVP_PKEY    *getPrivateKey() { return 0; }
 
+   virtual resip::Data& signatureDigest() { return mSignatureDigest; }
+   virtual const resip::Data& signatureDigest() const { return mSignatureDigest; }   
+
    virtual resip::Data& overlayName() { return mOverlayName; }
    virtual const resip::Data& overlayName() const { return mOverlayName; }
 
@@ -42,6 +45,7 @@ public:
       
 private:
    resip::Data mOverlayName;
+   resip::Data mSignatureDigest;
    NodeId      mNodeId;
    UserName    mUserName;
    std::vector<resip::GenericIPAddress> mBootstrapNodes;
