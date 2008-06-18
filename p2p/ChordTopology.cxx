@@ -19,7 +19,13 @@ ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporte
    TopologyAPI(config, dispatcher, transporter) 
 {
 }
-      
+
+   
+ChordTopology::~ChordTopology()
+{
+}
+
+
 void 
 ChordTopology::joinOverlay()
 {
@@ -84,17 +90,8 @@ void
 ChordTopology::candidatesCollected( const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
 {
    // Connect to node - send the ConnectReq
-   std::auto_ptr<Message> connectReq(new ConnectReq(resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, candidates));
-   mDispatcher.send(connectReq, *this);
-      
-// callback here 
-
-      // sent connect reqest to NNP
-
-      // send connect to bunch of fingers 
-
-      // send join to AP 
-
+   std::auto_ptr<Message> connectReq(new ConnectReq(/* TODO add NodeId here, */resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, candidates));
+   mDispatcher.send(connectReq, *this);      
 }
 
 
@@ -127,21 +124,24 @@ ChordTopology::consume(UpdateReq& msg)
       // Create our update message
       ChordUpdate ourUpdate;
       ourUpdate.setUpdateType(ChordUpdate::Neighbors);
-      // TODO set our predecessors and successors
+
+      // set our predecessors and successors
+      ourUpdate.setPredecessors(mPrevTable);
+      ourUpdate.setSuccessors(mNextTable);
 
       // if this changes the neighbor tables and if it does send updates to all
       // peers in prev/next table 
       std::vector<NodeId>::iterator it = mPrevTable.begin();
       for(; it != mPrevTable.end(); it++)
       {         
-         std::auto_ptr<Message> updateReq(new UpdateReq(ourUpdate.encode()));
+         std::auto_ptr<Message> updateReq(new UpdateReq(/* TODO pass in NodeId here, */ ourUpdate.encode()));
          mDispatcher.send(updateReq, *this);
       }
 
       it = mNextTable.begin();
       for(; it != mNextTable.end(); it++)
       {
-         std::auto_ptr<Message> updateReq(new UpdateReq(ourUpdate.encode()));
+         std::auto_ptr<Message> updateReq(new UpdateReq(/* TODO pass in NodeId here, */ ourUpdate.encode()));
          mDispatcher.send(updateReq, *this);
       }
    }
@@ -275,11 +275,6 @@ ChordTopology::resourceId( const resip::Data& resourceName )
     pb.data(result, anchor);
  
     return ResourceId(result);
-}
-
-
-ChordTopology::~ChordTopology()
-{
 }
 
 
