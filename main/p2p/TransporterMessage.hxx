@@ -66,7 +66,7 @@ class MessageArrived : public Event
 
       virtual void dispatch(EventConsumer& consumer);
 
-      NodeId getNodeId() {return mNodeId;}
+      NodeId getNodeId() const {return mNodeId;}
       std::auto_ptr<p2p::Message> getMessage() { return mMessage; }
 
    protected:
@@ -103,8 +103,8 @@ class LocalCandidatesCollected : public Event
 
       virtual void dispatch(EventConsumer& consumer);
 
-      NodeId& getNodeId() { return mNodeId; }
-      unsigned short getAppId() { return mAppId; }
+      const NodeId& getNodeId() const { return mNodeId; }
+      unsigned short getAppId() const { return mAppId; }
       std::vector<Candidate>& getCandidates() { return mCandidates; }
 
    protected:

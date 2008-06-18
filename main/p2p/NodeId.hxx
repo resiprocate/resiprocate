@@ -41,6 +41,15 @@ class CompressedId
 // Either a CompressedId, NodeId or ResourceId
 class DestinationId
 {
+   public:
+      NodeId asNodeId() const;
+      
+      bool isCompressed() const;
+      bool isDestinationId() const;
+      bool isNodeId() const;
+      bool isResourceId() const;
+
+      bool operator==(const NodeId& nid) const;
 };
 
 }

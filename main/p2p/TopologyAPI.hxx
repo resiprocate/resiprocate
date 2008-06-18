@@ -36,9 +36,9 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       // need a fifo to receive timer events 
 
       // Messages that the forwarding layer sends to this object
-      virtual void newConnectionFormed( NodeId& node )=0;
-      virtual void connectionLost( NodeId& node )=0;
-      virtual void candidatesCollected( NodeId& node, unsigned short appId, std::vector<Candidate>& candidates )=0;
+      virtual void newConnectionFormed( const NodeId& node )=0;
+      virtual void connectionLost( const NodeId& node )=0;
+      virtual void candidatesCollected( const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates )=0;
        
       // deal with topology change messages 
       virtual void consume(JoinReq& event)=0;
@@ -46,6 +46,7 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       virtual void consume(LeaveReq& event)=0;
       
       // Deal with routing querries 
+      virtual const NodeId& findNextHop( DestinationId& did) = 0;
       virtual const NodeId& findNextHop( NodeId& node )=0;
       virtual const NodeId& findNextHop( ResourceId& resource )=0;
       
@@ -54,14 +55,15 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       ///    Returns list of nodes to replicate on
 
       // Functions to find out if this peer is responsible for something
-      virtual bool isResponsible( NodeId& node )=0;
-      virtual bool isResponsible( ResourceId& resource )=0;
+      virtual bool isResponsible( const DestinationId& did) const=0;
+      virtual bool isResponsible( const NodeId& node ) const=0;
+      virtual bool isResponsible( const ResourceId& resource ) const=0;
 
       // Function to determine if we are connected to a node
-      virtual bool isConnected( NodeId& node )=0;
+      virtual bool isConnected( const NodeId& node ) const=0;
 
       // Function to hash resource names into resourceID 
-      virtual ResourceId resourceId( resip::Data& resourceName )=0;
+      virtual ResourceId resourceId( const resip::Data& resourceName )=0;
 
    protected:
       Profile&     mProfile;

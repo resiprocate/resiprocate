@@ -1,4 +1,6 @@
 #include "p2p/ForwardingLayer.hxx"
+#include "p2p/Dispatcher.hxx"
+
 namespace p2p
 {
 
@@ -14,41 +16,94 @@ ForwardingLayer::process(int ms)
 
 
 void 
-ForwardingLayer::forward( Message& m )
+ForwardingLayer::forward( std::auto_ptr<Message> m )
 {
    // get the destination node from m 
-
-   // call mTopology and see if I am resoponsible 
-
-   // send up or down based on whos responsible
+  redo:
+   DestinationId did = m->nextDestination();
+   if (did.isCompressed())
+   {
+      assert(0);
+   }
+   else if (mTopology.isResponsible(did))
+   {
+      if (did.isNodeId())
+      {
+         if (did == mProfile.nodeId()) // this is me
+         {
+            m->popNextDestinationId();
+            if (m->isDestinationListEmpty())
+            {
+               goto redo;
+            }
+            else
+            {
+               mDispatcher.post(m);
+            }
+         }
+         else // not me
+         {
+            if (mTopology.isConnected(did.asNodeId()))
+            {
+               mTransporter.send(did.asNodeId(), m); 
+            }
+            else
+            {
+               // drop on the floor
+            }
+         }
+      }
+      else // resourceID
+      {
+         assert (did.isResourceId());
+         m->popNextDestinationId();
+         if (m->isDestinationListEmpty())
+         {
+            mDispatcher.post(m);            
+         }
+         else
+         {
+            // drop on the floor
+         }
+      }
+   }
+   else // not responsible and not compressed
+   {
+      mTransporter.send(mTopology.findNextHop(did), m);
+   }
 }
 
 
 void 
 ForwardingLayer::consume(ConnectionOpened& m)
 {
+   mTopology.newConnectionFormed(m.getNodeId());
 }
 
 void 
 ForwardingLayer::consume(ConnectionClosed& m)
 {
+   mTopology.connectionLost(m.getNodeId());   
 }
 
 void 
 ForwardingLayer::consume(MessageArrived& m)
 {
+   forward(m.getMessage());
 }
 
 void 
 ForwardingLayer::consume(ApplicationMessageArrived& m)
 {
+   // do nothing for now
 }
 
 void 
 ForwardingLayer::consume(LocalCandidatesCollected& m)
 {
+   // pass to the TopologyAPI
+   // mTopology.candidatesCollected();
 }
-
 
 
 }
