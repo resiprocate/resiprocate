@@ -3,15 +3,68 @@
 
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/TransportType.hxx"
+#include "rutil/DnsUtil.hxx"
+#include "rutil/ParseBuffer.hxx"
 
 namespace p2p
 {
 
+//candidate:1 1 UDP 2130706431 10.0.1.1 8998 typ host
+
 class Candidate
 {
    public:
-      Candidate(resip::TransportType type, resip::GenericIPAddress& address) : 
-         mTransportType(type), mAddress(address) {}
+
+      Candidate(resip::TransportType type, resip::GenericIPAddress& address)
+        : mTransportType(type), mAddress(address)
+      {
+         resip::Data tmp;
+         {
+            resip::DataStream ds(tmp);
+
+            ds << "candidate:1 1 " 
+               << resip::getTransportNameFromType(type) << " "
+               << rand() << " "
+               << resip::DnsUtil::inet_ntop(address.v4Address.sin_addr) << " "
+               << address.v4Address.sin_port << " typ host";
+         }
+         mValue = tmp;
+      }
+
+      Candidate(const resip::Data &iceline)
+      {
+         resip::Data transport;
+         resip::Data ip;
+         resip::Data port;
+         const char *anchor;
+
+         resip::ParseBuffer pb(iceline);
+
+         pb.skipToChar(' ');
+         pb.skipToChar(' ');
+
+         anchor = pb.skipChar(' ');
+         pb.skipToChar(' ');
+         pb.data(transport, anchor);
+
+         pb.skipToChar(' ');
+         anchor = pb.skipChar(' ');
+         pb.skipToChar(' ');
+         pb.data(ip, anchor);
+
+         anchor = pb.skipChar(' ');
+         pb.skipToChar(' ');
+         pb.data(port, anchor);
+
+         mTransportType = resip::getTransportTypeFromName(transport.c_str());
+
+         mAddress.v4Address.sin_family = AF_INET;
+         mAddress.v4Address.sin_port = port.convertInt();
+         memset(mAddress.v4Address.sin_zero, 0,
+                sizeof(mAddress.v4Address.sin_zero)) ;
+
+         resip::DnsUtil::inet_pton(ip, mAddress.v4Address.sin_addr);
+      }
 
       const resip::TransportType    &getTransportType() const 
          { return mTransportType; }
@@ -20,6 +73,7 @@ class Candidate
          { return mAddress; }
 
    private:
+      resip::Data mValue;
       resip::TransportType    mTransportType;
       resip::GenericIPAddress mAddress;
       // TODO add ice specific members
