@@ -44,7 +44,13 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       virtual void consume(JoinReq& event)=0;
       virtual void consume(UpdateReq& event)=0;
       virtual void consume(LeaveReq& event)=0;
-      
+
+      // deal with responses
+      virtual void consume(ConnectAns& msg)=0;
+      virtual void consume(JoinAns& msg)=0;
+      virtual void consume(UpdateAns& msg)=0;
+      virtual void consume(LeaveAns& msg)=0;
+
       // Deal with routing querries 
       virtual const NodeId& findNextHop( const DestinationId& did) = 0;
       virtual const NodeId& findNextHop( const NodeId& node )=0;
