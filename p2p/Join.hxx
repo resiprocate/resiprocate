@@ -6,18 +6,19 @@
 namespace p2p 
 {
 
+class JoinReq;
+
 class JoinAns : public Message
 {
 public:
-    JoinAns(const resip::Data &overlaySpecific);
+    JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific);
     virtual MessageType getMessageType() const { return Message::JoinAnsType; }
 
-	virtual void getPayload(resip::Data &data) const;
+	virtual void getEncodedPayload(resip::DataStream &data) const;
 
 protected:
     resip::Data mOverlaySpecific;
 };
-
 
 class JoinReq : public Message
 {
@@ -27,12 +28,13 @@ public:
       virtual MessageType getMessageType() const { return Message::JoinReqType; }
       NodeId getNodeID() const { return mNodeID; }
 
-	  virtual void getPayload(resip::Data &data) const;
+	  virtual void getEncodedPayload(resip::DataStream &data) const;
 
 protected:
       NodeId mNodeID;
       resip::Data mOverlaySpecific;
 };
+
 
 }
 
