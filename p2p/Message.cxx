@@ -87,6 +87,7 @@ Message::getRequestMessageBody() const
 	return mRequestMessageBody;
 }
 
+bool
 Message::isRequest() const
 {
 	unsigned int reqValue = static_cast<unsigned int>(getType());
@@ -148,7 +149,20 @@ Message::parse(const resip::Data &message)
 			assert(0); // unknown value
 	}
 
-	newMessage->decodePayload(stream);
+	// let's decode the payload
+	MessagePayloadStruct payloadStruct;
+	payloadStruct.decode(stream);
+	mRequestMessageBody = payloadStruct.mPayload;
+
+	resip::DataStream payloadStream(mRequestMessageBody);
+
+	// get the signature
+	SignatureStruct signature;
+	signature.decode(stream);
+
+	// todo: verify the signature here
+
+	newMessage->decodePayload(payloadStream);
 	
 	return newMessage;
 }
