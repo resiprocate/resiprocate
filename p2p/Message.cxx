@@ -20,7 +20,7 @@ Message::~Message()
 }
 
 Message *
-Message::makeErrorResponse(ErrorResponseCode code, const resip::Data& reason) const
+Message::makeErrorResponse(Message::Error::Code code, const resip::Data& reason) const
 {
 	assert(0);
 	return 0;

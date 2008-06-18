@@ -15,16 +15,6 @@ class MessageContents;
 class ErrorResponse;
 class Event;
 
-enum ErrorResponseCode
-{
-   EMovedTemporarily = 302,
-   EUnauthorized = 401,
-   EForbidden = 403,
-   ENotFound = 404,
-   ERequestTimeout = 408,
-   EPreconditionFailed = 412,
-   EIncompatibleWithOverlay = 498
-};
 
 class JoinAns;
 class UpdateAns;
@@ -37,7 +27,7 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
       Message(ResourceId rid, const resip::Data& overlayName);
       
       virtual ~Message() = 0;
-
+      
       enum MessageType
       {
          PingReqType = 1,
@@ -66,12 +56,26 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
          FailureResponseType = 0xFFFF
       };
 
+      struct Error 
+      {
+            enum Code
+            {
+               MovedTemporarily = 302,
+               Unauthorized = 401,
+               Forbidden = 403,
+               NotFound = 404,
+               RequestTimeout = 408,
+               PreconditionFailed = 412,
+               IncompatibleWithOverlay = 498
+            };
+      };
+         
 	  bool isRequest() const;  // convenience function
 
       virtual MessageType getMessageType() const = 0;
 
       // copies via list to dest. list in reverse order
-      virtual Message *makeErrorResponse(ErrorResponseCode code, 
+      virtual Message *makeErrorResponse(Error::Code code, 
                                          const resip::Data& reason) const;
 
 	  JoinAns* makeJoinResponse(const resip::Data &overlaySpecific);
@@ -123,7 +127,7 @@ class ErrorResponse : public Message
    public:
       virtual MessageType getMessageType() const { return FailureResponseType; }
       
-      ErrorResponseCode getErrorCode() const;
+      Error::Code getErrorCode() const;
       const resip::Data& getReasonPhrase() const;
 
    protected:
