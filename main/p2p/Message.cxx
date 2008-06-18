@@ -183,6 +183,18 @@ Message::getFlags() const
 	return mPDU.mHeader->mFlags;
 }
 
+ConnectAns *
+Message::makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates)
+{
+	assert(getType() == ConnectReqType);
+
+	ConnectReq *req = static_cast<ConnectReq *>(this);
+	ConnectAns *response = new ConnectAns(req, frag, password, application, role, candidates);
+
+	return response;
+}
+
+
 JoinAns *
 Message::makeJoinResponse(const resip::Data &overlaySpecific)
 {

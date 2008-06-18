@@ -9,8 +9,7 @@ JoinAns::JoinAns()
 
 JoinAns::JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific)
 {
-   mOverlaySpecificData.resize(overlaySpecific.size());
-   std::copy(overlaySpecific.begin(), overlaySpecific.end(), mOverlaySpecificData.begin());
+   mOverlaySpecificData = overlaySpecific;
    
    copyForwardingData(*request);
 }
@@ -38,8 +37,7 @@ JoinReq::JoinReq(const NodeId &node, const resip::Data &overlaySpecific) :
    mJoiningPeerId = new s2c::NodeIdStruct;
    memcpy(mJoiningPeerId->mId, node.getValue().data(), sizeof(mJoiningPeerId->mId));
 
-   mOverlaySpecificData.resize(overlaySpecific.size());
-   std::copy(overlaySpecific.begin(), overlaySpecific.end(), mOverlaySpecificData.begin());
+   mOverlaySpecificData = overlaySpecific;
 }
 
 void
