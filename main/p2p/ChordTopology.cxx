@@ -206,6 +206,13 @@ ChordTopology::findNextHop( const ResourceId& resource )
 }
 
 
+const NodeId& 
+ChordTopology::findNextHop( const DestinationId& did )
+{
+   return findNextHop( did.asNodeId() );
+}
+
+
 // Deal with replication for storage 
 std::vector<NodeId> 
 ChordTopology::getReplicationSet(  const ResourceId& resource )
