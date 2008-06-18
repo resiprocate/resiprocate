@@ -66,6 +66,8 @@ class Candidate
          resip::DnsUtil::inet_pton(ip, mAddress.v4Address.sin_addr);
       }
 
+      const resip::Data &getIceString() const { return mValue; }
+
       const resip::TransportType    &getTransportType() const 
          { return mTransportType; }
 
