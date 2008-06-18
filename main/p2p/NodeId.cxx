@@ -108,6 +108,14 @@ CompressedId::CompressedId(const resip::Data& cid)
    assert(0);
 }
 
+bool
+CompressedId::operator==(const CompressedId& rhs) const
+{
+   return false;
+}
+
+   
+
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
  *  All rights reserved.
