@@ -198,6 +198,9 @@ Message::encodePayload()
 	s2c::SignatureStruct *sigBlock = sign(sigChunks);
 	mSig = sigBlock;
 
+	mSig->encode(encodedStream);
+	encodedStream.flush();
+
 	// we should optimize this eventually to avoid this copy
 	return encodedData;
 }
