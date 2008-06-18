@@ -55,7 +55,7 @@ Message::compareDestinationLists(const std::vector<DestinationStruct *> &l1, con
 		DestinationId id1(**iter1);
 		DestinationId id2(**iter2);
 
-		bool isOk = isOk && (id1 == id2);
+		isOk = isOk && (id1 == id2);
 	
 		++iter1;
 		++iter2;
