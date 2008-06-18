@@ -2,32 +2,31 @@
 #define P2P_CONNECT_HXX
 
 #include "p2p/Message.hxx"
+#include "p2p/ConnectBase.hxx"
 
 namespace p2p
 {
 
-class ConnectReq : public Message, private s2c::ConnectReqAnsStruct
+class ConnectReq : public ConnectBase
 {
 public:
 	friend class Message;
 
 	ConnectReq(const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates);
-
 	virtual MessageType getType() const { return ConnectReqType; }
-	virtual void getEncodedPayload(resip::DataStream &dataStream) { }
-   virtual void decodePayload(resip::DataStream &dataStream);
+
 protected:
 	ConnectReq();
 };
 
-class ConnectAns : public Message, private s2c::ConnectReqAnsStruct
+class ConnectAns : public ConnectBase
 {
 public:
 	friend class Message;
 
+	ConnectAns(const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates);
 	virtual MessageType getType() const { return ConnectAnsType; }
-	virtual void getEncodedPayload(resip::DataStream &dataStream) { }
-   virtual void decodePayload(resip::DataStream &dataStream);
+
 protected:
 	ConnectAns();
 };
