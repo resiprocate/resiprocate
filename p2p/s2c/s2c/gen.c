@@ -367,7 +367,7 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent, char *p
 
           fprintf(out,"   {\n");
           fprintf(out,"   long pos1=out.tellp();\n");
-          fprintf(out,"   out.seekp(pos1 + %d);\n",lengthbytes);
+          fprintf(out,"   for(int i=0;i<%d;i++) out.put(0);\n",lengthbytes);
           
           fprintf(out,"   for(unsigned int i=0;i<%s%s.size();i++)\n",prefix,name2var(member->name));
           snprintf(reference,sizeof(reference),"%s%s[i]",prefix,name2var(member->name));
@@ -427,7 +427,7 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
         do_auto=entry->u.ref_.ref->u.primitive_.bits;
 
         fprintf(out,"   long pos1=out.tellp();\n");
-        fprintf(out,"   out.seekp(pos1 + %d);\n",do_auto/8);
+        fprintf(out,"   for(int i=0;i<%d;i++) out.put(0);\n",do_auto/8);
       }
       else{
         s2c_gen_encode_c_member(entry, out, 0,"");
@@ -442,6 +442,7 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
       fprintf(out,"   out.seekp(pos1);\n");
       fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
         do_auto, do_auto/8);
+      fprintf(out,"   out.seekp(pos2);\n");
     }
 
     fprintf(out,"};\n\n");
