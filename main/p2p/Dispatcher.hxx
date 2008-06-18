@@ -20,13 +20,15 @@ class Dispatcher : public Postable<Message>
       void init(ForwardingLayer& forwardingLayer);
       void registerPostable(Message::MessageType type,
                             Postable<Event>& postable);
-      void send(std::auto_ptr<Message> message);
+      void send(std::auto_ptr<Message> message, Postable<Event>& postable);
+      
+      //not public api
       virtual void post(std::auto_ptr<Message> message);
-
    private:
       typedef std::map<Message::MessageType, Postable<Event>*> Registry;
+      typedef std::map<TransactionId, Postable<Event>*> TidMap;
       Registry mRegistry;
-//      std::map<TransactionId, Message*>
+      TidMap mTidMap;
       ForwardingLayer* mForwardingLayer;
 };
 

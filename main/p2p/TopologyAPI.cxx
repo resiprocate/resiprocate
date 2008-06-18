@@ -1,4 +1,5 @@
 #include "p2p/TopologyAPI.hxx"
+#include "p2p/Dispatcher.hxx"
 
 namespace p2p
 {
@@ -6,6 +7,10 @@ namespace p2p
 TopologyAPI::TopologyAPI(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
    mProfile(config), mDispatcher(dispatcher), mTransporter(transporter)
 {
+   // register with dispatcher for reload request events
+   mDispatcher.registerPostable(Message::JoinReqType, *this);
+   mDispatcher.registerPostable(Message::UpdateReqType, *this);
+   mDispatcher.registerPostable(Message::LeaveReqType, *this);
 }
 
 TopologyAPI::~TopologyAPI()
