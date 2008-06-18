@@ -26,6 +26,21 @@ NodeIdStruct :: NodeIdStruct ()
 
 };
 
+NodeIdStruct :: NodeIdStruct (const NodeIdStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "NodeIdStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void NodeIdStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -48,7 +63,7 @@ void NodeIdStruct :: decode(std::istream& in)
 
 };
 
-void NodeIdStruct :: encode(std::ostream& out)
+void NodeIdStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding NodeIdStruct");
    encode_uintX(out, 64, mHigh);
@@ -67,6 +82,21 @@ ResourceIdStruct :: ResourceIdStruct ()
  DebugLog(<< "Constructing ResourceIdStruct");
 
 };
+
+ResourceIdStruct :: ResourceIdStruct (const ResourceIdStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "ResourceIdStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void ResourceIdStruct :: print(std::ostream& out, int indent) const 
 {
@@ -95,7 +125,7 @@ void ResourceIdStruct :: decode(std::istream& in)
 
 };
 
-void ResourceIdStruct :: encode(std::ostream& out)
+void ResourceIdStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ResourceIdStruct");
     encode_uintX(out, 8, mId.size());
@@ -116,6 +146,21 @@ IPv4AddrPortStruct :: IPv4AddrPortStruct ()
    mPort=0;
 
 };
+
+IPv4AddrPortStruct :: IPv4AddrPortStruct (const IPv4AddrPortStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "IPv4AddrPortStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void IPv4AddrPortStruct :: print(std::ostream& out, int indent) const 
 {
@@ -139,7 +184,7 @@ void IPv4AddrPortStruct :: decode(std::istream& in)
 
 };
 
-void IPv4AddrPortStruct :: encode(std::ostream& out)
+void IPv4AddrPortStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding IPv4AddrPortStruct");
    encode_uintX(out, 32, mAddr);
@@ -162,6 +207,21 @@ IPv6AddrPortStruct :: IPv6AddrPortStruct ()
    mPort=0;
 
 };
+
+IPv6AddrPortStruct :: IPv6AddrPortStruct (const IPv6AddrPortStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "IPv6AddrPortStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void IPv6AddrPortStruct :: print(std::ostream& out, int indent) const 
 {
@@ -188,7 +248,7 @@ void IPv6AddrPortStruct :: decode(std::istream& in)
 
 };
 
-void IPv6AddrPortStruct :: encode(std::ostream& out)
+void IPv6AddrPortStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding IPv6AddrPortStruct");
    for(unsigned int i=0;i<16;i++)
@@ -214,6 +274,21 @@ IpAddressAndPortStruct :: IpAddressAndPortStruct ()
    mIpv6Address.mV6addrPort=0;
 
 };
+
+IpAddressAndPortStruct :: IpAddressAndPortStruct (const IpAddressAndPortStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "IpAddressAndPortStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void IpAddressAndPortStruct :: print(std::ostream& out, int indent) const 
 {
@@ -256,7 +331,7 @@ void IpAddressAndPortStruct :: decode(std::istream& in)
 
 };
 
-void IpAddressAndPortStruct :: encode(std::ostream& out)
+void IpAddressAndPortStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding IpAddressAndPortStruct");
    encode_uintX(out, 8, (u_int64)(mType));
@@ -294,6 +369,21 @@ DestinationStruct :: DestinationStruct ()
    mResource.mResourceId=0;
 
 };
+
+DestinationStruct :: DestinationStruct (const DestinationStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "DestinationStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void DestinationStruct :: print(std::ostream& out, int indent) const 
 {
@@ -356,7 +446,7 @@ void DestinationStruct :: decode(std::istream& in)
    }
 };
 
-void DestinationStruct :: encode(std::ostream& out)
+void DestinationStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding DestinationStruct");
    encode_uintX(out, 8, (u_int64)(mType));
@@ -402,6 +492,21 @@ SignerIdentityStruct :: SignerIdentityStruct ()
 
 };
 
+SignerIdentityStruct :: SignerIdentityStruct (const SignerIdentityStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "SignerIdentityStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void SignerIdentityStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -437,7 +542,7 @@ void SignerIdentityStruct :: decode(std::istream& in)
 
 };
 
-void SignerIdentityStruct :: encode(std::ostream& out)
+void SignerIdentityStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding SignerIdentityStruct");
    encode_uintX(out, 8, (u_int64)(mIdentityType));
@@ -461,6 +566,21 @@ SignatureAndHashAlgorithmStruct :: SignatureAndHashAlgorithmStruct ()
 
 };
 
+SignatureAndHashAlgorithmStruct :: SignatureAndHashAlgorithmStruct (const SignatureAndHashAlgorithmStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "SignatureAndHashAlgorithmStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void SignatureAndHashAlgorithmStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -483,7 +603,7 @@ void SignatureAndHashAlgorithmStruct :: decode(std::istream& in)
 
 };
 
-void SignatureAndHashAlgorithmStruct :: encode(std::ostream& out)
+void SignatureAndHashAlgorithmStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding SignatureAndHashAlgorithmStruct");
    encode_uintX(out, 8, mSig);
@@ -506,6 +626,21 @@ SignatureStruct :: SignatureStruct ()
 
 
 };
+
+SignatureStruct :: SignatureStruct (const SignatureStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "SignatureStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void SignatureStruct :: print(std::ostream& out, int indent) const 
 {
@@ -542,7 +677,7 @@ void SignatureStruct :: decode(std::istream& in)
 
 };
 
-void SignatureStruct :: encode(std::ostream& out)
+void SignatureStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding SignatureStruct");
    mAlgorithm->encode(out);
@@ -587,6 +722,21 @@ ForwardingHeaderStruct :: ForwardingHeaderStruct ()
    mMessageCode=0;
 
 };
+
+ForwardingHeaderStruct :: ForwardingHeaderStruct (const ForwardingHeaderStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "ForwardingHeaderStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void ForwardingHeaderStruct :: print(std::ostream& out, int indent) const 
 {
@@ -685,7 +835,7 @@ void ForwardingHeaderStruct :: decode(std::istream& in)
 
 };
 
-void ForwardingHeaderStruct :: encode(std::ostream& out)
+void ForwardingHeaderStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ForwardingHeaderStruct");
    encode_uintX(out, 8, mReloToken);
@@ -749,6 +899,21 @@ ForwardingLayerMessageStruct :: ForwardingLayerMessageStruct ()
 
 };
 
+ForwardingLayerMessageStruct :: ForwardingLayerMessageStruct (const ForwardingLayerMessageStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "ForwardingLayerMessageStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void ForwardingLayerMessageStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -784,7 +949,7 @@ void ForwardingLayerMessageStruct :: decode(std::istream& in)
 
 };
 
-void ForwardingLayerMessageStruct :: encode(std::ostream& out)
+void ForwardingLayerMessageStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ForwardingLayerMessageStruct");
    mHeader->encode(out);
@@ -806,6 +971,21 @@ MessagePayloadStruct :: MessagePayloadStruct ()
  DebugLog(<< "Constructing MessagePayloadStruct");
 
 };
+
+MessagePayloadStruct :: MessagePayloadStruct (const MessagePayloadStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "MessagePayloadStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void MessagePayloadStruct :: print(std::ostream& out, int indent) const 
 {
@@ -834,7 +1014,7 @@ void MessagePayloadStruct :: decode(std::istream& in)
 
 };
 
-void MessagePayloadStruct :: encode(std::ostream& out)
+void MessagePayloadStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding MessagePayloadStruct");
     encode_uintX(out, 24, mPayload.size());
@@ -855,6 +1035,21 @@ ErrorResponseStruct :: ErrorResponseStruct ()
 
 
 };
+
+ErrorResponseStruct :: ErrorResponseStruct (const ErrorResponseStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "ErrorResponseStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void ErrorResponseStruct :: print(std::ostream& out, int indent) const 
 {
@@ -903,7 +1098,7 @@ void ErrorResponseStruct :: decode(std::istream& in)
 
 };
 
-void ErrorResponseStruct :: encode(std::ostream& out)
+void ErrorResponseStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ErrorResponseStruct");
    encode_uintX(out, 16, mErrorCode);
@@ -928,6 +1123,21 @@ JoinReqStruct :: JoinReqStruct ()
 
 
 };
+
+JoinReqStruct :: JoinReqStruct (const JoinReqStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "JoinReqStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void JoinReqStruct :: print(std::ostream& out, int indent) const 
 {
@@ -960,7 +1170,7 @@ void JoinReqStruct :: decode(std::istream& in)
 
 };
 
-void JoinReqStruct :: encode(std::ostream& out)
+void JoinReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding JoinReqStruct");
    mJoiningPeerId->encode(out);
@@ -980,6 +1190,21 @@ JoinAnsStruct :: JoinAnsStruct ()
  DebugLog(<< "Constructing JoinAnsStruct");
 
 };
+
+JoinAnsStruct :: JoinAnsStruct (const JoinAnsStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "JoinAnsStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void JoinAnsStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1008,7 +1233,7 @@ void JoinAnsStruct :: decode(std::istream& in)
 
 };
 
-void JoinAnsStruct :: encode(std::ostream& out)
+void JoinAnsStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding JoinAnsStruct");
     encode_uintX(out, 16, mOverlaySpecificData.size());
@@ -1028,6 +1253,21 @@ LeaveReqStruct :: LeaveReqStruct ()
 
 
 };
+
+LeaveReqStruct :: LeaveReqStruct (const LeaveReqStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "LeaveReqStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void LeaveReqStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1060,7 +1300,7 @@ void LeaveReqStruct :: decode(std::istream& in)
 
 };
 
-void LeaveReqStruct :: encode(std::ostream& out)
+void LeaveReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding LeaveReqStruct");
    mLeavingPeerId->encode(out);
@@ -1084,6 +1324,21 @@ RouteQueryReqStruct :: RouteQueryReqStruct ()
 
 
 };
+
+RouteQueryReqStruct :: RouteQueryReqStruct (const RouteQueryReqStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "RouteQueryReqStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void RouteQueryReqStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1124,7 +1379,7 @@ void RouteQueryReqStruct :: decode(std::istream& in)
 
 };
 
-void RouteQueryReqStruct :: encode(std::ostream& out)
+void RouteQueryReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding RouteQueryReqStruct");
    encode_uintX(out, 8, (u_int64)(mSendUpdate));
@@ -1151,6 +1406,21 @@ FramedMessageStruct :: FramedMessageStruct ()
    mAck.mReceived=0;
 
 };
+
+FramedMessageStruct :: FramedMessageStruct (const FramedMessageStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "FramedMessageStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void FramedMessageStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1203,7 +1473,7 @@ void FramedMessageStruct :: decode(std::istream& in)
 
 };
 
-void FramedMessageStruct :: encode(std::ostream& out)
+void FramedMessageStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding FramedMessageStruct");
    encode_uintX(out, 8, (u_int64)(mType));
@@ -1238,6 +1508,21 @@ IceCandidateStruct :: IceCandidateStruct ()
 
 };
 
+IceCandidateStruct :: IceCandidateStruct (const IceCandidateStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "IceCandidateStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void IceCandidateStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -1265,7 +1550,7 @@ void IceCandidateStruct :: decode(std::istream& in)
 
 };
 
-void IceCandidateStruct :: encode(std::ostream& out)
+void IceCandidateStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding IceCandidateStruct");
     encode_uintX(out, 16, mCandidate.size());
@@ -1288,6 +1573,21 @@ ConnectReqAnsStruct :: ConnectReqAnsStruct ()
 
 
 };
+
+ConnectReqAnsStruct :: ConnectReqAnsStruct (const ConnectReqAnsStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "ConnectReqAnsStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void ConnectReqAnsStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1366,7 +1666,7 @@ void ConnectReqAnsStruct :: decode(std::istream& in)
 
 };
 
-void ConnectReqAnsStruct :: encode(std::ostream& out)
+void ConnectReqAnsStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ConnectReqAnsStruct");
     encode_uintX(out, 8, mUfrag.size());
@@ -1404,6 +1704,21 @@ PingReqStruct :: PingReqStruct ()
 
 };
 
+PingReqStruct :: PingReqStruct (const PingReqStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "PingReqStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void PingReqStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -1432,7 +1747,7 @@ void PingReqStruct :: decode(std::istream& in)
 
 };
 
-void PingReqStruct :: encode(std::ostream& out)
+void PingReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding PingReqStruct");
    {
@@ -1462,6 +1777,21 @@ PingInformationStruct :: PingInformationStruct ()
    mNumResources.mNumResources=0;
 
 };
+
+PingInformationStruct :: PingInformationStruct (const PingInformationStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "PingInformationStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void PingInformationStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1499,7 +1829,7 @@ void PingInformationStruct :: decode(std::istream& in)
 
 };
 
-void PingInformationStruct :: encode(std::ostream& out)
+void PingInformationStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding PingInformationStruct");
    encode_uintX(out, 8, (u_int64)(mType));
@@ -1533,6 +1863,21 @@ PingAnsStruct :: PingAnsStruct ()
 
 };
 
+PingAnsStruct :: PingAnsStruct (const PingAnsStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "PingAnsStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void PingAnsStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -1565,7 +1910,7 @@ void PingAnsStruct :: decode(std::istream& in)
 
 };
 
-void PingAnsStruct :: encode(std::ostream& out)
+void PingAnsStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding PingAnsStruct");
    encode_uintX(out, 64, mResponseId);
@@ -1596,6 +1941,21 @@ TunnelReqStruct :: TunnelReqStruct ()
 
 
 };
+
+TunnelReqStruct :: TunnelReqStruct (const TunnelReqStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "TunnelReqStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void TunnelReqStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1644,7 +2004,7 @@ void TunnelReqStruct :: decode(std::istream& in)
 
 };
 
-void TunnelReqStruct :: encode(std::ostream& out)
+void TunnelReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding TunnelReqStruct");
    encode_uintX(out, 16, mApplication);
@@ -1669,6 +2029,21 @@ DataValueStruct :: DataValueStruct ()
 
 
 };
+
+DataValueStruct :: DataValueStruct (const DataValueStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "DataValueStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void DataValueStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1705,7 +2080,7 @@ void DataValueStruct :: decode(std::istream& in)
 
 };
 
-void DataValueStruct :: encode(std::ostream& out)
+void DataValueStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding DataValueStruct");
    encode_uintX(out, 8, (u_int64)(mExists));
@@ -1729,6 +2104,21 @@ ArrayEntryStruct :: ArrayEntryStruct ()
 
 };
 
+ArrayEntryStruct :: ArrayEntryStruct (const ArrayEntryStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "ArrayEntryStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void ArrayEntryStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -1750,7 +2140,7 @@ void ArrayEntryStruct :: decode(std::istream& in)
 
 };
 
-void ArrayEntryStruct :: encode(std::ostream& out)
+void ArrayEntryStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ArrayEntryStruct");
    encode_uintX(out, 32, mIndex);
@@ -1769,6 +2159,21 @@ DictionaryKeyStruct :: DictionaryKeyStruct ()
  DebugLog(<< "Constructing DictionaryKeyStruct");
 
 };
+
+DictionaryKeyStruct :: DictionaryKeyStruct (const DictionaryKeyStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "DictionaryKeyStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void DictionaryKeyStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1797,7 +2202,7 @@ void DictionaryKeyStruct :: decode(std::istream& in)
 
 };
 
-void DictionaryKeyStruct :: encode(std::ostream& out)
+void DictionaryKeyStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding DictionaryKeyStruct");
     encode_uintX(out, 16, mKey.size());
@@ -1819,6 +2224,21 @@ DictionaryEntryStruct :: DictionaryEntryStruct ()
 
 };
 
+DictionaryEntryStruct :: DictionaryEntryStruct (const DictionaryEntryStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "DictionaryEntryStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void DictionaryEntryStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -1839,7 +2259,7 @@ void DictionaryEntryStruct :: decode(std::istream& in)
 
 };
 
-void DictionaryEntryStruct :: encode(std::ostream& out)
+void DictionaryEntryStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding DictionaryEntryStruct");
    mKey->encode(out);
@@ -1863,6 +2283,21 @@ StoredDataValueStruct :: StoredDataValueStruct ()
    mDictionary.mDictionaryEntry=0;
 
 };
+
+StoredDataValueStruct :: StoredDataValueStruct (const StoredDataValueStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "StoredDataValueStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void StoredDataValueStruct :: print(std::ostream& out, int indent) const 
 {
@@ -1905,7 +2340,7 @@ void StoredDataValueStruct :: decode(std::istream& in)
 
 };
 
-void StoredDataValueStruct :: encode(std::ostream& out)
+void StoredDataValueStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoredDataValueStruct");
    encode_uintX(out, 8, (u_int64)(mModel));
@@ -1949,6 +2384,21 @@ StoredDataStruct :: StoredDataStruct ()
 
 };
 
+StoredDataStruct :: StoredDataStruct (const StoredDataStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "StoredDataStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void StoredDataStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -1988,7 +2438,7 @@ void StoredDataStruct :: decode(std::istream& in)
    }
 };
 
-void StoredDataStruct :: encode(std::ostream& out)
+void StoredDataStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoredDataStruct");
    long pos1=out.tellp();
@@ -2024,6 +2474,21 @@ StoreKindDataStruct :: StoreKindDataStruct ()
 
 
 };
+
+StoreKindDataStruct :: StoreKindDataStruct (const StoreKindDataStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "StoreKindDataStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void StoreKindDataStruct :: print(std::ostream& out, int indent) const 
 {
@@ -2070,7 +2535,7 @@ void StoreKindDataStruct :: decode(std::istream& in)
 
 };
 
-void StoreKindDataStruct :: encode(std::ostream& out)
+void StoreKindDataStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoreKindDataStruct");
    encode_uintX(out, 32, mKind);
@@ -2106,6 +2571,21 @@ StoreReqStruct :: StoreReqStruct ()
 
 
 };
+
+StoreReqStruct :: StoreReqStruct (const StoreReqStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "StoreReqStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void StoreReqStruct :: print(std::ostream& out, int indent) const 
 {
@@ -2143,7 +2623,7 @@ void StoreReqStruct :: decode(std::istream& in)
 
 };
 
-void StoreReqStruct :: encode(std::ostream& out)
+void StoreReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoreReqStruct");
    mResource->encode(out);
@@ -2177,6 +2657,21 @@ StoreKindResponseStruct :: StoreKindResponseStruct ()
 
 
 };
+
+StoreKindResponseStruct :: StoreKindResponseStruct (const StoreKindResponseStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "StoreKindResponseStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void StoreKindResponseStruct :: print(std::ostream& out, int indent) const 
 {
@@ -2215,7 +2710,7 @@ void StoreKindResponseStruct :: decode(std::istream& in)
 
 };
 
-void StoreKindResponseStruct :: encode(std::ostream& out)
+void StoreKindResponseStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoreKindResponseStruct");
    encode_uintX(out, 32, mKind);
@@ -2246,6 +2741,21 @@ StoreAnsStruct :: StoreAnsStruct ()
 
 };
 
+StoreAnsStruct :: StoreAnsStruct (const StoreAnsStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "StoreAnsStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void StoreAnsStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -2273,7 +2783,7 @@ void StoreAnsStruct :: decode(std::istream& in)
 
 };
 
-void StoreAnsStruct :: encode(std::ostream& out)
+void StoreAnsStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoreAnsStruct");
    {
@@ -2303,6 +2813,21 @@ ArrayRangeStruct :: ArrayRangeStruct ()
 
 };
 
+ArrayRangeStruct :: ArrayRangeStruct (const ArrayRangeStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "ArrayRangeStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void ArrayRangeStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -2325,7 +2850,7 @@ void ArrayRangeStruct :: decode(std::istream& in)
 
 };
 
-void ArrayRangeStruct :: encode(std::ostream& out)
+void ArrayRangeStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ArrayRangeStruct");
    encode_uintX(out, 32, mFirst);
@@ -2351,6 +2876,21 @@ StoredDataSpecifierStruct :: StoredDataSpecifierStruct ()
 
 
 };
+
+StoredDataSpecifierStruct :: StoredDataSpecifierStruct (const StoredDataSpecifierStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "StoredDataSpecifierStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void StoredDataSpecifierStruct :: print(std::ostream& out, int indent) const 
 {
@@ -2428,7 +2968,7 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
    }
 };
 
-void StoredDataSpecifierStruct :: encode(std::ostream& out)
+void StoredDataSpecifierStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoredDataSpecifierStruct");
    encode_uintX(out, 32, mKind);
@@ -2494,6 +3034,21 @@ FetchReqStruct :: FetchReqStruct ()
 
 };
 
+FetchReqStruct :: FetchReqStruct (const FetchReqStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "FetchReqStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void FetchReqStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -2525,7 +3080,7 @@ void FetchReqStruct :: decode(std::istream& in)
 
 };
 
-void FetchReqStruct :: encode(std::ostream& out)
+void FetchReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding FetchReqStruct");
    mResource->encode(out);
@@ -2557,6 +3112,21 @@ FetchKindResponseStruct :: FetchKindResponseStruct ()
 
 
 };
+
+FetchKindResponseStruct :: FetchKindResponseStruct (const FetchKindResponseStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "FetchKindResponseStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void FetchKindResponseStruct :: print(std::ostream& out, int indent) const 
 {
@@ -2595,7 +3165,7 @@ void FetchKindResponseStruct :: decode(std::istream& in)
 
 };
 
-void FetchKindResponseStruct :: encode(std::ostream& out)
+void FetchKindResponseStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding FetchKindResponseStruct");
    encode_uintX(out, 32, mKind);
@@ -2626,6 +3196,21 @@ FetchAnsStruct :: FetchAnsStruct ()
 
 };
 
+FetchAnsStruct :: FetchAnsStruct (const FetchAnsStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "FetchAnsStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void FetchAnsStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -2653,7 +3238,7 @@ void FetchAnsStruct :: decode(std::istream& in)
 
 };
 
-void FetchAnsStruct :: encode(std::ostream& out)
+void FetchAnsStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding FetchAnsStruct");
    {
@@ -2681,6 +3266,21 @@ RemoveReqStruct :: RemoveReqStruct ()
 
 
 };
+
+RemoveReqStruct :: RemoveReqStruct (const RemoveReqStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "RemoveReqStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void RemoveReqStruct :: print(std::ostream& out, int indent) const 
 {
@@ -2713,7 +3313,7 @@ void RemoveReqStruct :: decode(std::istream& in)
 
 };
 
-void RemoveReqStruct :: encode(std::ostream& out)
+void RemoveReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding RemoveReqStruct");
    mResource->encode(out);
@@ -2742,6 +3342,21 @@ RemoveAnsStruct :: RemoveAnsStruct ()
 
 };
 
+RemoveAnsStruct :: RemoveAnsStruct (const RemoveAnsStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "RemoveAnsStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void RemoveAnsStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -2769,7 +3384,7 @@ void RemoveAnsStruct :: decode(std::istream& in)
 
 };
 
-void RemoveAnsStruct :: encode(std::ostream& out)
+void RemoveAnsStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding RemoveAnsStruct");
    {
@@ -2797,6 +3412,21 @@ FindReqStruct :: FindReqStruct ()
 
 
 };
+
+FindReqStruct :: FindReqStruct (const FindReqStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "FindReqStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void FindReqStruct :: print(std::ostream& out, int indent) const 
 {
@@ -2830,7 +3460,7 @@ void FindReqStruct :: decode(std::istream& in)
 
 };
 
-void FindReqStruct :: encode(std::ostream& out)
+void FindReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding FindReqStruct");
    mResource->encode(out);
@@ -2862,6 +3492,21 @@ FindKindDataStruct :: FindKindDataStruct ()
 
 };
 
+FindKindDataStruct :: FindKindDataStruct (const FindKindDataStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "FindKindDataStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void FindKindDataStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -2883,7 +3528,7 @@ void FindKindDataStruct :: decode(std::istream& in)
 
 };
 
-void FindKindDataStruct :: encode(std::ostream& out)
+void FindKindDataStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding FindKindDataStruct");
    encode_uintX(out, 32, mKind);
@@ -2902,6 +3547,21 @@ FindAnsStruct :: FindAnsStruct ()
  DebugLog(<< "Constructing FindAnsStruct");
 
 };
+
+FindAnsStruct :: FindAnsStruct (const FindAnsStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "FindAnsStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void FindAnsStruct :: print(std::ostream& out, int indent) const 
 {
@@ -2930,7 +3590,7 @@ void FindAnsStruct :: decode(std::istream& in)
 
 };
 
-void FindAnsStruct :: encode(std::ostream& out)
+void FindAnsStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding FindAnsStruct");
    {
@@ -2960,6 +3620,21 @@ TurnServerStruct :: TurnServerStruct ()
 
 };
 
+TurnServerStruct :: TurnServerStruct (const TurnServerStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "TurnServerStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void TurnServerStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -2981,7 +3656,7 @@ void TurnServerStruct :: decode(std::istream& in)
 
 };
 
-void TurnServerStruct :: encode(std::ostream& out)
+void TurnServerStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding TurnServerStruct");
    encode_uintX(out, 8, mIteration);
@@ -3003,6 +3678,21 @@ SipRegistrationStruct :: SipRegistrationStruct ()
 
 
 };
+
+SipRegistrationStruct :: SipRegistrationStruct (const SipRegistrationStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "SipRegistrationStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void SipRegistrationStruct :: print(std::ostream& out, int indent) const 
 {
@@ -3082,7 +3772,7 @@ void SipRegistrationStruct :: decode(std::istream& in)
    }
 };
 
-void SipRegistrationStruct :: encode(std::ostream& out)
+void SipRegistrationStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding SipRegistrationStruct");
    encode_uintX(out, 8, (u_int64)(mType));
@@ -3134,6 +3824,21 @@ ChordUpdateStruct :: ChordUpdateStruct ()
 
 
 };
+
+ChordUpdateStruct :: ChordUpdateStruct (const ChordUpdateStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "ChordUpdateStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
 
 void ChordUpdateStruct :: print(std::ostream& out, int indent) const 
 {
@@ -3225,7 +3930,7 @@ void ChordUpdateStruct :: decode(std::istream& in)
 
 };
 
-void ChordUpdateStruct :: encode(std::ostream& out)
+void ChordUpdateStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ChordUpdateStruct");
    encode_uintX(out, 8, (u_int64)(mType));
@@ -3309,6 +4014,21 @@ ChordRouteQueryAnsStruct :: ChordRouteQueryAnsStruct ()
 
 };
 
+ChordRouteQueryAnsStruct :: ChordRouteQueryAnsStruct (const ChordRouteQueryAnsStruct &from)
+{
+   // World's lamest copy constructor
+   mName = "ChordRouteQueryAnsStruct";
+   resip::Data dat;
+   {
+     resip::DataStream strm(dat);
+     from.encode(strm);
+   }
+   {
+     resip::DataStream strm(dat);
+     decode(strm);
+   }
+}
+
 void ChordRouteQueryAnsStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -3325,7 +4045,7 @@ void ChordRouteQueryAnsStruct :: decode(std::istream& in)
 
 };
 
-void ChordRouteQueryAnsStruct :: encode(std::ostream& out)
+void ChordRouteQueryAnsStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ChordRouteQueryAnsStruct");
    mNextId->encode(out);

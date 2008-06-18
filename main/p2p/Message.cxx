@@ -328,6 +328,9 @@ Message::encodePayload()
 
 	resip::Data encodedData;
 	resip::DataStream encodedStream(encodedData);
+        
+        int fff=encodedStream.tellp();
+        std::cerr << fff;
 
 	// encode forwarding header
 	mPDU.mHeader->encode(encodedStream);
