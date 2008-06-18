@@ -254,7 +254,7 @@ Message::getFlags() const
 }
 
 ConnectAns *
-Message::makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates)
+Message::makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates)
 {
 	assert(getType() == ConnectReqType);
 
