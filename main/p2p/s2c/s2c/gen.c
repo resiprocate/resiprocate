@@ -17,6 +17,7 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out, int do_inline);
 static int s2c_gen_encode_c_select(p_decl *decl, FILE *out, int do_inline);
 static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,int do_inline);
 static int s2c_gen_print_c_select(p_decl *decl, FILE *out,int do_inline);
+static int s2c_gen_construct_c_member(p_decl *member, FILE *out,int indent, char *prefix);
 
 static char *camelback(char *name)
   {
@@ -137,7 +138,6 @@ int s2c_gen_hdr_h(char *name, FILE *out)
 static int s2c_gen_member_fxns_h(char *classname, char *name, FILE *out)
   {
     fprintf(out,"\n\n");
-    fprintf(out,"   %s() {mName = \"%s\";}\n", classname, name);
     fprintf(out,"   PDUMemberFunctions\n");
       
       return(0);
@@ -214,20 +214,8 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out, int do_inline)
     if(!do_inline){
       /* First emit the class for the select itself */
       fprintf(out,"class %s : public PDU {\npublic:\n", type2class(decl->name));
+      fprintf(out,"   %s();\n",type2class(decl->name));
     }
-
-#if 0      
-    fprintf(out,"   enum { \n");
-
-    /* Now define the values */
-    for(arm=STAILQ_FIRST(&decl->u.select_.arms);arm;arm=STAILQ_NEXT(arm,entry)){
-      fprintf(out,"          %s=%d",name2enum(arm->name),arm->u.select_arm_.value);
-      if(STAILQ_NEXT(arm,entry))
-        fprintf(out,",\n");
-      else
-        fprintf(out,"\n   };\n");
-    }
-#endif
 
     /* Now emit each select arm */
     for(arm=STAILQ_FIRST(&decl->u.select_.arms);arm;arm=STAILQ_NEXT(arm,entry)){
@@ -262,7 +250,7 @@ static int s2c_gen_pdu_h_struct(p_decl *decl, FILE *out)
     p_decl *entry;
 
     fprintf(out,"class %s : public PDU {\npublic:\n", type2class(decl->name));
-    
+    fprintf(out,"   %s();\n",type2class(decl->name));    
 
     entry=STAILQ_FIRST(&decl->u.struct_.members);
     while(entry){
@@ -358,6 +346,7 @@ static int s2c_gen_encode_c_simple_type(p_decl *decl, char *prefix, char *refere
 
     return(0);
   }
+
 
 static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent, char *prefix)
   {
@@ -677,10 +666,113 @@ static int s2c_gen_decode_c_struct(p_decl *decl, FILE *out)
   }
 
 
+
+static int s2c_gen_construct_c_select(p_decl *decl, FILE *out, int do_inline)
+  {
+    p_decl *arm,*entry;
+    char prefix[100];
+
+    if(!do_inline){
+      fprintf(out,"%s :: %s ()\n{\n",type2class(decl->name),
+        type2class(decl->name));
+      
+      fprintf(out,"   DebugLog(<< \"Constructing %s\");\n",type2class(decl->name));
+      fprintf(out,"   mName = \"%s\";\n", type2class(decl->name));
+
+    }
+
+    arm=STAILQ_FIRST(&decl->u.select_.arms);
+    while(arm){
+      entry=STAILQ_FIRST(&arm->u.select_arm_.members);
+      while(entry){
+        snprintf(prefix,100,"m%s.",camelback(arm->name));
+        s2c_gen_construct_c_member(entry, out, 9, prefix);
+        entry=STAILQ_NEXT(entry,entry);
+      }
+      arm=STAILQ_NEXT(arm,entry);
+    }
+    if(!do_inline){
+      fprintf(out,"};\n");
+    }
+    return(0);
+  }
+
+
+
+static int s2c_gen_construct_c_simple_type(p_decl *decl, char *prefix, char *reference, FILE *out)
+  {
+    if((decl->type == TYPE_REF) && (decl->u.ref_.ref->type==TYPE_ENUM))
+      fprintf(out,"   %s%s=(%s)0;\n",prefix,reference,decl->u.ref_.ref->name);
+    else
+      fprintf(out,"   %s%s=0;\n",prefix,reference);
+
+
+
+
+    return(0);
+  }
+
+static int s2c_gen_construct_c_member(p_decl *member, FILE *out,int indent, char *prefix)
+  {
+    int i;
+    
+    switch(member->type){
+      case TYPE_REF:
+        s2c_gen_construct_c_simple_type(member,prefix,name2var(member->name),out);
+        break;
+      case TYPE_VARRAY:
+        {
+          ;
+        }
+      case TYPE_ARRAY:
+        {
+          char reference[100];
+          int ct=(member->u.array_.length*8) / (member->u.array_.ref->u.primitive_.bits);
+          
+          fprintf(out,"   for(unsigned int i=0;i<%d;i++)\n",ct);
+          snprintf(reference,sizeof(reference),"%s%s[i]",prefix,name2var(member->name));
+
+          for(i=0;i<indent+3;i++) fputc(' ',out);
+          s2c_gen_construct_c_simple_type(member->u.array_.ref,"",reference,out);
+
+          break;
+        }
+      case TYPE_SELECT:
+        {
+          s2c_gen_construct_c_select(member, out, 1);
+        }
+        break;
+      default:
+        nr_verr_exit("Don't know how to render element %s",member->name);
+    }
+  }
+
+static int s2c_gen_construct_c_struct(p_decl *decl, FILE *out)
+  {
+    p_decl *entry;
+
+    fprintf(out,"%s :: %s ()\n{\n",type2class(decl->name),type2class(decl->name));
+
+    fprintf(out,"   mName = \"%s\";\n", type2class(decl->name));
+    fprintf(out," DebugLog(<< \"Constructing %s\");\n",type2class(decl->name));
+    entry=STAILQ_FIRST(&decl->u.struct_.members);
+    while(entry){
+      s2c_gen_construct_c_member(entry, out, 0, "");
+      
+      fprintf(out,"\n");
+      entry=STAILQ_NEXT(entry,entry);
+    }
+
+    fprintf(out,"};\n\n");
+
+    return(0);    
+  }
+
 static int s2c_gen_pdu_c_struct(p_decl *decl, FILE *out)
   {
     fprintf(out,"\n\n// Classes for %s */\n\n",type2class(decl->name));
 
+    s2c_gen_construct_c_struct(decl, out);
     s2c_gen_print_c_struct(decl, out);
     s2c_gen_decode_c_struct(decl, out);
     s2c_gen_encode_c_struct(decl, out);
@@ -741,6 +833,7 @@ static int s2c_gen_pdu_c_select(p_decl *decl, FILE *out)
   {
     fprintf(out,"\n\n// Classes for %s */\n\n",type2class(decl->name));
 
+    s2c_gen_construct_c_select(decl, out, 0);
     s2c_gen_print_c_select(decl, out,0 );
     s2c_gen_decode_c_select(decl, out, 0);
     s2c_gen_encode_c_select(decl, out, 0);

@@ -13,6 +13,15 @@ namespace s2c {
 
 // Classes for NodeIdStruct */
 
+NodeIdStruct :: NodeIdStruct ()
+{
+   mName = "NodeIdStruct";
+ DebugLog(<< "Constructing NodeIdStruct");
+   for(unsigned int i=0;i<16;i++)
+      mId[i]=0;
+
+};
+
 void NodeIdStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -44,6 +53,15 @@ void NodeIdStruct :: encode(std::ostream& out)
 
 
 // Classes for ResourceIdStruct */
+
+ResourceIdStruct :: ResourceIdStruct ()
+{
+   mName = "ResourceIdStruct";
+ DebugLog(<< "Constructing ResourceIdStruct");
+   for(unsigned int i=0;i<248;i++)
+      mId[i]=0;
+
+};
 
 void ResourceIdStruct :: print(std::ostream& out, int indent) const 
 {
@@ -92,6 +110,21 @@ void ResourceIdStruct :: encode(std::ostream& out)
 
 
 // Classes for DestinationStruct */
+
+DestinationStruct :: DestinationStruct ()
+{
+   mName = "DestinationStruct";
+ DebugLog(<< "Constructing DestinationStruct");
+   mType=(DestinationType)0;
+
+   mLength=0;
+
+   mPeer.mNodeId=0;
+   mResource.mResourceId=0;
+   for(unsigned int i=0;i<248;i++)
+               mCompressed.mCompressedId[i]=0;
+
+};
 
 void DestinationStruct :: print(std::ostream& out, int indent) const 
 {
@@ -188,6 +221,17 @@ void DestinationStruct :: encode(std::ostream& out)
 
 // Classes for SignerIdentityStruct */
 
+SignerIdentityStruct :: SignerIdentityStruct ()
+{
+   mName = "SignerIdentityStruct";
+ DebugLog(<< "Constructing SignerIdentityStruct");
+   mIdentityType=(SignerIdentityType)0;
+
+   for(unsigned int i=0;i<65520;i++)
+      mSignerIdentity[i]=0;
+
+};
+
 void SignerIdentityStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -246,6 +290,16 @@ void SignerIdentityStruct :: encode(std::ostream& out)
 
 // Classes for SignatureAndHashAlgorithmStruct */
 
+SignatureAndHashAlgorithmStruct :: SignatureAndHashAlgorithmStruct ()
+{
+   mName = "SignatureAndHashAlgorithmStruct";
+ DebugLog(<< "Constructing SignatureAndHashAlgorithmStruct");
+   mSig=0;
+
+   mHash=0;
+
+};
+
 void SignatureAndHashAlgorithmStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
@@ -280,6 +334,19 @@ void SignatureAndHashAlgorithmStruct :: encode(std::ostream& out)
 
 
 // Classes for SignatureStruct */
+
+SignatureStruct :: SignatureStruct ()
+{
+   mName = "SignatureStruct";
+ DebugLog(<< "Constructing SignatureStruct");
+   mAlgorithm=0;
+
+   mIdentity=0;
+
+   for(unsigned int i=0;i<65520;i++)
+      mSignatureValue[i]=0;
+
+};
 
 void SignatureStruct :: print(std::ostream& out, int indent) const 
 {
@@ -340,6 +407,45 @@ void SignatureStruct :: encode(std::ostream& out)
 
 
 // Classes for ForwardingLayerMessageStruct */
+
+ForwardingLayerMessageStruct :: ForwardingLayerMessageStruct ()
+{
+   mName = "ForwardingLayerMessageStruct";
+ DebugLog(<< "Constructing ForwardingLayerMessageStruct");
+   mReloToken=0;
+
+   mOverlay=0;
+
+   mTtl=0;
+
+   mReserved=0;
+
+   mFragment=0;
+
+   mVersion=0;
+
+   mLength=0;
+
+   mTransactionId=0;
+
+   mFlags=0;
+
+   for(unsigned int i=0;i<0;i++)
+      mViaList[i]=0;
+
+   for(unsigned int i=0;i<0;i++)
+      mDestinationList[i]=0;
+
+   mRouteLogLenDummy=0;
+
+   mMessageCode=0;
+
+   for(unsigned int i=0;i<16777192;i++)
+      mPayload[i]=0;
+
+   mSig=0;
+
+};
 
 void ForwardingLayerMessageStruct :: print(std::ostream& out, int indent) const 
 {

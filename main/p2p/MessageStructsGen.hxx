@@ -4,20 +4,20 @@ namespace s2c {
 
 class NodeIdStruct : public PDU {
 public:
+   NodeIdStruct();
    unsigned char                 mId[16];
 
 
-   NodeIdStruct() {mName = "NodeId";}
    PDUMemberFunctions
 };
 
 
 class ResourceIdStruct : public PDU {
 public:
+   ResourceIdStruct();
    std::vector<unsigned char>    mId;
 
 
-   ResourceIdStruct() {mName = "ResourceId";}
    PDUMemberFunctions
 };
 
@@ -31,6 +31,7 @@ typedef enum {
 
 class DestinationStruct : public PDU {
 public:
+   DestinationStruct();
    DestinationType               mType;
    UInt8                         mLength;
    struct {
@@ -44,7 +45,6 @@ public:
    } mCompressed;
 
 
-   DestinationStruct() {mName = "Destination";}
    PDUMemberFunctions
 };
 
@@ -58,40 +58,41 @@ typedef enum {
 
 class SignerIdentityStruct : public PDU {
 public:
+   SignerIdentityStruct();
    SignerIdentityType            mIdentityType;
    std::vector<unsigned char>    mSignerIdentity;
 
 
-   SignerIdentityStruct() {mName = "SignerIdentity";}
    PDUMemberFunctions
 };
 
 
 class SignatureAndHashAlgorithmStruct : public PDU {
 public:
+   SignatureAndHashAlgorithmStruct();
    UInt8                         mSig;
    UInt8                         mHash;
 
 
-   SignatureAndHashAlgorithmStruct() {mName = "SignatureAndHashAlgorithm";}
    PDUMemberFunctions
 };
 
 
 class SignatureStruct : public PDU {
 public:
+   SignatureStruct();
    SignatureAndHashAlgorithmStruct*  mAlgorithm;
    SignerIdentityStruct*         mIdentity;
    std::vector<unsigned char>    mSignatureValue;
 
 
-   SignatureStruct() {mName = "Signature";}
    PDUMemberFunctions
 };
 
 
 class ForwardingLayerMessageStruct : public PDU {
 public:
+   ForwardingLayerMessageStruct();
    UInt8                         mReloToken;
    UInt32                        mOverlay;
    UInt8                         mTtl;
@@ -109,7 +110,6 @@ public:
    SignatureStruct*              mSig;
 
 
-   ForwardingLayerMessageStruct() {mName = "ForwardingLayerMessage";}
    PDUMemberFunctions
 };
 
