@@ -1,6 +1,7 @@
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
 
 #include "p2p/SelectTransporter.hxx"
 #include "p2p/Profile.hxx"
@@ -9,6 +10,9 @@
 #include "p2p/Message.hxx"
 #include "p2p/Candidate.hxx"
 #include "p2p/p2p.hxx"
+#include "p2p/P2PSubsystem.hxx"
+
+#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 namespace p2p
 {
@@ -50,16 +54,23 @@ void
 SelectTransporter::addListenerImpl(resip::TransportType transport,
                                    resip::GenericIPAddress &address)
 {
+   int status;
    assert(!mHasBootstrapSocket);
    assert(transport == resip::TCP);
+
+   DebugLog(<< "Adding bootstrap listener");
 
    struct sockaddr_in addr = address.v4Address;
 
    mBootstrapSocket = ::socket(AF_INET, SOCK_STREAM, 0);
-   ::bind(mBootstrapSocket, reinterpret_cast<sockaddr *>(&addr),
-          sizeof(struct sockaddr_in));
+   if (!mBootstrapSocket) {ErrLog(<< "::socket() failed");}
 
-   ::listen(mBootstrapSocket, 120);
+   status = ::bind(mBootstrapSocket, reinterpret_cast<sockaddr *>(&addr),
+                   sizeof(struct sockaddr_in));
+   if (status) { ErrLog( << "Cannot ::bind"); }
+
+   status = ::listen(mBootstrapSocket, 120);
+   if (status) { ErrLog( << "Cannot ::listen"); }
 
    mHasBootstrapSocket = true;
 }
@@ -73,6 +84,7 @@ SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
    if (i == mNodeFlowMap.end())
    {
       // XXX FIX ME -- should send error to application
+      ErrLog( << "Cannot send -- node not in flow map");
       return;
    }
 
@@ -83,15 +95,25 @@ SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
    resip::Data data;
    data = msg->encodePayload();
 
-   ::send((i->second).getSocket(), data.c_str(), data.size(), 0);
+   size_t bytesSent = ::send((i->second).getSocket(), data.data(), data.size(), 0);
    // XXX should check send response, and inform app of error if fail
+
+   if (bytesSent != data.size()) 
+   { 
+      ErrLog( << "Cannot send -- ::send returned " << bytesSent); 
+   }
 }
 
 void
 SelectTransporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
 {
-   ::send(flowId.getSocket(), data->c_str(), data->size(), 0);
+   size_t bytesSent = ::send(flowId.getSocket(), data->data(), data->size(), 0);
    // XXX should check send response, and inform app of error if fail
+
+   if (bytesSent != data->size()) 
+   { 
+      ErrLog(<< "Cannot send -- ::send returned " << bytesSent); 
+   }
 }
 
 void
@@ -99,10 +121,11 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
 {
   // For right now, we just return one candidate: a single TCP
   // listener. And we return it right away.
-
+  DebugLog(<< "Collection candidates for application " << appId);
 
   ListenerMap::iterator i;
   resip::GenericIPAddress addrPort;
+  int status;
 
   i = mListenerMap.find(std::make_pair(nodeId, appId));
 
@@ -110,6 +133,7 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
   // a new one and throw it in the listener map
   if (i == mListenerMap.end())
   {
+     DebugLog(<< "Adding new listener for application " << appId);
      struct sockaddr_in addr;
      resip::Socket s;
 #ifndef WIN32
@@ -120,9 +144,14 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
      memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
 
      s = ::socket(AF_INET, SOCK_STREAM, 0);
-     ::bind(s, reinterpret_cast<sockaddr *>(&addr),
+     if (!s) {ErrLog(<< "::socket() failed");}
+   
+     status = ::bind(s, reinterpret_cast<sockaddr *>(&addr),
             sizeof(struct sockaddr_in));
-     ::listen(s, 1);
+     if (status) { ErrLog( << "Cannot ::bind"); }
+
+     status = ::listen(s, 1);
+     if (status) { ErrLog( << "Cannot ::listen"); }
 
      addrPort.v4Address = addr;
 
@@ -135,6 +164,7 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
    }
    else
    {
+     DebugLog(<< "Found existing listener for application " << appId);
      addrPort = i->second.second;
    }
 
@@ -153,11 +183,18 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    resip::Socket s;
 
    s = ::socket(AF_INET, SOCK_STREAM, 0);
-   ::connect(s, &(bootstrapServer.address), sizeof(sockaddr_in));
+   if (!s) {ErrLog(<< "::socket() failed");}
+   
+   int status = ::connect(s, &(bootstrapServer.address), sizeof(sockaddr_in));
+   if (status) { ErrLog( << "Cannot ::connect"); }
 
    // Get the remote node ID from the incoming socket
    unsigned char buffer[16];
-   ::read(s, buffer, sizeof(buffer));
+   size_t bytesRead = ::read(s, buffer, sizeof(buffer));
+   if (bytesRead != sizeof(buffer)) 
+   {
+      ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+   }
 
    NodeId nodeId = resip::Data(buffer, sizeof(buffer));
 
@@ -188,8 +225,13 @@ SelectTransporter::connectImpl(NodeId nodeId,
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
    // Blow our node ID out on the wire (because there is no cert)
    const resip::Data nid = mConfiguration.nodeId().getValue();
-    ::send((i->second).getSocket(),
-           nid.c_str(), nid.size(), 0);
+   size_t bytesSent = ::send((i->second).getSocket(),
+                             nid.data(), nid.size(), 0);
+
+   if (bytesSent != nid.size()) 
+   {
+      ErrLog( << "Cannot ::send -- returned " << bytesSent); 
+   }
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 }
 
@@ -213,7 +255,10 @@ SelectTransporter::connectImpl(NodeId nodeId,
            || candidate.getTransportType() == resip::TLS);
 
    s = ::socket(AF_INET, SOCK_STREAM, 0);
-   ::connect(s, &(candidate.getAddress().address), sizeof(sockaddr_in));
+   if (!s) {ErrLog(<< "::socket() failed");}
+
+   int status = ::connect(s, &(candidate.getAddress().address), sizeof(sockaddr_in));
+   if (status) { ErrLog( << "Cannot ::connect"); }
 
    FlowId flowId(nodeId, application, s);
 
@@ -275,12 +320,22 @@ SelectTransporter::process(int ms)
      // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
      // Blow our node ID out on the wire (because there is no cert)
      const resip::Data nid = mConfiguration.nodeId().getValue();
-     ::send(s, nid.c_str(), nid.size(), 0);
+     size_t bytesSent = ::send((i->second).getSocket(),
+                               nid.data(), nid.size(), 0);
+
+     if (bytesSent != nid.size()) 
+     {
+        ErrLog( << "Cannot ::send -- returned " << bytesSent); 
+     }
      // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 
       // Get the remote node ID from the incoming socket
       unsigned char buffer[16];
-      ::read(s, buffer, sizeof(buffer));
+      size_t bytesRead = ::read(s, buffer, sizeof(buffer));
+      if (bytesRead != sizeof(buffer)) 
+      {
+         ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+      }
 
       NodeId nodeId = resip::Data(buffer, sizeof(buffer));
 
@@ -315,7 +370,13 @@ SelectTransporter::process(int ms)
         // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
         // Blow our node ID out on the wire (because there is no cert)
         const resip::Data nid = mConfiguration.nodeId().getValue();
-        ::send(s, nid.c_str(), nid.size(), 0);
+        size_t bytesSent = ::send((i->second).getSocket(),
+                                  nid.data(), nid.size(), 0);
+
+        if (bytesSent != nid.size()) 
+        {
+           ErrLog( << "Cannot ::send -- returned " << bytesSent); 
+        }
         // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 
         FlowId flowId(nodeId, application, s);
@@ -324,7 +385,11 @@ SelectTransporter::process(int ms)
           std::map<NodeId, FlowId>::value_type(nodeId, flowId));
 
         unsigned char buffer[16];
-        ::read(s, buffer, sizeof(buffer));
+        size_t bytesRead = ::read(s, buffer, sizeof(buffer));
+        if (bytesRead != sizeof(buffer)) 
+        {
+           ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+        }
         
         // Ideally, we'd check that the nodeId we just read
         // actually matches the nodeId we were expecting.
@@ -362,11 +427,23 @@ SelectTransporter::process(int ms)
             char *buffer = new char[16384];
             UInt32 *int_buffer = reinterpret_cast<UInt32*>(buffer);
             // Suck in the header
-            ::read(flowId.getSocket(), buffer, 30);
+            size_t bytesRead = ::read(flowId.getSocket(), buffer, 30);
+
+            if (bytesRead != 30) 
+            {
+               ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+            }
+
             if (int_buffer[0] == htonl(0x80000000 | 0x52454C4F))
             {
-               int length = ntohl(int_buffer[3]) & 0xFFFFFF;
-               ::read(flowId.getSocket(), buffer+30, length-30);
+               size_t length = ntohl(int_buffer[3]) & 0xFFFFFF;
+               bytesRead = ::read(flowId.getSocket(), buffer+30, length-30);
+
+               if (bytesRead != (length - 30)) 
+               {
+                  ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+               }
+
                resip::Data data(resip::Data::Take, buffer, length);
                std::auto_ptr<p2p::Message> msg(Message::parse(data));
                msg->pushVia(i->first);
