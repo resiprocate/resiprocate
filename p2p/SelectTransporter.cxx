@@ -149,7 +149,8 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
 void
 SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
 {
-  // XXX
+   // XXX
+   assert(0);
 }
 
 void
