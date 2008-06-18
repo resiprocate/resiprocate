@@ -16,12 +16,13 @@
 namespace p2p
 {
 
-class TransporterMessage;
 class Candidate;
+class Event;
+class FlowId;
 class Message;
 class Profile;
-class FlowId;
 class TransporterCommand;
+class TransporterMessage;
 
 class Transporter
 {
@@ -38,7 +39,7 @@ class Transporter
 
       virtual ~Transporter();
 
-      void setRxFifo(resip::Fifo<TransporterMessage> *fifo) {mRxFifo = fifo;}
+      void setRxFifo(resip::Fifo<Event> *fifo) {mRxFifo = fifo;}
 
       virtual bool process(int seconds=0) = 0;
    
@@ -83,7 +84,7 @@ class Transporter
                        resip::GenericIPAddress &stunTurnServer) = 0;
 
      resip::Fifo<TransporterCommand> mCmdFifo;
-     resip::Fifo<TransporterMessage> *mRxFifo;
+     resip::Fifo<Event>* mRxFifo;
 
      Profile &mConfiguration;
 

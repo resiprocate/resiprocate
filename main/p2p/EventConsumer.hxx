@@ -6,14 +6,27 @@ namespace p2p
 
 class CertDoneEvent;
 class StoreAns;
+class ConnectionOpened;
+class ConnectionClosed;
+class MessageArrived;
+class ApplicationMessageArrived;
+class LocalCandidatesCollected;
+
 template<class T> class EventWrapper;
 
 class EventConsumer
 {
    public:
       virtual ~EventConsumer(){};
+
       virtual void consume(CertDoneEvent& certdone) { assert(0); }
       virtual void consume(EventWrapper<StoreAns>& storeAns) { assert(0); }
+      virtual void consume(ConnectionOpened& m) { assert(0); }
+      virtual void consume(ConnectionClosed& m) { assert(0); }
+      virtual void consume(MessageArrived& m) { assert(0); }
+      virtual void consume(ApplicationMessageArrived& m) { assert(0); }
+      virtual void consume(LocalCandidatesCollected& m) { assert(0); }
+      
 };
 
 }
