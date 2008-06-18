@@ -39,7 +39,11 @@ class ChordTopology : public TopologyAPI
       virtual void consume(UpdateReq& msg);
       virtual void consume(LeaveReq& msg);
 
+      // deal with responses
       virtual void consume(ConnectAns& msg);
+      virtual void consume(JoinAns& msg);
+      virtual void consume(UpdateAns& msg);
+      virtual void consume(LeaveAns& msg);
    
       // called when store set completes, cases update to get sent
       // virtual void consume(EventWrapper<StoreSetFoo>& event);
@@ -72,6 +76,7 @@ class ChordTopology : public TopologyAPI
       std::set<NodeId> mFingerTable;
       std::vector<NodeId> mPrevTable;
       std::vector<NodeId> mNextTable;
+      bool mJoined;
 
       bool addNewNeighbors(  const std::vector<NodeId>& nodes, bool adjustNextOnly ); // return true if
                                                           // anything changed
