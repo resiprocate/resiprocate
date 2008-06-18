@@ -5,7 +5,7 @@
 
 using namespace p2p;
 
-NodeId::NodeId() : mA(0), mB(0)
+NodeId::NodeId() : mHigh(0), mLow(0)
 {
 }
 
@@ -41,22 +41,29 @@ NodeId
 NodeId::add2Pow( int power ) const
 {
    assert( power < 128 );
-   assert( power > 0 );
+   assert( power >= 0 );
    NodeId ret;
-/*
+
    ret = *this;
    
-   int byte = 15-power/8;
-   assert( byte >= 0 );
-   assert( byte < 16 );
+   if ( power >= 64 )
+   {
+      // working on high word 
+      power -= 64;
+      if (power>0) 
+      {
+         ret.mHigh += 1<<(power-1);
+      }
+   }
+   else
+   {
+      // working on low word
+       if (power>0) 
+      {
+         ret.mLow += 1<<(power-1);
+      }
+   }
    
-   int val = 1<<(power%8);
-   assert( val >= 1 );
-   assert( val <= 128 );
-   
-   ret.mValue[byte] += val;
-
-*/
    return ret;
 }
 
