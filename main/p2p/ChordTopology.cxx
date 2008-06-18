@@ -16,7 +16,13 @@ using namespace p2p;
 ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
    TopologyAPI(config, dispatcher, transporter) 
 {
-   // TODO - need to register with dispatcher for events
+   // register with dispatcher for reload request events
+   mDispatcher.registerPostable(Message::JoinReqType, *this);
+   mDispatcher.registerPostable(Message::UpdateReqType, *this);
+   mDispatcher.registerPostable(Message::LeaveReqType, *this);
+
+   // register with dispatcher for reload response events
+   mDispatcher.registerPostable(Message::ConnectAnsType, *this);
 }
       
 void 
@@ -144,7 +150,8 @@ ChordTopology::consume(LeaveReq& msg)
 void 
 ChordTopology::consume(ConnectAns& msg)
 {
-   assert(0);
+   // Form socket connection
+   //mTransporter.connect(
 }
 
 
