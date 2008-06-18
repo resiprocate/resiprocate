@@ -82,16 +82,16 @@ ChordTopology::connectionLost( NodeId& node )
 
 
 void 
-ChordTopology::candidatesCollected( NodeId& node, std::vector<Candidate>& candidates)
+ChordTopology::candidatesCollected( NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
 {
    // Connect to node - send the ConnectReq
    std::vector<resip::Data> dataCandidates;
    std::vector<Candidate>::iterator it = candidates.begin();
    for(;it != candidates.end(); it++)
    {
-      dataCandidates.push_back(resip::Data::Empty);  // Todo convert Candidate to Data
+      dataCandidates.push_back(resip::Data::Empty);  // Todo convert Candidate to Data (in SDP format)
    }
-   std::auto_ptr<Message> connectReq(new ConnectReq(resip::Data::Empty /* icefrag */, resip::Data::Empty /* resip::Data::Empty */, 0 /* port */, resip::Data::Empty /* ice tcp role */, dataCandidates));
+   std::auto_ptr<Message> connectReq(new ConnectReq(resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, dataCandidates));
    mDispatcher.send(connectReq);
       
 // callback here 
