@@ -2,6 +2,16 @@
 namespace p2p
 {
 
+void
+ForwardingLayer::process(int ms)
+{
+   TransporterMessage *tm = mRxFifo.getNext(ms);
+   if (!tm)
+   {
+      return;
+   }
+}
+
 }
 
 /* ======================================================================
