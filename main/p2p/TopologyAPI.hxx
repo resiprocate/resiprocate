@@ -26,6 +26,9 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
    public:
       virtual ~TopologyAPI() = 0;
       TopologyAPI(Profile& config, TransactionLayer& transactionProcessor);
+
+      // called to join the overlay 
+      virtual void joinOverlay( resip::GenericIPAddress& address )=0;
       
       // need a fifo to receive timer events 
 
@@ -37,9 +40,8 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       virtual void consume(EventWrapper<JoinReq>& event)=0;
       virtual void consume(EventWrapper<UpdateReq>& event)=0;
       virtual void consume(EventWrapper<LeaveReq>& event)=0;
-      //virtual void processJoin( Message& message )=0;
-      //virtual void processUpdate( Message& message )=0;
-      //virtual void processLeave( Message& message )=0;
+
+
       
       // Deal with routing querries 
       virtual const NodeId& findNextHop( NodeId& node )=0;
