@@ -246,6 +246,12 @@ ChordTopology::isResponsible( const ResourceId& resource ) const
   return isResponsible( node );
 }
 
+bool 
+ChordTopology::isResponsible( const DestinationId& did ) const
+{
+   return isResponsible(did.asNodeId());
+}
+
 
 // Functions to find out if this peer is responsible for something
 bool 
