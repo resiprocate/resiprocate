@@ -17,6 +17,7 @@ namespace p2p
 class NodeId
 {
    public:
+	  NodeId() { mValue[0] = mValue[1] = 0; }
       NodeId(const resip::Data& data);
       NodeId& operator=(const resip::Data& data);
       NodeId& operator=(const NodeId& data);

@@ -1,5 +1,7 @@
 #include "rutil/Data.hxx"
+#include "p2p/Join.hxx"
 #include "p2p/MessageStructsGen.hxx"
+#include "rutil/DataStream.hxx"
 
 #include <iostream>
 
@@ -13,6 +15,12 @@ int main()
 	std::cout << "done" << std::endl;
 
 //	hdr.print(std::cout, 2);
+
+	resip::Data d;
+	p2p::NodeId n;
+	p2p::Message *m = new p2p::JoinReq(n,d);
+	m->setOverlayName("duane");
+	resip::Data encodedMessage = m->encodePayload();
 
 //	Data d;
 //	DataStream ds(d);

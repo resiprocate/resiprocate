@@ -4,6 +4,8 @@
 #include "rutil/Data.hxx"
 #include "p2p.hxx"
 
+#include "p2p/MessageStructsGen.hxx"
+
 #include <vector>
 
 namespace p2p
@@ -20,6 +22,8 @@ class Signable
       {
          return mSignature;
       }
+
+	  s2c::SignatureStruct *sign(const std::vector<resip::Data> &signableData);
       
    protected:         
       virtual std::vector<resip::Data> collectSignableData() const = 0;

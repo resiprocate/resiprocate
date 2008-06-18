@@ -10,11 +10,23 @@
 #include <assert.h>
 
 using namespace p2p;
+using namespace s2c;
 
 Message::Message(ResourceId rid) :
 	mResourceId(rid)
 {
-	mVersion = 0x1; // set by the draft
+	mHeader = new ForwardingHeaderStruct();
+	mHeader->mVersion = 0x1; // set by the draft
+	mHeader->mTransactionId = 	(static_cast<UInt64>(rand()) << 48) |
+							 	(static_cast<UInt64>(rand()) << 32) |
+							 	(static_cast<UInt64>(rand()) << 16) |
+					 			(static_cast<UInt64>(rand()));
+}
+
+Message::Message()
+{
+	mHeader = new ForwardingHeaderStruct();
+	mHeader->mVersion = 0x1; // set by the draft
 }
 
 Message::~Message() 
@@ -26,6 +38,12 @@ void
 Message::setOverlayName(const resip::Data &overlayName)
 {
 	mOverlayName = overlayName;
+
+	// create the overlay field from the overlay name
+	resip::SHA1Stream stream;
+	stream << mOverlayName;
+	resip::Data sha1 = stream.getBin(32);
+	mHeader->mOverlay = ntohl(*reinterpret_cast<const UInt32 *>(sha1.c_str()));
 }
 
 Message *
@@ -72,40 +90,46 @@ Message::parse(const resip::Data &message)
 void 
 Message::copyForwardingData(const Message &header)
 {
-	mOverlay = header.mOverlay;
-	mTransactionId = header.mTransactionId;
+	mHeader->mOverlay = header.mHeader->mOverlay;		
+	mHeader->mTransactionId = header.mHeader->mTransactionId;
 }
 
 
 void 
 Message::decrementTTL()
 {
-	assert(mTtl);
-	mTtl--;
+	assert(mHeader->mTtl);
+	mHeader->mTtl--;
 }
 
 UInt8 
 Message::getTTL() const
 {
-	return mTtl;
+	return mHeader->mTtl;
+}
+
+void
+Message::setTTL(UInt8 ttl)
+{
+	mHeader->mTtl = ttl;
 }
 
 UInt32 
 Message::getOverlay() const
 {
-	return mOverlay;
+	return mHeader->mOverlay;
 }
 
 UInt64 
 Message::getTransactionID() const
 {
-	return mTransactionId;
+	return mHeader->mTransactionId;
 }
 
 UInt16 
 Message::getFlags() const 
 {
-	return mFlags;
+	return mHeader->mFlags;
 }
 
 JoinAns *
@@ -147,14 +171,14 @@ Message::encodePayload()
 	resip::SHA1Stream stream;
 	stream << mOverlayName;
 
-   mOverlay = stream.getUInt32();
-	mMessageCode = static_cast<UInt16>(getType());
+	mHeader->mMessageCode = static_cast<UInt16>(getType());
+    mHeader->mOverlay = stream.getUInt32();
 
 	resip::Data encodedData;
 	resip::DataStream encodedStream(encodedData);
 
 	// encode forwarding header
-	encode(encodedStream);
+	mHeader->encode(encodedStream);
 
 	encodedStream.flush();
 	size_t startOfPayload = encodedData.size();
@@ -170,6 +194,9 @@ Message::encodePayload()
 	sigChunks.push_back(resip::Data(resip::Data::Borrow, encodedData.data() + 4, 4));	// overlay
 	sigChunks.push_back(resip::Data(resip::Data::Borrow, encodedData.data() + 16, 8));	// transaction id
 	sigChunks.push_back(resip::Data(resip::Data::Borrow, encodedData.data() + startOfPayload, endOfPayload - startOfPayload));	// transaction id
+
+	s2c::SignatureStruct *sigBlock = sign(sigChunks);
+	mSig = sigBlock;
 
 	// we should optimize this eventually to avoid this copy
 	return encodedData;

@@ -23,7 +23,7 @@ protected:
 class JoinReq : public Message
 {
 public:
-      JoinReq(NodeId nodeID, const resip::Data &overlaySpecific);
+      JoinReq(const NodeId &nodeID, const resip::Data &overlaySpecific);
 
       virtual MessageType getType() const { return Message::JoinReqType; }
       NodeId getNodeID() const { return mNodeID; }
