@@ -17,11 +17,11 @@ class P2PStack
       void run();
       
    private:
-      Profile mConfig;
+      Profile mProfile;
 
       Dispatcher mDispatcher;
       SelectTransporter mTransporter;
-      Chord mChord;
+      ChordTopology mChord;
       ForwardingLayer mForwarder;
 };
 
