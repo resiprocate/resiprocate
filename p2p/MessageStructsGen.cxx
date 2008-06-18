@@ -798,6 +798,52 @@ void ForwardingLayerMessageStruct :: encode(std::ostream& out)
 
 
 
+// Classes for MessagePayloadStruct */
+
+MessagePayloadStruct :: MessagePayloadStruct ()
+{
+   mName = "MessagePayloadStruct";
+ DebugLog(<< "Constructing MessagePayloadStruct");
+
+};
+
+void MessagePayloadStruct :: print(std::ostream& out, int indent) const 
+{
+   do_indent(out,indent);
+   (out) << "MessagePayload:\n";
+   indent+=2;
+    out << mPayload.hex();
+};
+
+void MessagePayloadStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding MessagePayloadStruct");
+   {
+      UInt32 len;
+      int c;
+      decode_uintX(in, 24, len);
+      resip::DataStream strm(mPayload);
+      while(len--){
+        c=in.get();
+        if(c==EOF)
+          throw resip::ParseException("Premature end of data",
+          "payload",__FILE__,__LINE__);
+          strm.put(c);
+      };
+   }
+
+};
+
+void MessagePayloadStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding MessagePayloadStruct");
+    encode_uintX(out, 24, mPayload.size());
+    out << mPayload;
+
+};
+
+
+
 // Classes for ErrorResponseStruct */
 
 ErrorResponseStruct :: ErrorResponseStruct ()
