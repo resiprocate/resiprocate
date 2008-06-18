@@ -13,7 +13,7 @@ namespace p2p {
   void digestData(const vector<Data> toBeSigned, 
     unsigned char digest[32])
     {
-      EVP_MD_CTX md;
+       //EVP_MD_CTX md;
       
       
       

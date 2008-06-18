@@ -28,9 +28,11 @@ class ChordTopology : public TopologyAPI
       // need a fifo to receive timer events 
 
       // Messages that the forwarding layer sends to this object
-      virtual void newConnectionFormed( NodeId& node );
-      virtual void connectionLost( NodeId& node );
-      virtual void candidatesCollected( NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)=0;
+      virtual void newConnectionFormed( const NodeId& node );
+      virtual void connectionLost( const NodeId& node );
+      virtual void candidatesCollected( const NodeId& node, 
+                                        unsigned short appId, 
+                                        std::vector<Candidate>& candidates)=0;
        
       // deal with topology change messages 
       virtual void consume(JoinReq& msg);
@@ -43,22 +45,22 @@ class ChordTopology : public TopologyAPI
       // virtual void consume(EventWrapper<StoreSetFoo>& event);
 
       // Deal with routing querries 
-      virtual const NodeId& findNextHop( NodeId& node );
-      virtual const NodeId& findNextHop( ResourceId& resource );
+      virtual const NodeId& findNextHop( const NodeId& node );
+      virtual const NodeId& findNextHop( const ResourceId& resource );
       
       // Deal with replication for storage 
-      virtual std::vector<NodeId> getReplicationSet(  ResourceId& resource );
+      virtual std::vector<NodeId> getReplicationSet( const ResourceId& resource );
       ///    Returns list of nodes to replicate on
 
       // Functions to find out if this peer is responsible for something
-      virtual bool isResponsible( NodeId& node );
-      virtual bool isResponsible( ResourceId& resource );
+      virtual bool isResponsible( const NodeId& node );
+      virtual bool isResponsible( const ResourceId& resource );
 
       // Function to determine if we are connected to a node
-      virtual bool isConnected( NodeId& node );
+      virtual bool isConnected( const NodeId& node );
 
       // Function to hash resource names into resourceID 
-      virtual ResourceId resourceId( resip::Data& resourceName );
+      virtual ResourceId resourceId( const resip::Data& resourceName );
               
    private:
       

@@ -105,9 +105,10 @@ class Message : public Signable
 
       // placeholder for doing via list compression
       
+      bool isDestinationListEmpty() const;
       DestinationId nextDestination() const;
       void popNextDestinationId(); 
-
+      
       virtual std::auto_ptr<Event> event();
       
       virtual resip::Data brief() const 
