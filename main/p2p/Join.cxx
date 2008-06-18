@@ -2,6 +2,11 @@
 
 using namespace p2p;
 
+JoinAns::JoinAns()
+{
+
+}
+
 JoinAns::JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific)
 {
    mOverlaySpecificData.resize(overlaySpecific.size());
@@ -14,6 +19,17 @@ void
 JoinAns::getEncodedPayload(resip::DataStream &strm) 
 {
    encode(strm);
+}
+
+void 
+JoinAns::decodePayload(resip::DataStream &strm)
+{
+	decode(strm);
+}
+
+JoinReq::JoinReq()
+{
+
 }
 
 JoinReq::JoinReq(const NodeId &node, const resip::Data &overlaySpecific) :
@@ -30,6 +46,12 @@ void
 JoinReq::getEncodedPayload(resip::DataStream &strm) 
 {
    encode(strm);
+}
+
+void
+JoinReq::decodePayload(resip::DataStream &strm)
+{
+	decode(strm);
 }
 
 /* ======================================================================

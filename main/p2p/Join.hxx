@@ -10,27 +10,37 @@ class JoinReq;
 
 class JoinAns : public Message, private s2c::JoinAnsStruct
 {
-   public:
-      JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific);
-      virtual MessageType getType() const { return Message::JoinAnsType; }
+public:
+	friend class Message;
 
-      virtual void getEncodedPayload(resip::DataStream &data);
+	JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific);
+	virtual MessageType getType() const { return Message::JoinAnsType; }
 
+	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual void decodePayload(resip::DataStream &dataStream);
+
+protected:
+	JoinAns();
 };
 
 class JoinReq : public Message, private s2c::JoinReqStruct
 {
-   public:
-      JoinReq(const NodeId &nodeID, const resip::Data &overlaySpecific=resip::Data::Empty);
+public:
+	friend class Message;
 
-      virtual MessageType getType() const { return Message::JoinReqType; }
-      NodeId getNodeID() const { return mNodeID; }
+	JoinReq(const NodeId &nodeID, const resip::Data &overlaySpecific=resip::Data::Empty);
 
-	  virtual void getEncodedPayload(resip::DataStream &data);
+	virtual MessageType getType() const { return Message::JoinReqType; }
+	NodeId getNodeID() const { return mNodeID; }
 
-   protected:
-      NodeId mNodeID;
-      resip::Data mOverlaySpecific;
+	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual void decodePayload(resip::DataStream &dataStream);
+
+protected:
+	JoinReq();
+
+	NodeId mNodeID;
+	resip::Data mOverlaySpecific;
 };
 
 

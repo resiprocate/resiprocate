@@ -8,26 +8,37 @@ namespace p2p
 
 class LeaveReq;
 
-class LeaveAns: public Message
+class LeaveAns: public Message, private s2c::LeaveReqStruct
 {
-   public:
-      LeaveAns(p2p::LeaveReq *request);
+public:
+	friend class Message;
 
-      virtual MessageType getType() const { return Message::LeaveAnsType; }
-      virtual void getEncodedPayload(resip::DataStream &data);
+	LeaveAns(p2p::LeaveReq *request);
+
+	virtual MessageType getType() const { return Message::LeaveAnsType; }
+	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual void decodePayload(resip::DataStream &dataStream);
+
+protected:
+	LeaveAns();
 };
 
 
 class LeaveReq : public Message
 {
-   public:
-      LeaveReq(NodeId node);
-      
-      virtual MessageType getType() const { return Message::LeaveReqType; }
-      virtual void getEncodedPayload(resip::DataStream &data);
+public:
+	friend class Message;
 
-   protected:
-      NodeId mNode;
+	LeaveReq(NodeId node);
+      
+	virtual MessageType getType() const { return Message::LeaveReqType; }
+	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual void decodePayload(resip::DataStream &dataStream);
+
+protected:
+	LeaveReq();
+
+	NodeId mNode;
 };
 
 }
