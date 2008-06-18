@@ -24,7 +24,7 @@ class StoreAns : public ResourceMessage
          return mGeneration;
       }
 
-      EventWrapper<StoreAns>* event();
+      std::auto_ptr<Event> event();
       
 //       {
 //          return EventWrapper::wrap(this);

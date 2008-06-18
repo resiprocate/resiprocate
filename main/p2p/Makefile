@@ -32,7 +32,8 @@ SRC 	+= \
 	TransporterMessage.cxx \
 	Update.cxx \
         NodeId.cxx \
-	ForwardingLayer.cxx
+	ForwardingLayer.cxx \
+	Dispatcher.cxx \
 
 
 include $(BUILD)/Makefile.post

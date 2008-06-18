@@ -12,7 +12,7 @@ class JoinAns : public Message
 {
 public:
     JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific);
-    virtual MessageType getMessageType() const { return Message::JoinAnsType; }
+    virtual MessageType getType() const { return Message::JoinAnsType; }
 
 	virtual void getEncodedPayload(resip::DataStream &data) const;
 
@@ -25,7 +25,7 @@ class JoinReq : public Message
 public:
       JoinReq(NodeId nodeID, const resip::Data &overlaySpecific);
 
-      virtual MessageType getMessageType() const { return Message::JoinReqType; }
+      virtual MessageType getType() const { return Message::JoinReqType; }
       NodeId getNodeID() const { return mNodeID; }
 
 	  virtual void getEncodedPayload(resip::DataStream &data) const;
