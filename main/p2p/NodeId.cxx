@@ -47,6 +47,16 @@ NodeId::getValue() const
    return result;
 }
 
+
+NodeId::NodeId()
+{ 
+   for ( int i=0; i<16; i++ )
+   {
+      mValue[i] = 0;
+   }
+}
+
+
 NodeId
 DestinationId::asNodeId() const
 {
@@ -55,6 +65,32 @@ DestinationId::asNodeId() const
    return id;
 }
 
+
+NodeId
+NodeId::add2Pow( int power ) const
+{
+   assert( power < 128 );
+   assert( power > 0 );
+   NodeId ret;
+   ret = *this;
+   
+   int byte = 15-power/8;
+   assert( byte >= 0 );
+   assert( byte < 16 );
+   
+   int val = 1<<(power%8);
+   assert( val >= 1 );
+   assert( val <= 128 );
+   
+   ret.mValue[byte] += val;
+
+   return ret;
+}
+
+
+}
+
+=======
 bool
 DestinationId::isCompressed()const
 {
@@ -91,6 +127,7 @@ DestinationId::operator==(const NodeId& nid) const
 }
 
 
+>>>>>>> .r8002
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
  *  All rights reserved.
