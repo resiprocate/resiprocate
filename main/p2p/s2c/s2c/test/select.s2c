@@ -9,5 +9,6 @@ struct {
          case one:
            uint16   one_arm1;
            opaque   one_arm2[10];
+	   opaque   one_arm3<0..2^16-1>;
        };
 } named;

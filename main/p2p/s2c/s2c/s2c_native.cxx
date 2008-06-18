@@ -52,7 +52,7 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_char &value)
     int size;
     int c;      
     
-    assert(bits==8);
+    assert(bits<=8);
 
     size=bits/8;
     
@@ -89,7 +89,7 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int16 &value
     int size;
     int c;
     
-    assert(bits==16);
+    assert(bits<=16);
 
     size=bits/8;
     
@@ -107,7 +107,7 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int32 &value
     int size;
     int c;
     
-    assert(bits==32);
+    assert(bits<=32);
 
     size=bits/8;
     
@@ -125,7 +125,7 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int64 &value
     int size;
     int c;
     
-    assert(bits==64);
+    assert(bits<=64);
 
     size=bits/8;
     
