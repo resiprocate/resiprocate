@@ -111,7 +111,7 @@ Message::getFlags() const
 JoinAns *
 Message::makeJoinResponse(const resip::Data &overlaySpecific)
 {
-	assert(getMessageType() == JoinReqType);
+   assert(getType() == JoinReqType);
 
 	JoinReq *req = static_cast<JoinReq *>(this);
 	JoinAns *response = new JoinAns(req, overlaySpecific);
@@ -122,7 +122,7 @@ Message::makeJoinResponse(const resip::Data &overlaySpecific)
 LeaveAns *
 Message::makeLeaveResponse() 
 {
-	assert(getMessageType() == LeaveReqType);
+	assert(getType() == LeaveReqType);
 
 	LeaveReq *req = static_cast<LeaveReq *>(this);
 	return new LeaveAns(req);
@@ -131,7 +131,7 @@ Message::makeLeaveResponse()
 UpdateAns *
 Message::makeUpdateResponse()
 {
-	assert(getMessageType() == UpdateReqType);
+	assert(getType() == UpdateReqType);
 
 	UpdateReq *req = static_cast<UpdateReq *>(this);
 	UpdateAns *response = new UpdateAns(req);
@@ -149,7 +149,7 @@ Message::encodePayload()
 	resip::Data sha1 = stream.getBin(32);
 	mOverlay = ntohl(*reinterpret_cast<const UInt32 *>(sha1.c_str()));
 
-	mMessageCode = static_cast<UInt16>(getMessageType());
+	mMessageCode = static_cast<UInt16>(getType());
 
 	resip::Data encodedData;
 	resip::DataStream encodedStream(encodedData);

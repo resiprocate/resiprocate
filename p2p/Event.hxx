@@ -11,7 +11,7 @@ class EventConsumer;
 class Event 
 {
    public:
-      virtual ~Event();
+      virtual ~Event(){};
       virtual void dispatch(EventConsumer& consumer) = 0;
 };
 
