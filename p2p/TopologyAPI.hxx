@@ -41,8 +41,8 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       //virtual void processLeave( Message& message )=0;
       
       // Deal with routing querries 
-      virtual NodeId& findNextHop( NodeId& node )=0;
-      virtual NodeId& findNextHop( ResourceId& resource )=0;
+      virtual const NodeId& findNextHop( NodeId& node )=0;
+      virtual const NodeId& findNextHop( ResourceId& resource )=0;
       
       // Deal with replication for storage 
       virtual std::vector<NodeId> getReplicationSet(  ResourceId& resource )=0;
