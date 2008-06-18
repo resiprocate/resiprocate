@@ -125,6 +125,8 @@ class Message : public Signable
          return resip::Data::Empty;
       }
 
+		void dump() const;
+
 		bool operator==(const Message& msg) const;
 
 protected:
