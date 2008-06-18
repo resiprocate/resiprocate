@@ -1,9 +1,13 @@
 enum { zero (0), one(1), (255) } Binary;
 
-       select (Binary) {
+struct {
+       Binary type;
+
+       select (type) {
          case zero:
            uint8    zero_arm;
          case one:
            uint16   one_arm1;
            opaque   one_arm2[10];
        } named;
+} wrapper_struct;
