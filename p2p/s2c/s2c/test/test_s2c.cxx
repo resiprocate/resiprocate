@@ -15,6 +15,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
 #include "selectGen.hxx"
+#include "autoGen.hxx"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -59,5 +60,22 @@ int main(int argc, char **argv)
     
     std::cout << "Type is" << std::hex << (int)ns2.mSwitchtype << "\n";
 //    std::cout << std::hex << (int)ns2.mZero.mZeroArm << "\n";
+
+
+
+    // ***** Test auto ******
+    s2c::AutoExampleStruct a1;
+    a1.mType=s2c::abel;
+    a1.mAbel.mAbel1=55;
+    fout.open("test2.out");
+    a1.encode(fout);
+    fout.close();    
+    
+    std::ifstream fin2;
+    fin2.open("test2.out");
+    s2c::AutoExampleStruct a2;
+    a2.decode(fin2);
+
   }
+
 

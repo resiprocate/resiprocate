@@ -15,7 +15,7 @@
 
 static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out, int do_inline);
 static int s2c_gen_encode_c_select(p_decl *decl, FILE *out, int do_inline);
-static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,int do_inline);
+static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,char *instream,int do_inline);
 static int s2c_gen_print_c_select(p_decl *decl, FILE *out,int do_inline);
 static int s2c_gen_construct_c_member(p_decl *member, FILE *out,int indent, char *prefix);
 
@@ -255,7 +255,8 @@ static int s2c_gen_pdu_h_struct(p_decl *decl, FILE *out)
 
     entry=STAILQ_FIRST(&decl->u.struct_.members);
     while(entry){
-      s2c_gen_pdu_h_member(entry, out);
+      if(!entry->auto_len)
+        s2c_gen_pdu_h_member(entry, out);
     
       entry=STAILQ_NEXT(entry,entry);
     }
@@ -411,6 +412,7 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent, char *p
 static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
   {
     p_decl *entry;
+    int do_auto=0;
 
     fprintf(out,"void %s :: encode(std::ostream& out)\n{\n",type2class(decl->name));
     
@@ -418,10 +420,28 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
     entry=STAILQ_FIRST(&decl->u.struct_.members);
 
     while(entry){
-      s2c_gen_encode_c_member(entry, out, 0,"");
-      
+      if(entry->auto_len){
+        if(do_auto)
+          nr_verr_exit("Auto len feature can only be used once per struct");
+        
+        do_auto=entry->u.ref_.ref->u.primitive_.bits;
+
+        fprintf(out,"   long pos1=out.tellp();\n");
+        fprintf(out,"   out.seekp(pos1 + %d);\n",do_auto/8);
+      }
+      else{
+        s2c_gen_encode_c_member(entry, out, 0,"");
+      }
+
       fprintf(out,"\n");
       entry=STAILQ_NEXT(entry,entry);
+    }
+
+    if(do_auto){
+      fprintf(out,"   long pos2=out.tellp();\n");
+      fprintf(out,"   out.seekp(pos1);\n");
+      fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
+        do_auto, do_auto/8);
     }
 
     fprintf(out,"};\n\n");
@@ -547,7 +567,8 @@ static int s2c_gen_print_c_struct(p_decl *decl, FILE *out)
     entry=STAILQ_FIRST(&decl->u.struct_.members);
 
     while(entry){
-      s2c_gen_print_c_member(entry, out);
+      if(!entry->auto_len)
+        s2c_gen_print_c_member(entry, out);
 
       entry=STAILQ_NEXT(entry,entry);
     }
@@ -593,7 +614,7 @@ static int s2c_gen_decode_c_simple_type(p_decl *decl, char *prefix, char *refere
     return(0);
   }
 
-static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent, char *prefix)
+static int s2c_gen_decode_c_member(p_decl *member, FILE *out,char *instream,int indent, char *prefix)
   {
     int i;
 
@@ -601,7 +622,7 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent, char *p
 
     switch(member->type){
       case TYPE_REF:
-        s2c_gen_decode_c_simple_type(member,prefix,name2var(member->name),"in",out);
+        s2c_gen_decode_c_simple_type(member,prefix,name2var(member->name),instream,out);
         break;
       case TYPE_VARRAY:
         {
@@ -630,13 +651,13 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent, char *p
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
-          s2c_gen_decode_c_simple_type(member->u.array_.ref,prefix,reference,"in",out);
+          s2c_gen_decode_c_simple_type(member->u.array_.ref,prefix,reference,instream,out);
 
           break;
         }
       case TYPE_SELECT:
         {
-          s2c_gen_decode_c_select(member, out, 1);
+          s2c_gen_decode_c_select(member, out, instream, 1);
         }
         break;
       default:
@@ -648,6 +669,7 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent, char *p
 static int s2c_gen_decode_c_struct(p_decl *decl, FILE *out)
   {
     p_decl *entry;
+    int do_auto=0;
 
     fprintf(out,"void %s :: decode(std::istream& in)\n{\n",type2class(decl->name));
     
@@ -655,12 +677,28 @@ static int s2c_gen_decode_c_struct(p_decl *decl, FILE *out)
     entry=STAILQ_FIRST(&decl->u.struct_.members);
 
     while(entry){
-      s2c_gen_decode_c_member(entry, out, 0, "");
-      
+      if(entry->auto_len){
+        if(do_auto)
+          nr_verr_exit("Auto len feature can only be used once per struct");
+
+        do_auto=entry->u.ref_.ref->u.primitive_.bits;
+        fprintf(out,"   {\n");
+        fprintf(out,"   resip::Data d;\n");
+        fprintf(out,"   read_varray1(in, %d, d);\n",do_auto/8);
+        fprintf(out,"   resip::DataStream in_auto(d);\n");
+      }
+      else{
+        s2c_gen_decode_c_member(entry, out, do_auto?"in_auto":"in",0, "");
+      }
+
       fprintf(out,"\n");
       entry=STAILQ_NEXT(entry,entry);
-    }
 
+    }
+    if(do_auto) {
+      fprintf(out,"   if(in_auto.peek()!=EOF) assert(0);\n"); /* FIXME: exception */
+      fprintf(out,"   }\n");
+    }
     fprintf(out,"};\n\n");
 
     return(0);
@@ -758,7 +796,9 @@ static int s2c_gen_construct_c_struct(p_decl *decl, FILE *out)
     fprintf(out," DebugLog(<< \"Constructing %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
     while(entry){
-      s2c_gen_construct_c_member(entry, out, 0, "");
+      if(!entry->auto_len){
+        s2c_gen_construct_c_member(entry, out, 0, "");
+      }
       
       fprintf(out,"\n");
       entry=STAILQ_NEXT(entry,entry);
@@ -793,7 +833,7 @@ static int s2c_gen_print_c_select(p_decl *decl, FILE *out, int do_inline)
     }
   }
 
-static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,int do_inline)
+static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,char *instream, int do_inline)
   {
     p_decl *arm;
     p_decl *entry;
@@ -813,7 +853,7 @@ static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,int do_inline)
       entry=STAILQ_FIRST(&arm->u.select_arm_.members);
       while(entry){
         snprintf(prefix,100,"m%s.",camelback(arm->name));
-        s2c_gen_decode_c_member(entry, out, 9, prefix);
+        s2c_gen_decode_c_member(entry, out, instream, 9, prefix);
         entry=STAILQ_NEXT(entry,entry);
       }
       fprintf(out,"          break;\n\n");
@@ -836,7 +876,7 @@ static int s2c_gen_pdu_c_select(p_decl *decl, FILE *out)
 
     s2c_gen_construct_c_select(decl, out, 0);
     s2c_gen_print_c_select(decl, out,0 );
-    s2c_gen_decode_c_select(decl, out, 0);
+    s2c_gen_decode_c_select(decl, out, "in" ,0);
     s2c_gen_encode_c_select(decl, out, 0);
 
     return(0);

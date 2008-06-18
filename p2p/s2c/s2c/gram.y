@@ -176,7 +176,7 @@ declaration : NAME_ NAME_ ';'
     p_decl *decl=0;
     void *v;
     int r;
-
+    char *magic;
 
     if(r=r_assoc_fetch(types,$1, strlen($1), &v)){
       r_log(LOG_GENERIC,LOG_DEBUG,"Unknown type %s\n",$1);
@@ -188,10 +188,23 @@ declaration : NAME_ NAME_ ';'
     }
 
     decl=RCALLOC(sizeof(p_decl));
-
+    
+    
     decl->name=r_strdup($2);
     decl->type = TYPE_REF;
     decl->u.ref_.ref = v;
+
+    if(magic=strchr(decl->name,'.')){
+      magic++;
+      if(!strcmp(magic,"auto_len")){
+        if(decl->u.ref_.ref->type != TYPE_PRIMITIVE)
+          nr_verr_exit("Auto len feature only usable with integers");
+        decl->auto_len=1;
+      }
+      else{
+        nr_verr_exit("Illegal magic operation %s",magic);
+      }
+    }
 
     $$=decl;
   };
