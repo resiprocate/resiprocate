@@ -11,7 +11,7 @@ template<class T> class EventWrapper;
 class EventConsumer
 {
    public:
-      virtual ~EventConsumer() { ; }
+      virtual ~EventConsumer(){};
       virtual void consume(CertDoneEvent& certdone) { assert(0); }
       virtual void consume(EventWrapper<StoreAns>& storeAns) { assert(0); }
 };

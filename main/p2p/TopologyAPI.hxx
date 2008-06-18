@@ -24,7 +24,8 @@ class TransactionLayer;
 class TopologyAPI :  public EventConsumer, public Postable<Event>
 {
    public:
-      TopologyAPI(Profile& config, TransactionLayer& transactionProcessor );
+      virtual ~TopologyAPI() = 0;
+      TopologyAPI(Profile& config, TransactionLayer& transactionProcessor);
       
       // need a fifo to receive timer events 
 
@@ -54,11 +55,7 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
 
       // Function to hash resource names into resourceID 
       virtual ResourceId resourceId( resip::Data& resourceName )=0;
-        
-      virtual ~TopologyAPI();
-      
    private:
-
       NodeId& myNodeId();
 };
 
