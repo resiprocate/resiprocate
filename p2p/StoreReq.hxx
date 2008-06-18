@@ -12,7 +12,7 @@ class StoreReq : public ResourceMessage
 {
    public:
       typedef std::list<resip::SharedPtr<AbstractValue> > AbstractValues;
-      virtual MessageType getMessageType() const { return Message::StoreReq; }
+      virtual MessageType getMessageType() const { return Message::StoreReqType; }
 
       AbstractValues& values();
       const AbstractValues& values() const;

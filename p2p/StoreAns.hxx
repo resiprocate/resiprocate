@@ -12,7 +12,7 @@ class StoreAns : public ResourceMessage
    public:
       typedef std::vector<NodeId> NodeIds;
       
-      virtual MessageType getMessageType() const { return Message::StoreAns; }
+      virtual MessageType getMessageType() const { return Message::StoreAnsType; }
 
       KindId getKindId() const 
       {
