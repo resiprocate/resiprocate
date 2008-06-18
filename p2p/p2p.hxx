@@ -10,6 +10,7 @@ namespace p2p
 typedef ::UInt32 KindId;
 typedef ::UInt32 Generation;
 typedef ::UInt8 ReplicaNumber;
+typedef ::UInt64 TransactionId;
 
 } // p2p
 
