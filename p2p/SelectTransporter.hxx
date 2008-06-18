@@ -16,7 +16,7 @@
 namespace p2p
 {
 
-class TransporterMessage;
+class Event;
 class Candidate;
 class Message;
 class Profile;
@@ -58,6 +58,7 @@ class SelectTransporter : public Transporter
       void connectImpl(NodeId nodeId, 
                        std::vector<Candidate> remoteCandidates,
                        unsigned short application,
+                       resip::Fifo<Event>&,
                        resip::GenericIPAddress &stunTurnServer);
 
    private:

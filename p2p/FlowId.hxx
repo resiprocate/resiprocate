@@ -2,6 +2,7 @@
 #define __P2P_FLOW_ID_HXX 1
 
 #include "rutil/Socket.hxx"
+#include "rutil/Fifo.hxx"
 #include "p2p/NodeId.hxx"
 
 namespace p2p
@@ -10,8 +11,14 @@ namespace p2p
 class FlowId
 {
    public:
-      FlowId(NodeId nodeId, unsigned short application, resip::Socket &socket)
-         : mNodeId(nodeId), mApplication(application), mDescriptor(socket) {;}
+      FlowId(NodeId nodeId, 
+             unsigned short application, 
+             resip::Socket &socket,
+             resip::Fifo<Event>& fifo)
+         : mNodeId(nodeId), mApplication(application), 
+           mFifo(fifo),
+           mDescriptor(socket)
+           {;}
 
       resip::Socket &getSocket() { return mDescriptor; }
 
@@ -19,9 +26,12 @@ class FlowId
 
       const NodeId &getNodeId() const {return mNodeId;}
 
+      resip::Fifo<Event> &getFifo() {return mFifo;}
+
    private:
       NodeId mNodeId;
       unsigned short mApplication;
+      resip::Fifo<Event> &mFifo;
 
       // This is descriptor for now; it changes to something else
       // when we add ICE
