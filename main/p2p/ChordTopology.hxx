@@ -68,9 +68,10 @@ class ChordTopology : public TopologyAPI
       std::vector<NodeId> mPrevTable;
       std::vector<NodeId> mNextTable;
 
-      bool addNewNeighbors(  std::vector<NodeId>& nodes ); // return true if
+      bool addNewNeighbors(  const std::vector<NodeId>& nodes, bool adjustNextOnly ); // return true if
                                                           // anything changed
-      bool addNewFingers( std::vector<NodeId>& nodes ); // return true if changed
+      bool addNewFingers( const std::vector<NodeId>& nodes ); // return true if changed
+      void buildFingerTable();
 };
 
 }
