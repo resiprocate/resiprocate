@@ -2,6 +2,7 @@
 #include "p2p/Join.hxx"
 #include "p2p/Update.hxx"
 #include "p2p/Leave.hxx"
+#include "p2p/Event.hxx"
 
 #include "rutil/SHA1Stream.hxx"
 #include "rutil/Socket.hxx" 
@@ -38,7 +39,7 @@ Message::makeErrorResponse(Message::Error::Code code, const resip::Data& reason)
 bool
 Message::isRequest() const
 {
-	unsigned int reqValue = static_cast<unsigned int>(getMessageType());
+	unsigned int reqValue = static_cast<unsigned int>(getType());
 	return ((reqValue % 2) == 1);
 }
 
@@ -183,6 +184,12 @@ Message::collectSignableData() const
    return list;
 }
 
+std::auto_ptr<Event> 
+Message::event()
+{
+   assert(0);
+   return std::auto_ptr<Event>(0);
+}
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

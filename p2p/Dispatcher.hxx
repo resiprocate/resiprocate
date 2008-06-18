@@ -26,7 +26,7 @@ class Dispatcher : public Postable<Message>
       typedef std::map<Message::MessageType, Postable<Event>*> Registry;
       Registry mRegistry;
 //      std::map<TransactionId, Message*>
-      ForwardingLayer& mForwardingLayer
+      ForwardingLayer& mForwardingLayer;
 };
 
 } // p2p
