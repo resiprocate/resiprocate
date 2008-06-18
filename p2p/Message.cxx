@@ -12,12 +12,14 @@
 using namespace p2p;
 using namespace s2c;
 
+const UInt8 Message::MessageVersion = 0x1;
+
 Message::Message(ResourceId rid) :
 	mResourceId(rid)
 {
-	mHeader = new ForwardingHeaderStruct();
-	mHeader->mVersion = 0x1; // set by the draft
-	mHeader->mTransactionId = 	(static_cast<UInt64>(rand()) << 48) |
+	mPDU.mHeader = new ForwardingHeaderStruct();
+	mPDU.mHeader->mVersion = MessageVersion; // set by the draft
+	mPDU.mHeader->mTransactionId = 	(static_cast<UInt64>(rand()) << 48) |
 							 	(static_cast<UInt64>(rand()) << 32) |
 							 	(static_cast<UInt64>(rand()) << 16) |
 					 			(static_cast<UInt64>(rand()));
@@ -25,8 +27,8 @@ Message::Message(ResourceId rid) :
 
 Message::Message()
 {
-	mHeader = new ForwardingHeaderStruct();
-	mHeader->mVersion = 0x1; // set by the draft
+	mPDU.mHeader = new ForwardingHeaderStruct();
+	mPDU.mHeader->mVersion = MessageVersion; // set by the draft
 }
 
 Message::~Message() 
@@ -43,7 +45,7 @@ Message::setOverlayName(const resip::Data &overlayName)
 	resip::SHA1Stream stream;
 	stream << mOverlayName;
 	resip::Data sha1 = stream.getBin(32);
-	mHeader->mOverlay = ntohl(*reinterpret_cast<const UInt32 *>(sha1.c_str()));
+	mPDU.mHeader->mOverlay = ntohl(*reinterpret_cast<const UInt32 *>(sha1.c_str()));
 }
 
 Message *
@@ -90,46 +92,46 @@ Message::parse(const resip::Data &message)
 void 
 Message::copyForwardingData(const Message &header)
 {
-	mHeader->mOverlay = header.mHeader->mOverlay;		
-	mHeader->mTransactionId = header.mHeader->mTransactionId;
+	mPDU.mHeader->mOverlay = header.mPDU.mHeader->mOverlay;		
+	mPDU.mHeader->mTransactionId = header.mPDU.mHeader->mTransactionId;
 }
 
 
 void 
 Message::decrementTTL()
 {
-	assert(mHeader->mTtl);
-	mHeader->mTtl--;
+	assert(mPDU.mHeader->mTtl);
+	mPDU.mHeader->mTtl--;
 }
 
 UInt8 
 Message::getTTL() const
 {
-	return mHeader->mTtl;
+	return mPDU.mHeader->mTtl;
 }
 
 void
 Message::setTTL(UInt8 ttl)
 {
-	mHeader->mTtl = ttl;
+	mPDU.mHeader->mTtl = ttl;
 }
 
 UInt32 
 Message::getOverlay() const
 {
-	return mHeader->mOverlay;
+	return mPDU.mHeader->mOverlay;
 }
 
 UInt64 
 Message::getTransactionID() const
 {
-	return mHeader->mTransactionId;
+	return mPDU.mHeader->mTransactionId;
 }
 
 UInt16 
 Message::getFlags() const 
 {
-	return mHeader->mFlags;
+	return mPDU.mHeader->mFlags;
 }
 
 JoinAns *
@@ -171,14 +173,14 @@ Message::encodePayload()
 	resip::SHA1Stream stream;
 	stream << mOverlayName;
 
-	mHeader->mMessageCode = static_cast<UInt16>(getType());
-    mHeader->mOverlay = stream.getUInt32();
+	mPDU.mHeader->mMessageCode = static_cast<UInt16>(getType());
+    mPDU.mHeader->mOverlay = stream.getUInt32();
 
 	resip::Data encodedData;
 	resip::DataStream encodedStream(encodedData);
 
 	// encode forwarding header
-	mHeader->encode(encodedStream);
+	mPDU.mHeader->encode(encodedStream);
 
 	encodedStream.flush();
 	size_t startOfPayload = encodedData.size();
@@ -196,10 +198,19 @@ Message::encodePayload()
 	sigChunks.push_back(resip::Data(resip::Data::Borrow, encodedData.data() + startOfPayload, endOfPayload - startOfPayload));	// transaction id
 
 	s2c::SignatureStruct *sigBlock = sign(sigChunks);
-	mSig = sigBlock;
+	mPDU.mSig = sigBlock;
 
-	mSig->encode(encodedStream);
+	mPDU.mSig->encode(encodedStream);
 	encodedStream.flush();
+
+	size_t finalLength = encodedData.size();
+	std::cout << "final size: " << finalLength << std::endl;
+
+	// add the length to the header
+	assert(mPDU.mHeader->mVersion);
+	UInt32 *lengthWord = reinterpret_cast<UInt32 *>(const_cast<char *>(encodedData.data()) + 12);
+	(*lengthWord) = (*lengthWord | (htonl(finalLength & 0xfff) >> 8));
+	std::cout << *lengthWord << std::endl;
 
 	// we should optimize this eventually to avoid this copy
 	return encodedData;
