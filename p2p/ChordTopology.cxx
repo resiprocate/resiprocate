@@ -17,40 +17,67 @@ using namespace p2p;
       
 
 // Messages that the forwarding layer sends to this object
-void Chord::newConnectionFormed( NodeId& node )
+void 
+Chord::newConnectionFormed( NodeId& node )
 {
    // go and add this to the finger table
+   assert(mFingerTable.find(node) == mFingerTable.end());
+   mFingerTable.insert(node);
 }
 
 
-void Chord::connectionLost( NodeId& node )
+void 
+Chord::connectionLost( NodeId& node )
 {
-   // if this is in the finger table, remove it 
-   assert(0);
+   // if node is in the finger table, remove it 
+   mFingerTable.erase(node);
+
+   // if node is in the mPrevTable, remove it
+   std::vector<NodeId>::iterator it = mPrevTable.begin();
+   for(; it != mPrevTable.end(); it++)
+   {
+      if(*it == node) 
+      {
+         mPrevTable.erase(it);
+      }
+   }
+
+   // if this is in the mNextTable, remove it
+   it = mNextTable.begin();
+   for(; it != mNextTable.end(); it++)
+   {
+      if(*it == node) 
+      {
+         mPrevTable.erase(it);
+      }
+   }
+
+   // TODO - go get another finger table entry?
 }
 
 
 // deal with topoogy change messages 
-void Chord::consume(EventWrapper<JoinReq>& event)
+void 
+Chord::consume(EventWrapper<JoinReq>& event)
 {
-   // check we are reponsivle for the data from this node 
+   // check we are reponsible for the data from this node 
 
    // send the data using multiple store messages over to the new node 
    // use a StoreSet to monitor 
 
-   // update the replicated data storage 
-
-   
+   // update the replicated data storage    
 }
 
 
-void Chord::consume(EventWrapper<UpdateReq>& event)
+void 
+Chord::consume(EventWrapper<UpdateReq>& event)
 {
    // see if this changes the neighbor tables and if it does send updates
 }
 
 
-void Chord::consume(EventWrapper<LeaveReq>& event)
+void 
+Chord::consume(EventWrapper<LeaveReq>& event)
 {
    // if this is in the prev/next table, remove it and send updates 
    assert(0);
@@ -58,7 +85,8 @@ void Chord::consume(EventWrapper<LeaveReq>& event)
 
 
 // Deal with routing queries 
-const NodeId& Chord::findNextHop( NodeId& node )
+const NodeId& 
+Chord::findNextHop( NodeId& node )
 {
    assert( !isResponsible(node) );
    
@@ -84,7 +112,8 @@ const NodeId& Chord::findNextHop( NodeId& node )
 }
 
 
-const NodeId& Chord::findNextHop( ResourceId& resource )
+const NodeId& 
+Chord::findNextHop( ResourceId& resource )
 {
    NodeId node( resource.value() );
    return findNextHop( node );
@@ -92,7 +121,8 @@ const NodeId& Chord::findNextHop( ResourceId& resource )
 
 
 // Deal with replication for storage 
-std::vector<NodeId> Chord::getReplicationSet(  ResourceId& resource )
+std::vector<NodeId> 
+Chord::getReplicationSet(  ResourceId& resource )
 {
    std::vector<NodeId> replicateSet;
    const unsigned int numReplications=2;
@@ -110,7 +140,8 @@ std::vector<NodeId> Chord::getReplicationSet(  ResourceId& resource )
 
 
 // Functions to find out if this peer is responsible for something
-bool Chord::isResponsible( NodeId& node )
+bool 
+Chord::isResponsible( NodeId& node )
 {
    if (mPrevTable.size() == 0) return false;
 
@@ -122,7 +153,8 @@ bool Chord::isResponsible( NodeId& node )
 }
 
 
-bool Chord::isResponsible( ResourceId& resource )
+bool 
+Chord::isResponsible( ResourceId& resource )
 {
   NodeId node( resource.value() );
   return isResponsible( node );
@@ -130,7 +162,8 @@ bool Chord::isResponsible( ResourceId& resource )
 
 
 // Function to hash resource names into resourceID 
-ResourceId Chord::resourceId( resip::Data& resourceName )
+ResourceId 
+Chord::resourceId( resip::Data& resourceName )
 {
    // call sha1, truncate to 128 bits, and return 
     resip::SHA1Stream strm;
@@ -150,7 +183,8 @@ Chord::~Chord()
 }
 
 
-bool Chord::addNewNeighbors(std::vector<NodeId>& nodes)
+bool 
+Chord::addNewNeighbors(std::vector<NodeId>& nodes)
 {
    // This function takes a list of nodes and merges them into next and prev
    // tables. If anything changes, it sends updates 
@@ -185,7 +219,8 @@ bool Chord::addNewNeighbors(std::vector<NodeId>& nodes)
 }
 
 
-bool Chord::addNewFingers(std::vector<NodeId>& nodes)
+bool 
+Chord::addNewFingers(std::vector<NodeId>& nodes)
 {
    assert( nodes.size() > 0 );
    bool changed=false;
