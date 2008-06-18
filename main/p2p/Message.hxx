@@ -22,7 +22,7 @@ class JoinAns;
 class UpdateAns;
 class LeaveAns;
 
-class Message : public Signable, private s2c::ForwardingLayerMessageStruct
+class Message : public Signable
 {
    public:
       // Used to make a request. Will populate the rid into the destination list.  
@@ -57,6 +57,8 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
          FailureRequestType = 0xFFFE,
          FailureResponseType = 0xFFFF
       };
+
+	  static const UInt8 MessageVersion;
 
 	  void setOverlayName(const resip::Data &overlayName);
 
@@ -116,6 +118,7 @@ protected:
 	ResourceId mResourceId;
 	resip::Data mOverlayName;
 	resip::Data mEncodedData;
+	s2c::ForwardingLayerMessageStruct mPDU;
 
 	virtual void getEncodedPayload(resip::DataStream &dataStream) const = 0;
 	virtual std::vector<resip::Data> collectSignableData() const;
