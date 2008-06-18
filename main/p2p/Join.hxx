@@ -21,7 +21,7 @@ class JoinAns : public Message, private s2c::JoinAnsStruct
 class JoinReq : public Message, private s2c::JoinReqStruct
 {
    public:
-      JoinReq(const NodeId &nodeID, const resip::Data &overlaySpecific);
+      JoinReq(const NodeId &nodeID, const resip::Data &overlaySpecific=Data::Empty);
 
       virtual MessageType getType() const { return Message::JoinReqType; }
       NodeId getNodeID() const { return mNodeID; }
