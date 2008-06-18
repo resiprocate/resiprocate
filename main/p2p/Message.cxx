@@ -277,6 +277,29 @@ Message::collectSignableData() const
    return list;
 }
 
+bool 
+Message::isDestinationListEmpty() const
+{
+   assert(0);
+   return true;
+}
+
+DestinationId 
+Message::nextDestination() const
+{
+   assert(0);
+   DestinationId did;
+   return did;
+}
+
+void 
+Message::popNextDestinationId()
+{
+   assert(0);
+}
+
+
+
 std::auto_ptr<Event> 
 Message::event()
 {

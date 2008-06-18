@@ -18,25 +18,25 @@ SRC 	+= \
 	ChordUpdate.cxx \
 	Connect.cxx \
 	ConnectBase.cxx \
-	Join.cxx \
+	Dispatcher.cxx \
 	Find.cxx \
+	ForwardingLayer.cxx \
+	Join.cxx \
 	Leave.cxx \
 	Message.cxx \
 	MessageHelper.cxx \
 	MessageStructsGen.cxx \
+	NodeId.cxx \
 	P2PSubsystem.cxx \
 	ResourceId.cxx \
 	SelectTransporter.cxx \
+	Signable.cxx \
 	SignatureContext.cxx \
 	TestMake.cxx \
 	TopologyAPI.cxx \
 	Transporter.cxx \
 	TransporterMessage.cxx \
 	Update.cxx \
-	NodeId.cxx \
-	Signable.cxx \
-	ForwardingLayer.cxx \
-	Dispatcher.cxx \
 
 
 include $(BUILD)/Makefile.post
