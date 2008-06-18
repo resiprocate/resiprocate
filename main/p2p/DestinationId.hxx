@@ -13,7 +13,9 @@ class DestinationId : private s2c::DestinationStruct
 {
    public:
       DestinationId(s2c::DestinationStruct);
-      
+      DestinationId(const NodeId& nid);
+      DestinationId(const ResourceId& rid);
+
       bool isNodeId() const;
       NodeId asNodeId() const;
       

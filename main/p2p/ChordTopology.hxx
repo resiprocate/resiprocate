@@ -32,7 +32,7 @@ class ChordTopology : public TopologyAPI
       virtual void connectionLost( const NodeId& node );
       virtual void candidatesCollected( const NodeId& node, 
                                         unsigned short appId, 
-                                        std::vector<Candidate>& candidates)=0;
+                                        std::vector<Candidate>& candidates);
        
       // deal with topology change messages 
       virtual void consume(JoinReq& msg);
@@ -45,6 +45,7 @@ class ChordTopology : public TopologyAPI
       // virtual void consume(EventWrapper<StoreSetFoo>& event);
 
       // Deal with routing querries 
+      virtual const NodeId& findNextHop( const DestinationId& did);
       virtual const NodeId& findNextHop( const NodeId& node );
       virtual const NodeId& findNextHop( const ResourceId& resource );
       
@@ -53,14 +54,18 @@ class ChordTopology : public TopologyAPI
       ///    Returns list of nodes to replicate on
 
       // Functions to find out if this peer is responsible for something
-      virtual bool isResponsible( const NodeId& node );
-      virtual bool isResponsible( const ResourceId& resource );
+      virtual bool isResponsible( const DestinationId& did ) const;
+      virtual bool isResponsible( const NodeId& node ) const;
+      virtual bool isResponsible( const ResourceId& resource ) const;
 
       // Function to determine if we are connected to a node
-      virtual bool isConnected( const NodeId& node );
+      virtual bool isConnected( const NodeId& node ) const;
 
       // Function to hash resource names into resourceID 
       virtual ResourceId resourceId( const resip::Data& resourceName );
+
+      // not public api
+      virtual void post(std::auto_ptr<Event> message);
               
    private:
       

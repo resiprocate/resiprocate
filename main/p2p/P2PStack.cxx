@@ -3,13 +3,13 @@
 using namespace p2p;
 
 P2PStack::P2PStack(const Profile& profile) : 
-   mConfig(mProfile),
+   mProfile(profile),
    mDispatcher(),
    mTransporter(mProfile),
-   mChord(mProfile, mTransporter, mDispatcher),
-   mForwarder(mDispatcher, mTransporter, mChord)
+   mChord(mProfile, mDispatcher, mTransporter),
+   mForwarder(mProfile, mDispatcher, mTransporter, mChord)
 {
-   mDispatcher.setForwardingLayer(mForwarder);
+   mDispatcher.init(mForwarder);
 }
 
 void
@@ -17,6 +17,6 @@ P2PStack::run()
 {
    while (1)
    {
-      process(1000);
+      //process(1000);
    }
 }
