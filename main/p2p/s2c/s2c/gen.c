@@ -13,6 +13,10 @@
 #include <stdlib.h>
 #include "parser.h"
 
+static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out, int do_inline);
+static int s2c_gen_encode_c_select(p_decl *decl, FILE *out, int do_inline);
+static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,int do_inline);
+static int s2c_gen_print_c_select(p_decl *decl, FILE *out,int do_inline);
 
 static char *camelback(char *name)
   {
@@ -191,6 +195,11 @@ static int s2c_gen_pdu_h_member(p_decl *member, FILE *out)
 
           break;
         }
+      case TYPE_SELECT:
+        {
+          s2c_gen_pdu_h_select(member, out, 1);
+        }
+        break;
       default:
         nr_verr_exit("Don't know how to render element %s",member->name);
     }
@@ -198,13 +207,16 @@ static int s2c_gen_pdu_h_member(p_decl *member, FILE *out)
   }
 
 
-static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out)
+static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out, int do_inline)
   {
     p_decl *arm;
 
-    /* First emit the class for the select itself */
-    fprintf(out,"class %s : public PDU {\npublic:\n", type2class(decl->name));
-    fprintf(out,"   int  mType;\n");
+    if(!do_inline){
+      /* First emit the class for the select itself */
+      fprintf(out,"class %s : public PDU {\npublic:\n", type2class(decl->name));
+    }
+
+#if 0      
     fprintf(out,"   enum { \n");
 
     /* Now define the values */
@@ -215,7 +227,7 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out)
       else
         fprintf(out,"\n   };\n");
     }
-
+#endif
 
     /* Now emit each select arm */
     for(arm=STAILQ_FIRST(&decl->u.select_.arms);arm;arm=STAILQ_NEXT(arm,entry)){
@@ -234,11 +246,11 @@ static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out)
       fprintf(out,"   } %s;\n",armname);
     }
 
-    s2c_gen_member_fxns_h(type2class(decl->name),decl->name,out);
-
-    fprintf(out,"};\n\n");
-
-
+    if(!do_inline){
+      s2c_gen_member_fxns_h(type2class(decl->name),decl->name,out);
+      
+      fprintf(out,"};\n\n");
+    }
 
     return(0);
   }
@@ -270,7 +282,7 @@ static int s2c_gen_pdu_h_enum(p_decl *decl, FILE *out)
   {
     p_decl *entry;
 
-    fprintf(out,"enum %s{\n", camelback(decl->name));
+    fprintf(out,"typedef enum {\n");
     
     entry=STAILQ_FIRST(&decl->u.enum_.members);
     while(entry){
@@ -284,7 +296,7 @@ static int s2c_gen_pdu_h_enum(p_decl *decl, FILE *out)
       }
     }
     
-    fprintf(out,"};\n\n");
+    fprintf(out,"} %s;\n\n", camelback(decl->name));
     
     return(0);
   }
@@ -295,7 +307,7 @@ int s2c_gen_pdu_h(p_decl *decl, FILE *out)
       return(s2c_gen_pdu_h_struct(decl, out));
     }
     else if(decl->type==TYPE_SELECT){
-      return(s2c_gen_pdu_h_select(decl, out));
+      return(s2c_gen_pdu_h_select(decl, out,0));
     }
     else if(decl->type==TYPE_ENUM){
       return(s2c_gen_pdu_h_enum(decl,out));
@@ -394,6 +406,11 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent, char *p
 
           break;
         }
+      case TYPE_SELECT:
+        {
+          s2c_gen_encode_c_select(member, out, 1);
+        }
+        break;
       default:
         nr_verr_exit("Don't know how to render element %s",member->name);
     }
@@ -422,16 +439,18 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
     return(0);
   }
 
-static int s2c_gen_encode_c_select(p_decl *decl, FILE *out)
+static int s2c_gen_encode_c_select(p_decl *decl, FILE *out, int do_inline)
   {
     p_decl *arm,*entry;
     char prefix[100];
 
-    fprintf(out,"void %s :: encode(std::ostream& out)\n{\n",type2class(decl->name));
-    
-    fprintf(out,"   DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
+    if(!do_inline){
+      fprintf(out,"void %s :: encode(std::ostream& out)\n{\n",type2class(decl->name));
+      
+      fprintf(out,"   DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
+    }
 
-    fprintf(out,"   switch(mType) {\n");
+    fprintf(out,"   switch(%s) {\n",name2var(decl->u.select_.switch_on));
     arm=STAILQ_FIRST(&decl->u.select_.arms);
     while(arm){
       fprintf(out,"      case %d:\n",arm->u.select_arm_.value);
@@ -447,7 +466,10 @@ static int s2c_gen_encode_c_select(p_decl *decl, FILE *out)
     fprintf(out,"       default: /* User error */ \n");
     fprintf(out,"          assert(1==0);\n");
     fprintf(out,"   }\n\n");
-    fprintf(out,"};\n");
+    
+    if(!do_inline){
+      fprintf(out,"};\n");
+    }
     return(0);
   }
 
@@ -510,6 +532,11 @@ static int s2c_gen_print_c_member(p_decl *member, FILE *out)
 
           break;
         }
+      case TYPE_SELECT:
+        {
+          s2c_gen_print_c_select(member,out,1);
+        }
+        break;
       default:
         nr_verr_exit("Don't know how to render element %s",member->name);
     }
@@ -617,6 +644,11 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,int indent, char *p
 
           break;
         }
+      case TYPE_SELECT:
+        {
+          s2c_gen_decode_c_select(member, out, 1);
+        }
+        break;
       default:
         nr_verr_exit("Don't know how to render element %s%s",prefix,member->name);
     }
@@ -657,23 +689,30 @@ static int s2c_gen_pdu_c_struct(p_decl *decl, FILE *out)
   }
 
 
-static int s2c_gen_print_c_select(p_decl *decl, FILE *out)
+static int s2c_gen_print_c_select(p_decl *decl, FILE *out, int do_inline)
   {
-    fprintf(out,"void %s :: print(std::ostream& out, int indent) const \n{\n",type2class(decl->name));
-    fprintf(out,"}\n");
+    if(!do_inline){
+      fprintf(out,"void %s :: print(std::ostream& out, int indent) const \n{\n",type2class(decl->name));
+    }
+    
+    if(!do_inline){
+      fprintf(out,"}\n");
+    }
   }
 
-static int s2c_gen_decode_c_select(p_decl *decl, FILE *out)
+static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,int do_inline)
   {
     p_decl *arm;
     p_decl *entry;
     char prefix[100];
-    fprintf(out,"void %s :: decode(std::istream& in)\n{\n",type2class(decl->name));
-    
-    fprintf(out,"   DebugLog(<< \"Decoding %s\");\n",type2class(decl->name));
 
-    // TODO: need to automatically find this
-    fprintf(out,"   switch(mType){\n");
+    if(!do_inline){
+      fprintf(out,"void %s :: decode(std::istream& in)\n{\n",type2class(decl->name));
+    
+      fprintf(out,"   DebugLog(<< \"Decoding %s\");\n",type2class(decl->name));
+    }
+
+    fprintf(out,"   switch(%s){\n",name2var(decl->u.select_.switch_on));
     
     arm=STAILQ_FIRST(&decl->u.select_.arms);
     while(arm){
@@ -691,7 +730,10 @@ static int s2c_gen_decode_c_select(p_decl *decl, FILE *out)
     fprintf(out,"          assert(1==0);\n");
     fprintf(out,"   }\n\n");
 
-    fprintf(out,"};\n");
+    if(!do_inline){
+      fprintf(out,"};\n");
+    }
+
     return(0);
   }
 
@@ -699,9 +741,9 @@ static int s2c_gen_pdu_c_select(p_decl *decl, FILE *out)
   {
     fprintf(out,"\n\n// Classes for %s */\n\n",type2class(decl->name));
 
-    s2c_gen_print_c_select(decl, out);
-    s2c_gen_decode_c_select(decl, out);
-    s2c_gen_encode_c_select(decl, out);
+    s2c_gen_print_c_select(decl, out,0 );
+    s2c_gen_decode_c_select(decl, out, 0);
+    s2c_gen_encode_c_select(decl, out, 0);
 
     return(0);
   }
