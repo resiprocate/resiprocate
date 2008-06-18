@@ -34,9 +34,10 @@ Dispatcher::registerPostable(Message::MessageType type,
 }
 
 void 
-Dispatcher::send(std::auto_ptr<Message> message)
+Dispatcher::send(std::auto_ptr<Message> message, Postable<Event>& postable)
 {
    //.dcm. more with timers
+   mTidMap[message->getTransactionID()] = &postable;
    mForwardingLayer->post(message);
 }
 
@@ -56,8 +57,17 @@ Dispatcher::post(std::auto_ptr<Message> message)
       } 
       else 
       {
-         DebugLog(<< "Response for unregistered message type, dropping " 
-                  << message->brief());
+         TidMap::iterator id = mTidMap.find(message->getTransactionID());
+         if (id !=  mTidMap.end())
+         {
+            id->second->post(message->event());
+            mTidMap.erase(id);
+         }
+         else
+         {
+            DebugLog(<< "Unexpected response, dropping " 
+                     << message->brief());
+         }
       }
    } 
    else 
