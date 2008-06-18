@@ -9,13 +9,13 @@ UpdateAns::UpdateAns(UpdateReq *request)
 }
 
 void 
-UpdateReq::getEncodedPayload(resip::DataStream &data) const
+UpdateReq::getEncodedPayload(resip::DataStream &data) 
 {
 	assert(0);
 }
 
 void 
-UpdateAns::getEncodedPayload(resip::DataStream &data) const
+UpdateAns::getEncodedPayload(resip::DataStream &data)
 {
 	assert(0);
 }

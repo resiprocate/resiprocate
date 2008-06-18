@@ -120,7 +120,7 @@ protected:
 	resip::Data mEncodedData;
 	s2c::ForwardingLayerMessageStruct mPDU;
 
-	virtual void getEncodedPayload(resip::DataStream &dataStream) const = 0;
+	virtual void getEncodedPayload(resip::DataStream &dataStream) = 0;
 	virtual std::vector<resip::Data> collectSignableData() const;
 
 	Message();
