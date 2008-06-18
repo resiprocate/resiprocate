@@ -227,7 +227,7 @@ ChordTopology::getReplicationSet(  const ResourceId& resource )
 
 // Functions to find out if this peer is responsible for something
 bool 
-ChordTopology::isResponsible( const NodeId& node )
+ChordTopology::isResponsible( const NodeId& node ) const
 {
    if (mPrevTable.size() == 0) return false;
 
@@ -240,7 +240,7 @@ ChordTopology::isResponsible( const NodeId& node )
 
 
 bool 
-ChordTopology::isResponsible( const ResourceId& resource )
+ChordTopology::isResponsible( const ResourceId& resource ) const
 {
   NodeId node( resource.value() );
   return isResponsible( node );
@@ -249,7 +249,7 @@ ChordTopology::isResponsible( const ResourceId& resource )
 
 // Functions to find out if this peer is responsible for something
 bool 
-ChordTopology::isConnected( const NodeId& node )
+ChordTopology::isConnected( const NodeId& node ) const
 {
    // Check if node is in finger table
    if(mFingerTable.find(node) != mFingerTable.end())
@@ -277,6 +277,13 @@ ChordTopology::resourceId( const resip::Data& resourceName )
     return ResourceId(result);
 }
 
+
+void 
+ChordTopology::post(std::auto_ptr<Event> event)
+{
+   //will run in context of dispatcher 
+   event->dispatch(*this);
+}
 
 bool 
 ChordTopology::addNewNeighbors(const std::vector<NodeId>& nodes, bool adjustNextOnly)
