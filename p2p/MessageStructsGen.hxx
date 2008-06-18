@@ -177,6 +177,16 @@ public:
 };
 
 
+class MessagePayloadStruct : public PDU {
+public:
+   MessagePayloadStruct();
+   resip::Data                   mPayload;
+
+
+   PDUMemberFunctions
+};
+
+
 class ErrorResponseStruct : public PDU {
 public:
    ErrorResponseStruct();

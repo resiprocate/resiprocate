@@ -107,6 +107,10 @@
              Signature sig;
       } ForwardingLayerMessage;
 
+      struct {
+             opaque  payload<0..2^24-1>;            
+      } MessagePayload;
+
        public struct {
          uint16             error_code;
          opaque             reason_phrase<0..2^8-1>;  /* String*/
