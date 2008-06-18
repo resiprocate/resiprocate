@@ -59,6 +59,7 @@ class Message : public Signable
       };
 
 	  static const UInt8 MessageVersion;
+	  static const UInt8 MessageTtl;
 
 	  void setOverlayName(const resip::Data &overlayName);
 
@@ -121,11 +122,15 @@ protected:
 	s2c::ForwardingLayerMessageStruct mPDU;
 
 	virtual void getEncodedPayload(resip::DataStream &dataStream) = 0;
+	virtual void decodePayload(resip::DataStream &dataStream) = 0;
+
 	virtual std::vector<resip::Data> collectSignableData() const;
 
 	Message();
-protected:
 	void copyForwardingData(const Message &header);
+
+private:
+	void initForwardingData();
 };
 
 class MessageContents 

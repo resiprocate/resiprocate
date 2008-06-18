@@ -5,15 +5,19 @@
 #include "p2p/MessageStructsGen.hxx"
 #include "rutil/DataStream.hxx"
 
+#include "p2p/P2PSubsystem.hxx"
+#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
+
 #include <iostream>
 
 using namespace s2c;
 using namespace resip;
+using namespace p2p;
 
 int main() 
 {
-        resip::Log::initialize(resip::Data("cerr"),
-        resip::Data("DEBUG"),resip::Data("ParsingTest"));
+	resip::Log::initialize(resip::Data("cerr"),
+	resip::Data("DEBUG"),resip::Data("ParsingTest"));
       
 	std::cout << "ctor" << std::endl;
 	ForwardingLayerMessageStruct hdr;
@@ -24,6 +28,10 @@ int main()
 	p2p::Message *m = new p2p::JoinReq(n,d);
 	m->setOverlayName("duane");
 	resip::Data encodedMessage = m->encodePayload();
+
+	DebugLog(<< "attempting to parse");
+
+	Message *newMessage = Message::parse(encodedMessage);
 
 	std::cout << encodedMessage.hex() << std::endl;
 
