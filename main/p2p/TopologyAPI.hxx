@@ -14,18 +14,21 @@
 #include "p2p/Update.hxx"
 #include "p2p/Leave.hxx"
 #include "p2p/Message.hxx"
+//#include "p2p/Dispatcher.hxx"
+#include "p2p/Transporter.hxx"
 
 namespace p2p
 {
 
+class Dispatcher;
 class TransactionLayer;
 
-/// This is an abstract base class from which to derive the actually topology plugins
+/// This is an abstract base class from which to derive the actual topology plugins
 class TopologyAPI :  public EventConsumer, public Postable<Event>
 {
    public:
       virtual ~TopologyAPI() = 0;
-      TopologyAPI(Profile& config, TransactionLayer& transactionProcessor);
+      TopologyAPI(Profile& config, Dispatcher& dispatcher, Transporter& transporter);
 
       // called to join the overlay 
       virtual void joinOverlay( resip::GenericIPAddress& address )=0;
@@ -40,8 +43,6 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       virtual void consume(EventWrapper<JoinReq>& event)=0;
       virtual void consume(EventWrapper<UpdateReq>& event)=0;
       virtual void consume(EventWrapper<LeaveReq>& event)=0;
-
-
       
       // Deal with routing querries 
       virtual const NodeId& findNextHop( NodeId& node )=0;
@@ -57,8 +58,8 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
 
       // Function to hash resource names into resourceID 
       virtual ResourceId resourceId( resip::Data& resourceName )=0;
+
    private:
-      NodeId& myNodeId();
 };
 
 }

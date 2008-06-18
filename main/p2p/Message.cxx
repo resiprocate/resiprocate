@@ -4,6 +4,7 @@
 #include "p2p/Leave.hxx"
 
 #include "rutil/SHA1Stream.hxx"
+#include "rutil/Socket.hxx" 
 
 #include <assert.h>
 

@@ -11,12 +11,12 @@
 using namespace p2p;
 
 
-//Chord::Chord(Profile& config, TransactionLayer& transactionProcessor )
+//ChordTopology::ChordTopology(Profile& config, TransactionLayer& transactionProcessor )
 //{
 //}
       
 void 
-Chord::joinOverlay( resip::GenericIPAddress& bootstrap )
+ChordTopology::joinOverlay( resip::GenericIPAddress& bootstrap )
 {
    // tell the transport layer to form a connection to bootstrap node (special
    // bootstrap connect ). This needs to give up the address of the BP node 
@@ -38,7 +38,7 @@ Chord::joinOverlay( resip::GenericIPAddress& bootstrap )
 
 // Messages that the forwarding layer sends to this object
 void 
-Chord::newConnectionFormed( NodeId& node )
+ChordTopology::newConnectionFormed( NodeId& node )
 {
    // go and add this to the finger table
    assert(mFingerTable.find(node) == mFingerTable.end());
@@ -47,7 +47,7 @@ Chord::newConnectionFormed( NodeId& node )
 
 
 void 
-Chord::connectionLost( NodeId& node )
+ChordTopology::connectionLost( NodeId& node )
 {
    // if node is in the finger table, remove it 
    mFingerTable.erase(node);
@@ -78,7 +78,7 @@ Chord::connectionLost( NodeId& node )
 
 // deal with topoogy change messages 
 void 
-Chord::consume(EventWrapper<JoinReq>& event)
+ChordTopology::consume(EventWrapper<JoinReq>& event)
 {
    // check we are reponsible for the data from this node 
 
@@ -94,7 +94,7 @@ Chord::consume(EventWrapper<JoinReq>& event)
 
 
 void 
-Chord::consume(EventWrapper<UpdateReq>& event)
+ChordTopology::consume(EventWrapper<UpdateReq>& event)
 {
    // if our, prev empty, then this update will have the prev and need to
    // connect to them and set the prev 
@@ -105,7 +105,7 @@ Chord::consume(EventWrapper<UpdateReq>& event)
 
 
 void 
-Chord::consume(EventWrapper<LeaveReq>& event)
+ChordTopology::consume(EventWrapper<LeaveReq>& event)
 {
    // if this is in the prev/next table, remove it and send updates 
    assert(0);
@@ -114,7 +114,7 @@ Chord::consume(EventWrapper<LeaveReq>& event)
 
 // Deal with routing queries 
 const NodeId& 
-Chord::findNextHop( NodeId& node )
+ChordTopology::findNextHop( NodeId& node )
 {
    assert( !isResponsible(node) );
    
@@ -141,7 +141,7 @@ Chord::findNextHop( NodeId& node )
 
 
 const NodeId& 
-Chord::findNextHop( ResourceId& resource )
+ChordTopology::findNextHop( ResourceId& resource )
 {
    NodeId node( resource.value() );
    return findNextHop( node );
@@ -150,7 +150,7 @@ Chord::findNextHop( ResourceId& resource )
 
 // Deal with replication for storage 
 std::vector<NodeId> 
-Chord::getReplicationSet(  ResourceId& resource )
+ChordTopology::getReplicationSet(  ResourceId& resource )
 {
    std::vector<NodeId> replicateSet;
    const unsigned int numReplications=2;
@@ -169,7 +169,7 @@ Chord::getReplicationSet(  ResourceId& resource )
 
 // Functions to find out if this peer is responsible for something
 bool 
-Chord::isResponsible( NodeId& node )
+ChordTopology::isResponsible( NodeId& node )
 {
    if (mPrevTable.size() == 0) return false;
 
@@ -182,7 +182,7 @@ Chord::isResponsible( NodeId& node )
 
 
 bool 
-Chord::isResponsible( ResourceId& resource )
+ChordTopology::isResponsible( ResourceId& resource )
 {
   NodeId node( resource.value() );
   return isResponsible( node );
@@ -191,7 +191,7 @@ Chord::isResponsible( ResourceId& resource )
 
 // Function to hash resource names into resourceID 
 ResourceId 
-Chord::resourceId( resip::Data& resourceName )
+ChordTopology::resourceId( resip::Data& resourceName )
 {
    // call sha1, truncate to 128 bits, and return 
     resip::SHA1Stream strm;
@@ -206,13 +206,13 @@ Chord::resourceId( resip::Data& resourceName )
 }
 
 
-Chord::~Chord()
+ChordTopology::~ChordTopology()
 {
 }
 
 
 bool 
-Chord::addNewNeighbors(std::vector<NodeId>& nodes)
+ChordTopology::addNewNeighbors(std::vector<NodeId>& nodes)
 {
    // This function takes a list of nodes and merges them into next and prev
    // tables. If anything changes, it sends updates 
@@ -248,7 +248,7 @@ Chord::addNewNeighbors(std::vector<NodeId>& nodes)
 
 
 bool 
-Chord::addNewFingers(std::vector<NodeId>& nodes)
+ChordTopology::addNewFingers(std::vector<NodeId>& nodes)
 {
    assert( nodes.size() > 0 );
    bool changed=false;
