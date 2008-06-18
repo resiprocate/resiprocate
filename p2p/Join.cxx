@@ -20,7 +20,7 @@ JoinReq::JoinReq(const NodeId &node, const resip::Data &overlaySpecific) :
 	mNodeID(node)
 {
    mJoiningPeerId = new s2c::NodeIdStruct;
-   memcpy(mJoiningPeerId->mId, node.getValue().c_str(), sizeof(mJoiningPeerId->mId));
+   memcpy(mJoiningPeerId->mId, node.getValue().data(), sizeof(mJoiningPeerId->mId));
 
    mOverlaySpecificData.resize(overlaySpecific.size());
    std::copy(overlaySpecific.begin(), overlaySpecific.end(), mOverlaySpecificData.begin());
