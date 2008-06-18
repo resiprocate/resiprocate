@@ -93,6 +93,15 @@ SHA1Stream::getBin(unsigned int bits)
    return SHA1Buffer::getBin(bits);
 }
 
+UInt32
+SHA1Stream::getUInt32()
+{
+   flush();
+   UInt32 input = *((UInt32*)getBin(32).c_str());
+   return ntohl(input);
+}
+
+
 #endif // USE_SSL
 
 /* ====================================================================
