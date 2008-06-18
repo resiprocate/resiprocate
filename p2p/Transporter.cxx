@@ -127,7 +127,7 @@ class ConnectApplicationCommand : public TransporterCommand
 
 //----------------------------------------------------------------------
 
-Transporter::Transporter (ConfigObject &configuration)
+Transporter::Transporter (Profile &configuration)
   : mRxFifo(0), mConfiguration(configuration)
 {
 }
