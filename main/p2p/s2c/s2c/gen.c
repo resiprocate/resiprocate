@@ -724,6 +724,7 @@ static int s2c_gen_construct_c_member(p_decl *member, FILE *out,int indent, char
         {
           ;
         }
+        break;
       case TYPE_ARRAY:
         {
           char reference[100];
@@ -734,9 +735,8 @@ static int s2c_gen_construct_c_member(p_decl *member, FILE *out,int indent, char
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
           s2c_gen_construct_c_simple_type(member->u.array_.ref,"",reference,out);
-
-          break;
         }
+        break;
       case TYPE_SELECT:
         {
           s2c_gen_construct_c_select(member, out, 1);
