@@ -1,3 +1,5 @@
+#include "rutil/Log.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/Data.hxx"
 #include "p2p/Join.hxx"
 #include "p2p/MessageStructsGen.hxx"
@@ -10,6 +12,9 @@ using namespace resip;
 
 int main() 
 {
+        resip::Log::initialize(resip::Data("cerr"),
+        resip::Data("DEBUG"),resip::Data("ParsingTest"));
+      
 	std::cout << "ctor" << std::endl;
 	ForwardingLayerMessageStruct hdr;
 	std::cout << "done" << std::endl;
