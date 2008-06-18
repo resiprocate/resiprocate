@@ -2,7 +2,7 @@
 #include "rutil/DnsUtil.hxx"
 
 #include "p2p/Transporter.hxx"
-#include "p2p/ConfigObject.hxx"
+#include "p2p/Profile.hxx"
 #include "p2p/TransporterMessage.hxx"
 #include "p2p/FlowId.hxx"
 #include "p2p/Message.hxx"
@@ -128,7 +128,7 @@ class ConnectApplicationCommand : public TransporterCommand
 //----------------------------------------------------------------------
 
 Transporter::Transporter (resip::Fifo<TransporterMessage>& rxFifo,
-                          ConfigObject &configuration)
+                          Profile &configuration)
   : mRxFifo(rxFifo), mConfiguration(configuration)
 {
 }

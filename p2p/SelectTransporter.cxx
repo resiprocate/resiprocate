@@ -3,7 +3,7 @@
 #include "rutil/Socket.hxx"
 
 #include "p2p/SelectTransporter.hxx"
-#include "p2p/ConfigObject.hxx"
+#include "p2p/Profile.hxx"
 #include "p2p/TransporterMessage.hxx"
 #include "p2p/FlowId.hxx"
 #include "p2p/Message.hxx"
@@ -14,7 +14,7 @@ namespace p2p
 {
 
 SelectTransporter::SelectTransporter (resip::Fifo<TransporterMessage>& rxFifo,
-                          ConfigObject &configuration)
+                          Profile &configuration)
   : Transporter(rxFifo, configuration), mHasBootstrapSocket(false)
 {
    resip::Data localIp = resip::DnsUtil::getLocalIpAddress();

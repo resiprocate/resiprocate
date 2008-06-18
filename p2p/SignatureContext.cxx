@@ -4,7 +4,7 @@
 #include <openssl/evp.h>
 
 namespace p2p {
-  SignatureContext::SignatureContext(ConfigObject &config)
+  SignatureContext::SignatureContext(Profile &config)
     : mConfig(config)
     {
       ;

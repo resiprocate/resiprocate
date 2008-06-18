@@ -7,7 +7,7 @@
 
 #include "p2p/NodeId.hxx"
 #include "p2p/ResourceId.hxx"
-#include "p2p/ConfigObject.hxx"
+#include "p2p/Profile.hxx"
 #include "p2p/Message.hxx"
 #include "p2p/TopologyAPI.hxx"
 
@@ -22,7 +22,7 @@ class TransactionLayer;
 class Chord : public TopologyAPI
 {
    public:
-      Chord(ConfigObject& config, TransactionLayer& transactionProcessor );
+      Chord(Profile& config, TransactionLayer& transactionProcessor );
       
       // need a fifo to receive timer events 
 
