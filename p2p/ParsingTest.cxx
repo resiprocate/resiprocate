@@ -22,6 +22,8 @@ int main()
 	m->setOverlayName("duane");
 	resip::Data encodedMessage = m->encodePayload();
 
+	std::cout << 
+
 //	Data d;
 //	DataStream ds(d);
 //	hdr.encode(ds);
