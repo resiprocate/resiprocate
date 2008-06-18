@@ -31,7 +31,8 @@ SRC 	+= \
 	Transporter.cxx \
 	TransporterMessage.cxx \
 	Update.cxx \
-        NodeId.cxx \
+	NodeId.cxx \
+	Signable.cxx \
 	ForwardingLayer.cxx \
 	Dispatcher.cxx \
 
