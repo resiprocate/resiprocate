@@ -18,6 +18,7 @@ SRC 	+= \
 	ChordUpdate.cxx \
 	Connect.cxx \
 	ConnectBase.cxx \
+	DestinationId.cxx \
 	Dispatcher.cxx \
 	Find.cxx \
 	ForwardingLayer.cxx \
