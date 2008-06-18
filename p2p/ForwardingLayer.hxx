@@ -21,10 +21,12 @@ class TransporterMessage;
 class ForwardingLayer: public EventConsumer, public Postable<p2p::Message>
 {
    public:
-      ForwardingLayer(Dispatcher& dispatcher, 
+      ForwardingLayer(const Profile& profile, 
+                      Dispatcher& dispatcher, 
                       Transporter& transporter,
                       TopologyAPI& topology)
-         : mDispatcher(dispatcher),
+         : mProfile(profile),
+           mDispatcher(dispatcher),
            mTransporter(transporter),
            mTopology(topology) 
            {
@@ -41,9 +43,10 @@ class ForwardingLayer: public EventConsumer, public Postable<p2p::Message>
       virtual void consume(LocalCandidatesCollected& m);
 
       // from messages from above or below that need to be forwarded 
-      void forward( Message& m );
+      void forward( std::auto_ptr<Message> m );
       
    private:
+      const Profile& mProfile;
       Dispatcher& mDispatcher;
       Transporter& mTransporter;
       TopologyAPI& mTopology;
