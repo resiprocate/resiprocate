@@ -24,6 +24,7 @@ class DestinationId : private s2c::DestinationStruct
       ResourceId asResourceId() const;
       
       bool operator==(const NodeId& nid) const;
+      bool operator==(const DestinationId& nid) const;
 };
 
 }
