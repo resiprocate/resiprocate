@@ -175,7 +175,8 @@ Message::encodePayload()
 
 	mPDU.mHeader->mMessageCode = static_cast<UInt16>(getType());
     mPDU.mHeader->mOverlay = stream.getUInt32();
-
+        // TODO: Set flag to something goofy
+    mPDU.mHeader->mFlags = 0xfeeb;
 	resip::Data encodedData;
 	resip::DataStream encodedStream(encodedData);
 
@@ -190,6 +191,7 @@ Message::encodePayload()
 
 	encodedStream.flush();
 	size_t endOfPayload = encodedData.size();
+        
 
 	// compute signature block
     std::vector<resip::Data> sigChunks;
