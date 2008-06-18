@@ -16,6 +16,7 @@
 #include "rutil/DataStream.hxx"
 #include "selectGen.hxx"
 #include "autoGen.hxx"
+#include "structGen.hxx"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -76,6 +77,19 @@ int main(int argc, char **argv)
     s2c::AutoExampleStruct a2;
     a2.decode(fin2);
 
+
+    // ****** Test Struct *****
+    s2c::StructTestStruct st;
+    st.mSimpleInt=7;
+    st.mVariable="Bogus";
+    fout.open("test3.out");
+    st.encode(fout);
+    fout.close();    
+
+    s2c::StructTestStruct st2;
+    std::ifstream fin3;
+    fin3.open("test3.out");
+    st2.decode(fin3);
   }
 
 

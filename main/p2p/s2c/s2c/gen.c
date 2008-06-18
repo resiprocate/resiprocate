@@ -123,7 +123,12 @@ static int max2bytes(UINT4 max)
     return b;
   }
 
-
+static int is_opaque(p_decl *decl)
+  {
+    if(!strcmp(decl->name,"opaque"))
+      return 1;
+    return 0;
+  }
 
 /* Generate H files */
 int s2c_gen_hdr_h(char *name, FILE *out)
@@ -175,9 +180,14 @@ static int s2c_gen_pdu_h_member(p_decl *member, FILE *out)
           name2var(member->name),out);
         break;
       case TYPE_VARRAY:
-        snprintf(buf,sizeof(buf),"std::vector<%s>",
-          s2c_decl2type(member->u.varray_.ref));
-        s2c_print_a_b_indent(buf,name2var(member->name),out);
+        if(!is_opaque(member->u.varray_.ref)){
+          snprintf(buf,sizeof(buf),"std::vector<%s>",
+            s2c_decl2type(member->u.varray_.ref));
+          s2c_print_a_b_indent(buf,name2var(member->name),out);
+        }
+        else{
+          s2c_print_a_b_indent("resip::Data",name2var(member->name),out);
+        }
         break;
       case TYPE_ARRAY:
         {
@@ -321,8 +331,19 @@ int s2c_gen_ftr_h(FILE *out)
 /* Generate C files */
 int s2c_gen_hdr_c(char *name,FILE *out)
   {
-    fprintf(out,"#include <iostream>\n#include <iomanip>\n#include \"rutil/Logger.hxx\"\n#include \"rutil/ParseException.hxx\"\n#include \"P2PSubsystem.hxx\"\n#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P\n#include \"%sGen.hxx\"\n#include <assert.h>\n\nnamespace s2c {\n\n\n",name,
-      name2namespace(name));
+    fprintf(out,"#include <iostream>\n");
+    fprintf(out,"#include <iomanip>\n");
+    fprintf(out,"#include \"rutil/Logger.hxx\"\n");
+    fprintf(out,"#include \"rutil/ParseException.hxx\"\n");
+    fprintf(out,"#include \"rutil/Data.hxx\"\n");
+    fprintf(out,"#include \"rutil/DataStream.hxx\"\n");
+    fprintf(out,"#include \"P2PSubsystem.hxx\"\n");
+    fprintf(out,"#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P\n");
+    fprintf(out,"#include \"%sGen.hxx\"\n",name);
+    fprintf(out,"#include <assert.h>\n");
+    fprintf(out,"\n");
+    fprintf(out,"namespace s2c {\n");
+    fprintf(out,"\n");fprintf(out,"\n");
     
     return(0);
   }
@@ -364,24 +385,32 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent, char *p
         {
           char reference[100];
           int lengthbytes=max2bytes(member->u.varray_.length);
-
-          fprintf(out,"   {\n");
-          fprintf(out,"   long pos1=out.tellp();\n");
-          fprintf(out,"   for(int i=0;i<%d;i++) out.put(0);\n",lengthbytes);
           
-          fprintf(out,"   for(unsigned int i=0;i<%s%s.size();i++)\n",prefix,name2var(member->name));
-          snprintf(reference,sizeof(reference),"%s%s[i]",prefix,name2var(member->name));
+          if(!is_opaque(member->u.varray_.ref)){
+              fprintf(out,"   {\n");
+              fprintf(out,"   long pos1=out.tellp();\n");
+              fprintf(out,"   for(int i=0;i<%d;i++) out.put(0);\n",lengthbytes);
+          
+              fprintf(out,"   for(unsigned int i=0;i<%s%s.size();i++)\n",prefix,name2var(member->name));
+              snprintf(reference,sizeof(reference),"%s%s[i]",prefix,name2var(member->name));
 
-          for(i=0;i<indent+3;i++) fputc(' ',out);
-          s2c_gen_encode_c_simple_type(member->u.varray_.ref,"",reference,out);
+              for(i=0;i<indent+3;i++) fputc(' ',out);
+              s2c_gen_encode_c_simple_type(member->u.varray_.ref,"",reference,out);
 
-          fprintf(out,"   long pos2=out.tellp();\n");
-          fprintf(out,"   out.seekp(pos1);\n");
-          fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
-            lengthbytes*8, lengthbytes);
-          fprintf(out,"   out.seekp(pos2);\n");
-          fprintf(out,"   }\n");
-          break;
+              fprintf(out,"   long pos2=out.tellp();\n");
+              fprintf(out,"   out.seekp(pos1);\n");
+              fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
+                lengthbytes*8, lengthbytes);
+              fprintf(out,"   out.seekp(pos2);\n");
+              fprintf(out,"   }\n");
+              break;
+            }
+            else {
+              // Special case Data for Duane
+              fprintf(out,"    encode_uintX(out, %d, %s%s.size());\n",
+                8*lengthbytes, prefix, name2var(member->name));
+              fprintf(out,"    out << %s%s;\n",prefix,name2var(member->name));
+            }
         }
         break;
       case TYPE_ARRAY:
@@ -520,15 +549,19 @@ static int s2c_gen_print_c_member(p_decl *member, FILE *out)
         s2c_gen_print_c_simple_type(member,name2var(member->name),out);
         break;
       case TYPE_VARRAY:
-        {
+        if(!is_opaque(member->u.varray_.ref)){
           fprintf(out,"   for(unsigned int i=0;i<%s.size();i++){\n",name2var(member->name));
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
           
           for(i=0;i<3;i++) fputc(' ',out);
           s2c_gen_print_c_simple_type(member->u.varray_.ref,reference,out);
           fprintf(out,"   }\n");
-          break;
         }
+        else {
+          /* Special case Data for duane */
+          fprintf(out, "    out << %s.hex();\n",name2var(member->name));
+        }
+
         break;
       case TYPE_ARRAY:
         {
@@ -626,7 +659,7 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,char *instream,int 
         s2c_gen_decode_c_simple_type(member,prefix,name2var(member->name),instream,out);
         break;
       case TYPE_VARRAY:
-        {
+        if(!is_opaque(member->u.varray_.ref)){
           char reference[100];
           
           fprintf(out,"   {\n");
@@ -640,6 +673,23 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,char *instream,int 
           for(i=0;i<indent+3;i++) fputc(' ',out);
           s2c_gen_decode_c_simple_type(member->u.varray_.ref,prefix,reference,"in2",out);
           fprintf(out,"   }\n;");
+          fprintf(out,"   }\n");
+        }
+        else{
+          /* Special case Data for Duane */
+          fprintf(out,"   {\n");
+          fprintf(out,"      UInt32 len;\n");
+          fprintf(out,"      int c;\n");
+          fprintf(out,"      decode_uintX(%s, %d, len);\n",
+            instream, max2bytes(member->u.varray_.length)*8);
+          fprintf(out,"      resip::DataStream strm(%s%s);\n",prefix,name2var(member->name));
+          fprintf(out,"      while(len--){\n");
+          fprintf(out,"        c=%s.get();\n",instream);
+          fprintf(out,"        if(c==EOF)\n");
+          fprintf(out,"          throw resip::ParseException(\"Premature end of data\",\n");
+          fprintf(out,"          \"%s\",__FILE__,__LINE__);\n",member->name);          
+          fprintf(out,"          strm.put(c);\n",name2var(member->name));
+          fprintf(out,"      };\n");
           fprintf(out,"   }\n");
         }
         break;
