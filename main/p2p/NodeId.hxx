@@ -4,6 +4,7 @@
 #include "rutil/Compat.hxx"
 #include "p2p/MessageStructsGen.hxx"
 
+
 namespace resip
 {
 class Data;
@@ -28,9 +29,13 @@ class NodeId
       NodeId add2Pow( int power ) const; 
       
    private:
+      // NOTE: this should be 128 bits
       s2c::NodeIdStruct mNodeId;
 };
    
+std::ostream& operator<<( std::ostream& strm, const NodeId& node );
+std::istream& operator>>( std::istream& strm, const NodeId& node );
+
 
 class CompressedId
 {
