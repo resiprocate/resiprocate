@@ -44,8 +44,7 @@ Message::setOverlayName(const resip::Data &overlayName)
 	// create the overlay field from the overlay name
 	resip::SHA1Stream stream;
 	stream << mOverlayName;
-	resip::Data sha1 = stream.getBin(32);
-	mPDU.mHeader->mOverlay = ntohl(*reinterpret_cast<const UInt32 *>(sha1.c_str()));
+    mPDU.mHeader->mOverlay = stream.getUInt32();
 }
 
 Message *
