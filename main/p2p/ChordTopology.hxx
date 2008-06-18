@@ -42,8 +42,8 @@ class Chord : public TopologyAPI
       // virtual void consume(EventWrapper<StoreSetFoo>& event);
 
       // Deal with routing querries 
-      virtual NodeId& findNextHop( NodeId& node );
-      virtual NodeId& findNextHop( ResourceId& resource );
+      virtual const NodeId& findNextHop( NodeId& node );
+      virtual const NodeId& findNextHop( ResourceId& resource );
       
       // Deal with replication for storage 
       virtual std::vector<NodeId> getReplicationSet(  ResourceId& resource );
