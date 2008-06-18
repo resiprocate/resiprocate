@@ -22,7 +22,7 @@ class FlowId;
 class Message;
 class Profile;
 class TransporterCommand;
-class TransporterMessage;
+class Event;
 
 class Transporter
 {
@@ -61,6 +61,7 @@ class Transporter
       void connect(NodeId nodeId, 
                    std::vector<Candidate> remoteCandidates,
                    unsigned short application,
+                   resip::Fifo<Event>&,
                    resip::GenericIPAddress &stunTurnServer);
 
    protected:
@@ -81,6 +82,7 @@ class Transporter
       virtual void connectImpl(NodeId nodeId, 
                        std::vector<Candidate> remoteCandidates,
                        unsigned short application,
+                       resip::Fifo<Event>&,
                        resip::GenericIPAddress &stunTurnServer) = 0;
 
      resip::Fifo<TransporterCommand> mCmdFifo;

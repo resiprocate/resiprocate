@@ -206,7 +206,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
 
    NodeId nodeId = resip::Data(buffer, sizeof(buffer));
 
-   FlowId flowId(nodeId, application, s);
+   FlowId flowId(nodeId, application, s, *mRxFifo);
 
    mNodeFlowMap.insert(std::map<NodeId, FlowId>::value_type(nodeId, flowId));
 
@@ -224,7 +224,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
                                resip::GenericIPAddress &stunTurnServer)
 {
    connectImpl(nodeId, remoteCandidates, RELOAD_APPLICATION_ID,
-                 stunTurnServer);
+               *mRxFifo, stunTurnServer);
 
    std::map<NodeId, FlowId>::iterator i;
    i = mNodeFlowMap.find(nodeId);
@@ -247,6 +247,7 @@ void
 SelectTransporter::connectImpl(NodeId nodeId,
                          std::vector<Candidate> remoteCandidates,
                          unsigned short application,
+                         resip::Fifo<Event>& dataFifo,
                          resip::GenericIPAddress &stunTurnServer)
 {
    // XXX Right now, we just grab the first candidate out of the array
@@ -268,7 +269,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
    int status = ::connect(s, &(candidate.getAddress().address), sizeof(sockaddr_in));
    if (status) { ErrLog( << "Cannot ::connect"); }
 
-   FlowId flowId(nodeId, application, s);
+   FlowId flowId(nodeId, application, s, dataFifo);
 
    mNodeFlowMap.insert(std::map<NodeId, FlowId>::value_type(nodeId, flowId));
 
@@ -276,7 +277,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
                                                application,
                                                candidate.getTransportType(),
                                                0 /* no cert for you */);
-   mRxFifo->add(co);
+   flowId.getFifo().add(co);
 }
 
 //----------------------------------------------------------------------
@@ -347,7 +348,7 @@ SelectTransporter::process(int ms)
 
       NodeId nodeId = resip::Data(buffer, sizeof(buffer));
 
-      FlowId flowId(nodeId, application, s);
+      FlowId flowId(nodeId, application, s, *mRxFifo);
 
       mNodeFlowMap.insert(
         std::map<NodeId, FlowId>::value_type(nodeId, flowId));
@@ -387,7 +388,7 @@ SelectTransporter::process(int ms)
         }
         // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 
-        FlowId flowId(nodeId, application, s);
+        FlowId flowId(nodeId, application, s, *mRxFifo);
 
         mNodeFlowMap.insert(
           std::map<NodeId, FlowId>::value_type(nodeId, flowId));
@@ -480,7 +481,7 @@ SelectTransporter::process(int ms)
                ApplicationMessageArrived *ama = new
                   ApplicationMessageArrived(flowId, data);
 
-               mRxFifo->add(ama);
+               flowId.getFifo().add(ama);
             }
             else
             {

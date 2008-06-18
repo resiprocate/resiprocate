@@ -121,20 +121,23 @@ class ConnectApplicationCommand : public TransporterCommand
                    NodeId nodeId,
                    std::vector<Candidate> remoteCandidates,
                    unsigned short application,
+                   resip::Fifo<Event> &fifo,
                    resip::GenericIPAddress &stunTurnServer)
 
         : TransporterCommand(transporter), 
           mNodeId(nodeId),
           mRemoteCandidates(remoteCandidates),
           mApplication(application),
+          mFifo(fifo),
           mStunTurnServer (stunTurnServer) {;}
 
-      void operator()() { mTransporter->connectImpl(mNodeId, mRemoteCandidates, mApplication, mStunTurnServer); }
+      void operator()() { mTransporter->connectImpl(mNodeId, mRemoteCandidates, mApplication, mFifo, mStunTurnServer); }
 
    private:
       NodeId mNodeId;
       std::vector<Candidate> mRemoteCandidates;
       unsigned short mApplication;
+      resip::Fifo<Event> &mFifo;
       resip::GenericIPAddress mStunTurnServer;
 };
 
@@ -192,9 +195,10 @@ void
 Transporter::connect(NodeId nodeId,
                    std::vector<Candidate> remoteCandidates,
                    unsigned short application,
+                   resip::Fifo<Event> &fifo,
                    resip::GenericIPAddress &stunTurnServer)
 {
-  mCmdFifo.add(new ConnectApplicationCommand(this, nodeId, remoteCandidates, application, stunTurnServer));
+  mCmdFifo.add(new ConnectApplicationCommand(this, nodeId, remoteCandidates, application, fifo, stunTurnServer));
 }
 
 }
