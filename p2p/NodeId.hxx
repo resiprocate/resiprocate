@@ -17,7 +17,7 @@ namespace p2p
 class NodeId
 {
    public:
-	  NodeId() { mValue[0] = mValue[1] = 0; }
+      NodeId();
       NodeId(const resip::Data& data);
       NodeId& operator=(const resip::Data& data);
       NodeId& operator=(const NodeId& data);
@@ -27,6 +27,10 @@ class NodeId
       bool operator<(const NodeId& rhs) const;
       bool operator<=(const NodeId& rhs) const;
       bool operator==(const NodeId& rhs) const;
+      
+      // returns a node ID that is the value of this node plus 2^power passed
+      // in. In chord terms, add2Pow( 127 ) is half way around the ring 
+      NodeId add2Pow( int power ) const; 
       
    private:
       // NOTE: this should be 128 bits
