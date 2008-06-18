@@ -152,9 +152,9 @@ Message::parse(const resip::Data &message)
 	// let's decode the payload
 	MessagePayloadStruct payloadStruct;
 	payloadStruct.decode(stream);
-	mRequestMessageBody = payloadStruct.mPayload;
+	newMessage->mRequestMessageBody = payloadStruct.mPayload;
 
-	resip::DataStream payloadStream(mRequestMessageBody);
+	resip::DataStream payloadStream(newMessage->mRequestMessageBody);
 
 	// get the signature
 	SignatureStruct signature;
@@ -280,7 +280,13 @@ Message::encodePayload()
 	size_t startOfPayload = encodedData.size();
 
 	// encode specific message payload
-	getEncodedPayload(encodedStream);
+	MessagePayloadStruct msgPayload;
+	{
+		resip::DataStream payloadStream(msgPayload.mPayload);
+		getEncodedPayload(payloadStream);
+	}
+
+	msgPayload.encode(encodedStream);
 
 	encodedStream.flush();
 	size_t endOfPayload = encodedData.size();

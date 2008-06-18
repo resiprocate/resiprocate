@@ -3,6 +3,7 @@
 #include "rutil/Data.hxx"
 #include "p2p/Join.hxx"
 #include "p2p/Connect.hxx"
+#include "p2p/Update.hxx"
 #include "p2p/MessageStructsGen.hxx"
 #include "rutil/DataStream.hxx"
 
@@ -14,6 +15,21 @@
 using namespace s2c;
 using namespace resip;
 using namespace p2p;
+
+void
+TestUpdate()
+{
+	resip::Data noData;
+	UpdateReq *update = new UpdateReq(noData);
+	resip::Data encodedMessage = update->encodePayload();
+
+}
+
+void
+TestChordUpdate()
+{
+
+}
 
 int main() 
 {
