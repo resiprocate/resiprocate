@@ -383,11 +383,15 @@ select_start: SELECT_ '(' NAME_ ')'
     decl=RCALLOC(sizeof(p_decl));
 
     decl->type=TYPE_SELECT;
-    STAILQ_INIT(&decl->u.select_.arms);    
+    STAILQ_INIT(&decl->u.select_.arms);
+    decl->u.select_.switch_on=r_strdup($3);
+    
     push_decl(decl);
-    STAILQ_INSERT_TAIL(&public_decls,decl,entry);  // All decls public here
+    if(!CURRENT_DECL)
+      STAILQ_INSERT_TAIL(&public_decls,decl,entry);  
 };
-        | PUBLIC_ SELECT_ 
+
+/*        | PUBLIC_ SELECT_ 
 {
     p_decl *decl=0;
 
@@ -396,10 +400,13 @@ select_start: SELECT_ '(' NAME_ ')'
     decl=RCALLOC(sizeof(p_decl));
 
     decl->type=TYPE_SELECT;
+    decl->u.select_.switch_on=r_strdup($        4);
     STAILQ_INIT(&decl->u.select_.arms);    
     push_decl(decl);
-    STAILQ_INSERT_TAIL(&public_decls,decl,entry);
+    if(!CURRENT_DECL)
+      STAILQ_INSERT_TAIL(&public_decls,decl,entry);  
 };
+*/
 
 
 

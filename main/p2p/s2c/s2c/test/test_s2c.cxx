@@ -35,8 +35,15 @@ int main(int argc, char **argv)
     // ***** Test select  *****
     // Cook up an ns and write it
     s2c::NamedStruct ns1;
-    ns1.mType=ns1.tZero;
+
+    // Set up both variants
     ns1.mZero.mZeroArm=9;
+    ns1.mOne.mOneArm1=99;
+    memset(ns1.mOne.mOneArm2,0xff,10);
+
+    // Now choose one
+//    ns1.mSwitchtype=s2c::zero;
+    ns1.mSwitchtype=s2c::one;
 
     fout.open("test.out");
     ns1.encode(fout);
@@ -46,9 +53,9 @@ int main(int argc, char **argv)
     // Now read it back in again
     fin.open("test.out");
     s2c::NamedStruct ns2;
-    ns2.mType=ns2.tZero;
     ns2.decode(fin);
     
-    std::cout << std::hex << (int)ns2.mZero.mZeroArm << "\n";
+    std::cout << "Type is" << std::hex << (int)ns2.mSwitchtype << "\n";
+//    std::cout << std::hex << (int)ns2.mZero.mZeroArm << "\n";
   }
 
