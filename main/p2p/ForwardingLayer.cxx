@@ -5,12 +5,39 @@ namespace p2p
 void
 ForwardingLayer::process(int ms)
 {
-   TransporterMessage *tm = mRxFifo.getNext(ms);
-   if (!tm)
+   Event *event = mRxFifo.getNext(ms);
+   if (event) 
    {
-      return;
+      event->dispatch(*this);
    }
 }
+
+void 
+ForwardingLayer::consume(ConnectionOpened& m)
+{
+}
+
+void 
+ForwardingLayer::consume(ConnectionClosed& m)
+{
+}
+
+void 
+ForwardingLayer::consume(MessageArrived& m)
+{
+}
+
+void 
+ForwardingLayer::consume(ApplicationMessageArrived& m)
+{
+}
+
+void 
+ForwardingLayer::consume(LocalCandidatesCollected& m)
+{
+}
+
+
 
 }
 

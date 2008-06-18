@@ -5,10 +5,11 @@ using namespace p2p;
 P2PStack::P2PStack(const Profile& profile) : 
    mConfig(mProfile),
    mDispatcher(),
-   mChord(mProfile, mDispatcher),
    mTransporter(mProfile),
+   mChord(mProfile, mTransporter, mDispatcher),
    mForwarder(mDispatcher, mTransporter, mChord)
 {
+   mDispatcher.setForwardingLayer(mForwarder);
 }
 
 void

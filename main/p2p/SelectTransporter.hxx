@@ -37,7 +37,8 @@ class SelectTransporter : public Transporter
 
       ~SelectTransporter();
 
-      bool process(int seconds=0);
+      // ms is the value passed to select. 
+      bool process(int ms=0);
 
    protected:
       void addListenerImpl(resip::TransportType transport,

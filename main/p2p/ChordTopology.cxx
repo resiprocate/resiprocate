@@ -10,7 +10,6 @@
 
 using namespace p2p;
 
-
 ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
    TopologyAPI(config, dispatcher, transporter) 
 {

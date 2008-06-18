@@ -7,6 +7,7 @@
 #include "rutil/Fifo.hxx"
 #include "rutil/TransportType.hxx"
 
+#include "p2p/Event.hxx"
 #include "p2p/NodeId.hxx"
 #include "p2p/FlowId.hxx"
 #include "p2p/Candidate.hxx"
@@ -25,21 +26,7 @@ class Message;
 class FlowId;
 class Candidate;
 
-class TransporterMessage
-{
-   public:
-      virtual ~TransporterMessage() {;}
-
-      virtual ConnectionOpened* castConnectionOpened() { return 0; }
-      virtual ConnectionClosed* castConnectionClosed() { return 0; }
-      virtual ApplicationMessageArrived* castApplicationMessageArrived() { return 0; }
-      virtual MessageArrived* castMessageArrived() { return 0; }
-      virtual LocalCandidatesCollected* castLocalCandidatesCollected() { return 0; }
-
-   protected:
-};
-
-class ConnectionOpened : public TransporterMessage
+class ConnectionOpened : public Event
 {
    public:
       ConnectionOpened(
@@ -48,35 +35,33 @@ class ConnectionOpened : public TransporterMessage
                        resip::TransportType transportType,
                        X509 *cert
                        ) {}
-
-      virtual ConnectionOpened* castConnectionOpened() { return this; }
-
+      
+      virtual void dispatch(EventConsumer& consumer);
+         
       FlowId getFlowId();
       unsigned short getApplication();
       NodeId getNodeId() { return getFlowId().getNodeId(); }
       resip::TransportType getTransportType();
       X509 *getCertificate();
-
-   protected:
 };
 
-class ConnectionClosed : public TransporterMessage
+class ConnectionClosed : public Event
 {
    public:
       NodeId getNodeId();
       unsigned short getApplicationId();
-      virtual ConnectionClosed* castConnectionClosed() { return this; }
+      virtual void dispatch(EventConsumer& consumer);
 
    protected:
 };
 
-class MessageArrived : public TransporterMessage
+class MessageArrived : public Event
 {
    public:
       MessageArrived (NodeId nodeId, std::auto_ptr<p2p::Message> message)
         : mNodeId(nodeId), mMessage(message) {;}
 
-      virtual MessageArrived* castMessageArrived() { return this; }
+      virtual void dispatch(EventConsumer& consumer);
 
       NodeId getNodeId() {return mNodeId;}
       std::auto_ptr<p2p::Message> getMessage() { return mMessage; }
@@ -87,13 +72,13 @@ class MessageArrived : public TransporterMessage
       std::auto_ptr<p2p::Message> mMessage;
 };
 
-class ApplicationMessageArrived : public TransporterMessage
+class ApplicationMessageArrived : public Event
 {
    public:
       ApplicationMessageArrived(FlowId flowId, resip::Data &data)
         : mFlowId(flowId), mData(data) {;}
 
-      virtual ApplicationMessageArrived* castApplicationMessageArrived() { return this;}
+      virtual void dispatch(EventConsumer& consumer);
 
       FlowId getFlowId() const { return mFlowId; }
       const resip::Data &getData() const { return mData; }
@@ -105,15 +90,15 @@ class ApplicationMessageArrived : public TransporterMessage
      resip::Data mData;
 };
 
-class LocalCandidatesCollected : public TransporterMessage
+class LocalCandidatesCollected : public Event
 {
    public:
       LocalCandidatesCollected(std::vector<Candidate> &c) : 
-         mCandidates(c) {;}
+         mCandidates(c) {}
 
-      virtual LocalCandidatesCollected* castLocalCandidatesCollected() { return this; }
+      virtual void dispatch(EventConsumer& consumer);
 
-      std::vector<Candidate> &getCandidates() { return mCandidates; }
+      std::vector<Candidate>& getCandidates() { return mCandidates; }
 
    protected:
 
