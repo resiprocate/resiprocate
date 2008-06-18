@@ -9,11 +9,20 @@ ConnectionOpened::dispatch(EventConsumer& consumer)
    consumer.consume(*this);
 }
 
+ConnectionOpened::~ConnectionOpened()
+{
+}
+
 void
 ConnectionClosed::dispatch(EventConsumer& consumer)
 {
    consumer.consume(*this);
 }
+
+ConnectionClosed::~ConnectionClosed()
+{
+}
+
 
 void
 MessageArrived::dispatch(EventConsumer& consumer)
@@ -21,11 +30,21 @@ MessageArrived::dispatch(EventConsumer& consumer)
    consumer.consume(*this);
 }
 
+MessageArrived::~MessageArrived()
+{
+}
+
+
 void
 ApplicationMessageArrived::dispatch(EventConsumer& consumer)
 {
    consumer.consume(*this);
 }
+
+ApplicationMessageArrived::~ApplicationMessageArrived()
+{
+}
+
 
 void
 LocalCandidatesCollected::dispatch(EventConsumer& consumer)
@@ -33,6 +52,9 @@ LocalCandidatesCollected::dispatch(EventConsumer& consumer)
    consumer.consume(*this);
 }
 
+LocalCandidatesCollected::~LocalCandidatesCollected()
+{
+}
 
 
 /* ======================================================================
