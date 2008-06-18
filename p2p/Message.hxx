@@ -123,11 +123,14 @@ class Message : public Signable
          assert(0);
          return resip::Data::Empty;
       }
-   protected:
-      ResourceId mResourceId;
-      resip::Data mOverlayName;
-      resip::Data mEncodedData;
-      resip::Data mRequestMessageBody;
+
+		bool operator==(const Message& msg) const;
+
+protected:
+	ResourceId mResourceId;
+	resip::Data mOverlayName;
+	resip::Data mEncodedData;
+	resip::Data mRequestMessageBody;
 
       s2c::ForwardingLayerMessageStruct mPDU;
 

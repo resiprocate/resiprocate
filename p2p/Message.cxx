@@ -42,6 +42,47 @@ Message::getResponseNodeId() const
 	return n;
 }
 
+bool 
+Message::operator==(const Message& msg) const
+{
+	bool headerPayloadOk =  
+		(mPDU.mHeader->mReloToken == msg.mPDU.mHeader->mReloToken) &&
+		(mPDU.mHeader->mOverlay == msg.mPDU.mHeader->mOverlay) &&
+		(mPDU.mHeader->mTtl == msg.mPDU.mHeader->mTtl) &&
+		(mPDU.mHeader->mReserved == msg.mPDU.mHeader->mReserved) &&
+		(mPDU.mHeader->mFragment == msg.mPDU.mHeader->mFragment) &&
+		(mPDU.mHeader->mLength == msg.mPDU.mHeader->mLength) &&
+		(mPDU.mHeader->mTransactionId == msg.mPDU.mHeader->mTransactionId) &&
+		(mPDU.mHeader->mFlags == msg.mPDU.mHeader->mFlags) &&
+		(mPDU.mHeader->mRouteLogLenDummy == msg.mPDU.mHeader->mRouteLogLenDummy) &&
+		(getType() == msg.getType()) &&
+		(mPDU.mHeader->mViaList.size() == msg.mPDU.mHeader->mViaList.size()) &&
+		(mPDU.mHeader->mDestinationList.size() == msg.mPDU.mHeader->mDestinationList.size()) &&
+		(mPDU.mPayload == msg.mPDU.mPayload);
+
+	// check Vias
+	if (headerPayloadOk)
+	{
+		std::vector<DestinationStruct*>::const_iterator iter1 = mPDU.mHeader->mViaList.begin();
+		std::vector<DestinationStruct*>::const_iterator iter2 = msg.mPDU.mHeader->mViaList.begin();
+
+		while (iter1 != mPDU.mHeader->mViaList.end() && iter2 != msg.mPDU.mHeader->mViaList.end() && headerPayloadOk)
+		{
+			bool destOk = ((*iter1)->mType == (*iter2)->mType);
+			headerPayloadOk = (headerPayloadOk && destOk);
+
+			iter1++;
+			iter2++;
+		}
+	}
+
+	// check Destinations
+
+	// check sig
+	return headerPayloadOk;
+}
+
+
 void
 Message::initForwardingData()
 {

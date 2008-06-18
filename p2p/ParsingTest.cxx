@@ -1,6 +1,7 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Data.hxx"
+#include "p2p/ChordUpdate.hxx"
 #include "p2p/Join.hxx"
 #include "p2p/Connect.hxx"
 #include "p2p/Update.hxx"
@@ -13,7 +14,7 @@
 #include <iostream>
 
 using namespace s2c;
-using namespace resip;
+using namespace resip; // approved by Adam
 using namespace p2p;
 
 void
@@ -23,12 +24,30 @@ TestUpdate()
 	UpdateReq *update = new UpdateReq(noData);
 	resip::Data encodedMessage = update->encodePayload();
 
+	Message *compareMessage = Message::parse(encodedMessage);
+	assert(*compareMessage == *update);
 }
 
 void
 TestChordUpdate()
 {
+	ChordUpdate update;
+	UpdateReq *updateReq = new UpdateReq(update.encode());
+	resip::Data encodedMessage = updateReq->encodePayload();
 
+	Message *compareMessage = Message::parse(encodedMessage);
+	assert(*compareMessage == *updateReq);
+
+	resip::Data reqBlob = updateReq->getRequestMessageBody();
+	ChordUpdate update2(reqBlob);
+	assert(update2 == update);
+}
+
+void
+TestMessages()
+{
+	TestUpdate();
+	TestChordUpdate();
 }
 
 int main() 
@@ -58,6 +77,8 @@ int main()
 	ForwardingLayerMessageStruct hdr2;
 	resip::DataStream is(encodedMessage);
 	hdr2.decode(is);
+
+	TestMessages();
 
 //	Data d;
 //	DataStream ds(d);
