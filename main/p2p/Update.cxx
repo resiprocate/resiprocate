@@ -21,7 +21,7 @@ UpdateAns::getEncodedPayload(resip::DataStream &data)
 void 
 UpdateAns::decodePayload(resip::DataStream &dataStream) 
 {
-	assert(0);
+	// this function intentionally left blank
 }
 
 UpdateReq::UpdateReq()
@@ -45,7 +45,7 @@ UpdateReq::getEncodedPayload(resip::DataStream &data)
 void 
 UpdateReq::decodePayload(resip::DataStream &dataStream) 
 {
-	assert(0);
+	// this is intentionally left blank
 }
 
 /* ======================================================================
