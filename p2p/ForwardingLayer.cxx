@@ -12,6 +12,18 @@ ForwardingLayer::process(int ms)
    }
 }
 
+
+void 
+ForwardingLayer::forward( Message& m )
+{
+   // get the destination node from m 
+
+   // call mTopology and see if I am resoponsible 
+
+   // send up or down based on whos responsible
+}
+
+
 void 
 ForwardingLayer::consume(ConnectionOpened& m)
 {
