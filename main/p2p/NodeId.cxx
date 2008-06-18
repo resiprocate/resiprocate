@@ -77,11 +77,22 @@ NodeId::getNodeIdStruct() const
 }
 
 
+const resip::Data
+NodeId::encodeToNetwork() 
+{
+  resip::Data d;
+  resip::DataStream strm(d);
+   
+   mNodeId.encode(strm);
+   
+   return d;
+}
+
+
 CompressedId::CompressedId(const resip::Data& cid)
 {
    assert(0);
 }
-
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
