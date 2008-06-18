@@ -22,7 +22,7 @@ int main()
 	m->setOverlayName("duane");
 	resip::Data encodedMessage = m->encodePayload();
 
-	std::cout << 
+	//std::cout << 
 
 //	Data d;
 //	DataStream ds(d);
