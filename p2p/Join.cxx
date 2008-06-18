@@ -35,8 +35,8 @@ JoinReq::JoinReq(const NodeId &node, const resip::Data &overlaySpecific) :
 	mNodeID(node)
 {
    mJoiningPeerId = new s2c::NodeIdStruct;
-   memcpy(mJoiningPeerId->mId, node.getValue().data(), sizeof(mJoiningPeerId->mId));
-
+   *mJoiningPeerId = node.getNodeIdStruct();
+   
    mOverlaySpecificData = overlaySpecific;
 }
 
