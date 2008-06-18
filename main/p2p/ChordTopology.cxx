@@ -58,7 +58,7 @@ void Chord::consume(EventWrapper<LeaveReq>& event)
 
 
 // Deal with routing queries 
-NodeId& Chord::findNextHop( NodeId& node )
+const NodeId& Chord::findNextHop( NodeId& node )
 {
    assert( !isResponsible(node) );
    
@@ -84,7 +84,7 @@ NodeId& Chord::findNextHop( NodeId& node )
 }
 
 
-NodeId& Chord::findNextHop( ResourceId& resource )
+const NodeId& Chord::findNextHop( ResourceId& resource )
 {
    NodeId node( resource.value() );
    return findNextHop( node );
