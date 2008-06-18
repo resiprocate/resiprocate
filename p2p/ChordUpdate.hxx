@@ -41,6 +41,8 @@ public:
 	void setPredecessors(const std::vector<NodeId> &predecessors);
 	
 	resip::Data encode(); // encodes into a blob
+
+	bool operator == (const ChordUpdate &chord) const;
 protected:
 	resip::Data mUpdateBody;
 	UpdateType mUpdateType;
