@@ -118,6 +118,9 @@ Message::initForwardingData()
 					 			(static_cast<UInt64>(rand()));
 
 	mPDU.mHeader->mTtl = Message::MessageTtl;
+
+	// remove me
+	setOverlayName("test");
 }
 
 Message::~Message() 
