@@ -111,7 +111,7 @@ Message::getFlags() const
 JoinAns *
 Message::makeJoinResponse(const resip::Data &overlaySpecific)
 {
-   assert(getType() == JoinReqType);
+	assert(getType() == JoinReqType);
 
 	JoinReq *req = static_cast<JoinReq *>(this);
 	JoinAns *response = new JoinAns(req, overlaySpecific);
@@ -146,9 +146,8 @@ Message::encodePayload()
 	// create the overlay field from the overlay name
 	resip::SHA1Stream stream;
 	stream << mOverlayName;
-	resip::Data sha1 = stream.getBin(32);
-	mOverlay = ntohl(*reinterpret_cast<const UInt32 *>(sha1.c_str()));
 
+   mOverlay = stream.getUInt32();
 	mMessageCode = static_cast<UInt16>(getType());
 
 	resip::Data encodedData;

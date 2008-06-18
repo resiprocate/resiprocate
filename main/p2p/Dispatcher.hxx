@@ -15,8 +15,9 @@ class ForwardingLayer;
 class Dispatcher : public Postable<Message>
 {
   public:
-      Dispatcher(ForwardingLayer& forwardingLayer);
+      Dispatcher();
       
+      void init(ForwardingLayer& forwardingLayer);
       void registerPostable(Message::MessageType type,
                             Postable<Event>& postable);
       void send(std::auto_ptr<Message> message);
@@ -26,7 +27,7 @@ class Dispatcher : public Postable<Message>
       typedef std::map<Message::MessageType, Postable<Event>*> Registry;
       Registry mRegistry;
 //      std::map<TransactionId, Message*>
-      ForwardingLayer& mForwardingLayer;
+      ForwardingLayer* mForwardingLayer;
 };
 
 } // p2p
