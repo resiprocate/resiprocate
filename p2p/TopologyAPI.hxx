@@ -40,9 +40,9 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       virtual void connectionLost( NodeId& node )=0;
        
       // deal with topology change messages 
-      virtual void consume(EventWrapper<JoinReq>& event)=0;
-      virtual void consume(EventWrapper<UpdateReq>& event)=0;
-      virtual void consume(EventWrapper<LeaveReq>& event)=0;
+      virtual void consume(JoinReq& event)=0;
+      virtual void consume(UpdateReq& event)=0;
+      virtual void consume(LeaveReq& event)=0;
       
       // Deal with routing querries 
       virtual const NodeId& findNextHop( NodeId& node )=0;

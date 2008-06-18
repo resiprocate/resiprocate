@@ -43,7 +43,6 @@ class EventConsumer
       virtual ~EventConsumer(){};
 
       virtual void consume(CertDoneEvent& certdone) { assert(0); }
-      virtual void consume(EventWrapper<StoreAns>& storeAns) { assert(0); }
       virtual void consume(ConnectionOpened& m) { assert(0); }
       virtual void consume(ConnectionClosed& m) { assert(0); }
       virtual void consume(MessageArrived& m) { assert(0); }
