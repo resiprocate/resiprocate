@@ -129,6 +129,7 @@ static int max2bytes(UINT4 max)
 int s2c_gen_hdr_h(char *name, FILE *out)
   {
 
+    fprintf(out,"#ifndef _%s_h_\n#define _%s_h_\n\n",name,name);
     fprintf(out,"#include \"p2p/s2c/s2c/s2c_native.hxx\"\n\nnamespace s2c {\n\n",
       name2namespace(name));
     
@@ -309,7 +310,7 @@ int s2c_gen_pdu_h(p_decl *decl, FILE *out)
 
 int s2c_gen_ftr_h(FILE *out)
   {
-    fprintf(out,"}\n");
+    fprintf(out,"}\n\n#endif\n");
  
     return(0);
   }
