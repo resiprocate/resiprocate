@@ -33,12 +33,16 @@ class ForwardingLayer: public EventConsumer, public Postable<p2p::Message>
 
       void process(int ms);
 
+      // all the consumes methods are for messages coming up from transports to this
       virtual void consume(ConnectionOpened& m);
       virtual void consume(ConnectionClosed& m);
       virtual void consume(MessageArrived& m);
       virtual void consume(ApplicationMessageArrived& m);
       virtual void consume(LocalCandidatesCollected& m);
 
+      // from messages from above or below that need to be forwarded 
+      void forward( Message& m );
+      
    private:
       Dispatcher& mDispatcher;
       Transporter& mTransporter;
