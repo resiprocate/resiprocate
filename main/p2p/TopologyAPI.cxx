@@ -3,6 +3,11 @@
 namespace p2p
 {
 
+TopologyAPI::TopologyAPI(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
+   mProfile(config), mDispatcher(dispatcher), mTransporter(transporter)
+{
+}
+
 TopologyAPI::~TopologyAPI()
 {
 }
