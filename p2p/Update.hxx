@@ -12,10 +12,7 @@ class UpdateReq;
 class UpdateAns : public Message
 {
 public:
-	friend class Message;
-
 	virtual MessageType getType() const { return Message::UpdateAnsType; }
-	UpdateAns(p2p::UpdateReq *request);
 	virtual void getEncodedPayload(resip::DataStream &data);
 
 	std::auto_ptr<Event> event()
@@ -23,16 +20,18 @@ public:
 		return wrap(this);
 	}
 protected:
+	friend class Message;
+
 	virtual void decodePayload(resip::DataStream &dataStream);
+
 	UpdateAns();
+	UpdateAns(UpdateReq *request);
 };
 
 
 class UpdateReq : public Message
 {
 public:
-	friend class Message;
-
 	UpdateReq(resip::Data overlaySpecificBlob);
 	virtual MessageType getType() const { return Message::UpdateReqType; }
 
@@ -44,11 +43,12 @@ public:
 	}
 
 protected:
+	friend class Message;
+
 	resip::Data mOverlaySpecific;
 
 	virtual void decodePayload(resip::DataStream &dataStream);
 	UpdateReq();
-
 };
 
 }
