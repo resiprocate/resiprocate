@@ -10,7 +10,7 @@ class JoinAns : public Message
 {
 public:
     JoinAns(const resip::Data &overlaySpecific);
-    virtual MessageType getMessageType() const { return Message::JoinAns; }
+    virtual MessageType getMessageType() const { return Message::JoinAnsType; }
 
 	virtual void getPayload(resip::Data &data) const;
 
@@ -24,7 +24,7 @@ class JoinReq : public Message
 public:
       JoinReq(NodeId nodeID, const resip::Data &overlaySpecific);
 
-      virtual MessageType getMessageType() const { return Message::JoinReq; }
+      virtual MessageType getMessageType() const { return Message::JoinReqType; }
       NodeId getNodeID() const { return mNodeID; }
 
 	  virtual void getPayload(resip::Data &data) const;
