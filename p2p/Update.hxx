@@ -20,19 +20,21 @@ public:
 		return wrap(this);
 	}
 protected:
+	resip::Data mOverlaySpecificData;
+
 	friend class Message;
 
 	virtual void decodePayload(resip::DataStream &dataStream);
 
 	UpdateAns();
-	UpdateAns(UpdateReq *request);
+	UpdateAns(UpdateReq *request, const resip::Data &overlaySpecificData);
 };
 
 
 class UpdateReq : public Message
 {
 public:
-	UpdateReq(resip::Data overlaySpecificBlob);
+	UpdateReq(const resip::Data &overlaySpecificBlob);
 	virtual MessageType getType() const { return Message::UpdateReqType; }
 
 	virtual void getEncodedPayload(resip::DataStream &data);
@@ -45,7 +47,7 @@ public:
 protected:
 	friend class Message;
 
-	resip::Data mOverlaySpecific;
+	resip::Data mOverlaySpecificData;
 
 	virtual void decodePayload(resip::DataStream &dataStream);
 	UpdateReq();
