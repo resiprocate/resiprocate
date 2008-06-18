@@ -86,7 +86,7 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
       
       // encoding/parsing methods
       resip::Data encodePayload();
-      static Message *parse(const resip::Data &message, NodeId senderID);
+      static Message *parse(const resip::Data &message);
 
       // Forwarding Header
       UInt8 getTTL() const;

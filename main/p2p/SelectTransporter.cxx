@@ -368,7 +368,8 @@ SelectTransporter::process(int ms)
                int length = ntohl(int_buffer[3]) & 0xFFFFFF;
                ::read(flowId.getSocket(), buffer+30, length-30);
                resip::Data data(resip::Data::Take, buffer, length);
-               std::auto_ptr<p2p::Message> msg(Message::parse(data, i->first));
+               std::auto_ptr<p2p::Message> msg(Message::parse(data));
+               msg->pushVia(i->first);
 
                MessageArrived *ma = new MessageArrived(flowId.getNodeId(), msg);
 
