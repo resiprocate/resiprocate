@@ -97,17 +97,21 @@ class ApplicationMessageArrived : public Event
 class LocalCandidatesCollected : public Event
 {
    public:
-      LocalCandidatesCollected(std::vector<Candidate> &c) : 
-         mCandidates(c) {}
+      LocalCandidatesCollected(NodeId& nodeId, unsigned short appId, std::vector<Candidate> &c) : 
+         mNodeId(nodeId), mAppId(appId), mCandidates(c) {}
       ~LocalCandidatesCollected();
 
       virtual void dispatch(EventConsumer& consumer);
 
+      NodeId& getNodeId() { return mNodeId; }
+      unsigned short getAppId() { return mAppId; }
       std::vector<Candidate>& getCandidates() { return mCandidates; }
 
    protected:
 
    private:
+      NodeId mNodeId;
+      unsigned short mAppId;
       std::vector<Candidate> mCandidates;
 };
 

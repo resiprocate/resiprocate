@@ -8,6 +8,7 @@
 #include "p2p/FlowId.hxx"
 #include "p2p/Message.hxx"
 #include "p2p/Dispatcher.hxx"
+#include "p2p/Candidate.hxx"
 #include "p2p/Connect.hxx"
 
 using namespace p2p;
@@ -38,20 +39,8 @@ ChordTopology::newConnectionFormed( NodeId& node )
       // add the bootstrap node to our next table 
       mNextTable[0] = node;
 
-		resip::Data fakeData;
-		std::vector<resip::Data> candidates;
-      //ConnectReq(fakeData, fakeData, 0, fakeRole, candidates);
-		//const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates);
-      // send the ConnectReq to our NodeID to get NP 
-      std::auto_ptr<Message> connectReq(new ConnectReq(fakeData, fakeData, 0, fakeData, candidates));
-      mDispatcher.send(connectReq);
-      
-// callback here 
-      // sent connect reqest to NNP
-
-      // send connect to bunch of fingers 
-
-      // send join to AP 
+      // collect candidates for our NodeId
+      mTransporter.collectCandidates(node);
    }
    else
    {
@@ -89,6 +78,30 @@ ChordTopology::connectionLost( NodeId& node )
    }
 
    // TODO - go get another finger table entry?
+}
+
+
+void 
+ChordTopology::candidatesCollected( NodeId& node, std::vector<Candidate>& candidates)
+{
+   // Connect to node - send the ConnectReq
+   std::vector<resip::Data> dataCandidates;
+   std::vector<Candidate>::iterator it = candidates.begin();
+   for(;it != candidates.end(); it++)
+   {
+      dataCandidates.push_back(resip::Data::Empty);  // Todo convert Candidate to Data
+   }
+   std::auto_ptr<Message> connectReq(new ConnectReq(resip::Data::Empty /* icefrag */, resip::Data::Empty /* resip::Data::Empty */, 0 /* port */, resip::Data::Empty /* ice tcp role */, dataCandidates));
+   mDispatcher.send(connectReq);
+      
+// callback here 
+
+      // sent connect reqest to NNP
+
+      // send connect to bunch of fingers 
+
+      // send join to AP 
+
 }
 
 
@@ -209,6 +222,15 @@ ChordTopology::isResponsible( ResourceId& resource )
 {
   NodeId node( resource.value() );
   return isResponsible( node );
+}
+
+
+// Functions to find out if this peer is responsible for something
+bool 
+ChordTopology::isConnected( NodeId& node )
+{
+   // TODO
+   return false;
 }
 
 
