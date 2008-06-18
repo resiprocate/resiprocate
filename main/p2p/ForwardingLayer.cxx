@@ -4,8 +4,6 @@ namespace p2p
 
 }
 
-#endif
-
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
  *  All rights reserved.
