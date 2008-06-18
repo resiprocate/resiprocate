@@ -321,7 +321,7 @@ int s2c_gen_ftr_h(FILE *out)
 /* Generate C files */
 int s2c_gen_hdr_c(char *name,FILE *out)
   {
-    fprintf(out,"#include <iostream>\n#include <iomanip>\n#include \"rutil/Logger.hxx\"\n#include \"P2PSubsystem.hxx\"\n#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P\n#include \"%sGen.hxx\"\n#include <assert.h>\n\nnamespace s2c {\n\n\n",name,
+    fprintf(out,"#include <iostream>\n#include <iomanip>\n#include \"rutil/Logger.hxx\"\n#include \"rutil/ParseException.hxx\"\n#include \"P2PSubsystem.hxx\"\n#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P\n#include \"%sGen.hxx\"\n#include <assert.h>\n\nnamespace s2c {\n\n\n",name,
       name2namespace(name));
     
     return(0);
@@ -697,7 +697,9 @@ static int s2c_gen_decode_c_struct(p_decl *decl, FILE *out)
 
     }
     if(do_auto) {
-      fprintf(out,"   if(in_auto.peek()!=EOF) assert(0);\n"); /* FIXME: exception */
+      fprintf(out,"   if(in_auto.peek()!=EOF)\n");
+      fprintf(out,"      throw resip::ParseException(\"Inner encoded value too long\",\n");
+      fprintf(out,"      \"%s\",__FILE__,__LINE__);\n",decl->name);
       fprintf(out,"   }\n");
     }
     fprintf(out,"};\n\n");
