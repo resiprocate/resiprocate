@@ -9,13 +9,17 @@ namespace p2p
 class ConnectReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return ConnectReqType; }
+      ~ConnectReqMessage() {}
+      virtual MessageType getType() const { return ConnectReqType; }
+      virtual void getEncodedPayload(resip::DataStream &dataStream) const { }
 };
 
 class ConnectAnsMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return ConnectAnsType; }
+      ~ConnectAnsMessage() {}
+      virtual MessageType getType() const { return ConnectAnsType; }
+      virtual void getEncodedPayload(resip::DataStream &dataStream) const { }
 };
 
 

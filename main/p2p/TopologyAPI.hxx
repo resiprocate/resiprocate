@@ -31,7 +31,7 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       TopologyAPI(Profile& config, Dispatcher& dispatcher, Transporter& transporter);
 
       // called to join the overlay 
-      virtual void joinOverlay( resip::GenericIPAddress& address )=0;
+      virtual void joinOverlay()=0;
       
       // need a fifo to receive timer events 
 
