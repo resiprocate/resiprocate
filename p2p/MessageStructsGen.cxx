@@ -59,18 +59,20 @@ void NodeIdStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding NodeIdStruct");
    decode_uintX(in, 64, mHigh);
-   DebugLog( << "mHigh");
+   DebugLog( << "mHigh =" << std::hex << (unsigned long long) mHigh );
 
    decode_uintX(in, 64, mLow);
-   DebugLog( << "mLow");
+   DebugLog( << "mLow =" << std::hex << (unsigned long long) mLow );
 
 };
 
 void NodeIdStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding NodeIdStruct");
+   DebugLog( << "mHigh =" << std::hex << (unsigned long long) mHigh );
    encode_uintX(out, 64, mHigh);
 
+   DebugLog( << "mLow =" << std::hex << (unsigned long long) mLow );
    encode_uintX(out, 64, mLow);
 
 };
@@ -180,18 +182,20 @@ void IPv4AddrPortStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding IPv4AddrPortStruct");
    decode_uintX(in, 32, mAddr);
-   DebugLog( << "mAddr");
+   DebugLog( << "mAddr =" << std::hex << (unsigned long long) mAddr );
 
    decode_uintX(in, 16, mPort);
-   DebugLog( << "mPort");
+   DebugLog( << "mPort =" << std::hex << (unsigned long long) mPort );
 
 };
 
 void IPv4AddrPortStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding IPv4AddrPortStruct");
+   DebugLog( << "mAddr =" << std::hex << (unsigned long long) mAddr );
    encode_uintX(out, 32, mAddr);
 
+   DebugLog( << "mPort =" << std::hex << (unsigned long long) mPort );
    encode_uintX(out, 16, mPort);
 
 };
@@ -204,8 +208,9 @@ IPv6AddrPortStruct :: IPv6AddrPortStruct ()
 {
    mName = "IPv6AddrPortStruct";
  DebugLog(<< "Constructing IPv6AddrPortStruct");
-   for(unsigned int i=0;i<16;i++)
+   for(unsigned int i=0;i<16;i++){
       mAddr[i]=0;
+}
 
    mPort=0;
 
@@ -242,21 +247,25 @@ void IPv6AddrPortStruct :: print(std::ostream& out, int indent) const
 void IPv6AddrPortStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding IPv6AddrPortStruct");
-   for(unsigned int i=0;i<16;i++)
+   for(unsigned int i=0;i<16;i++){
       decode_uintX(in, 8, mAddr[i]);
-   DebugLog( << "mAddr[i]");
+   DebugLog( << "mAddr[i] =" << std::hex << (unsigned long long) mAddr[i] );
+   }
 
    decode_uintX(in, 16, mPort);
-   DebugLog( << "mPort");
+   DebugLog( << "mPort =" << std::hex << (unsigned long long) mPort );
 
 };
 
 void IPv6AddrPortStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding IPv6AddrPortStruct");
-   for(unsigned int i=0;i<16;i++)
-      encode_uintX(out, 8, mAddr[i]);
+   for(unsigned int i=0;i<16;i++){
+      DebugLog( << "mAddr[i] =" << std::hex << (unsigned long long) mAddr[i] );
+   encode_uintX(out, 8, mAddr[i]);
+   }
 
+   DebugLog( << "mPort =" << std::hex << (unsigned long long) mPort );
    encode_uintX(out, 16, mPort);
 
 };
@@ -314,7 +323,7 @@ void IpAddressAndPortStruct :: decode(std::istream& in)
    }
 
    decode_uintX(in, 8, mLength);
-   DebugLog( << "mLength");
+   DebugLog( << "mLength =" << std::hex << (unsigned long long) mLength );
 
    switch(mType){
       case 1:
@@ -339,6 +348,7 @@ void IpAddressAndPortStruct :: encode(std::ostream& out) const
    DebugLog(<< "Encoding IpAddressAndPortStruct");
    encode_uintX(out, 8, (u_int64)(mType));
 
+   DebugLog( << "mLength =" << std::hex << (unsigned long long) mLength );
    encode_uintX(out, 8, mLength);
 
    switch(mType) {
@@ -599,18 +609,20 @@ void SignatureAndHashAlgorithmStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding SignatureAndHashAlgorithmStruct");
    decode_uintX(in, 8, mSig);
-   DebugLog( << "mSig");
+   DebugLog( << "mSig =" << std::hex << (unsigned long long) mSig );
 
    decode_uintX(in, 8, mHash);
-   DebugLog( << "mHash");
+   DebugLog( << "mHash =" << std::hex << (unsigned long long) mHash );
 
 };
 
 void SignatureAndHashAlgorithmStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding SignatureAndHashAlgorithmStruct");
+   DebugLog( << "mSig =" << std::hex << (unsigned long long) mSig );
    encode_uintX(out, 8, mSig);
 
+   DebugLog( << "mHash =" << std::hex << (unsigned long long) mHash );
    encode_uintX(out, 8, mHash);
 
 };
@@ -780,31 +792,31 @@ void ForwardingHeaderStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ForwardingHeaderStruct");
    decode_uintX(in, 8, mReloToken);
-   DebugLog( << "mReloToken");
+   DebugLog( << "mReloToken =" << std::hex << (unsigned long long) mReloToken );
 
    decode_uintX(in, 32, mOverlay);
-   DebugLog( << "mOverlay");
+   DebugLog( << "mOverlay =" << std::hex << (unsigned long long) mOverlay );
 
    decode_uintX(in, 8, mTtl);
-   DebugLog( << "mTtl");
+   DebugLog( << "mTtl =" << std::hex << (unsigned long long) mTtl );
 
    decode_uintX(in, 8, mReserved);
-   DebugLog( << "mReserved");
+   DebugLog( << "mReserved =" << std::hex << (unsigned long long) mReserved );
 
    decode_uintX(in, 16, mFragment);
-   DebugLog( << "mFragment");
+   DebugLog( << "mFragment =" << std::hex << (unsigned long long) mFragment );
 
    decode_uintX(in, 8, mVersion);
-   DebugLog( << "mVersion");
+   DebugLog( << "mVersion =" << std::hex << (unsigned long long) mVersion );
 
    decode_uintX(in, 24, mLength);
-   DebugLog( << "mLength");
+   DebugLog( << "mLength =" << std::hex << (unsigned long long) mLength );
 
    decode_uintX(in, 64, mTransactionId);
-   DebugLog( << "mTransactionId");
+   DebugLog( << "mTransactionId =" << std::hex << (unsigned long long) mTransactionId );
 
    decode_uintX(in, 16, mFlags);
-   DebugLog( << "mFlags");
+   DebugLog( << "mFlags =" << std::hex << (unsigned long long) mFlags );
 
    {
    resip::Data d;
@@ -831,39 +843,50 @@ void ForwardingHeaderStruct :: decode(std::istream& in)
 ;   }
 
    decode_uintX(in, 16, mRouteLogLenDummy);
-   DebugLog( << "mRouteLogLenDummy");
+   DebugLog( << "mRouteLogLenDummy =" << std::hex << (unsigned long long) mRouteLogLenDummy );
 
    decode_uintX(in, 16, mMessageCode);
-   DebugLog( << "mMessageCode");
+   DebugLog( << "mMessageCode =" << std::hex << (unsigned long long) mMessageCode );
 
 };
 
 void ForwardingHeaderStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ForwardingHeaderStruct");
+   DebugLog( << "mReloToken =" << std::hex << (unsigned long long) mReloToken );
    encode_uintX(out, 8, mReloToken);
 
+   DebugLog( << "mOverlay =" << std::hex << (unsigned long long) mOverlay );
    encode_uintX(out, 32, mOverlay);
 
+   DebugLog( << "mTtl =" << std::hex << (unsigned long long) mTtl );
    encode_uintX(out, 8, mTtl);
 
+   DebugLog( << "mReserved =" << std::hex << (unsigned long long) mReserved );
    encode_uintX(out, 8, mReserved);
 
+   DebugLog( << "mFragment =" << std::hex << (unsigned long long) mFragment );
    encode_uintX(out, 16, mFragment);
 
+   DebugLog( << "mVersion =" << std::hex << (unsigned long long) mVersion );
    encode_uintX(out, 8, mVersion);
 
+   DebugLog( << "mLength =" << std::hex << (unsigned long long) mLength );
    encode_uintX(out, 24, mLength);
 
+   DebugLog( << "mTransactionId =" << std::hex << (unsigned long long) mTransactionId );
    encode_uintX(out, 64, mTransactionId);
 
+   DebugLog( << "mFlags =" << std::hex << (unsigned long long) mFlags );
    encode_uintX(out, 16, mFlags);
 
    {
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mViaList.size();i++)
+   {
       mViaList[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -874,15 +897,19 @@ void ForwardingHeaderStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mDestinationList.size();i++)
+   {
       mDestinationList[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
    SEEKP(out,pos2);
    }
 
+   DebugLog( << "mRouteLogLenDummy =" << std::hex << (unsigned long long) mRouteLogLenDummy );
    encode_uintX(out, 16, mRouteLogLenDummy);
 
+   DebugLog( << "mMessageCode =" << std::hex << (unsigned long long) mMessageCode );
    encode_uintX(out, 16, mMessageCode);
 
 };
@@ -1069,7 +1096,7 @@ void ErrorResponseStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ErrorResponseStruct");
    decode_uintX(in, 16, mErrorCode);
-   DebugLog( << "mErrorCode");
+   DebugLog( << "mErrorCode =" << std::hex << (unsigned long long) mErrorCode );
 
    {
       UInt32 len;
@@ -1104,6 +1131,7 @@ void ErrorResponseStruct :: decode(std::istream& in)
 void ErrorResponseStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ErrorResponseStruct");
+   DebugLog( << "mErrorCode =" << std::hex << (unsigned long long) mErrorCode );
    encode_uintX(out, 16, mErrorCode);
 
     encode_uintX(out, 8, mReasonPhrase.size());
@@ -1446,7 +1474,7 @@ void FramedMessageStruct :: decode(std::istream& in)
    switch(mType){
       case 128:
             decode_uintX(in, 24, mData.mSequence);
-   DebugLog( << "mData.mSequence");
+   DebugLog( << "mData.mSequence =" << std::hex << (unsigned long long) mData.mSequence );
             {
       UInt32 len;
       int c;
@@ -1464,9 +1492,9 @@ void FramedMessageStruct :: decode(std::istream& in)
 
       case 129:
             decode_uintX(in, 24, mAck.mAckSequence);
-   DebugLog( << "mAck.mAckSequence");
+   DebugLog( << "mAck.mAckSequence =" << std::hex << (unsigned long long) mAck.mAckSequence );
             decode_uintX(in, 32, mAck.mReceived);
-   DebugLog( << "mAck.mReceived");
+   DebugLog( << "mAck.mReceived =" << std::hex << (unsigned long long) mAck.mReceived );
           break;
 
        default: /* User error */ 
@@ -1483,14 +1511,17 @@ void FramedMessageStruct :: encode(std::ostream& out) const
 
    switch(mType) {
       case 128:
-            encode_uintX(out, 24, mData.mSequence);
+            DebugLog( << "mData.mSequence =" << std::hex << (unsigned long long) mData.mSequence );
+   encode_uintX(out, 24, mData.mSequence);
              encode_uintX(out, 24, mData.mMessage.size());
     out << mData.mMessage;
           break;
 
       case 129:
-            encode_uintX(out, 24, mAck.mAckSequence);
-            encode_uintX(out, 32, mAck.mReceived);
+            DebugLog( << "mAck.mAckSequence =" << std::hex << (unsigned long long) mAck.mAckSequence );
+   encode_uintX(out, 24, mAck.mAckSequence);
+            DebugLog( << "mAck.mReceived =" << std::hex << (unsigned long long) mAck.mReceived );
+   encode_uintX(out, 32, mAck.mReceived);
           break;
 
        default: /* User error */ 
@@ -1639,7 +1670,7 @@ void ConnectReqAnsStruct :: decode(std::istream& in)
    }
 
    decode_uintX(in, 16, mApplication);
-   DebugLog( << "mApplication");
+   DebugLog( << "mApplication =" << std::hex << (unsigned long long) mApplication );
 
    {
       UInt32 len;
@@ -1678,6 +1709,7 @@ void ConnectReqAnsStruct :: encode(std::ostream& out) const
     encode_uintX(out, 8, mPassword.size());
     out << mPassword;
 
+   DebugLog( << "mApplication =" << std::hex << (unsigned long long) mApplication );
    encode_uintX(out, 16, mApplication);
 
     encode_uintX(out, 8, mRole.size());
@@ -1687,7 +1719,9 @@ void ConnectReqAnsStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mCandidates.size();i++)
+   {
       mCandidates[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -1744,7 +1778,7 @@ void PingReqStruct :: decode(std::istream& in)
    while(in2.peek()!=EOF){
       mRequestedInfo.push_back(0);
       decode_uintX(in2, 8, mRequestedInfo[i++]);
-   DebugLog( << "mRequestedInfo[i++]");
+   DebugLog( << "mRequestedInfo[i++] =" << std::hex << (unsigned long long) mRequestedInfo[i++] );
    }
 ;   }
 
@@ -1757,7 +1791,10 @@ void PingReqStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mRequestedInfo.size();i++)
-      encode_uintX(out, 8, mRequestedInfo[i]);
+   {
+      DebugLog( << "mRequestedInfo[i] =" << std::hex << (unsigned long long) mRequestedInfo[i] );
+   encode_uintX(out, 8, mRequestedInfo[i]);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 8, (pos2 - pos1) - 1);
@@ -1817,12 +1854,12 @@ void PingInformationStruct :: decode(std::istream& in)
    switch(mType){
       case 1:
             decode_uintX(in, 32, mResponsibleSet.mResponsiblePpb);
-   DebugLog( << "mResponsibleSet.mResponsiblePpb");
+   DebugLog( << "mResponsibleSet.mResponsiblePpb =" << std::hex << (unsigned long long) mResponsibleSet.mResponsiblePpb );
           break;
 
       case 2:
             decode_uintX(in, 32, mNumResources.mNumResources);
-   DebugLog( << "mNumResources.mNumResources");
+   DebugLog( << "mNumResources.mNumResources =" << std::hex << (unsigned long long) mNumResources.mNumResources );
           break;
 
        default: /* User error */ 
@@ -1839,11 +1876,13 @@ void PingInformationStruct :: encode(std::ostream& out) const
 
    switch(mType) {
       case 1:
-            encode_uintX(out, 32, mResponsibleSet.mResponsiblePpb);
+            DebugLog( << "mResponsibleSet.mResponsiblePpb =" << std::hex << (unsigned long long) mResponsibleSet.mResponsiblePpb );
+   encode_uintX(out, 32, mResponsibleSet.mResponsiblePpb);
           break;
 
       case 2:
-            encode_uintX(out, 32, mNumResources.mNumResources);
+            DebugLog( << "mNumResources.mNumResources =" << std::hex << (unsigned long long) mNumResources.mNumResources );
+   encode_uintX(out, 32, mNumResources.mNumResources);
           break;
 
        default: /* User error */ 
@@ -1897,7 +1936,7 @@ void PingAnsStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding PingAnsStruct");
    decode_uintX(in, 64, mResponseId);
-   DebugLog( << "mResponseId");
+   DebugLog( << "mResponseId =" << std::hex << (unsigned long long) mResponseId );
 
    {
    resip::Data d;
@@ -1916,13 +1955,16 @@ void PingAnsStruct :: decode(std::istream& in)
 void PingAnsStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding PingAnsStruct");
+   DebugLog( << "mResponseId =" << std::hex << (unsigned long long) mResponseId );
    encode_uintX(out, 64, mResponseId);
 
    {
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mPingInfo.size();i++)
+   {
       mPingInfo[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -1975,7 +2017,7 @@ void TunnelReqStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding TunnelReqStruct");
    decode_uintX(in, 16, mApplication);
-   DebugLog( << "mApplication");
+   DebugLog( << "mApplication =" << std::hex << (unsigned long long) mApplication );
 
    {
       UInt32 len;
@@ -2010,6 +2052,7 @@ void TunnelReqStruct :: decode(std::istream& in)
 void TunnelReqStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding TunnelReqStruct");
+   DebugLog( << "mApplication =" << std::hex << (unsigned long long) mApplication );
    encode_uintX(out, 16, mApplication);
 
     encode_uintX(out, 8, mDialogId.size());
@@ -2136,7 +2179,7 @@ void ArrayEntryStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ArrayEntryStruct");
    decode_uintX(in, 32, mIndex);
-   DebugLog( << "mIndex");
+   DebugLog( << "mIndex =" << std::hex << (unsigned long long) mIndex );
 
    mValue = new DataValueStruct();
    mValue->decode(in);
@@ -2146,6 +2189,7 @@ void ArrayEntryStruct :: decode(std::istream& in)
 void ArrayEntryStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ArrayEntryStruct");
+   DebugLog( << "mIndex =" << std::hex << (unsigned long long) mIndex );
    encode_uintX(out, 32, mIndex);
 
    mValue->encode(out);
@@ -2424,10 +2468,10 @@ void StoredDataStruct :: decode(std::istream& in)
    resip::DataStream in_auto(d);
 
    decode_uintX(in_auto, 64, mStorageTime);
-   DebugLog( << "mStorageTime");
+   DebugLog( << "mStorageTime =" << std::hex << (unsigned long long) mStorageTime );
 
    decode_uintX(in_auto, 32, mLifetime);
-   DebugLog( << "mLifetime");
+   DebugLog( << "mLifetime =" << std::hex << (unsigned long long) mLifetime );
 
    mValue = new StoredDataValueStruct();
    mValue->decode(in_auto);
@@ -2447,8 +2491,10 @@ void StoredDataStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
 
+   DebugLog( << "mStorageTime =" << std::hex << (unsigned long long) mStorageTime );
    encode_uintX(out, 64, mStorageTime);
 
+   DebugLog( << "mLifetime =" << std::hex << (unsigned long long) mLifetime );
    encode_uintX(out, 32, mLifetime);
 
    mValue->encode(out);
@@ -2513,7 +2559,7 @@ void StoreKindDataStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding StoreKindDataStruct");
    decode_uintX(in, 32, mKind);
-   DebugLog( << "mKind");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
 
    {
       u_int32 v;
@@ -2522,7 +2568,7 @@ void StoreKindDataStruct :: decode(std::istream& in)
    }
 
    decode_uintX(in, 64, mGenerationCounter);
-   DebugLog( << "mGenerationCounter");
+   DebugLog( << "mGenerationCounter =" << std::hex << (unsigned long long) mGenerationCounter );
 
    {
    resip::Data d;
@@ -2541,17 +2587,21 @@ void StoreKindDataStruct :: decode(std::istream& in)
 void StoreKindDataStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoreKindDataStruct");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
    encode_uintX(out, 32, mKind);
 
    encode_uintX(out, 8, (u_int64)(mDataModel));
 
+   DebugLog( << "mGenerationCounter =" << std::hex << (unsigned long long) mGenerationCounter );
    encode_uintX(out, 64, mGenerationCounter);
 
    {
    long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mValues.size();i++)
+   {
       mValues[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
@@ -2610,7 +2660,7 @@ void StoreReqStruct :: decode(std::istream& in)
    mResource->decode(in);
 
    decode_uintX(in, 8, mReplicaNumber);
-   DebugLog( << "mReplicaNumber");
+   DebugLog( << "mReplicaNumber =" << std::hex << (unsigned long long) mReplicaNumber );
 
    {
    resip::Data d;
@@ -2631,13 +2681,16 @@ void StoreReqStruct :: encode(std::ostream& out) const
    DebugLog(<< "Encoding StoreReqStruct");
    mResource->encode(out);
 
+   DebugLog( << "mReplicaNumber =" << std::hex << (unsigned long long) mReplicaNumber );
    encode_uintX(out, 8, mReplicaNumber);
 
    {
    long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mKindData.size();i++)
+   {
       mKindData[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
@@ -2694,10 +2747,10 @@ void StoreKindResponseStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding StoreKindResponseStruct");
    decode_uintX(in, 32, mKind);
-   DebugLog( << "mKind");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
 
    decode_uintX(in, 64, mGenerationCounter);
-   DebugLog( << "mGenerationCounter");
+   DebugLog( << "mGenerationCounter =" << std::hex << (unsigned long long) mGenerationCounter );
 
    {
    resip::Data d;
@@ -2716,15 +2769,19 @@ void StoreKindResponseStruct :: decode(std::istream& in)
 void StoreKindResponseStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoreKindResponseStruct");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
    encode_uintX(out, 32, mKind);
 
+   DebugLog( << "mGenerationCounter =" << std::hex << (unsigned long long) mGenerationCounter );
    encode_uintX(out, 64, mGenerationCounter);
 
    {
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mReplicas.size();i++)
+   {
       mReplicas[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -2793,7 +2850,9 @@ void StoreAnsStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mKindResponses.size();i++)
+   {
       mKindResponses[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -2846,18 +2905,20 @@ void ArrayRangeStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ArrayRangeStruct");
    decode_uintX(in, 32, mFirst);
-   DebugLog( << "mFirst");
+   DebugLog( << "mFirst =" << std::hex << (unsigned long long) mFirst );
 
    decode_uintX(in, 32, mLast);
-   DebugLog( << "mLast");
+   DebugLog( << "mLast =" << std::hex << (unsigned long long) mLast );
 
 };
 
 void ArrayRangeStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding ArrayRangeStruct");
+   DebugLog( << "mFirst =" << std::hex << (unsigned long long) mFirst );
    encode_uintX(out, 32, mFirst);
 
+   DebugLog( << "mLast =" << std::hex << (unsigned long long) mLast );
    encode_uintX(out, 32, mLast);
 
 };
@@ -2912,7 +2973,7 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding StoredDataSpecifierStruct");
    decode_uintX(in, 32, mKind);
-   DebugLog( << "mKind");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
 
    {
       u_int32 v;
@@ -2921,7 +2982,7 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
    }
 
    decode_uintX(in, 64, mGeneration);
-   DebugLog( << "mGeneration");
+   DebugLog( << "mGeneration =" << std::hex << (unsigned long long) mGeneration );
 
    {
    resip::Data d;
@@ -2974,10 +3035,12 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
 void StoredDataSpecifierStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoredDataSpecifierStruct");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
    encode_uintX(out, 32, mKind);
 
    encode_uintX(out, 8, (u_int64)(mModel));
 
+   DebugLog( << "mGeneration =" << std::hex << (unsigned long long) mGeneration );
    encode_uintX(out, 64, mGeneration);
 
    long pos1=TELLP(out);
@@ -2992,7 +3055,9 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mArray.mIndices.size();i++)
+   {
                mArray.mIndices[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3005,7 +3070,9 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mDictionary.mKeys.size();i++)
+   {
                mDictionary.mKeys[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3092,7 +3159,9 @@ void FetchReqStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSpecifiers.size();i++)
+   {
       mSpecifiers[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3149,10 +3218,10 @@ void FetchKindResponseStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding FetchKindResponseStruct");
    decode_uintX(in, 32, mKind);
-   DebugLog( << "mKind");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
 
    decode_uintX(in, 64, mGeneration);
-   DebugLog( << "mGeneration");
+   DebugLog( << "mGeneration =" << std::hex << (unsigned long long) mGeneration );
 
    {
    resip::Data d;
@@ -3171,15 +3240,19 @@ void FetchKindResponseStruct :: decode(std::istream& in)
 void FetchKindResponseStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding FetchKindResponseStruct");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
    encode_uintX(out, 32, mKind);
 
+   DebugLog( << "mGeneration =" << std::hex << (unsigned long long) mGeneration );
    encode_uintX(out, 64, mGeneration);
 
    {
    long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mValues.size();i++)
+   {
       mValues[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
@@ -3248,7 +3321,9 @@ void FetchAnsStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mKindResponses.size();i++)
+   {
       mKindResponses[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
@@ -3325,7 +3400,9 @@ void RemoveReqStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSpecifiers.size();i++)
+   {
       mSpecifiers[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3394,7 +3471,9 @@ void RemoveAnsStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mKindResponses.size();i++)
+   {
       mKindResponses[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3457,7 +3536,7 @@ void FindReqStruct :: decode(std::istream& in)
    while(in2.peek()!=EOF){
       mKinds.push_back(0);
       decode_uintX(in2, 32, mKinds[i++]);
-   DebugLog( << "mKinds[i++]");
+   DebugLog( << "mKinds[i++] =" << std::hex << (unsigned long long) mKinds[i++] );
    }
 ;   }
 
@@ -3472,7 +3551,10 @@ void FindReqStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mKinds.size();i++)
-      encode_uintX(out, 32, mKinds[i]);
+   {
+      DebugLog( << "mKinds[i] =" << std::hex << (unsigned long long) mKinds[i] );
+   encode_uintX(out, 32, mKinds[i]);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 8, (pos2 - pos1) - 1);
@@ -3524,7 +3606,7 @@ void FindKindDataStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding FindKindDataStruct");
    decode_uintX(in, 32, mKind);
-   DebugLog( << "mKind");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
 
    mClosest = new ResourceIdStruct();
    mClosest->decode(in);
@@ -3534,6 +3616,7 @@ void FindKindDataStruct :: decode(std::istream& in)
 void FindKindDataStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding FindKindDataStruct");
+   DebugLog( << "mKind =" << std::hex << (unsigned long long) mKind );
    encode_uintX(out, 32, mKind);
 
    mClosest->encode(out);
@@ -3600,7 +3683,9 @@ void FindAnsStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mResults.size();i++)
+   {
       mResults[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3652,7 +3737,7 @@ void TurnServerStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding TurnServerStruct");
    decode_uintX(in, 8, mIteration);
-   DebugLog( << "mIteration");
+   DebugLog( << "mIteration =" << std::hex << (unsigned long long) mIteration );
 
    mServerAddress = new IpAddressAndPortStruct();
    mServerAddress->decode(in);
@@ -3662,6 +3747,7 @@ void TurnServerStruct :: decode(std::istream& in)
 void TurnServerStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding TurnServerStruct");
+   DebugLog( << "mIteration =" << std::hex << (unsigned long long) mIteration );
    encode_uintX(out, 8, mIteration);
 
    mServerAddress->encode(out);
@@ -3796,7 +3882,9 @@ void SipRegistrationStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSipRegistrationRoute.mDestinationList.size();i++)
+   {
                mSipRegistrationRoute.mDestinationList[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3947,7 +4035,9 @@ void ChordUpdateStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mNeighbors.mPredecessors.size();i++)
+   {
                mNeighbors.mPredecessors[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3957,7 +4047,9 @@ void ChordUpdateStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mNeighbors.mSuccessors.size();i++)
+   {
                mNeighbors.mSuccessors[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3970,7 +4062,9 @@ void ChordUpdateStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mFull.mPredecessors.size();i++)
+   {
                mFull.mPredecessors[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3980,7 +4074,9 @@ void ChordUpdateStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mFull.mSuccessors.size();i++)
+   {
                mFull.mSuccessors[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
@@ -3990,7 +4086,9 @@ void ChordUpdateStruct :: encode(std::ostream& out) const
    long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mFull.mFingers.size();i++)
+   {
                mFull.mFingers[i]->encode(out);
+   }
    long pos2=TELLP(out);
    SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
