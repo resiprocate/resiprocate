@@ -7,7 +7,7 @@ using namespace s2c;
 
 int main() 
 {
-	ForwardingHdrStruct hdr;
+	ForwardingLayerMessageStruct hdr;
 //	Data foo = Data::from(hdr);
 	return 0;
 }
