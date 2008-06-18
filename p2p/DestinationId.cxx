@@ -59,6 +59,25 @@ DestinationId::operator==(const NodeId& nid) const
    return (isNodeId() && nid == asNodeId());
 }
 
+bool
+DestinationId::operator==(const DestinationId& nid) const
+{
+   if (nid.isNodeId() && this->isNodeId())
+   {
+      return nid.asNodeId() == this->asNodeId();
+   }
+   else if (nid.isResourceId() && this->isResourceId())
+   {
+      return nid.asResourceId() == this->asResourceId();
+   }
+   else if (nid.isCompressedId() && this->isCompressedId())
+   {
+      return nid.asCompressedId() == this->asCompressedId();
+   }
+   return false;
+}
+
+
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
