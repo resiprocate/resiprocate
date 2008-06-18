@@ -45,7 +45,7 @@
 
       struct {
         DestinationType         type;
-        uint8                   length;
+        uint8                   length.auto_len;
 
         select (type) {
           case peer:
@@ -231,7 +231,7 @@
 
 
        struct {
-        DataModel            model;  /* TODO: Compensation for compiler */
+        DataModel            model;  /* TODO: Compensation for compiler?? */
 
         select (model) {
           case single_value:
@@ -249,7 +249,7 @@
       } StoredDataValue;
        
       struct {
-        uint32                  length;
+        uint32                  length.auto_len;
         uint64                  storage_time;
         uint32                  lifetime;
         StoredDataValue         value;
@@ -290,7 +290,7 @@
         KindId                  kind;
         DataModel               model;
         uint64                  generation;
-        uint16                  length;
+        uint16                  length.auto_len;
         
         select (model) {
           case single_value: ;    /* Empty */
@@ -357,7 +357,7 @@
 
        struct {
           SipRegistrationType   type;
-          uint16                length;
+          uint16                length.auto_len;
 
           select (type) {
             case sip_registration_uri:

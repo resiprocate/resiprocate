@@ -86,7 +86,6 @@ class DestinationStruct : public PDU {
 public:
    DestinationStruct();
    DestinationType               mType;
-   UInt8                         mLength;
    struct mPeer_ {
         NodeIdStruct*                 mNodeId;
    } mPeer;
@@ -406,7 +405,6 @@ public:
 class StoredDataStruct : public PDU {
 public:
    StoredDataStruct();
-   UInt32                        mLength;
    UInt64                        mStorageTime;
    UInt32                        mLifetime;
    StoredDataValueStruct*        mValue;
@@ -481,7 +479,6 @@ public:
    UInt32                        mKind;
    DataModel                     mModel;
    UInt64                        mGeneration;
-   UInt16                        mLength;
    struct mSingleValue_ {
    } mSingleValue;
    struct mArray_ {
@@ -602,7 +599,6 @@ class SipRegistrationStruct : public PDU {
 public:
    SipRegistrationStruct();
    SipRegistrationType           mType;
-   UInt16                        mLength;
    struct mSipRegistrationUri_ {
         std::vector<unsigned char>    mUri;
    } mSipRegistrationUri;

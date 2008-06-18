@@ -3,30 +3,31 @@
 
 #include <openssl/evp.h>
 
-#if 0
 namespace p2p {
-  SignatureContext::SignatureContext(Profile &config)
-    : mProfile(config)
+  SignatureContext::SignatureContext(Profile &profile)
+    : mProfile(profile)
     {
       ;
     }
 
-
-  // Private commands
-  void digestData(const vector<const Data> toBeSigned, 
+  void digestData(const vector<Data> toBeSigned, 
     unsigned char digest[32])
     {
+      EVP_MD_CTX md;
+      
+      
+      
+      
       
     }
   
-  Data SignatureContext::computeSignature(const vector<const Data> toBeSigned)
+  Data SignatureContext::computeSignature(const vector<Data> toBeSigned)
     {
-      UCHAR digest[32];
-
+      Data d;
+      
+      return d;
     }
-
 }
-#endif
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
