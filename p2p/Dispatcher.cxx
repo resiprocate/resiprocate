@@ -26,7 +26,9 @@ Dispatcher::registerPostable(Message::MessageType type,
    if (it == mRegistry.end())
    {
       mRegistry[type] = &postable;
-   } else {
+   }
+   else
+   {
       assert(0);
    }
 }
@@ -51,11 +53,15 @@ Dispatcher::post(std::auto_ptr<Message> message)
          mForwardingLayer->post(std::auto_ptr<Message>(
                                 message->makeErrorResponse(Message::Error::Forbidden, 
                                 NO_HANDLER)));
-      } else {
+      } 
+      else 
+      {
          DebugLog(<< "Response for unregistered message type, dropping " 
                   << message->brief());
       }
-   } else {
+   } 
+   else 
+   {
       it->second->post(message->event());
    }
 }

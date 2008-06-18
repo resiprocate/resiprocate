@@ -1,8 +1,10 @@
 #ifndef P2P_StoreAns_hxx
 #define P2P_StoreAns_hxx
 
-#include "Message.hxx"
 #include <vector>
+
+#include "p2p/Message.hxx"
+#include "p2p/EventWrapper.hxx"
 
 namespace p2p
 {
@@ -24,14 +26,15 @@ class StoreAns : public ResourceMessage
          return mGeneration;
       }
 
-      std::auto_ptr<Event> event();
-      
-//       {
-//          return EventWrapper::wrap(this);
-//       }
+      // call Event->dispatch(consumer) when you want to dispatch this
+      std::auto_ptr<Event> event()
+      {
+         return wrap(this);
+      }
 
       NodeIds& nodeIds();
       const NodeIds& nodeIds() const;
+
    private:
       KindId mKindId;
       Generation mGeneration;

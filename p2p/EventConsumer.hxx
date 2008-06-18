@@ -11,6 +11,7 @@ class ConnectionClosed;
 class MessageArrived;
 class ApplicationMessageArrived;
 class LocalCandidatesCollected;
+class StoreAns;
 
 template<class T> class EventWrapper;
 
@@ -26,6 +27,7 @@ class EventConsumer
       virtual void consume(MessageArrived& m) { assert(0); }
       virtual void consume(ApplicationMessageArrived& m) { assert(0); }
       virtual void consume(LocalCandidatesCollected& m) { assert(0); }
+      virtual void consume(StoreAns& m) { assert(0); }
       
 };
 
