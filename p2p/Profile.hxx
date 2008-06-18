@@ -22,7 +22,7 @@ enum {RELOAD_APPLICATION_ID = 8675};
 class Profile
 {
 public:
-   Profile() : mNodeId(resip::Data::Empty) {}
+   Profile() : mNodeId(resip::Data::Empty), mNumInitialFingers(8) {}
    virtual ~Profile() {;}
 
    virtual const X509        *getCertificate() { return 0; }
@@ -40,6 +40,9 @@ public:
    virtual UserName& userName() { return mUserName; }
    virtual const UserName& userName() const { return mUserName; }
 
+   virtual unsigned int numInitialFingers() { return mNumInitialFingers; }
+   virtual const unsigned int numInitialFingers() const { return mNumInitialFingers; }
+
    virtual std::vector<resip::GenericIPAddress>& bootstrapNodes() { return mBootstrapNodes; }
    virtual const std::vector<resip::GenericIPAddress>& bootstrapNodes() const { return mBootstrapNodes; }
       
@@ -48,6 +51,7 @@ private:
    resip::Data mSignatureDigest;
    NodeId      mNodeId;
    UserName    mUserName;
+   unsigned int mNumInitialFingers;
    std::vector<resip::GenericIPAddress> mBootstrapNodes;
 };
 

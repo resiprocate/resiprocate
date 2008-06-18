@@ -10,6 +10,8 @@
 #include "p2p/Dispatcher.hxx"
 #include "p2p/Candidate.hxx"
 #include "p2p/Connect.hxx"
+#include "p2p/Update.hxx"
+#include "p2p/ChordUpdate.hxx"
 
 using namespace p2p;
 
@@ -38,22 +40,20 @@ ChordTopology::joinOverlay()
 void 
 ChordTopology::newConnectionFormed( const NodeId& node )
 {
-   // If this is the first connection we ever have - then it must be the connection to
+   // If this is the first connection we have - then it must be the connection to
    // the bootstrap node
    if(mFingerTable.size() == 0 && mNextTable.size() == 0)
    {
-      // add the bootstrap node to our next table 
-      mNextTable[0] = node;
-
       // collect candidates for our NodeId
-      mTransporter.collectCandidates(node);
+      mTransporter.collectCandidates(mProfile.nodeId());
+
+      // Build finger table
+      buildFingerTable();
    }
-   else
-   {
-      // go and add this to the finger table
-      assert(mFingerTable.find(node) == mFingerTable.end());
-      mFingerTable.insert(node);
-   }
+
+   // go and add this to the finger table
+   assert(mFingerTable.find(node) == mFingerTable.end());
+   mFingerTable.insert(node);
 }
 
 
@@ -133,9 +133,31 @@ ChordTopology::consume(UpdateReq& msg)
 {
    // if our, prev empty, then this update will have the prev and need to
    // connect to them and set the prev 
+   ChordUpdate cordUpdate( msg.getRequestMessageBody() );
+   if(addNewNeighbors(cordUpdate.getPredecessors(), false /* adjustNextOnly */) ||
+      addNewNeighbors(cordUpdate.getSuccessors(), false /* adjustNextOnly */))
+   {
+      // Create our update message
+      ChordUpdate ourUpdate;
+      ourUpdate.setUpdateType(ChordUpdate::Neighbors);
+      // TODO set our predecessors and successors
 
-   // see if this changes the neighbor tables and if it does send updates to all
-   // peers in prev/next table 
+      // if this changes the neighbor tables and if it does send updates to all
+      // peers in prev/next table 
+      std::vector<NodeId>::iterator it = mPrevTable.begin();
+      for(; it != mPrevTable.end(); it++)
+      {         
+         std::auto_ptr<Message> updateReq(new UpdateReq(ourUpdate.encode()));
+         mDispatcher.send(updateReq);
+      }
+
+      it = mNextTable.begin();
+      for(; it != mNextTable.end(); it++)
+      {
+         std::auto_ptr<Message> updateReq(new UpdateReq(ourUpdate.encode()));
+         mDispatcher.send(updateReq);
+      }
+   }
 }
 
 
@@ -150,8 +172,13 @@ ChordTopology::consume(LeaveReq& msg)
 void 
 ChordTopology::consume(ConnectAns& msg)
 {
-   // Form socket connection
-   //mTransporter.connect(
+   // Get NodeId from message and check if it is a neighbour
+   std::vector<NodeId> nodes;
+   nodes.push_back(msg.getResponseNodeId());
+   addNewNeighbors(nodes, true /* adjustNextOnly */);
+
+   // Socket connect
+   //mTransporter.connect(   TODO
 }
 
 
@@ -242,26 +269,6 @@ ChordTopology::isConnected( const NodeId& node )
       return true;
    }
 
-   // Check if node is in the mPrevTable
-   std::vector<NodeId>::iterator it = mPrevTable.begin();
-   for(; it != mPrevTable.end(); it++)
-   {
-      if(*it == node) 
-      {
-         return true;
-      }
-   }
-
-   // Check if node is in the mNextTable
-   it = mNextTable.begin();
-   for(; it != mNextTable.end(); it++)
-   {
-      if(*it == node) 
-      {
-         return true;
-      }
-   }
-
    return false;
 }
 
@@ -289,7 +296,7 @@ ChordTopology::~ChordTopology()
 
 
 bool 
-ChordTopology::addNewNeighbors(std::vector<NodeId>& nodes)
+ChordTopology::addNewNeighbors(const std::vector<NodeId>& nodes, bool adjustNextOnly)
 {
    // This function takes a list of nodes and merges them into next and prev
    // tables. If anything changes, it sends updates 
@@ -299,39 +306,54 @@ ChordTopology::addNewNeighbors(std::vector<NodeId>& nodes)
    
    for (unsigned int n=0; n<nodes.size(); n++ )
    {
-      NodeId node(nodes[n]);
-      
+      bool setNext = false;
+      bool setPrev = false;
       if (mNextTable.size() == 0)
       {
-         mNextTable[0] = node; changed=true;
+         setNext = true;
       }
-      else if ( (mProfile.nodeId() < node) && (node < mNextTable[0]) )
+      else if ( (mProfile.nodeId() < nodes[n]) && (nodes[n] < mNextTable[0]) )
       {
-         mNextTable[0] = node; changed=true;
+         setNext = true;
       }
-      
-      if (mPrevTable.size() == 0)
+
+      if(!adjustNextOnly)
       {
-         mPrevTable[0] = node; changed=true;
+         if (mPrevTable.size() == 0)
+         {
+            setPrev = true;
+         }
+         else if ( (mPrevTable[0] < nodes[n]) && (nodes[n] < mProfile.nodeId()) )
+         {
+            setPrev = true;
+         }   
       }
-      else if ( (mPrevTable[0] < node) && (node < mProfile.nodeId()) )
+
+      if(setNext)
       {
-         mPrevTable[0] = node; changed=true;
-      }   
+         mNextTable[0] = nodes[n]; 
+      }
+
+      if(setNext || setPrev)
+      {
+         changed=true;
+         // kick start connection to newly added node if not admitting peer addition
+         if(!adjustNextOnly) mTransporter.collectCandidates(nodes[n]);  
+      }
    }
    
    return changed;
 }
 
-
+// May not actually be needed
 bool 
-ChordTopology::addNewFingers(std::vector<NodeId>& nodes)
+ChordTopology::addNewFingers(const std::vector<NodeId>& nodes)
 {
    assert( nodes.size() > 0 );
    bool changed=false;
 
    // iterate through finger table and check if we are actually adding new nodes
-   std::vector<NodeId>::iterator it = nodes.begin();
+   std::vector<NodeId>::const_iterator it = nodes.begin();
    for(;it != nodes.end(); it++)
    {
       std::set<NodeId>::iterator it2 = mFingerTable.find(*it);
@@ -342,6 +364,18 @@ ChordTopology::addNewFingers(std::vector<NodeId>& nodes)
       }
    }
    return changed;
+}
+
+
+void 
+ChordTopology::buildFingerTable()
+{
+   assert(mProfile.numInitialFingers() <= 127);
+   for(unsigned int i = 0; i < mProfile.numInitialFingers(); i++)
+   {
+      NodeId fingerNodeId = mProfile.nodeId().add2Pow(127-i);
+      mTransporter.collectCandidates(fingerNodeId);     
+   }
 }
 
 
