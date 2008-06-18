@@ -574,12 +574,12 @@ void SignatureStruct :: encode(std::ostream& out)
 
 
 
-// Classes for ForwardingLayerMessageStruct */
+// Classes for ForwardingHeaderStruct */
 
-ForwardingLayerMessageStruct :: ForwardingLayerMessageStruct ()
+ForwardingHeaderStruct :: ForwardingHeaderStruct ()
 {
-   mName = "ForwardingLayerMessageStruct";
- DebugLog(<< "Constructing ForwardingLayerMessageStruct");
+   mName = "ForwardingHeaderStruct";
+ DebugLog(<< "Constructing ForwardingHeaderStruct");
    mReloToken=0;
 
    mOverlay=0;
@@ -604,15 +604,12 @@ ForwardingLayerMessageStruct :: ForwardingLayerMessageStruct ()
 
    mMessageCode=0;
 
-
-   mSig=0;
-
 };
 
-void ForwardingLayerMessageStruct :: print(std::ostream& out, int indent) const 
+void ForwardingHeaderStruct :: print(std::ostream& out, int indent) const 
 {
    do_indent(out,indent);
-   (out) << "ForwardingLayerMessage:\n";
+   (out) << "ForwardingHeader:\n";
    indent+=2;
    do_indent(out, indent);
    (out)  << "relo_token:" << std::hex << (unsigned long long)mReloToken << "\n"; 
@@ -642,16 +639,11 @@ void ForwardingLayerMessageStruct :: print(std::ostream& out, int indent) const
    (out)  << "route_log_len_dummy:" << std::hex << (unsigned long long)mRouteLogLenDummy << "\n"; 
    do_indent(out, indent);
    (out)  << "message_code:" << std::hex << (unsigned long long)mMessageCode << "\n"; 
-   for(unsigned int i=0;i<mPayload.size();i++){
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mPayload[i] << "\n"; 
-   }
-   mSig->print(out, indent);
 };
 
-void ForwardingLayerMessageStruct :: decode(std::istream& in)
+void ForwardingHeaderStruct :: decode(std::istream& in)
 {
- DebugLog(<< "Decoding ForwardingLayerMessageStruct");
+ DebugLog(<< "Decoding ForwardingHeaderStruct");
    decode_uintX(in, 8, mReloToken);
    DebugLog( << "mReloToken");
 
@@ -709,26 +701,11 @@ void ForwardingLayerMessageStruct :: decode(std::istream& in)
    decode_uintX(in, 16, mMessageCode);
    DebugLog( << "mMessageCode");
 
-   {
-   resip::Data d;
-   read_varray1(in, 3, d);
-   resip::DataStream in2(d);
-   int i=0;
-   while(in2.peek()!=EOF){
-      mPayload.push_back(0);
-      decode_uintX(in2, 8, mPayload[i++]);
-   DebugLog( << "mPayload[i++]");
-   }
-;   }
-
-   mSig = new SignatureStruct();
-   mSig->decode(in);
-
 };
 
-void ForwardingLayerMessageStruct :: encode(std::ostream& out)
+void ForwardingHeaderStruct :: encode(std::ostream& out)
 {
-   DebugLog(<< "Encoding ForwardingLayerMessageStruct");
+   DebugLog(<< "Encoding ForwardingHeaderStruct");
    encode_uintX(out, 8, mReloToken);
 
    encode_uintX(out, 32, mOverlay);
@@ -772,6 +749,64 @@ void ForwardingLayerMessageStruct :: encode(std::ostream& out)
    encode_uintX(out, 16, mRouteLogLenDummy);
 
    encode_uintX(out, 16, mMessageCode);
+
+};
+
+
+
+// Classes for ForwardingLayerMessageStruct */
+
+ForwardingLayerMessageStruct :: ForwardingLayerMessageStruct ()
+{
+   mName = "ForwardingLayerMessageStruct";
+ DebugLog(<< "Constructing ForwardingLayerMessageStruct");
+   mHeader=0;
+
+
+   mSig=0;
+
+};
+
+void ForwardingLayerMessageStruct :: print(std::ostream& out, int indent) const 
+{
+   do_indent(out,indent);
+   (out) << "ForwardingLayerMessage:\n";
+   indent+=2;
+   mHeader->print(out, indent);
+   for(unsigned int i=0;i<mPayload.size();i++){
+      do_indent(out, indent);
+   (out)  << "opaque:" << std::hex << (unsigned long long) mPayload[i] << "\n"; 
+   }
+   mSig->print(out, indent);
+};
+
+void ForwardingLayerMessageStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding ForwardingLayerMessageStruct");
+   mHeader = new ForwardingHeaderStruct();
+   mHeader->decode(in);
+
+   {
+   resip::Data d;
+   read_varray1(in, 3, d);
+   resip::DataStream in2(d);
+   int i=0;
+   while(in2.peek()!=EOF){
+      mPayload.push_back(0);
+      decode_uintX(in2, 8, mPayload[i++]);
+   DebugLog( << "mPayload[i++]");
+   }
+;   }
+
+   mSig = new SignatureStruct();
+   mSig->decode(in);
+
+};
+
+void ForwardingLayerMessageStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding ForwardingLayerMessageStruct");
+   mHeader->encode(out);
 
    {
    long pos1=out.tellp();
