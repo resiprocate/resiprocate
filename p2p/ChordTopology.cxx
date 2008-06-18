@@ -37,8 +37,12 @@ ChordTopology::newConnectionFormed( NodeId& node )
       // add the bootstrap node to our next table 
       mNextTable[0] = node;
 
+		resip::Data fakeData;
+		std::vector<resip::Data> candidates;
+      //ConnectReq(fakeData, fakeData, 0, fakeRole, candidates);
+		//const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates);
       // send the ConnectReq to our NodeID to get NP 
-      std::auto_ptr<Message> connectReq(new ConnectReq);
+      std::auto_ptr<Message> connectReq(new ConnectReq(fakeData, fakeData, 0, fakeData, candidates));
       mDispatcher.send(connectReq);
       
 // callback here 
