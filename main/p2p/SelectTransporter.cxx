@@ -13,7 +13,7 @@
 namespace p2p
 {
 
-SelectTransporter::SelectTransporter ( ConfigObject &configuration )
+SelectTransporter::SelectTransporter ( Profile &configuration )
   : Transporter(configuration), mHasBootstrapSocket(false)
 {
    resip::Data localIp = resip::DnsUtil::getLocalIpAddress();
