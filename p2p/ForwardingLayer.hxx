@@ -7,30 +7,35 @@
 #include "p2p/NodeId.hxx"
 #include "p2p/ResourceId.hxx"
 #include "p2p/Message.hxx"
+#include "p2p/Postable.hxx"
+#include "p2p/Transporter.hxx"
+#include "p2p/TransporterMessage.hxx"
+#include "p2p/TopologyAPI.hxx"
+#include "p2p/Message.hxx"
 
 namespace p2p
 {
 class Dispatcher;
 class TransporterMessage;
 
-class ForwardingLayer: public Postable<Message>
+class ForwardingLayer: public Postable<p2p::Message>
 {
    public:
       ForwardingLayer(Dispatcher& dispatcher, 
-                      Transporter& transport,
+                      Transporter& transporter,
                       TopologyAPI& topology)
          : mDispatcher(dispatcher),
-           mTransport(transport),
+           mTransporter(transporter),
            mTopology(topology) 
            {
-              mDispatcher.setRxFifo(&mRxFifo);
+              mTransporter.setRxFifo(&mRxFifo);
            }
 
       void process();
 
    private:
       Dispatcher& mDispatcher;
-      Transporter& mTransport;
+      Transporter& mTransporter;
       TopologyAPI& mTopology;
 
       resip::Fifo<TransporterMessage> mRxFifo;
