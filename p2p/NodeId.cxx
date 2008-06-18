@@ -76,6 +76,13 @@ NodeId::getNodeIdStruct() const
    return mNodeId;
 }
 
+
+CompressedId::CompressedId(const resip::Data& cid)
+{
+   assert(0);
+}
+
+
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project
  *  All rights reserved.
