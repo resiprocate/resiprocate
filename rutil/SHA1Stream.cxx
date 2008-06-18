@@ -1,4 +1,6 @@
+#include <assert.h>
 #include "rutil/SHA1Stream.hxx"
+#include "rutil/Socket.hxx"  // for ntohl under windows
 #include "rutil/WinLeakCheck.hxx"
 
 #if defined(USE_SSL)
