@@ -154,7 +154,7 @@ Message::parse(const resip::Data &message)
 	payloadStruct.decode(stream);
 	newMessage->mRequestMessageBody = payloadStruct.mPayload;
 
-	resip::DataStream payloadStream(newMessage->mRequestMessageBody);
+	resip::DataStream payloadStream( newMessage->mRequestMessageBody );
 
 	// get the signature
 	SignatureStruct signature;
