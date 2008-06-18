@@ -25,6 +25,7 @@ class NodeId
       NodeId add2Pow( int power ) const; 
 
       const s2c::NodeIdStruct& getNodeIdStruct() const;
+      const resip::Data  encodeToNetwork();
       
    private:
       // NOTE: this should be 128 bits
