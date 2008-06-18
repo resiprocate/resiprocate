@@ -4,6 +4,7 @@
 #include "p2p/Connect.hxx"
 #include "p2p/Leave.hxx"
 #include "p2p/Event.hxx"
+#include "p2p/DestinationId.hxx"
 
 #include "rutil/SHA1Stream.hxx"
 #include "rutil/Socket.hxx" 
@@ -42,6 +43,27 @@ Message::getResponseNodeId() const
 	return n;
 }
 
+bool
+Message::compareDestinationLists(const std::vector<DestinationStruct *> &l1, const std::vector<DestinationStruct *> &l2) const
+{
+	std::vector<DestinationStruct*>::const_iterator iter1 = l1.begin();
+	std::vector<DestinationStruct*>::const_iterator iter2 = l2.begin();
+
+	bool isOk = true;
+	while (iter1 != l1.end() && iter2 != l2.end() && isOk)
+	{
+		DestinationId id1(**iter1);
+		DestinationId id2(**iter2);
+
+		bool isOk = isOk && (id1 == id2);
+	
+		++iter1;
+		++iter2;
+	}
+
+	return isOk;
+}
+
 bool 
 Message::operator==(const Message& msg) const
 {
@@ -63,20 +85,13 @@ Message::operator==(const Message& msg) const
 	// check Vias
 	if (headerPayloadOk)
 	{
-		std::vector<DestinationStruct*>::const_iterator iter1 = mPDU.mHeader->mViaList.begin();
-		std::vector<DestinationStruct*>::const_iterator iter2 = msg.mPDU.mHeader->mViaList.begin();
-
-		while (iter1 != mPDU.mHeader->mViaList.end() && iter2 != msg.mPDU.mHeader->mViaList.end() && headerPayloadOk)
-		{
-			bool destOk = ((*iter1)->mType == (*iter2)->mType);
-			headerPayloadOk = (headerPayloadOk && destOk);
-
-			iter1++;
-			iter2++;
-		}
+		headerPayloadOk = (headerPayloadOk && compareDestinationLists(mPDU.mHeader->mDestinationList, msg.mPDU.mHeader->mDestinationList));
 	}
 
-	// check Destinations
+	if (headerPayloadOk)
+	{
+		headerPayloadOk = (headerPayloadOk && compareDestinationLists(mPDU.mHeader->mViaList, msg.mPDU.mHeader->mViaList));
+	}
 
 	// check sig
 	return headerPayloadOk;
