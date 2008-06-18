@@ -90,6 +90,8 @@ class Message : public Signable
 	  UpdateAns* makeUpdateResponse();
 	  LeaveAns* makeLeaveResponse();
 	  ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates);
+
+		resip::Data getRequestMessageBody() const;
       
       // encoding/parsing methods
       resip::Data encodePayload();
@@ -104,6 +106,8 @@ class Message : public Signable
       UInt64 getTransactionID() const;
       UInt16 getFlags() const; 
       void pushVia(NodeId node);
+
+		NodeId getResponseNodeId() const; // pull this from the via list
 
       // placeholder for doing via list compression
       
@@ -122,8 +126,11 @@ protected:
 	ResourceId mResourceId;
 	resip::Data mOverlayName;
 	resip::Data mEncodedData;
+	resip::Data mRequestMessageBody;
+
 	s2c::ForwardingLayerMessageStruct mPDU;
 
+	// these have to be defined in the subclasses to encode and decode their message bodies
 	virtual void getEncodedPayload(resip::DataStream &dataStream) = 0;
 	virtual void decodePayload(resip::DataStream &dataStream) = 0;
 

@@ -33,6 +33,15 @@ Message::Message()
 	initForwardingData();
 }
 
+NodeId 
+Message::getResponseNodeId() const
+{
+	assert(0);
+	// todo grab from via
+	NodeId n;	
+	return n;
+}
+
 void
 Message::initForwardingData()
 {
@@ -70,8 +79,14 @@ Message::makeErrorResponse(Message::Error::Code code, const resip::Data& reason)
 	return 0;
 }
 
+resip::Data 
+Message::getRequestMessageBody() const
+{
+	assert(isRequest());
 
-bool
+	return mRequestMessageBody;
+}
+
 Message::isRequest() const
 {
 	unsigned int reqValue = static_cast<unsigned int>(getType());
@@ -219,9 +234,10 @@ UpdateAns *
 Message::makeUpdateResponse()
 {
 	assert(getType() == UpdateReqType);
-
+	
+	resip::Data d;
 	UpdateReq *req = static_cast<UpdateReq *>(this);
-	UpdateAns *response = new UpdateAns(req);
+	UpdateAns *response = new UpdateAns(req,d);
 	return response;
 }
 
