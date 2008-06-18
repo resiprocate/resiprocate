@@ -88,9 +88,6 @@ NodeId::add2Pow( int power ) const
 }
 
 
-}
-
-=======
 bool
 DestinationId::isCompressed()const
 {
