@@ -29,7 +29,7 @@ class LeaveReq : public Message
 public:
 	friend class Message;
 
-	LeaveReq(NodeId node);
+	LeaveReq(const DestinationId &dest, NodeId node);
       
 	virtual MessageType getType() const { return Message::LeaveReqType; }
 	virtual void getEncodedPayload(resip::DataStream &data);
