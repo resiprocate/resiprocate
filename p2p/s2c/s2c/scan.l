@@ -34,7 +34,7 @@ CODE            "{@"[^@]+"@}"
 "public"		{RETURN(PUBLIC_);}
 "primitive"		{RETURN(PRIMITIVE_);}
 "typedef"		{RETURN(TYPEDEF_);}
-
+"object"                {RETURN(OBJECT_);}
 
 {COMMENT}		{ /*Do nothing*/}
 {CODE}          { strcpy(yylval.str,yytext); RETURN(CODE_);}

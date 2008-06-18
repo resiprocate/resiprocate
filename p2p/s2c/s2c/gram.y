@@ -78,6 +78,7 @@ p_decl *make_fwd_ref (char *type)
 %token <val> CONSTANT_ 
 %token <val> PRIMITIVE_
 %token <val> TYPEDEF_
+%token <val> OBJECT_
 
 /*Types for nonterminals*/
 %type <val> module
@@ -109,6 +110,7 @@ definition:
           | enum
           | select
           | typedef
+          | object
           {
 
           }
@@ -313,6 +315,24 @@ primitive : PRIMITIVE_ NAME_ p_type  NUM_ ';'
       exit(1);
     }
   }    
+
+object:  OBJECT_ NAME_ NAME_ ';'
+  {
+    p_decl *decl=0;
+    int r;
+    decl=RCALLOC(sizeof(p_decl));
+
+    decl->name=r_strdup($3);
+    decl->u.object_.classname=r_strdup($2);
+
+    decl->type=TYPE_OBJECT;
+
+    if(r=r_assoc_insert(types,decl->name,strlen(decl->name),
+         decl,0,0,R_ASSOC_NEW)){
+      r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert object %s. Exists?\n",decl->name);
+      exit(1);
+    }
+  }
 
 enum_start: ENUM_
   {

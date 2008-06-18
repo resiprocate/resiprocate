@@ -13,7 +13,8 @@ typedef enum {
 class NodeIdStruct : public PDU {
 public:
    NodeIdStruct();
-   unsigned char                 mId[16];
+   UInt64                        mHigh;
+   UInt64                        mLow;
 
 
    PDUMemberFunctions

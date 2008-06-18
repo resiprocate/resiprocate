@@ -79,6 +79,9 @@ static char *s2c_decl2type(p_decl *decl)
     if(decl->type==TYPE_PRIMITIVE){
       return(decl->u.primitive_.type);
     }
+    if(decl->type==TYPE_OBJECT){
+      return(decl->u.object_.classname);
+    }
     else if(decl->type==TYPE_ENUM){
       return(camelback(decl->name));
     }
@@ -361,12 +364,16 @@ static int s2c_gen_encode_c_simple_type(p_decl *decl, char *prefix, char *refere
       fprintf(out,"   encode_uintX(out, %d, (u_int64)(%s%s));\n",
         8*max2bytes(decl->u.ref_.ref->u.enum_.max),prefix,reference);
     }
-    else if(decl->type==TYPE_PRIMITIVE)
+    else if(decl->type==TYPE_PRIMITIVE){
       fprintf(out,"   encode_uintX(out, %d, %s%s);\n",
         decl->u.primitive_.bits,prefix,reference);
-    else
+    }
+    else if(decl->type==TYPE_OBJECT){
+      fprintf(out,"   out << %s%s;\n",prefix,reference);
+    }
+    else{
       fprintf(out,"   %s%s->encode(out);\n",prefix,reference);
-
+    }
     return(0);
   }
 
@@ -532,6 +539,9 @@ static int s2c_gen_print_c_simple_type(p_decl *decl, char *reference, FILE *out)
       fprintf(out,"   do_indent(out, indent);\n");
       fprintf(out,"   (out)  << \"%s:\" << std::hex << (unsigned long long) %s << \"\\n\"; \n", decl->name, reference);
     }
+    else if(decl->type==TYPE_OBJECT){
+      ; /* TODO */
+    }
     else
       fprintf(out,"   %s->print(out, indent);\n",reference);
 
@@ -634,6 +644,9 @@ static int s2c_gen_decode_c_simple_type(p_decl *decl, char *prefix, char *refere
       fprintf(out,"   decode_uintX(%s, %d, %s%s);\n",
         instream,decl->u.primitive_.bits,prefix,reference);
       fprintf(out,"   DebugLog( << \"%s%s\");\n",prefix,reference);
+    }
+    else if(decl->type==TYPE_OBJECT){
+      fprintf(out,"   %s%s << %s;\n",prefix,reference,instream);
     }
     else{
       if(decl->type==TYPE_REF){
