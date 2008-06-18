@@ -25,24 +25,30 @@
 int main(int argc, char **argv)
   {
     std::ofstream fout;
+    std::ifstream fin;
 
     resip::Log::initialize(resip::Data("cerr"),
       resip::Data("DEBUG"),resip::Data("test_s2c"));
     InfoLog(<<"XXXX");
 
 
-
-    // Test select
-    s2c::NamedStruct ns;
-    
-    ns.mType=ns.tZero;
-    ns.mZero.mZeroArm=9;
+    // ***** Test select  *****
+    // Cook up an ns and write it
+    s2c::NamedStruct ns1;
+    ns1.mType=ns1.tZero;
+    ns1.mZero.mZeroArm=9;
 
     fout.open("test.out");
-    ns.encode(fout);
+    ns1.encode(fout);
     fout.close();    
 
     
+    // Now read it back in again
+    fin.open("test.out");
+    s2c::NamedStruct ns2;
+    ns2.mType=ns2.tZero;
+    ns2.decode(fin);
     
+    std::cout << std::hex << (int)ns2.mZero.mZeroArm << "\n";
   }
 
