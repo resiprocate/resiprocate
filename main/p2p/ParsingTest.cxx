@@ -29,12 +29,20 @@ TestUpdate()
 	UpdateReq *update = new UpdateReq(dest, noData);
 	assert(update->getType() == Message::UpdateReqType);
 
+	// check for non zero encoded payload
 	resip::Data encodedMessage = update->encodePayload();
+	assert(encodedMessage.size());
 
 	Message *compareMessage = Message::parse(encodedMessage);
-	assert(*compareMessage == *update);
 
-	// Test responses
+	// check that messages are equal
+	assert(*compareMessage == *update);
+	resip::Data secondMessage = compareMessage->encodePayload();
+	
+	// check that two similar messages encode the same
+	assert(secondMessage == encodedMessage);
+
+	// Test message type on a response
 	UpdateAns *updateAns = update->makeUpdateResponse(noData);
 	assert(updateAns->getType() == Message::UpdateAnsType);
 
