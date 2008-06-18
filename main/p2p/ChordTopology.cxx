@@ -84,13 +84,7 @@ void
 ChordTopology::candidatesCollected( const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
 {
    // Connect to node - send the ConnectReq
-   std::vector<resip::Data> dataCandidates;
-   std::vector<Candidate>::iterator it = candidates.begin();
-   for(;it != candidates.end(); it++)
-   {
-      dataCandidates.push_back(resip::Data::Empty);  // Todo convert Candidate to Data (in SDP format)
-   }
-   std::auto_ptr<Message> connectReq(new ConnectReq(resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, dataCandidates));
+   std::auto_ptr<Message> connectReq(new ConnectReq(resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, candidates));
    mDispatcher.send(connectReq, *this);
       
 // callback here 
@@ -171,7 +165,8 @@ ChordTopology::consume(ConnectAns& msg)
    addNewNeighbors(nodes, true /* adjustNextOnly */);
 
    // Socket connect
-   //mTransporter.connect(   TODO
+   resip::GenericIPAddress stunTurnServer;
+   mTransporter.connect(msg.getResponseNodeId(), msg.getCandidates(), stunTurnServer /* stunTurnServer */);
 }
 
 

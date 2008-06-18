@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <assert.h>
 
 #include "rutil/Data.hxx"
 #include "p2p/DestinationId.hxx"
