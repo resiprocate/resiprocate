@@ -9,25 +9,24 @@
       enum {reserved(0), peer(1), resource(2), compressed(3), (255) }
            DestinationType;
      
-      select (destination_type) {
-        case peer:
-           NodeId               node_id;
-        
-        case resource:
-           ResourceId           resource_id;
-      
-        case compressed:
-           opaque               compressed_id<0..2^8-1>;
-         
-        /* This structure may be extended with new types */
-      
-      } DestinationData;
-
 
       struct {
         DestinationType         type;
         uint8                   length;
-        DestinationData         destination_data;
+
+        select (type) {
+          case peer:
+             NodeId               node_id;
+          
+          case resource:
+             ResourceId           resource_id;
+        
+          case compressed:
+             opaque               compressed_id<0..2^8-1>;
+           
+          /* This structure may be extended with new types */
+        
+        } DestinationData;
       } Destination;
 
        enum {reserved1(0), signer_identity_peer (1), 
