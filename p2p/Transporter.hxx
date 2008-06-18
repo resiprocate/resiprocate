@@ -33,10 +33,11 @@ class Transporter
       friend class ConnectP2pCommand;
       friend class ConnectApplicationCommand;
 
-      Transporter(resip::Fifo<TransporterMessage>& rxFifo,
-                  Profile &configuration);
+      Transporter(ConfigObject &configuration);
 
       virtual ~Transporter();
+
+      void setRxFifo(resip::Fifo<TransporterMessage> *fifo) {mRxFifo = fifo;}
 
       virtual bool process(int seconds=0) = 0;
    
@@ -77,7 +78,7 @@ class Transporter
                        resip::GenericIPAddress &stunTurnServer) = 0;
 
      resip::Fifo<TransporterCommand> mCmdFifo;
-     resip::Fifo<TransporterMessage> &mRxFifo;
+     resip::Fifo<TransporterMessage> *mRxFifo;
 
      Profile &mConfiguration;
 
