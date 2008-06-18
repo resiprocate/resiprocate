@@ -19,7 +19,7 @@ namespace p2p
 class TransporterMessage;
 class Candidate;
 class Message;
-class ConfigObject;
+class Profile;
 class FlowId;
 class TransporterCommand;
 
@@ -34,7 +34,7 @@ class SelectTransporter : public Transporter
       friend class ConnectApplicationCommand;
 
       SelectTransporter(resip::Fifo<TransporterMessage>& rxFifo,
-                        ConfigObject &configuration);
+                        Profile &configuration);
 
       ~SelectTransporter();
 

@@ -10,7 +10,7 @@
 #include "rutil/GenericIPAddress.hxx"
 #include "rutil/Socket.hxx"
 
-#include "p2p/ConfigObject.hxx"
+#include "p2p/Profile.hxx"
 #include "p2p/NodeId.hxx"
 
 namespace p2p
@@ -19,7 +19,7 @@ namespace p2p
 class TransporterMessage;
 class Candidate;
 class Message;
-class ConfigObject;
+class Profile;
 class FlowId;
 class TransporterCommand;
 
@@ -34,7 +34,7 @@ class Transporter
       friend class ConnectApplicationCommand;
 
       Transporter(resip::Fifo<TransporterMessage>& rxFifo,
-                  ConfigObject &configuration);
+                  Profile &configuration);
 
       virtual ~Transporter();
 
@@ -79,7 +79,7 @@ class Transporter
      resip::Fifo<TransporterCommand> mCmdFifo;
      resip::Fifo<TransporterMessage> &mRxFifo;
 
-     ConfigObject &mConfiguration;
+     Profile &mConfiguration;
 
    private:
 };
