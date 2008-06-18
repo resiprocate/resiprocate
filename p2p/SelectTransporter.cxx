@@ -81,7 +81,7 @@ SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
    //**********************************************************************
 
    resip::Data data;
-   data = msg->encode();
+   data = msg->encodePayload();
 
    ::send((i->second).getSocket(), data.c_str(), data.size(), 0);
    // XXX should check send response, and inform app of error if fail
