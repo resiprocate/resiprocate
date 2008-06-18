@@ -3,7 +3,7 @@ include $(BUILD)/Makefile.pre
 
 CXXFLAGS += -I../../
  
-PACKAGES += RUTIL OPENSSL PTHREAD S2C
+PACKAGES += RUTIL OPENSSL PTHREAD S2C P2P
 
 TESTPROGRAMS += \
 	testConsole.cxx 
