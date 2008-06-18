@@ -363,6 +363,8 @@ static int s2c_gen_encode_c_simple_type(p_decl *decl, char *prefix, char *refere
     /* We can get a primitive as a ref or directly here because of arrays versus
      simple declarations*/
     if(decl->u.ref_.ref->type==TYPE_PRIMITIVE){
+      fprintf(out,"   DebugLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
+        prefix,reference);
       fprintf(out,"   encode_uintX(out, %d, %s%s);\n",
         decl->u.ref_.ref->u.primitive_.bits,prefix,reference);
     }
@@ -371,6 +373,8 @@ static int s2c_gen_encode_c_simple_type(p_decl *decl, char *prefix, char *refere
         8*max2bytes(decl->u.ref_.ref->u.enum_.max),prefix,reference);
     }
     else if(decl->type==TYPE_PRIMITIVE){
+      fprintf(out,"   DebugLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
+        prefix,reference);
       fprintf(out,"   encode_uintX(out, %d, %s%s);\n",
         decl->u.primitive_.bits,prefix,reference);
     }
@@ -405,11 +409,12 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent, char *p
               fprintf(out,"   for(int i=0;i<%d;i++) out.put(0);\n",lengthbytes);
           
               fprintf(out,"   for(unsigned int i=0;i<%s%s.size();i++)\n",prefix,name2var(member->name));
+              fprintf(out,"   {\n");
               snprintf(reference,sizeof(reference),"%s%s[i]",prefix,name2var(member->name));
 
               for(i=0;i<indent+3;i++) fputc(' ',out);
               s2c_gen_encode_c_simple_type(member->u.varray_.ref,"",reference,out);
-
+              fprintf(out,"   }\n");
               fprintf(out,"   long pos2=TELLP(out);\n");
               fprintf(out,"   SEEKP(out,pos1);\n");
               fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
@@ -431,12 +436,13 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent, char *p
           char reference[100];
           int ct=(member->u.array_.length*8) / (member->u.array_.ref->u.primitive_.bits);
           
-          fprintf(out,"   for(unsigned int i=0;i<%d;i++)\n",ct);
+          fprintf(out,"   for(unsigned int i=0;i<%d;i++){\n",ct);
           snprintf(reference,sizeof(reference),"%s%s[i]",prefix,name2var(member->name));
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
           s2c_gen_encode_c_simple_type(member->u.array_.ref,"",reference,out);
 
+          fprintf(out,"   }\n");
           break;
         }
       case TYPE_SELECT:
@@ -635,7 +641,8 @@ static int s2c_gen_decode_c_simple_type(p_decl *decl, char *prefix, char *refere
     if(decl->u.ref_.ref->type==TYPE_PRIMITIVE){
       fprintf(out,"   decode_uintX(%s, %d, %s%s);\n",
         instream,decl->u.ref_.ref->u.primitive_.bits,prefix,reference);
-      fprintf(out,"   DebugLog( << \"%s%s\");\n",prefix,reference);
+      fprintf(out,"   DebugLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
+        prefix,reference);
     }
     else if(decl->u.ref_.ref->type==TYPE_ENUM){
       fprintf(out,"   {\n");
@@ -649,7 +656,8 @@ static int s2c_gen_decode_c_simple_type(p_decl *decl, char *prefix, char *refere
     else if(decl->type==TYPE_PRIMITIVE){
       fprintf(out,"   decode_uintX(%s, %d, %s%s);\n",
         instream,decl->u.primitive_.bits,prefix,reference);
-      fprintf(out,"   DebugLog( << \"%s%s\");\n",prefix,reference);
+      fprintf(out,"   DebugLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
+        prefix,reference);
     }
     else if(decl->type==TYPE_OBJECT){
       fprintf(out,"   %s%s << %s;\n",prefix,reference,instream);
@@ -717,12 +725,12 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,char *instream,int 
           char reference[100];
           int ct=(member->u.array_.length*8) / (member->u.array_.ref->u.primitive_.bits);
           
-          fprintf(out,"   for(unsigned int i=0;i<%d;i++)\n",ct);
+          fprintf(out,"   for(unsigned int i=0;i<%d;i++){\n",ct);
           snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
           s2c_gen_decode_c_simple_type(member->u.array_.ref,prefix,reference,instream,out);
-
+          fprintf(out,"   }\n");
           break;
         }
       case TYPE_SELECT:
@@ -841,11 +849,12 @@ static int s2c_gen_construct_c_member(p_decl *member, FILE *out,int indent, char
           char reference[100];
           int ct=(member->u.array_.length*8) / (member->u.array_.ref->u.primitive_.bits);
           
-          fprintf(out,"   for(unsigned int i=0;i<%d;i++)\n",ct);
+          fprintf(out,"   for(unsigned int i=0;i<%d;i++){\n",ct);
           snprintf(reference,sizeof(reference),"%s%s[i]",prefix,name2var(member->name));
 
           for(i=0;i<indent+3;i++) fputc(' ',out);
           s2c_gen_construct_c_simple_type(member->u.array_.ref,"",reference,out);
+          fprintf(out,"}\n");
         }
         break;
       case TYPE_SELECT:
