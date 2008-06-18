@@ -149,7 +149,27 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
 void
 SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
 {
-   // XXX
+   unsigned short application = RELOAD_APPLICATION_ID;
+   resip::Socket s;
+
+   s = ::socket(AF_INET, SOCK_STREAM, 0);
+   ::connect(s, &(bootstrapServer.address), sizeof(sockaddr_in));
+
+   // Get the remote node ID from the incoming socket
+   unsigned char buffer[16];
+   ::read(s, buffer, sizeof(buffer));
+
+   NodeId nodeId = resip::Data(buffer, sizeof(buffer));
+
+   FlowId flowId(nodeId, application, s);
+
+   mNodeFlowMap.insert(std::map<NodeId, FlowId>::value_type(nodeId, flowId));
+
+   ConnectionOpened *co = new ConnectionOpened(flowId,
+                                               application,
+                                               resip::TCP,
+                                               0 /* no cert for you */);
+   mRxFifo->add(co);
    assert(0);
 }
 
@@ -252,6 +272,12 @@ SelectTransporter::process(int ms)
 
       s = accept(j->second.first, &addr, &addrlen);
 
+     // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
+     // Blow our node ID out on the wire (because there is no cert)
+     const resip::Data nid = mConfiguration.nodeId().getValue();
+     ::send(s, nid.c_str(), nid.size(), 0);
+     // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
+
       // Get the remote node ID from the incoming socket
       unsigned char buffer[16];
       ::read(s, buffer, sizeof(buffer));
@@ -285,6 +311,12 @@ SelectTransporter::process(int ms)
         socklen_t addrlen;
 
         s = accept(j->second.first, &addr, &addrlen);
+
+        // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
+        // Blow our node ID out on the wire (because there is no cert)
+        const resip::Data nid = mConfiguration.nodeId().getValue();
+        ::send(s, nid.c_str(), nid.size(), 0);
+        // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 
         FlowId flowId(nodeId, application, s);
 
