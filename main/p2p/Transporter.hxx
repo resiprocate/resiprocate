@@ -71,7 +71,7 @@ class Transporter
    
       virtual void collectCandidatesImpl(NodeId, unsigned short appId) = 0;
 
-      virtual void connectImpl(resip::GenericIPAddress) = 0;
+      virtual void connectImpl(resip::GenericIPAddress &) = 0;
    
       virtual void connectImpl(NodeId nodeId, 
                        std::vector<Candidate> remoteCandidates,
@@ -96,7 +96,7 @@ class TransporterCommand
    public:
      TransporterCommand(Transporter *transporter) : mTransporter(transporter) {;}
 
-     virtual ~TransporterCommand();
+     virtual ~TransporterCommand() {;}
 
      virtual void operator()() = 0;
 

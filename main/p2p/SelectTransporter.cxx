@@ -147,6 +147,12 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
 }
 
 void
+SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
+{
+  // XXX
+}
+
+void
 SelectTransporter::connectImpl(NodeId nodeId,
                                std::vector<Candidate> remoteCandidates,
                                resip::GenericIPAddress &stunTurnServer)
