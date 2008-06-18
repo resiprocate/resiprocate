@@ -38,7 +38,7 @@ Dispatcher::send(std::auto_ptr<Message> message, Postable<Event>& postable)
 {
    //.dcm. more with timers
    mTidMap[message->getTransactionID()] = &postable;
-   mForwardingLayer->post(message);
+   mForwardingLayer->forward(message);
 }
 
 static const resip::Data NO_HANDLER("Message not understood");
@@ -51,9 +51,9 @@ Dispatcher::post(std::auto_ptr<Message> message)
    {
       if (message->isRequest())
       {
-         mForwardingLayer->post(std::auto_ptr<Message>(
-                                message->makeErrorResponse(Message::Error::Forbidden, 
-                                NO_HANDLER)));
+         mForwardingLayer->forward(std::auto_ptr<Message>(
+                                      message->makeErrorResponse(Message::Error::Forbidden, 
+                                                                 NO_HANDLER)));
       } 
       else 
       {

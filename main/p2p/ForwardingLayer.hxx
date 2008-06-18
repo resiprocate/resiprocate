@@ -18,7 +18,7 @@ namespace p2p
 class Dispatcher;
 class TransporterMessage;
 
-class ForwardingLayer: public EventConsumer, public Postable<p2p::Message>
+class ForwardingLayer: public EventConsumer, public Postable<p2p::Event>
 {
    public:
       ForwardingLayer(const Profile& profile, 
@@ -44,6 +44,9 @@ class ForwardingLayer: public EventConsumer, public Postable<p2p::Message>
 
       // from messages from above or below that need to be forwarded 
       void forward( std::auto_ptr<Message> m );
+
+      //not public api
+      virtual void post(std::auto_ptr<Event> event);
       
    private:
       const Profile& mProfile;

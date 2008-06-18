@@ -28,6 +28,7 @@ SRC 	+= \
 	MessageHelper.cxx \
 	MessageStructsGen.cxx \
 	NodeId.cxx \
+	P2PStack.cxx \
 	P2PSubsystem.cxx \
 	ResourceId.cxx \
 	SelectTransporter.cxx \

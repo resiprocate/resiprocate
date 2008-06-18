@@ -105,6 +105,11 @@ ForwardingLayer::consume(LocalCandidatesCollected& m)
    // mTopology.candidatesCollected();
 }
 
+void 
+ForwardingLayer::post(std::auto_ptr<Event> event)
+{
+   event->dispatch(*this);
+}
 
 }
 
