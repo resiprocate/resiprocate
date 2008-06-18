@@ -5,8 +5,39 @@
       struct {
         opaque       id<0..2^8-1>;
       } ResourceId;
+
+
+      enum {reserved_addr(0), ipv4_address (1), ipv6_address (2), (255)} 
+           AddressType;
       
-      enum {reserved(0), peer(1), resource(2), compressed(3), (255) }
+      struct  {
+        uint32                  addr;
+        uint16                  port;
+      } IPv4AddrPort;
+      
+      struct  {
+        opaque	                addr[16];
+        uint16                  port;
+      } IPv6AddrPort;
+      
+      
+      struct {
+        AddressType             type;
+        uint8                   length;
+        
+        select (type) {
+          case ipv4_address:
+             IPv4AddrPort       v4addr_port;
+          
+          case ipv6_address:
+             IPv6AddrPort       v6addr_port;
+
+          /* This structure can be extended */
+        } ;
+       } IpAddressPort;
+
+      
+      enum {reserved_destination(0), peer(1), resource(2), compressed(3), (255) }
            DestinationType;
      
 
@@ -26,7 +57,7 @@
            
           /* This structure may be extended with new types */
         
-        } DestinationData;
+        } ;
       } Destination;
 
        enum {reserved1(0), signer_identity_peer (1), 
@@ -49,21 +80,23 @@
           opaque                        signature_value<0..2^16-1>;
        } Signature;
 
-struct {
-       uint8   relo_token;
-       uint32  overlay;
-       uint8   ttl;
-       uint8   reserved;
-       uint16  fragment;
-       uint8   version;
-       uint24  length;
-       uint64  transaction_id;
-       uint16  flags;
+      struct {
+             uint8   relo_token;
+             uint32  overlay;
+             uint8   ttl;
+             uint8   reserved;
+             uint16  fragment;
+             uint8   version;
+             uint24  length;
+             uint64  transaction_id;
+             uint16  flags;
+      
+             Destination via_list<0..2^16-1>;
+             Destination destination_list<0..2^16-1>;
+             uint16  route_log_len_dummy;
+             uint16  message_code;
+             opaque  payload<0..2^24-1>;
+             Signature sig;
+      } ForwardingLayerMessage;
 
-       Destination via_list<0..2^16-1>;
-       Destination destination_list<0..2^16-1>;
-       uint16  route_log_len_dummy;
-       uint16  message_code;
-       opaque  payload<0..2^24-1>;
-       Signature sig;
-} ForwardingLayerMessage;
+

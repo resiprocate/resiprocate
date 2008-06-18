@@ -1,3 +1,6 @@
+#ifndef _MessageStructs_h_
+#define _MessageStructs_h_
+
 #include "p2p/s2c/s2c/s2c_native.hxx"
 
 namespace s2c {
@@ -23,7 +26,52 @@ public:
 
 
 typedef enum {
-   reserved = 0,
+   reserved_addr = 0,
+   ipv4_address = 1,
+   ipv6_address = 2
+} AddressType;
+
+class IPv4AddrPortStruct : public PDU {
+public:
+   IPv4AddrPortStruct();
+   UInt32                        mAddr;
+   UInt16                        mPort;
+
+
+   PDUMemberFunctions
+};
+
+
+class IPv6AddrPortStruct : public PDU {
+public:
+   IPv6AddrPortStruct();
+   unsigned char                 mAddr[16];
+   UInt16                        mPort;
+
+
+   PDUMemberFunctions
+};
+
+
+class IpAddressPortStruct : public PDU {
+public:
+   IpAddressPortStruct();
+   AddressType                   mType;
+   UInt8                         mLength;
+   struct {
+        IPv4AddrPortStruct*           mV4addrPort;
+   } mIpv4Address;
+   struct {
+        IPv6AddrPortStruct*           mV6addrPort;
+   } mIpv6Address;
+
+
+   PDUMemberFunctions
+};
+
+
+typedef enum {
+   reserved_destination = 0,
    peer = 1,
    resource = 2,
    compressed = 3
@@ -115,3 +163,5 @@ public:
 
 
 }
+
+#endif
