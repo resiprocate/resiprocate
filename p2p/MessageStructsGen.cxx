@@ -107,6 +107,182 @@ void ResourceIdStruct :: encode(std::ostream& out)
 
 
 
+// Classes for IPv4AddrPortStruct */
+
+IPv4AddrPortStruct :: IPv4AddrPortStruct ()
+{
+   mName = "IPv4AddrPortStruct";
+ DebugLog(<< "Constructing IPv4AddrPortStruct");
+   mAddr=0;
+
+   mPort=0;
+
+};
+
+void IPv4AddrPortStruct :: print(std::ostream& out, int indent) const 
+{
+   do_indent(out,indent);
+   (out) << "IPv4AddrPort:\n";
+   indent+=2;
+   do_indent(out, indent);
+   (out)  << "addr:" << std::hex << (unsigned long long)mAddr << "\n"; 
+   do_indent(out, indent);
+   (out)  << "port:" << std::hex << (unsigned long long)mPort << "\n"; 
+};
+
+void IPv4AddrPortStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding IPv4AddrPortStruct");
+   decode_uintX(in, 32, mAddr);
+   DebugLog( << "mAddr");
+
+   decode_uintX(in, 16, mPort);
+   DebugLog( << "mPort");
+
+};
+
+void IPv4AddrPortStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding IPv4AddrPortStruct");
+   encode_uintX(out, 32, mAddr);
+
+   encode_uintX(out, 16, mPort);
+
+};
+
+
+
+// Classes for IPv6AddrPortStruct */
+
+IPv6AddrPortStruct :: IPv6AddrPortStruct ()
+{
+   mName = "IPv6AddrPortStruct";
+ DebugLog(<< "Constructing IPv6AddrPortStruct");
+   for(unsigned int i=0;i<16;i++)
+      mAddr[i]=0;
+
+   mPort=0;
+
+};
+
+void IPv6AddrPortStruct :: print(std::ostream& out, int indent) const 
+{
+   do_indent(out,indent);
+   (out) << "IPv6AddrPort:\n";
+   indent+=2;
+   for(unsigned int i=0;i<16;i++) {
+      do_indent(out, indent);
+   (out)  << "opaque:" << std::hex << (unsigned long long) mAddr[i] << "\n"; 
+   }
+   do_indent(out, indent);
+   (out)  << "port:" << std::hex << (unsigned long long)mPort << "\n"; 
+};
+
+void IPv6AddrPortStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding IPv6AddrPortStruct");
+   for(unsigned int i=0;i<16;i++)
+      decode_uintX(in, 8, mAddr[i]);
+   DebugLog( << "mAddr[i]");
+
+   decode_uintX(in, 16, mPort);
+   DebugLog( << "mPort");
+
+};
+
+void IPv6AddrPortStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding IPv6AddrPortStruct");
+   for(unsigned int i=0;i<16;i++)
+      encode_uintX(out, 8, mAddr[i]);
+
+   encode_uintX(out, 16, mPort);
+
+};
+
+
+
+// Classes for IpAddressPortStruct */
+
+IpAddressPortStruct :: IpAddressPortStruct ()
+{
+   mName = "IpAddressPortStruct";
+ DebugLog(<< "Constructing IpAddressPortStruct");
+   mType=(AddressType)0;
+
+   mLength=0;
+
+   mIpv4Address.mV4addrPort=0;
+   mIpv6Address.mV6addrPort=0;
+
+};
+
+void IpAddressPortStruct :: print(std::ostream& out, int indent) const 
+{
+   do_indent(out,indent);
+   (out) << "IpAddressPort:\n";
+   indent+=2;
+   do_indent(out, indent);
+   (out)  << "type:" << std::hex << (unsigned long long) mType << "\n"; 
+   do_indent(out, indent);
+   (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
+};
+
+void IpAddressPortStruct :: decode(std::istream& in)
+{
+ DebugLog(<< "Decoding IpAddressPortStruct");
+   {
+      u_int32 v;
+      decode_uintX(in, 8, v);
+      mType=(AddressType)v;
+   }
+
+   decode_uintX(in, 8, mLength);
+   DebugLog( << "mLength");
+
+   switch(mType){
+      case 1:
+            mIpv4Address.mV4addrPort = new IPv4AddrPortStruct();
+   mIpv4Address.mV4addrPort->decode(in);
+          break;
+
+      case 2:
+            mIpv6Address.mV6addrPort = new IPv6AddrPortStruct();
+   mIpv6Address.mV6addrPort->decode(in);
+          break;
+
+       default: /* User error */ 
+          assert(1==0);
+   }
+
+
+};
+
+void IpAddressPortStruct :: encode(std::ostream& out)
+{
+   DebugLog(<< "Encoding IpAddressPortStruct");
+   encode_uintX(out, 8, (u_int64)(mType));
+
+   encode_uintX(out, 8, mLength);
+
+   switch(mType) {
+      case 1:
+            mIpv4Address.mV4addrPort->encode(out);
+          break;
+
+      case 2:
+            mIpv6Address.mV6addrPort->encode(out);
+          break;
+
+       default: /* User error */ 
+          assert(1==0);
+   }
+
+
+};
+
+
+
 // Classes for DestinationStruct */
 
 DestinationStruct :: DestinationStruct ()

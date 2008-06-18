@@ -355,12 +355,14 @@ enumerated: NAME_ '(' NUM_ ')'
     CURRENT_DECL->u.enum_.max=$2;
   }
 
-select: select_start '{' select_arms '}' NAME_ ';' 
+select: select_start '{' select_arms '}' ';' 
 {
   int r;
 
-    CURRENT_DECL->name=r_strdup($5);
-    
+//    CURRENT_DECL->name=r_strdup($5);
+  CURRENT_DECL->name=r_strdup("auto-generated");
+
+/*    
     r_log(LOG_GENERIC,LOG_DEBUG,"Finished with select %s\n",$5);
     
     if(r=r_assoc_insert(types,CURRENT_DECL->name,strlen(CURRENT_DECL->name),
@@ -368,6 +370,7 @@ select: select_start '{' select_arms '}' NAME_ ';'
       r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert struct %s. Exists?\n",$5);
       exit(1);
     }
+*/
     $$ = CURRENT_DECL;
 
     pop_decl();
