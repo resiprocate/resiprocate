@@ -17,10 +17,12 @@ SRC 	+= \
 	ChordTopology.cxx \
 	ChordUpdate.cxx \
 	Connect.cxx \
+	ConnectBase.cxx \
 	Join.cxx \
 	Find.cxx \
 	Leave.cxx \
 	Message.cxx \
+	MessageHelper.cxx \
 	MessageStructsGen.cxx \
 	P2PSubsystem.cxx \
 	ResourceId.cxx \

@@ -1,20 +1,28 @@
 #include "p2p/Connect.hxx"
+#include "p2p/MessageHelper.hxx"
 
 using namespace p2p;
+using namespace s2c;
+
 
 ConnectReq::ConnectReq()
 {
 }
 
-ConnectReq::ConnectReq(const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates)
+
+/// ***********
+/// ConnectReq
+
+ConnectReq::ConnectReq(const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates) :
+	ConnectBase(frag, password, port, role, candidates)
 {
 
 }
 
-void 
-ConnectReq::decodePayload(resip::DataStream &dataStream)
+ConnectAns::ConnectAns(const resip::Data &frag, const resip::Data &password, UInt16 port, const resip::Data &role, const std::vector<resip::Data> &candidates) :
+	ConnectBase(frag, password, port, role, candidates)
 {
-	decode(dataStream);
+
 }
 
 ConnectAns::ConnectAns()
@@ -22,9 +30,4 @@ ConnectAns::ConnectAns()
 
 }
 
-void 
-ConnectAns::decodePayload(resip::DataStream &dataStream)
-{
-	decode(dataStream);
-}
 
