@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include "parser.h"
 
+
 static int s2c_gen_pdu_h_select(p_decl *decl, FILE *out, int do_inline);
 static int s2c_gen_encode_c_select(p_decl *decl, FILE *out, int do_inline);
 static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,char *instream,int do_inline);
@@ -349,6 +350,10 @@ int s2c_gen_hdr_c(char *name,FILE *out)
     fprintf(out,"namespace s2c {\n");
     fprintf(out,"\n");fprintf(out,"\n");
     
+    fprintf(out,"/* EKR: Most unprincipled hack of the day */\n");
+    fprintf(out,"#define TELLP(a) (static_cast<resip::DataStream &>(a)).tellp()\n");
+    fprintf(out,"#define SEEKP(a,b) (static_cast<resip::DataStream &>(a)).seekp(b)\n");
+
     return(0);
   }
 
@@ -396,7 +401,7 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent, char *p
           
           if(!is_opaque(member->u.varray_.ref)){
               fprintf(out,"   {\n");
-              fprintf(out,"   long pos1=out.tellp();\n");
+              fprintf(out,"   long pos1=TELLP(out);\n");
               fprintf(out,"   for(int i=0;i<%d;i++) out.put(0);\n",lengthbytes);
           
               fprintf(out,"   for(unsigned int i=0;i<%s%s.size();i++)\n",prefix,name2var(member->name));
@@ -405,11 +410,11 @@ static int s2c_gen_encode_c_member(p_decl *member, FILE *out,int indent, char *p
               for(i=0;i<indent+3;i++) fputc(' ',out);
               s2c_gen_encode_c_simple_type(member->u.varray_.ref,"",reference,out);
 
-              fprintf(out,"   long pos2=out.tellp();\n");
-              fprintf(out,"   out.seekp(pos1);\n");
+              fprintf(out,"   long pos2=TELLP(out);\n");
+              fprintf(out,"   SEEKP(out,pos1);\n");
               fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
                 lengthbytes*8, lengthbytes);
-              fprintf(out,"   out.seekp(pos2);\n");
+              fprintf(out,"   SEEKP(out,pos2);\n");
               fprintf(out,"   }\n");
               break;
             }
@@ -463,7 +468,7 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
         
         do_auto=entry->u.ref_.ref->u.primitive_.bits;
 
-        fprintf(out,"   long pos1=out.tellp();\n");
+        fprintf(out,"   long pos1=TELLP(out);\n");
         fprintf(out,"   for(int i=0;i<%d;i++) out.put(0);\n",do_auto/8);
       }
       else{
@@ -475,11 +480,11 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
     }
 
     if(do_auto){
-      fprintf(out,"   long pos2=out.tellp();\n");
-      fprintf(out,"   out.seekp(pos1);\n");
+      fprintf(out,"   long pos2=TELLP(out);\n");
+      fprintf(out,"   SEEKP(out,pos1);\n");
       fprintf(out,"   encode_uintX(out, %d, (pos2 - pos1) - %d);\n",
         do_auto, do_auto/8);
-      fprintf(out,"   out.seekp(pos2);\n");
+      fprintf(out,"   SEEKP(out,pos2);\n");
     }
 
     fprintf(out,"};\n\n");

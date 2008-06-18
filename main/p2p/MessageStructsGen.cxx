@@ -12,6 +12,9 @@
 namespace s2c {
 
 
+/* EKR: Most unprincipled hack of the day */
+#define TELLP(a) (static_cast<resip::DataStream &>(a)).tellp()
+#define SEEKP(a,b) (static_cast<resip::DataStream &>(a)).seekp(b)
 
 
 // Classes for NodeIdStruct */
@@ -451,7 +454,7 @@ void DestinationStruct :: encode(std::ostream& out) const
    DebugLog(<< "Encoding DestinationStruct");
    encode_uintX(out, 8, (u_int64)(mType));
 
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<1;i++) out.put(0);
 
    switch(mType) {
@@ -473,10 +476,10 @@ void DestinationStruct :: encode(std::ostream& out) const
    }
 
 
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
 };
 
 
@@ -857,25 +860,25 @@ void ForwardingHeaderStruct :: encode(std::ostream& out) const
    encode_uintX(out, 16, mFlags);
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mViaList.size();i++)
       mViaList[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mDestinationList.size();i++)
       mDestinationList[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
    encode_uintX(out, 16, mRouteLogLenDummy);
@@ -1681,14 +1684,14 @@ void ConnectReqAnsStruct :: encode(std::ostream& out) const
     out << mRole;
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mCandidates.size();i++)
       mCandidates[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -1751,14 +1754,14 @@ void PingReqStruct :: encode(std::ostream& out) const
 {
    DebugLog(<< "Encoding PingReqStruct");
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mRequestedInfo.size();i++)
       encode_uintX(out, 8, mRequestedInfo[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -1916,14 +1919,14 @@ void PingAnsStruct :: encode(std::ostream& out) const
    encode_uintX(out, 64, mResponseId);
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mPingInfo.size();i++)
       mPingInfo[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -2441,7 +2444,7 @@ void StoredDataStruct :: decode(std::istream& in)
 void StoredDataStruct :: encode(std::ostream& out) const 
 {
    DebugLog(<< "Encoding StoredDataStruct");
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
 
    encode_uintX(out, 64, mStorageTime);
@@ -2452,10 +2455,10 @@ void StoredDataStruct :: encode(std::ostream& out) const
 
    mSignature->encode(out);
 
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
 };
 
 
@@ -2545,14 +2548,14 @@ void StoreKindDataStruct :: encode(std::ostream& out) const
    encode_uintX(out, 64, mGenerationCounter);
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mValues.size();i++)
       mValues[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -2631,14 +2634,14 @@ void StoreReqStruct :: encode(std::ostream& out) const
    encode_uintX(out, 8, mReplicaNumber);
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mKindData.size();i++)
       mKindData[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -2718,14 +2721,14 @@ void StoreKindResponseStruct :: encode(std::ostream& out) const
    encode_uintX(out, 64, mGenerationCounter);
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mReplicas.size();i++)
       mReplicas[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -2787,14 +2790,14 @@ void StoreAnsStruct :: encode(std::ostream& out) const
 {
    DebugLog(<< "Encoding StoreAnsStruct");
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mKindResponses.size();i++)
       mKindResponses[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -2977,7 +2980,7 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out) const
 
    encode_uintX(out, 64, mGeneration);
 
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
 
    switch(mModel) {
@@ -2986,27 +2989,27 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out) const
 
       case 2:
             {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mArray.mIndices.size();i++)
                mArray.mIndices[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
           break;
 
       case 3:
             {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mDictionary.mKeys.size();i++)
                mDictionary.mKeys[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
           break;
 
@@ -3015,10 +3018,10 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out) const
    }
 
 
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
 };
 
 
@@ -3086,14 +3089,14 @@ void FetchReqStruct :: encode(std::ostream& out) const
    mResource->encode(out);
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSpecifiers.size();i++)
       mSpecifiers[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -3173,14 +3176,14 @@ void FetchKindResponseStruct :: encode(std::ostream& out) const
    encode_uintX(out, 64, mGeneration);
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mValues.size();i++)
       mValues[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -3242,14 +3245,14 @@ void FetchAnsStruct :: encode(std::ostream& out) const
 {
    DebugLog(<< "Encoding FetchAnsStruct");
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mKindResponses.size();i++)
       mKindResponses[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -3319,14 +3322,14 @@ void RemoveReqStruct :: encode(std::ostream& out) const
    mResource->encode(out);
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSpecifiers.size();i++)
       mSpecifiers[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -3388,14 +3391,14 @@ void RemoveAnsStruct :: encode(std::ostream& out) const
 {
    DebugLog(<< "Encoding RemoveAnsStruct");
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mKindResponses.size();i++)
       mKindResponses[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -3466,14 +3469,14 @@ void FindReqStruct :: encode(std::ostream& out) const
    mResource->encode(out);
 
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mKinds.size();i++)
       encode_uintX(out, 32, mKinds[i]);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 8, (pos2 - pos1) - 1);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -3594,14 +3597,14 @@ void FindAnsStruct :: encode(std::ostream& out) const
 {
    DebugLog(<< "Encoding FindAnsStruct");
    {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mResults.size();i++)
       mResults[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
 
 };
@@ -3777,7 +3780,7 @@ void SipRegistrationStruct :: encode(std::ostream& out) const
    DebugLog(<< "Encoding SipRegistrationStruct");
    encode_uintX(out, 8, (u_int64)(mType));
 
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
 
    switch(mType) {
@@ -3790,14 +3793,14 @@ void SipRegistrationStruct :: encode(std::ostream& out) const
              encode_uintX(out, 16, mSipRegistrationRoute.mContactPrefs.size());
     out << mSipRegistrationRoute.mContactPrefs;
             {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSipRegistrationRoute.mDestinationList.size();i++)
                mSipRegistrationRoute.mDestinationList[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
           break;
 
@@ -3806,10 +3809,10 @@ void SipRegistrationStruct :: encode(std::ostream& out) const
    }
 
 
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
 };
 
 
@@ -3941,57 +3944,57 @@ void ChordUpdateStruct :: encode(std::ostream& out) const
 
       case 2:
             {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mNeighbors.mPredecessors.size();i++)
                mNeighbors.mPredecessors[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
             {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mNeighbors.mSuccessors.size();i++)
                mNeighbors.mSuccessors[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
           break;
 
       case 3:
             {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mFull.mPredecessors.size();i++)
                mFull.mPredecessors[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
             {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mFull.mSuccessors.size();i++)
                mFull.mSuccessors[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
             {
-   long pos1=out.tellp();
+   long pos1=TELLP(out);
    for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mFull.mFingers.size();i++)
                mFull.mFingers[i]->encode(out);
-   long pos2=out.tellp();
-   out.seekp(pos1);
+   long pos2=TELLP(out);
+   SEEKP(out,pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
-   out.seekp(pos2);
+   SEEKP(out,pos2);
    }
           break;
 
