@@ -265,6 +265,7 @@ static int s2c_gen_pdu_h_struct(p_decl *decl, FILE *out)
 
     fprintf(out,"class %s : public PDU {\npublic:\n", type2class(decl->name));
     fprintf(out,"   %s();\n",type2class(decl->name));    
+    fprintf(out,"   %s(const %s&);\n",type2class(decl->name),type2class(decl->name));
 
     entry=STAILQ_FIRST(&decl->u.struct_.members);
     while(entry){
@@ -450,7 +451,7 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
     p_decl *entry;
     int do_auto=0;
 
-    fprintf(out,"void %s :: encode(std::ostream& out)\n{\n",type2class(decl->name));
+    fprintf(out,"void %s :: encode(std::ostream& out) const \n{\n",type2class(decl->name));
     
     fprintf(out,"   DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
@@ -492,7 +493,7 @@ static int s2c_gen_encode_c_select(p_decl *decl, FILE *out, int do_inline)
     char prefix[100];
 
     if(!do_inline){
-      fprintf(out,"void %s :: encode(std::ostream& out)\n{\n",type2class(decl->name));
+      fprintf(out,"void %s :: encode(std::ostream& out) const\n{\n",type2class(decl->name));
       
       fprintf(out,"   DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
     }
@@ -875,11 +876,31 @@ static int s2c_gen_construct_c_struct(p_decl *decl, FILE *out)
     return(0);    
   }
 
+static int s2c_gen_copy_construct_c_all(p_decl *decl, FILE *out)
+  {
+    fprintf(out,"%s :: %s (const %s &from)\n{\n",type2class(decl->name),type2class(decl->name),
+      type2class(decl->name));
+
+    fprintf(out,"   // World's lamest copy constructor\n");
+    fprintf(out,"   mName = \"%s\";\n", type2class(decl->name));
+    fprintf(out,"   resip::Data dat;\n");
+    fprintf(out,"   {\n");
+    fprintf(out,"     resip::DataStream strm(dat);\n");
+    fprintf(out,"     from.encode(strm);\n");
+    fprintf(out,"   }\n");
+    fprintf(out,"   {\n");
+    fprintf(out,"     resip::DataStream strm(dat);\n");
+    fprintf(out,"     decode(strm);\n");
+    fprintf(out,"   }\n");
+    fprintf(out,"}\n\n");
+  }
+
 static int s2c_gen_pdu_c_struct(p_decl *decl, FILE *out)
   {
     fprintf(out,"\n\n// Classes for %s */\n\n",type2class(decl->name));
 
     s2c_gen_construct_c_struct(decl, out);
+    s2c_gen_copy_construct_c_all(decl, out);
     s2c_gen_print_c_struct(decl, out);
     s2c_gen_decode_c_struct(decl, out);
     s2c_gen_encode_c_struct(decl, out);
@@ -939,8 +960,9 @@ static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,char *instream, int d
 static int s2c_gen_pdu_c_select(p_decl *decl, FILE *out)
   {
     fprintf(out,"\n\n// Classes for %s */\n\n",type2class(decl->name));
-
+    
     s2c_gen_construct_c_select(decl, out, 0);
+    s2c_gen_copy_construct_c_all(decl, out);
     s2c_gen_print_c_select(decl, out,0 );
     s2c_gen_decode_c_select(decl, out, "in" ,0);
     s2c_gen_encode_c_select(decl, out, 0);
@@ -962,6 +984,7 @@ int s2c_gen_pdu_c(p_decl *decl, FILE *out)
     else 
       nr_verr_exit("Internal error: can't generate .c for PDU %s",decl->name);
 
+    
     return(0);
   }
 
@@ -972,6 +995,5 @@ int s2c_gen_ftr_c(FILE *out)
  
     return(0);
   }
-
 
 
