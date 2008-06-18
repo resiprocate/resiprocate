@@ -60,10 +60,10 @@ class Message : public Signable
          FailureResponseType = 0xFFFF
       };
 
-	  static const UInt8 MessageVersion;
-	  static const UInt8 MessageTtl;
+      static const UInt8 MessageVersion;
+      static const UInt8 MessageTtl;
 
-	  void setOverlayName(const resip::Data &overlayName);
+      void setOverlayName(const resip::Data &overlayName);
 
       struct Error 
       {
@@ -79,7 +79,7 @@ class Message : public Signable
             };
       };
          
-	  bool isRequest() const;  // convenience function
+      bool isRequest() const;  // convenience function
 
       virtual MessageType getType() const = 0;
 
@@ -87,28 +87,28 @@ class Message : public Signable
       virtual Message *makeErrorResponse(Error::Code code, 
                                          const resip::Data& reason) const;
 
-	  JoinAns* makeJoinResponse(const resip::Data &overlaySpecific);
-	  UpdateAns* makeUpdateResponse();
-	  LeaveAns* makeLeaveResponse();
-	  ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates);
+      JoinAns* makeJoinResponse(const resip::Data &overlaySpecific);
+      UpdateAns* makeUpdateResponse();
+      LeaveAns* makeLeaveResponse();
+      ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<resip::Data> &candidates);
 
-		resip::Data getRequestMessageBody() const;
+      resip::Data getRequestMessageBody() const;
       
       // encoding/parsing methods
       resip::Data encodePayload();
       static Message *parse(const resip::Data &message);
 
-		// TTL
+      // TTL
       UInt8 getTTL() const;
-		void decrementTTL();
-		void setTTL(UInt8 ttl);
+      void decrementTTL();
+      void setTTL(UInt8 ttl);
 
       UInt32 getOverlay() const;
       UInt64 getTransactionID() const;
       UInt16 getFlags() const; 
       void pushVia(NodeId node);
 
-		NodeId getResponseNodeId() const; // pull this from the via list
+      NodeId getResponseNodeId() const; // pull this from the via list
 
       // placeholder for doing via list compression
       
@@ -123,25 +123,25 @@ class Message : public Signable
          assert(0);
          return resip::Data::Empty;
       }
-protected:
-	ResourceId mResourceId;
-	resip::Data mOverlayName;
-	resip::Data mEncodedData;
-	resip::Data mRequestMessageBody;
+   protected:
+      ResourceId mResourceId;
+      resip::Data mOverlayName;
+      resip::Data mEncodedData;
+      resip::Data mRequestMessageBody;
 
-	s2c::ForwardingLayerMessageStruct mPDU;
+      s2c::ForwardingLayerMessageStruct mPDU;
 
-	// these have to be defined in the subclasses to encode and decode their message bodies
-	virtual void getEncodedPayload(resip::DataStream &dataStream) = 0;
-	virtual void decodePayload(resip::DataStream &dataStream) = 0;
+      // these have to be defined in the subclasses to encode and decode their message bodies
+      virtual void getEncodedPayload(resip::DataStream &dataStream) = 0;
+      virtual void decodePayload(resip::DataStream &dataStream) = 0;
 
-	virtual std::vector<resip::Data> collectSignableData() const;
+      virtual std::vector<resip::Data> collectSignableData() const;
 
-	Message();
-	void copyForwardingData(const Message &header);
+      Message();
+      void copyForwardingData(const Message &header);
 
-private:
-	void initForwardingData();
+   private:
+      void initForwardingData();
 };
 
 class MessageContents 
@@ -163,8 +163,8 @@ class ErrorResponse : public Message
 
 class RouteQueryAnsMessage : public Message
 {
-public:
-	virtual MessageType getType() const { return RouteQueryAnsType; }
+   public:
+      virtual MessageType getType() const { return RouteQueryAnsType; }
 };
 
 class RouteQueryReqMessage : public Message
