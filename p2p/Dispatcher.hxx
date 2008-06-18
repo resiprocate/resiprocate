@@ -16,7 +16,7 @@ class Dispatcher : public Postable<Message>
 {
   public:
       Dispatcher(ForwardingLayer& forwardingLayer);
-
+      
       void registerPostable(Message::MessageType type,
                             Postable<Event>& postable);
       void send(std::auto_ptr<Message> message);

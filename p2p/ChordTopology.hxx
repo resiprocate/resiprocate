@@ -14,7 +14,7 @@
 namespace p2p
 {
 
-class TransactionLayer;
+class Dispatcher;
 
 /// This is an abstract base class from which to derive the actually topology plugins
 class ChordTopology : public TopologyAPI
