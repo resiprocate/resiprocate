@@ -59,7 +59,10 @@ class TopologyAPI :  public EventConsumer, public Postable<Event>
       // Function to hash resource names into resourceID 
       virtual ResourceId resourceId( resip::Data& resourceName )=0;
 
-   private:
+   protected:
+      Profile&     mProfile;
+      Dispatcher&  mDispatcher;
+      Transporter& mTransporter;
 };
 
 }
