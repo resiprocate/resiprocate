@@ -2,6 +2,10 @@
 
 using namespace p2p;
 
+LeaveAns::LeaveAns()
+{
+}
+
 LeaveAns::LeaveAns(LeaveReq *request)
 {
     copyForwardingData(*request);
@@ -13,6 +17,16 @@ LeaveAns::getEncodedPayload(resip::DataStream &data)
 	assert(0);
 }
 
+void
+LeaveAns::decodePayload(resip::DataStream &dataStream)
+{
+
+}
+
+LeaveReq::LeaveReq()
+{
+}
+
 void 
 LeaveReq::getEncodedPayload(resip::DataStream &data) 
 {
@@ -21,6 +35,12 @@ LeaveReq::getEncodedPayload(resip::DataStream &data)
 
 LeaveReq::LeaveReq(NodeId node) :
 	mNode(node)
+{
+
+}
+
+void
+LeaveReq::decodePayload(resip::DataStream &dataStream)
 {
 
 }
