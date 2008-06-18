@@ -61,6 +61,8 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_char &value)
     while(size--){
       value <<=8;
       c=in.get();
+      if(in.eof())
+        assert(0); // TODO: throw exception
       value |= c;
     }
   }
@@ -98,6 +100,9 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int16 &value
     while(size--){
       value <<=8;
       c=in.get();
+      if(in.eof())
+        assert(0); // TODO: throw exception
+
       value |= c;
     }
   }
@@ -116,6 +121,9 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int32 &value
     while(size--){
       value <<=8;
       c=in.get();
+      if(in.eof())
+        assert(0); // TODO: throw exception
+
       value |= c;
     }
   }
@@ -134,6 +142,8 @@ void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int64 &value
     while(size--){
       value <<=8;
       c=in.get();
+      if(in.eof())
+        assert(0);
       value |= c;
     }
   }
