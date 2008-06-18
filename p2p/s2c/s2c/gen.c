@@ -492,7 +492,7 @@ static int s2c_gen_print_c_simple_type(p_decl *decl, char *reference, FILE *out)
 static int s2c_gen_print_c_member(p_decl *member, FILE *out)
   {
     int i;
-    char reference[20];
+    char reference[100];
 
     switch(member->type){
       case TYPE_REF:
