@@ -33,7 +33,7 @@ LeaveReq::getEncodedPayload(resip::DataStream &data)
 	assert(0);
 }
 
-LeaveReq::LeaveReq(NodeId node) :
+LeaveReq::LeaveReq(const DestinationId &dest, NodeId node) :
 	mNode(node)
 {
 

@@ -89,7 +89,7 @@ class Message : public Signable
                                          const resip::Data& reason) const;
 
       JoinAns* makeJoinResponse(const resip::Data &overlaySpecific);
-      UpdateAns* makeUpdateResponse();
+      UpdateAns* makeUpdateResponse(const resip::Data &overlaySpecific);
       LeaveAns* makeLeaveResponse();
       ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates);
 
@@ -105,7 +105,7 @@ class Message : public Signable
       void setTTL(UInt8 ttl);
 
       UInt32 getOverlay() const;
-      UInt64 getTransactionID() const;
+      UInt64 getTransactionId() const;
       UInt16 getFlags() const; 
       void pushVia(NodeId node);
 
@@ -142,6 +142,7 @@ protected:
       virtual std::vector<resip::Data> collectSignableData() const;
 
       Message();
+		Message(const DestinationId &dest);
       void copyForwardingData(const Message &header);
 
    private:

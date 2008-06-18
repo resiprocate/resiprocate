@@ -31,7 +31,7 @@ JoinReq::JoinReq()
 
 }
 
-JoinReq::JoinReq(const NodeId &node, const resip::Data &overlaySpecific) :
+JoinReq::JoinReq(const DestinationId &dest, const NodeId &node, const resip::Data &overlaySpecific) :
 	mNodeID(node)
 {
    mJoiningPeerId = new s2c::NodeIdStruct;
