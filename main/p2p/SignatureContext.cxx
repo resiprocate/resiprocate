@@ -1,11 +1,12 @@
 #include "SignatureContext.hxx"
 
-#if 0
+
 #include <openssl/evp.h>
 
+#if 0
 namespace p2p {
   SignatureContext::SignatureContext(Profile &config)
-    : mConfig(config)
+    : mProfile(config)
     {
       ;
     }
@@ -23,9 +24,6 @@ namespace p2p {
       UCHAR digest[32];
 
     }
-
-
-  
 
 }
 #endif

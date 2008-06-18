@@ -155,6 +155,9 @@ void s2c::read_varray1(std::istream& in, unsigned int lenlen, resip::Data &buf)
     while(lenlen--){
       len<<=8;
       c=in.get();
+      if(in.eof())
+        assert(0); /* TODO: throw exception */
+        
       len|=c;
     }
     
@@ -162,6 +165,9 @@ void s2c::read_varray1(std::istream& in, unsigned int lenlen, resip::Data &buf)
     
     while(len--){
       c=in.get();
+      if(in.eof())
+        assert(0); /* TODO: throw exception */
+
       out.put(c);
     }
     

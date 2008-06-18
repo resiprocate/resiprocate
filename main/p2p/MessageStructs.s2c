@@ -331,19 +331,19 @@
         StoreKindResponse          kind_responses<0..2^16-1>;
       } RemoveAns;
       
-   struct {
-     ResourceId                 resource;
-     KindId                     kinds<0..2^8-1>;
-   } FindReq;
+      struct {
+        ResourceId                 resource;
+        KindId                     kinds<0..2^8-1>;
+      } FindReq;
 
-  struct {
-    KindId                      kind;
-    ResourceId                  closest;
-  } FindKindData;
-
-  struct {
-    FindKindData                results<0..2^16-1>;
-  } FindAns;
+      struct {
+        KindId                      kind;
+        ResourceId                  closest;
+      } FindKindData;
+    
+      struct {
+        FindKindData                results<0..2^16-1>;
+      } FindAns;
 
       struct {
         uint8                   iteration;
