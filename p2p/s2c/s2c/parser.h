@@ -33,6 +33,7 @@ typedef struct p_decl_ {
 #define TYPE_ARRAY     9
 #define TYPE_ENUM      10
 #define TYPE_ENUM_VALUE 11
+#define TYPE_OBJECT     12
 
   union {
     struct {
@@ -71,6 +72,9 @@ typedef struct p_decl_ {
     struct {
       int value;
     } enum_value_;
+    struct {
+      char *classname;
+    } object_;
   } u;
   
   STAILQ_ENTRY(p_decl_) entry;

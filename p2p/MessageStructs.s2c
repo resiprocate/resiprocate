@@ -1,7 +1,8 @@
        enum { bool_false (0), bool_true(1), (255)} Boolean;
 
       struct {
-        opaque id[16];
+        uint64 high;
+	uint64 low;
       } NodeId;
 
       struct {
