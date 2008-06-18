@@ -1,8 +1,10 @@
 #ifndef __P2P_RELOADMESSAGE_HXX
 #define __P2P_RELOADMESSAGE_HXX
 
-#include <assert.h>
+#include <cassert>
 #include "rutil/Data.hxx"
+
+#include "p2p/Event.hxx"
 #include "p2p/Signable.hxx"
 #include "p2p/ResourceId.hxx"
 #include "p2p/NodeId.hxx"

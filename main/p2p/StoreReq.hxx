@@ -23,6 +23,11 @@ class StoreReq : public ResourceMessage
          mReplicaNamber = number;
       }
 
+      std::auto_ptr<Event> event()
+      {
+         return wrap(this);
+      }
+
    private:
       AbstractValues mValues;
       ReplicaNumber mReplicaNamber;
