@@ -1,37 +1,13 @@
 #include "SignatureContext.hxx"
 
-
 #include <openssl/evp.h>
 
+#if 0
 namespace p2p {
 SignatureContext::SignatureContext(Profile &profile)
    : mProfile(profile)
 {
    ;
-}
-
-#if 0
-void SignatureContext::digestData(const vector<Data> toBeSigned, 
-                                  unsigned char digest[32],unsigned int *digest_len)
-{
-   EVP_MD_CTX md;
-   const EVP_MD *digest_ptr=EVP_get_digestbyname(mProfile.signatureDigest().c_str());
-   
-   assert(digest_ptr!=0);
-   
-   if(!EVP_DigestInit(&md, digest_ptr))
-      assert(0); // OpenSSL MD creation should succeed? TODO: ekr?
-  void digestData(const vector<Data> toBeSigned, 
-    unsigned char digest[32])
-    {
-       //EVP_MD_CTX md;
-      
-   for(unsigned int i=0;i<toBeSigned.size();i++)
-   {
-      EVP_DigestUpdate(&md,toBeSigned[i].data(),toBeSigned[i].size());
-   }
-      
-   EVP_DigestFinal(&md,digest,digest_len);
 }
 
 Data SignatureContext::computeSignature(const vector<Data> toBeSigned)
@@ -58,12 +34,17 @@ Data SignatureContext::computeSignature(const vector<Data> toBeSigned)
    {
       delete sig_buf[];
    }
-   
-   return resip::Data(resip::Data::Take,sig_buf,sig_len);
+
+   return Data(sig_buf);
 }
-#endif  
+
+
+
+
+
 
 }
+#endif
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

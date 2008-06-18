@@ -234,7 +234,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
 
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
    // Blow our node ID out on the wire (because there is no cert)
-   const resip::Data nid = mConfiguration.nodeId().getValue();
+   const resip::Data nid = mConfiguration.nodeId().encodeToNetwork();
    size_t bytesSent = ::send((i->second).getSocket(),
                              nid.data(), nid.size(), 0);
 
@@ -330,7 +330,7 @@ SelectTransporter::process(int ms)
 
      // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
      // Blow our node ID out on the wire (because there is no cert)
-     const resip::Data nid = mConfiguration.nodeId().getValue();
+     const resip::Data nid = mConfiguration.nodeId().encodeToNetwork();
      size_t bytesSent = ::send((i->second).getSocket(),
                                nid.data(), nid.size(), 0);
 
@@ -341,14 +341,19 @@ SelectTransporter::process(int ms)
      // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 
       // Get the remote node ID from the incoming socket
-      unsigned char buffer[16];
+      char buffer[16];
       size_t bytesRead = ::read(s, buffer, sizeof(buffer));
       if (bytesRead != sizeof(buffer)) 
       {
          ErrLog( << "Cannot ::read -- returned " << bytesRead); 
       }
-
-      NodeId nodeId = resip::Data(buffer, sizeof(buffer));
+      
+      // Parse the node id
+      s2c::NodeIdStruct nids;
+      resip::Data data(resip::Data::Borrow, buffer, sizeof(buffer));
+      resip::DataStream strm(data);
+      nids.decode(strm);
+      NodeId nodeId(nids);
 
       FlowId flowId(nodeId, application, s, *mRxFifo);
 
@@ -380,7 +385,7 @@ SelectTransporter::process(int ms)
 
         // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
         // Blow our node ID out on the wire (because there is no cert)
-        const resip::Data nid = mConfiguration.nodeId().getValue();
+        const resip::Data nid = mConfiguration.nodeId().encodeToNetwork();
         size_t bytesSent = ::send((i->second).getSocket(),
                                   nid.data(), nid.size(), 0);
 
