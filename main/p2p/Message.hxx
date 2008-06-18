@@ -146,6 +146,8 @@ protected:
 
    private:
       void initForwardingData();
+		bool compareDestinationLists(const std::vector<s2c::DestinationStruct *> &l1, const std::vector<s2c::DestinationStruct *> &l2) const;
+
 };
 
 class MessageContents 
