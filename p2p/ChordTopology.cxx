@@ -18,13 +18,6 @@ using namespace p2p;
 ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
    TopologyAPI(config, dispatcher, transporter) 
 {
-   // register with dispatcher for reload request events
-   mDispatcher.registerPostable(Message::JoinReqType, *this);
-   mDispatcher.registerPostable(Message::UpdateReqType, *this);
-   mDispatcher.registerPostable(Message::LeaveReqType, *this);
-
-   // register with dispatcher for reload response events
-   mDispatcher.registerPostable(Message::ConnectAnsType, *this);
 }
       
 void 
@@ -98,7 +91,7 @@ ChordTopology::candidatesCollected( const NodeId& node, unsigned short appId, st
       dataCandidates.push_back(resip::Data::Empty);  // Todo convert Candidate to Data (in SDP format)
    }
    std::auto_ptr<Message> connectReq(new ConnectReq(resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, dataCandidates));
-   mDispatcher.send(connectReq);
+   mDispatcher.send(connectReq, *this);
       
 // callback here 
 
@@ -148,14 +141,14 @@ ChordTopology::consume(UpdateReq& msg)
       for(; it != mPrevTable.end(); it++)
       {         
          std::auto_ptr<Message> updateReq(new UpdateReq(ourUpdate.encode()));
-         mDispatcher.send(updateReq);
+         mDispatcher.send(updateReq, *this);
       }
 
       it = mNextTable.begin();
       for(; it != mNextTable.end(); it++)
       {
          std::auto_ptr<Message> updateReq(new UpdateReq(ourUpdate.encode()));
-         mDispatcher.send(updateReq);
+         mDispatcher.send(updateReq, *this);
       }
    }
 }
