@@ -17,6 +17,16 @@ ChordUpdate::ChordUpdate(const resip::Data &chordUpdateBody) :
 	parse();
 }
 
+bool 
+ChordUpdate::operator == (const ChordUpdate &chord) const
+{
+	return 
+		(mUpdateType == chord.mUpdateType) &&
+		(mPredecessors == chord.mPredecessors) &&
+		(mSuccessors == chord.mSuccessors) &&
+		(mFingers == chord.mFingers);
+}
+
 void 
 ChordUpdate::setUpdateType(UpdateType updateType)
 {
