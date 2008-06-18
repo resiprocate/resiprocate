@@ -35,6 +35,7 @@ class ConnectionOpened : public Event
                        resip::TransportType transportType,
                        X509 *cert
                        ) {}
+      ~ConnectionOpened();
       
       virtual void dispatch(EventConsumer& consumer);
          
@@ -48,6 +49,7 @@ class ConnectionOpened : public Event
 class ConnectionClosed : public Event
 {
    public:
+      ~ConnectionClosed();
       NodeId getNodeId();
       unsigned short getApplicationId();
       virtual void dispatch(EventConsumer& consumer);
@@ -59,7 +61,8 @@ class MessageArrived : public Event
 {
    public:
       MessageArrived (NodeId nodeId, std::auto_ptr<p2p::Message> message)
-        : mNodeId(nodeId), mMessage(message) {;}
+        : mNodeId(nodeId), mMessage(message) {}
+      ~MessageArrived();
 
       virtual void dispatch(EventConsumer& consumer);
 
@@ -76,7 +79,8 @@ class ApplicationMessageArrived : public Event
 {
    public:
       ApplicationMessageArrived(FlowId flowId, resip::Data &data)
-        : mFlowId(flowId), mData(data) {;}
+        : mFlowId(flowId), mData(data) {}
+      ~ApplicationMessageArrived();
 
       virtual void dispatch(EventConsumer& consumer);
 
@@ -95,6 +99,7 @@ class LocalCandidatesCollected : public Event
    public:
       LocalCandidatesCollected(std::vector<Candidate> &c) : 
          mCandidates(c) {}
+      ~LocalCandidatesCollected();
 
       virtual void dispatch(EventConsumer& consumer);
 
