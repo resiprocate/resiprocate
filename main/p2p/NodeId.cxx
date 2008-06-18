@@ -2,7 +2,9 @@
 #include <assert.h>
 
 #include "rutil/Data.hxx"
+#include "rutil/DataStream.hxx"
 #include "p2p/NodeId.hxx"
+#include "p2p/ResourceId.hxx"
 
 using namespace p2p;
 
@@ -15,6 +17,13 @@ NodeId::NodeId(const s2c::NodeIdStruct& nid) : mNodeId(nid)
 {
 }
 
+NodeId::NodeId(const ResourceId& rid)
+{
+   assert(rid.value().size() == 16);
+   resip::Data buffer(rid.value());
+   resip::iDataStream strm(buffer);
+   mNodeId.decode(strm);
+}
 
 NodeId& NodeId::operator=(const NodeId& rhs)
 {
