@@ -94,7 +94,7 @@ void ResourceIdStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding ResourceIdStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mId.size();i++)
       encode_uintX(out, 8, mId[i]);
    long pos2=out.tellp();
@@ -360,7 +360,7 @@ void DestinationStruct :: encode(std::ostream& out)
    encode_uintX(out, 8, (u_int64)(mType));
 
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
 
    switch(mType) {
       case 1:
@@ -374,7 +374,7 @@ void DestinationStruct :: encode(std::ostream& out)
       case 3:
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mCompressed.mCompressedId.size();i++)
                encode_uintX(out, 8, mCompressed.mCompressedId[i]);
    long pos2=out.tellp();
@@ -392,6 +392,7 @@ void DestinationStruct :: encode(std::ostream& out)
    long pos2=out.tellp();
    out.seekp(pos1);
    encode_uintX(out, 8, (pos2 - pos1) - 1);
+   out.seekp(pos2);
 };
 
 
@@ -450,7 +451,7 @@ void SignerIdentityStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSignerIdentity.size();i++)
       encode_uintX(out, 8, mSignerIdentity[i]);
    long pos2=out.tellp();
@@ -566,7 +567,7 @@ void SignatureStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSignatureValue.size();i++)
       encode_uintX(out, 8, mSignatureValue[i]);
    long pos2=out.tellp();
@@ -731,7 +732,7 @@ void ForwardingHeaderStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mViaList.size();i++)
       mViaList[i]->encode(out);
    long pos2=out.tellp();
@@ -742,7 +743,7 @@ void ForwardingHeaderStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mDestinationList.size();i++)
       mDestinationList[i]->encode(out);
    long pos2=out.tellp();
@@ -815,7 +816,7 @@ void ForwardingLayerMessageStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 3);
+   for(int i=0;i<3;i++) out.put(0);
    for(unsigned int i=0;i<mPayload.size();i++)
       encode_uintX(out, 8, mPayload[i]);
    long pos2=out.tellp();
@@ -898,7 +899,7 @@ void ErrorResponseStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mReasonPhrase.size();i++)
       encode_uintX(out, 8, mReasonPhrase[i]);
    long pos2=out.tellp();
@@ -909,7 +910,7 @@ void ErrorResponseStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mErrorInfo.size();i++)
       encode_uintX(out, 8, mErrorInfo[i]);
    long pos2=out.tellp();
@@ -972,7 +973,7 @@ void JoinReqStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mOverlaySpecificData.size();i++)
       encode_uintX(out, 8, mOverlaySpecificData[i]);
    long pos2=out.tellp();
@@ -1027,7 +1028,7 @@ void JoinAnsStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding JoinAnsStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mOverlaySpecificData.size();i++)
       encode_uintX(out, 8, mOverlaySpecificData[i]);
    long pos2=out.tellp();
@@ -1090,7 +1091,7 @@ void LeaveReqStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mOverlaySpecificData.size();i++)
       encode_uintX(out, 8, mOverlaySpecificData[i]);
    long pos2=out.tellp();
@@ -1165,7 +1166,7 @@ void RouteQueryReqStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mOverlaySpecificData.size();i++)
       encode_uintX(out, 8, mOverlaySpecificData[i]);
    long pos2=out.tellp();
@@ -1251,7 +1252,7 @@ void FramedMessageStruct :: encode(std::ostream& out)
             encode_uintX(out, 24, mData.mSequence);
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 3);
+   for(int i=0;i<3;i++) out.put(0);
    for(unsigned int i=0;i<mData.mMessage.size();i++)
                encode_uintX(out, 8, mData.mMessage[i]);
    long pos2=out.tellp();
@@ -1317,7 +1318,7 @@ void IceCandidateStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding IceCandidateStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mCandidate.size();i++)
       encode_uintX(out, 8, mCandidate[i]);
    long pos2=out.tellp();
@@ -1429,7 +1430,7 @@ void ConnectReqAnsStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding ConnectReqAnsStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mUfrag.size();i++)
       encode_uintX(out, 8, mUfrag[i]);
    long pos2=out.tellp();
@@ -1440,7 +1441,7 @@ void ConnectReqAnsStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mPassword.size();i++)
       encode_uintX(out, 8, mPassword[i]);
    long pos2=out.tellp();
@@ -1453,7 +1454,7 @@ void ConnectReqAnsStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mRole.size();i++)
       encode_uintX(out, 8, mRole[i]);
    long pos2=out.tellp();
@@ -1464,7 +1465,7 @@ void ConnectReqAnsStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mCandidates.size();i++)
       mCandidates[i]->encode(out);
    long pos2=out.tellp();
@@ -1519,7 +1520,7 @@ void PingReqStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding PingReqStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mRequestedInfo.size();i++)
       encode_uintX(out, 8, mRequestedInfo[i]);
    long pos2=out.tellp();
@@ -1654,7 +1655,7 @@ void PingAnsStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mPingInfo.size();i++)
       mPingInfo[i]->encode(out);
    long pos2=out.tellp();
@@ -1735,7 +1736,7 @@ void TunnelReqStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mDialogId.size();i++)
       encode_uintX(out, 8, mDialogId[i]);
    long pos2=out.tellp();
@@ -1746,7 +1747,7 @@ void TunnelReqStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 3);
+   for(int i=0;i<3;i++) out.put(0);
    for(unsigned int i=0;i<mApplicationPdu.size();i++)
       encode_uintX(out, 8, mApplicationPdu[i]);
    long pos2=out.tellp();
@@ -1813,7 +1814,7 @@ void DataValueStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 4);
+   for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mValue.size();i++)
       encode_uintX(out, 8, mValue[i]);
    long pos2=out.tellp();
@@ -1912,7 +1913,7 @@ void DictionaryKeyStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding DictionaryKeyStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mKey.size();i++)
       encode_uintX(out, 8, mKey[i]);
    long pos2=out.tellp();
@@ -2108,7 +2109,7 @@ void StoredDataStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding StoredDataStruct");
    long pos1=out.tellp();
-   out.seekp(pos1 + 4);
+   for(int i=0;i<4;i++) out.put(0);
 
    encode_uintX(out, 64, mStorageTime);
 
@@ -2121,6 +2122,7 @@ void StoredDataStruct :: encode(std::ostream& out)
    long pos2=out.tellp();
    out.seekp(pos1);
    encode_uintX(out, 32, (pos2 - pos1) - 4);
+   out.seekp(pos2);
 };
 
 
@@ -2196,7 +2198,7 @@ void StoreKindDataStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 4);
+   for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mValues.size();i++)
       mValues[i]->encode(out);
    long pos2=out.tellp();
@@ -2267,7 +2269,7 @@ void StoreReqStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 4);
+   for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mKindData.size();i++)
       mKindData[i]->encode(out);
    long pos2=out.tellp();
@@ -2339,7 +2341,7 @@ void StoreKindResponseStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mReplicas.size();i++)
       mReplicas[i]->encode(out);
    long pos2=out.tellp();
@@ -2393,7 +2395,7 @@ void StoreAnsStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding StoreAnsStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mKindResponses.size();i++)
       mKindResponses[i]->encode(out);
    long pos2=out.tellp();
@@ -2551,7 +2553,7 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out)
    encode_uintX(out, 64, mGeneration);
 
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
 
    switch(mModel) {
       case 1:
@@ -2560,7 +2562,7 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out)
       case 2:
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mArray.mIndices.size();i++)
                mArray.mIndices[i]->encode(out);
    long pos2=out.tellp();
@@ -2573,7 +2575,7 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out)
       case 3:
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mDictionary.mKeys.size();i++)
                mDictionary.mKeys[i]->encode(out);
    long pos2=out.tellp();
@@ -2591,6 +2593,7 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out)
    long pos2=out.tellp();
    out.seekp(pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
+   out.seekp(pos2);
 };
 
 
@@ -2644,7 +2647,7 @@ void FetchReqStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSpecifiers.size();i++)
       mSpecifiers[i]->encode(out);
    long pos2=out.tellp();
@@ -2716,7 +2719,7 @@ void FetchKindResponseStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 4);
+   for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mValues.size();i++)
       mValues[i]->encode(out);
    long pos2=out.tellp();
@@ -2770,7 +2773,7 @@ void FetchAnsStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding FetchAnsStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 4);
+   for(int i=0;i<4;i++) out.put(0);
    for(unsigned int i=0;i<mKindResponses.size();i++)
       mKindResponses[i]->encode(out);
    long pos2=out.tellp();
@@ -2832,7 +2835,7 @@ void RemoveReqStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSpecifiers.size();i++)
       mSpecifiers[i]->encode(out);
    long pos2=out.tellp();
@@ -2886,7 +2889,7 @@ void RemoveAnsStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding RemoveAnsStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mKindResponses.size();i++)
       mKindResponses[i]->encode(out);
    long pos2=out.tellp();
@@ -2949,7 +2952,7 @@ void FindReqStruct :: encode(std::ostream& out)
 
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 1);
+   for(int i=0;i<1;i++) out.put(0);
    for(unsigned int i=0;i<mKinds.size();i++)
       encode_uintX(out, 32, mKinds[i]);
    long pos2=out.tellp();
@@ -3047,7 +3050,7 @@ void FindAnsStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding FindAnsStruct");
    {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mResults.size();i++)
       mResults[i]->encode(out);
    long pos2=out.tellp();
@@ -3194,13 +3197,13 @@ void SipRegistrationStruct :: encode(std::ostream& out)
    encode_uintX(out, 8, (u_int64)(mType));
 
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
 
    switch(mType) {
       case 1:
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSipRegistrationUri.mUri.size();i++)
                encode_uintX(out, 8, mSipRegistrationUri.mUri[i]);
    long pos2=out.tellp();
@@ -3213,7 +3216,7 @@ void SipRegistrationStruct :: encode(std::ostream& out)
       case 2:
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSipRegistrationRoute.mContactPrefs.size();i++)
                encode_uintX(out, 8, mSipRegistrationRoute.mContactPrefs[i]);
    long pos2=out.tellp();
@@ -3223,7 +3226,7 @@ void SipRegistrationStruct :: encode(std::ostream& out)
    }
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mSipRegistrationRoute.mDestinationList.size();i++)
                mSipRegistrationRoute.mDestinationList[i]->encode(out);
    long pos2=out.tellp();
@@ -3241,6 +3244,7 @@ void SipRegistrationStruct :: encode(std::ostream& out)
    long pos2=out.tellp();
    out.seekp(pos1);
    encode_uintX(out, 16, (pos2 - pos1) - 2);
+   out.seekp(pos2);
 };
 
 
@@ -3358,7 +3362,7 @@ void ChordUpdateStruct :: encode(std::ostream& out)
       case 2:
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mNeighbors.mPredecessors.size();i++)
                mNeighbors.mPredecessors[i]->encode(out);
    long pos2=out.tellp();
@@ -3368,7 +3372,7 @@ void ChordUpdateStruct :: encode(std::ostream& out)
    }
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mNeighbors.mSuccessors.size();i++)
                mNeighbors.mSuccessors[i]->encode(out);
    long pos2=out.tellp();
@@ -3381,7 +3385,7 @@ void ChordUpdateStruct :: encode(std::ostream& out)
       case 3:
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mFull.mPredecessors.size();i++)
                mFull.mPredecessors[i]->encode(out);
    long pos2=out.tellp();
@@ -3391,7 +3395,7 @@ void ChordUpdateStruct :: encode(std::ostream& out)
    }
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mFull.mSuccessors.size();i++)
                mFull.mSuccessors[i]->encode(out);
    long pos2=out.tellp();
@@ -3401,7 +3405,7 @@ void ChordUpdateStruct :: encode(std::ostream& out)
    }
             {
    long pos1=out.tellp();
-   out.seekp(pos1 + 2);
+   for(int i=0;i<2;i++) out.put(0);
    for(unsigned int i=0;i<mFull.mFingers.size();i++)
                mFull.mFingers[i]->encode(out);
    long pos2=out.tellp();
