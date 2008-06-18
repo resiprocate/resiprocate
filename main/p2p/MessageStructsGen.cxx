@@ -20,8 +20,9 @@ NodeIdStruct :: NodeIdStruct ()
 {
    mName = "NodeIdStruct";
  DebugLog(<< "Constructing NodeIdStruct");
-   for(unsigned int i=0;i<16;i++)
-      mId[i]=0;
+   mHigh=0;
+
+   mLow=0;
 
 };
 
@@ -30,26 +31,29 @@ void NodeIdStruct :: print(std::ostream& out, int indent) const
    do_indent(out,indent);
    (out) << "NodeId:\n";
    indent+=2;
-   for(unsigned int i=0;i<16;i++) {
-      do_indent(out, indent);
-   (out)  << "opaque:" << std::hex << (unsigned long long) mId[i] << "\n"; 
-   }
+   do_indent(out, indent);
+   (out)  << "high:" << std::hex << (unsigned long long)mHigh << "\n"; 
+   do_indent(out, indent);
+   (out)  << "low:" << std::hex << (unsigned long long)mLow << "\n"; 
 };
 
 void NodeIdStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding NodeIdStruct");
-   for(unsigned int i=0;i<16;i++)
-      decode_uintX(in, 8, mId[i]);
-   DebugLog( << "mId[i]");
+   decode_uintX(in, 64, mHigh);
+   DebugLog( << "mHigh");
+
+   decode_uintX(in, 64, mLow);
+   DebugLog( << "mLow");
 
 };
 
 void NodeIdStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding NodeIdStruct");
-   for(unsigned int i=0;i<16;i++)
-      encode_uintX(out, 8, mId[i]);
+   encode_uintX(out, 64, mHigh);
+
+   encode_uintX(out, 64, mLow);
 
 };
 
