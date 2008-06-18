@@ -30,7 +30,7 @@ ChordTopology::joinOverlay()
 
 // Messages that the forwarding layer sends to this object
 void 
-ChordTopology::newConnectionFormed( NodeId& node )
+ChordTopology::newConnectionFormed( const NodeId& node )
 {
    // If this is the first connection we ever have - then it must be the connection to
    // the bootstrap node
@@ -52,7 +52,7 @@ ChordTopology::newConnectionFormed( NodeId& node )
 
 
 void 
-ChordTopology::connectionLost( NodeId& node )
+ChordTopology::connectionLost( const NodeId& node )
 {
    // if node is in the finger table, remove it 
    mFingerTable.erase(node);
@@ -82,7 +82,7 @@ ChordTopology::connectionLost( NodeId& node )
 
 
 void 
-ChordTopology::candidatesCollected( NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
+ChordTopology::candidatesCollected( const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
 {
    // Connect to node - send the ConnectReq
    std::vector<resip::Data> dataCandidates;
@@ -150,7 +150,7 @@ ChordTopology::consume(ConnectAns& msg)
 
 // Deal with routing queries 
 const NodeId& 
-ChordTopology::findNextHop( NodeId& node )
+ChordTopology::findNextHop( const NodeId& node )
 {
    assert( !isResponsible(node) );
    
@@ -177,7 +177,7 @@ ChordTopology::findNextHop( NodeId& node )
 
 
 const NodeId& 
-ChordTopology::findNextHop( ResourceId& resource )
+ChordTopology::findNextHop( const ResourceId& resource )
 {
    NodeId node( resource.value() );
    return findNextHop( node );
@@ -186,7 +186,7 @@ ChordTopology::findNextHop( ResourceId& resource )
 
 // Deal with replication for storage 
 std::vector<NodeId> 
-ChordTopology::getReplicationSet(  ResourceId& resource )
+ChordTopology::getReplicationSet(  const ResourceId& resource )
 {
    std::vector<NodeId> replicateSet;
    const unsigned int numReplications=2;
@@ -205,7 +205,7 @@ ChordTopology::getReplicationSet(  ResourceId& resource )
 
 // Functions to find out if this peer is responsible for something
 bool 
-ChordTopology::isResponsible( NodeId& node )
+ChordTopology::isResponsible( const NodeId& node )
 {
    if (mPrevTable.size() == 0) return false;
 
@@ -218,7 +218,7 @@ ChordTopology::isResponsible( NodeId& node )
 
 
 bool 
-ChordTopology::isResponsible( ResourceId& resource )
+ChordTopology::isResponsible( const ResourceId& resource )
 {
   NodeId node( resource.value() );
   return isResponsible( node );
@@ -227,7 +227,7 @@ ChordTopology::isResponsible( ResourceId& resource )
 
 // Functions to find out if this peer is responsible for something
 bool 
-ChordTopology::isConnected( NodeId& node )
+ChordTopology::isConnected( const NodeId& node )
 {
    // Check if node is in finger table
    if(mFingerTable.find(node) != mFingerTable.end())
@@ -261,7 +261,7 @@ ChordTopology::isConnected( NodeId& node )
 
 // Function to hash resource names into resourceID 
 ResourceId 
-ChordTopology::resourceId( resip::Data& resourceName )
+ChordTopology::resourceId( const resip::Data& resourceName )
 {
    // call sha1, truncate to 128 bits, and return 
     resip::SHA1Stream strm;
