@@ -14,7 +14,7 @@ class FetchReq : public ResourceMessage
    public:
       typedef std::list<resip::SharedPtr<DataSpecifier> > DataSpecifiers;
       
-      virtual MessageType getMessageType() const { return Message::FetchReq; }
+      virtual MessageType getMessageType() const { return Message::FetchReqType; }
 
       DataSpecifiers& specifiers();
       const DataSpecifiers& specifiers() const;

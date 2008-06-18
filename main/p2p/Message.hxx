@@ -40,30 +40,30 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
 
       enum MessageType
       {
-         PingReq = 1,
-         PingAns = 2,
-         ConnectReq = 3, //
-         ConnectAns = 4, //
-         TunnelReq = 5,
-         TunnelAns = 6,
-         StoreReq = 7, //
-         StoreAns = 8, //
-         FetchReq = 9, //
-         FetchAns = 10, //
-         RemoveReq = 11,
-         RemoveAns = 12,
-         FindReq = 13,
-         FindAns = 14,
-         JoinReq = 15, //
-         JoinAns = 16, //
-         LeaveReq = 17,
-         LeaveAns = 18,
-         UpdateReq = 19, //
-         UpdateAns = 20, //
-         RouteQueryReq = 21,
-         RouteQueryAns = 22,
-         FailureRequest = 0xFFFE,
-         FailureResponse = 0xFFFF
+         PingReqType = 1,
+         PingAnsType = 2,
+         ConnectReqType = 3, //
+         ConnectAnsType = 4, //
+         TunnelReqType = 5,
+         TunnelAnsType = 6,
+         StoreReqType = 7, //
+         StoreAnsType = 8, //
+         FetchReqType = 9, //
+         FetchAnsType = 10, //
+         RemoveReqType = 11,
+         RemoveAnsType = 12,
+         FindReqType = 13,
+         FindAnsType = 14,
+         JoinReqType = 15, //
+         JoinAnsType = 16, //
+         LeaveReqType = 17,
+         LeaveAnsType = 18,
+         UpdateReqType = 19, //
+         UpdateAnsType = 20, //
+         RouteQueryReqType = 21,
+         RouteQueryAnsType = 22,
+         FailureRequestType = 0xFFFE,
+         FailureResponseType = 0xFFFF
       };
 
 	  bool isRequest() const;  // convenience function
@@ -74,10 +74,10 @@ class Message : public Signable, private s2c::ForwardingLayerMessageStruct
       virtual Message *makeErrorResponse(ErrorResponseCode code, 
                                          const resip::Data& reason) const;
 
-	  p2p::JoinAns *makeJoinResponse(const resip::Data &overlaySpecific);
-	  p2p::UpdateAns *makeUpdateResponse();
-	  p2p::LeaveAns *makeLeaveResponse();
-
+	  JoinAns* makeJoinResponse(const resip::Data &overlaySpecific);
+	  UpdateAns* makeUpdateResponse();
+	  LeaveAns* makeLeaveResponse();
+      
 	  //virtual JoinResponse *makeJoinResponse();
       
       // encoding/parsing methods
@@ -121,7 +121,7 @@ class MessageContents
 class ErrorResponse : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return FailureResponse; }
+      virtual MessageType getMessageType() const { return FailureResponseType; }
       
       ErrorResponseCode getErrorCode() const;
       const resip::Data& getReasonPhrase() const;
@@ -133,53 +133,53 @@ class ErrorResponse : public Message
 class RouteQueryAnsMessage : public Message
 {
 public:
-	virtual MessageType getMessageType() const { return RouteQueryAns; }
+	virtual MessageType getMessageType() const { return RouteQueryAnsType; }
 };
 
 class RouteQueryReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return RouteQueryReq; }
+      virtual MessageType getMessageType() const { return RouteQueryReqType; }
 };
 
 class RemoveAnsMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return RemoveAns; }
+      virtual MessageType getMessageType() const { return RemoveAnsType; }
 };
 
 
 class RemoveReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return RemoveReq; }
+      virtual MessageType getMessageType() const { return RemoveReqType; }
 };
 
 
 class TunnelAnsMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return TunnelAns; }
+      virtual MessageType getMessageType() const { return TunnelAnsType; }
 };
 
 
 class TunnelReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return TunnelReq; }
+      virtual MessageType getMessageType() const { return TunnelReqType; }
 };
 
 class PingAnsMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return PingAns; }
+      virtual MessageType getMessageType() const { return PingAnsType; }
 };
 
 
 class PingReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return PingReq; }
+      virtual MessageType getMessageType() const { return PingReqType; }
 };
 
 class ResourceMessage : public Message

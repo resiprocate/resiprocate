@@ -9,14 +9,14 @@ namespace p2p
 class FindAnsMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return FindAns; }
+      virtual MessageType getMessageType() const { return FindAnsType; }
 };
 
 
 class FindReqMessage : public Message
 {
    public:
-      virtual MessageType getMessageType() const { return FindReq; }
+      virtual MessageType getMessageType() const { return FindReqType; }
 };
 
 }

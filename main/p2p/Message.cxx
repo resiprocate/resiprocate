@@ -38,20 +38,20 @@ Message *
 Message::parse(const resip::Data &message, NodeId senderID)
 {
 	// placeholder
-	Message::MessageType messageType = UpdateReq; // remove me
+	Message::MessageType messageType = UpdateReqType; // remove me
 	Message *newMessage = 0;
 	
 	// parse the forwarding header
 	
 	switch(messageType)
 	{
-		case UpdateReq:
+		case UpdateReqType:
 			break;
-		case UpdateAns:
+		case UpdateAnsType:
 			break;
-		case JoinReq:
+		case JoinReqType:
 			break;
-		case JoinAns:
+		case JoinAnsType:
 			break;
 		default:
 			assert(0); // unknown value
