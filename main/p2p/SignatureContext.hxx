@@ -40,19 +40,19 @@ class SignatureContext
       void fetchCertificates(const vector<Data> signatures, Postable<bool> done);
 
       // Validate a signature, comparing to the expected NodeId node
-      bool validateSignature(const vector<const Data> toBeSigned, 
+      bool validateSignature(const vector<Data> toBeSigned, 
         const Data &signature, NodeId node);
 
       // Validate a signature, comparing to the expected UserName name
-      bool validateSignature(const vector<const Data> toBeSigned, 
+      bool validateSignature(const vector<Data> toBeSigned, 
         const Data &signature, UserName user);
 
       
    private:
-      void digestData(const vector<const Data> toBeSigned, unsigned char digest[32]);
-      Data computeSignature(const vector<const Data> toBeSigned);
+      void digestData(const vector<Data> toBeSigned, unsigned char digest[32]);
+      Data computeSignature(const vector<Data> toBeSigned);
       
-      Profile &mConfig;
+      Profile &mProfile;
 
       class CachedCertificate 
       {

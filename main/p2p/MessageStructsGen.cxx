@@ -291,7 +291,6 @@ DestinationStruct :: DestinationStruct ()
  DebugLog(<< "Constructing DestinationStruct");
    mType=(DestinationType)0;
 
-   mLength=0;
 
    mPeer.mNodeId=0;
    mResource.mResourceId=0;
@@ -305,8 +304,6 @@ void DestinationStruct :: print(std::ostream& out, int indent) const
    indent+=2;
    do_indent(out, indent);
    (out)  << "type:" << std::hex << (unsigned long long) mType << "\n"; 
-   do_indent(out, indent);
-   (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
 };
 
 void DestinationStruct :: decode(std::istream& in)
@@ -318,18 +315,20 @@ void DestinationStruct :: decode(std::istream& in)
       mType=(DestinationType)v;
    }
 
-   decode_uintX(in, 8, mLength);
-   DebugLog( << "mLength");
+   {
+   resip::Data d;
+   read_varray1(in, 1, d);
+   resip::DataStream in_auto(d);
 
    switch(mType){
       case 1:
             mPeer.mNodeId = new NodeIdStruct();
-   mPeer.mNodeId->decode(in);
+   mPeer.mNodeId->decode(in_auto);
           break;
 
       case 2:
             mResource.mResourceId = new ResourceIdStruct();
-   mResource.mResourceId->decode(in);
+   mResource.mResourceId->decode(in_auto);
           break;
 
       case 3:
@@ -351,6 +350,8 @@ void DestinationStruct :: decode(std::istream& in)
    }
 
 
+   if(in_auto.peek()!=EOF) assert(0);
+   }
 };
 
 void DestinationStruct :: encode(std::ostream& out)
@@ -358,7 +359,8 @@ void DestinationStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding DestinationStruct");
    encode_uintX(out, 8, (u_int64)(mType));
 
-   encode_uintX(out, 8, mLength);
+   long pos1=out.tellp();
+   out.seekp(pos1 + 1);
 
    switch(mType) {
       case 1:
@@ -387,6 +389,9 @@ void DestinationStruct :: encode(std::ostream& out)
    }
 
 
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 8, (pos2 - pos1) - 1);
 };
 
 
@@ -2051,7 +2056,6 @@ StoredDataStruct :: StoredDataStruct ()
 {
    mName = "StoredDataStruct";
  DebugLog(<< "Constructing StoredDataStruct");
-   mLength=0;
 
    mStorageTime=0;
 
@@ -2069,8 +2073,6 @@ void StoredDataStruct :: print(std::ostream& out, int indent) const
    (out) << "StoredData:\n";
    indent+=2;
    do_indent(out, indent);
-   (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
-   do_indent(out, indent);
    (out)  << "storage_time:" << std::hex << (unsigned long long)mStorageTime << "\n"; 
    do_indent(out, indent);
    (out)  << "lifetime:" << std::hex << (unsigned long long)mLifetime << "\n"; 
@@ -2081,27 +2083,32 @@ void StoredDataStruct :: print(std::ostream& out, int indent) const
 void StoredDataStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding StoredDataStruct");
-   decode_uintX(in, 32, mLength);
-   DebugLog( << "mLength");
+   {
+   resip::Data d;
+   read_varray1(in, 4, d);
+   resip::DataStream in_auto(d);
 
-   decode_uintX(in, 64, mStorageTime);
+   decode_uintX(in_auto, 64, mStorageTime);
    DebugLog( << "mStorageTime");
 
-   decode_uintX(in, 32, mLifetime);
+   decode_uintX(in_auto, 32, mLifetime);
    DebugLog( << "mLifetime");
 
    mValue = new StoredDataValueStruct();
-   mValue->decode(in);
+   mValue->decode(in_auto);
 
    mSignature = new SignatureStruct();
-   mSignature->decode(in);
+   mSignature->decode(in_auto);
 
+   if(in_auto.peek()!=EOF) assert(0);
+   }
 };
 
 void StoredDataStruct :: encode(std::ostream& out)
 {
    DebugLog(<< "Encoding StoredDataStruct");
-   encode_uintX(out, 32, mLength);
+   long pos1=out.tellp();
+   out.seekp(pos1 + 4);
 
    encode_uintX(out, 64, mStorageTime);
 
@@ -2111,6 +2118,9 @@ void StoredDataStruct :: encode(std::ostream& out)
 
    mSignature->encode(out);
 
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 32, (pos2 - pos1) - 4);
 };
 
 
@@ -2453,7 +2463,6 @@ StoredDataSpecifierStruct :: StoredDataSpecifierStruct ()
 
    mGeneration=0;
 
-   mLength=0;
 
 
 };
@@ -2469,8 +2478,6 @@ void StoredDataSpecifierStruct :: print(std::ostream& out, int indent) const
    (out)  << "model:" << std::hex << (unsigned long long) mModel << "\n"; 
    do_indent(out, indent);
    (out)  << "generation:" << std::hex << (unsigned long long)mGeneration << "\n"; 
-   do_indent(out, indent);
-   (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
 };
 
 void StoredDataSpecifierStruct :: decode(std::istream& in)
@@ -2488,8 +2495,10 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
    decode_uintX(in, 64, mGeneration);
    DebugLog( << "mGeneration");
 
-   decode_uintX(in, 16, mLength);
-   DebugLog( << "mLength");
+   {
+   resip::Data d;
+   read_varray1(in, 2, d);
+   resip::DataStream in_auto(d);
 
    switch(mModel){
       case 1:
@@ -2528,6 +2537,8 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
    }
 
 
+   if(in_auto.peek()!=EOF) assert(0);
+   }
 };
 
 void StoredDataSpecifierStruct :: encode(std::ostream& out)
@@ -2539,7 +2550,8 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out)
 
    encode_uintX(out, 64, mGeneration);
 
-   encode_uintX(out, 16, mLength);
+   long pos1=out.tellp();
+   out.seekp(pos1 + 2);
 
    switch(mModel) {
       case 1:
@@ -2576,6 +2588,9 @@ void StoredDataSpecifierStruct :: encode(std::ostream& out)
    }
 
 
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 16, (pos2 - pos1) - 2);
 };
 
 
@@ -3097,7 +3112,6 @@ SipRegistrationStruct :: SipRegistrationStruct ()
  DebugLog(<< "Constructing SipRegistrationStruct");
    mType=(SipRegistrationType)0;
 
-   mLength=0;
 
 
 };
@@ -3109,8 +3123,6 @@ void SipRegistrationStruct :: print(std::ostream& out, int indent) const
    indent+=2;
    do_indent(out, indent);
    (out)  << "type:" << std::hex << (unsigned long long) mType << "\n"; 
-   do_indent(out, indent);
-   (out)  << "length:" << std::hex << (unsigned long long)mLength << "\n"; 
 };
 
 void SipRegistrationStruct :: decode(std::istream& in)
@@ -3122,8 +3134,10 @@ void SipRegistrationStruct :: decode(std::istream& in)
       mType=(SipRegistrationType)v;
    }
 
-   decode_uintX(in, 16, mLength);
-   DebugLog( << "mLength");
+   {
+   resip::Data d;
+   read_varray1(in, 2, d);
+   resip::DataStream in_auto(d);
 
    switch(mType){
       case 1:
@@ -3170,6 +3184,8 @@ void SipRegistrationStruct :: decode(std::istream& in)
    }
 
 
+   if(in_auto.peek()!=EOF) assert(0);
+   }
 };
 
 void SipRegistrationStruct :: encode(std::ostream& out)
@@ -3177,7 +3193,8 @@ void SipRegistrationStruct :: encode(std::ostream& out)
    DebugLog(<< "Encoding SipRegistrationStruct");
    encode_uintX(out, 8, (u_int64)(mType));
 
-   encode_uintX(out, 16, mLength);
+   long pos1=out.tellp();
+   out.seekp(pos1 + 2);
 
    switch(mType) {
       case 1:
@@ -3221,6 +3238,9 @@ void SipRegistrationStruct :: encode(std::ostream& out)
    }
 
 
+   long pos2=out.tellp();
+   out.seekp(pos1);
+   encode_uintX(out, 16, (pos2 - pos1) - 2);
 };
 
 
