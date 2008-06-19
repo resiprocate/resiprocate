@@ -21,12 +21,7 @@ class Dispatcher : public Postable<Message>
       void registerPostable(Message::MessageType type, Postable<Event>& postable);
       void send(std::auto_ptr<Message> message, Postable<Event>& responseSink);
 
-      /**
-       * Responses come back as Message type to postable consumer.
-       */
-      void sendAsBaseMessage(std::auto_ptr<Message> message, Postable<Event>& postable);
-      
-      //not public api
+      // not public API
       virtual void post(std::auto_ptr<Message> message);
 
    private:
@@ -34,15 +29,12 @@ class Dispatcher : public Postable<Message>
       {
          public:
             Entry() 
-               : mPostable(0),
-                 mForBaseMessage(false)
+               : mPostable(0)
             {}
             Entry(Postable<Event>& postable, bool forBaseMessage = false)
-               : mPostable(&postable),
-                 mForBaseMessage(forBaseMessage)
+               : mPostable(&postable)
             {}
             Postable<Event>* mPostable;
-            bool mForBaseMessage;
       };
 
       typedef std::map<Message::MessageType, Postable<Event>*> Registry;

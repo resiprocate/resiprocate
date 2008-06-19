@@ -1,19 +1,19 @@
-#ifndef P2P_FIND_HXX
-#define P2P_FIND_HXX
+#ifndef P2P_Find_hxx
+#define P2P_Find_hxx
 
 #include "p2p/Message.hxx"
 
 namespace p2p 
 {
 
-class FindAnsMessage : public Message
+class FindAns : public Message
 {
    public:
       virtual MessageType getMessageType() const { return FindAnsType; }
 };
 
 
-class FindReqMessage : public Message
+class FindReq : public Message
 {
    public:
       virtual MessageType getMessageType() const { return FindReqType; }
