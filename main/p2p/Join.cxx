@@ -40,6 +40,13 @@ JoinReq::JoinReq(const DestinationId &dest, const NodeId &node, const resip::Dat
    mOverlaySpecificData = overlaySpecific;
 }
 
+NodeId 
+JoinReq::getNodeId() const
+{
+	return NodeId(*mJoiningPeerId);
+}
+
+
 void
 JoinReq::getEncodedPayload(resip::DataStream &strm) 
 {
