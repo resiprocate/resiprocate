@@ -62,7 +62,7 @@ TestConnect()
 
 	ConnectReq *connectReq3 = static_cast<ConnectReq *>(message2);
 	assert(connectReq3);
-	//assert(!connectReq3->getCandidates().empty());
+	assert(!connectReq3->getCandidates().empty());
 }
 
 void
