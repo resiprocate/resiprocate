@@ -14,7 +14,9 @@ class P2PStack
 {
    public:
       P2PStack(const Profile& profile);
-      void run();
+
+      void run(); // this never returns 
+      void process(int waitTimeMS); // run a time slice and return 
       
    private:
       Profile mProfile;
