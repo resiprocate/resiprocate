@@ -896,6 +896,7 @@ static int s2c_gen_copy_construct_c_all(p_decl *decl, FILE *out)
       type2class(decl->name));
 
     fprintf(out,"   // World's lamest copy constructor\n");
+    fprintf(out,"   if(this==&from) return;\n");
     fprintf(out,"   mName = \"%s\";\n", type2class(decl->name));
     fprintf(out,"   resip::Data dat;\n");
     fprintf(out,"   {\n");

@@ -32,6 +32,7 @@ NodeIdStruct :: NodeIdStruct ()
 NodeIdStruct :: NodeIdStruct (const NodeIdStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "NodeIdStruct";
    resip::Data dat;
    {
@@ -91,6 +92,7 @@ ResourceIdStruct :: ResourceIdStruct ()
 ResourceIdStruct :: ResourceIdStruct (const ResourceIdStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "ResourceIdStruct";
    resip::Data dat;
    {
@@ -155,6 +157,7 @@ IPv4AddrPortStruct :: IPv4AddrPortStruct ()
 IPv4AddrPortStruct :: IPv4AddrPortStruct (const IPv4AddrPortStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "IPv4AddrPortStruct";
    resip::Data dat;
    {
@@ -219,6 +222,7 @@ IPv6AddrPortStruct :: IPv6AddrPortStruct ()
 IPv6AddrPortStruct :: IPv6AddrPortStruct (const IPv6AddrPortStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "IPv6AddrPortStruct";
    resip::Data dat;
    {
@@ -290,6 +294,7 @@ IpAddressAndPortStruct :: IpAddressAndPortStruct ()
 IpAddressAndPortStruct :: IpAddressAndPortStruct (const IpAddressAndPortStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "IpAddressAndPortStruct";
    resip::Data dat;
    {
@@ -386,6 +391,7 @@ DestinationStruct :: DestinationStruct ()
 DestinationStruct :: DestinationStruct (const DestinationStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "DestinationStruct";
    resip::Data dat;
    {
@@ -508,6 +514,7 @@ SignerIdentityStruct :: SignerIdentityStruct ()
 SignerIdentityStruct :: SignerIdentityStruct (const SignerIdentityStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "SignerIdentityStruct";
    resip::Data dat;
    {
@@ -582,6 +589,7 @@ SignatureAndHashAlgorithmStruct :: SignatureAndHashAlgorithmStruct ()
 SignatureAndHashAlgorithmStruct :: SignatureAndHashAlgorithmStruct (const SignatureAndHashAlgorithmStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "SignatureAndHashAlgorithmStruct";
    resip::Data dat;
    {
@@ -645,6 +653,7 @@ SignatureStruct :: SignatureStruct ()
 SignatureStruct :: SignatureStruct (const SignatureStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "SignatureStruct";
    resip::Data dat;
    {
@@ -741,6 +750,7 @@ ForwardingHeaderStruct :: ForwardingHeaderStruct ()
 ForwardingHeaderStruct :: ForwardingHeaderStruct (const ForwardingHeaderStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "ForwardingHeaderStruct";
    resip::Data dat;
    {
@@ -932,6 +942,7 @@ ForwardingLayerMessageStruct :: ForwardingLayerMessageStruct ()
 ForwardingLayerMessageStruct :: ForwardingLayerMessageStruct (const ForwardingLayerMessageStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "ForwardingLayerMessageStruct";
    resip::Data dat;
    {
@@ -1005,6 +1016,7 @@ MessagePayloadStruct :: MessagePayloadStruct ()
 MessagePayloadStruct :: MessagePayloadStruct (const MessagePayloadStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "MessagePayloadStruct";
    resip::Data dat;
    {
@@ -1069,6 +1081,7 @@ ErrorResponseStruct :: ErrorResponseStruct ()
 ErrorResponseStruct :: ErrorResponseStruct (const ErrorResponseStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "ErrorResponseStruct";
    resip::Data dat;
    {
@@ -1158,6 +1171,7 @@ JoinReqStruct :: JoinReqStruct ()
 JoinReqStruct :: JoinReqStruct (const JoinReqStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "JoinReqStruct";
    resip::Data dat;
    {
@@ -1225,6 +1239,7 @@ JoinAnsStruct :: JoinAnsStruct ()
 JoinAnsStruct :: JoinAnsStruct (const JoinAnsStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "JoinAnsStruct";
    resip::Data dat;
    {
@@ -1288,6 +1303,7 @@ LeaveReqStruct :: LeaveReqStruct ()
 LeaveReqStruct :: LeaveReqStruct (const LeaveReqStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "LeaveReqStruct";
    resip::Data dat;
    {
@@ -1359,6 +1375,7 @@ RouteQueryReqStruct :: RouteQueryReqStruct ()
 RouteQueryReqStruct :: RouteQueryReqStruct (const RouteQueryReqStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "RouteQueryReqStruct";
    resip::Data dat;
    {
@@ -1441,6 +1458,7 @@ FramedMessageStruct :: FramedMessageStruct ()
 FramedMessageStruct :: FramedMessageStruct (const FramedMessageStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "FramedMessageStruct";
    resip::Data dat;
    {
@@ -1545,6 +1563,7 @@ IceCandidateStruct :: IceCandidateStruct ()
 IceCandidateStruct :: IceCandidateStruct (const IceCandidateStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "IceCandidateStruct";
    resip::Data dat;
    {
@@ -1611,6 +1630,7 @@ ConnectReqAnsStruct :: ConnectReqAnsStruct ()
 ConnectReqAnsStruct :: ConnectReqAnsStruct (const ConnectReqAnsStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "ConnectReqAnsStruct";
    resip::Data dat;
    {
@@ -1744,6 +1764,7 @@ PingReqStruct :: PingReqStruct ()
 PingReqStruct :: PingReqStruct (const PingReqStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "PingReqStruct";
    resip::Data dat;
    {
@@ -1821,6 +1842,7 @@ PingInformationStruct :: PingInformationStruct ()
 PingInformationStruct :: PingInformationStruct (const PingInformationStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "PingInformationStruct";
    resip::Data dat;
    {
@@ -1908,6 +1930,7 @@ PingAnsStruct :: PingAnsStruct ()
 PingAnsStruct :: PingAnsStruct (const PingAnsStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "PingAnsStruct";
    resip::Data dat;
    {
@@ -1990,6 +2013,7 @@ TunnelReqStruct :: TunnelReqStruct ()
 TunnelReqStruct :: TunnelReqStruct (const TunnelReqStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "TunnelReqStruct";
    resip::Data dat;
    {
@@ -2079,6 +2103,7 @@ DataValueStruct :: DataValueStruct ()
 DataValueStruct :: DataValueStruct (const DataValueStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "DataValueStruct";
    resip::Data dat;
    {
@@ -2153,6 +2178,7 @@ ArrayEntryStruct :: ArrayEntryStruct ()
 ArrayEntryStruct :: ArrayEntryStruct (const ArrayEntryStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "ArrayEntryStruct";
    resip::Data dat;
    {
@@ -2210,6 +2236,7 @@ DictionaryKeyStruct :: DictionaryKeyStruct ()
 DictionaryKeyStruct :: DictionaryKeyStruct (const DictionaryKeyStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "DictionaryKeyStruct";
    resip::Data dat;
    {
@@ -2274,6 +2301,7 @@ DictionaryEntryStruct :: DictionaryEntryStruct ()
 DictionaryEntryStruct :: DictionaryEntryStruct (const DictionaryEntryStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "DictionaryEntryStruct";
    resip::Data dat;
    {
@@ -2334,6 +2362,7 @@ StoredDataValueStruct :: StoredDataValueStruct ()
 StoredDataValueStruct :: StoredDataValueStruct (const StoredDataValueStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "StoredDataValueStruct";
    resip::Data dat;
    {
@@ -2434,6 +2463,7 @@ StoredDataStruct :: StoredDataStruct ()
 StoredDataStruct :: StoredDataStruct (const StoredDataStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "StoredDataStruct";
    resip::Data dat;
    {
@@ -2527,6 +2557,7 @@ StoreKindDataStruct :: StoreKindDataStruct ()
 StoreKindDataStruct :: StoreKindDataStruct (const StoreKindDataStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "StoreKindDataStruct";
    resip::Data dat;
    {
@@ -2628,6 +2659,7 @@ StoreReqStruct :: StoreReqStruct ()
 StoreReqStruct :: StoreReqStruct (const StoreReqStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "StoreReqStruct";
    resip::Data dat;
    {
@@ -2717,6 +2749,7 @@ StoreKindResponseStruct :: StoreKindResponseStruct ()
 StoreKindResponseStruct :: StoreKindResponseStruct (const StoreKindResponseStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "StoreKindResponseStruct";
    resip::Data dat;
    {
@@ -2804,6 +2837,7 @@ StoreAnsStruct :: StoreAnsStruct ()
 StoreAnsStruct :: StoreAnsStruct (const StoreAnsStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "StoreAnsStruct";
    resip::Data dat;
    {
@@ -2878,6 +2912,7 @@ ArrayRangeStruct :: ArrayRangeStruct ()
 ArrayRangeStruct :: ArrayRangeStruct (const ArrayRangeStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "ArrayRangeStruct";
    resip::Data dat;
    {
@@ -2944,6 +2979,7 @@ StoredDataSpecifierStruct :: StoredDataSpecifierStruct ()
 StoredDataSpecifierStruct :: StoredDataSpecifierStruct (const StoredDataSpecifierStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "StoredDataSpecifierStruct";
    resip::Data dat;
    {
@@ -3107,6 +3143,7 @@ FetchReqStruct :: FetchReqStruct ()
 FetchReqStruct :: FetchReqStruct (const FetchReqStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "FetchReqStruct";
    resip::Data dat;
    {
@@ -3188,6 +3225,7 @@ FetchKindResponseStruct :: FetchKindResponseStruct ()
 FetchKindResponseStruct :: FetchKindResponseStruct (const FetchKindResponseStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "FetchKindResponseStruct";
    resip::Data dat;
    {
@@ -3275,6 +3313,7 @@ FetchAnsStruct :: FetchAnsStruct ()
 FetchAnsStruct :: FetchAnsStruct (const FetchAnsStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "FetchAnsStruct";
    resip::Data dat;
    {
@@ -3348,6 +3387,7 @@ RemoveReqStruct :: RemoveReqStruct ()
 RemoveReqStruct :: RemoveReqStruct (const RemoveReqStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "RemoveReqStruct";
    resip::Data dat;
    {
@@ -3425,6 +3465,7 @@ RemoveAnsStruct :: RemoveAnsStruct ()
 RemoveAnsStruct :: RemoveAnsStruct (const RemoveAnsStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "RemoveAnsStruct";
    resip::Data dat;
    {
@@ -3498,6 +3539,7 @@ FindReqStruct :: FindReqStruct ()
 FindReqStruct :: FindReqStruct (const FindReqStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "FindReqStruct";
    resip::Data dat;
    {
@@ -3580,6 +3622,7 @@ FindKindDataStruct :: FindKindDataStruct ()
 FindKindDataStruct :: FindKindDataStruct (const FindKindDataStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "FindKindDataStruct";
    resip::Data dat;
    {
@@ -3637,6 +3680,7 @@ FindAnsStruct :: FindAnsStruct ()
 FindAnsStruct :: FindAnsStruct (const FindAnsStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "FindAnsStruct";
    resip::Data dat;
    {
@@ -3711,6 +3755,7 @@ TurnServerStruct :: TurnServerStruct ()
 TurnServerStruct :: TurnServerStruct (const TurnServerStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "TurnServerStruct";
    resip::Data dat;
    {
@@ -3771,6 +3816,7 @@ SipRegistrationStruct :: SipRegistrationStruct ()
 SipRegistrationStruct :: SipRegistrationStruct (const SipRegistrationStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "SipRegistrationStruct";
    resip::Data dat;
    {
@@ -3919,6 +3965,7 @@ ChordUpdateStruct :: ChordUpdateStruct ()
 ChordUpdateStruct :: ChordUpdateStruct (const ChordUpdateStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "ChordUpdateStruct";
    resip::Data dat;
    {
@@ -4118,6 +4165,7 @@ ChordRouteQueryAnsStruct :: ChordRouteQueryAnsStruct ()
 ChordRouteQueryAnsStruct :: ChordRouteQueryAnsStruct (const ChordRouteQueryAnsStruct &from)
 {
    // World's lamest copy constructor
+   if(this==&from) return;
    mName = "ChordRouteQueryAnsStruct";
    resip::Data dat;
    {
