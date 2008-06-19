@@ -22,6 +22,7 @@ ConnectBase::decodePayload(resip::DataStream &dataStream)
 void 
 ConnectBase::getEncodedPayload(resip::DataStream &dataStream) 
 {
+	std::cout << "about to ENCODE " << mCandidates.size() << std::endl;
 	encode(dataStream);
 }
 
