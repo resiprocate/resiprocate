@@ -194,7 +194,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    if (!s) {ErrLog(<< "::socket() failed");}
    
    int status = ::connect(s, &(bootstrapServer.address), sizeof(sockaddr_in));
-   if (status) { ErrLog( << "Cannot ::connect"); }
+   if (status) { ErrLog( << "Cannot ::connect"); return; }
 
    // Get the remote node ID from the incoming socket
    unsigned char buffer[16];
