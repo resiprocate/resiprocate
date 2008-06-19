@@ -38,6 +38,7 @@ UpdateReq::UpdateReq(const DestinationId &dest, const resip::Data &overlaySpecif
 void 
 UpdateReq::getEncodedPayload(resip::DataStream &data) 
 {
+	std::cout << "POOO: " << mOverlaySpecificData.size() << std::endl;
 	data << mOverlaySpecificData;
 }
 
