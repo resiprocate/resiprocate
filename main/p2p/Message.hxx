@@ -63,6 +63,7 @@ class Message : public Signable
 
       static const UInt8 MessageVersion;
       static const UInt8 MessageTtl;
+      static const UInt32 MessageReloToken;
 
       void setOverlayName(const resip::Data &overlayName);
 
