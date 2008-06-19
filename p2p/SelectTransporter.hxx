@@ -77,6 +77,10 @@ class SelectTransporter : public Transporter
      bool mHasBootstrapSocket;
      resip::GenericIPAddress mBootstrapAddress;
      resip::Socket mBootstrapSocket;
+
+     // OS independant implementations
+     size_t readSocket(resip::Socket s, char* buffer, unsigned int size);
+     int writeSocket(resip::Socket s, char* buffer, unsigned int size);
 };
 
 }

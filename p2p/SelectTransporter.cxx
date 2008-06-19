@@ -198,7 +198,9 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
 
    // Get the remote node ID from the incoming socket
    unsigned char buffer[16];
-   size_t bytesRead = ::read(s, buffer, sizeof(buffer));
+
+   size_t bytesRead = readSocket(s, (char*)buffer, sizeof(buffer));
+
    if (bytesRead != sizeof(buffer)) 
    {
       ErrLog( << "Cannot ::read -- returned " << bytesRead); 
@@ -343,7 +345,7 @@ SelectTransporter::process(int ms)
 
       // Get the remote node ID from the incoming socket
       char buffer[16];
-      size_t bytesRead = ::read(s, buffer, sizeof(buffer));
+      size_t bytesRead = readSocket(s, buffer, sizeof(buffer));
       if (bytesRead != sizeof(buffer)) 
       {
          ErrLog( << "Cannot ::read -- returned " << bytesRead); 
@@ -402,7 +404,7 @@ SelectTransporter::process(int ms)
           std::map<NodeId, FlowId>::value_type(nodeId, flowId));
 
         unsigned char buffer[16];
-        size_t bytesRead = ::read(s, buffer, sizeof(buffer));
+        size_t bytesRead = readSocket(s, (char*)buffer, sizeof(buffer));
         if (bytesRead != sizeof(buffer)) 
         {
            ErrLog( << "Cannot ::read -- returned " << bytesRead); 
@@ -444,7 +446,7 @@ SelectTransporter::process(int ms)
             char *buffer = new char[16384];
             UInt32 *int_buffer = reinterpret_cast<UInt32*>(buffer);
             // Suck in the header
-            size_t bytesRead = ::read(flowId.getSocket(), buffer, 30);
+            size_t bytesRead = readSocket(flowId.getSocket(), buffer, 30);
 
             if (bytesRead != 30) 
             {
@@ -454,7 +456,7 @@ SelectTransporter::process(int ms)
             if (int_buffer[0] == htonl(0x80000000 | 0x52454C4F))
             {
                size_t length = ntohl(int_buffer[3]) & 0xFFFFFF;
-               bytesRead = ::read(flowId.getSocket(), buffer+30, length-30);
+               bytesRead = readSocket(flowId.getSocket(), buffer+30, length-30);
 
                if (bytesRead != (length - 30)) 
                {
@@ -481,7 +483,7 @@ SelectTransporter::process(int ms)
             // Application data is sent as-is.
             char *buffer = new char[4096];
             size_t bytesRead;
-            bytesRead = ::read(flowId.getSocket(), buffer, 4096);
+            bytesRead = readSocket(flowId.getSocket(), buffer, 4096);
             if (bytesRead > 0)
             {
                resip::Data data(resip::Data::Take, buffer, bytesRead);
@@ -507,6 +509,26 @@ SelectTransporter::process(int ms)
       return true;
    }
    return false;
+}
+
+size_t 
+SelectTransporter::readSocket(resip::Socket s, char* buffer, unsigned int size)
+{
+#if defined(WIN32)
+   return ::recv(s, buffer, size, 0);
+#else
+   return ::read(s, buffer, size);
+#endif
+}
+
+int
+SelectTransporter::writeSocket(resip::Socket s, char* buffer, unsigned int size)
+{
+#if defined(WIN32)
+   return ::send(s, buffer, size, 0);
+#else
+   return ::write(s, buffer, size);
+#endif
 }
 
 }
