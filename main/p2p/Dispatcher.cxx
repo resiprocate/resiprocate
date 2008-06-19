@@ -43,14 +43,6 @@ Dispatcher::send(std::auto_ptr<Message> message, Postable<Event>& postable)
    mForwardingLayer->forward(message);
 }
 
-void 
-Dispatcher::sendAsBaseMessage(std::auto_ptr<Message> message, Postable<Event>& postable)
-{
-   //.dcm. more with timers
-   mTidMap[message->getTransactionId()] = Entry(postable, true);
-   mForwardingLayer->forward(message);
-}
-
 static const resip::Data NO_HANDLER("Message not understood");
 
 void 
@@ -71,14 +63,7 @@ Dispatcher::post(std::auto_ptr<Message> message)
          if (id !=  mTidMap.end())
          {
             Entry& entry = id->second;
-            if (entry.mForBaseMessage) 
-            {
-               entry.mPostable->post(std::auto_ptr<Event>(new EventWrapper<Message>(message.release())));
-            } 
-            else 
-            {
-               entry.mPostable->post(message->event());
-            }
+            entry.mPostable->post(message->event());
             mTidMap.erase(id);
          }
          else

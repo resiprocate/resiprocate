@@ -1,5 +1,5 @@
-#ifndef __P2P_RELOADMESSAGE_HXX
-#define __P2P_RELOADMESSAGE_HXX
+#ifndef __P2P_Message_hxx
+#define __P2P_Message_hxx
 
 #include <cassert>
 #include "rutil/Data.hxx"
@@ -171,53 +171,53 @@ class ErrorResponse : public Message
       virtual std::vector<resip::Data> collectSignableData() const;
 };
 
-class RouteQueryAnsMessage : public Message
+class RouteQueryAns : public Message
 {
    public:
       virtual MessageType getType() const { return RouteQueryAnsType; }
 };
 
-class RouteQueryReqMessage : public Message
+class RouteQueryReq : public Message
 {
    public:
       virtual MessageType getType() const { return RouteQueryReqType; }
 };
 
-class RemoveAnsMessage : public Message
+class RemoveAns : public Message
 {
    public:
       virtual MessageType getType() const { return RemoveAnsType; }
 };
 
 
-class RemoveReqMessage : public Message
+class RemoveReq : public Message
 {
    public:
       virtual MessageType getType() const { return RemoveReqType; }
 };
 
 
-class TunnelAnsMessage : public Message
+class TunnelAns : public Message
 {
    public:
       virtual MessageType getType() const { return TunnelAnsType; }
 };
 
 
-class TunnelReqMessage : public Message
+class TunnelReq : public Message
 {
    public:
       virtual MessageType getType() const { return TunnelReqType; }
 };
 
-class PingAnsMessage : public Message
+class PingAns : public Message
 {
    public:
       virtual MessageType getType() const { return PingAnsType; }
 };
 
 
-class PingReqMessage : public Message
+class PingReq : public Message
 {
    public:
       virtual MessageType getType() const { return PingReqType; }

@@ -1,5 +1,5 @@
-#ifndef P2P_LEAVE_HXX
-#define P2P_LEAVE_HXX
+#ifndef P2P_Leave_hxx
+#define P2P_Leave_hxx
 
 #include "p2p/Message.hxx"
 
