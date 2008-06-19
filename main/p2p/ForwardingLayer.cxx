@@ -1,8 +1,11 @@
 #include "p2p/ForwardingLayer.hxx"
 #include "p2p/Dispatcher.hxx"
+#include "p2p/P2PSubsystem.hxx"
 
 namespace p2p
 {
+
+#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 void
 ForwardingLayer::process(int ms)
@@ -10,6 +13,8 @@ ForwardingLayer::process(int ms)
    Event *event = mRxFifo.getNext(ms);
    if (event) 
    {
+      DebugLog(<< "ForwardingLayer: received an event");
+
       event->dispatch(*this);
    }
 }
@@ -19,6 +24,8 @@ void
 ForwardingLayer::forward( std::auto_ptr<Message> m )
 {
    // get the destination node from m 
+   DebugLog(<< "ForwardingLayer: message arrived");
+
   redo:
    DestinationId did = m->nextDestination();
    if (did.isCompressedId())
@@ -27,28 +34,42 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
    }
    else if (mTopology.isResponsible(did))
    {
+      DebugLog(<< "ForwardingLayer: we are responsible");
+
       if (did.isNodeId())
       {
+         DebugLog(<< "ForwardingLayer: this is a node-id");
+
          if (did == mProfile.nodeId()) // this is me
          {
+            DebugLog(<< "ForwardingLayer: addressed to me");
+
             m->popNextDestinationId();
             if (m->isDestinationListEmpty())
             {
+               DebugLog(<< "ForwardingLayer: more entries on destination list. Reentering forwarding loop");
                goto redo;
             }
             else
-            {
+            { 
+               DebugLog(<< "ForwardingLayer: no more entries on destination list. Posting.");
                mDispatcher.post(m);
             }
          }
          else // not me
          {
+            DebugLog(<< "ForwardingLayer: not addressed to me");
+             
             if (mTopology.isConnected(did.asNodeId()))
-            {
+            { 
+               DebugLog(<< "ForwardingLayer: forwarding to directly connected node");
+
                mTransporter.send(did.asNodeId(), m); 
             }
             else
             {
+               DebugLog(<< "ForwardingLayer: dropping packet");
+
                // drop on the floor
             }
          }
@@ -56,19 +77,28 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
       else // resourceID
       {
          assert (did.isResourceId());
+
+         DebugLog(<< "ForwardingLayer: destination is resource-id");
+
          m->popNextDestinationId();
          if (m->isDestinationListEmpty())
          {
+            DebugLog(<< "ForwardingLayer: delivering");
+
             mDispatcher.post(m);            
          }
          else
          {
+            DebugLog(<< "ForwardingLayer: discarding");
+
             // drop on the floor
          }
       }
    }
    else // not responsible and not compressed
    {
+      DebugLog(<< "ForwardingLayer: routing to next hop");
+
       mTransporter.send(mTopology.findNextHop(did), m);
    }
 }
@@ -77,18 +107,24 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
 void 
 ForwardingLayer::consume(ConnectionOpened& m)
 {
+   DebugLog(<< "ForwardingLayer: new connection formed");
+
    mTopology.newConnectionFormed(m.getNodeId());
 }
 
 void 
 ForwardingLayer::consume(ConnectionClosed& m)
 {
+   DebugLog(<< "ForwardingLayer: connection closed");
+
    mTopology.connectionLost(m.getNodeId());   
 }
 
 void 
 ForwardingLayer::consume(MessageArrived& m)
 {
+   DebugLog(<< "ForwardingLayer: message arrived");
+
    forward(m.getMessage());
 }
 

@@ -696,9 +696,10 @@ static int s2c_gen_decode_c_member(p_decl *member, FILE *out,char *instream,int 
           fprintf(out,"   int i=0;\n");
           fprintf(out,"   while(in2.peek()!=EOF){\n");
           fprintf(out,"      %s%s.push_back(0);\n",prefix,name2var(member->name));
-          snprintf(reference,sizeof(reference),"%s[i++]",name2var(member->name));
+          snprintf(reference,sizeof(reference),"%s[i]",name2var(member->name));
           for(i=0;i<indent+3;i++) fputc(' ',out);
           s2c_gen_decode_c_simple_type(member->u.varray_.ref,prefix,reference,"in2",out);
+          fprintf(out,"      i++;\n");
           fprintf(out,"   }\n;");
           fprintf(out,"   }\n");
         }
