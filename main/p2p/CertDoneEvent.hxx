@@ -22,6 +22,12 @@ class CertDone : public Event
          : mId(id) 
       {}
          
+      virtual resip::Data brief() const 
+      {
+         return "CertDone";
+      }
+      
+
    private:
       const resip::Data mId;
       Resolution mResolution;

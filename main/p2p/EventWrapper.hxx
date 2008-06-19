@@ -22,6 +22,12 @@ class EventWrapper : public Event
          consumer.consume(*mWrapped);
       }
 
+      virtual resip::Data brief() const 
+      {
+         return "Event Wrapper";
+      }
+      
+
    private:
       std::auto_ptr<T> mWrapped;
 };

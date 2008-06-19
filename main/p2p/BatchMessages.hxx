@@ -57,6 +57,11 @@ class BatchMessages : public EventConsumerBase, public Event
       virtual void consume(RouteQueryReq& m) { assert(0); }
       virtual void consume(const BatchMessages& cm) { assert(0); }
 
+      virtual resip::Data brief() const
+      { 
+         return "BatchMessages"; 
+      }
+
    private:
       void countDown(Message& m);
       Postable<Event>* mPostable;
