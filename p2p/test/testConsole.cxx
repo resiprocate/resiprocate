@@ -190,6 +190,8 @@ main (int argc, char** argv)
    Data address = DnsUtil::getLocalIpAddress();
    Data bootstrapAddress;
    unsigned short bootstrapPort=0;
+   unsigned short listenPort=9000;
+
    //Data logLevel("INFO");
    Data logLevel("DEBUG");
 
@@ -205,6 +207,7 @@ main (int argc, char** argv)
          isEqualNoCase(commandName, "/?"))
       {
          cout << "Command line options are:" << endl;
+         cout << " -p <listenPort>" << endl;
          cout << " -bs <booststrap node hostname/address>:<port>" << endl;
          cout << " -l <NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK> - logging level" << endl;
          cout << endl;
@@ -223,7 +226,11 @@ main (int argc, char** argv)
          }
          i++;  // increment argument
 
-         if(isEqualNoCase(commandName, "-bs"))
+         if(isEqualNoCase(commandName, "-p"))
+         {
+            listenPort = commandValue.convertInt();
+         }
+         else if(isEqualNoCase(commandName, "-bs"))
          {
             // Read server and port
             Data serverAndPort = commandValue;
@@ -261,6 +268,7 @@ main (int argc, char** argv)
    initNetwork();
 
    InfoLog( << "testConsole settings:");
+   InfoLog( << "  Listen Port = " << listenPort);
    InfoLog( << "  Bootstrap server = " << bootstrapAddress << ":" << bootstrapPort);
    InfoLog( << "  Log Level = " << logLevel);
    
