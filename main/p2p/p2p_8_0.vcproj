@@ -177,6 +177,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FlowId.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ForwardingLayer.cxx"
 				>
 			</File>
