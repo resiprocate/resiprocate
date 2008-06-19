@@ -252,10 +252,18 @@ Message::parse(const resip::Data &message)
 void 
 Message::copyForwardingData(const Message &header)
 {
-	mPDU.mHeader->mOverlay = header.mPDU.mHeader->mOverlay;		
-	mPDU.mHeader->mTransactionId = header.mPDU.mHeader->mTransactionId;
+   assert(header.isRequest());
+   mPDU.mHeader->mOverlay = header.mPDU.mHeader->mOverlay;		
+   mPDU.mHeader->mTransactionId = header.mPDU.mHeader->mTransactionId;
+   
+   assert(mPDU.mHeader->mDestinationList.empty());
+   std::vector<DestinationStruct*>::reverse_iterator i;
+   for (i=header.mPDU.mHeader->mViaList.rbegin(); i!=header.mPDU.mHeader->mViaList.rend(); ++i)
+   {
+      DestinationStruct* ds = new DestinationStruct(**i);
+      mPDU.mHeader->mDestinationList.push_back(ds);
+   }
 }
-
 
 void 
 Message::decrementTTL()
@@ -442,10 +450,18 @@ Message::event()
 }
 
 void
-Message::pushVia(NodeId id)
+Message::pushVia(const DestinationId& did)
 {
-   assert(0);
+   assert(!did.isResourceId());
+   mPDU.mHeader->mViaList.push_back(did.copyDestinationStruct());
 }
+
+void
+Message::pushDestinationId(const DestinationId& did)
+{
+   mPDU.mHeader->mDestinationList.push_back(did.copyDestinationStruct());
+}
+
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

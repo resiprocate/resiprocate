@@ -107,7 +107,8 @@ class Message : public Signable
       UInt32 getOverlay() const;
       UInt64 getTransactionId() const;
       UInt16 getFlags() const; 
-      void pushVia(NodeId node);
+      void pushVia(const DestinationId& node);
+      void pushDestinationId(const DestinationId& did);
 
       NodeId getResponseNodeId() const; // pull this from the via list
 
