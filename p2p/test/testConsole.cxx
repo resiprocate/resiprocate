@@ -269,8 +269,10 @@ main (int argc, char** argv)
    // Setup Config Object
    //////////////////////////////////////////////////////////////////////////////
    Profile profile;
-   profile.overlayName() = "p2poverlay.com";
-   memcpy(&profile.nodeId(),  resip::Random::getCryptoRandom(8).data(), 8);
+   profile.overlayName() = "p2poverlay.com"; 
+   
+   ResourceId rid(Random::getRandom(16));
+   profile.nodeId() = NodeId(rid);
    profile.userName().value() = "test";
 
    struct in_addr addr;
