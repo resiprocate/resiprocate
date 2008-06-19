@@ -43,7 +43,7 @@ ChordTopology::joinOverlay()
 void 
 ChordTopology::newConnectionFormed( const NodeId& node )
 {
-   DebugLog(<< "newConnectionFormed to: " << node.encodeToNetwork().hex());
+   DebugLog(<< "newConnectionFormed to: " << node);
 
    // If this is the first connection we have - then it must be the connection to
    // the bootstrap node
@@ -61,7 +61,7 @@ ChordTopology::newConnectionFormed( const NodeId& node )
    // the send a join
    if(mNextTable.size() == 1 && node == mNextTable[0])
    {
-      DebugLog(<< "sending join to node: " << node.encodeToNetwork().hex());
+      DebugLog(<< "sending join to node: " << node);
    	DestinationId destination(node);
       std::auto_ptr<Message> joinReq(new JoinReq(destination, mProfile.nodeId()));
       mDispatcher.send(joinReq, *this);      
@@ -76,7 +76,7 @@ ChordTopology::newConnectionFormed( const NodeId& node )
 void 
 ChordTopology::connectionLost( const NodeId& node )
 {
-   DebugLog(<< "connectionLost to: " << node.encodeToNetwork().hex());
+   DebugLog(<< "connectionLost to: " << node);
 
    // if node is in the finger table, remove it 
    mFingerTable.erase(node);
@@ -108,7 +108,7 @@ ChordTopology::connectionLost( const NodeId& node )
 void 
 ChordTopology::candidatesCollected( const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
 {
-   DebugLog(<< "candidateCollection completed, sending CONNECT req to: " << node.encodeToNetwork().hex());
+   DebugLog(<< "candidateCollection completed, sending CONNECT req to: " << node);
 
    // Connect to node - send the ConnectReq
 	DestinationId destination(node);
@@ -121,7 +121,7 @@ ChordTopology::candidatesCollected( const NodeId& node, unsigned short appId, st
 void 
 ChordTopology::consume(JoinReq& msg)
 {
-   DebugLog(<< "received JOIN req from: " << msg.getNodeId().encodeToNetwork().hex());
+   DebugLog(<< "received JOIN req from: " << msg.getNodeId());
 
    // check we are reponsible for the data from this node 
    if(!isResponsible(msg.getNodeId()))
@@ -188,7 +188,7 @@ ChordTopology::consume(LeaveReq& msg)
 void 
 ChordTopology::consume(ConnectAns& msg)
 {
-   DebugLog(<< "received CONNECT ans from: " << msg.getResponseNodeId().encodeToNetwork().hex());
+   DebugLog(<< "received CONNECT ans from: " << msg.getResponseNodeId());
    
    // Get NodeId from message and check if it is a neighbour
    std::vector<NodeId> nodes;
@@ -204,7 +204,7 @@ ChordTopology::consume(ConnectAns& msg)
 void 
 ChordTopology::consume(JoinAns& msg)
 {
-   DebugLog(<< "received JOIN ans from: " << msg.getResponseNodeId().encodeToNetwork().hex());
+   DebugLog(<< "received JOIN ans from: " << msg.getResponseNodeId());
 
    // TODO check response code?
    mJoined = true;
@@ -214,7 +214,7 @@ ChordTopology::consume(JoinAns& msg)
 void 
 ChordTopology::consume(UpdateAns& msg)
 {
-   DebugLog(<< "received UPDATE ans from: " << msg.getResponseNodeId().encodeToNetwork().hex());
+   DebugLog(<< "received UPDATE ans from: " << msg.getResponseNodeId());
 
    // TODO check response - and log?
 }
@@ -223,7 +223,7 @@ ChordTopology::consume(UpdateAns& msg)
 void 
 ChordTopology::consume(LeaveAns& msg)
 {
-   DebugLog(<< "received LEAVE ans from: " << msg.getResponseNodeId().encodeToNetwork().hex());
+   DebugLog(<< "received LEAVE ans from: " << msg.getResponseNodeId());
 
    // TODO check response - and log?
 }
@@ -239,7 +239,7 @@ ChordTopology::findNextHop( const NodeId& node )
    {
       // return the next pointer and increment around slowly 
       assert( mNextTable.size() > 0 );
-      DebugLog(<< "findNextHop returning: " << mNextTable[0].encodeToNetwork().hex());
+      DebugLog(<< "findNextHop returning: " << mNextTable[0]);
       return mNextTable[0];
    }
 
@@ -251,11 +251,11 @@ ChordTopology::findNextHop( const NodeId& node )
       if(nextIt == mFingerTable.end()) break;
       if((*it <= node) && (node < *nextIt))
       {
-         DebugLog(<< "findNextHop returning: " << it->encodeToNetwork().hex());
+         DebugLog(<< "findNextHop returning: " << *it);
          return *it;
       }
    }
-   DebugLog(<< "findNextHop returning: " << it->encodeToNetwork().hex());
+   DebugLog(<< "findNextHop returning: " << *it);
    return *it;    
 }
 
@@ -396,13 +396,13 @@ ChordTopology::addNewNeighbors(const std::vector<NodeId>& nodes, bool adjustNext
 
       if(setNext)
       {
-         DebugLog(<< "new next neighbour added: " << nodes[n].encodeToNetwork());
+         DebugLog(<< "new next neighbour added: " << nodes[n]);
          mNextTable[0] = nodes[n]; 
       }
 
       if(setPrev)
       {
-         DebugLog(<< "new prev neighbour added: " << nodes[n].encodeToNetwork().hex());
+         DebugLog(<< "new prev neighbour added: " << nodes[n]);
          mPrevTable[0] = nodes[n]; 
       }
 
@@ -410,7 +410,7 @@ ChordTopology::addNewNeighbors(const std::vector<NodeId>& nodes, bool adjustNext
       {
          changed=true;
          // kick start connection to newly added node if not admitting peer addition
-         DebugLog(<< "collecting candidates for new neighbour: " << nodes[n].encodeToNetwork().hex());
+         DebugLog(<< "collecting candidates for new neighbour: " << nodes[n]);
          if(!adjustNextOnly) mTransporter.collectCandidates(nodes[n]);  
       }
    }
@@ -448,7 +448,7 @@ ChordTopology::buildFingerTable()
    for(unsigned int i = 0; i < mProfile.numInitialFingers(); i++)
    {
       NodeId fingerNodeId = mProfile.nodeId().add2Pow(127-i);
-      DebugLog(<< "collecting candidates for fingertable: " << fingerNodeId.encodeToNetwork().hex());
+      DebugLog(<< "collecting candidates for fingertable: " << fingerNodeId);
       mTransporter.collectCandidates(fingerNodeId);     
    }
 }
@@ -472,7 +472,7 @@ ChordTopology::sendUpdates()
    std::vector<NodeId>::iterator it = mPrevTable.begin();
    for(; it != mPrevTable.end(); it++)
    {   
-      DebugLog(<< "sending update to prev neighbour: " << it->encodeToNetwork().hex());
+      DebugLog(<< "sending update to prev neighbour: " << *it);
       DestinationId destination(*it);
       std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
       mDispatcher.send(updateReq, *this);
@@ -481,7 +481,7 @@ ChordTopology::sendUpdates()
    it = mNextTable.begin();
    for(; it != mNextTable.end(); it++)
    {
-      DebugLog(<< "sending update to next neighbour: " << it->encodeToNetwork().hex());
+      DebugLog(<< "sending update to next neighbour: " << *it);
 	   DestinationId destination(*it);
       std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
       mDispatcher.send(updateReq, *this);
