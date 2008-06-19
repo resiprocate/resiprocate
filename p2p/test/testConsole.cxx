@@ -286,17 +286,20 @@ main (int argc, char** argv)
    
    profile.userName().value() = "test";
    
-   struct in_addr addr;
-   if(resip::DnsUtil::inet_pton(bootstrapAddress, addr)==0)
+   if(bootstrapPort != 0)
    {
-      cerr << "Invalid bootstrap address:" << bootstrapAddress << endl;
-      exit(-1);
+      struct in_addr addr;
+      if(resip::DnsUtil::inet_pton(bootstrapAddress, addr)==0)
+      {
+         cerr << "Invalid bootstrap address:" << bootstrapAddress << endl;
+         exit(-1);
+      }
+      sockaddr_in addr_in;
+      addr_in.sin_family = AF_INET;
+      addr_in.sin_addr = addr;
+      addr_in.sin_port = bootstrapPort;      
+      profile.bootstrapNodes().push_back(resip::GenericIPAddress(addr_in));    
    }
-   sockaddr_in addr_in;
-   addr_in.sin_family = AF_INET;
-   addr_in.sin_addr = addr;
-   addr_in.sin_port = bootstrapPort;      
-   profile.bootstrapNodes().push_back(resip::GenericIPAddress(addr_in));    
 
    //////////////////////////////////////////////////////////////////////////////
    // Setup P2PStack
