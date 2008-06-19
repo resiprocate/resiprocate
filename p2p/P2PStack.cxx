@@ -20,6 +20,7 @@ P2PStack::run()
       assert(0);
       //process(1000);
    }
+
 }
 
 void
@@ -33,4 +34,12 @@ P2PStack::process(int waitTimeMS)
 void
 P2PStack::join()
 {
+   mChord.joinOverlay();
+}
+
+
+ResourceId 
+P2PStack::getIdFromResourceName( const resip::Data& resourceName )
+{
+   return mChord.resourceId(resourceName);
 }
