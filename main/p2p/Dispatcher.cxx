@@ -3,6 +3,7 @@
 #include "p2p/P2PSubsystem.hxx"
 #include "p2p/EventWrapper.hxx"
 #include "p2p/ForwardingLayer.hxx"
+#include "rutil/Logger.hxx"
 #include "p2p/Message.hxx"
 
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
@@ -48,6 +49,8 @@ static const resip::Data NO_HANDLER("Message not understood");
 void 
 Dispatcher::post(std::auto_ptr<Message> message)
 {
+   DebugLog(<<"Dispatcher received " << message->brief());
+   
    Registry::iterator it = mRegistry.find(message->getType());
    if (it == mRegistry.end())
    {
