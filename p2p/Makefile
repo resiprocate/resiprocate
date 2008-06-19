@@ -21,6 +21,7 @@ SRC 	+= \
 	DestinationId.cxx \
 	Dispatcher.cxx \
 	Find.cxx \
+	FlowId.cxx \
 	ForwardingLayer.cxx \
 	Join.cxx \
 	Leave.cxx \

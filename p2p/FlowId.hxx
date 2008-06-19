@@ -5,8 +5,12 @@
 #include "rutil/Fifo.hxx"
 #include "p2p/NodeId.hxx"
 
+#include <iosfwd>
+
 namespace p2p
 {
+
+class Event;
 
 class FlowId
 {
@@ -20,14 +24,14 @@ class FlowId
            mDescriptor(socket)
            {;}
 
-      resip::Socket &getSocket() { return mDescriptor; }
+      resip::Socket getSocket() const { return mDescriptor; }
 
       unsigned short getApplication() const {return mApplication;}
 
       const NodeId &getNodeId() const {return mNodeId;}
 
       resip::Fifo<Event> &getFifo() {return mFifo;}
-
+      
    private:
       NodeId mNodeId;
       unsigned short mApplication;
@@ -37,6 +41,7 @@ class FlowId
       // when we add ICE
       resip::Socket mDescriptor;
 };
+std::ostream& operator<<( std::ostream& strm, const FlowId& node );
 
 }
 

@@ -78,6 +78,7 @@ SelectTransporter::addListenerImpl(resip::TransportType transport,
 void
 SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
 {
+   DebugLog( << "sending " << msg->brief() << " to " << nodeId);
    if (msg->getTTL() <= 1)
    {
       InfoLog(<< "TTL Exhausted -- dropping message.");
@@ -109,7 +110,12 @@ SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
    if (bytesSent != data.size()) 
    { 
       ErrLog( << "Cannot send -- ::send returned " << bytesSent); 
+      assert(0);
    }
+   else
+   {
+      DebugLog(<< "sent " << msg->brief() << " over " << i->second);
+   } 
 }
 
 void
@@ -121,6 +127,7 @@ SelectTransporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
    if (bytesSent != data->size()) 
    { 
       ErrLog(<< "Cannot send -- ::send returned " << bytesSent); 
+      assert(0);
    }
 }
 
@@ -191,10 +198,14 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    resip::Socket s;
 
    s = ::socket(AF_INET, SOCK_STREAM, 0);
-   if (!s) {ErrLog(<< "::socket() failed");}
+   if (!s) 
+   {
+      ErrLog(<< "::socket() failed");
+      assert(0);
+   }
    
    int status = ::connect(s, &(bootstrapServer.address), sizeof(sockaddr_in));
-   if (status) { ErrLog( << "Cannot ::connect"); return; }
+   if (status) { ErrLog( << "Cannot ::connect"); assert(0); return; }
 
    // Get the remote node ID from the incoming socket
    unsigned char buffer[16];
@@ -204,6 +215,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    if (bytesRead != sizeof(buffer)) 
    {
       ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+      assert(0);
    }
    s2c::NodeIdStruct nid;
    nid.mHigh = *((UInt64*)(buffer));
@@ -214,6 +226,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
 
    mNodeFlowMap.insert(std::map<NodeId, FlowId>::value_type(nodeId, flowId));
 
+   DebugLog(<< "Connected to bootstrap server: " << flowId << " sending ConnectionOpened to forwarding layer");
    ConnectionOpened *co = new ConnectionOpened(flowId,
                                                application,
                                                resip::TCP,
