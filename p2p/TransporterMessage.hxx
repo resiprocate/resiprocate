@@ -43,6 +43,12 @@ class ConnectionOpened : public Event
       resip::TransportType getTransportType() const;
       X509 *getCertificate() const;
 
+      virtual resip::Data brief() const
+      {
+         return "ConnectionOpened";
+      }
+      
+
    private:
       FlowId mFlowId;
       unsigned short mApplication;
@@ -60,6 +66,12 @@ class ConnectionClosed : public Event
       NodeId getNodeId() const;
       unsigned short getApplicationId() const;
       virtual void dispatch(EventConsumer& consumer);
+
+      
+      virtual resip::Data brief() const 
+      {
+         return "ConnectionClosed";
+      }
 
    protected:
       FlowId mFlowId;
@@ -79,6 +91,12 @@ class MessageArrived : public Event
       NodeId getNodeId() const {return mNodeId;}
       std::auto_ptr<p2p::Message> getMessage() { return mMessage; }
 
+      virtual resip::Data brief() const
+      {
+         return "MessageArrived";
+      }
+      
+
    protected:
 
       NodeId mNodeId;
@@ -96,6 +114,12 @@ class ApplicationMessageArrived : public Event
 
       FlowId getFlowId() const { return mFlowId; }
       const resip::Data &getData() const { return mData; }
+
+      virtual resip::Data brief() const
+      {
+         return "ApplicationMessageArrived";
+      }
+      
 
    protected:
 
@@ -116,6 +140,12 @@ class LocalCandidatesCollected : public Event
       const NodeId& getNodeId() const { return mNodeId; }
       unsigned short getAppId() const { return mAppId; }
       std::vector<Candidate>& getCandidates() { return mCandidates; }
+
+      virtual resip::Data brief() const
+      {
+         return "LocalCandidatesCollected";
+      }
+      
 
    protected:
 

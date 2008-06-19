@@ -22,6 +22,9 @@ class StoreSet : public EventConsumer,
       {
          event->dispatch(this);
       }
+
+      virtual resip::Data brief() const;
+
    private:
       
       int mStoreRequestsOutstanding;
