@@ -363,7 +363,7 @@ static int s2c_gen_encode_c_simple_type(p_decl *decl, char *prefix, char *refere
     /* We can get a primitive as a ref or directly here because of arrays versus
      simple declarations*/
     if(decl->u.ref_.ref->type==TYPE_PRIMITIVE){
-      fprintf(out,"   DebugLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
+      fprintf(out,"   StackLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
         prefix,reference);
       fprintf(out,"   encode_uintX(out, %d, %s%s);\n",
         decl->u.ref_.ref->u.primitive_.bits,prefix,reference);
@@ -373,7 +373,7 @@ static int s2c_gen_encode_c_simple_type(p_decl *decl, char *prefix, char *refere
         8*max2bytes(decl->u.ref_.ref->u.enum_.max),prefix,reference);
     }
     else if(decl->type==TYPE_PRIMITIVE){
-      fprintf(out,"   DebugLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
+      fprintf(out,"   StackLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
         prefix,reference);
       fprintf(out,"   encode_uintX(out, %d, %s%s);\n",
         decl->u.primitive_.bits,prefix,reference);
@@ -464,7 +464,7 @@ static int s2c_gen_encode_c_struct(p_decl *decl, FILE *out)
 
     fprintf(out,"void %s :: encode(std::ostream& out) const \n{\n",type2class(decl->name));
     
-    fprintf(out,"   DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
+    fprintf(out,"   StackLog(<< \"Encoding %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
 
     while(entry){
@@ -506,7 +506,7 @@ static int s2c_gen_encode_c_select(p_decl *decl, FILE *out, int do_inline)
     if(!do_inline){
       fprintf(out,"void %s :: encode(std::ostream& out) const\n{\n",type2class(decl->name));
       
-      fprintf(out,"   DebugLog(<< \"Encoding %s\");\n",type2class(decl->name));
+      fprintf(out,"   StackLog(<< \"Encoding %s\");\n",type2class(decl->name));
     }
 
     fprintf(out,"   switch(%s) {\n",name2var(decl->u.select_.switch_on));
@@ -641,7 +641,7 @@ static int s2c_gen_decode_c_simple_type(p_decl *decl, char *prefix, char *refere
     if(decl->u.ref_.ref->type==TYPE_PRIMITIVE){
       fprintf(out,"   decode_uintX(%s, %d, %s%s);\n",
         instream,decl->u.ref_.ref->u.primitive_.bits,prefix,reference);
-      fprintf(out,"   DebugLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
+      fprintf(out,"   StackLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
         prefix,reference);
     }
     else if(decl->u.ref_.ref->type==TYPE_ENUM){
@@ -656,7 +656,7 @@ static int s2c_gen_decode_c_simple_type(p_decl *decl, char *prefix, char *refere
     else if(decl->type==TYPE_PRIMITIVE){
       fprintf(out,"   decode_uintX(%s, %d, %s%s);\n",
         instream,decl->u.primitive_.bits,prefix,reference);
-      fprintf(out,"   DebugLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
+      fprintf(out,"   StackLog( << \"%s%s =\" << std::hex << (unsigned long long) %s%s );\n",prefix,reference,
         prefix,reference);
     }
     else if(decl->type==TYPE_OBJECT){
@@ -752,7 +752,7 @@ static int s2c_gen_decode_c_struct(p_decl *decl, FILE *out)
 
     fprintf(out,"void %s :: decode(std::istream& in)\n{\n",type2class(decl->name));
     
-    fprintf(out," DebugLog(<< \"Decoding %s\");\n",type2class(decl->name));
+    fprintf(out," StackLog(<< \"Decoding %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
 
     while(entry){
@@ -796,7 +796,7 @@ static int s2c_gen_construct_c_select(p_decl *decl, FILE *out, int do_inline)
       fprintf(out,"%s :: %s ()\n{\n",type2class(decl->name),
         type2class(decl->name));
       
-      fprintf(out,"   DebugLog(<< \"Constructing %s\");\n",type2class(decl->name));
+      fprintf(out,"   StackLog(<< \"Constructing %s\");\n",type2class(decl->name));
       fprintf(out,"   mName = \"%s\";\n", type2class(decl->name));
 
     }
@@ -875,7 +875,7 @@ static int s2c_gen_construct_c_struct(p_decl *decl, FILE *out)
     fprintf(out,"%s :: %s ()\n{\n",type2class(decl->name),type2class(decl->name));
 
     fprintf(out,"   mName = \"%s\";\n", type2class(decl->name));
-    fprintf(out," DebugLog(<< \"Constructing %s\");\n",type2class(decl->name));
+    fprintf(out," StackLog(<< \"Constructing %s\");\n",type2class(decl->name));
     entry=STAILQ_FIRST(&decl->u.struct_.members);
     while(entry){
       if(!entry->auto_len){
@@ -945,7 +945,7 @@ static int s2c_gen_decode_c_select(p_decl *decl, FILE *out,char *instream, int d
     if(!do_inline){
       fprintf(out,"void %s :: decode(std::istream& in)\n{\n",type2class(decl->name));
     
-      fprintf(out,"   DebugLog(<< \"Decoding %s\");\n",type2class(decl->name));
+      fprintf(out,"   StackLog(<< \"Decoding %s\");\n",type2class(decl->name));
     }
 
     fprintf(out,"   switch(%s){\n",name2var(decl->u.select_.switch_on));
