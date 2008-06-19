@@ -13,7 +13,6 @@ ConnectBase::ConnectBase()
 void 
 ConnectBase::decodePayload(resip::DataStream &dataStream)
 {
-	std::cout << "ATTEMPTING TO DECODE" << std::endl;
 	decode(dataStream);
 
 	print(std::cout, 2);
@@ -22,7 +21,6 @@ ConnectBase::decodePayload(resip::DataStream &dataStream)
 void 
 ConnectBase::getEncodedPayload(resip::DataStream &dataStream) 
 {
-	std::cout << "about to ENCODE " << mCandidates.size() << std::endl;
 	encode(dataStream);
 }
 
@@ -33,11 +31,8 @@ ConnectBase::ConnectBase(const resip::Data &frag, const resip::Data &password, U
 	mApplication = application;
 	mRole = role;
 
-	std::cout << "RIGHT HERE" << std::endl;
-
 	for (std::vector<Candidate>::const_iterator iter = candidates.begin(); iter != candidates.end(); iter++) 
 	{
-		std::cout << "ADDED TO THE THING" << std::endl;
 		IceCandidateStruct *iceStruct = new IceCandidateStruct;
 		iceStruct->mCandidate = iter->getIceString();
 		mCandidates.push_back(iceStruct);

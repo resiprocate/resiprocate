@@ -13,10 +13,12 @@ class JoinAns : public Message, private s2c::JoinAnsStruct
 public:
 	friend class Message;
 
-	JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific);
+	JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific = resip::Data::Empty);
 	virtual MessageType getType() const { return Message::JoinAnsType; }
 
 	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual resip::Data brief() const { return "JoinAns Message"; }
+
 
 protected:
 	virtual void decodePayload(resip::DataStream &dataStream);
@@ -29,9 +31,10 @@ public:
 	JoinReq(const DestinationId &dest, const NodeId &nodeId, const resip::Data &overlaySpecific=resip::Data::Empty);
       
 	virtual MessageType getType() const { return Message::JoinReqType; }
-	NodeId getNodeId() const { return mNodeId; }
+	NodeId getNodeId() const;
       
 	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual resip::Data brief() const { return "JoinReq Message"; }
 
 protected:
 	virtual void decodePayload(resip::DataStream &dataStream);
