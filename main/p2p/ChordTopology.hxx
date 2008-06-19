@@ -82,6 +82,7 @@ class ChordTopology : public TopologyAPI
                                                           // anything changed
       bool addNewFingers( const std::vector<NodeId>& nodes ); // return true if changed
       void buildFingerTable();
+      void sendUpdates();
 };
 
 }
