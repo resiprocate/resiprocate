@@ -326,13 +326,14 @@ SelectTransporter::process(int ms)
       struct sockaddr addr;
       socklen_t addrlen;
 
-      s = accept(j->second.first, &addr, &addrlen);
+      if((s = accept(mBootstrapSocket, &addr, &addrlen))<0){
+        ErrLog( << "Could not accept");
+      }
 
      // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
      // Blow our node ID out on the wire (because there is no cert)
      const resip::Data nid = mConfiguration.nodeId().encodeToNetwork();
-     size_t bytesSent = ::send((i->second).getSocket(),
-                               nid.data(), nid.size(), 0);
+     size_t bytesSent = ::send(s, nid.data(), nid.size(), 0);
 
      if (bytesSent != nid.size()) 
      {
