@@ -169,6 +169,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Dispatcher.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Find.cxx"
 				>
 			</File>
@@ -194,6 +198,10 @@
 			</File>
 			<File
 				RelativePath=".\NodeId.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\P2PStack.cxx"
 				>
 			</File>
 			<File
@@ -295,6 +303,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Dispatcher.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Event.hxx"
 				>
 			</File>
@@ -352,6 +364,10 @@
 			</File>
 			<File
 				RelativePath=".\p2p.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\P2PStack.hxx"
 				>
 			</File>
 			<File

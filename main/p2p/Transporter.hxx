@@ -41,7 +41,7 @@ class Transporter
 
       void setRxFifo(resip::Fifo<Event> *fifo) {mRxFifo = fifo;}
 
-      virtual bool process(int seconds=0) = 0;
+      virtual bool process(int ms=0) = 0;
    
       void addListener(resip::TransportType transport,
                        resip::GenericIPAddress &address);
