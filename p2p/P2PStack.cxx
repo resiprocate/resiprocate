@@ -38,6 +38,12 @@ P2PStack::join()
 }
 
 
+void 
+P2PStack::listenOn(int port)
+{
+}
+
+
 ResourceId 
 P2PStack::getIdFromResourceName( const resip::Data& resourceName )
 {
