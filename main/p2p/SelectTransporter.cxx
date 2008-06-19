@@ -331,6 +331,7 @@ SelectTransporter::process(int ms)
    }
 
    // TODO -- add bootstrap listener socket
+	fdSet.selectMilliSeconds(ms);
 
 
    if (mHasBootstrapSocket && fdSet.readyToRead(mBootstrapSocket))

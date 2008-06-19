@@ -400,15 +400,12 @@ Message::encodePayload()
 	encodedStream.flush();
 
 	size_t finalLength = encodedData.size();
-	std::cout << "final size: " << finalLength << std::endl;
 
 	// add the length to the header
 	assert(mPDU.mHeader->mVersion);
 	UInt32 *lengthWord = reinterpret_cast<UInt32 *>(const_cast<char *>(encodedData.data()) + 12);
 
-	std::cout << "current len word: " << *lengthWord << std::endl;
 	(*lengthWord) = (*lengthWord | (htonl(finalLength & 0x0fff) >> 8));
-	std::cout << "final len word: " << *lengthWord << std::endl;
 
 	// we should optimize this eventually to avoid this copy
 	return encodedData;
