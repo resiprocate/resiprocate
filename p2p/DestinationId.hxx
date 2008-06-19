@@ -27,6 +27,8 @@ class DestinationId : private s2c::DestinationStruct
       
       bool operator==(const NodeId& nid) const;
       bool operator==(const DestinationId& nid) const;
+
+      s2c::DestinationStruct* copyDestinationStruct() const;
 };
 
 }
