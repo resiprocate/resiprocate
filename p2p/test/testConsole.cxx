@@ -43,6 +43,7 @@ int _kbhit() {
 #include "p2p/TransporterMessage.hxx"
 #include "p2p/Profile.hxx"
 #include "p2p/SelectTransporter.hxx"
+#include "p2p/P2PStack.hxx"
 
 using namespace p2p;
 using namespace resip;
@@ -285,15 +286,15 @@ main (int argc, char** argv)
    profile.bootstrapNodes().push_back(resip::GenericIPAddress(addr_in));    
 
    //////////////////////////////////////////////////////////////////////////////
-   // Setup Transporter
+   // Setup P2PStack
    //////////////////////////////////////////////////////////////////////////////
-   SelectTransporter transporter(profile);
+   P2PStack p2pStack(profile);
 
    int input;
    while(true)
    {
-      // TODO - Call Process on P2P Componenets
-      transporter.process(1);
+      p2pStack.process();
+      
 
       while(_kbhit() != 0)
       {
