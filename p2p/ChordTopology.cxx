@@ -1,18 +1,19 @@
 
 #include "rutil/Data.hxx"
+#include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/SHA1Stream.hxx"
 
+#include "p2p/Candidate.hxx"
 #include "p2p/ChordTopology.hxx"
-#include "p2p/Profile.hxx"
+#include "p2p/ChordUpdate.hxx"
+#include "p2p/Connect.hxx"
+#include "p2p/Dispatcher.hxx"
 #include "p2p/FlowId.hxx"
 #include "p2p/Message.hxx"
-#include "p2p/Dispatcher.hxx"
-#include "p2p/Candidate.hxx"
-#include "p2p/Connect.hxx"
-#include "p2p/Update.hxx"
-#include "p2p/ChordUpdate.hxx"
 #include "p2p/P2PSubsystem.hxx"
+#include "p2p/Profile.hxx"
+#include "p2p/Update.hxx"
 
 using namespace p2p;
 
@@ -357,6 +358,7 @@ void
 ChordTopology::post(std::auto_ptr<Event> event)
 {
    //will run in same thread as the dispatcher 
+   DebugLog(<< "ChordTopology received: " << event->brief());
    event->dispatch(*this);
 }
 
