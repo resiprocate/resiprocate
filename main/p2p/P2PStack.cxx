@@ -54,7 +54,7 @@ P2PStack::listenOn(int port)
    sockaddr_in addr_in;
    addr_in.sin_family = AF_INET;
    addr_in.sin_addr = addr;
-   addr_in.sin_port = port;    
+   addr_in.sin_port = htons(port);    
 
    resip::GenericIPAddress address(addr_in);
    mTransporter.addListener(transport,address);
