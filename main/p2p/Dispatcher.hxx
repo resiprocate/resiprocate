@@ -18,9 +18,8 @@ class Dispatcher : public Postable<Message>
       Dispatcher();
       
       void init(ForwardingLayer& forwardingLayer);
-      void registerPostable(Message::MessageType type,
-                            Postable<Event>& postable);
-      void send(std::auto_ptr<Message> message, Postable<Event>& postable);
+      void registerPostable(Message::MessageType type, Postable<Event>& postable);
+      void send(std::auto_ptr<Message> message, Postable<Event>& responseSink);
 
       /**
        * Responses come back as Message type to postable consumer.
@@ -29,6 +28,7 @@ class Dispatcher : public Postable<Message>
       
       //not public api
       virtual void post(std::auto_ptr<Message> message);
+
    private:
       class Entry 
       {
