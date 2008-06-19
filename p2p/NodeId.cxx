@@ -92,7 +92,7 @@ NodeId::getNodeIdStruct() const
 
 
 const resip::Data
-NodeId::encodeToNetwork() 
+NodeId::encodeToNetwork() const
 {
   resip::Data d;
   resip::DataStream strm(d);
