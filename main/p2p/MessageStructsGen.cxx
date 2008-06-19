@@ -835,8 +835,9 @@ void ForwardingHeaderStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mViaList.push_back(0);
-      mViaList[i++] = new DestinationStruct();
-   mViaList[i++]->decode(in2);
+      mViaList[i] = new DestinationStruct();
+   mViaList[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -847,8 +848,9 @@ void ForwardingHeaderStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mDestinationList.push_back(0);
-      mDestinationList[i++] = new DestinationStruct();
-   mDestinationList[i++]->decode(in2);
+      mDestinationList[i] = new DestinationStruct();
+   mDestinationList[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -1713,8 +1715,9 @@ void ConnectReqAnsStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mCandidates.push_back(0);
-      mCandidates[i++] = new IceCandidateStruct();
-   mCandidates[i++]->decode(in2);
+      mCandidates[i] = new IceCandidateStruct();
+   mCandidates[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -1798,8 +1801,9 @@ void PingReqStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mRequestedInfo.push_back(0);
-      decode_uintX(in2, 8, mRequestedInfo[i++]);
-   DebugLog( << "mRequestedInfo[i++] =" << std::hex << (unsigned long long) mRequestedInfo[i++] );
+      decode_uintX(in2, 8, mRequestedInfo[i]);
+   DebugLog( << "mRequestedInfo[i] =" << std::hex << (unsigned long long) mRequestedInfo[i] );
+      i++;
    }
 ;   }
 
@@ -1968,8 +1972,9 @@ void PingAnsStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mPingInfo.push_back(0);
-      mPingInfo[i++] = new PingInformationStruct();
-   mPingInfo[i++]->decode(in2);
+      mPingInfo[i] = new PingInformationStruct();
+   mPingInfo[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -2608,8 +2613,9 @@ void StoreKindDataStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mValues.push_back(0);
-      mValues[i++] = new StoredDataStruct();
-   mValues[i++]->decode(in2);
+      mValues[i] = new StoredDataStruct();
+   mValues[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -2701,8 +2707,9 @@ void StoreReqStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mKindData.push_back(0);
-      mKindData[i++] = new StoreKindDataStruct();
-   mKindData[i++]->decode(in2);
+      mKindData[i] = new StoreKindDataStruct();
+   mKindData[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -2792,8 +2799,9 @@ void StoreKindResponseStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mReplicas.push_back(0);
-      mReplicas[i++] = new NodeIdStruct();
-   mReplicas[i++]->decode(in2);
+      mReplicas[i] = new NodeIdStruct();
+   mReplicas[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -2870,8 +2878,9 @@ void StoreAnsStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mKindResponses.push_back(0);
-      mKindResponses[i++] = new StoreKindResponseStruct();
-   mKindResponses[i++]->decode(in2);
+      mKindResponses[i] = new StoreKindResponseStruct();
+   mKindResponses[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -3037,8 +3046,9 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mArray.mIndices.push_back(0);
-               mArray.mIndices[i++] = new ArrayRangeStruct();
-   mArray.mIndices[i++]->decode(in2);
+               mArray.mIndices[i] = new ArrayRangeStruct();
+   mArray.mIndices[i]->decode(in2);
+      i++;
    }
 ;   }
           break;
@@ -3051,8 +3061,9 @@ void StoredDataSpecifierStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mDictionary.mKeys.push_back(0);
-               mDictionary.mKeys[i++] = new DictionaryKeyStruct();
-   mDictionary.mKeys[i++]->decode(in2);
+               mDictionary.mKeys[i] = new DictionaryKeyStruct();
+   mDictionary.mKeys[i]->decode(in2);
+      i++;
    }
 ;   }
           break;
@@ -3180,8 +3191,9 @@ void FetchReqStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mSpecifiers.push_back(0);
-      mSpecifiers[i++] = new StoredDataSpecifierStruct();
-   mSpecifiers[i++]->decode(in2);
+      mSpecifiers[i] = new StoredDataSpecifierStruct();
+   mSpecifiers[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -3268,8 +3280,9 @@ void FetchKindResponseStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mValues.push_back(0);
-      mValues[i++] = new StoredDataStruct();
-   mValues[i++]->decode(in2);
+      mValues[i] = new StoredDataStruct();
+   mValues[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -3346,8 +3359,9 @@ void FetchAnsStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mKindResponses.push_back(0);
-      mKindResponses[i++] = new FetchKindResponseStruct();
-   mKindResponses[i++]->decode(in2);
+      mKindResponses[i] = new FetchKindResponseStruct();
+   mKindResponses[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -3424,8 +3438,9 @@ void RemoveReqStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mSpecifiers.push_back(0);
-      mSpecifiers[i++] = new StoredDataSpecifierStruct();
-   mSpecifiers[i++]->decode(in2);
+      mSpecifiers[i] = new StoredDataSpecifierStruct();
+   mSpecifiers[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -3498,8 +3513,9 @@ void RemoveAnsStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mKindResponses.push_back(0);
-      mKindResponses[i++] = new StoreKindResponseStruct();
-   mKindResponses[i++]->decode(in2);
+      mKindResponses[i] = new StoreKindResponseStruct();
+   mKindResponses[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -3577,8 +3593,9 @@ void FindReqStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mKinds.push_back(0);
-      decode_uintX(in2, 32, mKinds[i++]);
-   DebugLog( << "mKinds[i++] =" << std::hex << (unsigned long long) mKinds[i++] );
+      decode_uintX(in2, 32, mKinds[i]);
+   DebugLog( << "mKinds[i] =" << std::hex << (unsigned long long) mKinds[i] );
+      i++;
    }
 ;   }
 
@@ -3713,8 +3730,9 @@ void FindAnsStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mResults.push_back(0);
-      mResults[i++] = new FindKindDataStruct();
-   mResults[i++]->decode(in2);
+      mResults[i] = new FindKindDataStruct();
+   mResults[i]->decode(in2);
+      i++;
    }
 ;   }
 
@@ -3890,8 +3908,9 @@ void SipRegistrationStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mSipRegistrationRoute.mDestinationList.push_back(0);
-               mSipRegistrationRoute.mDestinationList[i++] = new DestinationStruct();
-   mSipRegistrationRoute.mDestinationList[i++]->decode(in2);
+               mSipRegistrationRoute.mDestinationList[i] = new DestinationStruct();
+   mSipRegistrationRoute.mDestinationList[i]->decode(in2);
+      i++;
    }
 ;   }
           break;
@@ -4008,8 +4027,9 @@ void ChordUpdateStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mNeighbors.mPredecessors.push_back(0);
-               mNeighbors.mPredecessors[i++] = new NodeIdStruct();
-   mNeighbors.mPredecessors[i++]->decode(in2);
+               mNeighbors.mPredecessors[i] = new NodeIdStruct();
+   mNeighbors.mPredecessors[i]->decode(in2);
+      i++;
    }
 ;   }
             {
@@ -4019,8 +4039,9 @@ void ChordUpdateStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mNeighbors.mSuccessors.push_back(0);
-               mNeighbors.mSuccessors[i++] = new NodeIdStruct();
-   mNeighbors.mSuccessors[i++]->decode(in2);
+               mNeighbors.mSuccessors[i] = new NodeIdStruct();
+   mNeighbors.mSuccessors[i]->decode(in2);
+      i++;
    }
 ;   }
           break;
@@ -4033,8 +4054,9 @@ void ChordUpdateStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mFull.mPredecessors.push_back(0);
-               mFull.mPredecessors[i++] = new NodeIdStruct();
-   mFull.mPredecessors[i++]->decode(in2);
+               mFull.mPredecessors[i] = new NodeIdStruct();
+   mFull.mPredecessors[i]->decode(in2);
+      i++;
    }
 ;   }
             {
@@ -4044,8 +4066,9 @@ void ChordUpdateStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mFull.mSuccessors.push_back(0);
-               mFull.mSuccessors[i++] = new NodeIdStruct();
-   mFull.mSuccessors[i++]->decode(in2);
+               mFull.mSuccessors[i] = new NodeIdStruct();
+   mFull.mSuccessors[i]->decode(in2);
+      i++;
    }
 ;   }
             {
@@ -4055,8 +4078,9 @@ void ChordUpdateStruct :: decode(std::istream& in)
    int i=0;
    while(in2.peek()!=EOF){
       mFull.mFingers.push_back(0);
-               mFull.mFingers[i++] = new NodeIdStruct();
-   mFull.mFingers[i++]->decode(in2);
+               mFull.mFingers[i] = new NodeIdStruct();
+   mFull.mFingers[i]->decode(in2);
+      i++;
    }
 ;   }
           break;
