@@ -297,7 +297,7 @@ main (int argc, char** argv)
       sockaddr_in addr_in;
       addr_in.sin_family = AF_INET;
       addr_in.sin_addr = addr;
-      addr_in.sin_port = bootstrapPort;      
+      addr_in.sin_port = htons(bootstrapPort);      
       profile.bootstrapNodes().push_back(resip::GenericIPAddress(addr_in));    
    }
 
