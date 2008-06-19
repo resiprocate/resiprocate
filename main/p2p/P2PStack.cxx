@@ -17,6 +17,14 @@ P2PStack::run()
 {
    while (1)
    {
+      assert(0);
       //process(1000);
    }
+}
+
+void
+P2PStack::process(int waitTimeMS)
+{
+   mTransporter.process(waitTimeMS);
+   mForwarder.process(waitTimeMS);
 }
