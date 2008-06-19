@@ -1,6 +1,7 @@
 #include "p2p/Dispatcher.hxx"
 
 #include "p2p/P2PSubsystem.hxx"
+#include "p2p/EventWrapper.hxx"
 #include "p2p/ForwardingLayer.hxx"
 #include "p2p/Message.hxx"
 
@@ -37,7 +38,16 @@ void
 Dispatcher::send(std::auto_ptr<Message> message, Postable<Event>& postable)
 {
    //.dcm. more with timers
-   mTidMap[message->getTransactionId()] = &postable;
+   
+   mTidMap[message->getTransactionId()] = Entry(postable);
+   mForwardingLayer->forward(message);
+}
+
+void 
+Dispatcher::sendAsBaseMessage(std::auto_ptr<Message> message, Postable<Event>& postable)
+{
+   //.dcm. more with timers
+   mTidMap[message->getTransactionId()] = Entry(postable, true);
    mForwardingLayer->forward(message);
 }
 
@@ -60,7 +70,15 @@ Dispatcher::post(std::auto_ptr<Message> message)
          TidMap::iterator id = mTidMap.find(message->getTransactionId());
          if (id !=  mTidMap.end())
          {
-            id->second->post(message->event());
+            Entry& entry = id->second;
+            if (entry.mForBaseMessage) 
+            {
+               entry.mPostable->post(std::auto_ptr<Event>(new EventWrapper<Message>(message.release())));
+            } 
+            else 
+            {
+               entry.mPostable->post(message->event());
+            }
             mTidMap.erase(id);
          }
          else

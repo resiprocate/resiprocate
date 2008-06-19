@@ -1,16 +1,23 @@
 #ifndef P2P_EventConsumer_hxx
 #define P2P_EventConsumer_hxx
 
+#include <cassert>
+
+#include "p2p/Postable.hxx"
+
 namespace p2p
 {
 
+class BatchMessages;
 class CertDoneEvent;
 class ConnectionOpened;
 class ConnectionClosed;
+class Event;
 class MessageArrived;
 class ApplicationMessageArrived;
 class LocalCandidatesCollected;
 
+class Message;
 class PingReq;
 class PingAns;
 class ConnectReq;
@@ -37,7 +44,7 @@ class FailureResponse;
 
 template<class T> class EventWrapper;
 
-class EventConsumer
+class EventConsumer : public Postable<Event>
 {
    public:
       virtual ~EventConsumer(){};
@@ -49,6 +56,8 @@ class EventConsumer
       virtual void consume(ApplicationMessageArrived& m) { assert(0); }
       virtual void consume(LocalCandidatesCollected& m) { assert(0); }
 
+      virtual void consume(Message& m) { assert(0); }
+      
       virtual void consume(PingReq& m) { assert(0); }
       virtual void consume(PingAns& m) { assert(0); }
       virtual void consume(ConnectReq& m) { assert(0); }
@@ -71,6 +80,8 @@ class EventConsumer
       virtual void consume(RouteQueryReq& m) { assert(0); }
       virtual void consume(RouteQueryAns& m) { assert(0); }
       virtual void consume(FailureResponse& m) { assert(0); }
+
+      virtual void consume(const BatchMessages& cm) { assert(0); }
 };
 
 }
