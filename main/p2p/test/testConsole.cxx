@@ -66,6 +66,12 @@ static void
 signalHandler(int signo)
 {
    std::cerr << "Shutting down" << endl;
+
+   if ( finished )
+   {
+      exit(1);
+   }
+   
    finished = true;
 }
 
