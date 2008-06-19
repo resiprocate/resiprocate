@@ -105,7 +105,7 @@ NodeId::encodeToNetwork() const
 std::ostream& 
 p2p::operator<<( std::ostream& strm, const NodeId& node )
 {
-   node.mNodeId.print(strm, 0);
+   strm << "H:" << node.mNodeId.mHigh << " L:" << node.mNodeId.mLow;
    return strm;
 }
 
