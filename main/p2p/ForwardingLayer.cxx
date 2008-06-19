@@ -138,7 +138,7 @@ void
 ForwardingLayer::consume(LocalCandidatesCollected& m)
 {
    // pass to the TopologyAPI
-   // mTopology.candidatesCollected();
+   mTopology.candidatesCollected(m.getNodeId(), m.getAppId(), m.getCandidates());
 }
 
 void 
