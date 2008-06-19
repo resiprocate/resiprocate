@@ -114,7 +114,7 @@ SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
    }
    else
    {
-      DebugLog(<< "sent " << msg->brief() << " over " << i->second);
+     DebugLog(<< "sent " << msg->brief() << " over " << i->second << "bytes=" << bytesSent );
    } 
 }
 
@@ -199,6 +199,8 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    unsigned short application = RELOAD_APPLICATION_ID;
    resip::Socket s;
 
+   DebugLog(<<"Trying to connect to bootstrap server");
+
    s = ::socket(AF_INET, SOCK_STREAM, 0);
    if (!s) 
    {
@@ -209,10 +211,14 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    int status = ::connect(s, &(bootstrapServer.address), sizeof(sockaddr_in));
    if (status) { ErrLog( << "Cannot ::connect"); assert(0); return; }
 
+   DebugLog(<<"Connect succeeded");
+
    // Get the remote node ID from the incoming socket
    unsigned char buffer[16];
 
+   
    size_t bytesRead = readSocket(s, (char*)buffer, sizeof(buffer));
+   DebugLog(<< "Read#1" << bytesRead);
 
    if (bytesRead != sizeof(buffer)) 
    {
@@ -227,6 +233,17 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    FlowId flowId(nodeId, application, s, *mRxFifo);
 
    mNodeFlowMap.insert(std::map<NodeId, FlowId>::value_type(nodeId, flowId));
+
+   // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
+   // Blow our node ID out on the wire (because there is no cert)
+   
+   resip::Data ourNid=mConfiguration.nodeId().encodeToNetwork();
+   size_t bytesSent = ::send(s,ourNid.data(), ourNid.size(), 0);
+   if (bytesSent != ourNid.size()) 
+   {
+      ErrLog( << "Cannot ::send -- returned " << bytesSent); 
+   }
+   
 
    DebugLog(<< "Connected to bootstrap server: " << flowId << " sending ConnectionOpened to forwarding layer");
    ConnectionOpened *co = new ConnectionOpened(flowId,
@@ -346,6 +363,7 @@ SelectTransporter::process(int ms)
       if((s = accept(mBootstrapSocket, &addr, &addrlen))<0){
         ErrLog( << "Could not accept");
       }
+      DebugLog(<<"Accepted a connection");
 
      // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
      // Blow our node ID out on the wire (because there is no cert)
@@ -361,6 +379,7 @@ SelectTransporter::process(int ms)
       // Get the remote node ID from the incoming socket
       char buffer[16];
       size_t bytesRead = readSocket(s, buffer, sizeof(buffer));
+      DebugLog(<< "Read#2" << bytesRead);
       if (bytesRead != sizeof(buffer)) 
       {
          ErrLog( << "Cannot ::read -- returned " << bytesRead); 
@@ -420,6 +439,7 @@ SelectTransporter::process(int ms)
 
         unsigned char buffer[16];
         size_t bytesRead = readSocket(s, (char*)buffer, sizeof(buffer));
+        DebugLog(<< "Read#3" << bytesRead);
         if (bytesRead != sizeof(buffer)) 
         {
            ErrLog( << "Cannot ::read -- returned " << bytesRead); 
@@ -462,11 +482,16 @@ SelectTransporter::process(int ms)
             char *buffer = new char[16384];
             UInt32 *int_buffer = reinterpret_cast<UInt32*>(buffer);
             // Suck in the header
-            size_t bytesRead = readSocket(flowId.getSocket(), buffer, 30);
+            char *ptr;
+            size_t bytesRead;
+            size_t left=30;
+            ptr=buffer;
 
-            if (bytesRead != 30) 
-            {
-               ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+            while(left){
+              bytesRead = readSocket(flowId.getSocket(), ptr, left);
+              left-=bytesRead;
+              ptr+=bytesRead;
+              DebugLog(<< "Read from socket: " << bytesRead << "left=" << left);
             }
 
             if (int_buffer[0] == htonl(0x80000000 | 0x52454C4F))
@@ -489,6 +514,8 @@ SelectTransporter::process(int ms)
             }
             else
             {
+              ErrLog(<< "Not a correct reload message");
+              assert(0);
                delete(buffer);
                // Yikes! This isn't a reload message!
             }
