@@ -110,15 +110,31 @@ void
 ChordTopology::consume(JoinReq& msg)
 {
    // check we are reponsible for the data from this node 
+   if(!isResponsible(msg.getNodeId()))
+   {
+      // send error response - not responsible
+      std::auto_ptr<Message> errorAns(msg.makeErrorResponse(Message::Error::NotFound, "Not responsible for this Join"));
+      mDispatcher.send(errorAns, *this);
+      return;
+   }
 
-   // send the data using multiple store messages over to the new node 
+   // TODO - send the data using multiple store messages over to the new node 
    // use a StoreSet to monitor 
 
-   // update the replicated data storage    
+   // TODO - update the replicated data storage    
 
 // wait for all data to be stored 
 
    // send them an update to put the joining node in the ring 
+   std::vector<NodeId> nodes;
+   nodes.push_back(msg.getNodeId());
+   if(addNewNeighbors(nodes, false /* adjustNextOnly */))
+   {
+      sendUpdates();
+   }
+
+   std::auto_ptr<Message> joinAns(msg.makeJoinResponse(resip::Data::Empty /* Overlay specific */));
+   mDispatcher.send(joinAns, *this);
 }
 
 
@@ -131,32 +147,11 @@ ChordTopology::consume(UpdateReq& msg)
    if(addNewNeighbors(cordUpdate.getPredecessors(), false /* adjustNextOnly */) ||
       addNewNeighbors(cordUpdate.getSuccessors(), false /* adjustNextOnly */))
    {
-      // Create our update message
-      ChordUpdate ourUpdate;
-      ourUpdate.setUpdateType(ChordUpdate::Neighbors);
-
-      // set our predecessors and successors
-      ourUpdate.setPredecessors(mPrevTable);
-      ourUpdate.setSuccessors(mNextTable);
-
-      // if this changes the neighbor tables and if it does send updates to all
-      // peers in prev/next table 
-      std::vector<NodeId>::iterator it = mPrevTable.begin();
-      for(; it != mPrevTable.end(); it++)
-      {   
-			DestinationId destination(*it);
-         std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
-         mDispatcher.send(updateReq, *this);
-      }
-
-      it = mNextTable.begin();
-      for(; it != mNextTable.end(); it++)
-      {
-			DestinationId destination(*it);
-         std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
-         mDispatcher.send(updateReq, *this);
-      }
+      sendUpdates();
    }
+
+   std::auto_ptr<Message> udpateAns(msg.makeUpdateResponse(resip::Data::Empty /* Overlay specific */));
+   mDispatcher.send(udpateAns, *this);
 }
 
 
@@ -165,6 +160,9 @@ ChordTopology::consume(LeaveReq& msg)
 {
    // if this is in the prev/next table, remove it and send updates 
    assert(0);
+
+   std::auto_ptr<Message> leaveAns(msg.makeLeaveResponse());
+   mDispatcher.send(leaveAns, *this);
 }
 
 
@@ -404,6 +402,7 @@ ChordTopology::addNewFingers(const std::vector<NodeId>& nodes)
 }
 
 
+// TODO - need timers that periodically call this
 void 
 ChordTopology::buildFingerTable()
 {
@@ -415,6 +414,38 @@ ChordTopology::buildFingerTable()
    }
 }
 
+
+void
+ChordTopology::sendUpdates()
+{
+   // Create our update message
+   ChordUpdate ourUpdate;
+   ourUpdate.setUpdateType(ChordUpdate::Neighbors);
+
+   // set our predecessors and successors
+   ourUpdate.setPredecessors(mPrevTable);
+   ourUpdate.setSuccessors(mNextTable);
+
+   // TODO - put our nodeid somewhere in the message?
+
+   // if this changes the neighbor tables and if it does send updates to all
+   // peers in prev/next table 
+   std::vector<NodeId>::iterator it = mPrevTable.begin();
+   for(; it != mPrevTable.end(); it++)
+   {   
+      DestinationId destination(*it);
+      std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
+      mDispatcher.send(updateReq, *this);
+   }
+
+   it = mNextTable.begin();
+   for(; it != mNextTable.end(); it++)
+   {
+	   DestinationId destination(*it);
+      std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
+      mDispatcher.send(updateReq, *this);
+   }
+}
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

@@ -26,10 +26,10 @@ protected:
 class JoinReq : public Message, private s2c::JoinReqStruct
 {
 public:
-	JoinReq(const DestinationId &dest, const NodeId &nodeID, const resip::Data &overlaySpecific=resip::Data::Empty);
+	JoinReq(const DestinationId &dest, const NodeId &nodeId, const resip::Data &overlaySpecific=resip::Data::Empty);
       
 	virtual MessageType getType() const { return Message::JoinReqType; }
-	NodeId getNodeID() const { return mNodeID; }
+	NodeId getNodeId() const { return mNodeId; }
       
 	virtual void getEncodedPayload(resip::DataStream &data);
 
@@ -37,7 +37,7 @@ protected:
 	virtual void decodePayload(resip::DataStream &dataStream);
 	JoinReq();
 
-	NodeId mNodeID;
+	NodeId mNodeId;
 	resip::Data mOverlaySpecific;
 
 	friend class Message;
