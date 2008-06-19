@@ -13,7 +13,7 @@ ForwardingLayer::process(int ms)
    Event *event = mRxFifo.getNext(ms);
    if (event) 
    {
-      DebugLog(<< "ForwardingLayer: received an event");
+      DebugLog(<< "ForwardingLayer received:" << event->brief());
 
       event->dispatch(*this);
    }
