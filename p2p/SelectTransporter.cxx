@@ -121,6 +121,8 @@ SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
 void
 SelectTransporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
 {
+   DebugLog( << "sending raw data to: " << flowId);
+
    size_t bytesSent = ::send(flowId.getSocket(), data->data(), data->size(), 0);
    // XXX should check send response, and inform app of error if fail
 
