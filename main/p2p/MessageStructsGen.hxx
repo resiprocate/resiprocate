@@ -156,7 +156,7 @@ class ForwardingHeaderStruct : public PDU {
 public:
    ForwardingHeaderStruct();
    ForwardingHeaderStruct(const ForwardingHeaderStruct&);
-   UInt8                         mReloToken;
+   UInt32                        mReloToken;
    UInt32                        mOverlay;
    UInt8                         mTtl;
    UInt8                         mReserved;
