@@ -18,9 +18,11 @@ using namespace resip;
 
 const UInt8 Message::MessageVersion = 0x1;
 const UInt8 Message::MessageTtl = 0x20;
+const UInt32 Message::MessageReloToken=0xd2454c4f;
 
 #include "p2p/P2PSubsystem.hxx"
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
+
 
 Message::Message(ResourceId rid) :
 	mResourceId(rid)
@@ -348,12 +350,13 @@ Message::makeUpdateResponse(const resip::Data &overlaySpecific)
 resip::Data
 Message::encodePayload()
 {
+        
 	assert(mOverlayName.size());	// user needs to call setOverlayName
 	
 	// create the overlay field from the overlay name
 	resip::SHA1Stream stream;
 	stream << mOverlayName;
-
+        mPDU.mHeader->mReloToken=Message::MessageReloToken;
 	mPDU.mHeader->mMessageCode = static_cast<UInt16>(getType());
    mPDU.mHeader->mOverlay = stream.getUInt32();
    
@@ -403,7 +406,7 @@ Message::encodePayload()
 
 	// add the length to the header
 	assert(mPDU.mHeader->mVersion);
-	UInt32 *lengthWord = reinterpret_cast<UInt32 *>(const_cast<char *>(encodedData.data()) + 12);
+	UInt32 *lengthWord = reinterpret_cast<UInt32 *>(const_cast<char *>(encodedData.data()) + 13);
 
 	(*lengthWord) = (*lengthWord | (htonl(finalLength & 0x0fff) >> 8));
 
