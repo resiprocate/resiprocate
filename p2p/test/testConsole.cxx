@@ -306,6 +306,7 @@ main (int argc, char** argv)
       addr_in.sin_port = htons(bootstrapPort);      
       profile.bootstrapNodes().push_back(resip::GenericIPAddress(addr_in));    
    }
+   profile.numInitialFingers() = 0;   // FIXME - debugging only
 
    //////////////////////////////////////////////////////////////////////////////
    // Setup P2PStack
