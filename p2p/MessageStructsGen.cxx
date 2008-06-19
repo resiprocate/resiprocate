@@ -791,7 +791,7 @@ void ForwardingHeaderStruct :: print(std::ostream& out, int indent) const
 void ForwardingHeaderStruct :: decode(std::istream& in)
 {
  DebugLog(<< "Decoding ForwardingHeaderStruct");
-   decode_uintX(in, 8, mReloToken);
+   decode_uintX(in, 32, mReloToken);
    DebugLog( << "mReloToken =" << std::hex << (unsigned long long) mReloToken );
 
    decode_uintX(in, 32, mOverlay);
@@ -854,7 +854,7 @@ void ForwardingHeaderStruct :: encode(std::ostream& out) const
 {
    DebugLog(<< "Encoding ForwardingHeaderStruct");
    DebugLog( << "mReloToken =" << std::hex << (unsigned long long) mReloToken );
-   encode_uintX(out, 8, mReloToken);
+   encode_uintX(out, 32, mReloToken);
 
    DebugLog( << "mOverlay =" << std::hex << (unsigned long long) mOverlay );
    encode_uintX(out, 32, mOverlay);
