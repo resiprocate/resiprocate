@@ -1456,6 +1456,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          }
          else
          {
+            mCurrentRemoteSdp = sdp; 
             handler->onAnswer(getSessionHandle(), msg, *sdp);
          }
          
