@@ -290,10 +290,12 @@ main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
    P2PStack p2pStack(profile);
 
+   p2pStack.join();
+   
    int input;
    while(true)
    {
-      p2pStack.process();
+      p2pStack.process(0);
       
 
       while(_kbhit() != 0)
