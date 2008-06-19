@@ -332,7 +332,6 @@ SelectTransporter::process(int ms)
 
    // TODO -- add bootstrap listener socket
 
-   fdSet.selectMilliSeconds(ms);
 
    if (mHasBootstrapSocket && fdSet.readyToRead(mBootstrapSocket))
    {
@@ -364,6 +363,7 @@ SelectTransporter::process(int ms)
       if (bytesRead != sizeof(buffer)) 
       {
          ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+         assert(0);
       }
       
       // Parse the node id
@@ -383,7 +383,6 @@ SelectTransporter::process(int ms)
                                                 resip::TCP,
                                                 0 /* no cert for you */);
       mRxFifo->add(co);
-      
    }
 
    // Check for new incoming connections
@@ -423,6 +422,7 @@ SelectTransporter::process(int ms)
         if (bytesRead != sizeof(buffer)) 
         {
            ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+           assert(0);
         }
         
         // Ideally, we'd check that the nodeId we just read
