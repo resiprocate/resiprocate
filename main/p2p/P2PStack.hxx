@@ -19,13 +19,17 @@ class P2PStack
       void process(int waitTimeMS); // run a time slice and return 
       
       void join();
+
+      ResourceId getIdFromResourceName( const resip::Data& resourceName );
+      
       
    private:
       Profile mProfile;
 
       Dispatcher mDispatcher;
       SelectTransporter mTransporter;
-      ChordTopology mChord;
+      ChordTopology mChord; // TODO - this needs to be changed to a Topology
+                            // object 
       ForwardingLayer mForwarder;
 };
 

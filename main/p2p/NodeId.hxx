@@ -11,9 +11,9 @@ class ResourceId;
 class NodeId
 {
    public:
-	  NodeId();
-	  NodeId(const s2c::NodeIdStruct& nid);
-	  NodeId(const ResourceId& rid);
+      NodeId();
+      NodeId(const s2c::NodeIdStruct& nid);
+      NodeId(const ResourceId& rid);
       NodeId& operator=(const NodeId& data);
 
       bool operator<(const NodeId& rhs) const;

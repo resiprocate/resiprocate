@@ -298,7 +298,7 @@ main (int argc, char** argv)
    int input;
    while(true)
    {
-      p2pStack.process(0);
+      p2pStack.process(100);
       
 
       while(_kbhit() != 0)
