@@ -298,9 +298,8 @@ main (int argc, char** argv)
    int input;
    while(true)
    {
-      p2pStack.process(100);
+      p2pStack.process(10);
       
-
       while(_kbhit() != 0)
       {
 #ifdef WIN32
