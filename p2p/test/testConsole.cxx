@@ -301,8 +301,8 @@ main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
    P2PStack p2pStack(profile);
 
+   p2pStack.listenOn(listenPort);
    p2pStack.join();
-   p2pStack.listenOn(666);
    
    int input;
    while(true)
