@@ -302,7 +302,10 @@ main (int argc, char** argv)
    P2PStack p2pStack(profile);
 
    p2pStack.listenOn(listenPort);
-   p2pStack.join();
+   if(bootstrapPort != 0)
+   {
+      p2pStack.join();
+   }
    
    int input;
    while(true)
