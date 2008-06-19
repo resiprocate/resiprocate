@@ -235,7 +235,8 @@ Message::parse(const resip::Data &message)
 	payloadStruct.decode(stream);
 	newMessage->mRequestMessageBody = payloadStruct.mPayload;
 	*newMessage->mPDU.mHeader = header;
-
+	
+	DebugLog(<< "Message Body Payload Size Is " << newMessage->mRequestMessageBody.size());
 	resip::DataStream payloadStream( newMessage->mRequestMessageBody );
 
 	// get the signature
@@ -243,7 +244,6 @@ Message::parse(const resip::Data &message)
 	signature.decode(stream);
 
 	// todo: verify the signature here
-
 	newMessage->decodePayload(payloadStream);
 	
 	return newMessage;
