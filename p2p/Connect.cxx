@@ -16,6 +16,7 @@ ConnectReq::ConnectReq(const DestinationId &dest,
                        const std::vector<Candidate> &candidates) :
 	ConnectBase(frag, password, application, role, candidates)
 {
+	pushDestinationId(dest);
 }
 
 ConnectAns::ConnectAns()
