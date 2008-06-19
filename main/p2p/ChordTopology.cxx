@@ -12,8 +12,11 @@
 #include "p2p/Connect.hxx"
 #include "p2p/Update.hxx"
 #include "p2p/ChordUpdate.hxx"
+#include "p2p/P2PSubsystem.hxx"
 
 using namespace p2p;
+
+#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
    TopologyAPI(config, dispatcher, transporter), mJoined(false) 
@@ -32,6 +35,7 @@ ChordTopology::joinOverlay()
    // tell the transport layer to form a connection to bootstrap node (special
    // bootstrap connect ). This needs to give up the address of the BP node 
    mTransporter.connect(mProfile.bootstrapNodes().front());
+   DebugLog(<< "attempting to connect to bootstrap node");
 }
 
 
@@ -39,12 +43,15 @@ ChordTopology::joinOverlay()
 void 
 ChordTopology::newConnectionFormed( const NodeId& node )
 {
+   DebugLog(<< "newConnectionFormed to: " << node.encodeToNetwork());
+
    // If this is the first connection we have - then it must be the connection to
    // the bootstrap node
    if(mFingerTable.size() == 0 && mNextTable.size() == 0)
    {
       // collect candidates for our NodeId
       mTransporter.collectCandidates(mProfile.nodeId());
+      DebugLog(<< "collectingCandidates to connect to AP");
 
       // Build finger table
       buildFingerTable();
@@ -54,6 +61,7 @@ ChordTopology::newConnectionFormed( const NodeId& node )
    // the send a join
    if(mNextTable.size() == 1 && node == mNextTable[0])
    {
+      DebugLog(<< "sending join to node: " << node.encodeToNetwork());
    	DestinationId destination(node);
       std::auto_ptr<Message> joinReq(new JoinReq(destination, mProfile.nodeId()));
       mDispatcher.send(joinReq, *this);      
@@ -68,6 +76,8 @@ ChordTopology::newConnectionFormed( const NodeId& node )
 void 
 ChordTopology::connectionLost( const NodeId& node )
 {
+   DebugLog(<< "connectionLost to: " << node.encodeToNetwork());
+
    // if node is in the finger table, remove it 
    mFingerTable.erase(node);
 
@@ -98,6 +108,8 @@ ChordTopology::connectionLost( const NodeId& node )
 void 
 ChordTopology::candidatesCollected( const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
 {
+   DebugLog(<< "candidateCollection completed, sending CONNECT req to: " << node.encodeToNetwork());
+
    // Connect to node - send the ConnectReq
 	DestinationId destination(node);
    std::auto_ptr<Message> connectReq(new ConnectReq(destination, resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, candidates));
@@ -109,6 +121,8 @@ ChordTopology::candidatesCollected( const NodeId& node, unsigned short appId, st
 void 
 ChordTopology::consume(JoinReq& msg)
 {
+   DebugLog(<< "received JOIN req from: " << msg.getNodeId().encodeToNetwork());
+
    // check we are reponsible for the data from this node 
    if(!isResponsible(msg.getNodeId()))
    {
@@ -141,9 +155,12 @@ ChordTopology::consume(JoinReq& msg)
 void 
 ChordTopology::consume(UpdateReq& msg)
 {
+   DebugLog(<< "received JOIN req from: ?");
+
    // if our, prev empty, then this update will have the prev and need to
    // connect to them and set the prev 
    ChordUpdate cordUpdate( msg.getRequestMessageBody() );
+   
    if(addNewNeighbors(cordUpdate.getPredecessors(), false /* adjustNextOnly */) ||
       addNewNeighbors(cordUpdate.getSuccessors(), false /* adjustNextOnly */))
    {
@@ -158,6 +175,8 @@ ChordTopology::consume(UpdateReq& msg)
 void 
 ChordTopology::consume(LeaveReq& msg)
 {
+   DebugLog(<< "received LEAVE req from: ?");
+
    // if this is in the prev/next table, remove it and send updates 
    assert(0);
 
@@ -169,6 +188,8 @@ ChordTopology::consume(LeaveReq& msg)
 void 
 ChordTopology::consume(ConnectAns& msg)
 {
+   DebugLog(<< "received CONNECT ans from: " << msg.getResponseNodeId().encodeToNetwork());
+   
    // Get NodeId from message and check if it is a neighbour
    std::vector<NodeId> nodes;
    nodes.push_back(msg.getResponseNodeId());
@@ -183,6 +204,8 @@ ChordTopology::consume(ConnectAns& msg)
 void 
 ChordTopology::consume(JoinAns& msg)
 {
+   DebugLog(<< "received JOIN ans from: " << msg.getResponseNodeId().encodeToNetwork());
+
    // TODO check response code?
    mJoined = true;
 }
@@ -191,6 +214,8 @@ ChordTopology::consume(JoinAns& msg)
 void 
 ChordTopology::consume(UpdateAns& msg)
 {
+   DebugLog(<< "received UPDATE ans from: " << msg.getResponseNodeId().encodeToNetwork());
+
    // TODO check response - and log?
 }
 
@@ -198,6 +223,8 @@ ChordTopology::consume(UpdateAns& msg)
 void 
 ChordTopology::consume(LeaveAns& msg)
 {
+   DebugLog(<< "received LEAVE ans from: " << msg.getResponseNodeId().encodeToNetwork());
+
    // TODO check response - and log?
 }
 
@@ -212,6 +239,7 @@ ChordTopology::findNextHop( const NodeId& node )
    {
       // return the next pointer and increment around slowly 
       assert( mNextTable.size() > 0 );
+      DebugLog(<< "findNextHop returning: " << mNextTable[0].encodeToNetwork());
       return mNextTable[0];
    }
 
@@ -223,9 +251,11 @@ ChordTopology::findNextHop( const NodeId& node )
       if(nextIt == mFingerTable.end()) break;
       if((*it <= node) && (node < *nextIt))
       {
+         DebugLog(<< "findNextHop returning: " << it->encodeToNetwork());
          return *it;
       }
    }
+   DebugLog(<< "findNextHop returning: " << it->encodeToNetwork());
    return *it;    
 }
 
@@ -366,13 +396,21 @@ ChordTopology::addNewNeighbors(const std::vector<NodeId>& nodes, bool adjustNext
 
       if(setNext)
       {
+         DebugLog(<< "new next neighbour added: " << nodes[n].encodeToNetwork());
          mNextTable[0] = nodes[n]; 
+      }
+
+      if(setPrev)
+      {
+         DebugLog(<< "new prev neighbour added: " << nodes[n].encodeToNetwork());
+         mPrevTable[0] = nodes[n]; 
       }
 
       if(setNext || setPrev)
       {
          changed=true;
          // kick start connection to newly added node if not admitting peer addition
+         DebugLog(<< "collecting candidates for new neighbour: " << nodes[n].encodeToNetwork());
          if(!adjustNextOnly) mTransporter.collectCandidates(nodes[n]);  
       }
    }
@@ -410,6 +448,7 @@ ChordTopology::buildFingerTable()
    for(unsigned int i = 0; i < mProfile.numInitialFingers(); i++)
    {
       NodeId fingerNodeId = mProfile.nodeId().add2Pow(127-i);
+      DebugLog(<< "collecting candidates for fingertable: " << fingerNodeId.encodeToNetwork());
       mTransporter.collectCandidates(fingerNodeId);     
    }
 }
@@ -433,6 +472,7 @@ ChordTopology::sendUpdates()
    std::vector<NodeId>::iterator it = mPrevTable.begin();
    for(; it != mPrevTable.end(); it++)
    {   
+      DebugLog(<< "sending update to prev neighbour: " << it->encodeToNetwork());
       DestinationId destination(*it);
       std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
       mDispatcher.send(updateReq, *this);
@@ -441,6 +481,7 @@ ChordTopology::sendUpdates()
    it = mNextTable.begin();
    for(; it != mNextTable.end(); it++)
    {
+      DebugLog(<< "sending update to next neighbour: " << it->encodeToNetwork());
 	   DestinationId destination(*it);
       std::auto_ptr<Message> updateReq(new UpdateReq(destination, ourUpdate.encode()));
       mDispatcher.send(updateReq, *this);

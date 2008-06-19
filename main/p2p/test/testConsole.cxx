@@ -190,7 +190,8 @@ main (int argc, char** argv)
    Data address = DnsUtil::getLocalIpAddress();
    Data bootstrapAddress;
    unsigned short bootstrapPort=0;
-   Data logLevel("INFO");
+   //Data logLevel("INFO");
+   Data logLevel("DEBUG");
 
    // Loop through command line arguments and process them
    for(int i = 1; i < argc; i++)
