@@ -7,7 +7,6 @@
 #include "p2p/NodeId.hxx"
 #include "p2p/ResourceId.hxx"
 #include "p2p/Message.hxx"
-#include "p2p/Postable.hxx"
 #include "p2p/Transporter.hxx"
 #include "p2p/TransporterMessage.hxx"
 #include "p2p/TopologyAPI.hxx"
@@ -18,7 +17,7 @@ namespace p2p
 class Dispatcher;
 class TransporterMessage;
 
-class ForwardingLayer: public EventConsumer, public Postable<p2p::Event>
+class ForwardingLayer: public EventConsumer
 {
    public:
       ForwardingLayer(const Profile& profile, 

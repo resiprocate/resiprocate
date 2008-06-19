@@ -21,12 +21,32 @@ class Dispatcher : public Postable<Message>
       void registerPostable(Message::MessageType type,
                             Postable<Event>& postable);
       void send(std::auto_ptr<Message> message, Postable<Event>& postable);
+
+      /**
+       * Responses come back as Message type to postable consumer.
+       */
+      void sendAsBaseMessage(std::auto_ptr<Message> message, Postable<Event>& postable);
       
       //not public api
       virtual void post(std::auto_ptr<Message> message);
    private:
+      class Entry 
+      {
+         public:
+            Entry() 
+               : mPostable(0),
+                 mForBaseMessage(false)
+            {}
+            Entry(Postable<Event>& postable, bool forBaseMessage = false)
+               : mPostable(&postable),
+                 mForBaseMessage(forBaseMessage)
+            {}
+            Postable<Event>* mPostable;
+            bool mForBaseMessage;
+      };
+
       typedef std::map<Message::MessageType, Postable<Event>*> Registry;
-      typedef std::map<TransactionId, Postable<Event>*> TidMap;
+      typedef std::map<TransactionId, Entry> TidMap;
       Registry mRegistry;
       TidMap mTidMap;
       ForwardingLayer* mForwardingLayer;

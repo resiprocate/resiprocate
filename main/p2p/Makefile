@@ -39,7 +39,7 @@ SRC 	+= \
 	Transporter.cxx \
 	TransporterMessage.cxx \
 	Update.cxx \
-
+	BatchMessages.cxx \
 
 include $(BUILD)/Makefile.post
 
