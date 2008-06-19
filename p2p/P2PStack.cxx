@@ -1,4 +1,6 @@
+
 #include "p2p/P2PStack.hxx"
+#include <rutil/DnsUtil.hxx>
 
 using namespace p2p;
 
@@ -41,6 +43,21 @@ P2PStack::join()
 void 
 P2PStack::listenOn(int port)
 {
+   resip::TransportType transport = resip::TCP;
+
+   struct in_addr addr;
+   if(resip::DnsUtil::inet_pton("0.0.0.0", addr)==0)
+   {
+      assert(0);
+   }
+   
+   sockaddr_in addr_in;
+   addr_in.sin_family = AF_INET;
+   addr_in.sin_addr = addr;
+   addr_in.sin_port = port;    
+
+   resip::GenericIPAddress address(addr_in);
+   mTransporter.addListener(transport,address);
 }
 
 
