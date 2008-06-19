@@ -9,7 +9,6 @@
 #include "p2p/Profile.hxx"
 #include "p2p/Message.hxx"
 #include "p2p/EventConsumer.hxx"
-#include "p2p/Postable.hxx"
 #include "p2p/Join.hxx"
 #include "p2p/Update.hxx"
 #include "p2p/Leave.hxx"
@@ -24,7 +23,7 @@ class Dispatcher;
 class TransactionLayer;
 
 /// This is an abstract base class from which to derive the actual topology plugins
-class TopologyAPI :  public EventConsumer, public Postable<Event>
+class TopologyAPI :  public EventConsumer
 {
    public:
       virtual ~TopologyAPI() = 0;
