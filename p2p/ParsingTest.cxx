@@ -19,6 +19,53 @@ using namespace resip; // approved by Adam
 using namespace p2p;
 
 void
+TestConnect()
+{
+	NodeId node;
+	DestinationId dest(node);
+	resip::Data noData;
+
+	//const DestinationId &dest, const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates
+
+	resip::Data password = "password";
+	UInt16 application = 100;
+	resip::Data role = "test";
+
+	std::vector<Candidate> candidates;
+
+	ConnectReq *connect = new ConnectReq(dest, noData, password, application, role, candidates);
+	assert(connect);
+	assert(connect->getType() == Message::ConnectReqType);
+
+	resip::Data encodedData = connect->encodePayload();
+	assert(encodedData.size());
+
+	Message *message = Message::parse(encodedData);
+	assert(message->getType() == Message::ConnectReqType);
+	assert(*message == *connect);
+
+	ConnectReq *connectReq = static_cast<ConnectReq *>(message);
+	assert(connectReq->getPassword() == password);
+	assert(connectReq->getRole() == role);
+	assert(connectReq->getApplication() == application);
+
+	Candidate c("candidate:1 1 UDP 2130706431 10.0.1.1 8998 typ host");
+	assert(connectReq->getCandidates().empty());
+	
+	candidates.push_back(c);
+	ConnectReq *connect2 = new ConnectReq(dest, noData, password, application, role, candidates);
+	assert(connect2);
+
+	resip::Data encodedData2 = connect->encodePayload();
+	Message *message2 = Message::parse(encodedData2);
+	assert(message2);
+
+	ConnectReq *connectReq3 = static_cast<ConnectReq *>(message2);
+	assert(connectReq3);
+	//assert(!connectReq3->getCandidates().empty());
+}
+
+void
 TestUpdate()
 {	
 	NodeId node;
@@ -54,17 +101,25 @@ TestUpdate()
 void
 TestChordUpdate()
 {
+	DebugLog(<< "Testing ChordUpdate");
+
 	NodeId node;
 	DestinationId dest(node);
 
 	ChordUpdate update;
-	UpdateReq *updateReq = new UpdateReq(dest, update.encode());
+	update.setUpdateType(ChordUpdate::PeerReady);
+	resip::Data chordData = update.encode();
+	assert(chordData.size());
+
+	UpdateReq *updateReq = new UpdateReq(dest, chordData);
 	resip::Data encodedMessage = updateReq->encodePayload();
 
 	Message *compareMessage = Message::parse(encodedMessage);
 	assert(*compareMessage == *updateReq);
 
-	resip::Data reqBlob = updateReq->getRequestMessageBody();
+	resip::Data reqBlob = compareMessage->getRequestMessageBody();
+	assert(reqBlob.size());
+
 	ChordUpdate update2(reqBlob);
 	assert(update2 == update);
 
@@ -72,6 +127,8 @@ TestChordUpdate()
 	assert(updateAns);
 
 	assert(updateAns->getTransactionId() == updateReq->getTransactionId());
+
+	assert(updateAns->getType() == Message::UpdateAnsType);
 }
 
 void
@@ -83,8 +140,9 @@ TestJoin()
 void
 TestMessages()
 {
-	TestUpdate();
-	TestChordUpdate();
+	TestConnect();
+	//TestUpdate();
+	//TestChordUpdate();
 }
 
 int main() 

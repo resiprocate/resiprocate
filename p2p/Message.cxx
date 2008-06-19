@@ -89,14 +89,14 @@ Message::operator==(const Message& msg) const
 		(mPDU.mHeader->mTtl == msg.mPDU.mHeader->mTtl) &&
 		(mPDU.mHeader->mReserved == msg.mPDU.mHeader->mReserved) &&
 		(mPDU.mHeader->mFragment == msg.mPDU.mHeader->mFragment) &&
-		(mPDU.mHeader->mLength == msg.mPDU.mHeader->mLength); /*  && 
-		(mPDU.mHeader->mTransactionId == msg.mPDU.mHeader->mTransactionId) &&
+//		(mPDU.mHeader->mLength == msg.mPDU.mHeader->mLength);  && 
+		(mPDU.mHeader->mTransactionId == msg.mPDU.mHeader->mTransactionId)  &&
 		(mPDU.mHeader->mFlags == msg.mPDU.mHeader->mFlags) &&
 		(mPDU.mHeader->mRouteLogLenDummy == msg.mPDU.mHeader->mRouteLogLenDummy)  &&
 		(getType() == msg.getType()) &&
 		(mPDU.mHeader->mViaList.size() == msg.mPDU.mHeader->mViaList.size()) &&
-		(mPDU.mHeader->mDestinationList.size() == msg.mPDU.mHeader->mDestinationList.size()) &&
-		(mPDU.mPayload == msg.mPDU.mPayload); */
+		(mPDU.mHeader->mDestinationList.size() == msg.mPDU.mHeader->mDestinationList.size())  &&
+		(mPDU.mPayload == msg.mPDU.mPayload);  
 
 	DebugLog(<< "operator state " << headerPayloadOk);
 
@@ -234,6 +234,7 @@ Message::parse(const resip::Data &message)
 	MessagePayloadStruct payloadStruct;
 	payloadStruct.decode(stream);
 	newMessage->mRequestMessageBody = payloadStruct.mPayload;
+	*newMessage->mPDU.mHeader = header;
 
 	resip::DataStream payloadStream( newMessage->mRequestMessageBody );
 
@@ -374,6 +375,8 @@ Message::encodePayload()
 
 	encodedStream.flush();
 	size_t endOfPayload = encodedData.size();
+
+	DebugLog(<< "Encoded Payload Size Is: " << (endOfPayload - startOfPayload));
         
 
 	// compute signature block
@@ -394,8 +397,10 @@ Message::encodePayload()
 	// add the length to the header
 	assert(mPDU.mHeader->mVersion);
 	UInt32 *lengthWord = reinterpret_cast<UInt32 *>(const_cast<char *>(encodedData.data()) + 12);
-	(*lengthWord) = (*lengthWord | (htonl(finalLength & 0xfff) >> 8));
-	std::cout << *lengthWord << std::endl;
+
+	std::cout << "current len word: " << *lengthWord << std::endl;
+	(*lengthWord) = (*lengthWord | (htonl(finalLength & 0x0fff) >> 8));
+	std::cout << "final len word: " << *lengthWord << std::endl;
 
 	// we should optimize this eventually to avoid this copy
 	return encodedData;
