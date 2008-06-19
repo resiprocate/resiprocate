@@ -102,6 +102,13 @@ NodeId::encodeToNetwork() const
    return d;
 }
 
+std::ostream& 
+p2p::operator<<( std::ostream& strm, const NodeId& node )
+{
+   node.mNodeId.print(strm, 0);
+   return strm;
+}
+
 
 CompressedId::CompressedId(const resip::Data& cid)
 {

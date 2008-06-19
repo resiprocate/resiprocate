@@ -4,31 +4,32 @@
 using namespace p2p;
 using namespace s2c;
 
-
 ConnectReq::ConnectReq()
 {
 }
 
-
-/// ***********
-/// ConnectReq
-
-ConnectReq::ConnectReq(const DestinationId &dest, const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates) :
+ConnectReq::ConnectReq(const DestinationId &dest, 
+                       const resip::Data &frag, 
+                       const resip::Data &password, 
+                       UInt16 application, 
+                       const resip::Data &role, 
+                       const std::vector<Candidate> &candidates) :
 	ConnectBase(frag, password, application, role, candidates)
 {
-
 }
 
-ConnectAns::ConnectAns(Message *req, const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates) :
+ConnectAns::ConnectAns()
+{
+}
+
+ConnectAns::ConnectAns(Message *req, 
+                       const resip::Data &frag, 
+                       const resip::Data &password, 
+                       UInt16 application, 
+                       const resip::Data &role, 
+                       const std::vector<Candidate> &candidates) :
 	ConnectBase(frag, password, application, role, candidates)
 {
 	assert(req);
 	copyForwardingData(*req);
 }
-
-ConnectAns::ConnectAns()
-{
-
-}
-
-

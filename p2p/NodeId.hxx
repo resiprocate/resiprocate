@@ -1,6 +1,7 @@
 #ifndef __P2P_NODE_ID_HXX
 #define __P2P_NODE_ID_HXX
 
+#include <iosfwd>
 #include "p2p/MessageStructsGen.hxx"
 
 namespace p2p
@@ -26,15 +27,14 @@ class NodeId
 
       const s2c::NodeIdStruct& getNodeIdStruct() const;
       const resip::Data  encodeToNetwork() const;
-      
+
+      friend std::ostream& operator<<( std::ostream& strm, const NodeId& node );
+
    private:
       // NOTE: this should be 128 bits
       s2c::NodeIdStruct mNodeId;
-};
-   
-std::ostream& operator<<( std::ostream& strm, const NodeId& node );
-std::istream& operator>>( std::istream& strm, const NodeId& node );
 
+};
 
 class CompressedId
 {
@@ -43,7 +43,10 @@ class CompressedId
       bool operator==(const CompressedId& rhs) const;
 };
 
+std::ostream& operator<<( std::ostream& strm, const p2p::NodeId& node );
+
 }
+
 
 
 #endif
