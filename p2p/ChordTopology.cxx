@@ -356,7 +356,7 @@ ChordTopology::resourceId( const resip::Data& resourceName )
 void 
 ChordTopology::post(std::auto_ptr<Event> event)
 {
-   //will run in context of dispatcher 
+   //will run in same thread as the dispatcher 
    event->dispatch(*this);
 }
 

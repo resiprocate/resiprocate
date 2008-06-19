@@ -282,8 +282,10 @@ main (int argc, char** argv)
    
    ResourceId rid(Random::getRandom(16));
    profile.nodeId() = NodeId(rid);
+   cerr << "Using NodeId: " << profile.nodeId() << endl;
+   
    profile.userName().value() = "test";
-
+   
    struct in_addr addr;
    if(resip::DnsUtil::inet_pton(bootstrapAddress, addr)==0)
    {

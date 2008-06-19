@@ -24,8 +24,6 @@ DestinationId::DestinationId(const ResourceId& rid)
    mResource.mResourceId->mId = rid.value();
 }
 
-
-
 bool
 DestinationId::isNodeId() const
 {
