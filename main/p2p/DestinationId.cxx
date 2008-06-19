@@ -89,6 +89,13 @@ DestinationId::operator==(const DestinationId& nid) const
    return false;
 }
 
+s2c::DestinationStruct* 
+DestinationId::copyDestinationStruct() const
+{
+   return new s2c::DestinationStruct(*this);
+}
+
+
 
 
 /* ======================================================================
