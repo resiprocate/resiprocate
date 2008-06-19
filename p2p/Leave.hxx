@@ -17,6 +17,8 @@ public:
 
 	virtual MessageType getType() const { return Message::LeaveAnsType; }
 	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual resip::Data brief() const { return "LeaveAns Message"; }
+
 
 protected:
 	virtual void decodePayload(resip::DataStream &dataStream);
@@ -33,6 +35,7 @@ public:
       
 	virtual MessageType getType() const { return Message::LeaveReqType; }
 	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual resip::Data brief() const { return "LeaveReq Message"; }
 
 protected:
 	virtual void decodePayload(resip::DataStream &dataStream);

@@ -7,7 +7,9 @@
 #include "p2p/Update.hxx"
 #include "p2p/MessageStructsGen.hxx"
 #include "p2p/Candidate.hxx"
+
 #include "rutil/DataStream.hxx"
+#include "rutil/Random.hxx"
 
 #include "p2p/P2PSubsystem.hxx"
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
@@ -63,6 +65,9 @@ TestConnect()
 	ConnectReq *connectReq3 = static_cast<ConnectReq *>(message2);
 	assert(connectReq3);
 	assert(!connectReq3->getCandidates().empty());
+
+	std::vector<Candidate> newCandidates = connectReq3->getCandidates();
+	assert(newCandidates[0].getIceString() == c.getIceString());
 }
 
 void
@@ -134,14 +139,49 @@ TestChordUpdate()
 void
 TestJoin()
 {
+	DebugLog(<< "Testing Join");
 
+	NodeId node;
+	DestinationId dest(node);
+
+	JoinReq *joinReq = new JoinReq(dest, node);
+	assert(joinReq->getType() == Message::JoinReqType);
+	resip::Data encodedData = joinReq->encodePayload();
+
+	Message *msg = Message::parse(encodedData);
+	assert(msg);
+	assert(msg->getType() == Message::JoinReqType);
+
+	JoinReq *joinReqMsg = static_cast<JoinReq *>(msg);
+	assert(joinReqMsg->getNodeId() == node);
+
+	ResourceId rid(Random::getRandom(16));
+	NodeId nid(rid);
+
+	JoinReq *newReq = new JoinReq(dest, nid);
+	assert(newReq->getNodeId() == nid);
+	Message *testMessage = Message::parse(newReq->encodePayload());
+	assert(testMessage->getType() == Message::JoinReqType);
+
+	JoinReq *joinReq2 = static_cast<JoinReq *>(testMessage);
+	assert(joinReq2->getNodeId() == nid);
+
+	JoinAns *ans = joinReq2->makeJoinResponse();
+	assert(ans->getType() == Message::JoinAnsType);
+	assert(!ans->isRequest());
+
+	resip::Data encodedAnswer = ans->encodePayload();
+	Message *testMsg = Message::parse(encodedAnswer);
+	assert(testMsg);
+	assert(testMsg->getType() == Message::JoinAnsType);
 }
 
 void
 TestMessages()
 {
-	//TestUpdate();
-	//TestChordUpdate();
+	TestJoin();
+	TestUpdate();
+	TestChordUpdate();
 	TestConnect();
 }
 
