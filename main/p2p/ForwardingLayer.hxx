@@ -47,6 +47,12 @@ class ForwardingLayer: public EventConsumer
       //not public api
       virtual void post(std::auto_ptr<Event> event);
       
+      virtual resip::Data brief() const
+      {
+         return "ForwardingLayer";
+      }
+      
+
    private:
       const Profile& mProfile;
       Dispatcher& mDispatcher;

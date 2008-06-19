@@ -120,7 +120,8 @@ class Message : public Signable
       
       virtual std::auto_ptr<Event> event();
       
-      virtual resip::Data brief() const = 0;
+      virtual resip::Data brief() const =0;
+      
 
 		void dump() const;
 

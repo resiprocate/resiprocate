@@ -70,6 +70,12 @@ class TopologyAPI :  public EventConsumer
       // Function to hash resource names into resourceID 
       virtual ResourceId resourceId( const resip::Data& resourceName )=0;
 
+      virtual resip::Data brief() const
+      {
+         return "TopologyAPI";
+      }
+      
+
    protected:
       Profile&     mProfile;
       Dispatcher&  mDispatcher;
