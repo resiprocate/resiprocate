@@ -14,6 +14,8 @@ class UpdateAns : public Message
 public:
 	virtual MessageType getType() const { return Message::UpdateAnsType; }
 	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual resip::Data brief() const { return "UpdateAns Message"; }
+
 
 	std::auto_ptr<Event> event()
 	{
@@ -38,6 +40,7 @@ public:
 	virtual MessageType getType() const { return Message::UpdateReqType; }
 
 	virtual void getEncodedPayload(resip::DataStream &data);
+	virtual resip::Data brief() const { return "UpdateReq Message"; }
 
 	std::auto_ptr<Event> event()
 	{

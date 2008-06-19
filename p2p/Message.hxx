@@ -88,7 +88,7 @@ class Message : public Signable
       virtual Message *makeErrorResponse(Error::Code code, 
                                          const resip::Data& reason) const;
 
-      JoinAns* makeJoinResponse(const resip::Data &overlaySpecific);
+      JoinAns* makeJoinResponse(const resip::Data &overlaySpecific = resip::Data::Empty);
       UpdateAns* makeUpdateResponse(const resip::Data &overlaySpecific);
       LeaveAns* makeLeaveResponse();
       ConnectAns* makeConnectResponse(const resip::Data &frag, const resip::Data &password, UInt16 application, const resip::Data &role, const std::vector<Candidate> &candidates);
@@ -120,11 +120,7 @@ class Message : public Signable
       
       virtual std::auto_ptr<Event> event();
       
-      virtual resip::Data brief() const 
-      {
-         assert(0);
-         return resip::Data::Empty;
-      }
+      virtual resip::Data brief() const = 0;
 
 		void dump() const;
 

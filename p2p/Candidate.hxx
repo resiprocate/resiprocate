@@ -64,6 +64,8 @@ class Candidate
                 sizeof(mAddress.v4Address.sin_zero)) ;
 
          resip::DnsUtil::inet_pton(ip, mAddress.v4Address.sin_addr);
+
+			mValue = iceline;
       }
 
       const resip::Data &getIceString() const { return mValue; }
