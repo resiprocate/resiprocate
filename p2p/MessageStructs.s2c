@@ -85,7 +85,7 @@
 
        
       struct {
-             uint8   relo_token;
+             uint32   relo_token;
              uint32  overlay;
              uint8   ttl;
              uint8   reserved;
