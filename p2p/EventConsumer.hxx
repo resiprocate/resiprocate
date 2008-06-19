@@ -44,6 +44,9 @@ class EventConsumer : public EventConsumerBase
       virtual void consume(ErrorResponse& m) { assert(0); }
 
       virtual void consume(const BatchMessages& cm) { assert(0); }
+
+      virtual resip::Data brief() const { return "EventConsumer"; }
+
 };
 
 }
