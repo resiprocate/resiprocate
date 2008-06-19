@@ -56,7 +56,7 @@ TestConnect()
 	ConnectReq *connect2 = new ConnectReq(dest, noData, password, application, role, candidates);
 	assert(connect2);
 
-	resip::Data encodedData2 = connect->encodePayload();
+	resip::Data encodedData2 = connect2->encodePayload();
 	Message *message2 = Message::parse(encodedData2);
 	assert(message2);
 
@@ -140,9 +140,9 @@ TestJoin()
 void
 TestMessages()
 {
-	TestConnect();
 	//TestUpdate();
 	//TestChordUpdate();
+	TestConnect();
 }
 
 int main() 
