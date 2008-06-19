@@ -40,7 +40,7 @@ public:
    virtual UserName& userName() { return mUserName; }
    virtual const UserName& userName() const { return mUserName; }
 
-   virtual unsigned int numInitialFingers() { return mNumInitialFingers; }
+   virtual unsigned int& numInitialFingers() { return mNumInitialFingers; }
    virtual const unsigned int numInitialFingers() const { return mNumInitialFingers; }
 
    virtual std::vector<resip::GenericIPAddress>& bootstrapNodes() { return mBootstrapNodes; }
