@@ -204,8 +204,8 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
       ErrLog( << "Cannot ::read -- returned " << bytesRead); 
    }
    s2c::NodeIdStruct nid;
-   //nid.mHigh = *((UInt64*)(buffer));
-   //nid.mLow = *((UInt64*)(buffer+sizeof(UInt64)));
+   nid.mHigh = *((UInt64*)(buffer));
+   nid.mLow = *((UInt64*)(buffer+sizeof(UInt64)));
 
    NodeId nodeId(nid);
    FlowId flowId(nodeId, application, s, *mRxFifo);
@@ -217,7 +217,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
                                                resip::TCP,
                                                0 /* no cert for you */);
    mRxFifo->add(co);
-   assert(0);
+   //assert(0);
 }
 
 void
