@@ -18,6 +18,8 @@ class P2PStack
       void run(); // this never returns 
       void process(int waitTimeMS); // run a time slice and return 
       
+      void join();
+      
    private:
       Profile mProfile;
 

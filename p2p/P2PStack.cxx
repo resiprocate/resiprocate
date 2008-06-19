@@ -28,3 +28,9 @@ P2PStack::process(int waitTimeMS)
    mTransporter.process(waitTimeMS);
    mForwarder.process(waitTimeMS);
 }
+
+
+void
+P2PStack::join()
+{
+}
