@@ -10,11 +10,12 @@ DestinationId::DestinationId(s2c::DestinationStruct s) : s2c::DestinationStruct(
 {
 }
 
-DestinationId::DestinationId(const NodeId& nid)  
+DestinationId::DestinationId(const NodeId& nid) 
 {
    mPeer.mNodeId = new s2c::NodeIdStruct;
    *(mPeer.mNodeId) = nid.getNodeIdStruct();
    mResource.mResourceId = 0;
+	mType = s2c::peer;
 }
 
 DestinationId::DestinationId(const ResourceId& rid)
@@ -22,6 +23,7 @@ DestinationId::DestinationId(const ResourceId& rid)
    mPeer.mNodeId = 0;
    mResource.mResourceId = new s2c::ResourceIdStruct;
    mResource.mResourceId->mId = rid.value();
+	mType = s2c::resource;
 }
 
 bool
