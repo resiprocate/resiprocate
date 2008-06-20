@@ -109,7 +109,14 @@ ForwardingLayer::consume(ConnectionOpened& m)
 {
    DebugLog(<< "ForwardingLayer: new connection formed");
 
-   mTopology.newConnectionFormed(m.getNodeId());
+   if(m.getApplication() == RELOAD_APPLICATION_ID)
+   {
+      mTopology.newConnectionFormed(m.getNodeId(), m.isInbound());
+   }
+   else
+   {
+      // TODO - notify application that new connection is formed
+   }
 }
 
 void 
@@ -117,7 +124,14 @@ ForwardingLayer::consume(ConnectionClosed& m)
 {
    DebugLog(<< "ForwardingLayer: connection closed");
 
-   mTopology.connectionLost(m.getNodeId());   
+   if(m.getApplicationId() == RELOAD_APPLICATION_ID)
+   {
+      mTopology.connectionLost(m.getNodeId());   
+   }
+   else
+   {
+      // TODO - notify application that connection is closed
+   }
 }
 
 void 
@@ -138,7 +152,14 @@ void
 ForwardingLayer::consume(LocalCandidatesCollected& m)
 {
    // pass to the TopologyAPI
-   mTopology.candidatesCollected(m.getNodeId(), m.getAppId(), m.getCandidates());
+   if(m.getAppId() == RELOAD_APPLICATION_ID)
+   {
+      mTopology.candidatesCollected(m.getNodeId(), m.getAppId(), m.getCandidates());
+   }
+   else
+   {
+      // TODO - notify application that candidates are collected
+   }
 }
 
 void 

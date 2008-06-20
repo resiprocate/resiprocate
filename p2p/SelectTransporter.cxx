@@ -63,14 +63,21 @@ SelectTransporter::addListenerImpl(resip::TransportType transport,
    struct sockaddr_in addr = address.v4Address;
 
    mBootstrapSocket = ::socket(AF_INET, SOCK_STREAM, 0);
-   if (!mBootstrapSocket) {ErrLog(<< "::socket() failed");}
+   if (!mBootstrapSocket) {ErrLog(<< "::socket() failed, errno " << getErrno());}
+
+   int on = 1;
+#if !defined(WIN32)
+   ::setsockopt ( mBootstrapSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+#else
+   ::setsockopt ( mBootstrapSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on));
+#endif
 
    status = ::bind(mBootstrapSocket, reinterpret_cast<sockaddr *>(&addr),
                    sizeof(struct sockaddr_in));
-   if (status) { ErrLog( << "Cannot ::bind"); }
+   if (status) { ErrLog( << "Cannot ::bind, errno " << getErrno()); }
 
    status = ::listen(mBootstrapSocket, 120);
-   if (status) { ErrLog( << "Cannot ::listen"); }
+   if (status) { ErrLog( << "Cannot ::listen, errno " << getErrno()); }
 
    mHasBootstrapSocket = true;
 }
@@ -109,7 +116,7 @@ SelectTransporter::sendImpl(NodeId nodeId, std::auto_ptr<p2p::Message> msg)
 
    if (bytesSent != data.size()) 
    { 
-      ErrLog( << "Cannot send -- ::send returned " << bytesSent); 
+      ErrLog( << "Cannot send -- ::send returned " << bytesSent << " errno " << getErrno()); 
       assert(0);
    }
    else
@@ -128,7 +135,7 @@ SelectTransporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
 
    if (bytesSent != data->size()) 
    { 
-      ErrLog(<< "Cannot send -- ::send returned " << bytesSent); 
+      ErrLog(<< "Cannot send -- ::send returned " << bytesSent << " errno " << getErrno()); 
       assert(0);
    }
 }
@@ -150,7 +157,7 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
   // a new one and throw it in the listener map
   if (i == mListenerMap.end())
   {
-     DebugLog(<< "Adding new listener for application " << appId);
+     DebugLog(<< "Adding new listener for application " << appId << " on port " << mNextPort);
      struct sockaddr_in addr;
      resip::Socket s;
 #ifndef WIN32
@@ -161,14 +168,14 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
      memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
 
      s = ::socket(AF_INET, SOCK_STREAM, 0);
-     if (!s) {ErrLog(<< "::socket() failed");}
+     if (!s) {ErrLog(<< "::socket() failed, errno " << getErrno());}
    
      status = ::bind(s, reinterpret_cast<sockaddr *>(&addr),
             sizeof(struct sockaddr_in));
-     if (status) { ErrLog( << "Cannot ::bind"); }
+     if (status) { ErrLog( << "Cannot ::bind, errno " << getErrno()); }
 
      status = ::listen(s, 1);
-     if (status) { ErrLog( << "Cannot ::listen"); }
+     if (status) { ErrLog( << "Cannot ::listen, errno " << getErrno()); }
 
      addrPort.v4Address = addr;
 
@@ -209,7 +216,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    }
    
    int status = ::connect(s, &(bootstrapServer.address), sizeof(sockaddr_in));
-   if (status) { ErrLog( << "Cannot ::connect"); assert(0); return; }
+   if (status) { ErrLog( << "Cannot ::connect, errno " << getErrno()); assert(0); return; }
 
    DebugLog(<<"Connect succeeded");
 
@@ -222,7 +229,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
 
    if (bytesRead != sizeof(buffer)) 
    {
-      ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+      ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << getErrno()); 
       assert(0);
    }
    s2c::NodeIdStruct nid;
@@ -241,7 +248,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    size_t bytesSent = ::send(s,ourNid.data(), ourNid.size(), 0);
    if (bytesSent != ourNid.size()) 
    {
-      ErrLog( << "Cannot ::send -- returned " << bytesSent); 
+      ErrLog( << "Cannot ::send -- returned " << bytesSent << " errno " << getErrno()); 
    }
    
 
@@ -249,6 +256,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    ConnectionOpened *co = new ConnectionOpened(flowId,
                                                application,
                                                resip::TCP,
+                                               false /* inbound? */,
                                                0 /* no cert for you */);
    mRxFifo->add(co);
    //assert(0);
@@ -274,7 +282,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
 
    if (bytesSent != nid.size()) 
    {
-      ErrLog( << "Cannot ::send -- returned " << bytesSent); 
+      ErrLog( << "Cannot ::send -- returned " << bytesSent << " errno " << getErrno()); 
    }
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 }
@@ -300,10 +308,10 @@ SelectTransporter::connectImpl(NodeId nodeId,
            || candidate.getTransportType() == resip::TLS);
 
    s = ::socket(AF_INET, SOCK_STREAM, 0);
-   if (!s) {ErrLog(<< "::socket() failed");}
+   if (!s) {ErrLog(<< "::socket() failed, errno " << getErrno());}
 
    int status = ::connect(s, &(candidate.getAddress().address), sizeof(sockaddr_in));
-   if (status) { ErrLog( << "Cannot ::connect"); }
+   if (status) { ErrLog( << "Cannot ::connect, errno " << getErrno()); }
 
    FlowId flowId(nodeId, application, s, dataFifo);
 
@@ -312,6 +320,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
    ConnectionOpened *co = new ConnectionOpened(flowId,
                                                application,
                                                candidate.getTransportType(),
+                                               false /* inbound? */,
                                                0 /* no cert for you */);
    flowId.getFifo().add(co);
 }
@@ -358,10 +367,11 @@ SelectTransporter::process(int ms)
 
       resip::Socket s;
       struct sockaddr addr;
-      socklen_t addrlen;
+      socklen_t addrlen = sizeof(sockaddr);
 
-      if((s = accept(mBootstrapSocket, &addr, &addrlen))<0){
-        ErrLog( << "Could not accept");
+      if((s = accept(mBootstrapSocket, &addr, &addrlen))==(-1)){
+        ErrLog( << "Could not accept, errno " << getErrno());
+        assert(false);
       }
       DebugLog(<<"Accepted a connection");
 
@@ -369,20 +379,19 @@ SelectTransporter::process(int ms)
      // Blow our node ID out on the wire (because there is no cert)
      const resip::Data nid = mConfiguration.nodeId().encodeToNetwork();
      size_t bytesSent = ::send(s, nid.data(), nid.size(), 0);
-
      if (bytesSent != nid.size()) 
      {
-        ErrLog( << "Cannot ::send -- returned " << bytesSent); 
+        ErrLog( << "Cannot ::send -- returned " << bytesSent << " errno " << getErrno());
      }
      // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 
       // Get the remote node ID from the incoming socket
       char buffer[16];
       size_t bytesRead = readSocket(s, buffer, sizeof(buffer));
-      DebugLog(<< "Read#2" << bytesRead);
+      DebugLog(<< "Read#2 " << bytesRead);
       if (bytesRead != sizeof(buffer)) 
       {
-         ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+         ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << getErrno()); 
          assert(0);
       }
       
@@ -401,6 +410,7 @@ SelectTransporter::process(int ms)
       ConnectionOpened *co = new ConnectionOpened(flowId,
                                                 application,
                                                 resip::TCP,
+                                                true /* inbound? */,
                                                 0 /* no cert for you */);
       mRxFifo->add(co);
    }
@@ -428,7 +438,7 @@ SelectTransporter::process(int ms)
 
         if (bytesSent != nid.size()) 
         {
-           ErrLog( << "Cannot ::send -- returned " << bytesSent); 
+           ErrLog( << "Cannot ::send -- returned " << bytesSent << " errno " << getErrno()); 
         }
         // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 
@@ -442,7 +452,7 @@ SelectTransporter::process(int ms)
         DebugLog(<< "Read#3" << bytesRead);
         if (bytesRead != sizeof(buffer)) 
         {
-           ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+           ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << getErrno()); 
            assert(0);
         }
         
@@ -452,6 +462,7 @@ SelectTransporter::process(int ms)
         ConnectionOpened *co = new ConnectionOpened(flowId,
                                                   application,
                                                   resip::TCP,
+                                                  true /* inbound? */,
                                                   0 /* no cert for you */);
         mRxFifo->add(co);
 
@@ -501,7 +512,7 @@ SelectTransporter::process(int ms)
 
                if (bytesRead != (length - 30)) 
                {
-                  ErrLog( << "Cannot ::read -- returned " << bytesRead); 
+                  ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << getErrno()); 
                }
 
                resip::Data data(resip::Data::Take, buffer, length);

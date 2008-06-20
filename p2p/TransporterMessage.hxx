@@ -32,6 +32,7 @@ class ConnectionOpened : public Event
       ConnectionOpened(FlowId flowId,
                        unsigned short application,
                        resip::TransportType transportType,
+                       bool inbound,
                        X509 *cert);
       ~ConnectionOpened();
       
@@ -41,6 +42,7 @@ class ConnectionOpened : public Event
       unsigned short getApplication() const;
       NodeId getNodeId() const;
       resip::TransportType getTransportType() const;
+      bool isInbound() const;
       X509 *getCertificate() const;
 
       virtual resip::Data brief() const
@@ -53,6 +55,7 @@ class ConnectionOpened : public Event
       FlowId mFlowId;
       unsigned short mApplication;
       resip::TransportType mTransportType;
+      bool mInbound;
       X509* mCert;
 };
 
