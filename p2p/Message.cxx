@@ -10,6 +10,7 @@
 #include "rutil/Socket.hxx" 
 #include "rutil/Log.hxx"
 
+#include <openssl/rand.h>
 #include <assert.h>
 
 using namespace p2p;
@@ -38,7 +39,7 @@ Message::Message()
 
 Message::Message(const DestinationId &dest)
 {
-	// this is the constructor for requests
+    // this is the constructor for requests
 	initForwardingData();
 
 	// add to the destination list here
@@ -127,11 +128,9 @@ Message::initForwardingData()
 {
 	mPDU.mHeader = new ForwardingHeaderStruct();
 	mPDU.mHeader->mVersion = MessageVersion; // set by the draft
-	mPDU.mHeader->mTransactionId = 	
-								(static_cast<UInt64>(rand()) << 48) |
-							 	(static_cast<UInt64>(rand()) << 32) |
-							 	(static_cast<UInt64>(rand()) << 16) |
-					 			(static_cast<UInt64>(rand()));
+    
+    // Random transaction ID
+    RAND_bytes((unsigned char *)&mPDU.mHeader->mTransactionId,4);
 
 	mPDU.mHeader->mTtl = Message::MessageTtl;
 
@@ -187,10 +186,12 @@ Message::parse(const resip::Data &message)
 
 	ForwardingHeaderStruct header;
 	header.decode(stream);
-
+        
 	// figure out what type of message this is
 	Message::MessageType messageType = static_cast<Message::MessageType>(header.mMessageCode);
-	
+    DebugLog(<< "Transaction ID =" << std::hex << header.mTransactionId << "TTL=" <<
+             std::hex << (int)header.mTtl);
+
 	// parse the forwarding header
 	
 	switch(messageType)
