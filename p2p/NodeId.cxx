@@ -98,6 +98,7 @@ NodeId::encodeToNetwork() const
   resip::DataStream strm(d);
    
    mNodeId.encode(strm);
+   strm.flush();
    
    return d;
 }

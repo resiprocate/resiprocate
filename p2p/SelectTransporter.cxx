@@ -164,7 +164,8 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
      addr.sin_len = sizeof(struct sockaddr_in);
 #endif
      addr.sin_family = AF_INET;
-     addr.sin_port = mNextPort++;
+     addr.sin_port = ntohs(mNextPort++);
+     memset(&addr.sin_addr, 0, sizeof(addr.sin_addr));
      memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
 
      s = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -222,7 +223,6 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
 
    // Get the remote node ID from the incoming socket
    unsigned char buffer[16];
-
    
    size_t bytesRead = readSocket(s, (char*)buffer, sizeof(buffer));
    DebugLog(<< "Read#1" << bytesRead);
@@ -394,7 +394,7 @@ SelectTransporter::process(int ms)
          ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << getErrno()); 
          assert(0);
       }
-      
+
       // Parse the node id
       s2c::NodeIdStruct nids;
       resip::Data data(resip::Data::Borrow, buffer, sizeof(buffer));
@@ -426,7 +426,7 @@ SelectTransporter::process(int ms)
 
         resip::Socket s;
         struct sockaddr addr;
-        socklen_t addrlen;
+        socklen_t addrlen = sizeof(sockaddr);
 
         s = accept(j->second.first, &addr, &addrlen);
 
@@ -455,7 +455,7 @@ SelectTransporter::process(int ms)
            ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << getErrno()); 
            assert(0);
         }
-        
+
         // Ideally, we'd check that the nodeId we just read
         // actually matches the nodeId we were expecting.
 
@@ -500,9 +500,14 @@ SelectTransporter::process(int ms)
 
             while(left){
               bytesRead = readSocket(flowId.getSocket(), ptr, left);
+              if(bytesRead == -1) 
+              {
+                  ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << getErrno()); 
+                  assert(false);
+              }
               left-=bytesRead;
               ptr+=bytesRead;
-              DebugLog(<< "Read from socket: " << bytesRead << "left=" << left);
+              DebugLog(<< "Read from socket: " << bytesRead << " left=" << left);
             }
 
             if (int_buffer[0] == htonl(0x80000000 | 0x52454C4F))
