@@ -28,7 +28,7 @@ class ChordTopology : public TopologyAPI
       // need a fifo to receive timer events 
 
       // Messages that the forwarding layer sends to this object
-      virtual void newConnectionFormed( const NodeId& node );
+      virtual void newConnectionFormed( const NodeId& node, bool inbound );
       virtual void connectionLost( const NodeId& node );
       virtual void candidatesCollected( const NodeId& node, 
                                         unsigned short appId, 

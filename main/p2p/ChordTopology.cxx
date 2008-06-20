@@ -42,35 +42,38 @@ ChordTopology::joinOverlay()
 
 // Messages that the forwarding layer sends to this object
 void 
-ChordTopology::newConnectionFormed( const NodeId& node )
+ChordTopology::newConnectionFormed( const NodeId& node, bool inbound )
 {
-   DebugLog(<< "newConnectionFormed to: " << node);
+   DebugLog(<< "newConnectionFormed to: " << node << " (" << (inbound ? "inbound" : "outbound") << ")");
 
-   // If this is the first connection we have - then it must be the connection to
-   // the bootstrap node
-   if(mFingerTable.size() == 0 && mNextTable.size() == 0)
+   if(!inbound)
    {
-      // collect candidates for our NodeId
-      mTransporter.collectCandidates(mProfile.nodeId());
-      DebugLog(<< "collectingCandidates to connect to AP");
+      // If this is the first connection we have - then it must be the connection to
+      // the bootstrap node
+      if(mFingerTable.size() == 0 && mNextTable.size() == 0)
+      {
+         // collect candidates for our NodeId
+         mTransporter.collectCandidates(mProfile.nodeId());
+         DebugLog(<< "collectingCandidates to connect to AP");
 
-      // Build finger table
-      buildFingerTable();
+         // Build finger table
+         buildFingerTable();
+      }
+
+      // If we are not joined yet and this connection is to our Admitting Peer (next peer)
+      // the send a join
+      if(mNextTable.size() == 1 && node == mNextTable[0])
+      {
+         DebugLog(<< "sending join to node: " << node);
+   	   DestinationId destination(node);
+         std::auto_ptr<Message> joinReq(new JoinReq(destination, mProfile.nodeId()));
+         mDispatcher.send(joinReq, *this);      
+      }
+
+      // go and add this to the finger table
+      assert(mFingerTable.find(node) == mFingerTable.end());
+      mFingerTable.insert(node);
    }
-
-   // If we are not joined yet and this connection is to our Admitting Peer (next peer)
-   // the send a join
-   if(mNextTable.size() == 1 && node == mNextTable[0])
-   {
-      DebugLog(<< "sending join to node: " << node);
-   	DestinationId destination(node);
-      std::auto_ptr<Message> joinReq(new JoinReq(destination, mProfile.nodeId()));
-      mDispatcher.send(joinReq, *this);      
-   }
-
-   // go and add this to the finger table
-   assert(mFingerTable.find(node) == mFingerTable.end());
-   mFingerTable.insert(node);
 }
 
 
@@ -299,9 +302,19 @@ ChordTopology::getReplicationSet(  const ResourceId& resource )
 bool 
 ChordTopology::isResponsible( const NodeId& node ) const
 {
-   if (mPrevTable.size() == 0) return false;
+   // If it is us, then we are responsible
+   if(node == mProfile.nodeId())
+   {
+      return true;
+   }
 
-   if (  (mPrevTable[0] < node) && (node <= mProfile.nodeId()) )
+   // for now we are going to assume that if the prev table is empty, then we have a
+   // a new ring being formed and we are responsible for this request.  We need to consider
+   // the case where we are a node trying to join a stable ring, and the "join" process 
+   // has not completed yet - but we receive a message for another node.
+   if (mPrevTable.size() == 0) return true;  
+
+   if ( (mPrevTable[0] < node) && (node <= mProfile.nodeId()) )
    {
       return true;
    }
