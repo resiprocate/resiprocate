@@ -5,10 +5,12 @@ using namespace p2p;
 ConnectionOpened::ConnectionOpened(FlowId flowId,
                                    unsigned short application,
                                    resip::TransportType transportType,
+                                   bool inbound,
                                    X509 *cert) : 
    mFlowId(flowId),
    mApplication(application),
    mTransportType(transportType),
+   mInbound(inbound),
    mCert(cert)
 {
 }
@@ -45,6 +47,12 @@ resip::TransportType
 ConnectionOpened::getTransportType() const
 {
    return mTransportType;
+}
+
+bool
+ConnectionOpened::isInbound() const
+{
+   return mInbound;
 }
 
 X509*

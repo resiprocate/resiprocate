@@ -35,7 +35,7 @@ class TopologyAPI :  public EventConsumer
       // need a fifo to receive timer events 
 
       // Messages that the forwarding layer sends to this object
-      virtual void newConnectionFormed( const NodeId& node )=0;
+      virtual void newConnectionFormed( const NodeId& node, bool inbound )=0;
       virtual void connectionLost( const NodeId& node )=0;
       virtual void candidatesCollected( const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates )=0;
        
