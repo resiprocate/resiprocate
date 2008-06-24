@@ -23,36 +23,40 @@ class Profile
 {
 public:
       Profile() : mNodeId(), mNumInitialFingers(8) {}
-   virtual ~Profile() {;}
-
-   virtual const X509        *getCertificate() { return 0; }
-   virtual const EVP_PKEY    *getPrivateKey() { return 0; }
-
-   virtual resip::Data& signatureDigest() { return mSignatureDigest; }
-   virtual const resip::Data& signatureDigest() const { return mSignatureDigest; }   
-
-   virtual resip::Data& overlayName() { return mOverlayName; }
-   virtual const resip::Data& overlayName() const { return mOverlayName; }
-
-   virtual NodeId& nodeId() { return mNodeId; }
-   virtual const NodeId nodeId() const { return mNodeId; }
-
-   virtual UserName& userName() { return mUserName; }
-   virtual const UserName& userName() const { return mUserName; }
-
-   virtual unsigned int& numInitialFingers() { return mNumInitialFingers; }
-   virtual const unsigned int numInitialFingers() const { return mNumInitialFingers; }
-
-   virtual std::vector<resip::GenericIPAddress>& bootstrapNodes() { return mBootstrapNodes; }
-   virtual const std::vector<resip::GenericIPAddress>& bootstrapNodes() const { return mBootstrapNodes; }
+      virtual ~Profile() {;}
       
-private:
-   resip::Data mOverlayName;
-   resip::Data mSignatureDigest;
-   NodeId      mNodeId;
-   UserName    mUserName;
-   unsigned int mNumInitialFingers;
-   std::vector<resip::GenericIPAddress> mBootstrapNodes;
+      virtual const X509        *getCertificate() { return 0; }
+      virtual const EVP_PKEY    *getPrivateKey() { return 0; }
+      
+      virtual resip::Data& signatureDigest() { return mSignatureDigest; }
+      virtual const resip::Data& signatureDigest() const { return mSignatureDigest; }   
+      
+      virtual resip::Data& overlayName() { return mOverlayName; }
+      virtual const resip::Data& overlayName() const { return mOverlayName; }
+      
+      virtual bool& isBootstrap() { return mBootstrap; }
+      virtual const bool isBootstrap() const { return mBootstrap; }
+      
+      virtual NodeId& nodeId() { return mNodeId; }
+      virtual const NodeId nodeId() const { return mNodeId; }
+      
+      virtual UserName& userName() { return mUserName; }
+      virtual const UserName& userName() const { return mUserName; }
+      
+      virtual unsigned int& numInitialFingers() { return mNumInitialFingers; }
+      virtual const unsigned int numInitialFingers() const { return mNumInitialFingers; }
+      
+      virtual std::vector<resip::GenericIPAddress>& bootstrapNodes() { return mBootstrapNodes; }
+      virtual const std::vector<resip::GenericIPAddress>& bootstrapNodes() const { return mBootstrapNodes; }
+      
+   private:
+      resip::Data mOverlayName;
+      resip::Data mSignatureDigest;
+      NodeId      mNodeId;
+      UserName    mUserName;
+      unsigned int mNumInitialFingers;
+      std::vector<resip::GenericIPAddress> mBootstrapNodes;
+      bool mBootstrap;
 };
 
 }

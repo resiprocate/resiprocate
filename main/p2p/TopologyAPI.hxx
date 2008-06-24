@@ -46,6 +46,7 @@ class TopologyAPI :  public EventConsumer
 
       // deal with responses
       virtual void consume(ConnectAns& msg)=0;
+      virtual void consume(ConnectReq& msg)=0;
       virtual void consume(JoinAns& msg)=0;
       virtual void consume(UpdateAns& msg)=0;
       virtual void consume(LeaveAns& msg)=0;

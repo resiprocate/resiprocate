@@ -20,7 +20,9 @@ class Dispatcher;
 class ChordTopology : public TopologyAPI
 {
    public:
-      ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter);
+      ChordTopology(Profile& config, 
+                    Dispatcher& dispatcher, 
+                    Transporter& transporter);
       virtual ~ChordTopology();
 
       virtual void joinOverlay();
@@ -41,6 +43,7 @@ class ChordTopology : public TopologyAPI
 
       // deal with responses
       virtual void consume(ConnectAns& msg);
+      virtual void consume(ConnectReq& msg);
       virtual void consume(JoinAns& msg);
       virtual void consume(UpdateAns& msg);
       virtual void consume(LeaveAns& msg);
