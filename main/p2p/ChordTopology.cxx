@@ -19,8 +19,10 @@ using namespace p2p;
 
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
-ChordTopology::ChordTopology(Profile& config, Dispatcher& dispatcher, Transporter& transporter) :
-   TopologyAPI(config, dispatcher, transporter), mJoined(false) 
+ChordTopology::ChordTopology(Profile& config,
+                             Dispatcher& dispatcher, 
+                             Transporter& transporter) :
+   TopologyAPI(config, dispatcher, transporter), mJoined(false)
 {
 }
 
@@ -190,6 +192,13 @@ ChordTopology::consume(LeaveReq& msg)
 
 
 void 
+ChordTopology::consume(ConnectReq& msg)
+{
+   DebugLog(<< "received CONNECT Req from: " << msg.getResponseNodeId());
+}
+
+
+void 
 ChordTopology::consume(ConnectAns& msg)
 {
    DebugLog(<< "received CONNECT ans from: " << msg.getResponseNodeId());
@@ -244,6 +253,9 @@ ChordTopology::findNextHop( const NodeId& node )
       // return the next pointer and increment around slowly 
       assert( mNextTable.size() > 0 );
       DebugLog(<< "findNextHop returning: " << mNextTable[0]);
+
+      // TODO - deal with case wehre there is no next 
+
       return mNextTable[0];
    }
 
@@ -302,18 +314,22 @@ ChordTopology::getReplicationSet(  const ResourceId& resource )
 bool 
 ChordTopology::isResponsible( const NodeId& node ) const
 {
-   // If it is us, then we are responsible
-   if(node == mProfile.nodeId())
-   {
-      return true;
-   }
-
    // for now we are going to assume that if the prev table is empty, then we have a
    // a new ring being formed and we are responsible for this request.  We need to consider
    // the case where we are a node trying to join a stable ring, and the "join" process 
    // has not completed yet - but we receive a message for another node.
-   if (mPrevTable.size() == 0) return true;  
-
+   if (mPrevTable.size() == 0) 
+   {
+      if ( mProfile.isBootstrap() )
+      {
+         return true;  // only thing in the ring so responsible for everything 
+      }
+      else
+      {
+         return false; // have not joined ring yet so responsible for nothing 
+      }
+   }
+   
    if ( (mPrevTable[0] < node) && (node <= mProfile.nodeId()) )
    {
       return true;
