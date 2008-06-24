@@ -172,6 +172,7 @@ void processKeyboard(char input)
 int 
 main (int argc, char** argv)
 {
+
 #ifndef _WIN32
    if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
    {
@@ -201,6 +202,13 @@ main (int argc, char** argv)
    //Data logLevel("INFO");
    Data logLevel("DEBUG");
 
+   //////////////////////////////////////////////////////////////////////////////
+   // Setup Config Object
+   //////////////////////////////////////////////////////////////////////////////
+   Profile profile;
+   profile.overlayName() = "p2poverlay.com"; 
+   profile.isBootstrap() = false;
+
    // Loop through command line arguments and process them
    for(int i = 1; i < argc; i++)
    {
@@ -221,6 +229,11 @@ main (int argc, char** argv)
          cout << "testConsole -bs 192.168.1.100:9000" << endl;
          return 0;
       }
+      else if (isEqualNoCase(commandName,"--bootstrap") || isEqualNoCase(commandName,"-B"))
+          {
+              profile.isBootstrap() = true;
+          }
+
       else
       {
          // Process commands that have values
@@ -280,12 +293,7 @@ main (int argc, char** argv)
    
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
 
-   //////////////////////////////////////////////////////////////////////////////
-   // Setup Config Object
-   //////////////////////////////////////////////////////////////////////////////
-   Profile profile;
-   profile.overlayName() = "p2poverlay.com"; 
-   
+
    ResourceId rid(Random::getRandom(16));
    profile.nodeId() = NodeId(rid);
    cerr << "Using NodeId: " << profile.nodeId() << endl;
