@@ -6,7 +6,8 @@ CXXFLAGS += -I../../
 PACKAGES += RUTIL OPENSSL PTHREAD S2C P2P
 
 TESTPROGRAMS += \
-	testConsole.cxx 
+	testConsole.cxx \
+	testFoo.cxx
 
 include $(BUILD)/Makefile.post
 

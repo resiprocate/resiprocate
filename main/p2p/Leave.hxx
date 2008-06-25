@@ -2,6 +2,7 @@
 #define P2P_Leave_hxx
 
 #include "p2p/Message.hxx"
+#include "p2p/EventWrapper.hxx"
 
 namespace p2p
 {
@@ -18,6 +19,8 @@ public:
 	virtual MessageType getType() const { return Message::LeaveAnsType; }
 	virtual void getEncodedPayload(resip::DataStream &data);
 	virtual resip::Data brief() const { return "LeaveAns Message"; }
+
+    std::auto_ptr<Event> event() {return wrap(this);}
 
 
 protected:
@@ -36,6 +39,8 @@ public:
 	virtual MessageType getType() const { return Message::LeaveReqType; }
 	virtual void getEncodedPayload(resip::DataStream &data);
 	virtual resip::Data brief() const { return "LeaveReq Message"; }
+
+    std::auto_ptr<Event> event() {return wrap(this);}
 
 protected:
 	virtual void decodePayload(resip::DataStream &dataStream);
