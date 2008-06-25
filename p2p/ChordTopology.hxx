@@ -34,13 +34,13 @@ class ChordTopology : public TopologyAPI
       virtual void connectionLost( const NodeId& node );
        
       // deal with topology change messages 
+      virtual void consume(ConnectReq& msg);
       virtual void consume(JoinReq& msg);
       virtual void consume(UpdateReq& msg);
       virtual void consume(LeaveReq& msg);
 
       // deal with responses
       virtual void consume(ConnectAns& msg);
-      virtual void consume(ConnectReq& msg);
       virtual void consume(JoinAns& msg);
       virtual void consume(UpdateAns& msg);
       virtual void consume(LeaveAns& msg);

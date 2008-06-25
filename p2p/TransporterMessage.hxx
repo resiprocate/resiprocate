@@ -20,7 +20,7 @@ class ConnectionOpened;
 class ConnectionClosed;
 class ApplicationMessageArrived;
 class MessageArrived;
-class LocalCandidatesCollectedo;
+class LocalCandidatesCollected;
 
 class Message;
 class FlowId;
