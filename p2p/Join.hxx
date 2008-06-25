@@ -2,6 +2,7 @@
 #define P2P_JOIN_HXX
 
 #include "p2p/Message.hxx"
+#include "p2p/EventWrapper.hxx"
 
 namespace p2p 
 {
@@ -11,14 +12,15 @@ class JoinReq;
 class JoinAns : public Message, private s2c::JoinAnsStruct
 {
 public:
-	friend class Message;
-
-	JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific = resip::Data::Empty);
-	virtual MessageType getType() const { return Message::JoinAnsType; }
-
-	virtual void getEncodedPayload(resip::DataStream &data);
-	virtual resip::Data brief() const { return "JoinAns Message"; }
-
+    friend class Message;
+    
+    JoinAns(p2p::JoinReq *request, const resip::Data &overlaySpecific = resip::Data::Empty);
+    virtual MessageType getType() const { return Message::JoinAnsType; }
+    
+    virtual void getEncodedPayload(resip::DataStream &data);
+    virtual resip::Data brief() const { return "JoinAns Message"; }
+    
+    std::auto_ptr<Event> event() {return wrap(this);}
 
 protected:
 	virtual void decodePayload(resip::DataStream &dataStream);
@@ -35,6 +37,8 @@ public:
       
 	virtual void getEncodedPayload(resip::DataStream &data);
 	virtual resip::Data brief() const { return "JoinReq Message"; }
+
+    std::auto_ptr<Event> event() {return wrap(this);}
 
 protected:
 	virtual void decodePayload(resip::DataStream &dataStream);

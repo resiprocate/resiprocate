@@ -21,6 +21,7 @@ ConnectReq::ConnectReq(const DestinationId &dest,
 
 ConnectAns::ConnectAns()
 {
+    ;
 }
 
 ConnectAns::ConnectAns(Message *req, 
