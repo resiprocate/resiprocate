@@ -183,8 +183,9 @@ ChordTopology::consume(ConnectReq& msg)
 {
    DebugLog(<< "received CONNECT Req from: " << msg.getResponseNodeId());
    
-   
-   
+   // Socket connect
+   resip::GenericIPAddress stunTurnServer;
+   mTransporter.connect(msg.getResponseNodeId(), msg.getCandidates(), stunTurnServer /* stunTurnServer */);
 }
 
 
@@ -193,14 +194,6 @@ ChordTopology::consume(ConnectAns& msg)
 {
    DebugLog(<< "received CONNECT ans from: " << msg.getResponseNodeId());
    
-   // Get NodeId from message and check if it is a neighbour
-   std::vector<NodeId> nodes;
-   nodes.push_back(msg.getResponseNodeId());
-   addNewNeighbors(nodes, true /* adjustNextOnly */);
-
-   // Socket connect
-   resip::GenericIPAddress stunTurnServer;
-   mTransporter.connect(msg.getResponseNodeId(), msg.getCandidates(), stunTurnServer /* stunTurnServer */);
 }
 
 

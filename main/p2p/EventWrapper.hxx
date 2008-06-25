@@ -14,7 +14,7 @@ template <class T>
 class EventWrapper : public Event
 {
    public:
-      EventWrapper(T* t) : mWrapped()
+      EventWrapper(T* t) : mWrapped(t)
       {}
       
       virtual void dispatch(EventConsumer& consumer) 

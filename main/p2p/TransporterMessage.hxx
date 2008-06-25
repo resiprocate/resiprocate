@@ -91,8 +91,9 @@ class MessageArrived : public Event
 
       virtual void dispatch(EventConsumer& consumer);
 
-      NodeId getNodeId() const {return mNodeId;}
-      std::auto_ptr<p2p::Message> getMessage() { return mMessage; }
+      NodeId getNodeId() const {return mNodeId;}        
+      std::auto_ptr<p2p::Message> getMessage() { assert(mMessage.get());
+         return mMessage; }
 
       virtual resip::Data brief() const
       {
