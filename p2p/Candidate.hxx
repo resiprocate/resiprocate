@@ -5,9 +5,13 @@
 #include "rutil/TransportType.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/Logger.hxx"
 
+#include "p2p/P2PSubsystem.hxx"
 namespace p2p
 {
+
+#define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 //candidate:1 1 UDP 2130706431 10.0.1.1 8998 typ host
 
@@ -26,7 +30,7 @@ class Candidate
                << resip::getTransportNameFromType(type) << " "
                << rand() << " "
                << resip::DnsUtil::inet_ntop(address.v4Address.sin_addr) << " "
-               << address.v4Address.sin_port << " typ host";
+               << ntohs(address.v4Address.sin_port) << " typ host";
          }
          mValue = tmp;
       }
@@ -34,32 +38,42 @@ class Candidate
       Candidate(const resip::Data &iceline)
       {
          resip::Data transport;
-         resip::Data ip;
+         resip::Data ip("127.0.0.1"); // WRONG WRONG WRONG
          resip::Data port;
          const char *anchor;
-
+         
+         DebugLog(<< "Constructing Candidate from iceline " << iceline);
          resip::ParseBuffer pb(iceline);
+         
+         // At beginning
+         pb.skipToChar(' ');  // At end of foundation
+         pb.skipWhitespace(); // Skip the whitespace after foundation
+         
+         // Beginning of component ID
+         pb.skipToChar(' '); // End of component ID
 
-         pb.skipToChar(' ');
-         pb.skipToChar(' ');
-
-         anchor = pb.skipChar(' ');
-         pb.skipToChar(' ');
+         anchor = pb.skipWhitespace(); // Beginning of transport
+         pb.skipToChar(' '); // End of transport
          pb.data(transport, anchor);
+         DebugLog(<< "transport is " << transport);
+         
+         pb.skipWhitespace();  // Beginning of priority
+         pb.skipToChar(' '); // End of priority
 
-         pb.skipToChar(' ');
-         anchor = pb.skipChar(' ');
-         pb.skipToChar(' ');
-         pb.data(ip, anchor);
+         anchor = pb.skipWhitespace(); // Beginning of IP
+         pb.skipToChar(' '); // End of IP
+         // pb.data(ip, anchor); WRONG WRONG WRONG
+         DebugLog(<< "IP is " << ip);
 
-         anchor = pb.skipChar(' ');
-         pb.skipToChar(' ');
+         anchor=pb.skipWhitespace(); // Beginning of port
+         pb.skipToChar(' '); // End of port
          pb.data(port, anchor);
+         DebugLog(<< "port is " << port);
 
          mTransportType = resip::getTransportTypeFromName(transport.c_str());
 
          mAddress.v4Address.sin_family = AF_INET;
-         mAddress.v4Address.sin_port = port.convertInt();
+         mAddress.v4Address.sin_port = htons(port.convertInt());
          memset(mAddress.v4Address.sin_zero, 0,
                 sizeof(mAddress.v4Address.sin_zero)) ;
 
