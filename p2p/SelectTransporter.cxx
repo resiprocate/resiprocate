@@ -253,7 +253,7 @@ SelectTransporter::connectImpl(resip::GenericIPAddress &bootstrapServer)
    }
    
 
-   DebugLog(<< "Connected to bootstrap server: " << flowId << " sending ConnectionOpened to forwarding layer");
+   DebugLog(<< "Connected to server: " << flowId << " sending ConnectionOpened to forwarding layer");
    ConnectionOpened *co = new ConnectionOpened(flowId,
                                                application,
                                                resip::TCP,
@@ -270,23 +270,6 @@ SelectTransporter::connectImpl(NodeId nodeId,
 {
    connectImpl(nodeId, remoteCandidates, RELOAD_APPLICATION_ID,
                *mRxFifo, stunTurnServer);
-
-   std::map<NodeId, FlowId>::iterator i;
-   i = mNodeFlowMap.find(nodeId);
-   assert (i != mNodeFlowMap.end());
-
-   // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
-   // Blow our node ID out on the wire (because there is no cert)
-   const resip::Data nid = mConfiguration.nodeId().encodeToNetwork();
-   size_t bytesSent = ::send((i->second).getSocket(),
-                             nid.data(), nid.size(), 0);
-
-   if (bytesSent != nid.size()) 
-   {
-      ErrLog( << "Cannot ::send -- returned " << bytesSent << " errno " << errno); 
-   }
-   
-   // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 }
 
 void
@@ -444,11 +427,6 @@ SelectTransporter::process(int ms)
         }
         // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 
-        FlowId flowId(nodeId, application, s, *mRxFifo);
-
-        mNodeFlowMap.insert(
-          std::map<NodeId, FlowId>::value_type(nodeId, flowId));
-
         unsigned char buffer[16];
         size_t bytesRead = readSocket(s, (char*)buffer, sizeof(buffer));
         DebugLog(<< "Read#3" << bytesRead);
@@ -457,6 +435,17 @@ SelectTransporter::process(int ms)
            ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << errno); 
            assert(0);
         }
+
+        s2c::NodeIdStruct nids;
+
+        nids.mHigh = *((UInt64*)(buffer));
+        nids.mLow = *((UInt64*)(buffer+sizeof(UInt64)));
+        
+        NodeId nodeId2(nids);
+        FlowId flowId(nodeId2, application, s, *mRxFifo);
+
+        mNodeFlowMap.insert(
+           std::map<NodeId, FlowId>::value_type(nodeId2, flowId));
 
         // Ideally, we'd check that the nodeId we just read
         // actually matches the nodeId we were expecting.
