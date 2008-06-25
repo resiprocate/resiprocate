@@ -5,15 +5,12 @@
 #include <stdio.h>
 #include <sys/select.h>
 #include <termios.h>
-#define LIBEDIT
-#if defined(LIBEDIT)
 
-extern "C" {
 #include <histedit.h>
 #include <readline/readline.h>
-}
 
-#endif
+#include <popt.h>
+
 #include <sys/ioctl.h>
 
 // I'm thinking this can all just be readline/libedit compliant.
@@ -24,7 +21,6 @@ extern "C" void rl_insertstr(char*);
 extern "C" int add_history(const char*);
 
 #endif
-
 
 
 #include <rutil/Log.hxx>
@@ -162,8 +158,8 @@ void processKeyboard(char input)
 class TtyInterface
 {
 public:
-      TtyInterface(char * name);
-    virtual ~TtyInterface();
+      TtyInterface(const char * name);
+    virtual ~TtyInterface() {};
     void go();
       static int helpme(int,int){/*unimplemented*/return 0;};
       static void sigCatch(int) {  cerr << "Exiting..."; if (mFinished) exit(-1); mFinished=true;}
@@ -175,10 +171,9 @@ private:
 
 bool TtyInterface::mFinished = false;
 
-TtyInterface::TtyInterface(char * name)
+TtyInterface::TtyInterface(const char * )
 {
-    rl_readline_name = name;
-    rl_set_help(TtyInterface::helpme);
+//    rl_readline_name = name;
 }
 
 void
@@ -211,104 +206,112 @@ TtyInterface::go()
           // This isn't fatal .. let it ride.
        }
     }
-
-
-
 }
+
+struct options_s
+{
+      unsigned short listenPort;
+      Data remoteHost;
+      unsigned int remotePort;
+      char * connect;
+      int bootstrapMode;
+     char * logLevel;
+} options;
+
+
 int 
-main (int argc, char** argv)
+main (int argc, const char** argv)
 {
    TtyInterface tty(*argv);
-
+   
    // Defaults
    Data address = DnsUtil::getLocalIpAddress();
-   Data bootstrapAddress;
-   unsigned short bootstrapPort=0;
-   unsigned short listenPort=9000;
 
-   Data logLevel("DEBUG");
+
 
    // Command line args
    // --help
-   // -p listenPort
-   // -bs 
+   // short    long  type           varname
+   // -p      --port unsigned short listenPort
+   // -b      --
    // Loop through command line arguments and process them
-   for(int i = 1; i < argc; i++)
+
+//        struct poptOption {
+//            const char * longName; /* may be NULL */
+//            char shortName;        /* may be '\0' */
+//            int argInfo;
+//            void * arg;            /* depends on argInfo */
+//            int val;               /* 0 means don't return, just update flag */
+//            char * descrip;        /* description for autohelp -- may be NULL */
+//            char * argDescrip;     /* argument description for autohelp */
+//        };
+
+   struct poptOption opt[] = {
+       {"bootstrap" , 'B', POPT_ARG_NONE, &options.bootstrapMode, 'B', "enable bootstrap mode", 0 },
+       {"port", 'p', POPT_ARG_INT, &options.listenPort, 'p', "listen port", 0},
+       {"log-level",'l',POPT_ARG_STRING, &options.logLevel, 'l', "Log Level <NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK>" ,"LOG_LEVEL"},
+       {"connect", 'C', POPT_ARG_STRING, &options.connect, 'C', "Host to connect with.", "hostname[:port]"} ,
+       POPT_AUTOHELP
+       {0,0,0,0,0,0}
+   };
+
+   options.bootstrapMode = 0;
+   
+   poptContext optCon ( poptGetContext(0, argc, argv, opt, 0) ) ;
+   
+   poptSetOtherOptionHelp(optCon,"[OPTIONS]* <port>");
+
+   if (argc < 1) {
+       poptPrintUsage(optCon,stderr,0);
+       exit(1);
+   }
+   //--
+   int c;
+   while ((c = poptGetNextOpt(optCon)) >= 0)
    {
-      Data commandName(argv[i]);
-
-      // Process all commandNames that don't take values
-      if(isEqualNoCase(commandName, "-?") || 
-         isEqualNoCase(commandName, "--?") ||
-         isEqualNoCase(commandName, "--help") ||
-         isEqualNoCase(commandName, "/?"))
+      switch(c)
       {
-         cout << "Command line options are:" << endl;
-         cout << " -p <listenPort>" << endl;
-         cout << " -bs <booststrap node hostname/address>:<port>" << endl;
-         cout << " -l <NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK> - logging level" << endl;
-         cout << endl;
-         cout << "Sample Command line:" << endl;
-         cout << "testConsole -bs 192.168.1.100:9000" << endl;
-         return 0;
-      }
-      else
-      {
-         // Process commands that have values
-         Data commandValue(i+1 < argc ? argv[i+1] : Data::Empty);
-         if(commandValue.empty() || commandValue.at(0) == '-')
-         {
-            cerr << "Invalid command line parameters!" << endl;
-            exit(-1);
-         }
-         i++;  // increment argument
-
-         if(isEqualNoCase(commandName, "-p"))
-         {
-            listenPort = commandValue.convertInt();
-         }
-         else if(isEqualNoCase(commandName, "-bs"))
-         {
-            // Read server and port
-            Data serverAndPort = commandValue;
-            ParseBuffer pb(serverAndPort);
-            pb.skipWhitespace();
-            const char *start = pb.position();
-            pb.skipToOneOf(ParseBuffer::Whitespace, ":");  // white space or ":" 
-            Data hostname;
-            pb.data(hostname, start);
-            bootstrapAddress = hostname;
-            if(!pb.eof())
+         case 'C':
+            // look for the ':' from the END.
+            const char * colon = strrchr(options.connect,':');
+            if (colon)
             {
-               pb.skipChar(':');
-               start = pb.position();
-               pb.skipToOneOf(ParseBuffer::Whitespace);  // white space 
-               Data port;
-               pb.data(port, start);
-               bootstrapPort = (unsigned short)port.convertUnsignedLong();
+               unsigned long port = strtoul(++colon,0,0);
+               options.remotePort = port & 0xffff;
+               options.remoteHost = Data(options.connect,colon-options.connect-1);
             }
-         }
-         else if(isEqualNoCase(commandName, "-l"))
-         {
-            logLevel = commandValue;
-         }
-         else
-         {
-            cerr << "Invalid command line parameters!" << endl;
-            exit(-1);
-         }
+            else
+            {
+               options.remoteHost=Data(options.connect);
+            }
+            break;
       }
    }
+   if (c < -1) {
+      /* an error occurred during option processing */
+      fprintf(stderr, "%s: '%s' %s\n", *argv,
+      poptBadOption(optCon, POPT_BADOPTION_NOALIAS),
+       poptStrerror(c));
+      return 1;
+   }
 
-   Log::initialize("Cout", logLevel, "testConsole");
+// ---xxx---
+   cerr << "listenPort " << options.listenPort << endl;
+   cerr << "bootstrapMode " << options.bootstrapMode << endl;
+   cerr << "remoteHost " << options.remoteHost << endl;
+   cerr << "remotePort " << options.remotePort << endl;
+   cerr << "logLevel " << options.logLevel << endl;
+   
+   
+   Log::initialize("Cout", Data(options.logLevel), "testConsole");
 
    initNetwork();
 
    InfoLog( << "testConsole settings:");
-   InfoLog( << "  Listen Port = " << listenPort);
-   InfoLog( << "  Bootstrap server = " << bootstrapAddress << ":" << bootstrapPort);
-   InfoLog( << "  Log Level = " << logLevel);
-   
+   InfoLog( << "  Listen Port = " << options.listenPort);
+   InfoLog( << "  connect = " << options.remoteHost << ":" << options.remotePort );
+   InfoLog( << "  Log Level = " << options.logLevel);
+   InfoLog( << "  bootstrap = " << options.bootstrapMode);
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
 
    //////////////////////////////////////////////////////////////////////////////
@@ -323,20 +326,21 @@ main (int argc, char** argv)
    
    profile.userName().value() = "test";
    
-   if(bootstrapPort != 0)
+   if(options.remotePort != 0)
    {
       struct in_addr addr;
-      if(resip::DnsUtil::inet_pton(bootstrapAddress, addr)==0)
+      if(resip::DnsUtil::inet_pton(options.remoteHost, addr)==0)
       {
-         cerr << "Invalid bootstrap address:" << bootstrapAddress << endl;
+         cerr << "Invalid remote host address:" << options.remoteHost << endl;
          exit(-1);
       }
       sockaddr_in addr_in;
       addr_in.sin_family = AF_INET;
       addr_in.sin_addr = addr;
-      addr_in.sin_port = htons(bootstrapPort);      
+      addr_in.sin_port = htons(options.remotePort);      
       profile.bootstrapNodes().push_back(resip::GenericIPAddress(addr_in));    
    }
+
    profile.numInitialFingers() = 0;   // FIXME - debugging only
 
    //////////////////////////////////////////////////////////////////////////////
@@ -344,8 +348,8 @@ main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
    P2PStack p2pStack(profile);
 
-   p2pStack.listenOn(listenPort);
-   if(bootstrapPort != 0)
+   p2pStack.listenOn(options.listenPort);
+   if(options.remotePort != 0)
    {
       p2pStack.join();
    }
@@ -355,7 +359,7 @@ main (int argc, char** argv)
    {
       p2pStack.process(10);
       
-      while(3 /* doing things in readline() */)
+      while(3) /*do readline stuff */
       {
 #ifdef WIN32
          input = _getch();
@@ -367,7 +371,6 @@ main (int argc, char** argv)
          processKeyboard(input);
 #endif
       }
-      if(finished) break;
    }
 
    InfoLog(<< "testConsole is shutdown.");
