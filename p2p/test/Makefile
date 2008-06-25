@@ -1,12 +1,14 @@
 BUILD := ../../build
 include $(BUILD)/Makefile.pre
 
-CXXFLAGS += -I../../
+CXXFLAGS += -I../../ -g
  
-PACKAGES += RUTIL OPENSSL PTHREAD S2C P2P
-LIBS += -lreadline
-TESTPROGRAMS += \
-	testConsole.cxx 
+PACKAGES += RUTIL OPENSSL PTHREAD S2C P2P 
+LIBNAMES += readline popt
+
+TESTPROGRAMS = testCon.cxx
+
+
 
 include $(BUILD)/Makefile.post
 
