@@ -130,7 +130,7 @@ ChordTopology::consume(JoinReq& msg)
 
    // TODO - update the replicated data storage    
 
-// wait for all data to be stored 
+   // wait for all data to be stored 
 
    // send them an update to put the joining node in the ring 
    std::vector<NodeId> nodes;
