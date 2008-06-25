@@ -66,7 +66,7 @@ Dispatcher::post(std::auto_ptr<Message> message)
          if (id !=  mTidMap.end())
          {
             Entry& entry = id->second;
-            entry.mPostable->post(message->event());
+            entry.mPostable->post(message.release()->event());
             mTidMap.erase(id);
          }
          else
@@ -78,7 +78,7 @@ Dispatcher::post(std::auto_ptr<Message> message)
    } 
    else 
    {
-      it->second->post(message->event());
+      it->second->post(message.release()->event());
    }
 }
 
