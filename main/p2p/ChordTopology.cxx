@@ -110,6 +110,26 @@ ChordTopology::connectionLost( const NodeId& node )
 }
 
 
+void 
+ChordTopology::consume(ConnectReq& msg)
+{
+   DebugLog(<< "received CONNECT req.");
+
+   // Socket connect
+   resip::GenericIPAddress stunTurnServer;
+   mTransporter.connect(msg.getResponseNodeId(), msg.getCandidates(), stunTurnServer /* stunTurnServer */);
+
+
+   // Send Connect Ans
+   std::auto_ptr<Message> connectAns(msg.makeConnectResponse(resip::Data::Empty /* frag */, 
+                                                             resip::Data::Empty /* password */,
+                                                             RELOAD_APPLICATION_ID,
+                                                             resip::Data::Empty /* role */,
+                                                             msg.getCandidates() /* candidates */));  // TODO - need to actually gather local candidates
+   mDispatcher.send(connectAns, *this);
+}
+
+
 // deal with topoogy change messages 
 void 
 ChordTopology::consume(JoinReq& msg)
@@ -179,17 +199,6 @@ ChordTopology::consume(LeaveReq& msg)
 
 
 void 
-ChordTopology::consume(ConnectReq& msg)
-{
-   DebugLog(<< "received CONNECT Req from: " << msg.getResponseNodeId());
-
-   // Socket connect
-   resip::GenericIPAddress stunTurnServer;
-   mTransporter.connect(msg.getResponseNodeId(), msg.getCandidates(), stunTurnServer /* stunTurnServer */);
-}
-
-
-void 
 ChordTopology::consume(ConnectAns& msg)
 {
    DebugLog(<< "received CONNECT ans from: " << msg.getResponseNodeId());
@@ -229,13 +238,13 @@ ChordTopology::consume(LeaveAns& msg)
 const NodeId& 
 ChordTopology::findNextHop( const NodeId& node )
 {
-   assert( !isResponsible(node) );
+   assert( !isResponsible(node) );  
    
    if(mFingerTable.size() == 0)
    {
       // return the next pointer and increment around slowly 
       assert( mNextTable.size() > 0 );
-      DebugLog(<< "findNextHop returning: " << mNextTable[0]);
+      DebugLog(<< "findNextHop returning (from next table): " << mNextTable[0]);
 
       // TODO - deal with case wehre there is no next 
 
@@ -250,7 +259,7 @@ ChordTopology::findNextHop( const NodeId& node )
       if(nextIt == mFingerTable.end()) break;
       if((*it <= node) && (node < *nextIt))
       {
-         DebugLog(<< "findNextHop returning: " << *it);
+         DebugLog(<< "findNextHop returning (from finger table): " << *it);
          return *it;
       }
    }
@@ -270,7 +279,20 @@ ChordTopology::findNextHop( const ResourceId& resource )
 const NodeId& 
 ChordTopology::findNextHop( const DestinationId& did )
 {
-   return findNextHop( did.asNodeId() );
+   if(did.isNodeId())
+   {
+      return findNextHop(did.asNodeId());
+   }
+   else if(did.isResourceId())
+   {
+      return findNextHop(did.asResourceId());
+   }
+   else
+   {
+      assert(false);
+      static NodeId none;
+      return none;
+   }
 }
 
 
@@ -331,11 +353,19 @@ ChordTopology::isResponsible( const ResourceId& resource ) const
 bool 
 ChordTopology::isResponsible( const DestinationId& did ) const
 {
-   // This code does not make any sense, since if it's
-   // not a NodeId underneath it chokes -- EKR
-   assert(0);
-   
-   return isResponsible(did.asNodeId());
+   if(did.isNodeId())
+   {
+      return isResponsible(did.asNodeId());
+   }
+   else if(did.isResourceId())
+   {
+      return isResponsible(did.asResourceId());
+   }
+   else
+   {
+      assert(false);
+      return false;
+   }
 }
 
 

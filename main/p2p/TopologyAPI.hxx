@@ -40,13 +40,13 @@ class TopologyAPI :  public EventConsumer
       virtual void candidatesCollected( UInt64 tid, const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates )=0;
        
       // deal with topology change messages 
+      virtual void consume(ConnectReq& event)=0;
       virtual void consume(JoinReq& event)=0;
       virtual void consume(UpdateReq& event)=0;
       virtual void consume(LeaveReq& event)=0;
 
       // deal with responses
       virtual void consume(ConnectAns& msg)=0;
-      virtual void consume(ConnectReq& msg)=0;
       virtual void consume(JoinAns& msg)=0;
       virtual void consume(UpdateAns& msg)=0;
       virtual void consume(LeaveAns& msg)=0;
