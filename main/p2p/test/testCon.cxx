@@ -2,35 +2,30 @@
 #ifdef WIN32
 #include <conio.h>
 #else
-/**
- Linux (POSIX) implementation of _kbhit().
- Morgan McGuire, morgan@cs.brown.edu
- */
 #include <stdio.h>
 #include <sys/select.h>
 #include <termios.h>
-//#include <stropts.h>
+#define LIBEDIT
+#if defined(LIBEDIT)
+
+extern "C" {
+#include <histedit.h>
+#include <readline/readline.h>
+}
+
+#endif
 #include <sys/ioctl.h>
 
-int _kbhit() {
-    static const int STDIN = 0;
-    static bool initialized = false;
+// I'm thinking this can all just be readline/libedit compliant.
 
-    if (! initialized) {
-        // Use termios to turn off line buffering
-        termios term;
-        tcgetattr(STDIN, &term);
-        term.c_lflag &= ~ICANON;
-        tcsetattr(STDIN, TCSANOW, &term);
-        setbuf(stdin, NULL);
-        initialized = true;
-    }
+extern "C" char **completion_matches(const char*, char* func(const char*, int));
+extern "C" void rl_set_help(int func(int, int));
+extern "C" void rl_insertstr(char*);
+extern "C" int add_history(const char*);
 
-    int bytesWaiting;
-    ioctl(STDIN, FIONREAD, &bytesWaiting);
-    return bytesWaiting;
-}
 #endif
+
+
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -49,6 +44,14 @@ using namespace p2p;
 using namespace resip;
 using namespace std;
 
+
+int
+bind_help_key()
+{
+    // rl_bind_key('?', helpme);
+    return 0;
+}
+
 #define RESIPROCATE_SUBSYSTEM P2PSubsystem::P2P
 
 void sleepSeconds(unsigned int seconds)
@@ -61,19 +64,6 @@ void sleepSeconds(unsigned int seconds)
 }
 
 static bool finished = false;
-
-static void
-signalHandler(int signo)
-{
-   std::cerr << "Shutting down" << endl;
-
-   if ( finished )
-   {
-      exit(1);
-   }
-   
-   finished = true;
-}
 
 void processCommandLine(Data& commandline)
 {
@@ -169,29 +159,66 @@ void processKeyboard(char input)
    }
 }
 
+class TtyInterface
+{
+public:
+      TtyInterface(char * name);
+    virtual ~TtyInterface();
+    void go();
+      static int helpme(int,int){/*unimplemented*/return 0;};
+      static void sigCatch(int) {  cerr << "Exiting..."; if (mFinished) exit(-1); mFinished=true;}
+//      static void sigCatchAlrm(int) { }
+      
+private:
+      static bool mFinished;
+};
+
+bool TtyInterface::mFinished = false;
+
+TtyInterface::TtyInterface(char * name)
+{
+    rl_readline_name = name;
+    rl_set_help(TtyInterface::helpme);
+}
+
+void
+TtyInterface::go()
+{
+    // setup signals
+    //
+#define TS(sig,disposition) { #sig, sig, disposition}
+   struct
+   {
+         char *name;
+         int signum;
+         sig_t f;
+   } sigs[] = {
+      TS(SIGTSTP,sigCatch),
+      TS(SIGINT,sigCatch),
+#if !defined(WIN32)
+      TS(SIGPIPE,SIG_IGN),
+#endif
+      TS(SIGQUIT,sigCatch),
+      TS(SIGTERM,sigCatch)
+};
+#undef TS        
+                                               
+    for (unsigned int i = 0 ; i < sizeof(sigs)/sizeof(*sigs); i++)
+    {
+       if( signal( sigs[i].signum, sigs[i].f ) == SIG_ERR )
+       {
+          cerr << sigs[i].name << ": error setting singal disposition, errno=" << errno << endl;
+          // This isn't fatal .. let it ride.
+       }
+    }
+
+
+
+}
 int 
 main (int argc, char** argv)
 {
-
-#ifndef _WIN32
-   if ( signal( SIGPIPE, SIG_IGN) == SIG_ERR)
-   {
-      cerr << "Couldn't install signal handler for SIGPIPE" << endl;
-      exit(-1);
-   }
-#endif
-
-   if ( signal( SIGINT, signalHandler ) == SIG_ERR )
-   {
-      cerr << "Couldn't install signal handler for SIGINT" << endl;
-      exit( -1 );
-   }
-
-   if ( signal( SIGTERM, signalHandler ) == SIG_ERR )
-   {
-      cerr << "Couldn't install signal handler for SIGTERM" << endl;
-      exit( -1 );
-   }
+   TtyInterface tty(*argv);
 
    // Defaults
    Data address = DnsUtil::getLocalIpAddress();
@@ -199,16 +226,12 @@ main (int argc, char** argv)
    unsigned short bootstrapPort=0;
    unsigned short listenPort=9000;
 
-   //Data logLevel("INFO");
    Data logLevel("DEBUG");
 
-   //////////////////////////////////////////////////////////////////////////////
-   // Setup Config Object
-   //////////////////////////////////////////////////////////////////////////////
-   Profile profile;
-   profile.overlayName() = "p2poverlay.com"; 
-   profile.isBootstrap() = false;
-
+   // Command line args
+   // --help
+   // -p listenPort
+   // -bs 
    // Loop through command line arguments and process them
    for(int i = 1; i < argc; i++)
    {
@@ -229,11 +252,6 @@ main (int argc, char** argv)
          cout << "testConsole -bs 192.168.1.100:9000" << endl;
          return 0;
       }
-      else if (isEqualNoCase(commandName,"--bootstrap") || isEqualNoCase(commandName,"-B"))
-          {
-              profile.isBootstrap() = true;
-          }
-
       else
       {
          // Process commands that have values
@@ -293,7 +311,12 @@ main (int argc, char** argv)
    
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
 
-
+   //////////////////////////////////////////////////////////////////////////////
+   // Setup Config Object
+   //////////////////////////////////////////////////////////////////////////////
+   Profile profile;
+   profile.overlayName() = "p2poverlay.com"; 
+   
    ResourceId rid(Random::getRandom(16));
    profile.nodeId() = NodeId(rid);
    cerr << "Using NodeId: " << profile.nodeId() << endl;
@@ -332,7 +355,7 @@ main (int argc, char** argv)
    {
       p2pStack.process(10);
       
-      while(_kbhit() != 0)
+      while(3 /* doing things in readline() */)
       {
 #ifdef WIN32
          input = _getch();
