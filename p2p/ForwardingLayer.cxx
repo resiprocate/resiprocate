@@ -28,78 +28,85 @@ ForwardingLayer::forward( std::auto_ptr<Message> m )
 
   redo:
    DestinationId did = m->nextDestination();
+
    if (did.isCompressedId())
    {
       assert(0);
    }
-   else if (mTopology.isResponsible(did))
+   else if (did.isNodeId())
    {
-      DebugLog(<< "ForwardingLayer: we are responsible");
-
-      if (did.isNodeId())
+      DebugLog(<< "ForwardingLayer: this is a node-id");
+      
+      if (did == mProfile.nodeId()) // this is me
       {
-         DebugLog(<< "ForwardingLayer: this is a node-id");
-
-         if (did == mProfile.nodeId()) // this is me
+         DebugLog(<< "ForwardingLayer: addressed to me");
+         
+         m->popNextDestinationId();
+         if (!m->isDestinationListEmpty())
          {
-            DebugLog(<< "ForwardingLayer: addressed to me");
-
-            m->popNextDestinationId();
-            if (m->isDestinationListEmpty())
-            {
-               DebugLog(<< "ForwardingLayer: more entries on destination list. Reentering forwarding loop");
-               goto redo;
-            }
-            else
-            { 
-               DebugLog(<< "ForwardingLayer: no more entries on destination list. Posting.");
-               mDispatcher.post(m);
-            }
+            DebugLog(<< "ForwardingLayer: more entries on destination list. Reentering forwarding loop");
+            goto redo;
          }
-         else // not me
-         {
-            DebugLog(<< "ForwardingLayer: not addressed to me");
-             
-            if (mTopology.isConnected(did.asNodeId()))
-            { 
-               DebugLog(<< "ForwardingLayer: forwarding to directly connected node");
-
-               mTransporter.send(did.asNodeId(), m); 
-            }
-            else
-            {
-               DebugLog(<< "ForwardingLayer: dropping packet");
-
-               // drop on the floor
-            }
+         else
+         { 
+            DebugLog(<< "ForwardingLayer: no more entries on destination list. Posting.");
+            mDispatcher.post(m);
          }
       }
-      else // resourceID
+      else // not me
       {
-         assert (did.isResourceId());
-
-         DebugLog(<< "ForwardingLayer: destination is resource-id");
-
+         DebugLog(<< "ForwardingLayer: not addressed to me");
+         
+         if (mTopology.isConnected(did.asNodeId()))
+         { 
+            DebugLog(<< "ForwardingLayer: forwarding to directly connected node");
+            
+            mTransporter.send(did.asNodeId(), m); 
+         }
+         else if(mTopology.isResponsible(did.asNodeId()))
+         {
+            // We own this section of space so we'd know about this node if
+            // it existed
+            DebugLog(<< "ForwardingLayer: dropping packet");
+         }
+         else
+         {
+            // We're not responsible, try to route to someone who is
+            DebugLog(<< "ForwardingLayer: routing to next hop");
+            
+            mTransporter.send(mTopology.findNextHop(did), m);
+         }
+      }
+   }
+   else // resourceID
+   {
+      assert (did.isResourceId());
+      
+      DebugLog(<< "ForwardingLayer: destination is resource-id");
+      
+      if(mTopology.isResponsible(did.asResourceId()))
+      {
          m->popNextDestinationId();
          if (m->isDestinationListEmpty())
          {
             DebugLog(<< "ForwardingLayer: delivering");
-
+            
             mDispatcher.post(m);            
          }
          else
          {
-            DebugLog(<< "ForwardingLayer: discarding");
-
+            DebugLog(<< "ForwardingLayer: discarding illegal destination list (resource-id at nonterminal position)");
+            
             // drop on the floor
          }
       }
-   }
-   else // not responsible and not compressed
-   {
-      DebugLog(<< "ForwardingLayer: routing to next hop");
-
-      mTransporter.send(mTopology.findNextHop(did), m);
+      else
+      {
+         // Not responsible so try to route 
+         DebugLog(<< "ForwardingLayer: routing to next hop");
+         
+         mTransporter.send(mTopology.findNextHop(did.asResourceId()), m);
+      }
    }
 }
 
@@ -154,7 +161,8 @@ ForwardingLayer::consume(LocalCandidatesCollected& m)
    // pass to the TopologyAPI
    if(m.getAppId() == RELOAD_APPLICATION_ID)
    {
-      mTopology.candidatesCollected(m.getNodeId(), m.getAppId(), m.getCandidates());
+      mTopology.candidatesCollected(m.getTransactionId(),
+                                    m.getNodeId(), m.getAppId(), m.getCandidates());
    }
    else
    {

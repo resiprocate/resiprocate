@@ -70,13 +70,16 @@ class CollectCandidatesCommand : public TransporterCommand
 {
    public:
       CollectCandidatesCommand(Transporter *transporter,
+                               UInt64 tid,
                                NodeId &nodeId,
                                unsigned short appId)
-        : TransporterCommand(transporter), mNodeId(nodeId), mAppId(appId) {;}
+         : TransporterCommand(transporter), mTransactionId(tid), 
+           mNodeId(nodeId), mAppId(appId) {;}
 
-      void operator()() { mTransporter->collectCandidatesImpl(mNodeId, mAppId); }
+      void operator()() { mTransporter->collectCandidatesImpl(mTransactionId, mNodeId, mAppId); }
 
    private:
+      UInt64 mTransactionId;
       NodeId mNodeId;
       unsigned short mAppId;
 };
@@ -101,7 +104,7 @@ class ConnectP2pCommand : public TransporterCommand
                         NodeId nodeId,
                         std::vector<Candidate> remoteCandidates,
                         resip::GenericIPAddress &stunTurnServer)
-        : TransporterCommand(transporter), 
+         : TransporterCommand(transporter),
           mNodeId(nodeId),
           mRemoteCandidates(remoteCandidates),
           mStunTurnServer (stunTurnServer) {;}
@@ -118,12 +121,12 @@ class ConnectApplicationCommand : public TransporterCommand
 {
    public:
       ConnectApplicationCommand(Transporter *transporter,
-                   NodeId nodeId,
-                   std::vector<Candidate> remoteCandidates,
-                   unsigned short application,
-                   resip::Fifo<Event> &fifo,
-                   resip::GenericIPAddress &stunTurnServer)
-
+                                NodeId nodeId,
+                                std::vector<Candidate> remoteCandidates,
+                                unsigned short application,
+                                resip::Fifo<Event> &fifo,
+                                resip::GenericIPAddress &stunTurnServer)
+         
         : TransporterCommand(transporter), 
           mNodeId(nodeId),
           mRemoteCandidates(remoteCandidates),
@@ -172,9 +175,9 @@ Transporter::send(FlowId flowId, std::auto_ptr<resip::Data> msg)
 }
   
 void
-Transporter::collectCandidates(NodeId nodeId, unsigned short appId)
+Transporter::collectCandidates(const UInt64 tid, NodeId nodeId, unsigned short appId)
 {
-  mCmdFifo.add(new CollectCandidatesCommand(this, nodeId, appId));
+   mCmdFifo.add(new CollectCandidatesCommand(this, tid, nodeId, appId));
 }
   
 void
@@ -188,7 +191,7 @@ Transporter::connect(NodeId nodeId,
                    std::vector<Candidate> remoteCandidates,
                    resip::GenericIPAddress &stunTurnServer)
 {
-  mCmdFifo.add(new ConnectP2pCommand(this, nodeId, remoteCandidates, stunTurnServer));
+   mCmdFifo.add(new ConnectP2pCommand(this, nodeId, remoteCandidates, stunTurnServer));
 }
   
 void
@@ -198,7 +201,7 @@ Transporter::connect(NodeId nodeId,
                    resip::Fifo<Event> &fifo,
                    resip::GenericIPAddress &stunTurnServer)
 {
-  mCmdFifo.add(new ConnectApplicationCommand(this, nodeId, remoteCandidates, application, fifo, stunTurnServer));
+   mCmdFifo.add(new ConnectApplicationCommand(this, nodeId, remoteCandidates, application, fifo, stunTurnServer));
 }
 
 }

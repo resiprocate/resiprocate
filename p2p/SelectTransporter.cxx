@@ -142,7 +142,7 @@ SelectTransporter::sendImpl(FlowId flowId, std::auto_ptr<resip::Data> data)
 }
 
 void
-SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
+SelectTransporter::collectCandidatesImpl(UInt64 tid, NodeId nodeId, unsigned short appId)
 {
   // For right now, we just return one candidate: a single TCP
   // listener. And we return it right away.
@@ -198,7 +198,7 @@ SelectTransporter::collectCandidatesImpl(NodeId nodeId, unsigned short appId)
    Candidate c(resip::TCP, addrPort); // XXX -- SHOULD BE TLS
    candidates.push_back(c);
 
-   LocalCandidatesCollected *lcc = new LocalCandidatesCollected(nodeId, appId, candidates);
+   LocalCandidatesCollected *lcc = new LocalCandidatesCollected(tid, nodeId, appId, candidates);
    mRxFifo->add(lcc);
 }
 
@@ -285,6 +285,7 @@ SelectTransporter::connectImpl(NodeId nodeId,
    {
       ErrLog( << "Cannot ::send -- returned " << bytesSent << " errno " << errno); 
    }
+   
    // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
 }
 
@@ -509,6 +510,7 @@ SelectTransporter::process(int ms)
               left-=bytesRead;
               ptr+=bytesRead;
               DebugLog(<< "Read from socket: " << bytesRead << " left=" << left);
+              assert(bytesRead!=0); // Closed...
             }
 
             if (int_buffer[0] == htonl(0x80000000 | 0x52454C4F))
