@@ -4,10 +4,9 @@ include $(BUILD)/Makefile.pre
 CXXFLAGS += -I../../
  
 PACKAGES += RUTIL OPENSSL PTHREAD S2C P2P
-
+LIBS += -lreadline
 TESTPROGRAMS += \
-	testConsole.cxx \
-	testFoo.cxx
+	testConsole.cxx 
 
 include $(BUILD)/Makefile.post
 
