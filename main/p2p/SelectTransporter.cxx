@@ -161,22 +161,38 @@ SelectTransporter::collectCandidatesImpl(UInt64 tid, NodeId nodeId, unsigned sho
      DebugLog(<< "Adding new listener for application " << appId << " on port " << mNextPort);
      struct sockaddr_in addr;
      resip::Socket s;
+     int yes=1;
+     
+     int retry=5;
+     
+     while(retry--)
+     {
 #ifndef WIN32
-     addr.sin_len = sizeof(struct sockaddr_in);
+        addr.sin_len = sizeof(struct sockaddr_in);
 #endif
-     addr.sin_family = AF_INET;
-     addr.sin_port = ntohs(mNextPort++);
-     memset(&addr.sin_addr, 0, sizeof(addr.sin_addr));
-     memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(mNextPort++);
+        memset(&addr.sin_addr, 0, sizeof(addr.sin_addr));
+        memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
+     
 
-     s = ::socket(AF_INET, SOCK_STREAM, 0);
-     if (!s) {ErrLog(<< "::socket() failed, errno " << errno);}
-   
-     status = ::bind(s, reinterpret_cast<sockaddr *>(&addr),
-            sizeof(struct sockaddr_in));
-     if (status) { ErrLog( << "Cannot ::bind, errno " << errno); }
+        s = ::socket(AF_INET, SOCK_STREAM, 0);
+        setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (void *)&yes, sizeof(yes));
 
-     status = ::listen(s, 1);
+        if (!s) {ErrLog(<< "::socket() failed, errno " << errno);}
+
+        DebugLog(<< "Binding to port " << ntohs(addr.sin_port));
+
+        status = ::bind(s, reinterpret_cast<sockaddr *>(&addr),
+                        sizeof(struct sockaddr_in));
+        if (status) { 
+           ErrLog( << "Cannot ::bind, errno " << errno);
+           continue;
+        }
+     }
+     assert(status==0);
+     
+     status = ::listen(s, 5);
      if (status) { ErrLog( << "Cannot ::listen, errno " << errno); }
 
      addrPort.v4Address = addr;
@@ -268,11 +284,13 @@ SelectTransporter::connectImpl(NodeId nodeId,
                                std::vector<Candidate> remoteCandidates,
                                resip::GenericIPAddress &stunTurnServer)
 {
+   DebugLog(<< "connectImpl invoked");
+
    connectImpl(nodeId, remoteCandidates, RELOAD_APPLICATION_ID,
                *mRxFifo, stunTurnServer);
 }
 
-void
+void 
 SelectTransporter::connectImpl(NodeId nodeId,
                          std::vector<Candidate> remoteCandidates,
                          unsigned short application,
@@ -281,6 +299,8 @@ SelectTransporter::connectImpl(NodeId nodeId,
 {
    // XXX Right now, we just grab the first candidate out of the array
    // and connect to it. Whee!
+
+   DebugLog(<< "connectImpl invoked");
 
    resip::Socket s;
    Candidate candidate = remoteCandidates.front();
@@ -298,9 +318,41 @@ SelectTransporter::connectImpl(NodeId nodeId,
    int status = ::connect(s, &(candidate.getAddress().address), sizeof(sockaddr_in));
    if (status) { ErrLog( << "Cannot ::connect, errno " << errno); }
 
-   FlowId flowId(nodeId, application, s, dataFifo);
+
+   // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
+   // Blow our node ID out on the wire (because there is no cert)
+   const resip::Data nid = mConfiguration.nodeId().encodeToNetwork();
+   size_t bytesSent = ::send(s, nid.data(), nid.size(), 0);
+   if (bytesSent != nid.size()) 
+   {
+      ErrLog( << "Cannot ::send -- returned " << bytesSent << " errno " << errno);
+   }
+   // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
+
+   // Get the remote node ID from the incoming socket
+   char buffer[16];
+   size_t bytesRead = readSocket(s, buffer, sizeof(buffer));
+   DebugLog(<< "Read#2 " << bytesRead);
+   if (bytesRead != sizeof(buffer)) 
+   {
+      ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << errno); 
+      assert(0);
+   }
+      
+   // Parse the node id
+   s2c::NodeIdStruct nids;
+   resip::Data data(resip::Data::Borrow, buffer, sizeof(buffer));
+   resip::DataStream strm(data);
+   nids.decode(strm);
+   NodeId nodeId2(nids);
+
+   FlowId flowId(nodeId2, application, s, *mRxFifo);
+
+   DebugLog(<< "SelectTransporter: connection to node " << nodeId2);
 
    mNodeFlowMap.insert(std::map<NodeId, FlowId>::value_type(nodeId, flowId));
+
+   
 
    ConnectionOpened *co = new ConnectionOpened(flowId,
                                                application,
@@ -379,7 +431,7 @@ SelectTransporter::process(int ms)
          ErrLog( << "Cannot ::read -- returned " << bytesRead << " errno " << errno); 
          assert(0);
       }
-
+      
       // Parse the node id
       s2c::NodeIdStruct nids;
       resip::Data data(resip::Data::Borrow, buffer, sizeof(buffer));
@@ -389,6 +441,7 @@ SelectTransporter::process(int ms)
 
       FlowId flowId(nodeId, application, s, *mRxFifo);
 
+      
       mNodeFlowMap.insert(
         std::map<NodeId, FlowId>::value_type(nodeId, flowId));
 
@@ -403,6 +456,9 @@ SelectTransporter::process(int ms)
    // Check for new incoming connections
    for (j = mListenerMap.begin(); j != mListenerMap.end(); j++)
    {
+      DebugLog(<< "XXXXYYY");
+      
+
       if (fdSet.readyToRead(j->second.first))
       {
         // New incoming connection. Yaay!
@@ -418,8 +474,7 @@ SelectTransporter::process(int ms)
         // ********** XXX REMOVE THIS WHEN WE GO TO TLS/DTLS XXX ********** 
         // Blow our node ID out on the wire (because there is no cert)
         const resip::Data nid = mConfiguration.nodeId().encodeToNetwork();
-        size_t bytesSent = ::send((i->second).getSocket(),
-                                  nid.data(), nid.size(), 0);
+        size_t bytesSent = ::send(s,nid.data(), nid.size(), 0);
 
         if (bytesSent != nid.size()) 
         {
@@ -447,6 +502,8 @@ SelectTransporter::process(int ms)
         mNodeFlowMap.insert(
            std::map<NodeId, FlowId>::value_type(nodeId2, flowId));
 
+        DebugLog(<< "SelectTransporter: connection to node " << nodeId);
+        
         // Ideally, we'd check that the nodeId we just read
         // actually matches the nodeId we were expecting.
 
@@ -454,13 +511,19 @@ SelectTransporter::process(int ms)
                                                   application,
                                                   resip::TCP,
                                                   true /* inbound? */,
-                                                  0 /* no cert for you */);
-        mRxFifo->add(co);
+                                                  0 /* no cert for you
+                                                     * */);
+        
+        DebugLog(<< "Notifying about connection opened");
 
+        mRxFifo->add(co);
+        
         // Open Issue -- should we close and remove the listener here?
         // Adam and ekr say "probably"; fluffy says "hell no".
         resip::closeSocket(j->second.first);
-        mListenerMap.erase(j++);
+        // TODO: remove this from the map somehow?
+        //ListenerMap::iterator jold=j++;        
+        //mListenerMap.erase(jold);
       }
    }
 
