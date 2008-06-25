@@ -32,9 +32,6 @@ class ChordTopology : public TopologyAPI
       // Messages that the forwarding layer sends to this object
       virtual void newConnectionFormed( const NodeId& node, bool inbound );
       virtual void connectionLost( const NodeId& node );
-      virtual void candidatesCollected( const NodeId& node, 
-                                        unsigned short appId, 
-                                        std::vector<Candidate>& candidates);
        
       // deal with topology change messages 
       virtual void consume(JoinReq& msg);
@@ -86,6 +83,14 @@ class ChordTopology : public TopologyAPI
       bool addNewFingers( const std::vector<NodeId>& nodes ); // return true if changed
       void buildFingerTable();
       void sendUpdates();
+      
+      // Attach subsystem
+      void attach(const NodeId &attachTo);
+      void startCandidateCollection(const UInt64 tid, const NodeId &id);
+      virtual void candidatesCollected( UInt64 tid, 
+                                        const NodeId& node, 
+                                        unsigned short appId, 
+                                        std::vector<Candidate>& candidates);
 };
 
 }

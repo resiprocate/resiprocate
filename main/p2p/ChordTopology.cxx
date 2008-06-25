@@ -54,9 +54,8 @@ ChordTopology::newConnectionFormed( const NodeId& node, bool inbound )
       // the bootstrap node
       if(mFingerTable.size() == 0 && mNextTable.size() == 0)
       {
-         // collect candidates for our NodeId
-         mTransporter.collectCandidates(mProfile.nodeId());
-         DebugLog(<< "collectingCandidates to connect to AP");
+        // collect candidates for our NodeId
+         attach(mProfile.nodeId());
 
          // Build finger table
          buildFingerTable();
@@ -108,18 +107,6 @@ ChordTopology::connectionLost( const NodeId& node )
    }
 
    // TODO - go get another finger table entry?
-}
-
-
-void 
-ChordTopology::candidatesCollected( const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
-{
-   DebugLog(<< "candidateCollection completed, sending CONNECT req to: " << node);
-
-   // Connect to node - send the ConnectReq
-	DestinationId destination(node);
-   std::auto_ptr<Message> connectReq(new ConnectReq(destination, resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, candidates));
-   mDispatcher.send(connectReq, *this);
 }
 
 
@@ -195,6 +182,9 @@ void
 ChordTopology::consume(ConnectReq& msg)
 {
    DebugLog(<< "received CONNECT Req from: " << msg.getResponseNodeId());
+   
+   
+   
 }
 
 
@@ -348,6 +338,10 @@ ChordTopology::isResponsible( const ResourceId& resource ) const
 bool 
 ChordTopology::isResponsible( const DestinationId& did ) const
 {
+   // This code does not make any sense, since if it's
+   // not a NodeId underneath it chokes -- EKR
+   assert(0);
+   
    return isResponsible(did.asNodeId());
 }
 
@@ -442,7 +436,7 @@ ChordTopology::addNewNeighbors(const std::vector<NodeId>& nodes, bool adjustNext
          changed=true;
          // kick start connection to newly added node if not admitting peer addition
          DebugLog(<< "collecting candidates for new neighbour: " << nodes[n]);
-         if(!adjustNextOnly) mTransporter.collectCandidates(nodes[n]);  
+         if(!adjustNextOnly) attach(nodes[n]);  
       }
    }
    
@@ -480,7 +474,7 @@ ChordTopology::buildFingerTable()
    {
       NodeId fingerNodeId = mProfile.nodeId().add2Pow(127-i);
       DebugLog(<< "collecting candidates for fingertable: " << fingerNodeId);
-      mTransporter.collectCandidates(fingerNodeId);     
+      attach(fingerNodeId);
    }
 }
 
@@ -518,6 +512,54 @@ ChordTopology::sendUpdates()
       mDispatcher.send(updateReq, *this);
    }
 }
+
+
+
+// Connection management subsystem... This will eventually need to be
+// moved somewhere else, but for now...
+
+void 
+ChordTopology::attach(const NodeId &attachTo)
+{
+   DebugLog(<< "Attaching to node " << attachTo);
+
+   startCandidateCollection(0,attachTo);
+}
+
+void
+ChordTopology::startCandidateCollection(const UInt64 tid, const NodeId &attachTo)
+{
+   DebugLog(<< "Starting candidate collection");
+   
+   mTransporter.collectCandidates(tid, attachTo);
+}
+
+
+void 
+ChordTopology::candidatesCollected(UInt64 tid,
+                                   const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
+{
+   DebugLog(<< "candidateCollection completed, sending CONNECT req to: " << node);
+   
+   if(tid==0)
+   {
+      // We're initiating 
+
+      // This needs to be a resourceId to ensure correct routing
+      // hack-o-rama
+      ResourceId rid(node.encodeToNetwork());
+      DestinationId destination(rid);
+
+      std::auto_ptr<Message> connectReq(new ConnectReq(destination, resip::Data::Empty /* icefrag */, resip::Data::Empty /* password */, appId, resip::Data::Empty /* ice tcp role */, candidates));
+      mDispatcher.send(connectReq, *this);
+   }
+   else
+   {
+      // We're responding, in which case who knows....
+
+   }
+}
+
 
 /* ======================================================================
  *  Copyright (c) 2008, Various contributors to the Resiprocate project

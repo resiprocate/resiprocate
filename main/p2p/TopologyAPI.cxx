@@ -9,6 +9,7 @@ TopologyAPI::TopologyAPI(Profile& config, Dispatcher& dispatcher, Transporter& t
 {
    // register with dispatcher for reload request events
    mDispatcher.registerPostable(Message::JoinReqType, *this);
+   mDispatcher.registerPostable(Message::ConnectReqType, *this); // What about app connect?
    mDispatcher.registerPostable(Message::UpdateReqType, *this);
    mDispatcher.registerPostable(Message::LeaveReqType, *this);
 }

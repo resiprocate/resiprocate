@@ -54,7 +54,6 @@ Message::dump() const
 NodeId 
 Message::getResponseNodeId() const
 {
-	assert(0);
 	// todo grab from via
 	NodeId n;	
 	return n;
