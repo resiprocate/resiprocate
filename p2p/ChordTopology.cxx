@@ -52,7 +52,7 @@ ChordTopology::newConnectionFormed( const NodeId& node, bool inbound )
    {
       // If this is the first connection we have - then it must be the connection to
       // the bootstrap node
-      if(mFingerTable.size() == 0 && mNextTable.size() == 0)
+     if(mFingerTable.size() == 0 && mNextTable.size() == 0 && !mProfile.isBootstrap())
       {
         // collect candidates for our NodeId
          attach(mProfile.nodeId());
@@ -182,7 +182,7 @@ void
 ChordTopology::consume(ConnectReq& msg)
 {
    DebugLog(<< "received CONNECT Req from: " << msg.getResponseNodeId());
-   
+
    // Socket connect
    resip::GenericIPAddress stunTurnServer;
    mTransporter.connect(msg.getResponseNodeId(), msg.getCandidates(), stunTurnServer /* stunTurnServer */);
