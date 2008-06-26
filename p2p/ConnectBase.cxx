@@ -30,13 +30,7 @@ ConnectBase::ConnectBase(const resip::Data &frag, const resip::Data &password, U
 	mPassword = password;
 	mApplication = application;
 	mRole = role;
-
-	for (std::vector<Candidate>::const_iterator iter = candidates.begin(); iter != candidates.end(); iter++) 
-	{
-		IceCandidateStruct *iceStruct = new IceCandidateStruct;
-		iceStruct->mCandidate = iter->getIceString();
-		mCandidates.push_back(iceStruct);
-	}
+   setCandidates(candidates);
 }
 
 const resip::Data& 
@@ -73,4 +67,15 @@ ConnectBase::getCandidates()
       retCandidates.push_back(Candidate((*it)->mCandidate));
    }
    return retCandidates;
+}
+
+void 
+ConnectBase::setCandidates(const std::vector<Candidate> &candidates)
+{
+	for (std::vector<Candidate>::const_iterator iter = candidates.begin(); iter != candidates.end(); iter++) 
+	{
+		IceCandidateStruct *iceStruct = new IceCandidateStruct;
+		iceStruct->mCandidate = iter->getIceString();
+		mCandidates.push_back(iceStruct);
+	}
 }
