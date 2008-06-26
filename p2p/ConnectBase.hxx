@@ -22,6 +22,8 @@ public:
    const resip::Data& getRole();
    std::vector<Candidate> getCandidates();
 
+   void setCandidates(const std::vector<Candidate> &candidates);
+
 protected:
    virtual void decodePayload(resip::DataStream &dataStream);
 	ConnectBase();
