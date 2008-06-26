@@ -78,6 +78,9 @@ class ChordTopology : public TopologyAPI
       std::vector<NodeId> mNextTable;
       bool mJoined;
 
+      typedef std::map<UInt64, Message* > PendingResponseMap;
+      PendingResponseMap mPendingResponses;
+
       bool addNewNeighbors(  const std::vector<NodeId>& nodes, bool adjustNextOnly ); // return true if
                                                           // anything changed
       bool addNewFingers( const std::vector<NodeId>& nodes ); // return true if changed

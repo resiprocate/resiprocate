@@ -115,18 +115,20 @@ ChordTopology::consume(ConnectReq& msg)
 {
    DebugLog(<< "received CONNECT req.");
 
-   // Socket connect
+   // Build Connect Response and store to be sent out after candidate collection completes
+   // Real data will be filled out later
+   mPendingResponses[msg.getTransactionId()] = msg.makeConnectResponse(resip::Data::Empty /* frag */, 
+                                                                       resip::Data::Empty /* password */,
+                                                                       RELOAD_APPLICATION_ID,
+                                                                       resip::Data::Empty /* role */,
+                                                                       msg.getCandidates() /* candidates */);  
+
+   // Collect candidates for response
+   startCandidateCollection(msg.getTransactionId(), msg.getResponseNodeId() /* TODO - we really want to retrieve sending NodeId */);
+
+   // Socket connect - once ice is integrated this likely needs to move to after the candidates are collected
    resip::GenericIPAddress stunTurnServer;
    mTransporter.connect(msg.getResponseNodeId(), msg.getCandidates(), stunTurnServer /* stunTurnServer */);
-
-
-   // Send Connect Ans
-   std::auto_ptr<Message> connectAns(msg.makeConnectResponse(resip::Data::Empty /* frag */, 
-                                                             resip::Data::Empty /* password */,
-                                                             RELOAD_APPLICATION_ID,
-                                                             resip::Data::Empty /* role */,
-                                                             msg.getCandidates() /* candidates */));  // TODO - need to actually gather local candidates
-   mDispatcher.send(connectAns, *this);
 }
 
 
@@ -562,10 +564,11 @@ void
 ChordTopology::candidatesCollected(UInt64 tid,
                                    const NodeId& node, unsigned short appId, std::vector<Candidate>& candidates)
 {
-   DebugLog(<< "candidateCollection completed, sending CONNECT req to: " << node);
    
    if(tid==0)
    {
+      DebugLog(<< "candidateCollection completed, sending CONNECT req to: " << node);
+
       // We're initiating 
 
       // This needs to be a resourceId to ensure correct routing
@@ -578,8 +581,33 @@ ChordTopology::candidatesCollected(UInt64 tid,
    }
    else
    {
-      // We're responding, in which case who knows....
+      DebugLog(<< "candidateCollection completed, sending CONNECT response to: " << node);
+      // We're responding
 
+      // Find pending response
+      PendingResponseMap::iterator it = mPendingResponses.find(tid);
+      if(it != mPendingResponses.end())
+      {
+         if(it->second->getType() == Message::ConnectAnsType)
+         {
+            // Fill in the remaining Connect Response data
+            ConnectAns* connectAns = (ConnectAns*)it->second;
+            connectAns->setCandidates(candidates);
+            mDispatcher.send(std::auto_ptr<Message>(it->second), *this);
+            // Send Connect Ans
+            mPendingResponses.erase(it);
+         }
+         else
+         {
+            // Response not of expected type
+            assert(false);
+         }
+      }
+      else
+      {
+         // Response not found
+         assert(false);
+      }
    }
 }
 
