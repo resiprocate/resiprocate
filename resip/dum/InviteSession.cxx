@@ -1457,7 +1457,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          else
          {
             mCurrentRemoteSdp = sdp; 
-            handler->onAnswer(getSessionHandle(), msg, *sdp);
+            handler->onAnswer(getSessionHandle(), msg, *mCurrentRemoteSdp);
          }
          
          // !jf! do I need to allow a reINVITE overlapping the retransmission of
