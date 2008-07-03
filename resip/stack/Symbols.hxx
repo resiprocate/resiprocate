@@ -114,6 +114,8 @@ class Symbols
 
       static const char* pathSep;
       static const char* id;
+
+      static const char* Gruu;
 };
 
 }

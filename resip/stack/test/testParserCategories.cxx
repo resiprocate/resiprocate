@@ -547,7 +547,7 @@ main(int arc, char** argv)
       checkParameterName(text);
       checkParameterName(extensions);
       checkParameterName(Instance);
-      checkParameterName(gruu);
+      checkParameterName(gr);
 
       checkParameterName(transport);
       checkParameterName(user);
