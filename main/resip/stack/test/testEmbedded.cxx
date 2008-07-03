@@ -185,6 +185,51 @@ main(int argc, char** argv)
       assert(na.uri().embedded().header(h_CSeq).sequence() == 4178);
    }
 
+   {
+      cerr << "Parse Request-Line with embedded" << endl;
+      
+      Data nad("INVITE sips:bob@foo.com?CSeq=314159%20ACK SIP/2.0");
+      HeaderFieldValue hfv(nad.data(), nad.size());
+      RequestLine na(&hfv, Headers::NONE); 
+
+      assert(na.uri().hasEmbedded());
+      assert(na.uri().embedded().exists(h_CSeq));
+      assert(na.uri().embedded().header(h_CSeq).method() == ACK);
+      assert(na.uri().embedded().header(h_CSeq).sequence() == 314159);
+   }
+
+   {
+      cerr << "Parse Request-Line with embedded (and another param)" << endl;
+      
+      Data nad("INVITE sips:bob@foo.com;ttl=134?CSeq=314159%20ACK SIP/2.0");
+      HeaderFieldValue hfv(nad.data(), nad.size());
+      RequestLine na(&hfv, Headers::NONE); 
+
+      assert(na.uri().hasEmbedded());
+      assert(na.uri().embedded().exists(h_CSeq));
+      assert(na.uri().embedded().header(h_CSeq).method() == ACK);
+      assert(na.uri().embedded().header(h_CSeq).sequence() == 314159);
+      assert(na.uri().param(p_ttl) == 134);
+   }
+
+   {
+      cerr << "Parse Request-Line with multiple headers" << endl;
+      
+      Data nad("INVITE sip:speedy@cathaynetworks.com?Via=SIP/2.0/TLS%20cathay.com:5066%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "fobbieBletch-" RESIP_COOKIE "1&Via=SIP/2.0/TCP%20ixolib.com:5067%3Bbranch%3Dz9hG4bK" RESIP_COOKIE "bletchieFoo-" RESIP_COOKIE "1&CSeq=4178%20ACK SIP/2.0");
+      HeaderFieldValue hfv(nad.data(), nad.size());
+      RequestLine na(&hfv, Headers::NONE); 
+
+      assert(na.uri().hasEmbedded());
+      assert(na.uri().embedded().exists(h_Vias));
+      assert(na.uri().embedded().exists(h_CSeq));
+      
+      assert(na.uri().embedded().header(h_Vias).size() == 2);
+      assert(na.uri().embedded().header(h_Vias).front().transport() == "TLS");
+      assert((++(na.uri().embedded().header(h_Vias).begin()))->transport() == "TCP");
+      assert(na.uri().embedded().header(h_CSeq).method() == ACK);
+      assert(na.uri().embedded().header(h_CSeq).sequence() == 4178);
+   }
+
    cerr << endl << "Tests OK" << endl;
    return 0;
 }
