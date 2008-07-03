@@ -44,7 +44,10 @@ class ParameterTypes
          defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu"),  // <> quoted
          defineParam(regid, "reg-id", UInt32Parameter, "outbound"),  
          defineParam(ob,"ob",ExistsParameter,"outbound-05"),
-         defineParam(gruu, "gruu", QuotedDataParameter, "gruu"),
+
+         defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "gruu"),
+         defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "gruu"),
+         defineParam(gr, "gr", ExistsOrDataParameter, "gruu"),
 
          defineParam(accessType, "access-type", DataParameter, "RFC 2046"),
          defineParam(algorithm, "algorithm", DataParameter, "RFC ????"),
@@ -113,11 +116,10 @@ class ParameterTypes
 
          defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05"),
 
-         defineParam(qop, "qop", DataParameter, "RFC 3261"),
-         defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
 
          defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip"),
-
+         defineParam(qop, "qop", DataParameter, "RFC 3261"),
+         defineParam(qopOptions, "qop", DataParameter, "RFC 3261"),
          defineParam(addTransport, "addTransport", ExistsParameter, ""),
 
          MAX_PARAMETER
