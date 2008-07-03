@@ -486,16 +486,22 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
          case ARES_EDESTRUCTION:
             ErrLog (<< "Error " << mStub.errorMessage(status) << " for " << mTarget);
             break;
-         case ARES_EBADQUERY:
          case ARES_EBADNAME:
+            ErrLog(<< "Garbage hostname failed to resolve: " << mStub.errorMessage(status) << " for " << mTarget);
+            break;
+         case ARES_EBADQUERY:
+            ErrLog(<< "Query was malformed (probably because hostname was "
+                        "too long) " << mStub.errorMessage(status) << " for "
+                        << mTarget);
+            break;
          case ARES_EBADFAMILY:
-            ErrLog (<< "Ares usage rror " << mStub.errorMessage(status) << " for " << mTarget);
+            ErrLog (<< "Bad lookup type " << mStub.errorMessage(status) << " for " << mTarget);
+            // .bwc. This should not happen. If it does, we have code to fix.
             assert(0);
             break;
          default:
             ErrLog (<< "Unknown error " << mStub.errorMessage(status) << " for " << mTarget);
-            // .bwc. There are a whole bunch more error codes here.
-            // assert(0);
+            assert(0);
             break;
       }
 
