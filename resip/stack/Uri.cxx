@@ -847,7 +847,7 @@ Uri::parse(ParseBuffer& pb)
    if (!pb.eof() && *pb.position() == Symbols::QUESTION[0])
    {
       const char* anchor = pb.position();
-      pb.skipToOneOf(Symbols::RA_QUOTE, ParseBuffer::Whitespace);
+      pb.skipToOneOf(">;", ParseBuffer::Whitespace);
       pb.data(mEmbeddedHeadersText, anchor);
    }
 }
