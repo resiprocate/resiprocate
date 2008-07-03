@@ -1,4 +1,9 @@
 = Release Notes v 1.3.2 =
+==rutil==
+===Bug fixes===
+* fixed an assert bug when an excessively long domain name was passed to the DNS resolver (this could easily effect the proxy, for instance)
+
+= Release Notes v 1.3.2 =
 
 ==rutil==
 ===Bug fixes===
