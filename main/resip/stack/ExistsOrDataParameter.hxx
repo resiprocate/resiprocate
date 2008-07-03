@@ -1,43 +1,42 @@
-#include "resip/dum/RegistrationCreator.hxx"
-#include "resip/dum/DialogUsageManager.hxx"
-#include "resip/dum/MasterProfile.hxx"
-#include "rutil/Random.hxx"
-#include "rutil/Logger.hxx"
+#if !defined(RESIP_ExistsOrDataParameter_HXX)
+#define RESIP_ExistsOrDataParameter_HXX 
 
-using namespace resip;
+#include "resip/stack/Parameter.hxx"
+#include "resip/stack/ParameterTypeEnums.hxx"
+#include "resip/stack/QuotedDataParameter.hxx"
+#include <iosfwd>
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::DUM
-
-RegistrationCreator::RegistrationCreator(DialogUsageManager& dum, 
-                                         const NameAddr& target, 
-                                         SharedPtr<UserProfile> userProfile, 
-                                         UInt32 registrationTime)
-   : BaseCreator(dum, userProfile)
+namespace resip
 {
-   makeInitialRequest(target, target, REGISTER);
-   mLastRequest->header(h_RequestLine).uri().user() = Data::Empty;
-   mLastRequest->header(h_Expires).value() = registrationTime;
 
-   if (userProfile->getRinstanceEnabled())
-   {
-      mLastRequest->header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // .slg. poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
-   }
+class ParseBuffer;
 
-   if(userProfile->gruuEnabled() && userProfile->hasInstanceId())
-   {
-      mLastRequest->header(h_Contacts).front().param(p_Instance) = mUserProfile->getInstanceId();
-   }
+class ExistsOrDataParameter : public DataParameter
+{
+   public:
+      explicit ExistsOrDataParameter(ParameterTypes::Type);
+      ExistsOrDataParameter(ParameterTypes::Type, bool);
 
-   if (userProfile->getMethodsParamEnabled())
-   {
-      mLastRequest->header(h_Contacts).front().param(p_methods) = dum.getMasterProfile()->getAllowedMethodsData();
-   }
-   
-   DebugLog ( << "RegistrationCreator::RegistrationCreator: " << mLastRequest);   
-   // add instance parameter to the contact for gruu !cj! TODO 
+      ExistsOrDataParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
 
-   // store caller prefs in Contact
+      virtual std::ostream& encode(std::ostream& stream) const;
+
+      static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
+
+      virtual Parameter* clone() const;
+      
+   protected:
+      ExistsOrDataParameter(const ExistsOrDataParameter& other) 
+         : DataParameter(other)
+      {}
+
+      friend class ParserCategory;
+      friend class Auth;
+};
+ 
 }
+
+#endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

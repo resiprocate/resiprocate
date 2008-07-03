@@ -3,6 +3,7 @@
 
 #include "resip/stack/BranchParameter.hxx"
 #include "resip/stack/DataParameter.hxx"
+#include "resip/stack/ExistsOrDataParameter.hxx"
 #include "resip/stack/QuotedDataParameter.hxx"
 #include "resip/stack/QopParameter.hxx"
 #include "resip/stack/IntegerParameter.hxx"
@@ -52,10 +53,12 @@ defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840");
 defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"); // principal|msg-taker|attendant|information
 defineParam(text, "text", ExistsParameter, "RFC 3840");
 defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"); //list
-defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
+defineParam(Instance, "+sip.instance", QuotedDataParameter, "outbound");  // <> quoted
 defineParam(regid, "reg-id", UInt32Parameter, "outbound");
 defineParam(ob,"ob",ExistsParameter,"outbound-05");
-defineParam(gruu, "gruu", QuotedDataParameter, "gruu");
+defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "gruu");
+defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "gruu");
+defineParam(gr, "gr", ExistsOrDataParameter, "gruu");
 
 defineParam(accessType, "access-type", DataParameter, "RFC 2046");
 defineParam(algorithm, "algorithm", DataParameter, "RFC 2617");
@@ -125,9 +128,9 @@ defineParam(url, "url", QuotedDataParameter, "RFC 4483");
 
 defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
 defineParam(qop,"qop",DataParameter,"RFC3261");
-defineParam(qopOptions,"qop",DataParameter,"RFC3261");
 
 // Internal use only
+defineParam(qopOptions,"qop",DataParameter,"RFC3261");
 defineParam(addTransport, "addTransport", ExistsParameter, "RESIP INTERNAL");
 
 }

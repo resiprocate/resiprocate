@@ -49,13 +49,30 @@ class UserProfile : public Profile
       
 
       // !cj! - this GRUU stuff looks very suspect
+      // !dcm! -- yep, I don't think you can adda gruu..and disabling is weird.
+      //Anon should be on a per-call level...all of these will prob. go away.
+      //.dcm. anonymous gruu's will be used by making annon userprofile where
+      //one is avail. Up to the ap to keep the req'd reg up.
+      //1 gruu per userprofile for now.
       virtual void addGruu(const Data& aor, const NameAddr& contact);
       virtual bool hasGruu(const Data& aor) const;
       virtual bool hasGruu(const Data& aor, const Data& instance) const;
       virtual NameAddr& getGruu(const Data& aor);
       virtual NameAddr& getGruu(const Data& aor, const NameAddr& contact);
-      virtual void disableGruu();
 
+      //should do Supported wrangling--but what if rquired is desired? Same as 100rel?
+      virtual bool& gruuEnabled() { return mGruuEnabled; }
+      virtual bool gruuEnabled() const { return mGruuEnabled; }
+
+      virtual bool hasPublicGruu() const { return !mPubGruu.host().empty(); }
+      virtual const Uri& getPublicGruu() { return mPubGruu; }
+      virtual void setPublicGruu(const Uri& gruu) { mPubGruu = gruu; }
+
+      virtual bool hasTempGruu() const { return !mTempGruu.host().empty(); }
+      virtual const Uri& getTempGruu() { return mTempGruu; }
+      virtual void setTempGruu(const Uri& gruu) { mTempGruu = gruu; }
+
+      virtual bool hasInstanceId();
       virtual void setInstanceId(const Data& id);
       virtual const Data& getInstanceId() const;
       
@@ -89,6 +106,9 @@ class UserProfile : public Profile
       NameAddrs mServiceRoute;
       Data mImsAuthUserName;
       Data mImsAuthHost;
+      bool mGruuEnabled;
+      Uri mPubGruu;
+      Uri mTempGruu;
       bool mIsAnonymous;
       
       typedef std::set<DigestCredential> DigestCredentials;
