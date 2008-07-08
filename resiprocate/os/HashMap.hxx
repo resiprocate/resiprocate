@@ -3,7 +3,7 @@
 
 // !cj! if all these machine have to use map then we can just delete them and use the default 
 
-#  if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+#  if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) || __GNUC__ >= 4 )
 #    include <ext/hash_map>
 #    define HASH_MAP_NAMESPACE __gnu_cxx
 #    define HashMap __gnu_cxx::hash_map

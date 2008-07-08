@@ -7,6 +7,12 @@ using namespace resip;
 
 static Mimes empty;
 
+ClientSubscriptionHandler::~ClientSubscriptionHandler()
+{}
+
+ServerSubscriptionHandler::~ServerSubscriptionHandler()
+{}
+
 const Mimes& 
 ServerSubscriptionHandler::getSupportedMimeTypes() const
 {

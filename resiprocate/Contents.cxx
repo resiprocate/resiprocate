@@ -17,6 +17,9 @@ H_ContentDescription resip::h_ContentDescription;
 
 HashMap<Mime, ContentsFactoryBase*>* Contents::FactoryMap = 0;
 
+ContentsFactoryBase::~ContentsFactoryBase()
+{}
+
 Contents::Contents(HeaderFieldValue* headerFieldValue,
                    const Mime& contentType) 
    : LazyParser(headerFieldValue),
