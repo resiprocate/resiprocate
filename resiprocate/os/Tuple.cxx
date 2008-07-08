@@ -371,7 +371,7 @@ resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
 }
 
 
-#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) )
+#if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) || __GNUC__ >= 4 )
 
 size_t 
 __gnu_cxx::hash<resip::Tuple>::operator()(const resip::Tuple& tuple) const

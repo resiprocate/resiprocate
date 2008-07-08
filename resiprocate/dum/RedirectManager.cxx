@@ -124,6 +124,9 @@ RedirectManager::TargetSet::makeNextRequest(SipMessage& request)
    return false;
 }
 
+RedirectManager::Ordering::~Ordering()
+{}
+
 bool RedirectManager::Ordering::operator()(const NameAddr& lhs, const NameAddr& rhs) const
 {
    if (lhs.uri().exists(p_q))

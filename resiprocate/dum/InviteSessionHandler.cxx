@@ -5,6 +5,9 @@
 
 using namespace resip;
 
+InviteSessionHandler::~InviteSessionHandler()
+{}
+
 void 
 InviteSessionHandler::onReadyToSend(InviteSessionHandle handle, SipMessage& msg)
 {
