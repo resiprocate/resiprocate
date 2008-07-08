@@ -22,6 +22,9 @@ Data Headers::HeaderNames[MAX_HEADERS+1];
 bool Headers::CommaTokenizing[] = {false};
 bool Headers::CommaEncoding[] = {false};
 
+HeaderBase::~HeaderBase()
+{}
+
 bool 
 Headers::isCommaTokenizing(Type type)
 {

@@ -935,7 +935,7 @@ enum { chunkTermSentinelChar = '\0' };
             localTextPropBitMask |= charInfo->textPropBitMask;
           determineTransitionFromCharCategory:
             TransitionInfo *transitionInfo =
-                &(localStateMachine[localState][charCategory]);
+	       &(localStateMachine[localState][(int)charCategory]);
             TransitionAction transitionAction = transitionInfo->action;
 #if defined(RESIP_MSG_HEADER_SCANNER_DEBUG)  
             printStateTransition(localState, *charPtr, transitionAction);
