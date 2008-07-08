@@ -36,6 +36,26 @@ insert(std::ostream& s, const T& t)
 }
 #endif
 
+// special case for basic_string container
+template <class T>
+std::ostream&
+insert(std::ostream& s, const std::basic_string<T>& str)
+{
+   // use native <<
+   s << str;
+   return s;
+}
+
+// special case for pair
+template <class T, class U>
+std::ostream&
+insert(std::ostream& s, const std::pair<T, U>& p)
+{
+   // use native <<
+   s << "<" << p.first << ", " << p.second << ">";
+   return s;
+}
+
 // sadly, not generally supported
 #if 0
 #if !defined(WIN32) && !defined(__SUNPRO_CC)
@@ -201,26 +221,6 @@ insert(std::ostream& s, const std::map <K, V, H>& c)
       insert(s, i->second);  
    }
    s << "]";
-   return s;
-}
-
-// special case for basic_string container
-template <class T>
-std::ostream&
-insert(std::ostream& s, const std::basic_string<T>& str)
-{
-   // use native <<
-   s << str;
-   return s;
-}
-
-// special case for pair
-template <class T, class U>
-std::ostream&
-insert(std::ostream& s, const std::pair<T, U>& p)
-{
-   // use native <<
-   s << "<" << p.first << ", " << p.second << ">";
    return s;
 }
 
