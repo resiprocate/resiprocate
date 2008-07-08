@@ -25,6 +25,9 @@ using namespace resip;
 ParameterTypes::Factory ParameterTypes::ParameterFactories[ParameterTypes::MAX_PARAMETER] = {0};
 Data ParameterTypes::ParameterNames[ParameterTypes::MAX_PARAMETER] = {"PARAMETER?"};
 
+ParamBase::~ParamBase()
+{}
+
 defineParam(data, "data", ExistsParameter, "callee-caps");
 defineParam(control, "control", ExistsParameter, "callee-caps");
 defineParam(mobility, "mobility", QuotedDataParameter, "callee-caps"); // mobile|fixed

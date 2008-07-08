@@ -82,6 +82,7 @@ class ExternalDnsHostResult : public ExternalDnsResult
 class ExternalDnsHandler
 {
    public:
+      virtual ~ExternalDnsHandler() {};
       //underscores are against convention, but pretty impossible to read
       //otherwise. ?dcm? -- results stack or heap? 
       //the free routines can be dealt w/ iheritence instead if pointers are used
@@ -94,4 +95,3 @@ class ExternalDnsHandler
 }
 
 #endif
-      

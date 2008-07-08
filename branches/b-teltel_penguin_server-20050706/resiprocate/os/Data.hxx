@@ -199,7 +199,8 @@ class Data
       friend class DataStream;
 };
 
-static bool invokeDataInit = Data::init();
+// do we need to do this in header file?
+//static bool invokeDataInit = Data::init();
 
 
 inline bool isEqualNoCase(const Data& left, const Data& right)
