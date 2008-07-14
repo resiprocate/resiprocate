@@ -15,12 +15,14 @@
 
 #include "resip/stack/TcpTransport.hxx"
 #include "resip/stack/Helper.hxx"
+#include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/ExtensionHeader.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
+#include "rutil/Random.hxx"
 #include "rutil/DataStream.hxx"
 
 using namespace resip;
@@ -100,7 +102,13 @@ main(int argc, char* argv[])
          m->header(h_Vias).front().transport() = Tuple::toData(sender->transport());
          m->header(h_Vias).front().sentHost() = "localhost";
          m->header(h_Vias).front().sentPort() = sender->port();
-      
+         int contentLength=resip::Random::getRandom()%65535;
+         std::string body(contentLength,'0');
+         std::auto_ptr<Contents> contents(new PlainContents(Data(body.data(), body.size())));
+         m->setContents(contents);
+         int headerLength=resip::Random::getRandom()%65535;
+         std::string bigHeader(headerLength,'h');
+         m->header(h_Subject).value()=Data(bigHeader.data(), bigHeader.size());
          messages.push_back(m);
       }
 

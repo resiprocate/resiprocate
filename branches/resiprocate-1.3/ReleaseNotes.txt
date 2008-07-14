@@ -1,3 +1,8 @@
+= Release Notes v 1.3.4 =
+==stack==
+===Bug fixes===
+* fixed a couple of vulnerabilities that would allow an attacker to quickly run the stack out of memory (the bytes-in-memory/bytes-on-wire ratio was extremely large for these; one was approximately 500000, the other could easily get to 1000)
+
 = Release Notes v 1.3.3 =
 ==rutil==
 ===Bug fixes===
