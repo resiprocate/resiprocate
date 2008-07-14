@@ -1,0 +1,142 @@
+#!/bin/sh
+#
+# chkconfig: 35 90 10
+# description: This script starts up the repro processes.  
+#
+# processname: repro
+# pidfile: @REPRO_RUNDIR@/repro.pid
+#
+# Copyright (C) 2006 SIPfoundry Inc.
+# Licensed by SIPfoundry under the Vovida 
+#
+# Copyright (C) 2004 Pingtel Corp.
+# Licensed to SIPfoundry under a Contributor Agreement.
+#
+
+# This is an interactive program; we need the current locale.
+[ -f /etc/profile.d/lang.sh ] && . /etc/profile.d/lang.sh
+
+if [ "$LANG" = "ja" -o "$LANG" = "ja_JP.eucJP" ]; then
+    # We can't Japanese on normal console at boot time.
+    # So, force to set LANG=C
+    if [ "$TERM" = "linux" ] ; then
+        LANG=C
+    fi
+fi
+
+## Source function library.
+
+# Set up correctly depending on the distribution
+if [ ! -f /etc/redhat-release ]
+then
+  # Non-Redhat (Gentoo, Debian, and perhaps others)
+  echo_success() 
+  {
+      echo success
+  }
+  echo_failure() 
+  {
+      echo failure
+  }
+  . /etc/init.d/functions.sh
+
+else
+  # Redhat 
+  . /etc/init.d/functions
+fi
+
+## allow core files
+ulimit -c unlimited
+
+pidfile=@REPRO_RUNDIR@/repro.pid
+
+# See how we were called.
+case "$1" in
+    ## this is called from start below to get the pid in the background process
+    doit)
+        echo $$ > $pidfile
+        cmdargs=`sed 's/#.*//' @REPRO_CONFDIR@/repro.conf`
+        cd @REPRO_CWD@ || exit 1
+        exec @bindir@/repro ${cmdargs}
+        ;;
+
+    start)
+        ### Verify that repro is not already running.
+        if [ -e $pidfile ]
+        then
+            echo "   Found ${pidfile} - checking for running repro process"
+            running=`cat ${pidfile} 2> /dev/null`
+            if [ -n "$running" -a -e /proc/$running ]
+            then
+                echo -n " repro may already be running. Try stop or restart."
+                echo_failure
+                echo
+            else
+                # stale pid file found? - do stop just in case
+                echo " repro not found - running restart."
+                $0 restart
+            fi
+        else
+            iam=`whoami`
+            if [ $iam = @REPROUSER@ ]
+            then
+                ( $0 doit ) < /dev/null &
+            elif [ $iam = root ]
+            then
+                su @REPROUSER@ -c "$0 doit" < /dev/null &
+            else
+                echo "You must be able to start as @REPROUSER@" 1>&2
+                echo_failure
+                exit 1
+            fi
+        fi
+        ;;
+
+  stop)
+        echo -n "  Stopping: repro "
+        STATUS=0
+
+        if [ ! -r ${pidfile} ]
+            then
+            echo "(Not started) "
+        else
+            PID=`cat ${pidfile} 2> /dev/null`
+
+            if [ ! -e /proc/$PID ]
+                then
+                echo "(Started but not running) "
+                rm -f ${pidfile}
+            else
+                echo ""
+                kill $PID 2> /dev/null
+            fi
+        fi
+        ;;
+
+  status)
+        echo -n "Checking repro: "
+        if [ ! -r $pidfile ]
+            then
+            echo "[Not Running] "
+        else
+            PID=`cat $pidfile 2> /dev/null`
+
+            if [ -e /proc/$PID ]
+                then
+                echo_success; echo ''
+            else
+                echo_failure; echo ''
+            fi
+        fi
+        ;;
+
+  restart)
+        $0 stop
+        $0 start
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart}"
+        exit 1
+esac
+
+exit $?
