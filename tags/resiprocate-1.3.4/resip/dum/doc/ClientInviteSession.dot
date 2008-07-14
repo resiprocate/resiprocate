@@ -1,0 +1,47 @@
+digraph ClientInviteSession {
+	node [ fonstsize=8 fontname="VeraSans-Roman" ]
+	graph
+	[
+//		ranksep=1.5 // modify to shrink nodes etc
+//		nodesep=1.5
+		fontsize=8
+		fontname="VeraSans-Roman"
+		labelfontsize=8
+		labelfontname="VeraSans-Roman"
+	]
+
+	edge
+	[
+		fontname="VeraSans-Roman"	
+		fontsize=8
+		arrowhead=normal
+	]
+
+// Now setup labels and visual stuff.
+
+        fontname="VeraSans-Roman"
+
+        Start -> Proceeding
+                [ label="100/create timer" ]
+        Start -> Early
+                [ label="1XX/create timer" ]
+        Early -> Early
+              [ label="1XX/ create timer" ]
+        Proceeding -> Early
+                   [ label="1XX/update timer" ]
+        Start -> Terminated
+                 [ label="Failure Response" ]
+
+        Proceeding -> Terminated
+                   [ label="Failure Response" ]
+          
+          Proceeding -> Connected [ label="2XX/ACK" ]
+          Proceeding -> Canceled [ label="CANCEL" ]
+          Canceled -> Canceled [ label="CANCEL, Fail" ]
+          Early -> Canceled [ label="CANCEL" ]
+          Early -> Connected [ label="2XX/ACK" ]
+          Connected -> Terminated [ label="BYE" ]
+          Early -> Terminated [ label="Failure Response" ]
+          Start -> Connected [ label="2XX/ACK" ]
+          Canceled -> Terminated [ label="200/BYE\n*/nothing"]
+}
