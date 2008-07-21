@@ -21,7 +21,14 @@
 #include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 
+
 #ifdef USE_SSL
+#ifdef WIN32
+//hack for name collision of OCSP_RESPONSE and wincrypt.h in latest openssl release 0.9.8h
+//http://www.google.com/search?q=OCSP%5fRESPONSE+wincrypt%2eh
+//continue to watch this issue for a real fix.
+#undef OCSP_RESPONSE
+#endif
 #include "rutil/OpenSSLInit.hxx"
 #  define USE_OPENSSL 1
 #else
