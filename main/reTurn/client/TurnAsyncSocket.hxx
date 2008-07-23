@@ -176,12 +176,12 @@ private:
 
    asio::error_code handleStunMessage(StunMessage& stunMessage);
    asio::error_code handleDataInd(StunMessage& stunMessage);
-   asio::error_code handleChannelBindResponse(StunMessage &stunMessage);
-   asio::error_code handleSharedSecretResponse(StunMessage& stunMessage);
+   asio::error_code handleChannelBindResponse(StunMessage &request, StunMessage &response);
+   asio::error_code handleSharedSecretResponse(StunMessage &request, StunMessage &response);
    asio::error_code handleBindRequest(StunMessage& stunMessage);
-   asio::error_code handleBindResponse(StunMessage& stunMessage);
-   asio::error_code handleAllocateResponse(StunMessage& stunMessage);
-   asio::error_code handleRefreshResponse(StunMessage& stunMessage);
+   asio::error_code handleBindResponse(StunMessage &request, StunMessage &response);
+   asio::error_code handleAllocateResponse(StunMessage &request, StunMessage &response);
+   asio::error_code handleRefreshResponse(StunMessage &request, StunMessage &response);
 };
 
 } 
