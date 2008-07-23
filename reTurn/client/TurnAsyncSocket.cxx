@@ -561,32 +561,33 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
                newRequest->setNonce(mNonce.c_str());
                sendStunMessage(newRequest);
                return errorCode;
-            }
-          
-            mActiveRequestMap.erase(it);
+            }          
          }
 
          switch (stunMessage.mMethod) 
          {
          case StunMessage::BindMethod:
-            errorCode = handleBindResponse(stunMessage);
+            errorCode = handleBindResponse(*it->second->mRequestMessage, stunMessage);
             break;
          case StunMessage::SharedSecretMethod:
-            errorCode = handleSharedSecretResponse(stunMessage);
+            errorCode = handleSharedSecretResponse(*it->second->mRequestMessage, stunMessage);
             break;
          case StunMessage::TurnAllocateMethod:
-            errorCode = handleAllocateResponse(stunMessage);
+            errorCode = handleAllocateResponse(*it->second->mRequestMessage, stunMessage);
             break;
          case StunMessage::TurnRefreshMethod:
-            errorCode = handleRefreshResponse(stunMessage);
+            errorCode = handleRefreshResponse(*it->second->mRequestMessage, stunMessage);
             break;
          case StunMessage::TurnChannelBindMethod:
-            errorCode = handleChannelBindResponse(stunMessage);
+            errorCode = handleChannelBindResponse(*it->second->mRequestMessage, stunMessage);
             break;
          default:
             // Unknown method - just ignore
             break;
          }
+
+         // Remove request from map
+         mActiveRequestMap.erase(it);
       }
       break;
 
@@ -635,29 +636,17 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
 }
 
 asio::error_code
-TurnAsyncSocket::handleChannelBindResponse(StunMessage &stunMessage)
+TurnAsyncSocket::handleChannelBindResponse(StunMessage &request, StunMessage &response)
 {
-   if(!stunMessage.mHasTurnChannelNumber)
-   {
-      // Missing ChannelNumber attribute
-      WarningLog(<< "TurnAsyncSocket::handleChannelBindResponse: ChannelBind missing attributes.");
-      return asio::error_code(reTurn::MissingAttributes, asio::error::misc_category);
-   }
+   assert(request.mHasTurnChannelNumber);
 
-   RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(stunMessage.mTurnChannelNumber);
+   RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(request.mTurnChannelNumber);
    if(!remotePeer)
    {
       // Remote Peer not found - discard
-      WarningLog(<< "TurnAsyncSocket::handleChannelBindResponse: Received ChannelBindResponse for unknown channel (" << stunMessage.mTurnChannelNumber << ") - discarding");
+      WarningLog(<< "TurnAsyncSocket::handleChannelBindResponse: Received ChannelBindResponse for unknown channel (" << response.mTurnChannelNumber << ") - discarding");
       return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
    }
-
-   //if(remotePeer->getPeerTuple() != remoteTuple)
-   //{
-      // Mismatched remote address
-   //   WarningLog(<< "TurnAsyncSocket::handleChannelBindResponse: RemoteAddress associated with channel (" << remotePeer->getPeerTuple() << ") does not match ChannelConfirmationInd (" << remoteTuple << ").");
-   //   return asio::error_code(reTurn::UnknownRemoteAddress, asio::error::misc_category);
-   //}
 
    remotePeer->setChannelConfirmed();
 
@@ -665,27 +654,27 @@ TurnAsyncSocket::handleChannelBindResponse(StunMessage &stunMessage)
 }
 
 asio::error_code 
-TurnAsyncSocket::handleSharedSecretResponse(StunMessage& stunMessage)
+TurnAsyncSocket::handleSharedSecretResponse(StunMessage &request, StunMessage &response)
 {
-   if(stunMessage.mClass == StunMessage::StunClassSuccessResponse)
+   if(response.mClass == StunMessage::StunClassSuccessResponse)
    {
       // Copy username and password to callers buffer - checking sizes first
-      if(!stunMessage.mHasUsername || !stunMessage.mHasPassword)
+      if(!response.mHasUsername || !response.mHasPassword)
       {
          WarningLog(<< "TurnAsyncSocket::handleSharedSecretResponse: Stun response message for SharedSecretRequest is missing username and/or password!");
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretFailure(getSocketDescriptor(), asio::error_code(MissingAttributes, asio::error::misc_category));
          return asio::error_code(MissingAttributes, asio::error::misc_category);
       }
 
-      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretSuccess(getSocketDescriptor(), stunMessage.mUsername->c_str(), stunMessage.mUsername->size(), 
-                                                                            stunMessage.mPassword->c_str(), stunMessage.mPassword->size());
+      if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretSuccess(getSocketDescriptor(), response.mUsername->c_str(), response.mUsername->size(), 
+                                                                            response.mPassword->c_str(), response.mPassword->size());
    }
    else
    {
       // Check if success or not
-      if(stunMessage.mHasErrorCode)
+      if(response.mHasErrorCode)
       {
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretFailure(getSocketDescriptor(), asio::error_code(stunMessage.mErrorCode.errorClass * 100 + stunMessage.mErrorCode.number, asio::error::misc_category));
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretFailure(getSocketDescriptor(), asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category));
       }
       else
       {
@@ -720,19 +709,19 @@ TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
 }
 
 asio::error_code 
-TurnAsyncSocket::handleBindResponse(StunMessage& stunMessage)
+TurnAsyncSocket::handleBindResponse(StunMessage &request, StunMessage &response)
 {
-   if(stunMessage.mClass == StunMessage::StunClassSuccessResponse)
+   if(response.mClass == StunMessage::StunClassSuccessResponse)
    {
       StunTuple reflexiveTuple;
       reflexiveTuple.setTransportType(mLocalBinding.getTransportType());
-      if(stunMessage.mHasXorMappedAddress)
+      if(response.mHasXorMappedAddress)
       {
-         StunMessage::setTupleFromStunAtrAddress(reflexiveTuple, stunMessage.mXorMappedAddress);
+         StunMessage::setTupleFromStunAtrAddress(reflexiveTuple, response.mXorMappedAddress);
       }
-      else if(stunMessage.mHasMappedAddress)  // Only look at MappedAddress if XorMappedAddress is not found - for backwards compatibility
+      else if(response.mHasMappedAddress)  // Only look at MappedAddress if XorMappedAddress is not found - for backwards compatibility
       {
-         StunMessage::setTupleFromStunAtrAddress(reflexiveTuple, stunMessage.mMappedAddress);
+         StunMessage::setTupleFromStunAtrAddress(reflexiveTuple, response.mMappedAddress);
       }
       else
       {
@@ -744,9 +733,9 @@ TurnAsyncSocket::handleBindResponse(StunMessage& stunMessage)
    else
    {
       // Check if success or not
-      if(stunMessage.mHasErrorCode)
+      if(response.mHasErrorCode)
       {
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(stunMessage.mErrorCode.errorClass * 100 + stunMessage.mErrorCode.number, asio::error::misc_category));
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onBindFailure(getSocketDescriptor(), asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category));
       }
       else
       {
@@ -758,25 +747,25 @@ TurnAsyncSocket::handleBindResponse(StunMessage& stunMessage)
 }
 
 asio::error_code 
-TurnAsyncSocket::handleAllocateResponse(StunMessage& stunMessage)
+TurnAsyncSocket::handleAllocateResponse(StunMessage &request, StunMessage &response)
 {
-   if(stunMessage.mClass == StunMessage::StunClassSuccessResponse)
+   if(response.mClass == StunMessage::StunClassSuccessResponse)
    {
       StunTuple reflexiveTuple;
       StunTuple relayTuple;
-      if(stunMessage.mHasXorMappedAddress)
+      if(response.mHasXorMappedAddress)
       {
          reflexiveTuple.setTransportType(mLocalBinding.getTransportType());
-         StunMessage::setTupleFromStunAtrAddress(reflexiveTuple, stunMessage.mXorMappedAddress);
+         StunMessage::setTupleFromStunAtrAddress(reflexiveTuple, response.mXorMappedAddress);
       }
-      if(stunMessage.mHasTurnRelayAddress)
+      if(response.mHasTurnRelayAddress)
       {
          relayTuple.setTransportType(mRelayTransportType);
-         StunMessage::setTupleFromStunAtrAddress(relayTuple, stunMessage.mTurnRelayAddress);
+         StunMessage::setTupleFromStunAtrAddress(relayTuple, response.mTurnRelayAddress);
       }
-      if(stunMessage.mHasTurnLifetime)
+      if(response.mHasTurnLifetime)
       {
-         mLifetime = stunMessage.mTurnLifetime;
+         mLifetime = response.mTurnLifetime;
       }
       else
       {
@@ -792,8 +781,8 @@ TurnAsyncSocket::handleAllocateResponse(StunMessage& stunMessage)
                                                                                   reflexiveTuple, 
                                                                                   relayTuple, 
                                                                                   mLifetime, 
-                                                                                  stunMessage.mHasTurnBandwidth ? stunMessage.mTurnBandwidth : 0,
-                                                                                  stunMessage.mHasTurnReservationToken ? stunMessage.mTurnReservationToken : 0);
+                                                                                  response.mHasTurnBandwidth ? response.mTurnBandwidth : 0,
+                                                                                  response.mHasTurnReservationToken ? response.mTurnReservationToken : 0);
       }
       else
       {
@@ -803,9 +792,9 @@ TurnAsyncSocket::handleAllocateResponse(StunMessage& stunMessage)
    else
    {
       // Check if success or not
-      if(stunMessage.mHasErrorCode)
+      if(response.mHasErrorCode)
       {
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onAllocationFailure(getSocketDescriptor(), asio::error_code(stunMessage.mErrorCode.errorClass * 100 + stunMessage.mErrorCode.number, asio::error::misc_category));
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onAllocationFailure(getSocketDescriptor(), asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category));
       }
       else
       {
@@ -817,13 +806,13 @@ TurnAsyncSocket::handleAllocateResponse(StunMessage& stunMessage)
 }
 
 asio::error_code 
-TurnAsyncSocket::handleRefreshResponse(StunMessage& stunMessage)
+TurnAsyncSocket::handleRefreshResponse(StunMessage &request, StunMessage &response)
 {
-   if(stunMessage.mClass == StunMessage::StunClassSuccessResponse)
+   if(response.mClass == StunMessage::StunClassSuccessResponse)
    {
-      if(stunMessage.mHasTurnLifetime)
+      if(response.mHasTurnLifetime)
       {
-         mLifetime = stunMessage.mTurnLifetime;
+         mLifetime = response.mTurnLifetime;
       }
       else
       {
@@ -854,9 +843,9 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage& stunMessage)
    else
    {
       // Check if success or not
-      if(stunMessage.mHasErrorCode)
+      if(response.mHasErrorCode)
       {
-         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(stunMessage.mErrorCode.errorClass * 100 + stunMessage.mErrorCode.number, asio::error::misc_category));
+         if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category));
          if(mCloseAfterDestroyAllocationFinishes)
          {
             mHaveAllocation = false;
