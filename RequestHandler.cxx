@@ -655,14 +655,14 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
    // If allocation was found, then ensure that the same shared secret was used
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
-      WarningLog(<< "Refresh requested with username not matching allocation.  Sending 438.");
-      buildErrorResponse(response, 438, "Wrong Credentials");  
+      WarningLog(<< "Refresh requested with username not matching allocation.  Sending 441.");
+      buildErrorResponse(response, 441, "Wrong Credentials");  
       return RespondFromReceiving;
    }
    if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
-      WarningLog(<< "Refresh requested with shared secret not matching allocation.  Sending 438.");
-      buildErrorResponse(response, 438, "Wrong Credentials");   
+      WarningLog(<< "Refresh requested with shared secret not matching allocation.  Sending 441.");
+      buildErrorResponse(response, 441, "Wrong Credentials");   
       return RespondFromReceiving;
    }
 
@@ -744,14 +744,14 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
 
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
-      WarningLog(<< "Channel bind requested with username not matching allocation.  Sending 438.");
-      buildErrorResponse(response, 438, "Wrong Credentials");  
+      WarningLog(<< "Channel bind requested with username not matching allocation.  Sending 441.");
+      buildErrorResponse(response, 441, "Wrong Credentials");  
       return RespondFromReceiving;
    }
    if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
    {
-      WarningLog(<< "Channel bind requested with shared secret not matching allocation.  Sending 438.");
-      buildErrorResponse(response, 438, "Wrong Credentials");   
+      WarningLog(<< "Channel bind requested with shared secret not matching allocation.  Sending 441.");
+      buildErrorResponse(response, 441, "Wrong Credentials");   
       return RespondFromReceiving;
    }
 
@@ -779,8 +779,8 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
    response.mClass = StunMessage::StunClassSuccessResponse;
 
    // Add the channel number to make the clients job easier
-   response.mHasTurnChannelNumber = true;
-   response.mTurnChannelNumber = request.mTurnChannelNumber;
+   //response.mHasTurnChannelNumber = true;
+   //response.mTurnChannelNumber = request.mTurnChannelNumber;
 
    // Note: Message Integrity added by handleAuthentication
 
