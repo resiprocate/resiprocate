@@ -43,8 +43,8 @@ class ForkControlMessage : public ProcessorMessage
          return new ForkControlMessage(*this);
       }
       
-      virtual std::ostream& encode(std::ostream& ostr) const { ostr << "ForkControlMessage("<<mTid<<") "; return ostr; }
-      virtual std::ostream& encodeBrief(std::ostream& ostr) const { return encode(ostr);}
+      virtual EncodeStream& encode(EncodeStream& ostr) const { ostr << "ForkControlMessage("<<mTid<<") "; return ostr; }
+      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const { return encode(ostr);}
 
       std::vector<resip::Data> mTransactionsToProcess;
       std::vector<resip::Data> mTransactionsToCancel;

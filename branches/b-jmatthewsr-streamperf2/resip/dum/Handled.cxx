@@ -25,8 +25,8 @@ Handled::~Handled()
    }
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const Handled& handled)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const Handled& handled)
 {
    return handled.dump(strm);
 }

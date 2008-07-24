@@ -27,7 +27,7 @@ class DialogId
       size_t hash() const;
 
    private:
-      friend std::ostream& operator<<(std::ostream&, const DialogId& id);
+      friend EncodeStream& operator<<(EncodeStream&, const DialogId& id);
       DialogSetId mDialogSetId;
       Data mRemoteTag;
 };

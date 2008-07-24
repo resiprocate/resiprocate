@@ -19,11 +19,11 @@ class CancelClientInviteTransaction : public TransactionMessage
 
       virtual const Data& getTransactionId() const {return mTid;}
       virtual bool isClientTransaction() const {return true;}
-      virtual std::ostream& encode(std::ostream& strm) const
+      virtual EncodeStream& encode(EncodeStream& strm) const
       {
          return strm << "CancelClientInviteTransaction: " << mTid;
       }
-      virtual std::ostream& encodeBrief(std::ostream& strm) const
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const
       {
          return strm << "CancelClientInviteTransaction: " << mTid;
       }

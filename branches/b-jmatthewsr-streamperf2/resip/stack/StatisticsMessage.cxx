@@ -22,14 +22,14 @@ StatisticsMessage::StatisticsMessage(const StatisticsMessage& rhs)
 StatisticsMessage::~StatisticsMessage()
 {}
 
-std::ostream&
-StatisticsMessage::encodeBrief(std::ostream& str) const 
+EncodeStream&
+StatisticsMessage::encodeBrief(EncodeStream& str) const 
 {
    return str << "StatisticsMessage";
 }
 
-std::ostream& 
-StatisticsMessage::encode(std::ostream& strm) const 
+EncodeStream& 
+StatisticsMessage::encode(EncodeStream& strm) const 
 {
    strm << "StatisticsMessage[";
 /*

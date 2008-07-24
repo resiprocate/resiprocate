@@ -2,6 +2,7 @@
 #define RESIP_DataStream_hxx
 
 #include <iostream>
+#include "resipfaststreams.h"
 
 namespace resip
 {
@@ -10,7 +11,12 @@ class Data;
 /** @brief Implementation of std::streambuf used to back the DataStream, 
    iDataStream, and oDataStream.
  */
-class DataBuffer : public std::streambuf
+class DataBuffer : 
+#ifdef RESIP_USE_STL_STREAMS
+	public std::streambuf
+#else
+	public ResipStreamBuf
+#endif
 {
    public:
       DataBuffer(Data& str);
@@ -20,6 +26,15 @@ class DataBuffer : public std::streambuf
       virtual int sync();
       virtual int overflow(int c = -1);
       Data& mStr;
+
+#ifndef RESIP_USE_STL_STREAMS
+	  virtual size_t writebuf(const char *s, size_t count);
+	  virtual size_t readbuf(char *buf, size_t count);
+	  virtual size_t putbuf(char ch);
+	  virtual void flushbuf(void){}
+
+	  virtual UInt64 tellpbuf(void);
+#endif
 
    private:
       DataBuffer(const DataBuffer&);
@@ -36,7 +51,13 @@ class DataBuffer : public std::streambuf
 
    Reading and writing to the same stream with seekp operations is untested.
  */
-class DataStream : private DataBuffer, public std::iostream
+class DataStream : private DataBuffer
+#ifdef  RESIP_USE_STL_STREAMS
+	, public std::iostream
+#else
+	, public ResipFastOStream
+#endif
+
 {
    public:
       /** Constructs a DataStream with a Data to operate on.
@@ -48,8 +69,10 @@ class DataStream : private DataBuffer, public std::iostream
        */
       ~DataStream();
 
+#ifdef RESIP_USE_STL_STREAMS
       std::iostream::pos_type tellp();
       DataStream& seekp(std::iostream::pos_type pos);
+#endif
 
    private:
       DataStream(const DataStream&);
@@ -59,7 +82,7 @@ class DataStream : private DataBuffer, public std::iostream
 /**
    @brief An istream that operates on an existing Data.
  */
-class iDataStream : private DataBuffer, public std::istream
+class iDataStream : private DataBuffer, public DecodeStream
 {
    public:
       /** Constructs a iDataStream with a Data to operate on.
@@ -80,7 +103,9 @@ class iDataStream : private DataBuffer, public std::istream
    The data is appended to the reference passed to the constructor.  The data is 
    valid after DataStream's destructor is called.
  */
-class oDataStream : private DataBuffer, public std::ostream {
+class oDataStream : private DataBuffer, public EncodeStream 
+	
+{
    public:
       /** Constructs a oDataStream with a Data to operate on.
           @param str A Data to operate on.

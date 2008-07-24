@@ -82,8 +82,8 @@ PlainContents::getStaticType()
    return type;
 }
 
-std::ostream& 
-PlainContents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+PlainContents::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "PlainContents::encodeParsed " << mText);
    str << mText;

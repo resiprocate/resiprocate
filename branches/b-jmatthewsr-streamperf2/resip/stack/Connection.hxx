@@ -34,7 +34,7 @@ typedef IntrusiveListElement2<Connection*> ConnectionWriteList;
 class Connection : public ConnectionBase, public ConnectionLruList, public ConnectionReadList, public ConnectionWriteList
 {
       friend class ConnectionManager;
-      friend std::ostream& operator<<(std::ostream& strm, const resip::Connection& c);
+      friend EncodeStream& operator<<(EncodeStream& strm, const resip::Connection& c);
 
    public:
       Connection(Transport* transport,const Tuple& who, Socket socket, Compression &compression);
@@ -89,8 +89,8 @@ class Connection : public ConnectionBase, public ConnectionLruList, public Conne
       Connection& operator=(const Connection&);
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const resip::Connection& c);
+EncodeStream& 
+operator<<(EncodeStream& strm, const resip::Connection& c);
 
 }
 

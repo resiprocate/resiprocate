@@ -3,6 +3,8 @@
 
 #include <iosfwd>
 
+#include "rutil/resipfaststreams.h"
+
 namespace resip
 {
 class HandleManager;
@@ -16,15 +18,15 @@ class Handled
       Handled(HandleManager& ham);
       virtual ~Handled();
       
-      virtual std::ostream& dump(std::ostream& strm) const=0;
+      virtual EncodeStream& dump(EncodeStream& strm) const=0;
       
    protected:
       HandleManager& mHam;
       Handled::Id mId;
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const Handled& usage);
+EncodeStream& 
+operator<<(EncodeStream& strm, const Handled& usage);
  
 }
 

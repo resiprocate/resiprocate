@@ -131,7 +131,7 @@ ProcessorChain::setChainType(ChainType type)
 }
 
 void
-ProcessorChain::dump(std::ostream &os) const
+ProcessorChain::dump(EncodeStream &os) const
 {
    os << "Monkey Chain!" << Inserter(mChain);
 }

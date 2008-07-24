@@ -31,7 +31,7 @@ class SipFrag : public Contents
       SipMessage& message();
       const SipMessage& message() const;
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual void parse(ParseBuffer& pb);
 
       static bool init();

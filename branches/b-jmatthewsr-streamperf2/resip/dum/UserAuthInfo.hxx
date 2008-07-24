@@ -42,8 +42,8 @@ class UserAuthInfo : public resip::DumFeatureMessage
       virtual resip::Data brief() const;
       virtual resip::Message* clone() const;
 
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
       InfoMode mMode;
@@ -52,8 +52,8 @@ class UserAuthInfo : public resip::DumFeatureMessage
       resip::Data mA1;
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const UserAuthInfo& msg);
+EncodeStream& 
+operator<<(EncodeStream& strm, const UserAuthInfo& msg);
 
 }
 #endif

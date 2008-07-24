@@ -272,8 +272,8 @@ BranchParameter::clone() const
    return new BranchParameter(*this);
 }
 
-ostream& 
-BranchParameter::encode(ostream& stream) const
+EncodeStream& 
+BranchParameter::encode(EncodeStream& stream) const
 {
    stream << getName() << Symbols::EQUALS;
    if (mHasMagicCookie)

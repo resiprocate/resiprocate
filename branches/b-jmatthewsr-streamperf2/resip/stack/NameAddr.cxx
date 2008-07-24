@@ -245,8 +245,8 @@ NameAddr::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
-ostream&
-NameAddr::encodeParsed(ostream& str) const
+EncodeStream&
+NameAddr::encodeParsed(EncodeStream& str) const
 {
    //bool displayName = !mDisplayName.empty();
   if (mAllContacts)
