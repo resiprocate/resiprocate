@@ -302,12 +302,78 @@ class ResipFastIStream : public ResipBasicIOStream
       ResipStreamBuf *buf_;
 };
 
+class ResipStdBuf : public ResipStreamBuf
+{
+public:
+	typedef enum BufType
+	{
+		stdCerr,
+		stdCout
+	} BufType;
+
+	ResipStdBuf(BufType type)
+		:type_(type)
+	{}
+
+	~ResipStdBuf(void);
+
+	virtual size_t writebuf(const char *s, size_t count)
+	{
+		switch(type_)
+		{
+			case stdCerr:
+			{
+				std::cerr << s;
+				break;
+			}
+			case stdCout:
+			{
+				std::cout << s;
+				break;
+			}
+			default:
+				break;
+		}
+		return count;
+	}
+    virtual size_t readbuf(char *buf, size_t count)
+	{
+		return 0;
+	}
+    virtual size_t putbuf(char ch)
+	{
+		return writebuf(&ch,1);
+	}
+    virtual void flushbuf(void)
+	{}
+    virtual UInt64 tellpbuf(void)
+	{
+		return 0;
+	}
+
+private:
+	BufType type_;
+};
+
+class ResipStdCOStream : private ResipStdBuf, public ResipFastOStream
+{
+public:
+	ResipStdCOStream(ResipStdBuf::BufType type)
+		:ResipStdBuf(type),ResipFastOStream(this)
+	{}
+
+	~ResipStdCOStream(void)
+	{}
+};
+
 #ifdef  RESIP_USE_STL_STREAMS
 #define EncodeStream std::ostream
 #define DecodeStream std::istream
+#define CerrStream std::cerr
 #else
 #define EncodeStream resip::ResipFastOStream
 #define DecodeStream resip::ResipFastIStream
+#define CerrStream resip::ResipStdCOStream(ResipStdBuf::stdCerr)
 #endif
 
 } //namespace resip

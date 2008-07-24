@@ -193,8 +193,20 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
+				RelativePath=".\testApplicationSip.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\testStack.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
