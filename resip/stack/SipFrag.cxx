@@ -221,9 +221,7 @@ SipFrag::parse(ParseBuffer& pb)
    //      in test/testSipFrag.cxx
    if (false && scanChunkResult != MsgHeaderScanner::scrEnd) 
    {
-#ifdef RESIP_USE_STL_STREAMS
       CerrLog(<< "not MsgHeaderScanner::scrEnd");
-#endif
       pb.fail(__FILE__, __LINE__);
    } 
    else 
