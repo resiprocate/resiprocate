@@ -193,7 +193,7 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath=".\testApplicationSip.cxx"
+				RelativePath=".\testSipMessageEncode.cxx"
 				>
 			</File>
 			<File
