@@ -2,6 +2,7 @@
 #include <cassert>
 #include <ctype.h>
 #include <math.h>
+#include <limits.h>
 
 #if defined(HAVE_CONFIG_HXX)
 #include "resip/stack/config.hxx"
