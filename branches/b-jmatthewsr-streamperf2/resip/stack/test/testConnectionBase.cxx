@@ -66,7 +66,7 @@ class TestConnection : public ConnectionBase
          unsigned int chunk = Random::getRandom() % maxChunkSize;
          chunk = resipMax(chunk, minChunkSize);
          chunk = resipMin(chunk, maxChunkSize);
-         chunk = resipMin((long unsigned int)chunk, mTestStream.size() - mStreamPos);
+         chunk = resipMin(chunk, mTestStream.size() - mStreamPos);
          assert(chunk > 0);
          std::pair<char*, size_t> writePair = getWriteBuffer();
          memcpy(writePair.first, mTestStream.data() + mStreamPos, chunk);
