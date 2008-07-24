@@ -14,7 +14,7 @@ class KeepAliveMessage : public SipMessage
       virtual Message* clone() const;
       KeepAliveMessage& operator=(const KeepAliveMessage& rhs);      
       virtual ~KeepAliveMessage();
-      virtual std::ostream& encode(std::ostream& str) const;
+      virtual EncodeStream& encode(EncodeStream& str) const;
 };
 }
 

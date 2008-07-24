@@ -120,7 +120,7 @@ AmIResponsible::process(RequestContext& context)
 }
 
 void
-AmIResponsible::dump(std::ostream &os) const
+AmIResponsible::dump(EncodeStream &os) const
 {
   os << "AmIResponsible monkey" << std::endl;
 }

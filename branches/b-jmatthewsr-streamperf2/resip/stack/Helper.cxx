@@ -1290,9 +1290,13 @@ void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
    }
    nonceCount++;
    {
-      DataStream s(nonceCountString);
+      //DataStream s(nonceCountString);
       
-      s << std::setw(8) << std::setfill('0') << std::hex << nonceCount;
+      //s << std::setw(8) << std::setfill('0') << std::hex << nonceCount;
+	   char buf[128];
+	   *buf = 0;
+	   sprintf_s(buf,128,"%08X",nonceCount);
+	   nonceCountString = buf;
    }
    DebugLog(<< "nonceCount is now: [" << nonceCountString << "]");
 }

@@ -457,7 +457,7 @@ public:
       mClientSubscription.requestRefresh(mExpires);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientSubscriptionRefreshCommand";
    }
@@ -500,7 +500,7 @@ public:
       mClientSubscription.end();
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientSubscriptionEndCommand";
    }
@@ -546,7 +546,7 @@ public:
       mClientSubscription.acceptUpdate(mStatusCode);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientSubscriptionAcceptUpdateCommand";
    }
@@ -636,7 +636,7 @@ public:
       mClientSubscription.rejectUpdate(mStatusCode, mReasonPhrase);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientSubscriptionRejectUpdateCommand";
    }
@@ -661,8 +661,8 @@ void ClientSubscription::dialogDestroyed(const SipMessage& msg)
    delete this;   
 }
 
-std::ostream&
-ClientSubscription::dump(std::ostream& strm) const
+EncodeStream&
+ClientSubscription::dump(EncodeStream& strm) const
 {
    strm << "ClientSubscription " << mLastRequest->header(h_From).uri();
    return strm;

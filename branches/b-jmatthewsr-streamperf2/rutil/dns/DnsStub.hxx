@@ -31,7 +31,7 @@ class DNSResult
       int status;
       Data msg;
       std::vector<T> records;
-      std::ostream& dump(std::ostream& strm) const
+      EncodeStream& dump(EncodeStream& strm) const
       {
          if (status == 0)
          {
@@ -50,7 +50,7 @@ class DNSResult
 };
 
 template<class T>
-std::ostream& operator<<(std::ostream& strm, const DNSResult<T>& r)
+EncodeStream& operator<<(EncodeStream& strm, const DNSResult<T>& r)
 {
    r.dump(strm);
    return strm;

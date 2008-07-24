@@ -27,7 +27,7 @@ class AttributeHelper
 
       bool exists(const Data& key) const;
       const std::list<Data>& getValues(const Data& key) const;
-      std::ostream& encode(std::ostream& s) const;
+      EncodeStream& encode(EncodeStream& s) const;
       void parse(ParseBuffer& pb);
       void addAttribute(const Data& key, const Data& value = Data::Empty);
       void clearAttribute(const Data& key);
@@ -100,7 +100,7 @@ class SdpContents : public Contents
 
                   static std::auto_ptr<CodecMap> sStaticCodecs;
                   static bool sStaticCodecsCreated;
-                  friend std::ostream& operator<<(std::ostream&, const Codec&);
+                  friend EncodeStream& operator<<(EncodeStream&, const Codec&);
             };
 
             class Origin
@@ -115,7 +115,7 @@ class SdpContents : public Contents
                   Origin& operator=(const Origin& rhs);
 
                   void parse(ParseBuffer& pb);
-                  std::ostream& encode(std::ostream&) const;
+                  EncodeStream& encode(EncodeStream&) const;
 
                   const UInt64& getSessionId() const {return mSessionId;}
                   UInt64& getSessionId() { return mSessionId; }
@@ -150,7 +150,7 @@ class SdpContents : public Contents
                   Email& operator=(const Email& rhs);
 
                   void parse(ParseBuffer& pb);
-                  std::ostream& encode(std::ostream&) const;
+                  EncodeStream& encode(EncodeStream&) const;
 
                   const Data& getAddress() const {return mAddress;}
                   const Data& getFreeText() const {return mFreeText;}
@@ -173,7 +173,7 @@ class SdpContents : public Contents
                   Phone& operator=(const Phone& rhs);
 
                   void parse(ParseBuffer& pb);
-                  std::ostream& encode(std::ostream&) const;
+                  EncodeStream& encode(EncodeStream&) const;
 
                   const Data& getNumber() const {return mNumber;}
                   const Data& getFreeText() const {return mFreeText;}
@@ -197,7 +197,7 @@ class SdpContents : public Contents
                   Connection& operator=(const Connection& rhs);
 
                   void parse(ParseBuffer& pb);
-                  std::ostream& encode(std::ostream&) const;
+                  EncodeStream& encode(EncodeStream&) const;
 
                   AddrType getAddressType() const {return mAddrType;}
                   const Data& getAddress() const {return mAddress;}
@@ -225,7 +225,7 @@ class SdpContents : public Contents
                   Bandwidth& operator=(const Bandwidth& rhs);
 
                   void parse(ParseBuffer& pb);
-                  std::ostream& encode(std::ostream&) const;
+                  EncodeStream& encode(EncodeStream&) const;
 
                   const Data& modifier() const {return mModifier;}
                   Data modifier() {return mModifier;}
@@ -250,7 +250,7 @@ class SdpContents : public Contents
                   Time& operator=(const Time& rhs);
 
                   void parse(ParseBuffer& pb);
-                  std::ostream& encode(std::ostream&) const;
+                  EncodeStream& encode(EncodeStream&) const;
 
                   class Repeat
                   {
@@ -259,7 +259,7 @@ class SdpContents : public Contents
                                unsigned long duration,
                                std::list<int> offsets);
                         void parse(ParseBuffer& pb);
-                        std::ostream& encode(std::ostream&) const;
+                        EncodeStream& encode(EncodeStream&) const;
 
                         unsigned long getInterval() const {return mInterval;}
                         unsigned long getDuration() const {return mDuration;}
@@ -309,7 +309,7 @@ class SdpContents : public Contents
                   Timezones& operator=(const Timezones& rhs);
 
                   void parse(ParseBuffer& pb);
-                  std::ostream& encode(std::ostream&) const;
+                  EncodeStream& encode(EncodeStream&) const;
 
                   void addAdjustment(const Adjustment& adjusment);
                   const std::list<Adjustment>& getAdjustments() const {return mAdjustments; }
@@ -328,7 +328,7 @@ class SdpContents : public Contents
 
 
                   void parse(ParseBuffer& pb);
-                  std::ostream& encode(std::ostream&) const;
+                  EncodeStream& encode(EncodeStream&) const;
 
                   const KeyType& getMethod() const {return mMethod;}
                   const KeyType& method() const {return mMethod;}
@@ -355,7 +355,7 @@ class SdpContents : public Contents
                   Medium& operator=(const Medium& rhs);
 
                   void parse(ParseBuffer& pb);
-                  std::ostream& encode(std::ostream&) const;
+                  EncodeStream& encode(EncodeStream&) const;
 
                   void addFormat(const Data& format);
                   void setConnection(const Connection& connection);
@@ -437,7 +437,7 @@ class SdpContents : public Contents
             Session& operator=(const Session& rhs);
 
             void parse(ParseBuffer& pb);
-            std::ostream& encode(std::ostream&) const;
+            EncodeStream& encode(EncodeStream&) const;
 
             int version() const {return mVersion;}
             int& version() {return mVersion;}
@@ -512,7 +512,7 @@ class SdpContents : public Contents
       Session& session() {checkParsed(); return mSession;}
       const Session& session() const {checkParsed(); return mSession;}
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual void parse(ParseBuffer& pb);
       static const Mime& getStaticType() ;
 
@@ -530,7 +530,7 @@ typedef SdpContents::Session::Codec Codec;
 bool operator==(const SdpContents::Session::Codec& lhs,
                 const SdpContents::Session::Codec& rhs);
 
-std::ostream& operator<<(std::ostream& str, const SdpContents::Session::Codec& codec);
+EncodeStream& operator<<(EncodeStream& str, const SdpContents::Session::Codec& codec);
 
 }
 

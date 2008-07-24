@@ -80,8 +80,8 @@ OctetContents::getStaticType()
    return type;
 }
 
-std::ostream& 
-OctetContents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+OctetContents::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "OctetContents::encodeParsed " << mOctets);
    str << mOctets;

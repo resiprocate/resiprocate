@@ -71,8 +71,8 @@ GenericUri::clone() const
    return new GenericUri(*this);
 }
 
-std::ostream& 
-GenericUri::encodeParsed(std::ostream& str) const
+EncodeStream& 
+GenericUri::encodeParsed(EncodeStream& str) const
 {
    str << Symbols::LA_QUOTE[0]
        << mUri

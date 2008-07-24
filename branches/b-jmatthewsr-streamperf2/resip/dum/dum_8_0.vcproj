@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="dum"
 	ProjectGUID="{31B0654F-E08E-405F-909F-80F86CB14B9D}"
 	RootNamespace="dum"
 	Keyword="ManagedCProj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -276,14 +277,17 @@
 		<AssemblyReference
 			RelativePath="mscorlib.dll"
 			AssemblyName="mscorlib, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=IA64"
+			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
 			RelativePath="System.dll"
 			AssemblyName="System, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
 		/>
 		<AssemblyReference
 			RelativePath="System.Data.dll"
 			AssemblyName="System.Data, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=x86"
+			MinFrameworkVersion="131072"
 		/>
 	</References>
 	<Files>

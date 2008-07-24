@@ -20,8 +20,8 @@ class KeepAliveTimeout : public ApplicationMessage
       const Tuple& target() const { return mTarget; }
       int id() const { return mId; }
       virtual Message* clone() const;
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const;
    private:
       Tuple mTarget;
       int mId;

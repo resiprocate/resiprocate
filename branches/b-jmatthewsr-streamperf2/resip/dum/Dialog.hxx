@@ -153,10 +153,10 @@ class Dialog
       bool mDestroying;
       bool mReUseDialogSet;
 
-      friend std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
+      friend EncodeStream& operator<<(EncodeStream& strm, const Dialog& dialog);
 };
 
-std::ostream& operator<<(std::ostream& strm, const Dialog& dialog);
+EncodeStream& operator<<(EncodeStream& strm, const Dialog& dialog);
 
 }
 

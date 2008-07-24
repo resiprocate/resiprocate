@@ -56,8 +56,8 @@ IntegerParameter::clone() const
    return new IntegerParameter(*this);
 }
 
-ostream&
-IntegerParameter::encode(ostream& stream) const
+EncodeStream&
+IntegerParameter::encode(EncodeStream& stream) const
 {
    return stream << getName() << Symbols::EQUALS << mValue;
 }

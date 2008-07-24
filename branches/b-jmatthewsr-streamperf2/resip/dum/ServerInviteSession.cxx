@@ -102,7 +102,7 @@ public:
       mServerInviteSession.redirect(mContacts, mCode);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ServerInviteSessionRedirectCommand";
    }
@@ -193,7 +193,7 @@ public:
       mServerInviteSession.provisional(mStatusCode);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ServerInviteSessionProvisionalCommand";
    }
@@ -588,7 +588,7 @@ public:
       mServerInviteSession.accept(mStatusCode);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ServerInviteSessionAcceptCommand";
    }
