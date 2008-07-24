@@ -1,10 +1,6 @@
 #include <cassert>
 #include "rutil/DataStream.hxx"
 #include "rutil/Data.hxx"
-#include "rutil/DataException.hxx"
-#ifdef RESIP_USE_STL_STREAMS
-#include <iostream>
-#endif
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 #if defined(WIN32) && !defined(__GNUC__)
@@ -84,18 +80,12 @@ DataBuffer::sync()
    if (len > 0)
    {
       size_t pos = gptr() - eback();  // remember the get position
-      
-
-      int delta = pptr() - (mStr.data() + mStr.mSize);
-      if (delta > 0)
-      {
-         mStr.mSize += delta;
-      }
+      mStr.mSize += len;
       char* gbuf = const_cast<char*>(mStr.data());
       // reset the get buffer
       setg(gbuf, gbuf+pos, gbuf+mStr.size());
       // reset the put buffer
-      setp((char*)pptr(), (char*)(mStr.data() + mStr.size() + 1));
+      setp(gbuf + mStr.mSize, gbuf + mStr.mCapacity);
    }
 #endif
    return 0;
@@ -105,27 +95,23 @@ int
 DataBuffer::overflow(int c)
 {
 #ifdef RESIP_USE_STL_STREAMS
-   if (pptr() > pbase())
+   // sync, but reallocate
+   size_t len = pptr() - pbase();
+   if (len >= 0)
    {
-      int delta = pptr() - (mStr.data() + mStr.mSize);
-      
-      int distance = pptr() - mStr.data();
-      if (delta >= 0)
-      {
-         size_t pos = gptr() - eback();  // remember the get position
-         
-         // update the length
-         mStr.mSize += delta;
-         
-         // resize the underlying Data and reset the input buffer
-         mStr.resize(((mStr.mCapacity+16)*3)/2, true);
-         
-         char* gbuf = const_cast<char*>(mStr.mBuf);
-         // reset the get buffer
-         setg(gbuf, gbuf+pos, gbuf+mStr.mSize);
-         // reset the put buffer
-         setp(gbuf + distance, gbuf + mStr.mCapacity);
-      }
+      size_t pos = gptr() - eback();  // remember the get position
+
+      // update the length
+      mStr.mSize += len;
+
+      // resize the underlying Data and reset the input buffer
+      mStr.resize(((mStr.mCapacity+16)*3)/2, true);
+
+      char* gbuf = const_cast<char*>(mStr.mBuf);
+      // reset the get buffer
+      setg(gbuf, gbuf+pos, gbuf+mStr.mSize);
+      // reset the put buffer
+      setp(gbuf + mStr.mSize, gbuf + mStr.mCapacity);
    }
    if (c != -1)
    {

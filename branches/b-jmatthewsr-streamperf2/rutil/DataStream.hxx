@@ -6,6 +6,7 @@
 
 namespace resip
 {
+
 class Data;
 
 /** @brief Implementation of std::streambuf used to back the DataStream, 
@@ -47,9 +48,7 @@ class DataBuffer :
    The data written to the stream is appended to the reference passed to the
    constructor.  The data is valid after DataStream's destructor is called. 
    Data read from the stream is read from the reference passed to the
-   constructor. 
-
-   Reading and writing to the same stream with seekp operations is untested.
+   constructor.
  */
 class DataStream : private DataBuffer
 #ifdef  RESIP_USE_STL_STREAMS
@@ -68,11 +67,6 @@ class DataStream : private DataBuffer
         passed into the constructor.
        */
       ~DataStream();
-
-#ifdef RESIP_USE_STL_STREAMS
-      std::iostream::pos_type tellp();
-      DataStream& seekp(std::iostream::pos_type pos);
-#endif
 
    private:
       DataStream(const DataStream&);

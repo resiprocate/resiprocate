@@ -257,10 +257,10 @@ main(int argc, char* argv[])
       tassert(frag != 0);
 
       cout << "!! ";
-      frag->encode(cout);
+      frag->encode(CoutStream);
 
       tassert(frag->message().header(h_RequestLine).uri().user() == "bob");
-      msg->encode(cout);
+      msg->encode(CoutStream);
       tassert_verify(1);
    }
 
@@ -298,7 +298,7 @@ main(int argc, char* argv[])
       tassert(frag != 0);
 
       tassert(frag->message().header(h_StatusLine).responseCode() == 503);
-      msg->encode(cout);
+      msg->encode(CoutStream);
       tassert_verify(2);
    }
 
@@ -331,7 +331,7 @@ main(int argc, char* argv[])
       tassert(frag != 0);
 
       cout << "!! ";
-      frag->encode(cout);
+      frag->encode(CoutStream);
 
       tassert(frag->message().exists(h_From));
       tassert(frag->message().header(h_From).uri().user() == "alice");
@@ -339,7 +339,7 @@ main(int argc, char* argv[])
       tassert(frag->message().exists(h_CSeq));
       tassert(frag->message().header(h_CSeq).sequence() == 314159);
       
-      msg->encode(cout);
+      msg->encode(CoutStream);
       tassert_verify(3);
    }
    {
@@ -366,12 +366,12 @@ main(int argc, char* argv[])
       tassert(frag != 0);
 
       cout << "!! ";
-      frag->encode(cout);
+      frag->encode(CoutStream);
 
       tassert(frag->message().header(h_RequestLine).getMethod() == INVITE);
       tassert(frag->message().header(h_RequestLine).getSipVersion() == "SIP/2.0");
       
-      msg->encode(cout);
+      msg->encode(CoutStream);
 
       Contents* body2 = msg->getContents();
       tassert(body2);
@@ -385,7 +385,7 @@ main(int argc, char* argv[])
         ds.flush();
 
         cout << "SipFrag without contents encoded:" << endl;
-        f2->encode(cout);
+        f2->encode(CoutStream);
 
 
         tassert(d.find("Content-Length") == Data::npos);
@@ -450,7 +450,7 @@ main(int argc, char* argv[])
 
 
          cout << "!! ";
-         mmixed->encode(cout);
+         mmixed->encode(CoutStream);
 
          MultipartMixedContents::Parts& parts=mmixed->parts();
 
@@ -462,17 +462,17 @@ main(int argc, char* argv[])
          tassert(frag);
          if(frag)
          {
-            frag->encode(cout);
+            frag->encode(CoutStream);
          }
          
          Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
          tassert(pidf);
          if(pidf)
          {
-            pidf->encode(cout);
+            pidf->encode(CoutStream);
          }
 
-         message->encode(cout);
+         message->encode(CoutStream);
       }
 
       {
@@ -484,7 +484,7 @@ main(int argc, char* argv[])
 
 
          cout << "!! ";
-         mmixed->encode(cout);
+         mmixed->encode(CoutStream);
 
          MultipartMixedContents::Parts& parts=mmixed->parts();
 
@@ -495,17 +495,17 @@ main(int argc, char* argv[])
          tassert(frag);
          if(frag)
          {
-            frag->encode(cout);
+            frag->encode(CoutStream);
          }
          
          Pidf* pidf=dynamic_cast<Pidf*>(parts.back());
          tassert(pidf);
          if(pidf)
          {
-            pidf->encode(cout);
+            pidf->encode(CoutStream);
          }
 
-         copy->encode(cout);
+         copy->encode(CoutStream);
       }
 
       delete copy;
