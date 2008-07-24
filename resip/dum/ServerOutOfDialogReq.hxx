@@ -25,7 +25,7 @@ class ServerOutOfDialogReq : public NonDialogUsage
       virtual SharedPtr<SipMessage> answerOptions();
 	  virtual void send(SharedPtr<SipMessage> msg);
 
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
 
    protected:
       virtual ~ServerOutOfDialogReq();

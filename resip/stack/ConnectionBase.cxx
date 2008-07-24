@@ -579,8 +579,8 @@ ConnectionBase::transport() const
    return mTransport;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, 
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
                   const resip::ConnectionBase& c)
 
 {

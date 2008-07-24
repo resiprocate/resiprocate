@@ -62,8 +62,8 @@ RportParameter::clone() const
    return new RportParameter(*this);
 }
 
-ostream&
-RportParameter::encode(ostream& stream) const
+EncodeStream&
+RportParameter::encode(EncodeStream& stream) const
 {
    if (mHasValue || mValue > 0)
    {

@@ -99,8 +99,8 @@ class Log
             /** Commit logging */
             ~Guard();
 
-            std::ostream& asStream() {return mStream;}
-            operator std::ostream&() {return mStream;}
+	    EncodeStream& asStream() {return mStream;}
+	    operator EncodeStream&() {return mStream;}
 	    
          private:
             resip::Log::Level mLevel;
@@ -137,11 +137,12 @@ class Log
       };
 
       /// output the loglevel, hostname, appname, pid, tid, subsystem
-      static std::ostream& tags(Log::Level level, 
+      static EncodeStream& tags(Log::Level level,
                                 const Subsystem& subsystem, 
                                 const char* file,
                                 int line,
-                                std::ostream& strm);
+                                EncodeStream& strm);
+
       static Data& timestamp(Data& result);
       static Data timestamp();
       static ExternalLogger* getExternal()

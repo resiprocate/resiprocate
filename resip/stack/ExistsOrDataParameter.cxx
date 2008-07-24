@@ -66,8 +66,8 @@ ExistsOrDataParameter::clone() const
    return new ExistsOrDataParameter(*this);
 }
 
-std::ostream& 
-ExistsOrDataParameter::encode(std::ostream& stream) const
+EncodeStream& 
+ExistsOrDataParameter::encode(EncodeStream& stream) const
 {
    if (mValue.empty())
    {

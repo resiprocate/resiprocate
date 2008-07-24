@@ -53,7 +53,7 @@ class BranchParameter : public Parameter
       }
       
       virtual Parameter* clone() const;
-      virtual std::ostream& encode(std::ostream& stream) const;
+      virtual EncodeStream& encode(EncodeStream& stream) const;
 
       BranchParameter(const BranchParameter& other);
       BranchParameter& operator=(const BranchParameter& other);

@@ -92,8 +92,8 @@ SipFrag::message() const
    return *mMessage;
 }
 
-std::ostream& 
-SipFrag::encodeParsed(std::ostream& str) const
+EncodeStream& 
+SipFrag::encodeParsed(EncodeStream& str) const
 {
    mMessage->encodeSipFrag(str);
 
@@ -221,7 +221,9 @@ SipFrag::parse(ParseBuffer& pb)
    //      in test/testSipFrag.cxx
    if (false && scanChunkResult != MsgHeaderScanner::scrEnd) 
    {
+#ifdef RESIP_USE_STL_STREAMS
       CerrLog(<< "not MsgHeaderScanner::scrEnd");
+#endif
       pb.fail(__FILE__, __LINE__);
    } 
    else 

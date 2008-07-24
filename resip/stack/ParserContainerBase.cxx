@@ -93,9 +93,9 @@ ParserContainerBase::append(const ParserContainerBase& source)
    }
 }
 
-std::ostream& 
+EncodeStream& 
 ParserContainerBase::encode(const Data& headerName, 
-                            std::ostream& str) const
+                            EncodeStream& str) const
 {
    // !jf! this is not strictly correct since some headers are allowed to
    // be empty: Supported, Accept-Encoding, Allow-Events, Allow,
@@ -131,9 +131,9 @@ ParserContainerBase::encode(const Data& headerName,
    return str;
 }
 
-std::ostream&
+EncodeStream&
 ParserContainerBase::encodeEmbedded(const Data& headerName, 
-                                    std::ostream& str) const
+                                    EncodeStream& str) const
 {
    assert(!headerName.empty());
 

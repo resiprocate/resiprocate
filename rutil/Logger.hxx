@@ -28,7 +28,7 @@
 
 // unconditionally output to cerr -- easily change back and forth
 #define CerrLog(args_)                                                  \
-  resip::Log::tags(resip::Log::StdErr, RESIPROCATE_SUBSYSTEM,           \
+	resip::Log::tags(resip::Log::StdErr, RESIPROCATE_SUBSYSTEM,           \
                    __FILE__, __LINE__, std::cerr) << ' ' << '|' << ' '  \
           args_ << std::endl;
 

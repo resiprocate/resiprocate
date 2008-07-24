@@ -90,8 +90,8 @@ void TransactionUser::addDomain(const Data& domain)
    mDomainList.insert(domain);
 }
 
-std::ostream& 
-TransactionUser::encode(std::ostream& strm) const
+EncodeStream& 
+TransactionUser::encode(EncodeStream& strm) const
 {
    strm << "TU: " << name() << " size=" << mFifo.size();
    return strm;
@@ -115,8 +115,8 @@ TransactionUser::isRegisteredForConnectionTermination() const
    return mRegisteredForConnectionTermination;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::TransactionUser& tu)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::TransactionUser& tu)
 {
    tu.encode(strm);
    return strm;

@@ -42,8 +42,8 @@ ExistsParameter::clone() const
    return new ExistsParameter(*this);
 }
 
-ostream&
-ExistsParameter::encode(ostream& stream) const
+EncodeStream&
+ExistsParameter::encode(EncodeStream& stream) const
 {
    if (mValue)
    {

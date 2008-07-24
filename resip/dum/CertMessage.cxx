@@ -15,14 +15,14 @@ CertMessage::CertMessage(const MessageId& id,
 {
 }
 
-std::ostream&
-CertMessage::encodeBrief(std::ostream& str) const
+EncodeStream&
+CertMessage::encodeBrief(EncodeStream& str) const
 { 
    return str << "CertMessage: " << mId;
 }
 
-std::ostream& 
-CertMessage::encode(std::ostream& strm) const
+EncodeStream& 
+CertMessage::encode(EncodeStream& strm) const
 {
    return strm << brief() << "body: " << mBody;
 }
@@ -33,7 +33,7 @@ CertMessage::clone() const
    return new CertMessage(mId, mSuccess, mBody);
 }
 
-ostream& resip::operator<<(ostream& strm, const MessageId& id)
+EncodeStream& resip::operator<<(EncodeStream& strm, const MessageId& id)
 {
    strm << endl;
    strm << "Id: " << id.mId << "Aor :" << id.mAor << "Type: " << ((id.mType==MessageId::UserCert)? "Cert" : "Private Key") << endl;

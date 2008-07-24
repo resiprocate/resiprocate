@@ -63,8 +63,8 @@ AppDialog::getContact()
   return mDialog->mLocalContact;
 }
 
-std::ostream& 
-AppDialog::dump(std::ostream& strm) const
+EncodeStream& 
+AppDialog::dump(EncodeStream& strm) const
 {
    strm << "AppDialog " << mId;
    return strm;
