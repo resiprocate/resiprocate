@@ -316,7 +316,7 @@ public:
 	{}
 
 	~ResipStdBuf(void)
-        {}
+	{}
 
 	virtual size_t writebuf(const char *s, size_t count)
 	{
@@ -374,11 +374,14 @@ private:
 #define EncodeStream std::ostream
 #define DecodeStream std::istream
 #define CerrStream std::cerr
+#define CoutStream std::cout
 #else
 #define EncodeStream resip::ResipFastOStream
 #define DecodeStream resip::ResipFastIStream
 extern ResipStdCOStream resipFastCerr;
+extern ResipStdCOStream resipFastCout;
 #define CerrStream resip::resipFastCerr
+#define CoutStream resip::resipFastCout
 #endif
 
 } //namespace resip
