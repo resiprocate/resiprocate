@@ -1295,7 +1295,8 @@ void updateNonceCount(unsigned int& nonceCount, Data& nonceCountString)
       //s << std::setw(8) << std::setfill('0') << std::hex << nonceCount;
 	   char buf[128];
 	   *buf = 0;
-#ifdef WIN32
+
+#if (defined(_MSC_VER) && _MSC_VER >= 1400)
 	   sprintf_s(buf,128,"%08X",nonceCount);
 #else
 	   sprintf(buf,"%08X",nonceCount);
