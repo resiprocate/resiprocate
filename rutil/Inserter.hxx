@@ -12,6 +12,7 @@
 
 #include "HashMap.hxx"
 #include "rutil/compat.hxx"
+#include "rutil/resipfaststreams.h"
 
 namespace resip
 {

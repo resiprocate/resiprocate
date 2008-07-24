@@ -139,7 +139,7 @@ main(int argc, char* argv[])
          SipMessage* received = dynamic_cast<SipMessage*>(msg);
          if (received)
          {
-           received->encode(cout);
+           received->encode(CoutStream);
             outstanding--;
          
             assert (received->header(h_RequestLine).uri().host() == "localhost");
