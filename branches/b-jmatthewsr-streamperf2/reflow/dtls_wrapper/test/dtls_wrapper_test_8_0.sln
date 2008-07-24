@@ -1,0 +1,157 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testDtlsClient", "testDtlsClient_8_0.vcproj", "{44225649-C937-4BD8-A6AF-C53477BBD7F3}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53} = {D2AB531B-86AC-43DD-A330-9809B4F1BB53}
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8} = {67B5906C-5C9D-4D09-AC7E-AF71D72175F8}
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750} = {EEF031CB-FED8-451E-A471-91EC8D4F6750}
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testDtlsServer", "testDtlsServer_8_0.vcproj", "{EBDC3586-55A6-442F-B779-7372FF7B0DE4}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+	ProjectSection(ProjectDependencies) = postProject
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53} = {D2AB531B-86AC-43DD-A330-9809B4F1BB53}
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8} = {67B5906C-5C9D-4D09-AC7E-AF71D72175F8}
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750} = {EEF031CB-FED8-451E-A471-91EC8D4F6750}
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E} = {CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106} = {3D0E5CEB-93DC-4FDB-918B-D08FA369E106}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rutil", "..\..\..\rutil\rutil_8_0.vcproj", "{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ares", "..\..\..\contrib\ares\ares_8_0.vcproj", "{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reflow", "..\..\reflow_8_0.vcproj", "{D2AB531B-86AC-43DD-A330-9809B4F1BB53}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "srtp", "..\..\..\contrib\srtp\srtp.vcproj", "{EEF031CB-FED8-451E-A471-91EC8D4F6750}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "reTurnClient", "..\..\..\reTurn\client\reTurnClient_8_0.vcproj", "{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Dll|Win32 = Debug Dll|Win32
+		Debug|Win32 = Debug|Win32
+		Release Dll|Win32 = Release Dll|Win32
+		Release|Win32 = Release|Win32
+		SSL-Debug|Win32 = SSL-Debug|Win32
+		SSL-Release|Win32 = SSL-Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Debug Dll|Win32.ActiveCfg = Debug|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Debug Dll|Win32.Build.0 = Debug|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Debug|Win32.Build.0 = Debug|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Release Dll|Win32.ActiveCfg = Release|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Release Dll|Win32.Build.0 = Release|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Release|Win32.ActiveCfg = Release|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.Release|Win32.Build.0 = Release|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{44225649-C937-4BD8-A6AF-C53477BBD7F3}.SSL-Release|Win32.Build.0 = Release|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Debug Dll|Win32.ActiveCfg = Debug|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Debug Dll|Win32.Build.0 = Debug|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Debug|Win32.Build.0 = Debug|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Release Dll|Win32.ActiveCfg = Release|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Release Dll|Win32.Build.0 = Release|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Release|Win32.ActiveCfg = Release|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.Release|Win32.Build.0 = Release|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{EBDC3586-55A6-442F-B779-7372FF7B0DE4}.SSL-Release|Win32.Build.0 = Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Debug Dll|Win32.ActiveCfg = Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Debug Dll|Win32.Build.0 = Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Debug|Win32.ActiveCfg = SSL-Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Debug|Win32.Build.0 = SSL-Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Release Dll|Win32.ActiveCfg = Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Release Dll|Win32.Build.0 = Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Release|Win32.ActiveCfg = SSL-Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.Release|Win32.Build.0 = SSL-Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.SSL-Debug|Win32.ActiveCfg = SSL-Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.SSL-Debug|Win32.Build.0 = SSL-Debug|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.SSL-Release|Win32.ActiveCfg = SSL-Release|Win32
+		{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}.SSL-Release|Win32.Build.0 = SSL-Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug Dll|Win32.ActiveCfg = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug Dll|Win32.Build.0 = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Debug|Win32.Build.0 = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release Dll|Win32.ActiveCfg = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release Dll|Win32.Build.0 = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release|Win32.ActiveCfg = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.Release|Win32.Build.0 = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{CE7CF5E0-CAD1-49D6-95D1-143DED7B226E}.SSL-Release|Win32.Build.0 = Release|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Debug Dll|Win32.ActiveCfg = Debug|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Debug Dll|Win32.Build.0 = Debug|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Debug|Win32.Build.0 = Debug|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Release Dll|Win32.ActiveCfg = Release|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Release Dll|Win32.Build.0 = Release|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Release|Win32.ActiveCfg = Release|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.Release|Win32.Build.0 = Release|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{D2AB531B-86AC-43DD-A330-9809B4F1BB53}.SSL-Release|Win32.Build.0 = Release|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.Debug Dll|Win32.ActiveCfg = Debug Dll|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.Debug Dll|Win32.Build.0 = Debug Dll|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.Debug|Win32.Build.0 = Debug|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.Release Dll|Win32.ActiveCfg = Release Dll|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.Release Dll|Win32.Build.0 = Release Dll|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.Release|Win32.ActiveCfg = Release|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.Release|Win32.Build.0 = Release|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{EEF031CB-FED8-451E-A471-91EC8D4F6750}.SSL-Release|Win32.Build.0 = Release|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.Debug Dll|Win32.ActiveCfg = Debug|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.Debug Dll|Win32.Build.0 = Debug|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.Debug|Win32.Build.0 = Debug|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.Release Dll|Win32.ActiveCfg = Release|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.Release Dll|Win32.Build.0 = Release|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.Release|Win32.ActiveCfg = Release|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.Release|Win32.Build.0 = Release|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.SSL-Debug|Win32.ActiveCfg = Debug|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.SSL-Debug|Win32.Build.0 = Debug|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.SSL-Release|Win32.ActiveCfg = Release|Win32
+		{67B5906C-5C9D-4D09-AC7E-AF71D72175F8}.SSL-Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
