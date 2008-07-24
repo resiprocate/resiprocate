@@ -407,6 +407,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\resipfaststreams.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\dns\RRCache.cxx"
 				>
 			</File>
