@@ -100,7 +100,7 @@ main(int argc, char* argv[])
          if (received)
          {
            --count;
-           received->encode(cout);
+           received->encode(CoutStream);
            if (received->isRequest())
            {
              SipMessage* resp = Helper::makeResponse(*received, 606);

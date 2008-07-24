@@ -47,9 +47,9 @@ main(int argc, char** argv)
 
    auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
    assert(msg.get());   
-   cerr << Inserter(msg->header(h_WWWAuthenticates)) << endl;
+   CerrStream << Inserter(msg->header(h_WWWAuthenticates)) << endl;
    
-   cerr << "[" << msg->header(h_WWWAuthenticates).back().param(p_opaque) << "]" << endl;
+   CerrStream << "[" << msg->header(h_WWWAuthenticates).back().param(p_opaque) << "]" << endl;
 
    assert(msg->header(h_WWWAuthenticates).back().param(p_opaque) == "f2a62109ee6526c8760e4e7497861aac");
    
@@ -72,7 +72,7 @@ main(int argc, char** argv)
          "0\202\004\201\327\006	*\206H\206\367\001\007\002\201\240\202\004\201\3100\202\004\201\304\002\001\0011\0130	\006\005+\003\002\032\005\000\201\260\013\006	\201\252\206\201\310\206\367\001\007\001\201\240\202\003\201\376\201\260\202\003\201\372\201\260\202\002\201\343\201\240\003\002\001\002\002\007\201\322\000\002\000\201\327\003\201\313\201\260\006	\201\252\206\201\310\206\367\001\001\005\005\000\201\260\201\360\201\261\013\201\260	\006\003\201\325\004\006\023\002\201\325\201\323\201\261\023\201\260\021\006\003\201\325\004\010\023r\201\303\201\341\201\354\201\351\201\346\201\357\201\362\201\356\201\351\201\341\201\261\021\201\260\006\003U\004\007\023\010San Jose1\201\260\014\006\003\201\325\004\023\005\201\363\201\351\201\360\201\351\201\364\201\261\201\251\201\260\201\247\006\003\201\325\004\013\023\201\240\201\323\201\351\201\360\201\351\201\364\201\240\201\324\201\345\201\363\201\364\201\240\201\303\201\345\201\362\201\364\201\351\201\346\201\351\201\343\201\341\201\364\201\345\201\240\201\301\201\365\201\364\201\350\201\357\201\362\201\351\201\364\201\371\201\260\036\027\201\260\201\264\201\260\201\270\201\262\201\265\201\260\201\262\201\261\201\270\201\264\201\270\201\332\027\201\260\201\267\201\260\201\270\201\262\201\265\201\260\201\262\201\261\201\270\201\264\201\270\201\332\201\260\201\345\201\261\013\201\260	\006\003\201\325\004\006\023\002\201\325\201\323\201\261\023\201\260\021\006\003\201\325\004\010\023\201\303\201\341\201\354\201\351\201\346\201\357\201\362\201\356\201\351\201\341\201\261\021\201\260\006\003U\004\007\023\010San Jose1\201\260\014\006\003\201\325\004\005\201\363\201\351\201\360\201\351\201\364\201\261\036\201\260\034\006\003\201\325\004\003\024\025\201\364\201\357\201\346\201\365\201\300\201\365\201\341\201\256\201\356\201\364\201\364\201\256\201\363\201\351\201\360\201\351\201\364\201\256\201\356\201\345\201\364\201\260\201\237\201\260\006	\201\252\206\201\310\206\367\001\001\001\005\000\003\201\215\000\201\260\201\211\002\201\201\000\201\331\201\322\201\267\201\345\201\263\201\337\201\201\365\201\246\201\317\201\337\201\314\201\343\201\350\201\370\201\332\201\372\201\366\201\356\227\201\260\010\201\304\201\326\005\201\253\014\201\316\201\335\201\362\201\253\201\336\036\201\326\201\247\201\365\201\321\201\342\201\312\201\336\201\310\030\201\310\034\201\325\201\274\201\255\201\336\201\372\201\306\201\277\201\303\201\364\201\343\201\355\201\240\201\323\201\374\201\347\201\240\004\201\363\205\316\230\205\320\205\261\205\255\211\205\205\261\205\276\205\333\205\277\205\350\205\274\205\361\021\201\260\201\255\201\265\201\276\201\373\203\201\267\201\356\201\355\201\256\201\337\201\262\201\244\201\305\033\023\000\201\266\206\021\201\303\201\252\201\265\201\364\001\201\246\201\251\030\201\372\235\201\325\201\273\037\201\251\201\332\201\354\201\331\201\371\201\263\201\261\201\347\236\201\322\201\376\201\274\201\332\201\377\002\003\001\000\001\201\243\202\001\201\247\201\260\202\001\201\243\201\260\201\332\006\003\201\325\035\021\004\201\323\201\260\201\321\206\031\201\363\201\351\201\360\201\272\201\364\201\357\201\346\201\365\201\300\201\365\201\341\201\256\201\356\201\364\201\364\201\256\201\363\201\351\201\360\201\351\201\364\201\256\201\356\201\345\201\364\206\030\201\351\201\355\201\272\201\364\201\357\201\346\201\365\201\300\201\365\201\341\201\256\201\356\201\364\201\364\201\256\201\363\201\351\201\360\201\351\201\364\201\256\201\356\201\345\201\364\206\032\201\360\201\362\201\345\201\363\201\272\201\364\201\357\201\346\201\365\201\300\201\365\201\341\201\256\201\356\201\364\201\364\201\256\201\363\201\351\201\360\201\351\201\364\201\256\201\356\201\345\201\364\201\260	\006\003\201\325\035\023\004\002\201\260\000\201\260\035\006\003\201\325\035\004\026\004\024	\026\201\307\201\306l\201\242\234\013\201\261\034\237\201\247\201\262\035\201\254B\201\357\201\324\201\2660\201\232\006\003U\035#\004\201\2220\201\217\200\024kF\027\024\201\352\224v%\200Tn\023T\201\332\201\241\201\343T\024\201\241\201\266\201\241t\201\244r0p1\0130	\006\003U\004\006\023\002US1\0230\021\006\003U\004\010\023California1\0210\006\003U\004\007\023\010San Jose1\201\260\014\006\003\201\325\004\023\005\201\363\201\351\201\360\201\351\201\364\201\261\201\251\201\260\201\247\006\003\201\325\004\013\023\201\240\201\323\201\351\201\360\201\351\201\364\201\240\201\324\201\345\201\363\201\364\201\240\201\303\201\345\201\362\201\364\201\351\201\346\201\351\201\343\201\341\201\364\201\345\201\240\201\301\201\365\201\364\201\350\201\357\201\362\201\351\201\364\201\371\202\001\000\201\260\006	\201\252\206\201\310\206\367\001\001\005\005\000\003\201\201\000\201\241\201\311\201\336\226\201\321\201\365\201\256\201\256\005\201\245\215\310\215\320\215\260\024\201\351\201\301\201\377\201\270\201\337\201\260\201\306\203\201\241\201\307\203\355\032\201\246\003\201\334\201\264\010\201\321\000\201\261\201\255\201\261\201\366\201\304\201\346\201\270\201\313\226\210\201\363\014\201\256\201\277\201\302\201\240\201\361\201\366\201\352\201\344\201\255\201\327\201\263\236\201\355\201\272\010\236\201\277\201\245\201\267\201\316\201\300\201\311\201\357\201\336\201\277\201\360\201\366\201\302\201\262\201\373\201\261\201\351\201\345\201\243\201\330\201\325\201\271\201\277\201\264\234\201\363\007\021\201\247\201\314\201\265\201\243\201\242\201\253\201\353\201\266\201\313\201\341\201\341\201\340\201\316\232\205\244\205\324\205\267\205\363\205\351\205\257\205\373\205\267\010\201\362\201\240\201\273\201\324\201\265\211\264\030\201\372\201\356\201\326\201\323\201\261\202\001\201\241\201\260\202\001\035\002\001\001\201\260\201\373\201\260\201\360\201\261\013\201\260	\006\003\201\325\004\006\023\002\201\325\201\323\201\261\023\201\260\021\006\003\201\325\004\010\023\201\303\201\341\201\354\201\351\201\346\201\357\201\362\201\356\201\351\201\341\201\261\021\201\260\006\003U\004\007\023\010San Jose1\201\260\014\006\003\201\325\004\023\005\201\363\201\351\201\360\201\351\201\364\201\261\201\251\201\260\201\247\006\003\201\325\004\013\023\201\240\201\323\201\351\201\360\201\351\201\364\201\240\201\324\201\345\201\363\201\364\201\240\201\303\201\345\201\362\201\364\201\351\201\346\201\351\201\343\201\341\201\364\201\345\201\240\201\301\201\365\201\364\201\350\201\357\201\362\201\351\201\364\201\371\002\007\201\322\000\002\000\201\327\003\201\313\201\260	\006\005\201\253\003\002\032\005\000\201\260\006	\201\252\206\201\310\206\367\001\001\001\005\000\004\201\200\201\246\201\255\202\350\202\242\202\261\207\227\033\027\201\375	\201\332\201\267\201\246\201\375\031\201\326\201\255\001\201\271\201\333\201\306\201\351\201\367\201\344\031\201\356\233\201\353\031\003\201\336	\003\201\353\201\260\201\323\201\267\026\022\201\307\233\201\316\201\362\201\304\201\256\201\247\201\243\201\256\201\261\211\202\243\202\324\202\314\027\222\027\222\034\230\201\240\201\323\037\201\345\034\220\201\372\201\261\201\377\201\333\201\310\201\343\201\300\201\335\201\310	\236\201\274\201\315\201\301\201\352\202\201\261\201\324\201\347\222\203\333\203\316\203\336\203\360<\211\236\203\276[\203\301\003\010\201\373rR\236\201\322\027\201\242\201\374b\027d:\225(\030\225\217\032\202\025\201\373\226\201\255\201\255\201\304\201\346\201\353\201\262\201\362\201\311\201\323\201\347\201\346\201\327\201\311\201\351\201\362\201\362\201\317\201\312\201\255\201\255" );
 
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
-      // !ah! deleted cerr output that was messing up terminals 
+      // !ah! deleted CerrStream output that was messing up terminals 
    }
 
    {
@@ -80,11 +80,11 @@ main(int argc, char** argv)
 
       try
       {
-         cerr << empty.brief() << endl;
+         CerrStream << empty.brief() << endl;
          empty.header(h_CSeq);
-         cerr << empty.brief() << endl;
+         CerrStream << empty.brief() << endl;
          empty.header(h_Vias).push_back(Via());
-         cerr << empty.brief() << endl;
+         CerrStream << empty.brief() << endl;
       }
       catch (SipMessage::Exception& e)
       {}
@@ -105,7 +105,7 @@ main(int argc, char** argv)
 
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
       msg->header(h_Routes).pop_back();
-      cerr << *msg << endl;
+      CerrStream << *msg << endl;
    }
    
    {
@@ -181,14 +181,14 @@ main(int argc, char** argv)
       SdpContents csdp;
       csdp = *sdp;
       SdpContents::Session::Medium& my1Medium = csdp.session().media().front();
-      cerr << myMedium.protocol() << " : " << my1Medium.protocol() << endl;
+      CerrStream << myMedium.protocol() << " : " << my1Medium.protocol() << endl;
 
       SdpContents c2sdp;
       c2sdp = *sdp;
     
 
       SdpContents::Session::Medium& myMedium2 = c2sdp.session().media().front();
-      cerr << myMedium2.protocol() << endl;
+      CerrStream << myMedium2.protocol() << endl;
    }
 
    {
@@ -206,7 +206,7 @@ main(int argc, char** argv)
 
       try
       {
-         cerr << "transport=" << message1->header(h_Vias).front().transport() << endl;
+         CerrStream << "transport=" << message1->header(h_Vias).front().transport() << endl;
          assert(false);
       }
       catch (ParseException& e)
@@ -215,7 +215,7 @@ main(int argc, char** argv)
    }
 
    {
-      cerr << "test CRLFs before the start line" << endl;
+      CerrStream << "test CRLFs before the start line" << endl;
       Data txt1 = "\r\n\r\n\r\nSIP/2.0 407 Proxy Authentication Required\r\n"
          "To: <sip:jason_AT_meet2talk.com@beta.meet2talk.com>\r\n"
          "From: <sip:jason_AT_meet2talk.com@beta.meet2talk.com>;tag=113cba09\r\n"
@@ -238,7 +238,7 @@ main(int argc, char** argv)
    }
 
    {
-      cerr << "test complex content copy" << endl;
+      CerrStream << "test complex content copy" << endl;
 
       Data txt = ("MESSAGE sip:fluffy@212.157.205.40 SIP/2.0\r\n"
                   "Via: SIP/2.0/TCP 212.157.205.198:5060;branch=z9hG4bK2367411811584019109\r\n"
@@ -724,20 +724,20 @@ main(int argc, char** argv)
 
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       assert(message->exists(h_Unsupporteds));
-      cerr << message->header(h_AllowEvents).size() << endl;
-      cerr << message->header(h_Vias).size() << endl;
-      cerr << message->header(h_ProxyAuthorizations).size() << endl;
-      cerr << *message << endl;
+      CerrStream << message->header(h_AllowEvents).size() << endl;
+      CerrStream << message->header(h_Vias).size() << endl;
+      CerrStream << message->header(h_ProxyAuthorizations).size() << endl;
+      CerrStream << *message << endl;
    }
 
    {
       SipMessage msg;
       msg.header(h_CallId).value() = "8d057730fba2cd5e";
 
-      cerr << msg.header(h_CallId) << endl;
+      CerrStream << msg.header(h_CallId) << endl;
 
       const SipMessage msg1(msg);
-      cerr << msg1.header(h_CallId) << endl;
+      CerrStream << msg1.header(h_CallId) << endl;
    }
 
    {
@@ -758,7 +758,7 @@ main(int argc, char** argv)
      }
      catch (ParseException& e)
      {
-        cerr << e << endl;
+        CerrStream << e << endl;
      }
    }
 
@@ -777,7 +777,7 @@ main(int argc, char** argv)
      assert(response->exists(h_AllowEvents));
      assert(response->header(h_AllowEvents).size() == 0);
 
-     cerr << response->brief() << endl;
+     CerrStream << response->brief() << endl;
      assert(Data::from(response->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(wire)");
      
      char * txt2 = ("SIP/2.0 489 Bad Event" CRLF
@@ -809,7 +809,7 @@ main(int argc, char** argv)
      assert(r3->exists(h_AllowEvents));
      assert(r3->header(h_AllowEvents).size() == 2);
      assert(r3->header(h_AllowEvents).front().value() == "foo");
-     cerr << r3->brief() << endl;
+     CerrStream << r3->brief() << endl;
      assert(Data::from(r3->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(tu)");
 
      char * txt4 = ("SIP/2.0 489 Bad Event" CRLF
@@ -826,8 +826,8 @@ main(int argc, char** argv)
      auto_ptr<SipMessage> r4(TestSupport::makeMessage(txt4,true));
      assert(r4->exists(h_AllowEvents) );
 
-     cerr << r4->header(h_AllowEvents).size() << endl;
-     cerr << r4->header(h_AllowEvents).front().value() << endl;
+     CerrStream << r4->header(h_AllowEvents).size() << endl;
+     CerrStream << r4->header(h_AllowEvents).front().value() << endl;
 
      assert(r4->header(h_AllowEvents).size() == 4);
      assert(r4->header(h_AllowEvents).front().value() == "foo");
@@ -873,12 +873,12 @@ main(int argc, char** argv)
       assert(message->header(h_ContentType) < message->header(h_Accepts).front());
       assert(message->header(h_To) < message->header(h_From));
 
-      cerr << message->brief() << endl;
+      CerrStream << message->brief() << endl;
       assert(Data::from(message->brief()) == "SipReq:  INVITE ext101@192.168.2.220:5064 tid=11111 cseq=INVITE contact=ext103@192.168.2.220:5068 / 1 from(tu)");
    }
    
    {
-      cerr << "!Proxy-Authorization params" << endl;
+      CerrStream << "!Proxy-Authorization params" << endl;
       char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
@@ -900,7 +900,7 @@ main(int argc, char** argv)
       assert(message->header(h_ProxyAuthorizations).front().param(p_realm) == "atlanta.com");
       assert(message->header(h_ProxyAuthorizations).front().param(p_response) == "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY");
 
-      cerr << *message << endl;
+      CerrStream << *message << endl;
    }
 
    {
@@ -918,7 +918,7 @@ main(int argc, char** argv)
                    "\r\n");
 
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      cerr << *message << endl;
+      CerrStream << *message << endl;
 
       assert(message->header(h_Vias).front().param(UnknownParameterType("stid")) == "489573115");
       message->header(h_Vias).front().param(p_received) = "received";
@@ -939,12 +939,12 @@ main(int argc, char** argv)
       
   
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      cerr << *message << endl;
+      CerrStream << *message << endl;
       message->header(h_Vias).front();
       message->header(h_From);
       message->header(h_To);
-      cerr << message->header(h_Vias).front().param(p_branch).getTransactionId() << endl;
-      cerr << message->header(h_Vias).back().param(p_branch).getTransactionId() << endl;
+      CerrStream << message->header(h_Vias).front().param(p_branch).getTransactionId() << endl;
+      CerrStream << message->header(h_Vias).back().param(p_branch).getTransactionId() << endl;
    }
 
    {
@@ -964,8 +964,8 @@ main(int argc, char** argv)
       for (Vias::iterator i = message->header(h_Vias).begin();
            i != message->header(h_Vias).end(); i++)
       {
-         i->param(p_branch).encode(cerr);
-         cerr << endl;
+         i->param(p_branch).encode(CerrStream);
+         CerrStream << endl;
       }
    }
 
@@ -983,14 +983,14 @@ main(int argc, char** argv)
       
    
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      cerr << *message << endl;
+      CerrStream << *message << endl;
       message->header(h_Vias).front();
       message->header(h_From);
       message->header(h_To);
-      cerr << message->header(h_Vias).front() << endl;
-      cerr << message->header(h_Vias).back() << endl;
-      cerr << message->header(h_Vias).front().param(p_branch).getTransactionId() << endl;
-      cerr << message->header(h_Vias).back().param(p_branch).getTransactionId() << endl;
+      CerrStream << message->header(h_Vias).front() << endl;
+      CerrStream << message->header(h_Vias).back() << endl;
+      CerrStream << message->header(h_Vias).front().param(p_branch).getTransactionId() << endl;
+      CerrStream << message->header(h_Vias).back().param(p_branch).getTransactionId() << endl;
    }
 
    {
@@ -1005,8 +1005,8 @@ main(int argc, char** argv)
                    "Content-Length: 0\r\n"
                    "\r\n");
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
-      cerr << message->header(h_Contacts).front().param(UnknownParameterType("xmethods")) << endl;
-      cerr << *message << endl;
+      CerrStream << message->header(h_Contacts).front().param(UnknownParameterType("xmethods")) << endl;
+      CerrStream << *message << endl;
    }
 
    {
@@ -1156,15 +1156,15 @@ main(int argc, char** argv)
       auto_ptr<SipMessage> msg11(TestSupport::makeMessage(txt11));
 
       assert(msg1->getTransactionId() == msg1->getTransactionId());
-      cerr << "msg2=" << msg2->getTransactionId() << endl;
-      cerr << "msg3=" << msg3->getTransactionId() << endl;
+      CerrStream << "msg2=" << msg2->getTransactionId() << endl;
+      CerrStream << "msg3=" << msg3->getTransactionId() << endl;
       assert(msg2->getTransactionId() != msg3->getTransactionId());
       assert(msg3->getTransactionId() == msg4->getTransactionId());
       assert(msg4->getTransactionId() != msg5->getTransactionId());
       assert(msg4->getTransactionId() != msg6->getTransactionId());
       
-      cerr << "msg5=" << msg5->getTransactionId() << endl;
-      cerr << "msg6=" << msg6->getTransactionId() << endl;
+      CerrStream << "msg5=" << msg5->getTransactionId() << endl;
+      CerrStream << "msg6=" << msg6->getTransactionId() << endl;
       assert(msg5->header(h_RequestLine).uri() == msg6->header(h_RequestLine).uri());
       assert(msg5->header(h_RequestLine).uri().commutativeParameterHash() == msg6->header(h_RequestLine).uri().commutativeParameterHash());
 
@@ -1199,7 +1199,7 @@ main(int argc, char** argv)
       PlainContents pc("here is some plain ol' contents");
       inv.setContents(&pc);
 
-      cerr << inv.header(h_ContentType).type() << endl;
+      CerrStream << inv.header(h_ContentType).type() << endl;
       assert(inv.header(h_ContentType).type() == "text");
       assert(inv.header(h_ContentType).subType() == "plain");
 
@@ -1211,7 +1211,7 @@ main(int argc, char** argv)
 
       const Data d(Data::from(inv));
       
-      cerr << "!! " << d;
+      CerrStream << "!! " << d;
       assert(d == ("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                    "To: <sip:bob@biloxi.com>\r\n"
                    "From: \"Alice\"<sip:alice@atlanta.com>;tag=1928301774\r\n"
@@ -1249,7 +1249,7 @@ main(int argc, char** argv)
       auto_ptr<Contents> pc(new PlainContents("here is some plain ol' contents"));
       inv.setContents(pc);
 
-      cerr << inv.header(h_ContentType).type() << endl;
+      CerrStream << inv.header(h_ContentType).type() << endl;
       assert(inv.header(h_ContentType).type() == "text");
       assert(inv.header(h_ContentType).subType() == "plain");
 
@@ -1265,7 +1265,7 @@ main(int argc, char** argv)
          inv.encode(s);
       }
       
-      cerr << "!! " << d;
+      CerrStream << "!! " << d;
       assert(d == ("INVITE sip:bob@biloxi.com SIP/2.0\r\n"
                    "To: <sip:bob@biloxi.com>\r\n"
                    "From: \"Alice\"<sip:alice@atlanta.com>;tag=1928301774\r\n"
@@ -1317,7 +1317,7 @@ main(int argc, char** argv)
       assert(!sdp->session().media().empty());
       assert(sdp->session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
 
-      msg->encode(cerr);
+      msg->encode(CerrStream);
    }
 
    {
@@ -1407,7 +1407,7 @@ main(int argc, char** argv)
       assert(!sdp->session().media().empty());
       assert(sdp->session().media().front().getValues("rtpmap").front() == "0 PCMU/8000");
 
-      msg->encode(cerr);
+      msg->encode(CerrStream);
    }
 
    {
@@ -1436,7 +1436,7 @@ main(int argc, char** argv)
       msg->header(UnknownHeaderType("Foobie-Blech")).empty();
       //assert(!msg->header(UnknownHeaderType("Foobie-Blech")).empty());
       //assert(msg->header(UnknownHeaderType("Foobie-Blech")).front().value() == "");
-      msg->encode(cerr);
+      msg->encode(CerrStream);
    }
 
    {
@@ -1458,12 +1458,12 @@ main(int argc, char** argv)
           "\r\n");
       
       auto_ptr<SipMessage> msg(TestSupport::makeMessage(txt));
-      cerr << msg->header(h_Contacts).front().param(p_expires) << endl;
+      CerrStream << msg->header(h_Contacts).front().param(p_expires) << endl;
       assert(msg->header(h_Contacts).front().param(p_expires) == 63);
    }
 
    {
-      cerr << "test backward compatible expires parameter" << endl;
+      CerrStream << "test backward compatible expires parameter" << endl;
       char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
@@ -1479,13 +1479,13 @@ main(int argc, char** argv)
                     "Contact: <sip:qoq@192.0.2.4>\r\n"
                     "Content-Length: 0\r\n\r\n");
       auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
-      cerr << message1->header(h_Contacts).front().param(p_expires) << endl;
+      CerrStream << message1->header(h_Contacts).front().param(p_expires) << endl;
       assert(message1->header(h_Contacts).front().param(p_expires) == 3600);
       assert(message1->header(h_Contacts).front().param(UnknownParameterType("foo")) == "bar");
    }
 
    {
-      cerr << "test header copying between unparsed messages" << endl;
+      CerrStream << "test header copying between unparsed messages" << endl;
       char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
@@ -1503,7 +1503,7 @@ main(int argc, char** argv)
                     "Content-Length: 0\r\n\r\n");
       auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
       auto_ptr<SipMessage> r(Helper::makeResponse(*message1, 100));
-      r->encode(cerr);
+      r->encode(CerrStream);
 
       char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfirst\r\n"
@@ -1544,14 +1544,14 @@ main(int argc, char** argv)
       assert(message1->header(h_Vias).size() == 4);
       assert(message1->header(h_Expires).value() == 2700);
       assert(message1->header(h_ContentLength).value() == 0);
-      cerr << "Port: " << message1->header(h_RequestLine).uri().port() << endl;
-      cerr << "AOR: " << message1->header(h_RequestLine).uri().getAor() << endl;
+      CerrStream << "Port: " << message1->header(h_RequestLine).uri().port() << endl;
+      CerrStream << "AOR: " << message1->header(h_RequestLine).uri().getAor() << endl;
       assert(message1->header(h_RequestLine).uri().getAor() == "registrar.ixolib.com");
    }
 
    {
-      cerr << "test header copying between parsed messages" << endl;
-      cerr << " should NOT COPY any HeaderFieldValues" << endl;
+      CerrStream << "test header copying between parsed messages" << endl;
+      CerrStream << " should NOT COPY any HeaderFieldValues" << endl;
       char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
@@ -1661,7 +1661,7 @@ main(int argc, char** argv)
    }
 
    {
-      cerr << "test unparsed message copy" << endl;
+      CerrStream << "test unparsed message copy" << endl;
       char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
@@ -1680,12 +1680,12 @@ main(int argc, char** argv)
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       
       SipMessage copy(*message);
-      copy.encode(cerr);
-      cerr << endl;
+      copy.encode(CerrStream);
+      CerrStream << endl;
    }
    
    {
-      cerr << "test header creation" << endl;
+      CerrStream << "test header creation" << endl;
       SipMessage message;
 
       message.header(h_CSeq).sequence() = 123456;
@@ -1694,12 +1694,12 @@ main(int argc, char** argv)
       message.header(h_To).uri().user() = "speedy";
       assert(message.header(h_To).uri().user() == "speedy");
       
-      message.encode(cerr);
+      message.encode(CerrStream);
 
    }
    
    {
-      cerr << "test multiheaders access" << endl;
+      CerrStream << "test multiheaders access" << endl;
 
       char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
@@ -1718,8 +1718,8 @@ main(int argc, char** argv)
                    "Content-Length: 0\r\n\r\n");
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
-      cerr << "Encode from unparsed: " << endl;
-      message->encode(cerr);
+      CerrStream << "Encode from unparsed: " << endl;
+      message->encode(CerrStream);
 
       assert(message->header(h_To).uri().user() == "bob");
       assert(message->header(h_From).uri().user() == "bob");
@@ -1734,13 +1734,13 @@ main(int argc, char** argv)
       assert(message->header(h_ContentLength).value() == 0);
       assert(message->header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
       
-      cerr << "Encode from parsed: " << endl;
-      message->encode(cerr);
+      CerrStream << "Encode from parsed: " << endl;
+      message->encode(CerrStream);
 
       message->header(h_Contacts).front().uri().user() = "jason";
 
-      cerr << "Encode after messing: " << endl;
-      message->encode(cerr);
+      CerrStream << "Encode after messing: " << endl;
+      message->encode(CerrStream);
 
       SipMessage copy(*message);
       assert(copy.header(h_To).uri().user() == "bob");
@@ -1754,16 +1754,16 @@ main(int argc, char** argv)
       assert(copy.header(h_Vias).size() == 5);
       assert(copy.header(h_Expires).value() == 7200);
       assert(copy.header(h_ContentLength).value() == 0);
-      cerr << "RequestLine Uri AOR = " << copy.header(h_RequestLine).uri().getAor() << endl;
+      CerrStream << "RequestLine Uri AOR = " << copy.header(h_RequestLine).uri().getAor() << endl;
       assert(copy.header(h_RequestLine).uri().getAor() == "registrar.biloxi.com");
 
 
-      cerr << "Encode after copying: " << endl;
-      copy.encode(cerr);
+      CerrStream << "Encode after copying: " << endl;
+      copy.encode(CerrStream);
    }
    
    {
-      cerr << "test callId access" << endl;
+      CerrStream << "test callId access" << endl;
 
       char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=z9hG4bKnashds7\r\n"
@@ -1777,13 +1777,13 @@ main(int argc, char** argv)
                    "Content-Length: 0\r\n\r\n");
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
       
-      message->encode(cerr);
+      message->encode(CerrStream);
       
       //Data v = message->header(h_CallId).value();
       assert(message->header(h_CallId).value() == "843817637684230@998sdasdh09");
       //StatusLine& foo = message->header(h_StatusLine);
       //RequestLine& bar = message->header(h_RequestLine);
-      //cerr << bar.getMethod() << endl;
+      //CerrStream << bar.getMethod() << endl;
    }
    
    {
@@ -1800,13 +1800,13 @@ main(int argc, char** argv)
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
           
       Data v = message->header(h_CallId).value();
-      cerr << "Call-ID is " << v << endl;
+      CerrStream << "Call-ID is " << v << endl;
 
-      message->encode(cerr);
+      message->encode(CerrStream);
   
       //StatusLine& foo = message->header(h_StatusLine);
       //RequestLine& bar = message->header(h_RequestLine);
-      //cerr << bar.getMethod() << endl;
+      //CerrStream << bar.getMethod() << endl;
    }
 
    {
@@ -1830,15 +1830,15 @@ main(int argc, char** argv)
       assert(message->header(h_From).param(p_tag) == "456248");
       assert(message->header(h_From).param(p_mobility) == "hobble");
 
-      message->encode(cerr);
+      message->encode(CerrStream);
   
       //StatusLine& foo = message->header(h_StatusLine);
       //RequestLine& bar = message->header(h_RequestLine);
-      //cerr << bar.getMethod() << endl;
+      //CerrStream << bar.getMethod() << endl;
    }
 
    {
-      cerr << "first REGISTER in torture test" << endl;
+      CerrStream << "first REGISTER in torture test" << endl;
       
       char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
@@ -1893,13 +1893,13 @@ main(int argc, char** argv)
       assert(message->exists(h_Expires));
       assert(message->header(h_Expires).value() == 353245);
 
-      cerr << "Headers::Expires enum = " << h_Expires.getTypeNum() << endl;
+      CerrStream << "Headers::Expires enum = " << h_Expires.getTypeNum() << endl;
       
-      message->encode(cerr);
+      message->encode(CerrStream);
    }
 
    {
-      cerr << "first REGISTER in torture test" << endl;
+      CerrStream << "first REGISTER in torture test" << endl;
       
       char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
@@ -1914,11 +1914,11 @@ main(int argc, char** argv)
       auto_ptr<SipMessage> message(TestSupport::makeMessage(txt));
 
       assert(message->header(h_MaxForwards).value() == 8);
-      message->getRawHeader(Headers::MaxForwards)->getParserContainer()->encode(Headers::getHeaderName(Headers::MaxForwards), cerr) << endl;
+      message->getRawHeader(Headers::MaxForwards)->getParserContainer()->encode(Headers::getHeaderName(Headers::MaxForwards), CerrStream) << endl;
    }
 
    {
-      cerr << "response to REGISTER" << endl;
+      CerrStream << "response to REGISTER" << endl;
       
       char *txt = ("SIP/2.0 100 Trying\r\n"
                    "To: sip:localhost:5070\r\n"
@@ -1938,7 +1938,7 @@ main(int argc, char** argv)
       me.uri().port() = 5070;
       //auto_ptr<SipMessage> msg(Helper::makeRegister(me, me));
       auto_ptr<SipMessage> msg(Helper::makeRegister(me, me, me));
-      cerr << "encoded=" << *msg << endl;
+      CerrStream << "encoded=" << *msg << endl;
    }
    {
       char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
@@ -2187,7 +2187,7 @@ main(int argc, char** argv)
       assert(embeddedMsg2.header(h_Requires).find(Token(Symbols::Replaces)));
    }
 
-   cerr << "\nTEST OK" << endl;
+   CerrStream << "\nTEST OK" << endl;
    return 0;
 }
 
