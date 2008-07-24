@@ -2266,8 +2266,8 @@ TransactionState::isClient() const
    return false;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::TransactionState& state)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::TransactionState& state)
 {
    strm << "tid=" << state.mId << " [ ";
    switch (state.mMachine)

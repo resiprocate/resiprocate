@@ -13,6 +13,7 @@
 #include "resip/stack/MessageDecorator.hxx"
 
 #include "repro/Target.hxx"
+#include "rutil/resipfaststreams.h"
 
 namespace resip
 {
@@ -280,14 +281,14 @@ class ResponseContext
       void forwardBestResponse();
 
       friend class RequestContext;
-      friend std::ostream& operator<<(std::ostream& strm, const repro::ResponseContext& rc);
+      friend EncodeStream& operator<<(EncodeStream& strm, const repro::ResponseContext& rc);
 };
 
-std::ostream&
-operator<<(std::ostream& strm, const repro::ResponseContext& rc);
+EncodeStream&
+operator<<(EncodeStream& strm, const repro::ResponseContext& rc);
 
-std::ostream& 
-operator<<(std::ostream& strm, const repro::Target* t);
+EncodeStream& 
+operator<<(EncodeStream& strm, const repro::Target* t);
 
 }
 #endif

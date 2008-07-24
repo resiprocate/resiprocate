@@ -26,7 +26,7 @@ class TransactionUser
       void addDomain(const Data& domain);
 
       virtual const Data& name() const=0;
-      virtual std::ostream& encode(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
       void setMessageFilterRuleList(MessageFilterRuleList &rules);
       bool isRegisteredForTransactionTermination() const;
       bool isRegisteredForConnectionTermination() const;
@@ -69,8 +69,8 @@ class TransactionUser
       friend class TuSelector;      
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const TransactionUser& tu);
+EncodeStream& 
+operator<<(EncodeStream& strm, const TransactionUser& tu);
 
 }
 

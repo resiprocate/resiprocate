@@ -22,8 +22,8 @@ class DtlsMessage : public Message
       virtual ~DtlsMessage() 
             {}
       virtual Message * clone() const { return new DtlsMessage(mSsl); }
-      virtual std::ostream& encode(std::ostream& strm) const { return strm ; }
-      virtual std::ostream& encodeBrief(std::ostream& str) const { str << mSsl; return str; }
+      virtual EncodeStream& encode(EncodeStream& strm) const { return strm ; }
+      virtual EncodeStream& encodeBrief(EncodeStream& str) const { str << mSsl; return str; }
 
       SSL *getSsl() { return mSsl ; }
       

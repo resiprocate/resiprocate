@@ -52,7 +52,7 @@ SimpleStaticRoute::process(RequestContext& context)
 }
 
 void
-SimpleStaticRoute::dump(std::ostream &os) const
+SimpleStaticRoute::dump(EncodeStream &os) const
 {
    os << "Simple Static Route Monkey" << std::endl;
 }

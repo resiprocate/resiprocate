@@ -74,7 +74,7 @@ namespace resip
       void setValue(const Data& data) { ParseBuffer pb(data); mValue = pb.qVal(); }
       int getValue() const { return mValue; }
       const Data& getData() const;
-      std::ostream& encode(std::ostream& stream) const;
+      EncodeStream& encode(EncodeStream& stream) const;
 
    private:
       int mValue;

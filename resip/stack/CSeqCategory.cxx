@@ -147,8 +147,8 @@ CSeqCategory::parse(ParseBuffer& pb)
    pb.data(mUnknownMethodName, anchorPtr);
 }
 
-std::ostream& 
-CSeqCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+CSeqCategory::encodeParsed(EncodeStream& str) const
 {
    str << mSequence 
        << Symbols::SPACE 

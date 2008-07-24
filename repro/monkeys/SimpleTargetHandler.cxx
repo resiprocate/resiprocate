@@ -56,7 +56,7 @@ SimpleTargetHandler::process(RequestContext &rc)
 }
 
 void 
-SimpleTargetHandler::dump(std::ostream &os) const
+SimpleTargetHandler::dump(EncodeStream &os) const
 {
   os << "SimpleTargetHandler baboon" << std::endl;
 }

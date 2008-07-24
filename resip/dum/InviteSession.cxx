@@ -290,8 +290,8 @@ InviteSession::isTerminated() const
    }
 }
 
-std::ostream&
-InviteSession::dump(std::ostream& strm) const
+EncodeStream&
+InviteSession::dump(EncodeStream& strm) const
 {
    strm << "INVITE: " << mId
         << " " << toData(mState)
@@ -409,7 +409,7 @@ public:
       mInviteSession.provideOffer(mOffer, mLevel, mAlternative.get());
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionProvideOfferExCommand";
    }
@@ -446,7 +446,7 @@ public:
       mInviteSession.provideOffer(mOffer);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionProvideOfferCommand";
    }
@@ -523,7 +523,7 @@ public:
       mInviteSession.provideOffer(mAnswer);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionProvideAnswerCommand";
    }
@@ -639,7 +639,7 @@ public:
       mInviteSession.end(mReason);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionEndCommand";
    }
@@ -697,7 +697,7 @@ public:
       mInviteSession.reject(mCode, mWarning.get());
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionRejectCommand";
    }
@@ -801,7 +801,7 @@ public:
       mInviteSession.refer(mReferTo, mReferSub);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionReferCommand";
    }
@@ -884,7 +884,7 @@ public:
       mInviteSession.referCommand(mReferTo, mSessionToReplace, mReferSub);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionReferExCommand";
    }
@@ -944,7 +944,7 @@ public:
       mInviteSession.info(*mContents);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionInfoCommand";
    }
@@ -1002,7 +1002,7 @@ public:
       mInviteSession.message(*mContents);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionMessageCommand";
    }
@@ -2056,7 +2056,7 @@ public:
       mInviteSession.acceptNITCommand(mStatusCode, mContents.get());
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionAcceptNITCommand";
    }
@@ -2099,7 +2099,7 @@ public:
       mInviteSession.rejectNITCommand(mStatusCode);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "InviteSessionRejectNITCommand";
    }

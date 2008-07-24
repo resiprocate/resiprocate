@@ -125,8 +125,8 @@ Mime::clone() const
    return new Mime(*this);
 }
 
-std::ostream&
-Mime::encodeParsed(std::ostream& str) const
+EncodeStream&
+Mime::encodeParsed(EncodeStream& str) const
 {
    str << mType << Symbols::SLASH << mSubType ;
    encodeParameters(str);

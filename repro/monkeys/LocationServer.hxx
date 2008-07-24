@@ -15,7 +15,7 @@ namespace repro
       virtual ~LocationServer(){};
 
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
+      virtual void dump(EncodeStream &os) const;
 
     private:
       resip::RegistrationPersistenceManager& mStore;

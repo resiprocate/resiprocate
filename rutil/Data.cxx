@@ -1189,8 +1189,8 @@ Data::urlDecoded() const
    return buffer;
 }
 
-std::ostream&
-Data::urlDecode(std::ostream& s) const
+EncodeStream&
+Data::urlDecode(EncodeStream& s) const
 {
    unsigned int i = 0;
    for (const char* p = data(); p != data()+size(); ++p, ++i)
@@ -1259,8 +1259,8 @@ urlNonEncodedCharsInitFn()
 static bool dummy = urlNonEncodedCharsInitFn();
 
 // e.g. http://www.blooberry.com/indexdot/html/topics/urlencoding.htm
-std::ostream&
-Data::urlEncode(std::ostream& s) const
+EncodeStream&
+Data::urlEncode(EncodeStream& s) const
 {
    for (const char* p = data(); p != data() + size(); ++p)
    {
@@ -1313,8 +1313,8 @@ Data::xmlCharDataDecode() const
 }
 
 // http://www.w3.org/TR/REC-xml/#syntax
-std::ostream&
-Data::xmlCharDataEncode(std::ostream& s) const
+EncodeStream&
+Data::xmlCharDataEncode(EncodeStream& s) const
 {
    for (const char* p = data(); p != data() + size(); ++p)
    {
@@ -1345,8 +1345,8 @@ Data::xmlCharDataEncode(std::ostream& s) const
    return s;
 }
 
-std::ostream&
-Data::xmlCharDataDecode(std::ostream& s) const
+EncodeStream&
+Data::xmlCharDataDecode(EncodeStream& s) const
 {
    unsigned int i = 0;
    for (const char* p = data(); p != data()+size(); ++p, ++i)
@@ -1767,8 +1767,16 @@ Data::replace(const Data& match,
    return count;
 }
 
-ostream& 
-resip::operator<<(ostream& strm, const Data& d)
+#ifndef  RESIP_USE_STL_STREAMS
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const Data& d)
+{
+   return strm.write(d.mBuf, d.mSize);
+}
+#endif
+
+std::ostream& 
+resip::operator<<(std::ostream& strm, const Data& d)
 {
    return strm.write(d.mBuf, d.mSize);
 }

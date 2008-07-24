@@ -27,7 +27,7 @@ class Pidf : public Contents
       Pidf& operator=(const Pidf& rhs);
       virtual Contents* clone() const;
       static const Mime& getStaticType() ;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual void parse(ParseBuffer& pb);
 
       void setSimpleId(const Data& id);
@@ -64,7 +64,7 @@ class Pidf : public Contents
       std::vector<Tuple> mTuples;
 };
 
-std::ostream& operator<<(std::ostream& strm, const Pidf::Tuple& tuple);
+EncodeStream& operator<<(EncodeStream& strm, const Pidf::Tuple& tuple);
 static bool invokePidfInit = Pidf::init();
 
 }

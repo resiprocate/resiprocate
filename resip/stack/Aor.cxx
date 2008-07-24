@@ -225,8 +225,8 @@ Aor::port() const
    return mPort;
 }
       
-std::ostream& 
-Aor::operator<<(std::ostream& str) const
+EncodeStream& 
+Aor::operator<<(EncodeStream& str) const
 {
    str << value();
    return str;

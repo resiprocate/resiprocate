@@ -203,12 +203,12 @@ Log::toType(const Data& arg)
    }
 }
 
-ostream&
-Log::tags(Log::Level level, 
-          const Subsystem& subsystem, 
+EncodeStream &
+Log::tags(Log::Level level,
+          const Subsystem& subsystem,
           const char* pfile,
           int line,
-          ostream& strm) 
+          EncodeStream& strm)
 {
    char buffer[256];
    Data ts(Data::Borrow, buffer, sizeof(buffer));

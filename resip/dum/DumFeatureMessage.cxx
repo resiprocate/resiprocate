@@ -22,14 +22,14 @@ DumFeatureMessage::clone() const
    return new DumFeatureMessage(*this);
 }
             
-std::ostream&
-DumFeatureMessage::encodeBrief(std::ostream& strm) const
+EncodeStream&
+DumFeatureMessage::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }
 
-std::ostream& 
-DumFeatureMessage::encode(std::ostream& strm) const
+EncodeStream& 
+DumFeatureMessage::encode(EncodeStream& strm) const
 {
    strm << "DumFeatureMessage::" << mTransactionId;
    return strm;

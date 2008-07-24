@@ -1259,16 +1259,16 @@ ResponseContext::forwardBestResponse()
 }   
 
 
-std::ostream& 
-repro::operator<<(std::ostream& strm, const repro::Target* t)
+EncodeStream& 
+repro::operator<<(EncodeStream& strm, const repro::Target* t)
 {
    strm << "Target: " << t->uri() << " " <<" status=" << t->status();
    return strm;
 }
 
 
-std::ostream&
-repro::operator<<(std::ostream& strm, const ResponseContext& rc)
+EncodeStream&
+repro::operator<<(EncodeStream& strm, const ResponseContext& rc)
 {
    strm << "ResponseContext: "
         << " identity=" << rc.mRequestContext.getDigestIdentity()

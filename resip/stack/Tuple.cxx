@@ -566,8 +566,8 @@ Tuple::operator<(const Tuple& rhs) const
    }
 }
 
-std::ostream&
-resip::operator<<(std::ostream& ostrm, const Tuple& tuple)
+EncodeStream&
+resip::operator<<(EncodeStream& ostrm, const Tuple& tuple)
 {
    ostrm << "[ " ;
    

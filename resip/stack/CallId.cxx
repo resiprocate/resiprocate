@@ -81,8 +81,8 @@ CallID::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
-ostream&
-CallID::encodeParsed(ostream& str) const
+EncodeStream&
+CallID::encodeParsed(EncodeStream& str) const
 {
    str << mValue;
    encodeParameters(str);

@@ -30,7 +30,7 @@ class CallID : public ParserCategory
 
       virtual void parse(ParseBuffer& pb);
       virtual ParserCategory* clone() const;
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
    private:
       mutable Data mValue;

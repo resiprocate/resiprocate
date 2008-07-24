@@ -3,6 +3,7 @@
 
 #include "rutil/Data.hxx"
 #include <iosfwd>
+#include "rutil/resipfaststreams.h"
 
 namespace resip
 {
@@ -30,9 +31,9 @@ class Message
       Brief brief() const;
       virtual Message* clone() const = 0;
       /// output the entire message to stream
-      virtual std::ostream& encode(std::ostream& strm) const = 0;
+      virtual EncodeStream& encode(EncodeStream& strm) const = 0;
       /// output a brief description to stream
-      virtual std::ostream& encodeBrief(std::ostream& str) const = 0;
+      virtual EncodeStream& encodeBrief(EncodeStream& str) const = 0; 
 
    protected:
       friend class TuSelector;      
@@ -43,6 +44,15 @@ class Message
       TransactionUser* getTransactionUser() { return tu; }
       TransactionUser* tu;      
 };
+
+//always need std streams where things are encoded to cout, cerr, MD5Stream, etc...
+#ifndef  RESIP_USE_STL_STREAMS
+EncodeStream& 
+operator<<(EncodeStream& strm, const Message& msg);
+
+EncodeStream& 
+operator<<(EncodeStream& strm, const Message::Brief& brief);
+#endif
 
 std::ostream& 
 operator<<(std::ostream& strm, const Message& msg);

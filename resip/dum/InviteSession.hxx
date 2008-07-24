@@ -135,7 +135,7 @@ class InviteSession : public DialogUsage
       Data&   getPeerUserAgent() { return mPeerUserAgent; }
       NameAddrs& getPeerPAssertedIdentities() { return mPeerPAssertedIdentities; }
 
-      virtual std::ostream& dump(std::ostream& strm) const;
+    virtual EncodeStream& dump(EncodeStream& strm) const;
       InviteSessionHandle getSessionHandle();
 
       typedef enum

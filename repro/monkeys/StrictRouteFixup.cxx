@@ -55,7 +55,7 @@ StrictRouteFixup::process(RequestContext& context)
 }
 
 void
-StrictRouteFixup::dump(std::ostream &os) const
+StrictRouteFixup::dump(EncodeStream &os) const
 {
    os << "StrictRouteFixup monkey" << std::endl;
 }
