@@ -175,37 +175,6 @@ DataStream::~DataStream()
    flush();
 }
 
-#ifdef RESIP_USE_STL_STREAMS
-std::iostream::pos_type
-DataStream::tellp() 
-{
-   flush();
-   return pptr() - mStr.data();
-}
-
-DataStream&
-DataStream::seekp(std::iostream::pos_type pos)
-{
-   flush();
-   std::iostream::pos_type p = tellp();
-
-   if (pos > mStr.size()) 
-   {
-      throw DataException("Seek past DataStream end not supported",
-                          __FILE__, __LINE__);
-   }
-   if (pos < 0) 
-   {
-      throw DataException("Seek before DataStream begin not supported",
-                          __FILE__, __LINE__);
-   }
-   
-   setp((char*)(pos + mStr.data()), 
-        (char*)(mStr.data() + mStr.mCapacity + 1));
-   return *this;
-}
-#endif
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0
  *
