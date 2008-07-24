@@ -37,7 +37,7 @@ main()
       ApplicationSip* frag = dynamic_cast<ApplicationSip*>(body);
       assert(frag != 0);
 
-	  std::cerr << "!! ";
+      std::cerr << "!! ";
       frag->encode(CerrStream);
 
       assert(frag->message().header(h_RequestLine).uri().user() == "bob");
@@ -71,7 +71,7 @@ main()
       ApplicationSip* frag = dynamic_cast<ApplicationSip*>(body);
       assert(frag != 0);
 
-      cerr << "!! ";
+      std::cerr << "!! ";
       frag->encode(CerrStream);
 
       assert(frag->message().exists(h_From));
@@ -111,7 +111,7 @@ main()
       SipFrag* frag = dynamic_cast<SipFrag*>(body);
       assert(frag != 0);
 
-	  std::cerr << "!! ";
+      std::cerr << "!! ";
       frag->encode(CerrStream);
 
       assert(frag->message().exists(h_From));
