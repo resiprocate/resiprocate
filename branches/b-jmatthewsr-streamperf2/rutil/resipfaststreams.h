@@ -2,7 +2,7 @@
 
 //#define RESIP_USE_STL_STREAMS
 
-#include <iostream> //for std::endl
+#include <iostream> //for std::endl, std::cerr, etc.
 
 #include <cassert>
 #include "rutil/compat.hxx"
@@ -315,7 +315,8 @@ public:
 		:type_(type)
 	{}
 
-	~ResipStdBuf(void);
+	~ResipStdBuf(void)
+        {}
 
 	virtual size_t writebuf(const char *s, size_t count)
 	{

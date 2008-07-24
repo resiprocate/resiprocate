@@ -34,6 +34,7 @@ SRC = \
 	RWMutex.cxx \
 	Random.cxx \
 	RecursiveMutex.cxx \
+	resipfaststreams.cxx \
 	SHA1Stream.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
