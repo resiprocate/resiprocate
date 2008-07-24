@@ -33,9 +33,13 @@ leakCheck(bool verbose)
     }
 
 #ifndef WIN32
+#ifdef RESIP_USE_STL_STREAMS
     ofstream devnull("/dev/null");
     ostream& os(verbose?cout:devnull);
+#else
+    EncodeStream &os(verbose?CoutStream:resipFastNull);
     assert(os.good());
+#endif
 #endif
 
     for(int i = 0 ; i < 100 ; ++i)
@@ -74,7 +78,7 @@ leakCheck(bool verbose)
 }
 
 int
-main(int argc)
+main(int argc, char *argv[])
 {
    {
       const Data txt("some plain text");

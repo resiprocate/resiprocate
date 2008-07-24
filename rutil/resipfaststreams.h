@@ -1,6 +1,6 @@
 #pragma once
 
-//#define RESIP_USE_STL_STREAMS
+#define RESIP_USE_STL_STREAMS
 
 #include <iostream> //for std::endl, std::cerr, etc.
 
@@ -307,6 +307,7 @@ class ResipStdBuf : public ResipStreamBuf
 public:
 	typedef enum BufType
 	{
+                null,
 		stdCerr,
 		stdCout
 	} BufType;
@@ -383,6 +384,7 @@ extern ResipStdCOStream resipFastCout;
 #define CerrStream resip::resipFastCerr
 #define CoutStream resip::resipFastCout
 #endif
+extern ResipStdCOStream resipFastNull;
 
 } //namespace resip
 

@@ -17,79 +17,79 @@ main(int argc, char* argv[])
    Log::initialize(Log::Cout, l, argv[0]);
    
    {
-      cerr << "Network Interfaces: " << endl << Inserter(DnsUtil::getInterfaces()) << endl << endl;
+      CerrStream << "Network Interfaces: " << endl << Inserter(DnsUtil::getInterfaces()) << endl << endl;
    }
    
    {
       Data addr("1:1");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("1:1:192.168.2.233");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("1:1:::::");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("1:1::::::168.192.2.233");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("5f1b:df00:ce3e:e200:20:800:2b37:6426");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("5f1b:df00:ce3e:e200:20:800:2b37:6426:121.12.131.12");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("192.168.2.233");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(!DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("u@a.tv:1290");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(!DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("::1");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("::");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data addr("FF01::43");
-      cerr << "!! "<< addr << endl;
+      CerrStream << "!! "<< addr << endl;
       assert(DnsUtil::isIpV6Address(addr));
    }
 
    {
       Data c("apple:5060");
       Data addr(Data::Share, c.c_str(), 5);
-      cerr << "!! " << addr << endl;
+      CerrStream << "!! " << addr << endl;
       assert(!DnsUtil::isIpV6Address(addr));
    }
    
@@ -101,7 +101,7 @@ main(int argc, char* argv[])
       }
    }
 
-   cerr << "All OK" << endl;
+   CerrStream << "All OK" << endl;
 }
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
