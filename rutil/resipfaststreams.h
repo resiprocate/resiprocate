@@ -2,7 +2,7 @@
 
 //#define RESIP_USE_STL_STREAMS
 
-#include <ostream> //for std::endl
+#include <iostream> //for std::endl
 
 #include <cassert>
 #include "rutil/compat.hxx"
@@ -373,7 +373,8 @@ public:
 #else
 #define EncodeStream resip::ResipFastOStream
 #define DecodeStream resip::ResipFastIStream
-#define CerrStream resip::ResipStdCOStream(ResipStdBuf::stdCerr)
+extern ResipStdCOStream ResipFastCerr;
+#define CerrStream ResipFastCerr
 #endif
 
 } //namespace resip
