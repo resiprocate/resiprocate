@@ -355,15 +355,18 @@ private:
 	BufType type_;
 };
 
-class ResipStdCOStream : private ResipStdBuf, public ResipFastOStream
+class ResipStdCOStream: public ResipFastOStream
 {
 public:
 	ResipStdCOStream(ResipStdBuf::BufType type)
-		:ResipStdBuf(type),ResipFastOStream(this)
+		:buf_(type),ResipFastOStream(&buf_)
 	{}
 
 	~ResipStdCOStream(void)
 	{}
+
+private:
+	ResipStdBuf buf_;
 };
 
 #ifdef  RESIP_USE_STL_STREAMS
@@ -373,8 +376,8 @@ public:
 #else
 #define EncodeStream resip::ResipFastOStream
 #define DecodeStream resip::ResipFastIStream
-extern ResipStdCOStream ResipFastCerr;
-#define CerrStream ResipFastCerr
+extern ResipStdCOStream resipFastCerr;
+#define CerrStream resip::resipFastCerr
 #endif
 
 } //namespace resip
