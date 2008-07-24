@@ -26,7 +26,7 @@ class SipRawMessage : public SipMessage
 
       Data& raw() const {return mRawMessage;}
 
-      virtual std::ostream& encode(std::ostream& str) const
+      virtual EncodeStream& encode(EncodeStream& str) const
       {
          str << mRawMessage;
          return str;

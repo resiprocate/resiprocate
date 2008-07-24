@@ -1,5 +1,3 @@
 #include "resipfaststreams.h"
 
-using namespace resip;
-
-ResipStdCOStream ResipFastCerr(ResipStdBuf::stdCerr);
+resip::ResipStdCOStream resip::resipFastCerr(resip::ResipStdBuf::stdCerr);
