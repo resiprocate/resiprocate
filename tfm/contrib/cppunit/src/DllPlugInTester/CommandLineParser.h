@@ -66,7 +66,7 @@ public:
   bool useBriefTestProgress() const;
   bool noTestProgress() const;
   bool useTextOutputter() const;
-  bool useCoutStream() const;
+  bool useresipCout() const;
   bool waitBeforeExit() const;
   std::string getTestPath() const;
   int getPlugInCount() const;

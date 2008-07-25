@@ -38,10 +38,10 @@ main()
       assert(frag != 0);
 
       std::cerr << "!! ";
-      frag->encode(CerrStream);
+      frag->encode(resipCerr);
 
       assert(frag->message().header(h_RequestLine).uri().user() == "bob");
-      msg->encode(CerrStream);
+      msg->encode(resipCerr);
    }
 
    {
@@ -72,7 +72,7 @@ main()
       assert(frag != 0);
 
       std::cerr << "!! ";
-      frag->encode(CerrStream);
+      frag->encode(resipCerr);
 
       assert(frag->message().exists(h_From));
       assert(frag->message().header(h_From).uri().user() == "alice");
@@ -80,7 +80,7 @@ main()
       assert(frag->message().exists(h_CSeq));
       assert(frag->message().header(h_CSeq).sequence() == 314159);
       
-      msg->encode(CerrStream);
+      msg->encode(resipCerr);
    }
 
    // backward compatibiltiy with SipFrag
@@ -112,7 +112,7 @@ main()
       assert(frag != 0);
 
       std::cerr << "!! ";
-      frag->encode(CerrStream);
+      frag->encode(resipCerr);
 
       assert(frag->message().exists(h_From));
       assert(frag->message().header(h_From).uri().user() == "alice");
@@ -120,7 +120,7 @@ main()
       assert(frag->message().exists(h_CSeq));
       assert(frag->message().header(h_CSeq).sequence() == 314159);
       
-      msg->encode(CerrStream);
+      msg->encode(resipCerr);
    }
 
    cerr << "\nTEST OK" << endl;

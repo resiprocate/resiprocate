@@ -661,7 +661,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\resipfaststreams.h"
+				RelativePath=".\resipfaststreams.hxx"
 				>
 			</File>
 			<File

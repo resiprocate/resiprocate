@@ -2,7 +2,7 @@
 #define RESIP_AMIRESPONSIBLE_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
 #include <iosfwd>
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 namespace repro
 {

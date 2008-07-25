@@ -1,7 +1,7 @@
 #if !defined(RESIP_UINT32PARAMETER_HXX)
 #define RESIP_UINT32PARAMETER_HXX 
 
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 #include "resip/stack/ParameterTypeEnums.hxx"
 #include "resip/stack/Parameter.hxx"

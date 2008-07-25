@@ -61,7 +61,7 @@ main()
       assert(f);
       f->getBodyData();
 
-      mpc.encode(CerrStream);
+      mpc.encode(resipCerr);
    }
 
    {
