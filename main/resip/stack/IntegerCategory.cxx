@@ -85,8 +85,8 @@ IntegerCategory::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
-std::ostream& 
-IntegerCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+IntegerCategory::encodeParsed(EncodeStream& str) const
 {
   str << mValue;
 

@@ -119,7 +119,7 @@ OutboundTargetHandler::process(RequestContext & rc)
 }
 
 void 
-OutboundTargetHandler::dump(std::ostream &os) const
+OutboundTargetHandler::dump(EncodeStream &os) const
 {
    os << "OutboundTargetHandler baboon";
 }

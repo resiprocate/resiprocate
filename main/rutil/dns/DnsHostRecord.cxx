@@ -44,8 +44,8 @@ bool DnsHostRecord::isSameValue(const Data& value) const
    return DnsUtil::inet_ntop(mAddr) == value;
 }
 
-std::ostream&
-DnsHostRecord::dump(std::ostream& strm) const
+EncodeStream&
+DnsHostRecord::dump(EncodeStream& strm) const
 {
    strm << mName << "(A)--> " << DnsUtil::inet_ntop(mAddr);
    return strm;

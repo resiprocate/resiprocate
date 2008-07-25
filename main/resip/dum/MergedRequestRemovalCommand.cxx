@@ -30,14 +30,14 @@ Message* MergedRequestRemovalCommand::clone() const
    return new MergedRequestRemovalCommand(*this);
 }
 
-ostream&
-MergedRequestRemovalCommand::encode(ostream& strm) const
+EncodeStream&
+MergedRequestRemovalCommand::encode(EncodeStream& strm) const
 {
    return strm;
 }
 
-ostream&
-MergedRequestRemovalCommand::encodeBrief(ostream& strm) const
+EncodeStream&
+MergedRequestRemovalCommand::encodeBrief(EncodeStream& strm) const
 {
    return strm;
 }

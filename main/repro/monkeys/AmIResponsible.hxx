@@ -1,8 +1,8 @@
 #if !defined(RESIP_AMIRESPONSIBLE_REQUEST_PROCESSOR_HXX)
 #define RESIP_AMIRESPONSIBLE_REQUEST_PROCESSOR_HXX 
 #include "repro/Processor.hxx"
-
 #include <iosfwd>
+#include "rutil/resipfaststreams.hxx"
 
 namespace repro
 {
@@ -14,7 +14,7 @@ namespace repro
       virtual ~AmIResponsible();
 
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
+      virtual void dump(EncodeStream &os) const;
   };
 }
 #endif

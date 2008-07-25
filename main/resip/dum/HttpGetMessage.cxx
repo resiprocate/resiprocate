@@ -15,14 +15,14 @@ HttpGetMessage::HttpGetMessage(const Data& tid,
 {
 }
 
-std::ostream&
-HttpGetMessage::encodeBrief(std::ostream& str) const
+EncodeStream&
+HttpGetMessage::encodeBrief(EncodeStream& str) const
 { 
    return str << "HttpGetMessage: " << getTransactionId() << " " << mType;
 }
 
-std::ostream& 
-HttpGetMessage::encode(std::ostream& strm) const
+EncodeStream& 
+HttpGetMessage::encode(EncodeStream& strm) const
 {
    return strm << brief() << "body: " << mBody;   
 }

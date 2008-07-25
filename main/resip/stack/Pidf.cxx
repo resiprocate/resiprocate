@@ -114,8 +114,8 @@ Pidf::getStaticType()
    return type;
 }
 
-std::ostream& 
-Pidf::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Pidf::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "Pidf::encodeParsed " << mText);
    //str << mText;
@@ -354,8 +354,8 @@ Pidf::merge(const Pidf& other)
    }
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const Pidf::Tuple& tuple)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const Pidf::Tuple& tuple)
 {
    strm << "Tuple [" 
         << " status=" << tuple.status

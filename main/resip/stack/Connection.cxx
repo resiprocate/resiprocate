@@ -150,8 +150,8 @@ Connection::getConnectionManager() const
    return transport->getConnectionManager();
 }
             
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::Connection& c)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::Connection& c)
 {
    strm << "CONN: " << &c << " " << int(c.getSocket()) << " " << c.mWho;
    return strm;

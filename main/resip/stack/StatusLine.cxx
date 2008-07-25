@@ -120,8 +120,8 @@ StatusLine::parse(ParseBuffer& pb)
    pb.data(mReason, start);
 }
 
-ostream&
-StatusLine::encodeParsed(ostream& str) const
+EncodeStream&
+StatusLine::encodeParsed(EncodeStream& str) const
 {
    str << mSipVersion << Symbols::SPACE 
        << mResponseCode << Symbols::SPACE

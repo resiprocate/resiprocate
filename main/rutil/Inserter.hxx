@@ -12,6 +12,7 @@
 
 #include "HashMap.hxx"
 #include "rutil/compat.hxx"
+#include "rutil/resipfaststreams.hxx"
 
 namespace resip
 {
@@ -19,8 +20,8 @@ namespace resip
 /// Completely generic insert function
 #ifdef REASONABLE_TEMPLATES
 template <class T>
-std::ostream&
-insert(std::ostream& s, const T& t)
+EncodeStream&
+insert(EncodeStream& s, const T& t)
 {
    // use native <<
    s << t;
@@ -30,8 +31,8 @@ insert(std::ostream& s, const T& t)
 
 // specific collections, sigh
 template <class T>
-std::ostream&
-insert(std::ostream& s, const std::vector <T>& c)
+EncodeStream&
+insert(EncodeStream& s, const std::vector <T>& c)
 {
    s << "[";
    for (typename std::vector <T>::const_iterator i = c.begin();
@@ -49,8 +50,8 @@ insert(std::ostream& s, const std::vector <T>& c)
 }
 
 template <class T>
-std::ostream&
-insert(std::ostream& s, const std::deque<T>& c)
+EncodeStream&
+insert(EncodeStream& s, const std::deque<T>& c)
 {
    s << "[";
    for (typename std::deque <T>::const_iterator i = c.begin();
@@ -68,8 +69,8 @@ insert(std::ostream& s, const std::deque<T>& c)
 }
 
 template <class T>
-std::ostream&
-insert(std::ostream& s, const std::list <T>& c)
+EncodeStream&
+insert(EncodeStream& s, const std::list <T>& c)
 {
    s << "[";
    for (typename std::list <T>::const_iterator i = c.begin();
@@ -88,8 +89,8 @@ insert(std::ostream& s, const std::list <T>& c)
 
 #if !defined(__INTEL_COMPILER)
 template <class K, class C>
-std::ostream&
-insert(std::ostream& s, const std::set <K, C>& c)
+EncodeStream&
+insert(EncodeStream& s, const std::set <K, C>& c)
 {
    s << "[";
    for (typename std::set <K, C>::const_iterator i = c.begin();
@@ -108,8 +109,8 @@ insert(std::ostream& s, const std::set <K, C>& c)
 
 #if !defined(__INTEL_COMPILER)
 template <class K, class C>
-std::ostream&
-insert(std::ostream& s, const std::multiset <K, C>& c)
+EncodeStream&
+insert(EncodeStream& s, const std::multiset <K, C>& c)
 {
    s << "[";
    for (typename std::multiset <K, C>::const_iterator i = c.begin();
@@ -129,8 +130,8 @@ insert(std::ostream& s, const std::multiset <K, C>& c)
 // HashMap
 #if defined(HASH_MAP_NAMESPACE)
 template <class K, class V, class H>
-std::ostream&
-insert(std::ostream& s, const HashMap<K,V,H>& c)
+EncodeStream&
+insert(EncodeStream& s, const HashMap<K,V,H>& c)
 {
    s << "[";
    for (typename HashMap<K,V,H>::const_iterator i = c.begin();
@@ -151,8 +152,8 @@ insert(std::ostream& s, const HashMap<K,V,H>& c)
 
 #if defined(HASH_MAP_NAMESPACE)
 template <class V, class H>
-std::ostream&
-insert(std::ostream& s, const HashSet<V,H>& c)
+EncodeStream&
+insert(EncodeStream& s, const HashSet<V,H>& c)
 {
    s << "[";
    for (typename HashSet<V,H>::const_iterator i = c.begin();
@@ -171,8 +172,8 @@ insert(std::ostream& s, const HashSet<V,H>& c)
 
 // map
 template <class K, class V, class H>
-std::ostream&
-insert(std::ostream& s, const std::map <K, V, H>& c)
+EncodeStream&
+insert(EncodeStream& s, const std::map <K, V, H>& c)
 {
    s << "[";
    for (typename std::map<K,V, H>::const_iterator i = c.begin();
@@ -193,8 +194,8 @@ insert(std::ostream& s, const std::map <K, V, H>& c)
 
 // special case for basic_string container
 template <class T>
-std::ostream&
-insert(std::ostream& s, const std::basic_string<T>& str)
+EncodeStream&
+insert(EncodeStream& s, const std::basic_string<T>& str)
 {
    // use native <<
    s << str;
@@ -203,8 +204,8 @@ insert(std::ostream& s, const std::basic_string<T>& str)
 
 // special case for pair
 template <class T, class U>
-std::ostream&
-insert(std::ostream& s, const std::pair<T, U>& p)
+EncodeStream&
+insert(EncodeStream& s, const std::pair<T, U>& p)
 {
    // use native <<
    s << "<" << p.first << ", " << p.second << ">";
@@ -240,8 +241,8 @@ class InserterClass
 
 /// Function to allow an Inserter to be used directly with a stream
 template <class T>
-std::ostream&
-operator<<(std::ostream& s, const InserterClass<T>& inserter)
+EncodeStream&
+operator<<(EncodeStream& s, const InserterClass<T>& inserter)
 {
 #if defined(WIN32) && defined(_MSC_VER) && (_MSC_VER < 1310)
 	assert(0); // CJ - really need to fix this

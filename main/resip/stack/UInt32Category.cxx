@@ -85,8 +85,8 @@ UInt32Category::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
-std::ostream& 
-UInt32Category::encodeParsed(std::ostream& str) const
+EncodeStream& 
+UInt32Category::encodeParsed(EncodeStream& str) const
 {
   str << mValue;
 

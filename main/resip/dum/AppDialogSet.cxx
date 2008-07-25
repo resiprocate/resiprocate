@@ -99,8 +99,8 @@ AppDialogSet::getClassName()
    return "AppDialogSet";
 }
 
-std::ostream& 
-AppDialogSet::dump(std::ostream& strm) const
+EncodeStream& 
+AppDialogSet::dump(EncodeStream& strm) const
 {
    strm << "AppDialogSet " << mId;
    return strm;

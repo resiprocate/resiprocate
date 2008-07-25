@@ -77,8 +77,8 @@ ExpiresCategory::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
-std::ostream& 
-ExpiresCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+ExpiresCategory::encodeParsed(EncodeStream& str) const
 {
    str << mValue;
    encodeParameters(str);

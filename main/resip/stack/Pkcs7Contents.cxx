@@ -127,8 +127,8 @@ Pkcs7SignedContents::getStaticType()
 }
 
 
-std::ostream& 
-Pkcs7Contents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Pkcs7Contents::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "Pkcs7Contents::encodeParsed " << mText);
    str << mText;
