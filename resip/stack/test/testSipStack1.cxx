@@ -91,7 +91,7 @@ main(int argc, char* argv[])
          if ( msg )
          {
             DebugLog ( << "got message: " << *msg);
-            msg->encode(CoutStream);	  
+            msg->encode(resipCout);	  
          }
       }
    }

@@ -4,7 +4,7 @@
 #include "resip/stack/TransactionMessage.hxx"
 
 #include "rutil/Data.hxx"
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 namespace resip
 {

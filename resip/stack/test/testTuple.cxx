@@ -1,5 +1,5 @@
 #include <iostream>
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/stack/Connection.hxx"
 #include "resip/stack/Tuple.hxx"

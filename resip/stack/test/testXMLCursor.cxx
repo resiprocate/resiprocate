@@ -152,7 +152,7 @@ main()
       
       assert(xmlc.getTag() == "foo");
       assert(xmlc.getValue().empty());
-      CerrStream << Inserter(xmlc.getAttributes()) << endl;
+      resipCerr << Inserter(xmlc.getAttributes()) << endl;
       assert(xmlc.getAttributes().size() == 2);
       assert(xmlc.getAttributes().find("bar") != xmlc.getAttributes().end());
       assert(xmlc.atRoot());

@@ -4,7 +4,7 @@
 #include <map>
 #include <list>
 
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Data.hxx"
 
@@ -60,7 +60,7 @@ int
 main(int argc, char** argv)
 {
    {
-      CerrStream << Inserter(Foo(0, "null")) << endl;
+      resipCerr << Inserter(Foo(0, "null")) << endl;
    }
 
    {
@@ -70,7 +70,7 @@ main(int argc, char** argv)
       container.push_back(Foo(2, "bar"));
       container.push_back(Foo(3, "baz"));
 
-      CerrStream << Inserter(container) << endl;
+      resipCerr << Inserter(container) << endl;
    }
 
    {
@@ -80,7 +80,7 @@ main(int argc, char** argv)
       container.insert(Foo(2, "bar"));
       container.insert(Foo(3, "baz"));
 
-      CerrStream << Inserter(container) << endl;
+      resipCerr << Inserter(container) << endl;
    }
 
    {
@@ -89,7 +89,7 @@ main(int argc, char** argv)
       container[2] = Foo(2, "bar");
       container[3] = Foo(3, "baz");
 
-      CerrStream << Inserter(container) << endl;
+      resipCerr << Inserter(container) << endl;
    }
 
    {
@@ -98,7 +98,7 @@ main(int argc, char** argv)
       container[2] = Foo(2, "bar");
       container[3] = Foo(3, "baz");
 
-      CerrStream << Inserter(container) << endl;      
+      resipCerr << Inserter(container) << endl;      
    }
 
    {
@@ -107,10 +107,10 @@ main(int argc, char** argv)
       container.insert(Foo(2, "bar"));
       container.insert(Foo(3, "baz"));
 
-      CerrStream << Inserter(container) << endl;      
+      resipCerr << Inserter(container) << endl;      
    }
 
-   CerrStream << "All Ok" << endl;
+   resipCerr << "All Ok" << endl;
 }
 
 /* ====================================================================

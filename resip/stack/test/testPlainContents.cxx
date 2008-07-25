@@ -37,7 +37,7 @@ leakCheck(bool verbose)
     ofstream devnull("/dev/null");
     ostream& os(verbose?cout:devnull);
 #else
-    EncodeStream &os(verbose?CoutStream:resipFastNull);
+    EncodeStream &os(verbose?resipCout:resipFastNull);
     assert(os.good());
 #endif
 #endif

@@ -10,7 +10,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
 
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \

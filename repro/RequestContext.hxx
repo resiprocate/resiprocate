@@ -9,7 +9,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/TimerCMessage.hxx"
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 namespace resip
 {
