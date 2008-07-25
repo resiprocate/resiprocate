@@ -53,8 +53,8 @@ Processor::getAddress() const
    return mAddress;
 }
 
-std::ostream &
-repro::operator << (std::ostream &os, const repro::Processor &rp)
+EncodeStream &
+repro::operator << (EncodeStream &os, const repro::Processor &rp)
 {
   rp.dump(os);
   return os;

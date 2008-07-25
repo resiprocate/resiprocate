@@ -238,7 +238,7 @@ public:
       mClientRegistration.removeMyBindings(mStopRegisteringWhenDone);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientRegistrationRemoveMyBindings";
    }
@@ -327,7 +327,7 @@ public:
       mClientRegistration.end();
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientRegistrationEndCommand";
    }
@@ -341,8 +341,8 @@ ClientRegistration::endCommand()
    mDum.post(new ClientRegistrationEndCommand(*this));
 }
 
-std::ostream& 
-ClientRegistration::dump(std::ostream& strm) const
+EncodeStream& 
+ClientRegistration::dump(EncodeStream& strm) const
 {
    strm << "ClientRegistration " << mLastRequest->header(h_From).uri();
    return strm;

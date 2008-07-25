@@ -1110,8 +1110,8 @@ void Dialog::possiblyDie()
    }
 }
 
-ostream&
-resip::operator<<(ostream& strm, const Dialog& dialog)
+EncodeStream&
+resip::operator<<(EncodeStream& strm, const Dialog& dialog)
 {
    strm
       << "mClientSubscriptions("

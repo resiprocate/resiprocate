@@ -118,8 +118,8 @@ ServerOutOfDialogReq::reject(int statusCode)
    return mResponse;
 }
 
-std::ostream& 
-ServerOutOfDialogReq::dump(std::ostream& strm) const
+EncodeStream& 
+ServerOutOfDialogReq::dump(EncodeStream& strm) const
 {
    if(mRequest.exists(h_CSeq))
    {

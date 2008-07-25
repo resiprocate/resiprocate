@@ -21,8 +21,8 @@ class ConnectionTerminated : public TransactionMessage
       virtual const Data& getTransactionId() const { assert(0); return Data::Empty; }
       virtual bool isClientTransaction() const { assert(0); return false; }
       virtual Message* clone() const { return new ConnectionTerminated(mFlow); }
-      virtual std::ostream& encode(std::ostream& strm) const { return encodeBrief(strm); }
-      virtual std::ostream& encodeBrief(std::ostream& str) const 
+      virtual EncodeStream& encode(EncodeStream& strm) const { return encodeBrief(strm); }
+      virtual EncodeStream& encodeBrief(EncodeStream& str) const 
       {
          return str << "ConnectionTerminated " << mFlow;
       }

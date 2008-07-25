@@ -25,7 +25,7 @@ class PlainContents : public Contents
 
       static const Mime& getStaticType() ;
 
-      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual void parse(ParseBuffer& pb);
 
       const Data& text() const {checkParsed(); return mText;}

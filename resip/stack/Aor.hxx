@@ -36,7 +36,7 @@ class Aor
       int& port();
       int port() const;
       
-      std::ostream& operator<<(std::ostream& str) const;
+      EncodeStream& operator<<(EncodeStream& str) const;
 
    private:
       mutable Data mValue;

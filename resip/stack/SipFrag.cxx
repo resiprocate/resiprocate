@@ -92,8 +92,8 @@ SipFrag::message() const
    return *mMessage;
 }
 
-std::ostream& 
-SipFrag::encodeParsed(std::ostream& str) const
+EncodeStream& 
+SipFrag::encodeParsed(EncodeStream& str) const
 {
    mMessage->encodeSipFrag(str);
 
@@ -190,7 +190,7 @@ SipFrag::parse(ParseBuffer& pb)
    msgHeaderScanner.prepareForFrag(mMessage, hasStartLine(buffer, size));
    enum { sentinelLength = 4 };  // Two carriage return / line feed pairs.
    //char saveTermCharArray[sentinelLength];
-   static char* sentinel="\r\n\r\n";
+   static const char* sentinel="\r\n\r\n";
    char *termCharArray = buffer + size;
    memcpy(scratchpad,termCharArray,4);
    

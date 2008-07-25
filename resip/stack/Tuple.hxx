@@ -174,11 +174,14 @@ private:
       TransportType mTransportType;
       Data mTargetDomain; 
 
-      friend std::ostream& operator<<(std::ostream& strm, const Tuple& tuple);
+      friend EncodeStream& operator<<(EncodeStream& strm, const Tuple& tuple);
       friend class DnsResult;
 };
 
 }
+
+EncodeStream&
+resip::operator<<(EncodeStream& ostrm, const Tuple& tuple);
 
 HashValue(resip::Tuple);
 

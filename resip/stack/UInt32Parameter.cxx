@@ -52,8 +52,8 @@ UInt32Parameter::clone() const
    return new UInt32Parameter(*this);
 }
 
-ostream&
-UInt32Parameter::encode(ostream& stream) const
+EncodeStream&
+UInt32Parameter::encode(EncodeStream& stream) const
 {
    return stream << getName() << Symbols::EQUALS << mValue;
 }

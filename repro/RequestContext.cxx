@@ -771,8 +771,8 @@ RequestContext::fromTrustedNode() const
    return mFromTrustedNode;
 }
 
-std::ostream&
-repro::operator<<(std::ostream& strm, const RequestContext& rc)
+EncodeStream&
+repro::operator<<(EncodeStream& strm, const RequestContext& rc)
 {
    strm << "RequestContext: "
         << " identity=" << rc.mDigestIdentity

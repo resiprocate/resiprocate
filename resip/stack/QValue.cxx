@@ -18,8 +18,8 @@ QValue::getData() const
    return mDataValue;
 }
 
-ostream&
-QValue::encode(ostream& stream) const
+EncodeStream&
+QValue::encode(EncodeStream& stream) const
 {
 	int i = mValue;
 	

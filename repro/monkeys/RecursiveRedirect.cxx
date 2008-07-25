@@ -47,7 +47,7 @@ RecursiveRedirect::process(RequestContext& context)
 }
 
 void
-RecursiveRedirect::dump(std::ostream &os) const
+RecursiveRedirect::dump(EncodeStream &os) const
 {
    os << "Recursive Redirect Lemur" << std::endl;
 }

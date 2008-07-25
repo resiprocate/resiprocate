@@ -95,8 +95,8 @@ AttributeHelper::getValues(const Data& key) const
    return mAttributes.find(key)->second;
 }
 
-ostream&
-AttributeHelper::encode(ostream& s) const
+EncodeStream&
+AttributeHelper::encode(EncodeStream& s) const
 {
    for (std::list<std::pair<Data, Data> >::const_iterator i = mAttributeList.begin();
         i != mAttributeList.end(); ++i)
@@ -215,8 +215,8 @@ SdpContents::parse(ParseBuffer& pb)
    mSession.parse(pb);
 }
 
-ostream&
-SdpContents::encodeParsed(ostream& s) const
+EncodeStream&
+SdpContents::encodeParsed(EncodeStream& s) const
 {
    mSession.encode(s);
    return s;
@@ -275,8 +275,8 @@ SdpContents::Session::Origin::Origin(const Data& user,
      mAddress(address)
 {}
 
-ostream&
-SdpContents::Session::Origin::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Origin::encode(EncodeStream& s) const
 {
    s << "o="
      << mUser << Symbols::SPACE[0]
@@ -360,8 +360,8 @@ SdpContents::Session::Email::operator=(const Email& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Email::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Email::encode(EncodeStream& s) const
 {
    s << "e=" << mAddress;
    if (!mFreeText.empty())
@@ -452,8 +452,8 @@ SdpContents::Session::Phone::operator=(const Phone& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Phone::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Phone::encode(EncodeStream& s) const
 {
   s << "p=" << mNumber;
    if (!mFreeText.empty())
@@ -507,8 +507,8 @@ SdpContents::Session::Connection::operator=(const Connection& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Connection::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Connection::encode(EncodeStream& s) const
 {
    s << "c=IN "
      << NetworkType[mAddrType] << Symbols::SPACE[0] << mAddress;
@@ -593,8 +593,8 @@ SdpContents::Session::Bandwidth::operator=(const Bandwidth& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Bandwidth::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Bandwidth::encode(EncodeStream& s) const
 {
    s << "b="
      << mModifier
@@ -648,8 +648,8 @@ SdpContents::Session::Time::operator=(const Time& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Time::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Time::encode(EncodeStream& s) const
 {
    s << "t=" << mStart << Symbols::SPACE[0]
      << mStop
@@ -696,8 +696,8 @@ SdpContents::Session::Time::Repeat::Repeat(unsigned long interval,
      mOffsets(offsets)
 {}
 
-ostream&
-SdpContents::Session::Time::Repeat::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Time::Repeat::encode(EncodeStream& s) const
 {
    s << "r="
      << mInterval << Symbols::SPACE[0]
@@ -800,8 +800,8 @@ SdpContents::Session::Timezones::operator=(const Timezones& rhs)
    return *this;
 }
 
-ostream&
-SdpContents::Session::Timezones::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Timezones::encode(EncodeStream& s) const
 {
    if (!mAdjustments.empty())
    {
@@ -882,8 +882,8 @@ SdpContents::Session::Encryption::operator=(const Encryption& rhs)
 
 const char* KeyTypes[] = {"????", "prompt", "clear", "base64", "uri"};
 
-ostream&
-SdpContents::Session::Encryption::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Encryption::encode(EncodeStream& s) const
 {
    s << "k="
      << KeyTypes[mMethod];
@@ -1062,8 +1062,8 @@ SdpContents::Session::parse(ParseBuffer& pb)
    }
 }
 
-ostream&
-SdpContents::Session::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::encode(EncodeStream& s) const
 {
    s << "v=" << mVersion << Symbols::CRLF;
    mOrigin.encode(s);
@@ -1394,8 +1394,8 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
    mAttributeHelper.parse(pb);
 }
 
-ostream&
-SdpContents::Session::Medium::encode(ostream& s) const
+EncodeStream&
+SdpContents::Session::Medium::encode(EncodeStream& s) const
 {
    s << "m="
      << mName << Symbols::SPACE[0]
@@ -1857,8 +1857,8 @@ resip::operator==(const Codec& lhs, const Codec& rhs)
             (lhs.mEncodingParameters == defaultEncodingParameters && rhs.mEncodingParameters.empty())));
 }
 
-ostream&
-resip::operator<<(ostream& str, const Codec& codec)
+EncodeStream&
+resip::operator<<(EncodeStream& str, const Codec& codec)
 {
    str << codec.mName;
    str << Symbols::SLASH[0];

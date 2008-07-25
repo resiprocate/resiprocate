@@ -97,7 +97,7 @@ class SecurityAttributes
          mEncryptionPerformed = performed;
       }
 
-   friend std::ostream& operator<<(std::ostream& strm, const SecurityAttributes& sa);
+   friend EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
 
    private:
       bool mIsEncrypted;
@@ -109,7 +109,7 @@ class SecurityAttributes
       bool mEncryptionPerformed;
 };
 
-   std::ostream& operator<<(std::ostream& strm, const SecurityAttributes& sa);
+   EncodeStream& operator<<(EncodeStream& strm, const SecurityAttributes& sa);
 }
 
 #endif

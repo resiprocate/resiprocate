@@ -19,7 +19,7 @@ class ExistsOrDataParameter : public DataParameter
 
       ExistsOrDataParameter(ParameterTypes::Type, ParseBuffer& pb, const char* terminators);
 
-      virtual std::ostream& encode(std::ostream& stream) const;
+      virtual EncodeStream& encode(EncodeStream& stream) const;
 
       static Parameter* decode(ParameterTypes::Type type, ParseBuffer& pb, const char* terminators);
 

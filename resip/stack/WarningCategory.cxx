@@ -114,8 +114,8 @@ WarningCategory::text() const
    return mText;
 }
 
-std::ostream& 
-WarningCategory::encodeParsed(std::ostream& str) const
+EncodeStream& 
+WarningCategory::encodeParsed(EncodeStream& str) const
 {
    str << mCode << Symbols::SPACE[0];
    str << mHostname << Symbols::SPACE[0];

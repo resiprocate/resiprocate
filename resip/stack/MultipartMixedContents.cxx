@@ -119,8 +119,8 @@ MultipartMixedContents::getStaticType()
    return type;
 }
 
-std::ostream& 
-MultipartMixedContents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+MultipartMixedContents::encodeParsed(EncodeStream& str) const
 {
    const Data& boundaryToken = mType.param(p_boundary);
    Data boundary(boundaryToken.size() + 2, Data::Preallocate);
