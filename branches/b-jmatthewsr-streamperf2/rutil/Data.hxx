@@ -729,7 +729,9 @@ class Data
       static const bool isCharHex[256];
 
 	  friend std::ostream& operator<<(std::ostream& strm, const Data& d);
+#ifndef RESIP_USE_STL_STREAMS
 	  friend EncodeStream& operator<<(EncodeStream& strm, const Data& d);
+#endif
       friend class ParseBuffer;
       friend class DataBuffer;
       friend class DataStream;
