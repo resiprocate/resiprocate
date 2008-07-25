@@ -64,7 +64,7 @@ public:
       mClientPublication.end();
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientPublicationEndCommand";
    }
@@ -249,7 +249,7 @@ public:
       mClientPublication.refresh(mExpiration);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientPublicationRefreshCommand";
    }
@@ -303,7 +303,7 @@ public:
       mClientPublication.update(mBody.get());
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientPublicationUpdateCommand";
    }
@@ -334,8 +334,8 @@ ClientPublication::send(SharedPtr<SipMessage> request)
    }
 }
 
-std::ostream& 
-ClientPublication::dump(std::ostream& strm) const
+EncodeStream& 
+ClientPublication::dump(EncodeStream& strm) const
 {
    strm << "ClientPublication " << mId << " " << mPublish->header(h_From).uri();
    return strm;

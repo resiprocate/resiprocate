@@ -43,7 +43,7 @@ runTests( const CommandLineParser &parser )
 
     // Set up outputters
     CPPUNIT_NS::OStream *stream = &CPPUNIT_NS::stdCErr();
-    if ( parser.useCoutStream() )
+    if ( parser.useresipCout() )
       stream = &CPPUNIT_NS::stdCOut();
 
     CPPUNIT_NS::OStream *xmlStream = stream;

@@ -409,8 +409,8 @@ void ServerSubscription::onReadyToSend(SipMessage& msg)
    handler->onReadyToSend(getHandle(), msg);
 }
 
-std::ostream& 
-ServerSubscription::dump(std::ostream& strm) const
+EncodeStream& 
+ServerSubscription::dump(EncodeStream& strm) const
 {
    strm << "ServerSubscription " << mSubscriber;
    return strm;

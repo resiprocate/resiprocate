@@ -64,8 +64,8 @@ Rlmi::getStaticType()
    return type;
 }
 
-std::ostream& 
-Rlmi::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Rlmi::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "Rlmi::encodeParsed " << mText);
    str << mText;

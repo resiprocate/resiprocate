@@ -114,8 +114,8 @@ DialogId::getRemoteTag() const
 }
 
 
-std::ostream&
-resip::operator<<(std::ostream& os, const DialogId& id)
+EncodeStream&
+resip::operator<<(EncodeStream& os, const DialogId& id)
 {
     return os << id.mDialogSetId << "-" << id.mRemoteTag;
 }

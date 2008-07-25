@@ -68,8 +68,8 @@ DataParameter::clone() const
    return new DataParameter(*this);
 }
 
-ostream& 
-DataParameter::encode(ostream& stream) const
+EncodeStream& 
+DataParameter::encode(EncodeStream& stream) const
 {
    if (mQuoted)
    {

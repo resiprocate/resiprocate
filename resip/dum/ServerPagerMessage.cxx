@@ -53,7 +53,7 @@ public:
       mServerPagerMessage.end();
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ServerPagerMessageEndCommand";
    }
@@ -119,7 +119,7 @@ public:
       mServerPagerMessage.accept(mStatusCode);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ServerPagerMessageAcceptCommand";
    }
@@ -156,7 +156,7 @@ public:
       mServerPagerMessage.reject(mStatusCode);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ServerPagerMessageRejectCommand";
    }
@@ -171,8 +171,8 @@ ServerPagerMessage::rejectCommand(int statusCode)
    mDum.post(new ServerPagerMessageRejectCommand(*this, statusCode));
 }
 
-std::ostream& 
-ServerPagerMessage::dump(std::ostream& strm) const
+EncodeStream& 
+ServerPagerMessage::dump(EncodeStream& strm) const
 {
    strm << "ServerPagerMessage ";
    mRequest.encodeBrief(strm);
