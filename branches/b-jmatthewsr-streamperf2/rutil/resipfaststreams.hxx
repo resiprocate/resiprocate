@@ -1,12 +1,11 @@
+#if !defined(RESIP_RESIPFASTSTREAMS_HXX)
+#define RESIP_RESIPFASTSTREAMS_HXX
 /*! \file resipfaststreams.hxx
     \brief Replaces STL streams for general encoding purposes.
 
     #define RESIP_USE_STL_STREAMS will use the STL for stream encoding (std::ostream).  Undefining RESIP_USE_STL_STREAMS will
 	cause resip to use the alternative stream handling defined in this file for encoding objects.
 */
-
-#pragma once
-
 #define RESIP_USE_STL_STREAMS
 
 #include <iostream> //for std::endl, std::cerr, etc.
@@ -473,6 +472,8 @@ extern ResipStdCOStream resipFastCout;
 extern ResipStdCOStream resipFastNull;
 
 } //namespace resip
+
+#endif //RESIP_RESIPFASTSTREAMS_HXX
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0
