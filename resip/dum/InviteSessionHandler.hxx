@@ -64,13 +64,6 @@ class InviteSessionHandler
          Referred
       };
 
-//       typedef enum
-//       {
-//          PeerEnded,      // received a BYE or CANCEL from peer
-//          Ended,          // ended by the application
-//          GeneralFailure, // ended due to a failure
-//          Cancelled       // ended by the application via Cancel
-//       } TerminatedReason;
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* related=0)=0;
 
       /// called when a fork that was created through a 1xx never receives a 2xx
