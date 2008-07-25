@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 #include "resip/stack/HeaderFieldValue.hxx"
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 namespace resip
 {

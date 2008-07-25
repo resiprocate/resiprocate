@@ -91,7 +91,7 @@ class TestDnsHandler : public DnsHandler
          {
             Tuple tuple = result->next();
             results.push_back(tuple);
-            CoutStream << gf << result->target() << " -> " << tuple << ub <<  std::endl;
+            resipCout << gf << result->target() << " -> " << tuple << ub <<  std::endl;
             if(mResultsToGreylist.count(tuple)!=0)
             {
                result->greylistLast(Timer::getTimeMs()+15000);
@@ -136,7 +136,7 @@ class TestDnsHandler : public DnsHandler
          for(e=mExpectedResults.begin();e!=mExpectedResults.end();++e)
          {
             int p=0;
-            CoutStream << "Looking for " << *e << endl;
+            resipCout << "Looking for " << *e << endl;
             bool found=false;
             for(o=results.begin();(o!=results.end() && !found);++o)
             {
@@ -144,12 +144,12 @@ class TestDnsHandler : public DnsHandler
                if(*e==*o)
                {
                   found=true;
-                  CoutStream << *o << " matched!" << endl;
+                  resipCout << *o << " matched!" << endl;
                   mPermutation.push_back(p);
                }
                else
                {
-                  CoutStream << *o << " didn't match." << endl;
+                  resipCout << *o << " didn't match." << endl;
                }
             }
             
@@ -795,7 +795,7 @@ main(int argc, const char** argv)
             cerr << rf << "DNS results for " << (*it).uri << ub << endl;
             for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
             {
-               CerrStream << rf << (*i) << ub << endl;
+               resipCerr << rf << (*i) << ub << endl;
             }
             
             --count;
@@ -882,7 +882,7 @@ main(int argc, const char** argv)
                   assert(ipAddrToNum[it->handler->results[i]] >=0);
                   assert(ipAddrToNum[it->handler->results[i]] <numSRV);
                   ++table[i][ipAddrToNum[it->handler->results[i]]];
-                  CerrStream << rf << it->handler->results[i] << ub << endl;
+                  resipCerr << rf << it->handler->results[i] << ub << endl;
                }
                               
                --count;
@@ -1003,7 +1003,7 @@ main(int argc, const char** argv)
                cerr << rf << "DNS results for " << (*it).uri << ub << endl;
                for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
                {
-                  CerrStream << rf << (*i) << ub << endl;
+                  resipCerr << rf << (*i) << ub << endl;
                }
                
                --count;
@@ -1072,7 +1072,7 @@ main(int argc, const char** argv)
       assert(listener->gotGreylistCallback());
       listener->resetAll();
       
-      CoutStream << toGreylist << " was greylisted." << std::endl;
+      resipCout << toGreylist << " was greylisted." << std::endl;
       
       for(int i=0;i<20;++i)
       {
@@ -1107,7 +1107,7 @@ main(int argc, const char** argv)
       
       assert(listener->gotOkCallback());
       listener->resetAll();
-      CoutStream << "greylist on " << toGreylist << " has expired." << std::endl;
+      resipCout << "greylist on " << toGreylist << " has expired." << std::endl;
       
       for(int i=0;i<20;++i)
       {
@@ -1132,7 +1132,7 @@ main(int argc, const char** argv)
                cerr << rf << "DNS results for " << (*it).uri << ub << endl;
                for (std::vector<Tuple>::iterator i = (*it).handler->results.begin(); i != (*it).handler->results.end(); ++i)
                {
-                  CerrStream << rf << (*i) << ub << endl;
+                  resipCerr << rf << (*i) << ub << endl;
                }
                
                --count;

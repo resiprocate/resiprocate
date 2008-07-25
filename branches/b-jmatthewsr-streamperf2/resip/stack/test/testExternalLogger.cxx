@@ -61,7 +61,7 @@ class ExampleExternalLogger : public ExternalLogger
                               const Data& message,
 			      const Data& messageWithHeaders)
       {
-         CerrStream << "ExampleExternalLogger " << level << " $ "
+         resipCerr << "ExampleExternalLogger " << level << " $ "
                    << subsystem << " $ " 
                    << appName << " $ "
                    << file << ":" << line

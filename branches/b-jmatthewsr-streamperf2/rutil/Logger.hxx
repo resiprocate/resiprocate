@@ -29,7 +29,7 @@
 // unconditionally output to cerr -- easily change back and forth
 #define CerrLog(args_)                                                  \
 	resip::Log::tags(resip::Log::StdErr, RESIPROCATE_SUBSYSTEM,           \
-                   __FILE__, __LINE__, CerrStream) << ' ' << '|' << ' '  \
+                   __FILE__, __LINE__, resipCerr) << ' ' << '|' << ' '  \
           args_ << std::endl;
 
 #define StackLog(args_)                                                         \

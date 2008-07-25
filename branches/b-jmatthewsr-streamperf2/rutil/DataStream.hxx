@@ -2,7 +2,7 @@
 #define RESIP_DataStream_hxx
 
 #include <iostream>
-#include "resipfaststreams.h"
+#include "resipfaststreams.hxx"
 
 namespace resip
 {

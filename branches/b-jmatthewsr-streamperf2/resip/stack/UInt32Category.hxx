@@ -1,7 +1,7 @@
 #if !defined(RESIP_UINT32_CATEGORY_HXX)
 #define RESIP_UINT32_CATEGORY_HXX
 
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 #include <iosfwd>
 #include "rutil/Data.hxx"

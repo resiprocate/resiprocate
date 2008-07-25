@@ -395,7 +395,7 @@ main(int arc, char** argv)
       assert(s.param(p_lr));
       assert(s.param(UnknownParameterType("foobie")) == "quux");
 
-      s.encode(CerrStream);
+      s.encode(resipCerr);
       cerr << endl;
    }
 
@@ -1076,9 +1076,9 @@ main(int arc, char** argv)
       assert(nameAddr.uri().host() == "foo.com");
       
       cerr << "Uri params: ";
-      nameAddr.uri().encodeParameters(CerrStream) << endl;
+      nameAddr.uri().encodeParameters(resipCerr) << endl;
       cerr << "Header params: ";
-      nameAddr.encodeParameters(CerrStream) << endl;
+      nameAddr.encodeParameters(resipCerr) << endl;
       assert(nameAddr.param(p_tag) == "456248");
       assert(nameAddr.param(p_mobility) == "hobble");
 
@@ -1098,9 +1098,9 @@ main(int arc, char** argv)
       assert(nameAddr.uri().host() == "foo.com");
       
       cerr << "Uri params: ";
-      nameAddr.uri().encodeParameters(CerrStream) << endl;
+      nameAddr.uri().encodeParameters(resipCerr) << endl;
       cerr << "Header params: ";
-      nameAddr.encodeParameters(CerrStream) << endl;
+      nameAddr.encodeParameters(resipCerr) << endl;
 
       assert(nameAddr.param(p_tag) == "456248");
       assert(nameAddr.param(p_mobility) == "hobble");
@@ -1121,9 +1121,9 @@ main(int arc, char** argv)
       assert(nameAddr.uri().host() == "foo.com");
       
       cerr << "Uri params: ";
-      nameAddr.uri().encodeParameters(CerrStream) << endl;
+      nameAddr.uri().encodeParameters(resipCerr) << endl;
       cerr << "Header params: ";
-      nameAddr.encodeParameters(CerrStream) << endl;
+      nameAddr.encodeParameters(resipCerr) << endl;
       assert(nameAddr.uri().param(p_tag) == "456248");
       assert(nameAddr.uri().param(p_mobility) == "hobble");
 
@@ -1143,9 +1143,9 @@ main(int arc, char** argv)
       assert(nameAddr.uri().host() == "foo.com");
       
       cerr << "Uri params: ";
-      nameAddr.uri().encodeParameters(CerrStream) << endl;
+      nameAddr.uri().encodeParameters(resipCerr) << endl;
       cerr << "Header params: ";
-      nameAddr.encodeParameters(CerrStream) << endl;
+      nameAddr.encodeParameters(resipCerr) << endl;
       assert(nameAddr.uri().param(p_mobility) == "hobb;le");
       assert(nameAddr.uri().param(p_tag) == "true;false");
       //      assert("true;false" == nameAddr.uri().param(Data("useless")));
@@ -1550,7 +1550,7 @@ main(int arc, char** argv)
       TR _tr("Via 1");
 
       Via via;
-      via.encode(CerrStream);
+      via.encode(resipCerr);
       cerr << endl;
 
       assert (via.param(p_branch).hasMagicCookie());
@@ -1589,7 +1589,7 @@ main(int arc, char** argv)
          via.encode(s2);
       }
       
-      CerrStream << "!! " << dsData.c_str() << endl;
+      resipCerr << "!! " << dsData.c_str() << endl;
       assert(dsData == "SIP/2.0/UDP ;branch=z9hG4bK" RESIP_COOKIE "jason-1--" RESIP_COOKIE "");
       assert(via.param(p_branch).getTransactionId() == "jason");
    }
@@ -1640,7 +1640,7 @@ main(int arc, char** argv)
       Via via1;
       via1 = via;
 
-      cerr << "!! "; via1.encode(CerrStream); cerr << endl;
+      cerr << "!! "; via1.encode(resipCerr); cerr << endl;
       assert(via1.param(UnknownParameterType("stid")) == "abcd.2");
    }
 
@@ -1652,7 +1652,7 @@ main(int arc, char** argv)
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "ec1e.0");
-      cerr << "!! "; via.encode(CerrStream); cerr << endl;
+      cerr << "!! "; via.encode(resipCerr); cerr << endl;
       assert(via.param(p_ttl) == 4);
    }
 
@@ -1664,7 +1664,7 @@ main(int arc, char** argv)
       
       assert (via.param(p_branch).hasMagicCookie());
       assert (via.param(p_branch).getTransactionId() == "ec1e.0");
-      cerr << "!! "; via.encode(CerrStream); cerr << endl;
+      cerr << "!! "; via.encode(resipCerr); cerr << endl;
       assert(via.param(UnknownParameterType("stid")) == "489573115");
    }
 
@@ -1678,7 +1678,7 @@ main(int arc, char** argv)
       assert(bp.getTransactionId() == "jason");
 
       bp.reset(bp.getTransactionId() + ".10");
-      bp.encode(CerrStream); cerr << endl;
+      bp.encode(resipCerr); cerr << endl;
       assert(bp.getTransactionId() == "jason.10");
 
       Data o;
@@ -1686,7 +1686,7 @@ main(int arc, char** argv)
          DataStream s(o);
          bp.encode(s);
       }
-      CerrStream << "!! " << o << endl;
+      resipCerr << "!! " << o << endl;
       assert(o == "branch=z9hG4bK" RESIP_COOKIE "jason.10-1--" RESIP_COOKIE "");
    }
 
@@ -1705,7 +1705,7 @@ main(int arc, char** argv)
          DataStream s(o);
          bpc.encode(s);
       }
-      CerrStream << "!! " << o << endl;
+      resipCerr << "!! " << o << endl;
       assert(o == "branch=z9hG4bK" RESIP_COOKIE "jason.1.2.3-14--" RESIP_COOKIE "");
    }
 
@@ -1723,7 +1723,7 @@ main(int arc, char** argv)
          DataStream s(o);
          bpcc.encode(s);
       }
-      CerrStream << "!! " << o << endl;
+      resipCerr << "!! " << o << endl;
       assert(o == "branch=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "foobie");
 
       bpcc.reset("foobie");
@@ -1751,7 +1751,7 @@ main(int arc, char** argv)
          DataStream s(o);
          bpcc.encode(s);
       }
-      CerrStream << "!! " << o << endl;
+      resipCerr << "!! " << o << endl;
       assert(o == "branch=z9hG4bK" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14--" RESIP_COOKIE "");
    }
 
@@ -1769,7 +1769,7 @@ main(int arc, char** argv)
          DataStream s(o);
          bpcc.encode(s);
       }
-      CerrStream << "!! " << o << endl;
+      resipCerr << "!! " << o << endl;
       assert(o == "branch=z9hG4bK" RESIP_COOKIE "" RESIP_COOKIE "3e565-ef7w-17.1.2.3-14" RESIP_COOKIE "foobie-1--" RESIP_COOKIE "");
    }
    
@@ -1787,7 +1787,7 @@ main(int arc, char** argv)
          DataStream s(o);
          bpcc.encode(s);
       }
-      CerrStream << "!! " << o << endl;
+      resipCerr << "!! " << o << endl;
       assert(o == "branch=z9hG4bK" RESIP_COOKIE "");
    }
 
@@ -1805,7 +1805,7 @@ main(int arc, char** argv)
          DataStream s(o);
          bpcc.encode(s);
       }
-      CerrStream << "!! " << o << endl;
+      resipCerr << "!! " << o << endl;
       assert(o == "branch=z9hG4bK" RESIP_COOKIE "-1--" RESIP_COOKIE "");
    }
 
@@ -1834,10 +1834,10 @@ main(int arc, char** argv)
       BranchParameter bp(ParameterTypes::branch, pb, ";");
       assert(bp.hasMagicCookie());
       assert(bp.getTransactionId() == "5b42cb698e8c6827790212ac5bdade1a");
-      CerrStream << "!! " << bp.clientData() << endl;
+      resipCerr << "!! " << bp.clientData() << endl;
       assert(bp.clientData() == "PA32768");
       
-      bp.encode(CerrStream); cerr << endl;
+      bp.encode(resipCerr); cerr << endl;
    }
 
    {

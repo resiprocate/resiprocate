@@ -13,7 +13,7 @@
 #include "resip/stack/MessageDecorator.hxx"
 
 #include "repro/Target.hxx"
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 namespace resip
 {
