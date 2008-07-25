@@ -16,7 +16,7 @@ namespace resip
  */
 class DialogEventStateManager
 {
-public:
+   public:
    typedef std::vector<DialogEventInfo> DialogEventInfos;
    DialogEventInfos getDialogEventInfo() const;
 
@@ -29,8 +29,8 @@ private:
       void onTryingUac(DialogSet& dialogSet, const SipMessage& invite);
       void onProceedingUac(const DialogSet& dialogSet, const SipMessage& response);
 
-      //?dcm? how is direction determined when the onEarly is the first use of
-      //this dialog?
+   //?dcm? how is direction determined when the onEarly is the first use of
+   //this dialog?
       void onEarly(const Dialog& dialog, InviteSessionHandle is);
       
       void onConfirmed(const Dialog& dialog, InviteSessionHandle is);
@@ -62,7 +62,11 @@ private:
    DialogEventInfo* findOrCreateDialogInfo(const Dialog& dialog);
 
    void onDialogSetTerminatedImpl(const DialogSetId& dialogSetId, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
-   void onDialogTerminatedImpl(DialogEventInfo* eventInfo, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason);
+   TerminatedDialogEvent* onDialogTerminatedImpl(DialogEventInfo* eventInfo, InviteSessionHandler::TerminatedReason reason, 
+                                                 int responseCode = 0, Uri* remoteTarget = NULL);
+
+   static int getResponseCode(const SipMessage& msg);
+   static Uri* getFrontContact(const SipMessage& msg);
 
 private:
 

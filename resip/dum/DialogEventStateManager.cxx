@@ -57,7 +57,8 @@ DialogEventStateManager::onTryingUas(Dialog& dialog, const SipMessage& invite)
 
    mDialogIdToEventInfo[dialog.getId()] = eventInfo;
 
-   mDialogEventHandler->onTrying(*eventInfo, invite);
+   TryingDialogEvent evt(*eventInfo, invite);
+   mDialogEventHandler->onTrying(evt);
 }
 
 // we've sent an INVITE
@@ -107,7 +108,8 @@ DialogEventStateManager::onTryingUac(DialogSet& dialogSet, const SipMessage& inv
 
    mDialogIdToEventInfo[eventInfo->mDialogId] = eventInfo;
 
-   mDialogEventHandler->onTrying(*eventInfo, invite);
+   TryingDialogEvent evt(*eventInfo, invite);
+   mDialogEventHandler->onTrying(evt);
 }
 
 // we've received a 1xx response without a remote tag
@@ -131,7 +133,8 @@ DialogEventStateManager::onProceedingUac(const DialogSet& dialogSet, const SipMe
             assert(response.header(h_Contacts).front().isWellFormed());
             eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(response.header(h_Contacts).front().uri()));
          }
-         mDialogEventHandler->onProceeding(*eventInfo);
+         ProceedingDialogEvent evt(*eventInfo);
+         mDialogEventHandler->onProceeding(evt);
       }
       else
       {
@@ -160,7 +163,8 @@ DialogEventStateManager::onEarly(const Dialog& dialog, InviteSessionHandle is)
       eventInfo->mLocalTarget = dialog.getLocalContact().uri();
       eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
 
-      mDialogEventHandler->onEarly(*eventInfo);
+      EarlyDialogEvent evt(*eventInfo);
+      mDialogEventHandler->onEarly(evt);
    }
 }
 
@@ -180,7 +184,46 @@ DialogEventStateManager::onConfirmed(const Dialog& dialog, InviteSessionHandle i
       eventInfo->mLocalTarget = dialog.getLocalContact().uri();
       eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
 
-      mDialogEventHandler->onConfirmed(*eventInfo);
+      // for the dialog that got the 200 OK
+      SharedPtr<ConfirmedDialogEvent> confirmedEvt(new ConfirmedDialogEvent(*eventInfo));
+      
+      //mDialogEventHandler->onConfirmed(confirmedEvt);
+      MultipleEventDialogEvent::EventVector events;
+
+      // kill off any other dialogs in this dialog set, since certain proxy/registrars (like SER and sipX)
+      // won't bother giving us updates on their status anyways!
+      const DialogSetId& dialogSetId = dialog.getId().getDialogSetId();
+      DialogId fakeId(dialogSetId, Data::Empty);
+      std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.lower_bound(fakeId);
+      while (it != mDialogIdToEventInfo.end() && 
+            it->first.getDialogSetId() == dialogSetId)
+      {
+         DialogEventInfo::State dialogState = it->second->getState();
+         if (dialogState == DialogEventInfo::Proceeding || dialogState == DialogEventInfo::Early)
+         {
+            // .jjg. we're killing a *specific* dialog *after* the successful completion of the initial INVITE transaction;
+            // so just elminate this dialog, not the entire dialogset
+            SharedPtr<TerminatedDialogEvent> evt(onDialogTerminatedImpl(it->second, InviteSessionHandler::RemoteCancel));
+            events.push_back(evt);
+            delete it->second;
+            mDialogIdToEventInfo.erase(it++);
+         }
+         else
+         {
+            it++;
+         }
+      }
+
+      if (events.size() > 0)
+      {
+         events.push_back(confirmedEvt);
+         MultipleEventDialogEvent multipleEvt(events);
+         mDialogEventHandler->onMultipleEvents(multipleEvt);
+      }
+      else
+      {
+         mDialogEventHandler->onConfirmed(*confirmedEvt);
+      }
    }
 }
 
@@ -190,11 +233,13 @@ DialogEventStateManager::onTerminated(const Dialog& dialog, const SipMessage& ms
    std::map<DialogId, DialogEventInfo*, DialogIdComparator>::iterator it = mDialogIdToEventInfo.find(dialog.getId());
    if (it != mDialogIdToEventInfo.end())
    {
-      if (it->second->getState() == DialogEventInfo::Confirmed)
+      DialogEventInfo::State dialogState = it->second->getState();
+      if (dialogState == DialogEventInfo::Confirmed)
       {
          // .jjg. we're killing a *specific* dialog *after* the successful completion of the initial INVITE transaction;
          // so just elminate this dialog, not the entire dialogset
-         onDialogTerminatedImpl(it->second, msg, reason);
+         std::auto_ptr<TerminatedDialogEvent> evt(onDialogTerminatedImpl(it->second, reason, getResponseCode(msg), getFrontContact(msg)));
+         mDialogEventHandler->onTerminated(*evt);
          delete it->second;
          mDialogIdToEventInfo.erase(it++);
       }
@@ -237,15 +282,18 @@ DialogEventStateManager::onDialogSetTerminatedImpl(const DialogSetId& dialogSetI
           it->first.getDialogSetId() == dialogSetId)
    {
       eventInfo = it->second;
-      onDialogTerminatedImpl(eventInfo, msg, reason);
-
+      std::auto_ptr<TerminatedDialogEvent> evt(onDialogTerminatedImpl(eventInfo, reason, getResponseCode(msg), getFrontContact(msg)));
+      mDialogEventHandler->onTerminated(*evt);
       delete it->second;
       mDialogIdToEventInfo.erase(it++);
    }
 }
 
-void
-DialogEventStateManager::onDialogTerminatedImpl(DialogEventInfo* eventInfo, const SipMessage& msg, InviteSessionHandler::TerminatedReason reason)
+TerminatedDialogEvent*
+DialogEventStateManager::onDialogTerminatedImpl(DialogEventInfo* eventInfo, 
+                                                InviteSessionHandler::TerminatedReason reason,
+                                                int responseCode,
+                                                Uri* remoteTarget)
 {
    eventInfo->mState = DialogEventInfo::Terminated;
 
@@ -260,20 +308,42 @@ DialogEventStateManager::onDialogTerminatedImpl(DialogEventInfo* eventInfo, cons
       actualReason = InviteSessionHandler::Replaced;
    }
 
+   if (remoteTarget)
+   {
+      eventInfo->mRemoteTarget = std::auto_ptr<Uri>(remoteTarget);
+   }
+
+   TerminatedDialogEvent* evt = new TerminatedDialogEvent(*eventInfo, actualReason, responseCode);
+   return evt;
+   //mDialogEventHandler->onTerminated(evt);
+}
+
+int 
+DialogEventStateManager::getResponseCode(const SipMessage& msg)
+{
    int respCode = 0;
    if (msg.isResponse())
    {
       respCode = msg.header(h_StatusLine).responseCode();
+   }
+   return respCode;
+}
+
+Uri* 
+DialogEventStateManager::getFrontContact(const SipMessage& msg)
+{
+   Uri* pContact = NULL;
+   if (msg.isResponse())
+   {
       if (!msg.empty(h_Contacts))
       {
          // ?bwc? Has something already checked for well-formedness here? 
          // Maybe DialogSet? Assert for now.
          assert(msg.header(h_Contacts).front().isWellFormed());
-         eventInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(msg.header(h_Contacts).front().uri()));
+         pContact = new Uri(msg.header(h_Contacts).front().uri());
       }
    }
-
-   mDialogEventHandler->onTerminated(*eventInfo, actualReason, respCode);
+   return pContact;
 }
 
 DialogEventStateManager::DialogEventInfos 
@@ -318,25 +388,25 @@ DialogEventStateManager::findOrCreateDialogInfo(const Dialog& dialog)
             it->first.getDialogSetId() == dialog.getId().getDialogSetId())
       {
          if (it->first.getRemoteTag().empty())
-         {
-            // convert this bad boy into a full on Dialog
-            eventInfo = it->second;
-            mDialogIdToEventInfo.erase(it);
-            eventInfo->mDialogId = dialog.getId();
-         }
-         else
-         {
-            // clone this fellow member dialog, initializing it with a new id and creation time 
-            DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
-            newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
-            newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
-            newForkInfo->mDialogId = dialog.getId();
-            newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
-            newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
-            newForkInfo->mRouteSet = dialog.getRouteSet();
-            eventInfo = newForkInfo;
-         }
+      {
+         // convert this bad boy into a full on Dialog
+         eventInfo = it->second;
+         mDialogIdToEventInfo.erase(it);
+         eventInfo->mDialogId = dialog.getId();
       }
+      else
+      {
+         // clone this fellow member dialog, initializing it with a new id and creation time 
+         DialogEventInfo* newForkInfo = new DialogEventInfo(*(it->second));
+         newForkInfo->mDialogEventId = Random::getVersion4UuidUrn();
+            newForkInfo->mCreationTimeSeconds = Timer::getTimeSecs();
+         newForkInfo->mDialogId = dialog.getId();
+         newForkInfo->mRemoteIdentity = dialog.getRemoteNameAddr();
+         newForkInfo->mRemoteTarget = std::auto_ptr<Uri>(new Uri(dialog.getRemoteTarget().uri()));
+         newForkInfo->mRouteSet = dialog.getRouteSet();
+         eventInfo = newForkInfo;
+      }
+   }
       else
       {
          // .jjg. this can happen if onTryingUax(..) wasn't called yet for this dialog (set) id
