@@ -85,8 +85,7 @@ class ResipFastOStream : public ResipBasicIOStream
 {
    public:
       ResipFastOStream(ResipStreamBuf *buf):buf_(buf)
-      {
-         assert(buf);
+      {         
       }
       virtual ~ResipFastOStream(void)
       {}
@@ -104,6 +103,11 @@ class ResipFastOStream : public ResipBasicIOStream
       {
          return buf_;
       }
+
+	  void rdbuf(ResipStreamBuf *buf)
+	  {
+		  buf_ = buf;
+	  }
 
       ResipFastOStream & flush(void)
       {
@@ -446,8 +450,10 @@ class ResipStdCOStream: public ResipFastOStream
 {
    public:
       ResipStdCOStream(ResipStdBuf::BufType type)
-            :buf_(type),ResipFastOStream(&buf_)
-      {}
+            :buf_(type),ResipFastOStream(0)
+      {
+		  rdbuf(&buf_);
+	  }
 
       ~ResipStdCOStream(void)
       {}
