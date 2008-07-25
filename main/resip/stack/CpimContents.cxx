@@ -80,8 +80,8 @@ CpimContents::getStaticType()
    return type;
 }
 
-std::ostream& 
-CpimContents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+CpimContents::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "CpimContents::encodeParsed " << mText);
    str << mText;

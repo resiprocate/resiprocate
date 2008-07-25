@@ -29,14 +29,14 @@ Message* TargetCommand::clone() const
    return new TargetCommand(*this);
 }
 
-ostream&
-TargetCommand::encode(ostream& strm) const
+EncodeStream&
+TargetCommand::encode(EncodeStream& strm) const
 {
    return strm;
 }
 
-ostream&
-TargetCommand::encodeBrief(ostream& strm) const
+EncodeStream&
+TargetCommand::encodeBrief(EncodeStream& strm) const
 {
    return strm;
 }

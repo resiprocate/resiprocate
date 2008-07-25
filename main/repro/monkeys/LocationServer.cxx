@@ -112,7 +112,7 @@ LocationServer::process(RequestContext& context)
 }
 
 void
-LocationServer::dump(std::ostream &os) const
+LocationServer::dump(EncodeStream &os) const
 {
    os << "LocationServer monkey" << std::endl;
 }

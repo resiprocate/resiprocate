@@ -114,14 +114,14 @@ class UserProfile : public Profile
       typedef std::set<DigestCredential> DigestCredentials;
       DigestCredentials mDigestCredentials;
 
-      friend std::ostream& operator<<(std::ostream&, const UserProfile& profile);
+      friend EncodeStream& operator<<(EncodeStream&, const UserProfile& profile);
 };
   
-std::ostream& 
-operator<<(std::ostream&, const UserProfile& profile);
+EncodeStream& 
+operator<<(EncodeStream&, const UserProfile& profile);
 
-std::ostream& 
-operator<<(std::ostream&, const UserProfile::DigestCredential& cred);
+EncodeStream& 
+operator<<(EncodeStream&, const UserProfile::DigestCredential& cred);
  
 }
 

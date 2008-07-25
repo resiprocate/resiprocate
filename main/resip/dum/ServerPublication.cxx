@@ -169,8 +169,8 @@ ServerPublication::send(SharedPtr<SipMessage> response)
    }
 }
 
-std::ostream& 
-ServerPublication::dump(std::ostream& strm) const
+EncodeStream& 
+ServerPublication::dump(EncodeStream& strm) const
 {
    strm << "ServerPublication " << mDocumentKey << " " << mEventType;
    return strm;

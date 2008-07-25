@@ -35,7 +35,7 @@ class ClientSubscription: public BaseSubscription
       virtual void endCommand();
 
 
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
 
    protected:
       virtual ~ClientSubscription();

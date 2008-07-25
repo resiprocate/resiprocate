@@ -406,6 +406,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\resipfaststreams.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\dns\RRCache.cxx"
 				>
 			</File>
@@ -653,6 +657,10 @@
 			</File>
 			<File
 				RelativePath=".\RecursiveMutex.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\resipfaststreams.hxx"
 				>
 			</File>
 			<File

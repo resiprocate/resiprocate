@@ -24,8 +24,8 @@ class TransactionUserMessage : public TransactionMessage
       virtual bool isClientTransaction() const; 
       
       virtual Message* clone() const { return new TransactionUserMessage(mType, tu); }
-      virtual std::ostream& encode(std::ostream& strm) const;
-      virtual std::ostream& encodeBrief(std::ostream& str) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& str) const;
 
    private:
       Type mType;

@@ -37,14 +37,14 @@ DumDecrypted::decrypted()
    return &mDecrypted;
 }
      
-std::ostream&
-DumDecrypted::encodeBrief(std::ostream& strm) const
+EncodeStream&
+DumDecrypted::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }
 
-std::ostream& 
-DumDecrypted::encode(std::ostream& strm) const
+EncodeStream& 
+DumDecrypted::encode(EncodeStream& strm) const
 {
    return mDecrypted.encode(strm);
 }

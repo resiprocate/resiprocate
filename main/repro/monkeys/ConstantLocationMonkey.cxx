@@ -39,7 +39,7 @@ ConstantLocationMonkey::process(RequestContext& context)
 }
 
 void
-ConstantLocationMonkey::dump(std::ostream &os) const
+ConstantLocationMonkey::dump(EncodeStream &os) const
 {
   os << "ConstantLocation Monkey" << std::endl;
 }

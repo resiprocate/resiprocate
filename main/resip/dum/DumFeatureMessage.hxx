@@ -19,9 +19,9 @@ class DumFeatureMessage : public ApplicationMessage
 
       Message* clone() const;
 
-      virtual std::ostream& encode(std::ostream& strm) const;
+      virtual EncodeStream& encode(EncodeStream& strm) const;
       /// output a brief description to stream
-      virtual std::ostream& encodeBrief(std::ostream& str) const;
+      virtual EncodeStream& encodeBrief(EncodeStream& str) const;
 
       virtual const Data& getTransactionId() const { return mTransactionId; }
    private:

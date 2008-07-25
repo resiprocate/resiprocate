@@ -96,8 +96,8 @@ Token::clone() const
    return new Token(*this);
 }
 
-std::ostream& 
-Token::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Token::encodeParsed(EncodeStream& str) const
 {
    str << mValue;
    encodeParameters(str);

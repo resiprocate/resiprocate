@@ -377,7 +377,7 @@ QValueTargetHandler::removeTerminated(std::list<resip::Data> & queue,
 
 
 void 
-QValueTargetHandler::dump(std::ostream &os) const
+QValueTargetHandler::dump(EncodeStream &os) const
 {
   os << "QValueTargetHandler baboon" << std::endl;
 }

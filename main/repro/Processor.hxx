@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include "rutil/resipfaststreams.hxx"
 
 namespace repro
 {
@@ -32,7 +33,7 @@ class Processor
       processor_action_t;
 
       virtual processor_action_t process(RequestContext &)=0;
-      virtual void dump(std::ostream &os) const = 0;
+      virtual void dump(EncodeStream &os) const = 0;
       
       virtual void setChainType(ChainType type);
       virtual ChainType getChainType() const;
@@ -48,7 +49,7 @@ class Processor
       Processor::ChainType mType;
 };
 
-std::ostream &operator<<(std::ostream &os, const repro::Processor &rp);
+EncodeStream &operator<<(EncodeStream &os, const repro::Processor &rp);
 }
 
 

@@ -68,8 +68,8 @@ InvalidContents::getStaticType()
    return type;
 }
 
-std::ostream& 
-InvalidContents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+InvalidContents::encodeParsed(EncodeStream& str) const
 {
    str << mText;
    return str;

@@ -26,7 +26,7 @@ class DnsHostRecord : public DnsResourceRecord
       in_addr addr() const { return mAddr; }
       const Data& name() const { return mName; }
       bool isSameValue(const Data& value) const;
-      std::ostream& dump(std::ostream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       in_addr mAddr;

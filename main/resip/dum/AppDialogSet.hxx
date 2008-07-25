@@ -32,7 +32,7 @@ class AppDialogSet : public Handled
 
       virtual const Data getClassName();
 
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
 
    protected:
 

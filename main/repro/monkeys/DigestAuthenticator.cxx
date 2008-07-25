@@ -399,7 +399,7 @@ DigestAuthenticator::getRealm(RequestContext &rc)
 }
 
 void
-DigestAuthenticator::dump(std::ostream &os) const
+DigestAuthenticator::dump(EncodeStream &os) const
 {
    os << "DigestAuthentication monkey" << std::endl;
 }
