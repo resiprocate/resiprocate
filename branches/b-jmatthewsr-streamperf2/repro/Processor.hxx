@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 #include <vector>
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 namespace repro
 {

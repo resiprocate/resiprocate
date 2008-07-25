@@ -1,7 +1,7 @@
 #if !defined(RESIP_QVALUEPARAMETER_HXX)
 #define RESIP_QVALUEPARAMETER_HXX 
 
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 #include "resip/stack/Parameter.hxx"
 #include "resip/stack/ParameterTypeEnums.hxx"

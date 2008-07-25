@@ -5,7 +5,7 @@
 
 #include "rutil/Data.hxx"
 #include <time.h>
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 namespace repro
 {

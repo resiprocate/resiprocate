@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 #include "repro/Processor.hxx"
-#include "rutil/resipfaststreams.h"
+#include "rutil/resipfaststreams.hxx"
 
 namespace repro
 {
