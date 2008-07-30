@@ -271,6 +271,11 @@ ClientRegistration::requestRefresh(UInt32 expires)
 void
 ClientRegistration::internalRequestRefresh(UInt32 expires)
 {
+   if (mState == Refreshing)
+   {
+      return;
+   }
+
    InfoLog (<< "requesting refresh of " << *this);
    
    assert (mState == Registered);
