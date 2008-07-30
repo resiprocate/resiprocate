@@ -16,11 +16,16 @@ namespace resip
 class AresDns : public ExternalDns
 {
    public:
-      AresDns() {}
+      AresDns() {mChannel = 0; mFeatures = 0;}
       virtual ~AresDns();
 
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr socketfunc, int timeout=0, int tries=0, unsigned int features=0); 
+
+      virtual int internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
+                       AfterSocketCreationFuncPtr socketfunc, unsigned int features=0, ares_channeldata** channel = 0); 
+
+      virtual bool checkDnsChange();
 
       virtual bool requiresProcess();
       virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
@@ -43,6 +48,8 @@ class AresDns : public ExternalDns
       static ExternalDnsHandler* getHandler(void* arg);
       static void aresCallback(void *arg, int status, unsigned char* abuf, int alen);
 	  struct ares_channeldata* mChannel;
+	  std::vector<GenericIPAddress> mAdditionalNameservers;
+	  unsigned int mFeatures;
 };
    
 }
