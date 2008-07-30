@@ -281,8 +281,7 @@
 				RelativePath=".\RecursiveMutex.cxx">
 			</File>
 			<File
-				RelativePath=".\resipfaststreams.cxx"
-				>
+				RelativePath=".\resipfaststreams.cxx">
 			</File>
 			<File
 				RelativePath=".\dns\RRCache.cxx">
@@ -348,6 +347,9 @@
 			</File>
 			<File
 				RelativePath=".\AsyncID.hxx">
+			</File>
+			<File
+				RelativePath=".\AsyncProcessHandler.hxx">
 			</File>
 			<File
 				RelativePath=".\BaseException.hxx">
@@ -473,8 +475,7 @@
 				RelativePath=".\RecursiveMutex.hxx">
 			</File>
 			<File
-				RelativePath=".\resipfaststreams.hxx"
-				>
+				RelativePath=".\resipfaststreams.hxx">
 			</File>
 			<File
 				RelativePath=".\dns\RRCache.hxx">
