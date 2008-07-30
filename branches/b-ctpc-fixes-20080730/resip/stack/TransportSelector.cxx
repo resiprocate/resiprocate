@@ -233,7 +233,6 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
 void
 TransportSelector::buildFdSet(FdSet& fdset)
 {
-   mDns.buildFdSet(fdset);
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
    {
@@ -244,7 +243,6 @@ TransportSelector::buildFdSet(FdSet& fdset)
 void
 TransportSelector::process(FdSet& fdset)
 {
-   mDns.process(fdset);
    for(TransportList::iterator it = mSharedProcessTransports.begin(); 
        it != mSharedProcessTransports.end(); it++)
    {
@@ -1268,14 +1266,7 @@ TransportSelector::findTlsTransport(const Data& domainname,resip::TransportType 
 unsigned int 
 TransportSelector::getTimeTillNextProcessMS()
 {
-   if (mDns.requiresProcess())
-   {
-      return 50;
-   }
-   else
-   {
-      return INT_MAX;
-   }
+   return INT_MAX;
 }
 
 void
