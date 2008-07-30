@@ -41,8 +41,6 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::DNS
 
 DnsInterface::DnsInterface(DnsStub& dnsStub) : 
-   //mDnsProvider(ExternalDnsFactory::createExternalDns()),
-   mActiveQueryCount(0),
    mDnsStub(dnsStub)
 {
 
@@ -114,32 +112,11 @@ int DnsInterface::supportedProtocols()
    return mSupportedTransports.size();
 }
 
-bool 
-DnsInterface::requiresProcess()
-{
-   return mActiveQueryCount>0;
-}
-
-void 
-DnsInterface::buildFdSet(FdSet& fdset)
-{
-   //mDnsProvider->buildFdSet(fdset.read, fdset.write, fdset.size);
-   //mDnsStub->buildFdSet(fdset);
-}
-
-void 
-DnsInterface::process(FdSet& fdset)
-{
-   //mDnsStub->process(fdset);
-   //mDnsProvider->process(fdset.read, fdset.write);
-}
-
 
 DnsResult*
 DnsInterface::createDnsResult(DnsHandler* handler)
 {
    DnsResult* result = new DnsResult(*this, mDnsStub, mVip, handler);
-   mActiveQueryCount++;  
    return result;
 }
 
