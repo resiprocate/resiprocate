@@ -277,6 +277,7 @@ class InviteSession : public DialogUsage
       void dispatchWaitingToHangup(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
+      void dispatchInfo(const SipMessage& msg);
 
       void startRetransmit200Timer();
       void start491Timer();
@@ -385,7 +386,6 @@ class InviteSession : public DialogUsage
       void dispatchUnhandledInvite(const SipMessage& msg);
       void dispatchPrack(const SipMessage& msg);
       void dispatchCancel(const SipMessage& msg);
-      void dispatchInfo(const SipMessage& msg);
       void dispatchMessage(const SipMessage& msg);
 };
 
