@@ -606,6 +606,15 @@ ServerInviteSession::acceptCommand(int statusCode)
 void 
 ServerInviteSession::dispatch(const SipMessage& msg)
 {
+   if (msg.isRequest())
+   {
+      if (msg.header(h_RequestLine).method() == INFO)
+      {
+         InviteSession::dispatchInfo(msg);
+         return;
+      }
+   }
+
    switch (mState)
    {
       case UAS_Start:
