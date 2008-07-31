@@ -543,22 +543,22 @@ static int init_by_defaults(ares_channel channel)
              struct in_addr addr;
              addr.s_addr = inet_addr(pIPAddr->IpAddress.String);
              // append unique only
-             if (find_server(channel->servers, channel->nservers, addr) >= 0)
-                continue;
-
-             // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
-#ifdef USE_IPV6			 
-			 channel->servers[ channel->nservers ].family = AF_INET;
-#endif
-	         channel->servers[channel->nservers].addr = addr;
-             if ((channel->flags & ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3))
+             if (find_server(channel->servers, channel->nservers, addr) == -1)
              {
-               get_physical_address(channel->servers[channel->nservers].physical_addr,
-                                    MAX_ADAPTER_ADDRESS_LENGTH,
-                                    &channel->servers[channel->nservers].physical_addr_len,
-                                    addr);
+                // printf( "ARES: %s\n", pIPAddr ->IpAddress.String );
+#ifdef USE_IPV6			 
+                channel->servers[ channel->nservers ].family = AF_INET;
+#endif
+                channel->servers[channel->nservers].addr = addr;
+                if ((channel->flags & ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3))
+                {
+                   get_physical_address(channel->servers[channel->nservers].physical_addr,
+                                        MAX_ADAPTER_ADDRESS_LENGTH,
+                                        &channel->servers[channel->nservers].physical_addr_len,
+                                        addr);
+                }
+			       channel->nservers++;
              }
-			 channel->nservers++;
 
              pIPAddr = pIPAddr ->Next;
            }

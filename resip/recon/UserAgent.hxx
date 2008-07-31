@@ -95,6 +95,17 @@ public:
    void shutdown();
 
    /**
+     Used to initiate a snapshot of the existing DNS entries in the
+     cache to the logging subsystem.
+   */
+   void logDnsCache();
+
+   /**
+     Used to clear the existing DNS entries in the cache.
+   */
+   void clearDnsCache();
+
+   /**
      Retrieves the ConversationManager passed in the constructor.
 
      @return Pointer to the conversation manager

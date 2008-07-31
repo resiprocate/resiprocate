@@ -828,6 +828,18 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
       myConversationManager.displayInfo();
       return;
    }
+   if(isEqualNoCase(command, "dns") || isEqualNoCase(command, "ld"))
+   {
+      InfoLog( << "DNS cache (at WARNING log level):");
+      myUserAgent.logDnsCache();
+      return;
+   }
+   if(isEqualNoCase(command, "cleardns") || isEqualNoCase(command, "cd"))
+   {
+      myUserAgent.clearDnsCache();
+      InfoLog( << "DNS cache has been cleared.");
+      return;
+   }
 
    InfoLog( << "Possible commands are: " << endl
          << "  createConversation:      <'createconv'|'cc'>" << endl
@@ -869,6 +881,8 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          << "  setNATPassword           <'natpwd'|'np'> <password>" << endl
          << "  startApplicationTimer:   <'starttimer'|'st'> <timerId> <durationMs> <seqNo>" << endl
          << "  displayInfo:             <'info'|'i'>" << endl
+         << "  logDnsCache:             <'dns'|'ld'>" << endl
+         << "  clearDnsCache:           <'cleardns'|'cd'>" << endl
          << "  exitProgram:             <'exit'|'quit'|'q'>");
 }
 

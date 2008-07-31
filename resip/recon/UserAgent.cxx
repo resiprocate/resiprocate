@@ -151,6 +151,18 @@ UserAgent::shutdown()
    mStackThread.join();
 }
 
+void
+UserAgent::logDnsCache()
+{
+   mStack.logDnsCache();
+}
+
+void 
+UserAgent::clearDnsCache()
+{
+   mStack.clearDnsCache();
+}
+
 void 
 UserAgent::post(ApplicationMessage& message, unsigned int ms)
 {
