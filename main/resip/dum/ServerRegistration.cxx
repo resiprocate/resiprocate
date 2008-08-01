@@ -146,17 +146,24 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     database->lockRecord(mAor);
 
-    UInt32 globalExpires = 0;
-    UInt32 expires=0;
-    
-    if (!msg.empty(h_Expires) && msg.header(h_Expires).isWellFormed())
-    {
-      globalExpires = msg.header(h_Expires).value();
-    }
-    else
-    {
-       globalExpires = 3600;
-    }
+   UInt32 globalExpires=3600;   
+   UInt32 returnCode=0;
+   handler->getGlobalExpires(msg,mDum.getMasterProfile(),globalExpires,returnCode); 
+
+   if (returnCode >= 400)
+   {
+      SharedPtr<SipMessage> failure(new SipMessage);
+      mDum.makeResponse(*failure, msg, returnCode);
+	  if (423 == returnCode)
+	  {
+		failure->header(h_StatusLine).reason() = "Interval Too Brief";
+		failure->header(h_MinExpires).value() = globalExpires;
+	  }
+      mDum.send(failure);
+      database->unlockRecord(mAor);
+      delete(this);
+      return;
+   }
 
     mOriginalContacts = database->getContacts(mAor);
 
@@ -170,8 +177,10 @@ ServerRegistration::dispatch(const SipMessage& msg)
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
     ParserContainer<NameAddr>::iterator i;
     UInt64 now=Timer::getTimeSecs();
+    ParserContainer<NameAddr>::iterator iEnd(contactList.end());
 
-    for(i = contactList.begin(); i != contactList.end(); i++)
+   UInt32 expires=0;
+   for (i = contactList.begin(); i != iEnd; ++i )
     {
       if(!i->isWellFormed())
       {
@@ -183,14 +192,8 @@ ServerRegistration::dispatch(const SipMessage& msg)
          return;
       }
 
-      if (i->exists(p_expires))
-      {
-         expires = i->param(p_expires);
-      }
-      else
-      {
-         expires = globalExpires;
-      }
+	  expires = globalExpires;
+      handler->getContactExpires(*i,mDum.getMasterProfile(),expires,returnCode);       
 
       // Check for "Contact: *" style deregistration
       if (i->isAllContacts())
