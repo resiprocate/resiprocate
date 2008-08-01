@@ -533,6 +533,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RegistrationHandler.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\ServerAuthManager.cxx"
 				>
 			</File>

@@ -47,6 +47,25 @@ class Profile
       virtual UInt32 getDefaultMaxRegistrationTime() const;
       virtual void unsetDefaultMaxRegistrationTime();   
 
+	  
+	  /** 
+        *  Used when receiveing a REGISTER request, if the expires value in the request
+		*  is less than this time, then dum will reject the message with a 423 and set the
+		*  min-expires header to the value specified here.
+        *  @{
+        */
+	  virtual void setServerRegistrationMinExpiresTime(UInt32 secs);
+	  virtual UInt32 getServerRegistrationMinExpiresTime(void) const;
+	  virtual void unsetServerRegistrationMinExpiresTime(void);
+
+	  virtual void setServerRegistrationMaxExpiresTime(UInt32 secs);
+	  virtual UInt32 getServerRegistrationMaxExpiresTime(void) const;
+	  virtual void unsetServerRegistrationMaxExpiresTime(void);
+
+	  virtual void setServerRegistrationDefaultExpiresTime(UInt32 secs);
+	  virtual UInt32 getServerRegistrationDefaultExpiresTime(void) const;
+	  virtual void unsetServerRegistrationDefaultExpiresTime(void);
+
       /// The time to retry registrations on error responses (if Retry-After header is not present in error)
       /// Set to 0 to never retry on errors.  Note:  onRequestRetry is called before this setting is
       /// checked.  Return -1 from onRequestRetry in order to use this setting.
@@ -205,6 +224,15 @@ class Profile
       
       bool mHasDefaultMaxRegistrationExpires;
       UInt32 mDefaultMaxRegistrationExpires;
+
+	  bool mHasServerRegistrationMinExpires;
+	  UInt32 mDefaultServerRegistrationMinExpires;
+
+	  bool mHasServerRegistrationMaxExpires;
+	  UInt32 mDefaultServerRegistrationMaxExpires;
+
+	  bool mHasServerRegistrationDefaultExpires;
+	  UInt32 mDefaultServerRegistrationDefaultExpires;
 
       bool mHasDefaultRegistrationRetryInterval;
       int  mDefaultRegistrationRetryInterval;

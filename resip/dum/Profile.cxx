@@ -52,6 +52,9 @@ Profile::reset()
    unsetOutboundDecorator();
    unsetMethodsParamEnabled();
    unsetExpressOutboundAsRouteSetEnabled();
+   unsetServerRegistrationMinExpiresTime();
+   unsetServerRegistrationMaxExpiresTime();
+   unsetServerRegistrationDefaultExpiresTime();
 }
 
 void
@@ -884,6 +887,99 @@ Profile::unsetExpressOutboundAsRouteSetEnabled()
    }
 }
   
+void
+Profile::setServerRegistrationMinExpiresTime(UInt32 secs)
+{
+	mHasServerRegistrationMinExpires = true;
+	mDefaultServerRegistrationMinExpires = secs;
+}
+
+UInt32 
+Profile::getServerRegistrationMinExpiresTime() const
+{
+   // Fall through seting (if required)
+   if(!mHasServerRegistrationMinExpires && mBaseProfile.get())
+   {
+       return mBaseProfile->getServerRegistrationMinExpiresTime();
+   }
+   return mDefaultServerRegistrationMinExpires;
+}
+
+void
+Profile::unsetServerRegistrationMinExpiresTime()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasServerRegistrationMinExpires = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasServerRegistrationMinExpires = true;
+      mDefaultServerRegistrationMinExpires = 0; // No restriction
+   }
+}
+
+void 
+Profile::setServerRegistrationMaxExpiresTime(UInt32 secs)
+{
+	mHasServerRegistrationMaxExpires = true;
+	mDefaultServerRegistrationMaxExpires = secs;
+}
+
+UInt32 
+Profile::getServerRegistrationMaxExpiresTime(void) const
+{
+	// Fall through seting (if required)
+   if(!mHasServerRegistrationMaxExpires && mBaseProfile.get())
+   {
+       return mBaseProfile->getServerRegistrationMaxExpiresTime();
+   }
+   return mDefaultServerRegistrationMaxExpires;
+}
+void 
+Profile::unsetServerRegistrationMaxExpiresTime(void)
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasServerRegistrationMaxExpires = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasServerRegistrationMaxExpires = true;
+      mDefaultServerRegistrationMaxExpires = 0; // No restriction
+   }
+}
+
+void 
+Profile::setServerRegistrationDefaultExpiresTime(UInt32 secs)
+{
+	mHasServerRegistrationDefaultExpires = true;
+	mDefaultServerRegistrationDefaultExpires = secs;
+}
+
+UInt32 
+Profile::getServerRegistrationDefaultExpiresTime(void) const
+{
+	// Fall through seting (if required)
+   if(!mHasServerRegistrationDefaultExpires && mBaseProfile.get())
+   {
+       return mBaseProfile->getServerRegistrationDefaultExpiresTime();
+   }
+   return mDefaultServerRegistrationDefaultExpires;
+}
+void 
+Profile::unsetServerRegistrationDefaultExpiresTime(void)
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasServerRegistrationDefaultExpires = false;
+   }
+   else // No Base profile - so return to default setting
+   {
+      mHasServerRegistrationDefaultExpires = true;
+      mDefaultServerRegistrationDefaultExpires = 3600; 
+   }
+}
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
