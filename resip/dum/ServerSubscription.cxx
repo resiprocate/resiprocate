@@ -204,20 +204,21 @@ ServerSubscription::dispatch(const SipMessage& msg)
       //expiration times for an event package--part of handler API?
       //added to handler for now.
       mLastSubscribe = msg;      
-      if (msg.exists(h_Expires))
-      {         
-         mExpires = msg.header(h_Expires).value();
-      }
-      else if (handler->hasDefaultExpires())
-      {
-         mExpires = handler->getDefaultExpires();
-      }
-      else
-      {
-         handler->onError(getHandle(), msg);
-         send(reject(400));
+	
+	  int errorResponseCode = 0;
+	  handler->getExpires(msg,mExpires,errorResponseCode);
+	  if (errorResponseCode >= 400)
+	  {		  		  
+		 handler->onError(getHandle(), msg);
+		 SharedPtr<SipMessage> response = reject(errorResponseCode);
+
+		 if (errorResponseCode == 423 && handler->hasMinExpires())
+		 {
+		    response->header(h_MinExpires).value() = handler->getMinExpires();		   
+		 }
+         send(response);
          return;
-      }
+	  }     
 
       InviteSessionHandle invSession;
       if (getAppDialog().isValid())
