@@ -890,8 +890,8 @@ Profile::unsetExpressOutboundAsRouteSetEnabled()
 void
 Profile::setServerRegistrationMinExpiresTime(UInt32 secs)
 {
-	mHasServerRegistrationMinExpires = true;
-	mDefaultServerRegistrationMinExpires = secs;
+   mHasServerRegistrationMinExpires = true;
+   mDefaultServerRegistrationMinExpires = secs;
 }
 
 UInt32 
@@ -922,14 +922,14 @@ Profile::unsetServerRegistrationMinExpiresTime()
 void 
 Profile::setServerRegistrationMaxExpiresTime(UInt32 secs)
 {
-	mHasServerRegistrationMaxExpires = true;
-	mDefaultServerRegistrationMaxExpires = secs;
+   mHasServerRegistrationMaxExpires = true;
+   mDefaultServerRegistrationMaxExpires = secs;
 }
 
 UInt32 
 Profile::getServerRegistrationMaxExpiresTime(void) const
 {
-	// Fall through seting (if required)
+   // Fall through seting (if required)
    if(!mHasServerRegistrationMaxExpires && mBaseProfile.get())
    {
        return mBaseProfile->getServerRegistrationMaxExpiresTime();
@@ -953,14 +953,14 @@ Profile::unsetServerRegistrationMaxExpiresTime(void)
 void 
 Profile::setServerRegistrationDefaultExpiresTime(UInt32 secs)
 {
-	mHasServerRegistrationDefaultExpires = true;
-	mDefaultServerRegistrationDefaultExpires = secs;
+   mHasServerRegistrationDefaultExpires = true;
+   mDefaultServerRegistrationDefaultExpires = secs;
 }
 
 UInt32 
 Profile::getServerRegistrationDefaultExpiresTime(void) const
 {
-	// Fall through seting (if required)
+   // Fall through seting (if required)
    if(!mHasServerRegistrationDefaultExpires && mBaseProfile.get())
    {
        return mBaseProfile->getServerRegistrationDefaultExpiresTime();
