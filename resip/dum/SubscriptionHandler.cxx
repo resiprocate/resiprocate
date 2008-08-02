@@ -70,17 +70,17 @@ ServerSubscriptionHandler::getExpires(const SipMessage &msg, UInt32 &expires, in
    {         
       expires = msg.header(h_Expires).value();
 
-	  if (expires > 0)
-	  {
+      if (expires > 0)
+      {
          if (hasMinExpires() && (expires < getMinExpires()))
-		 {
-			 errorResponseCode = 423;
-		 }
-		 else if (hasMaxExpires() && (expires > getMaxExpires()))
-		 {
-			 expires = getMaxExpires();
-		 }
-	  }
+         {
+            errorResponseCode = 423;
+         }
+         else if (hasMaxExpires() && (expires > getMaxExpires()))
+         {
+            expires = getMaxExpires();
+         }
+      }
    }
    else if (hasDefaultExpires())
    {
@@ -88,7 +88,7 @@ ServerSubscriptionHandler::getExpires(const SipMessage &msg, UInt32 &expires, in
    }
    else
    {
-	   errorResponseCode = 400;	   
+      errorResponseCode = 400;	   
    }
 }
 
