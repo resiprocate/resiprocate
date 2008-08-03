@@ -26,7 +26,7 @@ ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<Mas
       if (expires != 0)
       {
          //check min expires first since max expires will not return an error and will just change the expires value.
-         UInt32 minExpires = masterProfile->getServerRegistrationMinExpiresTime();
+         UInt32 minExpires = masterProfile->serverRegistrationMinExpiresTime();
 
          if (expires < minExpires)
          {
@@ -35,9 +35,9 @@ ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<Mas
          }
          else
          {
-            UInt32 maxExpires = masterProfile->getServerRegistrationMaxExpiresTime();
+            UInt32 maxExpires = masterProfile->serverRegistrationMaxExpiresTime();
 
-            if (maxExpires > 0 && expires > maxExpires)
+            if (expires > maxExpires)
             {
                expires = maxExpires;
             }
@@ -46,7 +46,7 @@ ServerRegistrationHandler::getGlobalExpires(const SipMessage& msg, SharedPtr<Mas
    }
    else
    {
-      expires = masterProfile->getServerRegistrationDefaultExpiresTime();
+      expires = masterProfile->serverRegistrationDefaultExpiresTime();
    }
 }
 
@@ -70,7 +70,7 @@ ServerRegistrationHandler::getContactExpires(const NameAddr &contact, SharedPtr<
       if (expires != 0)
       {
          //check min expires first since max expires will not return an error and will just change the expires value.
-         UInt32 minExpires = masterProfile->getServerRegistrationMinExpiresTime();
+         UInt32 minExpires = masterProfile->serverRegistrationMinExpiresTime();
 
          if (expires < minExpires)
          {
@@ -79,9 +79,9 @@ ServerRegistrationHandler::getContactExpires(const NameAddr &contact, SharedPtr<
          }
          else
          {
-            UInt32 maxExpires = masterProfile->getServerRegistrationMaxExpiresTime();
+            UInt32 maxExpires = masterProfile->serverRegistrationMaxExpiresTime();
 
-            if (maxExpires > 0 && expires > maxExpires)
+            if (expires > maxExpires)
             {
                expires = maxExpires;
             }
