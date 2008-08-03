@@ -118,6 +118,25 @@ class MasterProfile : public UserProfile
       virtual bool& allowBadRegistrationEnabled();
       virtual const bool allowBadRegistrationEnabled() const;  
 
+           
+      ///
+      /// Used when receiveing a REGISTER request, if the expires value in the request
+      /// is less than this time, then dum will reject the message with a 423 and set the
+      /// min-expires header to the value specified here.
+      ///
+      virtual UInt32& serverRegistrationMinExpiresTime(void);
+      virtual const UInt32 serverRegistrationMinExpiresTime(void) const;
+
+      ///
+      /// If an inbound REGISTER has an Expires header or any individual contact bindings with expires greater
+      /// than this value, use this Max expires instead of the one given by the client.
+      virtual UInt32& serverRegistrationMaxExpiresTime(void);
+      virtual const UInt32 serverRegistrationMaxExpiresTime(void) const;
+
+      /// If no Expires header or individual contact bindings specify an expiration value, use this value.
+      virtual UInt32& serverRegistrationDefaultExpiresTime(void);
+      virtual const UInt32 serverRegistrationDefaultExpiresTime(void) const;
+
       ///Set this to include the RequestURI in merge request detection.
       ///*!*!*!*!*!*! RED FLASHING LIGHT *!*!*!*!*!*! 
       ///When false, DUM implements the policy that all RURIs that arrive are equivalent,
@@ -147,6 +166,10 @@ class MasterProfile : public UserProfile
       bool mValidateContentLanguageEnabled;
       bool mValidateAcceptEnabled;
       bool mAllowBadRegistrationEnabled;    
+      bool mHasServerRegistrationMinExpires;
+      UInt32 mServerRegistrationMinExpires;
+      UInt32 mServerRegistrationMaxExpires;
+      UInt32 mServerRegistrationDefaultExpires;
       bool mCheckReqUriInMergeDetectionEnabled;
       ReliableProvisionalMode mUacReliableProvisionalMode;
       ReliableProvisionalMode mUasReliableProvisionalMode;

@@ -18,7 +18,10 @@ MasterProfile::MasterProfile() :
    mAllowBadRegistrationEnabled(false),
    mCheckReqUriInMergeDetectionEnabled(false),
    mUacReliableProvisionalMode(Never),
-   mUasReliableProvisionalMode(Never)
+   mUasReliableProvisionalMode(Never),
+   mServerRegistrationMinExpires(0),
+   mServerRegistrationMaxExpires(UINT_MAX),
+   mServerRegistrationDefaultExpires(3600)
 {
    // Default settings
    addSupportedMimeType(INVITE, Mime("application", "sdp"));
@@ -370,6 +373,43 @@ bool&
 MasterProfile::allowBadRegistrationEnabled()
 {
    return mAllowBadRegistrationEnabled;   
+}
+
+  
+UInt32 &
+MasterProfile::serverRegistrationMinExpiresTime(void)
+{
+   return mServerRegistrationMinExpires;
+}
+
+const UInt32 
+MasterProfile::serverRegistrationMinExpiresTime(void) const
+{
+   return mServerRegistrationMinExpires;
+}
+
+UInt32 &
+MasterProfile::serverRegistrationMaxExpiresTime(void)
+{
+   return mServerRegistrationMaxExpires;
+}
+
+const UInt32 
+MasterProfile::serverRegistrationMaxExpiresTime(void) const
+{
+   return mServerRegistrationMaxExpires;
+}
+
+UInt32 &
+MasterProfile::serverRegistrationDefaultExpiresTime(void)
+{
+   return mServerRegistrationDefaultExpires;
+}
+
+const UInt32 
+MasterProfile::serverRegistrationDefaultExpiresTime(void) const
+{
+   return mServerRegistrationDefaultExpires;
 }
 
 const bool 
