@@ -23,10 +23,57 @@ DataBuffer::DataBuffer(Data& str)
 DataBuffer::~DataBuffer()
 {}
 
+#ifndef RESIP_USE_STL_STREAMS
+UInt64 DataBuffer::tellpbuf(void)
+{ 
+   return mStr.size(); 
+}
+
+size_t DataBuffer::readbuf(char *buf, size_t count)
+{
+   if (count <= 0)
+   {
+      return 0;
+   }
+
+   if (!buf)
+   {
+      assert(0);
+      return 0;
+   }
+
+   size_t cursize = mStr.size();
+
+   size_t toread = (cursize < count) ? (cursize) : (count);
+
+   memcpy(buf,mStr.begin(),toread);
+
+   //wow, not efficient.  Just added this function for repro, need to revisit. @TODO.
+   mStr = mStr.substr(toread);
+
+   return toread;
+}
+
+size_t DataBuffer::writebuf(const char *str, size_t count)
+{
+   if( count <= 0 )
+   {
+      return 0;
+   }
+
+   mStr.append(str,count);
+   return count;
+}
+size_t DataBuffer::putbuf(char ch)
+{
+   mStr += ch;
+
+   return 1;
+}
+#else
 int
 DataBuffer::sync()
 {
-#ifdef RESIP_USE_STL_STREAMS
    size_t len = pptr() - pbase();
    if (len > 0)
    {
@@ -38,14 +85,12 @@ DataBuffer::sync()
       // reset the put buffer
       setp(gbuf + mStr.mSize, gbuf + mStr.mCapacity);
    }
-#endif
    return 0;
 }
 
 int
 DataBuffer::overflow(int c)
 {
-#ifdef RESIP_USE_STL_STREAMS
    // sync, but reallocate
    size_t len = pptr() - pbase();
    if (len >= 0)
@@ -70,9 +115,9 @@ DataBuffer::overflow(int c)
       pbump(1);
       return c;
    }
-#endif
    return 0;
 }
+#endif
 
 iDataStream::iDataStream(Data& str)
    : DataBuffer(str), 
@@ -111,10 +156,10 @@ oDataStream::reset()
 
 DataStream::DataStream(Data& str)
    : DataBuffer(str), 
-  #ifdef  RESIP_USE_STL_STREAMS
+#ifdef  RESIP_USE_STL_STREAMS
      std::iostream(this)
 #else
-	ResipFastOStream(this)
+   ResipFastOStream(this)
 #endif
 {
    // don't call this with a read-only buffer!

@@ -677,6 +677,9 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
       mStartLine->encode(Data::Empty, str);
    }
 
+   //possibly encode contents to data once instead of CountStream?
+   //Data data;
+
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
       if (i != Headers::ContentLength) // !dlb! hack...
@@ -692,12 +695,12 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
          {
             size_t size;
             {
-               //CountStream cs(size);
-				Data data;
-				DataStream cs(data);
-				mContents->encode(cs);
-				cs.flush();
-				size = data.size();
+               CountStream cs(size);
+               
+               //DataStream cs(data);
+               mContents->encode(cs);
+               //cs.flush();
+               //size = data.size();
             }
             str << "Content-Length: " << size << "\r\n";
          }
@@ -723,6 +726,7 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
    if (mContents != 0)
    {
       mContents->encode(str);
+      //str << data;
    }
    else if (mContentsHfv != 0)
    {

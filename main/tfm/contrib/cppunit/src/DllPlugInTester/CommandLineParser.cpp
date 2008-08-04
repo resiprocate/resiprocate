@@ -219,7 +219,7 @@ CommandLineParser::useTextOutputter() const
 
 
 bool 
-CommandLineParser::useresipCout() const
+CommandLineParser::useCoutStream() const
 {
   return m_useCout;
 }
