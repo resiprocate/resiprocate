@@ -4,7 +4,7 @@
     \brief Replaces STL streams for general encoding purposes.
 
     #define RESIP_USE_STL_STREAMS will use the STL for stream encoding (std::ostream).  Undefining RESIP_USE_STL_STREAMS will
-	cause resip to use the alternative stream handling defined in this file for encoding objects.
+      cause resip to use the alternative stream handling defined in this file for encoding objects.
 */
 #define RESIP_USE_STL_STREAMS
 
@@ -85,7 +85,7 @@ class ResipFastOStream : public ResipBasicIOStream
 {
    public:
       ResipFastOStream(ResipStreamBuf *buf):buf_(buf)
-      {         
+      {
       }
       virtual ~ResipFastOStream(void)
       {}
@@ -104,10 +104,10 @@ class ResipFastOStream : public ResipBasicIOStream
          return buf_;
       }
 
-	  void rdbuf(ResipStreamBuf *buf)
-	  {
-		  buf_ = buf;
-	  }
+      void rdbuf(ResipStreamBuf *buf)
+      {
+         buf_ = buf;
+      }
 
       ResipFastOStream & flush(void)
       {
@@ -451,9 +451,9 @@ class ResipStdCOStream: public ResipFastOStream
    public:
       ResipStdCOStream(ResipStdBuf::BufType type)
             :ResipFastOStream(0),buf_(type)
-	  {
-		  rdbuf(&buf_);
-	  }
+      {
+         rdbuf(&buf_);
+      }
 
       ~ResipStdCOStream(void)
       {}

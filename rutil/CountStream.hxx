@@ -11,7 +11,12 @@ namespace resip
    @brief Implementation of std::streambuf used to back CountStream.
     @see CountStream
  */
-class CountBuffer : public std::streambuf
+class CountBuffer : 
+#ifdef RESIP_USE_STL_STREAMS
+   public std::streambuf
+#else
+   public ResipStreamBuf
+#endif
 {
    public:
       /** Constructs a CountBuffer with the reference to the size_t where the
@@ -20,9 +25,22 @@ class CountBuffer : public std::streambuf
       CountBuffer(size_t& count);
       virtual ~CountBuffer();
 
-   protected:
+   protected:      
+#ifdef RESIP_USE_STL_STREAMS
       virtual int sync();
       virtual int overflow(int c = -1);
+#else
+      virtual size_t writebuf(const char *s, size_t count);
+      virtual size_t putbuf(char ch);
+      virtual void flushbuf(void){}
+      virtual size_t readbuf(char *buf, size_t count)
+      {
+         assert(0);
+         return 0;
+      }
+
+      virtual UInt64 tellpbuf(void);
+#endif
 
    private:
       size_t& mCount;
@@ -36,11 +54,11 @@ class CountBuffer : public std::streambuf
    the reference passed to the constructor.  The data is valid after 
    CountStream's destructor is called (ie, flush occurs on destruction).
 */
-class CountStream : private CountBuffer, public std::ostream
+class CountStream : private CountBuffer, public EncodeStream
 {
    public:
       /** Constructs a CountStream with a reference to where the count of bytes
-      	written to the stream should be stored.
+         written to the stream should be stored.
         @param count A reference to the size_t where the number of bytes written
         to the stream after the stream goes out of scope.
        */

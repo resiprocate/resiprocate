@@ -14,9 +14,9 @@ class Data;
  */
 class DataBuffer : 
 #ifdef RESIP_USE_STL_STREAMS
-	public std::streambuf
+   public std::streambuf
 #else
-	public ResipStreamBuf
+   public ResipStreamBuf
 #endif
 {
    public:
@@ -24,19 +24,18 @@ class DataBuffer :
       virtual ~DataBuffer();
 
    protected:
+#ifdef RESIP_USE_STL_STREAMS
       virtual int sync();
       virtual int overflow(int c = -1);
-      Data& mStr;
-
-#ifndef RESIP_USE_STL_STREAMS
-	  virtual size_t writebuf(const char *s, size_t count);
-	  virtual size_t readbuf(char *buf, size_t count);
-	  virtual size_t putbuf(char ch);
-	  virtual void flushbuf(void){}
-
-	  virtual UInt64 tellpbuf(void);
+#else
+      virtual size_t writebuf(const char *s, size_t count);
+      virtual size_t readbuf(char *buf, size_t count);
+      virtual size_t putbuf(char ch);
+      virtual void flushbuf(void)
+      {}
+      virtual UInt64 tellpbuf(void);
 #endif
-
+      Data& mStr;
    private:
       DataBuffer(const DataBuffer&);
       DataBuffer& operator=(const DataBuffer&);
@@ -52,9 +51,9 @@ class DataBuffer :
  */
 class DataStream : private DataBuffer
 #ifdef  RESIP_USE_STL_STREAMS
-	, public std::iostream
+, public std::iostream
 #else
-	, public ResipFastOStream
+, public ResipFastOStream
 #endif
 
 {
@@ -98,7 +97,6 @@ class iDataStream : private DataBuffer, public DecodeStream
    valid after DataStream's destructor is called.
  */
 class oDataStream : private DataBuffer, public EncodeStream 
-	
 {
    public:
       /** Constructs a oDataStream with a Data to operate on.
@@ -117,9 +115,7 @@ class oDataStream : private DataBuffer, public EncodeStream
       oDataStream(const oDataStream&);
       oDataStream& operator=(const oDataStream&);
 };
-
 }
-
 #endif
 
 /* ====================================================================
