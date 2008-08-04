@@ -34,6 +34,14 @@ class HandleManager
       HandleMap mHandleMap;
       bool mShuttingDown;      
       Handled::Id mLastId;
+
+   public:
+      /// Returns the number of handles in use.
+      HandleMap::size_type handleCount(void) const 
+      { 
+          return mHandleMap.size(); 
+      }
+
 };
  
 }
