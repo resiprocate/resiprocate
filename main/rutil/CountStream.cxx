@@ -7,20 +7,25 @@
 
 using namespace resip;
 
+#ifdef RESIP_USE_STL_STREAMS
 static const int BuffSize(2048);
 // singleton buffer -- not really used
 static char Buffer[BuffSize];
+#endif
 
 CountBuffer::CountBuffer(size_t& count)
    : mCount(count)
 {
    mCount = 0;
+#ifdef RESIP_USE_STL_STREAMS
    setp(Buffer, Buffer+BuffSize);
+#endif
 }
 
 CountBuffer::~CountBuffer()
 {}
 
+#ifdef RESIP_USE_STL_STREAMS
 int
 CountBuffer::sync()
 {
@@ -45,15 +50,36 @@ CountBuffer::overflow(int c)
    }
    return 0;
 }
+#else
+UInt64 CountBuffer::tellpbuf(void)
+{ 
+   return mCount; 
+}
+
+
+size_t CountBuffer::writebuf(const char *str, size_t count)
+{
+   mCount += count;
+   return count;
+}
+size_t CountBuffer::putbuf(char ch)
+{
+   mCount++;
+
+   return 1;
+}
+#endif
 
 CountStream::CountStream(size_t& count)
-   : CountBuffer(count), std::ostream(this)
+   : CountBuffer(count), EncodeStream(this)
 {
 }
 
 CountStream::~CountStream()
 {
+#ifdef RESIP_USE_STL_STREAMS
    flush();
+#endif
 }
 
 /* ====================================================================
