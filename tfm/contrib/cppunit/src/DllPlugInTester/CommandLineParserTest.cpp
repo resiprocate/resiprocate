@@ -54,7 +54,7 @@ CommandLineParserTest::testEmptyCommandLine()
   CPPUNIT_ASSERT( !_parser->noTestProgress() );
   CPPUNIT_ASSERT( !_parser->useBriefTestProgress() );
   CPPUNIT_ASSERT( !_parser->useCompilerOutputter() );
-  CPPUNIT_ASSERT( !_parser->useresipCout() );
+  CPPUNIT_ASSERT( !_parser->useCoutStream() );
   CPPUNIT_ASSERT( !_parser->useTextOutputter() );
   CPPUNIT_ASSERT( !_parser->useXmlOutputter() );
 }
@@ -74,7 +74,7 @@ CommandLineParserTest::testFlagCompiler()
   CPPUNIT_ASSERT( !_parser->noTestProgress() );
   CPPUNIT_ASSERT( !_parser->useBriefTestProgress() );
   CPPUNIT_ASSERT( _parser->useCompilerOutputter() );
-  CPPUNIT_ASSERT( !_parser->useresipCout() );
+  CPPUNIT_ASSERT( !_parser->useCoutStream() );
   CPPUNIT_ASSERT( !_parser->useTextOutputter() );
   CPPUNIT_ASSERT( !_parser->useXmlOutputter() );
   CPPUNIT_ASSERT_EQUAL( 0, _parser->getPlugInCount() );
@@ -95,7 +95,7 @@ CommandLineParserTest::testLongFlagBriefProgress()
   CPPUNIT_ASSERT( !_parser->noTestProgress() );
   CPPUNIT_ASSERT( _parser->useBriefTestProgress() );
   CPPUNIT_ASSERT( !_parser->useCompilerOutputter() );
-  CPPUNIT_ASSERT( !_parser->useresipCout() );
+  CPPUNIT_ASSERT( !_parser->useCoutStream() );
   CPPUNIT_ASSERT( !_parser->useTextOutputter() );
   CPPUNIT_ASSERT( !_parser->useXmlOutputter() );
   CPPUNIT_ASSERT_EQUAL( 0, _parser->getPlugInCount() );
@@ -116,7 +116,7 @@ CommandLineParserTest::testFileName()
   CPPUNIT_ASSERT( !_parser->noTestProgress() );
   CPPUNIT_ASSERT( !_parser->useBriefTestProgress() );
   CPPUNIT_ASSERT( !_parser->useCompilerOutputter() );
-  CPPUNIT_ASSERT( !_parser->useresipCout() );
+  CPPUNIT_ASSERT( !_parser->useCoutStream() );
   CPPUNIT_ASSERT( !_parser->useTextOutputter() );
   CPPUNIT_ASSERT( !_parser->useXmlOutputter() );
 
@@ -142,7 +142,7 @@ CommandLineParserTest::testTestPath()
   CPPUNIT_ASSERT( !_parser->noTestProgress() );
   CPPUNIT_ASSERT( !_parser->useBriefTestProgress() );
   CPPUNIT_ASSERT( !_parser->useCompilerOutputter() );
-  CPPUNIT_ASSERT( !_parser->useresipCout() );
+  CPPUNIT_ASSERT( !_parser->useCoutStream() );
   CPPUNIT_ASSERT( !_parser->useTextOutputter() );
   CPPUNIT_ASSERT( !_parser->useXmlOutputter() );
   CPPUNIT_ASSERT_EQUAL( 0, _parser->getPlugInCount() );
@@ -164,7 +164,7 @@ CommandLineParserTest::testParameterWithSpace()
   CPPUNIT_ASSERT( !_parser->noTestProgress() );
   CPPUNIT_ASSERT( !_parser->useBriefTestProgress() );
   CPPUNIT_ASSERT( !_parser->useCompilerOutputter() );
-  CPPUNIT_ASSERT( !_parser->useresipCout() );
+  CPPUNIT_ASSERT( !_parser->useCoutStream() );
   CPPUNIT_ASSERT( !_parser->useTextOutputter() );
   CPPUNIT_ASSERT( _parser->useXmlOutputter() );
   CPPUNIT_ASSERT_EQUAL( 0, _parser->getPlugInCount() );
