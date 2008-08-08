@@ -808,7 +808,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                                           Tuple::inet_ntop(source) );
                   contact.uri().port() = target.transport->port();
 
-                  if (target.transport->transport() != UDP)
+                  if (target.transport->transport() != UDP && !contact.uri().exists(p_gr))
                   {
                      contact.uri().param(p_transport) = Tuple::toData(target.transport->transport());
                   }
