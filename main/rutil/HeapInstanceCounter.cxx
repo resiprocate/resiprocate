@@ -11,17 +11,22 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::STATS
 
+typedef map<void *, unsigned long> AllocationSizeMap;
+
 //namespace   //  unnamed namespace
 //{
 struct InstanceCounts
 {
       InstanceCounts()
          : total(0),
-           outstanding(0)
+           outstanding(0),
+           totalBytesOutstanding(0)
       {}
 
       size_t total;
       size_t outstanding;
+      size_t totalBytesOutstanding;
+      AllocationSizeMap allocationSizes;
 };
 
 // .dlb. should be using comparitor on typeinfo
@@ -41,13 +46,15 @@ HeapInstanceCounter::dump()
    }
    else
    {
-      AllocationMap::iterator i = allocationMap.begin();
-      for (; i != allocationMap.end(); ++i)
+      AllocationMap::const_iterator i(allocationMap.begin());
+      AllocationMap::const_iterator iEnd(allocationMap.end());
+      for (; i != iEnd; ++i)
       {
          if (i->second.total)
          {
             //abi::__cxa_demangle(typeid(obj).name(), 0, 0, &status);
-            WarningLog(<< i->first << " " << i->second.total << " > " << i->second.outstanding);
+            WarningLog(<< i->first << " " << i->second.total << " > " << i->second.outstanding << ", " << 
+                i->second.totalBytesOutstanding);
          }
       }
    }
@@ -57,16 +64,20 @@ void*
 HeapInstanceCounter::allocate(size_t bytes, 
                               const type_info& ti)
 {
-   {
+   void* addr = ::operator new(bytes);
+
+   { //lock scope
       // WarningLog(<< "allocated " << ti.name());
       Lock l(allocationMutex);
 
       const Data name(Data::Share, ti.name(), strlen(ti.name()));
-      allocationMap[name].total += 1;
-      allocationMap[name].outstanding += 1;
+      InstanceCounts &counts = allocationMap[name];
+      
+      counts.total += 1;
+      counts.outstanding += 1;
+      counts.totalBytesOutstanding += bytes;
+      counts.allocationSizes[addr] = bytes;	  
    }
-
-   void* addr = ::operator new(bytes);
    return addr;
 }
 
@@ -74,11 +85,21 @@ void
 HeapInstanceCounter::deallocate(void* addr, 
                                 const type_info& ti)
 {
-   {
+   {//lock scope
       // WarningLog(<< "deallocated " << ti.name());
       Lock l(allocationMutex);
       const Data name(Data::Share, ti.name(), strlen(ti.name()));
-      allocationMap[name].outstanding -= 1;
+      if (allocationMap.count(name) != 0)
+      {
+         InstanceCounts &counts = allocationMap[name];
+
+         if (counts.allocationSizes.count(addr) != 0)
+         {
+            counts.outstanding -= 1;
+            counts.totalBytesOutstanding -= counts.allocationSizes[addr];
+            counts.allocationSizes.erase(addr);
+         }
+      }
    }
    ::operator delete(addr);
 }
