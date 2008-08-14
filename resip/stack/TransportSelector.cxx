@@ -17,7 +17,6 @@
 #include "resip/stack/Uri.hxx"
 
 #include "resip/stack/ExtensionParameter.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionState.hxx"
@@ -26,9 +25,7 @@
 #include "resip/stack/InternalTransport.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "resip/stack/TcpTransport.hxx"
-#include "resip/stack/TlsTransport.hxx"
 #include "resip/stack/UdpTransport.hxx"
-#include "resip/stack/DtlsTransport.hxx"
 #include "resip/stack/Uri.hxx"
 
 #include "rutil/DataStream.hxx"
@@ -42,6 +39,12 @@
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>
 #include <osc/SigcompMessage.h>
+#endif
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/DtlsTransport.hxx"
+#include "resip/stack/ssl/Security.hxx"
+#include "resip/stack/ssl/TlsTransport.hxx"
 #endif
 
 #ifdef WIN32
@@ -153,15 +156,17 @@ TransportSelector::addTransport(std::auto_ptr<Transport> autoTransport)
    {
       assert(dynamic_cast<TcpTransport*>(transport));
    }
+#ifdef USE_SSL
    else if(transport->transport()==TLS)
    {
       assert(dynamic_cast<TlsTransport*>(transport));
    }
+#endif
    else if(transport->transport()==UDP)
    {
       assert(dynamic_cast<UdpTransport*>(transport));
    }
-#if USE_DTLS
+#if USE_DTLS && USE_SSL
    else if(transport->transport()==DTLS)
    {
       assert(dynamic_cast<DtlsTransport*>(transport));

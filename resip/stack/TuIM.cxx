@@ -29,7 +29,6 @@
 #include "resip/stack/MultipartSignedContents.hxx"
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/OctetContents.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/stack/Pidf.hxx"
 #include "resip/stack/SipFrag.hxx"
@@ -38,6 +37,10 @@
 #include "rutil/Random.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 

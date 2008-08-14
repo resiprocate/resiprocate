@@ -5,7 +5,6 @@
 #include "resip/stack/TransactionMap.hxx"
 #include "resip/stack/TransportSelector.hxx"
 #include "resip/stack/TimerQueue.hxx"
-#include "resip/stack/Security.hxx"
 
 namespace resip
 {

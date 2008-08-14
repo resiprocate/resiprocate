@@ -1,3 +1,7 @@
+#include "resip/dum/ssl/EncryptionManager.hxx"
+
+#include "resip/stack/ssl/Security.hxx"
+
 #include <cassert>
 #include <list>
 #include "rutil/BaseException.hxx"
@@ -6,7 +10,6 @@
 #include "resip/dum/BaseUsage.hxx"
 #include "resip/dum/Handles.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/stack/Contents.hxx"
 #include "resip/stack/MultipartSignedContents.hxx"
 #include "resip/stack/MultipartMixedContents.hxx"
@@ -17,7 +20,6 @@
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/dum/CertMessage.hxx"
 #include "resip/dum/TargetCommand.hxx"
-#include "resip/dum/EncryptionManager.hxx"
 #include "resip/dum/DumDecrypted.hxx"
 #include "resip/dum/DumFeature.hxx"
 #include "resip/dum/DumFeatureChain.hxx"
