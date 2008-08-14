@@ -988,7 +988,7 @@
 		F8DB1DB20C56CE1500853E27 /* Random.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Random.hxx; path = ../rutil/Random.hxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DB30C56CE1500853E27 /* RecursiveMutex.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = RecursiveMutex.hxx; path = ../rutil/RecursiveMutex.hxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DB40C56CE1500853E27 /* RWMutex.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = RWMutex.hxx; path = ../rutil/RWMutex.hxx; sourceTree = SOURCE_ROOT; };
-		F8DB1DB50C56CE1500853E27 /* SHA1Stream.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = SHA1Stream.hxx; path = ../rutil/SHA1Stream.hxx; sourceTree = SOURCE_ROOT; };
+		F8DB1DB50C56CE1500853E27 /* SHA1Stream.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = SHA1Stream.hxx; path = ../rutil/ssl/SHA1Stream.hxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DB60C56CE1500853E27 /* SharedCount.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = SharedCount.hxx; path = ../rutil/SharedCount.hxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DB70C56CE1500853E27 /* SharedPtr.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = SharedPtr.hxx; path = ../rutil/SharedPtr.hxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DB80C56CE1500853E27 /* Socket.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Socket.hxx; path = ../rutil/Socket.hxx; sourceTree = SOURCE_ROOT; };
