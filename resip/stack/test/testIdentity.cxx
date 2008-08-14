@@ -3,7 +3,10 @@
 #include <ostream>
 
 #include "rutil/Logger.hxx"
-#include "resip/stack/Security.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 #include "TestSupport.hxx"
 

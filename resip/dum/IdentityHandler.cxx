@@ -6,6 +6,10 @@
 #include "resip/dum/DialogUsageManager.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
+
 using namespace resip;
 using namespace std;
 

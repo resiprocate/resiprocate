@@ -12,7 +12,7 @@
 #include "resip/stack/DnsResult.hxx"
 #include "resip/stack/Headers.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
-#include "resip/stack/TlsConnection.hxx"
+//#include "resip/stack/TlsConnection.hxx"
 #include "resip/stack/Tuple.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransportSelector.hxx"
@@ -30,7 +30,7 @@ static ::resip::ApiCheck::ApiEntry anonymous_resipApiSizeList[] =
     RESIP_TENT(Headers,"PARTIAL_TEMPLATE_SPECIALIZATION"),
     RESIP_TENT(MsgHeaderScanner,"NEW_MSG_HEADER_SCANNER"),
     RESIP_TENT(SipMessage, "PARTIAL_TEMPLATE_SPECIALIZATION"),
-    RESIP_TENT(TlsConnection,"USE_SSL"),
+//    RESIP_TENT(TlsConnection,"USE_SSL"),
     RESIP_TENT(TransportSelector,"USE_IPV6"),
     RESIP_TENT(Tuple,"USE_IPV6"),
     RESIP_TENT(UdpTransport,"NEW_MSG_HEADER_SCANNER"),

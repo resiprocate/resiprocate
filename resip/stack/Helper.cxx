@@ -22,7 +22,6 @@
 #include "rutil/compat.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "resip/stack/Security.hxx"
 //#include "resip/stack/SecurityAttributes.hxx"
 //#include "resip/stack/Contents.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
@@ -30,6 +29,10 @@
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/MultipartAlternativeContents.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 using namespace resip;
 using namespace std;

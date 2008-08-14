@@ -1,8 +1,6 @@
 #if !defined(Repro_PrivateKeyPublicationHandler_hxx)
 #define Repro_PrivateKeyPublicationHandler_hxx
 
-#if defined(USE_SSL)
-
 #include "resip/dum/PublicationHandler.hxx"
 
 namespace resip
@@ -54,5 +52,4 @@ class PrivateKeyPublicationHandler : public resip::ServerPublicationHandler
  
 }
 
-#endif
 #endif
