@@ -1,7 +1,7 @@
 #include <cassert>
 #include <iostream>
 
-#include <rutil/OpenSSLInit.hxx>
+#include <rutil/ssl/OpenSSLInit.hxx>
 
 #include <openssl/e_os2.h>
 #include <openssl/rand.h>
