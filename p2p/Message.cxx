@@ -6,7 +6,7 @@
 #include "p2p/Event.hxx"
 #include "p2p/DestinationId.hxx"
 
-#include "rutil/SHA1Stream.hxx"
+#include "rutil/ssl/SHA1Stream.hxx"
 #include "rutil/Socket.hxx" 
 #include "rutil/Log.hxx"
 
