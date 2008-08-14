@@ -6,14 +6,21 @@
 #include <vector>
 #include "rutil/Data.hxx"
 
-#if defined (USE_SSL)
+// This will not be compiled or installed if USE_SSL isn't set. If you are 
+// including this file from a source tree, and you are getting link errors, you 
+// are probably trying to link against libs that were built without SSL support. 
+// Either stop trying to use this file, or re-build the libs with ssl support 
+// enabled.
+//#if defined (USE_SSL)
+//# include "openssl/sha.h"
+//#else
+//// !kh!
+//// so it would compile without openssl.
+//// also see my comment below.
+//typedef int SHA_CTX;
+//#endif // USE_SSL
+
 # include "openssl/sha.h"
-#else
-// !kh!
-// so it would compile without openssl.
-// also see my comment below.
-typedef int SHA_CTX;
-#endif // USE_SSL
 
 namespace resip
 {

@@ -31,7 +31,7 @@ struct GenericIPAddress
       {
       }
 
-#ifdef USE_IPV6
+#ifdef IPV6_ADDR_ANY
       GenericIPAddress(const sockaddr_in6& v6) : v6Address(v6)
       {
       }
@@ -43,7 +43,7 @@ struct GenericIPAddress
          {
             return sizeof(sockaddr_in);
          }
-#ifdef USE_IPV6
+#ifdef IPV6_ADDR_ANY
          else  if (address.sa_family == AF_INET6) // v6
          {
             return sizeof(sockaddr_in6);
@@ -60,7 +60,7 @@ struct GenericIPAddress
 
       bool isVersion6() const 
       { 
-#ifdef USE_IPV6
+#ifdef IPV6_ADDR_ANY
          if (address.sa_family == AF_INET6) return true; 
 #endif
          return false;
@@ -70,7 +70,7 @@ struct GenericIPAddress
       {
             sockaddr address;
             sockaddr_in v4Address;
-#ifdef USE_IPV6
+#ifdef IPV6_ADDR_ANY
             sockaddr_in6 v6Address;
 #endif
             char pad[28]; // this make union same size if v6 is in or out
@@ -87,7 +87,7 @@ struct GenericIPAddress
             }
             else // v6
             {
-#ifdef USE_IPV6
+#ifdef IPV6_ADDR_ANY
                return (v6Address.sin6_port == addr.v6Address.sin6_port &&
                      memcmp(&v6Address.sin6_addr, &addr.v6Address.sin6_addr, sizeof(in6_addr)) == 0);
 #else
@@ -125,7 +125,7 @@ struct GenericIPAddress
                return false;
             }
          }
-#ifdef USE_IPV6
+#ifdef IPV6_ADDR_ANY
          else if (address.sa_family == AF_INET6 &&
                   addr.address.sa_family == AF_INET6)
          {
