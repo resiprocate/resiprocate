@@ -24,7 +24,7 @@ PACKAGES += MYSQL
 SRC += MySqlDb.cxx
 endif
 
-CODE_SUBDIRS = monkeys stateAgents
+CODE_SUBDIRS = monkeys
 TARGET_LIBRARY = librepro
 TARGET_BINARY = repro
 
@@ -84,6 +84,7 @@ SRC +=	stateAgents/CertServer.cxx \
 	stateAgents/CertSubscriptionHandler.cxx \
 	stateAgents/PrivateKeyPublicationHandler.cxx \
 	stateAgents/PrivateKeySubscriptionHandler.cxx
+CODE_SUBDIRS += stateAgents
 endif
 
 reproSvnVersion=$(shell cat ../SVN-VERSION)

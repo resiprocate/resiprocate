@@ -1,4 +1,4 @@
-#include "rutil/OpenSSLInit.hxx"
+#include "rutil/ssl/OpenSSLInit.hxx"
 #include "rutil/Mutex.hxx"
 #include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"

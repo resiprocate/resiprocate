@@ -63,9 +63,10 @@ SRC = \
 
 ifeq ($(USE_SSL),yes)
 SRC += \
-	OpenSSLInit.cxx \
-	SHA1Stream.cxx
+	ssl/OpenSSLInit.cxx \
+	ssl/SHA1Stream.cxx
 PACKAGES += OPENSSL
+CODE_SUBDIRS += ssl
 endif
 
 

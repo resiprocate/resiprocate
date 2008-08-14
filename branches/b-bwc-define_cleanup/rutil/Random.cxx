@@ -29,7 +29,7 @@
 //continue to watch this issue for a real fix.
 #undef OCSP_RESPONSE
 #endif
-#include "rutil/OpenSSLInit.hxx"
+#include "rutil/ssl/OpenSSLInit.hxx"
 #  define USE_OPENSSL 1
 #else
 #  define USE_OPENSSL 0

@@ -1,4 +1,3 @@
- #include "resip/stack/Security.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipFrag.hxx"
@@ -45,7 +44,6 @@
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/UserAuthInfo.hxx"
 #include "resip/dum/DumFeature.hxx"
-#include "resip/dum/EncryptionManager.hxx"
 #include "resip/dum/IdentityHandler.hxx"
 #include "resip/dum/DumDecrypted.hxx"
 #include "resip/dum/CertMessage.hxx"
@@ -58,6 +56,11 @@
 #include "rutil/RWMutex.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Timer.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#include "resip/dum/ssl/EncryptionManager.hxx"
+#endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::DUM
 

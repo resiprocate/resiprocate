@@ -1,8 +1,6 @@
 #if !defined(Repro_CertServer_hxx)
 #define Repro_CertServer_hxx
 
-#if defined(USE_SSL)
-
 #include "repro/stateAgents/CertPublicationHandler.hxx"
 #include "repro/stateAgents/CertSubscriptionHandler.hxx"
 #include "repro/stateAgents/PrivateKeyPublicationHandler.hxx"
@@ -32,5 +30,4 @@ class CertServer
 };
 
 }
-#endif
 #endif

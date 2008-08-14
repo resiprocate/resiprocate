@@ -9,6 +9,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionController.hxx"
 #include "resip/stack/TransactionState.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "resip/stack/SipStack.hxx"
