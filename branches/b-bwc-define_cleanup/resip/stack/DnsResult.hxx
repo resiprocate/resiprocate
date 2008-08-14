@@ -24,6 +24,7 @@ struct hostent;
 namespace resip
 {
 class DnsInterface;
+class DnsAAAARecord;
 class DnsHandler;
 
 class DnsResult : public DnsResultSink
@@ -243,9 +244,9 @@ class DnsResult : public DnsResultSink
       // DnsResultSink
       void onDnsResult(const DNSResult<DnsHostRecord>&);
 
-#ifdef USE_IPV6
+//#ifdef USE_IPV6
       void onDnsResult(const DNSResult<DnsAAAARecord>&);
-#endif
+//#endif
 
       void onDnsResult(const DNSResult<DnsSrvRecord>&);
       void onDnsResult(const DNSResult<DnsNaptrRecord>&);
