@@ -76,9 +76,14 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
       }
       else if (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(TLS)))
       {
+#ifdef USE_SSL
          InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << interfaceObj);
          mTransport = new TlsTransport(mIncoming, mContact.uri().port(), V4, interfaceObj, 
                                        *mSecurity, "localhost", SecurityTypes::TLSv1);
+#else
+         ErrLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << interfaceObj << ", but TLS is disabled.");
+         assert(0);
+#endif
       }
       else
       {
