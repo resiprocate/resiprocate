@@ -1,7 +1,7 @@
 #if !defined(RESIP_MACSECURITY_HXX)
 #define RESIP_MACSECURITY_HXX
 
-#include "resip/stack/Security.hxx"
+#include "resip/stack/ssl/Security.hxx"
 
 namespace resip
 {
