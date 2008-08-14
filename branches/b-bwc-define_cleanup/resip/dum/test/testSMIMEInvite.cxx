@@ -24,7 +24,7 @@
 #include "rutil/Logger.hxx"
 
 #ifdef WIN32
-#include "resip/stack/WinSecurity.hxx"
+#include "resip/stack/ssl/WinSecurity.hxx"
 #endif
 
 #include "TestDumHandlers.hxx"

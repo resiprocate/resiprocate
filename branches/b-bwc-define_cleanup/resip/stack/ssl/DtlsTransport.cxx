@@ -36,7 +36,7 @@
 #endif
 
 #ifndef RESIP_SECURITY_HXX
-#include "resip/stack/Security.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #endif
 
 #ifndef RESIP_DTLSMESSAGE_HXX
