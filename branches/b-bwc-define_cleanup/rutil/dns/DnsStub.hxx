@@ -63,6 +63,7 @@ class DnsResultSink
       virtual void onDnsResult(const DNSResult<DnsHostRecord>&) = 0;
       virtual void onLogDnsResult(const DNSResult<DnsHostRecord>&);
 
+// We probably should not be installing this file.
 #ifdef USE_IPV6
       virtual void onDnsResult(const DNSResult<DnsAAAARecord>&) = 0;
       virtual void onLogDnsResult(const DNSResult<DnsAAAARecord>&);
