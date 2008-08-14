@@ -14,7 +14,7 @@
 #include "rutil/Logger.hxx"
 
 #include "resip/stack/SipStack.hxx"
-#include "resip/stack/Security.hxx"
+#include "resip/stack/ssl/Security.hxx"
 
 
 using namespace resip;

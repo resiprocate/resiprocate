@@ -1,7 +1,6 @@
-#include "resip/stack/WinSecurity.hxx"
+#include "resip/stack/ssl/WinSecurity.hxx"
 #include <sys/types.h>
 
-#ifdef USE_SSL
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
@@ -12,7 +11,6 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
-#endif
 
 #include <Wincrypt.h>
 #include "rutil/Logger.hxx"
