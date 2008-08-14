@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "rutil/SHA1Stream.hxx"
+#include "rutil/ssl/SHA1Stream.hxx"
 
 using namespace resip;
 using namespace std;

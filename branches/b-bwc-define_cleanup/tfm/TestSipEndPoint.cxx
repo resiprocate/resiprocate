@@ -10,8 +10,12 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/TcpTransport.hxx"
-#include "resip/stack/TlsTransport.hxx"
 #include "resip/stack/UdpTransport.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/TlsTransport.hxx"
+#endif
+
 #include "rutil/Inserter.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"

@@ -8,9 +8,9 @@
 #include "rutil/Data.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/stack/TlsTransport.hxx"
-#include "resip/stack/TlsConnection.hxx"
-#include "resip/stack/Security.hxx"
+#include "resip/stack/ssl/TlsTransport.hxx"
+#include "resip/stack/ssl/TlsConnection.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT

@@ -5,12 +5,15 @@
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Lock.hxx"
 #include "resip/stack/Uri.hxx"
-#include "resip/stack/TlsConnection.hxx"
-#include "resip/stack/TlsTransport.hxx"
 #include "resip/stack/ConnectionManager.hxx"
 #include "resip/stack/SipMessage.hxx"
 
 #include "repro/AclStore.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/TlsConnection.hxx"
+#include "resip/stack/ssl/TlsTransport.hxx"
+#endif
 
 using namespace resip;
 using namespace repro;
