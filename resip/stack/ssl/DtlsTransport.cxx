@@ -44,7 +44,7 @@
 #endif
 
 #ifndef RESIP_DTLSTRANSPORT_HXX
-#include "resip/stack/DtlsTransport.hxx"
+#include "resip/stack/ssl/DtlsTransport.hxx"
 #endif
 
 #include "rutil/WinLeakCheck.hxx"
