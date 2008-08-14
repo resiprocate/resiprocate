@@ -1454,9 +1454,11 @@ main(int arc, char** argv)
       
       dsData.clear();
       
-      DataStream s2(dsData);
       DateCategory otherDate(date);
-      otherDate.encode(s2);
+      {
+         DataStream s2(dsData);
+         otherDate.encode(s2);
+      }
       cerr << "!! original date     : " << date << endl;
       cerr << "!! original string   : " << dateString << endl;
       cerr << "!! otherDate         : " << otherDate << endl;
@@ -1521,9 +1523,10 @@ main(int arc, char** argv)
       assert(mime.param(p_charset) == "ISO-8859-4");
 
       Data dsData;
-      DataStream s(dsData);
-      mime.encode(s);
-      s.flush();
+      {
+         DataStream s(dsData);
+         mime.encode(s);
+      }
       assert(dsData == "text/html;charset=ISO-8859-4");
    }
 
@@ -1540,9 +1543,10 @@ main(int arc, char** argv)
       assert(mime.param(p_charset) == "ISO-8859-4");
 
       Data dsData;
-      DataStream s(dsData);
-      mime.encode(s);
-      s.flush();
+      {
+         DataStream s(dsData);
+         mime.encode(s);
+      }
       assert(dsData == "text/html;charset=ISO-8859-4");
    }
 
@@ -1623,6 +1627,7 @@ main(int arc, char** argv)
       via.param(p_branch).reset("jason");
       dsData.clear();
       via.encode(s);
+      s.flush();
       assert(dsData == "SIP/2.0/UDP ;branch=z9hG4bK" RESIP_COOKIE "jason-1--" RESIP_COOKIE "");
       assert(via.param(p_branch).getTransactionId() == "jason");
    }
