@@ -981,7 +981,7 @@
 		F8DB1DAB0C56CE1500853E27 /* MD5Stream.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = MD5Stream.hxx; path = ../rutil/MD5Stream.hxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DAC0C56CE1500853E27 /* Mutex.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Mutex.hxx; path = ../rutil/Mutex.hxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DAD0C56CE1500853E27 /* OpenSSLInit.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = OpenSSLInit.cxx; path = ../rutil/OpenSSLInit.cxx; sourceTree = SOURCE_ROOT; };
-		F8DB1DAE0C56CE1500853E27 /* OpenSSLInit.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = OpenSSLInit.hxx; path = ../rutil/OpenSSLInit.hxx; sourceTree = SOURCE_ROOT; };
+		F8DB1DAE0C56CE1500853E27 /* OpenSSLInit.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = OpenSSLInit.hxx; path = ../rutil/ssl/OpenSSLInit.hxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DAF0C56CE1500853E27 /* ParseBuffer.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = ParseBuffer.hxx; path = ../rutil/ParseBuffer.hxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DB00C56CE1500853E27 /* Poll.cxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Poll.cxx; path = ../rutil/Poll.cxx; sourceTree = SOURCE_ROOT; };
 		F8DB1DB10C56CE1500853E27 /* Poll.hxx */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.h; name = Poll.hxx; path = ../rutil/Poll.hxx; sourceTree = SOURCE_ROOT; };
