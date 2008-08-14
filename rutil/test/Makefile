@@ -5,7 +5,7 @@ CONTRIB = ../../../contrib
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RUTIL ARES OPENSSL PTHREAD POPT RADIUSCLIENTNG
+PACKAGES += RUTIL ARES PTHREAD POPT RADIUSCLIENTNG
 
 SRC = \
 	TestSubsystemLogLevel.cxx
@@ -25,10 +25,15 @@ TESTPROGRAMS += \
 	testMD5Stream.cxx \
 	testParseBuffer.cxx \
 	testRandomHex.cxx \
-	testSHA1Stream.cxx \
 	testThreadIf.cxx \
 
 #SRC = 	TestSupport.cxx
+
+ifeq ($(USE_SSL),yes)
+TESTPROGRAMS += \
+	testSHA1Stream.cxx
+PACKAGES += OPENSSL
+endif
 
 include $(BUILD)/Makefile.post
 

@@ -5,12 +5,17 @@
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/SecurityTypes.hxx"
 
-#ifdef USE_SSL
+// If USE_SSL is not defined, this will not be built, and this header will 
+// not be installed. If you are including this file from a source tree, and are 
+// getting link errors, the source tree was probably built without USE_SSL.
+//#ifdef USE_SSL
+//#include <openssl/ssl.h>
+//#else
+//typedef void BIO;
+//typedef void SSL;
+//#endif
+
 #include <openssl/ssl.h>
-#else
-typedef void BIO;
-typedef void SSL;
-#endif
 
 namespace resip
 {

@@ -9,17 +9,21 @@
 #include "resip/stack/SecurityTypes.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 
-#if defined(USE_SSL)
+// If USE_SSL is not defined, Security will not be built, and this header will 
+// not be installed. If you are including this file from a source tree, and are 
+// getting link errors, the source tree was probably built without USE_SSL.
+//#if defined(USE_SSL)
+//#else
+//// to ensure compilation and object size invariance.
+//typedef void BIO;
+//typedef void SSL;
+//typedef void X509;
+//typedef void X509_STORE;
+//typedef void SSL_CTX;
+//typedef void EVP_PKEY;
+//#endif
+
 #include <openssl/ssl.h>
-#else
-// to ensure compilation and object size invariance.
-typedef void BIO;
-typedef void SSL;
-typedef void X509;
-typedef void X509_STORE;
-typedef void SSL_CTX;
-typedef void EVP_PKEY;
-#endif
 
 namespace resip
 {
