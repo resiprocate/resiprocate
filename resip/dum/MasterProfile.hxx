@@ -166,13 +166,13 @@ class MasterProfile : public UserProfile
       bool mValidateContentLanguageEnabled;
       bool mValidateAcceptEnabled;
       bool mAllowBadRegistrationEnabled;    
-      bool mHasServerRegistrationMinExpires;
-      UInt32 mServerRegistrationMinExpires;
-      UInt32 mServerRegistrationMaxExpires;
-      UInt32 mServerRegistrationDefaultExpires;
+      bool mHasServerRegistrationMinExpires;      
       bool mCheckReqUriInMergeDetectionEnabled;
       ReliableProvisionalMode mUacReliableProvisionalMode;
       ReliableProvisionalMode mUasReliableProvisionalMode;
+      UInt32 mServerRegistrationMinExpires;
+      UInt32 mServerRegistrationMaxExpires;
+      UInt32 mServerRegistrationDefaultExpires;
 };
    
 }
