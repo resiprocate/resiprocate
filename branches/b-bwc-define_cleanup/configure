@@ -356,6 +356,7 @@ $uname = `uname`;
   {
     name        => "USE_IPV6",
     description => "Compile in IPv6 support?",
+#    default     => &detectIpv6, #Should we enable this by default if supported?
     default     => "no",
     validate    => [@yesno],
     flag        => 'ipv6',
@@ -991,6 +992,15 @@ sub detectDistcc
     return "yes";
   }
   "no";
+}
+
+sub detectIpv6
+{
+  if (-e "/usr/include/netinet6/in6.h")
+  {
+    return "yes";
+  }
+  return "no";
 }
 
 sub sigcompInstalled
