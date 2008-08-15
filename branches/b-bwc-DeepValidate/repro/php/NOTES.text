@@ -1,0 +1,17 @@
+repro-2005-08-25.tar
+-- full set of php files and database create scripts
+-- all functionality is implemented and lightly tested
+-- about to go back and fix the inconsistent naming of aor in the code
+
+repro-2005-08-24.tar
+-- full set of php files and database create scripts
+-- includes the userhome sub-pages except edit resource
+
+repro-2005-08-22-a.tar
+-- full set of php files and database create scripts
+-- fixed activateaccount.php
+
+repro-2005-08-22.tar
+-- full set of php files and database create scripts
+-- activateaccount.php file was corrupted by a mistake during the tar process 
+
