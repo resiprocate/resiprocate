@@ -70,7 +70,7 @@ class Tuple
             TransportType ptype, 
             const Data& targetDomain = Data::Empty);
 
-#ifdef IPV6_ADDR_ANY
+#ifdef IPPROTO_IPV6
       // enable this if the current platform supports IPV6; the USE_IPV6 #define
       // will determine if this c'tor is actually implemented.
       // ?bwc? Is there a more standard preprocessor macro for this?
@@ -173,7 +173,7 @@ private:
       {
             sockaddr mSockaddr;
             sockaddr_in m_anonv4;
-#ifdef IPV6_ADDR_ANY
+#ifdef IPPROTO_IPV6
             // enable this if the current platform supports IPV6
             // ?bwc? Is there a more standard preprocessor macro for this?
             sockaddr_in6 m_anonv6;
