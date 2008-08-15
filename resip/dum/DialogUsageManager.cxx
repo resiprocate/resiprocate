@@ -1,4 +1,4 @@
- #include "resip/stack/Security.hxx"
+#include "resip/stack/Security.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipFrag.hxx"
@@ -20,6 +20,8 @@
 #include "resip/dum/DefaultServerReferHandler.hxx"
 #include "resip/dum/DestroyUsage.hxx"
 #include "resip/dum/Dialog.hxx"
+#include "resip/dum/DialogEventStateManager.hxx"
+#include "resip/dum/DialogEventHandler.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ClientPagerMessage.hxx"
 #include "resip/dum/DumException.hxx"
@@ -76,6 +78,7 @@ DialogUsageManager::DialogUsageManager(SipStack& stack, bool createDefaultFeatur
    mIsDefaultServerReferHandler(true),
    mClientPagerMessageHandler(0),
    mServerPagerMessageHandler(0),
+   mDialogEventStateManager(0),
    mAppDialogSetFactory(new AppDialogSetFactory()),
    mStack(stack),
    mDumShutdownHandler(0),
@@ -521,7 +524,6 @@ DialogUsageManager::makeInviteSession(const NameAddr& target,
 {
    SharedPtr<SipMessage> inv = makeNewSession(new InviteSessionCreator(*this, target, userProfile, initialOffer, level, alternative), appDs);
    DumHelper::setOutgoingEncryptionLevel(*inv, level);
-
    return inv;
 }
 
@@ -613,6 +615,7 @@ DialogUsageManager::makeInviteSessionFromRefer(const SipMessage& refer,
    {
       inv->header(h_Replaces) = referTo.embedded().header(h_Replaces);
    }
+
    return inv;
 }
 
@@ -826,6 +829,25 @@ DialogUsageManager::send(SharedPtr<SipMessage> msg)
       if (outboundDecorator.get())
       {
          msg->addOutboundDecorator(std::auto_ptr<MessageDecorator>(outboundDecorator->clone()));
+      }
+
+      if (msg->header(h_RequestLine).method() == INVITE)
+      {
+         if (ds != 0)
+         {
+            if (mDialogEventStateManager)
+            {
+               Dialog* d = ds->findDialog(*msg);
+               if (d != 0)
+               {
+                  mDialogEventStateManager->onConfirmed(*d, d->getInviteSession());
+               }
+               else
+               {
+                  mDialogEventStateManager->onTryingUac(*ds, *msg);
+               }
+            }
+         }
       }
    }
 
@@ -2128,6 +2150,14 @@ TargetCommand::Target&
 DialogUsageManager::dumOutgoingTarget() 
 {
    return *mOutgoingTarget;
+}
+
+DialogEventStateManager* 
+DialogUsageManager::createDialogEventStateManager(DialogEventHandler* handler)
+{
+   mDialogEventStateManager = new DialogEventStateManager();
+   mDialogEventStateManager->mDialogEventHandler = handler;
+   return mDialogEventStateManager;
 }
 
 
