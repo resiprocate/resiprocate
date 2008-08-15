@@ -59,23 +59,29 @@ class ResipBasicIOStream
 
 #if (defined(_MSC_VER) && _MSC_VER >= 1400 )
 #define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) _snprintf_s(buffer,sizeofBuffer,_TRUNCATE,format,var1)
-#define LTOA(a,b,c,d) _ltoa_s(a,b,c,d)
-#define ULTOA(a,b,c,d) _ultoa_s(a,b,c,d)
+#define LTOA(value,string,sizeofstring,radix) _ltoa_s(value,string,sizeofstring,radix)
+#define ULTOA(value,string,sizeofstring,radix) _ultoa_s(value,string,sizeofstring,radix)
+#define I64TOA(value,string,sizeofstring,radix) _i64toa_s(value,string,sizeofstring,radix)
+#define UI64TOA(value,string,sizeofstring,radix) _ui64toa_s(value,string,sizeofstring,radix)
 #define GCVT(val,num,buffer,buffersize) _gcvt_s(buffer,buffersize,val,num)
 #else
+#define _TRUNCATE -1
 #define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) _snprintf(buffer,count,format,var1)
-#define LTOA(a,b,c,d) _ltoa(a,b,d)
-#define ULTOA(a,b,c,d) _ultoa(a,b,d)
-#define GCVT(val,sigdigits,buffer,buffersize) _gcvt(val,num,buffer)
-#define _CVTBUFSIZE 309+40
+#define LTOA(value,string,sizeofstring,radix) _ltoa(value,string,radix)
+#define ULTOA(value,string,sizeofstring,radix) _ultoa(value,string,radix)
+#define I64TOA(value,string,sizeofstring,radix) _i64toa(value,string,radix)
+#define UI64TOA(value,string,sizeofstring,radix) _ui64toa(value,string,radix)
+#define GCVT(val,sigdigits,buffer,buffersize) _gcvt(val,sigdigits,buffer)
 #endif
 
 #else //non-windows
 #define _TRUNCATE -1
 #define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) snprintf(buffer,sizeofBuffer,format,var1)
-#define LTOA(l,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%li",l)/*ltoa(l,buffer,radix)*/
-#define ULTOA(ul,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%lu",ul)/*ultoa(a,b,d)*/
-#define GCVT(f,sigdigits,buffer,bufferlen) SNPRINTF_1(buffer,bufferlen,bufferlen,"%f",f)/*gcvt(val,num,buffer)*/
+#define LTOA(l,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%li",l)
+#define ULTOA(ul,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%lu",ul)
+#define I64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%ll",value)
+#define UI64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%llu",value)
+#define GCVT(f,sigdigits,buffer,bufferlen) SNPRINTF_1(buffer,bufferlen,bufferlen,"%f",f)
 #define _CVTBUFSIZE 309+40
 #endif
 
@@ -86,6 +92,7 @@ class ResipFastOStream : public ResipBasicIOStream
    public:
       ResipFastOStream(ResipStreamBuf *buf):buf_(buf)
       {
+         good_ = true;
       }
       virtual ~ResipFastOStream(void)
       {}
@@ -218,7 +225,7 @@ class ResipFastOStream : public ResipBasicIOStream
             return *this;
          }
          char buf[66];
-         _i64toa_s(i64,buf,66,10);
+         I64TOA(i64,buf,66,10);
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
@@ -236,7 +243,7 @@ class ResipFastOStream : public ResipBasicIOStream
          }
 
          char buf[66];
-         _ui64toa_s(ui64,buf,66,10);
+         UI64TOA(ui64,buf,66,10);
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
          {
@@ -254,7 +261,7 @@ class ResipFastOStream : public ResipBasicIOStream
          }
 
          char buf[66];
-         SNPRINTF_1(buf,66,66,"%llu",ui64);
+         UI64TOA(ui64,buf,66,10);
 
          size_t count = strlen(buf);
          if (buf_->writebuf(buf,count) < count)
@@ -283,6 +290,20 @@ class ResipFastOStream : public ResipBasicIOStream
          char buf[_CVTBUFSIZE];
          GCVT(d,6,buf,_CVTBUFSIZE);//6 significant digits is the default for %f
          size_t count = strlen(buf);
+#ifndef WIN32 
+         //not using the non-standard microsoft conversion functions
+         //remove any trailing zeros.  Note that resipfastreams does not support STL stream width or precision
+         //modifiers
+         size_t idx=0;
+         for (; count > 1; count--)
+         {
+            idx = count-1;
+            if (buf[idx] != '0' && buf[idx] != '.')
+            {
+               break;
+            }
+         }
+#endif
          if (buf_->writebuf(buf,count) < count)
          {
             good_ = false;
