@@ -34,11 +34,49 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
               int tries,
               unsigned int features)
 {
+	mAdditionalNameservers = additionalNameservers;
+	mFeatures = features;
+
+	int ret = internalInit(additionalNameservers,
+              socketfunc,
+              features,
+				  &mChannel);
+
+	if(ret != Success)
+		return ret;
+
+   if (timeout > 0)
+   {
+      mChannel->timeout = timeout;
+   }
+
+   if (tries > 0)
+   {
+      mChannel->tries = tries;
+   }
+
+   return Success;      
+}
+
+int 
+AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
+              AfterSocketCreationFuncPtr socketfunc,
+              unsigned int features,
+				  ares_channeldata** channel
+)
+{
 #ifdef USE_IPV6
    int requiredCap = ARES_CAP_IPV6;
 #else
    int requiredCap = 0;
 #endif
+
+	if(*channel)
+	{
+		ares_destroy_suppress_callbacks(*channel);
+		*channel = 0;
+	}
+
 
    int cap = ares_capabilities(requiredCap);
    if (cap != requiredCap)
@@ -60,10 +98,10 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
 
    if (additionalNameservers.empty())
    {
-      status = ares_init_options_with_socket_function(&mChannel, &opt, optmask, socketfunc);
+      status = ares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
    }
    else
-   {
+   { 
       optmask |= ARES_OPT_SERVERS;
       opt.nservers = additionalNameservers.size();
       
@@ -89,36 +127,63 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
          opt.servers[i] = additionalNameservers[i].v4Address.sin_addr;
       }
 #endif
-      status = ares_init_options_with_socket_function(&mChannel, &opt, optmask, socketfunc);
+      status = ares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
       delete [] opt.servers;
       opt.servers = 0;
    }
-   
-   if (status != ARES_SUCCESS)
+	if (status != ARES_SUCCESS)
    {
       ErrLog (<< "Failed to initialize DNS library (status=" << status << ")");
       return status;
    }
    else
    {
-      if (timeout > 0)
+      InfoLog(<< "DNS initialization: found  " << (*channel)->nservers << " name servers");
+      for (int i = 0; i < (*channel)->nservers; ++i)
       {
-         mChannel->timeout = timeout;
+         InfoLog(<< " name server: " << DnsUtil::inet_ntop((*channel)->servers[i].addr));
       }
-
-      if (tries > 0)
-      {
-         mChannel->tries = tries;
-      }
-
-      InfoLog(<< "DNS initialization: found  " << mChannel->nservers << " name servers");
-      for (int i = 0; i < mChannel->nservers; ++i)
-      {
-         InfoLog(<< " name server: " << DnsUtil::inet_ntop(mChannel->servers[i].addr));
-      }
-
       return Success;      
    }
+}
+
+bool AresDns::checkDnsChange()
+{
+	//return 'true' if there are changes in the list of DNS servers
+	struct ares_channeldata* channel = 0;
+	bool bRet = false;
+	int result = internalInit(mAdditionalNameservers, 0, mFeatures, &channel);
+	if(result != Success || channel == 0)
+	{
+		bRet = true;
+	}
+	else if(channel->nservers != mChannel->nservers)
+	{
+		bRet = true;
+	}
+	else
+	{
+		for (int i = 0; i < mChannel->nservers; i++)
+		{
+			if (channel->servers[i].addr.s_addr != mChannel->servers[i].addr.s_addr)
+			{
+				bRet = true;
+				break;
+			}
+		}
+	}
+	ares_destroy_suppress_callbacks(channel);
+
+	if(!bRet)
+	{
+		InfoLog(<< " No changes in DNS server list");
+	}
+	else
+	{
+		InfoLog(<< " DNS server list changed");
+	}
+
+	return bRet;
 }
 
 AresDns::~AresDns()

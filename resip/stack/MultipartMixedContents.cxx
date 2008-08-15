@@ -192,6 +192,11 @@ MultipartMixedContents::parse(ParseBuffer& pb)
 
       // pull out contents type only
       pb.skipToChars("Content-Type");
+      if (pb.eof())
+      {
+         pb.reset(headerStart);
+         pb.skipToChars("CONTENT-TYPE");
+      }
       pb.assertNotEof();
 
       pb.skipToChar(Symbols::COLON[0]);
