@@ -38,8 +38,8 @@ leakCheck(bool verbose)
     ostream& os(verbose?cout:devnull);
 #else
     EncodeStream &os(verbose?resipCout:resipFastNull);
-    assert(os.good());
 #endif
+    assert(os.good());
 #endif
 
     for(int i = 0 ; i < 100 ; ++i)
