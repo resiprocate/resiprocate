@@ -135,6 +135,28 @@ RequestLine::parse(ParseBuffer& pb)
    pb.data(mSipVersion, start);
 }
 
+bool 
+RequestLine::deepValidate() const
+{
+   if(!mUri.deepValidate())
+   {
+      return false;
+   }
+
+   if(!mUnknownMethodName.containsOnly(Symbols::Token, false))
+   {
+      // If this is empty, we won't end up in here.
+      return false;
+   }
+
+   if(mSipVersion!="SIP/2.0")
+   {
+      return false;
+   }
+
+   return true;
+}
+
 EncodeStream&
 RequestLine::encodeParsed(EncodeStream& str) const
 {

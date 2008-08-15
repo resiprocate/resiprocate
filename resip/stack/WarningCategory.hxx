@@ -25,6 +25,7 @@ class WarningCategory : public ParserCategory
       WarningCategory& operator=(const WarningCategory&);
 
       virtual void parse(ParseBuffer& pb);
+      virtual bool deepValidate() const;
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 

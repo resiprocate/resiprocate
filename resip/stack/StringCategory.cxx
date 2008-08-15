@@ -59,6 +59,16 @@ StringCategory::parse(ParseBuffer& pb)
    pb.data(mValue, anchor);
 }
 
+bool 
+StringCategory::deepValidate() const
+{
+   if(!mValue.containsOnly(Symbols::Token, false))
+   {
+      return false;
+   }
+   return true;
+}
+
 EncodeStream& 
 StringCategory::encodeParsed(EncodeStream& str) const
 {
