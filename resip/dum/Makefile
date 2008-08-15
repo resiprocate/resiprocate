@@ -56,6 +56,7 @@ SRC =   \
 	RADIUSServerAuthManager.cxx \
 	RedirectManager.cxx \
 	RegistrationCreator.cxx \
+	RegistrationHandler.cxx \
 	ServerAuthManager.cxx \
 	ServerInviteSession.cxx \
 	ServerOutOfDialogReq.cxx \

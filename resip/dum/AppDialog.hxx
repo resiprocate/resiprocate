@@ -40,7 +40,7 @@ class AppDialog : public Handled
       // modify contact only onNew
       NameAddr& getContact();
       
-      virtual std::ostream& dump(std::ostream& strm) const;
+      virtual EncodeStream& dump(EncodeStream& strm) const;
 
    private:
       friend class DialogSet;      

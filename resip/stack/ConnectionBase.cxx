@@ -77,12 +77,13 @@ ConnectionBase::~ConnectionBase()
       delete sendData;
       mOutstandingSends.pop_front();
    }
-   DebugLog (<< "ConnectionBase::~ConnectionBase " << this);
    delete [] mBuffer;
    delete mMessage;
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
+
+   DebugLog (<< "ConnectionBase::~ConnectionBase " << this);
 }
 
 FlowKey
@@ -158,9 +159,42 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             delete this;
             return;
          }
-         mMessage->addBuffer(mBuffer);
+
          unsigned int numUnprocessedChars =
             (mBuffer + chunkLength) - unprocessedCharPtr;
+
+         if(numUnprocessedChars==chunkLength)
+         {
+            // .bwc. MsgHeaderScanner wasn't able to parse anything useful;
+            // don't bother mMessage yet, but make more room in mBuffer.
+            size_t size = numUnprocessedChars*3/2;
+            if (size < ConnectionBase::ChunkSize)
+            {
+               size = ConnectionBase::ChunkSize;
+            }
+            char* newBuffer = 0;
+            try
+            {
+               newBuffer=MsgHeaderScanner::allocateBuffer(size);
+            }
+            catch(std::bad_alloc&)
+            {
+               delete this; // d'tor deletes mBuffer and mMessage
+               ErrLog(<<"Failed to alloc a buffer during preparse!");
+               return;
+            }
+            memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
+            delete [] mBuffer;
+            mBuffer = newBuffer;
+            mBufferPos = numUnprocessedChars;
+            mBufferSize = size;
+            mConnState = ReadingHeaders;
+            return;
+         }
+
+         mMessage->addBuffer(mBuffer);
+         mBuffer=0;
+
          if (scanChunkResult == MsgHeaderScanner::scrNextChunk)
          {
             // Message header is incomplete...
@@ -169,7 +203,16 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                // ...but the chunk is completely processed.
                //.jacob. I've discarded the "assigned" concept.
                //DebugLog(<< "Data assigned, not fragmented, not complete");
-               mBuffer = MsgHeaderScanner::allocateBuffer(ChunkSize);
+               try
+               {
+                  mBuffer = MsgHeaderScanner::allocateBuffer(ChunkSize);
+               }
+               catch(std::bad_alloc&)
+               {
+                  delete this;  // d'tor deletes stuff
+                  ErrLog(<<"Failed to alloc a buffer during preparse!");
+                  return;
+               }
                mBufferPos = 0;
                mBufferSize = ChunkSize;
             }
@@ -181,7 +224,17 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                {
                   size = ConnectionBase::ChunkSize;
                }
-               char* newBuffer = MsgHeaderScanner::allocateBuffer(size);
+               char* newBuffer = 0;
+               try
+               {
+                  newBuffer = MsgHeaderScanner::allocateBuffer(size);
+               }
+               catch(std::bad_alloc&)
+               {
+                  delete this;  // d'tor deletes stuff
+                  ErrLog(<<"Failed to alloc a buffer during preparse!");
+                  return;
+               }
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBuffer = newBuffer;
                mBufferPos = numUnprocessedChars;
@@ -233,12 +286,15 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             {
                // The message body is incomplete.
                DebugLog(<< "partial body received");
-               char* newBuffer = MsgHeaderScanner::allocateBuffer(contentLength);               
+               int newSize=resipMin(resipMax((size_t)numUnprocessedChars*3/2,
+                                             (size_t)ConnectionBase::ChunkSize),
+                                    contentLength);
+               char* newBuffer = MsgHeaderScanner::allocateBuffer(newSize);
                memcpy(newBuffer, unprocessedCharPtr, numUnprocessedChars);
                mBufferPos = numUnprocessedChars;
-               mBufferSize = contentLength;
+               mBufferSize = newSize;
                mBuffer = newBuffer;
-            
+               
                mConnState = PartialBody;
             }
             else
@@ -315,6 +371,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          {
             mMessage->addBuffer(mBuffer);
             mMessage->setBody(mBuffer, contentLength);
+            mBuffer = 0;
             if (!transport()->basicCheck(*mMessage))
             {
                delete mMessage;
@@ -329,7 +386,26 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                mMessage = 0;
             }
             mConnState = NewMessage;
-            mBuffer = 0;            
+         }
+         else if (mBufferPos == mBufferSize)
+         {
+            // .bwc. We've filled our buffer; go ahead and make more room.
+            int newSize = resipMin(mBufferSize*3/2, contentLength);
+            char* newBuffer = 0;
+            try
+            {
+               newBuffer=new char[newSize];
+            }
+            catch(std::bad_alloc&)
+            {
+               delete this; // d'tor deletes mBuffer and mMessage
+               ErrLog(<<"Failed to alloc a buffer while receiving body!");
+               return;
+            }
+            memcpy(newBuffer, mBuffer, mBufferSize);
+            mBufferSize=newSize;
+            delete [] mBuffer;
+            mBuffer = newBuffer;
          }
          break;
       }
@@ -503,8 +579,8 @@ ConnectionBase::transport() const
    return mTransport;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, 
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, 
                   const resip::ConnectionBase& c)
 
 {

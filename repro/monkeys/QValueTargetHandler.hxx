@@ -33,7 +33,7 @@ class QValueTargetHandler : public Processor
       virtual ~QValueTargetHandler();
       
       virtual processor_action_t process(RequestContext &);
-      virtual void dump(std::ostream &os) const;
+      virtual void dump(EncodeStream &os) const;
 
       void fillNextTargetGroup(std::vector<resip::Data>& fillHere,
                               const std::list<resip::Data>& queue,

@@ -47,7 +47,7 @@ IsTrustedNode::process(RequestContext& context)
 }
 
 void
-IsTrustedNode::dump(std::ostream &os) const
+IsTrustedNode::dump(EncodeStream &os) const
 {
   os << "IsTrustedNode monkey" << std::endl;
 }

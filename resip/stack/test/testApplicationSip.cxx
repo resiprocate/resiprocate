@@ -37,11 +37,11 @@ main()
       ApplicationSip* frag = dynamic_cast<ApplicationSip*>(body);
       assert(frag != 0);
 
-      cerr << "!! ";
-      frag->encode(cerr);
+      std::cerr << "!! ";
+      frag->encode(resipCerr);
 
       assert(frag->message().header(h_RequestLine).uri().user() == "bob");
-      msg->encode(cerr);
+      msg->encode(resipCerr);
    }
 
    {
@@ -71,8 +71,8 @@ main()
       ApplicationSip* frag = dynamic_cast<ApplicationSip*>(body);
       assert(frag != 0);
 
-      cerr << "!! ";
-      frag->encode(cerr);
+      std::cerr << "!! ";
+      frag->encode(resipCerr);
 
       assert(frag->message().exists(h_From));
       assert(frag->message().header(h_From).uri().user() == "alice");
@@ -80,7 +80,7 @@ main()
       assert(frag->message().exists(h_CSeq));
       assert(frag->message().header(h_CSeq).sequence() == 314159);
       
-      msg->encode(cerr);
+      msg->encode(resipCerr);
    }
 
    // backward compatibiltiy with SipFrag
@@ -111,8 +111,8 @@ main()
       SipFrag* frag = dynamic_cast<SipFrag*>(body);
       assert(frag != 0);
 
-      cerr << "!! ";
-      frag->encode(cerr);
+      std::cerr << "!! ";
+      frag->encode(resipCerr);
 
       assert(frag->message().exists(h_From));
       assert(frag->message().header(h_From).uri().user() == "alice");
@@ -120,7 +120,7 @@ main()
       assert(frag->message().exists(h_CSeq));
       assert(frag->message().header(h_CSeq).sequence() == 314159);
       
-      msg->encode(cerr);
+      msg->encode(resipCerr);
    }
 
    cerr << "\nTEST OK" << endl;

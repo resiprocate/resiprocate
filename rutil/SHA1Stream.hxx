@@ -29,9 +29,13 @@ class SHA1Buffer : public std::streambuf
       /** @returns the SHA1 hexadecimal representation of the data from the buffer
        */
       Data getHex();
-      /** @returns the SHA1 binary representation of the data from the buffer
+      /** 
+          @param bits the lowest order bits in network byte order. bits must be
+          multiple of 8
+          @returns the SHA1 binary representation of the data from the buffer
        */
-      Data getBin();
+      Data getBin(unsigned int bits);
+
    protected:
       virtual int sync();
       virtual int overflow(int c = -1);
@@ -43,6 +47,7 @@ class SHA1Buffer : public std::streambuf
       // could use pimpl to get rid of one new/delete pair.
       std::auto_ptr<SHA_CTX> mContext;
       std::vector<char> mBuf;
+      bool mBlown;
 };
 
 /** 
@@ -59,9 +64,15 @@ class SHA1Stream : private SHA1Buffer, public std::ostream
        */
       Data getHex();
       /** Calls flush() on itself and returns the SHA1 data in binary format.
+          @param bits the lowest order bits in network byte order. bits must be
+          multiple of 8
           @returns the SHA1 binary representation of the data written to the stream
        */
-      Data getBin();
+      Data getBin(unsigned int bits=160);
+
+      /** Calls getBin(32) and converts to a UInt32 */
+      UInt32 getUInt32();
+      
 };
 
 }

@@ -40,6 +40,58 @@ ServerSubscriptionHandler::getDefaultExpires() const
    return 0;
 }
 
+bool 
+ServerSubscriptionHandler::hasMinExpires() const
+{
+   return false;
+}
+
+UInt32 
+ServerSubscriptionHandler::getMinExpires() const
+{
+   return 0;
+}
+bool 
+ServerSubscriptionHandler::hasMaxExpires() const
+{
+   return false;
+}
+
+UInt32 
+ServerSubscriptionHandler::getMaxExpires() const
+{
+   return 0;
+}
+
+void
+ServerSubscriptionHandler::getExpires(const SipMessage &msg, UInt32 &expires, int &errorResponseCode)
+{
+   if (msg.exists(h_Expires))
+   {         
+      expires = msg.header(h_Expires).value();
+
+      if (expires > 0)
+      {
+         if (hasMinExpires() && (expires < getMinExpires()))
+         {
+            errorResponseCode = 423;
+         }
+         else if (hasMaxExpires() && (expires > getMaxExpires()))
+         {
+            expires = getMaxExpires();
+         }
+      }
+   }
+   else if (hasDefaultExpires())
+   {
+      expires = getDefaultExpires();
+   }
+   else
+   {
+      errorResponseCode = 400;	   
+   }
+}
+
 void 
 ServerSubscriptionHandler::onRefresh(ServerSubscriptionHandle handle, const SipMessage& sub)
 {

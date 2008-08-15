@@ -17,7 +17,7 @@ class UdpServer
 {
 public:
    /// Create the server to listen on the specified UDP address and port
-   explicit UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming);
+   explicit UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port);
    ~UdpServer();
 
    void start();
@@ -42,8 +42,6 @@ private:
 
    /// The handler for all incoming requests.
    RequestHandler& mRequestHandler;
-
-   bool mTurnFraming;
 
    /// The RFC3489 Alternate Server
    UdpServer* mAlternatePortUdpServer;

@@ -883,7 +883,6 @@ Profile::unsetExpressOutboundAsRouteSetEnabled()
       mExpressOutboundAsRouteSetEnabled = false;
    }
 }
-  
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

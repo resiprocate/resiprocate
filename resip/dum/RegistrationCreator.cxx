@@ -23,6 +23,11 @@ RegistrationCreator::RegistrationCreator(DialogUsageManager& dum,
       mLastRequest->header(h_Contacts).front().uri().param(p_rinstance) = Random::getCryptoRandomHex(8);  // .slg. poor mans instance id so that we can tell which contacts are ours - to be replaced by gruu someday
    }
 
+   if(userProfile->gruuEnabled() && userProfile->hasInstanceId())
+   {
+      mLastRequest->header(h_Contacts).front().param(p_Instance) = mUserProfile->getInstanceId();
+   }
+
    if (userProfile->getMethodsParamEnabled())
    {
       mLastRequest->header(h_Contacts).front().param(p_methods) = dum.getMasterProfile()->getAllowedMethodsData();

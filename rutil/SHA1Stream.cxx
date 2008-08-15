@@ -1,4 +1,6 @@
+#include <assert.h>
 #include "rutil/SHA1Stream.hxx"
+#include "rutil/Socket.hxx"  // for ntohl under windows
 #include "rutil/WinLeakCheck.hxx"
 
 #if defined(USE_SSL)
@@ -12,7 +14,8 @@ using namespace resip;
 
 SHA1Buffer::SHA1Buffer()
         : mContext(new SHA_CTX()),
-          mBuf(SHA_DIGEST_LENGTH)
+          mBuf(SHA_DIGEST_LENGTH),
+          mBlown(false)
 {
    SHA1_Init(mContext.get());
    setp(&mBuf[0], (&mBuf[mBuf.size()-1])+1);
@@ -51,16 +54,22 @@ SHA1Buffer::overflow(int c)
 Data 
 SHA1Buffer::getHex()
 {
+   assert(mBlown == false);
    SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
+   mBlown = true;
    Data digest(Data::Share, (const char*)&mBuf[0], mBuf.size());
    return digest.hex();   
 }
 
 Data
-SHA1Buffer::getBin()
+SHA1Buffer::getBin(unsigned int bits)
 {
+   assert(mBlown == false);
+   assert (bits % 8 == 0);
+   assert (bits / 8 <= mBuf.size());
    SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
-   return Data(&mBuf[0], mBuf.size());
+   mBlown = true;
+   return Data(&mBuf[20-bits/8], bits / 8);
 }
 
 SHA1Stream::SHA1Stream()
@@ -80,11 +89,20 @@ SHA1Stream::getHex()
 }
 
 Data
-SHA1Stream::getBin()
+SHA1Stream::getBin(unsigned int bits)
 {
    flush();
-   return SHA1Buffer::getBin();
+   return SHA1Buffer::getBin(bits);
 }
+
+UInt32
+SHA1Stream::getUInt32()
+{
+   flush();
+   UInt32 input = *((UInt32*)getBin(32).c_str());
+   return ntohl(input);
+}
+
 
 #endif // USE_SSL
 

@@ -31,7 +31,7 @@ class Compression;
 
 class ConnectionBase
 {
-      friend std::ostream& operator<<(std::ostream& strm, const resip::ConnectionBase& c);
+      friend EncodeStream& operator<<(EncodeStream& strm, const resip::ConnectionBase& c);
    public:
       ConnectionBase(Transport* transport,
                      const Tuple& who,
@@ -104,8 +104,8 @@ class ConnectionBase
       MsgHeaderScanner mMsgHeaderScanner;
 };
 
-std::ostream& 
-operator<<(std::ostream& strm, const resip::ConnectionBase& c);
+EncodeStream& 
+operator<<(EncodeStream& strm, const resip::ConnectionBase& c);
 
 }
 

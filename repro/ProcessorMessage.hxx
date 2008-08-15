@@ -36,8 +36,8 @@ class ProcessorMessage : public resip::ApplicationMessage, public ChainTraverser
          return mTid;
       }
       
-      virtual std::ostream& encode(std::ostream& ostr) const =0;
-      virtual std::ostream& encodeBrief(std::ostream& ostr) const=0;
+      virtual EncodeStream& encode(EncodeStream& ostr) const =0;
+      virtual EncodeStream& encodeBrief(EncodeStream& ostr) const=0;
 
 
    protected:

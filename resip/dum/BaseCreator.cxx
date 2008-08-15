@@ -79,9 +79,20 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
       DebugLog ( << "Adding auth header to inital reg for IMS: " << auth);
    }
 
-   if (mUserProfile->hasGruu(target.uri().getAor()))
+   //.dcm. If we want to use userprofiles oacross multiple registration we will
+   //need the lookup-rtype hasGruu methods
+   //if (mUserProfile->hasGruu(target.uri().getAor()))
+   //?dcm? handle selction of anon vs pub gruu in profile?
+   //if (mUserProfile->hasGruu(target.uri().getAor()))
+   //!dcm! - clunky, have userprofile provide appropriate gruu or contact...
+   if (!mUserProfile->isAnonymous() && mUserProfile->hasPublicGruu() && method != REGISTER) //why not use GRUU for publish/etc?
    {
-      contact = mUserProfile->getGruu(target.uri().getAor());
+      contact.uri() = mUserProfile->getPublicGruu();
+      mLastRequest->header(h_Contacts).push_front(contact);
+   }
+   else if(mUserProfile->isAnonymous() && mUserProfile->hasTempGruu() && method != REGISTER)
+   {
+      contact.uri() = mUserProfile->getTempGruu();
       mLastRequest->header(h_Contacts).push_front(contact);
    }
    else
@@ -91,8 +102,12 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
          contact.uri() = mUserProfile->getOverrideHostAndPort();
       }
       contact.uri().user() = from.uri().user();
+
+      // .jjg. there isn't anything in the outbound [11] draft that says we 
+      // aren't allowed to include p_Instance in this case...  
+      // odds are it will be useful (or necessary) for some implementations
       const Data& instanceId = mUserProfile->getInstanceId();
-      if (!instanceId.empty())
+      if (!contact.uri().exists(p_gr) && !instanceId.empty())
       {
          contact.param(p_Instance) = instanceId;
       }
@@ -137,7 +152,7 @@ BaseCreator::makeInitialRequest(const NameAddr& target, const NameAddr& from, Me
 
    //DumHelper::setOutgoingEncryptionLevel(mLastRequest, mEncryptionLevel);
 
-   DebugLog ( << "BaseCreator::makeInitialRequest: " << mLastRequest);
+   DebugLog ( << "BaseCreator::makeInitialRequest: " << std::endl << std::endl << mLastRequest);
 }
 
 

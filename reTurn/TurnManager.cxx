@@ -11,8 +11,9 @@ using namespace std;
 
 namespace reTurn {
 
-#define PORT_RANGE_MIN 50000  // must be even
-#define PORT_RANGE_MAX 50999  // must be odd
+// This default range is the Dynamic and/or Private Port range
+#define PORT_RANGE_MIN 49152  // must be even
+#define PORT_RANGE_MAX 65535  // must be odd
 
 TurnManager::TurnManager(asio::io_service& ioService) : 
    mLastAllocatedUdpPort(PORT_RANGE_MIN-1),
@@ -20,11 +21,22 @@ TurnManager::TurnManager(asio::io_service& ioService) :
    mIOService(ioService)
 {
    // Initialize Allocation Ports
-   for(unsigned short i = PORT_RANGE_MIN; i <= PORT_RANGE_MAX; i++)
+   for(unsigned short i = PORT_RANGE_MIN; i <= PORT_RANGE_MAX && i != 0; i++) // i != 0 catches case where we increment 65535 (as an unsigned short)
    {
       mUdpAllocationPorts[i] = PortStateUnallocated;
       mTcpAllocationPorts[i] = PortStateUnallocated;
    }
+}
+
+TurnManager::~TurnManager()
+{
+   TurnAllocationMap::iterator it = mTurnAllocationMap.begin();
+   for(;it != mTurnAllocationMap.end();it++)
+   {
+      delete it->second;
+   }
+
+   InfoLog(<< "Turn Manager destroyed.");
 }
 
 void 

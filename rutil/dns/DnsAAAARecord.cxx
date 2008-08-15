@@ -42,8 +42,8 @@ bool DnsAAAARecord::isSameValue(const Data& value) const
    return DnsUtil::inet_ntop(mAddr) == value;
 }
 
-std::ostream&
-DnsAAAARecord::dump(std::ostream& strm) const
+EncodeStream&
+DnsAAAARecord::dump(EncodeStream& strm) const
 {
    strm << mName << " (AAAA) --> " << DnsUtil::inet_ntop(mAddr);
    return strm;

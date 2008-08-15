@@ -133,9 +133,9 @@ StunMessage::init()
    mHasTurnPeerAddress = false;
    mHasTurnData = false;
    mHasTurnRelayAddress = false;
-   mHasTurnRequestedPortProps = false;
+   mHasTurnRequestedProps = false;
    mHasTurnRequestedTransport = false;
-   mHasTurnRequestedIp = false;
+   mHasTurnReservationToken = false;
    mHasTurnConnectStat = false;
    mErrorCode.reason = 0;
    mUsername = 0;
@@ -366,19 +366,14 @@ StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddres
 }
 
 bool 
-StunMessage::stunParseAtrRequestedPortProps( char* body, unsigned int hdrLen,  TurnAtrRequestedPortProps& result )
+StunMessage::stunParseAtrRequestedProps( char* body, unsigned int hdrLen,  TurnAtrRequestedProps& result )
 {
    if ( hdrLen != 4 )
    {
-      WarningLog(<< "hdrLen wrong for PortProps");
+      WarningLog(<< "hdrLen wrong for RequestedProps");
       return false;
    }
-   body++;  // Skip pad
-   result.props = *body++ & 0x3;
-
-   UInt16 nport;
-   memcpy(&nport, body, 2); body+=2;
-   result.port = ntohs(nport);
+   result.propType = *body;  // copy first 8 bits into propType
 	
    return true;
 }
@@ -395,6 +390,21 @@ StunMessage::stunParseAtrUInt32( char* body, unsigned int hdrLen,  UInt32& resul
    {
       memcpy(&result, body, 4);
       result = ntohl(result);
+      return true;
+   }
+}
+
+bool 
+StunMessage::stunParseAtrUInt64( char* body, unsigned int hdrLen,  UInt64& result )
+{
+   if ( hdrLen != 8 )
+   {
+      WarningLog(<< "hdrLen wrong for UInt64 attribute");
+      return false;
+   }
+   else
+   {
+      memcpy(&result, body, 8);
       return true;
    }
 }
@@ -774,34 +784,36 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             StackLog(<< "Turn Relay Address = " << mTurnRelayAddress);
             break;
 
-         case TurnRequestedPortProps:
-            mHasTurnRequestedPortProps = true;
-            if (stunParseAtrRequestedPortProps( body, attrLen, mTurnRequestedPortProps) == false)
+         case TurnRequestedProps:
+            mHasTurnRequestedProps = true;
+            if (stunParseAtrRequestedProps( body, attrLen, mTurnRequestedProps) == false)
             {
-               WarningLog(<< "problem parsing turn requested port props");
+               WarningLog(<< "problem parsing turn requested props");
                return false;
             }
-            StackLog(<< "Turn Requested Port Props = " << (int)mTurnRequestedPortProps.props << ", port = " << mTurnRequestedPortProps.port);
+            StackLog(<< "Turn Requested Props = " << (int)mTurnRequestedProps.propType);
             break;
 
          case TurnRequestedTransport:
             mHasTurnRequestedTransport = true;
-            if (stunParseAtrUInt32( body, attrLen, mTurnRequestedTransport) == false)
+            UInt32 requestedTransport;
+            if (stunParseAtrUInt32( body, attrLen, requestedTransport) == false)
             {
                WarningLog(<< "problem parsing turn requested transport");
                return false;
             }
-            StackLog(<< "Turn Requested Transport = " << mTurnRequestedTransport);
+            mTurnRequestedTransport = requestedTransport >> 24;
+            StackLog(<< "Turn Requested Transport = " << (int)mTurnRequestedTransport);
             break;
 
-         case TurnRequestedIp:
-            mHasTurnRequestedIp = true;
-            if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRequestedIp ) == false )
+         case TurnReservationToken:
+            mHasTurnReservationToken = true;
+            if ( stunParseAtrUInt64(  body,  attrLen,  mTurnReservationToken ) == false )
             {
-               WarningLog(<< "problem parsing turn requested ip");
+               WarningLog(<< "problem parsing turn reservation token");
                return false;
             }
-            StackLog(<< "Turn Requested IP Address = " << mTurnRequestedIp);
+            StackLog(<< "Turn Reservation Token = " << mTurnReservationToken);
             break;
 
          case TurnConnectStat:
@@ -893,9 +905,6 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
       case StunMessage::TurnDataMethod:
          os << "Data";
          break;
-      case StunMessage::TurnChannelConfirmationMethod:
-         os << "ChannelConfirmation";
-         break;
       default:
          os << "Unknown ind method (" << int(h.msgType & 0x000F) << ")";
          break;
@@ -926,6 +935,9 @@ operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
 			break;
 		case StunMessage::TurnRefreshMethod:
             os << "Refresh";
+			break;
+		case StunMessage::TurnChannelBindMethod:
+            os << "ChannelBind";
 			break;
       default:
          os << "Unknown method (" << int(h.msgType & 0x000F) << ")";
@@ -987,6 +999,15 @@ StunMessage::encodeAtrUInt32(char* ptr, UInt16 type, UInt32 value)
    ptr = encode16(ptr, 4);
    ptr = encode32(ptr, value);
    return ptr;
+}
+
+char*
+StunMessage::encodeAtrUInt64(char* ptr, UInt16 type, UInt64 value)
+{
+   ptr = encode16(ptr, type);
+   ptr = encode16(ptr, 8);
+   memcpy(ptr, reinterpret_cast<void*>(&value), sizeof(UInt64));
+   return ptr + sizeof(UInt64);
 }
 
 char*
@@ -1075,13 +1096,13 @@ StunMessage::encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr)
 }
 
 char* 
-StunMessage::encodeAtrRequestedPortProps(char* ptr, const TurnAtrRequestedPortProps& atr)
+StunMessage::encodeAtrRequestedProps(char* ptr, const TurnAtrRequestedProps& atr)
 {
-   ptr = encode16(ptr, TurnRequestedPortProps);
+   ptr = encode16(ptr, TurnRequestedProps);
    ptr = encode16(ptr, 4);
-   *ptr++ = (UInt8)0;  // pad
-   *ptr++ = atr.props & 0x3;
-   ptr = encode16(ptr, atr.port);
+   *ptr++ = atr.propType;  
+   *ptr++ = 0; // pad
+   ptr = encode16(ptr, 0); // pad
    return ptr;
 }
 
@@ -1237,20 +1258,20 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       StackLog(<< "Encoding Turn RelayAddress: " << mTurnRelayAddress);
       ptr = encodeAtrXorAddress (ptr, TurnRelayAddress, mTurnRelayAddress);
    }
-   if (mHasTurnRequestedPortProps)
+   if (mHasTurnRequestedProps)
    {
-      StackLog(<< "Encoding Turn RequestedPortProps: " << (int)mTurnRequestedPortProps.props << ", port=" << mTurnRequestedPortProps.port);
-      ptr = encodeAtrRequestedPortProps(ptr, mTurnRequestedPortProps);
+      StackLog(<< "Encoding Turn RequestedProps: " << (int)mTurnRequestedProps.propType);
+      ptr = encodeAtrRequestedProps(ptr, mTurnRequestedProps);
    }   
    if (mHasTurnRequestedTransport)
    {
-      StackLog(<< "Encoding Turn RequestedTransport: " << mTurnRequestedTransport);
-      ptr = encodeAtrUInt32(ptr, TurnRequestedTransport, mTurnRequestedTransport);
+      StackLog(<< "Encoding Turn RequestedTransport: " << (int)mTurnRequestedTransport);
+      ptr = encodeAtrUInt32(ptr, TurnRequestedTransport, UInt32(mTurnRequestedTransport << 24));
    }   
-   if (mHasTurnRequestedIp)
+   if (mHasTurnReservationToken)
    {
-      StackLog(<< "Encoding Turn RequestedIp: " << mTurnRequestedIp);
-      ptr = encodeAtrXorAddress (ptr, TurnRequestedIp, mTurnRequestedIp);
+      StackLog(<< "Encoding Turn ReservationToken: " << mTurnReservationToken);
+      ptr = encodeAtrUInt64 (ptr, TurnReservationToken, mTurnReservationToken);
    }
    if (mHasTurnConnectStat)
    {
@@ -1501,36 +1522,34 @@ StunMessage::checkFingerprint()
 
 /* ====================================================================
 
- Original contribution Copyright (C) 2007 Plantronics, Inc.
- Provided under the terms of the Vovida Software License, Version 2.0.
+ Copyright (c) 2007-2008, Plantronics, Inc.
+ All rights reserved.
 
- The Vovida Software License, Version 2.0 
- 
  Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 
+ modification, are permitted provided that the following conditions are 
+ met:
+
+ 1. Redistributions of source code must retain the above copyright 
+    notice, this list of conditions and the following disclaimer. 
+
  2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in
-    the documentation and/or other materials provided with the
-    distribution. 
- 
- THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
- WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
- NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
- IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
- EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- DAMAGE.
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution. 
+
+ 3. Neither the name of Plantronics nor the names of its contributors 
+    may be used to endorse or promote products derived from this 
+    software without specific prior written permission. 
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
-

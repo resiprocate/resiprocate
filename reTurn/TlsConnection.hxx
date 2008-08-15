@@ -21,7 +21,7 @@ class TlsConnection
 {
 public:
   /// Construct a connection with the given io_service.
-   explicit TlsConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, bool turnFraming, asio::ssl::context& context);
+   explicit TlsConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, asio::ssl::context& context);
   ~TlsConnection();
 
    /// Get the socket associated with the connection.
@@ -54,8 +54,6 @@ protected:
 
    /// The handler used to process the incoming request.
    RequestHandler& mRequestHandler;
-
-   bool mTurnFraming;
 
 private:
 };

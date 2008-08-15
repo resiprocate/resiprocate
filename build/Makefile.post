@@ -73,14 +73,14 @@ endif
 # this section adds the appropriate flags, headers, etc. for packages.
 # See the Makefile.pkg for further information about how packages work.
 
-INCDIRS  += $(foreach package,$(PACKAGES), $($(package)_INCLUDEDIRS))
-CXXFLAGS += $(foreach package,$(PACKAGES), $($(package)_CXXFLAGS))
-LDFLAGS  += $(foreach package,$(PACKAGES), $($(package)_LDFLAGS))
-LIBDIRS  += $(foreach package,$(PACKAGES), $($(package)_LIBDIRS))
-LIBNAMES += $(foreach package,$(PACKAGES), $($(package)_LIBNAME) )
+INCDIRS  := $(foreach package,$(PACKAGES), $($(package)_INCLUDEDIRS)) $(INCDIRS)
+CXXFLAGS := $(foreach package,$(PACKAGES), $($(package)_CXXFLAGS)) $(CXXFLAGS)
+LDFLAGS  := $(foreach package,$(PACKAGES), $($(package)_LDFLAGS)) $(LDFLAGS)
+LIBDIRS  := $(foreach package,$(PACKAGES), $($(package)_LIBDIRS)) $(LIBDIRS)
+LIBNAMES := $(foreach package,$(PACKAGES), $($(package)_LIBNAME)) $(LIBNAMES)
 LDLIBS_LAST += $(foreach package,$(PACKAGES), $($(package)_LDLIBS_LAST))
-LDLIBS	 += $(foreach libs,$(LIBDIRS), -L$(libs)) $(foreach libs,$(LIBNAMES), -l$(libs))
-DEFINES += $(foreach package,$(PACKAGES), $($(package)_DEFINES) )
+LDLIBS	 := $(foreach libs,$(LIBDIRS), -L$(libs)) $(foreach libs,$(LIBNAMES), -l$(libs)) $(LDLIBS)
+DEFINES := $(foreach package,$(PACKAGES), $($(package)_DEFINES) ) $(DEFINES)
 
 # because order is important
 LDLIBS   += $(LDLIBS_LAST)

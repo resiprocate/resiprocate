@@ -51,6 +51,7 @@ testSelectInterruptor.cxx \
 testServer.cxx \
 testSipFrag.cxx \
 testSipMessage.cxx \
+testSipMessageEncode.cxx \
 testSipMessageMemory.cxx \
 testSipStack1.cxx \
 testSMIME.cxx \

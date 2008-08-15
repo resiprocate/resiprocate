@@ -157,12 +157,8 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onBindingSuccess: socketDest=" << socketDesc << ", reflexive=" << reflexiveTuple);
       mTurnAsyncSocket->createAllocation(30,       // TurnSocket::UnspecifiedLifetime, 
                                          TurnSocket::UnspecifiedBandwidth, 
-                                         StunMessage::PortPropsEvenPair,
-#ifdef ALLOC_PORT
-                                         ALLOC_PORT, 
-#else
-                                         TurnSocket::UnspecifiedPort,
-#endif
+                                         StunMessage::PropsPortPair,
+                                         TurnAsyncSocket::UnspecifiedToken,
                                          StunTuple::UDP);  
    }
    virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e)
@@ -170,13 +166,14 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth)
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onAllocationSuccess: socketDest=" << socketDesc << 
               ", reflexive=" << reflexiveTuple << 
               ", relay=" << relayTuple <<
               ", lifetime=" << lifetime <<
-              ", bandwidth=" << bandwidth);
+              ", bandwidth=" << bandwidth <<
+              ", reservationToken=" << reservationToken);
 
 #ifdef RECEIVE_ONLY
        // Send one packet of data so that it opens permission
@@ -321,7 +318,7 @@ int main(int argc, char* argv[])
     handler.setTurnAsyncSocket(turnSocket.get());
 
     // Connect to Stun/Turn Server
-    turnSocket->connect(turnAddress.c_str(), port, true);
+    turnSocket->connect(turnAddress.c_str(), port);
 
     // Set the username and password
     turnSocket->setUsernameAndPassword(username, password);

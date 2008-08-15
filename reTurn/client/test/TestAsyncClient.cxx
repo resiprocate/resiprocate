@@ -103,10 +103,10 @@ public:
    virtual void onBindSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onBindingSuccess: socketDest=" << socketDesc << ", reflexive=" << reflexiveTuple);
-      mTurnAsyncSocket->createAllocation(30,       // TurnSocket::UnspecifiedLifetime, 
-                                         TurnSocket::UnspecifiedBandwidth, 
-                                         StunMessage::PortPropsEvenPair,
-                                         TurnSocket::UnspecifiedPort,
+      mTurnAsyncSocket->createAllocation(30,       // TurnAsyncSocket::UnspecifiedLifetime, 
+                                         TurnAsyncSocket::UnspecifiedBandwidth, 
+                                         StunMessage::PropsPortPair,
+                                         TurnAsyncSocket::UnspecifiedToken,
                                          StunTuple::UDP);  
    }
    virtual void onBindFailure(unsigned int socketDesc, const asio::error_code& e)
@@ -114,20 +114,21 @@ public:
       InfoLog( << "MyTurnAsyncSocketHandler::onBindingFailure: socketDest=" << socketDesc << " error=" << e.value() << "(" << e.message() << ").");
    }
 
-   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth)
+   virtual void onAllocationSuccess(unsigned int socketDesc, const StunTuple& reflexiveTuple, const StunTuple& relayTuple, unsigned int lifetime, unsigned int bandwidth, UInt64 reservationToken)
    {
       InfoLog( << "MyTurnAsyncSocketHandler::onAllocationSuccess: socketDest=" << socketDesc << 
               ", reflexive=" << reflexiveTuple << 
               ", relay=" << relayTuple <<
               ", lifetime=" << lifetime <<
-              ", bandwidth=" << bandwidth);
+              ", bandwidth=" << bandwidth <<
+              ", reservationToken=" << reservationToken);
 
        // Test Data sending and receiving over allocation
        resip::Data turnData("This test is for wrapped Turn Data!");
        InfoLog( << "CLIENT: Sending: " << turnData);
        mTurnAsyncSocket->sendTo(asio::ip::address::from_string(address.c_str()), 2000, turnData.c_str(), turnData.size()+1);
 
-       turnData = "This test should be framed in TCP/TLS but not in UDP - since ChannelConfirmed is not yet received.";
+       turnData = "This test should be in ChannelData message in TCP/TLS but not in UDP - since ChannelBindResponse is not yet received.";
        InfoLog( << "CLIENT: Sending: " << turnData);
        mTurnAsyncSocket->setActiveDestination(asio::ip::address::from_string(address.c_str()), 2000);
        mTurnAsyncSocket->send(turnData.c_str(), turnData.size()+1);       
@@ -185,7 +186,7 @@ public:
          break;
       case 2:
          {
-            resip::Data turnData("This test is for framed turn data!");
+            resip::Data turnData("This test is for ChannelData message!");
             InfoLog( << "CLIENT: Sending: " << turnData);
             mTurnAsyncSocket->send(turnData.c_str(), turnData.size()+1);       
          }
@@ -213,6 +214,8 @@ int main(int argc, char* argv[])
 #ifdef WIN32
   resip::FindMemoryLeaks fml;
 #endif
+  //resip::Log::initialize(resip::Log::Cout, resip::Log::Stack, argv[0]);
+
   try
   {
     if (argc != 3)
@@ -244,7 +247,7 @@ int main(int argc, char* argv[])
     handler.setTurnAsyncSocket(turnSocket.get());
 
     // Connect to Stun/Turn Server
-    turnSocket->connect(argv[1], port, true);
+    turnSocket->connect(argv[1], port);
 
     // Set the username and password
     turnSocket->setUsernameAndPassword(username, password);

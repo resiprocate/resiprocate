@@ -12,6 +12,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/MD5Stream.hxx"
 
+#ifdef USE_RADIUS_CLIENT
+
 using namespace resip;
 using namespace std;
 
@@ -142,4 +144,6 @@ void MyRADIUSDigestAuthListener::onError() {
   UserAuthInfo *uai = new UserAuthInfo(user, realm, UserAuthInfo::Error, transactionId);
   tu.post(uai);
 }
+
+#endif
 

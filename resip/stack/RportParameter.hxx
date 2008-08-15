@@ -30,7 +30,7 @@ class RportParameter : public Parameter
 
       bool hasValue() const { return mHasValue; } 
 
-      virtual std::ostream& encode(std::ostream& stream) const;
+      virtual EncodeStream& encode(EncodeStream& stream) const;
 
       virtual Parameter* clone() const;
       

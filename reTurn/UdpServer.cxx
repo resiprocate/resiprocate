@@ -12,15 +12,14 @@ using namespace resip;
 
 namespace reTurn {
 
-UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port, bool turnFraming)
+UdpServer::UdpServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : AsyncUdpSocketBase(ioService),
   mRequestHandler(requestHandler),
-  mTurnFraming(turnFraming),
   mAlternatePortUdpServer(0),
   mAlternateIpUdpServer(0),
   mAlternateIpPortUdpServer(0)
 {
-   InfoLog(<< (mTurnFraming ? "TURN" : "STUN") << " UdpServer started.  Listening on " << address << ":" << port);
+   InfoLog(<< "UdpServer started.  Listening on " << address << ":" << port);
 
    bind(address, port);
 }
@@ -44,7 +43,6 @@ UdpServer::start()
 void 
 UdpServer::setAlternateUdpServers(UdpServer* alternatePort, UdpServer* alternateIp, UdpServer* alternateIpPort)
 {
-   assert(!mTurnFraming);
    assert(!mAlternatePortUdpServer);
    assert(!mAlternateIpUdpServer);
    assert(!mAlternateIpPortUdpServer);
@@ -70,10 +68,6 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
 {
    if (data->size() > 4)
    {
-      char* stunMessageBuffer = 0;
-      unsigned int stunMessageSize = 0;
-
-      bool treatAsData=false;
       /*
       std::cout << "Read " << bytesTransferred << " bytes from udp socket (" << address.to_string() << ":" << port << "): " << std::endl;
       cout << std::hex;
@@ -83,106 +77,70 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
       }
       std::cout << std::dec << std::endl;
       */
-      unsigned short channelNumber;
-      memcpy(&channelNumber, &(*data)[0], 2);
-      channelNumber = ntohs(channelNumber);
 
-      if(mTurnFraming)
+      if(((*data)[0] & 0xC0) == 0)  // Stun/Turn Messages always have bits 0 and 1 as 00 - otherwise ChannelData message
       {
-         // All Turn messaging will be framed
-         if(channelNumber == 0) // Stun/Turn Request
+         // Try to parse stun message
+         StunMessage request(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                             StunTuple(StunTuple::UDP, address, port),
+                             (char*)&(*data)[0], data->size());
+         if(request.isValid())
          {
-            stunMessageBuffer = (char*)&(*data)[4];
-            stunMessageSize = (unsigned int)data->size()-4;
-         }
-         else  
-         {
-            // Turn Data
-            treatAsData = true;
-         }
-      }
-      else
-      {
-         stunMessageBuffer = (char*)&(*data)[0];
-         stunMessageSize = data->size();
-      }
-
-      if(!treatAsData)
-      {
-         if(stunMessageBuffer && stunMessageSize)
-         {
-            // Try to parse stun message
-            StunMessage request(StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
-                                StunTuple(StunTuple::UDP, address, port),
-                                stunMessageBuffer, stunMessageSize);
-            if(request.isValid())
+            StunMessage* response;
+            asio::ip::udp::socket* responseSocket;
+            ResponseMap::iterator it = mResponseMap.find(request.mHeader.magicCookieAndTid);
+            if(it == mResponseMap.end())
             {
-               StunMessage* response;
-               asio::ip::udp::socket* responseSocket;
-               ResponseMap::iterator it = mResponseMap.find(request.mHeader.magicCookieAndTid);
-               if(it == mResponseMap.end())
-               {
-                  response = new StunMessage;
-                  RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, *response, isRFC3489BackwardsCompatServer());
+               response = new StunMessage;
+               RequestHandler::ProcessResult result = mRequestHandler.processStunMessage(this, request, *response, isRFC3489BackwardsCompatServer());
 
-                  switch(result)
-                  {
-                  case RequestHandler::NoResponseToSend:
-                     // No response to send - just receive next message
-                     delete response;
-                     doReceive();
-                     return;
-                  case RequestHandler::RespondFromAlternatePort:
-                     responseSocket = &mAlternatePortUdpServer->getSocket();
-                     break;
-                  case RequestHandler::RespondFromAlternateIp:
-                     responseSocket = &mAlternateIpUdpServer->getSocket();
-                     break;
-                  case RequestHandler::RespondFromAlternateIpPort:
-                     responseSocket = &mAlternateIpPortUdpServer->getSocket();
-                     break;
-                  case RequestHandler::RespondFromReceiving:
-                  default:
-                     responseSocket = &mSocket;            
-                     break;
-                  }
+               switch(result)
+               {
+               case RequestHandler::NoResponseToSend:
+                  // No response to send - just receive next message
+                  delete response;
+                  doReceive();
+                  return;
+               case RequestHandler::RespondFromAlternatePort:
+                  responseSocket = &mAlternatePortUdpServer->getSocket();
+                  break;
+               case RequestHandler::RespondFromAlternateIp:
+                  responseSocket = &mAlternateIpUdpServer->getSocket();
+                  break;
+               case RequestHandler::RespondFromAlternateIpPort:
+                  responseSocket = &mAlternateIpPortUdpServer->getSocket();
+                  break;
+               case RequestHandler::RespondFromReceiving:
+               default:
+                  responseSocket = &mSocket;            
+                  break;
+               }
 
-                  // Store response in Map - to be resent if a retranmission is received
-                  mResponseMap[response->mHeader.magicCookieAndTid] = new ResponseEntry(this, responseSocket, response);
-               }
-               else
-               {
-                  InfoLog(<< "UdpServer: received retransmission of request with tid: " << request.mHeader.magicCookieAndTid);
-                  response = it->second->mResponseMessage;
-                  responseSocket = it->second->mResponseSocket;
-               }
-#define RESPONSE_BUFFER_SIZE 1024
-               boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
-               unsigned int responseSize;
-               if(mTurnFraming)
-               {
-                  responseSize = response->stunEncodeFramedMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
-               }
-               else
-               {
-                  responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
-               }
-               buffer->truncate(responseSize);  // set size to real size
-
-               doSend(response->mRemoteTuple, buffer);
+               // Store response in Map - to be resent if a retranmission is received
+               mResponseMap[response->mHeader.magicCookieAndTid] = new ResponseEntry(this, responseSocket, response);
             }
             else
             {
-               WarningLog(<< "Received invalid StunMessage.  Dropping.");
+               InfoLog(<< "UdpServer: received retransmission of request with tid: " << request.mHeader.magicCookieAndTid);
+               response = it->second->mResponseMessage;
+               responseSocket = it->second->mResponseSocket;
             }
-         }
-         else
-         {
-            WarningLog(<< "Received invalid data.  Dropping.");
-         }
-      } 
-      else
+
+#define RESPONSE_BUFFER_SIZE 1024
+            boost::shared_ptr<DataBuffer> buffer = allocateBuffer(RESPONSE_BUFFER_SIZE);
+            unsigned int responseSize;
+            responseSize = response->stunEncodeMessage((char*)buffer->data(), RESPONSE_BUFFER_SIZE);
+            buffer->truncate(responseSize);  // set size to real size
+
+            doSend(response->mRemoteTuple, buffer);
+         }            
+      }
+      else // ChannelData message
       {
+         unsigned short channelNumber;
+         memcpy(&channelNumber, &(*data)[0], 2);
+         channelNumber = ntohs(channelNumber);
+
          mRequestHandler.processTurnData(channelNumber,
                                          StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
                                          StunTuple(StunTuple::UDP, address, port),
@@ -191,7 +149,7 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
    }
    else
    {
-      WarningLog(<< "Not enough data for framed message.  Dropping.");
+      WarningLog(<< "Not enough data for stun message or framed message.  Dropping.");
    }
 
    doReceive();

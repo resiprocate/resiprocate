@@ -34,6 +34,10 @@ GenericLogImpl::Instance()
          if (mLogger == 0 || (MaxLineCount && mLineCount > MaxLineCount))
          {
             std::cerr << "Creating a file logger" << std::endl;
+            if (mLogger)
+            {
+               delete mLogger;
+            }
             if (Log::mLogFileName != "")
             {
                mLogger = new std::ofstream(mLogFileName.c_str(), std::ios_base::out | std::ios_base::trunc);

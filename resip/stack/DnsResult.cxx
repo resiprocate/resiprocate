@@ -1338,16 +1338,16 @@ void DnsResult::clearCurrPath()
    }
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::DnsResult& result)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::DnsResult& result)
 {
    strm << result.mTarget << " --> " << Inserter(result.mResults);
    return strm;
 }
 
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::DnsResult::NAPTR& naptr)
 {
    strm << "key=" << naptr.key
         << " order=" << naptr.order
@@ -1359,8 +1359,8 @@ resip::operator<<(std::ostream& strm, const resip::DnsResult::NAPTR& naptr)
    return strm;
 }
 
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::DnsResult::SRV& srv)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::DnsResult::SRV& srv)
 {
    strm << "key=" << srv.key
         << " t=" << Tuple::toData(srv.transport) 

@@ -20,7 +20,7 @@ class TcpConnection
 {
 public:
    /// Construct a connection with the given io_service.
-   explicit TcpConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler, bool turnFraming);
+   explicit TcpConnection(asio::io_service& ioService, ConnectionManager& manager, RequestHandler& handler);
    ~TcpConnection();
 
    /// Get the socket associated with the connection.
@@ -49,8 +49,6 @@ protected:
 
    /// The handler used to process the incoming request.
    RequestHandler& mRequestHandler;
-
-   bool mTurnFraming;
 
 private:
 };

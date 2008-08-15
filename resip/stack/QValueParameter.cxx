@@ -44,14 +44,14 @@ QValueParameter::clone() const
    return new QValueParameter(*this);
 }
 
-ostream&
-QValueParameter::encode(ostream& stream) const
+EncodeStream&
+QValueParameter::encode(EncodeStream& stream) const
 {
    return stream << getName() << Symbols::EQUALS << mValue;
 }
 
-ostream&
-resip::operator<<(ostream& stream, const QValue& qvalue)
+EncodeStream&
+resip::operator<<(EncodeStream& stream, const QValue& qvalue)
 {
 	return qvalue.encode(stream);
 }

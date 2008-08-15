@@ -205,8 +205,8 @@ Via::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
-ostream&
-Via::encodeParsed(ostream& str) const
+EncodeStream&
+Via::encodeParsed(EncodeStream& str) const
 {
    str << mProtocolName << Symbols::SLASH << mProtocolVersion << Symbols::SLASH << mTransport 
        << Symbols::SPACE;

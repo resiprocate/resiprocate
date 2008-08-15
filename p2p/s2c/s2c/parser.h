@@ -21,15 +21,20 @@ typedef STAILQ_HEAD(p_decl_head_,p_decl_) p_decl_head;
 typedef struct p_decl_ {
   char *name;
   int type;
+  int auto_len;
+
 #define TYPE_PRIMITIVE 1
 #define TYPE_VARRAY     2
 #define TYPE_STRUCT    3
 #define TYPE_REF       4
-#define TYPE_ENUM      5
 #define TYPE_SELECT    6
 #define TYPE_SELECT_ARM 7
 #define TYPE_FWDREF     8
 #define TYPE_ARRAY     9
+#define TYPE_ENUM      10
+#define TYPE_ENUM_VALUE 11
+#define TYPE_OBJECT     12
+
   union {
     struct {
       char *type;
@@ -46,9 +51,7 @@ typedef struct p_decl_ {
       struct p_decl_ *ref;
     } ref_;
     struct {
-      int value;
-    } enum_;
-    struct {
+      char *switch_on;
       p_decl_head arms;
     } select_;
     struct {
@@ -62,6 +65,16 @@ typedef struct p_decl_ {
       UINT4 length;
       struct p_decl_ *ref;
     } array_;
+    struct {
+      int max;
+      p_decl_head members;
+    } enum_;
+    struct {
+      int value;
+    } enum_value_;
+    struct {
+      char *classname;
+    } object_;
   } u;
   
   STAILQ_ENTRY(p_decl_) entry;

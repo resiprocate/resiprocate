@@ -24,7 +24,7 @@ public:
       return NULL;
    }
 
-   virtual std::ostream& encode(std::ostream& strm) const
+   virtual EncodeStream& encode(EncodeStream& strm) const
    {
       return encodeBrief(strm);
    }

@@ -3,7 +3,7 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (c) 2005 Voipster / Indrek dot Juhani at voipster dot com
-// Copyright (c) 2005 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2005-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -66,11 +66,7 @@ public:
   // Create a new context implementation.
   void create(impl_type& impl, context_base::method m)
   {
-#if (OPENSSL_VERSION_NUMBER < 0x00909000L )
     ::SSL_METHOD* ssl_method = 0;
-#else
-    const ::SSL_METHOD* ssl_method = 0;
-#endif
     switch (m)
     {
     case context_base::sslv2:

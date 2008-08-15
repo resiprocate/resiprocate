@@ -40,41 +40,41 @@ ServerRegistration::end()
 void
 ServerRegistration::accept(SipMessage& ok)
 {
-  ok.remove(h_Contacts);
+   ok.remove(h_Contacts);
 
-  InfoLog( << "accepted a registration " << mAor );
-  
-  // Add all registered contacts to the message.
-  RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-  ContactList contacts;
-  ContactList::iterator i;
-  contacts = database->getContacts(mAor);
-  database->unlockRecord(mAor);
+   InfoLog( << "accepted a registration " << mAor );
 
-  UInt64 now=Timer::getTimeSecs();
+   // Add all registered contacts to the message.
+   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+   ContactList contacts;
+   ContactList::iterator i;
+   contacts = database->getContacts(mAor);
+   database->unlockRecord(mAor);
 
-  NameAddr contact;
-  for (i = contacts.begin(); i != contacts.end(); i++)
-  {
-    if (i->mRegExpires <= now)
-    {
-      database->removeContact(mAor,*i);
-      continue;
-    }
-    contact = i->mContact;
-    contact.param(p_expires) = UInt32(i->mRegExpires - now);
-    ok.header(h_Contacts).push_back(contact);
-  }
-  
-  if(mDidOutbound)
-  {
-     static Token outbound("outbound");
-     ok.header(h_Supporteds).push_back(outbound);
-  }
+   UInt64 now=Timer::getTimeSecs();
 
-  SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
-  mDum.send(msg);
-  delete(this);
+   NameAddr contact;
+   for (i = contacts.begin(); i != contacts.end(); i++)
+   {
+      if (i->mRegExpires <= now)
+      {
+         database->removeContact(mAor,*i);
+         continue;
+      }
+      contact = i->mContact;
+      contact.param(p_expires) = UInt32(i->mRegExpires - now);
+      ok.header(h_Contacts).push_back(contact);
+   }
+
+   if(mDidOutbound)
+   {
+      static Token outbound("outbound");
+      ok.header(h_Supporteds).push_back(outbound);
+   }
+
+   SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
+   mDum.send(msg);
+   delete(this);
 }
 
 void
@@ -90,18 +90,18 @@ ServerRegistration::reject(int statusCode)
 {
    InfoLog( << "rejected a registration " << mAor << " with statusCode=" << statusCode );
 
-  // First, we roll back the contact database to
-  // the state it was before the registration request.
-  RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-  database->removeAor(mAor);
-  database->addAor(mAor, mOriginalContacts);
-  database->unlockRecord(mAor);
+   // First, we roll back the contact database to
+   // the state it was before the registration request.
+   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+   database->removeAor(mAor);
+   database->addAor(mAor, mOriginalContacts);
+   database->unlockRecord(mAor);
 
-  SharedPtr<SipMessage> failure(new SipMessage);
-  mDum.makeResponse(*failure, mRequest, statusCode);
-  failure->remove(h_Contacts);
-  mDum.send(failure);
-  delete(this);
+   SharedPtr<SipMessage> failure(new SipMessage);
+   mDum.makeResponse(*failure, mRequest, statusCode);
+   failure->remove(h_Contacts);
+   mDum.send(failure);
+   delete(this);
 }
 
 void 
@@ -146,17 +146,24 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
     database->lockRecord(mAor);
 
-    UInt32 globalExpires = 0;
-    UInt32 expires=0;
-    
-    if (!msg.empty(h_Expires) && msg.header(h_Expires).isWellFormed())
-    {
-      globalExpires = msg.header(h_Expires).value();
-    }
-    else
-    {
-       globalExpires = 3600;
-    }
+   UInt32 globalExpires=3600;   
+   UInt32 returnCode=0;
+   handler->getGlobalExpires(msg,mDum.getMasterProfile(),globalExpires,returnCode); 
+
+   if (returnCode >= 400)
+   {
+      SharedPtr<SipMessage> failure(new SipMessage);
+      mDum.makeResponse(*failure, msg, returnCode);
+      if (423 == returnCode)
+      {
+         failure->header(h_StatusLine).reason() = "Interval Too Brief";
+         failure->header(h_MinExpires).value() = globalExpires;
+      }
+      mDum.send(failure);
+      database->unlockRecord(mAor);
+      delete(this);
+      return;
+   }
 
     mOriginalContacts = database->getContacts(mAor);
 
@@ -170,8 +177,10 @@ ServerRegistration::dispatch(const SipMessage& msg)
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
     ParserContainer<NameAddr>::iterator i;
     UInt64 now=Timer::getTimeSecs();
+    ParserContainer<NameAddr>::iterator iEnd(contactList.end());
 
-    for(i = contactList.begin(); i != contactList.end(); i++)
+   UInt32 expires=0;
+   for (i = contactList.begin(); i != iEnd; ++i )
     {
       if(!i->isWellFormed())
       {
@@ -183,14 +192,8 @@ ServerRegistration::dispatch(const SipMessage& msg)
          return;
       }
 
-      if (i->exists(p_expires))
-      {
-         expires = i->param(p_expires);
-      }
-      else
-      {
-         expires = globalExpires;
-      }
+      expires = globalExpires;
+      handler->getContactExpires(*i,mDum.getMasterProfile(),expires,returnCode);       
 
       // Check for "Contact: *" style deregistration
       if (i->isAllContacts())
@@ -368,8 +371,8 @@ ServerRegistration::dispatch(const DumTimeout& msg)
 {
 }
 
-std::ostream& 
-ServerRegistration::dump(std::ostream& strm) const
+EncodeStream& 
+ServerRegistration::dump(EncodeStream& strm) const
 {
    strm << "ServerRegistration " << mAor;
    return strm;

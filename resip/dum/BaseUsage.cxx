@@ -39,8 +39,8 @@ BaseUsage::getBaseHandle()
 }
 
 #if 0
-std::ostream& 
-BaseUsage::dump(std::ostream& strm) const
+EncodeStream& 
+BaseUsage::dump(EncodeStream& strm) const
 {
    strm << "BaseUsage: " << mId;
    return strm;

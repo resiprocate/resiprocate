@@ -208,8 +208,12 @@ TlsConnection::checkState()
                ErrLog( <<" (SSL Error want x509 lookup)" ); 
                break;
             case SSL_ERROR_SYSCALL: 
-               ErrLog( <<" (SSL Error want syscall)" ); 
-               ErrLog( <<"Error may be because trying ssl connection to tls server" ); 
+               {
+               int e = getErrno();
+               ErrLog( <<" (SSL Error syscall)" ); 
+               ErrLog( <<"Error may be because trying ssl connection to tls server, errno=" << e ); 
+               Transport::error(e);
+               }
                break;
             case SSL_ERROR_WANT_CONNECT: 
                ErrLog( <<" (SSL Error want connect)" ); 

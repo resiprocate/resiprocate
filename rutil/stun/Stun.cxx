@@ -875,6 +875,12 @@ computeHmac(char* hmac, const char* input, int length, const char* key, int size
    strncpy(hmac,"hmac-not-implemented",20);
 }
 #else
+#ifdef WIN32
+//hack for name collision of OCSP_RESPONSE and wincrypt.h in latest openssl release 0.9.8h
+//http://www.google.com/search?q=OCSP%5fRESPONSE+wincrypt%2eh
+//continue to watch this issue for a real fix.
+#undef OCSP_RESPONSE
+#endif
 #include <openssl/hmac.h>
 
 void

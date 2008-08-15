@@ -4,6 +4,7 @@
 #include <map>
 #include <list>
 
+#include "rutil/resipfaststreams.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Data.hxx"
 
@@ -49,7 +50,7 @@ struct Foo
 HashValue(Foo);
 HashValueImp(Foo, data.value.hash());
 
-ostream& operator<<(ostream& str, const Foo& foo)
+EncodeStream& operator<<(EncodeStream& str, const Foo& foo)
 {
    str << "Foo[" << foo.count << " " << foo.value << "]";
    return str;
@@ -59,7 +60,7 @@ int
 main(int argc, char** argv)
 {
    {
-      cerr << Inserter(Foo(0, "null")) << endl;
+      resipCerr << Inserter(Foo(0, "null")) << endl;
    }
 
    {
@@ -69,7 +70,7 @@ main(int argc, char** argv)
       container.push_back(Foo(2, "bar"));
       container.push_back(Foo(3, "baz"));
 
-      cerr << Inserter(container) << endl;
+      resipCerr << Inserter(container) << endl;
    }
 
    {
@@ -79,7 +80,7 @@ main(int argc, char** argv)
       container.insert(Foo(2, "bar"));
       container.insert(Foo(3, "baz"));
 
-      cerr << Inserter(container) << endl;
+      resipCerr << Inserter(container) << endl;
    }
 
    {
@@ -88,7 +89,7 @@ main(int argc, char** argv)
       container[2] = Foo(2, "bar");
       container[3] = Foo(3, "baz");
 
-      cerr << Inserter(container) << endl;
+      resipCerr << Inserter(container) << endl;
    }
 
    {
@@ -97,7 +98,7 @@ main(int argc, char** argv)
       container[2] = Foo(2, "bar");
       container[3] = Foo(3, "baz");
 
-      cerr << Inserter(container) << endl;      
+      resipCerr << Inserter(container) << endl;      
    }
 
    {
@@ -106,10 +107,10 @@ main(int argc, char** argv)
       container.insert(Foo(2, "bar"));
       container.insert(Foo(3, "baz"));
 
-      cerr << Inserter(container) << endl;      
+      resipCerr << Inserter(container) << endl;      
    }
 
-   cerr << "All Ok" << endl;
+   resipCerr << "All Ok" << endl;
 }
 
 /* ====================================================================

@@ -14,59 +14,83 @@
 #include "rutil/Subsystem.hxx"
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
-#include "test.hxx"
+#include "selectGen.hxx"
+#include "autoGen.hxx"
+#include "structGen.hxx"
 #include <iostream>
 #include <fstream>
 #include <vector>
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
-
   
 int main(int argc, char **argv)
   {
-
-
-    /* TESTS */
-    std::vector<int> v(2);
-    v[1]=0;
-
-
-
-    s2c::test::FooPdu *f=new s2c::test::FooPdu();
-
-    
     std::ofstream fout;
+    std::ifstream fin;
 
     resip::Log::initialize(resip::Data("cerr"),
       resip::Data("DEBUG"),resip::Data("test_s2c"));
     InfoLog(<<"XXXX");
+
+
+    // ***** Test select  *****
+    // Cook up an ns and write it
+    s2c::NamedStruct ns1;
+
+    // Set up both variants
+    ns1.mZero.mZeroArm=9;
+    ns1.mOne.mOneArm1=99;
+    memset(ns1.mOne.mOneArm2,0xff,10);
+    unsigned char blahblah=0x11;
     
+    // Now choose one
+//    ns1.mSwitchtype=s2c::zero;
+    ns1.mSwitchtype=s2c::one;
+
     fout.open("test.out");
+    ns1.encode(fout);
+    fout.close();    
 
-
-    f->mBar='X';
-    f->mMumble=new s2c::test::BazTypePdu();
-    f->mMumble->mZzz=0x9988;
-    f->mId=new s2c::test::PeerIdPdu();
-    memset(f->mId->mId, 0x65, 16);
-    f->mZulu=0xffff;
-    f->mVariable.push_back(0x11);
-    f->mVariable.push_back(0x22);
-
-    f->print(&std::cout, 0);
-
-    f->encode(&fout);
-    fout.close();
-
-
-    std::ifstream fin;
+    
+    // Now read it back in again
     fin.open("test.out");
+    s2c::NamedStruct ns2;
+    ns2.decode(fin);
     
-    s2c::test::FooPdu *f2=new s2c::test::FooPdu();
-    
-    f2->decode(&fin);
+    std::cout << "Type is" << std::hex << (int)ns2.mSwitchtype << "\n";
+//    std::cout << std::hex << (int)ns2.mZero.mZeroArm << "\n";
 
-    f2->print(&std::cout, 0);
+
+    // Now a copy constructor
+    s2c::NamedStruct ns3(ns2);
+
+    // ***** Test auto ******
+    s2c::AutoExampleStruct a1;
+    a1.mType=s2c::abel;
+    a1.mAbel.mAbel1=55;
+    fout.open("test2.out");
+    a1.encode(fout);
+    fout.close();    
+    
+    std::ifstream fin2;
+    fin2.open("test2.out");
+    s2c::AutoExampleStruct a2;
+    a2.decode(fin2);
+
+
+    // ****** Test Struct *****
+    s2c::StructTestStruct st;
+    st.mSimpleInt=7;
+    st.mVariable="Bogus";
+    fout.open("test3.out");
+    st.encode(fout);
+    fout.close();    
+
+    s2c::StructTestStruct st2;
+    std::ifstream fin3;
+    fin3.open("test3.out");
+    st2.decode(fin3);
   }
+
 

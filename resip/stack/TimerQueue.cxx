@@ -196,8 +196,25 @@ DtlsTimerQueue::process()
 
 #endif
 
+#ifndef RESIP_USE_STL_STREAMS
 std::ostream& 
 resip::operator<<(std::ostream& str, const BaseTimerQueue& tq)
+{
+   str << "TimerQueue[" ;
+
+    for (std::multiset<Timer>::const_iterator i = tq.mTimers.begin(); 
+        i != tq.mTimers.end(); ++i)
+   {
+      str << *i << " " ;
+   }
+
+   str << "]" << endl;
+   return str;
+}
+#endif
+
+EncodeStream& 
+resip::operator<<(EncodeStream& str, const BaseTimerQueue& tq)
 {
    str << "TimerQueue[" ;
 

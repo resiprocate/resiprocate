@@ -138,7 +138,7 @@ public:
       mClientPagerMessage.page(mContents, mLevel);
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientPagerMessagePageCommand";
    }
@@ -232,7 +232,7 @@ public:
       mClientPagerMessage.end();
    }
 
-   virtual std::ostream& encodeBrief(std::ostream& strm) const
+   virtual EncodeStream& encodeBrief(EncodeStream& strm) const
    {
       return strm << "ClientPagerMessageEndCommand";
    }
@@ -275,8 +275,8 @@ ClientPagerMessage::clearMsgQueued ()
    mMsgQueue.clear();
 }
 
-std::ostream& 
-ClientPagerMessage::dump(std::ostream& strm) const
+EncodeStream& 
+ClientPagerMessage::dump(EncodeStream& strm) const
 {
    strm << "ClientPagerMessage queued: " << mMsgQueue.size();
    return strm;

@@ -4,6 +4,7 @@
 #include "resip/stack/TransactionMessage.hxx"
 
 #include "rutil/Data.hxx"
+#include "rutil/resipfaststreams.hxx"
 
 namespace resip
 {
@@ -19,11 +20,11 @@ class AbandonServerTransaction : public TransactionMessage
 
       virtual const Data& getTransactionId() const {return mTid;}
       virtual bool isClientTransaction() const {return false;}
-      virtual std::ostream& encode(std::ostream& strm) const
+      virtual EncodeStream& encode(EncodeStream& strm) const
       {
          return strm << "AbandonServerTransaction: " << mTid;
       }
-      virtual std::ostream& encodeBrief(std::ostream& strm) const
+      virtual EncodeStream& encodeBrief(EncodeStream& strm) const
       {
          return strm << "AbandonServerTransaction: " << mTid;
       }

@@ -12,15 +12,65 @@ using namespace resip;
 DataBuffer::DataBuffer(Data& str)
    : mStr(str)
 {
+#ifdef RESIP_USE_STL_STREAMS
    char* gbuf = const_cast<char*>(mStr.mBuf);
    setg(gbuf, gbuf, gbuf+mStr.size());
    // expose the excess capacity as the put buffer
    setp(gbuf+mStr.mSize, gbuf+mStr.mCapacity);
+#endif
 }
 
 DataBuffer::~DataBuffer()
 {}
 
+#ifndef RESIP_USE_STL_STREAMS
+UInt64 DataBuffer::tellpbuf(void)
+{ 
+   return mStr.size(); 
+}
+
+size_t DataBuffer::readbuf(char *buf, size_t count)
+{
+   if (count <= 0)
+   {
+      return 0;
+   }
+
+   if (!buf)
+   {
+      assert(0);
+      return 0;
+   }
+
+   size_t cursize = mStr.size();
+
+   size_t toread = (cursize < count) ? (cursize) : (count);
+
+   memcpy(buf,mStr.begin(),toread);
+
+   //wow, not efficient.  Just added this function for repro, need to revisit. @TODO.
+   mStr = mStr.substr(toread);
+
+   return toread;
+}
+
+size_t DataBuffer::writebuf(const char *str, size_t count)
+{
+   if( count <= 0 )
+   {
+      return 0;
+   }
+
+   mStr.append(str,count);
+   return count;
+}
+size_t DataBuffer::putbuf(char ch)
+{
+   mStr += ch;
+
+   return 1;
+}
+#else
 int
 DataBuffer::sync()
 {
@@ -67,10 +117,11 @@ DataBuffer::overflow(int c)
    }
    return 0;
 }
+#endif
 
 iDataStream::iDataStream(Data& str)
    : DataBuffer(str), 
-     std::istream(this)
+     DecodeStream(this)
 {
 }
 
@@ -79,7 +130,7 @@ iDataStream::~iDataStream()
 
 oDataStream::oDataStream(Data& str)
    : DataBuffer(str), 
-     std::ostream(this)
+   EncodeStream(this)
 {
    // don't call this with a read-only buffer!
    assert(str.mMine != Data::Share);
@@ -95,16 +146,21 @@ oDataStream::reset()
 {
    flush();
    mStr.clear();
-
+#ifdef RESIP_USE_STL_STREAMS
    // reset the underlying buffer state
    char* gbuf = const_cast<char*>(mStr.mBuf);
    setg(gbuf, gbuf, gbuf+mStr.size());
    setp(gbuf+mStr.mSize, gbuf+mStr.mCapacity);
+#endif
 }
 
 DataStream::DataStream(Data& str)
    : DataBuffer(str), 
+#ifdef  RESIP_USE_STL_STREAMS
      std::iostream(this)
+#else
+   ResipFastOStream(this)
+#endif
 {
    // don't call this with a read-only buffer!
    assert(str.mMine != Data::Share);

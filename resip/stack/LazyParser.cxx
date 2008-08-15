@@ -119,8 +119,8 @@ LazyParser::clear()
    }
 }
 
-std::ostream&
-LazyParser::encode(std::ostream& str) const
+EncodeStream&
+LazyParser::encode(EncodeStream& str) const
 {
    if (isParsed())
    {
@@ -134,10 +134,30 @@ LazyParser::encode(std::ostream& str) const
    }
 }
 
-std::ostream&
-resip::operator<<(std::ostream& s, const LazyParser& lp)
+#ifndef  RESIP_USE_STL_STREAMS
+EncodeStream&
+resip::operator<<(EncodeStream&s, const LazyParser& lp)
 {
    lp.encode(s);
+   return s; 
+}
+#endif
+
+std::ostream&
+resip::operator<<(std::ostream &s, const LazyParser& lp)
+{	
+#ifdef  RESIP_USE_STL_STREAMS
+	lp.encode(s);
+#else
+	//this should only be called for things like cout,cerr, or other streams not supporting
+	//other stream encoders, aka MD5Stream
+	Data data;
+	DataStream stream(data);
+
+	lp.encode(stream);
+	stream.flush();
+	s << data.c_str();
+#endif
    return s; 
 }
 /* ====================================================================
