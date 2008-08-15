@@ -824,10 +824,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\AsyncProcessHandler.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\Auth.hxx"
 				>
 			</File>

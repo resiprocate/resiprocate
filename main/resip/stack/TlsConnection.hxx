@@ -4,6 +4,7 @@
 #include "resip/stack/Connection.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/SecurityTypes.hxx"
+#include "resip/stack/Security.hxx"
 
 #ifdef USE_SSL
 #include <openssl/ssl.h>
@@ -36,9 +37,11 @@ class TlsConnection : public Connection
       virtual bool isGood(); // has valid connection
       virtual bool isWritable();
       
-      const std::list<Data>& getPeerNames() const;
+      virtual bool transportWrite();
       
-      typedef enum TlsState { Broken, Accepting, Connecting, Handshaking, Up } TlsState;
+      void getPeerNames(std::list<Data> & peerNames) const;
+      
+      typedef enum TlsState { Initial, Broken, Handshaking, Up } TlsState;
       static const char * fromState(TlsState);
    
    private:
@@ -54,10 +57,11 @@ class TlsConnection : public Connection
       Data mDomain;
       
       TlsState mTlsState;
+      bool mHandShakeWantsRead;
 
       SSL* mSsl;
       BIO* mBio;
-      std::list<Data> mPeerNames;
+      std::list<BaseSecurity::PeerName> mPeerNames;
 };
  
 }
