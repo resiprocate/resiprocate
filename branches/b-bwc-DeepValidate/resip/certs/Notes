@@ -1,0 +1,95 @@
+
+   These scripts allow you to make certificates for test purposes. The
+   certificates will all share a common CA root so that everyone running
+   these scripts can have interoperable certificates. WARNING - these
+   certificates are totally insecure and are for test purposes only. All
+   the CA created by this script share the same private key to
+   facilitate interoperation testing, but this totally breaks the
+   security since the private key of the CA is well known.
+
+   The instructions assume a Unix-like environment with openssl
+   installed, but openssl does work in Windows too. Make sure you have
+   openssl installed by trying to run "openssl". Run the makeCA script
+   found in section XXX; this creates a subdirectory called demoCA. If
+   the makeCA script cannot find where your openssl is installed you
+   will have to set an environment variable called OPENSSLDIR to
+   whatever directory contains the file openssl.cnf. You can find this
+   with a "locate openssl.cnf". You are not ready to make certificates.
+
+   To create certs for use with TLS, run the makeCert script found in
+   section XXX with the fully qualified domain name of the proxy you are
+   making the certificate for. For example, "makeCert host.example.net".
+   This will generate a private key and a certificate. The private key
+   will be left in a file named host.example.net_key.pem in pem format.
+   The certificate will be in host.example.net_cert.pem. Some programs
+   expect both the certificate and private key combined together in a
+   PKCS12 format file. This is created by the script and left in a file
+   named host.example.net.p12. Some programs expect this file to have a
+   .pfx extension instead of .p12 - just rename the file if needed.
+
+   A second argument indicating the number of days the certificate
+   should be valid for can be passed to the makeCert script. It is
+   possible to make an expired certificate using the command "makeCert
+   host.example.net 0".
+
+   Anywhere that a password is used to protect a certificate, the
+   password is set to the string "password".
+
+   The root certificate for the CA is in the file demoCA/cacert.pem and
+   a PKCS#7 version of it is in demoCA/cacert.p7c.
+
+   For things that need DER format certificates, a certificate can be
+   converted from PEM to DER with "openssl x509 -in cert.pem -inform PEM
+   -out cert.der -outform DER".
+
+   Some programs expect certificates in PKCS#7 format (with a file
+   extension of .p7c). You can convert these from PEM format with to
+   PKCS#7 with "openssl crl2pkcs7 -nocrl -certfile cert.pem -certfile
+   demoCA/cacert.pem -outform DER -out cert.p7c"
+
+   IE, Outlook, and Netscape can import and export .p12 files and .p7c
+   files. You can convert a pkcs7 certificate to PEM format with
+   "openssl pkcs7 -in cert.p7c -inform DER -outform PEM -out cert.pem".
+
+   The private key can be converted to pkcs8 format with "openssl pkcs8
+   -in a_key.pem -topk8 -outform DER -out a_key.p8c"
+
+   In general, a TLS client will just need the root certificate of the
+   CA. A TLS server will need its private key and its certificate. These
+   could be in two PEM files or one .p12 file. An S/MIME program will
+   need its private key and certificate, the root certificate of the CA,
+   and the certificate for every other user it communicates with.
+
+   When validating a chain of certificates, make sure that the basic
+   constraints on any non leaf node allow the certificate to be used for
+   a CA. For example, if the domain example.com issues a certificate for
+   alice@example.com, alice should not be able to use this to sign a
+   certificate for bob@example.com.
+
+
+
+Some useful commands
+
+hexdump -e '"%07.7_ad  " 10/1 "%_p" "\n"'
+
+openssl asn1parse -inform DER -in j1 -i -offset 895 
+
+openssl pkcs7 -inform DER -in j2 -print_certs -text -noout
+
+openssl pkcs7 -inform DER -in j2 -outform PEM -out j3
+
+
+ setenv SIP ~/.sip_alice
+ setenv SIP ~/.sip_bob
+
+limp  -contact sip:alice@a.example.com:5070 -aor sip:alice@a.example.com -port 5070 -to sip:bob@b.example.com  -noRegister -tlsPort 0 
+limp  -contact sip:bob@b.example.com:5060 -aor sip:bob@b.example.com -noRegister -tlsPort 0 
+
+openssl base 64 -in foo -out bar -e ( or the -d to decode) 
+
+
+ openssl pkcs7 -inform DER -in resip-encrpt-out -text -noout -print_certs
+ openssl asn1parse -inform DER -in resip-encrpt-out -i
+
+
+ dumpasn1 -l -t resip-asn-decrypt 
