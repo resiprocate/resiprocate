@@ -205,6 +205,101 @@ Via::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
+bool 
+Via::deepValidate() const
+{
+   if(mProtocolName.empty() || !
+      mProtocolName.containsOnly(Symbols::Token,false))
+   {
+      return false;
+   }
+
+   if(mProtocolVersion.empty() || !
+      mProtocolVersion.containsOnly(Symbols::Token,false))
+   {
+      return false;
+   }
+
+   if(mTransport.empty() || !
+      mTransport.containsOnly(Symbols::Token,false))
+   {
+      return false;
+   }
+
+   // Host
+   ParseBuffer pb(mSentHost.data(), mSentHost.size());
+   try
+   {
+      while(!pb.eof())
+      {
+         const char* start=pb.position();
+         pb.skipToChar('.');
+         Data label;
+         pb.data(label,start);
+   
+         if(label.empty())
+         {
+            return false;
+         }
+   
+         if(!label.containsOnly(Symbols::DomainPartChars,false))
+         {
+            // Might be an IPV6 address? (We strip the [] out on parse)
+            if(start!=mSentHost.data() || !pb.eof() || !DnsUtil::isIpV6Address(mSentHost))
+            {
+               // Nope.
+               return false;
+            }
+            else
+            {
+               return true;
+            }
+         }
+   
+         if(label.containsOnly(Symbols::Digit,false))
+         {
+            // Might be an IPV4 address?
+            if(DnsUtil::isIpV4Address(mSentHost))
+            {
+               return true;
+            }
+            // I think stuff like foo.100.com is valid, right?
+         }
+   
+         if(label[0]=='-' || label[label.size()-1]=='-')
+         {
+            // Segment can't begin or end with a '-'
+            return false;
+         }
+   
+         if(pb.eof())
+         {
+            // Last label needs to start with an ALPHA
+            if(!Symbols::Alpha[label[0]])
+            {
+               return false;
+            }
+         }
+         else
+         {
+            pb.skipChar('.');
+         }
+      }
+   }
+   catch(ParseException&)
+   {
+      return false;
+   }
+
+   // Port
+   if(mSentPort < 0 || mSentPort >= 65536)
+   {
+      return false;
+   }
+
+   return true;
+}
+
 EncodeStream&
 Via::encodeParsed(EncodeStream& str) const
 {

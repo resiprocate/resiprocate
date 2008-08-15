@@ -4,6 +4,8 @@
 
 #include "resip/stack/Symbols.hxx"
 
+#include "rutil/Data.hxx"
+
 using namespace resip;
 
 const char* Symbols::DefaultSipVersion = "SIP/2.0";
@@ -122,6 +124,133 @@ const char *Symbols::pathSep = "\\";
 #else
 const char *Symbols::pathSep = "/";
 #endif
+
+const std::bitset<256> Symbols::Reserved(Data::toBitset(";/?:@&=+$,"));
+const std::bitset<256> Symbols::Mark(Data::toBitset("-_.!~*'()"));
+const std::bitset<256> Symbols::Hex(Data::toBitset("0123456789aAbBcCdDeEfF"));
+const std::bitset<256> Symbols::Alpha(Data::toBitset("qwertyuiopasdfghjklzxcvbnm"
+                              "QWERTYUIOPASDFGHJKLZXCVBNM"));
+const std::bitset<256> Symbols::Digit(Data::toBitset("1234567890"));
+
+std::bitset<256> makeAlphaNum()
+{
+   std::bitset<256> result(Symbols::Alpha);
+   result |= Symbols::Digit;
+   return result;
+}
+
+const std::bitset<256> Symbols::AlphaNum(makeAlphaNum());
+
+std::bitset<256> makeUnreserved()
+{
+   std::bitset<256> result(Symbols::AlphaNum);
+   result |= Symbols::Mark;
+   return result;
+}
+
+const std::bitset<256> Symbols::Unreserved(makeUnreserved());
+
+std::bitset<256> makeToken()
+{
+   std::bitset<256> result(Symbols::AlphaNum);
+   result |= Data::toBitset("-.!%*_+`'~");
+   return result;
+}
+
+const std::bitset<256> Symbols::Token(makeToken());
+
+const std::bitset<256> Symbols::Separators(Data::toBitset("()<>@,;:\\\"/[]?={} \t"));
+
+std::bitset<256> makeWord()
+{
+   std::bitset<256> result(Symbols::AlphaNum);
+   result |= Data::toBitset("-.!%*_+`'~()<>:\\\"/[]?{}");
+   return result;
+}
+
+const std::bitset<256> Symbols::Word(makeWord());
+
+const std::bitset<256> Symbols::UserUnreserved(Data::toBitset("&=+$,;?/"));
+
+std::bitset<256> makePassword()
+{
+   std::bitset<256> result(Symbols::Unreserved);
+   result |= Data::toBitset("&=+$,");
+   return result;
+}
+const std::bitset<256> Symbols::Password(makePassword());
+
+std::bitset<256> makeBase64()
+{
+   std::bitset<256> result(Symbols::AlphaNum);
+   result |= Data::toBitset("+/=.");
+   return result;
+}
+const std::bitset<256> Symbols::Base64(makeBase64());
+const std::bitset<256> Symbols::ParamUnreserved(Data::toBitset("[]/:&+$"));
+
+std::bitset<256> makeParamChar()
+{
+   std::bitset<256> result(Symbols::ParamUnreserved);
+   result |= Symbols::Unreserved;
+   return result;
+}
+
+const std::bitset<256> Symbols::ParamChar(makeParamChar());
+
+const std::bitset<256> Symbols::HnvUnreserved(Data::toBitset("[]/?:+$"));
+
+std::bitset<256> makeScheme()
+{
+   std::bitset<256> result(Symbols::AlphaNum);
+   result |= Data::toBitset("+-.");
+   return result;
+}
+
+const std::bitset<256> Symbols::Scheme(makeScheme());
+
+std::bitset<256> makeUriC()
+{
+   std::bitset<256> result(Symbols::Reserved);
+   result |= Symbols::Unreserved;
+   return result;
+}
+
+const std::bitset<256> Symbols::UriC(makeUriC());
+
+
+std::bitset<256> makeDomainPartChars()
+{
+   std::bitset<256> result(Symbols::AlphaNum);
+   result['-']=true;
+   return result;
+}
+
+const std::bitset<256> Symbols::DomainPartChars(makeDomainPartChars());
+
+std::bitset<256> makeUserC()
+{
+   std::bitset<256> result(Symbols::UserUnreserved);
+   result |= Symbols::Unreserved;
+   return result;
+}
+
+const std::bitset<256> Symbols::UserC(makeUserC());
+
+std::bitset<256> makeReasonC()
+{
+   std::bitset<256> result(Symbols::Reserved);
+   result |= Symbols::Unreserved;
+   result[' ']=true;
+   result['\t']=true;
+   for(int i=128; i<254;++i)
+   {
+      result[i]=true;
+   }
+   return result;
+}
+
+const std::bitset<256> Symbols::ReasonC(makeReasonC());
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

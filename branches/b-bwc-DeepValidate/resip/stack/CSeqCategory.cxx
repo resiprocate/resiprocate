@@ -147,6 +147,23 @@ CSeqCategory::parse(ParseBuffer& pb)
    pb.data(mUnknownMethodName, anchorPtr);
 }
 
+bool 
+CSeqCategory::deepValidate() const
+{
+   if(!mUnknownMethodName.containsOnly(Symbols::Token, false))
+   {
+      // If this is empty, we won't end up in here.
+      return false;
+   }
+
+   if(mSequence==0)
+   {
+      return false;
+   }
+
+   return true;
+}
+
 EncodeStream& 
 CSeqCategory::encodeParsed(EncodeStream& str) const
 {

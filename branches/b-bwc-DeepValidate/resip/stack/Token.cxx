@@ -90,6 +90,16 @@ Token::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
+bool 
+Token::deepValidate() const
+{
+   if(mValue.empty() || !mValue.containsOnly(Symbols::Token, false))
+   {
+      return false;
+   }
+   return true;
+}
+
 ParserCategory* 
 Token::clone() const
 {

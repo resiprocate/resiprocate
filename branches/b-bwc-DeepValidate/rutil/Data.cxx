@@ -1863,6 +1863,18 @@ Data::rawCaseInsensitiveHash(const unsigned char* c, size_t size)
    return ntohl(st);
 }
 
+std::bitset<256>
+Data::toBitset(const resip::Data& chars)
+{
+   std::bitset<256> result;
+   result.reset();
+   for (unsigned int i=0; i!=chars.mSize;++i)
+   {
+      result.set(*(unsigned char*)(chars.mBuf+i));
+   }
+   return result;
+}
+
 Data
 bits(size_t v)
 {
@@ -2051,6 +2063,32 @@ Data::base64encode(bool useSafeSet) const
                dstIndex);
 }
 
+bool 
+Data::containsOnly(const std::bitset<256>& allowed,
+                     bool allowEscaped) const
+{
+   const char* end=mBuf+mSize;
+   for(const char* c=mBuf; c<end; ++c)
+   {
+      if(*c=='%' && allowEscaped)
+      {
+         const std::bitset<256> hex(toBitset("0123456789aAbBcCdDeEfF"));
+         ++c;
+         if(c + 1 >= end || !hex[*c] || !hex[*(c+1)])
+         {
+            return false;
+         }
+         ++c;
+         continue;
+      }
+
+      if(!allowed[*c])
+      {
+         return false;
+      }
+   }
+   return true;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
