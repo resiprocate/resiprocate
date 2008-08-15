@@ -25,8 +25,10 @@ main(int argc, char* argv[])
    
    {
       Uri uri("sip:speedy_AT_home.com@whistler.gloo.net:5062");
+      assert(uri.deepValidate());
       uri.scheme() = Symbols::Pres;
       assert(Data::from(uri) == "pres:speedy_AT_home.com@whistler.gloo.net:5062");
+      assert(uri.deepValidate());
    }
    {
        const char * a = "alice";
@@ -36,8 +38,12 @@ main(int argc, char* argv[])
        alice.uri().user() = a;
        alice.uri().host() = e;
 
+       assert(alice.uri().deepValidate());
+
        NameAddr realm;
        realm.uri().host() = e;
+
+       assert(realm.uri().deepValidate());
 
        NameAddr aliceContact;
        aliceContact.uri().user() = a;
@@ -45,6 +51,7 @@ main(int argc, char* argv[])
        aliceContact.uri().port() = 32678;
 
 
+       assert(aliceContact.uri().deepValidate());
        
        auto_ptr<SipMessage> msg(Helper::makeRegister(alice,alice,aliceContact));
 
@@ -54,7 +61,10 @@ main(int argc, char* argv[])
        NameAddr original(aliceContact);
        original.uri().param(UnknownParameterType("x")) = Data("\"1\"");
 
+       assert(original.uri().deepValidate());
+
        Uri tmp = original.uri();
+       assert(tmp.deepValidate());
        Data buf;
        DataStream oldNA(buf);
        oldNA << Symbols::LA_QUOTE;
@@ -70,6 +80,8 @@ main(int argc, char* argv[])
        modified.uri().port() = 65530;
        modified.uri().user() = "alphabet-soup";
 
+       assert(modified.uri().deepValidate());
+
        Data gruuData ( Data::from(modified.uri())) ;
        msg->header(h_Contacts).back().param(p_gr) = gruuData;
 
@@ -77,30 +89,37 @@ main(int argc, char* argv[])
        cout << *msg << endl;
 
        Uri s1("sip:alice@example.com;gr=\"foo@example.com\"");
+       assert(s1.deepValidate());
        Uri s2("sip:alice@example.com;gr=\"foo@example.com\"");
+       assert(s2.deepValidate());
        assert(s1.param(p_gr) == Data("foo@example.com"));
        assert(s2.param(p_gr) == Data("foo@example.com"));
        cout << s1 << endl;
        cout << s2 << endl;
        cout << endl;
        Uri s3("sip:alice@example.com");
+       assert(s3.deepValidate());
        s3.param(UnknownParameterType("foo")) = Data("value");
        Uri s4("sip:alice@example.com");
+       assert(s4.deepValidate());
        s4.param(UnknownParameterType("foo")) = Data("\"value\"");
        cout << "s3's param =" << s3.param(UnknownParameterType("foo")) << endl;
        cout << "s4's param =" << s4.param(UnknownParameterType("foo")) << endl;
        cout << "s3 = " << s3 << endl;
        cout << "s4 = " << s4 << endl;
        Uri s5(s4);
+       assert(s5.deepValidate());
        cout << "s5 = " << s5 << endl;
        Data s5d(Data::from(s5));
        cout << "s5d = " << s5d << endl;
 
        Uri s6("sip:bob@example.com");
+       assert(s6.deepValidate());
        s6.host();
        s6.param(p_q) = 1000;  // 1.0
 
        Uri s7("sip:testproxy.example.com");
+       assert(s7.deepValidate());
 	   assert (s7.user().empty());
 	   s7.user() = "test";
 	   assert (!s7.user().empty());
@@ -108,12 +127,14 @@ main(int argc, char* argv[])
 	   assert (s7.user().empty());
 
        NameAddr na1;
+       assert(na1.uri().deepValidate());
        na1.uri().user() = "alice";
        na1.uri().host() = "example.com";
 
        Data q("\"");
        na1.param(UnknownParameterType("foo")) = Data(q + Data::from(s6) +q);
        NameAddr na2(na1);
+       assert(na2.uri().deepValidate());
        cout << "na1=" << na1 << endl;
        cout << "na2=" << na2 << endl;
        

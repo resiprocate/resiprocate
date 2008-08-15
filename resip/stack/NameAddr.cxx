@@ -245,6 +245,38 @@ NameAddr::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
+bool 
+NameAddr::deepValidate() const
+{
+   checkParsed();
+   if(mAllContacts)
+   {
+      return true;
+   }
+
+   if(!mUri.deepValidate())
+   {
+      return false;
+   }
+
+   // Display name
+#ifndef HANDLE_EMBEDDED_QUOTES_DNAME
+   // We always quote this while encoding, so it is always valid _unless_ there
+   // is a double quote in there somewhere, _and_ we aren't handling that
+   // contingency.
+   ParseBuffer pb(mDisplayName.data(), mDisplayName.size());
+   pb.skipToChar('\"');
+   if(!pb.eof())
+   {
+      return false;
+   }
+#else
+   // What might constitute malformedness here?
+#endif
+
+   return true;
+}
+
 EncodeStream&
 NameAddr::encodeParsed(EncodeStream& str) const
 {

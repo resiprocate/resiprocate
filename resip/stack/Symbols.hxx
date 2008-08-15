@@ -1,6 +1,7 @@
 #if !defined(RESIP_SYMBOLS_HXX)
 #define RESIP_SYMBOLS_HXX 
 
+#include <bitset>
 
 namespace resip
 {
@@ -116,6 +117,28 @@ class Symbols
       static const char* id;
 
       static const char* Gruu;
+
+      static const std::bitset<256> Reserved;
+      static const std::bitset<256> Unreserved;
+      static const std::bitset<256> Mark;
+      static const std::bitset<256> Hex;
+      static const std::bitset<256> Token;
+      static const std::bitset<256> Separators;
+      static const std::bitset<256> Word;
+      static const std::bitset<256> UserUnreserved;
+      static const std::bitset<256> Password;
+      static const std::bitset<256> Alpha;
+      static const std::bitset<256> Digit;
+      static const std::bitset<256> AlphaNum;
+      static const std::bitset<256> Base64;
+      static const std::bitset<256> ParamUnreserved;
+      static const std::bitset<256> ParamChar;
+      static const std::bitset<256> HnvUnreserved;
+      static const std::bitset<256> Scheme;
+      static const std::bitset<256> UriC;
+      static const std::bitset<256> DomainPartChars;
+      static const std::bitset<256> UserC;
+      static const std::bitset<256> ReasonC;
 };
 
 }

@@ -29,6 +29,7 @@ class CallID : public ParserCategory
       const Data& value() const;
 
       virtual void parse(ParseBuffer& pb);
+      virtual bool deepValidate() const;
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 

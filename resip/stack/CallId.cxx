@@ -81,6 +81,38 @@ CallID::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
+bool 
+CallID::deepValidate() const
+{
+   ParseBuffer pb(mValue.data(),mValue.size());
+   const char* start=pb.position();
+   pb.skipToChar('@');
+   Data word;
+   pb.data(word, start);
+
+   if(word.empty() || !word.containsOnly(Symbols::Word, false))
+   {
+      return false;
+   }
+
+   if(pb.eof())
+   {
+      return true;
+   }
+
+   pb.skipChar('@');
+   start=pb.position();
+   pb.skipToEnd();
+
+   pb.data(word, start);
+   if(word.empty() || !word.containsOnly(Symbols::Word, false))
+   {
+      return false;
+   }
+
+   return true;
+}
+
 EncodeStream&
 CallID::encodeParsed(EncodeStream& str) const
 {

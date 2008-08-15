@@ -119,6 +119,24 @@ Mime::parse(ParseBuffer& pb)
    parseParameters(pb);
 }
 
+bool 
+Mime::deepValidate() const
+{
+   // Type
+   if(mType.empty() || !mType.containsOnly(Symbols::Token,false))
+   {
+      return false;
+   }
+
+   // Sub-type
+   if(mSubType.empty() || !mSubType.containsOnly(Symbols::Token,false))
+   {
+      return false;
+   }
+
+   return true;
+}
+
 ParserCategory* 
 Mime::clone() const
 {

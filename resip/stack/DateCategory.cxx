@@ -523,6 +523,67 @@ DateCategory::parse(ParseBuffer& pb)
    pb.assertEof();
 }
 
+bool 
+DateCategory::deepValidate() const
+{
+   if(mDayOfMonth==0)
+   {
+      return false;
+   }
+
+   switch(mMonth)
+   {
+      case Feb:
+         if(mDayOfMonth > 29)
+         {
+            return false;
+         }
+         // Maybe write this to check leap years. Not really that important.
+         break;
+      case Apr:
+      case Jun:
+      case Sep:
+      case Nov:
+         if(mDayOfMonth > 30)
+         {
+            return false;
+         }
+         break;
+      case Jan:
+      case Mar:
+      case May:
+      case Jul:
+      case Aug:
+      case Oct:
+      case Dec:
+         if(mDayOfMonth > 31)
+         {
+            return false;
+         }
+         break;
+      default:
+         return false;
+   }
+
+   if(mHour > 24)
+   {
+      return false;
+   }
+
+   if(mMin > 60)
+   {
+      return false;
+   }
+
+   if(mSec > 60)
+   {
+      return false;
+   }
+
+   return true;
+}
+
+
 ParserCategory* 
 DateCategory::clone() const
 {

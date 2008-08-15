@@ -9,6 +9,8 @@
 #include "rutil/HeapInstanceCounter.hxx"
 #include "rutil/HashMap.hxx"
 
+#include <bitset>
+
 #ifndef RESIP_DATA_LOCAL_SIZE
 #define RESIP_DATA_LOCAL_SIZE 16
 #endif
@@ -678,6 +680,13 @@ class Data
       size_t caseInsensitivehash() const;
 
       /**
+         Creates a bitset reflecting the contents of this data (as a set)
+         ie. "15eo" would have the bits 49, 53, 101, and 111 set to true, and
+         all others set to false
+      */
+      static std::bitset<256> toBitset(const resip::Data& chars);
+
+      /**
         Performs escaping of this Data according to the indicated
         Predicate.
 
@@ -694,6 +703,9 @@ class Data
       template<class Predicate> EncodeStream& 
           escapeToStream(EncodeStream& str, 
                          Predicate shouldEscape) const;
+
+      bool containsOnly(const std::bitset<256>& allowed,
+                        bool allowPercentEscaped) const;
 
    private:
       /**

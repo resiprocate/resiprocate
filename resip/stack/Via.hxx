@@ -35,6 +35,7 @@ class Via : public ParserCategory
       int sentPort() const;
 
       virtual void parse(ParseBuffer& pb);
+      virtual bool deepValidate() const;
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
