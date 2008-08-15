@@ -281,10 +281,8 @@ class TestDns : public DnsInterface, public ThreadIf
          while (!waitForShutdown(100))
          {
             FdSet fdset;
-            buildFdSet(fdset);
             mStub.buildFdSet(fdset);
             fdset.selectMilliSeconds(1);
-            process(fdset);
             mStub.process(fdset);
          }
       }
@@ -815,7 +813,7 @@ main(int argc, const char** argv)
    }
 
    assert(queries.empty());
-   assert(!dns.requiresProcess());
+   assert(!stub->requiresProcess());
 
    std::map<resip::Tuple,int> ipAddrToNum;
    ipAddrToNum[Tuple("127.0.0.1",5060,V4,TCP)]=0;
@@ -902,7 +900,7 @@ main(int argc, const char** argv)
       }
       
       assert(queries.empty());
-      assert(!dns.requiresProcess());
+      assert(!stub->requiresProcess());
       
       std::cout << "Tabulated results:" << std::endl;
       for(int i=0;i<numSRV;++i)
