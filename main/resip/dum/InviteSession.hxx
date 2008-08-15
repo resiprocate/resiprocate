@@ -37,6 +37,13 @@ class InviteSession : public DialogUsage
           reinvite with no sdp to be sent.  */
       virtual void requestOffer();
 
+      typedef enum
+      {
+         None, // means no Offer or Answer (may have SDP)
+         Offer,
+         Answer
+      } OfferAnswerType;
+
       enum EndReason
       {
          NotSpecified=0,
@@ -116,8 +123,11 @@ class InviteSession : public DialogUsage
       // Convenience methods for accessing attributes of a dialog. 
       const NameAddr& myAddr() const;
       const NameAddr& peerAddr() const;
+      bool hasLocalSdp() const;
       const SdpContents& getLocalSdp() const;
+      bool hasRemoteSdp() const;
       const SdpContents& getRemoteSdp() const;
+      bool hasProposedRemoteSdp() const;
       const SdpContents& getProposedRemoteSdp() const;
       const Data& getDialogId() const;
       
@@ -137,13 +147,6 @@ class InviteSession : public DialogUsage
 
     virtual EncodeStream& dump(EncodeStream& strm) const;
       InviteSessionHandle getSessionHandle();
-
-      typedef enum
-      {
-         None, // means no Offer or Answer (may have SDP)
-         Offer,
-         Answer
-      } OfferAnswerType;
 
    protected:
 
