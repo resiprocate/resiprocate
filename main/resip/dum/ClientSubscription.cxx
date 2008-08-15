@@ -314,6 +314,13 @@ ClientSubscription::processNextNotify()
                   delete this;
                }
             }
+            else
+            {
+               acceptUpdate();
+               mEnded = true;
+               handler->onTerminated(getHandle(), qn->notify());
+               delete this;
+            }
          }
          else
          {
