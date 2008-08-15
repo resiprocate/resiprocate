@@ -64,9 +64,10 @@ class TestConnection : public ConnectionBase
       bool read(unsigned int minChunkSize, unsigned int maxChunkSize)
       {
          unsigned int chunk = Random::getRandom() % maxChunkSize;
-         chunk = chunk < minChunkSize ? minChunkSize : chunk;
-         chunk = chunk > maxChunkSize ? maxChunkSize : chunk;
-         chunk = (chunk > (mTestStream.size() - mStreamPos) ) ? (mTestStream.size() - mStreamPos) : chunk;
+         chunk = resipMax(chunk, minChunkSize);
+         chunk = resipMin(chunk, maxChunkSize);
+		 unsigned int chunkPos = mTestStream.size() - mStreamPos;
+         chunk = resipMin(chunk, chunkPos);
          assert(chunk > 0);
          std::pair<char*, size_t> writePair = getWriteBuffer();
          memcpy(writePair.first, mTestStream.data() + mStreamPos, chunk);
@@ -137,8 +138,8 @@ main(int argc, char** argv)
    for (unsigned int i=0; i < runs; i++)
    {
       TestConnection cBase(&fake,who, bytes, testRxFifo);
-      int minChunk = Random::getRandom() % chunkRange;
-      int maxChunk = Random::getRandom() % chunkRange;
+      int minChunk = (Random::getRandom() % chunkRange)+1;
+      int maxChunk = (Random::getRandom() % chunkRange)+1;
       if (maxChunk < minChunk) swap(maxChunk, minChunk);
       while(cBase.read(minChunk, maxChunk));      
    }

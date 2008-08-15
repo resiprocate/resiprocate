@@ -23,7 +23,6 @@
 #ifdef WIN32
 
 typedef int socklen_t;
-inline int getErrno() { return WSAGetLastError(); }
 
 #define EWOULDBLOCK             WSAEWOULDBLOCK
 #define EINPROGRESS             WSAEINPROGRESS
@@ -82,6 +81,7 @@ static const int SOCKET_ERROR = -1;
 inline int getErrno() { return errno; }
 #else
 typedef SOCKET Socket;
+inline int getErrno() { return WSAGetLastError(); }
 #endif
 
 //c function pointer because of ares

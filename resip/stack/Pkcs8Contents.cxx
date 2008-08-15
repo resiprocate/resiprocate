@@ -83,8 +83,8 @@ Pkcs8Contents::getStaticType()
    return type;
 }
 
-std::ostream& 
-Pkcs8Contents::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Pkcs8Contents::encodeParsed(EncodeStream& str) const
 {
    //DebugLog(<< "Pkcs8Contents::encodeParsed " << mText);
    str << mText;

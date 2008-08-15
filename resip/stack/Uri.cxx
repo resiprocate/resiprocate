@@ -847,7 +847,7 @@ Uri::parse(ParseBuffer& pb)
    if (!pb.eof() && *pb.position() == Symbols::QUESTION[0])
    {
       const char* anchor = pb.position();
-      pb.skipToOneOf(Symbols::RA_QUOTE, Symbols::SEMI_COLON);
+      pb.skipToOneOf(">;", ParseBuffer::Whitespace);
       pb.data(mEmbeddedHeadersText, anchor);
    }
 }
@@ -953,8 +953,8 @@ Uri::shouldEscapePasswordChar(char c)
 }
  
 // should not encode user parameters unless its a tel?
-std::ostream& 
-Uri::encodeParsed(std::ostream& str) const
+EncodeStream& 
+Uri::encodeParsed(EncodeStream& str) const
 {
    str << mScheme << Symbols::COLON; 
    if (!mUser.empty())
@@ -1080,8 +1080,8 @@ Uri::parseEmbeddedHeaders(ParseBuffer& pb)
    }
 }
 
-std::ostream& 
-Uri::encodeEmbeddedHeaders(std::ostream& str) const
+EncodeStream& 
+Uri::encodeEmbeddedHeaders(EncodeStream& str) const
 {
    if (mEmbeddedHeaders)
    {

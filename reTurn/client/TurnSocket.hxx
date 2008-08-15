@@ -1,6 +1,12 @@
 #ifndef TURNSOCKET_HXX
 #define TURNSOCKET_HXX
 
+#if defined(BOOST_MSVC) && (BOOST_MSVC >= 1400) \
+  && (!defined(_WIN32_WINNT) || _WIN32_WINNT < 0x0600) \
+  && !defined(ASIO_ENABLE_CANCELIO)
+#error You must define ASIO_ENABLE_CANCELIO in your build settings.
+#endif
+
 #include <vector>
 #include <asio.hpp>
 #include <rutil/Data.hxx>
@@ -17,7 +23,7 @@ class TurnSocket
 public:
    static unsigned int UnspecifiedLifetime;
    static unsigned int UnspecifiedBandwidth;
-   static unsigned short UnspecifiedPort;
+   static unsigned short UnspecifiedToken;
    static asio::ip::address UnspecifiedIpAddress;
 
    explicit TurnSocket(const asio::ip::address& address = UnspecifiedIpAddress, 
@@ -41,10 +47,9 @@ public:
    // Turn Allocation Methods
    asio::error_code createAllocation(unsigned int lifetime = UnspecifiedLifetime,
                                      unsigned int bandwidth = UnspecifiedBandwidth,
-                                     unsigned short requestedPortProps = StunMessage::PortPropsNone, 
-                                     unsigned short requestedPort = UnspecifiedPort,
-                                     StunTuple::TransportType requestedTransportType = StunTuple::None, 
-                                     const asio::ip::address &requestedIpAddress = UnspecifiedIpAddress);
+                                     unsigned char requestedProps = StunMessage::PropsNone, 
+                                     UInt64 reservationToken = UnspecifiedToken,
+                                     StunTuple::TransportType requestedTransportType = StunTuple::None);
    asio::error_code refreshAllocation();
    asio::error_code destroyAllocation();
 
@@ -86,10 +91,9 @@ protected:
    // Turn Allocation Properties used in request
    unsigned int mRequestedLifetime;
    unsigned int mRequestedBandwidth;
-   unsigned int mRequestedPortProps;
-   unsigned short mRequestedPort;
+   unsigned char mRequestedProps;
+   UInt64 mReservationToken;
    StunTuple::TransportType mRequestedTransportType;
-   asio::ip::address mRequestedIpAddress;
 
    // Turn Allocation Properties from response
    bool mHaveAllocation;
@@ -119,6 +123,7 @@ protected:
 
 private:
    resip::Mutex mMutex;
+   RemotePeer* channelBind(StunTuple& remoteTuple, asio::error_code& errorCode);
    asio::error_code checkIfAllocationRefreshRequired();
    StunMessage* sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode, bool addAuthInfo=true);
    asio::error_code sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size);
@@ -133,36 +138,34 @@ private:
 
 /* ====================================================================
 
- Original contribution Copyright (C) 2007 Plantronics, Inc.
- Provided under the terms of the Vovida Software License, Version 2.0.
+ Copyright (c) 2007-2008, Plantronics, Inc.
+ All rights reserved.
 
- The Vovida Software License, Version 2.0 
- 
  Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 
+ modification, are permitted provided that the following conditions are 
+ met:
+
+ 1. Redistributions of source code must retain the above copyright 
+    notice, this list of conditions and the following disclaimer. 
+
  2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in
-    the documentation and/or other materials provided with the
-    distribution. 
- 
- THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
- WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
- NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
- OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
- IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
- EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- DAMAGE.
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution. 
+
+ 3. Neither the name of Plantronics nor the names of its contributors 
+    may be used to endorse or promote products derived from this 
+    software without specific prior written permission. 
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+ A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  ==================================================================== */
-

@@ -46,82 +46,72 @@ public:
 
 int main(int argc, char* argv[])
 {
-#ifdef WIN32
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
   resip::FindMemoryLeaks fml;
 #endif
 
   try
   {
     // Check command line arguments.
-    if (argc != 6)
+    if (argc != 5)
     {
-      std::cerr << "Usage: reTurnServer <address> <turnPort> <stunPort> <altAddress> <altPort>\n";
+      std::cerr << "Usage: reTurnServer <address> <turnPort> <altAddress> <altPort>\n";
       std::cerr << "  For IPv4, try:\n";
-      std::cerr << "    reTurnServer 0.0.0.0 8777 3489 0.0.0.0 3589\n";
+      std::cerr << "    reTurnServer 0.0.0.0 8777 0.0.0.0 3589\n";
       std::cerr << "  For IPv6, try:\n";
-      std::cerr << "    reTurnServer 0::0 8777 3489 0::0 3589\n";
+      std::cerr << "    reTurnServer 0::0 8777 0::0 3589\n";
       return 1;
     }
 
     // Initialize Logging - TODO make configurable
     resip::Log::initialize(resip::Log::Cout, resip::Log::Info, argv[0]);
+    //resip::Log::initialize(resip::Log::Cout, resip::Log::Stack, argv[0]);
 
     // Initialize server.
     asio::io_service ioService;                       // The one and only ioService for the stunServer
     reTurn::TurnManager turnManager(ioService);         // The one and only Turn Manager
 
     unsigned short turnPort = (unsigned short)resip::Data(argv[2]).convertUnsignedLong();
-    unsigned short stunPort = (unsigned short)resip::Data(argv[3]).convertUnsignedLong();
-    unsigned short altStunPort = (unsigned short)resip::Data(argv[5]).convertUnsignedLong();
+    unsigned short altStunPort = (unsigned short)resip::Data(argv[4]).convertUnsignedLong();
     unsigned short tlsTurnPort = turnPort + 1;
-    unsigned short tlsStunPort = stunPort + 1;
     asio::ip::address turnAddress = asio::ip::address::from_string(argv[1]);
-    asio::ip::address altStunAddress = asio::ip::address::from_string(argv[4]);
+    asio::ip::address altStunAddress = asio::ip::address::from_string(argv[3]);
 
-    boost::shared_ptr<reTurn::UdpServer> udpTurnServer;
+    boost::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
     boost::shared_ptr<reTurn::TcpServer> tcpTurnServer;
     boost::shared_ptr<reTurn::TlsServer> tlsTurnServer;
-    boost::shared_ptr<reTurn::UdpServer> a1p1StunUdpServer;
     boost::shared_ptr<reTurn::UdpServer> a1p2StunUdpServer;
     boost::shared_ptr<reTurn::UdpServer> a2p1StunUdpServer;
     boost::shared_ptr<reTurn::UdpServer> a2p2StunUdpServer;
-    boost::shared_ptr<reTurn::TcpServer> tcpStunServer;
-    boost::shared_ptr<reTurn::TlsServer> tlsStunServer;
 
-    // The one and only RequestHandler - if stun port is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
+    // The one and only RequestHandler - if altStunPort is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
     reTurn::RequestHandler requestHandler(turnManager, 
-                                          stunPort != 0 ? &turnAddress : 0, 
-                                          stunPort != 0 ? &turnPort : 0, 
-                                          stunPort != 0 ? &altStunAddress : 0, 
-                                          stunPort != 0 ? &altStunPort : 0); 
+                                          altStunPort != 0 ? &turnAddress : 0, 
+                                          altStunPort != 0 ? &turnPort : 0, 
+                                          altStunPort != 0 ? &altStunAddress : 0, 
+                                          altStunPort != 0 ? &altStunPort : 0); 
 
-    if(turnPort != 0)
-    {
-       udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, turnPort, true /*turnFraming?*/));
-       udpTurnServer->start();
-       tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, turnAddress, turnPort, true /*turnFraming?*/));
-       tcpTurnServer->start();
-       tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, turnAddress, tlsTurnPort, true /*turnFraming?*/));
-       tlsTurnServer->start();
-    }
+    udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, turnPort));
+    tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, turnAddress, turnPort));
+    tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, turnAddress, tlsTurnPort));
 
-    if(stunPort != 0)  // if stun port is non-zero, then assume RFC3489 support is enabled
+    if(altStunPort != 0) // if alt stun port is non-zero, then RFC3489 support is enabled
     {
-       a1p1StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, stunPort, false /*turnFraming?*/));
-       a1p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, altStunPort, false /*turnFraming?*/));
-       a2p1StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, stunPort, false /*turnFraming?*/));
-       a2p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, altStunPort, false /*turnFraming?*/));
-       a1p1StunUdpServer->setAlternateUdpServers(a1p2StunUdpServer.get(), a2p1StunUdpServer.get(), a2p2StunUdpServer.get());
-       a1p2StunUdpServer->setAlternateUdpServers(a1p1StunUdpServer.get(), a2p2StunUdpServer.get(), a2p1StunUdpServer.get());
-       a2p1StunUdpServer->setAlternateUdpServers(a2p2StunUdpServer.get(), a1p1StunUdpServer.get(), a1p2StunUdpServer.get());
-       a2p2StunUdpServer->setAlternateUdpServers(a2p1StunUdpServer.get(), a1p2StunUdpServer.get(), a1p1StunUdpServer.get());
-       a1p1StunUdpServer->start();
+       a1p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, altStunPort));
+       a2p1StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, turnPort));
+       a2p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, altStunPort));
+       udpTurnServer->setAlternateUdpServers(a1p2StunUdpServer.get(), a2p1StunUdpServer.get(), a2p2StunUdpServer.get());
+       a1p2StunUdpServer->setAlternateUdpServers(udpTurnServer.get(), a2p2StunUdpServer.get(), a2p1StunUdpServer.get());
+       a2p1StunUdpServer->setAlternateUdpServers(a2p2StunUdpServer.get(), udpTurnServer.get(), a1p2StunUdpServer.get());
+       a2p2StunUdpServer->setAlternateUdpServers(a2p1StunUdpServer.get(), a1p2StunUdpServer.get(), udpTurnServer.get());
        a1p2StunUdpServer->start();
        a2p1StunUdpServer->start();
        a2p2StunUdpServer->start();
-       tcpStunServer.reset(new reTurn::TcpServer(ioService, requestHandler, turnAddress, stunPort, false /*turnFraming?*/));
-       tlsStunServer.reset(new reTurn::TlsServer(ioService, requestHandler, turnAddress, tlsStunPort, false /*turnFraming?*/));
     }
+
+    udpTurnServer->start();
+    tcpTurnServer->start();
+    tlsTurnServer->start();
 
 #ifdef _WIN32
     // Set console control handler to allow server to be stopped.

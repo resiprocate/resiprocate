@@ -135,8 +135,8 @@ RequestLine::parse(ParseBuffer& pb)
    pb.data(mSipVersion, start);
 }
 
-ostream&
-RequestLine::encodeParsed(ostream& str) const
+EncodeStream&
+RequestLine::encodeParsed(EncodeStream& str) const
 {
    str << (mMethod != UNKNOWN ? getMethodName(mMethod) : mUnknownMethodName) << Symbols::SPACE;
    mUri.encodeParsed(str);

@@ -151,8 +151,8 @@ bool DnsNaptrRecord::isSameValue(const Data& value) const
    return mReplacement == value;
 }
 
-std::ostream&
-DnsNaptrRecord::dump(std::ostream& strm) const
+EncodeStream&
+DnsNaptrRecord::dump(EncodeStream& strm) const
 {
    strm << mName << " (NAPTR)--> o=" << mOrder << " p=" << mPreference;
    return strm;

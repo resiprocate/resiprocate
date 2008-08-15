@@ -32,7 +32,7 @@ main(int argc, char** argv)
       }
       catch (BaseException& e)
       {
-         cerr << "Caught: " << e << endl;
+         resipCerr << "Caught: " << e << endl;
       }
    }
 
@@ -129,7 +129,7 @@ main(int argc, char** argv)
       assert(pc.getTuples()[0].note == "Ne dérangez pas, s'il vous plait");
       assert(pc.getTuples()[0].timeStamp == "2001-10-27T16:49:29Z");
 
-      pc.encodeParsed(cerr);
+      pc.encodeParsed(resipCerr);
    }
 
    {
@@ -213,7 +213,7 @@ main(int argc, char** argv)
       assert(n->getTuples()[0].note == "Ne dérangez pas, s'il vous plait");
       assert(n->getTuples()[0].timeStamp == "2001-10-27T16:49:29Z");
 
-      n->encodeParsed(cerr);
+      n->encodeParsed(resipCerr);
 
       n->merge(pc2);
 
@@ -230,7 +230,7 @@ main(int argc, char** argv)
       assert(n->getTuples()[2].note == "Ne dérangez pas, s'il vous plait");
       assert(n->getTuples()[2].timeStamp == "2002-10-27T16:49:29Z");
 
-      n->encodeParsed(cerr);
+      n->encodeParsed(resipCerr);
    }
    {
       resip::Pidf pidf;

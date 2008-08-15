@@ -1,4 +1,6 @@
 
+#ifdef USE_RADIUS_CLIENT
+
 #include "Logger.hxx"
 #include "RADIUSDigestAuthenticator.hxx"
 
@@ -257,6 +259,8 @@ void TestRADIUSDigestAuthListener::onAccessDenied() {
 void TestRADIUSDigestAuthListener::onError() {
   WarningLog(<<"TestRADIUSDigestAuthListener::onError");
 }
+
+#endif
 
 
 /* ====================================================================

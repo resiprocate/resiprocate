@@ -334,8 +334,8 @@ Transport::operator==(const Transport& rhs) const
             ( memcmp(&boundInterface(),&rhs.boundInterface(),mTuple.length()) == 0) );
 }
     
-std::ostream& 
-resip::operator<<(std::ostream& strm, const resip::Transport& rhs)
+EncodeStream& 
+resip::operator<<(EncodeStream& strm, const resip::Transport& rhs)
 {
    strm << "Transport: " << rhs.mTuple;
    if (!rhs.mInterface.empty()) strm << " on " << rhs.mInterface;

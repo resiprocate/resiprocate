@@ -59,7 +59,7 @@ class Subsystem
       Data mSubsystem;
       Log::Level mLevel;
 
-      friend std::ostream& operator<<(std::ostream& strm, const Subsystem& ss);
+      friend EncodeStream& operator<<(EncodeStream& strm, const Subsystem& ss);
 };
 
 

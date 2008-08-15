@@ -141,7 +141,7 @@ class Transport
       void setTlsDomain(const Data& domain) { mTlsDomain = domain; }
    private:
       static const Data transportNames[MAX_TRANSPORT];
-      friend std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
+      friend EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
 
       Data mTlsDomain;      
    protected:
@@ -149,7 +149,7 @@ class Transport
       Compression &mCompression;
 };
 
-std::ostream& operator<<(std::ostream& strm, const Transport& rhs);
+EncodeStream& operator<<(EncodeStream& strm, const Transport& rhs);
       
 }
 

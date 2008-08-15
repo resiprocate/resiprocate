@@ -110,7 +110,7 @@ StaticRoute::challengeRequest(repro::RequestContext &rc, resip::Data &realm)
 }
 
 void
-StaticRoute::dump(std::ostream &os) const
+StaticRoute::dump(EncodeStream &os) const
 {
    os << "Static Route Monkey" << std::endl;
 }

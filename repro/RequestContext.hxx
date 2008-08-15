@@ -9,6 +9,7 @@
 #include "resip/stack/NameAddr.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/TimerCMessage.hxx"
+#include "rutil/resipfaststreams.hxx"
 
 namespace resip
 {
@@ -94,11 +95,11 @@ class RequestContext
       void removeTopRouteIfSelf();
       
       friend class ResponseContext;
-      friend std::ostream& operator<<(std::ostream& strm, const repro::RequestContext& rc);
+      friend EncodeStream& operator<<(EncodeStream& strm, const repro::RequestContext& rc);
 };
 
-std::ostream&
-operator<<(std::ostream& strm, const repro::RequestContext& rc);
+EncodeStream&
+operator<<(EncodeStream& strm, const repro::RequestContext& rc);
 
 
 }

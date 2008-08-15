@@ -97,12 +97,24 @@ Dialog::Dialog(DialogUsageManager& dum, const SipMessage& msg, DialogSet& ds)
                if (isEqualNoCase(contact.uri().scheme(), Symbols::Sips) ||
                    isEqualNoCase(contact.uri().scheme(), Symbols::Sip))
                {
-                  mLocalContact = NameAddr(request.header(h_RequestLine).uri()); // update later when send a request
                   mRemoteTarget = contact;
-                  if (mDialogSet.getUserProfile()->hasOverrideHostAndPort())
+                  
+                  if (!mDialogSet.getUserProfile()->isAnonymous() && mDialogSet.getUserProfile()->hasPublicGruu())
                   {
-                     mLocalContact.uri().host() = mDialogSet.getUserProfile()->getOverrideHostAndPort().host();
-                     mLocalContact.uri().port() = mDialogSet.getUserProfile()->getOverrideHostAndPort().port();
+                     mLocalContact.uri() = mDialogSet.getUserProfile()->getPublicGruu();
+                  }
+                  else if(mDialogSet.getUserProfile()->isAnonymous() && mDialogSet.getUserProfile()->hasTempGruu())
+                  {
+                     mLocalContact.uri() = mDialogSet.getUserProfile()->getTempGruu();
+                  }
+                  else
+                  {
+                     mLocalContact = NameAddr(request.header(h_RequestLine).uri()); // update later when send a request
+                     if (mDialogSet.getUserProfile()->hasOverrideHostAndPort())
+                     {
+                        mLocalContact.uri().host() = mDialogSet.getUserProfile()->getOverrideHostAndPort().host();
+                        mLocalContact.uri().port() = mDialogSet.getUserProfile()->getOverrideHostAndPort().port();
+                     }
                   }
                }
                else
@@ -1098,8 +1110,8 @@ void Dialog::possiblyDie()
    }
 }
 
-ostream&
-resip::operator<<(ostream& strm, const Dialog& dialog)
+EncodeStream&
+resip::operator<<(EncodeStream& strm, const Dialog& dialog)
 {
    strm
       << "mClientSubscriptions("

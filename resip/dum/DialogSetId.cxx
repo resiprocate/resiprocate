@@ -109,8 +109,8 @@ size_t DialogSetId::hash() const
 }
 
 
-std::ostream&
-resip::operator<<(std::ostream& os, const DialogSetId& id)
+EncodeStream&
+resip::operator<<(EncodeStream& os, const DialogSetId& id)
 {
     return os << id.mCallId << '-' << id.mTag ;
 }

@@ -37,14 +37,14 @@ OutgoingEvent::releaseMessage()
 }
 */
      
-std::ostream&
-OutgoingEvent::encodeBrief(std::ostream& strm) const
+EncodeStream&
+OutgoingEvent::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }
 
-std::ostream& 
-OutgoingEvent::encode(std::ostream& strm) const
+EncodeStream& 
+OutgoingEvent::encode(EncodeStream& strm) const
 {
    mMessage->encode(strm); 
    return strm;

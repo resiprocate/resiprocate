@@ -64,8 +64,20 @@ class ServerSubscriptionHandler
       virtual void onExpiredByClient(ServerSubscriptionHandle, const SipMessage& sub, SipMessage& notify);
       virtual void onExpired(ServerSubscriptionHandle, SipMessage& notify);
 
+	  /** Default behavior is to use the expires value in the SipMessage, if it exists. Then verify the expires >= Min and <= Max (if set).  If an expires value does
+	    * not exists, use getDefaultExpires().  If hasDefaultExpires() is false, then reject the message with a 400.
+		* Set errorReturnCode to an error code >= 400 to reject this subscription. 
+		*/	  
+	  virtual void getExpires(const SipMessage &msg, UInt32 &expires, int &errorResponseCode);//ivr mod
+
       virtual bool hasDefaultExpires() const;
       virtual UInt32 getDefaultExpires() const;
+
+	  virtual bool hasMinExpires() const;
+	  virtual UInt32 getMinExpires() const;
+
+	  virtual bool hasMaxExpires() const;
+	  virtual UInt32 getMaxExpires() const;
 
       const Mimes& getSupportedMimeTypes() const;
 };

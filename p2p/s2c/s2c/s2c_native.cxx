@@ -12,9 +12,10 @@
 #include <assert.h>
 #include "rutil/Data.hxx"
 #include "rutil/DataStream.hxx"
+#include "rutil/ParseException.hxx"
 #include "s2c_native.hxx"
 
-void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64 value)
+void s2c::encode_uintX(std::ostream& out, const unsigned int bits, const u_int64 value)
   {
     int size;
 
@@ -25,21 +26,21 @@ void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64
     
     switch(size){
       case 8:
-        out->put(((value>>56)&0xff));
+        out.put(((value>>56)&0xff));
       case 7:
-        out->put(((value>>48)&0xff));
+        out.put(((value>>48)&0xff));
       case 6:
-        out->put(((value>>40)&0xff));
+        out.put(((value>>40)&0xff));
       case 5:
-        out->put(((value>>32)&0xff));
+        out.put(((value>>32)&0xff));
       case 4:
-        out->put(((value>>24)&0xff));
+        out.put(((value>>24)&0xff));
       case 3:
-        out->put(((value>>16)&0xff));
+        out.put(((value>>16)&0xff));
       case 2:
-        out->put(((value>>8)&0xff));
+        out.put(((value>>8)&0xff));
       case 1:
-        out->put(value&0xff);
+        out.put(value&0xff);
         break;
       default:
         assert(1==0);
@@ -47,12 +48,12 @@ void s2c::encode_uintX(std::ostream *out, const unsigned int bits, const u_int64
   }
   
 
-void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_char &value)
+void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_char &value)
   {
     int size;
     int c;      
     
-    assert(bits==8);
+    assert(bits<=8);
 
     size=bits/8;
     
@@ -60,13 +61,16 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_char &value)
 
     while(size--){
       value <<=8;
-      c=in->get();
+      c=in.get();
+     
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
       value |= c;
     }
   }
 
 
-/*void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int8 &value)
+/*void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int8 &value)
   {
     int size;
     int c;      
@@ -84,12 +88,12 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_char &value)
     }
   }
 */
-void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int16 &value)
+void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int16 &value)
   {
     int size;
     int c;
     
-    assert(bits==16);
+    assert(bits<=16);
 
     size=bits/8;
     
@@ -97,17 +101,21 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int16 &value
 
     while(size--){
       value <<=8;
-      c=in->get();
+      c=in.get();
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
+
+
       value |= c;
     }
   }
 
-void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int32 &value)
+void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int32 &value)
   {
     int size;
     int c;
     
-    assert(bits==32);
+    assert(bits<=32);
 
     size=bits/8;
     
@@ -115,17 +123,21 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int32 &value
 
     while(size--){
       value <<=8;
-      c=in->get();
+      
+      c=in.get();
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
+
       value |= c;
     }
   }
 
-void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int64 &value)
+void s2c::decode_uintX(std::istream& in, const unsigned int bits, u_int64 &value)
   {
     int size;
     int c;
     
-    assert(bits==64);
+    assert(bits<=64);
 
     size=bits/8;
     
@@ -133,19 +145,21 @@ void s2c::decode_uintX(std::istream *in, const unsigned int bits, u_int64 &value
 
     while(size--){
       value <<=8;
-      c=in->get();
+      c=in.get();
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
       value |= c;
     }
   }
     
-void s2c::do_indent(std::ostream *out, int indent)
+void s2c::do_indent(std::ostream& out, int indent)
  {
-   while(indent--)  *out  << ' ';
+   while(indent--)  out  << ' ';
  }
 
 // This is really clumsy, but I don't understand rutil
 // TODO: !ekr! cleanup
-void s2c::read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf)
+void s2c::read_varray1(std::istream& in, unsigned int lenlen, resip::Data &buf)
   {
     u_int64 len=0;
     int c;
@@ -153,17 +167,34 @@ void s2c::read_varray1(std::istream *in, unsigned int lenlen, resip::Data &buf)
     // First read the length
     assert(lenlen<=8);
     while(lenlen--){
-      len<<8;
-      c=in->get();
+      len<<=8;
+      c=in.get();
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
       len|=c;
     }
     
     resip::DataStream out(buf);
     
     while(len--){
-      c=in->get();
+      c=in.get();
+      if(c==EOF)
+        throw resip::ParseException("Unexpected end of encoding","",__FILE__,__LINE__);
+
       out.put(c);
     }
     
     out.flush();
   }
+
+s2c::PDU::~PDU()
+{
+}
+
+std::ostream& 
+operator<<(std::ostream& strm, const s2c::PDU& pdu)
+{
+   pdu.print(strm);
+   return strm;
+}
+

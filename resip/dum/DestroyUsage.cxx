@@ -43,8 +43,8 @@ DestroyUsage::clone() const
    return new DestroyUsage(*this);
 }
 
-std::ostream& 
-DestroyUsage::encodeBrief(std::ostream& strm) const
+EncodeStream& 
+DestroyUsage::encodeBrief(EncodeStream& strm) const
 {
    if (mDialogSet)
    {
@@ -65,8 +65,8 @@ DestroyUsage::encodeBrief(std::ostream& strm) const
    return strm;
 }
 
-std::ostream& 
-DestroyUsage::encode(std::ostream& strm) const
+EncodeStream& 
+DestroyUsage::encode(EncodeStream& strm) const
 {
    return strm << brief();
 }

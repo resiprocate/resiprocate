@@ -563,8 +563,8 @@ SipMessage::method() const
    return res;
 }
 
-std::ostream&
-SipMessage::encodeBrief(std::ostream& str) const
+EncodeStream&
+SipMessage::encodeBrief(EncodeStream& str) const
 {
    static const Data  request("SipReq:  ");
    static const Data response("SipResp: ");
@@ -655,27 +655,30 @@ SipMessage::isClientTransaction() const
    return ((mIsExternal && mResponse) || (!mIsExternal && mRequest));
 }
 
-std::ostream& 
-SipMessage::encode(std::ostream& str) const
+EncodeStream&
+SipMessage::encode(EncodeStream& str) const
 {
    return encode(str, false);
 }
 
-std::ostream& 
-SipMessage::encodeSipFrag(std::ostream& str) const
+EncodeStream&
+SipMessage::encodeSipFrag(EncodeStream& str) const
 {
    return encode(str, true);
 }
 
 // dynamic_cast &str to DataStream* to avoid CountStream?
 
-std::ostream& 
-SipMessage::encode(std::ostream& str, bool isSipFrag) const
+EncodeStream&
+SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 {
    if (mStartLine != 0)
    {
       mStartLine->encode(Data::Empty, str);
    }
+
+   //possibly encode contents to data once instead of CountStream?
+   //Data data;
 
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -693,7 +696,11 @@ SipMessage::encode(std::ostream& str, bool isSipFrag) const
             size_t size;
             {
                CountStream cs(size);
+               
+               //DataStream cs(data);
                mContents->encode(cs);
+               //cs.flush();
+               //size = data.size();
             }
             str << "Content-Length: " << size << "\r\n";
          }
@@ -719,6 +726,7 @@ SipMessage::encode(std::ostream& str, bool isSipFrag) const
    if (mContents != 0)
    {
       mContents->encode(str);
+      //str << data;
    }
    else if (mContentsHfv != 0)
    {
@@ -728,8 +736,8 @@ SipMessage::encode(std::ostream& str, bool isSipFrag) const
    return str;
 }
 
-std::ostream& 
-SipMessage::encodeEmbedded(std::ostream& str) const
+EncodeStream& 
+SipMessage::encodeEmbedded(EncodeStream& str) const
 {
    bool first = true;
    for (int i = 0; i < Headers::MAX_HEADERS; i++)

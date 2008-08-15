@@ -21,16 +21,21 @@
 extern FILE *dotc;
 extern FILE *doth;
 
-p_decl *current_decl[10]={0};
+#define CURRENT_DECL current_decl[current_decl_depth]
+
+p_decl *current_decl[50]={0};
 int current_decl_depth=0;
  
 void push_decl(p_decl *decl)
   {
+    r_log(LOG_GENERIC,LOG_DEBUG,"Pushing decl");
     current_decl[++current_decl_depth]=decl;
   }
 
 void pop_decl()
   {
+    r_log(LOG_GENERIC,LOG_DEBUG,"Popping decl %s, depth=%d",CURRENT_DECL->name,
+      current_decl_depth);
     current_decl_depth--;
   }
 
@@ -46,7 +51,6 @@ p_decl *make_fwd_ref (char *type)
     return(decl);
   }
 
-#define CURRENT_DECL current_decl[current_decl_depth]
 %}
 %union {
      unsigned int val;
@@ -74,6 +78,7 @@ p_decl *make_fwd_ref (char *type)
 %token <val> CONSTANT_ 
 %token <val> PRIMITIVE_
 %token <val> TYPEDEF_
+%token <val> OBJECT_
 
 /*Types for nonterminals*/
 %type <val> module
@@ -105,6 +110,7 @@ definition:
           | enum
           | select
           | typedef
+          | object
           {
 
           }
@@ -172,7 +178,7 @@ declaration : NAME_ NAME_ ';'
     p_decl *decl=0;
     void *v;
     int r;
-
+    char *magic;
 
     if(r=r_assoc_fetch(types,$1, strlen($1), &v)){
       r_log(LOG_GENERIC,LOG_DEBUG,"Unknown type %s\n",$1);
@@ -184,10 +190,23 @@ declaration : NAME_ NAME_ ';'
     }
 
     decl=RCALLOC(sizeof(p_decl));
-
+    
+    
     decl->name=r_strdup($2);
     decl->type = TYPE_REF;
     decl->u.ref_.ref = v;
+
+    if(magic=strchr(decl->name,'.')){
+      magic++;
+      if(!strcmp(magic,"auto_len")){
+        if(decl->u.ref_.ref->type != TYPE_PRIMITIVE)
+          nr_verr_exit("Auto len feature only usable with integers");
+        decl->auto_len=1;
+      }
+      else{
+        nr_verr_exit("Illegal magic operation %s",magic);
+      }
+    }
 
     $$=decl;
   };
@@ -237,20 +256,24 @@ declaration : NAME_ NAME_ ';'
 
     $$=decl;
   };
+  | select 
+  {
+    $$ = $1;
+  }
 
 
 varray_size: 
-            NUM_ '^' NUM_ '-' NUM_ 
+            NUM_ DOT_DOT_ NUM_ '^' NUM_ '-' NUM_ 
             {
               unsigned long long l;
               int i;
               
-              if($3 <= 0)
-                nr_verr_exit("Bogus exponent %d in size expression",$3);
-              l=$1;
+              if($5 <= 0)
+                nr_verr_exit("Bogus exponent %d in size expression",$5);
+              l=$3;
 
-              for(i = 1; i<$3;i++){
-                l *= $1;
+              for(i = 1; i<$5;i++){
+                l *= $3;
               }
               
               l -= $5;
@@ -293,8 +316,55 @@ primitive : PRIMITIVE_ NAME_ p_type  NUM_ ';'
     }
   }    
 
-enum: ENUM_ '{' enumerateds '}' NAME_ ';'
+object:  OBJECT_ NAME_ NAME_ ';'
+  {
+    p_decl *decl=0;
+    int r;
+    decl=RCALLOC(sizeof(p_decl));
+
+    decl->name=r_strdup($3);
+    decl->u.object_.classname=r_strdup($2);
+
+    decl->type=TYPE_OBJECT;
+
+    if(r=r_assoc_insert(types,decl->name,strlen(decl->name),
+         decl,0,0,R_ASSOC_NEW)){
+      r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert object %s. Exists?\n",decl->name);
+      exit(1);
+    }
+  }
+
+enum_start: ENUM_
+  {
+    p_decl *decl=0;
+
+    r_log(LOG_GENERIC,LOG_DEBUG,"enums start\n");
+
+    decl=RCALLOC(sizeof(p_decl));
+
+    decl->type=TYPE_ENUM;
+    STAILQ_INIT(&decl->u.enum_.members);    
+    push_decl(decl);
+    STAILQ_INSERT_TAIL(&public_decls,decl,entry);  // All decls public here
+  }
+
+enum: enum_start '{' enumerateds '}' NAME_ ';'
+{
+  int r;
+
+  CURRENT_DECL->name=r_strdup($5);
   
+  r_log(LOG_GENERIC,LOG_DEBUG,"Finished with enum %s\n",$5);
+  
+  if(r=r_assoc_insert(types,CURRENT_DECL->name,strlen(CURRENT_DECL->name),
+      CURRENT_DECL,0,0,R_ASSOC_NEW)){
+    r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert enum %s. Exists?\n",$5);
+    exit(1);
+  }
+
+  pop_decl();
+}
+
 enumerateds: enumerated {};
              | enumerated ',' enumerateds {};
 
@@ -305,23 +375,31 @@ enumerated: NAME_ '(' NUM_ ')'
     decl=RCALLOC(sizeof(p_decl));
 
     decl->name=r_strdup($1);
-    decl->u.enum_.value=$3;
-    decl->type=TYPE_ENUM;
+    decl->u.enum_value_.value=$3;
+    decl->type=TYPE_ENUM_VALUE;
+  
+  if(r=r_assoc_insert(types,decl->name,strlen(decl->name),
+      decl,0,0,R_ASSOC_NEW)){
+    r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert enum value %s. Exists?\n",$1);
+    exit(1);
+  }
 
-    if(r=r_assoc_insert(types,decl->name,strlen(decl->name),
-         decl,0,0,R_ASSOC_NEW)){
-      r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert enum %s. Exists?\n",decl->name);
-      exit(1);
-    }
+    STAILQ_INSERT_TAIL(&CURRENT_DECL->u.enum_.members,decl,entry);
   }    
+| '(' NUM_ ')'
 
+  {
+    CURRENT_DECL->u.enum_.max=$2;
+  }
 
-select: select_start '{' select_arms '}' NAME_ ';' 
+select: select_start '{' select_arms '}' ';' 
 {
   int r;
 
-    CURRENT_DECL->name=r_strdup($5);
-    
+//    CURRENT_DECL->name=r_strdup($5);
+  CURRENT_DECL->name=r_strdup("auto-generated");
+
+/*    
     r_log(LOG_GENERIC,LOG_DEBUG,"Finished with select %s\n",$5);
     
     if(r=r_assoc_insert(types,CURRENT_DECL->name,strlen(CURRENT_DECL->name),
@@ -329,12 +407,14 @@ select: select_start '{' select_arms '}' NAME_ ';'
       r_log(LOG_GENERIC,LOG_DEBUG,"Couldn't insert struct %s. Exists?\n",$5);
       exit(1);
     }
+*/
     $$ = CURRENT_DECL;
 
     pop_decl();
 };
 
-select_start: SELECT_ 
+
+select_start: SELECT_ '(' NAME_ ')'
 {
     p_decl *decl=0;
 
@@ -343,11 +423,15 @@ select_start: SELECT_
     decl=RCALLOC(sizeof(p_decl));
 
     decl->type=TYPE_SELECT;
-    STAILQ_INIT(&decl->u.select_.arms);    
+    STAILQ_INIT(&decl->u.select_.arms);
+    decl->u.select_.switch_on=r_strdup($3);
+    
     push_decl(decl);
-    STAILQ_INSERT_TAIL(&public_decls,decl,entry);  // All decls public here
+    if(!CURRENT_DECL)
+      STAILQ_INSERT_TAIL(&public_decls,decl,entry);  
 };
-        | PUBLIC_ SELECT_ 
+
+/*        | PUBLIC_ SELECT_ 
 {
     p_decl *decl=0;
 
@@ -356,10 +440,13 @@ select_start: SELECT_
     decl=RCALLOC(sizeof(p_decl));
 
     decl->type=TYPE_SELECT;
+    decl->u.select_.switch_on=r_strdup($        4);
     STAILQ_INIT(&decl->u.select_.arms);    
     push_decl(decl);
-    STAILQ_INSERT_TAIL(&public_decls,decl,entry);
+    if(!CURRENT_DECL)
+      STAILQ_INSERT_TAIL(&public_decls,decl,entry);  
 };
+*/
 
 
 
@@ -388,12 +475,12 @@ select_arm_start: CASE_ NAME_ ':'
       exit(1);
     }
     value=v;
-    if(value->type != TYPE_ENUM)
+    if(value->type != TYPE_ENUM_VALUE)
       nr_verr_exit("%s is not a constant/enum",value->name);
 
     decl->type=TYPE_SELECT_ARM;
     decl->name=r_strdup($2);
-    decl->u.select_arm_.value=value->u.enum_.value;
+    decl->u.select_arm_.value=value->u.enum_value_.value;
 
     STAILQ_INIT(&decl->u.select_arm_.members);
     
@@ -419,11 +506,14 @@ select_arm_decls: {};
   {
     p_decl *decl=$2;
     
-    r_log(LOG_GENERIC,LOG_DEBUG,"Adding type %s to %s",decl->name,CURRENT_DECL->name);
+//    r_log(LOG_GENERIC,LOG_DEBUG,"Adding type %s to %s",decl->name,CURRENT_DECL->name);
     
     STAILQ_INSERT_TAIL(&CURRENT_DECL->u.select_arm_.members,decl,entry);
   }
-    
+ | ';'
+  {
+  }
+  
 
 typedef: TYPEDEF_ declaration
   {

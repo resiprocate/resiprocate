@@ -449,8 +449,8 @@ Contents::preParseHeaders(ParseBuffer& pb)
    }
 }
 
-std::ostream&
-Contents::encodeHeaders(std::ostream& str) const
+EncodeStream&
+Contents::encodeHeaders(EncodeStream& str) const
 {
    if (mVersion != 1 || mMinorVersion != 0)
    {

@@ -2,12 +2,14 @@
 #define RESIP_REGISTRATIONHANDLER_HXX
 
 #include "resip/dum/Handles.hxx"
+#include "rutil/SharedPtr.hxx"
 
 namespace resip
 {
 
 class SipMessage;
 class NameAddr;
+class MasterProfile;
 
 class ClientRegistrationHandler
 {
@@ -25,7 +27,7 @@ class ClientRegistrationHandler
       virtual int onRequestRetry(ClientRegistrationHandle, int retrySeconds, const SipMessage& response)=0;
       
       /// Called if registration fails, usage will be destroyed (unless a 
-	  /// Registration retry interval is enabled in the Profile)
+      /// Registration retry interval is enabled in the Profile)
       virtual void onFailure(ClientRegistrationHandle, const SipMessage& response)=0;
 };
 
@@ -49,6 +51,24 @@ class ServerRegistrationHandler
 
       /// Called when a client queries for the list of current registrations
       virtual void onQuery(ServerRegistrationHandle, const SipMessage& reg)=0;
+
+      /// When processing a REGISTER request, return the desired expires value when processing the "Expires" header.
+      ///@param expires Set this to the desired expiration value for the set of contacts that do not explicitely 
+      ///   set the "expires" param.  
+      ///@param returnCode If the REGISTER should be rejected, use this return code.  A value of 423 will result in
+      ///the Min-Expires header added to the response.
+      ///
+      virtual void getGlobalExpires(const SipMessage& msg, SharedPtr<MasterProfile> masterProfile, 
+         UInt32 &expires, UInt32 &returnCode);
+
+      /// When processing a REGISTER request, return the desired expires value by processing this contact's expires
+      /// parameter.  If the expires value is not modified in this function the global expires will be used.
+      /// @param expires Set this to the desired expiration value for this contact.
+      /// @param returnCode If the REGISTER should be rejected, use this return code.  A value of 423 will result in
+      ///   the Min-Expires header added to the response.
+      ///
+      virtual void getContactExpires(const NameAddr &contact, SharedPtr<MasterProfile> masterProfile, 
+         UInt32 &expires, UInt32 &returnCode);
 };
 
 }

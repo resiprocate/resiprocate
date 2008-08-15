@@ -38,7 +38,7 @@ class DnsSrvRecord : public DnsResourceRecord
       const Data& target() const { return mTarget; }
       const Data& name() const { return mName; }
       bool isSameValue(const Data& value) const;
-      std::ostream& dump(std::ostream& strm) const;
+      EncodeStream& dump(EncodeStream& strm) const;
       
    private:
       int mPriority;

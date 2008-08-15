@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include "repro/Processor.hxx"
+#include "rutil/resipfaststreams.hxx"
 
 namespace repro
 {
@@ -18,7 +19,7 @@ class ProcessorChain : public Processor
       virtual processor_action_t process(RequestContext &);
 
       typedef std::vector<Processor*> Chain;
-      virtual void dump(std::ostream &os) const;
+      virtual void dump(EncodeStream &os) const;
 
       virtual void setChainType(ChainType type);
 

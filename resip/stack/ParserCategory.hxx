@@ -10,6 +10,8 @@
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
 
+#include "rutil/resipfaststreams.hxx"
+
 #define defineParam(_enum, _name, _type, _RFC_ref_ignored)                      \
       const _enum##_Param::DType& param(const _enum##_Param& paramType) const;  \
       _enum##_Param::DType& param(const _enum##_Param& paramType)
@@ -92,7 +94,10 @@ class ParserCategory : public LazyParser
       defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
       defineParam(regid, "reg-id", UInt32Parameter, "outbound");
       defineParam(ob,"ob",ExistsParameter,"outbound-05");
-      defineParam(gruu, "gruu", QuotedDataParameter, "gruu");
+
+      defineParam(pubGruu, "pub-gruu", QuotedDataParameter, "gruu");
+      defineParam(tempGruu, "temp-gruu", QuotedDataParameter, "gruu");
+      defineParam(gr, "gr", ExistsOrDataParameter, "gruu");
 
       defineParam(accessType, "access-type", DataParameter, "RFC 2046");
       defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
@@ -161,11 +166,11 @@ class ParserCategory : public LazyParser
 
       defineParam(url, "url", QuotedDataParameter, "draft-ietf-sip-content-indirect-mech-05");
 
-      defineParam(addTransport, "addTransport", ExistsParameter, "");
       defineParam(sigcompId, "sigcomp-id", QuotedDataParameter, "draft-ietf-rohc-sigcomp-sip");
+      defineParam(addTransport, "addTransport", ExistsParameter, "");
 
       void parseParameters(ParseBuffer& pb);
-      std::ostream& encodeParameters(std::ostream& str) const;
+      EncodeStream& encodeParameters(EncodeStream& str) const;
       
       // used to compare 2 parameter lists for equality in an order independent way
       Data commutativeParameterHash() const;
@@ -193,12 +198,12 @@ class ParserCategory : public LazyParser
    private:
       void clear();
       void copyParametersFrom(const ParserCategory& other);
-      friend std::ostream& operator<<(std::ostream&, const ParserCategory&);
+      friend EncodeStream& operator<<(EncodeStream&, const ParserCategory&);
       friend class NameAddr;
 };
 
-std::ostream&
-operator<<(std::ostream&, const ParserCategory& category);
+EncodeStream&
+operator<<(EncodeStream&, const ParserCategory& category);
 
 }
 
