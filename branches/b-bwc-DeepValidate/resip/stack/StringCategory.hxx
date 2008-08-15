@@ -26,6 +26,7 @@ class StringCategory : public ParserCategory
       StringCategory& operator=(const StringCategory&);
 
       virtual void parse(ParseBuffer& pb);
+      virtual bool deepValidate() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 

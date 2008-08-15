@@ -55,6 +55,7 @@ class DateCategory : public ParserCategory
       DateCategory& operator=(const DateCategory&);
 
       virtual void parse(ParseBuffer& pb);
+      virtual bool deepValidate() const;
       virtual ParserCategory* clone() const;
 
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;

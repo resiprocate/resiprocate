@@ -39,6 +39,7 @@ class NameAddr : public ParserCategory
       void setAllContacts();
       
       virtual void parse(ParseBuffer& pb);
+      virtual bool deepValidate() const;
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 

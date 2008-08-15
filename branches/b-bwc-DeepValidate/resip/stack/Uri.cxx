@@ -852,6 +852,120 @@ Uri::parse(ParseBuffer& pb)
    }
 }
 
+bool 
+Uri::deepValidate() const
+{
+   checkParsed();
+
+   // Scheme
+   if(mScheme.empty() || !Symbols::Alpha[mScheme[0]])
+   {
+      return false;
+   }
+
+   if(!mScheme.containsOnly(Symbols::Scheme,false))
+   {
+      return false;
+   }
+
+
+   // Host
+   ParseBuffer pb(mHost.data(), mHost.size());
+   try
+   {
+      while(!pb.eof())
+      {
+         const char* start=pb.position();
+         pb.skipToChar('.');
+         Data label;
+         pb.data(label,start);
+   
+         if(label.empty())
+         {
+            return false;
+         }
+   
+         if(!label.containsOnly(Symbols::DomainPartChars,false))
+         {
+            // Might be an IPV6 address? (We strip the [] out on parse)
+            if(start!=mHost.data() || !pb.eof() || !DnsUtil::isIpV6Address(mHost))
+            {
+               // Nope.
+               return false;
+            }
+            else
+            {
+               return true;
+            }
+         }
+   
+         if(label.containsOnly(Symbols::Digit,false))
+         {
+            // Might be an IPV4 address?
+            if(DnsUtil::isIpV4Address(mHost))
+            {
+               return true;
+            }
+            // I think stuff like foo.100.com is valid, right?
+         }
+   
+         if(label[0]=='-' || label[label.size()-1]=='-')
+         {
+            // Segment can't begin or end with a '-'
+            return false;
+         }
+   
+         if(pb.eof())
+         {
+            // Last label needs to start with an ALPHA
+            if(!Symbols::Alpha[label[0]])
+            {
+               return false;
+            }
+         }
+         else
+         {
+            pb.skipChar('.');
+         }
+      }
+   }
+   catch(ParseException&)
+   {
+      return false;
+   }
+
+   // User
+#ifndef HANDLE_CHARACTER_ESCAPING
+   // If character escaping is being handled here, this might contain unescaped
+   // stuff.
+   if(!mUser.containsOnly(Symbols::UserC,true))
+   {
+      return false;
+   }
+#endif
+
+   // User params?
+
+   // Port
+   if(mPort < 0 || mPort >= 65536)
+   {
+      return false;
+   }
+
+   // Password
+#ifndef HANDLE_CHARACTER_ESCAPING
+   // If character escaping is being handled here, this might contain unescaped
+   // stuff.
+   if(!mPassword.containsOnly(Symbols::Password,true))
+   {
+      return false;
+   }
+#endif
+
+   return true;
+}
+
+
 ParserCategory*
 Uri::clone() const
 {

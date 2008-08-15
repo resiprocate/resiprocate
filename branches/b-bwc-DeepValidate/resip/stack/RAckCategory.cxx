@@ -143,6 +143,23 @@ RAckCategory::parse(ParseBuffer& pb)
    pb.data(mUnknownMethodName, anchorPtr);
 }
 
+bool 
+RAckCategory::deepValidate() const
+{
+   if(!mUnknownMethodName.containsOnly(Symbols::Token, false))
+   {
+      // If this is empty, we won't end up in here.
+      return false;
+   }
+
+   if(mRSequence==0 || mCSequence==0)
+   {
+      return false;
+   }
+
+   return true;
+}
+
 EncodeStream& 
 RAckCategory::encodeParsed(EncodeStream& str) const
 {

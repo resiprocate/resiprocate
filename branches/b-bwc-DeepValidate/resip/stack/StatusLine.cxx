@@ -120,6 +120,27 @@ StatusLine::parse(ParseBuffer& pb)
    pb.data(mReason, start);
 }
 
+bool 
+StatusLine::deepValidate() const
+{
+   if(mResponseCode < 100 || mResponseCode > 699)
+   {
+      return false;
+   }
+
+   if(mSipVersion!="SIP/2.0")
+   {
+      return false;
+   }
+
+   if(!mReason.containsOnly(Symbols::ReasonC, true))
+   {
+      return false;
+   }
+
+   return true;
+}
+
 EncodeStream&
 StatusLine::encodeParsed(EncodeStream& str) const
 {

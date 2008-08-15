@@ -36,6 +36,7 @@ class RAckCategory : public ParserCategory
       bool operator==(const RAckCategory& rhs) const;
 
       virtual void parse(ParseBuffer& pb);
+      virtual bool deepValidate() const;
       virtual ParserCategory* clone() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
 
