@@ -85,9 +85,7 @@ class RRCache
 
       RRFactory<DnsHostRecord> mHostRecordFactory;
       RRFactory<DnsSrvRecord> mSrvRecordFactory;
-#ifdef USE_IPV6
       RRFactory<DnsAAAARecord> mAAAARecordFactory;
-#endif
       RRFactory<DnsNaptrRecord> mNaptrRecordFacotry;
       RRFactory<DnsCnameRecord> mCnameRecordFactory;
 
