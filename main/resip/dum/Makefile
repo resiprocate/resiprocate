@@ -30,6 +30,8 @@ SRC =   \
 	DefaultServerReferHandler.cxx \
 	DestroyUsage.cxx \
 	Dialog.cxx \
+	DialogEventInfo.cxx \
+	DialogEventStateManager.cxx \
 	DialogId.cxx \
 	DialogSet.cxx \
 	DialogSetId.cxx \
