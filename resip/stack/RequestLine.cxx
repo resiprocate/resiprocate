@@ -138,6 +138,11 @@ RequestLine::parse(ParseBuffer& pb)
 bool 
 RequestLine::deepValidate() const
 {
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    if(!mUri.deepValidate())
    {
       return false;
@@ -154,7 +159,7 @@ RequestLine::deepValidate() const
       return false;
    }
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 EncodeStream&

@@ -42,7 +42,7 @@ class LazyParser
       void checkParsed() const;
       
       bool isWellFormed() const;
-      virtual bool deepValidate() const{return true;}
+      virtual bool deepValidate() const{return isWellFormed();}
    protected:
       LazyParser();
 

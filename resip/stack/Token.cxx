@@ -93,11 +93,16 @@ Token::parse(ParseBuffer& pb)
 bool 
 Token::deepValidate() const
 {
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    if(mValue.empty() || !mValue.containsOnly(Symbols::Token, false))
    {
       return false;
    }
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 ParserCategory* 

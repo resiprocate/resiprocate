@@ -123,6 +123,11 @@ StatusLine::parse(ParseBuffer& pb)
 bool 
 StatusLine::deepValidate() const
 {
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    if(mResponseCode < 100 || mResponseCode > 699)
    {
       return false;
@@ -138,7 +143,7 @@ StatusLine::deepValidate() const
       return false;
    }
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 EncodeStream&

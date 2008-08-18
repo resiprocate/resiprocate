@@ -118,6 +118,10 @@ class Symbols
 
       static const char* Gruu;
 
+      static const std::bitset<256> UTF8_NONASCII;
+      static const std::bitset<256> TEXT_UTF8char;
+      static const std::bitset<256> UTF8_CONT;
+      static const std::bitset<256> LWS;
       static const std::bitset<256> Reserved;
       static const std::bitset<256> Unreserved;
       static const std::bitset<256> Mark;
@@ -139,6 +143,8 @@ class Symbols
       static const std::bitset<256> DomainPartChars;
       static const std::bitset<256> UserC;
       static const std::bitset<256> ReasonC;
+      static const std::bitset<256> QDText;
+      static const std::bitset<256> HfvC;
 };
 
 }

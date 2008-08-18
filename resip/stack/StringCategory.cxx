@@ -62,11 +62,16 @@ StringCategory::parse(ParseBuffer& pb)
 bool 
 StringCategory::deepValidate() const
 {
-   if(!mValue.containsOnly(Symbols::Token, false))
+   if(!isWellFormed())
    {
       return false;
    }
-   return true;
+
+   if(!mValue.containsOnly(Symbols::HfvC, false))
+   {
+      return false;
+   }
+   return ParserCategory::deepValidate();
 }
 
 EncodeStream& 

@@ -705,7 +705,8 @@ class Data
                          Predicate shouldEscape) const;
 
       bool containsOnly(const std::bitset<256>& allowed,
-                        bool allowPercentEscaped) const;
+                        bool allowPercentEscaped,
+                        bool allowSlashEscaped=false) const;
 
    private:
       /**

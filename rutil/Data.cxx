@@ -2065,21 +2065,29 @@ Data::base64encode(bool useSafeSet) const
 
 bool 
 Data::containsOnly(const std::bitset<256>& allowed,
-                     bool allowEscaped) const
+                     bool allowPercentEscaped,
+                     bool allowSlashEscaped) const
 {
-   const char* end=mBuf+mSize;
-   for(const char* c=mBuf; c<end; ++c)
+   const unsigned char* end=(unsigned char*)(mBuf+mSize);
+   for(const unsigned char* c=(unsigned char*)mBuf; c<end; ++c)
    {
-      if(*c=='%' && allowEscaped)
+      if(*c=='%' && allowPercentEscaped)
       {
-         const std::bitset<256> hex(toBitset("0123456789aAbBcCdDeEfF"));
-         ++c;
-         if(c + 1 >= end || !hex[*c] || !hex[*(c+1)])
+         const static std::bitset<256> hex(toBitset("0123456789aAbBcCdDeEfF"));
+         if(c + 2 < end && hex[*(c+1)] && hex[*(c+2)])
          {
-            return false;
+            c+=2;
+            continue;
          }
-         ++c;
-         continue;
+      }
+
+      if(*c=='\\' && allowSlashEscaped)
+      {
+         if(c!=end && *c <= 127 && *c!='\r' && *c!='\n')
+         {
+            ++c;
+            continue;
+         }
       }
 
       if(!allowed[*c])

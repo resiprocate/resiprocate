@@ -150,6 +150,11 @@ CSeqCategory::parse(ParseBuffer& pb)
 bool 
 CSeqCategory::deepValidate() const
 {
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    if(!mUnknownMethodName.containsOnly(Symbols::Token, false))
    {
       // If this is empty, we won't end up in here.
@@ -161,7 +166,7 @@ CSeqCategory::deepValidate() const
       return false;
    }
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 EncodeStream& 

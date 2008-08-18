@@ -26,8 +26,8 @@ using namespace resip;
 bool Uri::mEncodingReady = false;
 // class static variables listing the default characters not to encode
 // in user and password strings respectively
-Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$,;?/");
-Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\\()&=+$");
+Data Uri::mUriNonEncodingUserChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\'()&=+$,;?/");
+Data Uri::mUriNonEncodingPasswordChars = Data("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*\'()&=+$");
 Uri::EncodingTable Uri::mUriEncodingUserTable;
 Uri::EncodingTable Uri::mUriEncodingPasswordTable;
 
@@ -855,7 +855,10 @@ Uri::parse(ParseBuffer& pb)
 bool 
 Uri::deepValidate() const
 {
-   checkParsed();
+   if(!isWellFormed())
+   {
+      return false;
+   }
 
    // Scheme
    if(mScheme.empty() || !Symbols::Alpha[mScheme[0]])
@@ -868,70 +871,53 @@ Uri::deepValidate() const
       return false;
    }
 
-
-   // Host
-   ParseBuffer pb(mHost.data(), mHost.size());
-   try
+   if(!DnsUtil::isIpV4Address(mHost) && !DnsUtil::isIpV6Address(mHost))
    {
-      while(!pb.eof())
+      // Host
+      ParseBuffer pb(mHost.data(), mHost.size());
+      try
       {
-         const char* start=pb.position();
-         pb.skipToChar('.');
-         Data label;
-         pb.data(label,start);
-   
-         if(label.empty())
+         while(!pb.eof())
          {
-            return false;
-         }
-   
-         if(!label.containsOnly(Symbols::DomainPartChars,false))
-         {
-            // Might be an IPV6 address? (We strip the [] out on parse)
-            if(start!=mHost.data() || !pb.eof() || !DnsUtil::isIpV6Address(mHost))
+            const char* start=pb.position();
+            pb.skipToChar('.');
+            Data label;
+            pb.data(label,start);
+      
+            if(label.empty())
             {
-               // Nope.
                return false;
+            }
+      
+            if(!label.containsOnly(Symbols::DomainPartChars,false))
+            {
+               return false;
+            }
+      
+            if(label[0]=='-' || label[label.size()-1]=='-')
+            {
+               // Segment can't begin or end with a '-'
+               return false;
+            }
+      
+            if(pb.eof())
+            {
+               // Last label needs to start with an ALPHA
+               if(!Symbols::Alpha[label[0]])
+               {
+                  return false;
+               }
             }
             else
             {
-               return true;
+               pb.skipChar('.');
             }
-         }
-   
-         if(label.containsOnly(Symbols::Digit,false))
-         {
-            // Might be an IPV4 address?
-            if(DnsUtil::isIpV4Address(mHost))
-            {
-               return true;
-            }
-            // I think stuff like foo.100.com is valid, right?
-         }
-   
-         if(label[0]=='-' || label[label.size()-1]=='-')
-         {
-            // Segment can't begin or end with a '-'
-            return false;
-         }
-   
-         if(pb.eof())
-         {
-            // Last label needs to start with an ALPHA
-            if(!Symbols::Alpha[label[0]])
-            {
-               return false;
-            }
-         }
-         else
-         {
-            pb.skipChar('.');
          }
       }
-   }
-   catch(ParseException&)
-   {
-      return false;
+      catch(ParseException&)
+      {
+         return false;
+      }
    }
 
    // User
@@ -942,6 +928,10 @@ Uri::deepValidate() const
    {
       return false;
    }
+
+   // If we have a tel uri, we might see '#', which is otherwise not allowed.
+   // Maybe we should add this to the allowed set if we're dealing with a tel?
+   // If we do have a tel, how much validation should we do?
 #endif
 
    // User params?
@@ -962,7 +952,7 @@ Uri::deepValidate() const
    }
 #endif
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 
