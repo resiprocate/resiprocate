@@ -57,6 +57,12 @@ makeRequestProcessorChain(ProcessorChain& chain,
 static ProcessorChain&  
 makeResponseProcessorChain(ProcessorChain& chain) 
 {
+   ProcessorChain* lemurs = new ProcessorChain;
+
+   OutboundTargetHandler* ob = new OutboundTargetHandler;
+   lemurs->addProcessor(std::auto_ptr<Processor>(ob));
+
+   chain.addProcessor(std::auto_ptr<Processor>(lemurs));
    chain.setChainType(Processor::RESPONSE_CHAIN);
    return chain;
 }
@@ -65,9 +71,6 @@ static ProcessorChain&
 makeTargetProcessorChain(ProcessorChain& chain) 
 {
    ProcessorChain* baboons = new ProcessorChain;
-   
-   OutboundTargetHandler* ob = new OutboundTargetHandler;
-   baboons->addProcessor(std::auto_ptr<Processor>(ob));
    
    QValueTargetHandler* qval=
       new QValueTargetHandler(QValueTargetHandler::EQUAL_Q_PARALLEL,
