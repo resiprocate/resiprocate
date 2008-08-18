@@ -44,6 +44,8 @@ class InviteSession : public DialogUsage
          Answer
       } OfferAnswerType;
 
+      // WARNING:  Do not change this list without appropriately adjusting the 
+      //           EndReasons array in InviteSession.cxx
       enum EndReason
       {
          NotSpecified=0,
