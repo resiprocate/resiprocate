@@ -125,6 +125,47 @@ const char *Symbols::pathSep = "\\";
 const char *Symbols::pathSep = "/";
 #endif
 
+std::bitset<256> makeUTF8_NONASCII()
+{
+   std::bitset<256> result;
+   for(int i=192; i<254; ++i)
+   {
+      result[i]=true;
+   }
+   return result;
+}
+
+const std::bitset<256> Symbols::UTF8_NONASCII(makeUTF8_NONASCII());
+
+std::bitset<256> makeTEXT_UTF8char()
+{
+   std::bitset<256> result;
+   for(int i=33; i<127; ++i)
+   {
+      result[i]=true;
+   }
+
+   result |= Symbols::UTF8_NONASCII;
+   return result;
+}
+
+const std::bitset<256> Symbols::TEXT_UTF8char(makeTEXT_UTF8char());
+
+std::bitset<256> makeUTF8_CONT()
+{
+   std::bitset<256> result;
+   for(int i=128; i<192; ++i)
+   {
+      result[i]=true;
+   }
+   return result;
+}
+
+
+const std::bitset<256> Symbols::UTF8_CONT(makeUTF8_CONT());
+
+const std::bitset<256> Symbols::LWS(Data::toBitset("\r\n\t "));
+
 const std::bitset<256> Symbols::Reserved(Data::toBitset(";/?:@&=+$,"));
 const std::bitset<256> Symbols::Mark(Data::toBitset("-_.!~*'()"));
 const std::bitset<256> Symbols::Hex(Data::toBitset("0123456789aAbBcCdDeEfF"));
@@ -241,16 +282,45 @@ std::bitset<256> makeReasonC()
 {
    std::bitset<256> result(Symbols::Reserved);
    result |= Symbols::Unreserved;
+   result |= Symbols::UTF8_NONASCII;
+   result |= Symbols::UTF8_CONT;
+
    result[' ']=true;
    result['\t']=true;
-   for(int i=128; i<254;++i)
-   {
-      result[i]=true;
-   }
    return result;
 }
 
 const std::bitset<256> Symbols::ReasonC(makeReasonC());
+
+std::bitset<256> makeQDText()
+{
+   std::bitset<256> result;
+   result |= Symbols::LWS;
+
+   for(int i=32; i<127; ++i)
+   {
+      result[i]=true;
+   }
+
+   result['\"']=false;
+   result['\\']=false;
+
+   result |= Symbols::UTF8_NONASCII;
+
+   return result;
+}
+
+const std::bitset<256> Symbols::QDText(makeQDText());
+
+std::bitset<256> makeHfvC()
+{
+   std::bitset<256> result(Symbols::TEXT_UTF8char);
+   result |= Symbols::UTF8_CONT;
+   result |= Symbols::LWS;
+   return result;
+}
+
+const std::bitset<256> Symbols::HfvC(makeHfvC());
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

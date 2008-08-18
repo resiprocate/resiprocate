@@ -80,7 +80,7 @@ main(int argc, char* argv[])
        modified.uri().port() = 65530;
        modified.uri().user() = "alphabet-soup";
 
-       assert(modified.uri().deepValidate());
+      assert(modified.deepValidate());
 
        Data gruuData ( Data::from(modified.uri())) ;
        msg->header(h_Contacts).back().param(p_gr) = gruuData;
@@ -122,19 +122,23 @@ main(int argc, char* argv[])
        assert(s7.deepValidate());
 	   assert (s7.user().empty());
 	   s7.user() = "test";
+      assert(s7.deepValidate());
 	   assert (!s7.user().empty());
 	   s7.user().clear();
+      assert(s7.deepValidate());
 	   assert (s7.user().empty());
 
        NameAddr na1;
-       assert(na1.uri().deepValidate());
+       assert(na1.deepValidate());
        na1.uri().user() = "alice";
        na1.uri().host() = "example.com";
+       assert(na1.deepValidate());
 
        Data q("\"");
        na1.param(UnknownParameterType("foo")) = Data(q + Data::from(s6) +q);
+       assert(na1.deepValidate());
        NameAddr na2(na1);
-       assert(na2.uri().deepValidate());
+       assert(na2.deepValidate());
        cout << "na1=" << na1 << endl;
        cout << "na2=" << na2 << endl;
        
@@ -144,6 +148,8 @@ main(int argc, char* argv[])
       // Test order irrelevance of known parameters
       Uri sip1("sip:user@domain;ttl=15;method=foo");
       Uri sip2("sip:user@domain;method=foo;ttl=15");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
       cerr << "!!" << sip1.host() << endl;
       cerr << "!!" << sip2.host() << endl;
@@ -177,6 +183,7 @@ main(int argc, char* argv[])
    
    {
       Uri uri("sip:[5f1b:df00:ce3e:e200:20:800:121.12.131.12]");
+       assert(uri.deepValidate());
 
       cerr << "!! " << uri.host() << endl;
       assert(uri.host() == "5f1b:df00:ce3e:e200:20:800:121.12.131.12");
@@ -186,6 +193,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("sip:user@[5f1b:df00:ce3e:e200:20:800:121.12.131.12]");
+       assert(uri.deepValidate());
 
       cerr << "!! " << uri.host() << endl;
       assert(uri.host() == "5f1b:df00:ce3e:e200:20:800:121.12.131.12");
@@ -196,6 +204,7 @@ main(int argc, char* argv[])
    
    {
       Uri uri("sips:192.168.2.12");
+       assert(uri.deepValidate());
 
       assert(uri.scheme() == "sips");
       assert(uri.password() == "");
@@ -206,6 +215,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("sips:host.foo.com");
+       assert(uri.deepValidate());
       assert(uri.scheme() == "sips");
       assert(uri.password() == "");
       assert(uri.userParameters() == "");
@@ -215,6 +225,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("sip:user;x-v17:password@host.com:5555");
+       assert(uri.deepValidate());
 
       cerr << "user!!" << uri.user() << endl;
       cerr << "password!!" << uri.password() << endl;
@@ -246,6 +257,10 @@ main(int argc, char* argv[])
       Uri w2("sip:wombat@192.168.2.221:5063;transport=Udp;q=0.5");
       Uri w3("sip:wombat@192.168.2.221:5063;transport=Udp;q=0.5");
       Uri w4("sip:wombat@192.168.2.221:5063;transport=Udp");
+       assert(w1.deepValidate());
+       assert(w2.deepValidate());
+       assert(w3.deepValidate());
+       assert(w4.deepValidate());
 
       Uri::GreaterQ gtQ;
 
@@ -261,11 +276,14 @@ main(int argc, char* argv[])
    {
       Uri w1("sip:wombat@192.168.2.221:5062;transport=Udp");
       Uri w2("sip:wombat@192.168.2.221:5063;transport=Udp");
+       assert(w1.deepValidate());
+       assert(w2.deepValidate());
       assert(w1 != w2);
       assert(w1 < w2);
    }
    {
       Uri tel("tel:+358-555-1234567;pOstd=pP2;isUb=1411");
+       assert(tel.deepValidate());
       assert(tel.user() == "+358-555-1234567");
 
       assert(Data::from(tel) == "tel:+358-555-1234567;pOstd=pP2;isUb=1411");
@@ -273,7 +291,9 @@ main(int argc, char* argv[])
 
    {
       Uri tel("tel:+358-555-1234567;pOstd=pP2;isUb=1411");
+       assert(tel.deepValidate());
       Uri sip(Uri::fromTel(tel, Uri("sip:company.com")));
+       assert(sip.deepValidate());
 
       cerr << "!! " << Data::from(sip) << endl;
       assert(Data::from(sip) == "sip:+358-555-1234567;isub=1411;postd=pp2@company.com;user=phone");
@@ -281,7 +301,9 @@ main(int argc, char* argv[])
 
    {
       Uri tel("tel:+358-555-1234567;foo=bar;aaaa=baz;pOstd=pP2;isUb=1411");
+       assert(tel.deepValidate());
       Uri sip(Uri::fromTel(tel, Uri("sip:company.com")));
+       assert(sip.deepValidate());
 
       cerr << "!! " << Data::from(sip) << endl;
       assert(Data::from(sip) == "sip:+358-555-1234567;isub=1411;postd=pp2;aaaa=baz;foo=bar@company.com;user=phone");
@@ -289,12 +311,16 @@ main(int argc, char* argv[])
    
    {
       Uri tel("tel:+358-555-1234567;postd=pp22");
+       assert(tel.deepValidate());
       Uri sip(Uri::fromTel(tel, Uri("sip:foo.com")));
+       assert(sip.deepValidate());
       assert(Data::from(sip) == "sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
    }
    {
       Uri tel1("tel:+358-555-1234567;postd=pp22");
       Uri tel2("tel:+358-555-1234567;POSTD=PP22");
+       assert(tel1.deepValidate());
+       assert(tel2.deepValidate());
       cerr << "tel1=" << tel1 << " user=" << tel1.user() << endl;
       cerr << "tel2=" << tel2 << " user=" << tel2.user() << endl;
       assert (tel1 == tel2);
@@ -302,24 +328,34 @@ main(int argc, char* argv[])
    {
       Uri tel1("sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
       Uri tel2("sip:+358-555-1234567;POSTD=PP22@foo.com;user=phone");
+       assert(tel1.deepValidate());
+       assert(tel2.deepValidate());
       assert (tel1 != tel2);
    }
    {
       Uri tel1("tel:+358-555-1234567;postd=pp22;isub=1411");
       Uri tel2("tel:+358-555-1234567;isub=1411;postd=pp22");
+       assert(tel1.deepValidate());
+       assert(tel2.deepValidate());
       // requires us to parse the user parameters
       //assert (tel1 == tel2);
    }
    {
       Uri tel1("sip:+358-555-1234567;postd=pp22;isub=1411@foo.com;user=phone");
       Uri tel2("sip:+358-555-1234567;isub=1411;postd=pp22@foo.com;user=phone");
+       assert(tel1.deepValidate());
+       assert(tel2.deepValidate());
       assert (tel1 != tel2);
    }
    {
       Uri tel1("tel:+358-555-1234567;postd=pp22");
       Uri tel2("tel:+358-555-1234567;POSTD=PP22");
+       assert(tel1.deepValidate());
+       assert(tel2.deepValidate());
       Uri sip1(Uri::fromTel(tel1, Uri("sip:foo.com")));
       Uri sip2(Uri::fromTel(tel2, Uri("sip:foo.com")));
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
       assert (sip1 == sip2);
       assert (Data::from(sip1) == "sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
       assert (Data::from(sip2) == "sip:+358-555-1234567;postd=pp22@foo.com;user=phone");
@@ -327,8 +363,12 @@ main(int argc, char* argv[])
    {
       Uri tel1("tel:+358-555-1234567;tsp=a.b;phone-context=5");
       Uri tel2("tel:+358-555-1234567;phone-context=5;tsp=a.b");
+       assert(tel1.deepValidate());
+       assert(tel2.deepValidate());
       Uri sip1(Uri::fromTel(tel1, Uri("sip:foo.com")));
       Uri sip2(Uri::fromTel(tel2, Uri("sip:foo.com")));
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
       assert (sip1 == sip2);
       assert (Data::from(sip1) == "sip:+358-555-1234567;phone-context=5;tsp=a.b@foo.com;user=phone");
       assert (Data::from(sip2) == "sip:+358-555-1234567;phone-context=5;tsp=a.b@foo.com;user=phone");
@@ -336,6 +376,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("sip:fluffy@iii.ca:666");
+       assert(uri.deepValidate());
       assert(uri.scheme() == "sip");
       assert(uri.user() == "fluffy");
       assert(uri.host() == "iii.ca");
@@ -344,27 +385,32 @@ main(int argc, char* argv[])
    
    {
       Uri uri("sip:fluffy@iii.ca;transport=tcp");
+       assert(uri.deepValidate());
       assert(uri.param(p_transport) == "tcp");
    }
    
    {
       Uri uri("sips:fluffy@iii.ca;transport=tls");
+       assert(uri.deepValidate());
       assert(uri.scheme() == "sips");
       assert(uri.param(p_transport) == "tls");
    }
    
    {
       Uri uri("sip:fluffy@iii.ca;transport=sctp");
+       assert(uri.deepValidate());
       assert(uri.param(p_transport) == "sctp");
    }
    
    {
       Uri uri("sip:fluffy:password@iii.ca");
+       assert(uri.deepValidate());
       assert(uri.password() == "password");
    }
 
    {
       Uri uri("sip:fluffy@iii.ca;user=phone;ttl=5;lr;maddr=1.2.3.4");
+       assert(uri.deepValidate());
       assert(uri.param(p_ttl) == 5);
       assert(uri.exists(p_lr) == true);
       assert(uri.param(p_maddr) == "1.2.3.4");
@@ -373,6 +419,7 @@ main(int argc, char* argv[])
  
    {
       Uri uri("sip:fluffy@iii.ca;x-fluffy=foo");
+       assert(uri.deepValidate());
       assert(uri.exists(UnknownParameterType("x-fluffy")) == true);
       assert(uri.exists(UnknownParameterType("x-fufu")) == false);
       assert(uri.param(UnknownParameterType("x-fluffy")) == "foo");
@@ -380,18 +427,21 @@ main(int argc, char* argv[])
  
    {
       Uri uri("sip:fluffy@iii.ca;method=MESSAGE");
+       assert(uri.deepValidate());
       assert(uri.param(p_method) == "MESSAGE");
    }
 
    {
-      Uri uri("sip:+1(408) 444-1212:666@gw1");
-      assert(uri.user() == "+1(408) 444-1212");
+      Uri uri("sip:+1(408)444-1212:666@gw1");
+       assert(uri.deepValidate());
+      assert(uri.user() == "+1(408)444-1212");
       assert(uri.password() == "666");
       assert(uri.host() == "gw1");
    }
  
    {
       Uri uri("sip:fluffy;x-utag=foo@iii.ca");
+       assert(uri.deepValidate());
       assert(uri.user() == "fluffy;x-utag=foo");
       assert(uri.host() == "iii.ca");
 
@@ -401,6 +451,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("sip:fluffy;x-utag=foo:password@iii.ca");
+       assert(uri.deepValidate());
       assert(uri.user() == "fluffy;x-utag=foo");
       assert(uri.host() == "iii.ca");
       assert(uri.password() == "password");
@@ -412,6 +463,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("tel:+14086661212");
+       assert(uri.deepValidate());
       assert(uri.user() == "+14086661212");
       assert(uri.userParameters() == "");
       assert(uri.host() == "");
@@ -424,6 +476,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("tel:+14086661212;foo=bie");
+       assert(uri.deepValidate());
       assert(uri.user() == "+14086661212");
       assert(uri.userParameters() == "foo=bie");
       assert(uri.host() == "");
@@ -436,6 +489,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("tel:+14086661212;");
+       assert(uri.deepValidate());
       assert(uri.user() == "+14086661212");
       assert(uri.userParameters() == "");
       assert(uri.host() == "");
@@ -448,6 +502,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("sip:;:@");
+       assert(uri.deepValidate());
       cerr << "uri.user() = " << uri.user() << endl;
       assert(uri.user() == ";");
       assert(uri.userParameters() == "");
@@ -461,6 +516,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("tel:+1 (408) 555-1212");
+       assert(uri.deepValidate());
       assert(uri.scheme() == "tel");
    }
    // Tests for user-less uris (was broken accidentally v1.44 Uri.cxx)
@@ -468,6 +524,7 @@ main(int argc, char* argv[])
      Data original("sip:1.2.3.4:5060");
      Data encoded;
      Uri uri(original);
+       assert(uri.deepValidate());
 
      DataStream ds(encoded);
      uri.encode(ds);
@@ -483,6 +540,8 @@ main(int argc, char* argv[])
       // Test order irrelevance of unknown parameters
       Uri sip1("sip:user@domain;foo=bar;baz=qux");
       Uri sip2("sip:user@domain;baz=qux;foo=bar");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
       assert (sip1 == sip2);
       assert (sip2 == sip1);
    }
@@ -491,6 +550,8 @@ main(int argc, char* argv[])
       // Test order irrelevance of known parameters
       Uri sip1("sip:user@domain;ttl=15;method=foo");
       Uri sip2("sip:user@domain;method=foo;ttl=15");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
       assert (sip1 == sip2);
       assert (sip2 == sip1);
@@ -501,6 +562,8 @@ main(int argc, char* argv[])
    {
       Uri sip1("sip:alice@atlanta.com;transport=TCP");
       Uri sip2("sip:alice@AtLanTa.CoM;Transport=tcp");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
       assert(sip1 == sip2);
       assert(sip2 == sip1);
@@ -510,6 +573,9 @@ main(int argc, char* argv[])
       Uri sip1("sip:carol@chicago.com");
       Uri sip2("sip:carol@chicago.com;newparam=5");
       Uri sip3("sip:carol@chicago.com;security=on");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
+       assert(sip3.deepValidate());
 
       assert(sip1 == sip2);
       assert(sip2 == sip1);
@@ -522,6 +588,8 @@ main(int argc, char* argv[])
    {
       Uri sip1("sip:biloxi.com;transport=tcp;method=REGISTER?to=sip:bob%40biloxi.com");
       Uri sip2("sip:biloxi.com;method=REGISTER;transport=tcp?to=sip:bob%40biloxi.com");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
       assert(sip1 == sip2);
       assert(sip2 == sip1);
@@ -530,6 +598,8 @@ main(int argc, char* argv[])
   {
      Uri sip1("sip:alice@atlanta.com?subject=project%20x&priority=urgent");
      Uri sip2("sip:alice@atlanta.com?priority=urgent&subject=project%20x");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
      assert(sip1 == sip2);
      assert(sip2 == sip1);
@@ -538,6 +608,8 @@ main(int argc, char* argv[])
   {
      Uri sip1("SIP:ALICE@AtLanTa.CoM;Transport=udp"); // (different usernames)
      Uri sip2("sip:alice@AtLanTa.CoM;Transport=UDP");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
      assert(sip1 != sip2);
   }
@@ -545,6 +617,8 @@ main(int argc, char* argv[])
   {
      Uri sip1("sip:bob@biloxi.com"); // (can resolve to different ports)
      Uri sip2("sip:bob@biloxi.com:5060");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
      assert(sip1 != sip2);
   }     
@@ -552,6 +626,8 @@ main(int argc, char* argv[])
   {
      Uri sip1("sip:bob@biloxi.com"); // (can resolve to different transports)
      Uri sip2("sip:bob@biloxi.com;transport=udp");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
      assert(sip1 != sip2);
   }     
@@ -559,6 +635,8 @@ main(int argc, char* argv[])
   {
      Uri sip1("sip:bob@biloxi.com"); // (can resolve to different port and transports)
      Uri sip2("sip:bob@biloxi.com:6000;transport=tcp");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
      assert(sip1 != sip2);
   }     
@@ -568,6 +646,8 @@ main(int argc, char* argv[])
   {
      Uri sip1("sip:carol@chicago.com"); // (different header component)
      Uri sip2("sip:carol@chicago.com?Subject=next%20meeting");
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
      assert(sip1 != sip2);
   }     
@@ -575,6 +655,8 @@ main(int argc, char* argv[])
   {
      Uri sip1("sip:bob@phone21.boxesbybob.com"); // (even though that's what phone21.boxesbybob.com resolves to)
      Uri sip2("sip:bob@192.0.2.4");  
+       assert(sip1.deepValidate());
+       assert(sip2.deepValidate());
 
      assert(sip1 != sip2);
   }
@@ -583,6 +665,9 @@ main(int argc, char* argv[])
     Uri sip1("sip:carol@chicago.com");
     Uri sip2("sip:carol@chicago.com;security=on");
     Uri sip3("sip:carol@chicago.com;security=off");
+    assert(sip1.deepValidate());
+    assert(sip2.deepValidate());
+    assert(sip3.deepValidate());
 
     assert(sip1 == sip2);
     assert(sip1 == sip3);
@@ -595,10 +680,18 @@ main(int argc, char* argv[])
     Uri sip2("sip:carol@chicago.com:5060");
     Uri sip3("sip:1.2.3.4");
     Uri sip4("sip:1.2.3.4:5070");
+    assert(sip1.deepValidate());
+    assert(sip2.deepValidate());
+    assert(sip3.deepValidate());
+    assert(sip4.deepValidate());
     Uri sip1a("sip:carol@chicago.com;user=phone;foo=bar");
     Uri sip2a("sip:carol@chicago.com:5060;user=phone;foo=bar");
     Uri sip3a("sip:1.2.3.4;user=phone;foo=bar");
     Uri sip4a("sip:1.2.3.4:5070;user=phone;foo=bar");
+    assert(sip1a.deepValidate());
+    assert(sip2a.deepValidate());
+    assert(sip3a.deepValidate());
+    assert(sip4a.deepValidate());
 
     DebugLog( << "sip1.getAor==" << sip1.getAor() );
     DebugLog( << "sip1.getAorNoPort==" << sip1.getAorNoPort() );
@@ -636,6 +729,14 @@ main(int argc, char* argv[])
     NameAddr sip6("  DispName <sip:user@host.com>");
     NameAddr sip7("  DispName<sip:user@host.com>");
     NameAddr sip8("  Disp Name  <sip:user@host.com>");
+    assert(sip1.deepValidate());
+    assert(sip2.deepValidate());
+    assert(sip3.deepValidate());
+    assert(sip4.deepValidate());
+    assert(sip5.deepValidate());
+    assert(sip6.deepValidate());
+    assert(sip7.deepValidate());
+    assert(sip8.deepValidate());
 
     DebugLog( << "sip1.displayName=='" << sip1.displayName() << "'" );
     DebugLog( << "sip2.displayName=='" << sip2.displayName() << "'" );
@@ -668,6 +769,7 @@ main(int argc, char* argv[])
    // Embedded header testing
    {
        NameAddr addr("sip:user@domain.com?Call-Info=%3csip:192.168.0.1%3e%3banswer-after=0");
+       assert(addr.deepValidate());
        //cout << addr << endl;
        assert(Data::from(addr.uri()) == "sip:user@domain.com?Call-Info=%3csip:192.168.0.1%3e%3banswer-after=0");
        //cout << "CallInfo:  " << addr.uri().embedded().header(h_CallInfos).front() << endl;
@@ -680,13 +782,289 @@ main(int argc, char* argv[])
    // Some carriers insert # between a phone number and a billing prefix
    {
       Uri uri = Uri("sip:1234#00442031111111@lvdx.com");
+       assert(uri.deepValidate());
       //cout << "Encoded correctly: " << uri << endl;
       assert(Data::from(uri) == "sip:1234%2300442031111111@lvdx.com");
 
       Uri::setUriUserEncoding('#', false);
       uri = Uri("sip:1234#00442031111111@lvdx.com");
+       assert(uri.deepValidate());
       //cout << "Non Encoded # for compatibility: " << uri << endl;
       assert(Data::from(uri) == "sip:1234#00442031111111@lvdx.com");
+      Uri::setUriUserEncoding('#', true);
+   }
+
+   {
+      Uri uri("9sip:bob@foo");
+      assert(!uri.deepValidate());
+      assert(uri.scheme()=="9sip");
+      assert(uri.user()=="bob");
+      assert(uri.host()=="foo");
+   }
+
+   {
+      Uri uri("sip/foo:bob@foo");
+      assert(!uri.deepValidate());
+      assert(uri.scheme()=="sip/foo");
+      assert(uri.user()=="bob");
+      assert(uri.host()=="foo");
+   }
+
+   {
+      Uri uri("afh803r4+d7h8293-x1jp9e8n.nxo78e12h:bob@foo");
+      assert(uri.deepValidate());
+      assert(uri.scheme()=="afh803r4+d7h8293-x1jp9e8n.nxo78e12h");
+      assert(uri.user()=="bob");
+      assert(uri.host()=="foo");
+   }
+
+   {
+      Uri uri("a:bob@foo");
+      assert(uri.deepValidate());
+      assert(uri.scheme()=="a");
+      assert(uri.user()=="bob");
+      assert(uri.host()=="foo");
+   }
+
+   {
+      Uri uri(":bob@foo");
+      assert(!uri.deepValidate());
+      assert(uri.scheme()=="");
+      assert(uri.user()=="bob");
+      assert(uri.host()=="foo");
+   }
+
+   {
+      Uri uri("sip:@foo");
+      // ?bwc? Should the parse be failing here?
+      assert(uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890-_.!~*'()&=+$,;?/@foo");
+      assert(uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%20bob@foo");
+   }
+
+   {
+      Uri uri("sip:joe\"bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%22bob@foo");
+   }
+
+   {
+      Uri uri("sip:joe#bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%23bob@foo");
+   }
+
+   {
+      Uri uri("sip:joe<bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%3Cbob@foo");
+   }
+
+   {
+      Uri uri("sip:joe>bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%3Ebob@foo");
+   }
+
+   {
+      Uri uri("sip:joe[bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%5Bbob@foo");
+   }
+
+   {
+      Uri uri("sip:joe\\bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%5Cbob@foo");
+   }
+
+   {
+      Uri uri("sip:joe]bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%5Dbob@foo");
+   }
+
+   {
+      Uri uri("sip:joe^bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%5Ebob@foo");
+   }
+
+   {
+      Uri uri("sip:joe{bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%7Bbob@foo");
+   }
+
+   {
+      Uri uri("sip:joe|bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%7Cbob@foo");
+   }
+
+   {
+      Uri uri("sip:joe}bob@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe%7Dbob@foo");
+   }
+
+   {
+      Uri uri("sip:joe:password@foo");
+      assert(uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe:qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890-_.!~*'()&=+$,@foo");
+      assert(uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:bob:@foo");
+      assert(uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe: password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%20password@foo");
+   }
+
+   {
+      Uri uri("sip:joe:\"password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%22password@foo");
+   }
+
+   {
+      Uri uri("sip:joe:#password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%23password@foo");
+   }
+
+   {
+      Uri uri("sip:joe:<password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%3Cpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:>password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%3Epassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:[password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%5Bpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:\\password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%5Cpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:]password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%5Dpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:^password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%5Epassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:{password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%7Bpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:|password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%7Cpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:}password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%7Dpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:;password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%3Bpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:?password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%3Fpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe:/password@foo");
+      assert(uri.deepValidate());
+      assert(Data::from(uri)=="sip:joe:%2Fpassword@foo");
+   }
+
+   {
+      Uri uri("sip:joe@127.0.0.1.a");
+      assert(uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe@foo-12.com");
+      assert(uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe@foo-12.com.");
+      assert(uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe@foo-.com");
+      assert(!uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe@-foo.com");
+      assert(!uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe@foo.-.com");
+      assert(!uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe@foo.-.com");
+      assert(!uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe@foo.1com");
+      assert(!uri.deepValidate());
+   }
+
+   {
+      Uri uri("sip:joe@127.0.0.256");
+      assert(!uri.deepValidate());
    }
 
    cerr << endl << "All OK" << endl;

@@ -248,10 +248,14 @@ NameAddr::parse(ParseBuffer& pb)
 bool 
 NameAddr::deepValidate() const
 {
-   checkParsed();
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    if(mAllContacts)
    {
-      return true;
+      return ParserCategory::deepValidate();
    }
 
    if(!mUri.deepValidate())
@@ -261,12 +265,7 @@ NameAddr::deepValidate() const
 
    // Display name
 #ifndef HANDLE_EMBEDDED_QUOTES_DNAME
-   // We always quote this while encoding, so it is always valid _unless_ there
-   // is a double quote in there somewhere, _and_ we aren't handling that
-   // contingency.
-   ParseBuffer pb(mDisplayName.data(), mDisplayName.size());
-   pb.skipToChar('\"');
-   if(!pb.eof())
+   if(!mDisplayName.containsOnly(Symbols::QDText,true,true))
    {
       return false;
    }
@@ -274,7 +273,7 @@ NameAddr::deepValidate() const
    // What might constitute malformedness here?
 #endif
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 EncodeStream&

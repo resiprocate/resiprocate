@@ -70,6 +70,11 @@ WarningCategory::parse(ParseBuffer& pb)
 bool 
 WarningCategory::deepValidate() const
 {
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    if(mCode < 100 || mCode > 999)
    {
       return false;
@@ -107,7 +112,7 @@ WarningCategory::deepValidate() const
             }
             else
             {
-               return true;
+               break;
             }
          }
    
@@ -116,7 +121,7 @@ WarningCategory::deepValidate() const
             // Might be an IPV4 address?
             if(DnsUtil::isIpV4Address(mHostname))
             {
-               return true;
+               break;
             }
             // I think stuff like foo.100.com is valid, right?
          }
@@ -153,7 +158,7 @@ WarningCategory::deepValidate() const
       return false;
    }
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 ParserCategory* 

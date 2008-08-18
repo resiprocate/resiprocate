@@ -208,6 +208,11 @@ Via::parse(ParseBuffer& pb)
 bool 
 Via::deepValidate() const
 {
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    if(mProtocolName.empty() || !
       mProtocolName.containsOnly(Symbols::Token,false))
    {
@@ -252,7 +257,7 @@ Via::deepValidate() const
             }
             else
             {
-               return true;
+               break;
             }
          }
    
@@ -261,7 +266,7 @@ Via::deepValidate() const
             // Might be an IPV4 address?
             if(DnsUtil::isIpV4Address(mSentHost))
             {
-               return true;
+               break;
             }
             // I think stuff like foo.100.com is valid, right?
          }
@@ -297,7 +302,7 @@ Via::deepValidate() const
       return false;
    }
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 EncodeStream&
