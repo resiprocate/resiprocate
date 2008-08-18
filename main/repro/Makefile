@@ -60,6 +60,7 @@ SRC 	+=   \
 	Target.cxx \
 	WorkerThread.cxx \
 	Dispatcher.cxx \
+	OutboundTarget.cxx \
 	QValueTarget.cxx \
 	\
         monkeys/DigestAuthenticator.cxx \

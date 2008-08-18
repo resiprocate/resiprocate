@@ -7,6 +7,7 @@
 #include "resip/stack/ExtensionParameter.hxx"
 #include "repro/monkeys/LocationServer.hxx"
 #include "repro/RequestContext.hxx"
+#include "repro/OutboundTarget.hxx"
 #include "repro/QValueTarget.hxx"
 #include "repro/Proxy.hxx"
 #include "resip/stack/SipStack.hxx"
@@ -40,7 +41,7 @@ LocationServer::process(RequestContext& context)
       mStore.unlockRecord(inputUri);
       
       std::list<Target*> batch;
-      std::map<resip::Data,std::list<Target*> > outboundBatch;
+      std::map<resip::Data,resip::ContactList> outboundBatch;
       for ( resip::ContactList::iterator i  = contacts.begin()
                ; i != contacts.end()    ; ++i)
       {
@@ -57,14 +58,7 @@ LocationServer::process(RequestContext& context)
             else if(!contact.mReceivedFrom.onlyUseExistingConnection ||
                context.getProxy().getStack().isFlowAlive(contact.mReceivedFrom))
             {
-               // !bwc! If we have an outbound target with 
-               // onlyUseExistingConnection=false, this means that we do not
-               // have a direct connection to the endpoint (some edge-proxy 
-               // does). Normally, this means we will ignore mReceivedFrom, but
-               // this can be configured to still use mReceivedFrom.
-               Target* target = new Target(contact);
-               target->mPriorityMetric=(int)contact.mLastUpdated;
-               outboundBatch[contact.mInstance].push_back(target);
+               outboundBatch[contact.mInstance].push_back(contact);
             }
             else
             {
@@ -80,14 +74,17 @@ LocationServer::process(RequestContext& context)
          }
       }
 
-      std::map<resip::Data, std::list<Target*> >::iterator o;
+      std::map<resip::Data,resip::ContactList>::iterator o;
       
       for(o=outboundBatch.begin();o!=outboundBatch.end();++o)
       {
-         o->second.sort(Target::targetPtrCompare);
+         o->second.sort(OutboundTarget::instanceCompare);
+         OutboundTarget* ot = new OutboundTarget(o->second);
+         if(ot->nextInstance())
+         {
+            batch.push_back(ot);
+         }
       }
-      
-      context.getResponseContext().addOutboundBatch(outboundBatch);
       
       if(!batch.empty())
       {
