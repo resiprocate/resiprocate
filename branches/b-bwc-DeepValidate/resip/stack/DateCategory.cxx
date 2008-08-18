@@ -526,6 +526,11 @@ DateCategory::parse(ParseBuffer& pb)
 bool 
 DateCategory::deepValidate() const
 {
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    if(mDayOfMonth==0)
    {
       return false;
@@ -580,7 +585,7 @@ DateCategory::deepValidate() const
       return false;
    }
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 

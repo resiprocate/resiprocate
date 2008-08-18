@@ -84,6 +84,11 @@ CallID::parse(ParseBuffer& pb)
 bool 
 CallID::deepValidate() const
 {
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    ParseBuffer pb(mValue.data(),mValue.size());
    const char* start=pb.position();
    pb.skipToChar('@');
@@ -97,7 +102,7 @@ CallID::deepValidate() const
 
    if(pb.eof())
    {
-      return true;
+      return ParserCategory::deepValidate();
    }
 
    pb.skipChar('@');
@@ -110,7 +115,7 @@ CallID::deepValidate() const
       return false;
    }
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 EncodeStream&

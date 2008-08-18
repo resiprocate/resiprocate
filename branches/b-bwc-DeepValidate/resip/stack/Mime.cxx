@@ -122,6 +122,11 @@ Mime::parse(ParseBuffer& pb)
 bool 
 Mime::deepValidate() const
 {
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
    // Type
    if(mType.empty() || !mType.containsOnly(Symbols::Token,false))
    {
@@ -134,7 +139,7 @@ Mime::deepValidate() const
       return false;
    }
 
-   return true;
+   return ParserCategory::deepValidate();
 }
 
 ParserCategory* 
