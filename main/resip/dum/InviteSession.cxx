@@ -43,7 +43,8 @@ Data EndReasons[] =
    "Application Rejected Sdp(usually no common codec)",
    "Illegal Sdp Negotiation",
    "ACK not received",
-   "Session Timer Expired"
+   "Session Timer Expired",
+   "Stale re-Invite"
 };
 
 const Data& getEndReasonString(InviteSession::EndReason reason)
