@@ -27,8 +27,8 @@ class UserAgentShutdownCmd  : public resip::DumCommand
          mUserAgent->shutdownImpl();
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " UserAgentShutdownCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " UserAgentShutdownCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
 };
@@ -49,8 +49,8 @@ class AddConversationProfileCmd  : public resip::DumCommand
          mUserAgent->addConversationProfileImpl(mHandle, mConversationProfile, mDefaultOutgoing);
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " AddConversationProfileCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " AddConversationProfileCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
       UserAgent::ConversationProfileHandle mHandle;
@@ -70,8 +70,8 @@ class SetDefaultOutgoingConversationProfileCmd  : public resip::DumCommand
          mUserAgent->setDefaultOutgoingConversationProfileImpl(mHandle);
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " SetDefaultOutgoingConversationProfileCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " SetDefaultOutgoingConversationProfileCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
       UserAgent::ConversationProfileHandle mHandle;
@@ -89,8 +89,8 @@ class DestroyConversationProfileCmd  : public resip::DumCommand
          mUserAgent->destroyConversationProfileImpl(mHandle);
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " DestroyConversationProfileCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroyConversationProfileCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
       UserAgent::ConversationProfileHandle mHandle;
@@ -108,8 +108,8 @@ class UserAgentTimeout : public resip::DumCommand
       void executeCommand() { mUserAgent.onApplicationTimer(mTimerId, mDuration, mSeqNumber); }
 
       resip::Message* clone() const { return new UserAgentTimeout(*this); }
-      std::ostream& encode(std::ostream& strm) const { strm << "UserAgentTimeout: id=" << mTimerId << ", duration=" << mDuration << ", seq=" << mSeqNumber; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << "UserAgentTimeout: id=" << mTimerId << ", duration=" << mDuration << ", seq=" << mSeqNumber; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
 
       unsigned int id() const { return mTimerId; }
       unsigned int seqNumber() const { return mSeqNumber; }
@@ -142,8 +142,8 @@ class CreateSubscriptionCmd  : public resip::DumCommand
          mUserAgent->createSubscriptionImpl(mHandle, mEventType, mTarget, mSubscriptionTime, mMimeType);
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " CreateSubscriptionCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " CreateSubscriptionCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
       UserAgent::SubscriptionHandle mHandle;
@@ -165,8 +165,8 @@ class DestroySubscriptionCmd  : public resip::DumCommand
          mUserAgent->destroySubscriptionImpl(mHandle);
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " DestroySubscriptionCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroySubscriptionCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
       UserAgent::SubscriptionHandle mHandle;

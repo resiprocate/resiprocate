@@ -1797,17 +1797,32 @@ RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::Ter
    stateTransition(Terminating);
    switch(reason)
    {
-   case InviteSessionHandler::PeerEnded:
-      InfoLog(<< "onTerminated: handle=" << mHandle << ", received a BYE or CANCEL from peer");
+   case InviteSessionHandler::RemoteBye:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", received a BYE from peer");
       break;
-   case InviteSessionHandler::Ended:
-      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended by the application");
+   case InviteSessionHandler::RemoteCancel:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", received a CANCEL from peer");
       break;
-   case InviteSessionHandler::GeneralFailure:
-      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to a failure");
+   case InviteSessionHandler::Rejected:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", received a rejection from peer");
       break;
-   case InviteSessionHandler::Cancelled:
-      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended by the application via Cancel");
+   case InviteSessionHandler::LocalBye:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended locally via BYE");
+      break;
+   case InviteSessionHandler::LocalCancel:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended locally via CANCEL");
+      break;
+   case InviteSessionHandler::Replaced:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to being replaced");
+      break;
+   case InviteSessionHandler::Referred:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to being reffered");
+      break;
+   case InviteSessionHandler::Error:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to an error");
+      break;
+   case InviteSessionHandler::Timeout:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to a timeout");
       break;
    default:
       assert(false);

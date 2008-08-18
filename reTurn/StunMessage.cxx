@@ -841,8 +841,8 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
    return true;
 }
 
-ostream& 
-operator<< ( ostream& strm, const UInt128& r )
+EncodeStream& 
+operator<< ( EncodeStream& strm, const UInt128& r )
 {
    strm << int(r.longpart[0]);
    for ( int i=1; i<4; i++ )
@@ -853,8 +853,8 @@ operator<< ( ostream& strm, const UInt128& r )
    return strm;
 }
 
-ostream& 
-operator<<( ostream& strm, const StunMessage::StunAtrAddress& addr)
+EncodeStream& 
+operator<<( EncodeStream& strm, const StunMessage::StunAtrAddress& addr)
 {
    if(addr.family == StunMessage::IPv6Family)
    {
@@ -883,8 +883,8 @@ operator<<( ostream& strm, const StunMessage::StunAtrAddress& addr)
    return strm;
 }
 
-ostream&
-operator<<(ostream& os, const StunMessage::StunMsgHdr& h)
+EncodeStream&
+operator<<(EncodeStream& os, const StunMessage::StunMsgHdr& h)
 {
    os << "STUN ";
    bool outputMethod=true;
