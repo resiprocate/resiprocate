@@ -2,6 +2,7 @@
 #define STUNTUPLE_HXX
 
 #include <asio.hpp>
+#include <rutil/resipfaststreams.hxx>
 
 namespace reTurn {
 
@@ -37,10 +38,10 @@ private:
    asio::ip::address mAddress;
    unsigned int mPort;
 
-   friend std::ostream& operator<<(std::ostream& strm, const StunTuple& tuple);
+   friend EncodeStream& operator<<(EncodeStream& strm, const StunTuple& tuple);
 };
 
-std::ostream& operator<<(std::ostream& strm, const StunTuple& tuple);
+EncodeStream& operator<<(EncodeStream& strm, const StunTuple& tuple);
 
 } 
 

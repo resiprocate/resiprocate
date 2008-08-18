@@ -60,8 +60,8 @@ class MediaResourceParticipantDeleterCmd : public DumCommand
       void executeCommand() { Participant* participant = mConversationManager.getParticipant(mParticipantHandle); if(participant) delete participant; }
 
       Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << "MediaResourceParticipantDeleterCmd: partHandle=" << mParticipantHandle; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << "MediaResourceParticipantDeleterCmd: partHandle=" << mParticipantHandle; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
       
    private:
       ConversationManager& mConversationManager;

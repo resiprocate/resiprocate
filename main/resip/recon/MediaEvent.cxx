@@ -27,15 +27,15 @@ MediaEvent::clone() const
    return 0;
 }
 
-std::ostream& 
-MediaEvent::encode(std::ostream& strm) const
+EncodeStream& 
+MediaEvent::encode(EncodeStream& strm) const
 {
    strm << " media event: " << mEventType;;
    return strm;
 }
 
-std::ostream& 
-MediaEvent::encodeBrief(std::ostream& strm) const
+EncodeStream& 
+MediaEvent::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }
