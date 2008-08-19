@@ -129,7 +129,7 @@ main(int argc, char* argv[])
 	   assert (s7.user().empty());
 
        NameAddr na1;
-       assert(na1.deepValidate());
+       assert(!na1.deepValidate());
        na1.uri().user() = "alice";
        na1.uri().host() = "example.com";
        assert(na1.deepValidate());
@@ -502,7 +502,7 @@ main(int argc, char* argv[])
 
    {
       Uri uri("sip:;:@");
-       assert(uri.deepValidate());
+       assert(!uri.deepValidate());
       cerr << "uri.user() = " << uri.user() << endl;
       assert(uri.user() == ";");
       assert(uri.userParameters() == "");
