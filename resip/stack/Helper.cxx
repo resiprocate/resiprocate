@@ -2134,7 +2134,6 @@ auto_ptr<SdpContents> Helper::getSdp(Contents* tree)
    return empty;
 }
 
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

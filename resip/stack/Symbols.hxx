@@ -145,6 +145,11 @@ class Symbols
       static const std::bitset<256> ReasonC;
       static const std::bitset<256> QDText;
       static const std::bitset<256> HfvC;
+      static const std::bitset<256> PhoneDigit;
+      static const std::bitset<256> TelC;
+      static const std::bitset<256> reg_name;
+      static const std::bitset<256> PCharOrSemiC;
+      static const std::bitset<256> TelToken;
 };
 
 }
