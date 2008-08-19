@@ -1614,7 +1614,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
       {
          WarningLog(<< "adjustRTPStreams: handle=" << mHandle << ", something went wrong during SDP negotiations, no common codec found.");
       }
-      delete codecs;
+      delete [] codecs;
    }
    else
    {
@@ -1645,7 +1645,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
          }
           
          mConversationManager.getMediaInterface()->startRtpReceive(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
-         delete codecs;
+         delete [] codecs;
       }
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", receiving...");
    }
