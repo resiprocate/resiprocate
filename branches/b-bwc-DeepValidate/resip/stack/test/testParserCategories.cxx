@@ -75,8 +75,10 @@ main(int arc, char** argv)
       TR _tr("Test copy transport param");
 
       NameAddr test("<sip:jason_AT_example.com@10.0.0.1:5060;transport=TCP>");
+      assert(test.deepValidate());
       cerr << test << endl;
       NameAddr copy = test;
+      assert(copy.deepValidate());
       cerr << copy << endl;
       assert(test.uri().exists(p_transport));
       assert(copy.uri().exists(p_transport));
@@ -196,16 +198,19 @@ main(int arc, char** argv)
       TR _tr("Test exists unknown parameter");
 
       Uri uri1("sip:a@b;xaudio");
+      assert(uri1.deepValidate());
       assert(uri1.exists(UnknownParameterType("xaudio")));
       assert(uri1.param(UnknownParameterType("xaudio")) == Data::Empty);
       
       Uri uri2("sip:a@b;a=b;xaudio");
+      assert(uri2.deepValidate());
       cerr << uri2.param(UnknownParameterType("a")) << endl;
       
       assert(uri2.exists(UnknownParameterType("xaudio")));
       assert(uri2.param(UnknownParameterType("xaudio")) == Data::Empty);
 
       Uri uri3("sip:a@b;xaudio;a=b");
+      assert(uri3.deepValidate());
       assert(uri3.exists(UnknownParameterType("xaudio")));
       assert(uri3.param(UnknownParameterType("xaudio")) == Data::Empty);
    }
@@ -215,6 +220,7 @@ main(int arc, char** argv)
       Data data("A. Bell <sip:a.g.bell@bell-tel.com>;tag=459843");
 
       NameAddr legal(data);
+      assert(legal.deepValidate());
 
       assert(legal.uri().host() == "bell-tel.com");
 
@@ -228,6 +234,7 @@ main(int arc, char** argv)
       Data data("\"A. Bell\" <sip:a.g.bell@bell-tel.com>;tag=459843");
 
       NameAddr legal(data);
+      assert(legal.deepValidate());
 
       assert(legal.uri().host() == "bell-tel.com");
 
@@ -241,6 +248,7 @@ main(int arc, char** argv)
       Data data("sip:foo@bar.com;user=phone");
       
       NameAddr original(data);
+      assert(original.deepValidate());
       assert(original.uri().exists(p_user));
       
       cerr << "!!" << original << endl;
@@ -251,6 +259,7 @@ main(int arc, char** argv)
       Data data("tel:+14156268178;pOstd=pP2;isUb=1411");
       
       Uri original(data);
+      assert(original.deepValidate());
       cerr << original.getAor() << endl;
       
       assert(original.getAor() == "+14156268178");
@@ -262,7 +271,9 @@ main(int arc, char** argv)
       Data data1("sip:User@KeLoWnA.gLoO.nEt:5666");
       
       Uri original(data);
+      assert(original.deepValidate());
       Uri original1(data1);
+      assert(original1.deepValidate());
 
       cerr << "!! " << original.getAor() << " " << original1.getAor() << endl;
       assert(original.getAor() == original1.getAor());
@@ -271,6 +282,7 @@ main(int arc, char** argv)
    {
       TR _tr("Test tel NameAddr");
       NameAddr n1("<tel:98267168>");
+      assert(n1.deepValidate());
       cerr << n1.uri().user() << endl;
    }
 
@@ -281,13 +293,16 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(buf, strlen(buf));
       NameAddr nameaddr(&hfv, Headers::UNKNOWN);
       assert(!nameaddr.isWellFormed());
+      assert(!nameaddr.deepValidate());
    }
 #endif
    
    {
       TR _tr("Test empty NameAddr");
       NameAddr n1;
+      assert(!n1.deepValidate());
       NameAddr n2;
+      assert(!n2.deepValidate());
       assert (!(n1 < n2));
       assert (!(n2 < n1));
       assert (n1.uri().getAor() == n2.uri().getAor());
@@ -304,6 +319,7 @@ main(int arc, char** argv)
       w.param(p_q) = 843;
       assert(w.param(p_q) <= 843);
 #ifndef RESIP_FIXED_POINT
+      assert(w.deepValidate());
       assert(w.param(p_q) == 0.843);
       w.param(p_q) = 0.843;
       assert(w.param(p_q) == 843);
@@ -320,6 +336,8 @@ main(int arc, char** argv)
 
       NameAddr w1("<sip:wombat@192.168.2.221:5062;transport=Udp>;expires=63");
       NameAddr w2("<sip:wombat@192.168.2.221:5063;transport=Udp>;expires=66");
+      assert(w1.deepValidate());
+      assert(w2.deepValidate());
       assert(w1 < w2);
       assert (!(w2 < w1));
    }
@@ -331,6 +349,7 @@ main(int arc, char** argv)
       Auth auth(&hfv, Headers::Authorization);
       
       assert(auth.scheme() == "Digest");
+      assert(auth.deepValidate());
       assert(auth.exists(p_realm));
    }
 
@@ -340,7 +359,7 @@ main(int arc, char** argv)
       
       Uri original(data);
       cerr << original << endl;
-      
+      assert(original.deepValidate());
       assert(Data::from(original) == data);
    }
 
@@ -348,9 +367,11 @@ main(int arc, char** argv)
       TR _tr("Test assignment for NameAddr");
       NameAddr original(Data("\"Original\"<sip:orig@example.com>;tag=original"));
       (void)original.exists(p_tag);
+      assert(original.deepValidate());
       // force parse
       NameAddr newna(Data("\"new\"<sip:new@example.com>;tag=new"));
       (void)newna.exists(p_tag);
+      assert(newna.deepValidate());
       cout << "original NameAddr: ->" << original << "<-"<< endl;
       cout << "new NameAddr     : ->" << newna << "<-" << endl;
       original = newna;
@@ -360,6 +381,7 @@ main(int arc, char** argv)
    {
       TR _tr("Test typeless parameter copy");
       Token s = Token("jason");
+      assert(s.deepValidate());
       s.value() = "value";
       s.param(p_expires) = 17;
       s.param(p_lr);
@@ -368,6 +390,7 @@ main(int arc, char** argv)
       Token s1;
       s1.value() = "other";
       s1.param(p_ttl) = 21;
+      assert(s1.deepValidate());
 
       s.setParameter(s1.getParameterByEnum(ParameterTypes::ttl));
       assert(s.value() == "value");
@@ -406,6 +429,7 @@ main(int arc, char** argv)
       
       StringCategory str(&hfv, Headers::UNKNOWN);
       assert(str.value() == stringString);
+      assert(str.deepValidate());
 
       Data buff;
       {
@@ -417,6 +441,7 @@ main(int arc, char** argv)
 
       StringCategory copy(str);
       assert(copy.value() == stringString);
+      assert(copy.deepValidate());
 
       str.value() = "foo";
       assert(str.value() == "foo");
@@ -426,6 +451,7 @@ main(int arc, char** argv)
       TR _tr( "Test Token parameters");
       Token state;
       state.value() = Data("active");
+      assert(state.deepValidate());
       state.param(p_expires) = 666;
       cerr << state << endl;
    }
@@ -440,16 +466,19 @@ main(int arc, char** argv)
       cerr << statusLine.reason() << endl;
       assert(statusLine.reason() == "Ringing");
       assert(statusLine.getSipVersion() == "SIP/2.0");
+      assert(statusLine.deepValidate());
 
       StatusLine copy(statusLine);
       assert(copy.responseCode() == 180);
       assert(copy.reason() == "Ringing");
       assert(copy.getSipVersion() == "SIP/2.0");
+      assert(copy.deepValidate());
    }
    {
       Uri foo;
       // valgrind complains, but the problem moves when closely observed
       assert(foo.getAor().empty());
+      assert(!foo.deepValidate());
    }
 
 #define checkHeaderName(_name) cerr << Headers::_name << " " << Headers::getHeaderName(Headers::_name) << " = " << #_name << endl /*;assert(isEqualNoCase(Headers::getHeaderName(Headers::_name), #_name))*/
@@ -637,6 +666,7 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(org, strlen(org));
       Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == org);
+      assert(tok.deepValidate());
    }
 
    {
@@ -647,6 +677,7 @@ main(int arc, char** argv)
       Token tok(&hfv, Headers::UNKNOWN);
       assert(tok.value() == "WuggaWuggaFoo");
       assert(tok.param(p_ttl) == 2);
+      assert(tok.deepValidate());
    }
 
    {
@@ -655,6 +686,7 @@ main(int arc, char** argv)
       Data nad("bob<sips:bob@foo.com>;tag=wd834f");
       NameAddr na(nad); 
       assert(na.uri().user() == "bob");
+      assert(na.deepValidate());
    }
 
    {
@@ -666,6 +698,7 @@ main(int arc, char** argv)
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "a.b.c.com");
       assert(via.param(p_maddr) == "1.2.3.4");
+      assert(via.deepValidate());
    }
 
 #ifdef USE_IPV6
@@ -675,6 +708,7 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       assert(!via.isWellFormed());
+      assert(!via.deepValidate());
    }
 
    {
@@ -683,6 +717,7 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       assert(!via.isWellFormed());
+      assert(!via.deepValidate());
    }
 #endif
 
@@ -771,6 +806,7 @@ main(int arc, char** argv)
       assert(via.sentPort() == 5000);
       assert(via.sentHost() == "5f1b:df00:ce3e:e200:20:800:2b37:6426");
       assert(via.param(p_maddr) == "1.2.3.4");
+      assert(via.deepValidate());
    }
 #endif
    {
@@ -779,12 +815,14 @@ main(int arc, char** argv)
       ParseBuffer pb(uriString.data(), uriString.size());
       NameAddr to;
       to.parse(pb);
+      assert(to.deepValidate());
       Uri& uri = to.uri();
       cerr << "!! " << to << endl;
       assert(uri.scheme() == "sip");
       assert(uri.user() == "bob");
       assert(uri.host() == "foo.com");
       assert(uri.port() == 0);
+      assert(uri.deepValidate());
    }
 
    {
@@ -793,11 +831,13 @@ main(int arc, char** argv)
       ParseBuffer pb(uriString.data(), uriString.size());
       NameAddr to;
       to.parse(pb);
+      assert(to.deepValidate());
       Uri& uri = to.uri();
       assert(uri.scheme() == "sips");
       assert(uri.user() == "");
       assert(uri.host() == "foo.com");
       assert(uri.port() == 0);
+      assert(uri.deepValidate());
    }
 
    {
@@ -806,12 +846,14 @@ main(int arc, char** argv)
       ParseBuffer pb(uriString.data(), uriString.size());
       NameAddr to;
       to.parse(pb);
+      assert(to.deepValidate());
       Uri& uri = to.uri();
 
       assert(uri.scheme() == "sips");
       assert(uri.user() == "bob;param=gargle");
       assert(uri.password() == "password");
       assert(uri.host() == "foo.com");
+      assert(uri.deepValidate());
    }
 
    {
@@ -821,6 +863,7 @@ main(int arc, char** argv)
 
       NameAddr to;
       to.parse(pb);
+      assert(to.deepValidate());
       Uri& uri = to.uri();
 
       assert(uri.scheme() == "sips");
@@ -828,6 +871,7 @@ main(int arc, char** argv)
       assert(uri.password() == "password");
       assert(uri.host() == "foo.com");
       assert(uri.port() == 6000);
+      assert(uri.deepValidate());
    }
 
    {
@@ -837,6 +881,7 @@ main(int arc, char** argv)
 
       NameAddr to;
       to.parse(pb);
+      assert(to.deepValidate());
       Uri& uri = to.uri();
 
       assert(uri.scheme() == "sips");
@@ -844,6 +889,7 @@ main(int arc, char** argv)
       assert(uri.password() == "password");
       cerr << "Uri:" << uri.host() << endl;
       assert(uri.host() == "foo.com");
+      assert(uri.deepValidate());
    }
 
    {
@@ -853,9 +899,11 @@ main(int arc, char** argv)
 
       NameAddr to;
       to.parse(pb);
+      assert(to.deepValidate());
       Uri& uri = to.uri();
 
       assert(uri.param(p_transport) == "udp");
+      assert(uri.deepValidate());
    }
    
    cerr << "URI comparison tests" << endl;
@@ -871,10 +919,16 @@ main(int arc, char** argv)
       nA.parse(pa);
       nB.parse(pb);
       nC.parse(pc);
+      assert(nA.deepValidate());
+      assert(nB.deepValidate());
+      assert(nC.deepValidate());
       
       Uri& uA = nA.uri();
       Uri& uB = nB.uri();
       Uri& uC = nC.uri();
+      assert(uA.deepValidate());
+      assert(uB.deepValidate());
+      assert(uC.deepValidate());
       
       assert(uA == uB);
       assert(uB == uC);
@@ -890,9 +944,13 @@ main(int arc, char** argv)
       NameAddr nA, nB;
       nA.parse(pa);
       nB.parse(pb);
+      assert(nA.deepValidate());
+      assert(nB.deepValidate());
       
       Uri& uA = nA.uri();
       Uri& uB = nB.uri();
+      assert(uA.deepValidate());
+      assert(uB.deepValidate());
 
       assert(uA == uB);
    }
@@ -906,8 +964,12 @@ main(int arc, char** argv)
       NameAddr nA, nB;
       nA.parse(pa);
       nB.parse(pb);
+      assert(nA.deepValidate());
+      assert(nB.deepValidate());
       Uri& uA = nA.uri();
       Uri& uB = nB.uri();
+      assert(uA.deepValidate());
+      assert(uB.deepValidate());
 
       assert(uA == uB);
    }
@@ -921,8 +983,12 @@ main(int arc, char** argv)
       NameAddr nA, nB;
       nA.parse(pa);
       nB.parse(pb);
+      assert(nA.deepValidate());
+      assert(nB.deepValidate());
       Uri& uA = nA.uri();
       Uri& uB = nB.uri();      
+      assert(uA.deepValidate());
+      assert(uB.deepValidate());
 
       assert(uA != uB);
    }
@@ -935,8 +1001,12 @@ main(int arc, char** argv)
       NameAddr nA, nB;
       nA.parse(pa);
       nB.parse(pb);
+      assert(nA.deepValidate());
+      assert(nB.deepValidate());
       Uri& uA = nA.uri();
       Uri& uB = nB.uri();
+      assert(uA.deepValidate());
+      assert(uB.deepValidate());
       assert(uA != uB);
    }
    {
@@ -948,8 +1018,12 @@ main(int arc, char** argv)
       NameAddr nA, nB;
       nA.parse(pa);
       nB.parse(pb);
+      assert(nA.deepValidate());
+      assert(nB.deepValidate());
       Uri& uA = nA.uri();
       Uri& uB = nB.uri();
+      assert(uA.deepValidate());
+      assert(uB.deepValidate());
       assert(uA != uB);
    }
    {
@@ -961,8 +1035,12 @@ main(int arc, char** argv)
       NameAddr nA, nB;
       nA.parse(pa);
       nB.parse(pb);
+      assert(nA.deepValidate());
+      assert(nB.deepValidate());
       Uri& uA = nA.uri();
       Uri& uB = nB.uri();
+      assert(uA.deepValidate());
+      assert(uB.deepValidate());
       cerr << "A: " << uA << endl;
       cerr << "B: " << uB << endl;
       cerr << "A:exists(transport) " << uA.exists(p_transport) << endl;
@@ -993,6 +1071,7 @@ main(int arc, char** argv)
       assert(requestLine.uri().host() == "foo.com");
       assert(requestLine.getMethod() == INVITE);
       assert(requestLine.getSipVersion() == "SIP/2.0");
+      assert(requestLine.deepValidate());
    }
    {
       TR _tr( "Request Line parse tel");
@@ -1004,6 +1083,7 @@ main(int arc, char** argv)
       assert(requestLine.uri().user() == "4153331212");
       assert(requestLine.getMethod() == INVITE);
       assert(requestLine.getSipVersion() == "SIP/2.0");
+      assert(requestLine.deepValidate());
    }
    {
       TR _tr( "Request Line parse, parameters");
@@ -1019,6 +1099,7 @@ main(int arc, char** argv)
       assert(requestLine.uri().param(p_maddr) == "1.2.3.4");
       cerr << requestLine.getSipVersion() << endl;
       assert(requestLine.getSipVersion() == "SIP/2.0");
+      assert(requestLine.deepValidate());
    }
    {
       TR _tr( "NameAddr parse");
@@ -1029,6 +1110,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.deepValidate());
    }
    {
       TR _tr( "NameAddr parse, displayName");
@@ -1040,6 +1122,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.deepValidate());
    }
    {
       TR _tr( "NameAddr parse, quoted displayname");
@@ -1051,6 +1134,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.deepValidate());
    }
    {
       TR _tr( "NameAddr parse, quoted displayname, embedded quotes");
@@ -1062,6 +1146,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().scheme() == "sips");
       assert(nameAddr.uri().user() == "bob");
       assert(nameAddr.uri().host() == "foo.com");
+      assert(nameAddr.deepValidate());
    }
    {
       TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
@@ -1084,6 +1169,7 @@ main(int arc, char** argv)
 
       assert(nameAddr.uri().exists(p_tag) == false);
       assert(nameAddr.uri().exists(p_mobility) == false);
+      assert(nameAddr.deepValidate());
    }
    {
       TR _tr( "NameAddr parse, quoted displayname, parameterMove");
@@ -1107,6 +1193,7 @@ main(int arc, char** argv)
 
       assert(nameAddr.uri().exists(p_tag) == false);
       assert(nameAddr.uri().exists(p_mobility) == false);
+      assert(nameAddr.deepValidate());
    }
    {
       TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
@@ -1129,6 +1216,7 @@ main(int arc, char** argv)
 
       assert(nameAddr.exists(p_tag) == false);
       assert(nameAddr.exists(p_mobility) == false);
+      assert(nameAddr.deepValidate());
    }
    {
       TR _tr( "NameAddr parse, unquoted displayname, paramterMove");
@@ -1151,6 +1239,7 @@ main(int arc, char** argv)
       //      assert("true;false" == nameAddr.uri().param(Data("useless")));
 
       assert(nameAddr.exists(p_mobility) == false);
+      assert(nameAddr.deepValidate());
    }
    {
       TR _tr( "NameAddr parse");
@@ -1173,6 +1262,7 @@ main(int arc, char** argv)
       assert(nameAddr.uri().host() == "localhost");
       assert(nameAddr.uri().user() == "");
       assert(nameAddr.uri().port() == 5070);
+      assert(nameAddr.deepValidate());
    }
    {
       TR _tr( "StatusLine, no reason code");
@@ -1183,6 +1273,7 @@ main(int arc, char** argv)
       assert(statusLine.responseCode() == 100);
       assert(statusLine.reason() == "");
       assert(statusLine.getSipVersion() == "SIP/2.0");
+      assert(statusLine.deepValidate());
    }
    {
       TR _tr( "StatusLine, no reason code");
@@ -1193,6 +1284,7 @@ main(int arc, char** argv)
       assert(statusLine.responseCode() == 100);
       assert(statusLine.reason() == "");
       assert(statusLine.getSipVersion() == "SIP/2.0");
+      assert(statusLine.deepValidate());
    }
    {
       TR _tr("Auth Schemes");
@@ -1220,6 +1312,7 @@ main(int arc, char** argv)
       cerr << dsData.c_str() << endl;
       
       assert(dsData == "Digest realm=\"66.100.107.120\",username=\"1234\",nonce=\"1011235448\",uri=\"sip:66.100.107.120\",algorithm=MD5,response=\"8a5165b024fda362ed9c1e29a7af0ef2\"");
+      assert(auth.deepValidate());
    }
 
    {
@@ -1248,6 +1341,7 @@ main(int arc, char** argv)
       cerr << dsData.c_str() << endl;
       
       assert(dsData == "realm=\"66.100.107.120\",username=\"1234\",nonce=\"1011235448\",uri=\"sip:66.100.107.120\",algorithm=MD5,response=\"8a5165b024fda362ed9c1e29a7af0ef2\"");
+      assert(!auth.deepValidate());
    }
    
    {
@@ -1266,22 +1360,27 @@ main(int arc, char** argv)
       assert(wwwAuthen.exists(p_qopOptions));
       assert(!wwwAuthen.exists(p_qop));
       assert(wwwAuthen.param(p_qopOptions)=="auth,auth-int");
+      assert(!wwwAuthen.deepValidate());
       
       assert(pAuthen.exists(p_qopOptions));
       assert(!pAuthen.exists(p_qop));
       assert(pAuthen.param(p_qopOptions)=="auth,auth-int");
+      assert(!pAuthen.deepValidate());
       
       assert(!authInfo.exists(p_qopOptions));
       assert(authInfo.exists(p_qop));
       assert(authInfo.param(p_qop)=="auth");
+      assert(authInfo.deepValidate());
       
       assert(!pAuthor.exists(p_qopOptions));
       assert(pAuthor.exists(p_qop));
       assert(pAuthor.param(p_qop)=="auth");
+      assert(!pAuthor.deepValidate());
       
       assert(!author.exists(p_qopOptions));
       assert(author.exists(p_qop));
       assert(author.param(p_qop)=="auth");
+      assert(!author.deepValidate());
       
       {
          Data encoded;
@@ -1345,6 +1444,8 @@ main(int arc, char** argv)
       
       Auth emptyAuthor;
       Auth emptyAuthen;
+      assert(!emptyAuthor.deepValidate());
+      assert(!emptyAuthen.deepValidate());
       
       emptyAuthor.param(p_qop)="auth";
       emptyAuthen.param(p_qopOptions)="auth";
@@ -1375,11 +1476,16 @@ main(int arc, char** argv)
 
       Auth auth;
       Auth auth2;
+      assert(!auth.deepValidate());
+      assert(!auth2.deepValidate());
       auth.scheme() = "Digest";
+      assert(auth.deepValidate());
       auth.param(p_username) = "bob";
 
       auth2 = auth;
+      assert(auth2.deepValidate());
       Auth auth3(auth2);
+      assert(auth3.deepValidate());
       
       Data a;
       Data a1;

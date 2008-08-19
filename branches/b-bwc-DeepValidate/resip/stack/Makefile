@@ -130,6 +130,7 @@ SRC = \
 	UdpTransport.cxx \
 	UnknownParameter.cxx \
 	Uri.cxx \
+	ValidationHelper.cxx \
 	X509Contents.cxx \
 	XMLCursor.cxx \
 	KeepAliveMessage.cxx \
