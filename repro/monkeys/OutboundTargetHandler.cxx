@@ -42,7 +42,8 @@ OutboundTargetHandler::process(RequestContext & rc)
       OutboundTarget* ot = dynamic_cast<OutboundTarget*>(target);
       if(ot)
       {
-         if(ot->nextInstance())
+         std::auto_ptr<Target> newTarget(ot->nextInstance());
+         if(newTarget.get())
          {
             int flowDeadCode;
             if(resip::InteropHelper::getOutboundVersion() >= 5)
@@ -57,7 +58,7 @@ OutboundTargetHandler::process(RequestContext & rc)
             if(sip->header(resip::h_StatusLine).responseCode()==flowDeadCode)
             {
                // Try next reg-id
-               rsp.addTarget(*ot);
+               rsp.addTarget(newTarget);
                return Processor::SkipAllChains;
             }
          }
