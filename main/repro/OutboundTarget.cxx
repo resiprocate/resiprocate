@@ -16,16 +16,16 @@ OutboundTarget::OutboundTarget(const resip::ContactList& recs) :
 OutboundTarget::~OutboundTarget()
 {}
 
-bool
+OutboundTarget*
 OutboundTarget::nextInstance()
 {
-   if(mList.empty())
+   if(mList.size() <= 1)
    {
       return 0;
    }
 
    mList.pop_front();
-   return true;
+   return new OutboundTarget(mList);
 }
 
 OutboundTarget* 
