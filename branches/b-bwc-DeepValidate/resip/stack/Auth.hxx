@@ -29,6 +29,7 @@ class Auth : public ParserCategory
       Auth& operator=(const Auth&);
 
       virtual void parse(ParseBuffer& pb);
+      virtual bool deepValidate() const;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual ParserCategory* clone() const;
 

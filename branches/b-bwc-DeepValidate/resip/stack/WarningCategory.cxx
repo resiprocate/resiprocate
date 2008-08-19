@@ -3,6 +3,8 @@
 #endif
 
 #include "resip/stack/WarningCategory.hxx"
+
+#include "resip/stack/ValidationHelper.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
@@ -80,75 +82,12 @@ WarningCategory::deepValidate() const
       return false;
    }
 
-   if(mHostname.containsOnly(Symbols::Token, false))
+   if(!mHostname.containsOnly(Symbols::Token, false))
    {
-      // This is allowed to be a token. If this doesn't pan out, do host-type
-      // checking.
-      return true;
-   }
-
-   ParseBuffer pb(mHostname.data(), mHostname.size());
-   try
-   {
-      while(!pb.eof())
+      if(!ValidationHelper::checkIsHost(mHostname))
       {
-         const char* start=pb.position();
-         pb.skipToChar('.');
-         Data label;
-         pb.data(label,start);
-   
-         if(label.empty())
-         {
-            return false;
-         }
-   
-         if(!label.containsOnly(Symbols::DomainPartChars,false))
-         {
-            // Might be an IPV6 address? (We strip the [] out on parse)
-            if(start!=mHostname.data() || !pb.eof() || !DnsUtil::isIpV6Address(mHostname))
-            {
-               // Nope.
-               return false;
-            }
-            else
-            {
-               break;
-            }
-         }
-   
-         if(label.containsOnly(Symbols::Digit,false))
-         {
-            // Might be an IPV4 address?
-            if(DnsUtil::isIpV4Address(mHostname))
-            {
-               break;
-            }
-            // I think stuff like foo.100.com is valid, right?
-         }
-   
-         if(label[0]=='-' || label[label.size()-1]=='-')
-         {
-            // Segment can't begin or end with a '-'
-            return false;
-         }
-   
-         if(pb.eof())
-         {
-            // Last label needs to start with an ALPHA
-            if(!Symbols::Alpha[label[0]])
-            {
-               return false;
-            }
-         }
-         else
-         {
-            pb.skipChar('.');
-         }
+         return false;
       }
-   }
-   catch(ParseException&)
-   {
-      return false;
    }
 
    ParseBuffer pb2(mText.data(), mText.size());

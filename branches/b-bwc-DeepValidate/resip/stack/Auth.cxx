@@ -84,6 +84,33 @@ Auth::parse(ParseBuffer& pb)
    }
 }
 
+bool 
+Auth::deepValidate() const
+{
+   if(!isWellFormed())
+   {
+      return false;
+   }
+
+   if(mHeaderType==Headers::AuthenticationInfo)
+   {
+      // Maybe should be a different type?
+      if(!mScheme.empty())
+      {
+         return false;
+      }
+   }
+   else
+   {
+      if(mScheme.empty() || !mScheme.containsOnly(Symbols::Token,false))
+      {
+         return false;
+      }
+   }
+
+   return ParserCategory::deepValidate();
+}
+
 EncodeStream& 
 Auth::encodeParsed(EncodeStream& str) const
 {

@@ -322,6 +322,51 @@ std::bitset<256> makeHfvC()
 
 const std::bitset<256> Symbols::HfvC(makeHfvC());
 
+std::bitset<256> makePhoneDigit()
+{
+   std::bitset<256> result(Symbols::Digit);
+   result |= Data::toBitset("-.()");
+   return result;
+}
+
+const std::bitset<256> Symbols::PhoneDigit(makePhoneDigit());
+
+std::bitset<256> makeTelC()
+{
+   std::bitset<256> result(Symbols::PhoneDigit);
+   result |= Data::toBitset("pw*#ABCD");
+   return result;
+}
+
+const std::bitset<256> Symbols::TelC(makeTelC());
+
+std::bitset<256> makeReg_name()
+{
+   std::bitset<256> result(Symbols::Unreserved);
+   result |= Data::toBitset("$,;:@&=+");
+   return result;
+}
+
+const std::bitset<256> Symbols::reg_name(makeReg_name());
+
+std::bitset<256> makePCharOrSemiC()
+{
+   std::bitset<256> result(Symbols::Unreserved);
+   result |= Data::toBitset(":@&=+$,;");
+   return result;
+}
+
+const std::bitset<256> Symbols::PCharOrSemiC(makePCharOrSemiC());
+
+std::bitset<256> makeTelToken()
+{
+   std::bitset<256> result(Symbols::AlphaNum);
+   result |= Data::toBitset("!#$%&'*+-.^_|~");
+   return result;
+}
+
+const std::bitset<256> Symbols::TelToken(makeTelToken());
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

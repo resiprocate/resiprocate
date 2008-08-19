@@ -11,6 +11,7 @@
 #include "resip/stack/Symbols.hxx"
 #include "resip/stack/UnknownParameter.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/ValidationHelper.hxx"
 #include "rutil/DataStream.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
@@ -871,68 +872,37 @@ Uri::deepValidate() const
       return false;
    }
 
-   if(!DnsUtil::isIpV4Address(mHost) && !DnsUtil::isIpV6Address(mHost))
+   if(mScheme=="tel")
    {
-      // Host
-      ParseBuffer pb(mHost.data(), mHost.size());
-      try
-      {
-         while(!pb.eof())
-         {
-            const char* start=pb.position();
-            pb.skipToChar('.');
-            Data label;
-            pb.data(label,start);
-      
-            if(label.empty())
-            {
-               return false;
-            }
-      
-            if(!label.containsOnly(Symbols::DomainPartChars,false))
-            {
-               return false;
-            }
-      
-            if(label[0]=='-' || label[label.size()-1]=='-')
-            {
-               // Segment can't begin or end with a '-'
-               return false;
-            }
-      
-            if(pb.eof())
-            {
-               // Last label needs to start with an ALPHA
-               if(!Symbols::Alpha[label[0]])
-               {
-                  return false;
-               }
-            }
-            else
-            {
-               pb.skipChar('.');
-            }
-         }
-      }
-      catch(ParseException&)
+      if(!ValidationHelper::checkIsTelSubscriber(mUser,false))
       {
          return false;
       }
    }
-
-   // User
-#ifndef HANDLE_CHARACTER_ESCAPING
-   // If character escaping is being handled here, this might contain unescaped
-   // stuff.
-   if(!mUser.containsOnly(Symbols::UserC,true))
+   else if(mScheme=="sip" || mScheme=="sips")
    {
-      return false;
-   }
+      if(mHost.empty() || !ValidationHelper::checkIsHost(mHost))
+      {
+         return false;
+      }
 
-   // If we have a tel uri, we might see '#', which is otherwise not allowed.
-   // Maybe we should add this to the allowed set if we're dealing with a tel?
-   // If we do have a tel, how much validation should we do?
+      // User
+#ifndef HANDLE_CHARACTER_ESCAPING
+      // If character escaping is being handled here, this might contain unescaped
+      // stuff.
+      if(!mUser.containsOnly(Symbols::UserC,true))
+      {
+         return false;
+      }
+      // If character escaping is being handled here, this might contain unescaped
+      // stuff.
+      if(!mPassword.containsOnly(Symbols::Password,true))
+      {
+         return false;
+      }
 #endif
+
+   }
 
    // User params?
 
@@ -943,15 +913,6 @@ Uri::deepValidate() const
    }
 
    // Password
-#ifndef HANDLE_CHARACTER_ESCAPING
-   // If character escaping is being handled here, this might contain unescaped
-   // stuff.
-   if(!mPassword.containsOnly(Symbols::Password,true))
-   {
-      return false;
-   }
-#endif
-
    return ParserCategory::deepValidate();
 }
 
