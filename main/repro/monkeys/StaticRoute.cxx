@@ -86,7 +86,7 @@ StaticRoute::process(RequestContext& context)
          ContactInstanceRecord targetAddr;
          targetAddr.mContact.uri() = *i;
          targetAddr.mContact.param(p_q).setValue(1000);
-         QValueTarget target(targetAddr);
+         std::auto_ptr<Target> target(new QValueTarget(targetAddr));
          context.getResponseContext().addTarget(target, false /* beginImmediately */, mParallelForkStaticRoutes /* addToFirstBatch */);
          //context.addTarget(NameAddr(*i));
       }
