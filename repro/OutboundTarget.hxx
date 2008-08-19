@@ -11,7 +11,7 @@ class OutboundTarget : public QValueTarget
       explicit OutboundTarget(const resip::ContactList& recs);
       virtual ~OutboundTarget();
 
-      bool nextInstance();
+      OutboundTarget* nextInstance();
 
       virtual OutboundTarget* clone() const;
 
