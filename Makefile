@@ -38,11 +38,8 @@ all: repro dum tests tfm apps recon
 tfm: tfmcontrib
 	cd tfm; $(MAKE)
 
-rutil: rutil/config.hxx contrib
+rutil: contrib
 	cd rutil; $(MAKE) 
-
-rutil/config.hxx:
-	cd rutil && echo $(DEFINES) > config.hxx
 
 resiprocate: rutil
 	cd resip/stack; $(MAKE)
