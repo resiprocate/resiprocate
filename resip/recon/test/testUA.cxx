@@ -986,8 +986,9 @@ main (int argc, char** argv)
                                SdpCodec::SDP_CODEC_SPEEX_24 /* 99 - speex NB 24,600bps */,
                                SdpCodec::SDP_CODEC_L16_44100_MONO /* PCM 16 bit/sample 44100 samples/sec. */, 
                                SdpCodec::SDP_CODEC_ILBC /* 108 - iLBC */,
+                               SdpCodec::SDP_CODEC_ILBC_20MS /* 109 - Internet Low Bit Rate Codec, 20ms (RFC3951) */, 
                                SdpCodec::SDP_CODEC_GSM /* 3 - GSM */,
-                               SdpCodec::SDP_CODEC_TONES /* 109 - telephone-event */};
+                               SdpCodec::SDP_CODEC_TONES /* 110 - telephone-event */};
    unsigned int numCodecIds = sizeof(codecIds) / sizeof(codecIds[0]);
 
    // Loop through command line arguments and process them
