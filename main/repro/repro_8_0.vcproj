@@ -413,6 +413,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\OutboundTarget.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\monkeys\OutboundTargetHandler.cxx"
 				>
 			</File>
@@ -592,6 +596,10 @@
 			</File>
 			<File
 				RelativePath=".\monkeys\LocationServer.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\OutboundTarget.hxx"
 				>
 			</File>
 			<File
