@@ -72,7 +72,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sipXmediaLib-msvc8", "..\..
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libspeex", "..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\win32\VS2005\libspeex\libspeex.vcproj", "{E972C52F-9E85-4D65-B19C-031E511E9DB4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libspeex", "..\..\..\sipXtapi\sipXmediaLib\contrib\libspeex\win32\VS2003\libspeex\libspeex.vcproj", "{E972C52F-9E85-4D65-B19C-031E511E9DB4}"
 	ProjectSection(WebsiteProperties) = preProject
 		Debug.AspNetCompiler.Debug = "True"
 		Release.AspNetCompiler.Debug = "False"
