@@ -1024,28 +1024,59 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
       SdpCodec* offerCodec;
       while((offerCodec = (SdpCodec*) it()))
       {
+         std::list<SdpContents::Session::Codec>::iterator bestCapsCodecMatchIt = mediaSessionCaps.codecs().end();
+         UtlString encodingName;
+         UtlString parameters;
+         offerCodec->getEncodingName(encodingName);
+         offerCodec->getSdpFmtpField(parameters);
+         bool modeInOffer = parameters.first("mode=") == 0;
+
          // Loop through allowed codec list and see if codec is supported locally
          for (std::list<SdpContents::Session::Codec>::iterator capsCodecsIt = mediaSessionCaps.codecs().begin();
               capsCodecsIt != mediaSessionCaps.codecs().end(); capsCodecsIt++)
          {
-            UtlString encodingName;
-            offerCodec->getEncodingName(encodingName);
-
             if(isEqualNoCase(capsCodecsIt->getName(), encodingName.data()) &&
                capsCodecsIt->getRate() == offerCodec->getSampleRate())
             {
-               SdpContents::Session::Codec codec(*capsCodecsIt);
-               codec.payloadType() = offerCodec->getCodecPayloadFormat();  // honour offered payload id - just to be nice  :)
-               medium.addCodec(codec);
-               if(!valid && !isEqualNoCase(capsCodecsIt->getName(), "telephone-event"))
+               bool modeInCaps = capsCodecsIt->parameters().prefix("mode=");
+               if(!modeInOffer && !modeInCaps)
                {
-                  // Consider offer valid if we see any matching codec other than telephone-event
-                  valid = true;
+                  // If mode is not specified in either - then we have a match
+                  bestCapsCodecMatchIt = capsCodecsIt;
+                  break;
                }
-
-               break;
+               else if(modeInOffer && modeInCaps)
+               {
+                  if(isEqualNoCase(capsCodecsIt->parameters(), parameters.data()))
+                  {
+                     bestCapsCodecMatchIt = capsCodecsIt;
+                     break;
+                  }
+                  // If mode is specified in both, and doesn't match - then we have no match
+               }
+               else
+               {
+                  // Mode is specified on either offer or caps - this match is a potential candidate
+                  // As a rule - use first match of this kind only
+                  if(bestCapsCodecMatchIt == mediaSessionCaps.codecs().end())
+                  {
+                     bestCapsCodecMatchIt = capsCodecsIt;
+                  }
+               }
             }
          } 
+
+         if(bestCapsCodecMatchIt != mediaSessionCaps.codecs().end())
+         {
+            SdpContents::Session::Codec codec(*bestCapsCodecMatchIt);
+            codec.payloadType() = offerCodec->getCodecPayloadFormat();  // honour offered payload id - just to be nice  :)
+            medium.addCodec(codec);
+            if(!valid && !isEqualNoCase(bestCapsCodecMatchIt->getName(), "telephone-event"))
+            {
+               // Consider offer valid if we see any matching codec other than telephone-event
+               valid = true;
+            }
+         }
       }
       
       if(valid)
