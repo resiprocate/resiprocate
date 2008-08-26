@@ -80,10 +80,7 @@ LocationServer::process(RequestContext& context)
       {
          o->second.sort(OutboundTarget::instanceCompare);
          OutboundTarget* ot = new OutboundTarget(o->second);
-         if(ot->nextInstance())
-         {
-            batch.push_back(ot);
-         }
+         batch.push_back(ot);
       }
       
       if(!batch.empty())
