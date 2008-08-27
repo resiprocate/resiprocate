@@ -346,7 +346,14 @@ class TestUac : public TestInviteSessionHandler
 
       virtual void onTerminated(InviteSessionHandle, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
       {
-         cout << name << ": InviteSession-onTerminated - " << msg->brief() << endl;
+         if(msg)
+         {
+            cout << name << ": InviteSession-onTerminated - " << msg->brief() << endl;
+         }
+         else
+         {
+            cout << name << ": InviteSession-onTerminated" << endl;
+         }
          done = true;
       }
 };
