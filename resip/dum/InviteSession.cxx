@@ -224,6 +224,12 @@ InviteSession::peerAddr() const
    return mDialog.mRemoteNameAddr;
 }
 
+const NameAddr&
+InviteSession::remoteTarget() const
+{
+   return mDialog.mRemoteTarget;
+}
+
 bool
 InviteSession::isConnected() const
 {
