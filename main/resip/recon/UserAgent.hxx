@@ -1,5 +1,5 @@
-#if !defined(DUM_UserAgent_hxx)
-#define DUM_UserAgent_hxx
+#if !defined(UserAgent_hxx)
+#define UserAgent_hxx
 
 #include "ConversationManager.hxx"
 #include "UserAgentMasterProfile.hxx"
@@ -23,7 +23,7 @@
    #define sleepMs(t) usleep(t*1000)
 #endif
 
-namespace useragent
+namespace recon
 {
 
 class UserAgentShutdownCmd;
@@ -124,7 +124,7 @@ public:
       SubsystemTransaction,
       SubsystemTransport,
       SubsystemStats,
-      SubsystemUserAgent,
+      SubsystemRecon,
       SubsystemFlowManager,
       SubsystemReTurn
    } LoggingSubsystem;

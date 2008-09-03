@@ -4,7 +4,7 @@
 #include "UserAgentServerAuthManager.hxx"
 #include "UserAgentClientSubscription.hxx"
 #include "UserAgentRegistration.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 
 #include "FlowManagerSubsystem.hxx"
 
@@ -20,11 +20,11 @@
 #include <resip/dum/AppDialogSet.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) : 
    mCurrentSubscriptionHandle(1),
@@ -208,8 +208,8 @@ UserAgent::setLogLevel(Log::Level level, LoggingSubsystem subsystem)
    case SubsystemStats:
       Log::setLevel(level, Subsystem::STATS);
       break;
-   case SubsystemUserAgent:
-      Log::setLevel(level, UserAgentSubsystem::USERAGENT);
+   case SubsystemRecon:
+      Log::setLevel(level, ReconSubsystem::RECON);
       break;
    case SubsystemFlowManager:
       Log::setLevel(level, FlowManagerSubsystem::FLOWMANAGER);

@@ -153,6 +153,9 @@
 				RelativePath=".\Participant.cxx">
 			</File>
 			<File
+				RelativePath=".\ReconSubsystem.cxx">
+			</File>
+			<File
 				RelativePath=".\RelatedConversationSet.cxx">
 			</File>
 			<File
@@ -181,9 +184,6 @@
 			</File>
 			<File
 				RelativePath=".\UserAgentServerAuthManager.cxx">
-			</File>
-			<File
-				RelativePath=".\UserAgentSubsystem.cxx">
 			</File>
 		</Filter>
 		<Filter
@@ -235,6 +235,9 @@
 				RelativePath=".\Participant.hxx">
 			</File>
 			<File
+				RelativePath=".\ReconSubsystem.hxx">
+			</File>
+			<File
 				RelativePath=".\RelatedConversationSet.hxx">
 			</File>
 			<File
@@ -266,9 +269,6 @@
 			</File>
 			<File
 				RelativePath=".\UserAgentServerAuthManager.hxx">
-			</File>
-			<File
-				RelativePath=".\UserAgentSubsystem.hxx">
 			</File>
 		</Filter>
 		<Filter

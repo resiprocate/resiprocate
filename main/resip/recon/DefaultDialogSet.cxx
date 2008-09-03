@@ -1,7 +1,7 @@
 #include "ConversationManager.hxx"
 #include "DefaultDialogSet.hxx"
 #include "UserAgent.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -10,11 +10,11 @@
 #include <resip/dum/ServerInviteSession.hxx>
 #include <resip/dum/ClientSubscription.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 DefaultDialogSet::DefaultDialogSet(ConversationManager& conversationManager)
 : AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),

@@ -1,7 +1,7 @@
 #if !defined(ConversationParticipantAssignment_hxx)
 #define ConversationParticipantAssignment_hxx
 
-namespace useragent
+namespace recon
 {
 class Participant;
 

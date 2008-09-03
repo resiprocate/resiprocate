@@ -4,7 +4,7 @@
 #include <map>
 #include <rutil/Mutex.hxx>
 
-namespace useragent
+namespace recon
 {
 
 /**

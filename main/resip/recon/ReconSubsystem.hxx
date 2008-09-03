@@ -1,5 +1,5 @@
-#if !defined(UserAgentSubsystem_hxx)
-#define UserAgentSubsystem_hxx 
+#if !defined(ReconSubsystem_hxx)
+#define ReconSubsystem_hxx 
 
 #include <iostream>
 #include <rutil/Subsystem.hxx>
@@ -11,16 +11,16 @@
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 
-class UserAgentSubsystem : public resip::Subsystem
+class ReconSubsystem : public resip::Subsystem
 {
    public:
       // Add new systems below
-      static UserAgentSubsystem USERAGENT;
+      static ReconSubsystem RECON;
 
    private:
-      explicit UserAgentSubsystem(const char* rhs) : resip::Subsystem(rhs) {};
-      explicit UserAgentSubsystem(const resip::Data& rhs);
-      UserAgentSubsystem& operator=(const resip::Data& rhs);
+      explicit ReconSubsystem(const char* rhs) : resip::Subsystem(rhs) {};
+      explicit ReconSubsystem(const resip::Data& rhs);
+      ReconSubsystem& operator=(const resip::Data& rhs);
 };
 
 #endif

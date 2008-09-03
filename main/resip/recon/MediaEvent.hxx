@@ -3,7 +3,7 @@
 
 #include <resip/dum/DumCommand.hxx>
 
-namespace useragent
+namespace recon
 {
 
 class ConversationManager;

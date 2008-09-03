@@ -12,7 +12,7 @@
 class MpStreamPlayer;
 class MpPlayerEvent;
 
-namespace useragent
+namespace recon
 {
 class ConversationManager;
 
