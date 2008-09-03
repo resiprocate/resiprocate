@@ -20,7 +20,7 @@ class SipMessage;
 class Sdp;  // SipX Sdp
 class SdpMediaLine;
 
-namespace useragent
+namespace recon
 {
 class ConversationManager;
 

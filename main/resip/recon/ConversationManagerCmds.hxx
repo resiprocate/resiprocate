@@ -9,9 +9,9 @@
 #include "LocalParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-namespace useragent
+namespace recon
 {
 
 /**

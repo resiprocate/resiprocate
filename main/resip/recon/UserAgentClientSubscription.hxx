@@ -14,7 +14,7 @@ class DialogUsageManager;
 class SipMessage;
 }
 
-namespace useragent
+namespace recon
 {
 class UserAgent;
 
