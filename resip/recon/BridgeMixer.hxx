@@ -4,7 +4,7 @@
 #include <mp/MprBridge.h>
 #include <mp/MpResourceTopology.h>
 
-namespace useragent
+namespace recon
 {
 
 // These must align with sipX implementation

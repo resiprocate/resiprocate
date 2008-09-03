@@ -3,7 +3,7 @@
 
 #include "ConversationManager.hxx"
 
-namespace useragent
+namespace recon
 {
 class RemoteParticpant;
 

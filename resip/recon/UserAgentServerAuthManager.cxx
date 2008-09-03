@@ -10,9 +10,9 @@
 #include <rutil/MD5Stream.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
-#define RESIPROCATE_SUBSYSTEM Subsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM Subsystem::RECON
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 
 UserAgentServerAuthManager::UserAgentServerAuthManager(UserAgent& userAgent) :
