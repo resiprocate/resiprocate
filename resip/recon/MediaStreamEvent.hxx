@@ -6,7 +6,7 @@
 #include <resip/dum/DumCommand.hxx>
 #include <StunTuple.hxx>
 
-namespace useragent
+namespace recon
 {
 
 class RemoteParticipantDialogSet;

@@ -4,7 +4,7 @@
 #include <resip/dum/UserProfile.hxx>
 #include <resip/stack/SdpContents.hxx>
 
-namespace useragent
+namespace recon
 {
 
 /**

@@ -4,10 +4,10 @@
 
 #include <rutil/Logger.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::RECON
 
 MediaStreamReadyEvent::MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, 
                                              const reTurn::StunTuple& rtpTuple, 

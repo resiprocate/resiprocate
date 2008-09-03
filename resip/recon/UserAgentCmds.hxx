@@ -5,7 +5,7 @@
 
 #include "UserAgent.hxx"
 
-namespace useragent
+namespace recon
 {
 
 /**

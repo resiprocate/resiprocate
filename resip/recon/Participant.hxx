@@ -4,7 +4,7 @@
 #include "ConversationManager.hxx"
 #include <map>
 
-namespace useragent
+namespace recon
 {
 class ConversationManager;
 

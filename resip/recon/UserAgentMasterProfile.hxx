@@ -7,7 +7,7 @@
 #include <resip/dum/MasterProfile.hxx>
 #include <vector>
 
-namespace useragent
+namespace recon
 {
 
 /**

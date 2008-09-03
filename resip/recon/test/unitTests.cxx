@@ -1,5 +1,5 @@
 #include "UserAgent.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 
 #include <signal.h>
 #include "rutil/Log.hxx"
@@ -81,7 +81,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
@@ -96,7 +96,7 @@ NameAddr bobUri("sip:bob@127.0.0.1:32544");
 #define LOG_LEVEL resip::Log::Warning
 #define MARKER  cout << "**** SCENARIO " << SCENARIO << " CALLBACK_SEQUENCE " << CALLBACK_SEQUENCE-1 << " passed! ****" << endl
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 void sleepSeconds(unsigned int seconds)
 {

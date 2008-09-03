@@ -1,5 +1,5 @@
 #include "Conversation.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "RelatedConversationSet.hxx"
 #include "Participant.hxx"
 #include "LocalParticipant.hxx"
@@ -9,10 +9,10 @@
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 RelatedConversationSet::RelatedConversationSet(ConversationManager& conversationManager, 
                                                ConversationManager::ConversationHandle initialConversationHandle, 
