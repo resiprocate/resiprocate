@@ -72,34 +72,49 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
    mSsl = SSL_new(ctx);
    assert(mSsl);
 
-   if ( mServer )
-   {
-      assert( mSecurity );
+   assert( mSecurity );
 
+   if(!mDomain.empty())
+   {
       X509* cert = mSecurity->getDomainCert(mDomain); //mDomainCerts[mDomain];
       if (!cert)
       {
-         ErrLog(<< "Don't have certificate for domain " << mDomain );
+         if(mServer)
+         {
+            ErrLog(<< "Don't have certificate for domain " << mDomain );
+            throw Security::Exception("getDomainCert failed",
+                                      __FILE__,__LINE__);
+         }
       }
-      
-      if( !SSL_use_certificate(mSsl, cert) )
-      {
-         throw Security::Exception("SSL_use_certificate failed",
-                                   __FILE__,__LINE__);
+      else
+      {      
+         if( !SSL_use_certificate(mSsl, cert) )
+         {
+            throw Security::Exception("SSL_use_certificate failed",
+                                      __FILE__,__LINE__);
+         }
       }
       
       EVP_PKEY* pKey = mSecurity->getDomainKey(mDomain); //mDomainPrivateKeys[mDomain];
       if (!pKey)
       {
-         ErrLog(<< "Don't have private key for domain " << mDomain );
+         if(mServer)
+         {
+            ErrLog(<< "Don't have private key for domain " << mDomain );
+            throw Security::Exception("getDomainKey failed.",
+                                      __FILE__,__LINE__);
+         }
       }
-      if ( !SSL_use_PrivateKey(mSsl, pKey) )
+      else
       {
-         throw Security::Exception("SSL_use_PrivateKey failed.",
-                                   __FILE__,__LINE__);
+         if ( !SSL_use_PrivateKey(mSsl, pKey) )
+         {
+            throw Security::Exception("SSL_use_PrivateKey failed.",
+                                      __FILE__,__LINE__);
+         }
       }
    }
-   
+
    mBio = BIO_new_socket(fd,0/*close flag*/);
    assert( mBio );
    
