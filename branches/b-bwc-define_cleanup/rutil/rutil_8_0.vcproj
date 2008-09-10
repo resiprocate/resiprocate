@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="rutil"
 	ProjectGUID="{3D0E5CEB-93DC-4FDB-918B-D08FA369E106}"
+	RootNamespace="rutil"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -378,8 +379,24 @@
 				>
 			</File>
 			<File
-				RelativePath=".\OpenSSLInit.cxx"
+				RelativePath=".\ssl\OpenSSLInit.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\ParseBuffer.cxx"
@@ -430,8 +447,24 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SHA1Stream.cxx"
+				RelativePath=".\ssl\SHA1Stream.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Socket.cxx"
@@ -632,7 +665,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\OpenSSLInit.hxx"
+				RelativePath=".\ssl\OpenSSLInit.hxx"
 				>
 			</File>
 			<File
@@ -688,7 +721,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SHA1Stream.hxx"
+				RelativePath=".\ssl\SHA1Stream.hxx"
 				>
 			</File>
 			<File
