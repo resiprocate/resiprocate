@@ -4,6 +4,7 @@
 #ifndef WIN32
 #include <netinet/in.h>
 #else
+#include <winsock2.h>
 #include <Ws2tcpip.h>
 #endif
 
