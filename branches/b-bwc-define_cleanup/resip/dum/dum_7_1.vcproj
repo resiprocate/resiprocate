@@ -289,7 +289,19 @@
 				RelativePath=".\DumTimeout.cxx">
 			</File>
 			<File
-				RelativePath=".\EncryptionManager.cxx">
+				RelativePath=".\ssl\EncryptionManager.cxx">
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\EncryptionRequest.cxx">
@@ -528,7 +540,7 @@
 				RelativePath=".\DumTimeout.hxx">
 			</File>
 			<File
-				RelativePath=".\EncryptionManager.hxx">
+				RelativePath=".\ssl\EncryptionManager.hxx">
 			</File>
 			<File
 				RelativePath=".\EncryptionRequest.hxx">
