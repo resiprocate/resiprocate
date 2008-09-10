@@ -9,10 +9,12 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/TransactionController.hxx"
 #include "resip/stack/TransactionState.hxx"
+#ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
+#endif
 #include "rutil/Logger.hxx"
-#include "rutil/WinLeakCheck.hxx"
 #include "resip/stack/SipStack.hxx"
+#include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 
