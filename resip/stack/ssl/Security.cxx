@@ -2,6 +2,8 @@
 #include "resip/stack/config.hxx"
 #endif
 
+#ifdef USE_SSL
+
 #include "resip/stack/ssl/Security.hxx"
 
 #include <ostream>
@@ -23,9 +25,6 @@
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/FileSystem.hxx"
 #include "rutil/WinLeakCheck.hxx"
-
-
-#if defined(USE_SSL)
 
 #include "rutil/ssl/SHA1Stream.hxx"
 

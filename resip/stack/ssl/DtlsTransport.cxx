@@ -1,4 +1,5 @@
 
+#ifdef USE_SSL
 #ifdef USE_DTLS
 
 #if defined(HAVE_CONFIG_H)
@@ -646,6 +647,7 @@ DtlsTransport::_printSock( const struct sockaddr_in *sock )
 }
 
 #endif /* USE_DTLS */
+#endif /* USE_SSL */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
