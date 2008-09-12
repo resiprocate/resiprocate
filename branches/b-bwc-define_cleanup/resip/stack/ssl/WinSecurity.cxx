@@ -1,6 +1,7 @@
-#include "resip/stack/ssl/WinSecurity.hxx"
 #include <sys/types.h>
 
+#ifdef USE_SSL
+#include "resip/stack/ssl/WinSecurity.hxx"
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
@@ -28,12 +29,10 @@ WinSecurity::preload()
 {
    HCERTSTORE storeHandle = NULL;
 
-#ifdef USE_SSL
    getCerts(WinSecurity::ROOT_CA_STORE);
    //getCerts(WinSecurity::CA_STORE);
    //getCredentials(WinSecurity::PRIVATE_STORE);
    //getCerts(WinSecurity::USERS_STORE);   
-#endif
 }
 
 void
@@ -53,8 +52,6 @@ WinSecurity::onRemovePEM(const Data& name, PEMType type) const
 {
    return;
 }
-
-#ifdef USE_SSL
 
 static const Data 
 certStoreTypes(  WinSecurity::MsCertStoreType pType )
