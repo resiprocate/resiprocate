@@ -1,9 +1,9 @@
 #include <assert.h>
-#include "rutil/ssl/SHA1Stream.hxx"
 #include "rutil/Socket.hxx"  // for ntohl under windows
 #include "rutil/WinLeakCheck.hxx"
 
-//#if defined(USE_SSL)
+#if defined(USE_SSL)
+#include "rutil/ssl/SHA1Stream.hxx"
 
 // Remove warning about 'this' use in initiator list - pointer is only stored
 # if defined(WIN32) && !defined(__GNUC__)
@@ -104,7 +104,7 @@ SHA1Stream::getUInt32()
 }
 
 
-//#endif // USE_SSL
+#endif // USE_SSL
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

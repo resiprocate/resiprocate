@@ -2,6 +2,8 @@
 #include "resip/stack/config.hxx"
 #endif
 
+#ifdef USE_SSL
+
 #include <memory>
 
 #include "rutil/compat.hxx"
@@ -53,6 +55,7 @@ TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
    return conn;
 }
 
+#endif /* USE_SSL */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
