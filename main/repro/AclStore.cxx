@@ -275,7 +275,7 @@ AclStore::eraseAcl(const resip::Data& key)
       Lock lock(mMutex, VOCAL_WRITELOCK);
       if(findTlsPeerNameKey(key))
       {
-         mTlsPeerNameList.erase(mTlsPeerNameCursor);
+         mTlsPeerNameCursor = mTlsPeerNameList.erase(mTlsPeerNameCursor);
       }
    }
 }
