@@ -138,7 +138,9 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
          if(tlsConnection)
          {
-            mMessage->setTlsPeerNames(tlsConnection->getPeerNames());
+            std::list<Data> peerNameList;
+            tlsConnection->getPeerNames(peerNameList);
+            mMessage->setTlsPeerNames(peerNameList);
          }
 #endif
          mMsgHeaderScanner.prepareForMessage(mMessage);

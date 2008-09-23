@@ -138,19 +138,21 @@ ClientSubscription::processResponse(const SipMessage& msg)
       }
       sendQueuedRefreshRequest();
    }
-   else if (msg.header(h_StatusLine).statusCode() == 481 &&
+   else if (!mEnded &&
+            msg.header(h_StatusLine).statusCode() == 481 &&
             msg.exists(h_Expires) && msg.header(h_Expires).value() > 0)
    {
       InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
-               << mDialog.mRemoteTarget);
+               << mLastRequest->header(h_To));
 
-      SharedPtr<SipMessage> sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
+      SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType(), getAppDialogSet()->reuse());
       mDum.send(sub);
 
       delete this;
       return;
    }
-   else if (msg.header(h_StatusLine).statusCode() == 408 ||
+   else if (!mEnded &&
+            (msg.header(h_StatusLine).statusCode() == 408 ||
             ((msg.header(h_StatusLine).statusCode() == 413 ||
               msg.header(h_StatusLine).statusCode() == 480 ||
               msg.header(h_StatusLine).statusCode() == 486 ||
@@ -158,7 +160,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
               msg.header(h_StatusLine).statusCode() == 503 ||
               msg.header(h_StatusLine).statusCode() == 600 ||
               msg.header(h_StatusLine).statusCode() == 603) &&
-             msg.exists(h_RetryAfter)))
+             msg.exists(h_RetryAfter))))
    {
       int retry;
 
@@ -186,20 +188,19 @@ ClientSubscription::processResponse(const SipMessage& msg)
       else if (retry == 0)
       {
          DebugLog(<< "Application requested immediate retry on Retry-After");
-         //!dcm! -- why isn't this just a refresh--retry after might be
-         //middle element and not indicate dialog destruction       
-         if (mDialog.mRemoteTarget.uri().host().empty())
+
+         if (mOnNewSubscriptionCalled)
          {
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
-            mDum.send(sub);
+            // If we already have a dialog, then just refresh again
+            requestRefresh();
          }
          else
          {
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
+            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
             mDum.send(sub);
+            delete this;
+            return;
          }
-         //!dcm! -- new sub created above, when does this usage get destroyed?
-         //return;
       }
       else 
       {
@@ -211,10 +212,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
                        ++mTimerSeq);
          // leave the usage around until the timeout
          return;
-      }
-            
-      delete this;
-      return;
+      }            
    }
    else if (msg.header(h_StatusLine).statusCode() >= 300)
    {
@@ -314,6 +312,13 @@ ClientSubscription::processNextNotify()
                   delete this;
                }
             }
+            else
+            {
+               acceptUpdate();
+               mEnded = true;
+               handler->onTerminated(getHandle(), qn->notify());
+               delete this;
+            }
          }
          else
          {
@@ -387,17 +392,8 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          {
             InfoLog(<< "ClientSubscription: application retry new request");
   
-            if (mDialog.mRemoteTarget.uri().host().empty())
-            {
-               SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
-               mDum.send(sub);
-            }
-            else
-            {
-               SharedPtr<SipMessage> sub = mDum.makeSubscription(mDialog.mRemoteTarget, getEventType(), getAppDialogSet()->reuse());
-               mDum.send(sub);
-            }
-            
+            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
+            mDum.send(sub);            
             delete this;
          }
       }

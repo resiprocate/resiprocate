@@ -55,18 +55,6 @@ class DnsInterface
       bool isSupportedProtocol(TransportType t);
       int supportedProtocols();
 
-      
-      //only call buildFdSet and process if requiresProcess is true.  
-      bool requiresProcess();
-
-      // adds the appropriate file descriptors to the fdset to allow a
-      // select/poll call to be made 
-      void buildFdSet(FdSet& fdset);
-
-      // process any dns results back from the async dns library (e.g. ares). If
-      // there are results to report, post an event to the fifo
-      void process(FdSet& fdset);
-      
       // For each of the following calls, immediately return a DnsResult to the
       // caller. If synchronous, the DnsResult is complete and may block for an
       // arbitrary amount of time. In the synchronous case, the transactionId is
@@ -102,7 +90,6 @@ class DnsInterface
       //std::set<TransportType> mSupportedTransportTypes;
 
       //ExternalDns* mDnsProvider;
-      int mActiveQueryCount;      
 
       DnsStub& mDnsStub;
       RRVip mVip;

@@ -1,5 +1,5 @@
 #include "BridgeMixer.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "Participant.hxx"
 #include "RemoteParticipant.hxx"
 #include "Conversation.hxx"
@@ -11,11 +11,11 @@
 #define max(x,y) (((x)>(y))?(x):(y))
 #endif
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 BridgeMixer::BridgeMixer(ConversationManager& conversationManager) :
    mConversationManager(conversationManager)

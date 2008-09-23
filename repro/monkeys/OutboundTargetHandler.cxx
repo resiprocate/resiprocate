@@ -3,6 +3,7 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
+#include "repro/OutboundTarget.hxx"
 #include "repro/ResponseContext.hxx"
 #include "repro/RequestContext.hxx"
 
@@ -30,24 +31,21 @@ OutboundTargetHandler::process(RequestContext & rc)
       return Processor::Continue;
    }
 
-   ResponseContext::OutboundMap& map=rsp.mOutboundMap;
-   
    // !bwc! Check to see whether we need to move on to another reg-id
    resip::SipMessage* sip = dynamic_cast<resip::SipMessage*>(msg);
    if(sip && sip->isResponse() && sip->header(resip::h_StatusLine).responseCode() > 299)
    {
-      const resip::Data& tid=rsp.mCurrentResponseTid;
+      const resip::Data& tid=sip->getTransactionId();
       DebugLog(<<"Looking for tid " << tid);
       Target* target = rsp.getTarget(tid);
       assert(target);
-      if(target)
+      OutboundTarget* ot = dynamic_cast<OutboundTarget*>(target);
+      if(ot)
       {
-         resip::Data& instance = target->rec().mInstance;
-         ResponseContext::OutboundMap::iterator i=map.find(instance);
-         
-         if(i!=map.end())
+         std::auto_ptr<Target> newTarget(ot->nextInstance());
+         if(newTarget.get())
          {
-            unsigned int flowDeadCode;
+            int flowDeadCode;
             if(resip::InteropHelper::getOutboundVersion() >= 5)
             {
                flowDeadCode=430;
@@ -56,66 +54,18 @@ OutboundTargetHandler::process(RequestContext & rc)
             {
                flowDeadCode=410;
             }
-            
-            if(sip->header(resip::h_StatusLine).responseCode()==flowDeadCode && !i->second.empty())
+
+            if(sip->header(resip::h_StatusLine).responseCode()==flowDeadCode)
             {
-               if(i->second.front()==tid)
-               {
-                  i->second.pop_front();
-               }
-            }
-            else
-            {
-               map.erase(i);
+               // Try next reg-id
+               rsp.addTarget(newTarget);
+               return Processor::SkipAllChains;
             }
          }
       }
    }
-   
-   ResponseContext::OutboundMap::iterator i;
-   
-   for(i=map.begin();i!=map.end();++i)
-   {
-      bool bail = false;
 
-      while(!bail && !i->second.empty() && 
-            rsp.isCandidate(i->second.front()) )
-      {
-         bail = rsp.beginClientTransaction(i->second.front());
-         if(!bail)
-         {
-            // !bwc! How did this happen?
-            assert(0);
-            i->second.pop_front();
-         }
-      }
-
-   }
-
-   // !bwc! cleanup
-   for(i=map.begin();i!=map.end();)
-   {
-      if(i->second.empty())
-      {
-         ResponseContext::OutboundMap::iterator temp=i;
-         ++i;
-         map.erase(temp);
-      }
-      else
-      {
-         ++i;
-      }
-   }
-   
-   if(map.empty())
-   {
-      return Processor::Continue;
-   }
-   else
-   {
-      return Processor::WaitingForEvent;
-   }
-   
+   return Processor::Continue;
 }
 
 void 

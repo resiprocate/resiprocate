@@ -17,7 +17,7 @@
 #include <resip/dum/ClientSubscription.hxx>
 #include <resip/dum/ServerOutOfDialogReq.hxx>
 
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "UserAgent.hxx"
 #include "ConversationManager.hxx"
 #include "ConversationManagerCmds.hxx"
@@ -30,11 +30,11 @@
 #pragma warning( disable : 4355 )
 #endif
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 ConversationManager::ConversationManager() 
 : mUserAgent(0),

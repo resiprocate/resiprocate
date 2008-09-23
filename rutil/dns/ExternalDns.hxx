@@ -38,6 +38,9 @@ class ExternalDns
                        int dnsTries = 0,
                        unsigned int features = 0) = 0; // bit mask of Features
 
+      //returns 'true' only is there are changes in the DNS server list
+      virtual bool checkDnsChange() = 0;
+
       //only call buildFdSet and process if requiresProcess is true.  
       virtual bool requiresProcess() = 0;
 

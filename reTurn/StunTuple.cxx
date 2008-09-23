@@ -56,8 +56,8 @@ StunTuple::operator<(const StunTuple& rhs) const
    return false;
 }
 
-ostream&
-operator<<(ostream& strm, const StunTuple& tuple)
+EncodeStream&
+operator<<(EncodeStream& strm, const StunTuple& tuple)
 {
    switch(tuple.mTransport)
    {
@@ -74,7 +74,7 @@ operator<<(ostream& strm, const StunTuple& tuple)
       strm << "[TLS ";
       break;
    }
-   strm << tuple.mAddress << ":" << tuple.mPort << "]";
+   strm << tuple.mAddress.to_string() << ":" << tuple.mPort << "]";
    return strm;
 }
 

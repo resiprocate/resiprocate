@@ -158,7 +158,7 @@ void RRList::log()
       case T_CNAME:
       {
          DnsCnameRecord* record = dynamic_cast<DnsCnameRecord*>((*it).record);
-         assert(record);
+         assert(record);         
          strm << "CNAME: " << record->name() << " -> " << record->cname();
          break;
       }
@@ -204,6 +204,7 @@ void RRList::log()
          break;
       }
       
+      strm << " secsToExpirey=" << (mAbsoluteExpiry - Timer::getTimeSecs()) << " status=" << mStatus;
       strm.flush();
       WarningLog( << buffer);
    }
