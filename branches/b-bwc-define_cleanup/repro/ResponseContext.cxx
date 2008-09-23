@@ -59,61 +59,64 @@ resip::Data
 ResponseContext::addTarget(const NameAddr& addr, bool beginImmediately, bool addToFirstBatch)
 {
    InfoLog (<< "Adding candidate " << addr);
-   repro::Target target(addr);
+   std::auto_ptr<Target> target(new Target(addr));
+   Data tid=target->tid();
    addTarget(target, beginImmediately, addToFirstBatch);
-   return target.tid();
+   return tid;
 }
 
 bool
-ResponseContext::addTarget(repro::Target& target, bool beginImmediately, bool addToFirstBatch)
+ResponseContext::addTarget(std::auto_ptr<repro::Target> target, bool beginImmediately, bool addToFirstBatch)
 {
-   if(mRequestContext.mHaveSentFinalResponse)
+   if(mRequestContext.mHaveSentFinalResponse || !target.get())
    {
       return false;
    }
 
    //Disallow sip: if secure
-   if(mSecure && target.uri().scheme() != Symbols::Sips)
+   if(mSecure && target->uri().scheme() != Symbols::Sips)
    {
       return false;
    }
    
    //Make sure we don't have Targets with an invalid initial state.
-   if(target.status() != Target::Candidate)
+   if(target->status() != Target::Candidate)
    {
       return false;
    }
    
    if(beginImmediately)
    {
-      if(isDuplicate(&target))
+      if(isDuplicate(target.get()))
       {
          return false;
       }
    
-      mTargetList.push_back(target.rec());
+      mTargetList.push_back(target->rec());
       
-      beginClientTransaction(&target);
-      target.status()=Target::Started;
-      mActiveTransactionMap[target.tid()]=target.clone();
+      beginClientTransaction(target.get());
+      target->status()=Target::Started;
+      Target* toAdd=target.release();
+      mActiveTransactionMap[toAdd->tid()]=toAdd;
    }
    else
    {
-      if(target.mShouldAutoProcess)
+      if(target->mShouldAutoProcess)
       {
          if(addToFirstBatch && !mTransactionQueueCollection.empty())
          {
-            mTransactionQueueCollection.front().push_back(target.tid());
+            mTransactionQueueCollection.front().push_back(target->tid());
          }
          else
          {
             std::list<resip::Data> queue;
-            queue.push_back(target.tid());
+            queue.push_back(target->tid());
             mTransactionQueueCollection.push_back(queue);
          }
       }
 
-      mCandidateTransactionMap[target.tid()]=target.clone();
+      Target* toAdd=target.release();
+      mCandidateTransactionMap[toAdd->tid()]=toAdd;
    }
    
    return true;

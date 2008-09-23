@@ -4,6 +4,7 @@
 #include "resip/stack/Connection.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include "resip/stack/SecurityTypes.hxx"
+#include "resip/stack/Security.hxx"
 
 // If USE_SSL is not defined, this will not be built, and this header will 
 // not be installed. If you are including this file from a source tree, and are 
@@ -41,9 +42,11 @@ class TlsConnection : public Connection
       virtual bool isGood(); // has valid connection
       virtual bool isWritable();
       
-      const std::list<Data>& getPeerNames() const;
+      virtual bool transportWrite();
       
-      typedef enum TlsState { Broken, Accepting, Connecting, Handshaking, Up } TlsState;
+      void getPeerNames(std::list<Data> & peerNames) const;
+      
+      typedef enum TlsState { Initial, Broken, Handshaking, Up } TlsState;
       static const char * fromState(TlsState);
    
    private:
@@ -59,10 +62,11 @@ class TlsConnection : public Connection
       Data mDomain;
       
       TlsState mTlsState;
+      bool mHandShakeWantsRead;
 
       SSL* mSsl;
       BIO* mBio;
-      std::list<Data> mPeerNames;
+      std::list<BaseSecurity::PeerName> mPeerNames;
 };
  
 }

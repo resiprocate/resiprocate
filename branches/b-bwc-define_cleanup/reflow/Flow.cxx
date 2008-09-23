@@ -548,7 +548,7 @@ Flow::getReservationToken()
 void 
 Flow::onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port)
 {
-   InfoLog(<< "Flow::onConnectSuccess: socketDesc=" << socketDesc << ", address=" << address << ", port=" << port << ", componentId=" << mComponentId);
+   InfoLog(<< "Flow::onConnectSuccess: socketDesc=" << socketDesc << ", address=" << address.to_string() << ", port=" << port << ", componentId=" << mComponentId);
 
    // Start candidate discovery
    switch(mMediaStream.mNatTraversalMode)
@@ -704,7 +704,7 @@ Flow::onSendFailure(unsigned int socketDesc, const asio::error_code& e)
 void 
 Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data)
 {
-   DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+   DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
 
    // Check if packet is a dtls packet - if so then process it
    // Note:  Stun messaging should be picked off by the reTurn library - so we only need to tell the difference between DTLS and SRTP here

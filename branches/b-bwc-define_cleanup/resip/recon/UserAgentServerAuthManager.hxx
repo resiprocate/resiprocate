@@ -8,7 +8,7 @@
 #include <resip/dum/UserProfile.hxx>
 #include <resip/dum/ServerAuthManager.hxx>
 
-namespace useragent
+namespace recon
 {
 class UserAgent;
 

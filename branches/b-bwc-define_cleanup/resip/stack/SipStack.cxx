@@ -24,7 +24,7 @@
 #include "resip/stack/SipStack.hxx"
 #include "rutil/Inserter.hxx"
 #include "resip/stack/StatisticsManager.hxx"
-#include "resip/stack/AsyncProcessHandler.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
 #include "resip/stack/TcpTransport.hxx"
 #include "resip/stack/UdpTransport.hxx"
 #include "resip/stack/TransactionUser.hxx"
@@ -57,7 +57,7 @@ SipStack::SipStack(Security* pSecurity,
 #else
    mSecurity(0),
 #endif
-   mDnsStub(new DnsStub(additional, socketFunc)),
+   mDnsStub(new DnsStub(additional, socketFunc, handler)),
    mCompression(compression ? compression : new Compression(Compression::NONE)),
    mAsyncProcessHandler(handler),
    mTUFifo(TransactionController::MaxTUFifoTimeDepthSecs,
@@ -535,8 +535,11 @@ unsigned int
 SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
-   return resipMin(mTransactionController.getTimeTillNextProcessMS(),
-                   resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()));
+
+   unsigned int dnsNextProcess = (mDnsStub->requiresProcess() ? 200 : 0xffffffff);
+   return resipMin(dnsNextProcess,
+                   resipMin(mTransactionController.getTimeTillNextProcessMS(),
+                            resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer())));
 } 
 
 void 

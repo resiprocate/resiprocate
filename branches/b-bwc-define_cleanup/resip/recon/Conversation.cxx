@@ -5,16 +5,16 @@
 #include "MediaResourceParticipant.hxx"
 #include "UserAgent.hxx"
 #include "RelatedConversationSet.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 Conversation::Conversation(ConversationManager::ConversationHandle handle,
                            ConversationManager& conversationManager,

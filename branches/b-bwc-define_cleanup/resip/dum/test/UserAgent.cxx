@@ -221,14 +221,7 @@ UserAgent::onStaleCallTimeout(ClientInviteSessionHandle)
 void
 UserAgent::onTerminated(InviteSessionHandle h, InviteSessionHandler::TerminatedReason reason, const SipMessage* msg)
 {
-   if (reason != InviteSessionHandler::PeerEnded)
-   {
-      WarningLog(<< h->myAddr().uri().user() << " call terminated with " << h->peerAddr().uri().user());
-   }
-   else
-   {
-      WarningLog(<< h->myAddr().uri().user() << " ended call with " << h->peerAddr().uri().user());
-   }
+   WarningLog(<< h->myAddr().uri().user() << " call terminated with " << h->peerAddr().uri().user() << " reason=" << reason);
 }
 
 void

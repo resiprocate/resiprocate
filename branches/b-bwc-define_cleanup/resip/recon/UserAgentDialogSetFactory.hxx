@@ -10,7 +10,7 @@ namespace resip
    class SipMessage;
 }
 
-namespace useragent
+namespace recon
 {
    class ConversationManager;
 

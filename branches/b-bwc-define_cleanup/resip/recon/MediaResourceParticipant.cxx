@@ -1,5 +1,5 @@
 #include "BridgeMixer.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "MediaResourceParticipant.hxx"
 #include "ConversationManager.hxx"
 #include "Conversation.hxx"
@@ -17,11 +17,11 @@
 #include "mp/MprFromFile.h"
 #include "mp/MpStreamPlayer.h"
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 static const resip::ExtensionParameter p_localonly("local-only");
 static const resip::ExtensionParameter p_remoteonly("remote-only");
@@ -46,7 +46,7 @@ static const Data callwaitingTone("callwaiting");
 static const Data holdingTone("holding");
 static const Data loudfastbusyTone("loudfastbusy");
 
-namespace useragent
+namespace recon
 {
 
 // Used to delete a resource, from a sipX thread
@@ -60,8 +60,8 @@ class MediaResourceParticipantDeleterCmd : public DumCommand
       void executeCommand() { Participant* participant = mConversationManager.getParticipant(mParticipantHandle); if(participant) delete participant; }
 
       Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << "MediaResourceParticipantDeleterCmd: partHandle=" << mParticipantHandle; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << "MediaResourceParticipantDeleterCmd: partHandle=" << mParticipantHandle; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
       
    private:
       ConversationManager& mConversationManager;

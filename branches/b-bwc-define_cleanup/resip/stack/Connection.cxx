@@ -58,6 +58,14 @@ Connection::requestWrite(SendData* sendData)
 void
 Connection::performWrite()
 {
+   if(transportWrite())
+   {
+      assert(mInWritable);
+      getConnectionManager().removeFromWritable(this);
+      mInWritable = false;
+      return;
+   }
+
    assert(!mOutstandingSends.empty());
 
    const Data& sigcompId = mOutstandingSends.front()->sigcompId;
@@ -138,7 +146,7 @@ Connection::performWrite()
 void 
 Connection::ensureWritable()
 {
-   if(!mInWritable && !mOutstandingSends.empty())
+   if(!mInWritable)
    {
       getConnectionManager().addToWritable(this);
       mInWritable = true;

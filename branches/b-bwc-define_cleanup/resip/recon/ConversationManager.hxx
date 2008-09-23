@@ -30,7 +30,7 @@ namespace resip
 class DialogUsageManager;
 }
 
-namespace useragent
+namespace recon
 {
 class Conversation;
 class Participant;

@@ -4,10 +4,10 @@
 
 #include <rutil/Logger.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::RECON
 
 MediaStreamReadyEvent::MediaStreamReadyEvent(RemoteParticipantDialogSet& remoteParticipantDialogSet, 
                                              const reTurn::StunTuple& rtpTuple, 
@@ -31,15 +31,15 @@ MediaStreamReadyEvent::clone() const
    return 0;
 }
 
-std::ostream& 
-MediaStreamReadyEvent::encode(std::ostream& strm) const
+EncodeStream& 
+MediaStreamReadyEvent::encode(EncodeStream& strm) const
 {
    strm << "MediaStreamReadyEvent: rtpTuple: " << mRtpTuple << " rtcpTuple=" << mRtcpTuple;
    return strm;
 }
 
-std::ostream& 
-MediaStreamReadyEvent::encodeBrief(std::ostream& strm) const
+EncodeStream& 
+MediaStreamReadyEvent::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }
@@ -65,15 +65,15 @@ MediaStreamErrorEvent::clone() const
    return 0;
 }
 
-std::ostream& 
-MediaStreamErrorEvent::encode(std::ostream& strm) const
+EncodeStream& 
+MediaStreamErrorEvent::encode(EncodeStream& strm) const
 {
    strm << "MediaStreamErrorEvent: errorCode: " << mErrorCode;
    return strm;
 }
 
-std::ostream& 
-MediaStreamErrorEvent::encodeBrief(std::ostream& strm) const
+EncodeStream& 
+MediaStreamErrorEvent::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }

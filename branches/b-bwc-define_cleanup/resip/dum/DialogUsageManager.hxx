@@ -7,6 +7,7 @@
 
 #include "resip/stack/Headers.hxx"
 #include "resip/dum/EventDispatcher.hxx"
+#include "resip/dum/DialogEventInfo.hxx"
 #include "resip/dum/DialogSet.hxx"
 #include "resip/dum/DumTimeout.hxx"
 #include "resip/dum/HandleManager.hxx"
@@ -67,6 +68,9 @@ class RWMutex;
 
 class ExternalMessageBase;
 class ExternalMessageHandler;
+
+class DialogEventStateManager;
+class DialogEventHandler;
 
 class DialogUsageManager : public HandleManager, public TransactionUser
 {
@@ -316,6 +320,12 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       void registerForConnectionTermination(Postable*);
       void unRegisterForConnectionTermination(Postable*);
 
+      // The DialogEventStateManager is returned so that the client can query it for
+      // the current set of active dialogs (useful when accepting a dialog event subscription).
+      // The caller is responsible for deleting the DialogEventStateManager
+      // at the same time it deletes other handlers when DUM is destroyed.
+      DialogEventStateManager* createDialogEventStateManager(DialogEventHandler* handler);
+
    protected:
       virtual void onAllHandlesDestroyed();      
       //TransactionUser virtuals
@@ -482,6 +492,10 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       ClientPagerMessageHandler* mClientPagerMessageHandler;
       ServerPagerMessageHandler* mServerPagerMessageHandler;
       std::vector<ExternalMessageHandler*> mExternalMessageHandlers;
+
+      // a pointer because we'll only initialize if we add a
+      // server subscription handler for the 'dialog' event...
+      DialogEventStateManager* mDialogEventStateManager;
 
       std::auto_ptr<AppDialogSetFactory> mAppDialogSetFactory;
 

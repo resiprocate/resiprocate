@@ -9,9 +9,9 @@
 #include "LocalParticipant.hxx"
 #include "MediaResourceParticipant.hxx"
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-namespace useragent
+namespace recon
 {
 
 /**
@@ -35,8 +35,8 @@ class CreateConversationCmd  : public resip::DumCommand
             assert(conversation);
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " CreateConversationCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " CreateConversationCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ConversationHandle mConvHandle;
@@ -58,8 +58,8 @@ class DestroyConversationCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " DestroyConversationCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroyConversationCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ConversationHandle mConvHandle;
@@ -84,8 +84,8 @@ class JoinConversationCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " JoinConversationCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " JoinConversationCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ConversationHandle mSourceConvHandle;
@@ -130,8 +130,8 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " CreateRemoteParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " CreateRemoteParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;
@@ -175,8 +175,8 @@ class CreateMediaResourceParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " CreateMediaResourceParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " CreateMediaResourceParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;
@@ -196,8 +196,8 @@ class CreateLocalParticipantCmd  : public resip::DumCommand
          new LocalParticipant(mPartHandle, *mConversationManager);
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " CreateLocalParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " CreateLocalParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;
@@ -220,8 +220,8 @@ class DestroyParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { return new DestroyParticipantCmd(*this); }
-      std::ostream& encode(std::ostream& strm) const { strm << " DestroyParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroyParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;
@@ -246,8 +246,8 @@ class AddParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " AddParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " AddParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ConversationHandle mConvHandle;
@@ -273,8 +273,8 @@ class RemoveParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ConversationHandle mConvHandle;
@@ -305,8 +305,8 @@ class MoveParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " RemoveParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;
@@ -337,8 +337,8 @@ class ModifyParticipantContributionCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " ModifyParticipantContributionCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " ModifyParticipantContributionCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ConversationHandle mConvHandle;
@@ -357,8 +357,8 @@ class OutputBridgeMixWeightsCmd  : public resip::DumCommand
          mConversationManager->getBridgeMixer().outputBridgeMixWeights();
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " OutputBridgeMixWeightsCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " OutputBridgeMixWeightsCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
 };
@@ -381,8 +381,8 @@ class AlertParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " AlertParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " AlertParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;
@@ -405,8 +405,8 @@ class AnswerParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " AnswerParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " AnswerParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;
@@ -430,8 +430,8 @@ class RejectParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " RejectParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " RejectParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;
@@ -456,8 +456,8 @@ class RedirectParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " RedirectParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " RedirectParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;
@@ -483,8 +483,8 @@ class RedirectToParticipantCmd  : public resip::DumCommand
          }
       }
       resip::Message* clone() const { assert(0); return 0; }
-      std::ostream& encode(std::ostream& strm) const { strm << " RedirectToParticipantCmd: "; return strm; }
-      std::ostream& encodeBrief(std::ostream& strm) const { return encode(strm); }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " RedirectToParticipantCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
       ConversationManager::ParticipantHandle mPartHandle;

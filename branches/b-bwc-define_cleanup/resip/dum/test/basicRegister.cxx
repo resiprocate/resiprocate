@@ -27,7 +27,7 @@ class ClientHandler : public ClientRegistrationHandler
       {
          InfoLog( << "ClientHandler::onSuccess: " << endl );
 
-         cerr << "Pausing before unregister" << endl;
+         resipCerr << "Pausing before unregister" << endl;
          
 #ifdef WIN32
          Sleep(2000);
@@ -64,7 +64,7 @@ main (int argc, char** argv)
 {
 
    if ( argc < 3 ) {
-      cout << "usage: " << argv[0] << " sip:user passwd\n";
+      resipCout << "usage: " << argv[0] << " sip:user passwd\n";
       return 0;
    }
 

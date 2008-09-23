@@ -1,5 +1,5 @@
 #include "ConversationManager.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "UserAgentDialogSetFactory.hxx"
 #include "RemoteParticipant.hxx"
 #include "DefaultDialogSet.hxx"
@@ -10,9 +10,9 @@
 #include <resip/dum/AppDialogSet.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 

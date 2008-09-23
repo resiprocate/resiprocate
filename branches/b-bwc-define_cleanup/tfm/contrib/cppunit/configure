@@ -23553,5 +23553,5 @@ $as_echo X/* automatically generated */ |
 $as_echo "$as_me: error: input file $ac_prefix_conf_IN does not exist,     skip generating $ac_prefix_conf_OUT" >&2;}
    { (exit 1); exit 1; }; }
   fi
-  rm -f conftest.*
+  rm -rf conftest.*
 fi

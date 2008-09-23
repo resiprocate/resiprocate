@@ -2,14 +2,14 @@
 #include <resip/stack/SipMessage.hxx>
 #include <resip/stack/ExtensionParameter.hxx>
 
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "ConversationProfile.hxx"
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 static const resip::ExtensionParameter p_answerafter("answer-after");
 static const resip::ExtensionParameter p_required("required");

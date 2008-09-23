@@ -363,9 +363,9 @@ private:
    bool mIsValid;
 };
 
-std::ostream& operator<< ( std::ostream& strm, const StunMessage::StunAtrAddress& addr);
-std::ostream& operator<< ( std::ostream& strm, const UInt128& );
-std::ostream& operator<< ( std::ostream& strm, const StunMessage::StunMsgHdr& );
+EncodeStream& operator<< ( EncodeStream& strm, const StunMessage::StunAtrAddress& addr);
+EncodeStream& operator<< ( EncodeStream& strm, const UInt128& );
+EncodeStream& operator<< ( EncodeStream& strm, const StunMessage::StunMsgHdr& );
 
 }
 

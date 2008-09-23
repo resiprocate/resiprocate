@@ -18,6 +18,7 @@
 #include "rutil/dns/RRCache.hxx"
 #include "rutil/dns/RROverlay.hxx"
 #include "rutil/dns/ExternalDns.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
 
 
 namespace resip
@@ -114,7 +115,8 @@ class DnsStub : public ExternalDnsHandler
       };
 
       DnsStub(const NameserverList& additional = EmptyNameserverList,
-              AfterSocketCreationFuncPtr socketFunc = 0);
+              AfterSocketCreationFuncPtr socketFunc = 0,
+              AsyncProcessHandler* asyncProcessHandler = 0);
       ~DnsStub();
 
       // call this method before you create SipStack if you'd like to change the
@@ -132,6 +134,7 @@ class DnsStub : public ExternalDnsHandler
       const std::vector<Data>& getEnumSuffixes() const;
       void clearDnsCache();
       void logDnsCache();
+      bool checkDnsChange();
 
       template<class QueryType> void lookup(const Data& target, DnsResultSink* sink)
       {
@@ -147,6 +150,11 @@ class DnsStub : public ExternalDnsHandler
       {
          QueryCommand<QueryType>* command = new QueryCommand<QueryType>(target, protocol, sink, *this);
          mCommandFifo.add(command);
+
+         if (mAsyncProcessHandler)
+         {
+            mAsyncProcessHandler->handleProcessNotification();
+         }
       }
 
       void process(FdSet& fdset);
@@ -361,6 +369,9 @@ class DnsStub : public ExternalDnsHandler
       static int mDnsTimeout; // in seconds
       static int mDnsTries;
       static unsigned int mDnsFeatures;    // bit mask of ExternalDns::Features
+
+      /// if this object exists, it gets notified when ApplicationMessage's get posted
+      AsyncProcessHandler* mAsyncProcessHandler;
 };
 
 typedef DnsStub::Protocol Protocol;
