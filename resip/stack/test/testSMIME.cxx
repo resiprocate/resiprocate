@@ -1,7 +1,10 @@
 #include "resip/stack/MultipartSignedContents.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
 #include "resip/stack/PlainContents.hxx"
-#include "resip/stack/Security.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 #include "rutil/Log.hxx"
 

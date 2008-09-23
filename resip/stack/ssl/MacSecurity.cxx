@@ -1,4 +1,5 @@
-#include "resip/stack/MacSecurity.hxx"
+#ifdef USE_SSL
+#include "resip/stack/ssl/MacSecurity.hxx"
 #include "rutil/Logger.hxx"
 
 #include <CoreFoundation/CoreFoundation.h>
@@ -200,6 +201,9 @@ verifyCallback(int iInCode, X509_STORE_CTX *pInStore)
  
    return iInCode;
 }
+
+#endif /* USE_SSL */
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

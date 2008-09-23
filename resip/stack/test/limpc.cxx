@@ -77,7 +77,10 @@ void mvvline(...) {};
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/TuIM.hxx"
-#include "resip/stack/Security.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 static int myMain(int argc, char* argv[]);
 

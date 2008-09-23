@@ -47,13 +47,17 @@ DnsResultSink::onLogDnsResult(const DNSResult<DnsHostRecord>& rr)
    DebugLog (<< rr);
 }
 
-#if defined(USE_IPV6)
 void
 DnsResultSink::onLogDnsResult(const DNSResult<DnsAAAARecord>& rr)
 {
+#if defined(USE_IPV6)
    DebugLog (<< rr);
-}
+#else
+   ErrLog(<< "Something called "
+            "DnsResultSink::onLogDnsResult(const DNSResult<DnsAAAARecord>& rr)"
+            " when ipv6 support was disabled.");
 #endif
+}
 
 void
 DnsResultSink::onLogDnsResult(const DNSResult<DnsSrvRecord>& rr)

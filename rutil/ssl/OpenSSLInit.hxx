@@ -7,7 +7,11 @@
 #include <cassert>
 #include <vector>
 
-#ifdef USE_SSL
+// This will not be built or installed if USE_SSL is not defined; if you are 
+// building against a source tree, and including this, and getting linker 
+// errors, the source tree was probably built with this flag off. Either stop
+// including this file, or re-build the source tree with SSL enabled.
+//#ifdef USE_SSL
 
 struct CRYPTO_dynlock_value
 {
@@ -36,6 +40,6 @@ static bool invokeOpenSSLInit = OpenSSLInit::init();
 
 }
 
-#endif
+//#endif
 
 #endif

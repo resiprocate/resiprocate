@@ -1,83 +1,53 @@
-#if !defined(RESIP_SHA1STREAM_HXX)
-#define RESIP_SHA1STREAM_HXX 
+#if !defined(RESIP_MACSECURITY_HXX)
+#define RESIP_MACSECURITY_HXX
 
-#include <iostream>
-#include <memory>
-#include <vector>
-#include "rutil/Data.hxx"
-
-#if defined (USE_SSL)
-# include "openssl/sha.h"
-#else
-// !kh!
-// so it would compile without openssl.
-// also see my comment below.
-typedef int SHA_CTX;
-#endif // USE_SSL
+#include "resip/stack/ssl/Security.hxx"
 
 namespace resip
 {
 
-/** 
-   @brief An implementation of std::streambuf used to back the SHA1Stream.
+// Instead of using Mac specific data types
+// we pass around handles. This keeps us from
+// having to include Mac OS headers.
+typedef void * KeychainHandle;
+
+/*
+ * Manages certificates in the Mac Keychain.
  */
-class SHA1Buffer : public std::streambuf
+class MacSecurity : public Security
 {
    public:
-      SHA1Buffer();
-      virtual ~SHA1Buffer();
-      /** @returns the SHA1 hexadecimal representation of the data from the buffer
-       */
-      Data getHex();
-      /** 
-          @param bits the lowest order bits in network byte order. bits must be
-          multiple of 8
-          @returns the SHA1 binary representation of the data from the buffer
-       */
-      Data getBin(unsigned int bits);
+
+      MacSecurity(){};
+
+      // load root certificates into memory
+      virtual void preload();
+
+      // we need to stub out these functions since we don't
+      // dynamically add or remove certificates on the mac
+      virtual void onReadPEM(const Data&, PEMType, Data&) const
+      { }
+      virtual void onWritePEM(const Data&, PEMType, const Data&) const
+      { }
+      virtual void onRemovePEM(const Data&, PEMType) const
+      { }
 
    protected:
-      virtual int sync();
-      virtual int overflow(int c = -1);
-   private:
-      // !kh!
-      // used pointers to keep the same object layout.
-      // this adds overhead, two additional new/delete.
-      // could get rid of the overhead if, sizeof(SHA_CTX) and SHA_DIGEST_LENGTH are known and FIXED.
-      // could use pimpl to get rid of one new/delete pair.
-      std::auto_ptr<SHA_CTX> mContext;
-      std::vector<char> mBuf;
-      bool mBlown;
-};
 
-/** 
-   @brief Used to accumlate data written to the stream in a SHA1Buffer and
-    convert the data to SHA1.
- */
-class SHA1Stream : private SHA1Buffer, public std::ostream
-{
-   public:
-      SHA1Stream();
-      ~SHA1Stream();
-      /** Calls flush() on itself and returns the SHA1 data in hex format.
-          @returns the SHA1 hexadecimal representation of the data written to the stream
-       */
-      Data getHex();
-      /** Calls flush() on itself and returns the SHA1 data in binary format.
-          @param bits the lowest order bits in network byte order. bits must be
-          multiple of 8
-          @returns the SHA1 binary representation of the data written to the stream
-       */
-      Data getBin(unsigned int bits=160);
-
-      /** Calls getBin(32) and converts to a UInt32 */
-      UInt32 getUInt32();
+      // Opens a search handle to certificates store in
+      // the X509Anchors keychain
+      KeychainHandle openSystemCertStore();
       
+      // loads root certificates into memory
+      void getCerts();
+      
+      void closeCertifStore(KeychainHandle searchReference);
 };
 
-}
+} // namespace resip
 
-#endif
+#endif // ndef RESIP_MACSECURITY_HXX
+
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

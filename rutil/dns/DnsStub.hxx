@@ -64,10 +64,10 @@ class DnsResultSink
       virtual void onDnsResult(const DNSResult<DnsHostRecord>&) = 0;
       virtual void onLogDnsResult(const DNSResult<DnsHostRecord>&);
 
-#ifdef USE_IPV6
+// DnsAAAARecord will basically be non-functional if USE_IPV6 wasn't set in the
+// build.
       virtual void onDnsResult(const DNSResult<DnsAAAARecord>&) = 0;
       virtual void onLogDnsResult(const DNSResult<DnsAAAARecord>&);
-#endif
 
       virtual void onDnsResult(const DNSResult<DnsSrvRecord>&) = 0;
       virtual void onLogDnsResult(const DNSResult<DnsSrvRecord>&);

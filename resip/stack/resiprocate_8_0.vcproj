@@ -387,8 +387,24 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DtlsTransport.cxx"
+				RelativePath=".\ssl\DtlsTransport.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Embedded.cxx"
@@ -615,8 +631,24 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Security.cxx"
+				RelativePath=".\ssl\Security.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\SecurityAttributes.cxx"
@@ -699,12 +731,44 @@
 				>
 			</File>
 			<File
-				RelativePath=".\TlsConnection.cxx"
+				RelativePath=".\ssl\TlsConnection.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\TlsTransport.cxx"
+				RelativePath=".\ssl\TlsTransport.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Token.cxx"
@@ -787,8 +851,24 @@
 				>
 			</File>
 			<File
-				RelativePath=".\WinSecurity.cxx"
+				RelativePath=".\ssl\WinSecurity.cxx"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\X509Contents.cxx"
@@ -904,7 +984,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\DtlsTransport.hxx"
+				RelativePath=".\ssl\DtlsTransport.hxx"
 				>
 			</File>
 			<File
@@ -1144,7 +1224,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Security.hxx"
+				RelativePath=".\ssl\Security.hxx"
 				>
 			</File>
 			<File
@@ -1240,11 +1320,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\TlsConnection.hxx"
+				RelativePath=".\ssl\TlsConnection.hxx"
 				>
 			</File>
 			<File
-				RelativePath=".\TlsTransport.hxx"
+				RelativePath=".\ssl\TlsTransport.hxx"
 				>
 			</File>
 			<File
@@ -1348,7 +1428,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\WinSecurity.hxx"
+				RelativePath=".\ssl\WinSecurity.hxx"
 				>
 			</File>
 			<File

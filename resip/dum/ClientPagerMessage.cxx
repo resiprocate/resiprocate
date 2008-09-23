@@ -1,7 +1,6 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/MethodTypes.hxx"
 #include "resip/stack/TransactionUser.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/dum/PagerMessageCreator.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/ClientPagerMessage.hxx"
@@ -11,6 +10,10 @@
 #include "resip/dum/DumHelper.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Helper.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 using namespace resip;
 

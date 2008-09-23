@@ -1,52 +1,61 @@
-#if !defined(RESIP_MACSECURITY_HXX)
-#define RESIP_MACSECURITY_HXX
+#if defined(HAVE_CONFIG_H)
+#include "resip/stack/config.hxx"
+#endif
 
-#include "resip/stack/Security.hxx"
+#ifdef USE_SSL
 
-namespace resip
+#include <memory>
+
+#include "rutil/compat.hxx"
+#include "rutil/Data.hxx"
+#include "rutil/Socket.hxx"
+#include "rutil/Logger.hxx"
+#include "resip/stack/ssl/TlsTransport.hxx"
+#include "resip/stack/ssl/TlsConnection.hxx"
+#include "resip/stack/ssl/Security.hxx"
+#include "rutil/WinLeakCheck.hxx"
+
+#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
+
+using namespace std;
+using namespace resip;
+
+TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
+                           int portNum, 
+                           IpVersion version,
+                           const Data& interfaceObj,
+                           Security& security,
+                           const Data& sipDomain, 
+                           SecurityTypes::SSLType sslType,
+                           Compression &compression):
+   TcpBaseTransport(fifo, portNum, version, interfaceObj, compression ),
+   mSecurity(&security),
+   mSslType(sslType)
 {
+   setTlsDomain(sipDomain);   
+   mTuple.setType(transport());
 
-// Instead of using Mac specific data types
-// we pass around handles. This keeps us from
-// having to include Mac OS headers.
-typedef void * KeychainHandle;
+   InfoLog (<< "Creating TLS transport for domain " 
+            << sipDomain << " interface=" << interfaceObj 
+            << " port=" << portNum);
+}
 
-/*
- * Manages certificates in the Mac Keychain.
- */
-class MacSecurity : public Security
+
+TlsTransport::~TlsTransport()
 {
-   public:
+}
+  
 
-      MacSecurity(){};
+Connection* 
+TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
+{
+   assert(this);
+   Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
+                                        tlsDomain(), mSslType, mCompression );
+   return conn;
+}
 
-      // load root certificates into memory
-      virtual void preload();
-
-      // we need to stub out these functions since we don't
-      // dynamically add or remove certificates on the mac
-      virtual void onReadPEM(const Data&, PEMType, Data&) const
-      { }
-      virtual void onWritePEM(const Data&, PEMType, const Data&) const
-      { }
-      virtual void onRemovePEM(const Data&, PEMType) const
-      { }
-
-   protected:
-
-      // Opens a search handle to certificates store in
-      // the X509Anchors keychain
-      KeychainHandle openSystemCertStore();
-      
-      // loads root certificates into memory
-      void getCerts();
-      
-      void closeCertifStore(KeychainHandle searchReference);
-};
-
-} // namespace resip
-
-#endif // ndef RESIP_MACSECURITY_HXX
+#endif /* USE_SSL */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

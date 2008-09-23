@@ -14,7 +14,6 @@
 #include "resip/dum/Handles.hxx"
 #include "resip/dum/MergedRequestKey.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
-#include "resip/dum/EncryptionManager.hxx"
 #include "resip/dum/ServerSubscription.hxx"
 #include "rutil/BaseException.hxx"
 #include "rutil/SharedPtr.hxx"
@@ -58,6 +57,7 @@ class InviteSessionCreator;
 
 class AppDialogSetFactory;
 class DumShutdownHandler;
+class RemoteCertStore;
 
 class KeepAliveManager;
 class HttpGetMessage;

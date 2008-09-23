@@ -30,6 +30,8 @@
 #include "resip/stack/Uri.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 
+#include "resip/stack/ssl/Security.hxx"
+
 using namespace resip;
 using namespace std;
 

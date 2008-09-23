@@ -1,77 +1,115 @@
-#if !defined(TlsConnection_hxx)
-#define TlsConnection_hxx
+#include <assert.h>
+#include "rutil/Socket.hxx"  // for ntohl under windows
+#include "rutil/WinLeakCheck.hxx"
 
-#include "resip/stack/Connection.hxx"
-#include "rutil/HeapInstanceCounter.hxx"
-#include "resip/stack/SecurityTypes.hxx"
-#include "resip/stack/Security.hxx"
+#if defined(USE_SSL)
+#include "rutil/ssl/SHA1Stream.hxx"
 
-#ifdef USE_SSL
-#include <openssl/ssl.h>
-#else
-typedef void BIO;
-typedef void SSL;
-#endif
+// Remove warning about 'this' use in initiator list - pointer is only stored
+# if defined(WIN32) && !defined(__GNUC__)
+#   pragma warning( disable : 4355 ) // using this in base member initializer list 
+# endif // WIN32
 
-namespace resip
+using namespace resip;
+
+SHA1Buffer::SHA1Buffer()
+        : mContext(new SHA_CTX()),
+          mBuf(SHA_DIGEST_LENGTH),
+          mBlown(false)
 {
-
-class Tuple;
-class Security;
-
-class TlsConnection : public Connection
-{
-   public:
-      RESIP_HeapCount(TlsConnection);
-
-      TlsConnection( Transport* transport, const Tuple& who, Socket fd, 
-                     Security* security, bool server, Data domain, 
-                     SecurityTypes::SSLType sslType ,
-                     Compression &compression);
-      
-      virtual ~TlsConnection();
-
-      int read( char* buf, const int count );
-      int write( const char* buf, const int count );
-      virtual bool hasDataToRead(); // has data that can be read 
-      virtual bool isGood(); // has valid connection
-      virtual bool isWritable();
-      
-      virtual bool transportWrite();
-      
-      void getPeerNames(std::list<Data> & peerNames) const;
-      
-      typedef enum TlsState { Initial, Broken, Handshaking, Up } TlsState;
-      static const char * fromState(TlsState);
-   
-   private:
-      /// No default c'tor
-      TlsConnection();
-      void computePeerName();
-      Data getPeerNamesData() const;
-      TlsState checkState();
-
-      bool mServer;
-      Security* mSecurity;
-      SecurityTypes::SSLType mSslType;
-      Data mDomain;
-      
-      TlsState mTlsState;
-      bool mHandShakeWantsRead;
-
-      SSL* mSsl;
-      BIO* mBio;
-      std::list<BaseSecurity::PeerName> mPeerNames;
-};
- 
+   SHA1_Init(mContext.get());
+   setp(&mBuf[0], (&mBuf[mBuf.size()-1])+1);
 }
 
-#endif
+SHA1Buffer::~SHA1Buffer()
+{
+}
+
+int
+SHA1Buffer::sync()
+{
+   size_t len = pptr() - pbase();
+   if (len > 0) 
+   {
+      SHA1_Update(mContext.get(), reinterpret_cast <unsigned const char*>(pbase()), len);
+      // reset the put buffer
+      setp(&mBuf[0], (&mBuf[mBuf.size()-1])+1);
+   }
+   return 0;
+}
+
+int
+SHA1Buffer::overflow(int c)
+{
+   sync();
+   if (c != -1) 
+   {
+      mBuf[0] = c;
+      pbump(1);
+      return c;
+   }
+   return 0;
+}
+
+Data 
+SHA1Buffer::getHex()
+{
+   assert(mBlown == false);
+   SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
+   mBlown = true;
+   Data digest(Data::Share, (const char*)&mBuf[0], mBuf.size());
+   return digest.hex();   
+}
+
+Data
+SHA1Buffer::getBin(unsigned int bits)
+{
+   assert(mBlown == false);
+   assert (bits % 8 == 0);
+   assert (bits / 8 <= mBuf.size());
+   SHA1_Final((unsigned char*)&mBuf[0], mContext.get());
+   mBlown = true;
+   return Data(&mBuf[20-bits/8], bits / 8);
+}
+
+SHA1Stream::SHA1Stream()
+   : std::ostream(this)
+{
+}
+
+SHA1Stream::~SHA1Stream()
+{}
+
+Data 
+SHA1Stream::getHex()
+{
+   flush();
+   return SHA1Buffer::getHex();
+   //return mStreambuf.getHex();
+}
+
+Data
+SHA1Stream::getBin(unsigned int bits)
+{
+   flush();
+   return SHA1Buffer::getBin(bits);
+}
+
+UInt32
+SHA1Stream::getUInt32()
+{
+   flush();
+   UInt32 input = *((UInt32*)getBin(32).c_str());
+   return ntohl(input);
+}
+
+
+#endif // USE_SSL
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

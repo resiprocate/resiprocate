@@ -3,7 +3,7 @@
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIP RUTIL ARES PTHREAD OPENSSL OPENSIGCOMP
+PACKAGES += RESIP RUTIL ARES PTHREAD OPENSIGCOMP
 
 CXXFLAGS += -I../..
 CODE_SUBDIRS = 
@@ -45,7 +45,6 @@ SRC = \
 	DnsInterface.cxx \
 	DnsResult.cxx \
 	DtlsMessage.cxx \
-	DtlsTransport.cxx \
 	Embedded.cxx \
 	ExtensionParameter.cxx \
 	ExtensionHeader.cxx \
@@ -92,7 +91,6 @@ SRC = \
 	RportParameter.cxx \
 	SERNonceHelper.cxx \
 	SdpContents.cxx \
-	Security.cxx \
 	SecurityAttributes.cxx \
 	Compression.cxx \
 	SelectInterruptor.cxx \
@@ -100,8 +98,8 @@ SRC = \
 	SipMessage.cxx \
 	SipStack.cxx \
 	StackThread.cxx \
-    InterruptableStackThread.cxx \
-  StatisticsHandler.cxx \
+	InterruptableStackThread.cxx \
+	StatisticsHandler.cxx \
 	StatisticsManager.cxx \
 	StatisticsMessage.cxx \
 	Symbols.cxx \
@@ -111,9 +109,6 @@ SRC = \
 	TimeAccumulate.cxx \
 	TimerMessage.cxx \
 	TimerQueue.cxx \
-	TlsConnection.cxx \
-	TlsTransport.cxx \
-	TlsTransport.cxx \
 	Tuple.cxx \
 	TupleMarkManager.cxx \
 	TransactionController.cxx \
@@ -135,6 +130,16 @@ SRC = \
 	KeepAliveMessage.cxx \
 	StatelessHandler.cxx \
 	InvalidContents.cxx
+
+ifeq ($(USE_SSL),yes)
+SRC += \
+	ssl/DtlsTransport.cxx \
+	ssl/Security.cxx \
+	ssl/TlsConnection.cxx \
+	ssl/TlsTransport.cxx
+PACKAGES += OPENSSL
+CODE_SUBDIRS += ssl
+endif
 
 SUFFIXES += .gperf .cxx
 GPERFOPTS = -D -E -L C++ -t -k '*' --compare-strncmp

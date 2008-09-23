@@ -20,6 +20,9 @@
 #include "repro/UserStore.hxx"
 #include "repro/Store.hxx"
 
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 using namespace resip;
 using namespace repro;
@@ -151,6 +154,7 @@ WebAdmin::buildPage( const Data& uri,
    // certificate pages 
    if ( pageName.prefix("cert") || pageName == Data("cert.cer") )
    {
+#ifdef USE_SSL
       Data domain = mRealm;
       try 
       {
@@ -188,6 +192,10 @@ WebAdmin::buildPage( const Data& uri,
          setPage( resip::Data::Empty, pageNumber, 404 );
          return;
       }
+#else
+      // ?bwc? Probably could use a better indication?
+      setPage(resip::Data::Empty, pageNumber, 404);
+#endif
    }
   
    Data authenticatedUser;
