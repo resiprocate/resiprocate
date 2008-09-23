@@ -4,8 +4,8 @@
 
 #include <iostream>
 
-#include "resip/stack/Security.hxx"
-//#include "rutil/OpenSSLInit.hxx"
+#include "resip/stack/ssl/Security.hxx"
+//#include "rutil/ssl/OpenSSLInit.hxx"
 #include "rutil/ThreadIf.hxx"
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"

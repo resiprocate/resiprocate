@@ -1,10 +1,13 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/stack/OctetContents.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientSubscription.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 #include "RegEventClient.hxx"
 

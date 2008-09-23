@@ -2,13 +2,14 @@
 #include "resip/stack/config.hxx"
 #endif
 
-#include "resip/stack/TlsConnection.hxx"
-#include "resip/stack/Security.hxx"
+#if defined(USE_SSL)
+
+#include "resip/stack/ssl/TlsConnection.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "rutil/Logger.hxx"
 #include "resip/stack/Uri.hxx"
 #include "rutil/Socket.hxx"
 
-#if defined(USE_SSL)
 #include <openssl/e_os2.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>

@@ -1,4 +1,5 @@
 
+#ifdef USE_SSL
 #ifdef USE_DTLS
 
 #if defined(HAVE_CONFIG_H)
@@ -36,7 +37,7 @@
 #endif
 
 #ifndef RESIP_SECURITY_HXX
-#include "resip/stack/Security.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #endif
 
 #ifndef RESIP_DTLSMESSAGE_HXX
@@ -44,7 +45,7 @@
 #endif
 
 #ifndef RESIP_DTLSTRANSPORT_HXX
-#include "resip/stack/DtlsTransport.hxx"
+#include "resip/stack/ssl/DtlsTransport.hxx"
 #endif
 
 #include "rutil/WinLeakCheck.hxx"
@@ -646,6 +647,7 @@ DtlsTransport::_printSock( const struct sockaddr_in *sock )
 }
 
 #endif /* USE_DTLS */
+#endif /* USE_SSL */
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

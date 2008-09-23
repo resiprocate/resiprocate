@@ -1,6 +1,4 @@
-#if defined(USE_SSL)
-
-#include "resip/stack/Security.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/Pkcs8Contents.hxx"
 #include "resip/dum/ServerPublication.hxx"
 #include "repro/stateAgents/PrivateKeyPublicationHandler.hxx"
@@ -71,4 +69,3 @@ PrivateKeyPublicationHandler::add(ServerPublicationHandle h, const Contents* con
    }
 }
 
-#endif

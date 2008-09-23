@@ -5,9 +5,12 @@
 #include "rutil/Logger.hxx"
 #include "resip/stack/ConnectionBase.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "resip/stack/Security.hxx"
-#include "resip/stack/TlsConnection.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#include "resip/stack/ssl/TlsConnection.hxx"
+#endif
 
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>
@@ -130,6 +133,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
          mMessage->setSource(mWho);
          mMessage->setTlsDomain(mTransport->tlsDomain());
 
+#ifdef USE_SSL
          // Set TlsPeerName if message is from TlsConnection
          TlsConnection *tlsConnection = dynamic_cast<TlsConnection *>(this);
          if(tlsConnection)
@@ -138,6 +142,7 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             tlsConnection->getPeerNames(peerNameList);
             mMessage->setTlsPeerNames(peerNameList);
          }
+#endif
          mMsgHeaderScanner.prepareForMessage(mMessage);
          // Fall through to the next case.
       }

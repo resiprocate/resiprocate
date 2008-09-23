@@ -1,7 +1,6 @@
 #if !defined(Repro_PrivateKeySubscriptionHandler_hxx)
 #define Repro_PrivateKeySubscriptionHandler_hxx
 
-#if defined(USE_SSL)
 #include "resip/dum/SubscriptionHandler.hxx"
 
 namespace resip
@@ -34,5 +33,4 @@ class PrivateKeySubscriptionHandler : public resip::ServerSubscriptionHandler
  
 }
 
-#endif
 #endif

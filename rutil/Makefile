@@ -26,7 +26,6 @@ SRC = \
 	Logger.cxx \
 	MD5Stream.cxx \
 	Mutex.cxx \
-	OpenSSLInit.cxx \
 	ParseBuffer.cxx \
 	ParseException.cxx \
 	Poll.cxx \
@@ -35,7 +34,6 @@ SRC = \
 	Random.cxx \
 	RecursiveMutex.cxx \
 	resipfaststreams.cxx \
-	SHA1Stream.cxx \
 	Socket.cxx \
 	Subsystem.cxx \
 	SysLogBuf.cxx \
@@ -46,8 +44,8 @@ SRC = \
 	vmd5.cxx \
 	\
 	dns/AresDns.cxx \
-	dns/DnsAAAARecord.cxx \
 	dns/DnsCnameRecord.cxx \
+	dns/DnsAAAARecord.cxx \
 	dns/DnsHostRecord.cxx \
 	dns/DnsNaptrRecord.cxx \
 	dns/DnsResourceRecord.cxx \
@@ -62,6 +60,15 @@ SRC = \
 	\
 	stun/Stun.cxx \
 	stun/Udp.cxx
+
+ifeq ($(USE_SSL),yes)
+SRC += \
+	ssl/OpenSSLInit.cxx \
+	ssl/SHA1Stream.cxx
+PACKAGES += OPENSSL
+CODE_SUBDIRS += ssl
+endif
+
 
 ifeq ($(OSTYPE),MinGW)
     SRC += WinCompat.cxx

@@ -303,7 +303,19 @@
 				RelativePath=".\Mutex.cxx">
 			</File>
 			<File
-				RelativePath=".\OpenSSLInit.cxx">
+				RelativePath=".\ssl\OpenSSLInit.cxx">
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\ParseBuffer.cxx">
@@ -342,7 +354,19 @@
 				RelativePath=".\RWMutex.cxx">
 			</File>
 			<File
-				RelativePath=".\SHA1Stream.cxx">
+				RelativePath=".\ssl\SHA1Stream.cxx">
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Socket.cxx">
@@ -497,7 +521,7 @@
 				RelativePath=".\Mutex.hxx">
 			</File>
 			<File
-				RelativePath=".\OpenSSLInit.hxx">
+				RelativePath=".\ssl\OpenSSLInit.hxx">
 			</File>
 			<File
 				RelativePath=".\ParseBuffer.hxx">
@@ -539,7 +563,7 @@
 				RelativePath=".\RWMutex.hxx">
 			</File>
 			<File
-				RelativePath=".\SHA1Stream.hxx">
+				RelativePath=".\ssl\SHA1Stream.hxx">
 			</File>
 			<File
 				RelativePath=".\SharedCount.hxx">

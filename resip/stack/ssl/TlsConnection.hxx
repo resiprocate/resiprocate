@@ -1,63 +1,82 @@
-#if defined(HAVE_CONFIG_H)
-#include "resip/stack/config.hxx"
+#if !defined(TlsConnection_hxx)
+#define TlsConnection_hxx
+
+#include "resip/stack/Connection.hxx"
+#include "rutil/HeapInstanceCounter.hxx"
+#include "resip/stack/SecurityTypes.hxx"
+#include "resip/stack/ssl/Security.hxx"
+
+// If USE_SSL is not defined, this will not be built, and this header will 
+// not be installed. If you are including this file from a source tree, and are 
+// getting link errors, the source tree was probably built without USE_SSL.
+//#ifdef USE_SSL
+//#include <openssl/ssl.h>
+//#else
+//typedef void BIO;
+//typedef void SSL;
+//#endif
+
+#include <openssl/ssl.h>
+
+namespace resip
+{
+
+class Tuple;
+class Security;
+
+class TlsConnection : public Connection
+{
+   public:
+      RESIP_HeapCount(TlsConnection);
+
+      TlsConnection( Transport* transport, const Tuple& who, Socket fd, 
+                     Security* security, bool server, Data domain, 
+                     SecurityTypes::SSLType sslType ,
+                     Compression &compression);
+      
+      virtual ~TlsConnection();
+
+      int read( char* buf, const int count );
+      int write( const char* buf, const int count );
+      virtual bool hasDataToRead(); // has data that can be read 
+      virtual bool isGood(); // has valid connection
+      virtual bool isWritable();
+      
+      virtual bool transportWrite();
+      
+      void getPeerNames(std::list<Data> & peerNames) const;
+      
+      typedef enum TlsState { Initial, Broken, Handshaking, Up } TlsState;
+      static const char * fromState(TlsState);
+   
+   private:
+      /// No default c'tor
+      TlsConnection();
+      void computePeerName();
+      Data getPeerNamesData() const;
+      TlsState checkState();
+
+      bool mServer;
+      Security* mSecurity;
+      SecurityTypes::SSLType mSslType;
+      Data mDomain;
+      
+      TlsState mTlsState;
+      bool mHandShakeWantsRead;
+
+      SSL* mSsl;
+      BIO* mBio;
+      std::list<BaseSecurity::PeerName> mPeerNames;
+};
+ 
+}
+
 #endif
-
-#include <memory>
-
-#include "rutil/compat.hxx"
-#include "rutil/Data.hxx"
-#include "rutil/Socket.hxx"
-#include "rutil/Logger.hxx"
-#include "resip/stack/TlsTransport.hxx"
-#include "resip/stack/TlsConnection.hxx"
-#include "resip/stack/Security.hxx"
-#include "rutil/WinLeakCheck.hxx"
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::TRANSPORT
-
-using namespace std;
-using namespace resip;
-
-TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo, 
-                           int portNum, 
-                           IpVersion version,
-                           const Data& interfaceObj,
-                           Security& security,
-                           const Data& sipDomain, 
-                           SecurityTypes::SSLType sslType,
-                           Compression &compression):
-   TcpBaseTransport(fifo, portNum, version, interfaceObj, compression ),
-   mSecurity(&security),
-   mSslType(sslType)
-{
-   setTlsDomain(sipDomain);   
-   mTuple.setType(transport());
-
-   InfoLog (<< "Creating TLS transport for domain " 
-            << sipDomain << " interface=" << interfaceObj 
-            << " port=" << portNum);
-}
-
-
-TlsTransport::~TlsTransport()
-{
-}
-  
-
-Connection* 
-TlsTransport::createConnection(Tuple& who, Socket fd, bool server)
-{
-   assert(this);
-   Connection* conn = new TlsConnection(this,who, fd, mSecurity, server,
-                                        tlsDomain(), mSslType, mCompression );
-   return conn;
-}
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

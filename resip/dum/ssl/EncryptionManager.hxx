@@ -7,7 +7,6 @@
 #include "rutil/BaseException.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/Contents.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/stack/Helper.hxx"
 #include "resip/dum/CertMessage.hxx"
@@ -17,6 +16,7 @@
 
 namespace resip
 {
+class Security;
 
 class EncryptionManager : public DumFeature
 {

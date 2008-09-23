@@ -3,7 +3,7 @@
 BUILD = ../../build
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RESIP OPENSSL ARES PTHREAD
+PACKAGES += RESIP ARES PTHREAD
 
 TARGET_LIBRARY = libdum
 
@@ -72,7 +72,6 @@ SRC =   \
 	KeepAliveManager.cxx \
 	KeepAliveTimeout.cxx \
 	NetworkAssociation.cxx \
-	EncryptionManager.cxx \
 	DumDecrypted.cxx \
 	CertMessage.cxx \
 	DumFeatureChain.cxx \
@@ -85,6 +84,14 @@ SRC =   \
 	HttpGetMessage.cxx \
 	DumHelper.cxx \
 	MergedRequestRemovalCommand.cxx
+
+ifeq ($(USE_SSL),yes)
+SRC += \
+	ssl/EncryptionManager.cxx 
+PACKAGES += OPENSSL
+CODE_SUBDIRS += ssl
+endif
+
 
 include $(BUILD)/Makefile.post
 INSTALL_INCDIR := $(DESTDIR)$(INSTALL_PREFIX)/include/resip/dum
