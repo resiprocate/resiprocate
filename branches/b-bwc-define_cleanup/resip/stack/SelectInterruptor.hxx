@@ -1,7 +1,7 @@
 #ifndef RESIP_SelectInterruptor_HXX
 #define RESIP_SelectInterruptor_HXX
 
-#include "resip/stack/AsyncProcessHandler.hxx"
+#include "rutil/AsyncProcessHandler.hxx"
 #include "rutil/Socket.hxx"
 
 #if 0

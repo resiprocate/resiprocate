@@ -4,7 +4,7 @@
 #include "ConversationManager.hxx"
 #include "Participant.hxx"
 
-namespace useragent
+namespace recon
 {
 class ConversationManager;
 

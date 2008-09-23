@@ -1,6 +1,7 @@
 #include "resip/stack/MultipartMixedContents.hxx"
 #include "resip/stack/MultipartAlternativeContents.hxx"
 #include "resip/dum/Dialog.hxx"
+#include "resip/dum/DialogEventStateManager.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/DumTimeout.hxx"
 #include "resip/dum/InviteSessionHandler.hxx"
@@ -66,8 +67,14 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
          response->header(h_Contacts) = contacts;
          send(response);
 
+         if (mDum.mDialogEventStateManager)
+         {
+            mDum.mDialogEventStateManager->onTerminated(mDialog, *response, InviteSessionHandler::Rejected);
+         }
+
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Referred); 
          mDum.destroy(this);
          break;
       }
@@ -428,7 +435,7 @@ ServerInviteSession::end(EndReason reason)
              // ACK has likely timedout - hangup immediately
              sendBye();
              transition(Terminated);
-             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended);
+             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
          }
          break;
 
@@ -478,7 +485,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
          send(response);
 
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Rejected); 
          mDum.destroy(this);
          break;
       }
@@ -606,6 +613,15 @@ ServerInviteSession::acceptCommand(int statusCode)
 void 
 ServerInviteSession::dispatch(const SipMessage& msg)
 {
+   if (msg.isRequest())
+   {
+      if (msg.header(h_RequestLine).method() == INFO)
+      {
+         InviteSession::dispatchInfo(msg);
+         return;
+      }
+   }
+
    switch (mState)
    {
       case UAS_Start:
@@ -700,6 +716,11 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
    std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
    storePeerCapabilities(msg);
 
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onTryingUas(mDialog, msg);
+   }
+
    switch (toEvent(msg, sdp.get()))
    {
       case OnInviteOffer:
@@ -707,7 +728,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          transition(UAS_Offer);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onNewSession(getHandle(), InviteSession::Offer, msg);
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
@@ -716,7 +737,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       case OnInvite:
          *mLastRemoteSessionModification = msg;
          transition(UAS_NoOffer);
-         handler->onNewSession(getHandle(), None, msg);
+         handler->onNewSession(getHandle(), InviteSession::None, msg);
          if(!isTerminated())  
          {
             handler->onOfferRequired(getSessionHandle(), msg);
@@ -727,7 +748,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
          transition(UAS_ReceivedOfferReliable);
          mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
-         handler->onNewSession(getHandle(), Offer, msg);
+         handler->onNewSession(getHandle(), InviteSession::Offer, msg);
          if(!isTerminated())  
          {
             handler->onOffer(getSessionHandle(), msg, *sdp);
@@ -736,7 +757,7 @@ ServerInviteSession::dispatchStart(const SipMessage& msg)
       case OnInviteReliable:
          *mLastRemoteSessionModification = msg;
          transition(UAS_NoOfferReliable);
-         handler->onNewSession(getHandle(), None, msg);
+         handler->onNewSession(getHandle(), InviteSession::None, msg);
          if(!isTerminated())  
          {
             handler->onOfferRequired(getSessionHandle(), msg);
@@ -813,7 +834,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          send(b200);
 
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
          mDum.destroy(this);
          break;
       }
@@ -850,7 +871,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg); 
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg); 
          break;
       }
       
@@ -870,7 +891,7 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
          send(b200);
 
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
          mDum.destroy(this);
          break;
       }
@@ -905,7 +926,7 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg); 
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg); 
          break;
       }
       
@@ -925,7 +946,7 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
          send(b200);
 
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
          mDum.destroy(this);
          break;
       }
@@ -968,7 +989,7 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          mEndReason = IllegalNegotiation;
          sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
       }
          
@@ -1068,7 +1089,7 @@ ServerInviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 
          sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
          break;
       }
       
@@ -1089,7 +1110,13 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
    send(i487);
 
    transition(Terminated);
-   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onTerminated(mDialog, msg, InviteSessionHandler::RemoteCancel);
+   }
+
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
    mDum.destroy(this);
 }
 
@@ -1099,13 +1126,14 @@ ServerInviteSession::dispatchBye(const SipMessage& msg)
    SharedPtr<SipMessage> b200(new SipMessage);
    mDialog.makeResponse(*b200, msg, 200);
    send(b200);
-
+// !dcm! -- pretty sure we shouldn't 487 after the BYE/200
    SharedPtr<SipMessage> i487(new SipMessage);
    mDialog.makeResponse(*i487, mFirstRequest, 487);
    send(i487);
 
    transition(Terminated);
-   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
    mDum.destroy(this);
 }
 
@@ -1121,7 +1149,7 @@ ServerInviteSession::dispatchUnknown(const SipMessage& msg)
    send(i400);
 
    transition(Terminated);
-   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
    mDum.destroy(this);
 }
 
@@ -1156,6 +1184,12 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
    }
    startRetransmit1xxTimer();
    DumHelper::setOutgoingEncryptionLevel(*m1xx, mProposedEncryptionLevel);
+
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onEarly(mDialog, getSessionHandle());
+   }
+
    send(m1xx);
 }
 
@@ -1171,6 +1205,12 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
    startRetransmit200Timer(); // 2xx timer
    DumHelper::setOutgoingEncryptionLevel(*mInvite200, mCurrentEncryptionLevel);
+
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onConfirmed(mDialog, getSessionHandle());
+   }
+
    send(mInvite200);
 }
 

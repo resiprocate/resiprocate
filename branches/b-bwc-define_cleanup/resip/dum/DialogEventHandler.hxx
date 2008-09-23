@@ -1,32 +1,161 @@
 #if !defined(RESIP_DialogEventHandler_HXX)
 #define RESIP_DialogEventHandler_HXX
 
+#include "resip/dum/DialogEventInfo.hxx"
+#include "resip/dum/InviteSessionHandler.hxx"
+
 namespace resip
 {
-  class DialogEventHandler : public ServerSubscriptionHandler
-  {
-  public:   
-    virtual ~DialogEventHandler() {}
 
-    //acquire doc, send notify
-    virtual void onNewSubscription(ServerSubscriptionHandle, const SipMessage& sub)=0;
-    //do nothing
-    virtual void onTerminated(ServerSubscriptionHandle)=0;
+class DialogEvent
+{
+public:
+   DialogEvent() {}
+   DialogEvent(const DialogEvent& rhs) {}
+   virtual ~DialogEvent() {}
 
-    //call update
-    virtual void onPublished(ServerSubscriptionHandle associated, 
-			     ServerPublicationHandle publication, 
-			     const Contents* contents,
-			     const SecurityAttributes* attrs);
+   enum DialogEventType
+   {
+      DialogEventType_Trying,
+      DialogEventType_Proceeding,
+      DialogEventType_Early,
+      DialogEventType_Confirmed,
+      DialogEventType_Terminated,
+      DialogEventType_MultipleEvents
+   };
+   virtual DialogEventType getType() const = 0;
+};
 
+class TryingDialogEvent : public DialogEvent
+{
+public:
+   TryingDialogEvent(const DialogEventInfo& info, const SipMessage& initialInvite)
+      : mEventInfo(info), mInitialInvite(initialInvite)
+   {}
+   TryingDialogEvent(const TryingDialogEvent& rhs)
+      : mEventInfo(rhs.mEventInfo), mInitialInvite(rhs.mInitialInvite)
+   {}
+   virtual ~TryingDialogEvent() {}
+
+   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
+   const SipMessage& getInitialInvite() const { return mInitialInvite; }
+   DialogEventType getType() const { return DialogEvent::DialogEventType_Trying; }
+
+private:
+   DialogEventInfo mEventInfo;
+   SipMessage mInitialInvite;
+};
+
+class ProceedingDialogEvent : public DialogEvent
+{
+public:
+   ProceedingDialogEvent(const DialogEventInfo& info) 
+      : mEventInfo(info)
+   {}
+   ProceedingDialogEvent(const ProceedingDialogEvent& rhs)
+      : mEventInfo(rhs.mEventInfo)
+   {}
+   virtual ~ProceedingDialogEvent() {}
+
+   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
+   DialogEventType getType() const { return DialogEvent::DialogEventType_Proceeding; }
+
+private:
+   DialogEventInfo mEventInfo;
+};
+
+class EarlyDialogEvent : public DialogEvent
+{
+public:
+   EarlyDialogEvent(const DialogEventInfo& info)
+      : mEventInfo(info)
+   {}
+   EarlyDialogEvent(const EarlyDialogEvent& rhs)
+      : mEventInfo(rhs.mEventInfo)
+   {
+   }
+   virtual ~EarlyDialogEvent() {}
+
+   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
+   DialogEventType getType() const { return DialogEvent::DialogEventType_Early; }
+
+private:
+   DialogEventInfo mEventInfo;
+};
+
+class ConfirmedDialogEvent : public DialogEvent
+{
+public:
+   ConfirmedDialogEvent(const DialogEventInfo& info) 
+      : mEventInfo(info)
+   {}
+   ConfirmedDialogEvent(const ConfirmedDialogEvent& rhs)
+      : mEventInfo(rhs.mEventInfo)
+   {}
+   virtual ~ConfirmedDialogEvent() {}
+
+   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
+   DialogEventType getType() const { return DialogEvent::DialogEventType_Confirmed; }
+
+private:
+   DialogEventInfo mEventInfo;
+};
+
+class TerminatedDialogEvent : public DialogEvent
+{
+public:
+   TerminatedDialogEvent(const DialogEventInfo& info, InviteSessionHandler::TerminatedReason reason, int code)
+      : mEventInfo(info), mReason(reason), mCode(code)
+   {}
+   TerminatedDialogEvent(const TerminatedDialogEvent& rhs)
+      : mEventInfo(rhs.mEventInfo), mReason(rhs.mReason), mCode(rhs.mCode)
+   {}
+   virtual ~TerminatedDialogEvent() {}
+
+   const DialogEventInfo& getEventInfo() const { return mEventInfo; }
+   InviteSessionHandler::TerminatedReason getTerminatedReason() const { return mReason; }
+   int getResponseCode() const { return mCode; }
+   DialogEventType getType() const { return DialogEvent::DialogEventType_Terminated; }
+
+private:
+   DialogEventInfo mEventInfo;
+   InviteSessionHandler::TerminatedReason mReason;
+   int mCode;
+};
+
+class MultipleEventDialogEvent : public DialogEvent
+{
+public:
+   typedef std::vector< SharedPtr<DialogEvent> > EventVector;
+   MultipleEventDialogEvent(EventVector& events) 
+      : mEvents(events)
+   {}
+   MultipleEventDialogEvent(const MultipleEventDialogEvent& rhs)
+      : mEvents(rhs.mEvents)
+   {}
+   virtual ~MultipleEventDialogEvent() {}
+
+   const EventVector& getEvents() const { return mEvents; }
+   DialogEventType getType() const { return DialogEvent::DialogEventType_MultipleEvents; }
+
+private:
+   EventVector mEvents;
+};
+
+class DialogEventHandler
+{
+   public:   
+      virtual ~DialogEventHandler() {}
+      virtual void onTrying(const TryingDialogEvent& evt)=0;
+      virtual void onProceeding(const ProceedingDialogEvent& evt)=0;
+      virtual void onEarly(const EarlyDialogEvent& evt)=0;
+      virtual void onConfirmed(const ConfirmedDialogEvent& evt)=0; 
+      virtual void onTerminated(const TerminatedDialogEvent& evt)=0;
+      virtual void onMultipleEvents(const MultipleEventDialogEvent& evt)=0;
+};
       
-    
- private:
-    std::multimap<Data, InviteSessionHandler>
-  };
- 
-}
 
+}
 
 #endif
 

@@ -3,7 +3,7 @@
 
 #include <resip/dum/DumCommand.hxx>
 
-namespace useragent
+namespace recon
 {
 
 class ConversationManager;
@@ -27,8 +27,8 @@ class MediaEvent : public resip::DumCommand
       virtual void executeCommand();
 
       Message* clone() const;
-      std::ostream& encode(std::ostream& strm) const;
-      std::ostream& encodeBrief(std::ostream& strm) const;
+      EncodeStream& encode(EncodeStream& strm) const;
+      EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
       ConversationManager& mConversationManager;

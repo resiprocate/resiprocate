@@ -8,7 +8,7 @@
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
 #include "DtmfEvent.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -25,11 +25,11 @@
 
 #include <rutil/WinLeakCheck.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 // UAC
 RemoteParticipant::RemoteParticipant(ConversationManager::ParticipantHandle partHandle,
@@ -1024,28 +1024,59 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
       SdpCodec* offerCodec;
       while((offerCodec = (SdpCodec*) it()))
       {
+         std::list<SdpContents::Session::Codec>::iterator bestCapsCodecMatchIt = mediaSessionCaps.codecs().end();
+         UtlString encodingName;
+         UtlString parameters;
+         offerCodec->getEncodingName(encodingName);
+         offerCodec->getSdpFmtpField(parameters);
+         bool modeInOffer = parameters.first("mode=") == 0;
+
          // Loop through allowed codec list and see if codec is supported locally
          for (std::list<SdpContents::Session::Codec>::iterator capsCodecsIt = mediaSessionCaps.codecs().begin();
               capsCodecsIt != mediaSessionCaps.codecs().end(); capsCodecsIt++)
          {
-            UtlString encodingName;
-            offerCodec->getEncodingName(encodingName);
-
             if(isEqualNoCase(capsCodecsIt->getName(), encodingName.data()) &&
                capsCodecsIt->getRate() == offerCodec->getSampleRate())
             {
-               SdpContents::Session::Codec codec(*capsCodecsIt);
-               codec.payloadType() = offerCodec->getCodecPayloadFormat();  // honour offered payload id - just to be nice  :)
-               medium.addCodec(codec);
-               if(!valid && !isEqualNoCase(capsCodecsIt->getName(), "telephone-event"))
+               bool modeInCaps = capsCodecsIt->parameters().prefix("mode=");
+               if(!modeInOffer && !modeInCaps)
                {
-                  // Consider offer valid if we see any matching codec other than telephone-event
-                  valid = true;
+                  // If mode is not specified in either - then we have a match
+                  bestCapsCodecMatchIt = capsCodecsIt;
+                  break;
                }
-
-               break;
+               else if(modeInOffer && modeInCaps)
+               {
+                  if(isEqualNoCase(capsCodecsIt->parameters(), parameters.data()))
+                  {
+                     bestCapsCodecMatchIt = capsCodecsIt;
+                     break;
+                  }
+                  // If mode is specified in both, and doesn't match - then we have no match
+               }
+               else
+               {
+                  // Mode is specified on either offer or caps - this match is a potential candidate
+                  // As a rule - use first match of this kind only
+                  if(bestCapsCodecMatchIt == mediaSessionCaps.codecs().end())
+                  {
+                     bestCapsCodecMatchIt = capsCodecsIt;
+                  }
+               }
             }
          } 
+
+         if(bestCapsCodecMatchIt != mediaSessionCaps.codecs().end())
+         {
+            SdpContents::Session::Codec codec(*bestCapsCodecMatchIt);
+            codec.payloadType() = offerCodec->getCodecPayloadFormat();  // honour offered payload id - just to be nice  :)
+            medium.addCodec(codec);
+            if(!valid && !isEqualNoCase(bestCapsCodecMatchIt->getName(), "telephone-event"))
+            {
+               // Consider offer valid if we see any matching codec other than telephone-event
+               valid = true;
+            }
+         }
       }
       
       if(valid)
@@ -1614,7 +1645,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
       {
          WarningLog(<< "adjustRTPStreams: handle=" << mHandle << ", something went wrong during SDP negotiations, no common codec found.");
       }
-      delete codecs;
+      delete [] codecs;
    }
    else
    {
@@ -1645,7 +1676,7 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
          }
           
          mConversationManager.getMediaInterface()->startRtpReceive(mDialogSet.getMediaConnectionId(), numCodecs, codecs);
-         delete codecs;
+         delete [] codecs;
       }
       InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", receiving...");
    }
@@ -1797,17 +1828,32 @@ RemoteParticipant::onTerminated(InviteSessionHandle h, InviteSessionHandler::Ter
    stateTransition(Terminating);
    switch(reason)
    {
-   case InviteSessionHandler::PeerEnded:
-      InfoLog(<< "onTerminated: handle=" << mHandle << ", received a BYE or CANCEL from peer");
+   case InviteSessionHandler::RemoteBye:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", received a BYE from peer");
       break;
-   case InviteSessionHandler::Ended:
-      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended by the application");
+   case InviteSessionHandler::RemoteCancel:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", received a CANCEL from peer");
       break;
-   case InviteSessionHandler::GeneralFailure:
-      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to a failure");
+   case InviteSessionHandler::Rejected:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", received a rejection from peer");
       break;
-   case InviteSessionHandler::Cancelled:
-      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended by the application via Cancel");
+   case InviteSessionHandler::LocalBye:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended locally via BYE");
+      break;
+   case InviteSessionHandler::LocalCancel:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended locally via CANCEL");
+      break;
+   case InviteSessionHandler::Replaced:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to being replaced");
+      break;
+   case InviteSessionHandler::Referred:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to being reffered");
+      break;
+   case InviteSessionHandler::Error:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to an error");
+      break;
+   case InviteSessionHandler::Timeout:
+      InfoLog(<< "onTerminated: handle=" << mHandle << ", ended due to a timeout");
       break;
    default:
       assert(false);

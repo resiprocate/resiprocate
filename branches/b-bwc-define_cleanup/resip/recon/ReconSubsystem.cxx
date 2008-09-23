@@ -1,6 +1,6 @@
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 
-UserAgentSubsystem UserAgentSubsystem::USERAGENT("USERAGENT");
+ReconSubsystem ReconSubsystem::RECON("USERAGENT");
 
 
 

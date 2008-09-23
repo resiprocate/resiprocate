@@ -84,13 +84,6 @@ DnsResult::~DnsResult()
 void 
 DnsResult::transition(Type t)
 {
-   if ((t == Finished || t == Destroyed) &&
-       (mType == Pending || mType == Available))
-   {
-      mInterface.mActiveQueryCount--;
-      assert(mInterface.mActiveQueryCount >= 0);
-   }
-   
    if((t == Pending || t== Available) && 
          (mType== Finished || mType == Destroyed) )
    {

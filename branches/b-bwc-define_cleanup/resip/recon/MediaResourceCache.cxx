@@ -1,15 +1,15 @@
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "MediaResourceCache.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/WinLeakCheck.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 MediaResourceCache::MediaResourceCache()
 {

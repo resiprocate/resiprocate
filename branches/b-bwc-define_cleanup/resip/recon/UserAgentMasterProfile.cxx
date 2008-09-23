@@ -1,13 +1,13 @@
 #include <resip/stack/Tuple.hxx>
 
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "UserAgentMasterProfile.hxx"
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 UserAgentMasterProfile::UserAgentMasterProfile()
 : mStatisticsManagerEnabled(false),
