@@ -5,7 +5,11 @@
 #include "rutil/Socket.hxx"
 #include "rutil/dns/DnsResourceRecord.hxx"
 
-#ifdef USE_IPV6
+#ifndef WIN32
+#include <netinet/in.h>
+#else
+#include <Ws2tcpip.h>
+#endif
 
 namespace resip
 {
@@ -18,20 +22,25 @@ class DnsAAAARecord : public DnsResourceRecord
       DnsAAAARecord(const RROverlay& overlay);
       virtual ~DnsAAAARecord() {}
 
+#ifdef IPPROTO_IPV6
       const struct in6_addr& v6Address() const { return mAddr; }
+#endif
+
       virtual const Data& name() const { return mName; }
       virtual bool isSameValue(const Data& value) const;
       EncodeStream& dump(EncodeStream& strm) const;
       
    private:
-      struct in6_addr mAddr;
+      union
+      {
+#ifdef IPPROTO_IPV6
+         struct in6_addr mAddr;
+#endif
+         char pad[28]; // this make union same size if v6 is in or out
+      };
       Data mName;
-      
 };
 
 }
-
-#endif
-
 
 #endif

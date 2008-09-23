@@ -18,7 +18,6 @@
 #include "rutil/Timer.hxx"
 
 #include "resip/stack/Message.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/stack/ShutdownMessage.hxx"
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/ApplicationMessage.hxx"
@@ -27,12 +26,16 @@
 #include "resip/stack/StatisticsManager.hxx"
 #include "rutil/AsyncProcessHandler.hxx"
 #include "resip/stack/TcpTransport.hxx"
-#include "resip/stack/TlsTransport.hxx"
 #include "resip/stack/UdpTransport.hxx"
-#include "resip/stack/DtlsTransport.hxx"
 #include "resip/stack/TransactionUser.hxx"
 #include "resip/stack/TransactionUserMessage.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#include "resip/stack/ssl/DtlsTransport.hxx"
+#include "resip/stack/ssl/TlsTransport.hxx"
+#endif
 
 #if defined(WIN32) && !defined(__GNUC__)
 #pragma warning( disable : 4355 )
@@ -72,7 +75,11 @@ SipStack::SipStack(Security* pSecurity,
    initNetwork();
    if (pSecurity)
    {
+#ifdef USE_SSL
       pSecurity->preload();
+#else
+      assert(0);
+#endif
    }
 
    assert(!mShuttingDown);

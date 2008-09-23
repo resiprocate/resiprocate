@@ -1,6 +1,5 @@
 #include <signal.h>
 #include "resip/stack/MessageFilterRule.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/stack/Compression.hxx"
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipStack.hxx"
@@ -40,6 +39,7 @@
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 
 #if defined(USE_SSL)
+#include "resip/stack/ssl/Security.hxx"
 #include "repro/stateAgents/CertServer.hxx"
 #endif
 

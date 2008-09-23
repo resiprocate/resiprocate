@@ -2,6 +2,10 @@
 #include "resip/stack/config.hxx"
 #endif
 
+#ifdef USE_SSL
+
+#include "resip/stack/ssl/Security.hxx"
+
 #include <ostream>
 #include <fstream>
 
@@ -9,7 +13,6 @@
 #include "resip/stack/MultipartSignedContents.hxx"
 #include "resip/stack/Pkcs7Contents.hxx"
 #include "resip/stack/PlainContents.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 #include "resip/stack/Transport.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -17,15 +20,13 @@
 #include "rutil/DataStream.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
-#include "rutil/SHA1Stream.hxx"
 #include "rutil/Socket.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/FileSystem.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
-
-#if defined(USE_SSL)
+#include "rutil/ssl/SHA1Stream.hxx"
 
 #if !defined(WIN32)
 #include <sys/types.h>

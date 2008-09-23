@@ -1,8 +1,11 @@
 #if !defined(RESIP_GENERIC_IP_ADDRESS_HXX)
 #define RESIP_GENERIC_IP_ADDRESS_HXX
 
-#ifndef WIN32  
+#ifndef WIN32
 #include <netinet/in.h>
+#else
+#include <winsock2.h>
+#include <Ws2tcpip.h>
 #endif
 
 #include "rutil/Socket.hxx"
@@ -31,7 +34,7 @@ struct GenericIPAddress
       {
       }
 
-#ifdef USE_IPV6
+#ifdef IPPROTO_IPV6
       GenericIPAddress(const sockaddr_in6& v6) : v6Address(v6)
       {
       }
@@ -43,7 +46,7 @@ struct GenericIPAddress
          {
             return sizeof(sockaddr_in);
          }
-#ifdef USE_IPV6
+#ifdef IPPROTO_IPV6
          else  if (address.sa_family == AF_INET6) // v6
          {
             return sizeof(sockaddr_in6);
@@ -60,7 +63,7 @@ struct GenericIPAddress
 
       bool isVersion6() const 
       { 
-#ifdef USE_IPV6
+#ifdef IPPROTO_IPV6
          if (address.sa_family == AF_INET6) return true; 
 #endif
          return false;
@@ -70,7 +73,7 @@ struct GenericIPAddress
       {
             sockaddr address;
             sockaddr_in v4Address;
-#ifdef USE_IPV6
+#ifdef IPPROTO_IPV6
             sockaddr_in6 v6Address;
 #endif
             char pad[28]; // this make union same size if v6 is in or out
@@ -87,7 +90,7 @@ struct GenericIPAddress
             }
             else // v6
             {
-#ifdef USE_IPV6
+#ifdef IPPROTO_IPV6
                return (v6Address.sin6_port == addr.v6Address.sin6_port &&
                      memcmp(&v6Address.sin6_addr, &addr.v6Address.sin6_addr, sizeof(in6_addr)) == 0);
 #else
@@ -125,7 +128,7 @@ struct GenericIPAddress
                return false;
             }
          }
-#ifdef USE_IPV6
+#ifdef IPPROTO_IPV6
          else if (address.sa_family == AF_INET6 &&
                   addr.address.sa_family == AF_INET6)
          {

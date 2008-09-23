@@ -9,7 +9,9 @@ PACKAGES += RESIP RUTIL ARES OPENSSL PTHREAD POPT OPENSIGCOMP RADIUSCLIENTNG
 
 ifeq ($(USE_SSL), yes)
 TESTPROGRAMS += makeSelfCert.cxx \
+		testIdentity.cxx \
 		testSecurity.cxx \
+		testSMIME.cxx \
 		testTls.cxx \
 		dumpTls.cxx
 endif
@@ -17,7 +19,6 @@ endif
 
 TESTPROGRAMS += \
 UAS.cxx \
-testIdentity.cxx \
 testEmptyHfv.cxx \
 RFC4475TortureTests.cxx \
 limpc.cxx \
@@ -54,7 +55,6 @@ testSipMessage.cxx \
 testSipMessageEncode.cxx \
 testSipMessageMemory.cxx \
 testSipStack1.cxx \
-testSMIME.cxx \
 testStack.cxx \
 testTcp.cxx \
 testTime.cxx \

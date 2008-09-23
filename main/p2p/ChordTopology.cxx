@@ -2,7 +2,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
-#include "rutil/SHA1Stream.hxx"
+#include "rutil/ssl/SHA1Stream.hxx"
 
 #include "p2p/Candidate.hxx"
 #include "p2p/ChordTopology.hxx"

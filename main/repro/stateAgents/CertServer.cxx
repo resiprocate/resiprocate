@@ -1,6 +1,4 @@
-#if defined(USE_SSL)
-
-#include "resip/stack/Security.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/Pkcs8Contents.hxx"
 #include "resip/stack/X509Contents.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
@@ -38,6 +36,4 @@ CertServer::CertServer(DialogUsageManager& dum) :
 CertServer::~CertServer()
 {
 }
-
-#endif
 

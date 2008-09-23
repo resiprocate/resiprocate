@@ -10,8 +10,12 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/TcpTransport.hxx"
-#include "resip/stack/TlsTransport.hxx"
 #include "resip/stack/UdpTransport.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/TlsTransport.hxx"
+#endif
+
 #include "rutil/Inserter.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
@@ -72,9 +76,14 @@ TestSipEndPoint::TestSipEndPoint(const Uri& addressOfRecord,
       }
       else if (isEqualNoCase(contactUrl.param(p_transport), Tuple::toData(TLS)))
       {
+#ifdef USE_SSL
          InfoLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << interfaceObj);
          mTransport = new TlsTransport(mIncoming, mContact.uri().port(), V4, interfaceObj, 
                                        *mSecurity, "localhost", SecurityTypes::TLSv1);
+#else
+         ErrLog(<< "TestSipEndPoint[" << addressOfRecord << "]transport is TLS " << interfaceObj << ", but TLS is disabled.");
+         assert(0);
+#endif
       }
       else
       {

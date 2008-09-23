@@ -1,7 +1,6 @@
 #if !defined(RESIP_WEBADMIN_HXX)
 #define RESIP_WEBADMIN_HXX 
 
-#include "resip/stack/Security.hxx"
 #include "rutil/Data.hxx"
 //#include "rutil/Socket.hxx"
 #include "rutil/TransportType.hxx"
@@ -10,9 +9,12 @@
 //#include "repro/Store.hxx"
 #include "repro/HttpBase.hxx"
 
+#include <map>
+
 namespace resip
 {
 class RegistrationPersistenceManager;
+class Security;
 class DataStream;
 }
 

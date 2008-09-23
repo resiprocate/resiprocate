@@ -10,8 +10,11 @@
 #include "repro/monkeys/QValueTargetHandler.hxx"
 #include "repro/monkeys/SimpleTargetHandler.hxx"
 #include "rutil/Logger.hxx"
-#include "resip/stack/Security.hxx"
 #include "tfm/repro/TestRepro.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 using namespace resip;
 using namespace repro;
