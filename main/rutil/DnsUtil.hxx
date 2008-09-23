@@ -6,6 +6,11 @@
 #include "BaseException.hxx"
 #include "Data.hxx"
 
+#ifndef WIN32
+#include <netinet/in.h>
+#else
+#include <Ws2tcpip.h>
+#endif
 
 struct in_addr;
 struct in6_addr;
@@ -66,7 +71,7 @@ class DnsUtil
       static bool isIpV4Address(const Data& ipAddress);
       static bool isIpV6Address(const Data& ipAddress);
 
-#ifdef USE_IPV6
+#ifdef IPPROTO_IPV6
       static Data inet_ntop(const struct in6_addr& addr);
       static int inet_pton(const Data& printableIp, struct in6_addr& dst);
 #endif

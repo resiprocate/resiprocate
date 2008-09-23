@@ -1,6 +1,6 @@
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/TransactionUser.hxx"
-#include "resip/stack/Security.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "resip/dum/Handles.hxx"
 #include "resip/dum/MasterProfile.hxx"
 #include "resip/dum/UserProfile.hxx"
@@ -18,7 +18,7 @@
 #include "rutil/Logger.hxx"
 
 #ifdef WIN32
-#include "resip/stack/WinSecurity.hxx"
+#include "resip/stack/ssl/WinSecurity.hxx"
 #endif
 
 #include <iostream>

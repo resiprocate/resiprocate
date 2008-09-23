@@ -929,9 +929,9 @@ void DnsResult::onDnsResult(const DNSResult<DnsHostRecord>& result)
    }
 }
 
-#ifdef USE_IPV6
 void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
 {
+#ifdef USE_IPV6
    StackLog (<< "Received AAAA result for: " << mTarget);
    if (!mInterface.isSupported(mTransport, V6))
    {
@@ -979,9 +979,10 @@ void DnsResult::onDnsResult(const DNSResult<DnsAAAARecord>& result)
    }
    // funnel through to host processing
    mDns.lookup<RR_A>(mPassHostFromAAAAtoA, Protocol::Sip, this);
-
-}
+#else
+   assert(0);
 #endif
+}
 
 void DnsResult::onDnsResult(const DNSResult<DnsSrvRecord>& result)
 {

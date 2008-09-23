@@ -70,7 +70,14 @@ class Tuple
             TransportType ptype, 
             const Data& targetDomain = Data::Empty);
 
-#ifdef USE_IPV6
+#ifdef IPPROTO_IPV6
+      // enable this if the current platform supports IPV6; the USE_IPV6 #define
+      // will determine if this c'tor is actually implemented.
+      // ?bwc? Is there a more standard preprocessor macro for this?
+      // ?bwc? Is there a way we can add something more informative to the 
+      // linker error we'll see if we compiled without USE_IPV6, on a platform
+      // with IPV6, and someone tries to invoke this c'tor? (ie; "This library
+      // was built with IPV6 support disabled")
       Tuple(const in6_addr& pipv6,  
             int pport, 
             TransportType ptype, 
@@ -166,7 +173,9 @@ private:
       {
             sockaddr mSockaddr;
             sockaddr_in m_anonv4;
-#ifdef USE_IPV6
+#ifdef IPPROTO_IPV6
+            // enable this if the current platform supports IPV6
+            // ?bwc? Is there a more standard preprocessor macro for this?
             sockaddr_in6 m_anonv6;
 #endif
             char pad[28]; // this make union same size if v6 is in or out

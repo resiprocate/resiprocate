@@ -8,9 +8,12 @@
 #include "resip/stack/ConnectionManager.hxx"
 #include "resip/stack/InteropHelper.hxx"
 #include "resip/stack/SipMessage.hxx"
-#include "resip/stack/Security.hxx"
 #include "resip/stack/TcpBaseTransport.hxx"
 #include "rutil/WinLeakCheck.hxx"
+
+#ifdef USE_SSL
+#include "resip/stack/ssl/Security.hxx"
+#endif
 
 #ifdef USE_SIGCOMP
 #include <osc/Stack.h>

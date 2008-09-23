@@ -1,6 +1,4 @@
-#if defined(USE_SSL)
-
-#include "resip/stack/Security.hxx"
+#include "resip/stack/ssl/Security.hxx"
 #include "resip/stack/X509Contents.hxx"
 #include "resip/dum/ServerPublication.hxx"
 #include "repro/stateAgents/CertPublicationHandler.hxx"
@@ -72,4 +70,3 @@ CertPublicationHandler::add(ServerPublicationHandle h, const Contents* contents)
    }
 }
 
-#endif
