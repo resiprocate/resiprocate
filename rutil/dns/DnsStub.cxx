@@ -78,9 +78,11 @@ DnsResultSink::onLogDnsResult(const DNSResult<DnsCnameRecord>& rr)
 }
 
 DnsStub::DnsStub(const NameserverList& additional,
-                 AfterSocketCreationFuncPtr socketFunc) :
+                 AfterSocketCreationFuncPtr socketFunc,
+                 AsyncProcessHandler* asyncProcessHandler) :
    mTransform(0),
-   mDnsProvider(ExternalDnsFactory::createExternalDns())
+   mDnsProvider(ExternalDnsFactory::createExternalDns()),
+   mAsyncProcessHandler(asyncProcessHandler)
 {
    int retCode = mDnsProvider->init(additional, socketFunc, mDnsTimeout, mDnsTries, mDnsFeatures);
    if (retCode != ExternalDns::Success)
@@ -112,7 +114,7 @@ DnsStub::~DnsStub()
 bool 
 DnsStub::requiresProcess()
 {
-   return mDnsProvider->requiresProcess();
+   return (mCommandFifo.size() > 0) || (mQueries.size() > 0);
 }
 
 void 
@@ -251,6 +253,12 @@ DnsStub::skipDNSQuestion(const unsigned char *aptr,
    aptr += QFIXEDSZ;  
    free(name);
    return aptr;
+}
+
+bool
+DnsStub::checkDnsChange()
+{
+	return mDnsProvider ? mDnsProvider->checkDnsChange() : false;
 }
 
 bool
@@ -676,6 +684,11 @@ DnsStub::setEnumSuffixes(const std::vector<Data>& suffixes)
 {
    SetEnumSuffixesCommand* command = new SetEnumSuffixesCommand(*this, suffixes);
    mCommandFifo.add(command);
+
+   if (mAsyncProcessHandler)
+   {
+      mAsyncProcessHandler->handleProcessNotification();
+   }
 }
 
 const std::vector<Data>& 
@@ -695,6 +708,11 @@ DnsStub::clearDnsCache()
 {
    ClearDnsCacheCommand* command = new ClearDnsCacheCommand(*this);
    mCommandFifo.add(command);
+
+   if (mAsyncProcessHandler)
+   {
+      mAsyncProcessHandler->handleProcessNotification();
+   }
 }
 
 void
@@ -708,6 +726,11 @@ DnsStub::logDnsCache()
 {
    LogDnsCacheCommand* command = new LogDnsCacheCommand(*this);
    mCommandFifo.add(command);
+
+   if (mAsyncProcessHandler)
+   {
+      mAsyncProcessHandler->handleProcessNotification();
+   }
 }
 
 void

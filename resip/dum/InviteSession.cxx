@@ -5,6 +5,7 @@
 #include "resip/stack/Helper.hxx"
 #include "resip/dum/BaseCreator.hxx"
 #include "resip/dum/Dialog.hxx"
+#include "resip/dum/DialogEventStateManager.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
 #include "resip/dum/InviteSession.hxx"
 #include "resip/dum/ServerInviteSession.hxx"
@@ -42,7 +43,8 @@ Data EndReasons[] =
    "Application Rejected Sdp(usually no common codec)",
    "Illegal Sdp Negotiation",
    "ACK not received",
-   "Session Timer Expired"
+   "Session Timer Expired",
+   "Stale re-Invite"
 };
 
 const Data& getEndReasonString(InviteSession::EndReason reason)
@@ -97,6 +99,12 @@ InviteSession::dialogDestroyed(const SipMessage& msg)
    //delete this;   
 }
 
+bool
+InviteSession::hasLocalSdp() const
+{
+   return (mCurrentLocalSdp.get());
+}
+
 const SdpContents&
 InviteSession::getLocalSdp() const
 {
@@ -110,6 +118,12 @@ InviteSession::getLocalSdp() const
    }
 }
 
+bool
+InviteSession::hasRemoteSdp() const
+{
+   return (mCurrentRemoteSdp.get());
+}
+
 const SdpContents&
 InviteSession::getRemoteSdp() const
 {
@@ -121,6 +135,12 @@ InviteSession::getRemoteSdp() const
    {
       return SdpContents::Empty;
    }
+}
+
+bool
+InviteSession::hasProposedRemoteSdp() const
+{
+   return (mProposedRemoteSdp.get());
 }
 
 const SdpContents&
@@ -202,6 +222,12 @@ const NameAddr&
 InviteSession::peerAddr() const
 {
    return mDialog.mRemoteNameAddr;
+}
+
+const NameAddr&
+InviteSession::remoteTarget() const
+{
+   return mDialog.mRemoteTarget;
 }
 
 bool
@@ -566,7 +592,7 @@ InviteSession::end(EndReason reason)
          // !jf! do we need to store the BYE somewhere?
          sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
          break;
       }
 
@@ -588,7 +614,7 @@ InviteSession::end(EndReason reason)
              // ACK has likely timedout - hangup immediately
              sendBye();
              transition(Terminated);
-             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended);
+             mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
          }
          break;
 
@@ -603,7 +629,7 @@ InviteSession::end(EndReason reason)
 
          sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
          break;
       }
 
@@ -611,7 +637,7 @@ InviteSession::end(EndReason reason)
       {
          sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
          break;
       }
 
@@ -1119,7 +1145,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
             {
                sendBye();
                transition(Terminated);
-               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+               mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
             }
             else if(mState == ReceivedReinviteSentOffer)
             {
@@ -1202,7 +1228,7 @@ InviteSession::dispatch(const DumTimeout& timeout)
          {
             sendBye();
             transition(Terminated);
-            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
          }
          else if(mState == SentReinvite ||
                  mState == SentReinviteNoOffer)
@@ -1391,7 +1417,7 @@ InviteSession::dispatchSentUpdate(const SipMessage& msg)
       case OnGeneralFailure:
          sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
       default:
@@ -1504,7 +1530,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          mStaleReInviteTimerSeq++;
          sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
       case OnInviteFailure:
@@ -1599,7 +1625,7 @@ InviteSession::dispatchSentReinviteNoOffer(const SipMessage& msg)
          mStaleReInviteTimerSeq++;
          sendBye();
          transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
          break;
 
       case OnInviteFailure:
@@ -1806,7 +1832,7 @@ InviteSession::dispatchWaitingToTerminate(const SipMessage& msg)
       }
       sendBye();
       transition(Terminated);
-      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended); 
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
    }
    else if(msg.isRequest())
    {
@@ -1837,7 +1863,7 @@ InviteSession::dispatchWaitingToHangup(const SipMessage& msg)
 
          sendBye();
          transition(Terminated);
-         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Ended);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye);
          break;
       }
       
@@ -1928,7 +1954,7 @@ InviteSession::dispatchUnhandledInvite(const SipMessage& msg)
 
    sendBye();
    transition(Terminated);
-   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg); 
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg); 
 }
 
 void
@@ -1944,7 +1970,7 @@ InviteSession::dispatchPrack(const SipMessage& msg)
       sendBye();
       // !jf! should we make some other callback here
       transition(Terminated);
-      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
+      mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
    }
    else
    {
@@ -1966,7 +1992,8 @@ InviteSession::dispatchCancel(const SipMessage& msg)
       sendBye();
       // !jf! should we make some other callback here
       transition(Terminated);
-      handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+
+      handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteCancel, &msg);
    }
    else
    {
@@ -1990,7 +2017,14 @@ InviteSession::dispatchBye(const SipMessage& msg)
 
       // !jf! should we make some other callback here
       transition(Terminated);
-      handler->onTerminated(getSessionHandle(), InviteSessionHandler::PeerEnded, &msg);
+
+      if (mDum.mDialogEventStateManager)
+      {
+         mDum.mDialogEventStateManager->onTerminated(mDialog, msg, 
+         InviteSessionHandler::RemoteBye);
+      }
+
+      handler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
       mDum.destroy(this);
    }
    else
@@ -2857,6 +2891,11 @@ void InviteSession::sendBye()
       txt = getEndReasonString(mEndReason);
       reason.param(p_description) = txt;
       bye->header(h_Reasons).push_back(reason);      
+   }
+
+   if (mDum.mDialogEventStateManager)
+   {
+      mDum.mDialogEventStateManager->onTerminated(mDialog, *bye, InviteSessionHandler::LocalBye);
    }
    
    InfoLog (<< myAddr() << " Sending BYE " << txt);

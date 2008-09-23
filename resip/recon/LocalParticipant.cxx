@@ -2,17 +2,17 @@
 #include "ConversationManager.hxx"
 #include "Conversation.hxx"
 #include "UserAgent.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "LocalParticipant.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 LocalParticipant::LocalParticipant(ConversationManager::ParticipantHandle partHandle,
                                    ConversationManager& conversationManager)

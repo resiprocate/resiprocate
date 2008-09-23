@@ -3,10 +3,10 @@
 
 #include <rutil/Logger.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::RECON
 
 DtmfEvent::DtmfEvent(RemoteParticipant& participant, char event, int duration, bool up) : 
    mParticipant(participant),

@@ -6,7 +6,7 @@
 #include <resip/dum/DumCommand.hxx>
 #include <StunTuple.hxx>
 
-namespace useragent
+namespace recon
 {
 
 class RemoteParticipantDialogSet;
@@ -25,8 +25,8 @@ class MediaStreamReadyEvent : public resip::DumCommand
       virtual void executeCommand();
 
       Message* clone() const;
-      std::ostream& encode(std::ostream& strm) const;
-      std::ostream& encodeBrief(std::ostream& strm) const;
+      EncodeStream& encode(EncodeStream& strm) const;
+      EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
       RemoteParticipantDialogSet& mRemoteParticipantDialogSet;
@@ -41,8 +41,8 @@ class MediaStreamErrorEvent : public resip::DumCommand
       virtual void executeCommand();
 
       Message* clone() const;
-      std::ostream& encode(std::ostream& strm) const;
-      std::ostream& encodeBrief(std::ostream& strm) const;
+      EncodeStream& encode(EncodeStream& strm) const;
+      EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
       RemoteParticipantDialogSet& mRemoteParticipantDialogSet;

@@ -529,6 +529,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AsyncProcessHandler.hxx"
+				>
+			</File>
+			<File
 				RelativePath=".\BaseException.hxx"
 				>
 			</File>

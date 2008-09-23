@@ -33,7 +33,7 @@ FlowDtlsSocketContext::~FlowDtlsSocketContext()
 void 
 FlowDtlsSocketContext::write(const unsigned char* data, unsigned int len)
 {
-   InfoLog(<< "Dtls write to " << mAddress << ":" << mPort << " called.  ComponentId=" << mFlow.getComponentId());
+   InfoLog(<< "Dtls write to " << mAddress.to_string() << ":" << mPort << " called.  ComponentId=" << mFlow.getComponentId());
    mFlow.rawSendTo(mAddress, mPort, (const char*)data, len);
 }
 

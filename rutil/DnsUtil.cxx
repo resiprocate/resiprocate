@@ -467,7 +467,15 @@ DnsUtil::getInterfaces(const Data& matching)
    close(s);
 #else 
 #if defined(WIN32)
-   return WinCompat::getInterfaces(matching);
+   try
+   {
+      return WinCompat::getInterfaces(matching);
+   }
+   catch(WinCompat::Exception& e)
+   {
+      DebugLog (<< "  WinCompat::getInterfaces throws " << e.getMessage());
+      return results;
+   }
 #else
    assert(0);
 #endif

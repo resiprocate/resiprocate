@@ -332,18 +332,20 @@ main(int argc, char** argv)
 
    }
 
+   ProcessorChain* lemurs = new ProcessorChain;
+   OutboundTargetHandler* ob = new OutboundTargetHandler;
+   lemurs->addProcessor(auto_ptr<Processor>(ob));
+
    if (args.mRecursiveRedirect)
    {
-      ProcessorChain* lemurs = new ProcessorChain;
       RecursiveRedirect* red = new RecursiveRedirect;
       lemurs->addProcessor(std::auto_ptr<Processor>(red));
-      responseProcessors.addProcessor(auto_ptr<Processor>(lemurs));      
    }
-   
+
+   responseProcessors.addProcessor(auto_ptr<Processor>(lemurs));      
+
    ProcessorChain* baboons = new ProcessorChain;
 
-   OutboundTargetHandler* ob = new OutboundTargetHandler;
-   baboons->addProcessor(auto_ptr<Processor>(ob));
    
    if( args.mDoQValue)
    {

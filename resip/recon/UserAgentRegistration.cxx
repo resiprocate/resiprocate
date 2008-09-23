@@ -1,5 +1,5 @@
 #include "UserAgent.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "UserAgentRegistration.hxx"
 
 #include <rutil/Log.hxx>
@@ -7,11 +7,11 @@
 #include <resip/dum/DialogUsageManager.hxx>
 #include <resip/dum/ClientRegistration.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 UserAgentRegistration::UserAgentRegistration(UserAgent& userAgent, DialogUsageManager& dum, unsigned int handle)
 : AppDialogSet(dum),

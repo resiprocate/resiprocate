@@ -37,6 +37,15 @@ class InviteSession : public DialogUsage
           reinvite with no sdp to be sent.  */
       virtual void requestOffer();
 
+      typedef enum
+      {
+         None, // means no Offer or Answer (may have SDP)
+         Offer,
+         Answer
+      } OfferAnswerType;
+
+      // WARNING:  Do not change this list without appropriately adjusting the 
+      //           EndReasons array in InviteSession.cxx
       enum EndReason
       {
          NotSpecified=0,
@@ -116,8 +125,12 @@ class InviteSession : public DialogUsage
       // Convenience methods for accessing attributes of a dialog. 
       const NameAddr& myAddr() const;
       const NameAddr& peerAddr() const;
+      const NameAddr& remoteTarget() const;
+      bool hasLocalSdp() const;
       const SdpContents& getLocalSdp() const;
+      bool hasRemoteSdp() const;
       const SdpContents& getRemoteSdp() const;
+      bool hasProposedRemoteSdp() const;
       const SdpContents& getProposedRemoteSdp() const;
       const Data& getDialogId() const;
       
@@ -137,13 +150,6 @@ class InviteSession : public DialogUsage
 
     virtual EncodeStream& dump(EncodeStream& strm) const;
       InviteSessionHandle getSessionHandle();
-
-      typedef enum
-      {
-         None, // means no Offer or Answer (may have SDP)
-         Offer,
-         Answer
-      } OfferAnswerType;
 
    protected:
 
@@ -277,6 +283,7 @@ class InviteSession : public DialogUsage
       void dispatchWaitingToHangup(const SipMessage& msg);
       void dispatchTerminated(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
+      void dispatchInfo(const SipMessage& msg);
 
       void startRetransmit200Timer();
       void start491Timer();
@@ -385,7 +392,6 @@ class InviteSession : public DialogUsage
       void dispatchUnhandledInvite(const SipMessage& msg);
       void dispatchPrack(const SipMessage& msg);
       void dispatchCancel(const SipMessage& msg);
-      void dispatchInfo(const SipMessage& msg);
       void dispatchMessage(const SipMessage& msg);
 };
 

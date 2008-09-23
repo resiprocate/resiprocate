@@ -2,7 +2,7 @@
 #include <CpTopologyGraphInterface.h>
 
 #include "ConversationManager.hxx"
-#include "UserAgentSubsystem.hxx"
+#include "ReconSubsystem.hxx"
 #include "RemoteParticipantDialogSet.hxx"
 #include "RemoteParticipant.hxx"
 #include "Conversation.hxx"
@@ -32,11 +32,11 @@
    #define sleepMs(t) usleep(t*1000)
 #endif
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 using namespace std;
 
-#define RESIPROCATE_SUBSYSTEM UserAgentSubsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conversationManager,        
                                                        ConversationManager::ParticipantForkSelectMode forkSelectMode) :

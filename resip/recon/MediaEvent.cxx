@@ -3,10 +3,10 @@
 
 #include <rutil/Logger.hxx>
 
-using namespace useragent;
+using namespace recon;
 using namespace resip;
 
-#define RESIPROCATE_SUBSYSTEM resip::Subsystem::USERAGENT
+#define RESIPROCATE_SUBSYSTEM resip::Subsystem::RECON
 
 MediaEvent::MediaEvent(ConversationManager& conversationManager, MediaEventType eventType) : 
    mConversationManager(conversationManager),
@@ -27,15 +27,15 @@ MediaEvent::clone() const
    return 0;
 }
 
-std::ostream& 
-MediaEvent::encode(std::ostream& strm) const
+EncodeStream& 
+MediaEvent::encode(EncodeStream& strm) const
 {
    strm << " media event: " << mEventType;;
    return strm;
 }
 
-std::ostream& 
-MediaEvent::encodeBrief(std::ostream& strm) const
+EncodeStream& 
+MediaEvent::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }

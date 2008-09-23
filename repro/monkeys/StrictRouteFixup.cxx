@@ -42,10 +42,10 @@ StrictRouteFixup::process(RequestContext& context)
       //Will cancel any active transactions (ideally there should be none)
       //and terminate any pending transactions.
       context.getResponseContext().cancelAllClientTransactions();
-      Target target(request.header(h_RequestLine).uri());
+      std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
       if(!context.getTopRoute().uri().user().empty())
       {
-         target.rec().mReceivedFrom = Tuple::makeTuple(context.getTopRoute().uri().user().base64decode());
+         target->rec().mReceivedFrom = Tuple::makeTuple(context.getTopRoute().uri().user().base64decode());
       }
       context.getResponseContext().addTarget(target);
       return Processor::SkipThisChain;

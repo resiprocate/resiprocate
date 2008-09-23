@@ -19,6 +19,7 @@ SRC += \
         MediaResourceCache.cxx \
         MediaStreamEvent.cxx \
         Participant.cxx \
+        ReconSubsystem.cxx \
         RelatedConversationSet.cxx \
         RemoteParticipant.cxx \
         RemoteParticipantDialogSet.cxx \
@@ -28,8 +29,7 @@ SRC += \
         UserAgentDialogSetFactory.cxx \
         UserAgentMasterProfile.cxx \
         UserAgentRegistration.cxx \
-        UserAgentServerAuthManager.cxx \
-        UserAgentSubsystem.cxx
+        UserAgentServerAuthManager.cxx
 
 include $(BUILD)/Makefile.post
 
