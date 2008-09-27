@@ -1707,9 +1707,9 @@ Data::find(const char* match, size_type start) const
    {
       if (mBuf)
       {
-         ParseBuffer pb(mBuf+start, mSize);
+         ParseBuffer pb(mBuf + start, mSize - start);
          pb.skipToChars(match);
-         if (pb.eof()) 
+         if (pb.eof())
          {
             return Data::npos;
          }
