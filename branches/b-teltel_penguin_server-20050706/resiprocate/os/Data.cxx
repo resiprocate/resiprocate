@@ -1202,23 +1202,17 @@ Data::find(const Data& match, size_type start) const
 Data::size_type
 Data::find(const char* match, size_type start) const
 {
-   if (start > mSize) 
+   if (start < mSize && mBuf)
    {
-      return Data::npos;
-   }
-   else
-   {
-      ParseBuffer pb(mBuf+start, mSize-start);
+      ParseBuffer pb(mBuf + start, mSize - start);
       pb.skipToChars(match);
-      if (pb.eof())
+      if (!pb.eof())
       {
-         return Data::npos;
-      }
-      else
-      {
-         return pb.position() - pb.start() + start;
+	 return pb.position() - pb.start() + start;
       }
    }
+
+   return Data::npos;
 }
 
 bool
