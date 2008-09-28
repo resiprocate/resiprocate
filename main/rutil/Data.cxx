@@ -1716,23 +1716,17 @@ Data::size_type
 Data::find(const Data& match, 
            size_type start) const
 {
-   if (start >= mSize) 
+   if (start < mSize)
    {
-      return Data::npos;
-   }
-   else
-   {
-      ParseBuffer pb(mBuf+start, mSize-start);
+      ParseBuffer pb(mBuf + start, mSize - start);
       pb.skipToChars(match);
-      if (pb.eof()) 
-      {
-         return Data::npos;
-      }
-      else
+      if (!pb.eof())
       {
          return pb.position() - pb.start() + start;
       }
    }
+
+   return Data::npos;
 }
 
 int
