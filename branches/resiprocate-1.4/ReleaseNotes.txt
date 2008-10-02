@@ -4,16 +4,9 @@
 ===New features===
 * Working with installed resip headers/libs no longer requires setting the USE_SSL and USE_IPV6 preprocessor macros to avoid API/ABI mismatch issues
 
-==Build System==
-===New features===
-
-===Bug fixes===
-
 ==rutil==
 ===New features===
 * added a faster implementation of std::ostream
-
-===Bug fixes===
 
 ==stack==
 ===New features===
@@ -45,12 +38,8 @@
 ** mid-dialog 4xx retry error will no longer create a new dialog - refresh is retried instead
 
 ==repro==
-===New features===
-
 ===Bug fixes===
 * allow forking to both outbound and non-outbound target simultaneously
 * fix for repro crash when deleting two ACL members at the same time from the web interface
 * fix for WIN32 to catch exceptions thrown from WinCompat::getInterfaces
 
-==tfm==
-===New features===
