@@ -1,0 +1,10 @@
+#ICE_ASYNC_TEST_SRCDIR = $(ICE_ASYNC_SRCDIR)test/
+ICE_ICE_TEST_SRCDIR = $(ICE_ICE_SRCDIR)test/
+ICE_NET_TEST_SRCDIR = $(ICE_NET_SRCDIR)test/
+ICE_STUN_TEST_SRCDIR = $(ICE_STUN_SRCDIR)test/
+
+#include $(ICE_ASYNC_TEST_SRCDIR)targets.mk
+include $(ICE_ICE_TEST_SRCDIR)targets.mk
+include $(ICE_NET_TEST_SRCDIR)targets.mk
+include $(ICE_STUN_TEST_SRCDIR)targets.mk
+
