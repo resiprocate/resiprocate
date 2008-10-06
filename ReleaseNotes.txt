@@ -17,10 +17,8 @@
 * various fixes to the select loop
 * fixed a place in the multipart contents code that was doing case-sensitive comparisons on "Content-Type"
 * fixed a bug where a transport parameter was added to the Contact uri when the Contact uri had a gr parameter
-* fix for a timing issue in resip TLS code (SSL trying to write data before TCP
- connect was ready)
-* improved the certificate name match (wildcards match for subjectAltName and
- case insesitive match for commonName)
+* fix for a timing issue in resip TLS code (SSL trying to write data before TCP connect was ready)
+* improved the certificate name match (wildcards match for subjectAltName and case insensitive match for commonName)
 
 ==DUM==
 ===New features===
