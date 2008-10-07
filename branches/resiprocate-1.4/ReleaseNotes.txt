@@ -4,13 +4,23 @@
 ===New features===
 * Working with installed resip headers/libs no longer requires setting the USE_SSL and USE_IPV6 preprocessor macros to avoid API/ABI mismatch issues
 
+==Build system==
+===New features===
+* better cross-compilation support
+
 ==rutil==
 ===New features===
 * added a faster implementation of std::ostream
 
+===Bug fixes===
+* more work on bad asserts in the dns code
+
 ==stack==
 ===New features===
 * modified TlsConnection so that if a domain certificate is present, then it will be loaded and assigned to TLS client connections (as well as the TLS Server connections).  This allows resip to return a certificate to the Server if it asks for one (ie. MTLS servers).  Note: Errors are only logged or thrown when the certificate is not present in the store for TLS Server connections.
+* updated some documentation on what standards headers are defined in
+* added SipStack::abandonServerTransaction(), which allows a TU to tell the stack to abandon a given server transaction, without requiring the TU to send a response
+* added SipStack::cancelClientInviteTransaction(), which allows a TU to tell the stack to CANCEL a client INVITE transaction; the stack handles the sending of the CANCEL (including waiting for a provisional to come in if it hasn't already)
 
 ===Bug fixes===
 * fixed a bug in parsing of embedded headers in a Uri
@@ -19,6 +29,9 @@
 * fixed a bug where a transport parameter was added to the Contact uri when the Contact uri had a gr parameter
 * fix for a timing issue in resip TLS code (SSL trying to write data before TCP connect was ready)
 * improved the certificate name match (wildcards match for subjectAltName and case insensitive match for commonName)
+* fixed a bug where calling SipMessage::getContents() when the Content-Type header was malformed would cause an exception to be thrown
+* fixed a couple of bugs in SipMessage where an empty single-value header would cause exceptions to be thrown
+* fixed a bug where message-decorators could be run twice on outgoing messages if a DNS failover occurred
 
 ==DUM==
 ===New features===
