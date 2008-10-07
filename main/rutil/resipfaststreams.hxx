@@ -6,7 +6,7 @@
     #define RESIP_USE_STL_STREAMS will use the STL for stream encoding (std::ostream).  Undefining RESIP_USE_STL_STREAMS will
       cause resip to use the alternative stream handling defined in this file for encoding objects.
 */
-#define RESIP_USE_STL_STREAMS
+//#define RESIP_USE_STL_STREAMS
 
 #include <iostream> //for std::endl, std::cerr, etc.
 
