@@ -116,6 +116,12 @@ TlsConnection::TlsConnection( Transport* transport, const Tuple& tuple,
       }
    }
 
+   if(mServer)
+   {
+      // clear SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE set in SSL_CTX if we are a server
+      SSL_set_verify(mSsl, 0, 0);
+   }
+
    mBio = BIO_new_socket(fd,0/*close flag*/);
    assert( mBio );
    
