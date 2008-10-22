@@ -1,0 +1,1263 @@
+#!/bin/sh
+
+for PERL in /usr/bin/perl \
+            /bin/perl \
+            /usr/local/bin/perl \
+            /usr/pkg/bin/perl \
+            /usr/athena/bin/perl \
+            `which perl`
+do
+  if [ -x $PERL ]
+  then
+    break
+  fi
+done
+
+if [ ! -x $PERL ]
+then
+  echo ""
+  echo "*** Warning: Could not find perl interpreter."
+  if [ ! -e build/Makefile.conf ]
+  then
+    echo "*** Creating default config file in build/Makefile.conf"
+    echo "*** Please install perl and re-run $0"
+    echo "VOCAL_TOOLCHAIN_TYPE := gnu
+VOCAL_COMPILE_TYPE := debug
+CROSS_PLATFORM := arm-unknown-linux-gnu
+CROSS_TOOL_PREFIX := arm-unknown-linux-gnu
+VOCAL_CROSS_ROOT := /opt/crosstool/current/arm-unknown-linux-gnu/bin
+BUILD_SHARED_LIBS := no
+USE_DISTCC := no
+USE_CCACHE := no
+BUILD_REPRO := yes
+REPRO_DB := berkeley-db4
+DB_HEADERS := /usr/include/db4
+BUILD_RADIUS := no
+BUILD_TFM := no
+BUILD_RECON := no
+BUILD_RETURN_CLIENT := no
+BUILD_RETURN_SERVER := no
+USE_SSL := yes
+USE_DTLS := no
+SSL_LOCATION := 
+BOOST_INCDIR_CONFIG := /usr/local/include
+SIPX_INSTALLED := no
+SIPX_ROOT := ../sipXtapi
+SIPX_LIBDIR := /usr/local/lib
+SIPX_INCDIR := /usr/local/include
+USE_POPT := yes
+USE_CURL := no
+USE_GOOGLE_MALLOC := no
+USE_GOOGLE_CPUPERF := no
+USE_IPV6 := no
+POPT_INCDIR_CONFIG := /usr/include
+POPT_LIBDIR_CONFIG := /usr/lib
+RESIP_FIXED_POINT := no
+PEDANTIC_STACK := no
+# USE_SIGCOMP := no
+# SIGCOMP_BASEDIR:= /usr/local
+INSTALL_PREFIX := /usr/local
+ARES_PREFIX := /usr/local " > build/Makefile.conf
+    exit
+  fi
+  echo "*** Leaving build/Makefile.conf unmodified"
+  exit
+fi
+
+exec $PERL -wx $0 $@
+echo <<__END__
+#!perl
+
+######################################################################
+# Usage:
+#   ./configure [-y] [-m]
+#
+#   Options:
+#     -y  Run non-interactively
+#     -m  Run with text menu interface
+######################################################################
+
+# Change directory so that we can find the Makefile.conf file
+$mydir = $0;
+$mydir =~ s/\/[^\/]*$//;
+chdir ($mydir);
+
+$non_interactive = 0;
+
+$uname = `uname`;
+
+@yesno = ('yes','no');
+@toolchains = ('gnu','intel','sunpro','msgnu', 'gnu-cross');
+@compiletypes = ('debug','nodebug','opt','gopt','prof','small');
+@whichdb = ('berkeley-db4');
+
+######################################################################
+# NOTE: Any configuration variables that contain path information
+#       must be added to the following array for proper behavior.
+
+@pathoptions = ("DB_HEADERS", "BOOST_INCDIR_CONFIG",
+                "POPT_INCDIR_CONFIG", "POPT_LIBDIR_CONFIG",
+                "SIPX_ROOT", "SIPX_LIBDIR", "SIPX_INCDIR",
+                "SSL_LOCATION", "INSTALL_PREFIX", "ARES_PREFIX");
+
+
+######################################################################
+# The entries in the following array have the following
+# fields:
+#
+#   name         - Variable name to be used by the make system
+#
+#   description  - Question to ask the user
+#
+#   default      - Value to use by default
+#
+#   evaldefault  - Flag: if set, default is evaluated as perl statement
+#
+#   validate     - Optional array of allowed values
+#
+#   predicate    - Optional logical test; if false, the user
+#                 will not be asked to configure the value
+#
+#   forcedefault - If set, any questions hidden by the predicate
+#                  will be reset to their default values every
+#                  time the script is run
+#
+#   recalc       - List of options to recalculate and reset to defaults
+#                  when value is updated
+#
+#   flag         - For "yes/no" entries, adds commandline
+#                  flags of "--enable-foo" and "--disable-foo"
+#
+#   option       - Adds commandline options of "--foo=..."
+#
+
+@parameters = (
+  {
+    name        => "VOCAL_TOOLCHAIN_TYPE",
+    description => "Which toolchain do you want to use?",
+    default     => &detectToolchain,
+    validate    => [@toolchains],
+    recalc      => [@pathoptions],
+    option      => 'with-toolchain',
+  },
+  {
+    name        => "CROSS_PLATFORM",
+    description => "What is the name your toolchain uses for the cross platform?",
+    default     => "arm-unknown-linux-gnu",
+    predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
+    recalc      => ["CROSS_TOOL_PREFIX","VOCAL_CROSS_ROOT",@pathoptions],
+    option      => 'with-cross-platform',
+  },
+  {
+    name        => "CROSS_TOOL_PREFIX",
+    description => "What is the prefix for the cross-compiler binaries?",
+    default     => "\$config{CROSS_PLATFORM}",
+    evaldefault => 1,
+    predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
+    recalc      => ["VOCAL_CROSS_ROOT"],
+    option      => 'with-cross-tool-prefix',
+  },
+  {
+    name        => "VOCAL_CROSS_ROOT",
+    description => "Where is your cross compiler installed?",
+    default     => "&findCrossRoot",
+    evaldefault => 1,
+    predicate   => "\$config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/",
+    option      => 'with-cross-compiler-dir',
+  },
+  {
+    name        => "VOCAL_COMPILE_TYPE",
+    description => "What compile profile will you use?",
+    default     => "debug",
+    validate    => [@compiletypes],
+    option      => 'with-compile-type',
+  },
+  {
+    name        => "BUILD_SHARED_LIBS",
+    description => "Should the resip libraries be built shared?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'shared-libs',
+  },
+  {
+    name        => "USE_DISTCC",
+    description => "Will you be using distcc?",
+    default     => &detectDistcc,
+    validate    => [@yesno],
+    flag        => 'distcc',
+  },
+  {
+    name        => "USE_CCACHE",
+    description => "Will you be using ccache?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'ccache',
+  },
+    {
+    name        => "BUILD_REPRO",
+    description => "Build the Repro proxy server?",
+    default     => "yes",
+    validate    => [@yesno],
+    flag        => 'repro',
+  },
+  {
+    name        => "REPRO_DB",
+    description => "Which database should be used with Repro?",
+    default     => "berkeley-db4",
+    validate    => [@whichdb],
+    predicate   => "\$config{BUILD_REPRO} eq 'yes'",
+    option      => 'repro-db'
+  },
+  {
+    name        => "DB_HEADERS",
+    description => "Where is db_cxx.h?",
+    default     => "&findDb4",
+    evaldefault => 1,
+    predicate   => "(\$config{BUILD_REPRO} eq 'yes') and (\$config{REPRO_DB} eq 'berkeley-db4')",
+    option      => "db4-headers",
+  },
+    {
+    name        => "USE_RADIUS_CLIENT",
+    description => "Build the RADIUS authentication module? (requires radiusclient-ng)",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'radius',
+  },
+  {
+    name        => "BUILD_TFM",
+    description => "Build the TFM test framework?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'tfm',
+  },
+  {
+    name        => "BUILD_RECON",
+    description => "Build the reCon Conversation Manager?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'recon',
+  },
+  {
+    name        => "BUILD_RETURN_CLIENT",
+    description => "Build the reTurn client?",
+    default     => "\$config{BUILD_RECON}",
+    evaldefault => 1,
+    forcedefault=> 1,
+    validate    => [@yesno],
+    predicate   => "\$config{BUILD_RECON} eq 'no'",
+    flag        => 'return-client',
+  },
+  {
+    name        => "BUILD_RETURN_SERVER",
+    description => "Build the reTurn server?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'return-server',
+  },  
+  {
+    name        => "BOOST_INCDIR_CONFIG",
+    description => "Where is boost/config.hpp?",
+    default     => "&findBoostInclude",
+    evaldefault => 1,
+    predicate   => "(\$config{BUILD_RETURN_CLIENT} eq 'yes') or (\$config{BUILD_RETURN_SERVER} eq 'yes')",
+    option      => "boost-headers",
+  },
+  {
+    name        => "SIPX_INSTALLED",
+    description => "Are the sipX libraries and headers installed?",
+    default     => "no",
+    validate    => [@yesno],
+    predicate   => "\$config{BUILD_RECON} eq 'yes'",
+    flag        => "sipx-installed",
+  },
+  {
+    name        => "SIPX_ROOT",
+    description => "Where is the common root of the sipX libraries?",
+    default     => "../sipXtapi",
+    predicate   => "(\$config{BUILD_RECON} eq 'yes') and (\$config{SIPX_INSTALLED} eq 'no')",
+    option      => "libsipx-lib",
+  },
+  {
+    name        => "SIPX_LIBDIR",
+    description => "Where are the sipX libraries installed?",
+    default     => "/usr/local/lib",
+#    default     => &findSipXLibs,
+    predicate   => "(\$config{BUILD_RECON} eq 'yes') and (\$config{SIPX_INSTALLED} eq 'yes')",
+    option      => "sipx-libdir",
+  },
+  {
+    name        => "SIPX_INCDIR",
+    description => "Where are the sipX header files installed?",
+    default     => "/usr/local/include",
+#    default     => &findSipXIncludes,
+    predicate   => "(\$config{BUILD_RECON} eq 'yes') and (\$config{SIPX_INSTALLED} eq 'yes')",
+    option      => "sipx-incdir",
+  },
+  {
+    name        => "USE_SSL",
+    description => "Include SIP over TLS, SMIME or Identity header support? (Requires OpenSSL)",
+    default     => "yes",
+    forcedefault=> 1,
+    validate    => [@yesno],
+    predicate   => "(\$config{BUILD_RETURN_CLIENT} ne 'yes') and (\$config{BUILD_RETURN_SERVER} ne 'yes')",
+    flag        => 'ssl',
+  },
+  {
+    name        => "USE_DTLS",
+    description => "Do you want to include SIP over DTLS support? (Requires OpenSSL 0.9.8+)",
+    default     => "no",
+    validate    => [@yesno],
+    predicate   => "\$config{USE_SSL} eq 'yes'",
+    flag        => 'dtls',
+  },
+  {
+    name        => "SSL_LOCATION",
+    description => "Where is OpenSSL? (leave blank to use installed copy)",
+    default     => "&guessSslLocation",
+    evaldefault => 1,
+    predicate   => "(\$config{USE_SSL} eq 'yes')",
+    option      => 'with-ssl-location',
+  },
+#  {
+#    name        => "USE_SIGCOMP",
+#    description => "Do you want to include SigComp support?",
+#    default     => &sigcompInstalled,
+#    validate    => [@yesno],
+#    flag        => 'sigcomp',
+#  },
+#  {
+#    name        => "SIGCOMP_BASEDIR",
+#    description => "What is the base directory Open SigComp is installed in?",
+#    default     => "/usr/local",
+#    predicate   => "\$config{USE_SIGCOMP} eq 'yes'",
+#    option      => 'with-sigcomp-basedir',
+#  },
+  {
+    name        => "USE_CURL",
+    description => "Should DUM use curl to retreive identity information?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'curl',
+  },
+  {
+    name        => "USE_GOOGLE_MALLOC",
+    description => "Use the Google malloc() implementation?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'google-malloc',
+  },
+  {
+    name        => "USE_GOOGLE_CPUPERF",
+    description => "Use Google cpuperf?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'google-cpuperf',
+  },
+  {
+    name        => "USE_IPV6",
+    description => "Compile in IPv6 support?",
+#    default     => &detectIpv6, #Should we enable this by default if supported?
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'ipv6',
+  },
+  {
+    name        => "USE_POPT",
+    description => "Use popt to read commandline options?",
+    default     => "yes",
+    validate    => [@yesno],
+    flag        => 'popt',
+  },
+  {
+    name        => "POPT_INCDIR_CONFIG",
+    description => "Where is popt.h?",
+    default     => "&findPoptInclude",
+    evaldefault => 1,
+    option      => "popt-headers",
+    predicate   => "\$config{USE_POPT} eq 'yes'",
+  },
+  {
+    name        => "POPT_LIBDIR_CONFIG",
+    description => "Where is libpopt?",
+    default     => "&findPoptLib",
+    evaldefault => 1,
+    option      => "popt-lib",
+    predicate   => "\$config{USE_POPT} eq 'yes'",
+  },
+  {
+    name        => "RESIP_FIXED_POINT",
+    description => "Compile with no floating point functions?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'resip-fixed-point',
+  },
+  {
+    name        => "PEDANTIC_STACK",
+    description => "Force stack to fully parse every message it receives?",
+    default     => "no",
+    validate    => [@yesno],
+    flag        => 'pedantic-stack',
+  },
+  {
+    name        => "INSTALL_PREFIX",
+    description => "Where should the libraries be installed?",
+    default     => "&guessInstallPath",
+    evaldefault => 1,
+    option      => "prefix",
+  },
+  {
+    name        => "ARES_PREFIX",
+    description => "Where should ares be installed?",
+    default     => "&guessInstallPath",
+    evaldefault => 1,
+    option      => "ares-prefix",
+  },
+);
+
+if (open (CONF, "build/Makefile.conf"))
+{
+  while (<CONF>)
+  {
+    chomp;
+    if (/([^ :=]+) *:?= *([^ #]*)/)
+    {
+      $config{$1} = $2;
+    }
+  }
+  close (CONF);
+}
+
+&parseOptions;
+
+if (!$non_interactive)
+{
+  if ($use_text_menu)
+  {
+    &simpleTextMenu;
+  }
+  else
+  {
+    &simpleTextQuestionnaire;
+  }
+}
+&setAllDefaults;
+
+# Write out the resulting configure file to Makefile.conf
+open (CONF, ">build/Makefile.conf") || die "Could not write to build/Makefile.conf: $!";
+print "Writing Makefile.conf...\n";
+foreach $parameter (@parameters)
+{
+  print CONF ("# ".$parameter->{description}."\n");
+  if (exists $parameter->{validate})
+  {
+    print CONF ("# Allowed values: ".join(', ',@{$parameter->{validate}})."\n");
+  }
+  print CONF ($parameter->{name}." := ".$config{$parameter->{name}}."\n\n");
+}
+close (CONF);
+
+system "rm -Rf contrib/ares-build*";
+
+&checkForWarnings;
+
+######################################################################
+# Initialize any empty or invalid entries to their default values
+######################################################################
+sub setAllDefaults
+{
+  foreach $parameter (@parameters)
+  {
+    if ($parameter->{forcedefault}
+        && exists($parameter->{predicate}) 
+        && !eval($parameter->{predicate}))
+    {
+      delete $config{$parameter->{name}};
+    }
+
+    setSingleDefault($parameter);
+  }
+}
+
+######################################################################
+# Initalizes a single configuration parameter to its initial value
+# unless it already contains a valid value
+######################################################################
+
+sub setSingleDefault
+{
+  my ($parameter) = shift;
+
+    if (defined($config{$parameter->{name}}) &&
+        exists($parameter->{validate}) && 
+        !&validate($config{$parameter->{name}},@{$parameter->{validate}}))
+    {
+      warn "$0: '$config{$parameter->{name}}' is not a valid value for ".
+            "$parameter->{name} -- using default: $parameter->{default}\n";
+      delete $config{$parameter->{name}};
+    }
+
+    if (!exists($config{$parameter->{name}}))
+    {
+      if ($parameter->{evaldefault})
+      {
+        $config{$parameter->{name}} = eval($parameter->{default});
+      }
+      else
+      {
+        $config{$parameter->{name}} = $parameter->{default};
+      }
+    }
+}
+
+######################################################################
+sub recalcDefault
+{
+  my (@params) = @{$_[0]};
+  my ($param);
+  foreach $param(@params)
+  {
+    delete $config{$param};
+  }
+}
+
+######################################################################
+sub inputParameter
+{
+  my ($parameter) = shift;
+  my ($userinput);
+    do
+    {
+      if (exists($parameter->{validate}) && 
+          !&validate($config{$parameter->{name}},@{$parameter->{validate}}))
+      {
+        print "*** '$config{$parameter->{name}}' is not a valid value for ".
+              "$parameter->{name}\n\n";
+        $config{$parameter->{name}} = $parameter->{default};
+      }
+
+      print "".$parameter->{description}."\n";
+
+      if (exists $parameter->{validate})
+      {
+        print "(".join(', ',@{$parameter->{validate}}).") ";
+      }
+
+      print "[".$config{$parameter->{name}}."] ";
+      $userinput = readline(*STDIN);
+      chomp ($userinput);
+      if (length($userinput))
+      {
+        $config{$parameter->{name}} = $userinput;
+        if (exists($parameter->{recalc}))
+        {
+          &recalcDefault($parameter->{recalc});
+        }
+      }
+      print "\n";
+    }
+    until (!exists($parameter->{validate}) ||
+           &validate($config{$parameter->{name}},@{$parameter->{validate}}));
+}
+
+######################################################################
+sub simpleTextQuestionnaire
+{
+  my ($parameter);
+
+  foreach $parameter (@parameters)
+  {
+    setSingleDefault($parameter);
+
+    if (exists($parameter->{predicate}) && !eval($parameter->{predicate}))
+    {
+      next;
+    }
+    &inputParameter($parameter);
+  }
+}
+
+######################################################################
+# Relatively crude text-based menu system
+#
+# Ideally, this should be superceded by a curses-based system
+# at some point, but doing so will be a non-trivial effort.
+#
+# Currently, this makes a number of assumptions, including:
+#  - The terminal is at least tall enough to display all the options
+#  - The terminal implements at least a minimal subset of VT-100
+#    command codes
+#  - The arrow keys are communicated using the VT-100 esc-[A through
+#    esc-[D codes
+#  - 'stty' is present on the system and behaves in the way expected
+#    for turning on and off immediate keyboard input
+######################################################################
+sub simpleTextMenu
+{
+  my ($termwidth) = 80;
+  my ($termheight) = 24;
+  my ($parameter);
+  my ($max_label_length) = 0;
+  my ($value_length);
+  my ($last_row);
+  my ($current_parameter);
+  my ($selected_row) = 0;
+  my ($indent);
+  
+  my ($vt_clear_eos)    = "\033[0J";
+  my ($vt_home)         = "\033[0;0H";
+  my ($vt_clear_line)   = "\033[2K";
+  my ($vt_clear_eol)    = "\033[0K";
+  my ($vt_clear_screen) = "\033[2J${vt_home}";
+  my ($vt_reverse)      = "\033[7m";
+  my ($vt_normal)       = "\033[0m";
+
+  $SIG{'WINCH'} = 'queryWindowSize';
+
+  print "${vt_clear_screen}";
+
+  # We want to capture each key as it is pressed.
+  &cbreak;
+
+  foreach $parameter (@parameters)
+  {
+    if (length($parameter->{name})>$max_label_length)
+    {
+      $max_label_length = length($parameter->{name});
+    }
+  }
+  $max_label_length += 4;
+  $value_length = $termwidth-$max_label_length;
+
+  &queryWindowSize;
+
+  # Print the currently available options and their values
+  while (1)
+  {
+    print $vt_home;
+    $last_row = 0;
+    foreach $parameter (@parameters)
+    {
+
+      if (exists($parameter->{predicate}) && !eval($parameter->{predicate}))
+      {
+        if ($parameter->{forcedefault})
+        {
+          delete $config{$parameter->{name}};
+          &setSingleDefault($parameter);
+          printf "%-$max_label_length.${max_label_length}s", '  '.$parameter->{name};
+          print " [".$config{$parameter->{name}}."] (Locked)$vt_clear_eol\n";
+        }
+        next;
+      }
+
+      setSingleDefault($parameter);
+      print $vt_clear_line;
+      if ($last_row == $selected_row)
+      {
+        print $vt_reverse;
+        printf "%-${termwidth}.${termwidth}s", $parameter->{description};
+        print "$vt_clear_eol\n";
+        $current_parameter = $parameter;
+      }
+
+      $indent = (exists($parameter->{predicate})
+                 && !$parameter->{forcedefault})?'    ':'  ';
+
+      printf "%-$max_label_length.${max_label_length}s", $indent.$parameter->{name};
+      printf "%-$value_length.${value_length}s", " [".$config{$parameter->{name}}."]";
+      print "$vt_clear_eol\n$vt_normal";
+      $last_row++;
+    }
+
+    # Print menu
+    print "$vt_clear_eol\n[D - Reset to Default] ".
+          "[S - Save and Quit] ".
+          "[Q - Quit without Saving]".
+          "$vt_clear_eol\n";
+
+    if (exists($current_parameter->{validate}))
+    {
+      print "[<- and -> - Change Value] (".
+            join(', ',@{$current_parameter->{validate}}).")".
+            "$vt_clear_eol";
+    }
+    else
+    {
+      print "[Enter - Change Value]$vt_clear_eol";
+    }
+
+    print $vt_clear_eos;
+
+    # Get user input
+    $key = getc(STDIN);
+
+    # Input remaining bytes if an arrow key is pressed
+    if ($key eq "\033")
+    {
+      my ($tmp);
+      $key = getc(STDIN);
+      if ($key eq '[')
+      {
+        do
+        {
+          $tmp = getc(STDIN);
+          $key .= $tmp;
+        }
+        while $tmp =~ /[0-9;]/;
+      }
+    }
+
+    # Adjust for screen resizing
+    if ($key =~ /\[([0-9]+);([0-9]+)R/)
+    {
+      $termheight = $1;
+      $termwidth = $2;
+      $value_length = $termwidth-$max_label_length;
+      if ($value_length < 0) { $value_length = 0; }
+    }
+
+    $key =~ y/a-z/A-Z/;
+
+    # Save and exit
+    if ($key eq 'S')
+    {
+      last;
+    }
+
+    # Quit, abandoning any changes
+    elsif ($key eq 'Q')
+    {
+      print "$vt_clear_line\nExiting without saving\n";
+      &nocbreak;
+      exit;
+    }
+
+    # Set current parameter to its default value
+    elsif ($key eq 'D')
+    {
+      delete $config{$current_parameter->{name}};
+      &setSingleDefault($current_parameter);
+      if (exists($current_parameter->{recalc}))
+      {
+        &recalcDefault($current_parameter->{recalc});
+      }
+    }
+
+    # Arrow Up
+    elsif ($key eq '[A' && $selected_row > 0){ $selected_row--; }
+
+    # Arrow Down
+    elsif ($key eq '[B' && $selected_row < $last_row-1) { $selected_row++; }
+
+    # Right Arrow, Enter
+    elsif ($key =~ /([\r\n]|\[C|>|\.)/
+        && defined $current_parameter)
+    {
+      if (exists($current_parameter->{validate}))
+      {
+        my ($new_value) = ${$current_parameter->{validate}}[0];
+        my ($found) = 0;
+        my ($p);
+        foreach $p (@{$current_parameter->{validate}})
+        {
+          if ($found) { $new_value = $p; last; }
+          if ($p eq $config{$current_parameter->{name}}) { $found = 1; }
+        }
+        $config{$current_parameter->{name}} = $new_value;
+      }
+      else
+      {
+        &nocbreak;
+        print "$vt_clear_line\n";
+        &inputParameter($current_parameter);
+        &cbreak;
+      }
+
+      if (exists($current_parameter->{recalc}))
+      {
+        &recalcDefault($current_parameter->{recalc});
+      }
+    }
+
+    # Left Arrow
+    elsif ($key =~ /(\[D|<|,)/
+        && defined $current_parameter
+        && exists($current_parameter->{validate}))
+    {
+      my (@values) = @{$current_parameter->{validate}};
+      my ($new_value) = $values[$#values];
+      my ($prev) = $new_value;
+      my ($p);
+      foreach $p (@values)
+      {
+        if ($p eq $config{$current_parameter->{name}} && length($prev)) 
+        { 
+          $new_value = $prev; last;
+        }
+        $prev = $p;
+      }
+      $config{$current_parameter->{name}} = $new_value;
+
+      if (exists($current_parameter->{recalc}))
+      {
+        &recalcDefault($current_parameter->{recalc});
+      }
+    }
+
+    # Any other key (mostly to let y/n change yes/no values)
+    else
+    {
+      if (defined $current_parameter
+           && exists($current_parameter->{validate}))
+      {
+        my ($v);
+        my ($v2);
+        foreach $v (@{$current_parameter->{validate}})
+        {
+          $v2 = substr($v,0,1);
+          $v2 =~ y/a-z/A-Z/;
+          if ($v2 eq $key)
+          {
+            $config{$current_parameter->{name}} = $v;
+            if (exists($current_parameter->{recalc}))
+            {
+              &recalcDefault($current_parameter->{recalc});
+            }
+          }
+        }
+      }
+    }
+  }
+  print "$vt_clear_line\n";
+
+  # Return keyboard functioning to normal  
+  &nocbreak;
+}
+
+sub cbreak
+{
+  system ("stty", '-icanon') && system ('stty','eol',"\001");
+}
+
+sub nocbreak
+{
+  system "reset" || 
+    (system "stty", 'icanon' && system 'stty','eol',"\000");
+}
+
+######################################################################
+sub queryWindowSize
+{
+  my ($tmp) = $|;
+  $| = 1;
+  print "\0337"; # Save Cursor Position
+  print "\033[999;999H"; # Move to lower right corner
+  print "\033[6n"; # Request position report
+  print "\0338"; # Restore Cursor Position
+  $| = $tmp;
+}
+
+######################################################################
+
+sub validate
+{
+  my ($value, @allowed) = @_;
+  my ($allowed);
+
+  if (@allowed == 0)
+  {
+    return 1;
+  }
+
+  foreach $allowed (@allowed)
+  {
+    if (defined($value) && $value eq $allowed)
+    {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+######################################################################
+sub parseOptions
+{
+  my($option);
+  my($curr);
+  my ($parameter);
+
+  option: foreach $option (@ARGV)
+  {
+    if ($option eq '-y' || $option eq '--non-interactive')
+    {
+      $non_interactive = 1;
+      next option;
+    }
+
+    if ($option eq '-m' || $option eq '--use-text-menu')
+    {
+      $use_text_menu = 1;
+      next option;
+    }
+
+    foreach $parameter (@parameters)
+    {
+      if (defined $parameter->{flag})
+      {
+        $curr = $parameter->{flag};
+        if ($option =~ /^--(enable|disable)-$curr$/)
+        {
+          $config{$parameter->{name}} = ($1 eq 'enable'?'yes':'no');
+          next option;
+        }
+      }
+
+      if (defined $parameter->{option})
+      {
+        $curr = $parameter->{option};
+        if ($option =~ /^--$curr\=\"?([^"]*)\"?$/)
+        {
+          $config{$parameter->{name}} = $1;
+          next option;
+        }
+      }
+
+    }
+
+    print "\nUnknown option: $option\n\n";
+    &usage;
+  }
+}
+
+######################################################################
+sub usage
+{
+  my ($parameter);
+  print <<EOT
+Usage:
+  $0 [options]
+
+  Options:
+
+      -y, --non-interactive
+        Run non-interactively
+
+EOT
+
+;
+  foreach $parameter (@parameters)
+  {
+    if (defined $parameter->{flag})
+    {
+      print "      --enable-".$parameter->{flag}."\n";
+      print "      --disable-".$parameter->{flag}."\n";
+      print "        ".$parameter->{description}." ";
+      print "(Now ".($config{$parameter->{name}} eq 'yes'?
+             "enabled":"disabled").")\n";
+    }
+    if (defined $parameter->{option})
+    {
+      print "      --".$parameter->{option}."=\"...\"\n";
+      print "        ".$parameter->{description}." ";
+      print "(Now \"".$config{$parameter->{name}}."\")\n";
+      if (defined $parameter->{validate})
+      {
+        print "        Valid values are: [".
+              join(', ',@{$parameter->{validate}})."]\n";
+      }
+    }
+
+    print "\n";
+  }
+  exit;
+}
+
+######################################################################
+# Here are functions to determine reasonable defaults
+
+sub detectToolchain
+{
+  if ($uname =~ /SunOS/ || $uname =~ /Solaris/)
+  {
+    return "sunpro";
+  }
+  "gnu";
+}
+
+sub detectDistcc
+{
+  if ($ENV{DISTCC_HOSTS})
+  {
+    return "yes";
+  }
+  "no";
+}
+
+sub detectIpv6
+{
+  if (-e "/usr/include/netinet6/in6.h")
+  {
+    return "yes";
+  }
+  return "no";
+}
+
+sub sigcompInstalled
+{
+  if (-e "/usr/local/lib/libopensigcomp.a")
+  {
+    return "yes";
+  }
+  "no";
+}
+
+sub findDb4
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/include/db4";
+  }
+
+  my (@candidates) = 
+  (
+    '/usr/include/db4',
+    '/opt/local/include/db4',
+    '/include/db4',
+    '/usr/local/include/db4',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/db_cxx.h")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
+}
+
+sub findPoptInclude
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/include";
+  }
+
+  if ($uname =~ /MinGW/i)
+  {
+    return "\$\(ROOT\)/contrib/popt/win32/include";
+  }
+
+  my (@candidates) = 
+  (
+    '/usr/include',
+    '/usr/local/include',
+    '/include',
+    '/opt/popt/include',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/popt.h")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
+}
+
+sub findPoptLib
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/lib";
+  }
+
+  if ($uname =~ /MinGW/i)
+  {
+    return "\$\(ROOT\)/contrib/popt/win32/lib";
+  }
+
+  my (@candidates) = 
+  (
+    '/usr/lib',
+    '/usr/local/lib',
+    '/lib',
+    '/opt/popt/lib',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/libpopt.a" ||
+        -e "${candidate}/libpopt.so" ||
+        -e "${candidate}/libpopt.dylib")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
+}
+
+sub findBoostInclude
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/include";
+  }
+
+  my (@candidates) =
+  (
+    '/usr/include',
+    '/usr/local/include',
+    '/include',
+    '/opt/include',
+    '/opt/local/include',
+    '/sw/include',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/boost/config.hpp")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
+}
+
+sub findCrossRoot
+{
+  my (@candidates) = reverse sort 
+    glob("/opt/crosstool/*/".$config{CROSS_PLATFORM}."/bin/");
+
+  if (@candidates)
+  {
+    return $candidates[0];
+  }
+
+  return "/opt/crosstool/current/".$config{CROSS_PLATFORM}."/bin/";
+}
+
+sub guessInstallPath
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath";
+  }
+
+  return "/usr/local";
+}
+
+sub guessSslLocation
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/OpenSSL";
+  }
+
+  return "";
+}
+
+sub checkForWarnings
+{
+  my ($option);
+  my ($parameters);
+
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    print ("\n".('*!' x 30)."\n\n");
+    print "  WARNING: when cross-compiling, the paths for include\n".
+          "  files and libraries must point to directories that\n".
+          "  contain information appropriate to the target platform.\n".
+          "  please double-check that the following paths contain\n".
+          "  information *ONLY* for the $config{CROSS_PLATFORM}\n".
+          "  environment:\n\n";
+
+    foreach $option (@pathoptions)
+    {
+      foreach $parameter (@parameters)
+      {
+        if ($parameter->{name} eq $option
+            && (!exists($parameter->{predicate}) || 
+                eval($parameter->{predicate}))
+           )
+        {
+          print ("    ".$parameter->{name}." := ".$config{$parameter->{name}}."\n");
+        }
+      }
+    }
+
+    print "\n  You may be able to eliminate some of these paths by\n".
+          "  turning off features you don't plan to use; examples\n".
+          "  include SSL and popt.\n";
+
+    print ("\n".('*!' x 30)."\n");
+  }
+}
+
+__END__
+
+##############################################################################
+# 
+# The Vovida Software License, Version 1.0 
+# Copyright (c) 2000-2007 Vovida Networks, Inc.  All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 
+# 3. The names "VOCAL", "Vovida Open Communication Application Library",
+#    and "Vovida Open Communication Application Library (VOCAL)" must
+#    not be used to endorse or promote products derived from this
+#    software without prior written permission. For written
+#    permission, please contact vocal@vovida.org.
+# 
+# 4. Products derived from this software may not be called "VOCAL", nor
+#    may "VOCAL" appear in their name, without prior written
+#    permission of Vovida Networks, Inc.
+# 
+# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+# NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL VOVIDA
+# NETWORKS, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT DAMAGES
+# IN EXCESS OF $1,000, NOR FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+# DAMAGE.
+# 
+# ====================================================================
+# 
+# This software consists of voluntary contributions made by Vovida
+# Networks, Inc. and many individuals on behalf of Vovida Networks,
+# Inc.  For more information on Vovida Networks, Inc., please see
+# <http://www.vovida.org/>.
+# 
+##############################################################################

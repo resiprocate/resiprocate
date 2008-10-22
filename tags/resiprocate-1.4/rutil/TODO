@@ -1,0 +1,2 @@
+- reimplement CountStream at the ostream level
+- remove the coders and just use stuff in string class
