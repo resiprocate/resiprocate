@@ -242,6 +242,7 @@ ResponseContext::beginClientTransactions()
       }
       else
       {
+         i->second->status() = Target::Terminated;
          mTerminatedTransactionMap[i->second->tid()] = i->second;
          DebugLog(<<"Found a repeated target.");
       }
@@ -265,6 +266,7 @@ ResponseContext::beginClientTransaction(const resip::Data& tid)
    
    if(isDuplicate(i->second) || mRequestContext.mHaveSentFinalResponse)
    {
+      i->second->status() = Target::Terminated;
       mTerminatedTransactionMap[i->second->tid()] = i->second;
       mCandidateTransactionMap.erase(i);
       return false;
