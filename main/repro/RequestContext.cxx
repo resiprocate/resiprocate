@@ -357,37 +357,42 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
       if (ret == Processor::Continue) 
       {
          mResponseContext.processResponse(*sip);
+      }
+      else
+      {
+         // This means the response has been eaten. Do not forward back.
+         mResponseContext.terminateClientTransaction(sip->getTransactionId());
+      }
 
-         //If everything we have tried so far has gone quiescent, we
-         //need to fire up some more Targets (if there are any left)
-         mTargetProcessorChain.process(*this);
+      //If everything we have tried so far has gone quiescent, we
+      //need to fire up some more Targets (if there are any left)
+      mTargetProcessorChain.process(*this);
 
-         if(!mHaveSentFinalResponse && 
-            !mResponseContext.hasActiveTransactions())
+      if(!mHaveSentFinalResponse && 
+         !mResponseContext.hasActiveTransactions())
+      {
+         if(mResponseContext.hasCandidateTransactions())
          {
-            if(mResponseContext.hasCandidateTransactions())
-            {
-               resip::SipMessage response;
-               Helper::makeResponse(response, *mOriginalRequest, 500); 
-               // The last active transaction has ended, and the response processors
-               // did not start any of the pending transactions.
-               // Send a 500 response.
-               ErrLog( << "In RequestContext, after processing a sip response:"
-                       << " We have no active transactions, but there are candidates "
-                       << " remaining. (Bad baboon?)"
-                       << "Sending a 500 response for this request:" 
-                       << mOriginalRequest->header(h_RequestLine).uri() );
-               sendResponse(response);
-            }
-            else
-            {
-               ErrLog(<<"In RequestContext, after processing "
-               << "a sip response: all transactions are terminated, but we"
-               << " have not sent a final response. (What happened here?) ");
+            resip::SipMessage response;
+            Helper::makeResponse(response, *mOriginalRequest, 500); 
+            // The last active transaction has ended, and the response processors
+            // did not start any of the pending transactions.
+            // Send a 500 response.
+            ErrLog( << "In RequestContext, after processing a sip response:"
+                    << " We have no active transactions, but there are candidates "
+                    << " remaining. (Bad baboon?)"
+                    << "Sending a 500 response for this request:" 
+                    << mOriginalRequest->header(h_RequestLine).uri() );
+            sendResponse(response);
+         }
+         else
+         {
+            ErrLog(<<"In RequestContext, after processing "
+            << "a sip response: all transactions are terminated, but we"
+            << " have not sent a final response. (What happened here?) ");
 
-               // Send best response
-               mResponseContext.forwardBestResponse();
-            }
+            // Send best response
+            mResponseContext.forwardBestResponse();
          }
       }
    }
