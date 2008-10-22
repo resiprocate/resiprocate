@@ -7,10 +7,12 @@
 ==Build system==
 ===New features===
 * better cross-compilation support
+* added a menu-based configuration mode
 
 ==rutil==
 ===New features===
 * added a faster implementation of std::ostream
+* added some RADIUS utility classes
 
 ===Bug fixes===
 * more work on bad asserts in the dns code
@@ -22,6 +24,7 @@
 * added SipStack::abandonServerTransaction(), which allows a TU to tell the stack to abandon a given server transaction, without requiring the TU to send a response
 * added SipStack::cancelClientInviteTransaction(), which allows a TU to tell the stack to CANCEL a client INVITE transaction; the stack handles the sending of the CANCEL (including waiting for a provisional to come in if it hasn't already)
 * added SipStack::setFixBadCSeqNumbers(), which can configure the stack to automatically ensure that the CSeq number in responses matches the CSeq number in the request
+* added errno logging on SSL_ERROR_SYSCALL in TlsConnection
 
 ===Bug fixes===
 * fixed a bug in parsing of embedded headers in a Uri
@@ -40,6 +43,7 @@
 * dialog event support
 * more flexible configuration of min, max, and default expires values in ServerRegistration and ServerSubscription
 * add an accessor to InviteSession to get the remote contact header - remoteTarget
+* added RADIUS auth support (subject to depedencies)
 
 ===Bug fixes===
 * fixed a bug where calling ClientRegistration::refresh while a previous REGISTER was pending would cause another REGISTER request to be sent.
@@ -48,10 +52,12 @@
 ** ensure we don't retry if end() was called
 ** don't use mRemoteTarget when creating new retry Subscriptions
 ** mid-dialog 4xx retry error will no longer create a new dialog - refresh is retried instead
+* fixed bug where InviteSession::onAnswer() was not passing the current remote SDP correctly
+* added a missing entry in the InviteSession EndReason array
 
 ==repro==
 ===Bug fixes===
 * allow forking to both outbound and non-outbound target simultaneously
 * fix for repro crash when deleting two ACL members at the same time from the web interface
 * fix for WIN32 to catch exceptions thrown from WinCompat::getInterfaces
-
+* fixed recursive redirect functionality
