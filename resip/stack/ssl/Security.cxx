@@ -204,7 +204,6 @@ Security::Security(const Data& directory, const CipherList& cipherSuite) :
 void
 Security::preload()
 {
-#if 1
    FileSystem::Directory dir(mPath);
    FileSystem::Directory::iterator it(dir);
    for (; it != dir.end(); ++it)
@@ -245,6 +244,10 @@ Security::preload()
                attemptedToLoad = false;
             }
          }
+         catch (Exception& e)
+         {
+            ErrLog(<< "Some problem reading " << fileName << ": " << e);
+         }
          catch (...)
          {  
             ErrLog(<< "Some problem reading " << fileName );
@@ -256,65 +259,6 @@ Security::preload()
          }
       }
    }
-#else
-   // CJ - TODO - delete this old crap 
-   DIR* dir = opendir( mPath.c_str() );
-
-   if (!dir )
-   {
-      ErrLog( << "Error reading public key directory  " << mPath );
-      return;      
-   }
-
-   struct dirent * d = 0;
-   while (1)
-   {
-      d = readdir(dir);
-      if ( !d )
-      {
-         break;
-      }
-
-      Data name( d->d_name );
-      Data fileName = mPath+name;
-      
-      if (name.postfix(PEM))
-      {
-         InfoLog( << "Going to try to read file " << fileName );
-         
-         try
-         {
-            if (name.prefix(pemTypePrefixes(UserCert)))
-            {
-               addCertPEM( UserCert, getAor(name, UserCert), readIntoData(fileName), false );
-            }
-            else if (name.prefix(pemTypePrefixes(UserPrivateKey)))
-            {
-               addPrivateKeyPEM( UserPrivateKey, getAor(name, UserPrivateKey), readIntoData(fileName), false);
-            }
-            else if (name.prefix(pemTypePrefixes(DomainCert)))
-            {
-               addCertPEM( DomainCert, getAor(name, DomainCert), readIntoData(fileName), false);
-            }
-            else if (name.prefix(pemTypePrefixes(DomainPrivateKey)))
-            {
-               addPrivateKeyPEM( DomainPrivateKey, getAor(name, DomainPrivateKey), readIntoData(fileName), false);
-            }
-            else if (name.prefix(pemTypePrefixes(RootCert)))
-            {
-               addRootCertPEM(readIntoData(fileName));
-            }
-         }
-         catch (...)
-         {  
-            ErrLog(<< "Some problem reading " << fileName );
-         }
-         
-         InfoLog(<<"Sucessfully loaded " << fileName );
-      }
-   }
-   closedir( dir );
-#endif
 }
 
 
@@ -496,6 +440,11 @@ BaseSecurity::hasCert (PEMType type, const Data& aor) const
       }
       BaseSecurity*  mutable_this = const_cast<BaseSecurity*>(this);
       mutable_this->addCertPEM(type, aor, certPEM, false);
+   }
+   catch (Exception& e)
+   {
+      ErrLog(<<"Caught exception: " << e);
+      return   false;
    }
    catch (...)
    {
@@ -765,6 +714,11 @@ BaseSecurity::hasPrivateKey( PEMType type,
       onReadPEM(key, type, privateKeyPEM);
       BaseSecurity* mutable_this = const_cast<BaseSecurity*>(this);
       mutable_this->addPrivateKeyPEM(type, key, privateKeyPEM, false);
+   }
+   catch (Exception& e)
+   {
+      ErrLog(<<"Caught exception: " << e);
+      return   false;
    }
    catch(...)
    {
