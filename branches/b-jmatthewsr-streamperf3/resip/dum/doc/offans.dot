@@ -1,0 +1,43 @@
+digraph offans {
+	node [ fonstsize=8 fontname="Helvetica" ]
+	graph
+	[
+//		ranksep=1.5 // modify to shrink nodes etc
+//		nodesep=1.5
+		fontsize=8
+		fontname="Helvetica"
+		labelfontsize=8
+		labelfontname="Helvetica"
+	]
+
+	edge
+	[
+		fontname="Helvetica"	
+		fontsize=8
+		arrowhead=normal
+	]
+
+// Now setup labels and visual stuff.
+
+        fontname="Helvetica"
+
+        None -> Offered
+                [ label="SND Off\nSTO PL" ]
+        None -> Offered
+                [ label="RCV Off\nSTO PR" ]
+        Offered -> Answered
+                [ label="RCV ANS\nSTO CL,CR\nCLR PR" ]
+        Offered -> Answered
+                [ label="SND ANS\nSTO CL,CR\nCLR PR" ]
+        Answered -> CounterOffer
+                [ label="SND OFF\nSTO PL" ]
+        Answered -> CounterOffer
+                [ label="RCV OFF\nSTO PR" ]
+
+        CounterOffer -> Answered
+                [ label="RCV ANS\nSTO CL,CR\nCLR OK,PR\n\nSND ANS\nSTO CL,CR\nCLR PL,PR" ]
+
+        CounterOffer -> Answered
+                [ label="RCV FAIL\nCLR PL,PR\n\nSND FAIL\nCLR PL,PR" ]
+
+}

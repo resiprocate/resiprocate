@@ -1,0 +1,114 @@
+/**
+   @mainpage The reSIProcate SIP Stack library (resip)
+
+   @section resip_quick_start Quick Start
+
+   @subsection resip_fundamentals Resip's Fundamental Design
+      The resip stack plays the role of the UAC/UAS core, and the app plays the 
+      role of the @ref resip::TransactionUser "Transaction User" (or TU), both 
+      as described in RFC 3261. For the unfamiliar, the TU sends and receives 
+      @ref resip::SipMessage "SIP messages" from the core, 
+      while the core handles details like retransmissions, timeouts, and 
+      interactions with the transport layer. The UAS/UAC core will also inform 
+      the TU when transactions end.
+
+   @subsection resip_responsibilities Resip's Other Responsibilities
+      In addition to satisfying the duties of the UAS/UAC core, resip provides
+      additional functionality, such as:
+
+      - @ref sip_parse "SIP message parsing" : Resip supplies parse-code for all 
+      the core @ref sip_grammar "SIP grammar elements" (this parse code 
+      is fairly liberal, and does not do deep validation).
+      - @ref make_sip "SIP message construction" : Resip supplies code for 
+      constructing SIP messages according to the rules in RFC 3261.
+      - RFC 3263 DNS logic : The resip stack carries out all RFC 3263 DNS lookup
+      logic for you. This is actually a non-trivial task, if you haven't read
+      3263.
+      - Other RFC support : Wherever possible, resip provides code that 
+      implements all MUST and SHOULD-level requirements from supported RFCs
+      (a lot of this code lives in resip::Helper).
+
+   @subsection resip_big_picture The Big Picture
+      The basic anatomy of a SIP application running on top of the resip stack
+      is as follows. You have:
+      - One or more subclasses of resip::TransactionUser (the "app layer")
+      - A single instance of resip::SipStack
+      - One or more subclasses of resip::Transport.
+      
+      These are all connected together through a combination of message-passing,
+      and direct function calls(usually reserved for stuff like configuration).
+
+   @subsection resip_usage Usage
+      - Subclass resip::TransactionUser : The part of resip::TransactionUser
+      that is left up to the app-writer is the code that reads messages out of
+      the resip::TransactionUser's message-queue, and processes these messages.
+      What the resip::TransactionUser does with these messages is very 
+      open-ended, but the stack expects that every request will get a final 
+      response.
+      - Initialize the logging system : See resip::Log::initialize() (in rutil)
+      for details.
+      - Create a resip::SipStack : This part is pretty simple.
+      - Add some transports to the stack : Use resip::SipStack::addTransport()
+      to do this.
+      - Register your resip::TransactionUser : This is done with 
+      resip::SipStack::registerTransactionUser().
+      - Set up a process loop for resip::SipStack : Typically this is done by
+      creating a resip::StackThread, and running it (this will give SipStack a
+      thread of its own). If you want to run your app and the SipStack in the
+      same thread, use the code in StackThread as an example, and have it also
+      do processing for your TransactionUser.
+
+   @subsection resip_low_detail The Internals
+      The resip stack can be broken down into the following large components:
+      - resip::SipStack : This is the part that the resip::TransactionUser 
+         (app-layer) talks to. It also is responsible for coordinating the rest
+         of the major components in its process loop.
+      - resip::TransactionController : This is the part that manages all 
+         the transaction-state for the stack.
+      - resip::ExternalDns : This is the DNS resolver. By default, this is a
+         resip::AresDns, but the app-writer can override (not a very fun thing
+         to do, really).
+      - resip::TransportSelector : This is the part that handles the preparatory
+         work for sending a SIP message out on the wire. This includes choosing
+         a transport to send on, filling in parts of the SIP message that can 
+         only be filled in when we know what transport we're sending on, and
+         writing the SIP message into a buffer for the transport layer.
+      - resip::Transport : This is the base transport-layer class. Concrete
+         implementations of this include resip::UdpTransport, 
+         resip::TcpTransport, and resip::TlsTransport. There may be any number 
+         of these.
+      - resip::TuSelector : This is the part that determines which TU (there
+         may be several) a received SIP message should be sent to. It also 
+         decides how to route other message-passing from the stack (see 
+         TransactionTerminated and ConnectionTerminated)
+
+      Here's a description of the typical flow:
+         - resip::SipStack's main process loop runs, eventually causing one of 
+         the resip::Transport objects to read some bits off their fd. These bits
+         are run through a pre-parse (tokenizes the message into header field
+         values), and a basic validation (checks to see whether mandatory 
+         headers are present, and performs well-formedness checks on a very 
+         small number of headers). The resip::SipMessage is then posted to the 
+         resip::TransactionController's message queue.
+         - resip::TransactionController gets the resip::SipMessage, and creates
+         a resip::TransactionState for it (supposing it is a new transaction). 
+         The transaction-state logic is carried out, until a determination is 
+         made on whether to send it to the resip::TransactionUser (app-layer).
+         - The resip::SipMessage is passed to the resip::TuSelector, which 
+         posts it to the appropriate resip::TransactionUser, using a 
+         chain-of-responsibility type pattern.
+         - The resip::TransactionUser gets the resip::SipMessage, and does any 
+         processing it needs to. If the message was a request, the app-layer 
+         will post a response to the resip::SipStack, which will place the 
+         message in the resip::TransactionController's message queue.
+         - resip::TransactionController will get the resip::SipMessage, perform
+         any core transaction-state processing, and figure out where the message
+         needs to go (back to the source; although if this were a request, it 
+         would consult the resip::ExternalDns using an async call). Once a
+         target has been chosen, the resip::SipMessage is passed on to the
+         resip::TransportSelector.
+         - resip::TransportSelector chooses what transport to send the message
+         on, fills out some stuff in the resip::SipMessage, encodes it to a
+         buffer, and posts it to the chosen resip::Transport.
+         - resip::Transport throws the bits out on the wire.
+*/
