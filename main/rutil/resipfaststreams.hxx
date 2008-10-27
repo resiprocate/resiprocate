@@ -134,7 +134,7 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 
-      ResipFastOStream &put(const char ch)
+      ResipFastOStream &put(char ch)
       {
          if (rdbuf())
          {
@@ -369,6 +369,20 @@ inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, const 
 inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, char ch)
 {
    ostr.put(ch);
+
+   return ostr;
+}
+
+inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, unsigned char ch)
+{
+   ostr.put((char)ch);
+
+   return ostr;
+}
+
+inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, const unsigned char *str)
+{
+   ostr.write((const char *)str,strlen((const char *)str));
 
    return ostr;
 }
