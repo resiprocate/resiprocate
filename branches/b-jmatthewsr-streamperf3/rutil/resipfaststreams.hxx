@@ -22,7 +22,7 @@
 #include "rutil/compat.hxx"
 //#include <stdint.h>
 
-#define USE_RESIP
+//#define USE_RESIP
 
 void modp_itoa10(int value, char* buf);
 void modp_uitoa10(unsigned int value, char* buf);
@@ -192,14 +192,14 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 
-      ResipFastOStream &put(const char ch)
+      ResipFastOStream &put(char ch)
       {
          if (rdbuf())
          {
             rdbuf()->putbuf(ch);
          }
          return *this;
-      }
+      }     
 
       ResipFastOStream& operator<<(bool b)
       {
@@ -407,6 +407,20 @@ inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, const 
 inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, char ch)
 {
    ostr.put(ch);
+
+   return ostr;
+}
+
+inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, unsigned char ch)
+{
+   ostr.put((char)ch);
+
+   return ostr;
+}
+
+inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, const unsigned char *str)
+{
+   ostr.write((const char *)str,strlen((const char *)str));
 
    return ostr;
 }
