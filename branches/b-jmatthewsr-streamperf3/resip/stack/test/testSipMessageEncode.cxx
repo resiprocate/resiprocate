@@ -6,6 +6,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include <fstream>
 #include <string>
+#include <sstream>
 
 using namespace resip;
 using namespace std;
@@ -23,6 +24,7 @@ public:
 };
 
 void processArgs(int argc, char* argv[],Args &args);
+void testEncoders(void);
 
 int
 main(int argc, char* argv[])
@@ -36,6 +38,8 @@ main(int argc, char* argv[])
 	cout << "------------------------------------------------------------\r\n";
 
 	processArgs(argc,argv,args);
+
+   testEncoders();
 	
 	Data txt("INVITE sip:192.168.2.92:5100;q=1 SIP/2.0\r\n"
                "To: <sip:yiwen_AT_meet2talk.com@whistler.gloo.net>\r\n"
@@ -73,12 +77,21 @@ main(int argc, char* argv[])
 		return -1;
 	}
 
+   msg->parseAllHeaders();
+
 	cout << "\r\nRunning SipMsg Encoder Speed test\r\n";
 #ifdef RESIP_USE_STL_STREAMS
 	cout << "USING STL STREAMS\r\n";
 #else
 	cout << "USING RESIP FAST STREAMS\r\n";
 #endif
+
+   //Data sanityData;
+   //DataStream sanityStream(sanityData);
+
+   //msg->encode(sanityStream);
+
+   //assert(sanityData == txt);
 
 	UInt64 startTime=0;
 	UInt64 elapsed=0;
@@ -182,4 +195,40 @@ void processArgs(int argc, char* argv[],Args &args)
 			}
 		}
 	}
+}
+
+void testEncoders(void)
+{
+   std::stringstream stlstream;
+
+   resip::Data data;
+   resip::DataStream ds(data);
+
+   stlstream.precision(6);
+
+   stlstream << (double)123 << (double)123.0 << (double)123.1 << (double)0.0 << (float).0 << (float).01234 <<
+      987.0 << 0.0 << 0.123 <<
+      -12345678901234.5 << -123.0 << -1.0 << -0.0 << -.1234;
+
+   ds << (double)123 << (double)123.0 << (double)123.1 << (double)0.0 << (float).0 << (float).01234 <<
+      987.0 << 0.0 << 0.123 <<
+      -12345678901234.5 << -123.0 << -1.0 << -0.0 << -.1234;
+
+   if ( 0 != strcmp(stlstream.str().c_str(),data.c_str()) )
+   {
+      printf("\nStream error");
+   }
+
+   data.clear();
+   stlstream.str("");
+
+   long long i64 = 0xFFFFFFFFFFFFFFF6;
+   ds << i64;
+   stlstream << i64;
+
+   if ( 0 != strcmp(stlstream.str().c_str(),data.c_str()) )
+   {
+      printf("\nStream error");
+   }
+
 }
