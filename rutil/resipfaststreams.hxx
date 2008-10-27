@@ -387,6 +387,20 @@ inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, const 
    return ostr;
 }
 
+inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, signed char ch)
+{
+   ostr.put((char)ch);
+
+   return ostr;
+}
+
+inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, const signed char *str)
+{
+   ostr.write((const char *)str,strlen((const char *)str));
+
+   return ostr;
+}
+
 inline resip::ResipFastOStream & operator<<(resip::ResipFastOStream &ostr, const std::string &str)
 {
    ostr.write(str.c_str(),str.size());
