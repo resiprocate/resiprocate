@@ -5,6 +5,14 @@
 
     #define RESIP_USE_STL_STREAMS will use the STL for stream encoding (std::ostream).  Undefining RESIP_USE_STL_STREAMS will
       cause resip to use the alternative stream handling defined in this file for encoding objects.
+
+   modp* functions used under BSD License:
+   * <pre>
+ * Copyright &copy; 2007, Nick Galbreath -- nickg [at] modp [dot] com
+ * All rights reserved.
+ * http://code.google.com/p/stringencoders/
+ * Released under the bsd license.
+ * </pre>
 */
 //#define RESIP_USE_STL_STREAMS
 
@@ -12,6 +20,21 @@
 
 #include <cassert>
 #include "rutil/compat.hxx"
+//#include <stdint.h>
+
+#define USE_RESIP
+
+void modp_itoa10(int value, char* buf);
+void modp_uitoa10(unsigned int value, char* buf);
+void modp_itoa10_64(__int64 value, char* buf);
+void modp_uitoa10_64(UInt64 value, char* buf);
+void modp_dtoa(double value, char* buf, int precision);
+
+unsigned int resip_itoa10(int value, char* buf, unsigned int bufSize);
+unsigned int resip_uitoa10(unsigned int value, char* buf, unsigned int bufSize);
+unsigned int resip_itoa10_64(long long value, char* buf, unsigned int bufSize);
+unsigned int resip_uitoa10_64(UInt64 value, char* buf, unsigned int bufSize);
+unsigned int resip_dtoa(double value, char* buf, unsigned int bufSize, unsigned int precision);
 
 namespace resip
 {
@@ -54,35 +77,70 @@ class ResipBasicIOStream
       bool eof_;
 };
 
-
 #if (defined(WIN32) || defined(_WIN32_WCE))
 
 #if (defined(_MSC_VER) && _MSC_VER >= 1400 )
 #define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) _snprintf_s(buffer,sizeofBuffer,_TRUNCATE,format,var1)
-#define LTOA(value,string,sizeofstring,radix) _ltoa_s(value,string,sizeofstring,radix)
-#define ULTOA(value,string,sizeofstring,radix) _ultoa_s(value,string,sizeofstring,radix)
-#define I64TOA(value,string,sizeofstring,radix) _i64toa_s(value,string,sizeofstring,radix)
-#define UI64TOA(value,string,sizeofstring,radix) _ui64toa_s(value,string,sizeofstring,radix)
 #define GCVT(val,num,buffer,buffersize) _gcvt_s(buffer,buffersize,val,num)
 #else
-#define _TRUNCATE -1
 #define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) _snprintf(buffer,count,format,var1)
-#define LTOA(value,string,sizeofstring,radix) _ltoa(value,string,radix)
-#define ULTOA(value,string,sizeofstring,radix) _ultoa(value,string,radix)
-#define I64TOA(value,string,sizeofstring,radix) _i64toa(value,string,radix)
-#define UI64TOA(value,string,sizeofstring,radix) _ui64toa(value,string,radix)
 #define GCVT(val,sigdigits,buffer,buffersize) _gcvt(val,sigdigits,buffer)
 #endif
 
 #else //non-windows
-#define _TRUNCATE -1
 #define SNPRINTF_1(buffer,sizeofBuffer,count,format,var1) snprintf(buffer,sizeofBuffer,format,var1)
+//#define GCVT(f,sigdigits,buffer,bufferlen) SNPRINTF_1(buffer,bufferlen,bufferlen,"%f",f)
+#define GCVT(f,sigdigits,buffer,bufferlen) gcvt(f,sigdigits,buffer)
+#define _CVTBUFSIZE 309+40
+#endif
+
+
+#if (defined USE_MODP)
+
+#define LTOA(value,string,sizeofstring,radix) modp_itoa10(value,string)
+#define ULTOA(value,string,sizeofstring,radix) modp_uitoa10(value,string)
+#define I64TOA(value,string,sizeofstring,radix) modp_itoa10_64(value,string)
+#define UI64TOA(value,string,sizeofstring,radix) modp_uitoa10_64(value,string)
+#undef GCVT
+#define GCVT(val,precision,buffer,buffersize) modp_dtoa(val,buffer,precision)
+
+#endif
+
+#if (defined USE_RESIP)
+
+#define LTOA(value,string,sizeofstring,radix) resip_itoa10(value,string,sizeofstring)
+#define ULTOA(value,string,sizeofstring,radix) resip_uitoa10(value,string,sizeofstring)
+#define I64TOA(value,string,sizeofstring,radix) resip_itoa10_64(value,string,sizeofstring)
+#define UI64TOA(value,string,sizeofstring,radix) resip_uitoa10_64(value,string,sizeofstring)
+//#undef GCVT
+//#define GCVT(val,precision,buffer,buffersize) resip_dtoa(val,buffer,buffersize,precision)
+
+#endif
+
+#if (!defined(USE_MODP) && !defined(USE_RESIP))
+
+#if(defined(WIN32) || defined(_WIN32_WCE))
+
+#if (defined(_MSC_VER) && _MSC_VER >= 1400 )
+#define LTOA(value,string,sizeofstring,radix) _ltoa_s(value,string,sizeofstring,radix)
+#define ULTOA(value,string,sizeofstring,radix) _ultoa_s(value,string,sizeofstring,radix)
+#define I64TOA(value,string,sizeofstring,radix) _i64toa_s(value,string,sizeofstring,radix)
+#define UI64TOA(value,string,sizeofstring,radix) _ui64toa_s(value,string,sizeofstring,radix)
+#else
+#define _TRUNCATE -1
+#define LTOA(value,string,sizeofstring,radix) _ltoa(value,string,radix)
+#define ULTOA(value,string,sizeofstring,radix) _ultoa(value,string,radix)
+#define I64TOA(value,string,sizeofstring,radix) _i64toa(value,string,radix)
+#define UI64TOA(value,string,sizeofstring,radix) _ui64toa(value,string,radix)
+#endif
+
+#else //non-windows
+#define _TRUNCATE -1
 #define LTOA(l,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%li",l)
 #define ULTOA(ul,buffer,bufferlen,radix) SNPRINTF_1(buffer,bufferlen,bufferlen,"%lu",ul)
 #define I64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%ll",value)
 #define UI64TOA(value,string,sizeofstring,radix) SNPRINTF_1(string,sizeofstring,sizeofstring,"%llu",value)
-#define GCVT(f,sigdigits,buffer,bufferlen) SNPRINTF_1(buffer,bufferlen,bufferlen,"%f",f)
-#define _CVTBUFSIZE 309+40
+#endif
 #endif
 
 /** std::ostream replacement.
@@ -217,8 +275,7 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 
-#ifdef WIN32
-      ResipFastOStream& operator<<(__int64 i64)
+      ResipFastOStream& operator<<(long long i64)
       {
          if (!buf_)
          {
@@ -235,24 +292,6 @@ class ResipFastOStream : public ResipBasicIOStream
          return *this;
       }
 
-      ResipFastOStream& operator<<(unsigned __int64 ui64)
-      {
-         if (!buf_)
-         {
-            return *this;
-         }
-
-         char buf[66];
-         UI64TOA(ui64,buf,66,10);
-         size_t count = strlen(buf);
-         if (buf_->writebuf(buf,count) < count)
-         {
-            good_ = false;
-         }
-
-         return *this;
-      }
-#else
       ResipFastOStream& operator<<(UInt64 ui64)
       {
          if (!buf_)
@@ -271,7 +310,6 @@ class ResipFastOStream : public ResipBasicIOStream
 
          return *this;
       }
-#endif
 
       ResipFastOStream& operator<<(float f)
       {
@@ -290,7 +328,7 @@ class ResipFastOStream : public ResipBasicIOStream
          char buf[_CVTBUFSIZE];
          GCVT(d,6,buf,_CVTBUFSIZE);//6 significant digits is the default for %f
          size_t count = strlen(buf);
-#ifndef WIN32 
+//#ifndef WIN32 
          //not using the non-standard microsoft conversion functions
          //remove any trailing zeros.  Note that resipfastreams does not support STL stream width or precision
          //modifiers
@@ -303,7 +341,7 @@ class ResipFastOStream : public ResipBasicIOStream
                break;
             }
          }
-#endif
+//#endif
          if (buf_->writebuf(buf,count) < count)
          {
             good_ = false;
