@@ -14,7 +14,7 @@
  * Released under the bsd license.
  * </pre>
 */
-//#define RESIP_USE_STL_STREAMS
+#define RESIP_USE_STL_STREAMS
 
 #include <iostream> //for std::endl, std::cerr, etc.
 
@@ -419,6 +419,20 @@ inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, unsign
 }
 
 inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, const unsigned char *str)
+{
+   ostr.write((const char *)str,strlen((const char *)str));
+
+   return ostr;
+}
+
+inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, signed char ch)
+{
+   ostr.put((char)ch);
+
+   return ostr;
+}
+
+inline resip::ResipFastOStream& operator<<(resip::ResipFastOStream& ostr, const signed char *str)
 {
    ostr.write((const char *)str,strlen((const char *)str));
 
