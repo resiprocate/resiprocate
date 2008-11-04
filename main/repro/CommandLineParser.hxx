@@ -41,6 +41,7 @@ class CommandLineParser
       bool mCertServer;
       Data mRequestProcessorChainName;
       Data mMySqlServer;
+      Data mHttpHostname;
       int mHttpPort;
       bool mRecursiveRedirect;
       bool mDoQValue;
