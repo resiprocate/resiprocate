@@ -37,14 +37,15 @@ Source::operator<(const Source& rhs) const
    }
 }
 
-std::ostream& 
-operator<<(std::ostream& os, const Source& src)
+EncodeStream& 
+operator<<(EncodeStream& os, const Source& src)
 {
    os << "Source[" 
       << src.host << ":" << src.port 
       << " " 
       << resip::Tuple::toData(src.transportType) 
       << "]";
+   os.flush();
    return os;
 }
 /*
