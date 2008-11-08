@@ -24,7 +24,7 @@ class Event
       TestEndPoint* mEndPoint;
 };
 
-std::ostream& operator<<(std::ostream& str, const Event& event);
+EncodeStream& operator<<(EncodeStream& str, const Event& event);
 
 #endif
 /*
