@@ -1,3 +1,24 @@
+= Release Notes v 1.4.1 =
+
+==rutil==
+===Bug fixes===
+* fixed a bug where the new fast streams would not encode unsigned char properly
+* added fast stream support for signed char
+* fixed bug where OpenSSL was not being initialized in a threadsafe manner on non-Windows platforms
+
+==stack==
+===Bug fixes===
+* ensure we include codec format parameters (ftmp), even if rtpmap is not provided, when parsing SDP codecs
+* fixed a bug where DNS failover could cause a CANCEL request from the TU to go out with the wrong transaction identifier
+
+==DUM==
+===Bug fixes===
+* fixed a bug where multiple copies of message decorators were being added to outgoing messages
+
+==repro==
+===Bug fixes===
+* fixed a bug where adding a domain on the webadmin wasn't working (this was being caused by a bug in the fast stream classes)
+
 = Release Notes v 1.4 =
 
 ==General==
