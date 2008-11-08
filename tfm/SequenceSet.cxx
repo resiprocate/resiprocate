@@ -356,8 +356,8 @@ SequenceSet::handleEvent(shared_ptr<Event> event)
 //------------------------------------------------------------------------------
 
 
-std::ostream&
-operator<<(std::ostream& str, const SequenceSet& sset)
+EncodeStream&
+operator<<(EncodeStream& str, const SequenceSet& sset)
 {
    if (sset.executionFailed())
    {
@@ -368,6 +368,7 @@ operator<<(std::ostream& str, const SequenceSet& sset)
    {
       str << "<OK>";
    }
+   str.flush();
    return str;
 }
 /*

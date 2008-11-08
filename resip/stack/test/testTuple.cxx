@@ -21,8 +21,8 @@ main()
       assert(s == t);
       assert(s.hash() == t.hash());
       mMap[t] = 0;
-      std::cerr << mMap.count(t) << endl;
-      std::cerr << Inserter(mMap) << std::endl;
+      resipCerr << mMap.count(t) << endl;
+      resipCerr << Inserter(mMap) << std::endl;
       
       assert(mMap.count(t) == 1);
    }
@@ -163,7 +163,7 @@ main()
       
    }
 
-   std::cerr << "ALL OK" << std::endl;
+   resipCerr << "ALL OK" << std::endl;
 }
 
 /* ====================================================================
