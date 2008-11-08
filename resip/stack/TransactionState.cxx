@@ -80,6 +80,10 @@ TransactionState::handleInternalCancel(SipMessage* cancel,
                                        TransactionState& clientInvite)
 {
    TransactionState* state = TransactionState::makeCancelTransaction(&clientInvite, ClientNonInvite, clientInvite.mId+"cancel");
+   // Make sure the branch in the CANCEL matches the current 
+   // branch of the INVITE, in case we have done a DNS failover (the transport 
+   // sequences could be different by now)
+   cancel->header(h_Vias).front().param(p_branch)=clientInvite.mMsgToRetransmit->header(h_Vias).front().param(p_branch);
    state->processClientNonInvite(cancel);
    // for the INVITE in case we never get a 487
    clientInvite.mController.mTimers.add(Timer::TimerCleanUp, clientInvite.mId, 128*Timer::T1);

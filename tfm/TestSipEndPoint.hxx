@@ -950,7 +950,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             
             int getStatusCode() const { return mMsgTypeCode.second; }
             virtual resip::Data getMsgTypeString() const;
-            virtual std::ostream& output(std::ostream& s) const;
+            virtual EncodeStream& output(EncodeStream& s) const;
             
             class Exception : public resip::BaseException
             {

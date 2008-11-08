@@ -163,8 +163,8 @@ class TestEndPoint
 
             virtual bool queue(SequenceClass* parent);
             virtual void setSequenceSet(boost::shared_ptr<SequenceSet> set);
-            virtual std::ostream& output(std::ostream& s) const;
-            virtual void prettyPrint(std::ostream& str, bool& previousActive, int ind) const;
+            virtual EncodeStream& output(EncodeStream& s) const;
+            virtual void prettyPrint(EncodeStream& str, bool& previousActive, int ind) const;
 
             friend ExpectBase* optional(ExpectBase* expect);
             bool isOptional() const;
@@ -238,8 +238,8 @@ class TestEndPoint
             virtual unsigned int getTimeout() const { return 1000*60*60*10;}
             virtual ~And();
 
-            virtual std::ostream& output(std::ostream& s) const;
-            virtual void prettyPrint(std::ostream& s, bool& previousActive, int ind) const;
+            virtual EncodeStream& output(EncodeStream& s) const;
+            virtual void prettyPrint(EncodeStream& s, bool& previousActive, int ind) const;
 
             virtual void render(AsciiGraphic::CharRaster &craster) const;
             virtual Box layout() const;
@@ -270,8 +270,8 @@ class TestEndPoint
       boost::weak_ptr<SequenceSet> mSequenceSet;
 };
 
-std::ostream& operator<<(std::ostream& s, const TestEndPoint&);
-std::ostream& operator<<(std::ostream& s, const TestEndPoint::ExpectBase& eb);
+EncodeStream& operator<<(EncodeStream& s, const TestEndPoint&);
+EncodeStream& operator<<(EncodeStream& s, const TestEndPoint::ExpectBase& eb);
 
 ExpectAction* noAction();
 
