@@ -2,6 +2,7 @@
 #define Renderer_hxx
 
 #include <iosfwd>
+#include "rutil/resipfaststreams.hxx"
 
 class AsciiGraphic;
 
@@ -12,8 +13,8 @@ class Renderer
       const AsciiGraphic& mGraphic;
 };
 
-std::ostream&
-operator<<(std::ostream& str, const Renderer& renderer);
+EncodeStream&
+operator<<(EncodeStream& str, const Renderer& renderer);
 
 #endif
 /*

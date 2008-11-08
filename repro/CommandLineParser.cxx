@@ -52,6 +52,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
 
    char* reqChainName = "default";
    char* mySqlServer = 0;
+   char* httpHostname = 0;
    int httpPort = 5080;
    int recursiveRedirect = 0;
    int doQValue=0;
@@ -71,7 +72,8 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int outboundDisabled=0;
    int outboundVersion=11;
    int rrTokenHackEnabled=0;
-
+   
+   mHttpHostname = DnsUtil::getLocalHostName();
 
 #ifdef WIN32
 #ifndef HAVE_POPT_H
@@ -119,6 +121,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
       {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   0, "name of request chain (default: default)", 0},
       {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", "5080"},
+      {"http-hostname",     0,   POPT_ARG_STRING,                            &httpHostname,   0, "http hostname for this server (used in Identity headers)", 0},
       {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
       {"q-value",           0,   POPT_ARG_NONE,                              &doQValue,       0, "Enable sequential q-value processing", 0},
       {"q-value-behavior",  0,   POPT_ARG_STRING,                            &forkBehavior,   0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
@@ -210,14 +213,19 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    if (mySqlServer) 
    {
-      mMySqlServer = Data(mySqlServer);
+      mMySqlServer = mySqlServer;
    }
 
    if (dbPath)
    {
-      mDbPath = Data(dbPath);
+      mDbPath = dbPath;
    }
-   
+
+   if(httpHostname)
+   {
+      mHttpHostname = httpHostname;
+   }
+
    if(timerC >0)
    {
       mTimerC=timerC;
