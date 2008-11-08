@@ -242,8 +242,8 @@ TestEndPoint::And::~And()
    }
 }
 
-ostream& 
-TestEndPoint::And::output(ostream& s) const
+EncodeStream& 
+TestEndPoint::And::output(EncodeStream& s) const
 {
    s << "And(";
    for(list<SequenceClass*>::const_iterator i = mSequences.begin();
@@ -252,11 +252,12 @@ TestEndPoint::And::output(ostream& s) const
       s << "Sub" << **i << ", ";
    }
    s << ")";
+   s.flush();
    return s;
 }
 
 void
-TestEndPoint::And::prettyPrint(ostream& str, bool& previousActive, int ind) const
+TestEndPoint::And::prettyPrint(EncodeStream& str, bool& previousActive, int ind) const
 {
    str << "And(";
    ind += 4;
@@ -351,15 +352,16 @@ TestEndPoint::ExpectBase::setSequenceSet(boost::shared_ptr<SequenceSet> set)
    getEndPoint()->setSequenceSet(set);
 }
 
-std::ostream& 
-TestEndPoint::ExpectBase::output(std::ostream& s) const
+EncodeStream& 
+TestEndPoint::ExpectBase::output(EncodeStream& s) const
 {
    s << getMsgTypeString();
+   s.flush();
    return s;
 }
 
 void 
-TestEndPoint::ExpectBase::prettyPrint(std::ostream& str, bool& previousActive, int ind) const
+TestEndPoint::ExpectBase::prettyPrint(EncodeStream& str, bool& previousActive, int ind) const
 {
    output(str);
 }
@@ -419,15 +421,16 @@ TestEndPoint::check1(PredicateFn fn, resip::Data label)
 }
 
 
-std::ostream& 
-operator<<(ostream& s, const TestEndPoint& endPoint)
+EncodeStream& 
+operator<<(EncodeStream& s, const TestEndPoint& endPoint)
 {
    s << endPoint.getName();
+   s.flush();
    return s;
 }
 
-std::ostream& 
-operator<<(std::ostream& s, const TestEndPoint::ExpectBase& eb)
+EncodeStream& 
+operator<<(EncodeStream& s, const TestEndPoint::ExpectBase& eb)
 {
    return eb.output(s);
 }
