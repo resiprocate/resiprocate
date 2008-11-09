@@ -288,6 +288,16 @@ SdpMediaLine::addCandidate(SdpCandidate& candidate)
    mCandidates.insert(candidate);
 }
 
+void 
+SdpMediaLine::addCandidate(const char * foundation, unsigned int id, SdpCandidate::SdpCandidateTransportType transport, 
+                           UInt64 priority, const char * connectionAddress, unsigned int port, 
+                           SdpCandidate::SdpCandidateType candidateType, const char * relatedAddress, 
+                           unsigned int relatedPort)
+{ 
+   SdpCandidate t(foundation, id, transport, priority, connectionAddress, port, candidateType, relatedAddress, relatedPort);
+   addCandidate(t); 
+}
+
 SdpMediaLine::SdpMediaType 
 SdpMediaLine::getMediaTypeFromString(const char * type)
 {
