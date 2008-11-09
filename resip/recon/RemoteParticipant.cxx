@@ -1031,7 +1031,7 @@ RemoteParticipant::answerMediaLine(SdpContents::Session::Medium& mediaSessionCap
               capsCodecsIt != mediaSessionCaps.codecs().end(); capsCodecsIt++)
          {
             if(isEqualNoCase(capsCodecsIt->getName(), itCodec->getMimeSubtype()) &&
-               capsCodecsIt->getRate() == itCodec->getRate())
+               (unsigned int)capsCodecsIt->getRate() == itCodec->getRate())
             {
                bool modeInCaps = capsCodecsIt->parameters().prefix("mode=");
                if(!modeInOffer && !modeInCaps)

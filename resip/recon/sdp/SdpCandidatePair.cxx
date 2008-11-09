@@ -137,8 +137,8 @@ void SdpCandidatePair::resetPriority()
 {
    UInt64 offererPriority = mOfferer == OFFERER_LOCAL ? mLocalCandidate.getPriority() : mRemoteCandidate.getPriority();
    UInt64 answererPriority = mOfferer == OFFERER_LOCAL ? mRemoteCandidate.getPriority() : mLocalCandidate.getPriority();
-   mPriority = 4294967296*sdpMin(offererPriority, answererPriority) + 
-               2*sdpMax(offererPriority, answererPriority) + 
+   mPriority = (sdpMin(offererPriority, answererPriority)<<32) + 
+               (sdpMax(offererPriority, answererPriority)<<2) + 
                (offererPriority > answererPriority ? 1 : 0);
 }
 
