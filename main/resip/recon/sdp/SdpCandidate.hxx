@@ -3,6 +3,7 @@
 
 #include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
+#include <list>
 
 namespace sdpcontainer
 {
