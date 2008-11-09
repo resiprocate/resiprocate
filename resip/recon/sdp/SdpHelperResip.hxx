@@ -1,9 +1,11 @@
 #if !defined(SdpHelperResip_hxx)
 #define SdpHelperResip_hxx
 
-#include <sdp/Sdp.h>
-#include <sdp/SdpMediaLine.h>
+#include "Sdp.hxx"
+#include "SdpMediaLine.hxx"
 #include <resip/stack/SdpContents.hxx>
+
+using namespace sdpcontainer;
 
 namespace resip
 {

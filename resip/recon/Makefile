@@ -3,6 +3,7 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += ASIO RUTIL ARES OPENSSL SRTP RETURNCLIENT REFLOW SIPX BOOST PTHREAD
 TARGET_LIBRARY = librecon
+CODE_SUBDIRS = sdp
 
 SRC += \
         BridgeMixer.cxx \
@@ -23,13 +24,18 @@ SRC += \
         RelatedConversationSet.cxx \
         RemoteParticipant.cxx \
         RemoteParticipantDialogSet.cxx \
-        SdpHelperResip.cxx \
         UserAgent.cxx \
         UserAgentClientSubscription.cxx \
         UserAgentDialogSetFactory.cxx \
         UserAgentMasterProfile.cxx \
         UserAgentRegistration.cxx \
-        UserAgentServerAuthManager.cxx
+        UserAgentServerAuthManager.cxx \
+        sdp/Sdp.cxx \
+        sdp/SdpCandidate.cxx \
+        sdp/SdpCandidatePair.cxx \
+        sdp/SdpCodec.cxx \
+        sdp/SdpHelperResip.cxx \
+        sdp/SdpMediaLine.cxx
 
 include $(BUILD)/Makefile.post
 

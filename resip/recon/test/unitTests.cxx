@@ -6,6 +6,8 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 
+extern int sdpTests(void);
+
 ///////////////////////////////////////////////////////////////////////////
 // SCENARIOS UNDER TEST
 //
@@ -714,6 +716,9 @@ main (int argc, char** argv)
       cerr << "Couldn't install signal handler for SIGTERM" << endl;
       exit( -1 );
    }
+
+   // Run SdpTests
+   sdpTests();
 
    Log::initialize(Log::Cout, LOG_LEVEL, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);

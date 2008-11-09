@@ -2,14 +2,15 @@
 #include <utility>
 
 #include "SdpHelperResip.hxx"
-#include <sdp/Sdp.h>
-#include <sdp/SdpMediaLine.h>
-#include <sdp/SdpCodec.h>
-#include <sdp/SdpCandidate.h>
+#include "Sdp.hxx"
+#include "SdpMediaLine.hxx"
+#include "SdpCodec.hxx"
+#include "SdpCandidate.hxx"
 
 #include <rutil/WinLeakCheck.hxx>
 
 using namespace resip;
+using namespace sdpcontainer;
 
 Sdp::SdpAddressType SdpHelperResip::convertResipAddressType(resip::SdpContents::AddrType resipAddrType)
 {
@@ -141,9 +142,9 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
             {
                sdpTimeRepeat->addOffsetFromStartTime(*it3);
             }
-            sdpTime->addRepeat(sdpTimeRepeat);
+            sdpTime->addRepeat(*sdpTimeRepeat);
          }
-         sdp->addTime(sdpTime);
+         sdp->addTime(*sdpTime);
       }
    }
 
@@ -207,7 +208,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
                   pb.data(token, anchor);
                   sdpGroup->addIdentificationTag(token.c_str());
                }
-               sdp->addGroup(sdpGroup);
+               sdp->addGroup(*sdpGroup);
             }
          }
       }
@@ -327,7 +328,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
 
             potentialMedium->protocol() = SdpMediaLine::SdpTransportProtocolTypeString[potentialTransportType];
 
-            if(pcfgIt->getAttributeIds().entries() != 0 || pcfgIt->getDeleteSessionAttributes() || pcfgIt->getDeleteMediaAttributes())
+            if(!pcfgIt->getAttributeIds().empty() || pcfgIt->getDeleteSessionAttributes() || pcfgIt->getDeleteMediaAttributes())
             {
                acceptedConfigurationLine += " a=";
                if(pcfgIt->getDeleteSessionAttributes() && pcfgIt->getDeleteMediaAttributes())
@@ -348,10 +349,11 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
             }
             bool optional=false;
             bool first=true;
-            UtlSListIterator attribIt(pcfgIt->getAttributeIds());
-            SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem* configIdItem;
-            while((configIdItem = (SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem*) attribIt()))
+            SdpMediaLine::SdpPotentialConfiguration::ConfigIdList::const_iterator attribIt = pcfgIt->getAttributeIds().begin();
+            for(;attribIt != pcfgIt->getAttributeIds().end(); attribIt++)
             {
+               const SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem* configIdItem = &(*attribIt);
+
                // Find attribute in map
                std::map<unsigned int, std::pair<Data, Data> >::iterator acapListIt = acapList.find(configIdItem->getId());
                if(acapListIt == acapList.end()) continue;
@@ -379,7 +381,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
             }
             SdpMediaLine* potentialSdpMediaLine = parseMediaLine(*potentialMedium, potentialSession, rtcpEnabled);
             potentialSdpMediaLine->setPotentialMediaViewString(acceptedConfigurationLine.c_str());
-            mediaLine->addPotentialMediaView(potentialSdpMediaLine);
+            mediaLine->addPotentialMediaView(*potentialSdpMediaLine);
          }
       }
 
@@ -422,7 +424,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
                                         ptime * 1000, 
                                         resipCodec.encodingParameters().empty() ? 1 : resipCodec.encodingParameters().convertInt() /* Num Channels */, 
                                         resipCodec.parameters().c_str());
-         mediaLine->addCodec(codec);
+         mediaLine->addCodec(*codec);
       }
    }
 
@@ -521,7 +523,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
       if(rtcpEnabledForMedia)  // Set when iterrating through bandwidth settings
       {
          // Note: RFC3605 rtcp-attribute does not support multicast streams - see section 3.2 of RFC
-         if(mediaLine->getConnections().entries() == 1 && resipMedia.exists("rtcp"))
+         if(mediaLine->getConnections().size() == 1 && resipMedia.exists("rtcp"))
          {
             unsigned int ipv4ttl = 0;
             Sdp::SdpAddressType addrType = Sdp::ADDRESS_TYPE_NONE;
@@ -554,7 +556,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
             }
             if(address.empty())  // If connection address was not specified here - use the c= line
             {
-               SdpMediaLine::SdpConnection *connection = (SdpMediaLine::SdpConnection*)mediaLine->getConnections().first();
+               SdpMediaLine::SdpConnection *connection = (SdpMediaLine::SdpConnection*)&mediaLine->getConnections().front();
                mediaLine->addRtcpConnection(connection->getNetType(), 
                   connection->getAddressType(), 
                   connection->getAddress().data(), 
@@ -569,16 +571,14 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
          else  // default rule is that rtcp is sent on all connections, by adding 1 to the port
          {
             // Iterrate through each connection and add a corresponding RTCP connection
-            const UtlSList& connections = mediaLine->getConnections();
-            UtlSListIterator it2(connections);
-            SdpMediaLine::SdpConnection* connection;
-            while((connection = (SdpMediaLine::SdpConnection*)it2()))
+            SdpMediaLine::ConnectionList::const_iterator it2 = mediaLine->getConnections().begin();
+            for(;it2 != mediaLine->getConnections().end(); it2++)
             {
-               mediaLine->addRtcpConnection(connection->getNetType(), 
-                  connection->getAddressType(), 
-                  connection->getAddress().data(), 
-                  connection->getPort() + 1, 
-                  connection->getMulticastIpV4Ttl());
+               mediaLine->addRtcpConnection(it2->getNetType(), 
+                  it2->getAddressType(), 
+                  it2->getAddress().data(), 
+                  it2->getPort() + 1, 
+                  it2->getMulticastIpV4Ttl());
             }
          }
       }
@@ -664,7 +664,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
          SdpMediaLine::SdpCrypto *crypto = parseCryptoLine(*it2);
          if(crypto)
          {
-            mediaLine->addCryptoSettings(crypto);
+            mediaLine->addCryptoSettings(*crypto);
          }
       }
    }
@@ -816,7 +816,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
       mediaLine->setMaximumPacketRate(resipMedia.getValues("maxprate").front().convertDouble());
    }
 #else
-   // !slg TODO
+   // !slg! TODO
 #endif
 
    if(resipMedia.exists("label"))
@@ -967,7 +967,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
                      pb.data(token, anchor);
                   }
                }
-               mediaLine->addCandidate(candidate);
+               mediaLine->addCandidate(*candidate);
             }
          }
       }
@@ -1229,7 +1229,7 @@ bool SdpHelperResip::parsePotentialConfigurationLine(const resip::Data& pcfgLine
             std::list<SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem>::iterator attributesIt = listsIt->begin();
             for(;attributesIt != listsIt->end(); attributesIt++)
             {
-               potentialConfiguration.addAttributeId(new SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem(*attributesIt));
+               potentialConfiguration.addAttributeId(SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem(*attributesIt));
             }
             pcfgList.push_back(potentialConfiguration);
          }
@@ -1242,7 +1242,7 @@ bool SdpHelperResip::parsePotentialConfigurationLine(const resip::Data& pcfgLine
                std::list<SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem>::iterator attributesIt = listsIt->begin();
                for(;attributesIt != listsIt->end(); attributesIt++)
                {
-                  potentialConfiguration.addAttributeId(new SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem(*attributesIt));
+                  potentialConfiguration.addAttributeId(SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem(*attributesIt));
                }
                pcfgList.push_back(potentialConfiguration);
             }            
@@ -1268,7 +1268,7 @@ bool SdpHelperResip::parsePotentialConfigurationLine(const resip::Data& pcfgLine
                std::list<SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem>::iterator attributesIt = listsIt->begin();
                for(;attributesIt != listsIt->end(); attributesIt++)
                {
-                  potentialConfiguration.addAttributeId(new SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem(*attributesIt));
+                  potentialConfiguration.addAttributeId(SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem(*attributesIt));
                }
                pcfgList.push_back(potentialConfiguration);
             }
@@ -1300,11 +1300,10 @@ void testSDPCapabilityNegotiationParsing(void)
    for(;it2 != pcfgList.end(); it2++)
    {
       cout << "  Config Id=" << it2->getId() << " deleteMediaAttr=" << it2->getDeleteMediaAttributes() << " deleteSessionAttr=" << it2->getDeleteSessionAttributes() << " transportId=" << it2->getTransportId() << endl;
-      UtlSListIterator it3(it2->getAttributeIds());
-      SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem* configIdItem;
-      while((configIdItem = (SdpMediaLine::SdpPotentialConfiguration::ConfigIdItem*) it3()))
+      SdpMediaLine::SdpPotentialConfiguration::ConfigIdList::const_iterator it3 = it2->getAttributeIds().begin();
+      for(;it3 != it2->getAttributeIds().end(); it3++)
       {
-         cout << "   AttributeId=" << configIdItem->getId() << " optional=" << configIdItem->getOptional() << endl;
+         cout << "   AttributeId=" << it3->getId() << " optional=" << it3->getOptional() << endl;
       }
    }
 
