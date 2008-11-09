@@ -56,8 +56,6 @@ Some Existing Limitations with sipX media Integration
     b.  When playing media tones and files, the local-only and remote-only flags have not 
         yet been implemented, and will not currently work.
 
-3.  RFC2833 DTMF detection is currently not working.
-
 
 
 SRTP Implementation Notes
@@ -94,7 +92,7 @@ Setting up build environment:
 4.  cd resip/contrib
 5.  svn checkout https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl openssl
 
-Note:  Ensure you use at least SVN revision 10660 of sipXtapi.
+Note:  Ensure you use at least SVN revision 10809 of sipXtapi.
 
 /resip/                     <- https://svn.resiprocate.org/rep/resiprocate/main
 /resip/contrib/openssl      <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
@@ -137,14 +135,20 @@ Building recon on Windows
 1.  Ensure the build environment is setup as indicated above.
 2.  Use the recon_7_1.sln Visual Studio 2003 or recon_8_0.sln Visual Studio 2005 
     solution file
-4.  Open the sipXmediaAdapterLib project settings and enable the following defines:
+3.  Open the sipXmediaAdapterLib project settings and enable the following defines:
     DISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY
     ENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY
     by removing the 'xx' characters from the Preprocessor defines.
     You should do this for both Debug and Release project settings.
-5.  Open the sipXmediaAdapterLib and sipXmediaLib project settings and add the 
+4.  Open the sipXmediaAdapterLib and sipXmediaLib project settings and add the 
     following define:  DISABLE_STREAM_PLAYER to the Preprocessor defines.
     You should do this for both Debug and Release project settings.
+5.  Provide an include path to pcre for the sipXmediaLib projects by doing one 
+    of the following: 
+    - Modify your base Visual Studio settings for include paths - add an include 
+      path to \resip\contrib\pcre 
+    - Modify the Additional Include Directories settings of the sipXmediaAdapterLib, 
+      sipXmedaLib and sipXportLib projects to include: ";..\..\resip\contrib\pcre"     
 6.  Build solution.
 
 
@@ -154,6 +158,8 @@ A note on testUA executable requirements:
 By default you will be able to run testUA from the VS debugger, but if you decide
 to run testUA.exe on another machine you will need the following:
 - codec_*.dll from sipXtapi/sipXmediaLib/bin directory
+- ca.pem file in working directory - contains acceptable root certificate authority (CA) 
+  certificates for TURN over TLS 
 - VS 2003/2005 - C-runtime libaries present on the destination system
 
 
@@ -176,12 +182,12 @@ Note:  sipXtackLib is no longer required with the addition of the DISABLE_STREAM
 4.  To build sipXmediaLib:
     cd sipXtapi/sipXmediaLib
     autoreconf -fi
-    ./configure --prefix=/tmp/stage --enable-local-audio CXXFLAGS="-DDISABLE_STREAM_PLAYER"
+    ./configure --prefix=/tmp/stage --enable-local-audio --disable-stream-player
     make
 5.  To build sipXmediaAdapterLib:
     cd sipXtapi/sipXmediaAdapterLib
     autoreconf -fi
-    ./configure --prefix=/tmp/stage CXXFLAGS="-DDISABLE_DEFAULT_PHONE_MEDIA_INTERFACE_FACTORY -DENABLE_TOPOLOGY_FLOWGRAPH_INTERFACE_FACTORY -DDISABLE_STREAM_PLAYER"
+    ./configure --prefix=/tmp/stage --enable-topology-graph --disable-stream-player
     make
 
 
@@ -207,7 +213,9 @@ Running testua on Generic Linux
 1.  Go to resip/resip/recon/test
 2.  To run testUA ensure the codec plugins are in the same directory as the executable:
     cp ../../../../sipXtapi/sipXmediaLib/bin/*.so ./
-3.  ./testUA
+3.  ca.pem file in working directory - contains acceptable root certificate authority 
+    (CA) certificates for TURN over TLS     
+4.  ./testUA
 
 
 
@@ -216,16 +224,12 @@ TODO List
 In order for recon to appeal to the widest audience possible, some changes
 should be made in order to provide a better layer between the underlying
 media stack (currently sipXtapi) and the Conversation Manager.  The following
-tasks are required:
-1.  Re-write the SDP library.  The SDP library provides a semantic representation 
-    of the information conveyed in the Session Description Protocol (SDP), 
-    including ICE candidates and components.  It is currently created in sipX 
-    style code and reside in the sipXtapi repository (sipXsdpLib).  This library
-    should be ported/rewritten in resip style containers.  Once this is complete we 
-    can modify the offer/answer logic in recon to only be dependant on resip.
-2.  Provide a media access API/thin layer so that sipX API's are not accessed directly
-    from different areas in recon source code.  Currently sipX API's are accessed 
-    in the following locations:
+task is required:
+
+Provide a media access API/thin layer so that sipX API's are not accessed directly
+from different areas in recon source code.  Currently sipX API's are accessed 
+in the following locations:
+
     ConversationManager.cxx - contains main sipXmediaFactory and sipXmediaInterface - the interface into sipX library
       - createMediaInterface
       - setVolume

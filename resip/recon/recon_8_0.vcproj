@@ -234,7 +234,27 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SdpHelperResip.cxx"
+				RelativePath=".\sdp\Sdp.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpCandidate.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpCandidatePair.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpCodec.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpHelperResip.cxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpMediaLine.cxx"
 				>
 			</File>
 			<File
@@ -343,7 +363,27 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SdpHelperResip.hxx"
+				RelativePath=".\sdp\Sdp.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpCandidate.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpCandidatePair.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpCodec.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpHelperResip.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\sdp\SdpMediaLine.hxx"
 				>
 			</File>
 			<File

@@ -17,8 +17,11 @@ class DialogUsageManager;
 class SipMessage;
 }
 
-class Sdp;  // SipX Sdp
+namespace sdpcontainer
+{
+class Sdp; 
 class SdpMediaLine;
+}
 
 namespace recon
 {
@@ -119,13 +122,13 @@ private:
    void unhold();
    void provideOffer(bool postOfferAccept);
    bool provideAnswer(const resip::SdpContents& offer, bool postAnswerAccept, bool postAnswerAlert);
-   bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, SdpMediaLine* sdpMediaLine, resip::SdpContents& answer, bool potential);
+   bool answerMediaLine(resip::SdpContents::Session::Medium& mediaSessionCaps, const sdpcontainer::SdpMediaLine& sdpMediaLine, resip::SdpContents& answer, bool potential);
    bool buildSdpAnswer(const resip::SdpContents& offer, resip::SdpContents& answer);
    bool formMidDialogSdpOfferOrAnswer(const resip::SdpContents& localSdp, const resip::SdpContents& remoteSdp, resip::SdpContents& newSdp, bool offer);
    void setProposedSdp(const resip::SdpContents& sdp);
    void setLocalSdp(const resip::SdpContents& sdp);
    void setRemoteSdp(const resip::SdpContents& sdp, bool answer=false);
-   void setRemoteSdp(const resip::SdpContents& sdp, Sdp* remoteSdp);
+   void setRemoteSdp(const resip::SdpContents& sdp, sdpcontainer::Sdp* remoteSdp);
    void adjustRTPStreams(bool sendingOffer=false);
 
    resip::DialogUsageManager &mDum;
@@ -174,9 +177,9 @@ private:
    PendingRequest mPendingRequest;
    std::auto_ptr<resip::SdpContents> mPendingOffer;
 
-   Sdp* mProposedSdp;
-   Sdp* mLocalSdp;
-   Sdp* mRemoteSdp;
+   sdpcontainer::Sdp* mProposedSdp;
+   sdpcontainer::Sdp* mLocalSdp;
+   sdpcontainer::Sdp* mRemoteSdp;
 
    ConversationMap mRelatedConversations;
 };
