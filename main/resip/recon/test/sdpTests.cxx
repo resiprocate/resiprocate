@@ -354,7 +354,7 @@ int sdpTests()
       mediaLine->addCandidatePair(*sdpLocalCandidate, *sdpRemoteCandidate, SdpCandidatePair::OFFERER_LOCAL);
       assert(mediaLine->getCandidatePairs().size() == 2);
       SdpMediaLine::SdpCandidatePairList::iterator it2 = mediaLine->getCandidatePairs().begin();
-      assert(it2->getPriority() == UInt64(240518168779));
+      assert(it2->getPriority() == UInt64(240518168981));
       assert(it2->getLocalCandidate().getPort() == 6001);
       assert(it2->getRemoteCandidate().getPort() == 2346);
       assert(it2->getOfferer() == SdpCandidatePair::OFFERER_LOCAL);
@@ -362,7 +362,7 @@ int sdpTests()
       it2->setCheckState(SdpCandidatePair::CHECK_STATE_WAITING);
       assert(it2->getCheckState() == SdpCandidatePair::CHECK_STATE_WAITING);
       it2++;
-      assert(it2->getPriority() == UInt64(236223201480));
+      assert(it2->getPriority() == UInt64(236223201680));
 
       delete sdpRemoteCandidate;
 
