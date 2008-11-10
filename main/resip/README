@@ -5,12 +5,12 @@ Adding New Files to a module
 
 Example: Adding a new file Foo.cxx to the stack
 
-1) Edit sip/resiprocate/Makefile
+1) Edit resip/stack/Makefile
 2) Add Foo.cxx to the SRC list
 
-Example: Adding a new file os/Bar.cxx to the stack
-1) Edit sip/resiprocate/Makefile
-2) Add os/Bar.cxx to the SRC list
+Example: Adding a new file Bar.cxx to rutil
+1) Edit rutil/Makefile
+2) Add Bar.cxx to the SRC list
 
 Notes: 
 - All files noted in SRC list will be added to the target library
@@ -25,7 +25,7 @@ e.g. LDLIBS += -lmyspeciallib
 Creating an application based on the stack: 
 
 Option 1:  (Using the resip build system)
-For a example applications using the resip build system look at sip/presSvr or sip/resiprocate/test
+For example applications using the resip build system look at resip/stack/test or at repro.
 
 ###########################################################################################
 # Create a Makefile in the directory with the units with the following template
@@ -48,7 +48,7 @@ include $(BUILD)/Makefile.pre
 #LDLIBS += -lmylib
 
 # All of these packages are prerequisites for resiprocate
-PACKAGES += RESIPROCATE OPENSSL ARES PTHREAD
+PACKAGES += RESIP RUTIL OPENSSL ARES PTHREAD
 
 # Add an entry to TESTPROGRAMS for each target that has a main in it
 # On linux this will generate an executable in bin.debug.Linux.i686/main
@@ -65,8 +65,8 @@ include $(BUILD)/Makefile.post
 Option 2: (Using a third party build system)
 
 Prerequisites: 
-- Install ares library from sip/contrib/ares 
-  - cd sip/contrib/ares
+- Install ares library from contrib/ares 
+  - cd contrib/ares
   - ./configure
   - make
   - make install
@@ -83,6 +83,6 @@ CXXFLAGS += -Wall -fPIC -Wno-deprecated -march=i686 \
             -D_REENTRANT -DUSE_SSL -DNEW_MSG_HEADER_SCANNER -DUSE_IPV6 -DUSE_ARES \
             -I/usr/kerberos/include -I$(RESIP_DIR)/lib.debug.Linux.i686 
 LDFLAGS += -L$(RESIP_DIR)/lib.debug.Linux.i686 
-LDLIBS += -lresiprocate -lssl -lcrypto -lares -lpthread
+LDLIBS += -lresip -lrutil -lssl -lcrypto -lares -lpthread
 
 

@@ -3,10 +3,7 @@ Quick guide to building the libraries and tests:
 
 1) ./configure
 
-Configure Options:
-  --with-shared-libs              only build shared libraries
-  --with-openssl                  include TLS support via OpenSSL
-  --with-distcc                   use distributed compilation tool distcc
+By default, configure runs interactively, prompting for each configuration option. configure may be run in non-interactive mode by using a -y flag. Additionally, a -m flag may be used for menu-based configuration.
 
 2) make
 
@@ -22,12 +19,6 @@ setenv LD_LIBRARY_PATH $(RESIP_PATH)/lib.opt.Linux.i686
 
 e.g. BASH example on an Intel Macintosh running OS X
 export DYLD_LIBRARY_PATH=$(RESIP_PATH)/obj.debug.Darwin.i386
-
-To build with optimization level -O3: 
-% make CODE_OPTIMIZE=3
-
-To build with profiling (gprof) turned on: 
-% make CODE_PROFILE=1
 
 To build with distcc for distributed compilation (assume you have 4 hosts runing distccd)
 See http://distcc.samba.org/
