@@ -1038,7 +1038,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       boost::shared_ptr<resip::SipMessage> makeResponse(resip::SipMessage& request, int code);
       
       resip::DeprecatedDialog* getDialog(); // get the first dialog
-      resip::DeprecatedDialog* getDialog(const resip::CallId& callId);
+      resip::DeprecatedDialog* getDialog(const resip::CallId& callId,
+                                          const resip::Data& remoteTag=resip::Data::Empty);
       resip::DeprecatedDialog* getDialog(const resip::Uri& target);      
       resip::DeprecatedDialog* getDialog(const resip::NameAddr& target);      
       resip::DeprecatedDialog* getDialog(const resip::Data& user);
