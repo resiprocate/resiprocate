@@ -540,19 +540,22 @@ TestSipEndPoint::getDialog()
 }
 
 DeprecatedDialog*
-TestSipEndPoint::getDialog(const CallId& callId)
+TestSipEndPoint::getDialog(const CallId& callId,
+                           const resip::Data& remoteTag)
 {
-   DebugLog(<< "searching for callid: " << callId);
+   DebugLog(<< "searching for callid: " << callId << " tag:" << remoteTag);
    for(DialogList::iterator it = mDialogs.begin();
        it != mDialogs.end(); it++)
    {
       DebugLog (<< "Comparing to dialog: " << (*it));
-      if ( (*it)->getCallId() == callId)
+      if ( (*it)->getCallId() == callId && (remoteTag.empty() || (*it)->getRemoteTag()==remoteTag))
       {
-         DebugLog(<< "Dialog: " << *it << "  " << (*it)->getCallId() << "matched.");
+         DebugLog(<< "Dialog: " << *it << "  " << (*it)->getCallId() << " "
+         << (*it)->getRemoteTag() << " matched.");
          return *it;
       }
-      DebugLog(<< "Dialog: " << *it << "  " << (*it)->getCallId() << "did not match.");
+      DebugLog(<< "Dialog: " << *it << "  " << (*it)->getCallId() << " "
+         << (*it)->getRemoteTag() <<  "did not match.");
    }
    return 0;
 }
@@ -607,7 +610,8 @@ TestSipEndPoint::makeResponse(SipMessage& request, int responseCode)
          request.header(h_RequestLine).getMethod() == SUBSCRIBE ||
          request.header(h_RequestLine).getMethod() == PUBLISH) )
    {
-      DeprecatedDialog* dialog = getDialog(request.header(h_CallId));
+      DeprecatedDialog* dialog = getDialog(request.header(h_CallId),
+                                                request.header(h_From).param(p_tag));
       if (!dialog)
       {
          DebugLog(<< "making a dialog, contact: " << getContact());
@@ -622,7 +626,8 @@ TestSipEndPoint::makeResponse(SipMessage& request, int responseCode)
    }
    else
    {
-      DeprecatedDialog* dialog = getDialog(request.header(h_CallId));
+      DeprecatedDialog* dialog = getDialog(request.header(h_CallId),
+                                                request.header(h_From).param(p_tag));
       if (!dialog)
       {
          DebugLog(<<"making response outside of dialog, contact: " << getContact());
@@ -659,7 +664,15 @@ TestSipEndPoint::ByeTo::go(shared_ptr<SipMessage> msg, const Uri& target)
 shared_ptr<SipMessage>
 TestSipEndPoint::Bye::go(shared_ptr<SipMessage> msg)
 {
-   DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId));
+   resip::Data remoteTag(msg->isRequest() ? msg->header(h_From).param(p_tag) :
+                                            msg->header(h_To).param(p_tag) );
+   DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId),remoteTag);
+   if(!dialog)
+   {
+      resip::Data localTag(!msg->isRequest() ? msg->header(h_From).param(p_tag):
+                                               msg->header(h_To).param(p_tag) );
+      dialog=mEndPoint.getDialog(msg->header(h_CallId),localTag);
+   }
    assert(dialog);
    shared_ptr<SipMessage> bye(dialog->makeBye());
    return bye;
@@ -682,7 +695,9 @@ TestSipEndPoint::Notify200To::go(shared_ptr<SipMessage> msg, const Uri& target)
 shared_ptr<SipMessage>
 TestSipEndPoint::Notify200::go(shared_ptr<SipMessage> msg)
 {
-   DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId));
+   resip::Data remoteTag(msg->isRequest() ? msg->header(h_From).param(p_tag) :
+                                            msg->header(h_To).param(p_tag) );
+   DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId),remoteTag);
    assert(dialog);
    shared_ptr<SipMessage> notify(dialog->makeNotify());
    notify->header(h_Event).value() = "refer";
@@ -2076,7 +2091,9 @@ TestSipEndPoint::Notify::go(boost::shared_ptr<resip::SipMessage> msg)
    }
    else
    {
-      DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId));
+      resip::Data remoteTag(msg->isRequest() ? msg->header(h_From).param(p_tag) :
+                                               msg->header(h_To).param(p_tag) );
+      DeprecatedDialog* dialog = mEndPoint.getDialog(msg->header(h_CallId),remoteTag);
       assert(dialog);
       shared_ptr<SipMessage> notify(dialog->makeNotify());
       notify->setContents(mContents.get());
@@ -2565,7 +2582,8 @@ TestSipEndPoint::Ack::go(shared_ptr<SipMessage> response)
 
    if (code == 200)
    {
-      DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
+      DeprecatedDialog* dialog = mEndPoint.getDialog(response->header(h_CallId),
+                                                      response->header(h_To).param(p_tag));
       if(dialog)
       {
          DebugLog(<< "Constructing ack against 200 using dialog.");
@@ -2646,7 +2664,8 @@ TestSipEndPoint::AckNewTid::go(shared_ptr<SipMessage> response)
    if (code == 200)
    {
       DebugLog(<< "Constructing ack against 200 using dialog.");
-      DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
+      DeprecatedDialog* dialog = mEndPoint.getDialog(response->header(h_CallId),
+                                                      response->header(h_To).param(p_tag));
       assert (dialog);
       DebugLog(<< *dialog);
       // !dlb! should use contact from 200?
@@ -2697,7 +2716,8 @@ TestSipEndPoint::AckOldTid::go(shared_ptr<SipMessage> response)
    if (code == 200)
    {
       DebugLog(<< "Constructing ack against 200 using dialog.");
-      DeprecatedDialog* dialog = mEndPoint.getDialog(invite->header(h_CallId));
+      DeprecatedDialog* dialog = mEndPoint.getDialog(response->header(h_CallId),
+                                                      response->header(h_To).param(p_tag));
       assert (dialog);
       DebugLog(<< *dialog);
       // !dlb! should use contact from 200?
@@ -3450,7 +3470,8 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
          
          assert(invite != 0);
          
-         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
+         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId),
+                                                msg->header(h_To).param(p_tag));
          if (dialog != 0)
          {
             dialog->targetRefreshResponse(*msg);
@@ -3491,7 +3512,8 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
          shared_ptr<SipMessage> subscribe = getSentSubscribe(msg);
          assert(subscribe != 0);
          
-         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
+         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId),
+                                                msg->header(h_To).param(p_tag));
          if (dialog != 0)
          {
             CerrLog(<< "refreshing with SUBSCRIBE/2xx");
@@ -3518,7 +3540,8 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
       if (msg->header(h_RequestLine).getMethod() == INVITE)
       {
          storeReceivedInvite(msg);
-         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
+         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId),
+                                                msg->header(h_From).param(p_tag));
          if (dialog != 0)
          {
             if (dialog->targetRefreshRequest(*msg) != 0)
@@ -3530,7 +3553,8 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
       if (msg->header(h_RequestLine).getMethod() == UPDATE)
       {
          storeReceivedUpdate(msg);
-         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
+         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId),
+                                                msg->header(h_From).param(p_tag));
          if (dialog != 0)
          {
             if (dialog->targetRefreshRequest(*msg) != 0)
@@ -3542,7 +3566,8 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
       else if (msg->header(h_RequestLine).getMethod() == SUBSCRIBE)
       {
          storeReceivedSubscribe(msg);
-         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
+         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId),
+                                                msg->header(h_From).param(p_tag));
          if (dialog != 0)
          {
             if (dialog->targetRefreshRequest(*msg) != 0)
@@ -3554,7 +3579,8 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
       else if (msg->header(h_RequestLine).getMethod() == PUBLISH)
       {
          storeReceivedPublish(msg);
-         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId));
+         DeprecatedDialog* dialog = getDialog(msg->header(h_CallId),
+                                                msg->header(h_From).param(p_tag));
          if (dialog != 0)
          {
             if (dialog->targetRefreshRequest(*msg) != 0)
