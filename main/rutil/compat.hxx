@@ -144,6 +144,25 @@ typedef unsigned int   UInt32;
 #  define REASONABLE_TEMPLATES
 #endif
 
+// .bwc. This is the only place we check for USE_IPV6 in a header file. This 
+// code has no effect if USE_IPV6 is not set, so this should only kick in when
+// we're building the resip libs. If someone sets USE_IPV6 while building
+// against the resip libs, no resip header file will care, but if the platform
+// doesn't support IPv6, we will undef USE_IPV6.
+#ifdef USE_IPV6
+#ifndef IPPROTO_IPV6
+#ifdef _MSC_VER
+#define __STR2__(x) #x
+#define __STR1__(x) __STR2__(x)
+#define __LOC__ __FILE__ "("__STR1__(__LINE__)"): "
+#pragma message (__LOC__ " IPv6 support requested, but IPPROTO_V6 undefined; this platform does not appear to support IPv6 ")
+#else
+#warning IPv6 support requested, but IPPROTO_IPV6 undefined; this platform does not appear to support IPv6
+#endif
+#undef USE_IPV6
+#endif
+#endif
+
 #endif
 
 /* ====================================================================
