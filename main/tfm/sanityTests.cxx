@@ -5580,11 +5580,21 @@ class TestHolder : public Fixture
          jason->message(*derek,"Ping"),
          jason->expect(MESSAGE/407, from(proxy), WaitForResponse, jason->digestRespond()),
          derek->expect(MESSAGE, from(proxy), WaitForCommand, chain(derek->ring(),derek->ring(),derek->ring(),derek->ring(),derek->send486())),
-         jason->expect(MESSAGE/180, from(proxy),WaitForResponse, jason->noAction()),
-         jason->expect(MESSAGE/180, from(proxy),WaitForResponse, jason->noAction()),
-         jason->expect(MESSAGE/180, from(proxy),WaitForResponse, jason->noAction()),
-         jason->expect(MESSAGE/180, from(proxy),WaitForResponse, jason->noAction()),
-         jason->expect(MESSAGE/486, from(proxy),WaitForResponse, jason->noAction()),
+         And
+         (
+            Sub
+            (
+               optional(derek->expect(MESSAGE, from(proxy), WaitForCommand,derek->noAction()))
+            ),
+            Sub
+            (
+               jason->expect(MESSAGE/180, from(proxy),WaitForResponse, jason->noAction()),
+               jason->expect(MESSAGE/180, from(proxy),WaitForResponse, jason->noAction()),
+               jason->expect(MESSAGE/180, from(proxy),WaitForResponse, jason->noAction()),
+               jason->expect(MESSAGE/180, from(proxy),WaitForResponse, jason->noAction()),
+               jason->expect(MESSAGE/486, from(proxy),WaitForResponse, jason->noAction())
+            )
+         ),
          WaitForEndOfTest
       );
       
