@@ -1251,17 +1251,23 @@ ResponseContext::forwardBestResponse()
    }
    
    
-   if(mBestResponse.header(h_StatusLine).statusCode() == 503 ||
-      (mBestResponse.header(h_StatusLine).statusCode() == 408 &&
-      mBestResponse.method()!=INVITE))
+   if(mBestResponse.header(h_StatusLine).statusCode() == 503)
    {
       //See RFC 3261 sec 16.7, page 110, paragraph 2
       mBestResponse.header(h_StatusLine).statusCode() = 480;
    }
 
-   mRequestContext.sendResponse(mBestResponse);
-
-}   
+   if(mBestResponse.header(h_StatusLine).statusCode() == 408 &&
+      mBestResponse.method()!=INVITE)
+   {
+      // We don't forward back NIT 408; we just silently abandon the transaction
+      mRequestContext.getProxy().getStack().abandonServerTransaction(mRequestContext.mTid);
+   }
+   else
+   {
+      mRequestContext.sendResponse(mBestResponse);
+   }
+}
 
 
 EncodeStream& 
