@@ -5,6 +5,7 @@ PACKAGES += RECON DUM RESIP REFLOW RETURNCLIENT RUTIL ARES ASIO OPENSSL SRTP SIP
 
 TESTPROGRAMS += \
 	testUA.cxx \
+	sdpTests.cxx \
 	unitTests.cxx
 
 include $(BUILD)/Makefile.post

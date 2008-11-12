@@ -6,7 +6,9 @@
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 
+#ifdef WIN32
 extern int sdpTests(void);
+#endif 
 
 ///////////////////////////////////////////////////////////////////////////
 // SCENARIOS UNDER TEST
@@ -717,8 +719,10 @@ main (int argc, char** argv)
       exit( -1 );
    }
 
+#ifdef WIN32
    // Run SdpTests
    sdpTests();
+#endif
 
    Log::initialize(Log::Cout, LOG_LEVEL, argv[0]);
    //Log::initialize(Log::Cout, resip::Log::Debug, argv[0]);
