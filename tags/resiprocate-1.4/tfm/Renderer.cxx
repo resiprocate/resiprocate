@@ -10,8 +10,8 @@ Renderer::Renderer(const AsciiGraphic& graphic)
 {
 }
 
-EncodeStream&
-operator<<(EncodeStream& str, const Renderer& renderer)
+std::ostream&
+operator<<(std::ostream& str, const Renderer& renderer)
 {
    str << endl;
    renderer.mGraphic.renderToStream(str);

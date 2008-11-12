@@ -25,12 +25,10 @@ using namespace std;
 DigestAuthenticator::DigestAuthenticator( UserStore& userStore, 
                                           resip::SipStack* stack, 
                                           bool noIdentityHeaders, 
-                                          const Data& httpHostname, 
                                           int httpPort,
                                           bool useAuthInt,
                                           bool rejectBadNonces) :
             mNoIdentityHeaders(noIdentityHeaders),
-            mHttpHostname(httpHostname),
             mHttpPort(httpPort),
             mUseAuthInt(useAuthInt),
             mRejectBadNonces(rejectBadNonces)
@@ -217,7 +215,8 @@ DigestAuthenticator::process(repro::RequestContext &rc)
 #if defined(USE_SSL)
                if(!mNoIdentityHeaders)
                {
-                  static Data http("http://" + mHttpHostname + ":" + Data(mHttpPort) + "/cert?domain=");
+                  static Data http("http://");
+                  static Data post(":" + Data(mHttpPort) + "/cert?domain=");
                   // .bwc. Leave pre-existing Identity headers alone.
                   if(!sipMessage->exists(h_Identity))
                   {
@@ -236,8 +235,11 @@ DigestAuthenticator::process(repro::RequestContext &rc)
                         sipMessage->remove(h_IdentityInfo);
                      }
                      
-                     sipMessage->header(h_IdentityInfo).uri() = http + realm;
+                     sipMessage->header(h_IdentityInfo).uri() = http 
+                        + DnsUtil::getLocalHostName() 
+                        + post + realm;
                      InfoLog (<< "Identity-Info=" << sipMessage->header(h_IdentityInfo).uri());
+
                   }
                }
 #endif

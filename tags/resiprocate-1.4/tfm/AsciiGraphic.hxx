@@ -15,7 +15,7 @@ class AsciiGraphic
 
       typedef std::vector<char*> CharRaster;
 
-      void renderToStream(EncodeStream& str) const;
+      void renderToStream(std::ostream& str) const;
       virtual Box& displaceDown(const Box& box);
       virtual Box& displaceRight(const Box& box);
 
