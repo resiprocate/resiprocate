@@ -383,7 +383,7 @@ int main(int argc, char* argv[])
       assert(sdp.getMediaLines().size() == 2);
 
       // Ensure string builder does not crash
-      cout << sdp << std::endl;
+      resipCout << sdp << std::endl;
 
       // Test FoundationId interface
       assert(sdp.getLocalFoundationId(SdpCandidate::CANDIDATE_TYPE_HOST, "127.0.0.1") == "1");
@@ -457,7 +457,7 @@ int main(int argc, char* argv[])
          if(convSdp)
          {
             // Ensure string builder does not crash            
-            cout << "\n\nResip Sdp Helper Test:" << endl << *convSdp << endl;
+            resipCout << "\n\nResip Sdp Helper Test:" << endl << *convSdp << endl;
 
             // Perform some random assertions
             assert(convSdp->getLocalFoundationId(SdpCandidate::CANDIDATE_TYPE_HOST, "127.0.0.1") == "1");
@@ -506,7 +506,7 @@ int main(int argc, char* argv[])
             Sdp copySdp(*convSdp);
 
             // Ensure string builder does not crash
-            cout << copySdp << endl;
+            resipCout << copySdp << endl;
 
             // Perform some random assertions on copy
             assert(copySdp.getLocalFoundationId(SdpCandidate::CANDIDATE_TYPE_HOST, "127.0.0.2") == "2");
