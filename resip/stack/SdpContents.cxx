@@ -1643,7 +1643,12 @@ SdpContents::Session::Medium::codecs()
              if (ri != staticCodecs.end())
              {
                 //DebugLog(<< "Found static codec for format: " << mapKey);
-                mCodecs.push_back(ri->second);
+                Codec codec(ri->second);
+
+                // Look for format parameters, and assign
+                codec.assignFormatParameters(*this);
+
+                mCodecs.push_back(codec);
              }
          }
       }
@@ -1774,6 +1779,12 @@ Codec::parse(ParseBuffer& pb,
    }
    mPayloadType = payloadType;
 
+   assignFormatParameters(medium); 
+}
+
+void
+Codec::assignFormatParameters(const SdpContents::Session::Medium& medium)
+{
    // get parameters if they exist
    if (medium.exists(fmtp))
    {
@@ -1782,7 +1793,7 @@ Codec::parse(ParseBuffer& pb,
       {
          ParseBuffer pb(i->data(), i->size());
          int payload = pb.integer();
-         if (payload == payloadType)
+         if (payload == mPayloadType)
          {
             const char* anchor = pb.skipWhitespace();
             pb.skipToEnd();
