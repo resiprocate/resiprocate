@@ -62,7 +62,6 @@ class SdpContents : public Contents
                   void parse(ParseBuffer& pb,
                              const SdpContents::Session::Medium& medium,
                              int payLoadType);
-                  void assignFormatParameters(const SdpContents::Session::Medium& medium);
 
                   const Data& getName() const;
                   int getRate() const;
