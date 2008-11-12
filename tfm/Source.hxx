@@ -20,7 +20,7 @@ class Source
 
 typedef std::set<Source> SourceSet;
 
-EncodeStream& operator<<(EncodeStream& os, const Source& src);
+std::ostream& operator<<(std::ostream& os, const Source& src);
 
 #endif
 /*

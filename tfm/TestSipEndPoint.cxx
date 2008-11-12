@@ -3225,8 +3225,8 @@ TestSipEndPoint::SipExpect::getMsgTypeString() const
    }
 }
 
-EncodeStream& 
-TestSipEndPoint::SipExpect::output(EncodeStream& s) const
+ostream& 
+TestSipEndPoint::SipExpect::output(ostream& s) const
 {
    if (isOptional())
    {
@@ -3240,7 +3240,6 @@ TestSipEndPoint::SipExpect::output(EncodeStream& s) const
       s << ")";
    }
 
-   s.flush();
    return s;
 }
 

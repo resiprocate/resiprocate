@@ -74,8 +74,8 @@ class SequenceSet
       SequenceSet& operator=(const SequenceSet&);
 };
 
-EncodeStream&
-operator<<(EncodeStream& str, const SequenceSet& sset);
+std::ostream&
+operator<<(std::ostream& str, const SequenceSet& sset);
 
 #endif
 /*

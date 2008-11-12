@@ -68,7 +68,7 @@ class SequenceClass : public AsciiGraphic
 
       void fail(const resip::Data& message);
 
-      void prettyPrint(EncodeStream& str, bool& previousActive, int ind = 5) const;
+      void prettyPrint(std::ostream& str, bool& previousActive, int ind = 5) const;
 
       virtual void render(AsciiGraphic::CharRaster &craster) const;
       virtual Box layout() const;
@@ -120,15 +120,15 @@ class SequenceClass : public AsciiGraphic
       bool mTimingOut;
       resip::ValueFifo< boost::shared_ptr<Event> >::TimerId mTimerId;
 
-      friend EncodeStream& operator<<(EncodeStream& s, const SequenceClass& sequence);
+      friend std::ostream& operator<<(std::ostream& s, const SequenceClass& sequence);
 
       // no value semantics
       SequenceClass(const SequenceClass& sequence);
       SequenceClass& operator=(const SequenceClass&);
 };
 
-EncodeStream&
-operator<<(EncodeStream& s, const SequenceClass& sequence);
+std::ostream&
+operator<<(std::ostream& s, const SequenceClass& sequence);
 
 bool
 operator<(const SequenceClass& lhs, const SequenceClass& rhs);

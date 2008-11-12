@@ -207,7 +207,11 @@ SipMessage::cleanUp()
    delete mForceTarget;
    mForceTarget = 0;
 
-   clearOutboundDecorators();
+   while(!mOutboundDecorators.empty())
+   {
+      delete mOutboundDecorators.back();
+      mOutboundDecorators.pop_back();
+   }
 }
 
 SipMessage*
@@ -1608,16 +1612,6 @@ SipMessage::callOutboundDecorators(const Tuple &src, const Tuple &dest)
     (*i)->decorateMessage(*this, src, dest);
   }
   mIsDecorated = true;
-}
-
-void 
-SipMessage::clearOutboundDecorators()
-{
-   while(!mOutboundDecorators.empty())
-   {
-      delete mOutboundDecorators.back();
-      mOutboundDecorators.pop_back();
-   }
 }
 
 void 

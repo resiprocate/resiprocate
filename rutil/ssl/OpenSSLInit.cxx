@@ -38,13 +38,8 @@ OpenSSLInit::OpenSSLInit()
 	int locks = CRYPTO_num_locks();
 	mMutexes = new Mutex[locks];
 	CRYPTO_set_locking_callback(OpenSSLInit::lockingFunction);
-
-#if !defined(WIN32)
-#if defined(_POSIX_THREADS)
+#if !defined(WIN32) && defined(PTHREADS)
 	CRYPTO_set_id_callback(OpenSSLInit::threadIdFunction);
-#else
-#error Can't set OpenSSL up to be threadsafe!
-#endif
 #endif
 
 #if 0 //?dcm? -- not used by OpenSSL yet?
@@ -99,7 +94,7 @@ OpenSSLInit::threadIdFunction()
 #if defined(WIN32)
    assert(0);
 #else
-#ifndef _POSIX_THREADS
+#ifndef PTHREADS
    assert(0);
 #endif
    unsigned long ret;

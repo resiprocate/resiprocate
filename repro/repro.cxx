@@ -143,7 +143,6 @@ main(int argc, char** argv)
    }
 
    /* Initialize a stack */
-   initNetwork();
    CommandLineParser args(argc, argv);
    if(args.mLogType.lowercase() == "file")
    {
@@ -295,7 +294,6 @@ main(int argc, char** argv)
       {
          DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
                                                            &stack,args.mNoIdentityHeaders,
-                                                           args.mHttpHostname,
                                                            args.mHttpPort,
                                                            !args.mNoAuthIntChallenge /*useAuthInt*/,
                                                            args.mRejectBadNonces);

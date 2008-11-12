@@ -11,7 +11,7 @@ AsciiGraphic::AsciiGraphic() : mBox(0, 0, 0, 0)
 }
 
 void
-AsciiGraphic::renderToStream(EncodeStream& str) const
+AsciiGraphic::renderToStream(ostream& str) const
 {
    // determine the layout of the complete ascii art
    Box box = layout();
@@ -46,7 +46,6 @@ AsciiGraphic::renderToStream(EncodeStream& str) const
       str << out[i] << endl;
    }
 
-   str.flush();
    // cleanup
    for (CharRaster::iterator i = out.begin(); i != out.end(); i++)
    {
