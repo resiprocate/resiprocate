@@ -40,13 +40,7 @@ makeRequestProcessorChain(ProcessorChain& chain,
    IsTrustedNode* isTrusted = new IsTrustedNode(store.mAclStore);
    locators->addProcessor(std::auto_ptr<Processor>(isTrusted));
 
-   DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,
-                                                      stack,
-                                                      false,
-                                                      "localhost",
-                                                      5080,
-                                                      true,
-                                                      false);
+   DigestAuthenticator* da = new DigestAuthenticator(store.mUserStore,stack);
    locators->addProcessor(std::auto_ptr<Processor>(da)); 
 
    AmIResponsible* isme = new AmIResponsible;
