@@ -263,7 +263,6 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
                unsigned int acapId = pb.uInt32();
                Data name;
                Data value;
-               bool ok = false;
                pb.skipToChar(Symbols::SPACE[0]);
                const char * anchor = pb.skipWhitespace();
                if(!pb.eof())
@@ -317,7 +316,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
             for(potMedIt = potentialMedias.begin(); potMedIt != potentialMedias.end(); potMedIt++)
             {
                if(potMedIt->protocol() == resipMedia.protocol() &&
-                  potMedIt->port() == resipMedia.port() &&
+                  potMedIt->port() == (unsigned int)resipMedia.port() &&
                   potMedIt->name() == resipMedia.name())
                {
                   potentialMedium = &(*potMedIt);

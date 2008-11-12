@@ -41,8 +41,8 @@ public:
 
    void setLocalCandidate(const SdpCandidate& localCandidate) { mLocalCandidate = localCandidate; resetPriority(); }
    void setRemoteCandidate(const SdpCandidate& remoteCandidate) { mRemoteCandidate = remoteCandidate; resetPriority(); }
-   void setOfferer(SdpCandidatePairOffererType offerer) { mOfferer = offerer; resetPriority(); }
-   bool setCheckState(SdpCandidatePairCheckState checkState);
+   void setOfferer(const SdpCandidatePairOffererType offerer) { mOfferer = offerer; resetPriority(); }
+   bool setCheckState(const SdpCandidatePairCheckState checkState);
 
    void toString(resip::Data& sdpCandidateString) const;
 
