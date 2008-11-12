@@ -1,0 +1,84 @@
+= Release Notes v 1.4.1 =
+
+==rutil==
+===Bug fixes===
+* fixed a bug where the new fast streams would not encode unsigned char properly
+* added fast stream support for signed char
+* fixed bug where OpenSSL was not being initialized in a threadsafe manner on non-Windows platforms
+
+==stack==
+===Bug fixes===
+* ensure we include codec format parameters (ftmp), even if rtpmap is not provided, when parsing SDP codecs
+* fixed a bug where DNS failover could cause a CANCEL request from the TU to go out with the wrong transaction identifier
+
+==DUM==
+===Bug fixes===
+* fixed a bug where multiple copies of message decorators were being added to outgoing messages
+
+==repro==
+===Bug fixes===
+* fixed a bug where adding a domain on the webadmin wasn't working (this was being caused by a bug in the fast stream classes)
+
+= Release Notes v 1.4 =
+
+==General==
+===New features===
+* Working with installed resip headers/libs no longer requires setting the USE_SSL and USE_IPV6 preprocessor macros to avoid API/ABI mismatch issues
+
+==Build system==
+===New features===
+* better cross-compilation support
+* added a menu-based configuration mode
+
+==rutil==
+===New features===
+* added a faster implementation of std::ostream
+* added some RADIUS utility classes
+
+===Bug fixes===
+* more work on bad asserts in the dns code
+
+==stack==
+===New features===
+* modified TlsConnection so that if a domain certificate is present, then it will be loaded and assigned to TLS client connections (as well as the TLS Server connections).  This allows resip to return a certificate to the Server if it asks for one (ie. MTLS servers).  Note: Errors are only logged or thrown when the certificate is not present in the store for TLS Server connections.
+* updated some documentation on what standards headers are defined in
+* added SipStack::abandonServerTransaction(), which allows a TU to tell the stack to abandon a given server transaction, without requiring the TU to send a response
+* added SipStack::cancelClientInviteTransaction(), which allows a TU to tell the stack to CANCEL a client INVITE transaction; the stack handles the sending of the CANCEL (including waiting for a provisional to come in if it hasn't already)
+* added SipStack::setFixBadCSeqNumbers(), which can configure the stack to automatically ensure that the CSeq number in responses matches the CSeq number in the request
+* added errno logging on SSL_ERROR_SYSCALL in TlsConnection
+
+===Bug fixes===
+* fixed a bug in parsing of embedded headers in a Uri
+* various fixes to the select loop
+* fixed a place in the multipart contents code that was doing case-sensitive comparisons on "Content-Type"
+* fixed a bug where a transport parameter was added to the Contact uri when the Contact uri had a gr parameter
+* fix for a timing issue in resip TLS code (SSL trying to write data before TCP connect was ready)
+* improved the certificate name match (wildcards match for subjectAltName and case insensitive match for commonName)
+* fixed a bug where calling SipMessage::getContents() when the Content-Type header was malformed would cause an exception to be thrown
+* fixed a couple of bugs in SipMessage where an empty single-value header would cause exceptions to be thrown
+* fixed a bug where message-decorators could be run twice on outgoing messages if a DNS failover occurred
+
+==DUM==
+===New features===
+* GRUU support
+* dialog event support
+* more flexible configuration of min, max, and default expires values in ServerRegistration and ServerSubscription
+* add an accessor to InviteSession to get the remote contact header - remoteTarget
+* added RADIUS auth support (subject to depedencies)
+
+===Bug fixes===
+* fixed a bug where calling ClientRegistration::refresh while a previous REGISTER was pending would cause another REGISTER request to be sent.
+* fixed a bug where INFO requests were not handled correctly in a server invite session
+* in ClientSubscription
+** ensure we don't retry if end() was called
+** don't use mRemoteTarget when creating new retry Subscriptions
+** mid-dialog 4xx retry error will no longer create a new dialog - refresh is retried instead
+* fixed bug where InviteSession::onAnswer() was not passing the current remote SDP correctly
+* added a missing entry in the InviteSession EndReason array
+
+==repro==
+===Bug fixes===
+* allow forking to both outbound and non-outbound target simultaneously
+* fix for repro crash when deleting two ACL members at the same time from the web interface
+* fix for WIN32 to catch exceptions thrown from WinCompat::getInterfaces
+* fixed recursive redirect functionality
