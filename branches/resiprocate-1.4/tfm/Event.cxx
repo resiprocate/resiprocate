@@ -16,10 +16,11 @@ Event::getEndPoint() const
    return mEndPoint;
 }
 
-std::ostream& 
-operator<<(std::ostream& str, const Event& event)
+EncodeStream& 
+operator<<(EncodeStream& str, const Event& event)
 {
    str << event.toString();
+   str.flush();
    return str;
 }
 /*

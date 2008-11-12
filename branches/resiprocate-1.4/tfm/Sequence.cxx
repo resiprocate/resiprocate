@@ -128,7 +128,7 @@ SequenceClass::fail(const resip::Data& message)
 }
 
 void
-SequenceClass::prettyPrint(ostream& str, bool& previousActive, int ind) const
+SequenceClass::prettyPrint(EncodeStream& str, bool& previousActive, int ind) const
 {
    if (find(getSequenceSet()->mSequences.begin(),
             getSequenceSet()->mSequences.end(), this) != getSequenceSet()->mSequences.end())
@@ -184,6 +184,7 @@ SequenceClass::prettyPrint(ostream& str, bool& previousActive, int ind) const
       previousActive = true;
    }
    str << ")";
+   str.flush();
 }
 
 bool
@@ -410,8 +411,8 @@ SequenceClass::~SequenceClass()
    mSet.reset();
 }
 
-ostream&
-operator<<(ostream& s, const SequenceClass& sequence)
+EncodeStream&
+operator<<(EncodeStream& s, const SequenceClass& sequence)
 {
    s << "Sequence(" << &sequence << ", line: " << sequence.mLineNumber << ")[";
    for (list<TestEndPoint::ExpectBase*>::const_iterator i = sequence.mExpects.begin();
@@ -420,6 +421,7 @@ operator<<(ostream& s, const SequenceClass& sequence)
       s << **i << ", ";
    }
    s << "]";
+   s.flush();
    return s;
 }
 
