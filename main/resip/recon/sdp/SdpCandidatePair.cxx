@@ -57,7 +57,7 @@ SdpCandidatePair::operator=(const SdpCandidatePair& rhs)
    return *this;
 }
 
-bool SdpCandidatePair::setCheckState(SdpCandidatePairCheckState checkState)
+bool SdpCandidatePair::setCheckState(const SdpCandidatePairCheckState checkState)
 {
    bool stateChangeSuccess=false;
    switch(mCheckState)
@@ -126,7 +126,7 @@ bool SdpCandidatePair::operator<(const SdpCandidatePair& rhs) const
    if(mRemoteCandidate != rhs.mRemoteCandidate)
    {
       return mRemoteCandidate < rhs.mRemoteCandidate;
-   }
+   } 
 
    return false;   // equal
 }
@@ -138,7 +138,7 @@ void SdpCandidatePair::resetPriority()
    UInt64 offererPriority = mOfferer == OFFERER_LOCAL ? mLocalCandidate.getPriority() : mRemoteCandidate.getPriority();
    UInt64 answererPriority = mOfferer == OFFERER_LOCAL ? mRemoteCandidate.getPriority() : mLocalCandidate.getPriority();
    mPriority = (sdpMin(offererPriority, answererPriority)<<32) + 
-               (sdpMax(offererPriority, answererPriority)<<2) + 
+               (sdpMax(offererPriority, answererPriority)<<1) + 
                (offererPriority > answererPriority ? 1 : 0);
 }
 

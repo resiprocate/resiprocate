@@ -592,6 +592,7 @@ public:
    const bool isRtcpCandidatePresent() const { return mRtcpCandidatePresent; }
    const bool isIceSupported() const { return  mRtpCandidatePresent && (!isRtcpEnabled() || mRtcpCandidatePresent); }
 
+   // TODO:  In g++ std::set members are const and cannot be modified, need to update to a new STL type
    const SdpCandidatePairList& getCandidatePairs() const { return mCandidatePairs; }
    SdpCandidatePairList& getCandidatePairs() { return mCandidatePairs; }  // non-const version for manipulation
 
