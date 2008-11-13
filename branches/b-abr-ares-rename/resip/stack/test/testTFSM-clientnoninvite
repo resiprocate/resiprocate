@@ -1,0 +1,85 @@
+inject_tu
+{
+REGISTER sip:localhost SIP/2.0
+Via: SIP/2.0/UDP ;branch=z9hG4bK0000
+Max-Forwards: 70
+From: sip:A@inside.com;tag=12345
+To: sip:A@inside.com
+Call-ID: 0123456789@pc.inside.com
+CSeq: 1 REGISTER
+Contact: <sip:A@localhost>
+Content-Length: 0
+
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_wire
+{
+method=REGISTER
+timeout=40000
+}
+
+expect_tu
+{
+status=408
+timeout=50000
+}
+
+delay
+{
+timeout=50000
+}
+
