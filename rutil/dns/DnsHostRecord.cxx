@@ -28,7 +28,7 @@ DnsHostRecord::DnsHostRecord(const RROverlay& overlay)
 {
    char* name = 0;
    int len = 0;
-   ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
+   rares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
    mName = name;
    free(name);
    memcpy(&mAddr, overlay.data(), sizeof(in_addr));

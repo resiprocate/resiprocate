@@ -30,7 +30,7 @@ DnsAAAARecord::DnsAAAARecord(const RROverlay& overlay)
 #ifdef USE_IPV6
    char* name = 0;
    int len = 0;
-   ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
+   rares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
    mName = name;
    free(name);
    memcpy(&mAddr, overlay.data(), sizeof(in6_addr));

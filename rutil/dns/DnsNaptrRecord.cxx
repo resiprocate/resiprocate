@@ -97,15 +97,15 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
 {
    char* name = 0;
    int len = 0;
-   if (ARES_SUCCESS != ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
+   if (RARES_SUCCESS != rares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
    {
       throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
    }
    mName = name;
    free(name);
 
-   mOrder = DNS__16BIT(overlay.data());
-   mPreference = DNS__16BIT(overlay.data() + 2);
+   mOrder = RARES_DNS__16BIT(overlay.data());
+   mPreference = RARES_DNS__16BIT(overlay.data() + 2);
    const unsigned char* pPos = overlay.data() + 4;
    len = *pPos;
 
@@ -137,7 +137,7 @@ DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
 
    if (pPos[0] != 0)
    {
-      if (ARES_SUCCESS != ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len))
+      if (RARES_SUCCESS != rares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len))
       {
          throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);
       }

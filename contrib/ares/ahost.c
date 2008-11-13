@@ -47,11 +47,11 @@ int main(int argc, char **argv)
   if (argc == 0)
     usage();
 
-  status = ares_init(&channel);
-  if (status != ARES_SUCCESS)
+  status = rares_init(&channel);
+  if (status != RARES_SUCCESS)
     {
-      fprintf(stderr, "ares_init: %s\n", ares_strerror(status, &errmem));
-      ares_free_errmem(errmem);
+      fprintf(stderr, "rares_init: %s\n", rares_strerror(status, &errmem));
+      rares_free_errmem(errmem);
       return 1;
     }
 
@@ -60,10 +60,10 @@ int main(int argc, char **argv)
     {
       addr.s_addr = inet_addr(*argv);
       if (addr.s_addr == INADDR_NONE)
-	ares_gethostbyname(channel, *argv, AF_INET, callback, *argv);
+	rares_gethostbyname(channel, *argv, AF_INET, callback, *argv);
       else
 	{
-	  ares_gethostbyaddr(channel, &addr, sizeof(addr), AF_INET, callback,
+	  rares_gethostbyaddr(channel, &addr, sizeof(addr), AF_INET, callback,
 			     *argv);
 	}
     }
@@ -73,15 +73,15 @@ int main(int argc, char **argv)
     {
       FD_ZERO(&read_fds);
       FD_ZERO(&write_fds);
-      nfds = ares_fds(channel, &read_fds, &write_fds);
+      nfds = rares_fds(channel, &read_fds, &write_fds);
       if (nfds == 0)
 	break;
-      tvp = ares_timeout(channel, NULL, &tv);
+      tvp = rares_timeout(channel, NULL, &tv);
       select(nfds, &read_fds, &write_fds, NULL, tvp);
-      ares_process(channel, &read_fds, &write_fds);
+      rares_process(channel, &read_fds, &write_fds);
     }
 
-  ares_destroy(channel);
+  rares_destroy(channel);
   return 0;
 }
 
@@ -90,10 +90,10 @@ static void callback(void *arg, int status, struct hostent *host)
   struct in_addr addr;
   char *mem, **p;
 
-  if (status != ARES_SUCCESS)
+  if (status != RARES_SUCCESS)
     {
-      fprintf(stderr, "%s: %s\n", (char *) arg, ares_strerror(status, &mem));
-      ares_free_errmem(mem);
+      fprintf(stderr, "%s: %s\n", (char *) arg, rares_strerror(status, &mem));
+      rares_free_errmem(mem);
       return;
     }
 

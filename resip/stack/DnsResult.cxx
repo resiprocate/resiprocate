@@ -676,8 +676,8 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
    int len=0;
    
    // Parse the question name. 
-   status = ares_expand_name(aptr, abuf, alen, &name, &len);
-   if (status != ARES_SUCCESS)
+   status = rares_expand_name(aptr, abuf, alen, &name, &len);
+   if (status != RARES_SUCCESS)
    {
       StackLog (<< "Failed parse of RR");
       return NULL;
@@ -694,8 +694,8 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
    }
 
    // Parse the question type and class. 
-   //int type = DNS_QUESTION_TYPE(aptr);
-   //int dnsclass = DNS_QUESTION_CLASS(aptr);
+   //int type = RARES_DNS_QUESTION_TYPE(aptr);
+   //int dnsclass = RARES_DNS_QUESTION_CLASS(aptr);
    aptr += QFIXEDSZ;
    
    free(name);

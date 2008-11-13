@@ -212,14 +212,14 @@ int RRCache::getTTL(const RROverlay& overlay)
    if (overlay.type() != T_SOA) return -1;
    char* name = 0;
    int len = 0;
-   ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
+   rares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
    const unsigned char* pPos = overlay.data() + len;
    free(name);
-   ares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
+   rares_expand_name(pPos, overlay.msg(), overlay.msgLength(), &name, &len);
    free(name);
    pPos += len;
    pPos += 16; // skip four 32 bit entities.
-   return DNS__32BIT(pPos);         
+   return RARES_DNS__32BIT(pPos);         
 }
 
 void RRCache::purge()

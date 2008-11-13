@@ -35,7 +35,7 @@ struct qquery {
 
 static void qcallback(void *arg, int status, unsigned char *abuf, int alen);
 
-void ares_query(ares_channel channel, const char *name, int dnsclass,
+void rares_query(ares_channel channel, const char *name, int dnsclass,
 		int type, ares_callback callback, void *arg)
 {
   struct qquery *qquery;
@@ -43,18 +43,18 @@ void ares_query(ares_channel channel, const char *name, int dnsclass,
   int qlen, rd, status;
 
   /* See if query can be handled by local pseudo-domain DNS */
-  if (ares_local_query(channel, name, dnsclass, type, callback, arg) != 0)
+  if (rares_local_query(channel, name, dnsclass, type, callback, arg) != 0)
   {
-      /* printf("ares_query: query for %s was handled locally\n",name); */
+      /* printf("rares_query: query for %s was handled locally\n",name); */
       return;
   }
 
   /* Compose the query. */
-  rd = !(channel->flags & ARES_FLAG_NORECURSE);
-  status = ares_mkquery(name, dnsclass, type, channel->next_id, rd, &qbuf,
+  rd = !(channel->flags & RARES_FLAG_NORECURSE);
+  status = rares_mkquery(name, dnsclass, type, channel->next_id, rd, &qbuf,
 			&qlen);
   channel->next_id++;
-  if (status != ARES_SUCCESS)
+  if (status != RARES_SUCCESS)
     {
       callback(arg, status, NULL, 0);
       return;
@@ -64,16 +64,16 @@ void ares_query(ares_channel channel, const char *name, int dnsclass,
   qquery = malloc(sizeof(struct qquery));
   if (!qquery)
     {
-      ares_free_string((char*)qbuf);
-      callback(arg, ARES_ENOMEM, NULL, 0);
+      rares_free_string((char*)qbuf);
+      callback(arg, RARES_ENOMEM, NULL, 0);
       return;
     }
   qquery->callback = callback;
   qquery->arg = arg;
 
   /* Send it off.  qcallback will be called when we get an answer. */
-  ares_send(channel, qbuf, qlen, qcallback, qquery);
-  ares_free_string((char*)qbuf);
+  rares_send(channel, qbuf, qlen, qcallback, qquery);
+  rares_free_string((char*)qbuf);
 }
 
 static void qcallback(void *arg, int status, unsigned char *abuf, int alen)
@@ -82,34 +82,34 @@ static void qcallback(void *arg, int status, unsigned char *abuf, int alen)
   unsigned int ancount;
   int rcode;
 
-  if (status != ARES_SUCCESS)
+  if (status != RARES_SUCCESS)
     qquery->callback(qquery->arg, status, abuf, alen);
   else
     {
       /* Pull the response code and answer count from the packet. */
-      rcode = DNS_HEADER_RCODE(abuf);
-      ancount = DNS_HEADER_ANCOUNT(abuf);
+      rcode = RARES_DNS_HEADER_RCODE(abuf);
+      ancount = RARES_DNS_HEADER_ANCOUNT(abuf);
 
       /* Convert errors. */
       switch (rcode)
 	{
 	case NOERROR:
-	  status = (ancount > 0) ? ARES_SUCCESS : ARES_ENODATA;
+	  status = (ancount > 0) ? RARES_SUCCESS : RARES_ENODATA;
 	  break;
 	case FORMERR:
-	  status = ARES_EFORMERR;
+	  status = RARES_EFORMERR;
 	  break;
 	case SERVFAIL:
-	  status = ARES_ESERVFAIL;
+	  status = RARES_ESERVFAIL;
 	  break;
 	case NXDOMAIN:
-	  status = ARES_ENOTFOUND;
+	  status = RARES_ENOTFOUND;
 	  break;
 	case NOTIMP:
-	  status = ARES_ENOTIMP;
+	  status = RARES_ENOTIMP;
 	  break;
 	case REFUSED:
-	  status = ARES_EREFUSED;
+	  status = RARES_EREFUSED;
 	  break;
 	}
       qquery->callback(qquery->arg, status, abuf, alen);

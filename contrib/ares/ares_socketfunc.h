@@ -1,5 +1,5 @@
-#ifndef ARES__SOCKETFUNC_H
-#define ARES__SOCKETFUNC_H
+#ifndef RARES__SOCKETFUNC_H
+#define RARES__SOCKETFUNC_H
 
 
 #ifdef WIN32

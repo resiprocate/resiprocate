@@ -35,7 +35,7 @@
 #include "ares_local.h"
 
 struct host_query {
-  /* Arguments passed to ares_gethostbyname() */
+  /* Arguments passed to rares_gethostbyname() */
   ares_channel channel;
   char *name;
   ares_host_callback callback;
@@ -61,13 +61,13 @@ static int get_address_index(struct in_addr *addr, struct apattern *sortlist,
 extern char w32hostspath[];
 #endif
 
-void ares_gethostbyname(ares_channel channel, const char *name, int family,
+void rares_gethostbyname(ares_channel channel, const char *name, int family,
 			ares_host_callback callback, void *arg)
 {
   struct host_query *hquery;
 
   /* See if request can be handled by local pseudo-domain DNS */
-  if (ares_local_gethostbyname(channel, name, family, callback, arg))
+  if (rares_local_gethostbyname(channel, name, family, callback, arg))
   {
       return;
   }
@@ -75,7 +75,7 @@ void ares_gethostbyname(ares_channel channel, const char *name, int family,
   /* Right now we only know how to look up Internet addresses. */
   if (family != AF_INET)
     {
-      callback(arg, ARES_ENOTIMP, NULL);
+      callback(arg, RARES_ENOTIMP, NULL);
       return;
     }
 
@@ -86,7 +86,7 @@ void ares_gethostbyname(ares_channel channel, const char *name, int family,
   hquery = malloc(sizeof(struct host_query));
   if (!hquery)
     {
-      callback(arg, ARES_ENOMEM, NULL);
+      callback(arg, RARES_ENOMEM, NULL);
       return;
     }
   hquery->channel = channel;
@@ -94,7 +94,7 @@ void ares_gethostbyname(ares_channel channel, const char *name, int family,
   if (!hquery->name)
     {
       free(hquery);
-      callback(arg, ARES_ENOMEM, NULL);
+      callback(arg, RARES_ENOMEM, NULL);
       return;
     }
   hquery->callback = callback;
@@ -118,14 +118,14 @@ static void next_lookup(struct host_query *hquery)
 	case 'b':
 	  /* DNS lookup */
 	  hquery->remaining_lookups = p + 1;
-	  ares_search(hquery->channel, hquery->name, C_IN, T_A, host_callback,
+	  rares_search(hquery->channel, hquery->name, C_IN, T_A, host_callback,
 		      hquery);
 	  return;
 
 	case 'f':
 	  /* Host file lookup */
 	  status = file_lookup(hquery->name, &host);
-	  if (status != ARES_ENOTFOUND)
+	  if (status != RARES_ENOTFOUND)
 	    {
 	      end_hquery(hquery, status, host);
 	      return;
@@ -133,7 +133,7 @@ static void next_lookup(struct host_query *hquery)
 	  break;
 	}
     }
-  end_hquery(hquery, ARES_ENOTFOUND, NULL);
+  end_hquery(hquery, RARES_ENOTFOUND, NULL);
 }
 
 static void host_callback(void *arg, int status, unsigned char *abuf, int alen)
@@ -142,14 +142,14 @@ static void host_callback(void *arg, int status, unsigned char *abuf, int alen)
   ares_channel channel = hquery->channel;
   struct hostent *host;
 
-  if (status == ARES_SUCCESS)
+  if (status == RARES_SUCCESS)
     {
-      status = ares_parse_a_reply(abuf, alen, &host);
+      status = rares_parse_a_reply(abuf, alen, &host);
       if (host && channel->nsort)
 	sort_addresses(host, channel->sortlist, channel->nsort);
       end_hquery(hquery, status, host);
     }
-  else if (status == ARES_EDESTRUCTION)
+  else if (status == RARES_EDESTRUCTION)
     end_hquery(hquery, status, NULL);
   else
     next_lookup(hquery);
@@ -160,7 +160,7 @@ static void end_hquery(struct host_query *hquery, int status,
 {
   hquery->callback(hquery->arg, status, host);
   if (host)
-    ares_free_hostent(host);
+    rares_free_hostent(host);
   free(hquery->name);
   free(hquery);
 }
@@ -194,7 +194,7 @@ static int fake_hostent(const char *name, ares_host_callback callback,
   addr.s_addr = inet_addr(name);
   if (addr.s_addr == INADDR_NONE)
     {
-      callback(arg, ARES_EBADNAME, NULL);
+      callback(arg, RARES_EBADNAME, NULL);
       return 1;
     }
 
@@ -202,7 +202,7 @@ static int fake_hostent(const char *name, ares_host_callback callback,
   hostent.h_name = strdup(name);
   if (!hostent.h_name)
     {
-      callback(arg, ARES_ENOMEM, NULL);
+      callback(arg, RARES_ENOMEM, NULL);
       return 1;
     }
 
@@ -213,13 +213,13 @@ static int fake_hostent(const char *name, ares_host_callback callback,
   hostent.h_addrtype = AF_INET;
   hostent.h_length = sizeof(struct in_addr);
   hostent.h_addr_list = addrs;
-  callback(arg, ARES_SUCCESS, &hostent);
+  callback(arg, RARES_SUCCESS, &hostent);
 
   free(hostent.h_name);
   return 1;
 }
 
-int hostfile_lookup(const char *name, struct hostent **host)
+int rares_hostfile_lookup(const char *name, struct hostent **host)
 {
    return file_lookup(name, host);
 }
@@ -236,9 +236,9 @@ static int file_lookup(const char *name, struct hostent **host)
   fp = fopen(PATH_HOSTS, "r");
 #endif
   if (!fp)
-    return ARES_ENOTFOUND;
+    return RARES_ENOTFOUND;
 
-  while ((status = ares__get_hostent(fp, host)) == ARES_SUCCESS)
+  while ((status = rares__get_hostent(fp, host)) == RARES_SUCCESS)
     {
       if (strcasecmp((*host)->h_name, name) == 0)
 	break;
@@ -249,12 +249,12 @@ static int file_lookup(const char *name, struct hostent **host)
 	}
       if (*alias)
 	break;
-      ares_free_hostent(*host);
+      rares_free_hostent(*host);
     }
   fclose(fp);
-  if (status == ARES_EOF)
-    status = ARES_ENOTFOUND;
-  if (status != ARES_SUCCESS)
+  if (status == RARES_EOF)
+    status = RARES_ENOTFOUND;
+  if (status != RARES_SUCCESS)
     *host = NULL;
   return status;
 }
