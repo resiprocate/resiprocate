@@ -66,19 +66,19 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
 )
 {
 #ifdef USE_IPV6
-   int requiredCap = ARES_CAP_IPV6;
+   int requiredCap = RARES_CAP_IPV6;
 #else
    int requiredCap = 0;
 #endif
 
 	if(*channel)
 	{
-		ares_destroy_suppress_callbacks(*channel);
+		rares_destroy_suppress_callbacks(*channel);
 		*channel = 0;
 	}
 
 
-   int cap = ares_capabilities(requiredCap);
+   int cap = rares_capabilities(requiredCap);
    if (cap != requiredCap)
    {
       ErrLog (<< "Build mismatch (ipv4/ipv6) problem in ares library"); // !dcm!
@@ -92,17 +92,17 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
    memset(&opt, '\0', sizeof(opt));
    if ((features & ExternalDns::TryServersOfNextNetworkUponRcode3))
    {
-      optmask |= ARES_OPT_FLAGS;
-      opt.flags |= ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3;
+      optmask |= RARES_OPT_FLAGS;
+      opt.flags |= RARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3;
    }
 
    if (additionalNameservers.empty())
    {
-      status = ares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
+      status = rares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
    }
    else
    { 
-      optmask |= ARES_OPT_SERVERS;
+      optmask |= RARES_OPT_SERVERS;
       opt.nservers = additionalNameservers.size();
       
 #ifdef USE_IPV6
@@ -127,11 +127,11 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          opt.servers[i] = additionalNameservers[i].v4Address.sin_addr;
       }
 #endif
-      status = ares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
+      status = rares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
       delete [] opt.servers;
       opt.servers = 0;
    }
-	if (status != ARES_SUCCESS)
+	if (status != RARES_SUCCESS)
    {
       ErrLog (<< "Failed to initialize DNS library (status=" << status << ")");
       return status;
@@ -172,7 +172,7 @@ bool AresDns::checkDnsChange()
 			}
 		}
 	}
-	ares_destroy_suppress_callbacks(channel);
+	rares_destroy_suppress_callbacks(channel);
 
 	if(!bRet)
 	{
@@ -188,7 +188,7 @@ bool AresDns::checkDnsChange()
 
 AresDns::~AresDns()
 {
-   ares_destroy_suppress_callbacks(mChannel);
+   rares_destroy_suppress_callbacks(mChannel);
 }
 
 bool AresDns::hostFileLookup(const char* target, in_addr &addr)
@@ -196,9 +196,9 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
    assert(target);
 
    hostent *hostdata = 0;
-   int status = hostfile_lookup(target, &hostdata);
+   int status = rares_hostfile_lookup(target, &hostdata);
 
-   if (status != ARES_SUCCESS)
+   if (status != RARES_SUCCESS)
    {
       return false;
    }
@@ -225,7 +225,7 @@ AresDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
    Payload* p = reinterpret_cast<Payload*>(arg);
    void* userArg = reinterpret_cast<void*>(p->second);
    
-   if (status != ARES_SUCCESS)
+   if (status != RARES_SUCCESS)
    {
       return ExternalDnsRawResult(status, abuf, alen, userArg);
    }
@@ -244,7 +244,7 @@ AresDns::requiresProcess()
 void 
 AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 {
-   int newsize = ares_fds(mChannel, &read, &write);
+   int newsize = rares_fds(mChannel, &read, &write);
    if ( newsize > size )
    {
       size = newsize;
@@ -254,13 +254,13 @@ AresDns::buildFdSet(fd_set& read, fd_set& write, int& size)
 void 
 AresDns::process(fd_set& read, fd_set& write)
 {
-   ares_process(mChannel, &read, &write);
+   rares_process(mChannel, &read, &write);
 }
 
 char* 
 AresDns::errorMessage(long errorCode)
 {
-   const char* aresMsg = ares_strerror(errorCode);
+   const char* aresMsg = rares_strerror(errorCode);
 
    int len = strlen(aresMsg);
    char* errorString = new char[len+1];
@@ -273,7 +273,7 @@ AresDns::errorMessage(long errorCode)
 void
 AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData)
 {
-   ares_query(mChannel, target, C_IN, type, AresDns::aresCallback, new Payload(handler, userData));
+   rares_query(mChannel, target, C_IN, type, AresDns::aresCallback, new Payload(handler, userData));
 }
 
 void

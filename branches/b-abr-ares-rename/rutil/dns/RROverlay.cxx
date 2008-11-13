@@ -41,8 +41,8 @@ RROverlay::RROverlay(const unsigned char *aptr,
    int len = 0;
 
    // Parse the RR name. 
-   int status = ares_expand_name(aptr, abuf, alen, &name, &len);
-   if (status != ARES_SUCCESS)
+   int status = rares_expand_name(aptr, abuf, alen, &name, &len);
+   if (status != RARES_SUCCESS)
    {
       throw OverlayException("Failed parse of RR", __FILE__, __LINE__);
    }
@@ -60,9 +60,9 @@ RROverlay::RROverlay(const unsigned char *aptr,
    
    // Parse the fixed part of the RR, and advance to the RR data field. 
    //
-   mType = DNS_RR_TYPE(aptr);
-   mDataLen = DNS_RR_LEN(aptr);
-   mTTL = DNS_RR_TTL(aptr);
+   mType = RARES_DNS_RR_TYPE(aptr);
+   mDataLen = RARES_DNS_RR_LEN(aptr);
+   mTTL = RARES_DNS_RR_TTL(aptr);
    
    aptr += RRFIXEDSZ;
    if (aptr + mDataLen > abuf + alen)

@@ -74,7 +74,7 @@
  * be thought of as the root domain).
  */
 
-int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
+int rares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
 		 int rd, unsigned char **buf, int *buflen)
 {
   int len;
@@ -100,15 +100,15 @@ int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
   *buflen = len + HFIXEDSZ + QFIXEDSZ;
   *buf = malloc(*buflen);
   if (!*buf)
-      return ARES_ENOMEM;
+      return RARES_ENOMEM;
 
   /* Set up the header. */
   q = *buf;
   memset(q, 0, HFIXEDSZ);
-  DNS_HEADER_SET_QID(q, id);
-  DNS_HEADER_SET_OPCODE(q, QUERY);
-  DNS_HEADER_SET_RD(q, (rd) ? 1 : 0);
-  DNS_HEADER_SET_QDCOUNT(q, 1);
+  RARES_DNS_HEADER_SET_QID(q, id);
+  RARES_DNS_HEADER_SET_OPCODE(q, QUERY);
+  RARES_DNS_HEADER_SET_RD(q, (rd) ? 1 : 0);
+  RARES_DNS_HEADER_SET_QDCOUNT(q, 1);
 
   /* A name of "." is a screw case for the loop below, so adjust it. */
   if (strcmp(name, ".") == 0)
@@ -119,7 +119,7 @@ int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
   while (*name)
     {
       if (*name == '.')
-	return ARES_EBADNAME;
+	return RARES_EBADNAME;
 
       /* Count the number of bytes in this label. */
       len = 0;
@@ -130,7 +130,7 @@ int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
 	  len++;
 	}
       if (len > MAXLABEL)
-	return ARES_EBADNAME;
+	return RARES_EBADNAME;
 
       /* Encode the length and copy the data. */
       *q++ = len;
@@ -151,8 +151,8 @@ int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
   *q++ = 0;
 
   /* Finish off the question with the type and class. */
-  DNS_QUESTION_SET_TYPE(q, type);
-  DNS_QUESTION_SET_CLASS(q, dnsclass);
+  RARES_DNS_QUESTION_SET_TYPE(q, type);
+  RARES_DNS_QUESTION_SET_CLASS(q, dnsclass);
 
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }

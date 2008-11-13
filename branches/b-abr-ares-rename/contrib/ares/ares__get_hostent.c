@@ -31,14 +31,14 @@
 #include "ares.h"
 #include "ares_private.h"
 
-int ares__get_hostent(FILE *fp, struct hostent **host)
+int rares__get_hostent(FILE *fp, struct hostent **host)
 {
   char *line = NULL, *p, *q, *canonical, **alias;
   int status, linesize, end_at_hostname, naliases;
   struct in_addr addr;
   struct hostent *hostent = NULL;
 
-  while ((status = ares__read_line(fp, &line, &linesize)) == ARES_SUCCESS)
+  while ((status = rares__read_line(fp, &line, &linesize)) == RARES_SUCCESS)
     {
       /* Skip comment lines; terminate line at comment character. */
       if (*line == '#' || !*line)
@@ -140,11 +140,11 @@ int ares__get_hostent(FILE *fp, struct hostent **host)
       hostent->h_addr_list[1] = NULL;
       *host = hostent;
       free(line);
-      return ARES_SUCCESS;
+      return RARES_SUCCESS;
     }
   free(line);
 
-  if (status == ARES_SUCCESS)
+  if (status == RARES_SUCCESS)
     {
       /* Memory allocation failure; clean up. */
       if (hostent)
@@ -161,7 +161,7 @@ int ares__get_hostent(FILE *fp, struct hostent **host)
 	  free(hostent->h_addr_list);
 	}
       free(hostent);
-      return ARES_ENOMEM;
+      return RARES_ENOMEM;
     }
 
   return status;

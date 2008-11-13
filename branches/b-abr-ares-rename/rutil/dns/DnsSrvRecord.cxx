@@ -27,18 +27,18 @@ DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
 {
    char* name = 0;
    int len = 0;
-   if (ARES_SUCCESS != ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
+   if (RARES_SUCCESS != rares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
    {
       throw SrvException("Failed parse of SRV record", __FILE__, __LINE__);
    }
    mName = name;
    free(name);
 
-   mPriority = DNS__16BIT(overlay.data());
-   mWeight = DNS__16BIT(overlay.data() + 2);
-   mPort = DNS__16BIT(overlay.data() + 4);
+   mPriority = RARES_DNS__16BIT(overlay.data());
+   mWeight = RARES_DNS__16BIT(overlay.data() + 2);
+   mPort = RARES_DNS__16BIT(overlay.data() + 4);
 
-   if (ARES_SUCCESS != ares_expand_name(overlay.data() + 6, overlay.msg(), overlay.msgLength(), &name, &len))
+   if (RARES_SUCCESS != rares_expand_name(overlay.data() + 6, overlay.msg(), overlay.msgLength(), &name, &len))
    {
       throw SrvException("Failed parse of SRV record", __FILE__, __LINE__);
    }

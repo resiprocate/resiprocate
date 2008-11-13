@@ -60,12 +60,12 @@ struct nv {
 };
 
 static const struct nv flags[] = {
-  { "usevc",		ARES_FLAG_USEVC },
-  { "primary",		ARES_FLAG_PRIMARY },
-  { "igntc",		ARES_FLAG_IGNTC },
-  { "norecurse",	ARES_FLAG_NORECURSE },
-  { "stayopen",		ARES_FLAG_STAYOPEN },
-  { "noaliases",	ARES_FLAG_NOALIASES }
+  { "usevc",		RARES_FLAG_USEVC },
+  { "primary",		RARES_FLAG_PRIMARY },
+  { "igntc",		RARES_FLAG_IGNTC },
+  { "norecurse",	RARES_FLAG_NORECURSE },
+  { "stayopen",		RARES_FLAG_STAYOPEN },
+  { "noaliases",	RARES_FLAG_NOALIASES }
 };
 static const int nflags = sizeof(flags) / sizeof(flags[0]);
 
@@ -209,7 +209,7 @@ int getopt(int argc,
 int main(int argc, char **argv)
 {
   ares_channel channel;
-  int c, i, optmask = ARES_OPT_FLAGS, dnsclass = C_IN, type = T_A;
+  int c, i, optmask = RARES_OPT_FLAGS, dnsclass = C_IN, type = T_A;
   int status, nfds, count;
   struct ares_options options;
   struct hostent *hostent;
@@ -249,7 +249,7 @@ int main(int argc, char **argv)
    }  
 #endif
 
-    options.flags = ARES_FLAG_NOCHECKRESP;
+    options.flags = RARES_FLAG_NOCHECKRESP;
   options.servers = NULL;
   options.nservers = 0;
 
@@ -287,7 +287,7 @@ int main(int argc, char **argv)
 	  memcpy(&options.servers[options.nservers], hostent->h_addr,
 		 sizeof(struct in_addr));
 	  options.nservers++;
-	  optmask |= ARES_OPT_SERVERS;
+	  optmask |= RARES_OPT_SERVERS;
 	  break;
 
 	case 'c':
@@ -319,7 +319,7 @@ int main(int argc, char **argv)
 	  if (!isdigit((unsigned char)*optarg))
 	    usage();
 	  options.tcp_port = (unsigned short)strtol(optarg, NULL, 0);
-	  optmask |= ARES_OPT_TCP_PORT;
+	  optmask |= RARES_OPT_TCP_PORT;
 	  break;
 
 	case 'U':
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
 	  if (!isdigit((unsigned char)*optarg))
 	    usage();
 	  options.udp_port = (unsigned short)strtol(optarg, NULL, 0);
-	  optmask |= ARES_OPT_UDP_PORT;
+	  optmask |= RARES_OPT_UDP_PORT;
 	  break;
 	}
     }
@@ -336,12 +336,12 @@ int main(int argc, char **argv)
   if (argc == 0)
     usage();
 
-  status = ares_init_options(&channel, &options, optmask);
-  if (status != ARES_SUCCESS)
+  status = rares_init_options(&channel, &options, optmask);
+  if (status != RARES_SUCCESS)
     {
-      fprintf(stderr, "ares_init_options: %s\n",
-              ares_strerror(status)); //, &errmem));
-      ares_free_errmem(errmem);
+      fprintf(stderr, "rares_init_options: %s\n",
+              rares_strerror(status)); //, &errmem));
+      rares_free_errmem(errmem);
       return 1;
     }
 
@@ -351,11 +351,11 @@ int main(int argc, char **argv)
    * distinguish responses for the user when printing them out.
    */
   if (argc == 1)
-    ares_query(channel, *argv, dnsclass, type, callback, (char *) NULL);
+    rares_query(channel, *argv, dnsclass, type, callback, (char *) NULL);
   else
     {
       for (; *argv; argv++)
-	ares_query(channel, *argv, dnsclass, type, callback, *argv);
+	rares_query(channel, *argv, dnsclass, type, callback, *argv);
     }
 
   /* Wait for all queries to complete. */
@@ -363,20 +363,20 @@ int main(int argc, char **argv)
     {
       FD_ZERO(&read_fds);
       FD_ZERO(&write_fds);
-      nfds = ares_fds(channel, &read_fds, &write_fds);
+      nfds = rares_fds(channel, &read_fds, &write_fds);
       if (nfds == 0)
 	break;
-      tvp = ares_timeout(channel, NULL, &tv);
+      tvp = rares_timeout(channel, NULL, &tv);
       count = select(nfds, &read_fds, &write_fds, NULL, tvp);
       if (count < 0 && errno != EINVAL)
 	{
 	  perror("select");
 	  return 1;
 	}
-      ares_process(channel, &read_fds, &write_fds);
+      rares_process(channel, &read_fds, &write_fds);
     }
 
-  ares_destroy(channel);
+  rares_destroy(channel);
   return 0;
 }
 
@@ -394,10 +394,10 @@ static void callback(void *arg, int status, unsigned char *abuf, int alen)
   /* Display an error message if there was an error, but only stop if
    * we actually didn't get an answer buffer.
    */
-  if (status != ARES_SUCCESS)
+  if (status != RARES_SUCCESS)
     {
-       printf("%s\n", ares_strerror(status));//, &errmem));
-      ares_free_errmem(errmem);
+       printf("%s\n", rares_strerror(status));//, &errmem));
+      rares_free_errmem(errmem);
       if (!abuf)
 	return;
     }
@@ -407,18 +407,18 @@ static void callback(void *arg, int status, unsigned char *abuf, int alen)
     return;
 
   /* Parse the answer header. */
-  id = DNS_HEADER_QID(abuf);             /* query identification number */
-  qr = DNS_HEADER_QR(abuf);              /* query response */
-  opcode = DNS_HEADER_OPCODE(abuf);      /* opcode */
-  aa = DNS_HEADER_AA(abuf);              /* authoritative answer */
-  tc = DNS_HEADER_TC(abuf);              /* truncation */
-  rd = DNS_HEADER_RD(abuf);              /* recursion desired */
-  ra = DNS_HEADER_RA(abuf);              /* recursion available */
-  rcode = DNS_HEADER_RCODE(abuf);        /* response code */
-  qdcount = DNS_HEADER_QDCOUNT(abuf);    /* question count */
-  ancount = DNS_HEADER_ANCOUNT(abuf);    /* answer record count */
-  nscount = DNS_HEADER_NSCOUNT(abuf);    /* name server record count */
-  arcount = DNS_HEADER_ARCOUNT(abuf);    /* additional record count */
+  id = RARES_DNS_HEADER_QID(abuf);             /* query identification number */
+  qr = RARES_DNS_HEADER_QR(abuf);              /* query response */
+  opcode = RARES_DNS_HEADER_OPCODE(abuf);      /* opcode */
+  aa = RARES_DNS_HEADER_AA(abuf);              /* authoritative answer */
+  tc = RARES_DNS_HEADER_TC(abuf);              /* truncation */
+  rd = RARES_DNS_HEADER_RD(abuf);              /* recursion desired */
+  ra = RARES_DNS_HEADER_RA(abuf);              /* recursion available */
+  rcode = RARES_DNS_HEADER_RCODE(abuf);        /* response code */
+  qdcount = RARES_DNS_HEADER_QDCOUNT(abuf);    /* question count */
+  ancount = RARES_DNS_HEADER_ANCOUNT(abuf);    /* answer record count */
+  nscount = RARES_DNS_HEADER_NSCOUNT(abuf);    /* name server record count */
+  arcount = RARES_DNS_HEADER_ARCOUNT(abuf);    /* additional record count */
 
   /* Display the answer header. */
   printf("id: %d\n", id);
@@ -477,8 +477,8 @@ static const unsigned char *display_question(const unsigned char *aptr,
   int type, dnsclass, status, len;
 
   /* Parse the question name. */
-  status = ares_expand_name(aptr, abuf, alen, &name, &len);
-  if (status != ARES_SUCCESS)
+  status = rares_expand_name(aptr, abuf, alen, &name, &len);
+  if (status != RARES_SUCCESS)
     return NULL;
   aptr += len;
 
@@ -492,8 +492,8 @@ static const unsigned char *display_question(const unsigned char *aptr,
     }
 
   /* Parse the question type and class. */
-  type = DNS_QUESTION_TYPE(aptr);
-  dnsclass = DNS_QUESTION_CLASS(aptr);
+  type = RARES_DNS_QUESTION_TYPE(aptr);
+  dnsclass = RARES_DNS_QUESTION_CLASS(aptr);
   aptr += QFIXEDSZ;
 
   /* Display the question, in a format sort of similar to how we will
@@ -516,8 +516,8 @@ static const unsigned char *display_rr(const unsigned char *aptr,
   struct in_addr addr;
 
   /* Parse the RR name. */
-  status = ares_expand_name(aptr, abuf, alen, &name, &len);
-  if (status != ARES_SUCCESS)
+  status = rares_expand_name(aptr, abuf, alen, &name, &len);
+  if (status != RARES_SUCCESS)
     return NULL;
   aptr += len;
 
@@ -532,10 +532,10 @@ static const unsigned char *display_rr(const unsigned char *aptr,
 
   /* Parse the fixed part of the RR, and advance to the RR data
    * field. */
-  type = DNS_RR_TYPE(aptr);
-  dnsclass = DNS_RR_CLASS(aptr);
-  ttl = DNS_RR_TTL(aptr);
-  dlen = DNS_RR_LEN(aptr);
+  type = RARES_DNS_RR_TYPE(aptr);
+  dnsclass = RARES_DNS_RR_CLASS(aptr);
+  ttl = RARES_DNS_RR_TTL(aptr);
+  dlen = RARES_DNS_RR_LEN(aptr);
   aptr += RRFIXEDSZ;
   if (aptr + dlen > abuf + alen)
     {
@@ -562,8 +562,8 @@ static const unsigned char *display_rr(const unsigned char *aptr,
     case T_NS:
     case T_PTR:
       /* For these types, the RR data is just a domain name. */
-      status = ares_expand_name(aptr, abuf, alen, &name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(aptr, abuf, alen, &name, &len);
+      if (status != RARES_SUCCESS)
 	return NULL;
       printf("\t%s.", name);
       free(name);
@@ -586,14 +586,14 @@ static const unsigned char *display_rr(const unsigned char *aptr,
     case T_MINFO:
       /* The RR data is two domain names. */
       p = aptr;
-      status = ares_expand_name(p, abuf, alen, &name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(p, abuf, alen, &name, &len);
+      if (status != RARES_SUCCESS)
 	return NULL;
       printf("\t%s.", name);
       free(name);
       p += len;
-      status = ares_expand_name(p, abuf, alen, &name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(p, abuf, alen, &name, &len);
+      if (status != RARES_SUCCESS)
 	return NULL;
       printf("\t%s.", name);
       free(name);
@@ -606,8 +606,8 @@ static const unsigned char *display_rr(const unsigned char *aptr,
       if (dlen < 2)
 	return NULL;
       printf("\t%d", (aptr[0] << 8) | aptr[1]);
-      status = ares_expand_name(aptr + 2, abuf, alen, &name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(aptr + 2, abuf, alen, &name, &len);
+      if (status != RARES_SUCCESS)
 	return NULL;
       printf("\t%s.", name);
       free(name);
@@ -618,14 +618,14 @@ static const unsigned char *display_rr(const unsigned char *aptr,
        * numbers giving the serial number and some timeouts.
        */
       p = aptr;
-      status = ares_expand_name(p, abuf, alen, &name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(p, abuf, alen, &name, &len);
+      if (status != RARES_SUCCESS)
 	return NULL;
       printf("\t%s.\n", name);
       free(name);
       p += len;
-      status = ares_expand_name(p, abuf, alen, &name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(p, abuf, alen, &name, &len);
+      if (status != RARES_SUCCESS)
 	return NULL;
       printf("\t\t\t\t\t\t%s.\n", name);
       free(name);
@@ -671,12 +671,12 @@ static const unsigned char *display_rr(const unsigned char *aptr,
        * priority, weight, and port, followed by a domain name.
        */
       
-      printf("\t%d", DNS__16BIT(aptr));
-      printf(" %d", DNS__16BIT(aptr + 2));
-      printf(" %d", DNS__16BIT(aptr + 4));
+      printf("\t%d", RARES_DNS__16BIT(aptr));
+      printf(" %d", RARES_DNS__16BIT(aptr + 2));
+      printf(" %d", RARES_DNS__16BIT(aptr + 4));
       
-      status = ares_expand_name(aptr + 6, abuf, alen, &name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(aptr + 6, abuf, alen, &name, &len);
+      if (status != RARES_SUCCESS)
         return NULL;
       printf("\t%s.", name);
       free(name);
@@ -688,8 +688,8 @@ static const unsigned char *display_rr(const unsigned char *aptr,
        * representing flags, services, a regex, and a domain name.
        */
 
-      printf("\t%d", DNS__16BIT(aptr));
-      printf(" %d", DNS__16BIT(aptr + 2));
+      printf("\t%d", RARES_DNS__16BIT(aptr));
+      printf(" %d", RARES_DNS__16BIT(aptr + 2));
 
       p = aptr + 4;
       len = *p;
@@ -707,8 +707,8 @@ static const unsigned char *display_rr(const unsigned char *aptr,
         return NULL;
       printf(" %.*s", len, p + 1);
       p += len + 1;
-      status = ares_expand_name(p, abuf, alen, &name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(p, abuf, alen, &name, &len);
+      if (status != RARES_SUCCESS)
         return NULL;
       printf("\t%s.", name);
       free(name);

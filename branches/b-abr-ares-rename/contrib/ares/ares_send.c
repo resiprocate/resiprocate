@@ -30,7 +30,7 @@
 #include "ares_dns.h"
 #include "ares_private.h"
 
-void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
+void rares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
 	       ares_callback callback, void *arg)
 {
   struct query *query;
@@ -40,7 +40,7 @@ void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
   /* Verify that the query is at least long enough to hold the header. */
   if (qlen < HFIXEDSZ || qlen >= (1 << 16))
     {
-      callback(arg, ARES_EBADQUERY, NULL, 0);
+      callback(arg, RARES_EBADQUERY, NULL, 0);
       return;
     }
 
@@ -48,14 +48,14 @@ void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
   query = malloc(sizeof(struct query));
   if (!query)
     {
-      callback(arg, ARES_ENOMEM, NULL, 0);
+      callback(arg, RARES_ENOMEM, NULL, 0);
       return;
     }
   query->tcpbuf = malloc(qlen + 2);
   if (!query->tcpbuf)
     {
       free(query);
-      callback(arg, ARES_ENOMEM, NULL, 0);
+      callback(arg, RARES_ENOMEM, NULL, 0);
       return;
     }
     if (channel->nservers)
@@ -71,12 +71,12 @@ void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
     {
       free(query->tcpbuf);
       free(query);
-      callback(arg, ARES_ENOMEM, NULL, 0);
+      callback(arg, RARES_ENOMEM, NULL, 0);
       return;
     }
 
   /* Compute the query ID.  Start with no timeout. */
-  query->qid = DNS_HEADER_QID(qbuf);
+  query->qid = RARES_DNS_HEADER_QID(qbuf);
   query->timeout = 0;
 
   /* Form the TCP query buffer by prepending qlen (as two
@@ -98,8 +98,8 @@ void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
   query->server = 0;
   for (i = 0; i < channel->nservers; i++)
     query->skip_server[i] = 0;
-  query->using_tcp = (channel->flags & ARES_FLAG_USEVC) || qlen > PACKETSZ;
-  query->error_status = ARES_ECONNREFUSED;
+  query->using_tcp = (channel->flags & RARES_FLAG_USEVC) || qlen > PACKETSZ;
+  query->error_status = RARES_ECONNREFUSED;
 
   /* Chain the query into this channel's query list. */
   query->next = channel->queries;
@@ -107,5 +107,5 @@ void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
 
   /* Perform the first query action. */
   time(&now);
-  ares__send_query(channel, query, now);
+  rares__send_query(channel, query, now);
 }

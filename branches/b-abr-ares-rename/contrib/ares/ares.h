@@ -13,8 +13,8 @@
  * without express or implied warranty.
  */
 
-#ifndef ARES__H
-#define ARES__H
+#ifndef RARES__H
+#define RARES__H
 
 #ifdef WIN32
 	#include <winsock2.h>
@@ -46,53 +46,53 @@ extern "C" {
 
 #include "ares_socketfunc.h"
 
-#define ARES_SUCCESS		0
+#define RARES_SUCCESS		0
 
-/* Server error codes (ARES_ENODATA indicates no relevant answer) */
-#define ARES_ENODATA		1
-#define ARES_EFORMERR		2
-#define ARES_ESERVFAIL		3
-#define ARES_ENOTFOUND		4
-#define ARES_ENOTIMP		5
-#define ARES_EREFUSED		6
+/* Server error codes (RARES_ENODATA indicates no relevant answer) */
+#define RARES_ENODATA		1
+#define RARES_EFORMERR		2
+#define RARES_ESERVFAIL		3
+#define RARES_ENOTFOUND		4
+#define RARES_ENOTIMP		5
+#define RARES_EREFUSED		6
 
 /* Locally generated error codes */
-#define ARES_EBADQUERY		7
-#define ARES_EBADNAME		8
-#define ARES_EBADFAMILY		9
-#define ARES_EBADRESP		10
-#define ARES_ECONNREFUSED	11
-#define ARES_ETIMEOUT		12
-#define ARES_EOF		13
-#define ARES_EFILE		14
-#define ARES_ENOMEM		15
-#define ARES_EDESTRUCTION	16
+#define RARES_EBADQUERY		7
+#define RARES_EBADNAME		8
+#define RARES_EBADFAMILY		9
+#define RARES_EBADRESP		10
+#define RARES_ECONNREFUSED	11
+#define RARES_ETIMEOUT		12
+#define RARES_EOF		13
+#define RARES_EFILE		14
+#define RARES_ENOMEM		15
+#define RARES_EDESTRUCTION	16
 
 /* Flag values */
-#define ARES_FLAG_USEVC		(1 << 0)
-#define ARES_FLAG_PRIMARY	(1 << 1)
-#define ARES_FLAG_IGNTC		(1 << 2)
-#define ARES_FLAG_NORECURSE	(1 << 3)
-#define ARES_FLAG_STAYOPEN	(1 << 4)
-#define ARES_FLAG_NOSEARCH	(1 << 5)
-#define ARES_FLAG_NOALIASES	(1 << 6)
-#define ARES_FLAG_NOCHECKRESP	(1 << 7)
-#define ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3 (1 << 8) /* when rcode of 3 ('No such name') is recvd */
+#define RARES_FLAG_USEVC		(1 << 0)
+#define RARES_FLAG_PRIMARY	(1 << 1)
+#define RARES_FLAG_IGNTC		(1 << 2)
+#define RARES_FLAG_NORECURSE	(1 << 3)
+#define RARES_FLAG_STAYOPEN	(1 << 4)
+#define RARES_FLAG_NOSEARCH	(1 << 5)
+#define RARES_FLAG_NOALIASES	(1 << 6)
+#define RARES_FLAG_NOCHECKRESP	(1 << 7)
+#define RARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3 (1 << 8) /* when rcode of 3 ('No such name') is recvd */
 
 /* Option mask values */
-#define ARES_OPT_FLAGS		(1 << 0)
-#define ARES_OPT_TIMEOUT	(1 << 1)
-#define ARES_OPT_TRIES		(1 << 2)
-#define ARES_OPT_NDOTS		(1 << 3)
-#define ARES_OPT_UDP_PORT	(1 << 4)
-#define ARES_OPT_TCP_PORT	(1 << 5)
-#define ARES_OPT_SERVERS	(1 << 6)
-#define ARES_OPT_DOMAINS	(1 << 7)
-#define ARES_OPT_LOOKUPS	(1 << 8)
+#define RARES_OPT_FLAGS		(1 << 0)
+#define RARES_OPT_TIMEOUT	(1 << 1)
+#define RARES_OPT_TRIES		(1 << 2)
+#define RARES_OPT_NDOTS		(1 << 3)
+#define RARES_OPT_UDP_PORT	(1 << 4)
+#define RARES_OPT_TCP_PORT	(1 << 5)
+#define RARES_OPT_SERVERS	(1 << 6)
+#define RARES_OPT_DOMAINS	(1 << 7)
+#define RARES_OPT_LOOKUPS	(1 << 8)
 
 /* Capability mask values */
 
-#define ARES_CAP_IPV6 		(1 << 0)
+#define RARES_CAP_IPV6 		(1 << 0)
 
 #if defined(WIN32) || defined(sun)
 typedef unsigned char u_int8_t;
@@ -133,51 +133,51 @@ typedef void (*ares_callback)(void *arg, int status, unsigned char *abuf,
 typedef void (*ares_host_callback)(void *arg, int status,
 				   struct hostent *hostent);
 
-extern int ares_init(ares_channel *channelptr);
-extern int ares_init_with_socket_function(ares_channel *channelptr, socket_function_ptr);
+extern int rares_init(ares_channel *channelptr);
+extern int rares_init_with_socket_function(ares_channel *channelptr, socket_function_ptr);
 
-extern 	int ares_capabilities(int capmask);
+extern 	int rares_capabilities(int capmask);
 
-extern 	int ares_init_options(ares_channel *channelptr, struct ares_options *options,
+extern 	int rares_init_options(ares_channel *channelptr, struct ares_options *options,
                               int optmask);
 
-extern 	int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
+extern 	int rares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
                                                    int optmask, socket_function_ptr);
 
-extern 	void ares_destroy(ares_channel channel);
-extern 	void ares_destroy_suppress_callbacks(ares_channel channel);
+extern 	void rares_destroy(ares_channel channel);
+extern 	void rares_destroy_suppress_callbacks(ares_channel channel);
 
-extern 	void ares_destroy_internal(ares_channel channel, int suppressCallbacks);
+extern 	void rares_destroy_internal(ares_channel channel, int suppressCallbacks);
 
-extern 	void ares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
+extern 	void rares_send(ares_channel channel, const unsigned char *qbuf, int qlen,
 			ares_callback callback, void *arg);
-extern 	void ares_query(ares_channel channel, const char *name, int dnsclass,
+extern 	void rares_query(ares_channel channel, const char *name, int dnsclass,
 			int type, ares_callback callback, void *arg);
-extern 	void ares_search(ares_channel channel, const char *name, int dnsclass,
+extern 	void rares_search(ares_channel channel, const char *name, int dnsclass,
 			int type, ares_callback callback, void *arg);
-extern 	void ares_gethostbyname(ares_channel channel, const char *name, int family,
+extern 	void rares_gethostbyname(ares_channel channel, const char *name, int family,
 				ares_host_callback callback, void *arg);
-extern 	void ares_gethostbyaddr(ares_channel channel, const void *addr, int addrlen,
+extern 	void rares_gethostbyaddr(ares_channel channel, const void *addr, int addrlen,
 				int family, ares_host_callback callback, void *arg);
-extern   int hostfile_lookup(const char *name, struct hostent **host);
+extern   int rares_hostfile_lookup(const char *name, struct hostent **host);
 
-extern 	int ares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
-extern 	struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
+extern 	int rares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
+extern 	struct timeval *rares_timeout(ares_channel channel, struct timeval *maxtv,
 					struct timeval *tv);
-extern 	void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
+extern 	void rares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds);
 
-extern 	int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
+extern 	int rares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
 			int rd, unsigned char **buf, int *buflen);
-extern 	int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
+extern 	int rares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
 				int alen, char **s, int *enclen);
-extern 	int ares_parse_a_reply(const unsigned char *abuf, int alen,
+extern 	int rares_parse_a_reply(const unsigned char *abuf, int alen,
 				struct hostent **host);
-extern 	int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
+extern 	int rares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
 				int addrlen, int family, struct hostent **host);
-extern 	void ares_free_string(char *str);
-extern 	void ares_free_hostent(struct hostent *host);
-extern 	const char *ares_strerror(int code);
-extern 	void ares_free_errmem(char *mem);
+extern 	void rares_free_string(char *str);
+extern 	void rares_free_hostent(struct hostent *host);
+extern 	const char *rares_strerror(int code);
+extern 	void rares_free_errmem(char *mem);
 
 
 #if defined(WIN32) || defined (__CYGWIN__)
@@ -259,4 +259,4 @@ extern 	void ares_free_errmem(char *mem);
 #endif
 
 
-#endif /* ARES__H */
+#endif /* RARES__H */

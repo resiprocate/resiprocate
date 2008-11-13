@@ -1,5 +1,5 @@
-#ifndef ARES_LOCAL__H
-#define ARES_LOCAL__H
+#ifndef RARES_LOCAL__H
+#define RARES_LOCAL__H
 /*
 ** Define a suite of callbacks that can return locally configured DNS results.
 ** Very useful for testing or simulation.
@@ -8,16 +8,16 @@
 **
 */
 
-int ares_local_gethostbyname(ares_channel channel, const char *name, int family,
+int rares_local_gethostbyname(ares_channel channel, const char *name, int family,
                               ares_host_callback callback, void *arg);
 
-int ares_local_gethostbyaddr(ares_channel channel, const char *addr, int addrlen,
+int rares_local_gethostbyaddr(ares_channel channel, const char *addr, int addrlen,
                               int family, ares_host_callback callback, void*arg);
 
-int ares_local_query(ares_channel channel, const char *name, int dnsclass,
+int rares_local_query(ares_channel channel, const char *name, int dnsclass,
                       int type, ares_callback callback, void *arg);
 
 
-void ares_local_process_requests();
+void rares_local_process_requests();
 
 #endif

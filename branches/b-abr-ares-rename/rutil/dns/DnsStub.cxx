@@ -151,28 +151,28 @@ void DnsStub::cache(const Data& key,
    // skip header
    const unsigned char* aptr = abuf + HFIXEDSZ;
 
-   int qdcount = DNS_HEADER_QDCOUNT(abuf); // questions.
+   int qdcount = RARES_DNS_HEADER_QDCOUNT(abuf); // questions.
    for (int i = 0; i < qdcount && aptr; ++i)
    {
       aptr = skipDNSQuestion(aptr, abuf, alen);
    }
 
    // answers.
-   int ancount = DNS_HEADER_ANCOUNT(abuf);
+   int ancount = RARES_DNS_HEADER_ANCOUNT(abuf);
    for (int i = 0; i < ancount; i++)
    {
       aptr = createOverlay(abuf, alen, aptr, overlays);
    }
    
    // name server records.
-   int nscount = DNS_HEADER_NSCOUNT(abuf);
+   int nscount = RARES_DNS_HEADER_NSCOUNT(abuf);
    for (int i = 0; i < nscount; i++)
    {
       aptr = createOverlay(abuf, alen, aptr, overlays, true);
    }
 
    // additional records.
-   int arcount = DNS_HEADER_ARCOUNT(abuf);
+   int arcount = RARES_DNS_HEADER_ARCOUNT(abuf);
    for (int i = 0; i < arcount; i++)
    {
       aptr = createOverlay(abuf, alen, aptr, overlays);
@@ -203,7 +203,7 @@ void DnsStub::cacheTTL(const Data& key,
    // skip header
    const unsigned char* aptr = abuf + HFIXEDSZ;
 
-   int qdcount = DNS_HEADER_QDCOUNT(abuf); // questions.
+   int qdcount = RARES_DNS_HEADER_QDCOUNT(abuf); // questions.
    for (int i = 0; i < qdcount && aptr; ++i)
    {
       aptr = skipDNSQuestion(aptr, abuf, alen);
@@ -212,11 +212,11 @@ void DnsStub::cacheTTL(const Data& key,
    vector<RROverlay> overlays;
 
    // answers.
-   int ancount = DNS_HEADER_ANCOUNT(abuf);
+   int ancount = RARES_DNS_HEADER_ANCOUNT(abuf);
    if (ancount != 0) return;
    
    // name server records.
-   int nscount = DNS_HEADER_NSCOUNT(abuf);
+   int nscount = RARES_DNS_HEADER_NSCOUNT(abuf);
    if (nscount == 0) return;
    vector<RROverlay> soa;
    aptr = createOverlay(abuf, alen, aptr, soa);
@@ -235,8 +235,8 @@ DnsStub::skipDNSQuestion(const unsigned char *aptr,
    int len=0;
    
    // Parse the question name. 
-   status = ares_expand_name(aptr, abuf, alen, &name, &len);
-   if (status != ARES_SUCCESS)
+   status = rares_expand_name(aptr, abuf, alen, &name, &len);
+   if (status != RARES_SUCCESS)
    {
       throw DnsStubException("Failed DNS preparse", __FILE__, __LINE__);
    }
@@ -290,15 +290,15 @@ DnsStub::createOverlay(const unsigned char* abuf,
    const unsigned char* rptr = aptr;
    char* name = 0;
    int len = 0;
-   int status = ares_expand_name(aptr, abuf, alen, &name, &len);
-   if (ARES_SUCCESS != status)
+   int status = rares_expand_name(aptr, abuf, alen, &name, &len);
+   if (RARES_SUCCESS != status)
    {
       throw DnsStubException("Failed overlay creation", __FILE__, __LINE__);
    }
    free(name);
    aptr += len;
-   int type = DNS_RR_TYPE(aptr);
-   int dlen = DNS_RR_LEN(aptr);
+   int type = RARES_DNS_RR_TYPE(aptr);
+   int dlen = RARES_DNS_RR_LEN(aptr);
    if (!supportedType(type)) 
    {
       aptr += RRFIXEDSZ;
@@ -446,12 +446,12 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
    {
       switch (status)
       {
-         case ARES_ENODATA:
-         case ARES_EFORMERR:
-         case ARES_ESERVFAIL:
-         case ARES_ENOTFOUND:
-         case ARES_ENOTIMP:
-         case ARES_EREFUSED:
+         case RARES_ENODATA:
+         case RARES_EFORMERR:
+         case RARES_ESERVFAIL:
+         case RARES_ENOTFOUND:
+         case RARES_ENOTIMP:
+         case RARES_EREFUSED:
             if(mRRType == T_A)
             {
                in_addr address;  
@@ -485,28 +485,28 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
                InfoLog(<< e.getMessage());
             }
             break;
-         case ARES_ECONNREFUSED:
-         case ARES_ETIMEOUT:
+         case RARES_ECONNREFUSED:
+         case RARES_ETIMEOUT:
             ErrLog (<< "Connection error " << mStub.errorMessage(status) << " for " << mTarget);
             break;
-         case ARES_EBADRESP:
+         case RARES_EBADRESP:
             ErrLog (<< "Server response error " << mStub.errorMessage(status) << " for " << mTarget);
             break;
-         case ARES_EOF:
-         case ARES_EFILE:
-         case ARES_ENOMEM:
-         case ARES_EDESTRUCTION:
+         case RARES_EOF:
+         case RARES_EFILE:
+         case RARES_ENOMEM:
+         case RARES_EDESTRUCTION:
             ErrLog (<< "Error " << mStub.errorMessage(status) << " for " << mTarget);
             break;
-         case ARES_EBADNAME:
+         case RARES_EBADNAME:
             ErrLog(<< "Garbage hostname failed to resolve: " << mStub.errorMessage(status) << " for " << mTarget);
             break;
-         case ARES_EBADQUERY:
+         case RARES_EBADQUERY:
             ErrLog(<< "Query was malformed (probably because hostname was "
                         "too long) " << mStub.errorMessage(status) << " for "
                         << mTarget);
             break;
-         case ARES_EBADFAMILY:
+         case RARES_EBADFAMILY:
             ErrLog (<< "Bad lookup type " << mStub.errorMessage(status) << " for " << mTarget);
             // .bwc. This should not happen. If it does, we have code to fix.
             assert(0);
@@ -531,7 +531,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
    // skip header
    const unsigned char* aptr = abuf + HFIXEDSZ;
 
-   int qdcount = DNS_HEADER_QDCOUNT(abuf); // questions.
+   int qdcount = RARES_DNS_HEADER_QDCOUNT(abuf); // questions.
    for (int i = 0; i < qdcount && aptr; ++i)
    {
       try
@@ -541,14 +541,14 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
       catch (BaseException& e)
       {
          ErrLog(<< "Error parsing DNS record for " << mTarget << ": " << e.getMessage());
-         mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink); 
+         mResultConverter->notifyUser(mTarget, RARES_EFORMERR, e.getMessage(), Empty, mSink); 
          mStub.removeQuery(this);
          delete this;
          return;
       }
    }
 
-   int ancount = DNS_HEADER_ANCOUNT(abuf);
+   int ancount = RARES_DNS_HEADER_ANCOUNT(abuf);
    if (ancount == 0)
    {
       mResultConverter->notifyUser(mTarget, 0, mStub.errorMessage(0), Empty, mSink); 
@@ -597,10 +597,10 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
    char* name = 0;
    int len = 0;
 
-   if (ARES_SUCCESS != ares_expand_name(aptr, abuf, alen, &name, &len))
+   if (RARES_SUCCESS != rares_expand_name(aptr, abuf, alen, &name, &len))
    {
       ErrLog(<< "Failed DNS preparse for " << targetToQuery);
-      mResultConverter->notifyUser(mTarget, ARES_EFORMERR, "Failed DNS preparse", Empty, mSink); 
+      mResultConverter->notifyUser(mTarget, RARES_EFORMERR, "Failed DNS preparse", Empty, mSink); 
       bGotAnswers = false;
       return;
    }
@@ -615,14 +615,14 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
    catch (BaseException& e)
    {
       ErrLog(<< "Failed to cache result for " << targetToQuery << ": " << e.getMessage());
-      mResultConverter->notifyUser(mTarget, ARES_EFORMERR, e.getMessage(), Empty, mSink); 
+      mResultConverter->notifyUser(mTarget, RARES_EFORMERR, e.getMessage(), Empty, mSink); 
       bGotAnswers = false;
       return;
    }
 
    if (mRRType != T_CNAME)
    {
-      if (DNS_RR_TYPE(aptr) == T_CNAME)
+      if (RARES_DNS_RR_TYPE(aptr) == T_CNAME)
       {
          if (mFollowCname && mReQuery < MAX_REQUERIES)
          {

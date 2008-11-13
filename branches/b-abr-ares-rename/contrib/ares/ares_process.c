@@ -64,7 +64,7 @@ static void end_query(ares_channel channel, struct query *query, int status,
 /* Something interesting happened on the wire, or there was a timeout.
  * See what's up and respond accordingly.
  */
-void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
+void rares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
 {
   time_t now;
 
@@ -76,7 +76,7 @@ void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
 
   /* See if our local pseudo-db has any results. */
   /* Querying this only on timeouts is OK (is not high-performance) */
-  ares_local_process_requests();
+  rares_local_process_requests();
 }
 
 /* If any TCP sockets select true for writing, write out queued data
@@ -343,7 +343,7 @@ static void process_timeouts(ares_channel channel, time_t now)
       next = query->next;
       if (query->timeout != 0 && now >= query->timeout)
 	{
-	  query->error_status = ARES_ETIMEOUT;
+	  query->error_status = RARES_ETIMEOUT;
 	  next_server(channel, query, now);
 	}
     }
@@ -362,9 +362,9 @@ static void process_answer(ares_channel channel, unsigned char *abuf,
     return;
 
   /* Grab the query ID, truncate bit, and response code from the packet. */
-  id = DNS_HEADER_QID(abuf);
-  tc = DNS_HEADER_TC(abuf);
-  rcode = DNS_HEADER_RCODE(abuf);
+  id = RARES_DNS_HEADER_QID(abuf);
+  tc = RARES_DNS_HEADER_TC(abuf);
+  rcode = RARES_DNS_HEADER_RCODE(abuf);
 
   /* Find the query corresponding to this packet. */
   for (query = channel->queries; query; query = query->next)
@@ -379,12 +379,12 @@ static void process_answer(ares_channel channel, unsigned char *abuf,
    * don't accept the packet, and switch the query to TCP if we hadn't
    * done so already.
    */
-  if ((tc || alen > PACKETSZ) && !tcp && !(channel->flags & ARES_FLAG_IGNTC))
+  if ((tc || alen > PACKETSZ) && !tcp && !(channel->flags & RARES_FLAG_IGNTC))
     {
       if (!query->using_tcp)
 	{
 	  query->using_tcp = 1;
-	  ares__send_query(channel, query, now);
+	  rares__send_query(channel, query, now);
 	}
       return;
     }
@@ -398,7 +398,7 @@ static void process_answer(ares_channel channel, unsigned char *abuf,
   /* If we aren't passing through all error packets, discard packets
    * with SERVFAIL, NOTIMP, or REFUSED response codes.
    */
-  if (!(channel->flags & ARES_FLAG_NOCHECKRESP))
+  if (!(channel->flags & RARES_FLAG_NOCHECKRESP))
     {
       if (rcode == SERVFAIL || rcode == NOTIMP || rcode == REFUSED)
 	{
@@ -415,7 +415,7 @@ static void process_answer(ares_channel channel, unsigned char *abuf,
 	}
 
       /* 'No such name' */
-      if ((channel->flags & ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3) && rcode == NXDOMAIN)
+      if ((channel->flags & RARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3) && rcode == NXDOMAIN)
         {
           if (query->server == whichserver)
             {
@@ -425,7 +425,7 @@ static void process_answer(ares_channel channel, unsigned char *abuf,
         }
     }
 
-  end_query(channel, query, ARES_SUCCESS, abuf, alen);
+  end_query(channel, query, RARES_SUCCESS, abuf, alen);
 }
 
 static void handle_error(ares_channel channel, int whichserver, time_t now)
@@ -433,7 +433,7 @@ static void handle_error(ares_channel channel, int whichserver, time_t now)
   struct query *query;
 
   /* Reset communications with this server. */
-  ares__close_sockets(&channel->servers[whichserver]);
+  rares__close_sockets(&channel->servers[whichserver]);
 
   /* Tell all queries talking to this server to move on and not try
    * this server again.
@@ -463,7 +463,7 @@ static void next_server(ares_channel channel, struct query *query, time_t now)
 	{
 	  if (!query->skip_server[query->server])
 	    {
-	      ares__send_query(channel, query, now);
+	      rares__send_query(channel, query, now);
 	      return;
 	    }
 	}
@@ -512,14 +512,14 @@ static int next_server_new_network(ares_channel channel, struct query *query, ti
     }
     if (i == query->server)
     {
-      ares__send_query(channel, query, now);
+      rares__send_query(channel, query, now);
       return 1;
     }
   }
   return 0;
 }
 
-void ares__send_query(ares_channel channel, struct query *query, time_t now)
+void rares__send_query(ares_channel channel, struct query *query, time_t now)
 {
   struct send_request *sendreq;
   struct server_state *server;
@@ -541,7 +541,7 @@ void ares__send_query(ares_channel channel, struct query *query, time_t now)
 	}
       sendreq = malloc(sizeof(struct send_request));
       if (!sendreq)
-	end_query(channel, query, ARES_ENOMEM, NULL, 0);
+	end_query(channel, query, RARES_ENOMEM, NULL, 0);
       sendreq->data = query->tcpbuf;
       sendreq->len = query->tcplen;
       sendreq->next = NULL;
@@ -608,13 +608,13 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 	  int flags;
   if (fcntl(s, F_GETFL, &flags) == -1)
     {
-      ares__kill_socket(s);
+      rares__kill_socket(s);
       return -1;
     }
   flags |= O_NONBLOCK; // Fixed evil but here - used to be &=
   if (fcntl(s, F_SETFL, flags) == -1)
     {
-      ares__kill_socket(s);
+      rares__kill_socket(s);
       return -1;
     }
 }
@@ -641,7 +641,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
     if (connect(s, (const struct sockaddr *) &sin6 , sizeof(sin6)) == -1
            && getErrno() != PORTABLE_INPROGRESS_ERR)
     {
-      ares__kill_socket(s);
+      rares__kill_socket(s);
       return -1;
     }
   }
@@ -654,7 +654,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
 
     if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1 && getErrno() != PORTABLE_INPROGRESS_ERR)
     {
-      ares__kill_socket(s);
+      rares__kill_socket(s);
       return -1;
     }
   }
@@ -667,7 +667,7 @@ static int open_tcp_socket(ares_channel channel, struct server_state *server)
   if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1
          && getErrno() != PORTABLE_INPROGRESS_ERR)
   {
-    ares__kill_socket(s);
+    rares__kill_socket(s);
     return -1;
   }
 #endif
@@ -716,7 +716,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
     if (connect(s, (const struct sockaddr *) &sin6, sizeof(sin6)) == -1)
     {
-      ares__kill_socket(s);
+      rares__kill_socket(s);
       return -1;
     }
   }
@@ -729,7 +729,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
     if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1)
     {
-      ares__kill_socket(s);
+      rares__kill_socket(s);
       return -1;
     }
   }
@@ -751,7 +751,7 @@ static int open_udp_socket(ares_channel channel, struct server_state *server)
 
   if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) == -1)
     {
-      ares__kill_socket(s);
+      rares__kill_socket(s);
       return -1;
     }
 #endif
@@ -781,8 +781,8 @@ static int same_questions(const unsigned char *qbuf, int qlen,
     return 0;
 
   /* Extract qdcount from the request and reply buffers and compare them. */
-  q.qdcount = DNS_HEADER_QDCOUNT(qbuf);
-  a.qdcount = DNS_HEADER_QDCOUNT(abuf);
+  q.qdcount = RARES_DNS_HEADER_QDCOUNT(qbuf);
+  a.qdcount = RARES_DNS_HEADER_QDCOUNT(abuf);
   if (q.qdcount != a.qdcount)
     return 0;
 
@@ -791,8 +791,8 @@ static int same_questions(const unsigned char *qbuf, int qlen,
   for (i = 0; i < q.qdcount; i++)
     {
       /* Decode the question in the query. */
-      if (ares_expand_name(q.p, qbuf, qlen, &q.name, &q.namelen)
-	  != ARES_SUCCESS)
+      if (rares_expand_name(q.p, qbuf, qlen, &q.name, &q.namelen)
+	  != RARES_SUCCESS)
 	return 0;
       q.p += q.namelen;
       if (q.p + QFIXEDSZ > qbuf + qlen)
@@ -800,8 +800,8 @@ static int same_questions(const unsigned char *qbuf, int qlen,
 	  free(q.name);
 	  return 0;
 	}
-      q.type = DNS_QUESTION_TYPE(q.p);
-      q.dnsclass = DNS_QUESTION_CLASS(q.p);
+      q.type = RARES_DNS_QUESTION_TYPE(q.p);
+      q.dnsclass = RARES_DNS_QUESTION_CLASS(q.p);
       q.p += QFIXEDSZ;
 
       /* Search for this question in the answer. */
@@ -809,8 +809,8 @@ static int same_questions(const unsigned char *qbuf, int qlen,
       for (j = 0; j < a.qdcount; j++)
 	{
 	  /* Decode the question in the answer. */
-	  if (ares_expand_name(a.p, abuf, alen, &a.name, &a.namelen)
-	      != ARES_SUCCESS)
+	  if (rares_expand_name(a.p, abuf, alen, &a.name, &a.namelen)
+	      != RARES_SUCCESS)
 	    {
 	      free(q.name);
 	      return 0;
@@ -822,8 +822,8 @@ static int same_questions(const unsigned char *qbuf, int qlen,
 	      free(a.name);
 	      return 0;
 	    }
-	  a.type = DNS_QUESTION_TYPE(a.p);
-	  a.dnsclass = DNS_QUESTION_CLASS(a.p);
+	  a.type = RARES_DNS_QUESTION_TYPE(a.p);
+	  a.dnsclass = RARES_DNS_QUESTION_CLASS(a.p);
 	  a.p += QFIXEDSZ;
 
 	  /* Compare the decoded questions. */
@@ -863,14 +863,14 @@ static void end_query(ares_channel channel, struct query *query, int status,
   /* Simple cleanup policy: if no queries are remaining, close all
    * network sockets unless STAYOPEN is set.
    */
-  if (!channel->queries && !(channel->flags & ARES_FLAG_STAYOPEN))
+  if (!channel->queries && !(channel->flags & RARES_FLAG_STAYOPEN))
     {
       for (i = 0; i < channel->nservers; i++)
-	ares__close_sockets(&channel->servers[i]);
+	rares__close_sockets(&channel->servers[i]);
     }
 }
 
-void ares__kill_socket(int s)
+void rares__kill_socket(int s)
 {
 #ifdef WIN32
    closesocket(s);

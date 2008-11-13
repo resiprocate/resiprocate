@@ -20,23 +20,23 @@
 
 
 
-void ares_destroy(ares_channel channel)
+void rares_destroy(ares_channel channel)
 {
-   ares_destroy_internal(channel, 0);
+   rares_destroy_internal(channel, 0);
 }
 
-void ares_destroy_suppress_callbacks(ares_channel channel)
+void rares_destroy_suppress_callbacks(ares_channel channel)
 {
-   ares_destroy_internal(channel, 1);
+   rares_destroy_internal(channel, 1);
 }
 
-void ares_destroy_internal(ares_channel channel, int suppressCallbacks)
+void rares_destroy_internal(ares_channel channel, int suppressCallbacks)
 {
    int i;
    struct query *query;
 
    for (i = 0; i < channel->nservers; i++)
-      ares__close_sockets(&channel->servers[i]);
+      rares__close_sockets(&channel->servers[i]);
    free(channel->servers);
    for (i = 0; i < channel->ndomains; i++)
       free(channel->domains[i]);
@@ -49,7 +49,7 @@ void ares_destroy_internal(ares_channel channel, int suppressCallbacks)
       channel->queries = query->next;
       if (!suppressCallbacks)
       {
-         query->callback(query->arg, ARES_EDESTRUCTION, NULL, 0);
+         query->callback(query->arg, RARES_EDESTRUCTION, NULL, 0);
       }      
       free(query->tcpbuf);
       free(query->skip_server);
