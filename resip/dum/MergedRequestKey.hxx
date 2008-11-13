@@ -21,9 +21,6 @@ class MergedRequestKey
       static const MergedRequestKey Empty;
 
    private:
-      //MergedRequestKey(const MergedRequestKey& key);
-      MergedRequestKey& operator=(const MergedRequestKey& key);
-      
       Data mRequestUri;
       Data mCSeq;
       Data mTag;
