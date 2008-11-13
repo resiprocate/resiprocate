@@ -31,7 +31,7 @@
 #include <netdb.h>
 #endif
 
-int ares_parse_a_reply(const unsigned char *abuf, int alen,
+int rares_parse_a_reply(const unsigned char *abuf, int alen,
 		       struct hostent **host)
 {
   unsigned int qdcount, ancount;
@@ -47,23 +47,23 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
 
   /* Give up if abuf doesn't have room for a header. */
   if (alen < HFIXEDSZ)
-    return ARES_EBADRESP;
+    return RARES_EBADRESP;
 
   /* Fetch the question and answer count from the header. */
-  qdcount = DNS_HEADER_QDCOUNT(abuf);
-  ancount = DNS_HEADER_ANCOUNT(abuf);
+  qdcount = RARES_DNS_HEADER_QDCOUNT(abuf);
+  ancount = RARES_DNS_HEADER_ANCOUNT(abuf);
   if (qdcount != 1)
-    return ARES_EBADRESP;
+    return RARES_EBADRESP;
 
   /* Expand the name from the question, and skip past the question. */
   aptr = abuf + HFIXEDSZ;
-  status = ares_expand_name(aptr, abuf, alen, &hostname, &len);
-  if (status != ARES_SUCCESS)
+  status = rares_expand_name(aptr, abuf, alen, &hostname, &len);
+  if (status != RARES_SUCCESS)
     return status;
   if (aptr + len + QFIXEDSZ > abuf + alen)
     {
       free(hostname);
-      return ARES_EBADRESP;
+      return RARES_EBADRESP;
     }
   aptr += len + QFIXEDSZ;
 
@@ -72,14 +72,14 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
   if (!addrs)
     {
       free(hostname);
-      return ARES_ENOMEM;
+      return RARES_ENOMEM;
     }
   aliases = malloc((ancount + 1) * sizeof(char *));
   if (!aliases)
     {
       free(hostname);
       free(addrs);
-      return ARES_ENOMEM;
+      return RARES_ENOMEM;
     }
   naddrs = 0;
   naliases = 0;
@@ -88,18 +88,18 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
   for (i = 0; i < (int)ancount; i++)
     {
       /* Decode the RR up to the data field. */
-      status = ares_expand_name(aptr, abuf, alen, &rr_name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(aptr, abuf, alen, &rr_name, &len);
+      if (status != RARES_SUCCESS)
 	break;
       aptr += len;
       if (aptr + RRFIXEDSZ > abuf + alen)
 	{
-	  status = ARES_EBADRESP;
+	  status = RARES_EBADRESP;
 	  break;
 	}
-      rr_type = DNS_RR_TYPE(aptr);
-      rr_class = DNS_RR_CLASS(aptr);
-      rr_len = DNS_RR_LEN(aptr);
+      rr_type = RARES_DNS_RR_TYPE(aptr);
+      rr_class = RARES_DNS_RR_CLASS(aptr);
+      rr_len = RARES_DNS_RR_LEN(aptr);
       aptr += RRFIXEDSZ;
 
       if (rr_class == C_IN && rr_type == T_A
@@ -108,7 +108,7 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
 	{
 	  memcpy(&addrs[naddrs], aptr, sizeof(struct in_addr));
 	  naddrs++;
-	  status = ARES_SUCCESS;
+	  status = RARES_SUCCESS;
 	}
 
       if (rr_class == C_IN && rr_type == T_CNAME)
@@ -118,8 +118,8 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
 	  naliases++;
 
 	  /* Decode the RR data and replace the hostname with it. */
-	  status = ares_expand_name(aptr, abuf, alen, &rr_data, &len);
-	  if (status != ARES_SUCCESS)
+	  status = rares_expand_name(aptr, abuf, alen, &rr_data, &len);
+	  if (status != RARES_SUCCESS)
 	    break;
 	  free(hostname);
 	  hostname = rr_data;
@@ -130,14 +130,14 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
       aptr += rr_len;
       if (aptr > abuf + alen)
 	{
-	  status = ARES_EBADRESP;
+	  status = RARES_EBADRESP;
 	  break;
 	}
     }
 
-  if (status == ARES_SUCCESS && naddrs == 0)
-    status = ARES_ENODATA;
-  if (status == ARES_SUCCESS)
+  if (status == RARES_SUCCESS && naddrs == 0)
+    status = RARES_ENODATA;
+  if (status == RARES_SUCCESS)
     {
       /* We got our answer.  Allocate memory to build the host entry. */
       aliases[naliases] = NULL;
@@ -156,11 +156,11 @@ int ares_parse_a_reply(const unsigned char *abuf, int alen,
 		hostent->h_addr_list[i] = (char *) &addrs[i];
 	      hostent->h_addr_list[naddrs] = NULL;
 	      *host = hostent;
-	      return ARES_SUCCESS;
+	      return RARES_SUCCESS;
 	    }
 	  free(hostent);
 	}
-      status = ARES_ENOMEM;
+      status = RARES_ENOMEM;
     }
   for (i = 0; i < naliases; i++)
     free(aliases[i]);

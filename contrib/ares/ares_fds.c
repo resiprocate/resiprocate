@@ -19,7 +19,7 @@
 #include "ares.h"
 #include "ares_private.h"
 
-int ares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
+int rares_fds(ares_channel channel, fd_set *read_fds, fd_set *write_fds)
 {
   struct server_state *server;
   int i, nfds;

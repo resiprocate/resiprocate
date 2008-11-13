@@ -21,7 +21,7 @@
 #include <netdb.h>
 #endif
 
-void ares_free_hostent(struct hostent *host)
+void rares_free_hostent(struct hostent *host)
 {
   char **p;
 

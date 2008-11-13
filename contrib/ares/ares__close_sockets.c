@@ -21,7 +21,7 @@
 #include "ares.h"
 #include "ares_private.h"
 
-void ares__close_sockets(struct server_state *server)
+void rares__close_sockets(struct server_state *server)
 {
   struct send_request *sendreq;
 
@@ -44,12 +44,12 @@ void ares__close_sockets(struct server_state *server)
   /* Close the TCP and UDP sockets. */
   if (server->tcp_socket != -1)
     {
-      ares__kill_socket(server->tcp_socket);
+      rares__kill_socket(server->tcp_socket);
       server->tcp_socket = -1;
     }
   if (server->udp_socket != -1)
     {
-      ares__kill_socket(server->udp_socket);
+      rares__kill_socket(server->udp_socket);
       server->udp_socket = -1;
     }
 }

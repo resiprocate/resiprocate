@@ -79,33 +79,33 @@ char w32hostspath[256];
 #endif
 
 
-int ares_capabilities(int capmask)
+int rares_capabilities(int capmask)
 {
 #ifdef USE_IPV6
-   static int ares_caps = ARES_CAP_IPV6;
+   static int ares_caps = RARES_CAP_IPV6;
 #else
    static int ares_caps = 0;
 #endif
    return (capmask & ares_caps);
 }
 
-int ares_init(ares_channel *channelptr)
+int rares_init(ares_channel *channelptr)
 {
-   return ares_init_options_with_socket_function(channelptr, NULL, 0, NULL);
+   return rares_init_options_with_socket_function(channelptr, NULL, 0, NULL);
 }
 
-int ares_init_with_socket_function(ares_channel *channelptr, socket_function_ptr socketFunc)
+int rares_init_with_socket_function(ares_channel *channelptr, socket_function_ptr socketFunc)
 {
-   return ares_init_options_with_socket_function(channelptr, NULL, 0, socketFunc);
+   return rares_init_options_with_socket_function(channelptr, NULL, 0, socketFunc);
 }
 
-int ares_init_options(ares_channel *channelptr, struct ares_options *options,
+int rares_init_options(ares_channel *channelptr, struct ares_options *options,
                       int optmask)
 {
-   return ares_init_options_with_socket_function(channelptr, options, optmask, NULL);
+   return rares_init_options_with_socket_function(channelptr, options, optmask, NULL);
 }
 
-int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
+int rares_init_options_with_socket_function(ares_channel *channelptr, struct ares_options *options,
                       int optmask, socket_function_ptr socketFunc)
 {
   ares_channel channel;
@@ -139,7 +139,7 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
 
   channel = malloc(sizeof(struct ares_channeldata));
   if (!channel)
-    return ARES_ENOMEM;
+    return RARES_ENOMEM;
 
   /* Set everything to distinguished values so we know they haven't
    * been set yet.
@@ -160,13 +160,13 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
    * precedence to lowest.
    */
   status = init_by_options(channel, options, optmask);
-  if (status == ARES_SUCCESS)
+  if (status == RARES_SUCCESS)
     status = init_by_environment(channel);
-  if (status == ARES_SUCCESS)
+  if (status == RARES_SUCCESS)
     status = init_by_resolv_conf(channel);
-  if (status == ARES_SUCCESS)
+  if (status == RARES_SUCCESS)
     status = init_by_defaults(channel);
-  if (status != ARES_SUCCESS)
+  if (status != RARES_SUCCESS)
     {
       /* Something failed; clean up memory we may have allocated. */
       if (channel->nservers != -1)
@@ -184,8 +184,8 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
       return status;
     }
 
-  /* Trim to one server if ARES_FLAG_PRIMARY is set. */
-  if ((channel->flags & ARES_FLAG_PRIMARY) && channel->nservers > 1)
+  /* Trim to one server if RARES_FLAG_PRIMARY is set. */
+  if ((channel->flags & RARES_FLAG_PRIMARY) && channel->nservers > 1)
     channel->nservers = 1;
 
   /* Initialize server states. */
@@ -215,7 +215,7 @@ int ares_init_options_with_socket_function(ares_channel *channelptr, struct ares
   channel->queries = NULL;
 
   *channelptr = channel;
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 static int init_by_options(ares_channel channel, struct ares_options *options,
@@ -224,26 +224,26 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
   int i;
 
   /* Easy stuff. */
-  if ((optmask & ARES_OPT_FLAGS) && channel->flags == -1)
+  if ((optmask & RARES_OPT_FLAGS) && channel->flags == -1)
     channel->flags = options->flags;
-  if ((optmask & ARES_OPT_TIMEOUT) && channel->timeout == -1)
+  if ((optmask & RARES_OPT_TIMEOUT) && channel->timeout == -1)
     channel->timeout = options->timeout;
-  if ((optmask & ARES_OPT_TRIES) && channel->tries == -1)
+  if ((optmask & RARES_OPT_TRIES) && channel->tries == -1)
     channel->tries = options->tries;
-  if ((optmask & ARES_OPT_NDOTS) && channel->ndots == -1)
+  if ((optmask & RARES_OPT_NDOTS) && channel->ndots == -1)
     channel->ndots = options->ndots;
-  if ((optmask & ARES_OPT_UDP_PORT) && channel->udp_port == -1)
+  if ((optmask & RARES_OPT_UDP_PORT) && channel->udp_port == -1)
      channel->udp_port = options->udp_port;
-  if ((optmask & ARES_OPT_TCP_PORT) && channel->tcp_port == -1)
+  if ((optmask & RARES_OPT_TCP_PORT) && channel->tcp_port == -1)
      channel->tcp_port = options->tcp_port;
 
   /* Copy the servers, if given. */
-  if ((optmask & ARES_OPT_SERVERS) && channel->nservers == -1)
+  if ((optmask & RARES_OPT_SERVERS) && channel->nservers == -1)
   {
      channel->servers =
         malloc(options->nservers * sizeof(struct server_state));
      if (!channel->servers && options->nservers != 0)
-        return ARES_ENOMEM;
+        return RARES_ENOMEM;
      memset(channel->servers, '\0', options->nservers * sizeof(struct server_state));
      for (i = 0; i < options->nservers; i++)
      {
@@ -267,30 +267,30 @@ static int init_by_options(ares_channel channel, struct ares_options *options,
   /* Copy the domains, if given.  Keep channel->ndomains consistent so
    * we can clean up in case of error.
    */
-  if ((optmask & ARES_OPT_DOMAINS) && channel->ndomains == -1)
+  if ((optmask & RARES_OPT_DOMAINS) && channel->ndomains == -1)
     {
       channel->domains = malloc(options->ndomains * sizeof(char *));
       if (!channel->domains && options->ndomains != 0)
-	return ARES_ENOMEM;
+	return RARES_ENOMEM;
       for (i = 0; i < options->ndomains; i++)
 	{
 	  channel->ndomains = i;
 	  channel->domains[i] = strdup(options->domains[i]);
 	  if (!channel->domains[i])
-	    return ARES_ENOMEM;
+	    return RARES_ENOMEM;
 	}
       channel->ndomains = options->ndomains;
     }
 
   /* Set lookups, if given. */
-  if ((optmask & ARES_OPT_LOOKUPS) && !channel->lookups)
+  if ((optmask & RARES_OPT_LOOKUPS) && !channel->lookups)
     {
       channel->lookups = strdup(options->lookups);
       if (!channel->lookups)
-	return ARES_ENOMEM;
+	return RARES_ENOMEM;
     }
 
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 static int init_by_environment(ares_channel channel)
@@ -306,7 +306,7 @@ static int init_by_environment(ares_channel channel)
   if (localdomain && channel->ndomains == -1)
     {
       status = set_search(channel, localdomain);
-      if (status != ARES_SUCCESS)
+      if (status != RARES_SUCCESS)
 	return status;
     }
 
@@ -318,11 +318,11 @@ static int init_by_environment(ares_channel channel)
   if (res_options)
     {
       status = set_options(channel, res_options);
-      if (status != ARES_SUCCESS)
+      if (status != RARES_SUCCESS)
 	return status;
     }
 
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 static int init_by_resolv_conf(ares_channel channel)
@@ -338,8 +338,8 @@ static int init_by_resolv_conf(ares_channel channel)
   errno = ENOENT;
 #endif
   if (!fp)
-    return (errno == ENOENT) ? ARES_SUCCESS : ARES_EFILE;
-  while ((status = ares__read_line(fp, &line, &linesize)) == ARES_SUCCESS)
+    return (errno == ENOENT) ? RARES_SUCCESS : RARES_EFILE;
+  while ((status = rares__read_line(fp, &line, &linesize)) == RARES_SUCCESS)
     {
       if ((p = try_config(line, "domain")) && channel->ndomains == -1)
 	status = config_domain(channel, p);
@@ -354,15 +354,15 @@ static int init_by_resolv_conf(ares_channel channel)
       else if ((p = try_config(line, "options")))
 	status = set_options(channel, p);
       else
-	status = ARES_SUCCESS;
-      if (status != ARES_SUCCESS)
+	status = RARES_SUCCESS;
+      if (status != RARES_SUCCESS)
 	break;
     }
   free(line);
   fclose(fp);
 
   /* Handle errors. */
-  if (status != ARES_EOF)
+  if (status != RARES_EOF)
     {
       free(servers);
       free(sortlist);
@@ -383,7 +383,7 @@ static int init_by_resolv_conf(ares_channel channel)
       channel->nsort = nsort;
     }
 
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 #if defined(__APPLE__) || defined(__MACH__)
@@ -455,9 +455,9 @@ static int init_by_defaults(ares_channel channel)
   if (channel->flags == -1)
     channel->flags = 0;
   if (channel->timeout == -1)
-    channel->timeout = DEFAULT_TIMEOUT;
+    channel->timeout = RARES_DEFAULT_TIMEOUT;
   if (channel->tries == -1)
-    channel->tries = DEFAULT_TRIES;
+    channel->tries = RARES_DEFAULT_TRIES;
   if (channel->ndots == -1)
     channel->ndots = 1;
   if (channel->udp_port == -1)
@@ -482,14 +482,14 @@ static int init_by_defaults(ares_channel channel)
 	  hLib = LoadLibrary(TEXT("iphlpapi.dll"));
 	  if(!hLib)
 	  {
-		  return ARES_ENOTIMP;
+		  return RARES_ENOTIMP;
 	  }
 
 	  (void*)GetNetworkParams = GetProcAddress(hLib, TEXT("GetNetworkParams"));
 	  if(!GetNetworkParams)
 	  {
 		  FreeLibrary(hLib);
-		  return ARES_ENOTIMP;
+		  return RARES_ENOTIMP;
 	  }
       //printf("ARES: figuring out DNS servers\n");
       FixedInfo = (FIXED_INFO *) GlobalAlloc( GPTR, sizeof( FIXED_INFO ) );
@@ -506,7 +506,7 @@ static int init_by_defaults(ares_channel channel)
         //printf("ARES: couldn't get network params\n");
         GlobalFree( FixedInfo );
   	    FreeLibrary(hLib);
-        return ARES_ENODATA;
+        return RARES_ENODATA;
       }
       else
       {
@@ -532,7 +532,7 @@ static int init_by_defaults(ares_channel channel)
 		   {
 	           GlobalFree( FixedInfo );
  		       FreeLibrary(hLib);
-			   return ARES_ENOMEM;
+			   return RARES_ENOMEM;
 		   }
            memset(channel->servers, '\0', num * sizeof(struct server_state));
 
@@ -550,7 +550,7 @@ static int init_by_defaults(ares_channel channel)
                 channel->servers[ channel->nservers ].family = AF_INET;
 #endif
                 channel->servers[channel->nservers].addr = addr;
-                if ((channel->flags & ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3))
+                if ((channel->flags & RARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3))
                 {
                    get_physical_address(channel->servers[channel->nservers].physical_addr,
                                         MAX_ADAPTER_ADDRESS_LENGTH,
@@ -569,7 +569,7 @@ static int init_by_defaults(ares_channel channel)
   		   /* If no specified servers, try a local named. */
 		   channel->servers = malloc(sizeof(struct server_state));
 		   if (!channel->servers)
-              return ARES_ENOMEM;
+              return RARES_ENOMEM;
            memset(channel->servers, '\0', sizeof(struct server_state));
 
 #ifdef USE_IPV6			 
@@ -589,7 +589,7 @@ static int init_by_defaults(ares_channel channel)
 		/* If nobody specified servers, try a local named. */
 		channel->servers = malloc(sizeof(struct server_state));
 		if (!channel->servers)
-			return ARES_ENOMEM;
+			return RARES_ENOMEM;
         memset(channel->servers, '\0', sizeof(struct server_state));
 
 		// need a way to test here if v4 or v6 is running
@@ -618,11 +618,11 @@ static int init_by_defaults(ares_channel channel)
 	{
 	  channel->domains = malloc(sizeof(char *));
 	  if (!channel->domains)
-	    return ARES_ENOMEM;
+	    return RARES_ENOMEM;
 	  channel->ndomains = 0;
 	  channel->domains[0] = strdup(strchr(hostname, '.') + 1);
 	  if (!channel->domains[0])
-	    return ARES_ENOMEM;
+	    return RARES_ENOMEM;
 	  channel->ndomains = 1;
 	}
     }
@@ -637,10 +637,10 @@ static int init_by_defaults(ares_channel channel)
     {
       channel->lookups = strdup("bf");
       if (!channel->lookups)
-	return ARES_ENOMEM;
+	return RARES_ENOMEM;
     }
 
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 static int config_domain(ares_channel channel, char *str)
@@ -677,7 +677,7 @@ static int config_lookup(ares_channel channel, const char *str)
     }
   *l = 0;
   channel->lookups = strdup(lookups);
-  return (channel->lookups) ? ARES_SUCCESS : ARES_ENOMEM;
+  return (channel->lookups) ? RARES_SUCCESS : RARES_ENOMEM;
 }
 
 static int config_nameserver(struct server_state **servers, int *nservers,
@@ -698,18 +698,18 @@ static int config_nameserver(struct server_state **servers, int *nservers,
 	if (inet_pton6(str, (u_char *) & addr6))  /* how about an IPv6 address? */
 	  family = AF_INET6;
 	else	
-	  return ARES_SUCCESS;	/* nope, it was garbage, return early */
+	  return RARES_SUCCESS;	/* nope, it was garbage, return early */
   }
 #else
   /* Add a nameserver entry, if this is a valid address. */
 
   if (!inet_pton4(str, (u_char *) & addr))   /* is it an IPv4 address? */
-	  return ARES_SUCCESS;	/* nope, it was garbage, return early */
+	  return RARES_SUCCESS;	/* nope, it was garbage, return early */
 #endif
 
   newserv = realloc(*servers, (*nservers + 1) * sizeof(struct server_state));
   if (!newserv)
-    return ARES_ENOMEM;
+    return RARES_ENOMEM;
   memset(&newserv[*nservers], '\0', sizeof(struct server_state));   // clear *new* memory only
 
 #ifdef USE_IPV6
@@ -722,7 +722,7 @@ static int config_nameserver(struct server_state **servers, int *nservers,
 
   *servers = newserv;
   (*nservers)++;
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 static int config_sortlist(struct apattern **sortlist, int *nsort,
@@ -754,7 +754,7 @@ static int config_sortlist(struct apattern **sortlist, int *nsort,
 	  /* Add this pattern to our list. */
 	  newsort = realloc(*sortlist, (*nsort + 1) * sizeof(struct apattern));
 	  if (!newsort)
-	    return ARES_ENOMEM;
+	    return RARES_ENOMEM;
 	  newsort[*nsort] = pat;
 	  *sortlist = newsort;
 	  (*nsort)++;
@@ -769,7 +769,7 @@ static int config_sortlist(struct apattern **sortlist, int *nsort,
 	str++;
     }
 
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 static int set_search(ares_channel channel, const char *str)
@@ -791,7 +791,7 @@ static int set_search(ares_channel channel, const char *str)
 
   channel->domains = malloc(n * sizeof(char *));
   if (!channel->domains && n)
-    return ARES_ENOMEM;
+    return RARES_ENOMEM;
 
   /* Now copy the domains. */
   n = 0;
@@ -804,7 +804,7 @@ static int set_search(ares_channel channel, const char *str)
 	q++;
       channel->domains[n] = malloc(q - p + 1);
       if (!channel->domains[n])
-	return ARES_ENOMEM;
+	return RARES_ENOMEM;
       memcpy(channel->domains[n], p, q - p);
       channel->domains[n][q - p] = 0;
       p = q;
@@ -814,7 +814,7 @@ static int set_search(ares_channel channel, const char *str)
     }
   channel->ndomains = n;
 
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 static int set_options(ares_channel channel, const char *str)
@@ -841,7 +841,7 @@ static int set_options(ares_channel channel, const char *str)
 	p++;
     }
 
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 static char *try_config(char *s, char *opt)
@@ -924,7 +924,7 @@ static int find_server(struct server_state *servers, int nservers, struct in_add
 
 /*
  * V4. Get the physical address of the first NIC whose list of DNS servers contain 'addr'.
- * return: ARES_SUCCESS, etc.
+ * return: RARES_SUCCESS, etc.
  */
 static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* physAddrLen, struct in_addr addr)
 {
@@ -934,19 +934,19 @@ static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* 
   DWORD dwRet = ERROR_BUFFER_OVERFLOW;
   DWORD dwSize = 0;
   IP_ADAPTER_ADDRESSES *pAdapterAddresses = 0;
-  int rc = ARES_ENOTFOUND;
+  int rc = RARES_ENOTFOUND;
 
   memset(physicalAddr, '\0', physicalAddrBufSz);
   *physAddrLen = 0;
 
   hLib = LoadLibrary(TEXT("iphlpapi.dll"));
   if (!hLib)
-    return ARES_ENOTIMP;
+    return RARES_ENOTIMP;
 
   (void*)GetAdaptersAddressesProc = GetProcAddress(hLib, TEXT("GetAdaptersAddresses"));
   if(!GetAdaptersAddressesProc)
   {
-    rc = ARES_ENOTIMP;
+    rc = RARES_ENOTIMP;
     goto cleanup;
   }
 
@@ -958,20 +958,20 @@ static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* 
     pAdapterAddresses = (IP_ADAPTER_ADDRESSES *) LocalAlloc(LMEM_ZEROINIT, dwSize);
     if (! pAdapterAddresses)
     {
-      rc = ARES_ENOMEM;
+      rc = RARES_ENOMEM;
       goto cleanup;
     }
   }
   else
   {
-    rc = ARES_ENODATA;
+    rc = RARES_ENODATA;
     goto cleanup;
   }
 
   dwRet = (*GetAdaptersAddressesProc)(AF_UNSPEC, 0, NULL, pAdapterAddresses, &dwSize);
   if (dwRet != ERROR_SUCCESS)
   {
-    rc = ARES_ENODATA;
+    rc = RARES_ENODATA;
     goto cleanup;
   }
 
@@ -995,14 +995,14 @@ static int get_physical_address(char *physicalAddr, int physicalAddrBufSz, int* 
             if (*physAddrLen > physicalAddrBufSz)
               *physAddrLen = physicalAddrBufSz;
             memcpy(physicalAddr, &AI->PhysicalAddress[0], *physAddrLen);
-            rc = ARES_SUCCESS;
+            rc = RARES_SUCCESS;
             goto cleanup;
           }
         }
       }
     }
   }
-  rc = ARES_ENOTFOUND;
+  rc = RARES_ENOTFOUND;
 
 cleanup:
   if (hLib)
@@ -1011,7 +1011,7 @@ cleanup:
     LocalFree(pAdapterAddresses);
   return rc;
 #else // WIN32
-  return ARES_ENOTIMP;
+  return RARES_ENOTIMP;
 #endif // WIN32
 }
 
