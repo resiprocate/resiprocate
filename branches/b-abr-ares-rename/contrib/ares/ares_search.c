@@ -22,7 +22,7 @@
 #include "ares_private.h"
 
 struct search_query {
-  /* Arguments passed to ares_search */
+  /* Arguments passed to rares_search */
   ares_channel channel;
   char *name;			/* copied into an allocated buffer */
   int dnsclass;
@@ -42,7 +42,7 @@ static void end_squery(struct search_query *squery, int status,
 static int cat_domain(const char *name, const char *domain, char **s);
 static int single_domain(ares_channel channel, const char *name, char **s);
 
-void ares_search(ares_channel channel, const char *name, int dnsclass,
+void rares_search(ares_channel channel, const char *name, int dnsclass,
 		 int type, ares_callback callback, void *arg)
 {
   struct search_query *squery;
@@ -51,17 +51,17 @@ void ares_search(ares_channel channel, const char *name, int dnsclass,
   int status, ndots;
 
   /* If name only yields one domain to search, then we don't have
-   * to keep extra state, so just do an ares_query().
+   * to keep extra state, so just do an rares_query().
    */
   status = single_domain(channel, name, &s);
-  if (status != ARES_SUCCESS)
+  if (status != RARES_SUCCESS)
     {
       callback(arg, status, NULL, 0);
       return;
     }
   if (s)
     {
-      ares_query(channel, s, dnsclass, type, callback, arg);
+      rares_query(channel, s, dnsclass, type, callback, arg);
       free(s);
       return;
     }
@@ -72,7 +72,7 @@ void ares_search(ares_channel channel, const char *name, int dnsclass,
   squery = malloc(sizeof(struct search_query));
   if (!squery)
     {
-      callback(arg, ARES_ENOMEM, NULL, 0);
+      callback(arg, RARES_ENOMEM, NULL, 0);
       return;
     }
   squery->channel = channel;
@@ -80,7 +80,7 @@ void ares_search(ares_channel channel, const char *name, int dnsclass,
   if (!squery->name)
     {
       free(squery);
-      callback(arg, ARES_ENOMEM, NULL, 0);
+      callback(arg, RARES_ENOMEM, NULL, 0);
       return;
     }
   squery->dnsclass = dnsclass;
@@ -106,7 +106,7 @@ void ares_search(ares_channel channel, const char *name, int dnsclass,
       /* Try the name as-is first. */
       squery->next_domain = 0;
       squery->trying_as_is = 1;
-      ares_query(channel, name, dnsclass, type, search_callback, squery);
+      rares_query(channel, name, dnsclass, type, search_callback, squery);
     }
   else
     {
@@ -114,9 +114,9 @@ void ares_search(ares_channel channel, const char *name, int dnsclass,
       squery->next_domain = 1;
       squery->trying_as_is = 0;
       status = cat_domain(name, channel->domains[0], &s);
-      if (status == ARES_SUCCESS)
+      if (status == RARES_SUCCESS)
 	{
-	  ares_query(channel, s, dnsclass, type, search_callback, squery);
+	  rares_query(channel, s, dnsclass, type, search_callback, squery);
 	  free(s);
 	}
       else
@@ -132,8 +132,8 @@ static void search_callback(void *arg, int status, unsigned char *abuf,
   char *s;
 
   /* Stop searching unless we got a non-fatal error. */
-  if (status != ARES_ENODATA && status != ARES_ESERVFAIL
-      && status != ARES_ENOTFOUND)
+  if (status != RARES_ENODATA && status != RARES_ESERVFAIL
+      && status != RARES_ENOTFOUND)
     end_squery(squery, status, abuf, alen);
   else
     {
@@ -145,13 +145,13 @@ static void search_callback(void *arg, int status, unsigned char *abuf,
 	  /* Try the next domain. */
 	  status = cat_domain(squery->name,
 			      channel->domains[squery->next_domain], &s);
-	  if (status != ARES_SUCCESS)
+	  if (status != RARES_SUCCESS)
 	    end_squery(squery, status, NULL, 0);
 	  else
 	    {
 	      squery->trying_as_is = 0;
 	      squery->next_domain++;
-	      ares_query(channel, s, squery->dnsclass, squery->type,
+	      rares_query(channel, s, squery->dnsclass, squery->type,
 			 search_callback, squery);
 	      free(s);
 	    }
@@ -160,7 +160,7 @@ static void search_callback(void *arg, int status, unsigned char *abuf,
 	{
 	  /* Try the name as-is at the end. */
 	  squery->trying_as_is = 1;
-	  ares_query(channel, squery->name, squery->dnsclass, squery->type,
+	  rares_query(channel, squery->name, squery->dnsclass, squery->type,
 		     search_callback, squery);
 	}
       else
@@ -183,12 +183,12 @@ static int cat_domain(const char *name, const char *domain, char **s)
 
   *s = malloc(nlen + 1 + dlen + 1);
   if (!*s)
-    return ARES_ENOMEM;
+    return RARES_ENOMEM;
   memcpy(*s, name, nlen);
   (*s)[nlen] = '.';
   memcpy(*s + nlen + 1, domain, dlen);
   (*s)[nlen + 1 + dlen] = 0;
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 /* Determine if this name only yields one query.  If it does, set *s to
@@ -210,10 +210,10 @@ static int single_domain(ares_channel channel, const char *name, char **s)
   if (name[len - 1] == '.')
     {
       *s = strdup(name);
-      return (*s) ? ARES_SUCCESS : ARES_ENOMEM;
+      return (*s) ? RARES_SUCCESS : RARES_ENOMEM;
     }
 
-  if (!(channel->flags & ARES_FLAG_NOALIASES) && !strchr(name, '.'))
+  if (!(channel->flags & RARES_FLAG_NOALIASES) && !strchr(name, '.'))
     {
       /* The name might be a host alias. */
 #ifdef UNDER_CE
@@ -226,8 +226,8 @@ static int single_domain(ares_channel channel, const char *name, char **s)
 	  fp = fopen(hostaliases, "r");
 	  if (fp)
 	    {
-	      while ((status = ares__read_line(fp, &line, &linesize))
-		     == ARES_SUCCESS)
+	      while ((status = rares__read_line(fp, &line, &linesize))
+		     == RARES_SUCCESS)
 		{
                    if (strncasecmp(line, name, len) != 0 ||
 		      !isspace((unsigned char)line[len]))
@@ -248,24 +248,24 @@ static int single_domain(ares_channel channel, const char *name, char **s)
 			}
 		      free(line);
 		      fclose(fp);
-		      return (*s) ? ARES_SUCCESS : ARES_ENOMEM;
+		      return (*s) ? RARES_SUCCESS : RARES_ENOMEM;
 		    }
 		}
 	      free(line);
 	      fclose(fp);
-	      if (status != ARES_SUCCESS)
+	      if (status != RARES_SUCCESS)
 		return status;
 	    }
 	}
     }
 
-  if (channel->flags & ARES_FLAG_NOSEARCH || channel->ndomains == 0)
+  if (channel->flags & RARES_FLAG_NOSEARCH || channel->ndomains == 0)
     {
       /* No domain search to do; just try the name as-is. */
       *s = strdup(name);
-      return (*s) ? ARES_SUCCESS : ARES_ENOMEM;
+      return (*s) ? RARES_SUCCESS : RARES_ENOMEM;
     }
 
   *s = NULL;
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }

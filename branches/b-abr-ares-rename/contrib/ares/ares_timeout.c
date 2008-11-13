@@ -21,7 +21,7 @@
 #include <sys/time.h>
 #endif
 
-struct timeval *ares_timeout(ares_channel channel, struct timeval *maxtv,
+struct timeval *rares_timeout(ares_channel channel, struct timeval *maxtv,
 			     struct timeval *tvbuf)
 {
   struct query *query;

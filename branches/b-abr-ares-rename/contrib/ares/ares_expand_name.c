@@ -51,7 +51,7 @@ static int name_length(const unsigned char *encoded, const unsigned char *abuf,
  * backslashes to escape periods or backslashes in the expanded name.
  */
 
-int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
+int rares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
 		     int alen, char **s, int *enclen)
 {
   int len, indir = 0;
@@ -60,11 +60,11 @@ int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
 
   len = name_length(encoded, abuf, alen);
   if (len == -1)
-    return ARES_EBADNAME;
+    return RARES_EBADNAME;
 
   *s = malloc(len + 1);
   if (!*s)
-    return ARES_ENOMEM;
+    return RARES_ENOMEM;
   q = *s;
 
   /* No error-checking necessary; it was all done by name_length(). */
@@ -103,7 +103,7 @@ int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
   /* Write a trailing NUL in any case. */
   *q = 0;
 
-  return ARES_SUCCESS;
+  return RARES_SUCCESS;
 }
 
 /* Return the length of the expansion of an encoded domain name, or

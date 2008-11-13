@@ -32,7 +32,7 @@
 #include "ares_dns.h"
 #include "ares_private.h"
 
-int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
+int rares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
 			 int addrlen, int family, struct hostent **host)
 {
   unsigned int qdcount, ancount;
@@ -46,23 +46,23 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
 
   /* Give up if abuf doesn't have room for a header. */
   if (alen < HFIXEDSZ)
-    return ARES_EBADRESP;
+    return RARES_EBADRESP;
 
   /* Fetch the question and answer count from the header. */
-  qdcount = DNS_HEADER_QDCOUNT(abuf);
-  ancount = DNS_HEADER_ANCOUNT(abuf);
+  qdcount = RARES_DNS_HEADER_QDCOUNT(abuf);
+  ancount = RARES_DNS_HEADER_ANCOUNT(abuf);
   if (qdcount != 1)
-    return ARES_EBADRESP;
+    return RARES_EBADRESP;
 
   /* Expand the name from the question, and skip past the question. */
   aptr = abuf + HFIXEDSZ;
-  status = ares_expand_name(aptr, abuf, alen, &ptrname, &len);
-  if (status != ARES_SUCCESS)
+  status = rares_expand_name(aptr, abuf, alen, &ptrname, &len);
+  if (status != RARES_SUCCESS)
     return status;
   if (aptr + len + QFIXEDSZ > abuf + alen)
     {
       free(ptrname);
-      return ARES_EBADRESP;
+      return RARES_EBADRESP;
     }
   aptr += len + QFIXEDSZ;
 
@@ -71,26 +71,26 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
   for (i = 0; i < (int)ancount; i++)
     {
       /* Decode the RR up to the data field. */
-      status = ares_expand_name(aptr, abuf, alen, &rr_name, &len);
-      if (status != ARES_SUCCESS)
+      status = rares_expand_name(aptr, abuf, alen, &rr_name, &len);
+      if (status != RARES_SUCCESS)
 	break;
       aptr += len;
       if (aptr + RRFIXEDSZ > abuf + alen)
 	{
-	  status = ARES_EBADRESP;
+	  status = RARES_EBADRESP;
 	  break;
 	}
-      rr_type = DNS_RR_TYPE(aptr);
-      rr_class = DNS_RR_CLASS(aptr);
-      rr_len = DNS_RR_LEN(aptr);
+      rr_type = RARES_DNS_RR_TYPE(aptr);
+      rr_class = RARES_DNS_RR_CLASS(aptr);
+      rr_len = RARES_DNS_RR_LEN(aptr);
       aptr += RRFIXEDSZ;
 
       if (rr_class == C_IN && rr_type == T_PTR
 	  && strcasecmp(rr_name, ptrname) == 0)
 	{
 	  /* Decode the RR data and set hostname to it. */
-	  status = ares_expand_name(aptr, abuf, alen, &rr_data, &len);
-	  if (status != ARES_SUCCESS)
+	  status = rares_expand_name(aptr, abuf, alen, &rr_data, &len);
+	  if (status != RARES_SUCCESS)
 	    break;
 	  if (hostname)
 	    free(hostname);
@@ -100,8 +100,8 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
       if (rr_class == C_IN && rr_type == T_CNAME)
 	{
 	  /* Decode the RR data and replace ptrname with it. */
-	  status = ares_expand_name(aptr, abuf, alen, &rr_data, &len);
-	  if (status != ARES_SUCCESS)
+	  status = rares_expand_name(aptr, abuf, alen, &rr_data, &len);
+	  if (status != RARES_SUCCESS)
 	    break;
 	  free(ptrname);
 	  ptrname = rr_data;
@@ -111,14 +111,14 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
       aptr += rr_len;
       if (aptr > abuf + alen)
 	{
-	  status = ARES_EBADRESP;
+	  status = RARES_EBADRESP;
 	  break;
 	}
     }
 
-  if (status == ARES_SUCCESS && !hostname)
-    status = ARES_ENODATA;
-  if (status == ARES_SUCCESS)
+  if (status == RARES_SUCCESS && !hostname)
+    status = RARES_ENODATA;
+  if (status == RARES_SUCCESS)
     {
       /* We got our answer.  Allocate memory to build the host entry. */
       hostent = malloc(sizeof(struct hostent));
@@ -142,7 +142,7 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
 		      hostent->h_addr_list[1] = NULL;
 		      *host = hostent;
 		      free(ptrname);
-		      return ARES_SUCCESS;
+		      return RARES_SUCCESS;
 		    }
 		  free(hostent->h_addr_list[0]);
 		}
@@ -150,7 +150,7 @@ int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,
 	    }
 	  free(hostent);
 	}
-      status = ARES_ENOMEM;
+      status = RARES_ENOMEM;
     }
   if (hostname)
     free(hostname);

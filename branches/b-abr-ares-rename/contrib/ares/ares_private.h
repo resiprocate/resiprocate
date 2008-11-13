@@ -25,8 +25,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define	DEFAULT_TIMEOUT		5
-#define DEFAULT_TRIES		4
+#define	RARES_DEFAULT_TIMEOUT		5
+#define RARES_DEFAULT_TRIES		4
 #ifndef INADDR_NONE
 #define	INADDR_NONE 0xffffffff
 #endif
@@ -87,7 +87,7 @@ struct query {
   char *tcpbuf;
   int tcplen;
 
-  /* Arguments passed to ares_send() (qbuf points into tcpbuf) */
+  /* Arguments passed to rares_send() (qbuf points into tcpbuf) */
   const char *qbuf;
   int qlen;
   ares_callback callback;
@@ -139,12 +139,12 @@ struct ares_channeldata {
       
 };
 
-void ares__send_query(ares_channel channel, struct query *query, time_t now);
-void ares__close_sockets(struct server_state *server);
-int ares__get_hostent(FILE *fp, struct hostent **host);
-int ares__read_line(FILE *fp, char **buf, int *bufsize);
+void rares__send_query(ares_channel channel, struct query *query, time_t now);
+void rares__close_sockets(struct server_state *server);
+int rares__get_hostent(FILE *fp, struct hostent **host);
+int rares__read_line(FILE *fp, char **buf, int *bufsize);
 
-void ares__kill_socket(int s);
+void rares__kill_socket(int s);
 
 #ifdef WIN32
 #define strcasecmp(a,b) stricmp(a,b)

@@ -17,9 +17,9 @@
 #include "ares.h"
 
 /* Do nothing, for now.  A future implementation may want to deal with
- * internationalization, in which case ares_strerror() might allocate
+ * internationalization, in which case rares_strerror() might allocate
  * memory which we would then have to free.
  */
-void ares_free_errmem(char *mem)
+void rares_free_errmem(char *mem)
 {
 }

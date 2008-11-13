@@ -24,7 +24,7 @@ int
 LocalDns::init()
 {
    int status;
-   if ((status = ares_init(&mChannel)) != ARES_SUCCESS)
+   if ((status = rares_init(&mChannel)) != RARES_SUCCESS)
    {
       return status;
    }
@@ -62,7 +62,7 @@ LocalDns::makeRawResult(void *arg, int status, unsigned char *abuf, int alen)
    Payload* p = reinterpret_cast<Payload*>(arg);
    void* userArg = reinterpret_cast<void*>(p->second);
    
-   if (status != ARES_SUCCESS)
+   if (status != RARES_SUCCESS)
    {
       return ExternalDnsRawResult(status, abuf, alen, userArg);
    }
@@ -92,7 +92,7 @@ void
 LocalDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData)
 {
    mTarget = target;
-   ares_query(mChannel, target, C_IN, type, LocalDns::localCallback, new Payload(handler, userData));
+   rares_query(mChannel, target, C_IN, type, LocalDns::localCallback, new Payload(handler, userData));
 }
 
 void LocalDns::message(const char* file, unsigned char* buf, int& len)
