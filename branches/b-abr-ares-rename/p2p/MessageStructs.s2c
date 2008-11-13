@@ -1,0 +1,406 @@
+       enum { bool_false (0), bool_true(1), (255)} Boolean;
+
+      struct {
+        uint64 high;
+	uint64 low;
+      } NodeId;
+
+      struct {
+        opaque       id<0..2^8-1>;
+      } ResourceId;
+
+
+      enum {reserved_addr(0), ipv4_address (1), ipv6_address (2), (255)} 
+           AddressType;
+      
+      struct  {
+        uint32                  addr;
+        uint16                  port;
+      } IPv4AddrPort;
+      
+      struct  {
+        opaque	                addr[16];
+        uint16                  port;
+      } IPv6AddrPort;
+      
+      
+      struct {
+        AddressType             type;
+        uint8                   length;
+        
+        select (type) {
+          case ipv4_address:
+             IPv4AddrPort       v4addr_port;
+          
+          case ipv6_address:
+             IPv6AddrPort       v6addr_port;
+
+          /* This structure can be extended */
+        } ;
+       } IpAddressAndPort;
+
+      
+      enum {reserved_destination(0), peer(1), resource(2), compressed(3), (255) }
+           DestinationType;
+     
+
+      struct {
+        DestinationType         type;
+        uint8                   length.auto_len;
+
+        select (type) {
+          case peer:
+             NodeId               node_id;
+          
+          case resource:
+             ResourceId           resource_id;
+        
+          case compressed:
+             opaque               compressed_id<0..2^8-1>;
+           
+          /* This structure may be extended with new types */
+        
+        } ;
+      } Destination;
+
+       enum {reserved1(0), signer_identity_peer (1), 
+             signer_identity_name (2), signer_identity_certificate (3), 
+             (255)} SignerIdentityType;
+
+       struct {
+         SignerIdentityType     identity_type;
+         opaque			signer_identity<0..2^16-1>;
+       } SignerIdentity;
+
+       struct {
+          uint8 sig;
+          uint8 hash;
+       }  SignatureAndHashAlgorithm;	
+
+       struct  {
+          SignatureAndHashAlgorithm     algorithm;
+          SignerIdentity                identity;
+          opaque                        signature_value<0..2^16-1>;
+       } Signature;
+
+       
+      struct {
+             uint32   relo_token;
+             uint32  overlay;
+             uint8   ttl;
+             uint8   reserved;
+             uint16  fragment;
+             uint8   version;
+             uint24  length;
+             uint64  transaction_id;
+             uint16  flags;
+      
+             Destination via_list<0..2^16-1>;
+             Destination destination_list<0..2^16-1>;
+             uint16  route_log_len_dummy;
+             uint16  message_code;
+      } ForwardingHeader;
+     
+      struct {
+             ForwardingHeader header;
+             opaque  payload<0..2^24-1>;
+             Signature sig;
+      } ForwardingLayerMessage;
+
+      struct {
+             opaque  payload<0..2^24-1>;            
+      } MessagePayload;
+
+       public struct {
+         uint16             error_code;
+         opaque             reason_phrase<0..2^8-1>;  /* String*/
+         opaque             error_info<0..2^16-1>;
+       } ErrorResponse;
+
+
+       struct {
+          NodeId                joining_peer_id;
+          opaque                overlay_specific_data<0..2^16-1>;
+       } JoinReq;
+
+       struct {
+          opaque                overlay_specific_data<0..2^16-1>;
+       } JoinAns;
+
+       public struct {
+          NodeId                leaving_peer_id;
+          opaque                overlay_specific_data<0..2^16-1>;
+       } LeaveReq;
+
+       struct {
+         Boolean                send_update;
+         Destination            destination;
+	 opaque			overlay_specific_data<0..2^16-1>;
+       } RouteQueryReq;
+
+
+
+      enum {data (128), ack (129), (255)} FramedMessageType;
+
+      struct {            
+        FramedMessageType       type;
+
+        select (type) {
+          case data:
+            uint24              sequence;
+            opaque              message<0..2^24-1>;
+
+          case ack:
+            uint24              ack_sequence;
+            uint32              received;            
+        };
+      } FramedMessage;
+
+      
+      struct {
+            opaque	        candidate<0..2^16-1>;
+      } IceCandidate;
+
+      struct  {
+        opaque                  ufrag<0..2^8-1>;
+        opaque                  password<0..2^8-1>;                
+        uint16                  application;
+        opaque                  role<0..2^8-1>;
+        IceCandidate            candidates<0..2^16-1>;
+      } ConnectReqAns;
+
+
+      enum { responsible_set(1), num_resources(2), (255)} 
+           PingInformationType;
+
+      struct {
+      /*      TODO: FIX */
+      /*        PingInformationType     requested_info<0..2^8-1>; */
+             uint8 requested_info<0..2^8-1>;
+      } PingReq;
+
+
+       struct {
+         PingInformationType    type;
+         
+         select (type) {
+           case responsible_set:
+             uint32             responsible_ppb;
+
+           case num_resources:
+             uint32             num_resources;                           
+
+           /* This type may be extended */
+
+         };
+       } PingInformation;
+
+       struct {
+         uint64                 response_id;
+         PingInformation        ping_info<0..2^16-1>;
+       } PingAns;
+
+
+
+       struct  {
+         uint16                 application;
+         opaque                 dialog_id<0..2^8-1>;
+         opaque                 application_pdu<0..2^24-1>;
+       } TunnelReq;
+
+
+      
+      enum { reserved_data_model(0), single_value(1), array(2), 
+             dictionary(3), (255)} DataModel;
+
+      struct {
+        Boolean                exists;
+        opaque                 value<0..2^32-1>;
+      } DataValue;
+
+       struct {
+         uint32                  index;
+	 DataValue               value;
+       } ArrayEntry;
+
+
+       /* TODO FIXME     typedef opaque           DictionaryKey<0..2^16-1>; */
+       struct {
+         opaque                 key<0..2^16-1>;
+       } DictionaryKey;
+              
+       struct {
+         DictionaryKey          key;
+	 DataValue		value;
+       } DictionaryEntry;
+
+
+       struct {
+        DataModel            model;  /* TODO: Compensation for compiler?? */
+
+        select (model) {
+          case single_value:
+            DataValue             single_value_entry;
+
+          case array:
+            ArrayEntry            array_entry;
+
+          case dictionary:
+            DictionaryEntry       dictionary_entry;
+
+
+          /* This structure may be extended */
+        } ;
+      } StoredDataValue;
+       
+      struct {
+        uint32                  length.auto_len;
+        uint64                  storage_time;
+        uint32                  lifetime;
+        StoredDataValue         value;
+        Signature               signature;
+      } StoredData;
+
+       
+     struct {
+         KindId                 kind;
+         DataModel              data_model;
+         uint64                 generation_counter;
+         StoredData             values<0..2^32-1>;
+     } StoreKindData;
+
+     struct {
+         ResourceId             resource;
+	 uint8			replica_number;		
+         StoreKindData          kind_data<0..2^32-1>;
+     } StoreReq;
+
+      struct {
+        KindId                  kind;
+        uint64                  generation_counter;
+        NodeId                  replicas<0..2^16-1>;
+      } StoreKindResponse;
+
+
+      struct {
+        StoreKindResponse       kind_responses<0..2^16-1>;
+      } StoreAns;
+
+      struct {
+        uint32            first;
+        uint32            last;
+      } ArrayRange;
+	      
+      struct {
+        KindId                  kind;
+        DataModel               model;
+        uint64                  generation;
+        uint16                  length.auto_len;
+        
+        select (model) {
+          case single_value: ;    /* Empty */
+
+          case array:
+	       ArrayRange       indices<0..2^16-1>;
+          
+          case dictionary:
+               DictionaryKey    keys<0..2^16-1>;
+
+          /* This structure may be extended */
+
+        } ;
+      } StoredDataSpecifier;
+
+      struct {
+        ResourceId              resource;
+        StoredDataSpecifier     specifiers<0..2^16-1>;
+      } FetchReq;
+
+       struct {
+         KindId                 kind;
+         uint64                 generation;
+         StoredData             values<0..2^32-1>;
+       } FetchKindResponse;
+
+       struct {
+         FetchKindResponse      kind_responses<0..2^32-1>;
+       } FetchAns;
+
+      struct {
+        ResourceId              resource;
+        StoredDataSpecifier     specifiers<0..2^16-1>;
+      } RemoveReq;
+
+      
+      struct {
+        StoreKindResponse          kind_responses<0..2^16-1>;
+      } RemoveAns;
+      
+      struct {
+        ResourceId                 resource;
+        KindId                     kinds<0..2^8-1>;
+      } FindReq;
+
+      struct {
+        KindId                      kind;
+        ResourceId                  closest;
+      } FindKindData;
+    
+      struct {
+        FindKindData                results<0..2^16-1>;
+      } FindAns;
+
+      struct {
+        uint8                   iteration;
+        IpAddressAndPort        server_address;
+      } TurnServer;
+      
+
+       enum {sip_registration_uri (1), sip_registration_route (2), 
+          (255)} SipRegistrationType;
+   
+
+       struct {
+          SipRegistrationType   type;
+          uint16                length.auto_len;
+
+          select (type) {
+            case sip_registration_uri:
+              opaque               uri<0..2^16-1>;
+   
+            case sip_registration_route:
+              opaque               contact_prefs<0..2^16-1>;
+              Destination          destination_list<0..2^16-1>;
+   
+            /* This type can be extended */
+   
+          } ;
+
+      } SipRegistration;
+
+      enum { reserved_chord (0), peer_ready(1), neighbors(2), full(3), (255) }
+           ChordUpdateType;
+
+
+      struct {
+        ChordUpdateType         type;
+	
+        select(type){
+          case peer_ready:                   /* Empty */
+            ;
+          
+          case neighbors:
+            NodeId              predecessors<0..2^16-1>;
+            NodeId              successors<0..2^16-1>;
+
+          case full:
+            NodeId              predecessors<0..2^16-1>;
+            NodeId              successors<0..2^16-1>;
+            NodeId              fingers<0..2^16-1>;             
+        };
+      } ChordUpdate;
+
+
+    struct {
+       NodeId                  next_id;
+    } ChordRouteQueryAns;

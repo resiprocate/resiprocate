@@ -1,0 +1,5 @@
+typedef opaque NodeId[16];
+
+struct {
+        NodeId id;
+} NodeIdTest;
