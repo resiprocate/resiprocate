@@ -88,11 +88,18 @@ Setting up build environment:
 -----------------------------
 1.  Go to directory where you want to create build env.
 2.  svn checkout https://svn.resiprocate.org/rep/resiprocate/main resip
-3.  svn checkout https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi sipXtapi
+3.  svn checkout https://scm.sipfoundry.org/rep/sipX/main sipXtapi
 4.  cd resip/contrib
 5.  svn checkout https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl openssl
 
-Note:  Ensure you use at least SVN revision 10809 of sipXtapi.
+Note:  sipXtapi SVN repository has recently changed locations from: 
+       https://scm.sipfoundry.org/rep/sipX/branches/sipXtapi     to 
+       https://scm.sipfoundry.org/rep/sipX/main.  If you are migrating a local
+       check out use the following command, or TortoiseSVN, to update your local 
+       copy to the new location:
+       svn switch https://scm.sipfoundry.org/rep/sipX/main
+
+Note:  Ensure you use at least SVN revision 10947 of sipXtapi.
 
 /resip/                     <- https://svn.resiprocate.org/rep/resiprocate/main
 /resip/contrib/openssl      <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
