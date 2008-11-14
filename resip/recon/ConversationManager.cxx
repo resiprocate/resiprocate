@@ -5,6 +5,8 @@
 #include <mp/MpResourceTopology.h>
 #include <mi/MiNotification.h>
 #include <mi/MiDtmfNotf.h>
+#include <mi/MiRtpStreamActivityNotf.h>
+#include <mi/MiIntNotf.h>
 
 // resip includes
 #include <rutil/Log.hxx>
@@ -24,6 +26,7 @@
 #include "Conversation.hxx"
 #include "Participant.hxx"
 #include "BridgeMixer.hxx"
+#include "DtmfEvent.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -460,6 +463,24 @@ ConversationManager::getParticipant(ParticipantHandle partHandle)
    }
 }
 
+RemoteParticipant* 
+ConversationManager::getRemoteParticipantFromMediaConnectionId(int mediaConnectionId)
+{
+   ParticipantMap::iterator i = mParticipants.begin();
+   for(; i != mParticipants.end(); i++)
+   {
+      RemoteParticipant* remoteParticipant = dynamic_cast<RemoteParticipant*>(i->second);
+      if(remoteParticipant)
+      {
+         if(remoteParticipant->getMediaConnectionId() == mediaConnectionId)
+         {
+            return remoteParticipant;
+         }
+      }
+   }
+   return 0;
+}
+
 Conversation* 
 ConversationManager::getConversation(ConversationHandle convHandle)
 {
@@ -638,20 +659,60 @@ ConversationManager::post(const OsMsg& msg)
          {
             MiDtmfNotf* pDtmfNotfMsg = (MiDtmfNotf*)&msg;
 
-            // Note: sipXtapi is returning the correct connectionId here in order for us to associate the tone event
-            //       with a particular RemoteParticipant - once this is fixed we should be able to find the 
-            //       applicable RemoteParticipant handle to generate the callback to the application.
+            RemoteParticipant* remoteParticipant = getRemoteParticipantFromMediaConnectionId(pNotfMsg->getConnectionId());
+            if(remoteParticipant)
+            {
+               // Get event into dum queue, so that callback is on dum thread
+               DtmfEvent* devent = new DtmfEvent(*remoteParticipant, pDtmfNotfMsg->getKeyCode(), pDtmfNotfMsg->getDuration(), pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
+               mUserAgent->getDialogUsageManager().post(devent);
+            }
 
-            // Get event into dum queue, so that callback is on dum thread
-            //DtmfEvent* devent = new DtmfEvent(*this, tonec, duration, up);
-            //mDum.post(devent);
-
-            InfoLog( << "NotificationDispatcher: received MI_NOTF_DTMF_RECEIVED, keyCode=" << pDtmfNotfMsg->getKeyCode() << 
+            InfoLog( << "NotificationDispatcher: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() << 
+               ", connectionId=" << pNotfMsg->getConnectionId() << 
+               ", keyCode=" << pDtmfNotfMsg->getKeyCode() << 
                ", state=" << pDtmfNotfMsg->getKeyPressState() << 
-               ", duration=" << pDtmfNotfMsg->getDuration() <<
-               ", connectionId=" << pNotfMsg->getConnectionId());
+               ", duration=" << pDtmfNotfMsg->getDuration());
          }
          break;
+      case MiNotification::MI_NOTF_DELAY_SPEECH_STARTED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_DELAY_SPEECH_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_DELAY_NO_DELAY:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_DELAY_NO_DELAY, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_DELAY_QUIESCENCE:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_DELAY_QUIESCENCE, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_RX_STREAM_ACTIVITY: ///< Value for MiRtpStreamActivityNotf notifications.
+         {
+            MiRtpStreamActivityNotf* pRtpStreamActivityNotfMsg = (MiRtpStreamActivityNotf*)&msg;
+         
+            InfoLog( << "NotificationDispatcher: received MI_NOTF_RX_STREAM_ACTIVITY, sourceId=" << pNotfMsg->getSourceId().data() << 
+               ", connectionId=" << pNotfMsg->getConnectionId() <<
+               ", state=" << (pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_START ? "STREAM_START" :
+                              pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_STOP ? "STREAM_STOP" :
+                              pRtpStreamActivityNotfMsg->getState() == MiRtpStreamActivityNotf::STREAM_CHANGE ? "STREAM_CHANGE" : 
+                              Data(pRtpStreamActivityNotfMsg->getState()).c_str()) <<
+               ", ssrc=" << pRtpStreamActivityNotfMsg->getSsrc() <<
+               ", address=" << pRtpStreamActivityNotfMsg->getAddress() <<
+               ", port=" << pRtpStreamActivityNotfMsg->getPort());
+         }
+         break;
+      case MiNotification::MI_NOTF_ENERGY_LEVEL:       ///< Audio energy level (MiIntNotf)
+         {
+            //MiIntNotf* pIntNotfMsg = (MiIntNotf*)&msg;
+            //InfoLog( << "NotificationDispatcher: received MI_NOTF_ENERGY_LEVEL, sourceId=" << pNotfMsg->getSourceId().data() << 
+            //   ", connectionId=" << pNotfMsg->getConnectionId() <<
+            //   ", value=" << pIntNotfMsg->getValue());
+         }
+         break;
+      case MiNotification::MI_NOTF_VOICE_STARTED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+      case MiNotification::MI_NOTF_VOICE_STOPPED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
+
       default:
          InfoLog(<< "NotificationDispatcher: unrecognized MiNotification type = " << pNotfMsg->getType());
       }

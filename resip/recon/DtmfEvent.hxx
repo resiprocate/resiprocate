@@ -18,16 +18,16 @@ class Message;
 class DtmfEvent : public resip::DumCommand
 {
    public:
-      DtmfEvent(RemoteParticipant& participant, char event, int duration, bool up);
+      DtmfEvent(RemoteParticipant& participant, int dtmf, int duration, bool up);
       virtual void executeCommand();
 
       Message* clone() const;
-      std::ostream& encode(std::ostream& strm) const;
-      std::ostream& encodeBrief(std::ostream& strm) const;
+      EncodeStream& encode(EncodeStream& strm) const;
+      EncodeStream& encodeBrief(EncodeStream& strm) const;
 
    private:
       RemoteParticipant& mParticipant;
-      char mDtmfTone;
+      int mDtmfTone;
       int mDuration;
       bool mUp;
 };

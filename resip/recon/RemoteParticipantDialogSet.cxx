@@ -15,6 +15,9 @@
 #include "Flow.hxx"
 #include "MediaStream.hxx"
 
+#include "sdp/SdpHelperResip.hxx"
+#include "sdp/Sdp.hxx"
+
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
 #include <rutil/Random.hxx>
@@ -50,6 +53,7 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mActiveRemoteParticipantHandle(0),
    mNatTraversalMode(flowmanager::MediaStream::NoNatTraversal),
    mMediaStream(0),
+   mProposedSdp(0),
    mSecureMediaMode(ConversationProfile::NoSecureMedia),
    mSecureMediaRequired(false),
    mMediaConnectionId(0),
@@ -80,6 +84,9 @@ RemoteParticipantDialogSet::~RemoteParticipantDialogSet()
    
    // Delete Media Stream
    delete mMediaStream;
+
+   // Delete Sdp memory
+   if(mProposedSdp) delete mProposedSdp;
 
    InfoLog(<< "RemoteParticipantDialogSet destroyed.  mActiveRemoteParticipantHandle=" << mActiveRemoteParticipantHandle);
 }
@@ -188,7 +195,7 @@ RemoteParticipantDialogSet::getLocalRTPPort()
          // New Remote Participant - create media Interface connection
          FlowManagerSipXSocket* rtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow());
          FlowManagerSipXSocket* rtcpSocket = new FlowManagerSipXSocket(mMediaStream->getRtcpFlow());
-         ret = ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->createConnection(mMediaConnectionId,rtpSocket,rtcpSocket);
+         ret = ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->createConnection(mMediaConnectionId,rtpSocket,rtcpSocket,false);
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
       }
       else
@@ -245,7 +252,7 @@ RemoteParticipantDialogSet::getLocalRTPPort()
       }
 
       //InfoLog(<< "About to get Connection Port on Bridge for MediaConnectionId: " << mMediaConnectionId);
-      ret = ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getConnectionPortOnBridge(mMediaConnectionId, mConnectionPortOnBridge);
+      ret = ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getConnectionPortOnBridge(mMediaConnectionId, 0, mConnectionPortOnBridge);
       InfoLog( << "RTP Port allocated=" << mLocalRTPPort << " (sipXmediaConnectionId=" << mMediaConnectionId << ", BridgePort=" << mConnectionPortOnBridge << ", ret=" << ret << ")");
    }
 
@@ -578,6 +585,15 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
       mDialogs[DialogId(msg)] = participant;
       return participant;
    }
+}
+
+void 
+RemoteParticipantDialogSet::setProposedSdp(ConversationManager::ParticipantHandle handle, const resip::SdpContents& sdp)
+{
+   if(mProposedSdp) delete mProposedSdp;
+   mProposedSdp = 0;
+   InfoLog(<< "setProposedSdp: handle=" << handle << ", proposedSdp=" << sdp);
+   mProposedSdp = SdpHelperResip::createSdpFromResipSdp(sdp);
 }
 
 void 
