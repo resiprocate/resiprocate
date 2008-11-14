@@ -420,11 +420,11 @@ public:
      particular remote participant.
 
      @param partHandle Handle of the participant that received the digit
-     @param tone Character representation of the DTMF tone received
+     @param dtmf Integer representation of the DTMF tone received
      @param duration Duration of the DTMF tone received
      @param up Set to true if the DTMF key is up (otherwise down)
    */
-   virtual void onDtmfEvent(ParticipantHandle partHandle, char tone, int duration, bool up) = 0;
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) = 0;
 
    ///////////////////////////////////////////////////////////////////////
    // Media Related Methods - this may not be the right spot for these - move to LocalParticipant?
@@ -577,6 +577,7 @@ private:
    ParticipantHandle mCurrentParticipantHandle;
    ParticipantHandle getNewParticipantHandle();    // thread safe
    Participant* getParticipant(ParticipantHandle partHandle);
+   RemoteParticipant* getRemoteParticipantFromMediaConnectionId(int mediaConnectionId);
 
    std::deque<unsigned int> mRTPPortFreeList;
    void initRTPPortFreeList();

@@ -166,9 +166,9 @@ public:
       mMediaParticipantHandles.remove(partHandle);
    }
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, char tone, int duration, bool up)
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up)
    {
-      InfoLog(<< "onDtmfEvent: handle=" << partHandle << " tone=" << tone << " dur=" << duration << " up=" << up);
+      InfoLog(<< "onDtmfEvent: handle=" << partHandle << " tone=" << dtmf << " dur=" << duration << " up=" << up);
    }
 
    virtual void onIncomingParticipant(ParticipantHandle partHandle, const SipMessage& msg, bool autoAnswer)
