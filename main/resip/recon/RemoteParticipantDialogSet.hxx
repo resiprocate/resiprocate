@@ -16,6 +16,10 @@
 #include "ConversationProfile.hxx"
 #include "Participant.hxx"
 
+namespace sdpcontainer
+{
+class Sdp; 
+}
 
 namespace resip
 {
@@ -48,6 +52,8 @@ public:
    virtual resip::AppDialog* createAppDialog(const resip::SipMessage& msg);
    virtual unsigned int getLocalRTPPort();
 
+   virtual void setProposedSdp(ConversationManager::ParticipantHandle handle, const resip::SdpContents& sdp);
+   virtual sdpcontainer::Sdp* getProposedSdp() { return mProposedSdp; }
    virtual void setUACConnected(const resip::DialogId& dialogId, ConversationManager::ParticipantHandle partHandle);
    virtual bool isUACConnected();
    virtual bool isStaleFork(const resip::DialogId& dialogId);
@@ -63,6 +69,7 @@ public:
    // sipX Media Stuff
    virtual int getMediaConnectionId() { return mMediaConnectionId; }
    virtual int getConnectionPortOnBridge() { return mConnectionPortOnBridge; }
+
    void setActiveDestination(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
    void startDtlsClient(const char* address, unsigned short rtpPort, unsigned short rtcpPort);
    void setRemoteSDPFingerprint(const resip::Data& fingerprint);
@@ -117,6 +124,7 @@ private:
    };
    PendingOfferAnswer mPendingOfferAnswer;
    void doProvideOfferAnswer(bool offer, std::auto_ptr<resip::SdpContents> sdp, resip::InviteSessionHandle& inviteSessionHandle, bool postOfferAnswerAccept, bool postAnswerAlert);
+   sdpcontainer::Sdp* mProposedSdp;  // stored here vs RemoteParticipant, since each forked leg needs access to the original offer
 
    // Secure Media 
    resip::Data mLocalSrtpSessionKey;
