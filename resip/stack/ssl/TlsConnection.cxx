@@ -352,7 +352,7 @@ TlsConnection::read(char* buf, int count )
    }
 
    int bytesRead = SSL_read(mSsl,buf,count);
-   StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, bytesRead) << "]");
+   StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, (bytesRead > 0)?(bytesRead):(0)) << "]");
 
    if (bytesRead > 0 && SSL_pending(mSsl))
    {
