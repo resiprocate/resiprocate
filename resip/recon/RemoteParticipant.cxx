@@ -46,7 +46,6 @@ RemoteParticipant::RemoteParticipant(ConversationManager::ParticipantHandle part
   mState(Connecting),
   mOfferRequired(false),
   mLocalHold(true),
-  mProposedSdp(0),
   mLocalSdp(0),
   mRemoteSdp(0)
 {
@@ -65,7 +64,6 @@ RemoteParticipant::RemoteParticipant(ConversationManager& conversationManager,
   mState(Connecting),
   mOfferRequired(false),
   mLocalHold(true),
-  mProposedSdp(0),
   mLocalSdp(0),
   mRemoteSdp(0)
 {
@@ -88,7 +86,6 @@ RemoteParticipant::~RemoteParticipant()
    mConversations.clear();
 
    // Delete Sdp memory
-   if(mProposedSdp) delete mProposedSdp;
    if(mLocalSdp) delete mLocalSdp;
    if(mRemoteSdp) delete mRemoteSdp;
 
@@ -134,7 +131,22 @@ RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
 int 
 RemoteParticipant::getConnectionPortOnBridge()
 {
-   return mDialogSet.getConnectionPortOnBridge();
+   if(mDialogSet.getActiveRemoteParticipantHandle() == mHandle)
+   {
+      return mDialogSet.getConnectionPortOnBridge();
+   }
+   else
+   {
+      // If this is not active fork leg, then we don't want to effect the bridge mixer.  
+      // Note:  All forked endpoints/participants have the same connection port on the bridge
+      return -1;
+   }
+}
+
+int 
+RemoteParticipant::getMediaConnectionId() 
+{ 
+   return mDialogSet.getMediaConnectionId();
 }
 
 void 
@@ -1368,10 +1380,7 @@ RemoteParticipant::destroyConversations()
 void 
 RemoteParticipant::setProposedSdp(const resip::SdpContents& sdp)
 {
-   if(mProposedSdp) delete mProposedSdp;
-   mProposedSdp = 0;
-   InfoLog(<< "setProposedSdp: handle=" << mHandle << ", proposedSdp=" << sdp);
-   mProposedSdp = SdpHelperResip::createSdpFromResipSdp(sdp);
+   mDialogSet.setProposedSdp(mHandle, sdp);
 }
 
 void 
@@ -1390,11 +1399,10 @@ RemoteParticipant::setRemoteSdp(const resip::SdpContents& sdp, bool answer)
    mRemoteSdp = 0;
    InfoLog(<< "setRemoteSdp: handle=" << mHandle << ", remoteSdp=" << sdp);
    mRemoteSdp = SdpHelperResip::createSdpFromResipSdp(sdp);
-   if(answer && mProposedSdp)
+   if(answer && mDialogSet.getProposedSdp())
    {
       if(mLocalSdp) delete mLocalSdp;
-      mLocalSdp = mProposedSdp;
-      mProposedSdp = 0;
+      mLocalSdp = new sdpcontainer::Sdp(*mDialogSet.getProposedSdp());  // copied
    }
 }
 
@@ -1414,12 +1422,14 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
    Data remoteIPAddress;
    unsigned int remoteRtpPort=0;
    unsigned int remoteRtcpPort=0;
-   Sdp *localSdp = sendingOffer ? mProposedSdp : mLocalSdp;
+   Sdp *localSdp = sendingOffer ? mDialogSet.getProposedSdp() : mLocalSdp;
    Sdp *remoteSdp = sendingOffer ? 0 : mRemoteSdp;
    const SdpMediaLine::CodecList* localCodecs;
    const SdpMediaLine::CodecList* remoteCodecs;
    bool supportedCryptoSuite = false;
    bool supportedFingerprint = false;
+
+   assert(localSdp);
 
    /*
    InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", localSdp=" << localSdp);
@@ -1609,25 +1619,56 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
       SdpMediaLine::CodecList::const_iterator itRemoteCodec = remoteCodecs->begin();
       for(; itRemoteCodec != remoteCodecs->end(); itRemoteCodec++)
       {
+         bool modeInRemote = itRemoteCodec->getFormatParameters().prefix("mode=");
+         SdpMediaLine::CodecList::const_iterator bestCapsCodecMatchIt = localCodecs->end();
          SdpMediaLine::CodecList::const_iterator itLocalCodec = localCodecs->begin();
          for(; itLocalCodec != localCodecs->end(); itLocalCodec++)
          {
-            if(isEqualNoCase(itRemoteCodec->getMimeSubtype(), itLocalCodec->getMimeSubtype()))
+            if(isEqualNoCase(itRemoteCodec->getMimeSubtype(), itLocalCodec->getMimeSubtype()) &&
+               itRemoteCodec->getRate() == itLocalCodec->getRate())
             {
-               codecs[numCodecs++] = new ::SdpCodec(itRemoteCodec->getPayloadType(), 
-                                                    itRemoteCodec->getMimeType().c_str(), 
-                                                    itRemoteCodec->getMimeSubtype().c_str(), 
-                                                    itRemoteCodec->getRate(), 
-                                                    itRemoteCodec->getPacketTime(), 
-                                                    itRemoteCodec->getNumChannels(), 
-                                                    itRemoteCodec->getFormatParameters().c_str());
-
-               UtlString codecString;
-               codecs[numCodecs-1]->toString(codecString);
-
-               InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", sending to destination address " << remoteIPAddress << ":" << 
-                          remoteRtpPort << " (RTCP on " << remoteRtcpPort << "): " << codecString.data());
+               bool modeInLocal = itLocalCodec->getFormatParameters().prefix("mode=");
+               if(!modeInLocal && !modeInRemote)
+               {
+                  // If mode is not specified in either - then we have a match
+                  bestCapsCodecMatchIt = itLocalCodec;
+                  break;
+               }
+               else if(modeInLocal && modeInRemote)
+               {
+                  if(isEqualNoCase(itRemoteCodec->getFormatParameters(), itLocalCodec->getFormatParameters()))
+                  {
+                     bestCapsCodecMatchIt = itLocalCodec;
+                     break;
+                  }
+                  // If mode is specified in both, and doesn't match - then we have no match
+               }
+               else
+               {
+                  // Mode is specified on either offer or caps - this match is a potential candidate
+                  // As a rule - use first match of this kind only
+                  if(bestCapsCodecMatchIt == localCodecs->end())
+                  {
+                     bestCapsCodecMatchIt = itLocalCodec;
+                  }
+               }
             }
+         }
+         if(bestCapsCodecMatchIt != localCodecs->end())
+         {
+            codecs[numCodecs++] = new ::SdpCodec(itRemoteCodec->getPayloadType(), 
+                                                 itRemoteCodec->getMimeType().c_str(), 
+                                                 itRemoteCodec->getMimeSubtype().c_str(), 
+                                                 itRemoteCodec->getRate(), 
+                                                 itRemoteCodec->getPacketTime(), 
+                                                 itRemoteCodec->getNumChannels(), 
+                                                 itRemoteCodec->getFormatParameters().c_str());
+
+            UtlString codecString;
+            codecs[numCodecs-1]->toString(codecString);
+
+            InfoLog(<< "adjustRTPStreams: handle=" << mHandle << ", sending to destination address " << remoteIPAddress << ":" << 
+                       remoteRtpPort << " (RTCP on " << remoteRtcpPort << "): " << codecString.data());
          }
       }
 
@@ -1699,9 +1740,9 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
 }
 
 void
-RemoteParticipant::onDtmfEvent(char tone, int duration, bool up)
+RemoteParticipant::onDtmfEvent(int dtmf, int duration, bool up)
 {
-   if(mHandle) mConversationManager.onDtmfEvent(mHandle, tone, duration, up);
+   if(mHandle) mConversationManager.onDtmfEvent(mHandle, dtmf, duration, up);
 }
 
 void

@@ -8,9 +8,9 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::RECON
 
-DtmfEvent::DtmfEvent(RemoteParticipant& participant, char event, int duration, bool up) : 
+DtmfEvent::DtmfEvent(RemoteParticipant& participant, int dtmf, int duration, bool up) : 
    mParticipant(participant),
-   mDtmfTone(event),
+   mDtmfTone(dtmf),
    mDuration(duration),
    mUp(up)
 {
@@ -29,15 +29,15 @@ DtmfEvent::clone() const
    return 0;
 }
 
-std::ostream& 
-DtmfEvent::encode(std::ostream& strm) const
+EncodeStream& 
+DtmfEvent::encode(EncodeStream& strm) const
 {
    strm << " dtmf event: " << mDtmfTone << " duration=" << mDuration << " up=" << mUp;
    return strm;
 }
 
-std::ostream& 
-DtmfEvent::encodeBrief(std::ostream& strm) const
+EncodeStream& 
+DtmfEvent::encodeBrief(EncodeStream& strm) const
 {
    return encode(strm);
 }

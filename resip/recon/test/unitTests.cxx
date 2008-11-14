@@ -332,7 +332,7 @@ public:
       InfoLog(<< mLogPrefix << "onParticipantRedirectFailure: handle=" << partHandle << " statusCode=" << statusCode);
    }
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, char dtmf, int duration, bool up) {}
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) {}
 
 private:
    std::list<ConversationHandle> mConvHandles;
@@ -572,7 +572,7 @@ public:
       }
    }
 
-   virtual void onDtmfEvent(ParticipantHandle partHandle, char dtmf, int duration, bool up) {}
+   virtual void onDtmfEvent(ParticipantHandle partHandle, int dtmf, int duration, bool up) {}
 
 private:
    std::list<ConversationHandle> mConvHandles;

@@ -56,6 +56,7 @@ public:
 
    virtual void initiateRemoteCall(const resip::NameAddr& destination);
    virtual int getConnectionPortOnBridge();
+   virtual int getMediaConnectionId();
    virtual void destroyParticipant();
    virtual void addToConversation(Conversation *conversation, unsigned int inputGain = 100, unsigned int outputGain = 100);
    virtual void removeFromConversation(Conversation *conversation);
@@ -76,7 +77,7 @@ public:
    virtual void destroyConversations();
 
    // DTMF Handler
-   virtual void onDtmfEvent(char tone, int duration, bool up);
+   virtual void onDtmfEvent(int dtmf, int duration, bool up);
 
    // Invite Session Handler /////////////////////////////////////////////////////
    virtual void onNewSession(resip::ClientInviteSessionHandle h, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
@@ -177,7 +178,6 @@ private:
    PendingRequest mPendingRequest;
    std::auto_ptr<resip::SdpContents> mPendingOffer;
 
-   sdpcontainer::Sdp* mProposedSdp;
    sdpcontainer::Sdp* mLocalSdp;
    sdpcontainer::Sdp* mRemoteSdp;
 
