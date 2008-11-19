@@ -98,7 +98,7 @@ StunMessage::~StunMessage()
    if(mPassword) delete mPassword;
    if(mRealm) delete mRealm;
    if(mNonce) delete mNonce;
-   if(mServer) delete mServer;
+   if(mSoftware) delete mSoftware;
    if(mTurnData) delete mTurnData;
 }
 
@@ -120,9 +120,8 @@ StunMessage::init()
    mHasReflectedFrom = false;
    mHasXorMappedAddress = false;
    mHasFingerprint = false;
-   mHasServer = false;
+   mHasSoftware = false;
    mHasAlternateServer = false;
-   mHasRefreshInterval = false;
    mHasSecondaryAddress = false;
    mHasTurnChannelNumber = false;
    mHasTurnLifetime = false;
@@ -142,7 +141,7 @@ StunMessage::init()
    mPassword = 0;
    mRealm = 0;
    mNonce = 0;
-   mServer = 0;
+   mSoftware = 0;
    mTurnData = 0;
 }
 
@@ -232,16 +231,16 @@ StunMessage::setNonce(const char* nonce)
 }
    
 void 
-StunMessage::setServer(const char* server)
+StunMessage::setSoftware(const char* software)
 {
-   mHasServer = true;
-   if(mServer)
+   mHasSoftware = true;
+   if(mSoftware)
    {
-      *mServer = server;
+      *mSoftware = software;
    }
    else
    {
-      mServer = new Data(server);
+      mSoftware = new Data(software);
    }
 }
  
@@ -270,6 +269,7 @@ StunMessage::applyXorToAddress(const StunAtrAddress& in, StunAtrAddress& out)
    {
       for(int i = 0; i < 4; i++)
       {
+         // Note:  MagicCookieAndTid are stored in network byte order
          out.addr.ipv6.longpart[i] = out.addr.ipv6.longpart[i]^mHeader.magicCookieAndTid.longpart[i];
       }
    }
@@ -285,11 +285,13 @@ StunMessage::setStunAtrAddressFromTuple(StunAtrAddress& address, const StunTuple
    address.port = tuple.getPort();
    if(tuple.getAddress().is_v6())
    {
+      // Note:  addr.ipv6 is stored in network byte order
       address.family = StunMessage::IPv6Family;  
       memcpy(&address.addr.ipv6, tuple.getAddress().to_v6().to_bytes().c_array(), sizeof(address.addr.ipv6));
    }
    else
    {
+      // Note:  addr.ipv4 is stored in host byte order
       address.family = StunMessage::IPv4Family;  
       address.addr.ipv4 = tuple.getAddress().to_v4().to_ulong();   
    }
@@ -301,6 +303,7 @@ StunMessage::setTupleFromStunAtrAddress(StunTuple& tuple, const StunAtrAddress& 
    tuple.setPort(address.port);
    if(address.family == StunMessage::IPv6Family)
    {
+      // Note:  addr.ipv6 is stored in network byte order
       asio::ip::address_v6::bytes_type bytes;
       memcpy(bytes.c_array(), &address.addr.ipv6, bytes.size());
       asio::ip::address_v6 addr(bytes);
@@ -308,6 +311,7 @@ StunMessage::setTupleFromStunAtrAddress(StunTuple& tuple, const StunAtrAddress& 
    }
    else
    {
+      // Note:  addr.ipv4 is stored in host byte order
       asio::ip::address_v4 addr(address.addr.ipv4);
       tuple.setAddress(addr);
    }
@@ -327,7 +331,7 @@ StunMessage::stunParseAtrXorAddress( char* body, unsigned int hdrLen, StunAtrAdd
 bool 
 StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddress& result )
 {
-   if ( hdrLen != 8 )
+   if ( hdrLen != 8 /* ipv4 size */ && hdrLen != 20 /* ipv6 size */ )
    {
       WarningLog(<< "hdrLen wrong for Address");
       return false;
@@ -342,19 +346,15 @@ StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddres
    if (result.family == IPv4Family)
    {		
       UInt32 naddr;
-      memcpy(&naddr, body, 4); body+=4;
+      memcpy(&naddr, body, sizeof(UInt32)); body+=sizeof(UInt32);
       result.addr.ipv4 = ntohl(naddr);
+      // Note:  addr.ipv4 is stored in host byte order
       return true;
    }
    else if (result.family == IPv6Family)
    {
-      UInt128 naddr;
-      memcpy(&naddr, body, 32); body+=32;
-      /*
-      for(int i = 0; i < 4; i++)
-      {
-         result.addr.ipv6.longpart[i] = ntohl(naddr.longpart[i]);
-      }*/
+      memcpy(&result.addr.ipv6, body, sizeof(result.addr.ipv6)); body+=sizeof(result.addr.ipv6);
+      // Note:  addr.ipv6 is stored in host byte order
       return true;
    }
    else
@@ -503,8 +503,6 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 		
       unsigned int attrLen = ntohs(attr->length);
       // attrLen may not be on 4 byte boundary, in which case we need to pad to 4 bytes when advancing to next attribute
-      // Note:  Later RFC3489bis documents re-instated that all stun attributes must be on the 4 byte boundary, so this
-      //        attrLenPad is not-really necessary.  Leaving it here for now, since it doesn't hurt.
       unsigned int attrLenPad = attrLen % 4 == 0 ? 0 : 4 - (attrLen % 4);  
       int atrType = ntohs(attr->type);
 		
@@ -520,317 +518,526 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 
       switch ( atrType )
       {
-         case MappedAddress:
-            mHasMappedAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mMappedAddress )== false )
+         case MappedAddress:        
+            if(!mHasMappedAddress)
             {
-               WarningLog(<< "problem parsing MappedAddress");
-               return false;
+               mHasMappedAddress = true;
+               if ( stunParseAtrAddress(  body,  attrLen,  mMappedAddress )== false )
+               {
+                  WarningLog(<< "problem parsing MappedAddress");
+                  return false;
+               }
+               StackLog(<< "MappedAddress = " << mMappedAddress);
             }
-            StackLog(<< "MappedAddress = " << mMappedAddress);
+            else
+            {
+               WarningLog(<< "Duplicate MappedAddress in message - ignoring.");
+            }
             break;  
 
          case ResponseAddress:  // deprecated
-            mHasResponseAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mResponseAddress )== false )
+            if(!mHasResponseAddress)
             {
-               WarningLog(<< "problem parsing ResponseAddress");
-               return false;
+               mHasResponseAddress = true;
+               if ( stunParseAtrAddress(  body,  attrLen,  mResponseAddress )== false )
+               {
+                  WarningLog(<< "problem parsing ResponseAddress");
+                  return false;
+               }
+               StackLog(<< "ResponseAddress = " << mResponseAddress);
             }
-            StackLog(<< "ResponseAddress = " << mResponseAddress);
+            else
+            {
+               WarningLog(<< "Duplicate ResponseAddress in message - ignoring.");
+            }
             break;  
 				
          case ChangeRequest:  // deprecated
-            mHasChangeRequest = true;
-            if (stunParseAtrUInt32( body, attrLen, mChangeRequest) == false)
+            if(!mHasChangeRequest)
             {
-               WarningLog(<< "problem parsing ChangeRequest");
-               return false;
+               mHasChangeRequest = true;
+               if (stunParseAtrUInt32( body, attrLen, mChangeRequest) == false)
+               {
+                  WarningLog(<< "problem parsing ChangeRequest");
+                  return false;
+               }
+               StackLog(<< "ChangeRequest = " << mChangeRequest);
             }
-            StackLog(<< "ChangeRequest = " << mChangeRequest);
+            else
+            {
+               WarningLog(<< "Duplicate ChangeRequest in message - ignoring.");
+            }
             break;
 				
          case SourceAddress:  // deprecated
-            mHasSourceAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mSourceAddress )== false )
+            if(!mHasSourceAddress)
             {
-               WarningLog(<< "problem parsing SourceAddress");
-               return false;
+               mHasSourceAddress = true;
+               if ( stunParseAtrAddress(  body,  attrLen,  mSourceAddress )== false )
+               {
+                  WarningLog(<< "problem parsing SourceAddress");
+                  return false;
+               }
+               StackLog(<< "SourceAddress = " << mSourceAddress);
             }
-            StackLog(<< "SourceAddress = " << mSourceAddress);
+            else
+            {
+               WarningLog(<< "Duplicate SourceAddress in message - ignoring.");
+            }
             break;  
 				
          case ChangedAddress:  // deprecated
-            mHasChangedAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mChangedAddress )== false )
+            if(!mHasChangedAddress)
             {
-               WarningLog(<< "problem parsing ChangedAddress");
-               return false;
+               mHasChangedAddress = true;
+               if ( stunParseAtrAddress(  body,  attrLen,  mChangedAddress )== false )
+               {
+                  WarningLog(<< "problem parsing ChangedAddress");
+                  return false;
+               }
+               StackLog(<< "ChangedAddress = " << mChangedAddress);
             }
-            StackLog(<< "ChangedAddress = " << mChangedAddress);
+            else
+            {
+               WarningLog(<< "Duplicate ChangedAddress in message - ignoring.");
+            }
             break;  
 				
          case Username: 
-            mHasUsername = true;
-            mUsername = new resip::Data(resip::Data::Share, body, attrLen);
-            StackLog(<< "Username = " << *mUsername);
+            if(!mHasUsername)
+            {
+               mHasUsername = true;
+               mUsername = new resip::Data(resip::Data::Share, body, attrLen);
+               StackLog(<< "Username = " << *mUsername);
+            }
+            else
+            {
+               WarningLog(<< "Duplicate Username in message - ignoring.");
+            }
             break;
 				
          case Password: 
-            mHasPassword = true;
-            mPassword = new resip::Data(resip::Data::Share, body, attrLen);
-            StackLog(<< "Password = " << *mPassword);
+            if(!mHasPassword)
+            {
+               mHasPassword = true;
+               mPassword = new resip::Data(resip::Data::Share, body, attrLen);
+               StackLog(<< "Password = " << *mPassword);
+            }
+            else
+            {
+               WarningLog(<< "Duplicate Password in message - ignoring.");
+            }
             break;
 				
          case MessageIntegrity:
-            mHasMessageIntegrity = true;
-            if (stunParseAtrIntegrity( body, attrLen, mMessageIntegrity) == false)
+            if(!mHasMessageIntegrity)
             {
-               WarningLog(<< "problem parsing MessageIntegrity");
-               return false;
+               mHasMessageIntegrity = true;
+               if (stunParseAtrIntegrity( body, attrLen, mMessageIntegrity) == false)
+               {
+                  WarningLog(<< "problem parsing MessageIntegrity");
+                  return false;
+               }
+               //StackLog(<< "MessageIntegrity = " << mMessageIntegrity.hash);
             }
-            //StackLog(<< "MessageIntegrity = " << mMessageIntegrity.hash);
+            else
+            {
+               WarningLog(<< "Duplicate MessageIntegrity in message - ignoring.");
+            }
             break;
 				
          case ErrorCode:
-            mHasErrorCode = true;
-            if (stunParseAtrError(body, attrLen, mErrorCode) == false)
+            if(!mHasErrorCode)
             {
-               WarningLog(<< "problem parsing ErrorCode");
-               return false;
+               mHasErrorCode = true;
+               if (stunParseAtrError(body, attrLen, mErrorCode) == false)
+               {
+                  WarningLog(<< "problem parsing ErrorCode");
+                  return false;
+               }
+               StackLog(<< "ErrorCode = " << (int(mErrorCode.errorClass) * 100 + int(mErrorCode.number)) 
+                                 << " (" << *mErrorCode.reason << ")");
             }
-            StackLog(<< "ErrorCode = " << (int(mErrorCode.errorClass) * 100 + int(mErrorCode.number)) 
-                              << " (" << *mErrorCode.reason << ")");
+            else
+            {
+               WarningLog(<< "Duplicate ErrorCode in message - ignoring.");
+            }
             break;
 				
          case UnknownAttribute:
-            mHasUnknownAttributes = true;
-            if (stunParseAtrUnknown(body, attrLen, mUnknownAttributes) == false)
+            if(!mHasUnknownAttributes)
             {
-               WarningLog(<< "problem parsing UnknownAttribute");
-               return false;
+               mHasUnknownAttributes = true;
+               if (stunParseAtrUnknown(body, attrLen, mUnknownAttributes) == false)
+               {
+                  WarningLog(<< "problem parsing UnknownAttribute");
+                  return false;
+               }
+               // TODO output
             }
-            // TODO output
+            else
+            {
+               WarningLog(<< "Duplicate UnknownAttribute in message - ignoring.");
+            }
             break;
 				
          case ReflectedFrom:  // deprecated
-            mHasReflectedFrom = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mReflectedFrom ) == false )
+            if(!mHasReflectedFrom)
             {
-               WarningLog(<< "problem parsing ReflectedFrom");
-               return false;
+               mHasReflectedFrom = true;
+               if ( stunParseAtrAddress(  body,  attrLen,  mReflectedFrom ) == false )
+               {
+                  WarningLog(<< "problem parsing ReflectedFrom");
+                  return false;
+               }
+               StackLog(<< "ReflectedFrom = " << mReflectedFrom);
             }
-            StackLog(<< "ReflectedFrom = " << mReflectedFrom);
+            else
+            {
+               WarningLog(<< "Duplicate ReflectedFrom in message - ignoring.");
+            }
             break;  
 				
          case Realm: 
-            mHasRealm = true;
-            mRealm = new resip::Data(resip::Data::Share, body, attrLen);
-            StackLog(<< "Realm = " << *mRealm);
+            if(!mHasRealm)
+            {
+               mHasRealm = true;
+               mRealm = new resip::Data(resip::Data::Share, body, attrLen);
+               StackLog(<< "Realm = " << *mRealm);
+            }
+            else
+            {
+               WarningLog(<< "Duplicate Realm in message - ignoring.");
+            }
             break;
 
          case Nonce: 
-            mHasNonce = true;
-            mNonce = new resip::Data(resip::Data::Share, body, attrLen);
-            StackLog(<< "Nonce = " << *mNonce);
+            if(!mHasNonce)
+            {
+               mHasNonce = true;
+               mNonce = new resip::Data(resip::Data::Share, body, attrLen);
+               StackLog(<< "Nonce = " << *mNonce);
+            }
+            else
+            {
+               WarningLog(<< "Duplicate Nonce in message - ignoring.");
+            }
             break;
 
          case XorMappedAddress_old:
          case XorMappedAddress:
-            mHasXorMappedAddress = true;
-            if ( stunParseAtrXorAddress(  body,  attrLen,  mXorMappedAddress ) == false )
+            if(!mHasXorMappedAddress)
             {
-               WarningLog(<< "problem parsing XorMappedAddress");
-               return false;
+               mHasXorMappedAddress = true;
+               if ( stunParseAtrXorAddress(  body,  attrLen,  mXorMappedAddress ) == false )
+               {
+                  WarningLog(<< "problem parsing XorMappedAddress");
+                  return false;
+               }
+               StackLog(<< "XorMappedAddress = " << mXorMappedAddress);
             }
-            StackLog(<< "XorMappedAddress = " << mXorMappedAddress);
+            else
+            {
+               WarningLog(<< "Duplicate XorMappedAddress in message - ignoring.");
+            }
             break;  				
 
          case Fingerprint:
-            mHasFingerprint = true;
-            if (stunParseAtrUInt32( body, attrLen, mFingerprint) == false)
+            if(!mHasFingerprint)
             {
-               WarningLog(<< "problem parsing Fingerprint");
-               return false;
+               mHasFingerprint = true;
+               if (stunParseAtrUInt32( body, attrLen, mFingerprint) == false)
+               {
+                  WarningLog(<< "problem parsing Fingerprint");
+                  return false;
+               }
+               StackLog(<< "Fingerprint = " << mFingerprint);
             }
-            StackLog(<< "Fingerprint = " << mFingerprint);
+            else
+            {
+               WarningLog(<< "Duplicate Fingerprint in message - ignoring.");
+            }
             break;
 
-         case Server: 
-            mHasServer = true;
-            mServer = new resip::Data(resip::Data::Share, body, attrLen);
-            StackLog(<< "Server = " << *mServer);
+         case Software: 
+            if(!mHasSoftware)
+            {
+               mHasSoftware = true;
+               mSoftware = new resip::Data(resip::Data::Share, body, attrLen);
+               StackLog(<< "Software = " << *mSoftware);
+            }
+            else
+            {
+               WarningLog(<< "Duplicate Software in message - ignoring.");
+            }
             break;
 
          case AlternateServer:
-            mHasAlternateServer = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mAlternateServer ) == false )
+            if(!mHasAlternateServer)
             {
-               WarningLog(<< "problem parsing AlternateServer");
-               return false;
+               mHasAlternateServer = true;
+               if ( stunParseAtrAddress(  body,  attrLen,  mAlternateServer ) == false )
+               {
+                  WarningLog(<< "problem parsing AlternateServer");
+                  return false;
+               }
+               StackLog(<< "AlternateServer = " << mAlternateServer);
             }
-            StackLog(<< "AlternateServer = " << mAlternateServer);
+            else
+            {
+               WarningLog(<< "Duplicate AlternateServer in message - ignoring.");
+            }
             break;  
 
-         case RefreshInterval:
-            mHasRefreshInterval = true;
-            if (stunParseAtrUInt32( body, attrLen, mRefreshInterval) == false)
-            {
-               WarningLog(<< "problem parsing refresh interval");
-               return false;
-            }
-            StackLog(<< "Refresh interval = " << mRefreshInterval);
-            break;
-
          case SecondaryAddress:
-            mHasSecondaryAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mSecondaryAddress ) == false )
+            if(!mHasSecondaryAddress)
             {
-               WarningLog(<< "problem parsing secondaryAddress");
-               return false;
+               mHasSecondaryAddress = true;
+               if ( stunParseAtrAddress(  body,  attrLen,  mSecondaryAddress ) == false )
+               {
+                  WarningLog(<< "problem parsing secondaryAddress");
+                  return false;
+               }
+               StackLog(<< "SecondaryAddress = " << mSecondaryAddress);
             }
-            StackLog(<< "SecondaryAddress = " << mSecondaryAddress);
+            else
+            {
+               WarningLog(<< "Duplicate SecondaryAddress in message - ignoring.");
+            }
             break;  
 
          // TURN attributes
 
          case TurnChannelNumber:
-            mHasTurnChannelNumber = true;
+            if(!mHasTurnChannelNumber)
             {
                UInt32 channelNumber;
+               mHasTurnChannelNumber = true;
                if(stunParseAtrUInt32( body, attrLen, channelNumber) == false)
                {
                   WarningLog(<< "problem parsing channel number");
                   return false;
                }
                mTurnChannelNumber = (channelNumber & 0xFFFF0000) >> 16;
+               StackLog(<< "Turn ChannelNumber = " << mTurnChannelNumber);
             }
-            StackLog(<< "Turn ChannelNumber = " << mTurnChannelNumber);
+            else
+            {
+               WarningLog(<< "Duplicate TurnChannelNumber in message - ignoring.");
+            }
             break;
 
          case TurnLifetime:
-            mHasTurnLifetime = true;
-            if (stunParseAtrUInt32( body, attrLen, mTurnLifetime) == false)
+            if(!mHasTurnLifetime)
             {
-               WarningLog(<< "problem parsing turn lifetime");
-               return false;
+               mHasTurnLifetime = true;
+               if (stunParseAtrUInt32( body, attrLen, mTurnLifetime) == false)
+               {
+                  WarningLog(<< "problem parsing turn lifetime");
+                  return false;
+               }
+               StackLog(<< "Turn Lifetime = " << mTurnLifetime);
             }
-            StackLog(<< "Turn Lifetime = " << mTurnLifetime);
+            else
+            {
+               WarningLog(<< "Duplicate TurnLifetime in message - ignoring.");
+            }
             break;
 
          case TurnAlternateServer:
-            mHasTurnAlternateServer = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mTurnAlternateServer ) == false )
+            if(!mHasTurnAlternateServer)
             {
-               WarningLog(<< "problem parsing turn alternate server");
-               return false;
+               mHasTurnAlternateServer = true;
+               if ( stunParseAtrAddress(  body,  attrLen,  mTurnAlternateServer ) == false )
+               {
+                  WarningLog(<< "problem parsing turn alternate server");
+                  return false;
+               }
+               StackLog(<< "Turn Alternate Server = " << mTurnAlternateServer);
             }
-            StackLog(<< "Turn Alternate Server = " << mTurnAlternateServer);
+            else
+            {
+               WarningLog(<< "Duplicate TurnAlternateServer in message - ignoring.");
+            }
             break;
 
          case TurnMagicCookie:
-            mHasTurnMagicCookie = true;
-            if (stunParseAtrUInt32( body, attrLen, mTurnMagicCookie) == false)
+            if(!mHasTurnMagicCookie)
             {
-               WarningLog(<< "problem parsing turn magic cookie");
-               return false;
+               mHasTurnMagicCookie = true;
+               if (stunParseAtrUInt32( body, attrLen, mTurnMagicCookie) == false)
+               {
+                  WarningLog(<< "problem parsing turn magic cookie");
+                  return false;
+               }
+               StackLog(<< "TurnMagicCookie (deprecated) = " << mTurnMagicCookie);
             }
-            StackLog(<< "TurnMagicCookie (deprecated) = " << mTurnMagicCookie);
+            else
+            {
+               WarningLog(<< "Duplicate TurnMagicCookie in message - ignoring.");
+            }
             break;
 
          case TurnBandwidth:
-            mHasTurnBandwidth = true;
-            if (stunParseAtrUInt32( body, attrLen, mTurnBandwidth) == false)
+            if(!mHasTurnBandwidth)
             {
-               WarningLog(<< "problem parsing turn bandwidth");
-               return false;
+               mHasTurnBandwidth = true;
+               if (stunParseAtrUInt32( body, attrLen, mTurnBandwidth) == false)
+               {
+                  WarningLog(<< "problem parsing turn bandwidth");
+                  return false;
+               }
+               StackLog(<< "Turn Bandwidth = " << mTurnBandwidth);
             }
-            StackLog(<< "Turn Bandwidth = " << mTurnBandwidth);
+            else
+            {
+               WarningLog(<< "Duplicate TurnBandwidth in message - ignoring.");
+            }
             break;
 
          case TurnDestinationAddress:
-            mHasTurnDestinationAddress = true;
-            if ( stunParseAtrAddress(  body,  attrLen,  mTurnDestinationAddress ) == false )
+            if(!mHasTurnDestinationAddress)
             {
-               WarningLog(<< "problem parsing turn destination address");
-               return false;
+               mHasTurnDestinationAddress = true;
+               if ( stunParseAtrAddress(  body,  attrLen,  mTurnDestinationAddress ) == false )
+               {
+                  WarningLog(<< "problem parsing turn destination address");
+                  return false;
+               }
+               StackLog(<< "Turn Destination Address = " << mTurnDestinationAddress);
             }
-            StackLog(<< "Turn Destination Address = " << mTurnDestinationAddress);
+            else
+            {
+               WarningLog(<< "Duplicate TurnDestinationAddress in message - ignoring.");
+            }
             break;
 
          case TurnPeerAddress:
-            mHasTurnPeerAddress = true;
-            if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnPeerAddress ) == false )
+            if(!mHasTurnPeerAddress)
             {
-               WarningLog(<< "problem parsing turn peer address");
-               return false;
+               mHasTurnPeerAddress = true;
+               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnPeerAddress ) == false )
+               {
+                  WarningLog(<< "problem parsing turn peer address");
+                  return false;
+               }
+               StackLog(<< "Turn Peer Address = " << mTurnPeerAddress);
             }
-            StackLog(<< "Turn Remote Address = " << mTurnPeerAddress);
+            else
+            {
+               WarningLog(<< "Duplicate TurnPeerAddress in message - ignoring.");
+            }
             break;
 
          //overlay on parse, ownership is buffer parsed from
          case TurnData:
-            mHasTurnData = true;
-            mTurnData = new resip::Data(resip::Data::Share, body, attrLen);
+            if(!mHasTurnData)
+            {
+               mHasTurnData = true;
+               mTurnData = new resip::Data(resip::Data::Share, body, attrLen);
+            }
+            else
+            {
+               WarningLog(<< "Duplicate TurnData in message - ignoring.");
+            }
             break;
 
          case TurnRelayAddress:
-            mHasTurnRelayAddress = true;
-            if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRelayAddress ) == false )
+            if(!mHasTurnRelayAddress)
             {
-               WarningLog(<< "problem parsing turn relay address");
-               return false;
+               mHasTurnRelayAddress = true;
+               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRelayAddress ) == false )
+               {
+                  WarningLog(<< "problem parsing turn relay address");
+                  return false;
+               }
+               StackLog(<< "Turn Relay Address = " << mTurnRelayAddress);
             }
-            StackLog(<< "Turn Relay Address = " << mTurnRelayAddress);
+            else
+            {
+               WarningLog(<< "Duplicate TurnRelayAddress in message - ignoring.");
+            }
             break;
 
          case TurnRequestedProps:
-            mHasTurnRequestedProps = true;
-            if (stunParseAtrRequestedProps( body, attrLen, mTurnRequestedProps) == false)
+            if(!mHasTurnRequestedProps)
             {
-               WarningLog(<< "problem parsing turn requested props");
-               return false;
+               mHasTurnRequestedProps = true;
+               if (stunParseAtrRequestedProps( body, attrLen, mTurnRequestedProps) == false)
+               {
+                  WarningLog(<< "problem parsing turn requested props");
+                  return false;
+               }
+               StackLog(<< "Turn Requested Props = " << (int)mTurnRequestedProps.propType);
             }
-            StackLog(<< "Turn Requested Props = " << (int)mTurnRequestedProps.propType);
+            else
+            {
+               WarningLog(<< "Duplicate TurnRequestedProps in message - ignoring.");
+            }
             break;
 
          case TurnRequestedTransport:
-            mHasTurnRequestedTransport = true;
-            UInt32 requestedTransport;
-            if (stunParseAtrUInt32( body, attrLen, requestedTransport) == false)
+            if(!mHasTurnRequestedTransport)
             {
-               WarningLog(<< "problem parsing turn requested transport");
-               return false;
+               mHasTurnRequestedTransport = true;
+               UInt32 requestedTransport;
+               if (stunParseAtrUInt32( body, attrLen, requestedTransport) == false)
+               {
+                  WarningLog(<< "problem parsing turn requested transport");
+                  return false;
+               }
+               mTurnRequestedTransport = requestedTransport >> 24;
+               StackLog(<< "Turn Requested Transport = " << (int)mTurnRequestedTransport);
             }
-            mTurnRequestedTransport = requestedTransport >> 24;
-            StackLog(<< "Turn Requested Transport = " << (int)mTurnRequestedTransport);
+            else
+            {
+               WarningLog(<< "Duplicate TurnRequestedTransport in message - ignoring.");
+            }
             break;
 
          case TurnReservationToken:
-            mHasTurnReservationToken = true;
-            if ( stunParseAtrUInt64(  body,  attrLen,  mTurnReservationToken ) == false )
+            if(!mHasTurnReservationToken)
             {
-               WarningLog(<< "problem parsing turn reservation token");
-               return false;
+               mHasTurnReservationToken = true;
+               if ( stunParseAtrUInt64(  body,  attrLen,  mTurnReservationToken ) == false )
+               {
+                  WarningLog(<< "problem parsing turn reservation token");
+                  return false;
+               }
+               StackLog(<< "Turn Reservation Token = " << mTurnReservationToken);
             }
-            StackLog(<< "Turn Reservation Token = " << mTurnReservationToken);
+            else
+            {
+               WarningLog(<< "Duplicate TurnReservationToken in message - ignoring.");
+            }
             break;
 
          case TurnConnectStat:
-            mHasTurnConnectStat = true;
-            if (stunParseAtrUInt32( body, attrLen, mTurnConnectStat) == false)
+            if(!mHasTurnConnectStat)
             {
-               WarningLog(<< "problem parsing turn connect stat");
-               return false;
+               mHasTurnConnectStat = true;
+               if (stunParseAtrUInt32( body, attrLen, mTurnConnectStat) == false)
+               {
+                  WarningLog(<< "problem parsing turn connect stat");
+                  return false;
+               }
+               StackLog(<< "Turn Connect Stat = " << mTurnConnectStat);
             }
-            StackLog(<< "Turn Connect Stat = " << mTurnConnectStat);
+            else
+            {
+               WarningLog(<< "Duplicate TurnConnectStat in message - ignoring.");
+            }
             break;
 					
          default:
-            InfoLog(<< "Unknown attribute: " << atrType);
             if ( atrType <= 0x7FFF ) 
             {
+               WarningLog(<< "Unknown comprehension required attribute: " << atrType);
                return false;
+            }
+            else
+            {
+               InfoLog(<< "Ignoring unknown comprehension optional attribute: " << atrType);
             }
       }
 		
@@ -988,7 +1195,7 @@ StunMessage::encodeTurnData(char *ptr, const resip::Data* td)
    ptr = encode16(ptr, (UInt16)td->size());
    memcpy(ptr, td->data(), td->size());
    ptr += td->size();
-   
+   memset(ptr, 0, padsize);  // zero out padded data (note: this is not required by the RFC)
    return ptr+padsize;
 }
 
@@ -1028,17 +1235,13 @@ StunMessage::encodeAtrAddress(char* ptr, UInt16 type, const StunAtrAddress& atr)
    ptr = encode16(ptr, atr.port);
    if(atr.family == IPv6Family)
    {
+      // Note:  addr.ipv6 is stored in network byte order
       memcpy(ptr, &atr.addr.ipv6, sizeof(atr.addr.ipv6));
       ptr += sizeof(atr.addr.ipv6);
-      /*
-      for(int i = 0; i < 4; i++)
-      {
-         ptr = encode32(ptr, atr.addr.ipv6.longpart[i]);
-      }
-      */
    }
    else
    {
+      // Note:  addr.ipv4 is stored in host byte order - encode32 will conver to network byte order
       ptr = encode32(ptr, atr.addr.ipv4);
    }
 	
@@ -1080,9 +1283,9 @@ StunMessage::encodeAtrString(char* ptr, UInt16 type, const Data* atr)
    UInt16 padsize = (UInt16)atr->size() % 4 == 0 ? 0 : 4 - ((UInt16)atr->size() % 4);
 	
    ptr = encode16(ptr, type);
-   ptr = encode16(ptr, (UInt16)atr->size()+padsize);  
+   ptr = encode16(ptr, (UInt16)atr->size());  
    ptr = encode(ptr, atr->data(), (unsigned int)atr->size());
-   memset(ptr, 0, padsize);
+   memset(ptr, 0, padsize);  // zero out padded data (note: this is not required by the RFC)
    return ptr + padsize;
 }
 
@@ -1197,20 +1400,15 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       StackLog(<< "Encoding XorMappedAddress: " << mXorMappedAddress);
       ptr = encodeAtrXorAddress(ptr, XorMappedAddress, mXorMappedAddress);
    }
-   if (mHasServer)
+   if (mHasSoftware)
    {
-      StackLog(<< "Encoding Server: " << *mServer);
-      ptr = encodeAtrString(ptr, Server, mServer);
+      StackLog(<< "Encoding Software: " << *mSoftware);
+      ptr = encodeAtrString(ptr, Software, mSoftware);
    }
    if (mHasAlternateServer)
    {
       StackLog(<< "Encoding Alternate Server: " << mAlternateServer);
       ptr = encodeAtrAddress(ptr, AlternateServer, mAlternateServer);
-   }
-   if (mHasRefreshInterval)
-   {
-      StackLog(<< "Encoding Refresh Interval: " << mRefreshInterval);
-      ptr = encodeAtrUInt32(ptr, RefreshInterval, mRefreshInterval);
    }
    if (mHasSecondaryAddress)
    {

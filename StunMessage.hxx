@@ -44,7 +44,7 @@ public:
    void setPassword(const char* password);
    void setRealm(const char* realm);
    void setNonce(const char* nonce);
-   void setServer(const char* server);
+   void setSoftware(const char* software);
    void setTurnData(const char* data, unsigned int len);
 
    void createHeader(UInt16 stunclass, UInt16 method);  // Set info needed for a new stun message - set's tid as well
@@ -98,13 +98,13 @@ public:
    // define types for a stun message 
    // RFC3489-bis-11
    const static UInt16 BindMethod                  = 0x001;
-   const static UInt16 SharedSecretMethod          = 0x002;  // deprecated by RFC3289-bis-11 (used for backwards compatibility to 3489 only)
+   const static UInt16 SharedSecretMethod          = 0x002;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
 
    // define types for a turn message - per behave-turn-07
    const static UInt16 TurnAllocateMethod          = 0x003;
    const static UInt16 TurnRefreshMethod           = 0x004;
    const static UInt16 TurnChannelBindMethod       = 0x009;
-   // define types for a turn indication - per behave-turn-05
+   // define types for a turn indication - per behave-turn-07
    const static UInt16 TurnSendMethod              = 0x006;
    const static UInt16 TurnDataMethod              = 0x007;
 
@@ -112,24 +112,23 @@ public:
    // RFC3489-bis-11
    // Comprehension required attributes
    const static UInt16 MappedAddress    = 0x0001;
-   const static UInt16 ResponseAddress  = 0x0002;  // deprecated by RFC3489-bis-11
-   const static UInt16 ChangeRequest    = 0x0003;  // deprecated by RFC3489-bis-11
-   const static UInt16 SourceAddress    = 0x0004;  // deprecated by RFC3489-bis-11
-   const static UInt16 ChangedAddress   = 0x0005;  // deprecated by RFC3489-bis-11
+   const static UInt16 ResponseAddress  = 0x0002;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+   const static UInt16 ChangeRequest    = 0x0003;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+   const static UInt16 SourceAddress    = 0x0004;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
+   const static UInt16 ChangedAddress   = 0x0005;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
    const static UInt16 Username         = 0x0006;  
-   const static UInt16 Password         = 0x0007;  // deprecated by RFC3489-bis-11
+   const static UInt16 Password         = 0x0007;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
    const static UInt16 MessageIntegrity = 0x0008;
    const static UInt16 ErrorCode        = 0x0009;
    const static UInt16 UnknownAttribute = 0x000A;
-   const static UInt16 ReflectedFrom    = 0x000B;  // deprecated by RFC3489-bis-11
+   const static UInt16 ReflectedFrom    = 0x000B;  // deprecated by RFC5389 (used for backwards compatibility to RFC3489 only)
    const static UInt16 Realm            = 0x0014;
    const static UInt16 Nonce            = 0x0015;
    const static UInt16 XorMappedAddress = 0x0020;
    const static UInt16 XorMappedAddress_old = 0x8020; // deprecated
    // Comprehension Optional Attributes
-   const static UInt16 Server           = 0x8022;
+   const static UInt16 Software         = 0x8022;
    const static UInt16 AlternateServer  = 0x8023;
-   const static UInt16 RefreshInterval  = 0x8024;
    const static UInt16 Fingerprint      = 0x8028;  
    const static UInt16 SecondaryAddress = 0x8050;  // Non standard extension
 
@@ -149,7 +148,7 @@ public:
    const static UInt16 TurnReservationToken   = 0x0022;
    const static UInt16 TurnConnectStat        = 0x0023; // tcp allocations
 
-   const static UInt32 StunMagicCookie  = 0x2112A442;
+   const static UInt32 StunMagicCookie  = 0x2112A442;  // network byte order
    typedef struct 
    {
       UInt32 magicCookie;
@@ -179,8 +178,8 @@ public:
       UInt16 port;
       union
       {
-         UInt32 ipv4;
-         UInt128 ipv6;
+         UInt32 ipv4;  // in host byte order
+         UInt128 ipv6; // in network byte order
       } addr;
    } StunAtrAddress;
 
@@ -272,14 +271,11 @@ public:
    bool mHasFingerprint;
    UInt32 mFingerprint;
 
-   bool mHasServer;
-   resip::Data* mServer;
+   bool mHasSoftware;
+   resip::Data* mSoftware;
 
    bool mHasAlternateServer;
    StunAtrAddress mAlternateServer;
-
-   bool mHasRefreshInterval;
-   UInt32 mRefreshInterval;
 
    bool mHasSecondaryAddress;
    StunAtrAddress mSecondaryAddress;
