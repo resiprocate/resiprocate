@@ -18,7 +18,7 @@ UdpRelayServer::UdpRelayServer(asio::io_service& ioService, TurnAllocation& turn
   mTurnAllocation(turnAllocation),
   mStopping(false)
 {
-   InfoLog(<< "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress() << ":" << mTurnAllocation.getRequestedTuple().getPort());
+   InfoLog(<< "UdpRelayServer started.  Listening on " << mTurnAllocation.getRequestedTuple().getAddress().to_string() << ":" << mTurnAllocation.getRequestedTuple().getPort());
 
    bind(turnAllocation.getRequestedTuple().getAddress(), turnAllocation.getRequestedTuple().getPort());
 }
@@ -69,7 +69,7 @@ UdpRelayServer::onReceiveSuccess(const asio::ip::address& address, unsigned shor
       }
       else
       {
-         InfoLog(<< "No permission for " << address << " dropping data.");
+         InfoLog(<< "No permission for " << address.to_string() << " dropping data.");
       }
    }
    doReceive();

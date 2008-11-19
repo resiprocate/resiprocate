@@ -30,7 +30,7 @@ const char authenticationPassword[] = "1234";
 
 #define NONCE_LIFETIME 3600    // 1 hour - ?slg? what do we want as a default here? 
 //#define NONCE_LIFETIME 10    // for TESTING
-#define SERVER_STRING "reTURN 0.2 - turn-07"
+#define SOFTWARE_STRING "reTURN 0.3 - RFC5389/turn-07"
 #define DEFAULT_LIFETIME 600   // 10 minutes
 #define MAX_LIFETIME     3600  // 1 hour
 //#define DEFAULT_LIFETIME 30  // for TESTING
@@ -139,9 +139,9 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
       // Copy over TransactionId
       response.mHeader.magicCookieAndTid = request.mHeader.magicCookieAndTid;
 
-      if (1) // add ServerName - could be a setting in the future
+      if (1) // add Software name - could be a setting in the future
       {
-         response.setServer(SERVER_STRING);
+         response.setSoftware(SOFTWARE_STRING);
       }
    }
 
