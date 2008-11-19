@@ -226,6 +226,7 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple,resip::Data& container)
 
    rawToken[1] += (tuple.getPort() << 16);
 
+#ifdef USE_IPV6
    if(tuple.ipVersion()==V6)
    {
       rawToken[1] += 0x00000001;
@@ -234,6 +235,7 @@ Tuple::writeBinaryToken(const resip::Tuple& tuple,resip::Data& container)
       memcpy(&rawToken[2],&address,16);
    }
    else
+#endif
    {
       in_addr address = reinterpret_cast<const sockaddr_in&>(tuple.getSockaddr()).sin_addr;
       assert(sizeof(address)==4);
