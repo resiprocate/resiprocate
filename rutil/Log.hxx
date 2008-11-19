@@ -21,9 +21,9 @@
 // crashes in the Mac OS native API.
 #if !defined(WIN32) && !defined(TARGET_OS_MAC)
 #define LOG_ENABLE_THREAD_SETTING
-// defining hash function in mac os (non-sdk api) because pthread_t 
-// is a pointer,  (this assumes it's always the same pointer)
-#ifdef __APPLE__
+// defining hash function in mac os (non-sdk api) and cygwin because
+// pthread_t is a pointer,  (this assumes it's always the same pointer)
+#if defined(__APPLE__) || defined(__CYGWIN__)
 HashValue(pthread_t);
 #endif
 #endif
