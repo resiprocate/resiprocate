@@ -22,8 +22,12 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
+
+#ifndef __CYGWIN__
 #include <arpa/nameser.h>
 #include <resolv.h>
+#endif
+
 #include <net/if.h>
 
 #if defined (__SUNPRO_CC) 
