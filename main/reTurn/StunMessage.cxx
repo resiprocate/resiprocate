@@ -24,11 +24,12 @@ using namespace resip;
 static const Data USERNAME_KEY("stunServerUsernameKey");
 static const Data PASSWORD_KEY("stunServerPasswordKey");
 
-#define MAX_USERNAME_BYTES    512
-#define MAX_PASSWORD_BYTES    512
-#define MAX_REALM_BYTES       763
-#define MAX_NONCE_BYTES       763
-#define MAX_SOFTWARE_BYTES    763
+#define MAX_USERNAME_BYTES          512
+#define MAX_PASSWORD_BYTES          512
+#define MAX_REALM_BYTES             763
+#define MAX_NONCE_BYTES             763
+#define MAX_SOFTWARE_BYTES          763
+#define MAX_ERRORCODE_REASON_BYTES  763
 
 namespace reTurn {
 
@@ -420,10 +421,11 @@ bool
 StunMessage::stunParseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result )
 {
    body+=2;  // skip pad
-   result.errorClass = *body++;
+   result.errorClass = *body++ * 0x7;
    result.number = *body++;
-		
-   result.reason = new resip::Data(resip::Data::Share, body, hdrLen-4);
+	
+   int reasonLen = (hdrLen -4) > MAX_ERRORCODE_REASON_BYTES ? MAX_ERRORCODE_REASON_BYTES : hdrLen-4;
+   result.reason = new resip::Data(resip::Data::Share, body, reasonLen);
    return true;
 }
 
@@ -432,13 +434,13 @@ StunMessage::stunParseAtrUnknown( char* body, unsigned int hdrLen,  StunAtrUnkno
 {
    if ( hdrLen >= sizeof(result) )
    {
-      WarningLog(<< "hdrLen wrong for Unknown attribute");
+      WarningLog(<< "hdrLen wrong for Unknown attribute or too many unknown attributes present");
       return false;
    }
    else
    {
-      if (hdrLen % 4 != 0) return false;
-      result.numAttributes = hdrLen / 4;
+      if (hdrLen % 2 != 0) return false;
+      result.numAttributes = hdrLen / 2;
       for (int i=0; i<result.numAttributes; i++)
       {
          memcpy(&result.attrType[i], body, 2); body+=2;
@@ -667,6 +669,11 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
          case ErrorCode:
             if(!mHasErrorCode)
             {
+               if(attrLen-4 > MAX_ERRORCODE_REASON_BYTES)
+               {
+                  WarningLog(<< "ErrorCode reason length=" << attrLen-4 << " is longer than max allowed=" << MAX_ERRORCODE_REASON_BYTES);
+                  return false;
+               }
                mHasErrorCode = true;
                if (stunParseAtrError(body, attrLen, mErrorCode) == false)
                {
@@ -1288,9 +1295,9 @@ StunMessage::encodeAtrError(char* ptr, const StunAtrError& atr)
    UInt16 padsize = (unsigned int)atr.reason->size() % 4 == 0 ? 0 : 4 - ((unsigned int)atr.reason->size() % 4);
 
    ptr = encode16(ptr, ErrorCode);
-   ptr = encode16(ptr, 4 + (UInt16)atr.reason->size() + padsize); 
+   ptr = encode16(ptr, 4 + (UInt16)atr.reason->size()); 
    ptr = encode16(ptr, 0); // pad
-   *ptr++ = atr.errorClass;
+   *ptr++ = atr.errorClass * 0x7;  // first 3 bits only
    *ptr++ = atr.number;
    ptr = encode(ptr, atr.reason->data(), (unsigned int)atr.reason->size());
    memset(ptr, 0, padsize);
@@ -1300,13 +1307,14 @@ StunMessage::encodeAtrError(char* ptr, const StunAtrError& atr)
 char* 
 StunMessage::encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr)
 {
+   UInt16 padsize = (2*atr.numAttributes) % 4 == 0 ? 0 : 4 - ((2*atr.numAttributes) % 4);
    ptr = encode16(ptr, UnknownAttribute);
-   ptr = encode16(ptr, 2+2*atr.numAttributes);
+   ptr = encode16(ptr, 2*atr.numAttributes);
    for (int i=0; i<atr.numAttributes; i++)
    {
       ptr = encode16(ptr, atr.attrType[i]);
    }
-   return ptr;
+   return ptr+padsize;
 }
 
 char* 
