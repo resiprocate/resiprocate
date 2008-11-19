@@ -14,9 +14,11 @@ using namespace resip;
 
 #define UDP_RT0 100  // RTO - Estimate of Roundtrip time - 100ms is recommened for fixed line transport - the initial value should be configurable
                      // Should also be calculation this on the fly
-#define UDP_MAX_RETRANSMITS  7       // Defined by RFC3489-bis11
-#define TCP_RESPONSE_TIME 7900       // Defined by RFC3489-bis11
-#define UDP_FINAL_REQUEST_TIME (UDP_RT0 * 16)  // Defined by RFC3489-bis11
+#define UDP_MAX_RETRANSMITS    7       // Defined by RFC5389 (Rc) - should be configurable
+#define TCP_RESPONSE_TIME      39500   // Defined by RFC5389 (Ti) - should be configurable
+#define UDP_Rm                 16      // Defined by RFC5389 - should be configurable
+#define UDP_FINAL_REQUEST_TIME (UDP_RT0 * UDP_Rm)  // Defined by RFC5389
+#define SOFTWARE_STRING "reTURN Async Client 0.3 - RFC5389/turn-07"
 
 namespace reTurn {
 
@@ -361,6 +363,9 @@ TurnAsyncSocket::createNewStunMessage(UInt16 stunclass, UInt16 method, bool addA
 {
    StunMessage* msg = new StunMessage();
    msg->createHeader(stunclass, method);
+
+   // Add Software Attribute
+   msg->setSoftware(SOFTWARE_STRING);
 
    if(addAuthInfo && !mUsername.empty() && !mHmacKey.empty())
    {
