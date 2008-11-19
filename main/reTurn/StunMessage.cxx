@@ -421,7 +421,7 @@ bool
 StunMessage::stunParseAtrError( char* body, unsigned int hdrLen,  StunAtrError& result )
 {
    body+=2;  // skip pad
-   result.errorClass = *body++ * 0x7;
+   result.errorClass = *body++ & 0x7;
    result.number = *body++;
 	
    int reasonLen = (hdrLen -4) > MAX_ERRORCODE_REASON_BYTES ? MAX_ERRORCODE_REASON_BYTES : hdrLen-4;
@@ -1297,7 +1297,7 @@ StunMessage::encodeAtrError(char* ptr, const StunAtrError& atr)
    ptr = encode16(ptr, ErrorCode);
    ptr = encode16(ptr, 4 + (UInt16)atr.reason->size()); 
    ptr = encode16(ptr, 0); // pad
-   *ptr++ = atr.errorClass * 0x7;  // first 3 bits only
+   *ptr++ = atr.errorClass & 0x7;  // first 3 bits only
    *ptr++ = atr.number;
    ptr = encode(ptr, atr.reason->data(), (unsigned int)atr.reason->size());
    memset(ptr, 0, padsize);
