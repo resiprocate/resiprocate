@@ -96,7 +96,7 @@ ifndef OSTYPE
 OSTYPE       := $(shell uname)
 endif
 ifndef OSVER
-OSVER        := $(shell uname -r)
+OSVER        := $(shell uname -r | tr '()/' " ")
 endif
 
 OS_MAJOR_VER := $(word 1,$(subst ., ,$(OSVER)) 0 0 0 0)

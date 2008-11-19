@@ -39,7 +39,7 @@ volatile short Log::touchCount = 0;
 
 
 #ifdef LOG_ENABLE_THREAD_SETTING
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__CYGWIN__)
 HashValueImp(pthread_t, (size_t)data);
 #endif
 HashMap<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
