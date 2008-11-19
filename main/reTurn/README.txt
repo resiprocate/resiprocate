@@ -8,7 +8,7 @@ Original Author: Scott Godin
 What is reTurn?
 ---------------
 reTurn is a Stun/Turn server and client library implementation of the latest 
-Stun/Turn drafts:  RFC3489bis-15, and draft-ietf-behave-turn-07
+Stun/Turn drafts:  RFC5389, and draft-ietf-behave-turn-07
 
 
 Current External Library Usage
@@ -36,15 +36,16 @@ Multi-threaded Server                  no           no      Once Turn code is im
 TLS Server Support                     yes          yes     
 RFC3489 bis 13 message parsing         yes          partly
 IPV6 message parsing support           yes          no 
-Shared Secret with Short Term Cred     yes          yes     Checking username for expirey and correct HMAC is not completed
-Shared Secret with Long Term Cred      mostly       yes     Implementation currently only accepts one hardcoded username/password - not implement on client side sync sockets
+Short Term Credentials                 yes          yes     Implementation currently only accepts one hardcoded username/password
+Long Term Credentials                  mostly       yes     Implementation currently only accepts one hardcoded username/password - not implemented on client side sync sockets
 Finger Print Insertion and Validation  yes          yes     Uses BOOST:crc_optimal
 Checking for unknown attributes        no           no
 Bandwidth Check                        no           no
 Turn Allocation                        yes          yes     Only UDP Relay's are implemented
 Requested Props (Even, Pair)           yes          yes
 Turn Permissions                       yes          yes      
-Turn Relay                             yes          yes     UDP Peers only
+Turn UDP Relay                         yes          yes     
+Turn TCP Relay                         no           no     
 Asyncronous Client APIs                yes          yes
 Channel Binding                        yes          yes
 
@@ -65,6 +66,7 @@ General TODO
  - Configuration Framework
  - Multi-threaded support
  - Bandwidth check
+ - TCP Relay
 
 
 Client TODO

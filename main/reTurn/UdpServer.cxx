@@ -186,7 +186,7 @@ UdpServer::ResponseEntry::ResponseEntry(UdpServer* udpServer, asio::ip::udp::soc
    mCleanupTimer(udpServer->mIOService)
 {
    // start timer
-   mCleanupTimer.expires_from_now(boost::posix_time::seconds(10));  // Transaction Responses are cahced for 10 seconds
+   mCleanupTimer.expires_from_now(boost::posix_time::seconds(10));  // Transaction Responses are cached for 10 seconds
    mCleanupTimer.async_wait(boost::bind(&UdpServer::cleanupResponseMap, udpServer, asio::placeholders::error, responseMessage->mHeader.magicCookieAndTid));
 }
 
