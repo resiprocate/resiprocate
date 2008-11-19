@@ -52,7 +52,7 @@ public:
                turnSocket.connect(sourceAddress.to_string(), sourcePort);
                connected = true;
             }
-            InfoLog( << "PEER: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
+            InfoLog( << "PEER: Received data from " << sourceAddress.to_string() << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
             turnSocket.send(buffer, size);
          }
          size = sizeof(buffer);
@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
          // Receive Data
          while(!(rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)))
          {
-            InfoLog(<< "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
+            InfoLog(<< "CLIENT: Received data from " << sourceAddress.to_string() << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
             size = sizeof(buffer);
          }
          if(rc)
@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 
          while(!(rc=turnSocket.receive(buffer, size, 1000, &sourceAddress, &sourcePort)))
          {
-            InfoLog(<< "CLIENT: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
+            InfoLog(<< "CLIENT: Received data from " << sourceAddress.to_string() << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
             size = sizeof(buffer);
          }
          if(rc)

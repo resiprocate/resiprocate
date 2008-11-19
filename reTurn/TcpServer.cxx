@@ -23,7 +23,7 @@ TcpServer::TcpServer(asio::io_service& ioService, RequestHandler& requestHandler
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
-   InfoLog(<< "TcpServer started.  Listening on " << address << ":" << port);
+   InfoLog(<< "TcpServer started.  Listening on " << address.to_string() << ":" << port);
 }
 
 void 

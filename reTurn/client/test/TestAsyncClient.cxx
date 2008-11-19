@@ -56,7 +56,7 @@ public:
                turnSocket.connect(sourceAddress.to_string(), sourcePort);
                connected = true;
             }
-            InfoLog(<< "PEER: Received data from " << sourceAddress << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
+            InfoLog(<< "PEER: Received data from " << sourceAddress.to_string() << ":" << sourcePort << " - [" << resip::Data(buffer, size).c_str() << "]");
             turnSocket.send(buffer, size);
          }
          size = sizeof(buffer);
@@ -82,7 +82,7 @@ public:
 
    virtual void onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port)
    {
-      InfoLog( << "MyTurnAsyncSocketHandler::onConnectSuccess: socketDest=" << socketDesc << ", address=" << address << ", port=" << port);
+      InfoLog( << "MyTurnAsyncSocketHandler::onConnectSuccess: socketDest=" << socketDesc << ", address=" << address.to_string() << ", port=" << port);
       mTurnAsyncSocket->bindRequest();
    }
    virtual void onConnectFailure(unsigned int socketDesc, const asio::error_code& e)
@@ -178,7 +178,7 @@ public:
 
    virtual void onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data)
    {
-      InfoLog( << "MyTurnAsyncSocketHandler::onReceiveSuccess: socketDest=" << socketDesc << ", fromAddress=" << address << ", fromPort=" << port << ", size=" << data->size() << ", data=" << data->data());
+      InfoLog( << "MyTurnAsyncSocketHandler::onReceiveSuccess: socketDest=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", data=" << data->data());
 
       switch(++mNumReceives)
       {
