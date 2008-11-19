@@ -24,6 +24,12 @@ using namespace resip;
 static const Data USERNAME_KEY("stunServerUsernameKey");
 static const Data PASSWORD_KEY("stunServerPasswordKey");
 
+#define MAX_USERNAME_BYTES    512
+#define MAX_PASSWORD_BYTES    512
+#define MAX_REALM_BYTES       763
+#define MAX_NONCE_BYTES       763
+#define MAX_SOFTWARE_BYTES    763
+
 namespace reTurn {
 
 bool operator<(const UInt128& lhs, const UInt128& rhs)
@@ -143,6 +149,7 @@ StunMessage::init()
    mNonce = 0;
    mSoftware = 0;
    mTurnData = 0;
+   mMessageIntegrityMsgLength = 0;
 }
 
 void 
@@ -606,6 +613,11 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
          case Username: 
             if(!mHasUsername)
             {
+               if(attrLen > MAX_USERNAME_BYTES)
+               {
+                  WarningLog(<< "Username length=" << attrLen << " is longer than max allowed=" << MAX_USERNAME_BYTES);
+                  return false;
+               }
                mHasUsername = true;
                mUsername = new resip::Data(resip::Data::Share, body, attrLen);
                StackLog(<< "Username = " << *mUsername);
@@ -619,6 +631,11 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
          case Password: 
             if(!mHasPassword)
             {
+               if(attrLen > MAX_PASSWORD_BYTES)
+               {
+                  WarningLog(<< "Password length=" << attrLen << " is longer than max allowed=" << MAX_PASSWORD_BYTES);
+                  return false;
+               }
                mHasPassword = true;
                mPassword = new resip::Data(resip::Data::Share, body, attrLen);
                StackLog(<< "Password = " << *mPassword);
@@ -639,6 +656,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
                   return false;
                }
                //StackLog(<< "MessageIntegrity = " << mMessageIntegrity.hash);
+               mMessageIntegrityMsgLength = body + attrLen - buf - sizeof(StunMsgHdr);
             }
             else
             {
@@ -701,6 +719,11 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
          case Realm: 
             if(!mHasRealm)
             {
+               if(attrLen > MAX_REALM_BYTES)
+               {
+                  WarningLog(<< "Realm length=" << attrLen << " is longer than max allowed=" << MAX_REALM_BYTES);
+                  return false;
+               }
                mHasRealm = true;
                mRealm = new resip::Data(resip::Data::Share, body, attrLen);
                StackLog(<< "Realm = " << *mRealm);
@@ -714,6 +737,11 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
          case Nonce: 
             if(!mHasNonce)
             {
+               if(attrLen > MAX_NONCE_BYTES)
+               {
+                  WarningLog(<< "Nonce length=" << attrLen << " is longer than max allowed=" << MAX_NONCE_BYTES);
+                  return false;
+               }
                mHasNonce = true;
                mNonce = new resip::Data(resip::Data::Share, body, attrLen);
                StackLog(<< "Nonce = " << *mNonce);
@@ -762,6 +790,11 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
          case Software: 
             if(!mHasSoftware)
             {
+               if(attrLen > MAX_SOFTWARE_BYTES)
+               {
+                  WarningLog(<< "Software length=" << attrLen << " is longer than max allowed=" << MAX_SOFTWARE_BYTES);
+                  return false;
+               }
                mHasSoftware = true;
                mSoftware = new resip::Data(resip::Data::Share, body, attrLen);
                StackLog(<< "Software = " << *mSoftware);
@@ -1277,14 +1310,15 @@ StunMessage::encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr)
 }
 
 char* 
-StunMessage::encodeAtrString(char* ptr, UInt16 type, const Data* atr)
+StunMessage::encodeAtrString(char* ptr, UInt16 type, const Data* atr, UInt16 maxBytes)
 {
    assert(atr);
-   UInt16 padsize = (UInt16)atr->size() % 4 == 0 ? 0 : 4 - ((UInt16)atr->size() % 4);
+   UInt16 size = atr->size() > maxBytes ? maxBytes : (UInt16)atr->size();
+   UInt16 padsize = size % 4 == 0 ? 0 : 4 - (size % 4);
 	
    ptr = encode16(ptr, type);
-   ptr = encode16(ptr, (UInt16)atr->size());  
-   ptr = encode(ptr, atr->data(), (unsigned int)atr->size());
+   ptr = encode16(ptr, size);  
+   ptr = encode(ptr, atr->data(), size);
    memset(ptr, 0, padsize);  // zero out padded data (note: this is not required by the RFC)
    return ptr + padsize;
 }
@@ -1358,12 +1392,12 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasUsername)
    {
       StackLog(<< "Encoding Username: " << *mUsername);
-      ptr = encodeAtrString(ptr, Username, mUsername);
+      ptr = encodeAtrString(ptr, Username, mUsername, MAX_USERNAME_BYTES);
    }
    if (mHasPassword)
    {
       StackLog(<< "Encoding Password: " << *mPassword);
-      ptr = encodeAtrString(ptr, Password, mPassword);
+      ptr = encodeAtrString(ptr, Password, mPassword, MAX_PASSWORD_BYTES);
    }
    if (mHasErrorCode)
    {
@@ -1388,12 +1422,12 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasRealm)
    {
       StackLog(<< "Encoding Realm: " << *mRealm);
-      ptr = encodeAtrString(ptr, Realm, mRealm);
+      ptr = encodeAtrString(ptr, Realm, mRealm, MAX_REALM_BYTES);
    }
    if (mHasNonce)
    {
       StackLog(<< "Encoding Nonce: " << *mNonce);
-      ptr = encodeAtrString(ptr, Nonce, mNonce);
+      ptr = encodeAtrString(ptr, Nonce, mNonce, MAX_NONCE_BYTES);
    }
    if (mHasXorMappedAddress)
    {
@@ -1403,7 +1437,7 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasSoftware)
    {
       StackLog(<< "Encoding Software: " << *mSoftware);
-      ptr = encodeAtrString(ptr, Software, mSoftware);
+      ptr = encodeAtrString(ptr, Software, mSoftware, MAX_SOFTWARE_BYTES);
    }
    if (mHasAlternateServer)
    {
@@ -1477,33 +1511,25 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       ptr = encodeAtrUInt32(ptr, TurnConnectStat, mTurnConnectStat);
    }   
 
-   // Update Length in header now - needed in message integrity and fingerprint calculations
+   // Update Length in header now - needed in message integrity calculations
    UInt16 msgSize = ptr - buf - sizeof(StunMsgHdr);
-   if(mHasMessageIntegrity) msgSize += 24;  // 20 (attribute value) + 4 (attribute header)
-   if(mHasFingerprint) msgSize += 8;        // 4 (attribute value) + 4 (attribute header)
+   if(mHasMessageIntegrity) msgSize += 24;  // 4 (attribute header) + 20 (attribute value)
    encode16(lengthp, msgSize);
 
    if (mHasMessageIntegrity)
    {
       StackLog(<< "HMAC with key: " << mHmacKey);
-
-      // allocate space for message integrity attribute (hash + attribute type + size)
-      char* ptrMessageIntegrity = ptr;
-	   ptr += 24;  // 20 (attribute value) + 4 (attribute header)
    
+      int len = ptr - buf;
+      StackLog(<< "Adding message integrity: buffer size=" << len << ", hmacKey=" << mHmacKey);
       StunAtrIntegrity integrity;
-      // pad with zeros prior to calculating message integrity attribute	   
-      int padding = 0;
-      int len = ptrMessageIntegrity - buf;
-      if (len % 64)
-      {
-         padding = 64 - (len % 64);
-         memset(ptrMessageIntegrity, 0, padding);
-      }
-      StackLog(<< "Adding message integrity: buffer size=" << len+padding << ", hmacKey=" << mHmacKey);
-      computeHmac(integrity.hash, buf, len + padding, mHmacKey.c_str(), (int)mHmacKey.size());
-	   ptr = encodeAtrIntegrity(ptrMessageIntegrity, integrity);
+      computeHmac(integrity.hash, buf, len, mHmacKey.c_str(), (int)mHmacKey.size());
+	   ptr = encodeAtrIntegrity(ptr, integrity);
    }
+
+   // Update Length in header now - may be needed in fingerprint calculations
+   if(mHasFingerprint) msgSize += 8;        // 4 (attribute header) + 4 (attribute value)
+   encode16(lengthp, msgSize);
 
    // add finger print if required
    if (mHasFingerprint)
@@ -1670,14 +1696,22 @@ StunMessage::checkMessageIntegrity(const Data& hmacKey)
    {
       unsigned char hmac[20];
 
-      // pad with zeros prior to calculating message integrity attribute	   
-      int len = (int)mBuffer.size()-20-4-(mHasFingerprint?8:0);  // remove last TLV (Message Integrity TLV) from HMAC calculation and Fingerprint TLV (if present)
-      int padding = len % 64 == 0 ? 0 : 64 - (len % 64);
-      Data buffer(mBuffer.data(), len+padding);  // .slg. this creates a temp copy of the buffer so that we can pad it
-      memset((void*)(buffer.data() + len), 0, padding);  // Zero out padding area 
+      // Store original stun message length from mBuffer 
+      char *lengthposition = (char*)mBuffer.data() + 2;
+      UInt16 originalLength;
+      memcpy(&originalLength, lengthposition, 2);
 
-      StackLog(<< "Checking message integrity: buffer size=" << (unsigned int)buffer.size() << ", hmacKey=" << hmacKey);
-      computeHmac((char*)hmac, buffer.data(), buffer.size(), hmacKey.c_str(), hmacKey.size());
+      // Update stun message length in mBuffer for calculation
+      UInt16 tempLength = htons(mMessageIntegrityMsgLength);
+      memcpy(lengthposition, &tempLength, 2);
+
+      // Calculate HMAC
+      int iHMACBufferSize = mMessageIntegrityMsgLength - 24 /* MessageIntegrity size */ + sizeof(StunMsgHdr); // The entire message proceeding the message integrity attribute
+      StackLog(<< "Checking message integrity: length=" << mMessageIntegrityMsgLength << ", size=" << iHMACBufferSize << ", hmacKey=" << hmacKey);
+      computeHmac((char*)hmac, mBuffer.data(), iHMACBufferSize, hmacKey.c_str(), hmacKey.size());
+
+      // Restore original stun message length in mBuffer
+      memcpy(lengthposition, &originalLength, 2);
 
       if (memcmp(mMessageIntegrity.hash, hmac, 20) == 0)
       {
