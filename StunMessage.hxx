@@ -224,6 +224,8 @@ public:
    resip::Data mBuffer;
    resip::Data mHmacKey;
 
+   UInt16 mMessageIntegrityMsgLength;
+
    StunMsgHdr mHeader;
 
    bool mHasMappedAddress;
@@ -351,7 +353,7 @@ private:
    char* encodeAtrAddress(char* ptr, UInt16 type, const StunAtrAddress& atr);
    char* encodeAtrError(char* ptr, const StunAtrError& atr);
    char* encodeAtrUnknown(char* ptr, const StunAtrUnknown& atr);
-   char* encodeAtrString(char* ptr, UInt16 type, const resip::Data* atr);
+   char* encodeAtrString(char* ptr, UInt16 type, const resip::Data* atr, UInt16 maxBytes);
    char* encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr);
    char* encodeAtrRequestedProps(char* ptr, const TurnAtrRequestedProps& atr);
    void computeHmac(char* hmac, const char* input, int length, const char* key, int sizeKey);
