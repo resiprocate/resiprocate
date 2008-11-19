@@ -47,7 +47,7 @@ TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler
    mAcceptor.bind(endpoint);
    mAcceptor.listen();
 
-   InfoLog(<< "TlsServer started.  Listening on " << address << ":" << port);
+   InfoLog(<< "TlsServer started.  Listening on " << address.to_string() << ":" << port);
 }
 
 void
