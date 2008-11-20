@@ -870,7 +870,7 @@ myMain(int argc, char* argv[])
       {
          if (!noV4) 
          {
-            sipStack.addTransport(DTLS, dtlsPort, V4, Data::Empty, tlsDomain );
+            sipStack.addTransport(DTLS, dtlsPort, V4, StunDisabled, Data::Empty, tlsDomain );
          }
       }
    }
