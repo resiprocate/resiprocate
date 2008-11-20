@@ -13,6 +13,7 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Uri.hxx"
+#include "resip/stack/ssl/Security.hxx"
 
 using namespace resip;
 using namespace std;
