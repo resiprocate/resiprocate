@@ -13,7 +13,9 @@
 #include "resip/stack/SipMessage.hxx"
 #include "resip/stack/SipStack.hxx"
 #include "resip/stack/Uri.hxx"
+#ifdef USE_SSL
 #include "resip/stack/ssl/Security.hxx"
+#endif
 
 using namespace resip;
 using namespace std;
