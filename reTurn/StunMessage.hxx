@@ -73,7 +73,7 @@ public:
    const static UInt32 ChangePortFlag = 0x02;
 
 
-   // Message Type - from RFC3489-bis-11
+   // Message Type - from RFC5389
    //
    //        0                   1                   2                   3
    //        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -321,6 +321,8 @@ public:
 
    bool mHasTurnConnectStat;
    UInt32 mTurnConnectStat;
+
+   StunAtrUnknown mUnknownRequiredAttributes;
 
    // Utility APIs
    void applyXorToAddress(const StunAtrAddress& in, StunAtrAddress& out);  // ensure tid is set first

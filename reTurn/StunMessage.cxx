@@ -151,6 +151,7 @@ StunMessage::init()
    mSoftware = 0;
    mTurnData = 0;
    mMessageIntegrityMsgLength = 0;
+   mUnknownRequiredAttributes.numAttributes = 0;
 }
 
 void 
@@ -501,6 +502,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 
    char* body = buf + sizeof(StunMsgHdr);
    unsigned int size = mHeader.msgLength;
+   mUnknownRequiredAttributes.numAttributes = 0;
 	
    StackLog(<< "bytes after header = " << size);
 	
@@ -1072,8 +1074,11 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
          default:
             if ( atrType <= 0x7FFF ) 
             {
+               if(mUnknownRequiredAttributes.numAttributes < STUN_MAX_UNKNOWN_ATTRIBUTES)
+               {
+                  mUnknownRequiredAttributes.attrType[mUnknownRequiredAttributes.numAttributes++] = atrType;
+               }
                WarningLog(<< "Unknown comprehension required attribute: " << atrType);
-               return false;
             }
             else
             {

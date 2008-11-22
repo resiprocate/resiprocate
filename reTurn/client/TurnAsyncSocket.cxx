@@ -491,7 +491,26 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
          switch (stunMessage.mMethod) 
          {
          case StunMessage::BindMethod:
-            errorCode = handleBindRequest(stunMessage);
+            if(stunMessage.mUnknownRequiredAttributes.numAttributes > 0)
+            {
+               // There were unknown comprehension-required attributes in the request
+               StunMessage* response = new StunMessage();
+               response->mClass = StunMessage::StunClassErrorResponse;
+               response->mMethod = stunMessage.mMethod;
+               response->setErrorCode(420, "Unknown Attribute");  
+               // Copy over TransactionId
+               response->mHeader.magicCookieAndTid = stunMessage.mHeader.magicCookieAndTid;
+               // Add Unknown Attributes
+               response->mHasUnknownAttributes = true;
+               response->mUnknownAttributes = stunMessage.mUnknownRequiredAttributes;
+               // Add Software Attribute
+               response->setSoftware(SOFTWARE_STRING);
+               sendStunMessage(response);
+            }
+            else
+            {
+               errorCode = handleBindRequest(stunMessage);
+            }
             break;
          case StunMessage::SharedSecretMethod:
          case StunMessage::TurnAllocateMethod:
@@ -500,9 +519,12 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
             // These requests are not handled by a client
             StunMessage* response = new StunMessage();
             response->mClass = StunMessage::StunClassErrorResponse;
+            response->mMethod = stunMessage.mMethod;
             response->setErrorCode(400, "Invalid Request Method");  
             // Copy over TransactionId
             response->mHeader.magicCookieAndTid = stunMessage.mHeader.magicCookieAndTid;
+            // Add Software Attribute
+            response->setSoftware(SOFTWARE_STRING);
             sendStunMessage(response);
             break;
          }
@@ -512,7 +534,16 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
          switch (stunMessage.mMethod) 
          {
          case StunMessage::TurnDataMethod: 
-            errorCode = handleDataInd(stunMessage);
+            if(stunMessage.mUnknownRequiredAttributes.numAttributes > 0)
+            {
+               // Unknown Comprehension-Required Attributes found
+               WarningLog(<< "Ignoring DataInd with unknown comprehension required attributes.");
+               errorCode = asio::error_code(reTurn::UnknownRequiredAttributes, asio::error::misc_category);
+            }
+            else
+            {
+               errorCode = handleDataInd(stunMessage);
+            }
             break;
          case StunMessage::BindMethod:
             // A Bind indication is simply a keepalive with no response required
@@ -527,6 +558,13 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
       case StunMessage::StunClassSuccessResponse:
       case StunMessage::StunClassErrorResponse:
       {
+         if(stunMessage.mUnknownRequiredAttributes.numAttributes > 0)
+         {
+            // Unknown Comprehension-Required Attributes found
+            WarningLog(<< "Ignoring Response with unknown comprehension required attributes.");
+            return asio::error_code(reTurn::UnknownRequiredAttributes, asio::error::misc_category);
+         }
+
          // First check if this response if for an active request
          RequestMap::iterator it = mActiveRequestMap.find(stunMessage.mHeader.magicCookieAndTid);
          if(it == mActiveRequestMap.end())
@@ -693,7 +731,7 @@ TurnAsyncSocket::handleSharedSecretResponse(StunMessage &request, StunMessage &r
 asio::error_code
 TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
 {
-   // Note: handling of BindRequest is not fully backwards compatible with RFC3489 - it is inline with bis13
+   // Note: handling of BindRequest is not fully backwards compatible with RFC3489 - it is inline with RFC5389
    StunMessage* response = new StunMessage();
 
    // form the outgoing message
@@ -706,6 +744,9 @@ TurnAsyncSocket::handleBindRequest(StunMessage& stunMessage)
    // Add XOrMappedAddress to response 
    response->mHasXorMappedAddress = true;
    StunMessage::setStunAtrAddressFromTuple(response->mXorMappedAddress, stunMessage.mRemoteTuple);
+
+   // Add Software Attribute
+   response->setSoftware(SOFTWARE_STRING);
 
    // send bindResponse to local client
    sendStunMessage(response);
