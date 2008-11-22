@@ -65,69 +65,80 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
 
    if(handleAuthentication(request, response))  
    {
-      // Request is authenticated, process it
-      switch(request.mClass)
-      { 
-      case StunMessage::StunClassRequest:
-         switch (request.mMethod) 
-         {
-         case StunMessage::BindMethod:
-            result = processStunBindingRequest(request, response, isRFC3489BackwardsCompatServer);
-            break;
-
-         case StunMessage::SharedSecretMethod:
-            result = processStunSharedSecretRequest(request, response);
-            break;
-
-         case StunMessage::TurnAllocateMethod:
-            result = processTurnAllocateRequest(turnSocket, request, response);
-            if(result != NoResponseToSend)
+      // Check if there were unknown require attributes
+      if(request.mUnknownRequiredAttributes.numAttributes > 0)
+      {
+         InfoLog(<< "Received Request with unknown comprehension-required attributes. Sending 420.");
+         buildErrorResponse(response, 420, "Unknown attribute", authenticationRealm);  
+         response.mHasUnknownAttributes = true;
+         response.mUnknownAttributes = request.mUnknownRequiredAttributes;
+      }
+      else
+      {
+         // Request is authenticated, process it
+         switch(request.mClass)
+         { 
+         case StunMessage::StunClassRequest:
+            switch (request.mMethod) 
             {
-               // Add an XOrMappedAddress to all TurnAllocateResponses
-               response.mHasXorMappedAddress = true;
-               StunMessage::setStunAtrAddressFromTuple(response.mXorMappedAddress, request.mRemoteTuple);
+            case StunMessage::BindMethod:
+               result = processStunBindingRequest(request, response, isRFC3489BackwardsCompatServer);
+               break;
+
+            case StunMessage::SharedSecretMethod:
+               result = processStunSharedSecretRequest(request, response);
+               break;
+
+            case StunMessage::TurnAllocateMethod:
+               result = processTurnAllocateRequest(turnSocket, request, response);
+               if(result != NoResponseToSend)
+               {
+                  // Add an XOrMappedAddress to all TurnAllocateResponses
+                  response.mHasXorMappedAddress = true;
+                  StunMessage::setStunAtrAddressFromTuple(response.mXorMappedAddress, request.mRemoteTuple);
+               }
+               break;
+
+            case StunMessage::TurnRefreshMethod:
+               result = processTurnRefreshRequest(request, response);
+               break;
+
+            case StunMessage::TurnChannelBindMethod:
+               result = processTurnChannelBindRequest(request, response);
+               break;
+
+            default:
+               buildErrorResponse(response, 400, "Invalid Request Method");  
+               break;
             }
             break;
 
-         case StunMessage::TurnRefreshMethod:
-            result = processTurnRefreshRequest(request, response);
-            break;
-
-         case StunMessage::TurnChannelBindMethod:
-            result = processTurnChannelBindRequest(request, response);
-            break;
-
-         default:
-            buildErrorResponse(response, 400, "Invalid Request Method");  
-            break;
-         }
-         break;
-
-      case StunMessage::StunClassIndication:
-         result = NoResponseToSend;  // Indications don't have responses
-         switch (request.mMethod) 
-         {
-         case StunMessage::TurnSendMethod:
-            processTurnSendIndication(request);
-            break;
-
-         case StunMessage::BindMethod:
-            // A Bind indication is simply a keepalive with no response required
-            break;
-
-         case StunMessage::TurnDataMethod: // Don't need to handle these - only sent by server, never received
-         default:
-            // Unknown indication - just ignore
-            break;
-         }
-         break;
+         case StunMessage::StunClassIndication:
+            result = NoResponseToSend;  // Indications don't have responses
+            switch (request.mMethod) 
+            {
+            case StunMessage::TurnSendMethod:
+               processTurnSendIndication(request);
+               break;
    
-      case StunMessage::StunClassSuccessResponse:
-      case StunMessage::StunClassErrorResponse:
-      default:
-         // A server should never receive a response
-         result = NoResponseToSend;
-         break;
+            case StunMessage::BindMethod:
+               // A Bind indication is simply a keepalive with no response required
+               break;
+   
+            case StunMessage::TurnDataMethod: // Don't need to handle these - only sent by server, never received
+            default:
+               // Unknown indication - just ignore
+               break;
+            }
+            break;
+   
+         case StunMessage::StunClassSuccessResponse:
+         case StunMessage::StunClassErrorResponse:
+         default:
+            // A server should never receive a response
+            result = NoResponseToSend;
+            break;
+         }
       }
    }
 
