@@ -723,6 +723,13 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
    {
       if(stunMessage.mClass == StunMessage::StunClassIndication && stunMessage.mMethod == StunMessage::TurnDataMethod)
       {
+         if(stunMessage.mUnknownRequiredAttributes.numAttributes > 0)
+         {
+            // Unknown Comprehension-Required Attributes found
+            WarningLog(<< "DataInd with unknown comprehension required attributes.");
+            return asio::error_code(reTurn::UnknownRequiredAttributes, asio::error::misc_category);
+         }
+
          if(!stunMessage.mHasTurnPeerAddress || !stunMessage.mHasTurnData)
          {
             // Missing RemoteAddress or TurnData attribute
@@ -763,22 +770,40 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
       }
       else if(stunMessage.mClass == StunMessage::StunClassRequest && stunMessage.mMethod == StunMessage::BindMethod)
       {
-         // Note: handling of BindRequest is not fully backwards compatible with RFC3489 - it is inline with bis11
+         // Note: handling of BindRequest is not fully backwards compatible with RFC3489 - it is inline with RFC5389
          StunMessage response;
 
          // form the outgoing message
-         response.mClass = StunMessage::StunClassSuccessResponse;
          response.mMethod = StunMessage::BindMethod;
 
          // Copy over TransactionId
          response.mHeader.magicCookieAndTid = stunMessage.mHeader.magicCookieAndTid;
 
-         // Add XOrMappedAddress to response 
-         response.mHasXorMappedAddress = true;
-         StunMessage::setStunAtrAddressFromTuple(response.mXorMappedAddress, stunMessage.mRemoteTuple);
+         if(stunMessage.mUnknownRequiredAttributes.numAttributes > 0)
+         {
+            // Unknown Comprehension-Required Attributes found
+            WarningLog(<< "BindRequest with unknown comprehension required attributes.");
+
+            response.mClass = StunMessage::StunClassErrorResponse;
+
+            // Add unknown attributes
+            response.mHasUnknownAttributes = true;
+            response.mUnknownAttributes = stunMessage.mUnknownRequiredAttributes;
+         }
+         else
+         {
+            response.mClass = StunMessage::StunClassSuccessResponse;
+
+            // Add XOrMappedAddress to response 
+            response.mHasXorMappedAddress = true;
+            StunMessage::setStunAtrAddressFromTuple(response.mXorMappedAddress, stunMessage.mRemoteTuple);
+         }
+
+         // Add Software Attribute
+         response.setSoftware(SOFTWARE_STRING);
 
          // send bind response to local client
-         unsigned int bufferSize = 8 /* Stun Header */ + 36 /* XorMapped Address (v6) */;
+         unsigned int bufferSize = 512;  // enough room for Stun Header + XorMapped Address (v6) or Unknown Attributes + Software Attribute;
          resip::Data buffer(bufferSize, resip::Data::Preallocate);
          unsigned int writeSize = response.stunEncodeMessage((char*)buffer.data(), bufferSize);
 
@@ -930,7 +955,8 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
          {
             StunMessage* response = new StunMessage(mLocalBinding, mConnectedTuple, &mReadBuffer[0], readsize);
 
-            if(response->isValid())
+            // If response is valid and has no unknown comprehension-required attributes then we can process it
+            if(response->isValid() && response->mUnknownRequiredAttributes.numAttributes == 0) 
             {
                if(!response->checkMessageIntegrity(request.mHmacKey))
                {
