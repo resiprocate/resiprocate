@@ -269,7 +269,7 @@ class TestDns : public DnsInterface, public ThreadIf
          addTransportType(TCP, V4);
          addTransportType(UDP, V4);
          addTransportType(TLS, V4);
-#ifdef IPV6
+#ifdef USE_IPV6
          addTransportType(TCP, V6);
          addTransportType(UDP, V6);
          addTransportType(TLS, V6);
