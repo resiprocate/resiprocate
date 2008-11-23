@@ -159,7 +159,12 @@ dtls-srtp-openssl: configure_dtls-srtp-openssl
 
 tfmcontrib: cppunit netxx
 
-contrib: ares 
+# Only build contrib/ares if we need it
+ifeq ($(DNS_RESOLVER),resip-ares)
+contrib: ares
+else
+contrib: 
+endif
 
 ###########################################################################
 # Various clean targets

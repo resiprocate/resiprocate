@@ -4,10 +4,7 @@
 
 #include <stdlib.h>
 
-#if defined(USE_ARES)
-#include "ares.h"
-#include "ares_dns.h"
-#endif
+#include "AresCompat.hxx"
 
 #ifndef __CYGWIN__
 #ifndef RRFIXEDSZ
@@ -92,11 +89,10 @@ DnsNaptrRecord::RegExp::apply(const Data& input) const
    return mReplacement;
 }
 
-
 DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
 {
    char* name = 0;
-   int len = 0;
+   ares_length_type len = 0;
    if (ARES_SUCCESS != ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
    {
       throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);

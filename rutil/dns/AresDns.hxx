@@ -22,8 +22,8 @@ class AresDns : public ExternalDns
       virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
                        AfterSocketCreationFuncPtr socketfunc, int timeout=0, int tries=0, unsigned int features=0); 
 
-      virtual int internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
-                       AfterSocketCreationFuncPtr socketfunc, unsigned int features=0, ares_channeldata** channel = 0); 
+      int internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
+                       AfterSocketCreationFuncPtr socketfunc, unsigned int features=0, ares_channeldata** channel = 0, int timeout=0, int tries=0); 
 
       virtual bool checkDnsChange();
 
@@ -47,6 +47,7 @@ class AresDns : public ExternalDns
       static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
       static ExternalDnsHandler* getHandler(void* arg);
       static void aresCallback(void *arg, int status, unsigned char* abuf, int alen);
+      static void caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
 	  struct ares_channeldata* mChannel;
 	  std::vector<GenericIPAddress> mAdditionalNameservers;
 	  unsigned int mFeatures;

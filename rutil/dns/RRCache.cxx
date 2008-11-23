@@ -2,8 +2,7 @@
 #include "rutil/config.hxx"
 #endif
 
-#include "ares.h"
-#include "ares_dns.h"
+#include "AresCompat.hxx"
 
 #ifndef WIN32
 #include <sys/types.h>
@@ -211,7 +210,7 @@ int RRCache::getTTL(const RROverlay& overlay)
    // overlay is a soa answer.
    if (overlay.type() != T_SOA) return -1;
    char* name = 0;
-   int len = 0;
+   ares_length_type len = 0;
    ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
    const unsigned char* pPos = overlay.data() + len;
    free(name);

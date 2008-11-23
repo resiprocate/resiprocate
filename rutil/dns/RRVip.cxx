@@ -2,8 +2,7 @@
 #include "rutil/config.hxx"
 #endif
 
-#include "ares.h"
-#include "ares_dns.h"
+#include "AresCompat.hxx"
 
 #include <map>
 #include <list>
