@@ -81,10 +81,24 @@ MYSQL_LIBNAME :=  mysqlclient z m
 MYSQL_DEFINES += USE_MYSQL
 endif
 
-ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
-ARES_LIBDIRS := $(ROOT)/contrib/ares-build.$(OS_ARCH)
-ARES_LIBNAME := ares
-ARES_DEFINES := 
+# We can only use one of CARES or ARES, and to avoid mucking up all the
+# packaging stuff, let's just swap one in for another since they are almost
+# interchangeable anyway.  
+ifeq ($(DNS_RESOLVER),resip-ares)
+   ARES_INCLUDEDIRS := $(ROOT)/contrib/ares
+   ARES_LIBDIRS := $(ROOT)/contrib/ares-build.$(OS_ARCH)
+   ARES_LIBNAME := ares
+   ARES_DEFINES := 
+endif
+
+ifeq ($(DNS_RESOLVER),c-ares)
+   # The CARES_INCLUDEDIRS and CARES_LIBDIRS variables are set by configure in
+   # Makefile.conf
+   ARES_INCLUDEDIRS := $(CARES_INCLUDEDIRS)
+   ARES_LIBDIRS := $(CARES_LIBDIRS)
+   ARES_LIBNAME := cares
+   ARES_DEFINES :=
+endif
 
 S2C_INCLUDEDIRS := $(ROOT)/p2p/s2c/s2c
 S2C_LIBDIRS := $(ROOT)/p2p/s2c/s2c/obj.$(TARGET_NAME)
@@ -232,7 +246,14 @@ RECON_DEPENDS := $(ROOT)/resip/recon/obj.$(TARGET_NAME)/librecon.$(LIBSUFFIX)
 $(RECON_DEPENDS):
 	cd $(ROOT)/resip/recon; $(MAKE)
 
+# Use c-ares (external) or contrib/ares?
+ifeq ($(DNS_RESOLVER),c-ares)
+DEFINES += USE_CARES
+endif
+ifeq ($(DNS_RESOLVER),resip-ares)
 DEFINES += USE_ARES
+endif
+
 ifeq ($(USE_IPV6),yes)
 DEFINES += USE_IPV6
 endif

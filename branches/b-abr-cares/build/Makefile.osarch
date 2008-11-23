@@ -78,6 +78,11 @@ ifeq ($(USE_GOOGLE_CPUPERF),yes)
 LDLIBS_LAST += -lprofiler
 endif
 
+# This is needed for c-ares-1.5.3 on Linux, at least
+ifeq ($(DNS_RESOLVER),c-ares)
+LDLIBS_LAST += -lrt
+endif
+
 endif
 
 
