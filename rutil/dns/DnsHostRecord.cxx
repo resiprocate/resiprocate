@@ -4,10 +4,7 @@
 
 #include <stdlib.h>
 
-#if defined(USE_ARES)
-#include "ares.h"
-#include "ares_dns.h"
-#endif
+#include "AresCompat.hxx"
 
 #ifndef __CYGWIN__
 #ifndef RRFIXEDSZ
@@ -27,7 +24,7 @@ using namespace resip;
 DnsHostRecord::DnsHostRecord(const RROverlay& overlay)
 {
    char* name = 0;
-   int len = 0;
+   ares_length_type len = 0;
    ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
    mName = name;
    free(name);

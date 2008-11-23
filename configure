@@ -57,7 +57,10 @@ PEDANTIC_STACK := no
 # USE_SIGCOMP := no
 # SIGCOMP_BASEDIR:= /usr/local
 INSTALL_PREFIX := /usr/local
-ARES_PREFIX := /usr/local " > build/Makefile.conf
+DNS_RESOLVER := resip-ares
+ARES_PREFIX := /usr/local
+CARES_INCDIR :=
+CARES_LIBDIR := " > build/Makefile.conf
     exit
   fi
   echo "*** Leaving build/Makefile.conf unmodified"
@@ -90,6 +93,7 @@ $uname = `uname`;
 @toolchains = ('gnu','intel','sunpro','msgnu', 'gnu-cross');
 @compiletypes = ('debug','nodebug','opt','gopt','prof','small');
 @whichdb = ('berkeley-db4');
+@resolvers = ('resip-ares','c-ares');
 
 ######################################################################
 # NOTE: Any configuration variables that contain path information
@@ -406,11 +410,34 @@ $uname = `uname`;
     option      => "prefix",
   },
   {
+    name        => "DNS_RESOLVER",
+    description => "Which DNS resolution library do you want to use?",
+    default     => 'resip-ares',
+    validate    => [@resolvers],
+    recalc      => ['ARES_PREFIX','CARES_INCLUDEDIRS','CARES_LIBDIRS'],
+    option      => 'with-resolver',
+  },
+  {
     name        => "ARES_PREFIX",
     description => "Where should ares be installed?",
     default     => "&guessInstallPath",
     evaldefault => 1,
     option      => "ares-prefix",
+    predicate   => "\$config{DNS_RESOLVER} eq 'resip-ares'",
+  },
+  {
+    name        => "CARES_INCLUDEDIRS",
+    description => "If using c-ares, the directory containing its headers.",
+    default     => "",
+    option      => "cares-headers",
+    predicate   => "\$config{DNS_RESOLVER} eq 'c-ares'",
+  },
+  {
+    name        => "CARES_LIBDIRS",
+    description => "If using c-ares, the directory containing its libraries.",
+    default     => "",
+    option      => "cares-libs",
+    predicate   => "\$config{DNS_RESOLVER} eq 'c-ares'",
   },
 );
 
