@@ -35,6 +35,7 @@ public:
    StunMessage& operator=(const StunMessage& rhs);
 
    bool isValid() { return mIsValid; }
+   bool hasMagicCookie();
 
    unsigned int stunEncodeMessage(char* buf, unsigned int bufLen);
    unsigned int stunEncodeFramedMessage(char* buf, unsigned int bufLen);  // Used for TURN-05 framing only
