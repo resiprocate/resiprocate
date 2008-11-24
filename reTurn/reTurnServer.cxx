@@ -53,13 +53,13 @@ int main(int argc, char* argv[])
   try
   {
     // Check command line arguments.
-    if (argc != 5)
+    if (argc != 6)
     {
-      std::cerr << "Usage: reTurnServer <address> <turnPort> <altAddress> <altPort>\n";
+      std::cerr << "Usage: reTurnServer <address> <turnPort> <tlsPort> <altAddress> <altPort>\n";
       std::cerr << "  For IPv4, try:\n";
-      std::cerr << "    reTurnServer 0.0.0.0 8777 0.0.0.0 3589\n";
+      std::cerr << "    reTurnServer 0.0.0.0 3478 5349 0.0.0.0 3479\n";
       std::cerr << "  For IPv6, try:\n";
-      std::cerr << "    reTurnServer 0::0 8777 0::0 3589\n";
+      std::cerr << "    reTurnServer 0::0 3478 5349 0::0 3479\n";
       return 1;
     }
 
@@ -72,10 +72,10 @@ int main(int argc, char* argv[])
     reTurn::TurnManager turnManager(ioService);         // The one and only Turn Manager
 
     unsigned short turnPort = (unsigned short)resip::Data(argv[2]).convertUnsignedLong();
-    unsigned short altStunPort = (unsigned short)resip::Data(argv[4]).convertUnsignedLong();
-    unsigned short tlsTurnPort = turnPort + 1;
+    unsigned short tlsTurnPort = (unsigned short)resip::Data(argv[3]).convertUnsignedLong();
+    unsigned short altStunPort = (unsigned short)resip::Data(argv[5]).convertUnsignedLong();
     asio::ip::address turnAddress = asio::ip::address::from_string(argv[1]);
-    asio::ip::address altStunAddress = asio::ip::address::from_string(argv[3]);
+    asio::ip::address altStunAddress = asio::ip::address::from_string(argv[4]);
 
     boost::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
     boost::shared_ptr<reTurn::TcpServer> tcpTurnServer;

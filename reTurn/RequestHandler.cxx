@@ -154,6 +154,12 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
       {
          response.setSoftware(SOFTWARE_STRING);
       }
+
+      // If fingerprint is used in request, then use fingerprint in response
+      if(request.mHasFingerprint)
+      {
+         response.mHasFingerprint = true;
+      }
    }
 
    return result;
@@ -235,9 +241,10 @@ RequestHandler::checkNonce(const Data& nonce)
 bool 
 RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response)
 {
-   // Don't authenticate shared secret requests, or Indications
+   // Don't authenticate shared secret requests, Binding Requests or Indications (if LongTermCredentials are used)
    if((request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
-      (request.mClass == StunMessage::StunClassIndication))
+      (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::BindMethod) ||
+      (authenticationMode == LongTermPassword && request.mClass == StunMessage::StunClassIndication))
    {
       return true;
    }
@@ -356,15 +363,21 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
 {
    ProcessResult result = RespondFromReceiving;
 
-   // TODO should check for unknown attributes here and send 420 listing the
-   // unknown attributes. 
-
    // form the outgoing message
    response.mClass = StunMessage::StunClassSuccessResponse;
 
-   // Add XOrMappedAddress to response - we do this even for 3489 endpoints - since some support it, others should just ignore this attribute
-   response.mHasXorMappedAddress = true;
-   StunMessage::setStunAtrAddressFromTuple(response.mXorMappedAddress, request.mRemoteTuple);
+   // Add XOrMappedAddress to response if RFC5389 sender 
+   if(request.hasMagicCookie())
+   {
+      response.mHasXorMappedAddress = true;
+      StunMessage::setStunAtrAddressFromTuple(response.mXorMappedAddress, request.mRemoteTuple);
+   }
+   else
+   {
+      // Add Mapped address to response
+      response.mHasMappedAddress = true;
+      StunMessage::setStunAtrAddressFromTuple(response.mMappedAddress, request.mRemoteTuple);
+   }
 
    // the following code is for RFC3489 backward compatibility
    if(mRFC3489SupportEnabled && isRFC3489BackwardsCompatServer)
@@ -402,10 +415,6 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
          sendFromTuple.setAddress(request.mLocalTuple.getAddress());
          sendFromTuple.setPort(request.mLocalTuple.getPort());
       }
-
-      // Add Mapped address to response
-      response.mHasMappedAddress = true;
-      StunMessage::setStunAtrAddressFromTuple(response.mMappedAddress, request.mRemoteTuple);
 
       // Add source address - for RFC3489 backwards compatibility
       response.mHasSourceAddress = true;
