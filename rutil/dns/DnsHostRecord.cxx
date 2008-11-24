@@ -10,6 +10,9 @@
 #ifndef RRFIXEDSZ
 #define RRFIXEDSZ 10
 #endif
+#ifndef NS_RRFIXEDSZ
+#define NS_RRFIXEDSZ 10
+#endif
 #endif
 
 #include "rutil/Data.hxx"
