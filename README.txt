@@ -39,7 +39,7 @@ IPV6 message parsing support           yes          no
 Short Term Credentials                 yes          yes     Implementation currently only accepts one hardcoded username/password
 Long Term Credentials                  mostly       yes     Implementation currently only accepts one hardcoded username/password - not implemented on client side sync sockets
 Finger Print Insertion and Validation  yes          yes     Uses BOOST:crc_optimal
-Checking for unknown attributes        no           no
+Checking for unknown attributes        yes          no
 Bandwidth Check                        no           no
 Turn Allocation                        yes          yes     Only UDP Relay's are implemented
 Requested Props (Even, Pair)           yes          yes
@@ -57,29 +57,41 @@ General TODO
 - per user allocation quota enforcement
 - move TLS server settings to configuration
 - cleanup stun message class so that there are accessors for all data members
-- Check for unknown attributes
 - Timeout Channel Bindings - currently binding last until the allocation is destroyed
 - The server is supposed to prevent a relayed transport address and the 5-tuple from being
   reused in different allocations for 2 minutes after the allocation expires
-- SASL Prep for unicode passwords (RFC4013)
 - from chart above
  - Configuration Framework
- - Multi-threaded support
+ - Multi-threaded support in Server
  - Bandwidth check
  - TCP Relay
+- Short Term passwords do not make any sense in reTurnServer (outside of RFC3489 backcompat) - they need to be supported on client APIs
 
+RFC53389 TODO's
+---------------
+-Username must contain UTF-8 sequence of bytes, and must have been processed by SASLprep
+-Realm qdtext or quoted-pair - It must UTF-8 encoded and MUST be less than 128 characters (which can be as long as 763 bytes), and must be processed by SASLprep
+-Nonce qdtext or quoted-pair - MUST be less than 128 characters (which can be as long as 763 bytes)
+-Software must be a UTF-8 sequence of less than 128 characters (which can be as long as 763 byes)
+-The Password used in the HMAC key must be SASLprep processed
+-remove quotes and trailing nulls from username, realm.  remove trailing nulls from password before forming MD5 hash for message integrity
+-Errorcode Reason Phrase must be a UTF-8 sequence of less than 128 characters (which can be as long as 763 byes)
+-need handling for 300 Try Alternate response - currently applications responsibility
+-the following values should be configurable
+ - Initial RTO (default 500ms)
+ - Rc (default 7)
+ - Rm (default 16)
+-actual RTO should be calculated
+-UDP retransmissions should stop if a hard ICMP error is seen
+-need to do client side TLS certificate hostname checks after successful handshake
+- DNS SRV Discovery - currently only does host record lookup (using ASIO) - _stun._udp, _stun._tcp, _stuns._tcp, _turn._udp, _turn._tcp, _turns._tcp
 
 Client TODO
 -----------
 - rework synchronous sockets to use Asynchrous sockets to unify implementation better
-- Note:  synchronous sockets currently do not support long term authentication
 - retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response - currently applications responsibility
-- DNS SRV Discovery - currently only does host record lookup (using ASIO)
-- implement 300 Try-Alternate response - currently applications responsibility
-- use of a calculated RTO for retransmissions
-- TLS client- post connect/handshake server hostname validation
 - keepalive usage??
-- add option to require message integrity - depends on usage - ICE
+- add option to require message integrity? - depends on usage - ICE
          
 
 

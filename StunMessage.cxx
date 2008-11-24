@@ -1356,6 +1356,12 @@ StunMessage::encodeAtrRequestedProps(char* ptr, const TurnAtrRequestedProps& atr
    return ptr;
 }
 
+bool 
+StunMessage::hasMagicCookie()
+{
+   return mHeader.id.magicCookie == StunMessage::StunMagicCookie;
+}
+
 unsigned int
 StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen) 
 {
