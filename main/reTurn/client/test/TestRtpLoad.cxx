@@ -134,7 +134,7 @@ public:
 
    virtual void onConnectSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port)
    {
-      InfoLog( << "MyTurnAsyncSocketHandler::onConnectSuccess: socketDest=" << socketDesc << ", address=" << address << ", port=" << port);
+      InfoLog( << "MyTurnAsyncSocketHandler::onConnectSuccess: socketDest=" << socketDesc << ", address=" << address.to_string() << ", port=" << port);
       mTurnAsyncSocket->bindRequest();
    }
    virtual void onConnectFailure(unsigned int socketDesc, const asio::error_code& e)
