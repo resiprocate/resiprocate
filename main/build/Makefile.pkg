@@ -8,7 +8,11 @@
 ######################################################################
 
 ifeq ($(BUILD_SHARED_LIBS),yes)
+ifeq ($(OSTYPE),Darwin)
+LIBSUFFIX := dylib
+else
 LIBSUFFIX := so
+endif
 else
 LIBSUFFIX := a
 endif
