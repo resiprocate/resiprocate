@@ -22,7 +22,7 @@ class InviteSessionHandler
       /// Received a failure response from UAS
       virtual void onFailure(ClientInviteSessionHandle, const SipMessage& msg)=0;
       
-      /// called when dialog enters the Early state - typically after getting 100
+      /// called when an in-dialog provisional response is received that contains an SDP body
       virtual void onEarlyMedia(ClientInviteSessionHandle, const SipMessage&, const SdpContents&)=0;
 
       /// called when dialog enters the Early state - typically after getting 18x
