@@ -798,25 +798,27 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
    
    switch (toEvent(msg, sdp.get()))
    {
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 491);
+         send(response);
+         break;
+      }
+
       case OnAck:
-      case OnAckAnswer:
+      case OnAckAnswer:  // .bwc. unsolicited SDP in ACK; it would probably make sense to just ignore.
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
          handler->onConnectedConfirmed(getSessionHandle(), msg);  
          break;
       }
-
-//       .bwc. unsolicited SDP in ACK; it would probably make sense to just
-//       ignore.
-//      case OnAckAnswer:
-//      {
-//         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-//         sendBye();
-//         transition(Terminated);
-//         handler->onTerminated(getSessionHandle(), InviteSessionHandler::GeneralFailure, &msg);
-//         break;
-//      }
       
       case OnCancel:
       {
@@ -858,6 +860,19 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
    
    switch (toEvent(msg, sdp.get()))
    {
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 491);
+         send(response);
+         break;
+      }
+
       case OnAck:
       {
          assert(mProposedLocalSdp.get());
@@ -914,6 +929,19 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
    
    switch (toEvent(msg, sdp.get()))
    {
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 491);
+         send(response);
+         break;
+      }
+
       case OnAck:
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
@@ -968,6 +996,19 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 
    switch (toEvent(msg, sdp.get()))
    {
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 491);
+         send(response);
+         break;
+      }
+
       case OnAckAnswer:
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
