@@ -414,7 +414,6 @@ $uname = `uname`;
     description => "Which DNS resolution library do you want to use?",
     default     => 'resip-ares',
     validate    => [@resolvers],
-    recalc      => ['ARES_PREFIX','CARES_INCLUDEDIRS','CARES_LIBDIRS'],
     option      => 'with-resolver',
   },
   {
