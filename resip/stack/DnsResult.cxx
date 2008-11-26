@@ -24,10 +24,7 @@
 #endif
 #endif
 
-#if defined(USE_ARES)
-#include "ares.h"
-#include "ares_dns.h"
-#endif
+#include "rutil/dns/AresCompat.hxx"
 
 #include "rutil/DnsUtil.hxx"
 #include "rutil/Inserter.hxx"
@@ -48,10 +45,6 @@
 #include "rutil/WinLeakCheck.hxx"
 
 #include "rutil/Timer.hxx"
-
-#if !defined(USE_ARES)
-#warning "ARES is required"
-#endif
 
 using namespace resip;
 using namespace std;
@@ -673,7 +666,7 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
 {
    char *name=0;
    int status=0;
-   int len=0;
+   ares_length_type len=0;
    
    // Parse the question name. 
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
