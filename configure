@@ -232,7 +232,7 @@ $uname = `uname`;
   },
   {
     name        => "BUILD_RECON",
-    description => "Build the reCon Conversation Manager?",
+    description => "Build the reCon Conversation Manager? (requires dtls-srtp patched OpenSSL)",
     default     => "no",
     validate    => [@yesno],
     flag        => 'recon',
@@ -926,6 +926,7 @@ sub parseOptions
     }
 
     print "\nUnknown option: $option\n\n";
+    &setAllDefaults;
     &usage;
   }
 }
@@ -942,6 +943,9 @@ Usage:
 
       -y, --non-interactive
         Run non-interactively
+
+      -m, --use-text-menu
+        Run with text menu interface
 
 EOT
 
