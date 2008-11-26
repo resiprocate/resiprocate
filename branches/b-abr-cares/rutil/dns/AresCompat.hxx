@@ -37,9 +37,11 @@ namespace resip
   // To avoid #ifdefs on every call to ares_expand_name() and so on, we define
   // the type that is used to return lengths from that function.  This can be
   // int or long.
-#if !defined(USE_CARES)
+#if defined(USE_ARES)
   typedef int ares_length_type;
-#else
+#endif
+
+#if defined(USE_CARES)
   typedef long ares_length_type;
 #endif
 }
