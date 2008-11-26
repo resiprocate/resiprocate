@@ -1,58 +1,49 @@
-#if !defined(RESIP_ARES_DNS_HXX)
-#define RESIP_ARES_DNS_HXX
+#if !defined(RESIP_ARES_COMPAT_HXX)
+#define RESIP_ARES_COMPAT_HXX
 
-#include "rutil/GenericIPAddress.hxx"
-#include "rutil/dns/ExternalDns.hxx"
+// This header hides some of the differences between contrib/ares and c-ares
+//
+// GOTCHA: This must only be included from .cxx files.  Ideally, it would only
+// be included from .cxx files inside this directory, but there is some
+// leakage at the moment :(
 
-extern "C"
-{
-struct ares_channeldata;
-}
+#if defined(USE_ARES)
+#  include "ares.h"
+#  include "ares_dns.h"
+#  include "ares_private.h"
+#elif defined(USE_CARES)
+#  include "ares.h"
+#  include "ares_version.h"
+#else
+#  error Must have ARES or C-ARES
+#endif
 
-//struct fd_set;
+// These are not part of the c-ares API, but are used by this library
+#if !defined(DNS__16BIT)
+#  define DNS__16BIT(p)             (((p)[0] << 8) | (p)[1])   
+#  define DNS__32BIT(p)		    (((p)[0] << 24) | ((p)[1] << 16) | \
+				      ((p)[2] << 8) | (p)[3])
+#  define DNS_HEADER_QDCOUNT(h)     DNS__16BIT((h) + 4)
+#  define DNS_HEADER_ANCOUNT(h)     DNS__16BIT((h) + 6)
+#  define DNS_HEADER_NSCOUNT(h)     DNS__16BIT((h) + 8)
+#  define DNS_HEADER_ARCOUNT(h)     DNS__16BIT((h) + 10)
+#  define DNS_RR_TYPE(r)            DNS__16BIT(r)
+#  define DNS_RR_LEN(r)             DNS__16BIT((r) + 8)
+#  define DNS_RR_TTL(r)             DNS__32BIT((r) + 4)
+#endif
 
 namespace resip
 {
-class AresDns : public ExternalDns
-{
-   public:
-      AresDns() {mChannel = 0; mFeatures = 0;}
-      virtual ~AresDns();
+  // To avoid #ifdefs on every call to ares_expand_name() and so on, we define
+  // the type that is used to return lengths from that function.  This can be
+  // int or long.
+#if defined(USE_ARES)
+  typedef int ares_length_type;
+#endif
 
-      virtual int init(const std::vector<GenericIPAddress>& additionalNameservers,
-                       AfterSocketCreationFuncPtr socketfunc, int timeout=0, int tries=0, unsigned int features=0); 
-
-      int internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
-                       AfterSocketCreationFuncPtr socketfunc, unsigned int features=0, ares_channeldata** channel = 0, int timeout=0, int tries=0); 
-
-      virtual bool checkDnsChange();
-
-      virtual bool requiresProcess();
-      virtual void buildFdSet(fd_set& read, fd_set& write, int& size);
-      virtual void process(fd_set& read, fd_set& write);
-
-      //?dcm?  I believe these need to do nothing in the ARES case.
-      virtual void freeResult(ExternalDnsRawResult /* res */) {}
-      virtual void freeResult(ExternalDnsHostResult /* res */) {}
-
-      virtual char* errorMessage(long errorCode);
-
-      void lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData);
-
-      virtual bool hostFileLookup(const char* target, in_addr &addr);
-
-   private:
-
-      typedef std::pair<ExternalDnsHandler*, void*> Payload;
-      static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
-      static ExternalDnsHandler* getHandler(void* arg);
-      static void aresCallback(void *arg, int status, unsigned char* abuf, int alen);
-      static void caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
-	  struct ares_channeldata* mChannel;
-	  std::vector<GenericIPAddress> mAdditionalNameservers;
-	  unsigned int mFeatures;
-};
-   
+#if defined(USE_CARES)
+  typedef long ares_length_type;
+#endif
 }
 
 #endif

@@ -13,14 +13,6 @@
 #endif
 #endif
 
-
-
-
-#if defined(USE_ARES)
-#include "ares.h"
-#include "ares_dns.h"
-#endif
-
 #include "rutil/compat.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/BaseException.hxx"

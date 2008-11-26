@@ -6,9 +6,7 @@
 #include "ares.h"
 #include "ares_dns.h"
 
-#if !defined(USE_ARES)
-#error Must have ARES
-#endif
+#include "AresCompat.hxx"
 
 #if !defined(WIN32)
 #include <arpa/nameser.h>

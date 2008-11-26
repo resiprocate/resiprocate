@@ -5,17 +5,11 @@
 #include "rutil/dns/AresDns.hxx"
 #include "rutil/GenericIPAddress.hxx"
 
-#include "ares.h"
-#include "ares_dns.h"
-#include "ares_private.h"
+#include "AresCompat.hxx"
 
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include "rutil/WinLeakCheck.hxx"
-
-#if !defined(USE_ARES)
-#error Must have ARES
-#endif
 
 #if !defined(WIN32)
 #if !defined(__CYGWIN__)
@@ -34,78 +28,107 @@ AresDns::init(const std::vector<GenericIPAddress>& additionalNameservers,
               int tries,
               unsigned int features)
 {
-	mAdditionalNameservers = additionalNameservers;
-	mFeatures = features;
+   mAdditionalNameservers = additionalNameservers;
+   mFeatures = features;
+   
+   int ret = internalInit(additionalNameservers,
+                          socketfunc,
+                          features,
+                          &mChannel,
+                          timeout,
+                          tries);
 
-	int ret = internalInit(additionalNameservers,
-              socketfunc,
-              features,
-				  &mChannel);
-
-	if(ret != Success)
-		return ret;
-
-   if (timeout > 0)
-   {
-      mChannel->timeout = timeout;
-   }
-
-   if (tries > 0)
-   {
-      mChannel->tries = tries;
-   }
+   if (ret != Success)
+      return ret;
 
    return Success;      
 }
 
 int 
 AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers,
-              AfterSocketCreationFuncPtr socketfunc,
-              unsigned int features,
-				  ares_channeldata** channel
+                      AfterSocketCreationFuncPtr socketfunc,
+                      unsigned int features,
+                      ares_channeldata** channel,
+                      int timeout,
+                      int tries
 )
 {
+   if(*channel)
+   {
+#if defined(USE_ARES)
+      ares_destroy_suppress_callbacks(*channel);
+#elif defined(USE_CARES)
+      // Callbacks will be supressed by looking for the ARES_EDESTRUCTION
+      // sentinel status
+      ares_destroy(*channel);
+#endif
+      *channel = 0;
+   }
+
+#if defined(USE_ARES)
+
 #ifdef USE_IPV6
    int requiredCap = ARES_CAP_IPV6;
 #else
    int requiredCap = 0;
 #endif
 
-	if(*channel)
-	{
-		ares_destroy_suppress_callbacks(*channel);
-		*channel = 0;
-	}
-
-
+   // Only the contrib/ares has this function
    int cap = ares_capabilities(requiredCap);
    if (cap != requiredCap)
    {
       ErrLog (<< "Build mismatch (ipv4/ipv6) problem in ares library"); // !dcm!
       return BuildMismatch;      
    }
+#endif
    
    int status;
    ares_options opt;
    int optmask = 0;
 
    memset(&opt, '\0', sizeof(opt));
+
+#if defined(USE_ARES)
+   // TODO: What is this and how does it map to c-ares?
    if ((features & ExternalDns::TryServersOfNextNetworkUponRcode3))
    {
       optmask |= ARES_OPT_FLAGS;
       opt.flags |= ARES_FLAG_TRY_NEXT_SERVER_ON_RCODE3;
    }
+#endif
 
+#if defined(USE_CARES)
+   // In c-ares, we can actually set the timeout and retries via the API
+   if (timeout > 0)
+   {
+      opt.timeout = timeout;
+      optmask |= ARES_OPT_TIMEOUT;
+   }
+
+   if (tries > 0)
+   {
+      opt.tries = tries;
+      optmask |= ARES_OPT_TRIES;
+   }
+#endif
+   
    if (additionalNameservers.empty())
    {
+#if defined(USE_ARES)
       status = ares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
+#elif defined(USE_CARES)
+      // TODO: Does the socket function matter?
+      status = ares_init_options(channel, &opt, optmask);
+#endif
    }
    else
    { 
       optmask |= ARES_OPT_SERVERS;
       opt.nservers = additionalNameservers.size();
       
-#ifdef USE_IPV6
+#if defined(USE_IPV6) && defined(USE_ARES)
+      // With contrib/ares, you can configure IPv6 addresses for the
+      // nameservers themselves.
       opt.servers = new multiFamilyAddr[additionalNameservers.size()];
       for (size_t i =0; i < additionalNameservers.size(); i++)
       {
@@ -121,74 +144,201 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          }                  
       }
 #else
+      // If we're only supporting IPv4 or we are using c-ares, we can't
+      // support additional nameservers that are IPv6 right now.
       opt.servers = new in_addr[additionalNameservers.size()];
       for (size_t i =0; i < additionalNameservers.size(); i++)
       {
-         opt.servers[i] = additionalNameservers[i].v4Address.sin_addr;
+         if(additionalNameservers[i].isVersion4()) 
+         {
+            opt.servers[i] = additionalNameservers[i].v4Address.sin_addr;
+         }
+         else
+         {
+           WarningLog (<< "Ignoring non-IPv4 additional name server "
+#if defined(USE_ARES)
+                       "(not yet supported with c-ares)"
+#elif defined(USE_CARES)
+                       "(IPv6 support was not enabled)"
+#endif
+                       );
+         }
       }
 #endif
+
+#if defined(USE_ARES)
       status = ares_init_options_with_socket_function(channel, &opt, optmask, socketfunc);
+#elif defined(USE_CARES)
+      // TODO: Does the socket function matter?
+      status = ares_init_options(channel, &opt, optmask);
+#endif
+      
       delete [] opt.servers;
       opt.servers = 0;
    }
-	if (status != ARES_SUCCESS)
+   if (status != ARES_SUCCESS)
    {
       ErrLog (<< "Failed to initialize DNS library (status=" << status << ")");
       return status;
    }
    else
    {
+
+#if defined(USE_ARES)
+      
       InfoLog(<< "DNS initialization: found  " << (*channel)->nservers << " name servers");
       for (int i = 0; i < (*channel)->nservers; ++i)
       {
          InfoLog(<< " name server: " << DnsUtil::inet_ntop((*channel)->servers[i].addr));
+      } 
+
+      // In ares, we must manipulate these directly
+      if (timeout > 0)
+      {
+         mChannel->timeout = timeout;
       }
+      
+      if (tries > 0)
+      {
+         mChannel->tries = tries;
+      }
+
+#elif defined(USE_CARES)
+      {
+         // Log which version of c-ares we're using
+         InfoLog(<< "DNS initialization: using c-ares v"
+                 << ::ares_version(NULL));
+
+         // Ask for the current configuration so we can print the servers found
+         struct ares_options options;
+         std::memset(&options, 0, sizeof(options));
+         int ignored;
+         if(ares_save_options(*channel, &options, &ignored) == ARES_SUCCESS)
+         {
+            InfoLog(<< "DNS initialization: found "
+                    << options.nservers << " name servers");
+            
+            // Log them all
+            for (int i = 0; i < options.nservers; ++i)
+            {
+               InfoLog(<< " name server: "
+                       << DnsUtil::inet_ntop(options.servers[i]));
+            }
+            ares_destroy_options(&options);
+         }
+      }
+#endif
+      
       return Success;      
    }
 }
 
 bool AresDns::checkDnsChange()
 {
-	//return 'true' if there are changes in the list of DNS servers
-	struct ares_channeldata* channel = 0;
-	bool bRet = false;
-	int result = internalInit(mAdditionalNameservers, 0, mFeatures, &channel);
-	if(result != Success || channel == 0)
-	{
-		bRet = true;
-	}
-	else if(channel->nservers != mChannel->nservers)
-	{
-		bRet = true;
-	}
-	else
-	{
-		for (int i = 0; i < mChannel->nservers; i++)
-		{
-			if (channel->servers[i].addr.s_addr != mChannel->servers[i].addr.s_addr)
-			{
-				bRet = true;
-				break;
-			}
-		}
-	}
-	ares_destroy_suppress_callbacks(channel);
+   // We must return 'true' if there are changes in the list of DNS servers
+   struct ares_channeldata* channel = 0;
+   bool bRet = false;
+   int result = internalInit(mAdditionalNameservers, 0, mFeatures, &channel);
+   if(result != Success || channel == 0)
+   {
+      // It has changed because it failed, I suppose
+      InfoLog(<< " DNS server list changed");
+      return true;
+   }
 
-	if(!bRet)
-	{
-		InfoLog(<< " No changes in DNS server list");
-	}
-	else
-	{
-		InfoLog(<< " DNS server list changed");
-	}
+#if defined(USE_ARES)
+   {
+      // Compare the two lists.  Are they different sizes?
+      if(mChannel->nservers != channel->nservers)
+      {
+         // Yes, so they're different
+         bRet = true;
+      }
+      else
+      {
+         // Compare them one-by-one
+         for (int i = 0; i < mChannel->nservers; ++i)
+         {
+            if (mChannel->servers[i].addr.s_addr
+                != channel->servers[i].addr.s_addr)
+            {
+               bRet = true;
+               break;
+            }
+         }
+      }
+ 
+      // Destroy the secondary configuration we read
+      ares_destroy_suppress_callbacks(channel);
+   }
+#elif defined(USE_CARES)
+   {
+      // Get the options, including the server list, from the old and the
+      // current (i.e. just read) configuration.  
+      struct ares_options old;
+      struct ares_options updated;
+      std::memset(&old, 0, sizeof(old));
+      std::memset(&updated, 0, sizeof(updated));
+      int ignored;
+      
+      // Can we get the configuration?
+      if(ares_save_options(mChannel, &old, &ignored) != ARES_SUCCESS
+         || ares_save_options(channel, &updated, &ignored) != ARES_SUCCESS)
+      {
+         // It failed, so call it different
+         bRet = true;
+      }
+      else
+      {
+         // Compare the two lists.  Are they different sizes?
+         if(old.nservers != updated.nservers)
+         {
+            // Yes, so they're different
+            bRet = true;
+         }
+         else
+         {
+            // Compare them one-by-one
+            for (int i = 0; i < old.nservers; ++i)
+            {
+               if (old.servers[i].s_addr != updated.servers[i].s_addr)
+               {
+                  bRet = true;
+                  break;
+               }
+            }
+         }
 
-	return bRet;
+         // Free any ares_options contents we have created.
+         ares_destroy_options(&old);
+         ares_destroy_options(&updated);
+      }
+      
+      // Destroy the secondary configuration we read
+      ares_destroy(channel);
+   }
+#endif
+
+   // Report on the results
+   if(!bRet)
+   {
+      InfoLog(<< " No changes in DNS server list");
+   }
+   else
+   {
+      InfoLog(<< " DNS server list changed");
+   }
+
+   return bRet;
 }
 
 AresDns::~AresDns()
 {
+#if defined(USE_ARES)
    ares_destroy_suppress_callbacks(mChannel);
+#elif defined(USE_CARES)
+   ares_destroy(mChannel);
+#endif
 }
 
 bool AresDns::hostFileLookup(const char* target, in_addr &addr)
@@ -196,7 +346,15 @@ bool AresDns::hostFileLookup(const char* target, in_addr &addr)
    assert(target);
 
    hostent *hostdata = 0;
-   int status = hostfile_lookup(target, &hostdata);
+
+   // Look this up
+   int status = 
+#if defined(USE_ARES)
+     hostfile_lookup(target, &hostdata)
+#elif defined(USE_CARES)
+     ares_gethostbyname_file(mChannel, target, AF_INET, &hostdata)
+#endif
+     ;
 
    if (status != ARES_SUCCESS)
    {
@@ -273,15 +431,37 @@ AresDns::errorMessage(long errorCode)
 void
 AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* handler, void* userData)
 {
-   ares_query(mChannel, target, C_IN, type, AresDns::aresCallback, new Payload(handler, userData));
+   ares_query(mChannel, target, C_IN, type,
+#if defined(USE_ARES)
+              aresCallback,
+#elif defined(USE_CARES)
+              caresCallback,
+#endif
+              new Payload(handler, userData));
 }
 
 void
 AresDns::aresCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
+#if defined(USE_CARES)
+   // If this is destruction, skip it.  We do this here for completeness.
+   if(status == ARES_EDESTRUCTION)
+   {
+      return;
+   }
+#endif
+   
    getHandler(arg)->handleDnsRaw(makeRawResult(arg, status, abuf, alen));
    Payload* p = reinterpret_cast<Payload*>(arg);
    delete p;
+}
+
+void
+AresDns::caresCallback(void *arg, int status, int timeouts,
+                       unsigned char *abuf, int alen)
+{
+   // Simply ignore the timeouts argument
+   return AresDns::aresCallback(arg, status, abuf, alen);
 }
 
 /* ====================================================================

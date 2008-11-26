@@ -1,6 +1,3 @@
-# If the ARES_PREFIX make variable is set, it will be passed to ares'
-# ./configure as ares' install location.
-
 BUILD 	=	build
 -include $(BUILD)/Makefile.conf
 -include $(BUILD)/Makefile.all
@@ -37,6 +34,8 @@ all: repro dum tests tfm apps recon
 
 tfm: tfmcontrib
 	cd tfm; $(MAKE)
+
+contrib: 
 
 rutil: contrib
 	cd rutil; $(MAKE) 
@@ -92,20 +91,6 @@ ifeq (${BUILD_SHARED_LIBS},no)
    CPPUNIT_USE_SHARED_LIBS=--enable-shared=false
 endif
 
-ifeq (${USE_IPV6},yes)
-   ARES_IPV6=--with-ipv6
-endif
-
-# Setting the ARES_PREFIX make variable means that its value should be
-# passed to ares' ./configure as ares' install prefix.
-# Here we construct the ARES_PREFIX_ARG make variable, which is either empty
-# or the appropriate --prefix option for ares' ./configure.
-ifeq (${ARES_PREFIX},)
-   ARES_PREFIX_ARG=
-else
-   ARES_PREFIX_ARG=--prefix=${ARES_PREFIX}
-endif
-
 configure_netxx: tfm/contrib/Netxx-0.3.2/Makefile
 
 tfm/contrib/Netxx-0.3.2/Makefile:
@@ -128,19 +113,6 @@ tfm/contrib/cppunit/Makefile:
 cppunit: configure_cppunit
 	cd tfm/contrib/cppunit && $(MAKE)
 
-# If we are building ares under Resiprocate, ares needs to know the
-# Resiprocate install directory.  It is passed in via the ARES_PREFIX
-# make variable.
-contrib/ares-build.$(OS_ARCH)/Makefile:
-	mkdir -p contrib/ares-build.$(OS_ARCH)
-	cd contrib/ares-build.$(OS_ARCH) && \
-	  ../ares/configure ${ARES_IPV6} ${ARES_PREFIX_ARG} ${CONFIGURE_ARGS}
-
-configure_ares: contrib/ares-build.$(OS_ARCH)/Makefile
-
-ares: configure_ares
-	cd contrib/ares-build.$(OS_ARCH) && $(MAKE)
-
 contrib/srtp/Makefile:
 	cd contrib/srtp && ./configure ${CONFIGURE_ARGS}
 
@@ -159,15 +131,50 @@ dtls-srtp-openssl: configure_dtls-srtp-openssl
 
 tfmcontrib: cppunit netxx
 
-contrib: ares 
+###########################################################################
+# Resiprocate Custom ares rules
+
+ifeq ($(DNS_RESOLVER),resip-ares)
+
+ifeq (${USE_IPV6},yes)
+   ARES_IPV6=--with-ipv6
+endif
+
+ifeq (${ARES_PREFIX},)
+   ARES_PREFIX_ARG=
+else
+   ARES_PREFIX_ARG=--prefix=${ARES_PREFIX}
+endif
+
+contrib/ares-build.$(OS_ARCH)/Makefile:
+	mkdir -p contrib/ares-build.$(OS_ARCH)
+	cd contrib/ares-build.$(OS_ARCH) && \
+	  ../ares/configure ${ARES_IPV6} ${ARES_PREFIX_ARG} ${CONFIGURE_ARGS}
+
+configure_ares: contrib/ares-build.$(OS_ARCH)/Makefile
+
+ares: configure_ares
+	cd contrib/ares-build.$(OS_ARCH) && $(MAKE)
+
+contrib: ares
+
+install-ares:
+	cd contrib/ares-build.$(OS_ARCH); $(MAKE) install
+
+else
+# Dummy rules to use when resip-ares is not being used
+install-ares:
+endif
+
+clean-ares:
+	-rm -Rf contrib/ares-build.*
 
 ###########################################################################
 # Various clean targets
 CLEANDIRS := resip/stack resip/dum resip/stack/test presSvr repro rutil \
              rutil/test tfm apps reTurn reTurn/client reTurn/client/test
 
-cleancontrib:
-	-rm -Rf contrib/ares-build.*
+cleancontrib: clean-ares
 	-$(MAKE) -C tfm/contrib/cppunit distclean
 	-$(MAKE) -C tfm/contrib/Netxx-0.3.2 realclean
 	find tfm/contrib/Netxx-0.3.2 -name 'Netxx-config' -exec rm -f '{}' \;
@@ -177,7 +184,6 @@ clean: cleanpkg
 
 cleanall: cleancontrib
 	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir cleanall; done ; true
-	-$(MAKE) -C contrib/ares distclean
 
 distclean: cleancontrib cleanpkg
 	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir distclean; done ; true
@@ -186,16 +192,7 @@ distclean: cleancontrib cleanpkg
 	-rm -Rf build/Makefile.conf
 
 ###########################################################################
-
-# install does not include install-ares, because it did not in the
-# past.  (As far as I know, installing ares is needed only when
-# resiprocateLib is used as part of sipX, and the sipX Makefiles
-# invoke the install-ares target directly.)
-# .bwc. We need ares if we are installing shared libraries.
 install: install-ares install-rutil install-resip install-dum
-
-install-ares:
-	cd contrib/ares-build.$(OS_ARCH); $(MAKE) install
 
 install-rutil:
 	cd rutil; $(MAKE) install
