@@ -218,6 +218,7 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(PAssociatedUri, "P-Associated-URI", NameAddr, "RFC 3455");
       defineMultiHeader(ServiceRoute, "Service-Route", NameAddr, "RFC 3608");
       defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
+      defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244");
 
       defineHeader(ContentTransferEncoding, "Content-Transfer-Encoding", StringCategory, "RFC ?");
       defineHeader(Organization, "Organization", StringCategory, "RFC 3261");

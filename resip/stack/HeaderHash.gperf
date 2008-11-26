@@ -112,5 +112,6 @@ session-expires, Headers::SessionExpires
 min-se, Headers::MinSE
 refer-sub, Headers::ReferSub
 remote-party-id, Headers::RemotePartyId
+history-info, Headers::HistoryInfo
 %%
 }
