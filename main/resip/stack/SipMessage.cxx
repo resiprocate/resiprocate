@@ -1462,6 +1462,7 @@ defineMultiHeader(Warning, "Warning", WarningCategory, "RFC 3261");
 defineMultiHeader(Via, "Via", Via, "RFC 3261");
 defineHeader(RAck, "RAck", RAckCategory, "RFC 3262");
 defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"); // ?bwc? Not in 3323, should we keep?
+defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244");
 
 #endif
 
