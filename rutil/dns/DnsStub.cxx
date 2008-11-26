@@ -286,11 +286,7 @@ DnsStub::createOverlay(const unsigned char* abuf,
 {
    const unsigned char* rptr = aptr;
    char* name = 0;
-#if !defined(USE_CARES)
-   int len = 0;
-#else
-   long len = 0;
-#endif
+   ares_length_type len = 0;
    
    int status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (ARES_SUCCESS != status)
@@ -597,11 +593,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
    bDeleteThis = true;
 
    char* name = 0;
-#if !defined(USE_CARES)
-   int len = 0;
-#else
-   long len = 0;
-#endif
+   ares_length_type len = 0;
 
    if (ARES_SUCCESS != ares_expand_name(aptr, abuf, alen, &name, &len))
    {
