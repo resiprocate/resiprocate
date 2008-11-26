@@ -2,14 +2,14 @@
 #include "rutil/config.hxx"
 #endif
 
-#if defined(USE_ARES)
-#include "ares.h"
-#include "ares_dns.h"
-#endif
+#include "AresCompat.hxx"
 
 #ifndef __CYGWIN__
 #ifndef RRFIXEDSZ
 #define RRFIXEDSZ 10
+#endif
+#ifndef NS_RRFIXEDSZ
+#define NS_RRFIXEDSZ 10
 #endif
 #endif
 
@@ -38,7 +38,7 @@ RROverlay::RROverlay(const unsigned char *aptr,
    mType(-1)
 {
    char *name;
-   int len = 0;
+   ares_length_type len = 0;
 
    // Parse the RR name. 
    int status = ares_expand_name(aptr, abuf, alen, &name, &len);
