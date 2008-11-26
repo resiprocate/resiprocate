@@ -126,6 +126,7 @@ class Headers
          defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01"),
          defineHeader(PrivAnswerMode, "Priv-Answer-Mode", Token, "draft-ietf-answermode-01"),
          defineHeader(RemotePartyId, "Remote-Party-ID", NameAddr, "draft-ietf-sip-privacy-04"), // ?bwc? Not in 3323, should we keep?
+         defineMultiHeader(HistoryInfo, "History-Info", NameAddr, "RFC 4244"),
 
          defineMultiHeader(RESIP_DO_NOT_USE, "ShouldNotSeeThis", StringCategory, "N/A"),
          MAX_HEADERS,
