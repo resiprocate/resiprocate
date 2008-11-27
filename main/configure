@@ -709,7 +709,7 @@ sub simpleTextMenu
     }
     else
     {
-      print "[Enter - Change Value]$vt_clear_eol";
+      print "[Enter - Change Value] [B - Blank Value]$vt_clear_eol";
     }
 
     print $vt_clear_eos;
@@ -763,6 +763,15 @@ sub simpleTextMenu
     {
       delete $config{$current_parameter->{name}};
       &setSingleDefault($current_parameter);
+      if (exists($current_parameter->{recalc}))
+      {
+        &recalcDefault($current_parameter->{recalc});
+      }
+    }
+
+    elsif ($key eq 'B')
+    {
+      $config{$current_parameter->{name}} = '';
       if (exists($current_parameter->{recalc}))
       {
         &recalcDefault($current_parameter->{recalc});
