@@ -166,7 +166,7 @@ dependencies: $(DEPENDENCIES)
 
 ifdef ROOT_TARGET
 target:
-	cd $(ROOT) ; $(MAKE) $(ROOT_TARGET)
+	$(MAKE) -C $(ROOT) $(ROOT_TARGET)
 endif
 
 all: code 
