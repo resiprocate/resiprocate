@@ -150,6 +150,11 @@ code *Hash.cxx: .firstrun
 .firstrun:
 	touch .firstrun MethodHash.cxx *Hash.cxx
 
+clean: cleancruft 
+
+cleancruft:
+	-rm -r .firstrun
+
 # rule for case sensitive sorts of hash
 MethodHash.cxx: MethodHash.gperf
 	gperf -v > /dev/null 2>&1 && gperf $(GPERFOPTS) -Z `echo MethodHash | sed -e 's/.*\///'` $< > $@ || echo "gperf not installed, touching $@" && touch $@
