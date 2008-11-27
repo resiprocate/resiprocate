@@ -421,7 +421,7 @@ DnsStub::Query::go()
    
    if (!cached)
    {
-      StackLog (<< mTarget << " not cached. Doing external dns lookup");
+      StackLog (<< targetToQuery << " not cached. Doing external dns lookup");
       mStub.lookupRecords(targetToQuery, mRRType, this);
    }
    else // is cached
@@ -483,6 +483,7 @@ DnsStub::Query::process(int status, const unsigned char* abuf, const int alen)
                InfoLog(<< e.getMessage());
             }
             break;
+
          case ARES_ECONNREFUSED:
          case ARES_ETIMEOUT:
             ErrLog (<< "Connection error " << mStub.errorMessage(status) << " for " << mTarget);
