@@ -769,7 +769,8 @@ sub simpleTextMenu
       }
     }
 
-    elsif ($key eq 'B')
+    # Blank the current option
+    elsif ($key eq 'B' && !exists($current_parameter->{validate}))
     {
       $config{$current_parameter->{name}} = '';
       if (exists($current_parameter->{recalc}))
