@@ -178,6 +178,9 @@ cleancontrib: clean-ares
 	-$(MAKE) -C tfm/contrib/cppunit distclean
 	-$(MAKE) -C tfm/contrib/Netxx-0.3.2 realclean
 	find tfm/contrib/Netxx-0.3.2 -name 'Netxx-config' -exec rm -f '{}' \;
+	-$(MAKE) -C contrib/srtp superclean
+	-$(MAKE) -C contrib/srtp/crypto superclean
+	-$(MAKE) -C contrib/srtp/doc superclean
 
 clean: cleanpkg
 	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir clean; done ; true
@@ -190,6 +193,7 @@ distclean: cleancontrib cleanpkg
 	find * -name '*.db' -exec rm -f '{}' \;
 	-rm -Rf .make_prefs
 	-rm -Rf build/Makefile.conf
+	-rm -f SVN-VERSION
 
 ###########################################################################
 install: install-ares install-rutil install-resip install-dum

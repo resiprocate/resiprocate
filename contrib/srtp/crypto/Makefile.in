@@ -116,7 +116,7 @@ clean:
 	rm -rf latex
 
 superclean: clean
-	rm -f *core TAGS ktrace.out
+	rm -f *core TAGS ktrace.out Makefile
 
 
 # the target 'package' builds a compressed tar archive of the source code
