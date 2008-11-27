@@ -63,6 +63,7 @@
 #include <string>
 #include <list>
 #include <set>
+#include <cstring>
 
 //####################################################################
 namespace {

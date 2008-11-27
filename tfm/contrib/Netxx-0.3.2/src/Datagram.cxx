@@ -64,6 +64,7 @@
 #include <memory>
 #include <cstring>
 #include <vector>
+#include <cstdlib>
 
 namespace {
     void call_connect(Netxx::Socket &socket, const Netxx::Peer &peer, std::vector<std::string> &files);
