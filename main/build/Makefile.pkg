@@ -199,20 +199,20 @@ RUTIL_LIBDIRS := $(ROOT)/rutil/obj.$(TARGET_NAME)
 RUTIL_LIBNAME := rutil
 RUTIL_DEPENDS := $(ROOT)/rutil/obj.$(TARGET_NAME)/librutil.$(LIBSUFFIX)
 $(RUTIL_DEPENDS): 
-	cd $(ROOT)/rutil; $(MAKE)
+	$(MAKE) -C $(ROOT)/rutil
 
 RESIP_INCLUDEDIRS := $(ROOT)
 RESIP_LIBDIRS := $(ROOT)/resip/stack/obj.$(TARGET_NAME) 
 RESIP_LIBNAME := resip
 RESIP_DEPENDS := $(ROOT)/resip/stack/obj.$(TARGET_NAME)/libresip.$(LIBSUFFIX)
 $(RESIP_DEPENDS): 
-	cd $(ROOT)/resip/stack; $(MAKE)
+	$(MAKE) -C $(ROOT)/resip/stack
 
 DUM_LIBDIRS := $(ROOT)/resip/dum/obj.$(TARGET_NAME) 
 DUM_LIBNAME := dum
 DUM_DEPENDS := $(ROOT)/resip/dum/obj.$(TARGET_NAME)/libdum.$(LIBSUFFIX)
 $(DUM_DEPENDS): 
-	cd $(ROOT)/resip/dum; $(MAKE)
+	$(MAKE) -C $(ROOT)/resip/dum
 
 REPRO_INCLUDEDIRS := $(ROOT)
 REPRO_LIBDIRS := $(ROOT)/repro/obj.$(TARGET_NAME) 
@@ -220,35 +220,35 @@ REPRO_LIBNAME := repro
 REPRO_LDFLAGS :=
 REPRO_DEPENDS := $(ROOT)/resip/dum/obj.$(TARGET_NAME)/librepro.$(LIBSUFFIX)
 $(REPRO_DEPENDS): 
-	cd $(ROOT)/repro; $(MAKE) 
+	$(MAKE) -C $(ROOT)/repro 
 
 TFM_INCLUDEDIRS := $(ROOT)
 TFM_LIBDIRS := $(ROOT)/tfm/obj.$(TARGET_NAME) 
 TFM_LIBNAME := tfm
 TFM_DEPENDS := $(ROOT)/tfm/obj.$(TARGET_NAME)/libtfm.$(LIBSUFFIX)
 $(TFM_DEPENDS): 
-	cd $(ROOT)/tfm; $(MAKE) 
+	$(MAKE) -C $(ROOT)/tfm 
 
 RETURNCLIENT_INCLUDEDIRS := $(ROOT)/reTurn
 RETURNCLIENT_LIBDIRS := $(ROOT)/reTurn/client/obj.$(TARGET_NAME)
 RETURNCLIENT_LIBNAME := reTurnClient
 RETURNCLIENT_DEPENDS := $(ROOT)/reTurn/client/obj.$(TARGET_NAME)/libreTurnClient.$(LIBSUFFIX)
 $(RETURNCLIENT_DEPENDS):
-	cd $(ROOT)/reTurn/client; $(MAKE)
+	$(MAKE) -C $(ROOT)/reTurn/client
 
 REFLOW_INCLUDEDIRS := $(ROOT)/reflow
 REFLOW_LIBDIRS := $(ROOT)/reflow/obj.$(TARGET_NAME)
 REFLOW_LIBNAME := reflow
 REFLOW_DEPENDS := $(ROOT)/reflow/obj.$(TARGET_NAME)/libreflow.$(LIBSUFFIX)
 $(REFLOW_DEPENDS):
-	cd $(ROOT)/reflow; $(MAKE)
+	$(MAKE) -C $(ROOT)/reflow
 
 RECON_INCLUDEDIRS := $(ROOT)/resip/recon
 RECON_LIBDIRS := $(ROOT)/resip/recon/obj.$(TARGET_NAME)
 RECON_LIBNAME := recon
 RECON_DEPENDS := $(ROOT)/resip/recon/obj.$(TARGET_NAME)/librecon.$(LIBSUFFIX)
 $(RECON_DEPENDS):
-	cd $(ROOT)/resip/recon; $(MAKE)
+	$(MAKE) -C $(ROOT)/resip/recon
 
 # Use c-ares (external) or contrib/ares?
 ifeq ($(DNS_RESOLVER),c-ares)
