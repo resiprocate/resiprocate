@@ -57,6 +57,7 @@
 
 // standard includes
 #include <cstdlib>
+#include <cstring>
 
 namespace {
     const char const_local_service[] = "local";

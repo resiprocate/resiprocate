@@ -58,6 +58,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <new>
+#include <cstring>
 
 //####################################################################
 namespace {
