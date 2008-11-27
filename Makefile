@@ -33,38 +33,38 @@ stack: dum tests
 all: repro dum tests tfm apps recon
 
 tfm: tfmcontrib
-	cd tfm; $(MAKE)
+	$(MAKE) -C tfm
 
 contrib: 
 
 rutil: contrib
-	cd rutil; $(MAKE) 
+	$(MAKE) -C rutil 
 
 resiprocate: rutil
-	cd resip/stack; $(MAKE)
+	$(MAKE) -C resip/stack
 
 dum: resiprocate
-	cd resip/dum; $(MAKE)
+	$(MAKE) -C resip/dum
 
 b2bua: resiprocate
-	cd b2bua; $(MAKE)
+	$(MAKE) -C b2bua
 
 repro: dum
-	cd repro; $(MAKE)
+	$(MAKE) -C repro
 
 tests: resiprocate 
-	cd resip/stack/test; $(MAKE)
-	cd rutil/test; $(MAKE)	
+	$(MAKE) -C resip/stack/test
+	$(MAKE) -C rutil/test	
 
 check: tests
 	cd resip/stack/test && ./runtests.sh
 	cd rutil/test && ./runtests.sh	
 
 presSvr: resiprocate
-	cd presSvr; $(MAKE)
+	$(MAKE) -C presSvr
 
 apps: dum
-	cd apps; $(MAKE)
+	$(MAKE) -C apps
 
 return: return-server return-client
 
@@ -73,18 +73,18 @@ reTurn: return
 reTURN: return
 	
 return-server: rutil
-	cd reTurn; $(MAKE)
+	$(MAKE) -C reTurn
 
 return-client: rutil
-	cd reTurn/client; $(MAKE)
-	cd reTurn/client/test; $(MAKE)
+	$(MAKE) -C reTurn/client
+	$(MAKE) -C reTurn/client/test
 
 recon: dum reflow
-	cd resip/recon; $(MAKE)
-	cd resip/recon/test; $(MAKE)
+	$(MAKE) -C resip/recon
+	$(MAKE) -C resip/recon/test
 
 reflow: dtls-srtp-openssl return-client srtp 
-	cd reflow; $(MAKE)
+	$(MAKE) -C reflow
 
 ifeq (${BUILD_SHARED_LIBS},no)
    NETXX_USE_SHARED_LIBS=--disable-shared
@@ -101,7 +101,7 @@ netxx:
 	$(MAKE) -C tfm/contrib/Netxx-0.3.2 -f Makefile.MinGW
 else
 netxx: configure_netxx
-	cd tfm/contrib/Netxx-0.3.2 && $(MAKE)
+	$(MAKE) -C tfm/contrib/Netxx-0.3.2 
 endif
 
 configure_cppunit: tfm/contrib/cppunit/Makefile
@@ -111,7 +111,7 @@ tfm/contrib/cppunit/Makefile:
 	cd tfm/contrib/cppunit && ./configure ${CPPUNIT_USE_SHARED_LIBS} ${CONFIGURE_ARGS} --disable-doxygen
 
 cppunit: configure_cppunit
-	cd tfm/contrib/cppunit && $(MAKE)
+	$(MAKE) -C tfm/contrib/cppunit 
 
 contrib/srtp/Makefile:
 	cd contrib/srtp && ./configure ${CONFIGURE_ARGS}
@@ -119,7 +119,7 @@ contrib/srtp/Makefile:
 configure_srtp: contrib/srtp/Makefile
 
 srtp: configure_srtp
-	cd contrib/srtp && $(MAKE)
+	$(MAKE) -C contrib/srtp 
 
 contrib/openssl/Makefile:
 	cd $(SSL_LOCATION) && ./Configure linux-generic32 --openssldir=/usr enable-tlsext ${CONFIGURE_ARGS} && $(MAKE) depend
@@ -127,7 +127,7 @@ contrib/openssl/Makefile:
 configure_dtls-srtp-openssl: contrib/openssl/Makefile
 
 dtls-srtp-openssl: configure_dtls-srtp-openssl
-	cd $(SSL_LOCATION) && $(MAKE)
+	$(MAKE) -C $(SSL_LOCATION) 
 
 tfmcontrib: cppunit netxx
 
@@ -154,12 +154,12 @@ contrib/ares-build.$(OS_ARCH)/Makefile:
 configure_ares: contrib/ares-build.$(OS_ARCH)/Makefile
 
 ares: configure_ares
-	cd contrib/ares-build.$(OS_ARCH) && $(MAKE)
+	$(MAKE) -C contrib/ares-build.$(OS_ARCH) 
 
 contrib: ares
 
 install-ares:
-	cd contrib/ares-build.$(OS_ARCH); $(MAKE) install
+	$(MAKE) -C contrib/ares-build.$(OS_ARCH) install
 
 else
 # Dummy rules to use when resip-ares is not being used
@@ -195,16 +195,16 @@ distclean: cleancontrib cleanpkg
 install: install-ares install-rutil install-resip install-dum
 
 install-rutil:
-	cd rutil; $(MAKE) install
+	$(MAKE) -C rutil install
 
 install-resip:
-	cd resip/stack; $(MAKE) install
+	$(MAKE) -C resip/stack install
 
 install-dum:
-	cd resip/dum; $(MAKE) install
+	$(MAKE) -C resip/dum install
 
 install-repro:
-	cd repro; $(MAKE) install
+	$(MAKE) -C repro install
 
 SVN-VERSION: 
 	@if test -d .svn ; \
