@@ -96,101 +96,99 @@ int closeSocket( Socket fd );
 */
 class FdSet
 {
-   public:
-      FdSet() : size(0), numReady(0)
-      {
-         FD_ZERO(&read);
-         FD_ZERO(&write);
-         FD_ZERO(&except);
-      }
-      
-      int select(struct timeval& tv)
-      {
-         return numReady = ::select(size, &read, &write, &except, &tv);
-      }
+public:
+   FdSet() : size(0), numReady(0)
+   {
+      FD_ZERO(&read);
+      FD_ZERO(&write);
+      FD_ZERO(&except);
+   }
 
-      int selectMilliSeconds(unsigned long ms)
-      {
-         struct timeval tv;
-         tv.tv_sec = (ms/1000);
-         tv.tv_usec = (ms%1000)*1000;
-         return select(tv);
-      }
+   int select(struct timeval& tv)
+   {
+      return numReady = ::select(size, &read, &write, &except, &tv);
+   }
 
-      bool readyToRead(Socket fd)
-      {
-         return ( FD_ISSET(fd, &read) != 0);
-      }
-      
-      bool readyToWrite(Socket fd)
-      {
-         return ( FD_ISSET(fd, &write) != 0);
-      }
+   int selectMilliSeconds(unsigned long ms)
+   {
+      struct timeval tv;
+      tv.tv_sec = (ms/1000);
+      tv.tv_usec = (ms%1000)*1000;
+      return select(tv);
+   }
 
-      bool hasException(Socket fd)
-      {
-          return (FD_ISSET(fd,&except) != 0);
-      }
+   bool readyToRead(Socket fd)
+   {
+      return (FD_ISSET(fd, &read) != 0);
+   }
 
-      void setRead(Socket fd)
-      {
-		  assert( FD_SETSIZE >= 8 );
+   bool readyToWrite(Socket fd)
+   {
+      return (FD_ISSET(fd, &write) != 0);
+   }
+
+   bool hasException(Socket fd)
+   {
+      return (FD_ISSET(fd,&except) != 0);
+   }
+
+   void setRead(Socket fd)
+   {
+      assert( FD_SETSIZE >= 8 );
 #ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
-         assert( fd < (int)FD_SETSIZE ); // redefineing FD_SETSIZE will not work 
+      assert( fd < (int)FD_SETSIZE ); // redefineing FD_SETSIZE will not work 
 #else
-         assert(read.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
+      assert(read.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
 #endif
-         int temp = FD_SETSIZE;
-         FD_SET(fd, &read);
-         size = ( int(fd+1) > size) ? int(fd+1) : size;
-      }
+      FD_SET(fd, &read);
+      size = ( int(fd+1) > size) ? int(fd+1) : size;
+   }
 
-      void setWrite(Socket fd)
-      {
+   void setWrite(Socket fd)
+   {
 #ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
-		  assert( fd < (int)FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
+      assert( fd < (int)FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
 #else
-        assert(write.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
+      assert(write.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
 #endif
-         FD_SET(fd, &write);
-         size = ( int(fd+1) > size) ? int(fd+1) : size;
-      }
-      
-      void setExcept(Socket fd)
-      {
+      FD_SET(fd, &write);
+      size = ( int(fd+1) > size) ? int(fd+1) : size;
+   }
+
+   void setExcept(Socket fd)
+   {
 #ifndef WIN32 // windows fd are not int's and don't start at 0 - this won't work in windows
-		  assert( fd < (int)FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
+      assert( fd < (int)FD_SETSIZE ); // redefinitn FD_SETSIZE will not work 
 #else
-        assert(except.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
+      assert(except.fd_count < FD_SETSIZE); // Ensure there is room to add new FD
 #endif
+      FD_SET(fd,&except);
+      size = ( int(fd+1) > size) ? int(fd+1) : size;
+   }
 
-          FD_SET(fd,&except);
-		  size = ( int(fd+1) > size) ? int(fd+1) : size;
-      }
 
+   void clear(Socket fd)
+   {
+      FD_CLR(fd, &read);
+      FD_CLR(fd, &write);
+      FD_CLR(fd, &except);
+   }
 
-      void clear(Socket fd)
-      {
-         FD_CLR(fd, &read);
-         FD_CLR(fd, &write);
-         FD_CLR(fd, &except);
-      }
-      
-      void reset()
-      {
-         size = 0;
-         numReady = 0;
-         FD_ZERO(&read);
-         FD_ZERO(&write);
-         FD_ZERO(&except);
-      }
+   void reset()
+   {
+      size = 0;
+      numReady = 0;
+      FD_ZERO(&read);
+      FD_ZERO(&write);
+      FD_ZERO(&except);
+   }
 
-      // Make this stuff public for async dns/ares to use
-      fd_set read;
-      fd_set write;
-      fd_set except;
-      int size;
-	  int numReady;  // set after each select call
+   // Make this stuff public for async dns/ares to use
+   fd_set read;
+   fd_set write;
+   fd_set except;
+   int size;
+   int numReady;  // set after each select call
 };
 
 	
