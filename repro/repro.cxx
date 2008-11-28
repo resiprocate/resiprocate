@@ -222,8 +222,8 @@ main(int argc, char** argv)
          }
          if (args.mDtlsPort)
          {
-            if (args.mUseV4) stack.addTransport(DTLS, args.mTlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
-            if (args.mUseV6) stack.addTransport(DTLS, args.mTlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
+            if (args.mUseV4) stack.addTransport(DTLS, args.mDtlsPort, V4, StunEnabled, Data::Empty, args.mTlsDomain);
+            if (args.mUseV6) stack.addTransport(DTLS, args.mDtlsPort, V6, StunEnabled, Data::Empty, args.mTlsDomain);
          }
       }
    }
