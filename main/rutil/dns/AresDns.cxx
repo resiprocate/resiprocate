@@ -156,9 +156,9 @@ AresDns::internalInit(const std::vector<GenericIPAddress>& additionalNameservers
          else
          {
            WarningLog (<< "Ignoring non-IPv4 additional name server "
-#if defined(USE_ARES)
+#if defined(USE_CARES)
                        "(not yet supported with c-ares)"
-#elif defined(USE_CARES)
+#elif defined(USE_ARES)
                        "(IPv6 support was not enabled)"
 #endif
                        );
