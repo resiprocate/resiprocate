@@ -121,6 +121,7 @@ configure_srtp: contrib/srtp/Makefile
 srtp: configure_srtp
 	$(MAKE) -C contrib/srtp 
 
+ifneq ($(SSL_LOCATION),)
 $(SSL_LOCATION)/Makefile:
 	cd $(SSL_LOCATION) && ./Configure linux-generic32 --openssldir=/usr enable-tlsext ${CONFIGURE_ARGS} && $(MAKE) depend
 
@@ -128,6 +129,9 @@ configure_dtls-srtp-openssl: $(SSL_LOCATION)/Makefile
 
 dtls-srtp-openssl: configure_dtls-srtp-openssl
 	$(MAKE) -C $(SSL_LOCATION) 
+else
+dtls-srtp-openssl:
+endif
 
 tfmcontrib: cppunit netxx
 
