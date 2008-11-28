@@ -218,7 +218,7 @@ REPRO_INCLUDEDIRS := $(ROOT)
 REPRO_LIBDIRS := $(ROOT)/repro/obj.$(TARGET_NAME) 
 REPRO_LIBNAME := repro
 REPRO_LDFLAGS :=
-REPRO_DEPENDS := $(ROOT)/resip/dum/obj.$(TARGET_NAME)/librepro.$(LIBSUFFIX)
+REPRO_DEPENDS := $(ROOT)/repro/obj.$(TARGET_NAME)/librepro.$(LIBSUFFIX)
 $(REPRO_DEPENDS): 
 	$(MAKE) -C $(ROOT)/repro 
 
