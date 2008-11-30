@@ -37,7 +37,11 @@ if ($conf{'USE_SSL'} eq 'yes')
 }
 
 &exec ("svnversion");
-&exec ("head ReleaseNotes.txt");
+
+if (-e 'ReleaseNotes.txt')
+{
+  &exec ("head ReleaseNotes.txt");
+}
 
 if ($uname =~ /Darwin/i)
 {
