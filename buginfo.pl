@@ -45,7 +45,7 @@ if ($uname =~ /Darwin/i)
 }
 elsif ($uname =~ /Linux/i)
 {
-  &exec ("sysctl -a hw");
+  &exec ("cat /proc/cpuinfo");
 }
 
 
