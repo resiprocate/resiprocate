@@ -11,7 +11,12 @@
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
-typedef boost::crc_optimal<32, 0x04C11DB7, 0xFFFFFFFF, 0x5354554e, true, true> stun_crc_32_type;
+typedef boost::crc_optimal<32 /* bits */, 
+                          0x04C11DB7 /* trunc poly */, 
+                          0xFFFFFFFF /* Init Rem */, 
+                          0x5354554e /* Final XOr */, 
+                          true /* Reflect In */, 
+                          true /* Reflect Rem */> stun_crc_32_type;
 
 #ifdef USE_SSL
 #include <openssl/hmac.h>
@@ -20,7 +25,7 @@ typedef boost::crc_optimal<32, 0x04C11DB7, 0xFFFFFFFF, 0x5354554e, true, true> s
 using namespace std;
 using namespace resip;
 
-// What should we set these
+// What should we set these to?  Used for short term password generation.
 static const Data USERNAME_KEY("stunServerUsernameKey");
 static const Data PASSWORD_KEY("stunServerPasswordKey");
 
@@ -161,7 +166,7 @@ StunMessage::createHeader(UInt16 stunclass, UInt16 method)
    mMethod = method;
 
    // Assign a tid
-   mHeader.id.magicCookie = StunMagicCookie;
+   mHeader.id.magicCookie = htonl(StunMagicCookie);
    Data random = Random::getCryptoRandom(12);
    memcpy(&mHeader.id.tid, random.data(), sizeof(mHeader.id.tid));
 }
@@ -485,7 +490,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
 	
    if (mHeader.msgLength + sizeof(StunMsgHdr) != bufLen)
    {
-      WarningLog(<< "Message header length doesn't match message size: " << mHeader.msgLength << " - " << bufLen);
+      WarningLog(<< "Message header length (" << mHeader.msgLength << ") + header size (" <<  sizeof(StunMsgHdr) << ") doesn't match message size (" << bufLen << ")"); 
       return false;
    }
 
@@ -494,7 +499,7 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
    mMethod = mHeader.msgType & 0x000F;
 	
    // Look for stun magic cookie
-   mHasMagicCookie = mHeader.id.magicCookie == StunMagicCookie;
+   mHasMagicCookie = mHeader.id.magicCookie == htonl(StunMagicCookie);
    if(!mHasMagicCookie)
    {
       StackLog(<< "stun magic cookie not found.");
@@ -1110,16 +1115,11 @@ operator<<( EncodeStream& strm, const StunMessage::StunAtrAddress& addr)
 {
    if(addr.family == StunMessage::IPv6Family)
    {
-      strm << "[";
+      asio::ip::address_v6::bytes_type bytes;
+      memcpy(bytes.c_array(), &addr.addr.ipv6, bytes.size());
+      asio::ip::address_v6 addrv6(bytes);
 
-      for(int i =0; i < 4; i++)
-      {
-         UInt32 ippart = addr.addr.ipv6.longpart[i];
-         strm << ((int)(ippart>>16)&0xFFFF) << ":";
-         strm << ((int)(ippart>>0)&0xFFFF) << (i == 3 ? "" : ":");
-      }
-
-      strm << "]:" << addr.port;
+      strm << "[" << addrv6.to_string() << "]:" << addr.port;
    }
    else
    {
@@ -1359,7 +1359,7 @@ StunMessage::encodeAtrRequestedProps(char* ptr, const TurnAtrRequestedProps& atr
 bool 
 StunMessage::hasMagicCookie()
 {
-   return mHeader.id.magicCookie == StunMessage::StunMagicCookie;
+   return mHeader.id.magicCookie == htonl(StunMessage::StunMagicCookie);
 }
 
 unsigned int
@@ -1701,6 +1701,7 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& longtermAuthenticationP
       MD5Stream r;
       r << *mUsername << ":" << *mRealm << ":" << longtermAuthenticationPassword;
       hmacKey = r.getHex();
+      DebugLog(<< "calculateHmacKey: '" << *mUsername << ":" << *mRealm << ":" << longtermAuthenticationPassword << "' = " << hmacKey);
    }
    else
    {
@@ -1762,6 +1763,7 @@ StunMessage::checkFingerprint()
       }
       else
       {
+         WarningLog(<< "Fingerprint=" << mFingerprint << " does not match CRC=" << stun_crc.checksum());
          return false;
       }
    }
