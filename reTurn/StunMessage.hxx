@@ -149,7 +149,7 @@ public:
    const static UInt16 TurnReservationToken   = 0x0022;
    const static UInt16 TurnConnectStat        = 0x0023; // tcp allocations
 
-   const static UInt32 StunMagicCookie  = 0x2112A442;  // network byte order
+   const static UInt32 StunMagicCookie  = 0x2112A442;  
    typedef struct 
    {
       UInt32 magicCookie;
