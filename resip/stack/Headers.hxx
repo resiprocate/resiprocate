@@ -145,7 +145,7 @@ extern H_SecurityVerifys h_SecurityVerifies;
 
 defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841");
 defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
-defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
+defineMultiHeader(Privacy, "Privacy", PrivacyCategory, "RFC 3323");
 // explicitly declare to avoid h_Privacys
 extern H_Privacys h_Privacies;
 

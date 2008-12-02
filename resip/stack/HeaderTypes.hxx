@@ -109,7 +109,7 @@ class Headers
          defineHeader(RAck, "RAck", RAckCategory, "RFC 3262"),
 
          defineMultiHeader(Reason, "Reason", Token, "RFC 3326"),
-         defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323"),
+         defineMultiHeader(Privacy, "Privacy", PrivacyCategory, "RFC 3323"),
          defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841"),
          defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313"),
          defineHeader(Join, "Join", CallId, "RFC 3911"),
