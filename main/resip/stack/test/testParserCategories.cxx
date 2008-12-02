@@ -2073,6 +2073,47 @@ main(int arc, char** argv)
       assert(Data::from(str) == rackString);
    }
 
+   {
+      TR _tr( "Test Privacy Category 1");
+      Data privacy("user;session;critical");
+      HeaderFieldValue hfv(privacy.data(), privacy.size());
+      
+      PrivacyCategory test(&hfv, Headers::UNKNOWN);
+      assert(test.value().size()==3);
+      assert(test.value().back()=="critical");
+      test.value().pop_back();
+      assert(test.value().back()=="session");
+      test.value().pop_back();
+      assert(test.value().back()=="user");
+      test.value().pop_back();
+   }
+
+   {
+      TR _tr( "Test Privacy Category 2");
+      Data privacy("user; session;   critical  ");
+      HeaderFieldValue hfv(privacy.data(), privacy.size());
+      
+      PrivacyCategory test(&hfv, Headers::UNKNOWN);
+      assert(test.value().size()==3);
+      assert(test.value().back()=="critical");
+      test.value().pop_back();
+      assert(test.value().back()=="session");
+      test.value().pop_back();
+      assert(test.value().back()=="user");
+      test.value().pop_back();
+   }
+
+   {
+      TR _tr( "Test Privacy Category 3");
+      Data privacy("user");
+      HeaderFieldValue hfv(privacy.data(), privacy.size());
+      
+      PrivacyCategory test(&hfv, Headers::UNKNOWN);
+      assert(test.value().size()==1);
+      assert(test.value().back()=="user");
+      test.value().pop_back();
+   }
+
    cerr << "\nTEST OK" << endl;
 
    return 0;
