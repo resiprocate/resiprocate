@@ -354,21 +354,29 @@ TlsConnection::read(char* buf, int count )
    int bytesRead = SSL_read(mSsl,buf,count);
    StackLog(<< "SSL_read returned " << bytesRead << " bytes [" << Data(Data::Borrow, buf, (bytesRead > 0)?(bytesRead):(0)) << "]");
 
-   if (bytesRead > 0 && SSL_pending(mSsl))
-   {
-      int restBytes = SSL_pending(mSsl);
-      char* buffer = getWriteBufferForExtraBytes(restBytes);
-      StackLog(<< "reading remaining buffered bytes");
-      restBytes = SSL_read(mSsl, buffer, SSL_pending(mSsl));
-      StackLog(<< "SSL_read returned  " << restBytes << " bytes [" << Data(Data::Borrow, buffer, restBytes) << "]");
+   int bytesPending = SSL_pending(mSsl);
 
-      if (restBytes>0)
+   if ((bytesRead > 0) && (bytesPending > 0))
+   {
+      char* buffer = getWriteBufferForExtraBytes(bytesPending);
+      if (buffer)
       {
-         bytesRead += restBytes;
+         StackLog(<< "reading remaining buffered bytes");
+         bytesPending = SSL_read(mSsl, buffer, bytesPending);
+         StackLog(<< "SSL_read returned  " << bytesPending << " bytes [" << Data(Data::Borrow, buffer, (bytesPending > 0)?(bytesPending):(0)) << "]");
+         
+         if (bytesPending > 0)
+         {
+            bytesRead += bytesPending;
+         }
+         else
+         {
+            bytesRead = bytesPending;
+         }
       }
       else
       {
-         bytesRead = restBytes;
+         assert(0);
       }
    }
 
