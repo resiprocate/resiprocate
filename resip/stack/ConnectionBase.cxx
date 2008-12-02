@@ -547,7 +547,7 @@ ConnectionBase::getWriteBuffer()
    {
       if (mBuffer)
       {
-	 delete [] mBuffer;
+         delete [] mBuffer;
       }
 
       DebugLog (<< "Creating buffer for " << *this);
@@ -562,13 +562,21 @@ ConnectionBase::getWriteBuffer()
 char*
 ConnectionBase::getWriteBufferForExtraBytes(int extraBytes)
 {
-   char* buffer = MsgHeaderScanner::allocateBuffer(mBufferSize + extraBytes);
-   memcpy(buffer, mBuffer, mBufferSize);
-   delete [] mBuffer;
-   mBuffer = buffer;
-   buffer += mBufferSize;
-   mBufferSize += extraBytes;
-   return buffer;
+   if (extraBytes > 0)
+   {
+      char* buffer = MsgHeaderScanner::allocateBuffer(mBufferSize + extraBytes);
+      memcpy(buffer, mBuffer, mBufferSize);
+      delete [] mBuffer;
+      mBuffer = buffer;
+      buffer += mBufferSize;
+      mBufferSize += extraBytes;
+      return buffer;
+   }
+   else
+   {
+      assert(0);
+      return mBuffer;
+   }
 }
             
 void 
