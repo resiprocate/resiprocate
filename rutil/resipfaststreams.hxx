@@ -342,7 +342,7 @@ class ResipFastOStream : public ResipBasicIOStream
 
          if (_Pfn == static_cast<std::ostream& (*)(std::ostream&)>(std::endl))
          {
-            if (buf_->writebuf("\r\n",2) < 2)
+            if (buf_->writebuf("\n",1) < 1)
             {
                good_ = false;
             }
