@@ -1131,9 +1131,17 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
       {
          mHeaders[header] = new HeaderFieldValueList;
       }
-      if (len)
+
+      if(Headers::isMulti(header))
       {
-         if(mHeaders[header]->size()==1 && !(Headers::isMulti(header)))
+         if (len)
+         {
+            mHeaders[header]->push_back(new HeaderFieldValue(start, len));
+         }
+      }
+      else
+      {
+         if(mHeaders[header]->size()==1)
          {
             if(mInvalid)
             {
@@ -1144,8 +1152,11 @@ SipMessage::addHeader(Headers::Type header, const char* headerName, int headerLe
             mReason += Headers::getHeaderName(header);
             return;
          }
-         mHeaders[header]->push_back(new HeaderFieldValue(start, len));
+         mHeaders[header]->push_back(new HeaderFieldValue(start ? 
+                                                   start : Data::Empty.data(), 
+                                                         len));
       }
+
    }
    else
    {
