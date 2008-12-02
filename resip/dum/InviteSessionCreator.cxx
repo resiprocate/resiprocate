@@ -24,7 +24,7 @@ InviteSessionCreator::InviteSessionCreator(DialogUsageManager& dum,
    makeInitialRequest(target, INVITE);
    if (userProfile->isAnonymous())
    {
-      mLastRequest->header(h_Privacys).push_back(Token(Symbols::id));
+      mLastRequest->header(h_Privacys).push_back(PrivacyCategory(Symbols::id));
    }
    
    DumHelper::setOutgoingEncryptionLevel(*mLastRequest, level);

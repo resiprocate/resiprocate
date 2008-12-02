@@ -38,6 +38,7 @@
 #include "resip/dum/PublicationCreator.hxx"
 #include "resip/dum/RedirectManager.hxx"
 #include "resip/dum/RegistrationCreator.hxx"
+#include "resip/dum/RemoteCertStore.hxx"
 #include "resip/dum/ServerAuthManager.hxx"
 #include "resip/dum/ServerInviteSession.hxx"
 #include "resip/dum/ServerPublication.hxx"
