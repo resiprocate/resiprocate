@@ -1,33 +1,118 @@
-#if !defined(RESIP_PARSERCATEGORIES_HXX)
-#define RESIP_PARSERCATEGORIES_HXX 
-
-//#warning "DO NOT USE ParserCategories.hxx"
-
-#include "resip/stack/Auth.hxx"
-#include "resip/stack/CSeqCategory.hxx"
-#include "resip/stack/CallId.hxx"
-#include "resip/stack/DateCategory.hxx"
-#include "resip/stack/ExpiresCategory.hxx"
-#include "resip/stack/GenericUri.hxx"
-#include "resip/stack/IntegerCategory.hxx"
-#include "resip/stack/UInt32Category.hxx"
-#include "resip/stack/Mime.hxx"
-#include "resip/stack/NameAddr.hxx"
 #include "resip/stack/PrivacyCategory.hxx"
-#include "resip/stack/RAckCategory.hxx"
-#include "resip/stack/RequestLine.hxx"
-#include "resip/stack/StatusLine.hxx"
-#include "resip/stack/StringCategory.hxx"
-#include "resip/stack/Token.hxx"
-#include "resip/stack/Via.hxx"
-#include "resip/stack/WarningCategory.hxx"
 
-#endif
+#include "rutil/ParseBuffer.hxx"
+
+namespace resip
+{
+PrivacyCategory::PrivacyCategory() 
+   : ParserCategory(), 
+     mValue() 
+{}
+
+static const Data parseContext("PrivacyCategory constructor");
+PrivacyCategory::PrivacyCategory(const Data& d) 
+   : ParserCategory(),
+     mValue() 
+{
+   PrivacyCategory tmp;
+   ParseBuffer pb(d, parseContext);
+   tmp.parse(pb);
+   *this = tmp;
+}
+
+PrivacyCategory::PrivacyCategory(HeaderFieldValue* hfv, Headers::Type type) 
+   : ParserCategory(hfv, type), 
+     mValue() 
+{}
+
+PrivacyCategory::PrivacyCategory(const PrivacyCategory& rhs)
+   : ParserCategory(rhs),
+     mValue(rhs.mValue)
+{}
+
+PrivacyCategory&
+PrivacyCategory::operator=(const PrivacyCategory& rhs)
+{
+   if (this != &rhs)
+   {
+      rhs.checkParsed();
+      ParserCategory::operator=(rhs);
+      mValue = rhs.mValue;
+   }
+   return *this;
+}
+
+const std::vector<Data>& 
+PrivacyCategory::value() const
+{
+   checkParsed();
+   return mValue;
+}
+
+std::vector<Data>& 
+PrivacyCategory::value()
+{
+   checkParsed();
+   return mValue;
+}
+
+void 
+PrivacyCategory::parse(ParseBuffer& pb)
+{
+   while(!pb.eof())
+   {
+      pb.skipWhitespace();
+      if(!pb.eof())
+      {
+         const char* start=pb.position();
+         pb.skipToOneOf(";",ParseBuffer::Whitespace);
+         if(pb.position()==start)
+         {
+            throw ParseException("Empty privacy token!",
+                                 "PrivacyCategory::parse()",
+                                 __FILE__, __LINE__);
+         }
+         mValue.push_back(pb.data(start));
+         pb.skipWhitespace();
+      }
+      if(!pb.eof())
+      {
+         pb.skipChar(';');
+      }
+   }
+}
+
+ParserCategory* 
+PrivacyCategory::clone() const
+{
+   return new PrivacyCategory(*this);
+}
+
+EncodeStream& 
+PrivacyCategory::encodeParsed(EncodeStream& str) const
+{
+   bool first=true;
+   for(std::vector<Data>::const_iterator i=mValue.begin(); i!=mValue.end(); ++i)
+   {
+      if(first)
+      {
+         first=false;
+      }
+      else
+      {
+         str << ';';
+      }
+      str << *i;
+   }
+   return str;
+}
+
+} // of namespace resip
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
