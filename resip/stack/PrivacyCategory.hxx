@@ -1,33 +1,49 @@
-#if !defined(RESIP_PARSERCATEGORIES_HXX)
-#define RESIP_PARSERCATEGORIES_HXX 
+#if !defined(RESIP_PRIVACY_CATEGORY_HXX)
+#define RESIP_PRIVACY_CATEGORY_HXX 
 
-//#warning "DO NOT USE ParserCategories.hxx"
+#include <iosfwd>
+#include "rutil/Data.hxx"
+#include "resip/stack/ParserCategory.hxx"
+#include "resip/stack/ParserContainer.hxx"
 
-#include "resip/stack/Auth.hxx"
-#include "resip/stack/CSeqCategory.hxx"
-#include "resip/stack/CallId.hxx"
-#include "resip/stack/DateCategory.hxx"
-#include "resip/stack/ExpiresCategory.hxx"
-#include "resip/stack/GenericUri.hxx"
-#include "resip/stack/IntegerCategory.hxx"
-#include "resip/stack/UInt32Category.hxx"
-#include "resip/stack/Mime.hxx"
-#include "resip/stack/NameAddr.hxx"
-#include "resip/stack/PrivacyCategory.hxx"
-#include "resip/stack/RAckCategory.hxx"
-#include "resip/stack/RequestLine.hxx"
-#include "resip/stack/StatusLine.hxx"
-#include "resip/stack/StringCategory.hxx"
-#include "resip/stack/Token.hxx"
-#include "resip/stack/Via.hxx"
-#include "resip/stack/WarningCategory.hxx"
+namespace resip
+{
+
+
+/**
+   @ingroup sip_grammar
+   @brief Represents the "token" element in the RFC 3261 grammar.
+*/
+class PrivacyCategory : public ParserCategory
+{
+   public:
+      enum {commaHandling = CommasAllowedOutputCommas};
+
+      PrivacyCategory();
+      explicit PrivacyCategory(const Data& d);
+      PrivacyCategory(HeaderFieldValue* hfv, Headers::Type type);
+      PrivacyCategory(const PrivacyCategory&);
+      PrivacyCategory& operator=(const PrivacyCategory&);
+
+      const std::vector<Data>& value() const;
+      std::vector<Data>& value();
+
+      virtual void parse(ParseBuffer& pb); // remember to call parseParameters()
+      virtual ParserCategory* clone() const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
+   private:
+      std::vector<Data> mValue;
+};
+typedef ParserContainer<PrivacyCategory> PrivacyCategories;
+ 
+}
 
 #endif
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
- * Copyright (c) 2000 Vovida Networks, Inc.  All rights reserved.
+ * Copyright (c) 2000-2005 Vovida Networks, Inc.  All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

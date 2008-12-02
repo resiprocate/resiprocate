@@ -84,6 +84,7 @@ SRC = \
 	Pkcs7Contents.cxx \
 	Pkcs8Contents.cxx \
 	PlainContents.cxx \
+	PrivacyCategory.cxx \
 	QopParameter.cxx \
 	QuotedDataParameter.cxx \
 	RAckCategory.cxx \

@@ -187,7 +187,7 @@ class SipMessage : public TransactionMessage
       defineMultiHeader(SecurityVerify, "Security-Verify", Token, "RFC 3329");
       defineMultiHeader(RequestDisposition, "Request-Disposition", Token, "RFC 3841");
       defineMultiHeader(Reason, "Reason", Token, "RFC 3326");
-      defineMultiHeader(Privacy, "Privacy", Token, "RFC 3323");
+      defineMultiHeader(Privacy, "Privacy", PrivacyCategory, "RFC 3323");
       defineMultiHeader(PMediaAuthorization, "P-Media-Authorization", Token, "RFC 3313");
       defineHeader(ReferSub, "Refer-Sub", Token, "RFC 4488");
       defineHeader(AnswerMode, "Answer-Mode", Token, "draft-ietf-answermode-01");
