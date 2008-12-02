@@ -998,7 +998,7 @@ Dialog::makeRequest(SipMessage& request, MethodTypes method)
 
    if (mDialogSet.mUserProfile->isAnonymous())
    {
-      request.header(h_Privacys).push_back(Token(Symbols::id));
+      request.header(h_Privacys).push_back(PrivacyCategory(Symbols::id));
    }
 
    DebugLog ( << "Dialog::makeRequest: " << std::endl << std::endl << request );
