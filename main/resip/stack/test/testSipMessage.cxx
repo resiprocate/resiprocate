@@ -764,6 +764,28 @@ main(int argc, char** argv)
 
    {
      char * txt = ("SIP/2.0 489 Bad Event" CRLF
+                   "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
+                   "CSeq: " CRLF
+                   "Call-ID:  f354ce714fb8a95c" CRLF
+                   "From:  <sip:RjS@127.0.0.1:5070>;tag=59e7dd57" CRLF
+                   "To:  <sip:RjS@127.0.0.1:5060>" CRLF
+                   CRLF);
+     TestSupport::prettyPrint(txt,strlen(txt));
+
+     auto_ptr<SipMessage> response(TestSupport::makeMessage(txt,true));
+     try
+     {
+        const SipMessage& constSip(*response);
+        assert(!constSip.header(h_CSeq).isWellFormed());
+     }
+     catch (...)
+     {
+        assert(false);
+     }
+   }
+
+   {
+     char * txt = ("SIP/2.0 489 Bad Event" CRLF
                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                    "CSeq: 1 SUBSCRIBE" CRLF
                    "Allow-Events: " CRLF
