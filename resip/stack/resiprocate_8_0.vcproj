@@ -595,6 +595,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PrivacyCategory.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\QopParameter.cxx"
 				>
 			</File>
@@ -1185,6 +1189,10 @@
 			</File>
 			<File
 				RelativePath=".\PlainContents.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\PrivacyCategory.hxx"
 				>
 			</File>
 			<File

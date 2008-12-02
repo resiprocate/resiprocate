@@ -37,6 +37,7 @@ class InterruptableStackThread : public ThreadIf
    protected:
       virtual void buildFdSet(FdSet& fdset);
       virtual unsigned int getTimeTillNextProcessMS() const;
+      virtual void process(FdSet& fdset);
 
    private:
       SipStack& mStack;

@@ -24,6 +24,7 @@
 	#include <string.h>
 	#include <stdio.h>
 	#include <WS2tcpip.h>
+   #pragma warning(disable:4996) // Remove warning:  "warning C4996: 'strdup': The POSIX name for this item is deprecated. Instead, use the ISO C++ conformant name: _strdup." 
 #endif
 
 
