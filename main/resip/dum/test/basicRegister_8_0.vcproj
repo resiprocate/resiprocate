@@ -213,7 +213,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../../&quot;;&quot;$(ProjectDir)../../contrib/ares&quot;;&quot;$(ProjectDir)../../../contrib/openssl/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../../&quot;;&quot;$(ProjectDir)../../contrib/ares&quot;;&quot;$(ProjectDir)../../../contrib/openssl/include&quot;;&quot;$(ProjectDir)../../../contrib/openssl/inc32&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE; USE_SSL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -300,7 +300,7 @@
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../../&quot;;&quot;$(ProjectDir)../../contrib/ares&quot;;&quot;$(ProjectDir)../../../contrib/openssl/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../../&quot;;&quot;$(ProjectDir)../../contrib/ares&quot;;&quot;$(ProjectDir)../../../contrib/openssl/include&quot;;&quot;$(ProjectDir)../../../contrib/openssl/inc32&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE; USE_SSL"
 				StringPooling="true"
 				RuntimeLibrary="2"
