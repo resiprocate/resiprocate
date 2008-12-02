@@ -29,6 +29,7 @@ InterruptableStackThread::thread()
          mStack.process(fdset); // .dcm. reqd to get send requests queued at transports
          mSelectInterruptor.buildFdSet(fdset);
          mStack.buildFdSet(fdset);
+         buildFdSet(fdset);
          int ret = fdset.selectMilliSeconds(resipMin(mStack.getTimeTillNextProcessMS(), 
                                                      getTimeTillNextProcessMS()));
          if (ret >= 0)
@@ -38,6 +39,7 @@ InterruptableStackThread::thread()
             // .dcm. how will this interact w/ TuSelector?
             mSelectInterruptor.process(fdset);
             mStack.process(fdset);
+            process(fdset);
          }
       }
       catch (BaseException& e)
@@ -57,13 +59,19 @@ InterruptableStackThread::shutdown()
 
 void
 InterruptableStackThread::buildFdSet(FdSet& fdset)
-{}
+{
+}
 
 unsigned int
 InterruptableStackThread::getTimeTillNextProcessMS() const
 {
    //.dcm. --- eventually make infinite
    return 10000;   
+}
+
+void 
+InterruptableStackThread::process(FdSet& fdset)
+{
 }
 
 /* ====================================================================
