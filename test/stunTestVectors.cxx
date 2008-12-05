@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
    assert(reqltcMessage.mHasMessageIntegrity);
    resip::Data hmacKey;
    reqltcMessage.calculateHmacKey(hmacKey, password);
-   assert(reqltcMessage.checkMessageIntegrity(hmacKey));  // !slg! There is either a problem in draft-ietf-behave-stun-test-vectors-04 or reTurn implementation - I can't find anything obviously wrong in reTurn???
+   assert(reqltcMessage.checkMessageIntegrity(hmacKey));  
 
    return 0;
 }
