@@ -11,13 +11,6 @@
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
 
-typedef boost::crc_optimal<32 /* bits */, 
-                          0x04C11DB7 /* trunc poly */, 
-                          0xFFFFFFFF /* Init Rem */, 
-                          0x5354554e /* Final XOr */, 
-                          true /* Reflect In */, 
-                          true /* Reflect Rem */> stun_crc_32_type;
-
 #ifdef USE_SSL
 #include <openssl/hmac.h>
 #endif
@@ -35,6 +28,8 @@ static const Data PASSWORD_KEY("stunServerPasswordKey");
 #define MAX_NONCE_BYTES             763
 #define MAX_SOFTWARE_BYTES          763
 #define MAX_ERRORCODE_REASON_BYTES  763
+
+#define STUN_CRC_FINAL_XOR 0x5354554e
 
 namespace reTurn {
 
@@ -1554,9 +1549,9 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    if (mHasFingerprint)
    {
       StackLog(<< "Calculating fingerprint for data of size " << ptr-buf);
-      stun_crc_32_type stun_crc;
+      boost::crc_32_type stun_crc;
       stun_crc.process_bytes(buf, ptr-buf); // Calculate CRC across entire message, except the fingerprint attribute
-      UInt32 fingerprint = stun_crc.checksum();
+      UInt32 fingerprint = stun_crc.checksum() ^ STUN_CRC_FINAL_XOR;
       ptr = encodeAtrUInt32(ptr, Fingerprint, fingerprint);
    }
 
@@ -1755,9 +1750,11 @@ StunMessage::checkFingerprint()
    if(mHasFingerprint)
    {
       StackLog(<< "Calculating fingerprint to check for data of size " << mBuffer.size() - 8);
-      stun_crc_32_type stun_crc;
+      boost::crc_32_type stun_crc;
       stun_crc.process_bytes(mBuffer.data(), mBuffer.size()-8); // Calculate CRC across entire message, except the fingerprint attribute
-      if(stun_crc.checksum() == mFingerprint)
+
+      unsigned long crc = stun_crc.checksum() ^ STUN_CRC_FINAL_XOR;
+      if(crc == mFingerprint)
       {
          return true;
       }

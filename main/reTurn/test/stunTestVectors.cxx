@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
    assert(reqMessage.mHasMessageIntegrity);
    assert(reqMessage.checkMessageIntegrity("VOkJxbRl1RmTxUk/WvJxBt"));
    assert(reqMessage.mHasFingerprint);
-   //assert(reqMessage.checkFingerprint());  // !slg! There is either a problem in draft-ietf-behave-stun-test-vectors-04 or reTurn implementation - I can't find anything obviously wrong in reTurn???
+   assert(reqMessage.checkFingerprint());  
 
    const unsigned char respv4[] =
      "\x01\x01\x00\x3c"
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
    assert(respv4Message.mHasMessageIntegrity);
    assert(respv4Message.checkMessageIntegrity("VOkJxbRl1RmTxUk/WvJxBt"));
    assert(respv4Message.mHasFingerprint);
-   //assert(respv4Message.checkFingerprint());  // !slg! There is either a problem in draft-ietf-behave-stun-test-vectors-04 or reTurn implementation - I can't find anything obviously wrong in reTurn???
+   assert(respv4Message.checkFingerprint());  
 
    const unsigned char respv6[] =
      "\x01\x01\x00\x48"
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
    assert(respv6Message.mHasMessageIntegrity);
    assert(respv6Message.checkMessageIntegrity("VOkJxbRl1RmTxUk/WvJxBt"));
    assert(respv6Message.mHasFingerprint);
-   //assert(respv6Message.checkFingerprint());  // !slg! There is either a problem in draft-ietf-behave-stun-test-vectors-04 or reTurn implementation - I can't find anything obviously wrong in reTurn???
+   assert(respv6Message.checkFingerprint());  
 
    const unsigned char reqltc[] =
      "\x00\x01\x00\x60"
@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
    assert(reqltcMessage.mHasMessageIntegrity);
    resip::Data hmacKey;
    reqltcMessage.calculateHmacKey(hmacKey, password);
-   //assert(reqltcMessage.checkMessageIntegrity(hmacKey));  // !slg! There is either a problem in draft-ietf-behave-stun-test-vectors-04 or reTurn implementation - I can't find anything obviously wrong in reTurn???
+   assert(reqltcMessage.checkMessageIntegrity(hmacKey));  // !slg! There is either a problem in draft-ietf-behave-stun-test-vectors-04 or reTurn implementation - I can't find anything obviously wrong in reTurn???
 
    return 0;
 }
