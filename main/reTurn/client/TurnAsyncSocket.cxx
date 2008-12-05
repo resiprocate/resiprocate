@@ -589,7 +589,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
                mRealm = *stunMessage.mRealm;
                MD5Stream r;
                r << mUsername << ":" << mRealm << ":" << mPassword;
-               mHmacKey = r.getHex();
+               mHmacKey = r.getBin();
 
                // Create a new transaction - by starting with old request
                StunMessage* newRequest = it->second->mRequestMessage;
