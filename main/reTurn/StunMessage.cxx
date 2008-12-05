@@ -1695,7 +1695,7 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& longtermAuthenticationP
    {
       MD5Stream r;
       r << *mUsername << ":" << *mRealm << ":" << longtermAuthenticationPassword;
-      hmacKey = r.getHex();
+      hmacKey = r.getBin();
       DebugLog(<< "calculateHmacKey: '" << *mUsername << ":" << *mRealm << ":" << longtermAuthenticationPassword << "' = " << hmacKey);
    }
    else
