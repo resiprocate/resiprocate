@@ -988,7 +988,7 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
                   mRealm = *response->mRealm;
                   MD5Stream r;
                   r << mUsername << ":" << mRealm << ":" << mPassword;
-                  mHmacKey = r.getHex();
+                  mHmacKey = r.getBin();
 
                   // Re-Issue reques (with new TID)
                   request.createHeader(request.mClass, request.mMethod);  // updates TID
