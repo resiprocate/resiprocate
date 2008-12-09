@@ -16,6 +16,7 @@ class ServerSubscription : public BaseSubscription
       ServerSubscriptionHandle getHandle();
 
       const Data& getSubscriber() const { return mSubscriber; }
+      UInt32 getTimeLeft();
      
       //only 200 and 202 are permissable.  SubscriptionState is not affected.
       //currently must be called for a refresh as well as initial creation.
@@ -55,8 +56,6 @@ class ServerSubscription : public BaseSubscription
       void makeNotifyExpires();
       void makeNotify();    
       
-      UInt32 getTimeLeft();
-
       bool shouldDestroyAfterSendingFailure(const SipMessage& msg);      
 
       Data mSubscriber;
