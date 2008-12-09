@@ -156,12 +156,6 @@ InviteSession::getProposedRemoteSdp() const
    }
 }
 
-const Data& 
-InviteSession::getDialogId() const
-{
-   return mDialog.getId().getCallId();
-}
-
 InviteSessionHandle
 InviteSession::getSessionHandle()
 {
@@ -210,24 +204,6 @@ InviteSession::updateMethodSupported() const
        return mPeerSupportedMethods.find(Token("UPDATE"));
    }
    return false;
-}
-
-const NameAddr&
-InviteSession::myAddr() const
-{
-   return mDialog.mLocalNameAddr;
-}
-
-const NameAddr&
-InviteSession::peerAddr() const
-{
-   return mDialog.mRemoteNameAddr;
-}
-
-const NameAddr&
-InviteSession::remoteTarget() const
-{
-   return mDialog.mRemoteTarget;
 }
 
 bool
