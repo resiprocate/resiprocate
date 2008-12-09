@@ -30,6 +30,10 @@ class DialogUsage : public BaseUsage
       AppDialogSetHandle getAppDialogSet();
       AppDialogHandle getAppDialog();     
 
+      // Convenience methods for accessing attributes of a dialog. 
+      const NameAddr& myAddr() const;
+      const NameAddr& peerAddr() const;
+      const NameAddr& remoteTarget() const;
       const DialogId& getDialogId() const;
       const Data& getCallId() const;
       SharedPtr<UserProfile> getUserProfile();
