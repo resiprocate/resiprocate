@@ -122,17 +122,12 @@ class InviteSession : public DialogUsage
       virtual void acceptReferNoSub(int statusCode = 200);
       virtual void rejectReferNoSub(int responseCode);
 
-      // Convenience methods for accessing attributes of a dialog. 
-      const NameAddr& myAddr() const;
-      const NameAddr& peerAddr() const;
-      const NameAddr& remoteTarget() const;
       bool hasLocalSdp() const;
       const SdpContents& getLocalSdp() const;
       bool hasRemoteSdp() const;
       const SdpContents& getRemoteSdp() const;
       bool hasProposedRemoteSdp() const;
       const SdpContents& getProposedRemoteSdp() const;
-      const Data& getDialogId() const;
       
       bool isConnected() const;
       bool isTerminated() const;

@@ -44,6 +44,24 @@ DialogUsage::getAppDialog()
    return mDialog.mAppDialog->getHandle();
 }
 
+const NameAddr&
+DialogUsage::myAddr() const
+{
+   return mDialog.mLocalNameAddr;
+}
+
+const NameAddr&
+DialogUsage::peerAddr() const
+{
+   return mDialog.mRemoteNameAddr;
+}
+
+const NameAddr&
+DialogUsage::remoteTarget() const
+{
+   return mDialog.mRemoteTarget;
+}
+
 const DialogId& 
 DialogUsage::getDialogId() const
 {
