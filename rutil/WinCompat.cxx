@@ -244,13 +244,14 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
          int i;
          for (i = 0, AI = pAdapterAddresses; AI != NULL; AI = AI->Next, i++) 
          {
-             if (AI->FirstUnicastAddress != NULL) 
+             for (PIP_ADAPTER_UNICAST_ADDRESS unicast = AI->FirstUnicastAddress;
+                  unicast; unicast = unicast->Next)
              {
-                if (AI->FirstUnicastAddress->Address.lpSockaddr->sa_family != saddr->sa_family)
+                if (unicast->Address.lpSockaddr->sa_family != saddr->sa_family)
                    continue;
                 if (saddr->sa_family == AF_INET && AI->IfIndex == dwBestIfIndex)
                 {
-                   GenericIPAddress ipaddress(*AI->FirstUnicastAddress->Address.lpSockaddr);
+                   GenericIPAddress ipaddress(*unicast->Address.lpSockaddr);
                    LocalFree(pAdapterAddresses);
                    return(ipaddress);
                 }
@@ -259,7 +260,7 @@ WinCompat::determineSourceInterfaceWithIPv6(const GenericIPAddress& destination)
                 {
                    // explicitly cast to sockaddr_in6, to use that version of GenericIPAddress' ctor. If we don't, then compiler
                    // defaults to ctor for sockaddr_in (at least under Win32), which will truncate the lower-bits of the IPv6 address.
-                   const struct sockaddr_in6* psa = reinterpret_cast<const struct sockaddr_in6*>(AI->FirstUnicastAddress->Address.lpSockaddr);
+                   const struct sockaddr_in6* psa = reinterpret_cast<const struct sockaddr_in6*>(unicast->Address.lpSockaddr);
                    GenericIPAddress ipaddress(*psa);
                    LocalFree(pAdapterAddresses);
                    return(ipaddress);
@@ -443,7 +444,10 @@ WinCompat::getInterfaces(const Data& matching)
                Data name(AI->Description);
                if(matching == Data::Empty || name == matching)
                {
-                  results.push_back(std::make_pair(name, Data(AI->IpAddressList.IpAddress.String)));
+                  for (const IP_ADDR_STRING *addr=&AI->IpAddressList; addr; addr = addr->Next)
+                  {
+                     results.push_back(std::make_pair(name, Data(addr->IpAddress.String)));
+                  }
                }
             }
             LocalFree(pAdaptersInfo);
@@ -490,7 +494,15 @@ WinCompat::getInterfaces(const Data& matching)
 
                if(matching == Data::Empty || name == matching)
                {
-                  results.push_back(std::make_pair(name, DnsUtil::inet_ntop(*AI->FirstUnicastAddress->Address.lpSockaddr)));
+                  for (PIP_ADAPTER_UNICAST_ADDRESS unicast = AI->FirstUnicastAddress;
+                       unicast; unicast = unicast->Next)
+                  {
+#ifndef USE_IPV6
+                     // otherwise we would get 0.0.0.0 for AF_INET6 addresses
+                     if (unicast->Address.lpSockaddr->sa_family != AF_INET) continue;
+#endif
+                     results.push_back(std::make_pair(name, DnsUtil::inet_ntop(*unicast->Address.lpSockaddr)));
+                  }
                }
             } 
          }
