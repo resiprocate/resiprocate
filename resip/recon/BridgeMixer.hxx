@@ -8,9 +8,7 @@ namespace recon
 {
 
 // These must align with sipX implementation
-#define DEFAULT_LOCAL_RESOURCE_BRIDGE_CONNECTION_PORT     0
-#define DEFAULT_FILE_PLAYER_BRIDGE_CONNECTION_PORT        1
-#define DEFAULT_TONE_PLAYER_BRIDGE_CONNECTION_PORT        2
+#define DEFAULT_LOCAL_RESOURCE_BRIDGE_CONNECTION_PORT     2
 
 class ConversationManager;
 class Participant;

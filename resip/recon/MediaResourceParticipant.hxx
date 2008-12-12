@@ -61,6 +61,8 @@ private:
    resip::Uri mMediaUrl;
    ResourceType mResourceType;
    MpStreamPlayer* mStreamPlayer;
+   int mToneGenPortOnBridge;
+   int mFromFilePortOnBridge;
 
    // Play settings
    bool mLocalOnly;

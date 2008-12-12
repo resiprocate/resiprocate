@@ -13,9 +13,10 @@
 #include "ConversationManagerCmds.hxx"
 
 // sipX includes
-#include "mp/dtmflib.h"
-#include "mp/MprFromFile.h"
-#include "mp/MpStreamPlayer.h"
+#include <CpTopologyGraphInterface.h>
+#include <mp/dtmflib.h>
+#include <mp/MprFromFile.h>
+#include <mp/MpStreamPlayer.h>
 
 using namespace recon;
 using namespace resip;
@@ -116,6 +117,8 @@ MediaResourceParticipant::MediaResourceParticipant(ConversationManager::Particip
    {
       WarningLog(<< "MediaResourceParticipant::MediaResourceParticipant unknown exception");
    }
+   ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_TONE_GEN_RESOURCE_NAME,0,mToneGenPortOnBridge);
+   ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_FILE_RESOURCE_NAME,0,mFromFilePortOnBridge);
 }
 
 MediaResourceParticipant::~MediaResourceParticipant()
@@ -343,14 +346,14 @@ MediaResourceParticipant::getConnectionPortOnBridge()
    int connectionPort = -1;
    switch(mResourceType)
    {
-   case Tone:
-      connectionPort = DEFAULT_TONE_PLAYER_BRIDGE_CONNECTION_PORT;
+   case Tone:       
+      connectionPort = mToneGenPortOnBridge;
       break;
    case File:
    case Cache:
    case Http:
    case Https:
-      connectionPort = DEFAULT_FILE_PLAYER_BRIDGE_CONNECTION_PORT;
+      connectionPort = mFromFilePortOnBridge;
       break;
    case Invalid:
       WarningLog(<< "MediaResourceParticipant::getConnectionPortOnBridge invalid resource type: " << mResourceType);
