@@ -19,8 +19,7 @@ LocalParticipant::LocalParticipant(ConversationManager::ParticipantHandle partHa
                                    ConversationManager& conversationManager)
 : Participant(partHandle, conversationManager)
 {
-  //((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_INPUT_DEVICE_RESOURCE_NAME,0,mLocalPortOnBridge);
-   mLocalPortOnBridge = DEFAULT_LOCAL_RESOURCE_BRIDGE_CONNECTION_PORT;  // Would be nice if we could query this (like in MediaResourceParticipant), but above line does not work
+  ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_AEC_RESOURCE_NAME,0,mLocalPortOnBridge);
    InfoLog(<< "LocalParticipant created, handle=" << mHandle);
 }
 
