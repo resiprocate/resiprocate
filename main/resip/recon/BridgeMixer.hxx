@@ -6,10 +6,6 @@
 
 namespace recon
 {
-
-// These must align with sipX implementation
-#define DEFAULT_LOCAL_RESOURCE_BRIDGE_CONNECTION_PORT     2
-
 class ConversationManager;
 class Participant;
 
