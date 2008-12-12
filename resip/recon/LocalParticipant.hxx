@@ -28,7 +28,9 @@ class LocalParticipant : public Participant
       virtual int getConnectionPortOnBridge();
       virtual void destroyParticipant();
 
-   protected:       
+   protected:     
+   private:
+      int mLocalPortOnBridge;
 };
 
 }

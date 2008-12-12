@@ -533,6 +533,7 @@ private:
 
    friend class RemoteParticipantDialogSet;
    friend class MediaResourceParticipant;
+   friend class LocalParticipant;
    friend class BridgeMixer;
    CpMediaInterface* getMediaInterface() { return mMediaInterface; }
    unsigned int allocateRTPPort();
