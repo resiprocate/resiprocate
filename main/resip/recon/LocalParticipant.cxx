@@ -4,6 +4,7 @@
 #include "UserAgent.hxx"
 #include "ReconSubsystem.hxx"
 #include "LocalParticipant.hxx"
+#include <CpTopologyGraphInterface.h>
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -18,6 +19,8 @@ LocalParticipant::LocalParticipant(ConversationManager::ParticipantHandle partHa
                                    ConversationManager& conversationManager)
 : Participant(partHandle, conversationManager)
 {
+  //((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_FROM_INPUT_DEVICE_RESOURCE_NAME,0,mLocalPortOnBridge);
+   mLocalPortOnBridge = DEFAULT_LOCAL_RESOURCE_BRIDGE_CONNECTION_PORT;  // Would be nice if we could query this (like in MediaResourceParticipant), but above line does not work
    InfoLog(<< "LocalParticipant created, handle=" << mHandle);
 }
 
@@ -37,7 +40,7 @@ LocalParticipant::~LocalParticipant()
 int 
 LocalParticipant::getConnectionPortOnBridge()
 {
-   return DEFAULT_LOCAL_RESOURCE_BRIDGE_CONNECTION_PORT;
+   return mLocalPortOnBridge;
 }
 
 void
