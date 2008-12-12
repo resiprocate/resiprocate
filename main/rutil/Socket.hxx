@@ -76,8 +76,8 @@ initNetwork();
 
 #ifndef WIN32
 typedef int Socket;
-static const Socket INVALID_SOCKET = -1;
-static const int SOCKET_ERROR = -1;
+#define INVALID_SOCKET (-1)
+#define SOCKET_ERROR   (-1)
 inline int getErrno() { return errno; }
 #else
 typedef SOCKET Socket;
