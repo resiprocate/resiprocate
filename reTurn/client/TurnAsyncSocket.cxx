@@ -218,8 +218,8 @@ TurnAsyncSocket::doCreateAllocation(unsigned int lifetime,
    
    if(requestedProps != StunMessage::PropsNone)
    {
-      request->mHasTurnRequestedProps = true;
-      request->mTurnRequestedProps.propType = requestedProps;
+      request->mHasTurnEvenPort = true;
+      request->mTurnEvenPort.propType = requestedProps;
    }
    else if(reservationToken != 0)
    {
@@ -321,8 +321,8 @@ RemotePeer* TurnAsyncSocket::doChannelBinding(const StunTuple& remoteTuple)
    // Set headers
    request->mHasTurnChannelNumber = true;
    request->mTurnChannelNumber = remotePeer->getChannel();
-   request->mHasTurnPeerAddress = true;
-   StunMessage::setStunAtrAddressFromTuple(request->mTurnPeerAddress, remoteTuple);
+   request->mHasTurnXorPeerAddress = true;
+   StunMessage::setStunAtrAddressFromTuple(request->mTurnXorPeerAddress, remoteTuple);
 
    // Send the Request and start transaction timers
    sendStunMessage(request);
@@ -650,7 +650,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
 asio::error_code
 TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
 {
-   if(!stunMessage.mHasTurnPeerAddress || !stunMessage.mHasTurnData)
+   if(!stunMessage.mHasTurnXorPeerAddress || !stunMessage.mHasTurnData)
    {
       // Missing RemoteAddress or TurnData attribute
       WarningLog(<< "TurnAsyncSocket::handleDataInd: DataInd missing attributes.");
@@ -659,7 +659,7 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
 
    StunTuple remoteTuple;
    remoteTuple.setTransportType(mRelayTransportType);
-   StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnPeerAddress);
+   StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress);
 
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
    if(!remotePeer)
@@ -804,10 +804,10 @@ TurnAsyncSocket::handleAllocateResponse(StunMessage &request, StunMessage &respo
          reflexiveTuple.setTransportType(mLocalBinding.getTransportType());
          StunMessage::setTupleFromStunAtrAddress(reflexiveTuple, response.mXorMappedAddress);
       }
-      if(response.mHasTurnRelayAddress)
+      if(response.mHasTurnXorRelayedAddress)
       {
          relayTuple.setTransportType(mRelayTransportType);
-         StunMessage::setTupleFromStunAtrAddress(relayTuple, response.mTurnRelayAddress);
+         StunMessage::setTupleFromStunAtrAddress(relayTuple, response.mTurnXorRelayedAddress);
       }
       if(response.mHasTurnLifetime)
       {
@@ -982,8 +982,8 @@ TurnAsyncSocket::sendTo(RemotePeer& remotePeer, boost::shared_ptr<DataBuffer>& d
       // Data must be wrapped in a Send Indication
       // Wrap data in a SendInd
       StunMessage* ind = createNewStunMessage(StunMessage::StunClassIndication, StunMessage::TurnSendMethod, false);
-      ind->mHasTurnPeerAddress = true;
-      StunMessage::setStunAtrAddressFromTuple(ind->mTurnPeerAddress, remotePeer.getPeerTuple());
+      ind->mHasTurnXorPeerAddress = true;
+      StunMessage::setStunAtrAddressFromTuple(ind->mTurnXorPeerAddress, remotePeer.getPeerTuple());
       if(data->size() > 0)
       {
          ind->setTurnData(data->data(), data->size());

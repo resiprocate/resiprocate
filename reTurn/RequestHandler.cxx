@@ -533,21 +533,20 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    }
                                 
    unsigned short port = 0;  // Default to Any free port
-   UInt8 props = StunMessage::PropsNone;
-   if(request.mHasTurnRequestedProps)
+   if(request.mHasTurnEvenPort)
    {
       if(request.mHasTurnReservationToken)
       {
-         WarningLog(<< "Both Requested Props and Reservation Token headers are present.  Sending 400.");
+         WarningLog(<< "Both EvenPort and Reservation Token headers are present.  Sending 400.");
          buildErrorResponse(response, 400, "Bad request - both Requested Props and Reservation Token present");  
          return RespondFromReceiving;
       }
-      if(request.mTurnRequestedProps.propType == StunMessage::PropsPortEven)
+      if(request.mTurnEvenPort.propType == StunMessage::PropsPortEven)
       {
          // Attempt to allocate an even port
          port = mTurnManager.allocateEvenPort(allocationTuple.getTransportType());
       }
-      else if(request.mTurnRequestedProps.propType == StunMessage::PropsPortPair)
+      else if(request.mTurnEvenPort.propType == StunMessage::PropsPortPair)
       {
          // Attempt to allocate an even port, with a free adjacent odd port
          port = mTurnManager.allocateEvenPortPair(allocationTuple.getTransportType());
@@ -634,8 +633,8 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    response.mHasTurnLifetime = true;
    response.mTurnLifetime = lifetime;
 
-   response.mHasTurnRelayAddress = true;
-   StunMessage::setStunAtrAddressFromTuple(response.mTurnRelayAddress, allocation->getRequestedTuple());
+   response.mHasTurnXorRelayedAddress = true;
+   StunMessage::setStunAtrAddressFromTuple(response.mTurnXorRelayedAddress, allocation->getRequestedTuple());
 
    // Note:  XorMappedAddress is added to all TurnAllocate responses in processStunMessage
   
@@ -775,11 +774,11 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
       return RespondFromReceiving;
    }
 
-   if(request.mHasTurnPeerAddress && request.mHasTurnChannelNumber)
+   if(request.mHasTurnXorPeerAddress && request.mHasTurnChannelNumber)
    {
       StunTuple remoteAddress;
       remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
-      StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnPeerAddress);
+      StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress);
 
       if(!allocation->addChannelBinding(remoteAddress, request.mTurnChannelNumber))
       {
@@ -818,15 +817,15 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
       return;
    }
 
-   if(!request.mHasTurnPeerAddress)
+   if(!request.mHasTurnXorPeerAddress)
    {
-      WarningLog(<< "Turn send indication with no remote address.  Dropping.");
+      WarningLog(<< "Turn send indication with no peer address.  Dropping.");
       return;
    }
 
    StunTuple remoteAddress;
    remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
-   StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnPeerAddress);
+   StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress);
 
    if(request.mHasTurnData)  
    {

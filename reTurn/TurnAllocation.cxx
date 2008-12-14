@@ -197,8 +197,8 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr
    {
       StunMessage dataInd;
       dataInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnDataMethod);
-      dataInd.mHasTurnPeerAddress = true;
-      StunMessage::setStunAtrAddressFromTuple(dataInd.mTurnPeerAddress, peerAddress);
+      dataInd.mHasTurnXorPeerAddress = true;
+      StunMessage::setStunAtrAddressFromTuple(dataInd.mTurnXorPeerAddress, peerAddress);
       dataInd.setTurnData(data->data(), (unsigned int)data->size());
 
       // send DataInd to local client
