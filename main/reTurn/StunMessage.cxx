@@ -132,15 +132,13 @@ StunMessage::init()
    mHasSecondaryAddress = false;
    mHasTurnChannelNumber = false;
    mHasTurnLifetime = false;
-   mHasTurnAlternateServer = false;
-   mHasTurnMagicCookie = false;
    mHasTurnBandwidth = false;
-   mHasTurnDestinationAddress = false;
-   mHasTurnPeerAddress = false;
+   mHasTurnXorPeerAddress = false;
    mHasTurnData = false;
-   mHasTurnRelayAddress = false;
-   mHasTurnRequestedProps = false;
+   mHasTurnXorRelayedAddress = false;
+   mHasTurnEvenPort = false;
    mHasTurnRequestedTransport = false;
+   mHasTurnDontFragment = false;
    mHasTurnReservationToken = false;
    mHasTurnConnectStat = false;
    mErrorCode.reason = 0;
@@ -375,14 +373,14 @@ StunMessage::stunParseAtrAddress( char* body, unsigned int hdrLen, StunAtrAddres
 }
 
 bool 
-StunMessage::stunParseAtrRequestedProps( char* body, unsigned int hdrLen,  TurnAtrRequestedProps& result )
+StunMessage::stunParseAtrEvenPort( char* body, unsigned int hdrLen,  TurnAtrEvenPort& result )
 {
-   if ( hdrLen != 4 )
+   if ( hdrLen != 1 )
    {
-      WarningLog(<< "hdrLen wrong for RequestedProps");
+      WarningLog(<< "hdrLen wrong for EvenPort");
       return false;
    }
-   result.propType = *body;  // copy first 8 bits into propType
+   result.propType = *body & 0x80;  // copy first 8 bits into propType - but only look at highest order
 	
    return true;
 }
@@ -886,40 +884,6 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             }
             break;
 
-         case TurnAlternateServer:
-            if(!mHasTurnAlternateServer)
-            {
-               mHasTurnAlternateServer = true;
-               if ( stunParseAtrAddress(  body,  attrLen,  mTurnAlternateServer ) == false )
-               {
-                  WarningLog(<< "problem parsing turn alternate server");
-                  return false;
-               }
-               StackLog(<< "Turn Alternate Server = " << mTurnAlternateServer);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate TurnAlternateServer in message - ignoring.");
-            }
-            break;
-
-         case TurnMagicCookie:
-            if(!mHasTurnMagicCookie)
-            {
-               mHasTurnMagicCookie = true;
-               if (stunParseAtrUInt32( body, attrLen, mTurnMagicCookie) == false)
-               {
-                  WarningLog(<< "problem parsing turn magic cookie");
-                  return false;
-               }
-               StackLog(<< "TurnMagicCookie (deprecated) = " << mTurnMagicCookie);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate TurnMagicCookie in message - ignoring.");
-            }
-            break;
-
          case TurnBandwidth:
             if(!mHasTurnBandwidth)
             {
@@ -937,37 +901,20 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             }
             break;
 
-         case TurnDestinationAddress:
-            if(!mHasTurnDestinationAddress)
+         case TurnXorPeerAddress:
+            if(!mHasTurnXorPeerAddress)
             {
-               mHasTurnDestinationAddress = true;
-               if ( stunParseAtrAddress(  body,  attrLen,  mTurnDestinationAddress ) == false )
-               {
-                  WarningLog(<< "problem parsing turn destination address");
-                  return false;
-               }
-               StackLog(<< "Turn Destination Address = " << mTurnDestinationAddress);
-            }
-            else
-            {
-               WarningLog(<< "Duplicate TurnDestinationAddress in message - ignoring.");
-            }
-            break;
-
-         case TurnPeerAddress:
-            if(!mHasTurnPeerAddress)
-            {
-               mHasTurnPeerAddress = true;
-               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnPeerAddress ) == false )
+               mHasTurnXorPeerAddress = true;
+               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnXorPeerAddress ) == false )
                {
                   WarningLog(<< "problem parsing turn peer address");
                   return false;
                }
-               StackLog(<< "Turn Peer Address = " << mTurnPeerAddress);
+               StackLog(<< "Turn Peer Address = " << mTurnXorPeerAddress);
             }
             else
             {
-               WarningLog(<< "Duplicate TurnPeerAddress in message - ignoring.");
+               WarningLog(<< "Duplicate TurnXorPeerAddress in message - ignoring.");
             }
             break;
 
@@ -984,37 +931,37 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             }
             break;
 
-         case TurnRelayAddress:
-            if(!mHasTurnRelayAddress)
+         case TurnXorRelayedAddress:
+            if(!mHasTurnXorRelayedAddress)
             {
-               mHasTurnRelayAddress = true;
-               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnRelayAddress ) == false )
+               mHasTurnXorRelayedAddress = true;
+               if ( stunParseAtrXorAddress(  body,  attrLen,  mTurnXorRelayedAddress ) == false )
                {
                   WarningLog(<< "problem parsing turn relay address");
                   return false;
                }
-               StackLog(<< "Turn Relay Address = " << mTurnRelayAddress);
+               StackLog(<< "Turn Relayed Address = " << mTurnXorRelayedAddress);
             }
             else
             {
-               WarningLog(<< "Duplicate TurnRelayAddress in message - ignoring.");
+               WarningLog(<< "Duplicate TurnXorRelayedAddress in message - ignoring.");
             }
             break;
 
-         case TurnRequestedProps:
-            if(!mHasTurnRequestedProps)
+         case TurnEvenPort:
+            if(!mHasTurnEvenPort)
             {
-               mHasTurnRequestedProps = true;
-               if (stunParseAtrRequestedProps( body, attrLen, mTurnRequestedProps) == false)
+               mHasTurnEvenPort = true;
+               if (stunParseAtrEvenPort( body, attrLen, mTurnEvenPort) == false)
                {
-                  WarningLog(<< "problem parsing turn requested props");
+                  WarningLog(<< "problem parsing turn even port");
                   return false;
                }
-               StackLog(<< "Turn Requested Props = " << (int)mTurnRequestedProps.propType);
+               StackLog(<< "Turn Even Port = " << (int)mTurnEvenPort.propType);
             }
             else
             {
-               WarningLog(<< "Duplicate TurnRequestedProps in message - ignoring.");
+               WarningLog(<< "Duplicate TurnEvenPort in message - ignoring.");
             }
             break;
 
@@ -1034,6 +981,23 @@ StunMessage::stunParseMessage( char* buf, unsigned int bufLen)
             else
             {
                WarningLog(<< "Duplicate TurnRequestedTransport in message - ignoring.");
+            }
+            break;
+
+         case TurnDontFragment:
+            if(!mHasTurnDontFragment)
+            {
+               mHasTurnDontFragment = true;
+               if(attrLen != 0)
+               {
+                  WarningLog(<< "invalid attribute length for DontFragment attribute");
+                  return false;
+               }
+               StackLog(<< "Turn Dont Fragement = <exists>");
+            }
+            else
+            {
+               WarningLog(<< "Duplicate TurnDontFragment in message - ignoring.");
             }
             break;
 
@@ -1341,10 +1305,10 @@ StunMessage::encodeAtrIntegrity(char* ptr, const StunAtrIntegrity& atr)
 }
 
 char* 
-StunMessage::encodeAtrRequestedProps(char* ptr, const TurnAtrRequestedProps& atr)
+StunMessage::encodeAtrEvenPort(char* ptr, const TurnAtrEvenPort& atr)
 {
-   ptr = encode16(ptr, TurnRequestedProps);
-   ptr = encode16(ptr, 4);
+   ptr = encode16(ptr, TurnEvenPort);
+   ptr = encode16(ptr, 1);
    *ptr++ = atr.propType;  
    *ptr++ = 0; // pad
    ptr = encode16(ptr, 0); // pad
@@ -1371,12 +1335,6 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
    char* lengthp = ptr;
    ptr = encode16(ptr, 0);
    ptr = encode(ptr, reinterpret_cast<const char*>(&mHeader.id), sizeof(mHeader.id));
-
-   if (mHasTurnMagicCookie)
-   {
-      StackLog(<< "Encoding TurnMagicCookie: " << mTurnMagicCookie);
-      ptr = encodeAtrUInt32(ptr, TurnMagicCookie, mTurnMagicCookie);
-   }
 
    if (mHasMappedAddress)
    {
@@ -1474,46 +1432,42 @@ StunMessage::stunEncodeMessage(char* buf, unsigned int bufLen)
       StackLog(<< "Encoding Turn Lifetime: " << mTurnLifetime);
       ptr = encodeAtrUInt32(ptr, TurnLifetime, mTurnLifetime);
    }
-   if (mHasTurnAlternateServer)
-   {
-      StackLog(<< "Encoding Turn AlternateServer: " << mTurnAlternateServer);
-      ptr = encodeAtrAddress(ptr, TurnAlternateServer, mTurnAlternateServer);
-   }
    if (mHasTurnBandwidth)
    {
       StackLog(<< "Encoding Turn Bandwidth: " << mTurnBandwidth);
       ptr = encodeAtrUInt32(ptr, TurnBandwidth, mTurnBandwidth);
    }   
-   if (mHasTurnDestinationAddress)
+   if (mHasTurnXorPeerAddress)
    {
-      StackLog(<< "Encoding Turn DestinationAddress: " << mTurnDestinationAddress);
-      ptr = encodeAtrAddress (ptr, TurnDestinationAddress, mTurnDestinationAddress);
-   }
-   if (mHasTurnPeerAddress)
-   {
-      StackLog(<< "Encoding Turn PeerAddress: " << mTurnPeerAddress);
-      ptr = encodeAtrXorAddress (ptr, TurnPeerAddress, mTurnPeerAddress);
+      StackLog(<< "Encoding Turn XorPeerAddress: " << mTurnXorPeerAddress);
+      ptr = encodeAtrXorAddress (ptr, TurnXorPeerAddress, mTurnXorPeerAddress);
    }
    if (mHasTurnData)
    {
       StackLog(<< "Encoding TurnData (not shown)");
       ptr = encodeTurnData (ptr, mTurnData);
    }
-   if (mHasTurnRelayAddress)
+   if (mHasTurnXorRelayedAddress)
    {
-      StackLog(<< "Encoding Turn RelayAddress: " << mTurnRelayAddress);
-      ptr = encodeAtrXorAddress (ptr, TurnRelayAddress, mTurnRelayAddress);
+      StackLog(<< "Encoding Turn XorRelayedAddress: " << mTurnXorRelayedAddress);
+      ptr = encodeAtrXorAddress (ptr, TurnXorRelayedAddress, mTurnXorRelayedAddress);
    }
-   if (mHasTurnRequestedProps)
+   if (mHasTurnEvenPort)
    {
-      StackLog(<< "Encoding Turn RequestedProps: " << (int)mTurnRequestedProps.propType);
-      ptr = encodeAtrRequestedProps(ptr, mTurnRequestedProps);
+      StackLog(<< "Encoding Turn EvenPort: " << (int)mTurnEvenPort.propType);
+      ptr = encodeAtrEvenPort(ptr, mTurnEvenPort);
    }   
    if (mHasTurnRequestedTransport)
    {
       StackLog(<< "Encoding Turn RequestedTransport: " << (int)mTurnRequestedTransport);
       ptr = encodeAtrUInt32(ptr, TurnRequestedTransport, UInt32(mTurnRequestedTransport << 24));
    }   
+   if (mHasTurnDontFragment)
+   {
+      StackLog(<< "Encoding Turn DontFragment: <exists>");
+      ptr = encode16(ptr, TurnDontFragment);
+      ptr = encode16(ptr, 0);  // 0 attribute length
+   }
    if (mHasTurnReservationToken)
    {
       StackLog(<< "Encoding Turn ReservationToken: " << mTurnReservationToken);
