@@ -2,7 +2,6 @@
 #include "../AsyncSocketBase.hxx"
 #include "ErrorCode.hxx"
 #include <boost/bind.hpp>
-#include <rutil/MD5Stream.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
 #include "../ReTurnSubsystem.hxx"
@@ -587,9 +586,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
             {
                mNonce = *stunMessage.mNonce;
                mRealm = *stunMessage.mRealm;
-               MD5Stream r;
-               r << mUsername << ":" << mRealm << ":" << mPassword;
-               mHmacKey = r.getBin();
+               stunMessage.calculateHmacKey(mHmacKey, mUsername, mRealm, mPassword);
 
                // Create a new transaction - by starting with old request
                StunMessage* newRequest = it->second->mRequestMessage;
