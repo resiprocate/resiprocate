@@ -220,8 +220,8 @@ TurnSocket::createAllocation(unsigned int lifetime,
 
    if(mRequestedProps != StunMessage::PropsNone)
    {
-      request.mHasTurnRequestedProps = true;
-      request.mTurnRequestedProps.propType = mRequestedProps;
+      request.mHasTurnEvenPort = true;
+      request.mTurnEvenPort.propType = mRequestedProps;
    }
    else if(mReservationToken != 0)
    {
@@ -240,7 +240,7 @@ TurnSocket::createAllocation(unsigned int lifetime,
       mReflexiveTuple.setTransportType(mLocalBinding.getTransportType());
       StunMessage::setTupleFromStunAtrAddress(mReflexiveTuple, response->mXorMappedAddress);
    }
-   if(response->mHasTurnRelayAddress)
+   if(response->mHasTurnXorRelayedAddress)
    {
       // Transport Type is requested type or socket type
       if(request.mHasTurnRequestedTransport)
@@ -251,7 +251,7 @@ TurnSocket::createAllocation(unsigned int lifetime,
       {
          mRelayTuple.setTransportType(mLocalBinding.getTransportType());  
       }
-      StunMessage::setTupleFromStunAtrAddress(mRelayTuple, response->mTurnRelayAddress);
+      StunMessage::setTupleFromStunAtrAddress(mRelayTuple, response->mTurnXorRelayedAddress);
    }
    if(response->mHasTurnLifetime)
    {
@@ -429,8 +429,8 @@ TurnSocket::channelBind(StunTuple& remoteTuple, asio::error_code& errorCode)
    // Set headers
    request.mHasTurnChannelNumber = true;
    request.mTurnChannelNumber = remotePeer->getChannel();
-   request.mHasTurnPeerAddress = true;
-   StunMessage::setStunAtrAddressFromTuple(request.mTurnPeerAddress, remoteTuple);
+   request.mHasTurnXorPeerAddress = true;
+   StunMessage::setStunAtrAddressFromTuple(request.mTurnXorPeerAddress, remoteTuple);
 
    StunMessage* response = sendRequestAndGetResponse(request, errorCode);
    if(response == 0)
@@ -554,17 +554,17 @@ TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size
       // Wrap data in a SendInd
       StunMessage ind;
       ind.createHeader(StunMessage::StunClassIndication, StunMessage::TurnSendMethod);
-      ind.mHasTurnPeerAddress = true;
-      ind.mTurnPeerAddress.port = remotePeer.getPeerTuple().getPort();
+      ind.mHasTurnXorPeerAddress = true;
+      ind.mTurnXorPeerAddress.port = remotePeer.getPeerTuple().getPort();
       if(remotePeer.getPeerTuple().getAddress().is_v6())
       {
-         ind.mTurnPeerAddress.family = StunMessage::IPv6Family;
-         memcpy(&ind.mTurnPeerAddress.addr.ipv6, remotePeer.getPeerTuple().getAddress().to_v6().to_bytes().c_array(), sizeof(ind.mTurnPeerAddress.addr.ipv6));
+         ind.mTurnXorPeerAddress.family = StunMessage::IPv6Family;
+         memcpy(&ind.mTurnXorPeerAddress.addr.ipv6, remotePeer.getPeerTuple().getAddress().to_v6().to_bytes().c_array(), sizeof(ind.mTurnXorPeerAddress.addr.ipv6));
       }
       else
       {
-         ind.mTurnPeerAddress.family = StunMessage::IPv4Family;
-         ind.mTurnPeerAddress.addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_ulong();
+         ind.mTurnXorPeerAddress.family = StunMessage::IPv4Family;
+         ind.mTurnXorPeerAddress.addr.ipv4 = remotePeer.getPeerTuple().getAddress().to_v4().to_ulong();
       }
       if(size > 0)
       {
@@ -730,7 +730,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
             return asio::error_code(reTurn::UnknownRequiredAttributes, asio::error::misc_category);
          }
 
-         if(!stunMessage.mHasTurnPeerAddress || !stunMessage.mHasTurnData)
+         if(!stunMessage.mHasTurnXorPeerAddress || !stunMessage.mHasTurnData)
          {
             // Missing RemoteAddress or TurnData attribute
             WarningLog(<< "DataInd missing attributes.");
@@ -739,7 +739,7 @@ TurnSocket::handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned i
 
          StunTuple remoteTuple;
          remoteTuple.setTransportType(mRelayTuple.getTransportType());
-         StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnPeerAddress);
+         StunMessage::setTupleFromStunAtrAddress(remoteTuple, stunMessage.mTurnXorPeerAddress);
 
          RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
          if(!remotePeer)
