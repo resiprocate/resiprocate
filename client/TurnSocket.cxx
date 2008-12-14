@@ -1,7 +1,6 @@
 #include "TurnSocket.hxx"
 #include "ErrorCode.hxx"
 #include <boost/bind.hpp>
-#include <rutil/MD5Stream.hxx>
 #include <rutil/Lock.hxx>
 #include <rutil/WinLeakCheck.hxx>
 #include <rutil/Logger.hxx>
@@ -986,9 +985,7 @@ TurnSocket::sendRequestAndGetResponse(StunMessage& request, asio::error_code& er
                {
                   mNonce = *response->mNonce;
                   mRealm = *response->mRealm;
-                  MD5Stream r;
-                  r << mUsername << ":" << mRealm << ":" << mPassword;
-                  mHmacKey = r.getBin();
+                  response->calculateHmacKey(mHmacKey, mUsername, mRealm, mPassword);
 
                   // Re-Issue reques (with new TID)
                   request.createHeader(request.mClass, request.mMethod);  // updates TID
