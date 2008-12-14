@@ -39,7 +39,7 @@ public:
    virtual void disableTurnAsyncHandler();
    virtual unsigned int getSocketDescriptor() = 0;
 
-   // Note: Shared Secret requests have been deprecated by RFC3489-bis11, and not 
+   // Note: Shared Secret requests have been deprecated by RFC5389, and not 
    //       widely implemented in RFC3489 - so not really needed at all
    void requestSharedSecret();
 
