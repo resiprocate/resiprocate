@@ -1647,15 +1647,21 @@ StunMessage::calculateHmacKey(Data& hmacKey, const Data& longtermAuthenticationP
 
    if(mHasRealm)  // Longterm authenicationmode
    {
-      MD5Stream r;
-      r << *mUsername << ":" << *mRealm << ":" << longtermAuthenticationPassword;
-      hmacKey = r.getBin();
-      DebugLog(<< "calculateHmacKey: '" << *mUsername << ":" << *mRealm << ":" << longtermAuthenticationPassword << "' = " << hmacKey);
+      calculateHmacKey(hmacKey, *mUsername, *mRealm, longtermAuthenticationPassword);
    }
    else
    {
       generateShortTermPasswordForUsername(hmacKey);
    }
+}
+
+void
+StunMessage::calculateHmacKey(Data& hmacKey, const Data& username, const Data& realm, const Data& longtermAuthenticationPassword)
+{
+   MD5Stream r;
+   r << username << ":" << realm << ":" << longtermAuthenticationPassword;
+   hmacKey = r.getBin();
+   DebugLog(<< "calculateHmacKey: '" << username << ":" << realm << ":" << longtermAuthenticationPassword << "' = " << hmacKey);
 }
 
 bool 
