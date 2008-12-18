@@ -99,7 +99,7 @@ Note:  sipXtapi SVN repository has recently changed locations from:
        copy to the new location:
        svn switch https://scm.sipfoundry.org/rep/sipX/main
 
-Note:  Ensure you use at least SVN revision 11090 of sipXtapi.
+Note:  Ensure you use at least SVN revision 11109 of sipXtapi.
 
 /resip/                     <- https://svn.resiprocate.org/rep/resiprocate/main
 /resip/contrib/openssl      <- https://svn.resiprocate.org/rep/resiprocate/contrib/dtls-srtp/openssl
