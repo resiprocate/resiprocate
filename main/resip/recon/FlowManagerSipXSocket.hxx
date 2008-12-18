@@ -7,6 +7,9 @@
 
 using namespace flowmanager;
 
+namespace recon
+{
+
 class FlowManagerSipXSocket : public OsSocket
 {
 /* //////////////////////////// PUBLIC //////////////////////////////////// */
@@ -125,6 +128,7 @@ private:
    Flow* mFlow;
 };
 
+}
 /* ============================ INLINE METHODS ============================ */
 
 

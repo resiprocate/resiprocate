@@ -15,6 +15,7 @@
 #include "FlowManagerSipXSocket.hxx"
 
 using namespace std;
+using namespace recon;
 
 // Constructor
 FlowManagerSipXSocket::FlowManagerSipXSocket(Flow* flow) 

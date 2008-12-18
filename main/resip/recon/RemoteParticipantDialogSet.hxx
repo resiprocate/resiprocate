@@ -31,6 +31,7 @@ namespace recon
 {
 class ConversationManager;
 class RemoteParticipant;
+class FlowManagerSipXSocket;
 
 /**
   This class is used by Invite DialogSets.  Non-Invite DialogSets
@@ -108,6 +109,8 @@ private:
    flowmanager::MediaStream* mMediaStream;
    reTurn::StunTuple mRtpTuple;
    reTurn::StunTuple mRtcpTuple;
+   FlowManagerSipXSocket* mRtpSocket;
+   FlowManagerSipXSocket* mRtcpSocket;
 
    // SDP Negotiations that may need to be delayed due to FlowManager binding/allocation
    resip::SharedPtr<resip::SipMessage> mPendingInvite;
