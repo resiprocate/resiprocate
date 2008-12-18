@@ -306,25 +306,13 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
             }
             else
             {
-               // The message body is complete.
-               mMessage->setBody(unprocessedCharPtr, contentLength);
-               if (!transport()->basicCheck(*mMessage))
-               {
-                  delete mMessage;
-                  mMessage = 0;
-               }
-               else
-               {
-                  Transport::stampReceived(mMessage);
-                  DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
-                  fifo.add(mMessage);
-                  mMessage = 0;                  
-               }
-
+               // Do this stuff BEFORE we kick the message out the door.
+               // Remember, deleting or passing mMessage on invalidates our
+               // buffer!
                int overHang = numUnprocessedChars - contentLength;
 
                mConnState = NewMessage;
-               mBuffer = 0;               
+               mBuffer = 0;
                if (overHang > 0) 
                {
                   // The next message has been partially read.
@@ -345,6 +333,25 @@ ConnectionBase::preparseNewBytes(int bytesRead, Fifo<TransactionMessage>& fifo)
                   DebugLog (<< Data(mBuffer, overHang));
                   
                   bytesRead = overHang;
+               }
+
+               // The message body is complete.
+               mMessage->setBody(unprocessedCharPtr, contentLength);
+               if (!transport()->basicCheck(*mMessage))
+               {
+                  delete mMessage;
+                  mMessage = 0;
+               }
+               else
+               {
+                  Transport::stampReceived(mMessage);
+                  DebugLog(<< "##Connection: " << *this << " received: " << *mMessage);
+                  fifo.add(mMessage);
+                  mMessage = 0;
+               }
+
+               if (overHang > 0) 
+               {
                   goto start;
                }
             }
