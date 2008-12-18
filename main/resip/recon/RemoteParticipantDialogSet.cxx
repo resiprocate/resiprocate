@@ -53,6 +53,8 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mActiveRemoteParticipantHandle(0),
    mNatTraversalMode(flowmanager::MediaStream::NoNatTraversal),
    mMediaStream(0),
+   mRtpSocket(0),
+   mRtcpSocket(0),
    mProposedSdp(0),
    mSecureMediaMode(ConversationProfile::NoSecureMedia),
    mSecureMediaRequired(false),
@@ -81,7 +83,11 @@ RemoteParticipantDialogSet::~RemoteParticipantDialogSet()
    {
       delete mUACOriginalRemoteParticipant;
    }
-   
+
+   // Delete custom sockets - Note:  Must be done before MediaStream is deleted
+   if(mRtpSocket) delete mRtpSocket;
+   if(mRtcpSocket) delete mRtcpSocket;
+
    // Delete Media Stream
    delete mMediaStream;
 
@@ -193,9 +199,9 @@ RemoteParticipantDialogSet::getLocalRTPPort()
                      profile->stunPassword().c_str()); 
 
          // New Remote Participant - create media Interface connection
-         FlowManagerSipXSocket* rtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow());
-         FlowManagerSipXSocket* rtcpSocket = new FlowManagerSipXSocket(mMediaStream->getRtcpFlow());
-         ret = ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->createConnection(mMediaConnectionId,rtpSocket,rtcpSocket,false);
+         mRtpSocket = new FlowManagerSipXSocket(mMediaStream->getRtpFlow());
+         mRtcpSocket = new FlowManagerSipXSocket(mMediaStream->getRtcpFlow());
+         ret = ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->createConnection(mMediaConnectionId,mRtpSocket,mRtcpSocket,false);
 #ifdef DISABLE_FLOWMANAGER_IF_NO_NAT_TRAVERSAL
       }
       else
