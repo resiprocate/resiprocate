@@ -1672,14 +1672,12 @@ SdpContents::Session::Medium::findFirstMatchingCodecs(const std::list<Codec>& co
    std::list<resip::SdpContents::Session::Codec>::const_iterator sEnd = internalCodecList.end();
    std::list<resip::SdpContents::Session::Codec>::const_iterator eIter;
    std::list<resip::SdpContents::Session::Codec>::const_iterator eEnd = codecList.end();
-   bool found = false;
    for (eIter = codecList.begin(); eIter != eEnd ; ++eIter)
    {
       for (sIter = internalCodecList.begin(); sIter != sEnd; ++sIter)
       {
          if (*sIter == *eIter)
          {
-            found = true;
 			   if (pMatchingCodec) 
             {
                *pMatchingCodec = *eIter;
