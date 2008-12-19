@@ -377,11 +377,14 @@ class SdpContents : public Contents
                   Data& protocol() {return mProtocol;}
 
                   // preferred codec/format interface
+                  // Note:  internal storage of formats, rtpmap attributes, and ftmp attributes are cleared out after 
+                  //        codecs() is called, since they get converted internally as Codec objects
                   const std::list<Codec>& codecs() const;
                   std::list<Codec>& codecs();
                   void clearCodecs();
                   void addCodec(const Codec& codec);
 
+                  // Note: formats are clear out and converted in codec objects when codecs() is called
                   const std::list<Data>& getFormats() const {return mFormats;}
                   const Data& information() const {return mInformation;}
                   Data& information() {return mInformation;}
