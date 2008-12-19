@@ -400,7 +400,13 @@ class SdpContents : public Contents
                   const std::list<Data>& getValues(const Data& key) const;
                   void clearAttribute(const Data& key);
 
+                  // Search through this mediums codecs to find and return the first match from the passed in list
+                  // Note:  The codecList item that matched the codec from the medium is passed back via pMatchingCodec 
+                  //        if a non-NULL pointer is passed in.  The codec returned if from this medium.
                   const Codec& findFirstMatchingCodecs(const std::list<Codec>& codecList, Codec* pMatchingCodec = 0) const;
+                  // Search through this mediums codecs to find and return the first match from the passed in medium
+                  // Note:  The passed in medium's codec that matched the codec from this medium is passed back 
+                  //        via pMatchingCodec if a non-NULL pointer is passed in.  The codec returned if from this medium.
                   const Codec& findFirstMatchingCodecs(const Medium& medium, Codec* pMatchingCodec = 0) const;
 
                   int findTelephoneEventPayloadType() const;
