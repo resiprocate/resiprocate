@@ -109,7 +109,19 @@ TransactionState::process(TransactionController& controller)
       return;
    }
 
-   Data tid = message->getTransactionId();
+   // .bwc. We can't do anything without a tid here. Check this first.
+   Data tid;
+   try
+   {
+      tid = message->getTransactionId();
+   }
+   catch (SipMessage::Exception&)
+   {
+      // .bwc This is not our error. Do not ErrLog.
+      DebugLog(<< "TransactionState::process dropping message with invalid tid " << message->brief());
+      delete message;
+      return;
+   }
 
    // This ensures that CANCEL requests form unique transactions
    if (sip && sip->header(h_CSeq).method() == CANCEL) 
@@ -1226,6 +1238,52 @@ TransactionState::processNoDnsResults()
 void
 TransactionState::processTransportFailure()
 {
+   // .bwc. We should only try multiple dns results if we are originating a
+   // request. Additionally, there are (potential) cases where it would not
+   // be appropriate to fail over even then.
+   if (mMachine == ClientNonInvite)
+   {
+      if (mState == Completed || mState == Terminated)
+      {
+         WarningLog(<< "Got a TransportFailure message in a " << mState <<
+         " ClientNonInvite transaction. How did this happen? Since we have"
+         " already completed the transaction, we shouldn't try"
+         " additional DNS results.");
+         return;
+      }
+   }
+   else if (mMachine == ClientInvite)
+   {
+      if (mState == Completed || mState == Terminated)
+      {
+         // .bwc. Perhaps the attempted transmission of the ACK failed here.
+         // (assuming this transaction got a failure response; not sure what
+         // might have happened if this is not the case)
+         // In any case, we should not try sending the INVITE anywhere else.
+         InfoLog(<< "Got a TransportFailure message in a " << mState <<
+         " ClientInvite transaction. Since we have"
+         " already completed the transaction, we shouldn't try"
+         " additional DNS results.");
+         return;
+      }
+      else if (mState == Proceeding)
+      {
+         // .bwc. We need to revert our state back to Calling, since we are
+         // going to be sending the INVITE to a new endpoint entirely.
+
+         // !bwc!
+         // An interesting consequence occurs if our failover ultimately
+         // sends to the same instance of a resip stack; we increment the
+         // transport sequence in our branch parameter, but any resip-based
+         // stack will ignore this change, and process this "new" request as
+         // a retransmission! Furthermore, our state will be out of phase
+         // with the state at the remote endpoint, and if we have sent a
+         // PRACK, it will know (and stuff will break)!
+         // TODO What else needs to be done here to safely revert our state?
+         mState = Calling;
+      }
+   }
+
    InfoLog (<< "Try sending request to a different dns result");
    assert(mMsgToRetransmit);
 
