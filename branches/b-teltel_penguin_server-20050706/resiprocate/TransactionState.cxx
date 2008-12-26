@@ -399,7 +399,12 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
 { 
    StackLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
 
-   assert(!isInvite(msg));
+   if (isInvite(msg))
+   {
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      sendToTU(Helper::makeResponse(*sip, 400, "Transaction-ID Collision"));
+      return;
+   }
 
    if (isRequest(msg) && isFromTU(msg))
    {
@@ -766,7 +771,6 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
          CritLog (<< "Fatal error in TransactionState::processServerNonInvite " 
                   << msg->brief()
                   << " state=" << *this);
-         assert(0);
          delete msg;
       }
    }
@@ -819,7 +823,6 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
                CritLog (<< "Fatal error in TransactionState::processServerNonInvite " 
                         << msg->brief()
                         << " state=" << *this);
-               assert(0);
                delete msg;
             }
          }
@@ -833,7 +836,6 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
    else if (isTimer(msg))
    {
       TimerMessage* timer = dynamic_cast<TimerMessage*>(msg);
-      assert(timer);
       if (mState == Completed && timer->getType() == Timer::TimerJ)
       {
          terminateServerTransaction(mId);
