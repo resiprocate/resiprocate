@@ -25,22 +25,22 @@ using namespace resip;
 ParameterTypes::Factory ParameterTypes::ParameterFactories[ParameterTypes::MAX_PARAMETER] = {0};
 Data ParameterTypes::ParameterNames[ParameterTypes::MAX_PARAMETER] = {"PARAMETER?"};
 
-defineParam(data, "data", ExistsParameter, "callee-caps");
-defineParam(control, "control", ExistsParameter, "callee-caps");
-defineParam(mobility, "mobility", QuotedDataParameter, "callee-caps"); // mobile|fixed
-defineParam(description, "description", QuotedDataParameter, "callee-caps"); // <> quoted
-defineParam(events, "events", QuotedDataParameter, "callee-caps"); // list
-defineParam(priority, "priority", QuotedDataParameter, "callee-caps"); // non-urgent|normal|urgent|emergency
-defineParam(methods, "methods", QuotedDataParameter, "callee-caps"); // list
-defineParam(schemes, "schemes", QuotedDataParameter, "callee-caps"); // list
-defineParam(application, "application", ExistsParameter, "callee-caps");
-defineParam(video, "video", ExistsParameter, "callee-caps");
-defineParam(language, "language", QuotedDataParameter, "callee-caps"); // list
-defineParam(type, "type", QuotedDataParameter, "callee-caps"); // list
-defineParam(isFocus, "isfocus", ExistsParameter, "callee-caps");
-defineParam(actor, "actor", QuotedDataParameter, "callee-caps"); // principal|msg-taker|attendant|information
-defineParam(text, "text", ExistsParameter, "callee-caps");
-defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"); //list
+defineParam(data, "data", ExistsParameter, "RFC 3840");
+defineParam(control, "control", ExistsParameter, "RFC 3840");
+defineParam(mobility, "mobility", QuotedDataParameter, "RFC 3840"); // mobile|fixed
+defineParam(description, "description", QuotedDataParameter, "RFC 3840"); // <> quoted
+defineParam(events, "events", QuotedDataParameter, "RFC 3840"); // list
+defineParam(priority, "priority", QuotedDataParameter, "RFC 3840"); // non-urgent|normal|urgent|emergency
+defineParam(methods, "methods", QuotedDataParameter, "RFC 3840"); // list
+defineParam(schemes, "schemes", QuotedDataParameter, "RFC 3840"); // list
+defineParam(application, "application", ExistsParameter, "RFC 3840");
+defineParam(video, "video", ExistsParameter, "RFC 3840");
+defineParam(language, "language", QuotedDataParameter, "RFC 3840"); // list
+defineParam(type, "type", QuotedDataParameter, "RFC 3840"); // list
+defineParam(isFocus, "isfocus", ExistsParameter, "RFC 3840");
+defineParam(actor, "actor", QuotedDataParameter, "RFC 3840"); // principal|msg-taker|attendant|information
+defineParam(text, "text", ExistsOrDataParameter, "RFC 3840"); // using ExistsOrDataParameter so this parameter is compatible with both RFC3840 and RFC3326
+defineParam(extensions, "extensions", QuotedDataParameter, "RFC 3840"); //list
 defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
 defineParam(regid, "reg-id", UInt32Parameter, "outbound");
 defineParam(ob,"ob",ExistsParameter,"outbound-05");
@@ -52,7 +52,7 @@ defineParam(gr, "gr", ExistsOrDataParameter, "gruu");
 defineParam(accessType, "access-type", DataParameter, "RFC 2046");
 defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
 defineParam(boundary, "boundary", DataParameter, "RFC 2046");
-defineParam(branch, "branch", BranchParameter, "RFC ????");
+defineParam(branch, "branch", BranchParameter, "RFC 3261");
 defineParam(charset, "charset", DataParameter, "RFC 2045");
 defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
 defineParam(comp, "comp", DataParameter, "RFC ????");
