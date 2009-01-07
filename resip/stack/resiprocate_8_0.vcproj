@@ -599,10 +599,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\QopParameter.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\QuotedDataParameter.cxx"
 				>
 			</File>
@@ -1196,10 +1192,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\QopParameter.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\QuotedDataParameter.hxx"
 				>
 			</File>
@@ -1313,6 +1305,10 @@
 			</File>
 			<File
 				RelativePath=".\TcpTransport.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\TextParameter.hxx"
 				>
 			</File>
 			<File

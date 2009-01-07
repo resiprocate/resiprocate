@@ -89,7 +89,7 @@ class ParserCategory : public LazyParser
       defineParam(type, "type", QuotedDataParameter, "callee-caps"); // list
       defineParam(isFocus, "isfocus", ExistsParameter, "callee-caps");
       defineParam(actor, "actor", QuotedDataParameter, "callee-caps"); // principal|msg-taker|attendant|information
-      defineParam(text, "text", ExistsParameter, "callee-caps");
+      defineParam(text, "text", ExistsOrDataParameter, "callee-caps"); // using ExistsOrDataParameter so this parameter is compatible with both RFC3840 and RFC3326
       defineParam(extensions, "extensions", QuotedDataParameter, "callee-caps"); //list
       defineParam(Instance, "+sip.instance", QuotedDataParameter, "gruu");  // <> quoted
       defineParam(regid, "reg-id", UInt32Parameter, "outbound");
@@ -102,7 +102,7 @@ class ParserCategory : public LazyParser
       defineParam(accessType, "access-type", DataParameter, "RFC 2046");
       defineParam(algorithm, "algorithm", DataParameter, "RFC ????");
       defineParam(boundary, "boundary", DataParameter, "RFC 2046");
-      defineParam(branch, "branch", BranchParameter, "RFC ????");
+      defineParam(branch, "branch", BranchParameter, "RFC 3261");
       defineParam(charset, "charset", DataParameter, "RFC 2045");
       defineParam(cnonce, "cnonce", QuotedDataParameter, "RFC ????");
       defineParam(comp, "comp", DataParameter, "RFC ????");
