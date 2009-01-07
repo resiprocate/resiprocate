@@ -223,6 +223,10 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
 		</Filter>
+		<File
+			RelativePath=".\testua_readme.txt"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
