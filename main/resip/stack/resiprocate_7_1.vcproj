@@ -475,9 +475,6 @@
 				RelativePath=".\PrivacyCategory.cxx">
 			</File>
 			<File
-				RelativePath=".\QopParameter.cxx">
-			</File>
-			<File
 				RelativePath=".\QuotedDataParameter.cxx">
 			</File>
 			<File
@@ -918,9 +915,6 @@
 			</File>
 			<File
 				RelativePath=".\PrivacyCategory.hxx">
-			</File>
-			<File
-				RelativePath=".\QopParameter.hxx">
 			</File>
 			<File
 				RelativePath=".\QuotedDataParameter.hxx">
