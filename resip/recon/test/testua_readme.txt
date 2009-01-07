@@ -260,7 +260,7 @@ setAutoAnswer            <'autoans'|'aa'> <'0'|'1'> (1 to enable (default)
 setCodecs                <'setcodecs'|'sc'> <codecId>[,<codecId>]+ (comma separated list)
   Changes the default codec list/order.  Note a codec plugin must have been 
   present at startup time, in order to use that codec.  Unknown id's are 
-  ignored.  Default is: 0,8,96,97,98,99,108,4,109 
+  ignored.  Default is: 0,8,96,98,99,108,97,3,109 
   Acceptable sipX codec Ids are:
     0   - G.711 mu-law
     3   - GSM codec
