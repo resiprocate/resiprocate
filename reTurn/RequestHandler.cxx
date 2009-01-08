@@ -23,14 +23,14 @@ namespace reTurn {
 // !slg! TODO these need to be made into settings
 //RequestHandler::AuthenticationMode authenticationMode = RequestHandler::NoAuthentication;
 //RequestHandler::AuthenticationMode authenticationMode = RequestHandler::ShortTermPassword;
-RequestHandler::AuthenticationMode authenticationMode = RequestHandler::LongTermPassword;
+RequestHandler::AuthenticationMode authenticationMode = RequestHandler::LongTermPassword;  // required for TURN
 const char authenticationRealm[] = "test";
 const char authenticationUsername[] = "test";
 const char authenticationPassword[] = "1234";
 
 #define NONCE_LIFETIME 3600    // 1 hour - ?slg? what do we want as a default here? 
 //#define NONCE_LIFETIME 10    // for TESTING
-#define SOFTWARE_STRING "reTURNServer 0.3 - RFC5389/turn-07"
+#define SOFTWARE_STRING "reTURNServer 0.4 - RFC5389/turn-12"
 #define DEFAULT_LIFETIME 600   // 10 minutes
 #define MAX_LIFETIME     3600  // 1 hour
 //#define DEFAULT_LIFETIME 30  // for TESTING
@@ -101,6 +101,10 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
 
             case StunMessage::TurnRefreshMethod:
                result = processTurnRefreshRequest(request, response);
+               break;
+
+            case StunMessage::TurnCreatePermissionMethod:
+               result = processTurnCreatePermissionRequest(request, response);
                break;
 
             case StunMessage::TurnChannelBindMethod:
@@ -526,6 +530,14 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
       return RespondFromReceiving;
    }
 
+   // Check if Don't Fragment attribute is present - if so return an error - TODO implement DF bit, then remove this check
+   if(request.mHasTurnDontFragment)
+   {
+      WarningLog(<< "Turn allocate request with Don't Fragment requested, not yet implemented.  Sending 420.");
+      buildErrorResponse(response, 420, "Don't Fragment not yet implemented", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
+      return RespondFromReceiving;
+   }
+
    // Check if bandwidth is available
    if(request.mHasTurnBandwidth)
    {
@@ -537,8 +549,8 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    {
       if(request.mHasTurnReservationToken)
       {
-         WarningLog(<< "Both EvenPort and Reservation Token headers are present.  Sending 400.");
-         buildErrorResponse(response, 400, "Bad request - both Requested Props and Reservation Token present");  
+         WarningLog(<< "Both Even Port and Reservation Token attributes are present.  Sending 400.");
+         buildErrorResponse(response, 400, "Bad request - both Even Port and Reservation Token present");  
          return RespondFromReceiving;
       }
       if(request.mTurnEvenPort.propType == StunMessage::PropsPortEven)
@@ -567,9 +579,9 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    {
       // Try to allocate reserved port - for now reservation token is reserved port number
       port = (unsigned short)request.mTurnReservationToken;
-      if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), (unsigned short)request.mTurnReservationToken))
+      if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), (unsigned short)request.mTurnReservationToken), true /* allocate reserved */)
       {
-         WarningLog(<< "Unable to allocate requested port.  Sending 508.");
+         WarningLog(<< "Unable to allocate requested port - bad reservation token.  Sending 508.");
          buildErrorResponse(response, 508, "Insufficient Port Capacity");  
          return RespondFromReceiving;
       }      
@@ -638,8 +650,9 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
 
    // Note:  XorMappedAddress is added to all TurnAllocate responses in processStunMessage
   
-   response.mHasTurnBandwidth = true;
-   response.mTurnBandwidth = request.mHasTurnBandwidth ? request.mTurnBandwidth : DEFAULT_BANDWIDTH;
+   //Reserved for future draft
+   //response.mHasTurnBandwidth = true;
+   //response.mTurnBandwidth = request.mHasTurnBandwidth ? request.mTurnBandwidth : DEFAULT_BANDWIDTH;
 
    // Note: Message Integrity added by handleAuthentication
 
@@ -671,7 +684,7 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
       return RespondFromReceiving;
    }
 
-   // If allocation was found, then ensure that the same shared secret was used
+   // If allocation was found, then ensure that the same username and shared secret was used
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
       WarningLog(<< "Refresh requested with username not matching allocation.  Sending 441.");
@@ -729,8 +742,71 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
    response.mHasTurnLifetime = true;
    response.mTurnLifetime = lifetime;
   
-   response.mHasTurnBandwidth = true;
-   response.mTurnBandwidth = request.mHasTurnBandwidth ? request.mTurnBandwidth : DEFAULT_BANDWIDTH;
+   //Reserved for future draft
+   //response.mHasTurnBandwidth = true;
+   //response.mTurnBandwidth = request.mHasTurnBandwidth ? request.mTurnBandwidth : DEFAULT_BANDWIDTH;
+
+   // Note: Message Integrity added by handleAuthentication
+
+   return RespondFromReceiving;
+}
+
+RequestHandler::ProcessResult 
+RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMessage& response)
+{
+   // TurnCreatePermission requests must be authenticated
+   if(!request.mHasMessageIntegrity)
+   {
+      WarningLog(<< "Turn create permission request without authentication.  Send 401.");
+      buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
+      return RespondFromReceiving;
+   }
+
+   Data hmacKey;
+   assert(request.mHasUsername);
+   request.calculateHmacKey(hmacKey, authenticationPassword);
+
+   TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
+
+   if(!allocation)
+   {
+      WarningLog(<< "Turn create permission request for non-existing allocation.  Send 437."); 
+      buildErrorResponse(response, 437, "No Allocation");  
+      return RespondFromReceiving;
+   }
+
+   // If allocation was found, then ensure that the same username and shared secret was used
+   if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
+   {
+      WarningLog(<< "Create permission requested with username not matching allocation.  Sending 441.");
+      buildErrorResponse(response, 441, "Wrong Credentials");  
+      return RespondFromReceiving;
+   }
+   if(allocation->getClientAuth().getClientSharedSecret() != hmacKey)
+   {
+      WarningLog(<< "Create permission requested with shared secret not matching allocation.  Sending 441.");
+      buildErrorResponse(response, 441, "Wrong Credentials");   
+      return RespondFromReceiving;
+   }
+
+   if(request.mHasTurnXorPeerAddress)
+   {
+      StunTuple remoteAddress;
+      remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
+      StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress);
+
+      // TODO - need to handle multiple XorPeerAddresses
+      allocation->refreshPermission(remoteAddress.getAddress());
+   }
+   else
+   {
+      WarningLog(<< "Create permission request missing peer address.  Sending 400.");
+      buildErrorResponse(response, 400, "Bad Request - missing attribute");   
+      return RespondFromReceiving;
+   }
+
+   // form the outgoing success response
+   response.mClass = StunMessage::StunClassSuccessResponse;
 
    // Note: Message Integrity added by handleAuthentication
 
@@ -740,7 +816,7 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
 RequestHandler::ProcessResult 
 RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage& response)
 {
-   // Turn Allocate requests must be authenticated
+   // TurnChannelBind requests must be authenticated
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn channel bind request without authentication.  Send 401.");
@@ -761,6 +837,7 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
       return RespondFromReceiving;
    }
 
+   // If allocation was found, then ensure that the same username and shared secret was used
    if(allocation->getClientAuth().getClientUsername() != *request.mUsername)
    {
       WarningLog(<< "Channel bind requested with username not matching allocation.  Sending 441.");
@@ -776,6 +853,14 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
 
    if(request.mHasTurnXorPeerAddress && request.mHasTurnChannelNumber)
    {
+      // Ensure channel number is in valid range
+      if(request.mTurnChannelNumber < MIN_CHANNEL_NUM || request.mTurnChannelNumber > MAX_CHANNEL_NUM)
+      {
+         WarningLog(<< "Channel bind requested with an out of range channel number=" << request.mTurnChannelNumber << ".  Sending 400.");
+         buildErrorResponse(response, 400, "Bad Request - channel number out of range");   
+         return RespondFromReceiving;
+      }
+
       StunTuple remoteAddress;
       remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
       StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress);
@@ -790,7 +875,7 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
    else
    {
       WarningLog(<< "Channel bind request missing peer address and/or channel number.  Sending 400.");
-      buildErrorResponse(response, 400, "Bad Request - missing headers");   
+      buildErrorResponse(response, 400, "Bad Request - missing attribute");   
       return RespondFromReceiving;
    }
 
@@ -817,9 +902,16 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
       return;
    }
 
-   if(!request.mHasTurnXorPeerAddress)
+   if(!request.mHasTurnXorPeerAddress || !request.mHasTurnData)
    {
-      WarningLog(<< "Turn send indication with no peer address.  Dropping.");
+      WarningLog(<< "Turn send indication with no peer address or data.  Dropping.");
+      return;
+   }
+
+   // Check if Don't Fragment attribute is present - if so drop - TODO implement DF bit, then remove this check
+   if(request.mHasTurnDontFragment)
+   {
+      WarningLog(<< "Turn send indication with Don't Fragment requested, not yet implemented.  Dropping.");
       return;
    }
 
@@ -827,20 +919,15 @@ RequestHandler::processTurnSendIndication(StunMessage& request)
    remoteAddress.setTransportType(allocation->getRequestedTuple().getTransportType());
    StunMessage::setTupleFromStunAtrAddress(remoteAddress, request.mTurnXorPeerAddress);
 
-   if(request.mHasTurnData)  
+   // Check if permission exists, if not then drop
+   if(!allocation->existsPermission(remoteAddress.getAddress()))
    {
-      boost::shared_ptr<DataBuffer> data(new DataBuffer(request.mTurnData->data(), request.mTurnData->size()));
-      allocation->sendDataToPeer(remoteAddress, data, false /* isFramed? */);
+      WarningLog(<< "Turn send indication for destination=" << remoteAddress << ", but no permission installed.  Dropping.");
+      return;
    }
-   else
-   {
-      // Refresh the permission only
-      allocation->refreshPermission(remoteAddress.getAddress());
 
-      // Send empty packet?  (note: if this goes back in the above permission refresh is not required)
-      //boost::shared_ptr<DataBuffer> empty(new DataBuffer((const char*)0, 0));
-      //allocation->sendDataToPeer(request.mTurnChannelNumber, remoteAddress, empty, false /* isFramed? */);
-   }
+   boost::shared_ptr<DataBuffer> data(new DataBuffer(request.mTurnData->data(), request.mTurnData->size()));
+   allocation->sendDataToPeer(remoteAddress, data, false /* isFramed? */);
 }
 
 void 
