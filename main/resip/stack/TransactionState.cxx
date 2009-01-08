@@ -658,7 +658,14 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
 { 
    StackLog (<< "TransactionState::processClientNonInvite: " << msg->brief());
 
-   assert(!isInvite(msg));
+   // !wensong! it's possible to receive INVITE of the same tid over reliable
+   // transport, better to return 400 response
+   if (isInvite(msg))
+   {
+      SipMessage* sip = dynamic_cast<SipMessage*>(msg);
+      sendToTU(Helper::makeResponse(*sip, 400, "Transaction-ID Collision"));
+      return;
+   }
 
    if (isRequest(msg) && isFromTU(msg))
    {
