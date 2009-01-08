@@ -10,9 +10,6 @@ using namespace std;
 
 namespace reTurn {
 
-#define MIN_CHANNEL_NUM 0x4000
-#define MAX_CHANNEL_NUM 0xFFFF
-
 ChannelManager::ChannelManager()
 {
    // make starting channel number random
