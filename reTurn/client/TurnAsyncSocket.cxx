@@ -17,7 +17,7 @@ using namespace resip;
 #define TCP_RESPONSE_TIME      39500   // Defined by RFC5389 (Ti) - should be configurable
 #define UDP_Rm                 16      // Defined by RFC5389 - should be configurable
 #define UDP_FINAL_REQUEST_TIME (UDP_RT0 * UDP_Rm)  // Defined by RFC5389
-#define SOFTWARE_STRING "reTURN Async Client 0.3 - RFC5389/turn-07"
+#define SOFTWARE_STRING "reTURN Async Client 0.3 - RFC5389/turn-12"
 
 namespace reTurn {
 
@@ -442,6 +442,10 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
          memcpy(&channelNumber, &(*data)[0], 2);
          channelNumber = ntohs(channelNumber);
 
+         // TODO - check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
+
+         // TODO - check that permission exists before processing
+
          RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
          if(remotePeer)
          {
@@ -678,18 +682,34 @@ TurnAsyncSocket::handleDataInd(StunMessage& stunMessage)
 asio::error_code
 TurnAsyncSocket::handleChannelBindResponse(StunMessage &request, StunMessage &response)
 {
-   assert(request.mHasTurnChannelNumber);
-
-   RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(request.mTurnChannelNumber);
-   if(!remotePeer)
+   if(response.mClass == StunMessage::StunClassSuccessResponse)
    {
-      // Remote Peer not found - discard
-      WarningLog(<< "TurnAsyncSocket::handleChannelBindResponse: Received ChannelBindResponse for unknown channel (" << response.mTurnChannelNumber << ") - discarding");
-      return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
+      assert(request.mHasTurnChannelNumber);
+
+      RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(request.mTurnChannelNumber);
+      if(!remotePeer)
+      {
+         // Remote Peer not found - discard
+         WarningLog(<< "TurnAsyncSocket::handleChannelBindResponse: Received ChannelBindResponse for unknown channel (" << response.mTurnChannelNumber << ") - discarding");
+         return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
+      }
+
+      remotePeer->setChannelConfirmed();
    }
-
-   remotePeer->setChannelConfirmed();
-
+   else
+   {
+      // Check error code
+      if(response.mHasErrorCode)
+      {
+         ErrLog(<< "TurnAsyncSocket::handleChannelBindResponse: Received ChannelBindResponse error: " << response.mErrorCode.errorClass * 100 + response.mErrorCode.number);
+         return asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category);
+      }
+      else
+      {
+         ErrLog(<< "TurnAsyncSocket::handleChannelBindResponse: Received ChannelBindResponse error but no error code attribute found.");
+         return asio::error_code(MissingAttributes, asio::error::misc_category);
+      }
+   }
    return asio::error_code();
 }
 
@@ -711,7 +731,7 @@ TurnAsyncSocket::handleSharedSecretResponse(StunMessage &request, StunMessage &r
    }
    else
    {
-      // Check if success or not
+      // Check error code
       if(response.mHasErrorCode)
       {
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSharedSecretFailure(getSocketDescriptor(), asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category));
@@ -891,8 +911,14 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage &request, StunMessage &respon
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(response.mErrorCode.errorClass * 100 + response.mErrorCode.number, asio::error::misc_category));
          if(mCloseAfterDestroyAllocationFinishes)
          {
+            cancelAllocationTimer();
             mHaveAllocation = false;
             actualClose();
+         }
+         else if(response.mErrorCode.errorClass == 4 && response.mErrorCode.number == 37) // response is 437, then remove allocation
+         {
+            cancelAllocationTimer();
+            mHaveAllocation = false;
          }
       }
       else
@@ -900,6 +926,7 @@ TurnAsyncSocket::handleRefreshResponse(StunMessage &request, StunMessage &respon
          if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onRefreshFailure(getSocketDescriptor(), asio::error_code(MissingAttributes, asio::error::misc_category));
          if(mCloseAfterDestroyAllocationFinishes)
          {
+            cancelAllocationTimer();
             mHaveAllocation = false;
             actualClose();
          }
@@ -958,7 +985,7 @@ TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port,
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
    if(!remotePeer)
    {
-      // No remote peer yet (ie. not data sent or received from remote peer) - so create one
+      // No remote peer yet (ie. no data sent or received from remote peer) - so create one
       remotePeer = doChannelBinding(remoteTuple);
       assert(remotePeer);
    }

@@ -137,6 +137,7 @@ TurnManager::allocateEvenPort(StunTuple::TransportType transport)
    return portToCheck;
 }
 
+// Note:  This is not used, since requesting an odd port was removed
 unsigned short 
 TurnManager::allocateOddPort(StunTuple::TransportType transport)
 {
@@ -179,15 +180,26 @@ TurnManager::allocateEvenPortPair(StunTuple::TransportType transport)
 }
 
 bool 
-TurnManager::allocatePort(StunTuple::TransportType transport, unsigned short port)
+TurnManager::allocatePort(StunTuple::TransportType transport, unsigned short port, bool reserved)
 {
    if(port >= PORT_RANGE_MIN && port <= PORT_RANGE_MAX)
    {
       PortAllocationMap& portAllocationMap = getPortAllocationMap(transport);
-      if(portAllocationMap[port] != PortStateAllocated)  // Allow reserved state to be allocated with specific port request
+      if(reserved)
       {
-         portAllocationMap[port] = PortStateAllocated;
-         return true;
+         if(portAllocationMap[port] == PortStateReserved)
+         {
+            portAllocationMap[port] = PortStateAllocated;
+            return true;
+         }
+      }
+      else
+      {
+         if(portAllocationMap[port] == PortStateUnallocated)  
+         {
+            portAllocationMap[port] = PortStateAllocated;
+            return true;
+         }
       }
    }
    return false;

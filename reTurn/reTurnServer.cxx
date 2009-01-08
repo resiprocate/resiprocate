@@ -47,114 +47,129 @@ public:
 int main(int argc, char* argv[])
 {
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
-  resip::FindMemoryLeaks fml;
+   resip::FindMemoryLeaks fml;
 #endif
 
-  try
-  {
-    // Check command line arguments.
-    if (argc != 6)
-    {
-      std::cerr << "Usage: reTurnServer <address> <turnPort> <tlsPort> <altAddress> <altPort>\n";
-      std::cerr << "  For IPv4, try:\n";
-      std::cerr << "    reTurnServer 0.0.0.0 3478 5349 0.0.0.0 3479\n";
-      std::cerr << "  For IPv6, try:\n";
-      std::cerr << "    reTurnServer 0::0 3478 5349 0::0 3479\n";
-      return 1;
-    }
+   try
+   {
+      unsigned short turnPort = 3478;
+      unsigned short tlsTurnPort = 5349;
+      unsigned short altStunPort = 0;  // Note:  The default is to disable RFC3489 binding support
+      asio::ip::address turnAddress = asio::ip::address::from_string("0.0.0.0");
+      asio::ip::address altStunAddress = asio::ip::address::from_string("0.0.0.0");
 
-    // Initialize Logging - TODO make configurable
-    resip::Log::initialize(resip::Log::Cout, resip::Log::Info, argv[0]);
-    //resip::Log::initialize(resip::Log::Cout, resip::Log::Stack, argv[0]);
+      // Check command line arguments.
+      if (argc != 1 && argc != 6)
+      {
+         std::cerr << "Usage: reTurnServer <address> <turnPort> <tlsPort> <altAddress> \n";
+         std::cerr << "                    <altPort>\n";
+         std::cerr << "  IPv4 Example (with RFC3478 support):\n";
+         std::cerr << "    reTurnServer 192.168.1.10 3478 5349 192.168.1.11 3479\n\n";
+         std::cerr << "  IPv6 Example (with RFC3478 support):\n";
+         std::cerr << "    reTurnServer 3ffe:0501:0008:0000:0260:97ff:fe40:efab 3478\n";
+         std::cerr << "                 5349 3ffe:0501:0008:0000:0260:97ff:fe40:efac 3479\n\n";
+         std::cerr << "  Note:  For RFC3489 legacy support define altPort as non-zero and\n";
+         std::cerr << "         ensure you don't use INADDR_ANY for the IP addresses.\n";
+         std::cerr << "         Both addresses should terminate on the machine running\n";
+         std::cerr << "         reTurn.";
+         return 1;
+      }
 
-    // Initialize server.
-    asio::io_service ioService;                       // The one and only ioService for the stunServer
-    reTurn::TurnManager turnManager(ioService);         // The one and only Turn Manager
+      // Initialize Logging - TODO make configurable
+      resip::Log::initialize(resip::Log::Cout, resip::Log::Info, argv[0]);
+      //resip::Log::initialize(resip::Log::Cout, resip::Log::Stack, argv[0]);
 
-    unsigned short turnPort = (unsigned short)resip::Data(argv[2]).convertUnsignedLong();
-    unsigned short tlsTurnPort = (unsigned short)resip::Data(argv[3]).convertUnsignedLong();
-    unsigned short altStunPort = (unsigned short)resip::Data(argv[5]).convertUnsignedLong();
-    asio::ip::address turnAddress = asio::ip::address::from_string(argv[1]);
-    asio::ip::address altStunAddress = asio::ip::address::from_string(argv[4]);
+      // Initialize server.
+      asio::io_service ioService;                       // The one and only ioService for the stunServer
+      reTurn::TurnManager turnManager(ioService);         // The one and only Turn Manager
 
-    boost::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
-    boost::shared_ptr<reTurn::TcpServer> tcpTurnServer;
-    boost::shared_ptr<reTurn::TlsServer> tlsTurnServer;
-    boost::shared_ptr<reTurn::UdpServer> a1p2StunUdpServer;
-    boost::shared_ptr<reTurn::UdpServer> a2p1StunUdpServer;
-    boost::shared_ptr<reTurn::UdpServer> a2p2StunUdpServer;
+      if(argc == 6)
+      {
+         turnPort = (unsigned short)resip::Data(argv[2]).convertUnsignedLong();
+         tlsTurnPort = (unsigned short)resip::Data(argv[3]).convertUnsignedLong();
+         altStunPort = (unsigned short)resip::Data(argv[5]).convertUnsignedLong();
+         turnAddress = asio::ip::address::from_string(argv[1]);
+         altStunAddress = asio::ip::address::from_string(argv[4]);
+      }
 
-    // The one and only RequestHandler - if altStunPort is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
-    reTurn::RequestHandler requestHandler(turnManager, 
-                                          altStunPort != 0 ? &turnAddress : 0, 
-                                          altStunPort != 0 ? &turnPort : 0, 
-                                          altStunPort != 0 ? &altStunAddress : 0, 
-                                          altStunPort != 0 ? &altStunPort : 0); 
+      boost::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
+      boost::shared_ptr<reTurn::TcpServer> tcpTurnServer;
+      boost::shared_ptr<reTurn::TlsServer> tlsTurnServer;
+      boost::shared_ptr<reTurn::UdpServer> a1p2StunUdpServer;
+      boost::shared_ptr<reTurn::UdpServer> a2p1StunUdpServer;
+      boost::shared_ptr<reTurn::UdpServer> a2p2StunUdpServer;
 
-    udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, turnPort));
-    tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, turnAddress, turnPort));
-    tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, turnAddress, tlsTurnPort));
+      // The one and only RequestHandler - if altStunPort is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
+      reTurn::RequestHandler requestHandler(turnManager, 
+         altStunPort != 0 ? &turnAddress : 0, 
+         altStunPort != 0 ? &turnPort : 0, 
+         altStunPort != 0 ? &altStunAddress : 0, 
+         altStunPort != 0 ? &altStunPort : 0); 
 
-    if(altStunPort != 0) // if alt stun port is non-zero, then RFC3489 support is enabled
-    {
-       a1p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, altStunPort));
-       a2p1StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, turnPort));
-       a2p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, altStunPort));
-       udpTurnServer->setAlternateUdpServers(a1p2StunUdpServer.get(), a2p1StunUdpServer.get(), a2p2StunUdpServer.get());
-       a1p2StunUdpServer->setAlternateUdpServers(udpTurnServer.get(), a2p2StunUdpServer.get(), a2p1StunUdpServer.get());
-       a2p1StunUdpServer->setAlternateUdpServers(a2p2StunUdpServer.get(), udpTurnServer.get(), a1p2StunUdpServer.get());
-       a2p2StunUdpServer->setAlternateUdpServers(a2p1StunUdpServer.get(), a1p2StunUdpServer.get(), udpTurnServer.get());
-       a1p2StunUdpServer->start();
-       a2p1StunUdpServer->start();
-       a2p2StunUdpServer->start();
-    }
+      udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, turnPort));
+      tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, turnAddress, turnPort));
+      tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, turnAddress, tlsTurnPort));
 
-    udpTurnServer->start();
-    tcpTurnServer->start();
-    tlsTurnServer->start();
+      if(altStunPort != 0) // if alt stun port is non-zero, then RFC3489 support is enabled
+      {
+         a1p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, altStunPort));
+         a2p1StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, turnPort));
+         a2p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, altStunPort));
+         udpTurnServer->setAlternateUdpServers(a1p2StunUdpServer.get(), a2p1StunUdpServer.get(), a2p2StunUdpServer.get());
+         a1p2StunUdpServer->setAlternateUdpServers(udpTurnServer.get(), a2p2StunUdpServer.get(), a2p1StunUdpServer.get());
+         a2p1StunUdpServer->setAlternateUdpServers(a2p2StunUdpServer.get(), udpTurnServer.get(), a1p2StunUdpServer.get());
+         a2p2StunUdpServer->setAlternateUdpServers(a2p1StunUdpServer.get(), a1p2StunUdpServer.get(), udpTurnServer.get());
+         a1p2StunUdpServer->start();
+         a2p1StunUdpServer->start();
+         a2p2StunUdpServer->start();
+      }
+
+      udpTurnServer->start();
+      tcpTurnServer->start();
+      tlsTurnServer->start();
 
 #ifdef _WIN32
-    // Set console control handler to allow server to be stopped.
-    console_ctrl_function = boost::bind(&asio::io_service::stop, &ioService);
-    SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
+      // Set console control handler to allow server to be stopped.
+      console_ctrl_function = boost::bind(&asio::io_service::stop, &ioService);
+      SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
 #else
-    // Block all signals for background thread.
-    sigset_t new_mask;
-    sigfillset(&new_mask);
-    sigset_t old_mask;
-    pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
+      // Block all signals for background thread.
+      sigset_t new_mask;
+      sigfillset(&new_mask);
+      sigset_t old_mask;
+      pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-    // Run the ioService until stopped.
-    // Create a pool of threads to run all of the io_services.
-    boost::shared_ptr<asio::thread> thread(new asio::thread(
-          boost::bind(&asio::io_service::run, &ioService)));
+      // Run the ioService until stopped.
+      // Create a pool of threads to run all of the io_services.
+      boost::shared_ptr<asio::thread> thread(new asio::thread(
+         boost::bind(&asio::io_service::run, &ioService)));
 
 #ifndef _WIN32
-    // Restore previous signals.
-    pthread_sigmask(SIG_SETMASK, &old_mask, 0);
+      // Restore previous signals.
+      pthread_sigmask(SIG_SETMASK, &old_mask, 0);
 
-    // Wait for signal indicating time to shut down.
-    sigset_t wait_mask;
-    sigemptyset(&wait_mask);
-    sigaddset(&wait_mask, SIGINT);
-    sigaddset(&wait_mask, SIGQUIT);
-    sigaddset(&wait_mask, SIGTERM);
-    pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
-    int sig = 0;
-    sigwait(&wait_mask, &sig);
-    ioService.stop();
+      // Wait for signal indicating time to shut down.
+      sigset_t wait_mask;
+      sigemptyset(&wait_mask);
+      sigaddset(&wait_mask, SIGINT);
+      sigaddset(&wait_mask, SIGQUIT);
+      sigaddset(&wait_mask, SIGTERM);
+      pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
+      int sig = 0;
+      sigwait(&wait_mask, &sig);
+      ioService.stop();
 #endif
 
-    // Wait for thread to exit
-    thread->join();
-  }
-  catch (std::exception& e)
-  {
-     ErrLog(<< "exception: " << e.what());
-  }
+      // Wait for thread to exit
+      thread->join();
+   }
+   catch (std::exception& e)
+   {
+      ErrLog(<< "exception: " << e.what());
+   }
 
-  return 0;
+   return 0;
 }
 
 

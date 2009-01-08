@@ -18,7 +18,7 @@ using namespace resip;
 #define UDP_Rm                 16      // Defined by RFC5389 - should be configurable
 #define UDP_FINAL_REQUEST_TIME (UDP_RT0 * UDP_Rm)  // Defined by RFC5389
 
-#define SOFTWARE_STRING "reTURN Sync Client 0.3 - RFC5389/turn-07"
+#define SOFTWARE_STRING "reTURN Sync Client 0.3 - RFC5389/turn-12"
 
 namespace reTurn {
 
@@ -308,7 +308,8 @@ TurnSocket::refreshAllocation()
    // Check if success or not
    if(response->mHasErrorCode)
    {
-      if(mRequestedLifetime != 0)
+      if(mRequestedLifetime != 0 ||
+         (response->mErrorCode.errorClass == 4 && response->mErrorCode.number == 37))  // if we receive a 437 response to a refresh, we should ensure the allocation is destroyed
       {
          mHaveAllocation = false;
       }
