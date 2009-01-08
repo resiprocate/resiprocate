@@ -32,7 +32,7 @@ public:
    unsigned short allocateEvenPort(StunTuple::TransportType transport);
    unsigned short allocateOddPort(StunTuple::TransportType transport);
    unsigned short allocateEvenPortPair(StunTuple::TransportType transport);
-   bool allocatePort(StunTuple::TransportType transport, unsigned short port);
+   bool allocatePort(StunTuple::TransportType transport, unsigned short port, bool reserved = false);
    void deallocatePort(StunTuple::TransportType transport, unsigned short port);
 
 private:

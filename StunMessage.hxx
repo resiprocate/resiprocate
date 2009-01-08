@@ -106,7 +106,7 @@ public:
    const static UInt16 TurnRefreshMethod           = 0x004;
    const static UInt16 TurnSendMethod              = 0x006;  // indication only
    const static UInt16 TurnDataMethod              = 0x007;  // indication only
-   const static UInt16 TurnCreatePermission        = 0x008;
+   const static UInt16 TurnCreatePermissionMethod  = 0x008;
    const static UInt16 TurnChannelBindMethod       = 0x009;
 
    // define  stun attribute - RFC5389

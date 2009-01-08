@@ -8,7 +8,7 @@ Original Author: Scott Godin
 What is reTurn?
 ---------------
 reTurn is a Stun/Turn server and client library implementation of the latest 
-Stun/Turn drafts:  RFC5389, and draft-ietf-behave-turn-07
+Stun/Turn drafts:  RFC5389, and draft-ietf-behave-turn-12
 
 
 Current External Library Usage
@@ -48,6 +48,7 @@ Turn UDP Relay                         yes          yes
 Turn TCP Relay                         no           no     
 Asyncronous Client APIs                yes          yes
 Channel Binding                        yes          yes
+Don't Fragment Attribute               no           no
 
 
 General TODO
@@ -66,6 +67,23 @@ General TODO
  - Bandwidth check
  - TCP Relay
 - Short Term passwords do not make any sense in reTurnServer (outside of RFC3489 backcompat) - they need to be supported on client APIs
+
+TURN TODO's
+-----------
+- CreatePermission requests can contain multiple addresses - need to modify StunMessage in order to support this
+- Channel Bindings last for 10 minutes unless refreshed - TODO
+- Clients need to install permissions before data can be sent - need to queue outbound data until CreateChannel response is received
+- Clients need to periodically send ChannelBind requests to refresh both Permissions and ChannelBindings (note: permission interval is 5 min, channel bind is 10 min)
+- ChannelData messages must be padded to a multiple of 4 bytes, the padding is not to be reflected in the encoded length
+- Check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
+- When client receives a Data Ind - it should ensure it is from an endpoint that it believes that it has installed a permission for, otherwise drop
+- It is recommended that the client check if a permission exists towards the peer that just send a ChannelData message, if not - discard
+- Could add checking that ChannelData messages always begin with bits 0b01, since bits 0b10 and 0b11 are reserved
+- Need to give clients the ability to add Don't Fragment header to Allocate request
+- If request with Don't Fragment fails with 420 code, then it can be retried without Don't Fragment (this will likely remain the responsibilty of the reTurn client application)
+- It is recommended that the server impose limits on both the number of allocations active at one time for a given username and on the amount of bandwidth those allocations use. - 486 (Allocation Quota Exceeded)
+- Port allocation algorithm should be better to ensure we won't run into collisions with other applications - port allocations should be random
+- If the client receives a 400 response to a channel-bind request, then it is recommended that the allocation be deleted, and the client start again with a new allocation
 
 RFC53389 TODO's
 ---------------
@@ -89,10 +107,14 @@ RFC53389 TODO's
 Client TODO
 -----------
 - rework synchronous sockets to use Asynchrous sockets to unify implementation better
-- retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response - currently applications responsibility
 - keepalive usage??
 - add option to require message integrity? - depends on usage - ICE
-         
+
+Client Notes
+------------         
+- retries should be paced at 500ms, 1000ms, 2000ms, etc. - after 442, 443, or 444 response - currently applications responsibility
+- If a client receives a 437 allocation mismatch response to an allocate, then it should retry using a different client transport address - it should do this 3 times (this will likely remain the responsibilty of the reTurn client application)
+- To prevent race conditions a client MUST wait 5 mins after the channel binding expires before attempting to bind the channel number to a different transport address or the transport address to a different channel number (within the same allocation?).
 
 
 Client API

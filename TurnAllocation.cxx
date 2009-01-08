@@ -15,7 +15,7 @@
 using namespace std;
 using namespace resip;
 
-#define TURN_PERMISSION_INACTIVITY_SECONDS 300   // 5 minuntes - .slg. TODO - move to configuration
+#define TURN_PERMISSION_INACTIVITY_SECONDS 300   // 5 minuntes
 
 namespace reTurn {
 
@@ -154,7 +154,7 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<D
    DebugLog(<< "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress);
 
-   // add permission if it does not exist
+   // TODO - remove this when permission and channel binding refreshes are implemented in the client
    refreshPermission(peerAddress.getAddress());
 
    if(mRequestedTuple.getTransportType() == StunTuple::UDP)
@@ -218,19 +218,16 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr
 bool 
 TurnAllocation::addChannelBinding(const StunTuple& peerAddress, unsigned short channelNumber)
 {
-   // Add or refresh permission
-   refreshPermission(peerAddress.getAddress());
-
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
    if(remotePeer)
    {
       if(remotePeer->getPeerTuple() != peerAddress)
       {
-         WarningLog(<< "addChannelBinding failed since channel is alredy in use: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+         WarningLog(<< "addChannelBinding failed since channel is already in use: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
                     mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress);
          return false;
       }
-      // TODO - refresh binding??
+      // TODO - refresh channel binding lifetime??
    }
    else
    {
@@ -243,6 +240,10 @@ TurnAllocation::addChannelBinding(const StunTuple& peerAddress, unsigned short c
       }
       mChannelManager.createChannelBinding(peerAddress, channelNumber);
    }
+
+   // Add or refresh permission
+   refreshPermission(peerAddress.getAddress());
+
    return true;
 }
 
