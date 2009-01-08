@@ -63,6 +63,7 @@ private:
    ProcessResult processStunSharedSecretRequest(StunMessage& request, StunMessage& response);
    ProcessResult processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response);
    ProcessResult processTurnRefreshRequest(StunMessage& request, StunMessage& response);
+   ProcessResult processTurnCreatePermissionRequest(StunMessage& request, StunMessage& response);
    ProcessResult processTurnChannelBindRequest(StunMessage& request, StunMessage& response);
 
    // Specific Indication processors
