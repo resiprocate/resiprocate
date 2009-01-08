@@ -124,9 +124,12 @@ BaseTimeLimitTimerQueue::process()
    // get the set of timers that have fired and insert TimerMsg into the state
    // machine fifo and application messages into the TU fifo
 
-   if (!mTimers.empty() && msTillNextTimer() == 0)
+   if (!mTimers.empty())
    {
       Timer now(0);
+      if (now < *mTimers.begin())
+         return;
+
       std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
       for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
       {
@@ -143,9 +146,12 @@ TimerQueue::process()
    // get the set of timers that have fired and insert TimerMsg into the state
    // machine fifo and application messages into the TU fifo
 
-   if (!mTimers.empty() && msTillNextTimer() == 0)
+   if (!mTimers.empty())
    {
       Timer now(0);
+      if (now < *mTimers.begin())
+         return;
+
       std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
       for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
       {
@@ -182,9 +188,12 @@ DtlsTimerQueue::process()
    // get the set of timers that have fired and insert TimerMsg into the state
    // machine fifo and application messages into the TU fifo
    
-   if (!mTimers.empty() && msTillNextTimer() == 0)
+   if (!mTimers.empty())
    {
       Timer now(0);
+      if (now < *mTimers.begin())
+         return;
+
       std::multiset<Timer>::iterator end = mTimers.upper_bound(now);
       for (std::multiset<Timer>::iterator i = mTimers.begin(); i != end; ++i)
       {
