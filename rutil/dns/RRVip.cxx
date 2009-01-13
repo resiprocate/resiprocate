@@ -98,6 +98,15 @@ void RRVip::removeVip(const Data& target,
    }
 }
 
+void RRVip::removeAll()
+{
+   for (map<MapKey, Transform*>::iterator it = mTransforms.begin(); it != mTransforms.end();)
+   {
+      delete (*it).second;
+      it = mTransforms.erase(it);
+   }
+}
+
 void RRVip::transform(const Data& target,
                       int rrType,
                       std::vector<DnsResourceRecord*>& src)
@@ -216,7 +225,12 @@ void RRVip::SrvTransform::transform(RRVector& src,
       for (RRVector::iterator it = src.begin(); it != src.end(); ++it)
       {
          int priority = ((dynamic_cast<DnsSrvRecord*>(*it))->priority())++;
-         if (priority < min) min = priority;
+         DebugLog(<< "Priority found to be: " << priority);
+         if (priority < min) 
+         {
+            min = priority;
+            DebugLog(<< "priority " << priority << "is new minimum"); 
+         }
       }
       dynamic_cast<DnsSrvRecord*>((*vip))->priority() = min;
    }

@@ -487,6 +487,13 @@ class SipStack
       void logDnsCache();
 
       /**
+          Clears the whitelist; this is useful when you have failed over to 
+          a (whitelisted) 'backup' server, but then want to migrate back to
+          the 'primary' server.
+      */
+      void clearWhitelist();
+
+      /**
           Enable Statistics Manager.  SIP Statistics will be collected and 
           dispatched periodically via a StatisticsMessage.  Note:  By default 
           the Statistics Manager is enabled.
