@@ -32,6 +32,11 @@ BaseSubscription::BaseSubscription(DialogUsageManager& dum, Dialog& dialog, cons
       mEventType = "refer";
       mLastRequest->header(h_Event).value() = mEventType;      
    }
+
+   if (request.exists(h_Supporteds))
+   {
+      mLastRequest->header(h_Supporteds) = request.header(h_Supporteds);
+   }
 }
 
 bool
