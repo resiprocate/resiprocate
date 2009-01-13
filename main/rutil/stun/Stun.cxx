@@ -30,7 +30,7 @@
 
 #include <net/if.h>
 
-#if defined (__SUNPRO_CC) 
+#if defined (__SUNPRO_CC) || defined (__sun__)
 #include <sys/sockio.h> // solaris only?
 #endif
 
