@@ -271,7 +271,7 @@ ClientRegistration::requestRefresh(UInt32 expires)
 void
 ClientRegistration::internalRequestRefresh(UInt32 expires)
 {
-   if (mState == Refreshing)
+   if (mState == Refreshing || mState == Removing)
    {
       return;
    }
