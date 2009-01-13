@@ -107,16 +107,19 @@ ifeq ($(OSTYPE),SunOS)
     INCDIRS += /opt/sfw/include /opt/csw/include 
     LIBDIRS += /opt/sfw/lib /opt/csw/lib
 
+    CXXFLAGS += -D_REENTRANT
+    CFLAGS   += -D_REENTRANT
+
     ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
-        CXXFLAGS += -D_REENTRANT
-        CFLAGS   += -D_REENTRANT
-        LDLIBS_LAST   += -R/usr/local/lib -lnsl -lsocket
+        LDLIBS_LAST   += -R/usr/local/lib
     else
-        CXXFLAGS += -D_REENTRANT -mt -library=stlport4
-        CFLAGS   += -D_REENTRANT -mt
-        LDFLAGS  +=  -DTHREAD=MULTI -mt -library=stlport4
-        LDLIBS_LAST   += -liostream -lnsl -lsocket -lrt
+        CXXFLAGS += -mt -library=stlport4
+        CFLAGS   += -mt
+        LDFLAGS  += -DTHREAD=MULTI -mt -library=stlport4
+        LDLIBS_LAST   += -liostream
     endif
+
+    LDLIBS_LAST   += -lnsl -lsocket -lrt
 
 # Do I need any xarch parameters on CXXFLAGS        
     ifeq ($(ARCH),sparc)
