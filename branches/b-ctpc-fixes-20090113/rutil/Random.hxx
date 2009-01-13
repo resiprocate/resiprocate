@@ -61,6 +61,8 @@ class Random
             DWORD mThreadStorage;
       };
       static Initializer mInitializer;
+
+      static BOOLEAN (APIENTRY *RtlGenRandom)(void*, ULONG);
 #endif
       
 };
