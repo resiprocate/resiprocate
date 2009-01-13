@@ -118,6 +118,7 @@ class DnsResult : public DnsResultSink
       // return the target of associated query
       Data target() const { return mTarget; }
       unsigned int getSRVResultsSize() const {return mSRVResults.size();}
+      unsigned int getResultsSize() const {return mResults.size();}
 
       // Will delete this DnsResult if no pending queries are out there or wait
       // until the pending queries get responses and then delete
