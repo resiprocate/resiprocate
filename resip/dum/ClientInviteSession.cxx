@@ -492,8 +492,6 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    assert(msg.header(h_StatusLine).statusCode() < 200);
    assert(msg.header(h_StatusLine).statusCode() > 100);
 
-   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
-   
    //.dcm. Kept the following checks here rather than discardMessage as the
    // state machine can be affected(termination).
 
