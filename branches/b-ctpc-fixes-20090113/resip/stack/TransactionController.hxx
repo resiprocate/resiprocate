@@ -49,6 +49,7 @@ class TransactionController
 
       void registerMarkListener(MarkListener* listener);
       void unregisterMarkListener(MarkListener* listener);
+      void clearWhitelist();
 
       inline bool getFixBadDialogIdentifiers() const 
       {

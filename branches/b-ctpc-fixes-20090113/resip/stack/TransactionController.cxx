@@ -167,6 +167,12 @@ void TransactionController::unregisterMarkListener(MarkListener* listener)
    mTransportSelector.unregisterMarkListener(listener);
 }
 
+void
+TransactionController::clearWhitelist()
+{
+   mTransportSelector.clearWhitelist();
+}
+
 void 
 TransactionController::abandonServerTransaction(const Data& tid)
 {

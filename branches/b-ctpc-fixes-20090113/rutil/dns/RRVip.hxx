@@ -15,6 +15,7 @@ class RRVip : public DnsStub::ResultTransform
       void vip(const Data& target, int rrType, const Data& vip);
       void removeVip(const Data& target, int rrType);
       void transform(const Data& target, int rrType, std::vector<DnsResourceRecord*>&);
+      void removeAll();
 
    private:
 

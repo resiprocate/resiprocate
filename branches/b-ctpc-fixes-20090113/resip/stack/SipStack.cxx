@@ -593,6 +593,12 @@ SipStack::unregisterMarkListener(MarkListener* listener)
    mTransactionController.unregisterMarkListener(listener);
 }
 
+void
+SipStack::clearWhitelist()
+{
+   mTransactionController.clearWhitelist();
+}
+
 DnsStub&
 SipStack::getDnsStub() const
 {

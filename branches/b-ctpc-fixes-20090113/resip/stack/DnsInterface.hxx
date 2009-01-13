@@ -79,6 +79,8 @@ class DnsInterface
       //virtual void handleDnsRaw(ExternalDnsRawResult);
       TupleMarkManager& getMarkManager(){return mMarkManager;}
 
+      void clearWhitelist();
+
    protected: 
       // When complete or partial results are ready, call DnsHandler::process()
       // For synchronous DnsInterface, set to 0
