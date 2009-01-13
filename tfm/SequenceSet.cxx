@@ -54,6 +54,10 @@ SequenceSet::clear()
          delete *i;
       }
       mSequences.clear();      
+
+      mActiveSet.clear();
+
+      mEventFifo.clear();
    }
 }
      
@@ -123,6 +127,8 @@ SequenceSet::exec()
 
    // next sequence addition clears old sequences
    mReset = true;
+   clear();
+   release();
    return succ;
 }
 

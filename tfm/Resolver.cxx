@@ -130,7 +130,7 @@ Resolver::lookupARecords()
 
    int herrno=0;
    char buffer[8192];
-#ifdef __QNX__
+#if defined(__QNX__) || defined(sun)
    result = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &herrno);
    if (result == 0)
    {
