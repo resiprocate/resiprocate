@@ -7063,7 +7063,7 @@ class TestHolder : public Fixture
       {
          InfoLog(<< "*!testTCPPreparseError!*");
 
-         Random::initialize();
+         resip::Random::initialize();
 
          Uri server;
          server.host() = "127.0.0.1";
@@ -7086,7 +7086,7 @@ class TestHolder : public Fixture
       {
          InfoLog(<< "*!testTCPParseBufferError!*");
 
-         Random::initialize();
+         resip::Random::initialize();
 
          Uri server;
          server.host() = "127.0.0.1";

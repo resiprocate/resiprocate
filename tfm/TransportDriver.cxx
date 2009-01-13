@@ -102,7 +102,7 @@ TransportDriver::process()
    {
       buildFdSet(fdset); 
    }
-   fdset.selectMilliSeconds(25); //5 ms granularity
+   fdset.selectMilliSeconds(250); //5 ms granularity
    
    Lock lock(mMutex);
    for (vector<Client*>::iterator it =  mClients.begin();
