@@ -1285,6 +1285,12 @@ void TransportSelector::unregisterMarkListener(MarkListener* listener)
    mDns.getMarkManager().unregisterMarkListener(listener);
 }
 
+void
+TransportSelector::clearWhitelist()
+{
+   mDns.clearWhitelist();
+}
+
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0

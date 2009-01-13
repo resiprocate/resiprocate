@@ -92,6 +92,7 @@ class TransportSelector
 
       void registerMarkListener(MarkListener* listener);
       void unregisterMarkListener(MarkListener* listener);
+      void clearWhitelist();
       void setEnumSuffixes(const std::vector<Data>& suffixes);
 
       static Tuple getFirstInterface(bool is_v4, TransportType type);

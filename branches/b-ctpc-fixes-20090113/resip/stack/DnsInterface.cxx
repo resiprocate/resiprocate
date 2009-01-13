@@ -126,6 +126,12 @@ DnsInterface::lookup(DnsResult* res, const Uri& uri)
    res->lookup(uri, mDnsStub.getEnumSuffixes());   
 }
 
+void
+DnsInterface::clearWhitelist()
+{
+   mVip.removeAll();
+}
+
 // DnsResult* 
 // DnsInterface::lookup(const Via& via, DnsHandler* handler)
 // {
