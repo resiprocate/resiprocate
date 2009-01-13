@@ -143,13 +143,10 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       InviteReferReplaces* inviteReferReplaces();
       InviteReferReplaces* inviteReferredBy();
 
-      typedef boost::function<boost::shared_ptr<resip::SipMessage> 
-      ( boost::shared_ptr<resip::SipMessage> msg) > 
+      typedef boost::function1<boost::shared_ptr<resip::SipMessage>, boost::shared_ptr<resip::SipMessage> > 
       MessageConditionerFn;
 
-      typedef boost::function<resip::Data 
-      ( const resip::Data& ) > 
-      RawConditionerFn;
+      typedef boost::function1<resip::Data, const resip::Data&> RawConditionerFn;
 
       class IdentityMessageConditioner
       {
@@ -221,19 +218,21 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             Invite(TestSipEndPoint* from, 
                    const resip::Uri& to, 
                    boost::shared_ptr<resip::SdpContents> sdp = 
-                   boost::shared_ptr<resip::SdpContents>());
+                     boost::shared_ptr<resip::SdpContents>(),
+                   bool isAnonymous = false);
             virtual resip::Data toString() const;
             
          private:
             virtual boost::shared_ptr<resip::SipMessage> go();
             boost::shared_ptr<resip::SdpContents> mSdp;
+            bool mIsAnonymous;
       };
       friend class Invite;
       Invite* invite(const TestUser& endPoint);
       Invite* invite(const TestSipEndPoint& endPoint);
       Invite* invite(const resip::Uri& url);
       Invite* invite(const TestUser& endPoint, const boost::shared_ptr<resip::SdpContents>& sdp);
-      Invite* invite(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp);
+      Invite* invite(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp, bool isAnonymous=false);
       Invite* invite(const resip::Data& url);
 
       class RawInvite : public MessageAction
@@ -507,11 +506,15 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       {
          public:
             explicit Send302(TestSipEndPoint & endPoint);
+            Send302(TestSipEndPoint& endPoint, const resip::Uri& redirectTo);
             virtual boost::shared_ptr<resip::SipMessage>
             go(boost::shared_ptr<resip::SipMessage> msg);
             TestSipEndPoint & mEndPoint;                                                      
+         private:
+            std::auto_ptr<resip::Uri> mRedirectTo;
       };
       MessageExpectAction* send302();
+      MessageExpectAction* send302(const resip::Uri& redirectTarget);
 
 
       class RawReply : public MessageExpectAction
@@ -665,11 +668,21 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ring, 180);
       MessageExpectAction* ring();
 
+      class RingNewBranch : public MessageExpectAction
+      {
+      public:
+         explicit RingNewBranch(TestSipEndPoint& endPoint);
+         virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+      private:
+         TestSipEndPoint& mEndPoint;
+      };
+      MessageExpectAction* ringNewBranch();
+
 //      EXPECT_FUNCTOR_RESPONSE(TestSipEndPoint, Ring183, 183);
       class Ring183 : public MessageExpectAction
       {
          public:
-            explicit Ring183(TestSipEndPoint & endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>());
+            explicit Ring183(TestSipEndPoint & endPoint, boost::shared_ptr<resip::SdpContents> sdp = boost::shared_ptr<resip::SdpContents>(), bool removeContact = false);
             explicit Ring183(TestSipEndPoint & endPoint, boost::shared_ptr<resip::SdpContents> sdp, int rseq);
             virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
          private:
@@ -677,9 +690,11 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             boost::shared_ptr<resip::SdpContents> mSdp;
             bool mReliable;
             int mRseq;
+            bool mRemoveContact;
       };
       MessageExpectAction* ring183();
       MessageExpectAction* ring183(const boost::shared_ptr<resip::SdpContents>& sdp);
+      MessageExpectAction* ring183_missingContact(const boost::shared_ptr<resip::SdpContents>& sdp);
       MessageExpectAction* reliableProvisional(const boost::shared_ptr<resip::SdpContents>& sdp, int rseq);
       MessageExpectAction* reliableProvisional(int rseq);
       
@@ -1082,7 +1097,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       ReceivedPublishList mPublishReceived;
       RequestMap mRequests;
       
-      static boost::shared_ptr<resip::SipMessage> nil;
+      static boost::shared_ptr<resip::SipMessage> nilMessage;
 
       // disabled
       TestSipEndPoint(const TestSipEndPoint&);
