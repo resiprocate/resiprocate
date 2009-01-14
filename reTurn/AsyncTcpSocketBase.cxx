@@ -156,6 +156,7 @@ AsyncTcpSocketBase::handleReadHeader(const asio::error_code& e)
       std::cout << std::endl;
       */
 
+      // Note:  For both StunMessages and ChannelData messages the length in bytes 3 and 4
       UInt16 dataLen;
       memcpy(&dataLen, &(*mReceiveBuffer)[2], 2);
       dataLen = ntohs(dataLen);

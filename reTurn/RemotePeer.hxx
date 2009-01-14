@@ -11,7 +11,7 @@ namespace reTurn {
 class RemotePeer
 {
 public:
-   explicit RemotePeer(const StunTuple& peerTuple, unsigned short channel);
+   explicit RemotePeer(const StunTuple& peerTuple, unsigned short channel, unsigned int timeoutSeconds);
 
    unsigned short getChannel() const { return mChannel; }
    void setChannel(unsigned short channel) { mChannel = channel; }
@@ -20,11 +20,17 @@ public:
 
    const StunTuple& getPeerTuple() const { return mPeerTuple; }
 
+   void refresh();
+   bool isExpired();
+
 private:
    StunTuple mPeerTuple;
  
    unsigned short mChannel;
    bool mChannelConfirmed; 
+
+   time_t    mExpires;
+   unsigned int mTimeoutSeconds;
 };
 
 } 

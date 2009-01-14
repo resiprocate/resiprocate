@@ -4,11 +4,29 @@ using namespace std;
 
 namespace reTurn {
 
-RemotePeer::RemotePeer(const StunTuple& peerTuple, unsigned short channel) : 
+RemotePeer::RemotePeer(const StunTuple& peerTuple, unsigned short channel, unsigned int timeoutSeconds) : 
    mPeerTuple(peerTuple), 
    mChannel(channel),
-   mChannelConfirmed(false)
+   mChannelConfirmed(false),
+   mExpires(time(0)+timeoutSeconds),
+   mTimeoutSeconds(timeoutSeconds)
 {
+}
+
+void 
+RemotePeer::refresh()
+{
+   mExpires = time(0)+mTimeoutSeconds;
+}
+
+bool 
+RemotePeer::isExpired()
+{
+   if(time(0) > mExpires)
+   {
+      return true;
+   }
+   return false;
 }
 
 } // namespace
