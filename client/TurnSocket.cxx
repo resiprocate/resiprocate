@@ -18,6 +18,9 @@ using namespace resip;
 #define UDP_Rm                 16      // Defined by RFC5389 - should be configurable
 #define UDP_FINAL_REQUEST_TIME (UDP_RT0 * UDP_Rm)  // Defined by RFC5389
 
+//#define TURN_CHANNEL_BINDING_REFRESH_SECONDS 20   // TESTING only
+#define TURN_CHANNEL_BINDING_REFRESH_SECONDS 240   // 4 minuntes - this is one minute before the permission will expire, Note:  ChannelBinding refreshes also refresh permissions
+
 #define SOFTWARE_STRING "reTURN Sync Client 0.3 - RFC5389/turn-12"
 
 namespace reTurn {
@@ -410,17 +413,18 @@ TurnSocket::setActiveDestination(const asio::ip::address& address, unsigned shor
    else
    {
       // No remote peer yet (ie. not data sent or received from remote peer) - so create one
-      mActiveDestination = channelBind(remoteTuple, errorCode);
+      mActiveDestination = mChannelManager.createChannelBinding(remoteTuple);
+      assert(mActiveDestination);
+      errorCode = channelBind(*mActiveDestination);
    }
 
    return errorCode;
 }
 
-RemotePeer*
-TurnSocket::channelBind(StunTuple& remoteTuple, asio::error_code& errorCode)
+asio::error_code
+TurnSocket::channelBind(RemotePeer& remotePeer)
 {
-   RemotePeer* remotePeer = mChannelManager.createChannelBinding(remoteTuple);
-   assert(remotePeer);
+   asio::error_code ret;
 
    // Form Channel Bind request
    StunMessage request;
@@ -428,27 +432,29 @@ TurnSocket::channelBind(StunTuple& remoteTuple, asio::error_code& errorCode)
 
    // Set headers
    request.mHasTurnChannelNumber = true;
-   request.mTurnChannelNumber = remotePeer->getChannel();
+   request.mTurnChannelNumber = remotePeer.getChannel();
    request.mHasTurnXorPeerAddress = true;
-   StunMessage::setStunAtrAddressFromTuple(request.mTurnXorPeerAddress, remoteTuple);
+   StunMessage::setStunAtrAddressFromTuple(request.mTurnXorPeerAddress, remotePeer.getPeerTuple());
 
-   StunMessage* response = sendRequestAndGetResponse(request, errorCode);
+   StunMessage* response = sendRequestAndGetResponse(request, ret);
    if(response == 0)
    {
-      return 0;
+      return ret;
    }
 
    // Check if success or not
    if(response->mHasErrorCode)
    {
-      errorCode = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
+      ret = asio::error_code(response->mErrorCode.errorClass * 100 + response->mErrorCode.number, asio::error::misc_category);
       delete response;
-      return 0;
+      return ret;
    }
 
-   remotePeer->setChannelConfirmed();
+   remotePeer.refresh();
+   remotePeer.setChannelConfirmed();
+   mChannelBindingRefreshTimes[remotePeer.getChannel()] = time(0) + TURN_CHANNEL_BINDING_REFRESH_SECONDS;
 
-   return remotePeer;
+   return ret;
 }
 
 asio::error_code 
@@ -500,10 +506,10 @@ TurnSocket::sendTo(const asio::ip::address& address, unsigned short port, const 
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(remoteTuple);
    if(!remotePeer)
    {
-      // No remote peer - then just create a temp on for sending
+      // No remote peer - then just create a temp one for sending
       // For blocking TurnSocket we do not send ChannelBind unless setActiveDestination is used
       // to avoid blocking on the sendTo call
-      RemotePeer remotePeer(remoteTuple, 0 /* not important */);
+      RemotePeer remotePeer(remoteTuple, 0 /* channel - not important */, 0 /* lifetime - not important */);
       return sendTo(remotePeer, buffer, size);
    }
    else
@@ -516,8 +522,16 @@ asio::error_code
 TurnSocket::sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size)
 {
    resip::Lock lock(mMutex);
+
    // Check to see if an allocation refresh is required - if so send it and make sure it was sucessful
    asio::error_code ret = checkIfAllocationRefreshRequired();
+   if(ret)
+   {
+      return ret;
+   }
+
+   // Check to see if a channel binding refresh is required - if so send it and make sure it was successful
+   ret = checkIfChannelBindingRefreshRequired();
    if(ret)
    {
       return ret;
@@ -865,10 +879,36 @@ TurnSocket::checkIfAllocationRefreshRequired()
 {
    if(mHaveAllocation && (time(0) >= mAllocationRefreshTime))
    {
-      // Do refresh
+      // Do allocation refresh
       return refreshAllocation();
    }
    return asio::error_code();  // 0
+}
+
+asio::error_code 
+TurnSocket::checkIfChannelBindingRefreshRequired()
+{
+   asio::error_code ret; // 0
+   if(mHaveAllocation)
+   {
+      time_t now = time(0);
+      ChannelBindingRefreshTimeMap::iterator it = mChannelBindingRefreshTimes.begin();
+      for(;it!=mChannelBindingRefreshTimes.end();it++)
+      {
+         if(it->second != 0 && now >= it->second)
+         {
+            it->second = 0;  // will be reset by channelBind if success
+
+            // Do channel binding refresh
+            RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(it->first);
+            if(remotePeer)
+            {
+               ret = channelBind(*remotePeer);
+            }
+         }
+      }
+   }
+   return ret;
 }
 
 StunMessage* 

@@ -150,6 +150,12 @@ private:
    void cancelAllocationTimer();
    void allocationTimerExpired(const asio::error_code& e);
 
+   typedef std::map<unsigned short, asio::deadline_timer*> ChannelBindingTimerMap;
+   ChannelBindingTimerMap mChannelBindingTimers;
+   void startChannelBindingTimer(unsigned short channel);
+   void cancelChannelBindingTimers();
+   void channelBindingTimerExpired(const asio::error_code& e, unsigned short channel);
+
    void doRequestSharedSecret();
    void doSetUsernameAndPassword(resip::Data* username, resip::Data* password, bool shortTermAuth);
    void doBindRequest();
@@ -166,7 +172,7 @@ private:
    void doSendTo(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
    void doClose();
    void actualClose();
-   RemotePeer* doChannelBinding(const StunTuple& remoteTuple);
+   void doChannelBinding(RemotePeer& remotePeer);
 
    StunMessage* createNewStunMessage(UInt16 stunclass, UInt16 method, bool addAuthInfo=true);
    void sendStunMessage(StunMessage* request, bool reTransmission=false);

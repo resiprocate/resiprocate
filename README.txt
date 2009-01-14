@@ -58,9 +58,6 @@ General TODO
 - per user allocation quota enforcement
 - move TLS server settings to configuration
 - cleanup stun message class so that there are accessors for all data members
-- Timeout Channel Bindings - currently binding last until the allocation is destroyed
-- The server is supposed to prevent a relayed transport address and the 5-tuple from being
-  reused in different allocations for 2 minutes after the allocation expires
 - from chart above
  - Configuration Framework
  - Multi-threaded support in Server
@@ -71,11 +68,8 @@ General TODO
 TURN TODO's
 -----------
 - CreatePermission requests can contain multiple addresses - need to modify StunMessage in order to support this
-- Channel Bindings last for 10 minutes unless refreshed - TODO
 - Clients need to install permissions before data can be sent - need to queue outbound data until CreateChannel response is received
-- Clients need to periodically send ChannelBind requests to refresh both Permissions and ChannelBindings (note: permission interval is 5 min, channel bind is 10 min)
 - ChannelData messages must be padded to a multiple of 4 bytes, the padding is not to be reflected in the encoded length
-- Check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
 - When client receives a Data Ind - it should ensure it is from an endpoint that it believes that it has installed a permission for, otherwise drop
 - It is recommended that the client check if a permission exists towards the peer that just send a ChannelData message, if not - discard
 - Could add checking that ChannelData messages always begin with bits 0b01, since bits 0b10 and 0b11 are reserved
@@ -102,13 +96,14 @@ RFC53389 TODO's
 -actual RTO should be calculated
 -UDP retransmissions should stop if a hard ICMP error is seen
 -need to do client side TLS certificate hostname checks after successful handshake
-- DNS SRV Discovery - currently only does host record lookup (using ASIO) - _stun._udp, _stun._tcp, _stuns._tcp, _turn._udp, _turn._tcp, _turns._tcp
+-DNS SRV Discovery - currently only does host record lookup (using ASIO) - _stun._udp, _stun._tcp, _stuns._tcp, _turn._udp, _turn._tcp, _turns._tcp
 
 Client TODO
 -----------
 - rework synchronous sockets to use Asynchrous sockets to unify implementation better
 - keepalive usage??
 - add option to require message integrity? - depends on usage - ICE
+- add ability to install a permission or binding without sending data
 
 Client Notes
 ------------         
