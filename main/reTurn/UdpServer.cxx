@@ -141,11 +141,22 @@ UdpServer::onReceiveSuccess(const asio::ip::address& address, unsigned short por
          memcpy(&channelNumber, &(*data)[0], 2);
          channelNumber = ntohs(channelNumber);
 
-         // TODO - check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
-         mRequestHandler.processTurnData(channelNumber,
-                                         StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
-                                         StunTuple(StunTuple::UDP, address, port),
-                                         data);
+         unsigned short dataLen;
+         memcpy(&dataLen, &(*data)[2], 2);
+         dataLen = ntohs(dataLen);
+
+         // Check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
+         if(data->size() < dataLen + 4)
+         {
+            WarningLog(<< "ChannelData message size=" << dataLen+4 << " too larger for UDP packet size=" << data->size() <<".  Dropping.");
+         }
+         else
+         {
+            mRequestHandler.processTurnData(channelNumber,
+                                          StunTuple(StunTuple::UDP, mSocket.local_endpoint().address(), mSocket.local_endpoint().port()),
+                                          StunTuple(StunTuple::UDP, address, port),
+                                          data);
+         }
       }
    }
    else

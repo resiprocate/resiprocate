@@ -23,8 +23,18 @@ using namespace reTurn;
 using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
+//#define CONTINUOUSTESTMODE 
 
 resip::Data address = resip::DnsUtil::getLocalIpAddress();
+
+void sleepSeconds(unsigned int seconds)
+{
+#ifdef WIN32
+   Sleep(seconds*1000);
+#else
+   sleep(seconds);
+#endif
+}
 
 // Simple UDP Echo Server
 class TurnPeer : public resip::ThreadIf
@@ -192,7 +202,17 @@ public:
          }
          break;
       case 3:
-         mTurnAsyncSocket->destroyAllocation();
+#ifdef CONTINUOUSTESTMODE
+      default:
+         {
+            sleepSeconds(1);    
+            resip::Data turnData("This test is for ChannelData message!");
+            InfoLog( << "CLIENT: Sending: " << turnData);
+            mTurnAsyncSocket->send(turnData.c_str(), turnData.size()+1);       
+         }
+#else
+         mTurnAsyncSocket->destroyAllocation(); 
+#endif
          //mTurnAsyncSocket->close();
          break;
       }
