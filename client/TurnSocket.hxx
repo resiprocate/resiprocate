@@ -104,6 +104,8 @@ protected:
    unsigned int mBandwidth;
 
    ChannelManager mChannelManager;
+   typedef std::map<unsigned short, time_t> ChannelBindingRefreshTimeMap;
+   ChannelBindingRefreshTimeMap mChannelBindingRefreshTimes;
    RemotePeer* mActiveDestination;
 
    asio::io_service mIOService;
@@ -123,8 +125,9 @@ protected:
 
 private:
    resip::Mutex mMutex;
-   RemotePeer* channelBind(StunTuple& remoteTuple, asio::error_code& errorCode);
+   asio::error_code channelBind(RemotePeer& remotePeer);
    asio::error_code checkIfAllocationRefreshRequired();
+   asio::error_code checkIfChannelBindingRefreshRequired();
    StunMessage* sendRequestAndGetResponse(StunMessage& request, asio::error_code& errorCode, bool addAuthInfo=true);
    asio::error_code sendTo(RemotePeer& remotePeer, const char* buffer, unsigned int size);
    asio::error_code handleStunMessage(StunMessage& stunMessage, char* buffer, unsigned int& size, asio::ip::address* sourceAddress=0, unsigned short* sourcePort=0);

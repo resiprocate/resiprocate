@@ -20,7 +20,17 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::TEST
 
+//#define CONTINUOUSTESTMODE 
 #define NO_AUTHENTICATION
+
+void sleepSeconds(unsigned int seconds)
+{
+#ifdef WIN32
+   Sleep(seconds*1000);
+#else
+   sleep(seconds);
+#endif
+}
 
 // Simple UDP Echo Server
 class TurnPeer : public resip::ThreadIf
@@ -181,6 +191,9 @@ int main(int argc, char* argv[])
             }          
          }
 
+#ifdef CONTINUOUSTESTMODE
+         while(!rc || rc.value() == asio::error::operation_aborted) {
+#endif
          turnData = "This test is for ChannelData message!";
          InfoLog( << "CLIENT: Sending: " << turnData);
          turnSocket.send(turnData.c_str(), turnData.size());       
@@ -198,7 +211,10 @@ int main(int argc, char* argv[])
                InfoLog( << "CLIENT: Receive error: [" << rc.value() << "] " << rc.message());
             }
          }
-
+#ifdef CONTINUOUSTESTMODE
+         sleepSeconds(1);
+         }//end while
+#endif
          turnSocket.destroyAllocation();
       }
 

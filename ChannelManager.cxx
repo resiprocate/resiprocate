@@ -5,6 +5,8 @@
 #include "ReTurnSubsystem.hxx"
 
 #define RESIPROCATE_SUBSYSTEM ReTurnSubsystem::RETURN
+#define TURN_CHANNEL_BINDING_LIFETIME_SECONDS 600   // 10 minuntes
+//#define TURN_CHANNEL_BINDING_LIFETIME_SECONDS 60   // TESTING only
 
 using namespace std;
 
@@ -53,7 +55,7 @@ ChannelManager::createChannelBinding(const StunTuple& peerTuple, unsigned short 
    assert(findRemotePeerByPeerAddress(peerTuple) == 0);
 
    // Create New RemotePeer
-   RemotePeer* remotePeer = new RemotePeer(peerTuple, channel);
+   RemotePeer* remotePeer = new RemotePeer(peerTuple, channel, TURN_CHANNEL_BINDING_LIFETIME_SECONDS);
 
    // Add RemoteAddress to the appropriate maps
    mTupleRemotePeerMap[peerTuple] = remotePeer;
@@ -67,7 +69,16 @@ ChannelManager::findRemotePeerByChannel(unsigned short channelNumber)
    ChannelRemotePeerMap::iterator it = mChannelRemotePeerMap.find(channelNumber);
    if(it != mChannelRemotePeerMap.end())
    {
-      return it->second;
+      if(!it->second->isExpired())
+      {
+         return it->second;
+      }
+      else
+      {
+         // cleanup expired channel binding
+         mTupleRemotePeerMap.erase(it->second->getPeerTuple());
+         mChannelRemotePeerMap.erase(it);
+      }
    }
    return 0;
 }
@@ -79,7 +90,16 @@ ChannelManager::findRemotePeerByPeerAddress(const StunTuple& peerAddress)
    TupleRemotePeerMap::iterator it = mTupleRemotePeerMap.find(peerAddress);
    if(it != mTupleRemotePeerMap.end())
    {
-      return it->second;
+      if(!it->second->isExpired())
+      {
+         return it->second;
+      }
+      else
+      {
+         // cleanup expired channel binding
+         mChannelRemotePeerMap.erase(it->second->getChannel());
+         mTupleRemotePeerMap.erase(it);
+      }
    }
    return 0;
 }
