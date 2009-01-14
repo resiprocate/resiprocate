@@ -17,6 +17,10 @@ using namespace resip;
 #define TCP_RESPONSE_TIME      39500   // Defined by RFC5389 (Ti) - should be configurable
 #define UDP_Rm                 16      // Defined by RFC5389 - should be configurable
 #define UDP_FINAL_REQUEST_TIME (UDP_RT0 * UDP_Rm)  // Defined by RFC5389
+
+//#define TURN_CHANNEL_BINDING_REFRESH_SECONDS 20   // TESTING only
+#define TURN_CHANNEL_BINDING_REFRESH_SECONDS 240   // 4 minuntes - this is one minute before the permission will expire, Note:  ChannelBinding refreshes also refresh permissions
+
 #define SOFTWARE_STRING "reTURN Async Client 0.3 - RFC5389/turn-12"
 
 namespace reTurn {
@@ -47,6 +51,8 @@ TurnAsyncSocket::~TurnAsyncSocket()
 {
    clearActiveRequestMap();
    cancelAllocationTimer();
+   cancelChannelBindingTimers();
+
    DebugLog(<< "TurnAsyncSocket::~TurnAsyncSocket destroyed!");
 }
 
@@ -302,26 +308,24 @@ TurnAsyncSocket::doSetActiveDestination(const asio::ip::address& address, unsign
    else
    {
       // No channel binding yet (ie. not data sent or received from remote peer) - so create one
-      mActiveDestination = doChannelBinding(remoteTuple);
-
+      mActiveDestination = mChannelManager.createChannelBinding(remoteTuple);
       assert(mActiveDestination);
+      doChannelBinding(*mActiveDestination);
    }
    DebugLog(<< "TurnAsyncSocket::doSetActiveDestination: Active Destination set to: " << remoteTuple);
    if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onSetActiveDestinationSuccess(getSocketDescriptor());
 }
 
-RemotePeer* TurnAsyncSocket::doChannelBinding(const StunTuple& remoteTuple)
+void TurnAsyncSocket::doChannelBinding(RemotePeer& remotePeer)
 {
-   RemotePeer* remotePeer = mChannelManager.createChannelBinding(remoteTuple);
-
    // Form Channel Bind request
    StunMessage* request = createNewStunMessage(StunMessage::StunClassRequest, StunMessage::TurnChannelBindMethod);
 
    // Set headers
    request->mHasTurnChannelNumber = true;
-   request->mTurnChannelNumber = remotePeer->getChannel();
+   request->mTurnChannelNumber = remotePeer.getChannel();
    request->mHasTurnXorPeerAddress = true;
-   StunMessage::setStunAtrAddressFromTuple(request->mTurnXorPeerAddress, remoteTuple);
+   StunMessage::setStunAtrAddressFromTuple(request->mTurnXorPeerAddress, remotePeer.getPeerTuple());
 
    // Send the Request and start transaction timers
    sendStunMessage(request);
@@ -329,9 +333,8 @@ RemotePeer* TurnAsyncSocket::doChannelBinding(const StunTuple& remoteTuple)
    // If not using UDP - then mark channel as confirmed - otherwise wait for ChannelBind response
    if(mLocalBinding.getTransportType() != StunTuple::UDP)
    {
-      remotePeer->setChannelConfirmed();
+      remotePeer.setChannelConfirmed();
    }
-   return remotePeer;
 }
 
 void
@@ -442,9 +445,19 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
          memcpy(&channelNumber, &(*data)[0], 2);
          channelNumber = ntohs(channelNumber);
 
-         // TODO - check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
+         if(mLocalBinding.getTransportType() == StunTuple::UDP)
+         {
+            // Check if the UDP datagram size is too short to contain the claimed length of the ChannelData message, then discard
+            unsigned short dataLen;
+            memcpy(&dataLen, &(*data)[2], 2);
+            dataLen = ntohs(dataLen);
 
-         // TODO - check that permission exists before processing
+            if(data->size() < (unsigned int)dataLen+4)
+            {
+               WarningLog(<< "ChannelData message size=" << dataLen+4 << " too large for UDP packet size=" << data->size() <<".  Dropping.");
+               return;
+            }
+         }
 
          RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channelNumber);
          if(remotePeer)
@@ -694,7 +707,10 @@ TurnAsyncSocket::handleChannelBindResponse(StunMessage &request, StunMessage &re
          return asio::error_code(reTurn::InvalidChannelNumberReceived, asio::error::misc_category);
       }
 
+      DebugLog(<< "TurnAsyncSocket::handleChannelBindResponse: Channel " << remotePeer->getChannel() << " is now bound to " << remotePeer->getPeerTuple());
+      remotePeer->refresh();
       remotePeer->setChannelConfirmed();
+      startChannelBindingTimer(remotePeer->getChannel());
    }
    else
    {
@@ -986,8 +1002,9 @@ TurnAsyncSocket::doSendTo(const asio::ip::address& address, unsigned short port,
    if(!remotePeer)
    {
       // No remote peer yet (ie. no data sent or received from remote peer) - so create one
-      remotePeer = doChannelBinding(remoteTuple);
+      remotePeer = mChannelManager.createChannelBinding(remoteTuple);
       assert(remotePeer);
+      doChannelBinding(*remotePeer);
    }
    return sendTo(*remotePeer, data);
 }
@@ -1054,6 +1071,7 @@ TurnAsyncSocket::actualClose()
 {
    clearActiveRequestMap();
    cancelAllocationTimer();
+   cancelChannelBindingTimers();
    mAsyncSocketBase.close();
 }
 
@@ -1208,6 +1226,49 @@ TurnAsyncSocket::allocationTimerExpired(const asio::error_code& e)
       // Note:  only release guard if not calling doRefreshAllocation - since
       // doRefreshAllocation will release the guard
       GuardReleaser guardReleaser(mGuards);
+   }
+}
+
+void
+TurnAsyncSocket::startChannelBindingTimer(unsigned short channel)
+{
+   ChannelBindingTimerMap::iterator it = mChannelBindingTimers.find(channel);
+   if(it==mChannelBindingTimers.end())
+   {
+      std::pair<ChannelBindingTimerMap::iterator,bool> ret = 
+         mChannelBindingTimers.insert(std::pair<unsigned short, asio::deadline_timer*>(channel, new asio::deadline_timer(mIOService)));
+      assert(ret.second);
+      it = ret.first;
+   }
+   it->second->expires_from_now(boost::posix_time::seconds(TURN_CHANNEL_BINDING_REFRESH_SECONDS));  
+   mGuards.push(mAsyncSocketBase.shared_from_this());
+   it->second->async_wait(boost::bind(&TurnAsyncSocket::channelBindingTimerExpired, this, asio::placeholders::error, channel));
+}
+
+void
+TurnAsyncSocket::cancelChannelBindingTimers()
+{
+   // Cleanup ChannelBinding Timers
+   ChannelBindingTimerMap::iterator it = mChannelBindingTimers.begin();
+   for(;it!=mChannelBindingTimers.end();it++)
+   {
+      it->second->cancel();
+      delete it->second;
+   }
+   mChannelBindingTimers.clear();
+}
+
+void 
+TurnAsyncSocket::channelBindingTimerExpired(const asio::error_code& e, unsigned short channel)
+{
+   GuardReleaser guardReleaser(mGuards);
+   if(!e)
+   {
+      RemotePeer* remotePeer = mChannelManager.findRemotePeerByChannel(channel);
+      if(remotePeer)
+      {
+         doChannelBinding(*remotePeer);
+      }
    }
 }
 

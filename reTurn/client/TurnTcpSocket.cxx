@@ -131,7 +131,7 @@ TurnTcpSocket::handleReadHeader(const asio::error_code& e)
       std::cout << std::endl;
       */
 
-      // All Turn messaging will be framed
+      // Note:  For both StunMessages and ChannelData messages the length in bytes 3 and 4
       UInt16 dataLen;
       memcpy(&dataLen, &mReadBuffer[2], 2);
       dataLen = ntohs(dataLen);

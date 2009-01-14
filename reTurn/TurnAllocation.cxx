@@ -15,7 +15,8 @@
 using namespace std;
 using namespace resip;
 
-#define TURN_PERMISSION_INACTIVITY_SECONDS 300   // 5 minuntes
+#define TURN_PERMISSION_LIFETIME_SECONDS 300   // 5 minuntes
+//#define TURN_PERMISSION_LIFETIME_SECONDS 30   // TESTING only
 
 namespace reTurn {
 
@@ -34,7 +35,7 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
    mLocalTurnSocket(localTurnSocket)
 {
    InfoLog(<< "TurnAllocation created: clientLocal=" << clientLocalTuple << " clientRemote=" << 
-           clientRemoteTuple << " requested=" << requestedTuple << " lifetime=" << lifetime);
+           clientRemoteTuple << " allocation=" << requestedTuple << " lifetime=" << lifetime);
 
    refresh(lifetime);
 
@@ -56,7 +57,7 @@ TurnAllocation::TurnAllocation(TurnManager& turnManager,
 TurnAllocation::~TurnAllocation()
 {
    InfoLog(<< "TurnAllocation destroyed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple);
+           mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple);
 
    // Delete Relay Servers
    if(mUdpRelayServer) mUdpRelayServer->stop();
@@ -79,7 +80,7 @@ void
 TurnAllocation::refresh(unsigned int lifetime)  // update expiration time
 {
    InfoLog(<< "TurnAllocation refreshed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " lifetime=" << lifetime);
+           mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " lifetime=" << lifetime);
 
    mExpires = time(0) + lifetime;
 
@@ -97,7 +98,7 @@ TurnAllocation::existsPermission(const asio::ip::address& address)
       if(it->second->isExpired()) // check if expired
       {
          InfoLog(<< "TurnAllocation has expired permission: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-            mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " exipred address=" << it->first.to_string());
+            mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " exipred address=" << it->first.to_string());
          delete it->second;
          mTurnPermissionMap.erase(it);
          return false;
@@ -118,11 +119,15 @@ TurnAllocation::refreshPermission(const asio::ip::address& address)
    }
    if(!turnPermission) // create if doesn't exist
    {
-      mTurnPermissionMap[address] = new TurnPermission(address, TURN_PERMISSION_INACTIVITY_SECONDS);  
+      mTurnPermissionMap[address] = new TurnPermission(address, TURN_PERMISSION_LIFETIME_SECONDS);  
+      InfoLog(<< "Permission for " << address.to_string() << " created: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+              mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple);
    }
    else
    {
       turnPermission->refresh();
+      InfoLog(<< "Permission for " << address.to_string() << " refreshed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+              mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple);
    }
 }
 
@@ -144,7 +149,7 @@ TurnAllocation::sendDataToPeer(unsigned short channelNumber, boost::shared_ptr<D
    else
    {
       WarningLog(<< "sendDataToPeer bad channel number - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-         mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber);
+         mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " channelNumber=" << channelNumber);
    }
 }
 
@@ -152,10 +157,7 @@ void
 TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data, bool isFramed)
 {
    DebugLog(<< "TurnAllocation sendDataToPeer: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-           mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peerAddress=" << peerAddress);
-
-   // TODO - remove this when permission and channel binding refreshes are implemented in the client
-   refreshPermission(peerAddress.getAddress());
+           mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " peerAddress=" << peerAddress);
 
    if(mRequestedTuple.getTransportType() == StunTuple::UDP)
    {
@@ -177,24 +179,20 @@ TurnAllocation::sendDataToPeer(const StunTuple& peerAddress, boost::shared_ptr<D
 void 
 TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr<DataBuffer>& data)
 {
-   // Find RemotePeer
+   // See if a channel binding exists - if so, use it
    RemotePeer* remotePeer = mChannelManager.findRemotePeerByPeerAddress(peerAddress);
-   if(!remotePeer)
+   if(remotePeer)
    {
-      WarningLog(<< "sendDataToClient RemotePeer info not found - discarding data: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-            mKey.getClientRemoteTuple() << " requested=" <<  mRequestedTuple << " peerAddress=" << peerAddress);
-      return;
+      // send data to local client
+      mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), remotePeer->getChannel(), data);
+
+      DebugLog(<< "TurnAllocation sendDataToClient: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+                  mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " peer=" << peerAddress << 
+                  " channelNumber=" << (int)remotePeer->getChannel());
    }
-
-   // Use DataInd if channel is not yet confirmed
-   bool useDataInd = !remotePeer->isChannelConfirmed();
-
-   DebugLog(<< "TurnAllocation sendDataToClient: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-               mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " peer=" << peerAddress << 
-               " channelNumber=" << (int)remotePeer->getChannel());
-
-   if(useDataInd)
+   else
    {
+      // No Channel Binding - use DataInd
       StunMessage dataInd;
       dataInd.createHeader(StunMessage::StunClassIndication, StunMessage::TurnDataMethod);
       dataInd.mHasTurnXorPeerAddress = true;
@@ -207,11 +205,10 @@ TurnAllocation::sendDataToClient(const StunTuple& peerAddress, boost::shared_ptr
       unsigned int size = dataInd.stunEncodeMessage((char*)buffer->data(), bufferSize);
       buffer->truncate(size);  // Set size to proper size
       mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), buffer);
-   }
-   else
-   {
-      // send data to local client
-      mLocalTurnSocket->doSend(mKey.getClientRemoteTuple(), remotePeer->getChannel(), data);
+
+      DebugLog(<< "TurnAllocation sendDataToClient: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+                  mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " peer=" << peerAddress << 
+                  " using DataInd.");
    }
 }
 
@@ -224,10 +221,14 @@ TurnAllocation::addChannelBinding(const StunTuple& peerAddress, unsigned short c
       if(remotePeer->getPeerTuple() != peerAddress)
       {
          WarningLog(<< "addChannelBinding failed since channel is already in use: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-                    mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress);
+                    mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress);
          return false;
       }
-      // TODO - refresh channel binding lifetime??
+      // refresh channel binding lifetime
+      remotePeer->refresh();
+
+      InfoLog(<< "Channel " << channelNumber << " binding to " << peerAddress << " refreshed: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+              mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple);
    }
    else
    {
@@ -235,10 +236,13 @@ TurnAllocation::addChannelBinding(const StunTuple& peerAddress, unsigned short c
       if(remotePeer)
       {
          WarningLog(<< "addChannelBinding failed since peerAddress is alredy in use: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
-                    mKey.getClientRemoteTuple() << " requested=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress);
+                    mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple << " channelNumber=" << channelNumber << " peerAddress=" << peerAddress);
          return false;
       }
       mChannelManager.createChannelBinding(peerAddress, channelNumber);
+
+      InfoLog(<< "Channel " << channelNumber << " binding to " << peerAddress << " created: clientLocal=" << mKey.getClientLocalTuple() << " clientRemote=" << 
+              mKey.getClientRemoteTuple() << " allocation=" << mRequestedTuple);
    }
 
    // Add or refresh permission
