@@ -3,6 +3,7 @@
 
 #include "resip/stack/Helper.hxx"
 #include "resip/dum/BaseCreator.hxx"
+#include "resip/dum/ClientAuthManager.hxx"
 #include "resip/dum/ClientRegistration.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/DialogUsageManager.hxx"
@@ -618,6 +619,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                      assert(false);
                      break;
                   }
+                  if(mDum.mClientAuthManager.get()) mDum.mClientAuthManager.get()->clearAuthenticationState(DialogSetId(*mLastRequest));
                   mDum.addTimer(DumTimeout::RegistrationRetry, 
                                 retry, 
                                 getBaseHandle(),
@@ -656,6 +658,7 @@ ClientRegistration::dispatch(const SipMessage& msg)
                break;
             }
 
+            if(mDum.mClientAuthManager.get()) mDum.mClientAuthManager.get()->clearAuthenticationState(DialogSetId(*mLastRequest));
             mDum.addTimer(DumTimeout::RegistrationRetry,
                           retryInterval,
                           getBaseHandle(),
