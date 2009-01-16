@@ -222,7 +222,7 @@ bool
 ClientAuthManager::RealmState::handleAuth(UserProfile& userProfile, const Auth& auth, bool isProxyCredential)
 {   
    DebugLog( << "ClientAuthManager::RealmState::handleAuth: " << this << " " << auth << " is proxy: " << isProxyCredential);
-   mIsProxyCredential = isProxyCredential;   //this cahnging dynamically would
+   mIsProxyCredential = isProxyCredential;   //this changing dynamically would
                                              //be very bizarre..should trap w/ enum
    switch(mState)
    {
@@ -308,7 +308,6 @@ ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Au
 void 
 ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
 {
-   assert(mState != Failed);
    if (mState == Failed) return;
 
    Data cnonce = Random::getCryptoRandomHex(16);
