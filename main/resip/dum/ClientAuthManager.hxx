@@ -30,6 +30,7 @@ class ClientAuthManager
 
       //
       virtual void addAuthentication(SipMessage& origRequest);
+      virtual void clearAuthenticationState(const DialogSetId& dsId);
       
    private:
       friend class DialogSet;
