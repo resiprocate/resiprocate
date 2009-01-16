@@ -86,6 +86,11 @@ ClientAuthManager::addAuthentication(SipMessage& request)
    }
 }
 
+void 
+ClientAuthManager::clearAuthenticationState(const DialogSetId& dsId)
+{
+   dialogSetDestroyed(dsId);
+}
 
 ClientAuthManager::AuthState::AuthState() :
    mFailed(false)
@@ -308,6 +313,7 @@ ClientAuthManager::RealmState::findCredential(UserProfile& userProfile, const Au
 void 
 ClientAuthManager::RealmState::addAuthentication(SipMessage& request)
 {
+   assert(mState != Failed);
    if (mState == Failed) return;
 
    Data cnonce = Random::getCryptoRandomHex(16);
