@@ -35,6 +35,8 @@ int _kbhit() {
 #include "../UserAgent.hxx"
 #include "../ReconSubsystem.hxx"
 
+#include <os/OsSysLog.h>
+
 // Test Prompts for cache testing
 #include "playback_prompt.h"
 #include "record_prompt.h"
@@ -98,17 +100,27 @@ class MyConversationManager : public ConversationManager
 {
 public:
 
-   MyConversationManager() 
+   MyConversationManager(bool localAudioEnabled)
+      : ConversationManager(localAudioEnabled),
+        mLocalAudioEnabled(localAudioEnabled)
    { 
    };
 
    virtual void startup()
    {      
-      // Create initial local participant and conversation  
-      addParticipant(createConversation(), createLocalParticipant());
-      resip::Uri uri("tone:dialtone;duration=1000");
-      createMediaResourceParticipant(mConversationHandles.front(), uri);
-
+      if(mLocalAudioEnabled)
+      {
+         // Create initial local participant and conversation  
+         addParticipant(createConversation(), createLocalParticipant());
+         resip::Uri uri("tone:dialtone;duration=1000");
+         createMediaResourceParticipant(mConversationHandles.front(), uri);
+      }
+      else
+      {
+         // If no local audio - just create a starter conversation
+         createConversation();
+      }
+   
       // Load 2 items into cache for testing
       {
          resip::Data buffer(Data::Share, (const char*)playback_prompt, sizeof(playback_prompt));
@@ -293,6 +305,7 @@ public:
    std::list<ParticipantHandle> mLocalParticipantHandles;
    std::list<ParticipantHandle> mRemoteParticipantHandles;
    std::list<ParticipantHandle> mMediaParticipantHandles;
+   bool mLocalAudioEnabled;
 };
 
 void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
@@ -972,6 +985,7 @@ main (int argc, char** argv)
    unsigned short natTraversalServerPort = 8777;
    Data stunUsername;
    Data stunPassword;
+   bool localAudioEnabled = true;
    unsigned short sipPort = 5062;
    unsigned short tlsPort = 5063;
    unsigned short mediaPortStart = 17384;
@@ -1020,6 +1034,7 @@ main (int argc, char** argv)
          cout << " -ns <server:port> - set the hostname and port of the NAT STUN/TURN server" << endl;
          cout << " -nu <username> - sets the STUN/TURN username to use for NAT server" << endl;
          cout << " -np <password> - sets the STUN/TURN password to use for NAT server" << endl;
+         cout << " -nl - no local audio support - removed local sound hardware requirement" << endl;
          cout << " -l <NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK> - logging level" << endl;
          cout << endl;
          cout << "Sample Command line:" << endl;
@@ -1037,6 +1052,10 @@ main (int argc, char** argv)
       else if(isEqualNoCase(commandName, "-nk"))
       {
          keepAlivesDisabled = true;
+      }
+      else if(isEqualNoCase(commandName, "-nl"))
+      {
+         localAudioEnabled = false;
       }
       else
       {
@@ -1195,6 +1214,8 @@ main (int argc, char** argv)
    }
 
    //enableConsoleOutput(TRUE);  // Allow sipX console output
+   OsSysLog::initialize(0, "testUA");
+   OsSysLog::setOutputFile(0, "sipXtapilog.txt") ;
    Log::initialize("Cout", logLevel, "testUA");
    //UserAgent::setLogLevel(Log::Warning, UserAgent::SubsystemAll);
    //UserAgent::setLogLevel(Log::Info, UserAgent::SubsystemRecon);
@@ -1219,6 +1240,7 @@ main (int argc, char** argv)
    InfoLog( << "  TLS Port = " << tlsPort);
    InfoLog( << "  TLS Domain = " << tlsDomain);
    InfoLog( << "  Outbound Proxy = " << outboundProxy);
+   InfoLog( << "  Local Audio Enabled = " << (localAudioEnabled ? "true" : "false"));
    InfoLog( << "  Log Level = " << logLevel);
    
    InfoLog( << "type help or '?' for list of accepted commands." << endl);
@@ -1378,7 +1400,7 @@ main (int argc, char** argv)
    {
       conversationProfile->setDefaultRegistrationTime(0);
    }
-   conversationProfile->setDefaultRegistrationRetryTime(30);
+   conversationProfile->setDefaultRegistrationRetryTime(120);  // 2 mins
    conversationProfile->setDefaultFrom(uri);
    conversationProfile->setDigestCredential(uri.uri().host(), uri.uri().user(), password);
 
@@ -1439,7 +1461,7 @@ main (int argc, char** argv)
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      MyConversationManager myConversationManager;
+      MyConversationManager myConversationManager(localAudioEnabled);
       MyUserAgent ua(&myConversationManager, profile);
       myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
       ua.addConversationProfile(conversationProfile);
@@ -1475,6 +1497,7 @@ main (int argc, char** argv)
       ua.shutdown();
    }
    InfoLog(<< "testUA is shutdown.");
+   OsSysLog::shutdown();
    sleepSeconds(2);
 }
 
