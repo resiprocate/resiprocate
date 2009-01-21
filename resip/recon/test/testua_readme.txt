@@ -142,6 +142,10 @@ Command line options are:
  -np <password> - sets the STUN/TURN password to use for NAT server
 
   Use this option if the STUN/TURN server requires authentication.
+  
+ -nl - disables local audio support - removes requirement for local audio hardware.
+       Note:  if local audio support is disabled, then local participants cannot
+              be created.
 
  -l <NONE|CRIT|ERR|WARNING|INFO|DEBUG|STACK> - logging level
 
