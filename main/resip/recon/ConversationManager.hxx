@@ -66,7 +66,7 @@ class ConversationManager  : public resip::InviteSessionHandler,
                              public OsMsgDispatcher
 {
 public:  
-   ConversationManager();
+   ConversationManager(bool localAudioEnabled=true);
    virtual ~ConversationManager();
 
    typedef unsigned int ConversationHandle;
@@ -579,6 +579,7 @@ private:
    ParticipantHandle getNewParticipantHandle();    // thread safe
    Participant* getParticipant(ParticipantHandle partHandle);
    RemoteParticipant* getRemoteParticipantFromMediaConnectionId(int mediaConnectionId);
+   bool mLocalAudioEnabled;
 
    std::deque<unsigned int> mRTPPortFreeList;
    void initRTPPortFreeList();

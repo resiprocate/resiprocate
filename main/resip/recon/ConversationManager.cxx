@@ -39,10 +39,11 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-ConversationManager::ConversationManager() 
+ConversationManager::ConversationManager(bool localAudioEnabled) 
 : mUserAgent(0),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
+  mLocalAudioEnabled(localAudioEnabled),
   mMediaFactory(0),
   mMediaInterface(0),
   mBridgeMixer(*this)
@@ -55,7 +56,7 @@ ConversationManager::ConversationManager()
    int codecPathsNum = sizeof(codecPaths)/sizeof(codecPaths[0]);
    assert(OS_SUCCESS == CpMediaInterfaceFactory::addCodecPaths(codecPathsNum, codecPaths));
 
-   mMediaFactory = sipXmediaFactoryFactory(NULL);
+   mMediaFactory = sipXmediaFactoryFactory(NULL, 0, 0, 0, mLocalAudioEnabled);
 
    // Create MediaInterface
    UtlString localRtpInterfaceAddress("127.0.0.1");
@@ -108,7 +109,10 @@ ConversationManager::ConversationManager()
    mMediaInterface->setNotificationsEnabled(true);
 
    // This is the one and only media interface - give it focus
-   mMediaInterface->giveFocus();
+   if(mLocalAudioEnabled)
+   {
+      mMediaInterface->giveFocus();
+   }
 
 #endif
 }
@@ -206,10 +210,18 @@ ConversationManager::createMediaResourceParticipant(ConversationHandle convHandl
 ConversationManager::ParticipantHandle 
 ConversationManager::createLocalParticipant()
 {
-   ParticipantHandle partHandle = getNewParticipantHandle();
+   ParticipantHandle partHandle = 0;
+   if(mLocalAudioEnabled)
+   {
+      partHandle = getNewParticipantHandle();
 
-   CreateLocalParticipantCmd* cmd = new CreateLocalParticipantCmd(this, partHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+      CreateLocalParticipantCmd* cmd = new CreateLocalParticipantCmd(this, partHandle);
+      mUserAgent->getDialogUsageManager().post(cmd);
+   }
+   else
+   {
+      WarningLog(<< "createLocalParticipant called when local audio support is disabled.");
+   }
 
    return partHandle;
 }
