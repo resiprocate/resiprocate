@@ -2090,7 +2090,7 @@ InviteSession::rejectNIT(int statusCode)
       throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
    }
    mLastNitResponse->header(h_StatusLine).statusCode() = statusCode;  
-   mLastNitResponse->releaseContents();
+   mLastNitResponse->setContents(0);
    Helper::getResponseCodeReason(statusCode, mLastNitResponse->header(h_StatusLine).reason());
    send(mLastNitResponse);
 }
@@ -2232,7 +2232,7 @@ InviteSession::sessionRefresh()
    {
       transition(SentUpdate);
       mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
-      mLastLocalSessionModification->releaseContents();  // Don't send SDP
+      mLastLocalSessionModification->setContents(0);  // Don't send SDP
    }
    else
    {
