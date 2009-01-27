@@ -1,4 +1,5 @@
 #include <asio.hpp>
+#include <boost/function.hpp>
 #include <rutil/Data.hxx>
 
 // SYSTEM INCLUDES
