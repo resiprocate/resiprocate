@@ -42,11 +42,12 @@ LocationServer::process(RequestContext& context)
       
       std::list<Target*> batch;
       std::map<resip::Data,resip::ContactList> outboundBatch;
+      UInt64 now = Timer::getTimeSecs();
       for ( resip::ContactList::iterator i  = contacts.begin()
                ; i != contacts.end()    ; ++i)
       {
          resip::ContactInstanceRecord contact = *i;
-         if (contact.mRegExpires - Timer::getTimeSecs() >= 0)
+         if (contact.mRegExpires > now)
          {
             InfoLog (<< *this << " adding target " << contact.mContact <<
                   " with tuple " << contact.mReceivedFrom);
