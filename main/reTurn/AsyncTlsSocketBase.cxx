@@ -1,3 +1,4 @@
+#include <boost/function.hpp>
 #include <boost/bind.hpp>
 
 #include "AsyncTlsSocketBase.hxx"
