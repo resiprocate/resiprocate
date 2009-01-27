@@ -762,12 +762,14 @@ WebAdmin::buildRegistrationsSubPage(DataStream& s)
             contacts = mRegDb.getContacts(uri);
          
          bool first = true;
+         UInt64 now = Timer::getTimeSecs();
          for (ContactList::iterator i = contacts.begin();
               i != contacts.end(); ++i )
          {
-            UInt64 secondsRemaining = i->mRegExpires - Timer::getTimeSecs();
-            if (secondsRemaining > 0)
+            if(i->mRegExpires > now)
             {
+               UInt64 secondsRemaining = i->mRegExpires - now;
+
                s << "<tr>" << endl
                  << "  <td>" ;
                if (first) 
