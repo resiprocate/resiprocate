@@ -12,7 +12,7 @@ namespace reTurn {
 class AsyncTlsSocketBase : public AsyncSocketBase
 {
 public:
-   AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context); 
+   AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context, bool validateServerCertificateHostname); 
    virtual ~AsyncTlsSocketBase();
 
    virtual unsigned int getSocketDescriptor();
@@ -36,6 +36,7 @@ protected:
    virtual void handleTcpResolve(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
    virtual void handleConnect(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
    virtual void handleClientHandshake(const asio::error_code& ec, asio::ip::tcp::resolver::iterator endpoint_iterator);
+   virtual bool validateServerCertificateHostname();
 
    virtual void onServerHandshakeSuccess() { assert(false); }
    virtual void onServerHandshakeFailure(const asio::error_code& e) { assert(false); }
@@ -44,6 +45,8 @@ protected:
    asio::ip::tcp::resolver mResolver;
 
 private:
+   std::string mHostname;
+   bool mValidateServerCertificateHostname;
 };
 
 }

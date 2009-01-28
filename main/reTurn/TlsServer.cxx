@@ -11,32 +11,37 @@ namespace reTurn {
 TlsServer::TlsServer(asio::io_service& ioService, RequestHandler& requestHandler, const asio::ip::address& address, unsigned short port)
 : mIOService(ioService),
   mAcceptor(ioService),
-  mContext(ioService, asio::ssl::context::tlsv1),
+  mContext(ioService, asio::ssl::context::tlsv1),  // TLSv1.0
   mConnectionManager(),
   mRequestHandler(requestHandler)
 {
-   // Set Context options - TODO make into configuration settings
+   // Set Context options 
    asio::error_code ec;
-   mContext.set_options(asio::ssl::context::default_workarounds | 
-                        asio::ssl::context::no_sslv2 |
-                        asio::ssl::context::single_dh_use);
+   mContext.set_options(asio::ssl::context::default_workarounds |  // Implement various bug workarounds.
+                        asio::ssl::context::no_sslv2 | // Disable SSL v2.
+                        asio::ssl::context::single_dh_use);  // enforce recalculation of the DH key for eatch session
+   
    mContext.set_password_callback(boost::bind(&TlsServer::getPassword, this));
-#define SERVER_CERT_FILE "server.pem"
-#define TMP_DH_FILE "dh512.pem"
-   mContext.use_certificate_chain_file(SERVER_CERT_FILE, ec);
+
+   // Use a certificate chain from a file.
+   mContext.use_certificate_chain_file(mRequestHandler.getConfig().mTlsServerCertificateFilename.c_str(), ec);
    if(ec)
    {
-      ErrLog(<< "Unable to load server cert chain file: " << SERVER_CERT_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
+      ErrLog(<< "Unable to load server cert chain file: " << mRequestHandler.getConfig().mTlsServerCertificateFilename << ", error=" << ec.value() << "(" << ec.message() << ")");
    }
-   mContext.use_private_key_file(SERVER_CERT_FILE, asio::ssl::context::pem, ec);
+
+   // Use a private key from a file.
+   mContext.use_private_key_file(mRequestHandler.getConfig().mTlsServerCertificateFilename.c_str(), asio::ssl::context::pem, ec);
    if(ec)
    {
-      ErrLog(<< "Unable to load server private key file: " << SERVER_CERT_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
+      ErrLog(<< "Unable to load server private key file: " << mRequestHandler.getConfig().mTlsServerCertificateFilename << ", error=" << ec.value() << "(" << ec.message() << ")");
    }
-   mContext.use_tmp_dh_file(TMP_DH_FILE, ec);
+
+   // Use the specified file to obtain the temporary Diffie-Hellman parameters.
+   mContext.use_tmp_dh_file(mRequestHandler.getConfig().mTlsTempDhFilename.c_str(), ec);
    if(ec)
    {
-      ErrLog(<< "Unable to load temporary Diffie-Hellman parameters file: " << TMP_DH_FILE << ", error=" << ec.value() << "(" << ec.message() << ")");
+      ErrLog(<< "Unable to load temporary Diffie-Hellman parameters file: " << mRequestHandler.getConfig().mTlsTempDhFilename << ", error=" << ec.value() << "(" << ec.message() << ")");
    }
 
    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
@@ -60,7 +65,7 @@ TlsServer::start()
 std::string 
 TlsServer::getPassword() const
 {
-   return "test";  // TODO configuration
+   return mRequestHandler.getConfig().mTlsPrivateKeyPassword.c_str();
 }
 
 void 

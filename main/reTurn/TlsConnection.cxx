@@ -21,7 +21,7 @@ TlsConnection::TlsConnection(asio::io_service& ioService,
                              ConnectionManager& manager, 
                              RequestHandler& handler, 
                              asio::ssl::context& context)
-  : AsyncTlsSocketBase(ioService, context),
+  : AsyncTlsSocketBase(ioService, context, false /* not needed in server */),
     mConnectionManager(manager),
     mRequestHandler(handler)
 {
