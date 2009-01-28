@@ -53,7 +53,8 @@ FlowManager::FlowManager() :
 
    // Setup SSL context
    asio::error_code ec;
-   mSslContext.set_verify_mode(asio::ssl::context::verify_peer);
+   mSslContext.set_verify_mode(asio::ssl::context::verify_peer | 
+                               asio::ssl::context::verify_fail_if_no_peer_cert);
 #define VERIFY_FILE "ca.pem"
    mSslContext.load_verify_file(VERIFY_FILE, ec);   // TODO make a setting
    if(ec)

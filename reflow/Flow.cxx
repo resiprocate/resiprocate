@@ -131,7 +131,12 @@ Flow::Flow(asio::io_service& ioService,
       mTurnSocket.reset(new TurnAsyncTcpSocket(mIOService, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
       break;
    case StunTuple::TLS:
-      mTurnSocket.reset(new TurnAsyncTlsSocket(mIOService, mSslContext, this, mLocalBinding.getAddress(), mLocalBinding.getPort()));
+      mTurnSocket.reset(new TurnAsyncTlsSocket(mIOService, 
+                                               mSslContext, 
+                                               false, // validateServerCertificateHostname - TODO - make this configurable
+                                               this, 
+                                               mLocalBinding.getAddress(), 
+                                               mLocalBinding.getPort()));
       break;
    default:
       // Bad Transport type!
