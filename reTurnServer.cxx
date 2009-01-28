@@ -8,6 +8,7 @@
 #include "TcpServer.hxx"
 #include "TlsServer.hxx"
 #include "UdpServer.hxx"
+#include "ReTurnConfig.hxx"
 #include "RequestHandler.hxx"
 #include "TurnManager.hxx"
 #include <rutil/WinLeakCheck.hxx>
@@ -37,27 +38,16 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 }
 #endif // defined(_WIN32)
 
-
-class reTurnConfig
-{
-public:
-   // TODO
-};
-
 int main(int argc, char* argv[])
 {
 #if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
    resip::FindMemoryLeaks fml;
 #endif
 
+   reTurn::ReTurnConfig reTurnConfig;
+
    try
    {
-      unsigned short turnPort = 3478;
-      unsigned short tlsTurnPort = 5349;
-      unsigned short altStunPort = 0;  // Note:  The default is to disable RFC3489 binding support
-      asio::ip::address turnAddress = asio::ip::address::from_string("0.0.0.0");
-      asio::ip::address altStunAddress = asio::ip::address::from_string("0.0.0.0");
-
       // Check command line arguments.
       if (argc != 1 && argc != 6)
       {
@@ -75,21 +65,21 @@ int main(int argc, char* argv[])
          return 1;
       }
 
-      // Initialize Logging - TODO make configurable
-      resip::Log::initialize(resip::Log::Cout, resip::Log::Info, argv[0]);
-      //resip::Log::initialize(resip::Log::Cout, resip::Log::Stack, argv[0]);
+      // Initialize Logging
+      resip::Log::initialize(reTurnConfig.mLoggingType, reTurnConfig.mLoggingLevel, "reTurnServer", reTurnConfig.mLoggingFilename.c_str());
+      resip::GenericLogImpl::MaxLineCount = reTurnConfig.mLoggingFileMaxLineCount;
 
       // Initialize server.
-      asio::io_service ioService;                       // The one and only ioService for the stunServer
-      reTurn::TurnManager turnManager(ioService);         // The one and only Turn Manager
+      asio::io_service ioService;                                // The one and only ioService for the stunServer
+      reTurn::TurnManager turnManager(ioService, reTurnConfig);  // The one and only Turn Manager
 
       if(argc == 6)
       {
-         turnPort = (unsigned short)resip::Data(argv[2]).convertUnsignedLong();
-         tlsTurnPort = (unsigned short)resip::Data(argv[3]).convertUnsignedLong();
-         altStunPort = (unsigned short)resip::Data(argv[5]).convertUnsignedLong();
-         turnAddress = asio::ip::address::from_string(argv[1]);
-         altStunAddress = asio::ip::address::from_string(argv[4]);
+         reTurnConfig.mTurnPort = (unsigned short)resip::Data(argv[2]).convertUnsignedLong();
+         reTurnConfig.mTlsTurnPort = (unsigned short)resip::Data(argv[3]).convertUnsignedLong();
+         reTurnConfig.mAltStunPort = (unsigned short)resip::Data(argv[5]).convertUnsignedLong();
+         reTurnConfig.mTurnAddress = asio::ip::address::from_string(argv[1]);
+         reTurnConfig.mAltStunAddress = asio::ip::address::from_string(argv[4]);
       }
 
       boost::shared_ptr<reTurn::UdpServer> udpTurnServer;  // also a1p1StunUdpServer
@@ -101,20 +91,20 @@ int main(int argc, char* argv[])
 
       // The one and only RequestHandler - if altStunPort is non-zero, then assume RFC3489 support is enabled and pass settings to request handler
       reTurn::RequestHandler requestHandler(turnManager, 
-         altStunPort != 0 ? &turnAddress : 0, 
-         altStunPort != 0 ? &turnPort : 0, 
-         altStunPort != 0 ? &altStunAddress : 0, 
-         altStunPort != 0 ? &altStunPort : 0); 
+         reTurnConfig.mAltStunPort != 0 ? &reTurnConfig.mTurnAddress : 0, 
+         reTurnConfig.mAltStunPort != 0 ? &reTurnConfig.mTurnPort : 0, 
+         reTurnConfig.mAltStunPort != 0 ? &reTurnConfig.mAltStunAddress : 0, 
+         reTurnConfig.mAltStunPort != 0 ? &reTurnConfig.mAltStunPort : 0); 
 
-      udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, turnPort));
-      tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, turnAddress, turnPort));
-      tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, turnAddress, tlsTurnPort));
+      udpTurnServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
+      tcpTurnServer.reset(new reTurn::TcpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTurnPort));
+      tlsTurnServer.reset(new reTurn::TlsServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mTlsTurnPort));
 
-      if(altStunPort != 0) // if alt stun port is non-zero, then RFC3489 support is enabled
+      if(reTurnConfig.mAltStunPort != 0) // if alt stun port is non-zero, then RFC3489 support is enabled
       {
-         a1p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, turnAddress, altStunPort));
-         a2p1StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, turnPort));
-         a2p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, altStunAddress, altStunPort));
+         a1p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mTurnAddress, reTurnConfig.mAltStunPort));
+         a2p1StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mAltStunAddress, reTurnConfig.mTurnPort));
+         a2p2StunUdpServer.reset(new reTurn::UdpServer(ioService, requestHandler, reTurnConfig.mAltStunAddress, reTurnConfig.mAltStunPort));
          udpTurnServer->setAlternateUdpServers(a1p2StunUdpServer.get(), a2p1StunUdpServer.get(), a2p2StunUdpServer.get());
          a1p2StunUdpServer->setAlternateUdpServers(udpTurnServer.get(), a2p2StunUdpServer.get(), a2p1StunUdpServer.get());
          a2p1StunUdpServer->setAlternateUdpServers(a2p2StunUdpServer.get(), udpTurnServer.get(), a1p2StunUdpServer.get());

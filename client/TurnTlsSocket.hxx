@@ -11,13 +11,16 @@ namespace reTurn {
    class TurnTlsSocket : public TurnTcpSocket
 {
 public:
-   explicit TurnTlsSocket(const asio::ip::address& address = UnspecifiedIpAddress, 
+   explicit TurnTlsSocket(bool validateServerCertificateHostname,
+                          const asio::ip::address& address = UnspecifiedIpAddress, 
                           unsigned short port = 0);
 
    virtual unsigned int getSocketDescriptor() { return mSocket.lowest_layer().native(); }
    virtual  asio::error_code connect(const std::string& address, unsigned short port);
 
 protected:
+   virtual bool validateServerCertificateHostname(const std::string& hostname);
+
    virtual asio::error_code rawWrite(const char* buffer, unsigned int size);
    virtual asio::error_code rawWrite(const std::vector<asio::const_buffer>& buffers);
 
@@ -28,6 +31,7 @@ protected:
 private:
    asio::ssl::context mSslContext;
    asio::ssl::stream<asio::ip::tcp::socket> mSocket;
+   bool mValidateServerCertificateHostname;
 };
 
 } 
