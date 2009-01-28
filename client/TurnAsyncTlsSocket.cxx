@@ -7,11 +7,12 @@ namespace reTurn {
 
 TurnAsyncTlsSocket::TurnAsyncTlsSocket(asio::io_service& ioService,
                                        asio::ssl::context& sslContext,
+                                       bool validateServerCertificateHostname,
                                        TurnAsyncSocketHandler* turnAsyncSocketHandler,
                                        const asio::ip::address& address, 
                                        unsigned short port) : 
    TurnAsyncSocket(ioService, *this, turnAsyncSocketHandler, address, port),
-   AsyncTlsSocketBase(ioService, sslContext)
+   AsyncTlsSocketBase(ioService, sslContext, validateServerCertificateHostname)
 {
    mLocalBinding.setTransportType(StunTuple::TLS);
 

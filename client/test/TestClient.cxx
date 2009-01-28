@@ -120,7 +120,8 @@ int main(int argc, char* argv[])
 
       TurnUdpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
       //TurnTcpSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0);
-      //TurnTlsSocket turnSocket(asio::ip::address::from_string("127.0.0.1"), 0); 
+      //TurnTlsSocket turnSocket(false /* validateServerCertificateHostname */, asio::ip::address::from_string("127.0.0.1"), 0); 
+      //port=5349;
 
       // Connect to Stun/Turn Server
       rc = turnSocket.connect(argv[1], port);

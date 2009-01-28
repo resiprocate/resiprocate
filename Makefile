@@ -14,6 +14,7 @@ SRC += \
         DataBuffer.cxx \
         RemotePeer.cxx \
         RequestHandler.cxx \
+        ReTurnConfig.cxx \
         ReTurnSubsystem.cxx \
         StunAuth.cxx \
         StunMessage.cxx \

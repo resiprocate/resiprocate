@@ -14,7 +14,7 @@ Stun/Turn drafts:  RFC5389, and draft-ietf-behave-turn-12
 Current External Library Usage
 ------------------------------
 - currently uses ASIO, BOOST and RUTIL
-- ASIO - 1.0.0
+- ASIO - 1.2.0
        - Used for server sockets and transports
        - Tuple information used in StunMessage uses asio::ip::udp::endpoint - easily changed
        - StunMessage, TurnAllocation and RequestHandler use asio::ip:address to manipulate IPV6, 
@@ -30,16 +30,16 @@ Current External Library Usage
 
 Feature                                Implemented  Tested  Notes
 -------------------------------------------------------------------
-Configuration Framework                no           no      Currently just uses a few command line parameters and hardcoded settings
+Configuration Framework                partially    yes     Currently just uses a few command line parameters and hardcoded settings
 RFC3489 support                        yes          mostly  
 Multi-threaded Server                  no           no      Once Turn code is implemented consider asio threading model and provide locking
 TLS Server Support                     yes          yes     
-RFC3489 bis 13 message parsing         yes          partly
+RFC5389 message parsing                yes          partly
 IPV6 message parsing support           yes          no 
 Short Term Credentials                 yes          yes     Implementation currently only accepts one hardcoded username/password
-Long Term Credentials                  mostly       yes     Implementation currently only accepts one hardcoded username/password - not implemented on client side sync sockets
+Long Term Credentials                  mostly       yes     Implementation currently only accepts one hardcoded username/password
 Finger Print Insertion and Validation  yes          yes     Uses BOOST:crc_optimal
-Checking for unknown attributes        yes          no
+Checking for unknown attributes        yes          yes
 Bandwidth Check                        no           no
 Turn Allocation                        yes          yes     Only UDP Relay's are implemented
 Requested Props (Even, Pair)           yes          yes
@@ -48,7 +48,7 @@ Turn UDP Relay                         yes          yes
 Turn TCP Relay                         no           no     
 Asyncronous Client APIs                yes          yes
 Channel Binding                        yes          yes
-Don't Fragment Attribute               no           no
+Don't Fragment Attribute               no           no      Server will reject requests asking for DF option
 
 
 General TODO
@@ -56,7 +56,6 @@ General TODO
 - reduce library use - remove BOOST and/or rutil requirement - remove ASIO for client??
 - allow multiple interfaces to be used for relay
 - per user allocation quota enforcement
-- move TLS server settings to configuration
 - cleanup stun message class so that there are accessors for all data members
 - from chart above
  - Configuration Framework
@@ -95,7 +94,6 @@ RFC53389 TODO's
  - Rm (default 16)
 -actual RTO should be calculated
 -UDP retransmissions should stop if a hard ICMP error is seen
--need to do client side TLS certificate hostname checks after successful handshake
 -DNS SRV Discovery - currently only does host record lookup (using ASIO) - _stun._udp, _stun._tcp, _stuns._tcp, _turn._udp, _turn._tcp, _turns._tcp
 
 Client TODO
