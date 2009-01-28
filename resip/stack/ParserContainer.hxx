@@ -1,6 +1,7 @@
 #ifndef RESIP_ParserContainer_hxx
 #define RESIP_ParserContainer_hxx
 
+#include <algorithm>
 #include <iterator>
 
 #include "resip/stack/HeaderFieldValueList.hxx"
