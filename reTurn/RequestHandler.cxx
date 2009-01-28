@@ -21,19 +21,7 @@ using namespace resip;
 namespace reTurn {
 
 // !slg! TODO these need to be made into settings
-//RequestHandler::AuthenticationMode authenticationMode = RequestHandler::NoAuthentication;
-//RequestHandler::AuthenticationMode authenticationMode = RequestHandler::ShortTermPassword;
-RequestHandler::AuthenticationMode authenticationMode = RequestHandler::LongTermPassword;  // required for TURN
-const char authenticationRealm[] = "test";
-const char authenticationUsername[] = "test";
-const char authenticationPassword[] = "1234";
-
-#define NONCE_LIFETIME 3600    // 1 hour - ?slg? what do we want as a default here? 
-//#define NONCE_LIFETIME 10    // for TESTING
 #define SOFTWARE_STRING "reTURNServer 0.4 - RFC5389/turn-12"
-#define DEFAULT_LIFETIME 600   // 10 minutes
-#define MAX_LIFETIME     3600  // 1 hour
-//#define DEFAULT_LIFETIME 30  // for TESTING
 #define DEFAULT_BANDWIDTH 100  // 100 kbit/s - enough for G711 RTP ?slg? what do we want this to be?
 
 RequestHandler::RequestHandler(TurnManager& turnManager,
@@ -69,7 +57,7 @@ RequestHandler::processStunMessage(AsyncSocketBase* turnSocket, StunMessage& req
       if(request.mUnknownRequiredAttributes.numAttributes > 0)
       {
          InfoLog(<< "Received Request with unknown comprehension-required attributes. Sending 420.");
-         buildErrorResponse(response, 420, "Unknown attribute", authenticationRealm);  
+         buildErrorResponse(response, 420, "Unknown attribute", getConfig().mAuthenticationRealm.c_str());  
          response.mHasUnknownAttributes = true;
          response.mUnknownAttributes = request.mUnknownRequiredAttributes;
       }
@@ -220,7 +208,7 @@ RequestHandler::checkNonce(const Data& nonce)
    UInt64 creationTime;
    pb.data(creationTimeData, anchor);
    creationTime = creationTimeData.convertUInt64();
-   if((now-creationTime) <= NONCE_LIFETIME)
+   if((now-creationTime) <= getConfig().mNonceLifetime)
    {
       // If nonce hasn't expired yet - ensure this is a nonce we generated
       Data nonceToMatch(100, Data::Preallocate);
@@ -248,23 +236,23 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
    // Don't authenticate shared secret requests, Binding Requests or Indications (if LongTermCredentials are used)
    if((request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::SharedSecretMethod) ||
       (request.mClass == StunMessage::StunClassRequest && request.mMethod == StunMessage::BindMethod) ||
-      (authenticationMode == LongTermPassword && request.mClass == StunMessage::StunClassIndication))
+      (getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword && request.mClass == StunMessage::StunClassIndication))
    {
       return true;
    }
 
    if (!request.mHasMessageIntegrity)
    {
-      if (authenticationMode == ShortTermPassword) 
+      if (getConfig().mAuthenticationMode == ReTurnConfig::ShortTermPassword) 
       {
          InfoLog(<< "Received Request with no Message Integrity. Sending 400.");
          buildErrorResponse(response, 400, "Bad Request (no MessageIntegrity)");  
          return false;
       }
-      else if(authenticationMode == LongTermPassword)
+      else if(getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword)
       {
          InfoLog(<< "Received Request with no Message Integrity. Sending 401.");
-         buildErrorResponse(response, 401, "Unauthorized (no MessageIntegrity)", authenticationRealm);  
+         buildErrorResponse(response, 401, "Unauthorized (no MessageIntegrity)", getConfig().mAuthenticationRealm.c_str());  
          return false;
       }
    }
@@ -277,7 +265,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          return false;
       }
 
-      if(authenticationMode == LongTermPassword)  
+      if(getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword)  
       {
          if(!request.mHasRealm)
          {
@@ -298,7 +286,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
             break;
          case Expired:
             WarningLog(<< "Nonce expired. Sending 438.");
-            buildErrorResponse(response, 438, "Stale Nonce", authenticationRealm);
+            buildErrorResponse(response, 438, "Stale Nonce", getConfig().mAuthenticationRealm.c_str());
             return false;
             break;
          case NotValid:
@@ -310,7 +298,7 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
          }
       }
 
-      if(authenticationMode == ShortTermPassword)
+      if(getConfig().mAuthenticationMode == ReTurnConfig::ShortTermPassword)
       {
          // !slg! check if username field has expired
          // !slg! we may want to delay this check for Turn Allocations so that expired 
@@ -328,10 +316,10 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
 
       // !slg! need to determine whether the USERNAME contains a known entity, and in the case of a long-term
       //       credential, known within the realm of the REALM attribute of the request
-      if (authenticationMode == LongTermPassword && strcmp(request.mUsername->c_str(), authenticationUsername) != 0)
+      if (getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword && !getConfig().isUserNameValid(*request.mUsername))
       {
          WarningLog(<< "Invalid username: " << *request.mUsername << ". Sending 401.");
-         buildErrorResponse(response, 401, "Unathorized", authenticationMode == LongTermPassword ? authenticationRealm : 0);
+         buildErrorResponse(response, 401, "Unathorized", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0);
          return false;
       }
 
@@ -342,15 +330,15 @@ RequestHandler::handleAuthentication(StunMessage& request, StunMessage& response
       Data hmacKey;
       assert(request.mHasUsername);
 
-      if(authenticationMode != NoAuthentication)
+      if(getConfig().mAuthenticationMode != ReTurnConfig::NoAuthentication)
       {
-         request.calculateHmacKey(hmacKey, authenticationPassword);
+         request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
       }
       
       if(!request.checkMessageIntegrity(hmacKey))
       {
          WarningLog(<< "MessageIntegrity is bad. Sending 401.");
-         buildErrorResponse(response, 401, "Unauthorized", authenticationMode == LongTermPassword ? authenticationRealm : 0);
+         buildErrorResponse(response, 401, "Unauthorized", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0);
          return false;
       }
 
@@ -484,13 +472,13 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn allocate request without authentication.  Sending 401.");
-      buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
+      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
 
    Data hmacKey;
    assert(request.mHasUsername);
-   request.calculateHmacKey(hmacKey, authenticationPassword);
+   request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
 
    DebugLog(<< "Allocation request received: localTuple=" << request.mLocalTuple << ", remoteTuple=" << request.mRemoteTuple);
 
@@ -534,7 +522,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    if(request.mHasTurnDontFragment)
    {
       WarningLog(<< "Turn allocate request with Don't Fragment requested, not yet implemented.  Sending 420.");
-      buildErrorResponse(response, 420, "Don't Fragment not yet implemented", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
+      buildErrorResponse(response, 420, "Don't Fragment not yet implemented", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
 
@@ -601,16 +589,16 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
 
    allocationTuple.setPort(port);
 
-   UInt32 lifetime = DEFAULT_LIFETIME;
+   UInt32 lifetime = getConfig().mDefaultAllocationLifetime;
    if(request.mHasTurnLifetime)
    {
       // Check if the requested value is greater than the server max
-      if(request.mTurnLifetime > MAX_LIFETIME)
+      if(request.mTurnLifetime > getConfig().mMaxAllocationLifetime)
       {
-         lifetime = MAX_LIFETIME;
+         lifetime = getConfig().mMaxAllocationLifetime;
       }
       // The server should ignore requests for a lifetime less than it's default
-      else if(request.mTurnLifetime > DEFAULT_LIFETIME)
+      else if(request.mTurnLifetime > getConfig().mDefaultAllocationLifetime)
       {
          lifetime = request.mTurnLifetime;
       }
@@ -667,13 +655,13 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn refresh request without authentication.  Sending 401.");
-      buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
+      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
 
    Data hmacKey;
    assert(request.mHasUsername);
-   request.calculateHmacKey(hmacKey, authenticationPassword);
+   request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
 
    TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
@@ -716,22 +704,20 @@ RequestHandler::processTurnRefreshRequest(StunMessage& request, StunMessage& res
       return RespondFromReceiving;
    }
 
-   UInt32 lifetime = DEFAULT_LIFETIME;
+   UInt32 lifetime = getConfig().mDefaultAllocationLifetime;
    if(request.mHasTurnLifetime)
    {
       // Check if the requested value is greater than the server max
-      if(request.mTurnLifetime > MAX_LIFETIME)
+      if(request.mTurnLifetime > getConfig().mMaxAllocationLifetime)
       {
-         lifetime = MAX_LIFETIME;
+         lifetime = getConfig().mMaxAllocationLifetime;
       }
       // The server should ignore requests for a lifetime less than it's default
-      else if(request.mTurnLifetime > DEFAULT_LIFETIME)
+      else if(request.mTurnLifetime > getConfig().mDefaultAllocationLifetime)
       {
          lifetime = request.mTurnLifetime;
       }
    }
-
-   // TODO - if bandwidth header is present then check if it is OK
 
    // Check if this is a subsequent allocate request 
    allocation->refresh(lifetime);
@@ -758,13 +744,13 @@ RequestHandler::processTurnCreatePermissionRequest(StunMessage& request, StunMes
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn create permission request without authentication.  Send 401.");
-      buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
+      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
 
    Data hmacKey;
    assert(request.mHasUsername);
-   request.calculateHmacKey(hmacKey, authenticationPassword);
+   request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
 
    TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 
@@ -820,13 +806,13 @@ RequestHandler::processTurnChannelBindRequest(StunMessage& request, StunMessage&
    if(!request.mHasMessageIntegrity)
    {
       WarningLog(<< "Turn channel bind request without authentication.  Send 401.");
-      buildErrorResponse(response, 401, "Missing Message Integrity", authenticationMode == LongTermPassword ? authenticationRealm : 0 );  
+      buildErrorResponse(response, 401, "Missing Message Integrity", getConfig().mAuthenticationMode == ReTurnConfig::LongTermPassword ? getConfig().mAuthenticationRealm.c_str() : 0 );  
       return RespondFromReceiving;
    }
 
    Data hmacKey;
    assert(request.mHasUsername);
-   request.calculateHmacKey(hmacKey, authenticationPassword);
+   request.calculateHmacKey(hmacKey, getConfig().getPasswordForUsername(*request.mUsername));
 
    TurnAllocation* allocation = mTurnManager.findTurnAllocation(TurnAllocationKey(request.mLocalTuple, request.mRemoteTuple));
 

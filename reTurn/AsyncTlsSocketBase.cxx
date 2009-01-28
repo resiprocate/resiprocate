@@ -1,6 +1,9 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
+
 #include "AsyncTlsSocketBase.hxx"
 #include "AsyncSocketBaseHandler.hxx"
 #include <rutil/Logger.hxx>
@@ -12,10 +15,11 @@ using namespace std;
 
 namespace reTurn {
 
-AsyncTlsSocketBase::AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context) 
+AsyncTlsSocketBase::AsyncTlsSocketBase(asio::io_service& ioService, asio::ssl::context& context, bool validateServerCertificateHostname) 
    : AsyncSocketBase(ioService),
    mSocket(ioService, context),
-   mResolver(ioService)
+   mResolver(ioService),
+   mValidateServerCertificateHostname(validateServerCertificateHostname)
 {
 }
 
@@ -46,6 +50,8 @@ AsyncTlsSocketBase::bind(const asio::ip::address& address, unsigned short port)
 void 
 AsyncTlsSocketBase::connect(const std::string& address, unsigned short port)
 {
+   mHostname = address;
+
    // Start an asynchronous resolve to translate the address
    // into a list of endpoints.
    resip::Data service(port);
@@ -111,7 +117,16 @@ AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
       mConnectedAddress = endpoint_iterator->endpoint().address();
       mConnectedPort = endpoint_iterator->endpoint().port();
 
-      onConnectSuccess();
+      // Validate that hostname in cert matches connection hostname
+      if(!mValidateServerCertificateHostname || validateServerCertificateHostname())
+      {
+         onConnectSuccess();
+      }
+      else
+      {
+         WarningLog(<< "Hostname in certificate does not match connection hostname!");
+         onConnectFailure(asio::error::operation_aborted);
+      }
    }
    else if (++endpoint_iterator != asio::ip::tcp::resolver::iterator())
    {
@@ -125,6 +140,102 @@ AsyncTlsSocketBase::handleClientHandshake(const asio::error_code& ec,
    {
       onConnectFailure(ec);
    }
+}
+
+bool 
+AsyncTlsSocketBase::validateServerCertificateHostname()
+{
+   bool valid = false;
+
+   // print session info
+   SSL_CIPHER *ciph;
+   ciph=SSL_get_current_cipher(mSocket.impl()->ssl);
+   InfoLog( << "TLS session set up with " 
+      <<  SSL_get_version(mSocket.impl()->ssl) << " "
+      <<  SSL_CIPHER_get_version(ciph) << " "
+      <<  SSL_CIPHER_get_name(ciph) << " " );
+
+   // get the certificate - should always exist since mode is set for SSL to verify the cert first
+   X509* cert = SSL_get_peer_certificate(mSocket.impl()->ssl);
+   assert(cert);
+
+   // Look at the SubjectAltName, and if found, set as peerName
+   bool hostnamePresentInSubjectAltName = false;
+   GENERAL_NAMES* gens;
+   gens = (GENERAL_NAMES*)X509_get_ext_d2i(cert, NID_subject_alt_name, 0, 0);
+   for(int i = 0; i < sk_GENERAL_NAME_num(gens); i++)
+   {  
+      GENERAL_NAME* gen = sk_GENERAL_NAME_value(gens, i);
+
+      DebugLog(<< "subjectAltName of cert contains type <" << gen->type << ">" );
+
+      if (gen->type == GEN_DNS)
+      {
+         ASN1_IA5STRING* asn = gen->d.dNSName;
+         resip::Data dns(asn->data, asn->length);
+         InfoLog(<< "subjectAltName of TLS session cert contains DNS <" << dns << ">" );
+         hostnamePresentInSubjectAltName = true;
+         if(resip::isEqualNoCase(dns, mHostname.c_str()))
+         {
+            valid = true;
+            break;
+         }
+      }
+
+      if (gen->type == GEN_EMAIL)
+      {
+         DebugLog(<< "subjectAltName of cert has EMAIL type" );
+      }
+
+      if(gen->type == GEN_URI) 
+      {
+         DebugLog(<< "subjectAltName of cert has URI type" );
+      }
+   }
+   sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+
+   // If there are no peer names from the subjectAltName, then use the commonName
+   if(!hostnamePresentInSubjectAltName)
+   {   
+      // look at the Common Name to find the peerName of the cert 
+      X509_NAME* subject = X509_get_subject_name(cert);
+      if(!subject)
+      {
+         ErrLog( << "Invalid certificate: subject not found ");
+      }
+   
+      int i =-1;
+      while( !valid )
+      {
+         i = X509_NAME_get_index_by_NID(subject, NID_commonName,i);
+         if ( i == -1 )
+         {
+            break;
+         }
+         assert( i != -1 );
+         X509_NAME_ENTRY* entry = X509_NAME_get_entry(subject,i);
+         assert( entry );
+   
+         ASN1_STRING*	s = X509_NAME_ENTRY_get_data(entry);
+         assert( s );
+   
+         int t = M_ASN1_STRING_type(s);
+         int l = M_ASN1_STRING_length(s);
+         unsigned char* d = M_ASN1_STRING_data(s);
+         resip::Data name(d,l);
+         DebugLog( << "got x509 string type=" << t << " len="<< l << " data=" << d );
+         assert( name.size() == (unsigned)l );
+   
+         InfoLog( << "Found common name in cert: " << name );      
+         if(resip::isEqualNoCase(name, mHostname.c_str()))
+         {
+            valid = true;
+         }
+      }
+   }
+   
+   X509_free(cert);
+   return valid;
 }
 
 void

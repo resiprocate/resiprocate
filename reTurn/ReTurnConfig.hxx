@@ -1,39 +1,56 @@
-#ifndef TURNASYNCTLSSOCKET_HXX
-#define TURNASYNCTLSSOCKET_HXX
+#if !defined(RETURN_CONFIG_HXX)
+#define RETURN_CONFIG_HXX 
 
+#include <map>
 #include <asio.hpp>
-#include <asio/ssl.hpp>
-
-#include "TurnAsyncTcpSocket.hxx"
-#include "../AsyncTlsSocketBase.hxx"
+#include <rutil/Data.hxx>
+#include <rutil/Log.hxx>
 
 namespace reTurn {
 
-class TurnAsyncTlsSocket : public TurnAsyncSocket, public AsyncTlsSocketBase
+class ReTurnConfig
 {
 public:
-   explicit TurnAsyncTlsSocket(asio::io_service& ioService, 
-                               asio::ssl::context& sslContext,
-                               bool validateServerCertificateHostname,
-                               TurnAsyncSocketHandler* turnAsyncSocketHandler,
-                               const asio::ip::address& address = UnspecifiedIpAddress, 
-                               unsigned short port = 0);
+   ReTurnConfig();
 
-   virtual unsigned int getSocketDescriptor() { return mSocket.lowest_layer().native(); }
+   typedef enum
+   {
+      NoAuthentication,
+      ShortTermPassword,
+      LongTermPassword
+   } AuthenticationMode;
 
-protected:
+   unsigned short mTurnPort;
+   unsigned short mTlsTurnPort;
+   unsigned short mAltStunPort;  
+   asio::ip::address mTurnAddress;
+   asio::ip::address mAltStunAddress;
 
-private:
-   // AsyncTcpSocketBase callbacks
-   virtual void onConnectSuccess();
-   virtual void onConnectFailure(const asio::error_code& e);
-   virtual void onReceiveSuccess(const asio::ip::address& address, unsigned short port, boost::shared_ptr<DataBuffer>& data);
-   virtual void onReceiveFailure(const asio::error_code& e);
-   virtual void onSendSuccess();
-   virtual void onSendFailure(const asio::error_code& e);
+   AuthenticationMode mAuthenticationMode;
+   resip::Data mAuthenticationRealm;
+   std::map<resip::Data,resip::Data> mAuthenticationCredentials;
+   unsigned long mNonceLifetime;
+
+   unsigned short mAllocationPortRangeMin;
+   unsigned short mAllocationPortRangeMax;
+   unsigned long mDefaultAllocationLifetime;
+   unsigned long mMaxAllocationLifetime;
+   unsigned long mMaxAllocationsPerUser;  // TODO - enforcement needs to be implemented
+
+   resip::Data mTlsServerCertificateFilename;
+   resip::Data mTlsTempDhFilename;
+   resip::Data mTlsPrivateKeyPassword;
+
+   resip::Log::Type mLoggingType;
+   resip::Log::Level mLoggingLevel;
+   resip::Data mLoggingFilename;
+   unsigned int mLoggingFileMaxLineCount;
+
+   bool isUserNameValid(const resip::Data& username) const;
+   const resip::Data& getPasswordForUsername(const resip::Data& username) const;
 };
 
-} 
+} // namespace
 
 #endif
 

@@ -4,6 +4,7 @@
 #include <map>
 #include <asio.hpp>
 #include "TurnAllocationKey.hxx"
+#include "ReTurnConfig.hxx"
 #include "StunTuple.hxx"
 
 namespace reTurn {
@@ -13,7 +14,7 @@ class TurnAllocation;
 class TurnManager
 {
 public:
-   explicit TurnManager(asio::io_service& ioService);  // ioService used to start timers
+   explicit TurnManager(asio::io_service& ioService, const ReTurnConfig& config);  // ioService used to start timers
    ~TurnManager();
 
    void addTurnAllocation(TurnAllocation* turnAllocation);
@@ -35,6 +36,8 @@ public:
    bool allocatePort(StunTuple::TransportType transport, unsigned short port, bool reserved = false);
    void deallocatePort(StunTuple::TransportType transport, unsigned short port);
 
+   const ReTurnConfig& getConfig() { return mConfig; }
+
 private:
    typedef std::map<TurnAllocationKey, TurnAllocation*> TurnAllocationMap;  // .slg. consider using hash table
    TurnAllocationMap mTurnAllocationMap;
@@ -54,6 +57,7 @@ private:
    unsigned short advanceLastAllocatedPort(StunTuple::TransportType transport, unsigned int numToAdvance = 1);
 
    asio::io_service& mIOService;
+   const ReTurnConfig& mConfig;
 };
 
 } 
