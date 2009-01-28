@@ -23,13 +23,6 @@ public:
 
    typedef enum
    {
-      NoAuthentication,
-      ShortTermPassword,
-      LongTermPassword
-   } AuthenticationMode;
-
-   typedef enum
-   {
       NoResponseToSend,
       RespondFromReceiving,
       RespondFromAlternatePort,
@@ -41,6 +34,8 @@ public:
    /// Returns true if the response message is to be sent
    ProcessResult processStunMessage(AsyncSocketBase* turnSocket, StunMessage& request, StunMessage& response, bool isRFC3489BackwardsCompatServer=false);
    void processTurnData(unsigned short channelNumber, const StunTuple& localTuple, const StunTuple& remoteTuple, boost::shared_ptr<DataBuffer>& data);
+
+   const ReTurnConfig& getConfig() { return mTurnManager.getConfig(); }
 
 private:
 

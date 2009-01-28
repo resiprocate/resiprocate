@@ -11,17 +11,14 @@ using namespace std;
 
 namespace reTurn {
 
-// This default range is the Dynamic and/or Private Port range
-#define PORT_RANGE_MIN 49152  // must be even
-#define PORT_RANGE_MAX 65535  // must be odd
-
-TurnManager::TurnManager(asio::io_service& ioService) : 
-   mLastAllocatedUdpPort(PORT_RANGE_MIN-1),
-   mLastAllocatedTcpPort(PORT_RANGE_MIN-1),
-   mIOService(ioService)
+TurnManager::TurnManager(asio::io_service& ioService, const ReTurnConfig& config) : 
+   mLastAllocatedUdpPort(config.mAllocationPortRangeMin-1),
+   mLastAllocatedTcpPort(config.mAllocationPortRangeMin-1),
+   mIOService(ioService),
+   mConfig(config)
 {
    // Initialize Allocation Ports
-   for(unsigned short i = PORT_RANGE_MIN; i <= PORT_RANGE_MAX && i != 0; i++) // i != 0 catches case where we increment 65535 (as an unsigned short)
+   for(unsigned short i = config.mAllocationPortRangeMin; i <= config.mAllocationPortRangeMax && i != 0; i++) // i != 0 catches case where we increment 65535 (as an unsigned short)
    {
       mUdpAllocationPorts[i] = PortStateUnallocated;
       mTcpAllocationPorts[i] = PortStateUnallocated;
@@ -182,7 +179,7 @@ TurnManager::allocateEvenPortPair(StunTuple::TransportType transport)
 bool 
 TurnManager::allocatePort(StunTuple::TransportType transport, unsigned short port, bool reserved)
 {
-   if(port >= PORT_RANGE_MIN && port <= PORT_RANGE_MAX)
+   if(port >= mConfig.mAllocationPortRangeMin && port <= mConfig.mAllocationPortRangeMax)
    {
       PortAllocationMap& portAllocationMap = getPortAllocationMap(transport);
       if(reserved)
@@ -208,7 +205,7 @@ TurnManager::allocatePort(StunTuple::TransportType transport, unsigned short por
 void 
 TurnManager::deallocatePort(StunTuple::TransportType transport, unsigned short port)
 {
-   if(port >= PORT_RANGE_MIN && port <= PORT_RANGE_MAX)
+   if(port >= mConfig.mAllocationPortRangeMin && port <= mConfig.mAllocationPortRangeMax)
    {
       PortAllocationMap& portAllocationMap = getPortAllocationMap(transport);
       portAllocationMap[port] = PortStateUnallocated;
@@ -243,17 +240,17 @@ TurnManager::advanceLastAllocatedPort(StunTuple::TransportType transport, unsign
    case StunTuple::TCP:
    case StunTuple::TLS:
       mLastAllocatedTcpPort+=numToAdvance;
-      if(mLastAllocatedTcpPort > PORT_RANGE_MAX) 
+      if(mLastAllocatedTcpPort > mConfig.mAllocationPortRangeMax) 
       {
-         mLastAllocatedTcpPort = PORT_RANGE_MIN+(mLastAllocatedTcpPort-PORT_RANGE_MAX-1);
+         mLastAllocatedTcpPort = mConfig.mAllocationPortRangeMin+(mLastAllocatedTcpPort-mConfig.mAllocationPortRangeMax-1);
       }
       return mLastAllocatedTcpPort;
    case StunTuple::UDP:
    default:
       mLastAllocatedUdpPort+=numToAdvance;
-      if(mLastAllocatedUdpPort > PORT_RANGE_MAX) 
+      if(mLastAllocatedUdpPort > mConfig.mAllocationPortRangeMax) 
       {
-         mLastAllocatedUdpPort = PORT_RANGE_MIN+(mLastAllocatedUdpPort-PORT_RANGE_MAX-1);
+         mLastAllocatedUdpPort = mConfig.mAllocationPortRangeMin+(mLastAllocatedUdpPort-mConfig.mAllocationPortRangeMax-1);
       }
       return mLastAllocatedUdpPort;
    }
