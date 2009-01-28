@@ -13,8 +13,6 @@ endif
 
 TESTPROGRAMS += testCurlHttpProvider.cxx
 
-#TARGET_LIBRARY = curlShit
-
 SRC = 		CurlHttpProvider.cxx
 
 dumpasn1: dumpasn1.c

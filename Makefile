@@ -198,6 +198,7 @@ distclean: cleancontrib cleanpkg
 	-rm -Rf .make_prefs
 	-rm -Rf build/Makefile.conf
 	-rm -f SVN-VERSION
+	-rm -Rf lib.*.*
 
 ###########################################################################
 install: install-ares install-rutil install-resip install-dum
