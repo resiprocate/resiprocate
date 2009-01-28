@@ -4,6 +4,7 @@
 
 #include <fcntl.h>
 #include <cassert>
+#include <cstdlib>
 
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Data.hxx"

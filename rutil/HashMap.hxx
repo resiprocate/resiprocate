@@ -3,7 +3,28 @@
 
 // !cj! if all these machine have to use map then we can just delete them and use the default 
 
-#  if ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) ) || ( __GNUC__ > 3 )
+#  if ( (__GNUC__ == 4) && (__GNUC_MINOR__ >= 3) ) || ( __GNUC__ > 4 )
+#    include <tr1/unordered_map>
+#    include <tr1/unordered_set>
+#    define HASH_MAP_NAMESPACE std::tr1
+#    define HashMap std::tr1::unordered_map
+#    define HashSet std::tr1::unordered_set
+
+#define HashValue(type)                           \
+namespace std                                     \
+{                                                 \
+namespace tr1                                     \
+{                                                 \
+template <>                                       \
+struct hash<type>                                 \
+{                                                 \
+      size_t operator()(const type& data) const;  \
+};                                                \
+}                                                 \
+}
+#define HashValueImp(type, ret) size_t HASH_MAP_NAMESPACE::hash<type>::operator()(const type& data) const { return ret; }
+
+#  elif ( (__GNUC__ == 3) && (__GNUC_MINOR__ >= 1) ) || ( __GNUC__ > 3 )
 #    include <ext/hash_map>
 #    include <ext/hash_set>
 #    define HASH_MAP_NAMESPACE __gnu_cxx
