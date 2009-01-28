@@ -13,6 +13,7 @@
 #endif
 #endif
 
+#include <cstdlib>
 #include <vector>
 #include "rutil/Data.hxx"
 #include "rutil/BaseException.hxx"
