@@ -483,7 +483,7 @@ TurnAsyncSocket::handleReceivedData(const asio::ip::address& address, unsigned s
    }
    else  // size <= 4
    {
-      WarningLog(<< "TurnAsyncSocket::handleReceivedData: not enough data received for stun or channel data message - discarding!");
+      WarningLog(<< "TurnAsyncSocket::handleReceivedData: not enough data received (" << data->size() << " bytes) for stun or channel data message - discarding!");
       if(mTurnAsyncSocketHandler) mTurnAsyncSocketHandler->onReceiveFailure(getSocketDescriptor(), asio::error_code(reTurn::FrameError, asio::error::misc_category));         
    }
 }
@@ -1078,8 +1078,16 @@ TurnAsyncSocket::actualClose()
 void 
 TurnAsyncSocket::turnReceive()
 {
-   //mAsyncSocketBase.receive();
-   mAsyncSocketBase.doReceive();
+   if(mLocalBinding.getTransportType() == StunTuple::UDP)
+   {
+      //mAsyncSocketBase.receive();
+      mAsyncSocketBase.doReceive();
+   }
+   else
+   {
+      //mAsyncSocketBase.framedReceive();
+      mAsyncSocketBase.doFramedReceive();
+   }
 }
 
 void 
