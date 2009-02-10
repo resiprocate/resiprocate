@@ -594,23 +594,25 @@ Dialog::dispatch(const SipMessage& msg)
       // from how it worked in main branch pre merge.
       // If the response doesn't match a cseq for a request I've sent, ignore
       // the response
-      RequestMap::iterator r = mRequests.find(msg.header(h_CSeq).sequence());
-      if (r != mRequests.end())
-      {
-         bool handledByAuth = false;
-         if (mDum.mClientAuthManager.get() && 
-             mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), *r->second, msg))
-         {
-            InfoLog( << "about to re-send request with digest credentials" << r->second->brief());
+      {//scope 'r' as it is invalidated below
+         RequestMap::iterator r = mRequests.find(msg.header(h_CSeq).sequence());
+         if (r != mRequests.end())
+         {         
+            bool handledByAuth = false;
+            if (mDum.mClientAuthManager.get() && 
+                mDum.mClientAuthManager->handle(*mDialogSet.getUserProfile(), *r->second, msg))
+            {
+               InfoLog( << "about to re-send request with digest credentials" << r->second->brief());
 
-            assert (r->second->isRequest());
+               assert (r->second->isRequest());
 
-            mLocalCSeq++;
-            send(r->second);
-            handledByAuth = true;
+               mLocalCSeq++;
+               send(r->second);
+               handledByAuth = true;
+            }
+            mRequests.erase(r);
+            if (handledByAuth) return;
          }
-         mRequests.erase(r);
-         if (handledByAuth) return;
       }
       
       const SipMessage& response = msg;
@@ -640,7 +642,14 @@ Dialog::dispatch(const SipMessage& msg)
                DebugLog ( << "Dialog::dispatch  --  Created new client invite session" << msg.brief());
 
                mInviteSession = makeClientInviteSession(response);
-               mInviteSession->dispatch(response);
+               if (mInviteSession)
+               {
+                  mInviteSession->dispatch(response);
+               }
+               else
+               {
+                  ErrLog( << "Dialog::dispatch  --  Unable to create invite session from response" << msg.brief());
+               }
             }
             else
             {
@@ -1072,7 +1081,11 @@ ClientInviteSession*
 Dialog::makeClientInviteSession(const SipMessage& response)
 {
    InviteSessionCreator* creator = dynamic_cast<InviteSessionCreator*>(mDialogSet.getCreator());
-   assert(creator); // !jf! this maybe can assert by evil UAS
+   if (!creator)
+   {
+      assert(0); // !jf! this maybe can assert by evil UAS
+      return 0;
+   }
    //return mDum.createAppClientInviteSession(*this, *creator);
    return new ClientInviteSession(mDum, *this, creator->getLastRequest(),
                                   creator->getInitialOffer(), creator->getEncryptionLevel(), creator->getServerSubscription());
