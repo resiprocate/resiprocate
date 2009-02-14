@@ -1,4 +1,4 @@
-SUBDIRS = .  dum test
+SUBDIRS = dum test
 CXX = ${DISTCC} @CXX@
 dnl INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I/usr/kerberos/include
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
@@ -155,6 +155,9 @@ libresiprocate_la_LDFLAGS = -version-info $(LIBRESIP_SO_VERSION)
 
 resiprocate_includedir=$(includedir)/resiprocate
 resiprocate_include_HEADERS = \
+	ApiCheck.hxx \
+	ApiCheckList.hxx \
+	ApplicationMessage.hxx \
 	ApplicationSip.hxx \
 	AresDns.hxx \
 	Auth.hxx \
@@ -171,6 +174,8 @@ resiprocate_include_HEADERS = \
 	DnsInterface.hxx \
 	DnsResult.hxx \
 	DnsHandler.hxx \
+	DtlsMessage.hxx \
+	DtlsTransport.hxx \
 	Embedded.hxx \
 	ExistsParameter.hxx \
 	ExpiresCategory.hxx \
@@ -196,6 +201,7 @@ resiprocate_include_HEADERS = \
 	MethodTypes.hxx \
 	Mime.hxx \
 	MsgHeaderScanner.hxx \
+	MultipartAlternativeContents.hxx \
 	MultipartMixedContents.hxx \
 	MultipartSignedContents.hxx \
 	NameAddr.hxx \
@@ -272,6 +278,8 @@ resiprocate_include_HEADERS = \
 
 resiprocate_os_includedir=$(includedir)/resiprocate/os
 resiprocate_os_include_HEADERS = \
+	os/AbstractFifo.hxx \
+	os/AsyncProcessHandler.hxx \
 	os/BaseException.hxx \
 	os/CircularBuffer.hxx \
 	os/Coders.hxx \
@@ -286,6 +294,7 @@ resiprocate_os_include_HEADERS = \
 	os/HeapInstanceCounter.hxx \
 	os/Id.hxx \
 	os/Inserter.hxx \
+	os/IntrusiveListElement.hxx \
 	os/Lock.hxx \
 	os/Lockable.hxx \
 	os/Log.hxx \
@@ -302,13 +311,15 @@ resiprocate_os_include_HEADERS = \
 	os/SysLogBuf.hxx \
 	os/SysLogStream.hxx \
 	os/ThreadIf.hxx \
+	os/TimeLimitFifo.hxx \
 	os/Timer.hxx \
 	os/TransportType.hxx \
 	os/Tuple.hxx \
 	os/compat.hxx \
 	os/vmd5.hxx \
 	os/vthread.hxx \
-	os/WinCompat.hxx 
+	os/WinCompat.hxx \
+	os/WinLeakCheck.hxx
 
 resiprocate_external_includedir=$(includedir)/resiprocate/external
 resiprocate_external_include_HEADERS = \
