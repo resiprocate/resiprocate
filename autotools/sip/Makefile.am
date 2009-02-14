@@ -1,6 +1,11 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = resiprocate .
+RPMSOURCEDIR    = $(shell rpm --eval '%_sourcedir')
+RPMSPECDIR      = $(shell rpm --eval '%_specdir')
+RPMSRCRPMDIR    = $(shell rpm --eval '%_srcrpmdir')
+
+SUBDIRS = resiprocate
+
 EXTRA_DIST = contrib/ares certs README.windows ReSIProcate.sln	\
 		SipIMP SipIMP-Qt SipIMPSetup ReSIProcate_7_1.sln \
 		sip.xcode README.autotools
@@ -14,14 +19,17 @@ dist-hook:
 	     $(distdir)/SipIMP-Qt $(distdir)/SipIMPSetup -name CVS \
              -o -name .cvsignore | xargs rm -rf
 
-#rpms:	dist
-#	sed -e "s/RESIP_VERSION/$(VERSION)/g" -e "s/RESIP_RELEASE/$(RELEASE)/g" < resip.spec.in > resip.spec
-#	cp $(PACKAGE)-$(VERSION).tar.gz /usr/src/redhat/SOURCES/
-#	cp resip.spec /usr/src/redhat/SPECS/
-#	rpmbuild -ba /usr/src/redhat/SPECS/resip.spec
+rpms:	dist
+	sed -e "s/RESIP_VERSION/$(VERSION)/g" -e "s/RESIP_RELEASE/$(RELEASE)/g" < resip.spec.in > resip.spec
+	cp $(PACKAGE)-$(VERSION).tar.gz $(RPMSOURCEDIR)/
+	cp resip.spec $(RPMSPECDIR)/
+	rpmbuild -ba $(RPMSPECDIR)/resip.spec
 
-#srpm:	dist
-#	sed -e "s/RESIP_VERSION/$(VERSION)/g" -e "s/RESIP_RELEASE/$(RELEASE)/g" < resip.spec.in > resip.spec
-#	cp $(PACKAGE)-$(VERSION).tar.gz /usr/src/redhat/SOURCES/
-#	cp resip.spec /usr/src/redhat/SPECS/
-#	rpmbuild -bs /usr/src/redhat/SPECS/resip.spec
+srpm:	dist
+	sed -e "s/RESIP_VERSION/$(VERSION)/g" -e "s/RESIP_RELEASE/$(RELEASE)/g" < resip.spec.in > resip.spec
+	cp $(PACKAGE)-$(VERSION).tar.gz $(RPMSOURCEDIR)/
+	cp resip.spec $(RPMSPECDIR)/
+	rpmbuild -bs $(RPMSPECDIR)/resip.spec
+
+i686:	srpm
+	rpmbuild --rebuild --target i686 $(RPMSRCRPMDIR)/$(PACKAGE)-$(VERSION)-$(RELEASE).src.rpm

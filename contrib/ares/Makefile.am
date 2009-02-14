@@ -16,7 +16,7 @@ libares_a_SOURCES = \
 	ares_parse_ptr_reply.c ares_process.c ares_query.c ares_search.c \
 	ares_send.c ares_strerror.c ares_timeout.c ares_local.c
 
-libares_adir = ares
+libares_adir=$(includedir)
 libares_a_HEADERS =\
 	ares.h ares_compat.h ares_dns.h ares_local.h
 

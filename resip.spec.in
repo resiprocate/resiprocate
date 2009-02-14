@@ -51,14 +51,12 @@ need to perform multiple DNS queries in parallel.
 
 %build
 ( cd contrib/ares && CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --mandir=%{mandir} && make )
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --with-openssl --with-ares --with-shared-libs
+CFLAGS="$RPM_OPT_FLAGS" CXXFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --with-openssl --with-ares --with-shared-libs
 make
 
 %install
 make DESTDIR=$RPM_BUILD_ROOT install
 make DESTDIR=$RPM_BUILD_ROOT -C contrib/ares install
-strip -g -R .comment $RPM_BUILD_ROOT%{_libdir}/lib*.so.*.*
-strip -g -R .comment $RPM_BUILD_ROOT%{_libdir}/lib*.a
 
 %clean
 rm -rf $RPM_BUILD_ROOT
