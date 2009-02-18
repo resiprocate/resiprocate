@@ -21,6 +21,8 @@
 
 #ifdef WIN32
 #include "resip/stack/ssl/WinSecurity.hxx"
+#else
+#include "resip/stack/ssl/Security.hxx"
 #endif
 
 #include <iostream>

@@ -9,8 +9,12 @@
 #include "rutil/Subsystem.hxx"
 #include "resip/dum/KeepAliveManager.hxx"
 
-#if defined(WIN32) && defined (USE_SSL)
+#if defined (USE_SSL)
+#if defined(WIN32) 
 #include "resip/stack/ssl/WinSecurity.hxx"
+#else
+#include "resip/stack/ssl/Security.hxx"
+#endif
 #endif
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::TEST
