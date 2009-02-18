@@ -175,8 +175,10 @@ clean-ares:
 
 ###########################################################################
 # Various clean targets
-CLEANDIRS := resip/stack resip/dum resip/stack/test presSvr repro rutil \
-             rutil/test tfm apps reTurn reTurn/client reTurn/client/test
+CLEANDIRS := resip/stack resip/dum resip/dum/test resip/stack/test presSvr \
+             repro rutil rutil/test tfm apps reTurn reTurn/client \
+             reTurn/client/test p2p p2p/s2c/s2c
+
 
 cleancontrib: clean-ares
 	-$(MAKE) -C tfm/contrib/cppunit distclean
