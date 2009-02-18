@@ -12,6 +12,14 @@
 #include "resip/dum/ServerPublication.hxx"
 #include "resip/dum/ServerOutOfDialogReq.hxx"
 
+#if defined (USE_SSL)
+#if defined(WIN32) 
+#include "resip/stack/ssl/WinSecurity.hxx"
+#else
+#include "resip/stack/ssl/Security.hxx"
+#endif
+#endif
+
 #include "UserAgent.hxx"
 
 using namespace resip;

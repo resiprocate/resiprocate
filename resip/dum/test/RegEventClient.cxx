@@ -37,15 +37,25 @@ AddAor::clone() const
    return new AddAor(mClient, mAor);
 }
 
+#ifdef RESIP_USE_STL_STREAMS
 std::ostream& 
 AddAor::encode(std::ostream& strm) const
+#else
+resip::ResipFastOStream&
+AddAor::encode(resip::ResipFastOStream& strm) const
+#endif
 {
    strm << "Add RegEvent watcher " << mAor;
    return strm;
 }
 
+#ifdef RESIP_USE_STL_STREAMS
 std::ostream& 
 AddAor::encodeBrief(std::ostream& strm) const
+#else
+resip::ResipFastOStream&
+AddAor::encodeBrief(resip::ResipFastOStream& strm) const
+#endif
 {
    return encode(strm);
 }

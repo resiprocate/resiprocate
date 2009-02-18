@@ -8,9 +8,15 @@ PACKAGES += DUM RESIP RUTIL OPENSSL ARES PTHREAD POPT RADIUSCLIENTNG
 TARGET_LIBRARY = 
 
 #testDumTimer.cxx
-TESTPROGRAMS += basicRegister.cxx BasicCall.cxx testSMIMEMessage.cxx basicMessage.cxx testSMIMEInvite.cxx
+TESTPROGRAMS += basicRegister.cxx BasicCall.cxx basicMessage.cxx
 
-TESTPROGRAMS += limpc.cxx treg.cxx
+TESTPROGRAMS += treg.cxx
+
+ifeq ($(USE_SSL),yes)
+TESTPROGRAMS += testSMIMEMessage.cxx testSMIMEInvite.cxx
+TESTPROGRAMS += limpc.cxx
+endif
+
 SRC = CommandLineParser.cxx UserAgent.cxx
 
 SRC += RegEventClient.cxx

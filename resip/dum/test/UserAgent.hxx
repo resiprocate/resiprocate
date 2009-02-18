@@ -105,12 +105,20 @@ class UserAgent : public CommandLineParser,
                return new EndInviteSessionCommand(mHandle);
             }
 
+#ifdef RESIP_USE_STL_STREAMS
             virtual std::ostream& encode(std::ostream& str) const
+#else
+            virtual EncodeStream& encode(EncodeStream& str) const
+#endif
             {
                return str << "EndInviteSessionCommand";
             }
 
+#ifdef RESIP_USE_STL_STREAMS
             virtual std::ostream& encodeBrief(std::ostream& str) const
+#else
+            virtual EncodeStream& encodeBrief(EncodeStream& str) const
+#endif
             {
                return encode(str);
             }

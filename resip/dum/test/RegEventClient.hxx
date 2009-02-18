@@ -93,8 +93,13 @@ class AddAor : public resip::DumCommand
       virtual void executeCommand();
 
       virtual resip::Message* clone() const;
+#ifdef RESIP_USE_STL_STREAMS
       virtual std::ostream& encode(std::ostream&) const;
       virtual std::ostream& encodeBrief(std::ostream&) const;
+#else
+      virtual resip::ResipFastOStream& encode(resip::ResipFastOStream&) const;
+      virtual resip::ResipFastOStream& encodeBrief(resip::ResipFastOStream&) const;
+#endif
       
    private:
       RegEventClient& mClient;
