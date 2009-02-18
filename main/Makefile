@@ -53,8 +53,9 @@ repro: dum
 	$(MAKE) -C repro
 
 tests: resiprocate 
-	$(MAKE) -C resip/stack/test
 	$(MAKE) -C rutil/test	
+	$(MAKE) -C resip/stack/test
+	$(MAKE) -C resip/dum/test	
 
 check: tests
 	cd resip/stack/test && ./runtests.sh
