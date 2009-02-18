@@ -590,6 +590,12 @@ sub simpleTextQuestionnaire
 {
   my ($parameter);
 
+  print "**********************************************************************\n".
+        "* On most platforms, the menu-based configuration is much easier     *\n".
+        "* to use than the text-based questionairre. To use the menu system,  *\n".
+        "* hit ctrl-c, and re-run this script as '$0".(@ARGV?' ':'').join(' ',@ARGV)." -m'\n".
+        "**********************************************************************\n\n";
+
   foreach $parameter (@parameters)
   {
     setSingleDefault($parameter);
