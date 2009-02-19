@@ -88,8 +88,10 @@ RegEventClient::RegEventClient(SharedPtr<MasterProfile> profile) :
 
 RegEventClient::~RegEventClient()
 {
+#ifdef USE_SSL
    delete mSecurity;
    mSecurity = 0;
+#endif
 }
 
 void
