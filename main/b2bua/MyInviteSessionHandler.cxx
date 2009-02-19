@@ -231,37 +231,46 @@ void MyInviteSessionHandler::onTerminated(InviteSessionHandle is, InviteSessionH
   }
   MyAppDialog *myAppDialog = (MyAppDialog *)is->getAppDialog().get();
   switch(reason) {
-  case PeerEnded: // received a BYE or CANCEL from peer
-    B2BUA_LOG_DEBUG("onTerminated: PeerEnded");
-    if(msg != NULL) {
-      if(msg->isRequest()) {
-        if(msg->header(h_RequestLine).getMethod() == CANCEL) {
-          call->onCancel();
-        } else if(msg->header(h_RequestLine).getMethod() == BYE) {
-          // MyAppDialog *myAppDialog = (MyAppDialog *)is->getAppDialog().get();
-          call->onHangup(myAppDialog);
-        } else {
-          B2BUA_LOG_WARNING("unrecognised terminate method");
-        }
-      } else {
-        B2BUA_LOG_WARNING("terminate::PeerEnded, but message is not request");
-      }
-    } else {
-      B2BUA_LOG_WARNING("terminate::PeerEnded, but no message");
-    }
+
+  // received a BYE or CANCEL from peer
+  case RemoteCancel: 
+    B2BUA_LOG_DEBUG("onTerminated: RemoteCancel");
+    call->onCancel();
     break;
-  case Ended: // ended by the application
-    B2BUA_LOG_DEBUG("onTerminated: Ended");
+
+  case RemoteBye: 
+    B2BUA_LOG_DEBUG("onTerminated: RemoteBye");
+    // MyAppDialog *myAppDialog = (MyAppDialog *)is->getAppDialog().get();
+    call->onHangup(myAppDialog);
+    break;
+
+  // ended by the application
+  case LocalBye: 
+    B2BUA_LOG_DEBUG("onTerminated: LocalBye");
     //call->onFailure(myAppDialog);
     break;
-  case GeneralFailure: // ended due to a failure
-    B2BUA_LOG_DEBUG("onTerminated: GeneralFailure");
+
+  case Referred: 
+    B2BUA_LOG_DEBUG("onTerminated: Referred");
+    //call->onFailure(myAppDialog);
+    break;
+
+  // ended due to a failure
+  case Error:
+    B2BUA_LOG_DEBUG("onTerminated: Error");
     call->onFailure(myAppDialog);
     break;
-  case Cancelled: // ended by the application via Cancel
-    B2BUA_LOG_DEBUG("onTerminated: Cancelled"); 
+
+  case Timeout:
+    B2BUA_LOG_DEBUG("onTerminated: Timeout");
+    call->onFailure(myAppDialog);
+    break;
+
+  case LocalCancel: // ended by the application via Cancel
+    B2BUA_LOG_DEBUG("onTerminated: LocalCancel"); 
     // no need to do anything, because we have initiated this cancel
     break;
+
   default:
     B2BUA_LOG_WARNING("onTerminated: unhandled case %d", reason);
     break;
