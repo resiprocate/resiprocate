@@ -1,6 +1,7 @@
 #!/bin/sh
 
-for PERL in /usr/bin/perl \
+for PERL in /opt/local/bin/perl \
+            /usr/bin/perl \
             /bin/perl \
             /usr/local/bin/perl \
             /usr/pkg/bin/perl \
