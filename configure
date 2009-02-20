@@ -461,31 +461,41 @@ if (!$non_interactive)
   {
     &simpleTextMenu;
   }
+  elsif ($use_curses_menu)
+  {
+    &cursesMenu;
+    exit;
+  }
   else
   {
     &simpleTextQuestionnaire;
   }
 }
+
 &setAllDefaults;
-
-# Write out the resulting configure file to Makefile.conf
-open (CONF, ">build/Makefile.conf") || die "Could not write to build/Makefile.conf: $!";
 print "Writing Makefile.conf...\n";
-foreach $parameter (@parameters)
-{
-  print CONF ("# ".$parameter->{description}."\n");
-  if (exists $parameter->{validate})
-  {
-    print CONF ("# Allowed values: ".join(', ',@{$parameter->{validate}})."\n");
-  }
-  print CONF ($parameter->{name}." := ".$config{$parameter->{name}}."\n\n");
-}
-close (CONF);
-
-system "rm -Rf contrib/ares-build*";
-
+&saveValues;
 &checkForWarnings;
 
+######################################################################
+# Write out the resulting configure file to Makefile.conf
+######################################################################
+sub saveValues
+{
+  open (CONF, ">build/Makefile.conf") || die "Could not write to build/Makefile.conf: $!";
+  foreach $parameter (@parameters)
+  {
+    print CONF ("# ".$parameter->{description}."\n");
+    if (exists $parameter->{validate})
+    {
+      print CONF ("# Allowed values: ".join(', ',@{$parameter->{validate}})."\n");
+    }
+    print CONF ($parameter->{name}." := ".$config{$parameter->{name}}."\n\n");
+  }
+  close (CONF);
+
+  system "rm -Rf contrib/ares-build*";
+}
 ######################################################################
 # Initialize any empty or invalid entries to their default values
 ######################################################################
@@ -900,6 +910,255 @@ sub queryWindowSize
 }
 
 ######################################################################
+# Slightly less crude curses-based menu system
+######################################################################
+sub cursesMenu
+{
+  my $curses_ui_installed = undef;
+  eval('use Curses::UI; $curses_ui_installed=1');
+  if (!$curses_ui_installed)
+  {
+    die "Curses mode requires the Curses::UI module.\n".
+        "Run 'cpan Curses::UI' as root to install.\n";
+  }
+
+  $ui = new Curses::UI( -color_support => 1,
+                           -mouse_support => 1);
+  $ui->draw();
+
+  my @menu =
+    (
+      {
+        -label => 'File',
+        -submenu => [
+          { -label => 'Save', -value => \&saveValues },
+          { -label => 'Quit', -value => \&guiQuit },
+        ]
+      },
+    );
+
+  my $menu = $ui->add('menu','Menubar', -menu => \@menu);
+
+  my $sb = $ui->add('status_bar','Window',
+                        -border => 0,
+                        -height => 1,
+                        -width => undef,
+                        -y => -1,
+                   );
+
+  my $mainwin = $ui->add('mainwin','Window',
+                         -border => 1,
+                         -bfg => 'red',
+                         -x => 0,
+                         -y => 1,
+                         -width => -1,
+                         -height => -1,
+                         -padbottom => 1,
+                          );
+
+  $gui_st = $sb->add('status_text','Label',
+                        -bg => 'blue',
+                        -fg => 'white',
+                        -paddingspaces => 1,
+                        -width => -1,
+                        );
+
+  $gui_list = $mainwin->add('list','Listbox',
+                           -values => [&guiList],
+                           -labels => {&guiLabels},
+                           -onselchange => \&guiSelectionChanged,
+                           -vscrollbar => 'right',
+                           );
+
+#  $gui_st->text(join ' ',sort keys %{$list});
+
+  $ui->set_binding(sub{$menu->focus()}, "\cF");
+  $ui->set_binding(\&guiQuit, "q");
+
+  $gui_list->set_binding(\&guiChange,' ');
+  $gui_list->set_binding(\&guiChange,'|');
+  $gui_list->set_binding(\&guiChange,Curses::UI::Widget::KEY_RIGHT());
+  $gui_list->set_binding(\&guiChange,Curses::UI::Widget::KEY_ENTER());
+  $gui_list->set_binding(sub{},'y');
+  $gui_list->set_binding(sub{},'n');
+  $gui_list->set_binding(sub{},'0');
+  $gui_list->set_binding(sub{},'1');
+
+  $gui_list->focus();
+  &guiSelectionChanged();
+  $ui->mainloop();
+}
+
+sub guiSelectionChanged
+{
+  my ($description) = '';
+  my ($key) = $gui_list->get_active_value();
+
+  foreach $parameter (@parameters)
+  {
+    if ($parameter->{name} eq $key)
+    {
+      $description = ' '.$parameter->{description};
+      last;
+    }
+  } 
+
+  $gui_st->text($description);
+  $gui_st->focus();
+  $gui_list->focus();
+}
+
+sub guiChange
+{
+  my ($key) = $gui_list->get_active_value();
+
+  foreach $parameter (@parameters)
+  {
+    if ($parameter->{name} eq $key)
+    {
+      if (exists($parameter->{validate}))
+      {
+        # select from choices
+        my ($p);
+        my ($index) = 0;
+        foreach $p (@{$parameter->{validate}})
+        {
+          if ($p eq $config{$parameter->{name}}) { last; }
+          $index++;
+        }
+
+
+        my ($i);
+        my ($j);
+        my (%k) = ();
+        my (%shortcut);
+        foreach $i (@{$parameter->{validate}})
+        {
+          $j = 0;
+          while ($k{substr($i,$j,1)}){$j++}
+          $shortcut{$i}=substr($i,$j,1);
+          $k{substr($i,$j,1)}++;
+        }
+
+        $i = 0;
+        my (@buttons) = map {
+          {-label => '<'.$_.'>',
+           -value => $i++,
+           -shortcut => $shortcut{$_} } }
+          @{$parameter->{validate}};
+
+        my ($description) = $parameter->{description};
+        $description =~ s/(.{40}) /$1\n/g;
+
+        $index = $ui->dialog(-message => $description,
+                              -buttons => [@buttons],
+                              -selected => $index);
+
+        my ($new_value) = ${$parameter->{validate}}[$index];
+        $config{$parameter->{name}} = $new_value;
+      }
+      else
+      {
+        # input string
+        my ($new_value) = $ui->dirbrowser(
+                                -path => '/'.$config{$parameter->{name}}, 
+                                -title => $parameter->{description},
+                                );
+        if (defined($new_value))
+        {
+          $config{$parameter->{name}} = $new_value;
+        }
+      }
+
+
+#      {
+#        # input string
+#        my ($new_value) = $ui->question($parameter->{description});
+#        if (defined($new_value))
+#        {
+#          $config{$parameter->{name}} = $new_value;
+#        }
+#      }
+
+      if (exists($current_parameter->{recalc}))
+      {
+        &recalcDefault($current_parameter->{recalc});
+      }
+
+      my ($index) = $gui_list->get_active_id();
+      $gui_list->values([&guiList]);
+      $gui_list->labels({&guiLabels});
+
+      # WOW! Is this ever ugly. There isn't any sane way to set the
+      # active id....
+      while ($index--)
+      {
+        $gui_list->process_bindings(Curses::UI::Widget::KEY_DOWN());
+      }
+      return;
+    }
+  } 
+}
+
+sub guiList
+{
+  my (@list) = ();
+  foreach $parameter (@parameters)
+  {
+    if (exists($parameter->{predicate}) && !eval($parameter->{predicate})
+        && ! ($parameter->{forcedefault}))
+    {
+      next;
+    }
+
+    push (@list, $parameter->{name});
+  }
+
+  return @list;
+}
+
+sub guiLabels
+{
+  my (%labels) = ();
+  my ($max_label_length) = 0;
+
+  foreach $parameter (@parameters)
+  {
+    if (length($parameter->{name})>$max_label_length)
+    {
+      $max_label_length = length($parameter->{name});
+    }
+  }
+  $max_label_length += 2;
+
+  foreach $parameter (@parameters)
+  {
+    if (exists($parameter->{predicate}) && !eval($parameter->{predicate})
+        && ! ($parameter->{forcedefault}))
+    {
+      next;
+    }
+
+    setSingleDefault($parameter);
+
+    $indent = (exists($parameter->{predicate})
+               && !$parameter->{forcedefault})?'  ':'';
+
+    $labels{$parameter->{name}} =
+          sprintf ("%-$max_label_length.${max_label_length}s %s", 
+                  $indent.$parameter->{name},
+                  "[".$config{$parameter->{name}}."]");
+  }
+
+  return %labels;
+}
+
+sub guiQuit
+{
+  exit;
+}
+
+######################################################################
 
 sub validate
 {
@@ -940,6 +1199,12 @@ sub parseOptions
     if ($option eq '-m' || $option eq '--use-text-menu')
     {
       $use_text_menu = 1;
+      next option;
+    }
+
+    if ($option eq '-c' || $option eq '--use-curses-menu')
+    {
+      $use_curses_menu = 1;
       next option;
     }
 
