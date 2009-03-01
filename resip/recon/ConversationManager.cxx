@@ -54,7 +54,8 @@ ConversationManager::ConversationManager(bool localAudioEnabled)
    UtlString codecPaths[] = {"."};
 #endif
    int codecPathsNum = sizeof(codecPaths)/sizeof(codecPaths[0]);
-   assert(OS_SUCCESS == CpMediaInterfaceFactory::addCodecPaths(codecPathsNum, codecPaths));
+   OsStatus rc = CpMediaInterfaceFactory::addCodecPaths(codecPathsNum, codecPaths);
+   assert(OS_SUCCESS == rc);
 
    mMediaFactory = sipXmediaFactoryFactory(NULL, 0, 0, 0, mLocalAudioEnabled);
 
