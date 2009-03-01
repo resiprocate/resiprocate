@@ -664,8 +664,8 @@ ConversationManager::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_RECORD_FINISHED:
          InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
-      case MiNotification::MI_NOTF_RECORD_NOINPUTDATA:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_NOINPUTDATA, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+      case MiNotification::MI_NOTF_RECORD_ERROR:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_ERROR, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_DTMF_RECEIVED:
          {
