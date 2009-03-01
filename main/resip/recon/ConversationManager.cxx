@@ -659,6 +659,9 @@ ConversationManager::post(const OsMsg& msg)
       case MiNotification::MI_NOTF_PROGRESS:
          InfoLog( << "NotificationDispatcher: received MI_NOTF_PROGRESS, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
+      case MiNotification::MI_NOTF_RECORD_STARTED:
+         InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         break;
       case MiNotification::MI_NOTF_RECORD_STOPPED:
          InfoLog( << "NotificationDispatcher: received MI_NOTF_RECORD_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
