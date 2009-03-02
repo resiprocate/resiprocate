@@ -519,10 +519,14 @@ main(int argc, char* argv[])
       }
    }
 
-//#if defined(__SUNPRO_CC)
-//   typedef IntrusiveListElement<FooFoo*> read;
-//   typedef IntrusiveListElement1<FooFoo*> write;
-//#endif
+// .abr. Yes, this really is necessary just to get things to compile. Don't ask
+// why -- it's clearly a compiler bug. But you would be well advised not to
+// comment it out unless you're actually using the SunPRO compiler, and have
+// found an alternate workaround.
+#if defined(__SUNPRO_CC)
+   typedef IntrusiveListElement<FooFoo*> read;
+   typedef IntrusiveListElement1<FooFoo*> write;
+#endif
 
    //=============================================================================
    // Read version

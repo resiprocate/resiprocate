@@ -9,6 +9,7 @@
 #define RESIP_USE_STL_STREAMS
 
 #include <iostream> //for std::endl, std::cerr, etc.
+#include <stdio.h> //for snprintf
 
 #include <cassert>
 #include "rutil/compat.hxx"

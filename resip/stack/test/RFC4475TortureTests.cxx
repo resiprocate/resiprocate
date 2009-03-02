@@ -341,6 +341,7 @@ a=rtpmap:31 LPC
 void
 intmeth()
 {
+#if 0
 /*
    This message exercises a wider range of characters in several key
    syntactic elements than implementations usually see.  In particular,
@@ -400,6 +401,8 @@ Content-Length: 0
 
 
 */
+#endif
+
    FILE* fid= fopen("intmeth.dat","r");
    tassert(fid);
    resip::Data txt;
@@ -2395,6 +2398,7 @@ l: 0
 void
 mpart01()
 {
+#if 0
 /*
    This MESSAGE request contains two body parts.  The second part is
    binary encoded and contains null (0x00) characters.  Receivers must
@@ -2444,6 +2448,8 @@ hÎÿ®<½+ÿuÝÕdŽY=ÖG(òb ÷éAtž3
 --7a9cbec02ceef655--
 
 */
+#endif
+
    FILE* fid= fopen("mpart01.dat","r");
    tassert(fid);
    resip::Data txt;
