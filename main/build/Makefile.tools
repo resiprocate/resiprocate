@@ -194,7 +194,7 @@ MKSHLIB		= CC -G
 AR		= /usr/ccs/bin/ar
 ARFLAGS		= rv
 CC		= cc
-CXX		= CC 
+CXX		= CC -D'__attribute__(x)'=''
 DEP		= CC -xM
 #DMANGLE		= | perl $(TOOLS)/hacksol | grep -v /opt/SUNWspro
 DFLAGS		= 
