@@ -130,6 +130,7 @@ class TestSMIMEMessageHandler : public ClientPagerMessageHandler,
       {
          InfoLog( << "ClientRegistrationHandler::onRequestRetry\n" );
          exit(-1);
+         return -1;
       }
 
    protected:
