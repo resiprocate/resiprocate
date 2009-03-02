@@ -95,7 +95,7 @@ endif
 configure_netxx: tfm/contrib/Netxx-0.3.2/Makefile
 
 tfm/contrib/Netxx-0.3.2/Makefile:
-	cd tfm/contrib/Netxx-0.3.2 && perl configure.pl --contrib --disable-examples ${NETXX_USE_SHARED_LIBS}
+	cd tfm/contrib/Netxx-0.3.2 && CXX="$(CXX)" perl configure.pl --contrib --disable-examples ${NETXX_USE_SHARED_LIBS}
 
 ifeq ($(OSTYPE),MinGW)
 netxx:
