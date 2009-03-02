@@ -187,10 +187,11 @@ private:
       friend class DnsResult;
 };
 
-}
 
 EncodeStream&
-resip::operator<<(EncodeStream& ostrm, const Tuple& tuple);
+operator<<(EncodeStream& ostrm, const Tuple& tuple);
+
+}
 
 HashValue(resip::Tuple);
 

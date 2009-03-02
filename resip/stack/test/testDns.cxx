@@ -855,7 +855,11 @@ main(int argc, const char** argv)
       // .bwc. first index is the order (1st=0, 2nd=1, etc), and second index
       // is the last tuple in the IP address (127.0.0.1 is 0, 127.0.0.2 is 1)
       // The value stored is the number of times this combination was encountered.
+#ifdef __GNUC__
       int table[numSRV][numSRV];
+#else
+      int table[5][5];
+#endif
       
       for(int i=0;i<numSRV;++i)
       {

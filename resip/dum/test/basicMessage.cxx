@@ -54,6 +54,7 @@ public:
     {
     	cout << "client regListener::onRequestRetry\n";
 	    exit(-1);
+	return -1;
     }
 
 protected:

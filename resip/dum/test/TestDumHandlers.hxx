@@ -49,6 +49,7 @@ class TestClientRegistrationHandler : public ClientRegistrationHandler
       {
          InfoLog( << "TestClientRegistrationHandler::onRequestRetry" );
          exit(-1);
+         return -1;
       }
 };
 
