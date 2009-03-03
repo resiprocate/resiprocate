@@ -1436,6 +1436,7 @@ sub findBoostInclude
     '/include',
     '/opt/include',
     '/opt/local/include',
+    '/opt/csw/include',
     '/sw/include',
   );
   my ($candidate);
