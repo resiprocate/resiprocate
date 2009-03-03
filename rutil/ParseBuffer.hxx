@@ -4,6 +4,12 @@
 #include "rutil/Data.hxx"
 #include "rutil/ParseException.hxx"
 
+#ifdef __GNUC__
+#define RESIP_DEPRECATED __attribute__ ((deprecated))
+#else
+#define RESIP_DEPRECATED
+#endif
+
 namespace resip
 {
 
@@ -115,8 +121,8 @@ class ParseBuffer
       UInt64 uInt64();
 
 #ifndef WIN32
-      __attribute__ ((deprecated)) UInt64 unsignedLongLong(){return uInt64();} 
-      __attribute__ ((deprecated)) unsigned long unsignedInteger(){return uInt32();}
+      RESIP_DEPRECATED UInt64 unsignedLongLong(){return uInt64();} 
+      RESIP_DEPRECATED unsigned long unsignedInteger(){return uInt32();}
 #endif
 
 #ifndef RESIP_FIXED_POINT		

@@ -183,7 +183,7 @@ class TestEndPoint
             virtual const char* name() const ;
       };
 
-      typedef boost::function<bool (boost::shared_ptr<Event> e) > PredicateFn;
+      typedef boost::function<bool (boost::shared_ptr<Event>) > PredicateFn;
       // general assertion mechanism -- allows general functor
       class Assert : public ExpectAction
       {
@@ -199,7 +199,7 @@ class TestEndPoint
       friend class Assert;
       ExpectAction* check1(PredicateFn fn, resip::Data label);
 
-      typedef boost::function<void (boost::shared_ptr<Event> event) > ExecFn;
+      typedef boost::function<void (boost::shared_ptr<Event>) > ExecFn;
       class Execute : public ExpectAction
       {
          public:

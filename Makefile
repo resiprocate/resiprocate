@@ -95,7 +95,7 @@ endif
 configure_netxx: tfm/contrib/Netxx-0.3.2/Makefile
 
 tfm/contrib/Netxx-0.3.2/Makefile:
-	cd tfm/contrib/Netxx-0.3.2 && CXX="$(CXX)" perl configure.pl --contrib --disable-examples ${NETXX_USE_SHARED_LIBS}
+	cd tfm/contrib/Netxx-0.3.2 && CXX="$(CXX)" CXXFLAGS='$(CXXFLAGS)' perl configure.pl --contrib --disable-examples ${NETXX_USE_SHARED_LIBS}
 
 ifeq ($(OSTYPE),MinGW)
 netxx:
@@ -106,13 +106,12 @@ netxx: configure_netxx
 endif
 
 configure_cppunit: tfm/contrib/cppunit/Makefile
-
         
 tfm/contrib/cppunit/Makefile:
-	cd tfm/contrib/cppunit && ./configure ${CPPUNIT_USE_SHARED_LIBS} ${CONFIGURE_ARGS} --disable-doxygen
+	cd tfm/contrib/cppunit && CC="$(CC)" CFLAGS='$(CFLAGS)' CXX="$(CXX)" CXXFLAGS='$(CXXFLAGS)' ./configure ${CPPUNIT_USE_SHARED_LIBS} ${CONFIGURE_ARGS} --disable-doxygen
 
 cppunit: configure_cppunit
-	$(MAKE) -C tfm/contrib/cppunit 
+	$(MAKE) -C tfm/contrib/cppunit/src/cppunit libcppunit.la
 
 contrib/srtp/Makefile:
 	cd contrib/srtp && ./configure ${CONFIGURE_ARGS}

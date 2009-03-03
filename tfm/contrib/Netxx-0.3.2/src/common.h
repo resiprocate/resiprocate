@@ -39,5 +39,7 @@
 
 #include "compat.h"
 #include "inet6.h"
+#include <string.h>
+#include <stdlib.h>
 
 #endif

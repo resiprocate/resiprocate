@@ -144,7 +144,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       InviteReferReplaces* inviteReferredBy();
 
       typedef boost::function<boost::shared_ptr<resip::SipMessage> 
-      ( boost::shared_ptr<resip::SipMessage> msg) > 
+      ( boost::shared_ptr<resip::SipMessage>) > 
       MessageConditionerFn;
 
       typedef boost::function<resip::Data 
