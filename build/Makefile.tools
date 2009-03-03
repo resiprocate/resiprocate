@@ -10,10 +10,9 @@
 # possible values for VOCAL_TOOLCHAIN_TYPE are
 
 #     gnu      -- the gcc compiler
-#     gnu3      -- the gcc 3.0 compiler, when named gcc3
-#     armcross   -- the ARM crosscompiler for 
+#     armcross -- the ARM crosscompiler -- DEPRECATED, DO NOT USE
 #     sunpro   -- Sun's Forte C++ compiler
-#     intel   --  intel's icc compiler for linux
+#     intel    --  intel's icc compiler for linux
 #     msgnu    -- Microsoft's Visual C++ compiler , but using GNU make
 #                 instead of project files.
 
@@ -194,13 +193,14 @@ MKSHLIB		= CC -G
 AR		= /usr/ccs/bin/ar
 ARFLAGS		= rv
 CC		= cc
-CXX		= CC -D'__attribute__(x)'=''
+CXX		= CC
 DEP		= CC -xM
 #DMANGLE		= | perl $(TOOLS)/hacksol | grep -v /opt/SUNWspro
-DFLAGS		= 
+DFLAGS		=
 INSTALL		= install
 LINKER		= CC
 LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
+CXXFLAGS        += -D"__attribute__(x)"=""
 RANLIB		= ranlib
 
 DEBUG_FLAG	= -g
@@ -263,6 +263,9 @@ ifeq ($(USE_CCACHE),yes)
   CXX := $(CCACHE) $(CXX)
 
 endif
+
+DEFINES += RESIP_TOOLCHAIN_$(shell echo $(VOCAL_TOOLCHAIN_TYPE)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCEDFGHIJKLMNOPQRSTUVWXYZ/') \
+
 
 ##############################################################################
 # 

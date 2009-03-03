@@ -212,6 +212,10 @@ endif
 
 LARCH := $(ARCH)
 
+ifeq ($(ARCH),i86pc)
+LARCH := ia32
+endif
+
 ifeq ($(ARCH),i686)
 LARCH := ia32
 endif
@@ -231,6 +235,10 @@ endif
 ifeq ($(ARCH),Power Macintosh)
 ARCH := powermac
 endif
+
+DEFINES += RESIP_OSTYPE_$(shell echo $(OSTYPE)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCEDFGHIJKLMNOPQRSTUVWXYZ/') \
+           RESIP_ARCH_$(shell echo $(ARCH)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCEDFGHIJKLMNOPQRSTUVWXYZ/') \
+           RESIP_LARCH_$(shell echo $(LARCH)|sed 'y/abcdefghijklmnopqrstuvwxyz/ABCEDFGHIJKLMNOPQRSTUVWXYZ/')
 
 # set the environment 
 
