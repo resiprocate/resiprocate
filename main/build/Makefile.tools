@@ -200,8 +200,12 @@ DFLAGS		=
 INSTALL		= install
 LINKER		= CC
 LNDIR		= $(shell pwd)/$(ROOT)/build/lndir.sh
-CXXFLAGS        += -D"__attribute__(x)"=""
 RANLIB		= ranlib
+
+CXXFLAGS        += -mt -library=stlport4 
+CFLAGS          += -mt
+LDFLAGS         += -DTHREAD=MULTI -mt -library=stlport4
+LDLIBS_LAST     += -liostream
 
 DEBUG_FLAG	= -g
 

@@ -148,8 +148,16 @@ Resolver::lookupARecords()
     // http://developer.apple.com/technotes/tn2002/pdf/tn2053.pdf
     result = gethostbyname(mHost.c_str());
     int ret = (result==0);
+#elif defined(RESIP_OSTYPE_SUNOS)
+     result = gethostbyname_r (mHost.c_str(), &hostbuf, 
+                               buffer, sizeof(buffer), &herrno);
+    int ret = (result==0);
 #else
-   int ret = gethostbyname_r (mHost.c_str(), &hostbuf, buffer, sizeof(buffer), &result, &herrno);
+   // This is a glibc extension; it is similar to the Solaris version,
+   // except that the result is returned in the fifth parameter
+   // instead of as a return value.
+   int ret = gethostbyname_r (mHost.c_str(), &hostbuf, 
+                              buffer, sizeof(buffer), &result, &herrno);
 #endif
    assert (ret != ERANGE);
    if (ret != 0)
