@@ -1468,7 +1468,7 @@ main(int argc, char** argv)
    }
 
    {
-      char *txt = 
+      const char *txt = 
          ("SIP/2.0 200\r\n"
           "To: <sip:ext102@squamish.gloo.net:5060>;tag=8be36d98\r\n"
           "From: <sip:ext102@squamish.gloo.net:5060>;tag=38810b6d\r\n"
