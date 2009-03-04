@@ -294,14 +294,14 @@ class TestUac : public TestInviteSessionHandler
 {
    public:
       bool done;
-      SdpContents* sdp;     
+      SdpContents* mSdp;     
       HeaderFieldValue* hfv;      
       Data* txt;      
 
       TestUac() 
          : TestInviteSessionHandler("UAC"), 
            done(false),
-           sdp(0),
+           mSdp(0),
            hfv(0),
            txt(0)
       {
@@ -320,12 +320,12 @@ class TestUac : public TestInviteSessionHandler
          
          hfv = new HeaderFieldValue(txt->data(), txt->size());
          Mime type("application", "sdp");
-         sdp = new SdpContents(hfv, type);
+         mSdp = new SdpContents(hfv, type);
       }
 
       virtual ~TestUac()
       {
-         delete sdp;
+         delete mSdp;
          delete txt;
          delete hfv;
       }
@@ -337,6 +337,7 @@ class TestUac : public TestInviteSessionHandler
          is->provideAnswer(sdp);
       }
 
+      using TestInviteSessionHandler::onConnected;
       virtual void onConnected(ClientInviteSessionHandle is, const SipMessage& msg)
       {
          cout << name << ": ClientInviteSession-onConnected - " << msg.brief() << endl;
@@ -366,7 +367,7 @@ class TestUas : public TestInviteSessionHandler
       bool requestedOffer;
       time_t* pHangupAt;
 
-      SdpContents* sdp;
+      SdpContents* mSdp;
       HeaderFieldValue* hfv;
       Data* txt;      
 
@@ -392,16 +393,17 @@ class TestUas : public TestInviteSessionHandler
          
          hfv = new HeaderFieldValue(txt->data(), txt->size());
          Mime type("application", "sdp");
-         sdp = new SdpContents(hfv, type);
+         mSdp = new SdpContents(hfv, type);
       }
 
       ~TestUas()
       {
-         delete sdp;
+         delete mSdp;
          delete txt;
          delete hfv;
       }
 
+      using TestInviteSessionHandler::onNewSession;
       virtual void 
       onNewSession(ServerInviteSessionHandle sis, InviteSession::OfferAnswerType oat, const SipMessage& msg)
       {
@@ -429,7 +431,7 @@ class TestUas : public TestInviteSessionHandler
       virtual void onOfferRequired(InviteSessionHandle is, const SipMessage& msg)
       {
          cout << name << ": InviteSession-onOfferRequired - " << msg.brief() << endl;
-         is->provideOffer(*sdp);
+         is->provideOffer(*mSdp);
       }
 
       virtual void onAnswer(InviteSessionHandle is, const SipMessage& msg, const SdpContents& sdp)      
@@ -618,7 +620,7 @@ main (int argc, char** argv)
 			  dumUac->send(dumUac->makeOutOfDialogRequest(uasAor, OPTIONS, new testAppDialogSet(*dumUac, "UAC(OPTIONS)")));  // Should probably add Allow, Accept, Accept-Encoding, Accept-Language and Supported headers - but this is fine for testing/demonstration
 
               cout << "UAC: Sending Invite Request to UAS." << endl;
-              dumUac->send(dumUac->makeInviteSession(uasAor, uac.sdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
+              dumUac->send(dumUac->makeInviteSession(uasAor, uac.mSdp, new testAppDialogSet(*dumUac, "UAC(INVITE)")));
            }
         }
 

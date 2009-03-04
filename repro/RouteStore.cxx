@@ -209,13 +209,13 @@ RouteStore::getFirstKey()
 {
    Lock lock(mMutex, VOCAL_READLOCK);
 
-   RouteOpList::iterator mCursor = mRouteOperators.begin();
-   if ( mCursor == mRouteOperators.end() )
+   RouteOpList::iterator cursor = mRouteOperators.begin();
+   if ( cursor == mRouteOperators.end() )
    {
       return Key( Data::Empty );
    }
    
-   return mCursor->key;
+   return cursor->key;
 }
 
 bool 
