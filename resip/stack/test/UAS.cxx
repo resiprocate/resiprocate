@@ -62,10 +62,10 @@ main(int argc, char* argv[])
       exit( -1 );
    }
 
-   char* logType = "cout";
-   char* logLevel = "ALERT";
-   char* proto = "tcp";
-   char* bindAddr = "";
+   const char* logType = "cout";
+   const char* logLevel = "ALERT";
+   const char* proto = "tcp";
+   const char* bindAddr = "";
 
    int seltime = 0;
    
