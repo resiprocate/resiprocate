@@ -85,7 +85,9 @@ inline int getErrno() { return WSAGetLastError(); }
 #endif
 
 //c function pointer because of ares
+extern "C" {
 typedef void(*AfterSocketCreationFuncPtr)(Socket s, int transportType, const char* file, int line);
+}
 
 bool makeSocketNonBlocking(Socket fd);
 bool makeSocketBlocking(Socket fd);
