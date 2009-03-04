@@ -20,11 +20,11 @@ struct CRYPTO_dynlock_value
 
 extern "C"
 {
-  void ::resip_OpenSSLInit_lockingFunction(int mode, int n, const char* file, int line);
-  unsigned long ::resip_OpenSSLInit_threadIdFunction();
-  CRYPTO_dynlock_value* ::resip_OpenSSLInit_dynCreateFunction(char* file, int line);
-  void ::resip_OpenSSLInit_dynDestroyFunction(CRYPTO_dynlock_value*, const char* file, int line);
-  void ::resip_OpenSSLInit_dynLockFunction(int mode, struct CRYPTO_dynlock_value*, const char* file, int line);
+  void resip_OpenSSLInit_lockingFunction(int mode, int n, const char* file, int line);
+  unsigned long resip_OpenSSLInit_threadIdFunction();
+  CRYPTO_dynlock_value* resip_OpenSSLInit_dynCreateFunction(char* file, int line);
+  void resip_OpenSSLInit_dynDestroyFunction(CRYPTO_dynlock_value*, const char* file, int line);
+  void resip_OpenSSLInit_dynLockFunction(int mode, struct CRYPTO_dynlock_value*, const char* file, int line);
 }
 
 namespace resip

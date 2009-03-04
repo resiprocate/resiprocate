@@ -12,8 +12,8 @@ struct ares_channeldata;
 //struct fd_set;
 
 extern "C" {
-  void ::resip_AresDns_aresCallback(void *arg, int status, unsigned char* abuf, int alen);
-  void ::resip_AresDns_caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
+  void resip_AresDns_aresCallback(void *arg, int status, unsigned char* abuf, int alen);
+  void resip_AresDns_caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
 }
 
 namespace resip
