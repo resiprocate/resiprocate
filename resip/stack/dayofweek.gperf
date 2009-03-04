@@ -1,4 +1,4 @@
-struct days { char *name; DayOfWeek type; };
+struct days { const char *name; DayOfWeek type; };
 %%
 Sun, DayOfWeek::Sun
 Mon, DayOfWeek::Mon

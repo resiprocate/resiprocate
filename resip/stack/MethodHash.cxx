@@ -1,4 +1,4 @@
-/* C++ code produced by gperf version 3.0.1 */
+/* C++ code produced by gperf version 3.0.3 */
 /* Command-line: gperf -D -E -L C++ -t -k '*' --compare-strncmp -Z MethodHash MethodHash.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -37,7 +37,7 @@
 namespace resip
 {
 #line 9 "MethodHash.gperf"
-struct methods { char *name; MethodTypes type; };
+struct methods { const char *name; MethodTypes type; };
 /* maximum key range = 31, duplicates = 0 */
 
 class MethodHash

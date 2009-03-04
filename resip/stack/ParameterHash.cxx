@@ -36,7 +36,7 @@
 namespace resip {
 using namespace std;
 #line 8 "ParameterHash.gperf"
-struct params { char *name; ParameterTypes::Type type; };
+struct params { const char *name; ParameterTypes::Type type; };
 /* maximum key range = 266, duplicates = 0 */
 
 class ParameterHash

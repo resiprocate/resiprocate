@@ -38,7 +38,7 @@ namespace resip
 {
 using namespace std;
 #line 10 "HeaderHash.gperf"
-struct headers { char *name; Headers::Type type; };
+struct headers { const char *name; Headers::Type type; };
 /* maximum key range = 430, duplicates = 4 */
 
 class HeaderHash
