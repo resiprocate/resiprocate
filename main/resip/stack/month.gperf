@@ -1,4 +1,4 @@
-struct months { char *name; Month type; };
+struct months { const char *name; Month type; };
 %%
 Jan, Month::Jan
 Feb, Month::Feb

@@ -8,7 +8,7 @@
 namespace Vocal2 {
 
 %}
-struct params { char *name; ParameterTypes::Type type; };
+struct params { const char *name; ParameterTypes::Type type; };
 %%
 transport, ParameterTypes::transport
 user, ParameterTypes::user
