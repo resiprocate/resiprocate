@@ -37,20 +37,20 @@ OpenSSLInit::OpenSSLInit()
 {
 	int locks = CRYPTO_num_locks();
 	mMutexes = new Mutex[locks];
-	CRYPTO_set_locking_callback(OpenSSLInit::lockingFunction);
+	CRYPTO_set_locking_callback(::resip_OpenSSLInit_lockingFunction);
 
 #if !defined(WIN32)
 #if defined(_POSIX_THREADS)
-	CRYPTO_set_id_callback(OpenSSLInit::threadIdFunction);
+	CRYPTO_set_id_callback(::resip_OpenSSLInit_threadIdFunction);
 #else
 #error Can't set OpenSSL up to be threadsafe!
 #endif
 #endif
 
 #if 0 //?dcm? -- not used by OpenSSL yet?
-	CRYPTO_set_dynlock_create_callback(OpenSSLInit::dynCreateFunction);
-	CRYPTO_set_dynlock_destroy_callback(OpenSSLInit::dynDestroyFunction);
-	CRYPTO_set_dynlock_lock_callback(OpenSSLInit::dynLockFunction);
+	CRYPTO_set_dynlock_create_callback(::resip_OpenSSLInit_dynCreateFunction);
+	CRYPTO_set_dynlock_destroy_callback(::resip_OpenSSLInit_dynDestroyFunction);
+	CRYPTO_set_dynlock_lock_callback(::resip_OpenSSLInit_dynLockFunction);
 #endif
 
 	CRYPTO_malloc_debug_init();
@@ -80,9 +80,9 @@ OpenSSLInit::~OpenSSLInit()
 }
 
 void
-OpenSSLInit::lockingFunction(int mode, int n, const char* file, int line)
+::resip_OpenSSLInit_lockingFunction(int mode, int n, const char* file, int line)
 {
-   if(!mInitialized) return;
+   if(!resip::OpenSSLInit::mInitialized) return;
    if (mode & CRYPTO_LOCK)
    {
       OpenSSLInit::mMutexes[n].lock();
@@ -94,7 +94,7 @@ OpenSSLInit::lockingFunction(int mode, int n, const char* file, int line)
 }
 
 unsigned long 
-OpenSSLInit::threadIdFunction()
+::resip_OpenSSLInit_threadIdFunction()
 {
 #if defined(WIN32)
    assert(0);
@@ -110,7 +110,7 @@ OpenSSLInit::threadIdFunction()
 }
 
 CRYPTO_dynlock_value* 
-OpenSSLInit::dynCreateFunction(char* file, int line)
+::resip_OpenSSLInit_dynCreateFunction(char* file, int line)
 {
    CRYPTO_dynlock_value* dynLock = new CRYPTO_dynlock_value;
    dynLock->mutex = new Mutex;
@@ -118,14 +118,14 @@ OpenSSLInit::dynCreateFunction(char* file, int line)
 }
 
 void
-OpenSSLInit::dynDestroyFunction(CRYPTO_dynlock_value* dynlock, const char* file, int line)
+::resip_OpenSSLInit_dynDestroyFunction(CRYPTO_dynlock_value* dynlock, const char* file, int line)
 {
    delete dynlock->mutex;
    delete dynlock;
 }
 
 void 
-OpenSSLInit::dynLockFunction(int mode, struct CRYPTO_dynlock_value* dynlock, const char* file, int line)
+::resip_OpenSSLInit_dynLockFunction(int mode, struct CRYPTO_dynlock_value* dynlock, const char* file, int line)
 {
    if (mode & CRYPTO_LOCK)
    {
