@@ -580,7 +580,7 @@ main(int argc, char** argv)
     }
    {
       // exercise header remove
-      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+      const char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "Allow-Events: foo\r\n"
                    "Allow-Events: bar\r\n"
                    "Allow-Events: baz\r\n"
@@ -633,7 +633,7 @@ main(int argc, char** argv)
 
    {
       // exercise header remove
-      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+      const char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "Allow-Events: foo\r\n"
                    "Allow-Events: bar\r\n"
                    "Allow-Events: baz\r\n"
@@ -702,7 +702,7 @@ main(int argc, char** argv)
 
    {
       // demonstrate comma encoding
-      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+      const char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "Allow-Events: foo\r\n"
                    "Allow-Events: bar\r\n"
                    "Allow-Events: baz\r\n"
@@ -741,7 +741,7 @@ main(int argc, char** argv)
    }
 
    {
-     char * txt = ("SIP/2.0 489 Bad Event" CRLF
+     const char * txt = ("SIP/2.0 489 Bad Event" CRLF
                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
                    "CSeq: " CRLF
                    "Call-ID:  f354ce714fb8a95c" CRLF
@@ -763,7 +763,7 @@ main(int argc, char** argv)
    }
 
    {
-     char * txt = ("SIP/2.0 489 Bad Event" CRLF
+     const char * txt = ("SIP/2.0 489 Bad Event" CRLF
                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
                    "CSeq: " CRLF
                    "Call-ID:  f354ce714fb8a95c" CRLF
@@ -785,7 +785,7 @@ main(int argc, char** argv)
    }
 
    {
-     char * txt = ("SIP/2.0 489 Bad Event" CRLF
+     const char * txt = ("SIP/2.0 489 Bad Event" CRLF
                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                    "CSeq: 1 SUBSCRIBE" CRLF
                    "Allow-Events: " CRLF
@@ -802,7 +802,7 @@ main(int argc, char** argv)
      resipCerr << response->brief() << endl;
      assert(Data::from(response->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(wire)");
      
-     char * txt2 = ("SIP/2.0 489 Bad Event" CRLF
+     const char * txt2 = ("SIP/2.0 489 Bad Event" CRLF
                     "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                     "CSeq: 1 SUBSCRIBE" CRLF
                     "Call-ID:  f354ce714fb8a95c" CRLF
@@ -816,7 +816,7 @@ main(int argc, char** argv)
      assert(r2->exists(h_AllowEvents));
      assert(r2->header(h_AllowEvents).size() == 0);
 
-     char * txt3 =("SIP/2.0 489 Bad Event" CRLF
+     const char * txt3 =("SIP/2.0 489 Bad Event" CRLF
                    "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                    "CSeq: 1 SUBSCRIBE" CRLF
                    "Call-ID:  f354ce714fb8a95c" CRLF
@@ -834,7 +834,7 @@ main(int argc, char** argv)
      resipCerr << r3->brief() << endl;
      assert(Data::from(r3->brief()) == "SipResp: 489 tid=899769382 cseq=SUBSCRIBE / 1 from(tu)");
 
-     char * txt4 = ("SIP/2.0 489 Bad Event" CRLF
+     const char * txt4 = ("SIP/2.0 489 Bad Event" CRLF
                     "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                     "CSeq: 1 SUBSCRIBE" CRLF
                     "Call-ID:  f354ce714fb8a95c" CRLF
@@ -855,7 +855,7 @@ main(int argc, char** argv)
      assert(r4->header(h_AllowEvents).front().value() == "foo");
 
 
-     char * txt5 = ("SIP/2.0 489 Bad Event" CRLF
+     const char * txt5 = ("SIP/2.0 489 Bad Event" CRLF
                     "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK" RESIP_COOKIE "899769382-1--" RESIP_COOKIE "" CRLF
                     "CSeq: 1 SUBSCRIBE" CRLF
                     "Call-ID:  f354ce714fb8a95c" CRLF
@@ -873,7 +873,7 @@ main(int argc, char** argv)
 
    {
       // Test just in time parsing with comparison: NameAddr;
-      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+      const char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
                    "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "11111-1-client_data-" RESIP_COOKIE ";stid=489573115\r\n"
@@ -901,7 +901,7 @@ main(int argc, char** argv)
    
    {
       resipCerr << "!Proxy-Authorization params" << endl;
-      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+      const char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
                    "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "563465-1--" RESIP_COOKIE ";stid=489573115\r\n"
@@ -926,7 +926,7 @@ main(int argc, char** argv)
    }
 
    {
-      char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
+      const char* txt = ("INVITE sip:ext101@192.168.2.220:5064;transport=UDP SIP/2.0\r\n"
                    "To: <sip:ext101@whistler.gloo.net:5061>\r\n"
                    "From: <sip:ext103@whistler.gloo.net:5061>;tag=a731\r\n"
                    "Via: SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "21312-1--" RESIP_COOKIE ";stid=489573115\r\n"
@@ -948,7 +948,7 @@ main(int argc, char** argv)
    }
 
    {
-      char* txt = ("SIP/2.0 200 OK""\r\n"
+      const char* txt = ("SIP/2.0 200 OK""\r\n"
                    "From: 1245<sip:4000@193.12.63.124:5060>;tag=7c3f0cc1-13c4-3e5a380c-1ac5646-257e""\r\n"
                    "To: prolab<sip:5000@host2.sipdragon.sipit.net>;tag=7c3f0cc1-13c5-3e5a380d-1ac5827-618f""\r\n"
                    "Call-ID: 9e9017c-7c3f0cc1-13c4-3e5a380c-1ac5646-3700@193.12.63.124""\r\n"
@@ -970,7 +970,7 @@ main(int argc, char** argv)
    }
 
    {
-      char *txt = ("SIP/2.0 200 OK\r\n"
+      const char *txt = ("SIP/2.0 200 OK\r\n"
                    "From: 1245<sip:4000@193.12.63.124:5060>;tag=7c3f0cc1-13c4-3e5a380c-1ac5646-257e\r\n"
                    "To: prolab<sip:5000@host2.sipdragon.sipit.net>;tag=7c3f0cc1-13c5-3e5a380d-1ac5827-618f\r\n"
                    "Call-ID: 9e9017c-7c3f0cc1-13c4-3e5a380c-1ac5646-3700@193.12.63.124\r\n"
@@ -992,7 +992,7 @@ main(int argc, char** argv)
    }
 
    {
-      char* txt = ("SIP/2.0 200 OK""\r\n"
+      const char* txt = ("SIP/2.0 200 OK""\r\n"
                    "From: 1245<sip:4000@193.12.63.124:5060>;tag=7c3f0cc1-13c4-3e5a380c-1ac5646-257e""\r\n"
                    "To: prolab<sip:5000@host2.sipdragon.sipit.net>;tag=7c3f0cc1-13c5-3e5a380d-1ac5827-618f""\r\n"
                    "Call-ID: 9e9017c-7c3f0cc1-13c4-3e5a380c-1ac5646-3700@193.12.63.124""\r\n"
@@ -1016,7 +1016,7 @@ main(int argc, char** argv)
    }
 
    {
-      char *txt = ("To: <sip:106@kelowna.gloo.net>"
+      const char *txt = ("To: <sip:106@kelowna.gloo.net>"
                    "From: <sip:106@kelowna.gloo.net>;tag=18c7b33a-430c-429c-9f46-e5b509264519\r\n"
                    "Via: SIP/2.0/UDP 192.168.2.15:10276;received=192.168.2.15\r\n"
                    "Call-ID: cb15283c-6efb-452e-aef2-5e44e02e2440@192.168.2.15\r\n"
@@ -1462,7 +1462,7 @@ main(int argc, char** argv)
    }
 
    {
-      char* b = "shared buffer";
+      const char* b = "shared buffer";
       HeaderFieldValue h1(b, strlen(b));
       HeaderFieldValue h2(h1);
    }
@@ -1486,7 +1486,7 @@ main(int argc, char** argv)
 
    {
       resipCerr << "test backward compatible expires parameter" << endl;
-      char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+      const char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=third\r\n"
@@ -1508,7 +1508,7 @@ main(int argc, char** argv)
 
    {
       resipCerr << "test header copying between unparsed messages" << endl;
-      char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+      const char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=third\r\n"
@@ -1527,7 +1527,7 @@ main(int argc, char** argv)
       auto_ptr<SipMessage> r(Helper::makeResponse(*message1, 100));
       r->encode(resipCerr);
 
-      char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
+      const char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sfirst\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=ssecond\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5060;branch=sthird\r\n"
@@ -1574,7 +1574,7 @@ main(int argc, char** argv)
    {
       resipCerr << "test header copying between parsed messages" << endl;
       resipCerr << " should NOT COPY any HeaderFieldValues" << endl;
-      char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+      const char *txt1 = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
                     "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=third\r\n"
@@ -1617,7 +1617,7 @@ main(int argc, char** argv)
       message1->header(h_Expires).value();
       message1->header(h_ContentLength).value();
 
-      char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
+      const char *txt2 = ("REGISTER sip:registrar.ixolib.com SIP/2.0\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5061;branch=sfirst\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5061;branch=ssecond\r\n"
                     "Via: SIP/2.0/UDP speedyspc.biloxi.com:5061;branch=sthird\r\n"
@@ -1684,7 +1684,7 @@ main(int argc, char** argv)
 
    {
       resipCerr << "test unparsed message copy" << endl;
-      char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=third\r\n"
@@ -1723,7 +1723,7 @@ main(int argc, char** argv)
    {
       resipCerr << "test multiheaders access" << endl;
 
-      char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=first\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=second\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=third\r\n"
@@ -1787,7 +1787,7 @@ main(int argc, char** argv)
    {
       resipCerr << "test callId access" << endl;
 
-      char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=z9hG4bKnashds7\r\n"
                    "Max-Forwards: 70\r\n"
                    "To: Bob <sip:bob@biloxi.com>\r\n"
@@ -1809,7 +1809,7 @@ main(int argc, char** argv)
    }
    
    {
-      char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=z9hG4bKnashds7\r\n"
                    "Max-Forwards: 70\r\n"
                    "To: Bob <sip:bob@biloxi.com>\r\n"
@@ -1833,7 +1833,7 @@ main(int argc, char** argv)
 
    {
       
-      char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:registrar.biloxi.com SIP/2.0\r\n"
                    "Via: SIP/2.0/UDP bobspc.biloxi.com:5060;branch=z9hG4bKnashds7\r\n"
                    "Max-Forwards: 70\r\n"
                    "To: Bob <sip:bob@biloxi.com>\r\n"
@@ -1862,7 +1862,7 @@ main(int argc, char** argv)
    {
       resipCerr << "first REGISTER in torture test" << endl;
       
-      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
                    "From: sip:user@company.com;tag=3411345\r\n"
                    "Max-Forwards: 8\r\n"
@@ -1923,7 +1923,7 @@ main(int argc, char** argv)
    {
       resipCerr << "first REGISTER in torture test" << endl;
       
-      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
                    "From: sip:user@company.com;tag=3411345\r\n"
                    "Max-Forwards: 8\r\n"
@@ -1942,7 +1942,7 @@ main(int argc, char** argv)
    {
       resipCerr << "response to REGISTER" << endl;
       
-      char *txt = ("SIP/2.0 100 Trying\r\n"
+      const char *txt = ("SIP/2.0 100 Trying\r\n"
                    "To: sip:localhost:5070\r\n"
                    "From: sip:localhost:5070;tag=73483366\r\n"
                    "Call-ID: 51dcb07418a21008e0ba100800000000\r\n"
@@ -1963,7 +1963,7 @@ main(int argc, char** argv)
       resipCerr << "encoded=" << *msg << endl;
    }
    {
-      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
                    "From: sip:user@company.com;tag=3411345\r\n"
                    "Max-Forwards: 8\r\n"
@@ -1979,7 +1979,7 @@ main(int argc, char** argv)
       assert(message->header(h_RequestLine).getMethod() == copy->header(h_RequestLine).getMethod());
    }
    {
-      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
                    "From: sip:user@company.com;tag=3411345\r\n"
                    "Max-Forwards: 8\r\n"
@@ -2022,7 +2022,7 @@ main(int argc, char** argv)
    }
 
    {
-      char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
+      const char *txt = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
                    "From: sip:user@company.com;tag=3411345\r\n"
                    "Max-Forwards: 8\r\n"
@@ -2032,7 +2032,7 @@ main(int argc, char** argv)
                    "Via: SIP/2.0/UDP 135.180.130.133;branch=z9hG4bKkdjuw\r\n"
                    "Expires: 353245\r\n\r\n");
 
-      char *txt2 = ("REGISTER sip:company.com SIP/2.0\r\n"
+      const char *txt2 = ("REGISTER sip:company.com SIP/2.0\r\n"
                    "To: sip:user@company.com\r\n"
                    "From: sip:user@company.com;tag=3411345\r\n"
                    "Max-Forwards: 8\r\n"

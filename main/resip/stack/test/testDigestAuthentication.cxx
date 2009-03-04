@@ -106,13 +106,13 @@ main(int arc, char** argv)
    }
 
    {
-      char* alg = "MD5";
-      char* username = "user";
-      char* password = "secret";
-      char* realm = "localhost";
-      char* method = "REGISTER";
-      char* uri = "user@host.com";
-      char* nonce = "92347fea23";
+      const char* alg = "MD5";
+      const char* username = "user";
+      const char* password = "secret";
+      const char* realm = "localhost";
+      const char* method = "REGISTER";
+      const char* uri = "user@host.com";
+      const char* nonce = "92347fea23";
 
       Data responseMD5 = Helper::makeResponseMD5(username,
                                                  password,
@@ -146,16 +146,16 @@ main(int arc, char** argv)
    }
 
    {
-      char* alg = "MD5";
-      char* username = "user";
-      char* password = "secret";
-      char* realm = "localhost";
-      char* method = "REGISTER";
-      char* uri = "user@host.com";
-      char* nonce = "92347fea23";
-      char* cnonce = "72345hef";
-      char* cnonceCount = "00000001";
-      char* qop = "auth";
+      const char* alg = "MD5";
+      const char* username = "user";
+      const char* password = "secret";
+      const char* realm = "localhost";
+      const char* method = "REGISTER";
+      const char* uri = "user@host.com";
+      const char* nonce = "92347fea23";
+      const char* cnonce = "72345hef";
+      const char* cnonceCount = "00000001";
+      const char* qop = "auth";
 
       Data responseMD5 = Helper::makeResponseMD5(username,
                                                  password,
@@ -192,13 +192,13 @@ main(int arc, char** argv)
    }
 
    {
-      char* alg = "MD5";
-      char* username = "user";
-      char* password = "secret";
-      char* realm = "localhost";
-      char* method = "REGISTER";
-      char* uri = "user@host.com";
-      char* nonce = "92347fea23";
+      const char* alg = "MD5";
+      const char* username = "user";
+      const char* password = "secret";
+      const char* realm = "localhost";
+      const char* method = "REGISTER";
+      const char* uri = "user@host.com";
+      const char* nonce = "92347fea23";
 
       Data responseMD5 = Helper::makeResponseMD5(username,
                                                  password,
@@ -250,16 +250,16 @@ Content-Length: 0
 Proxy-Authorization: Digest username="sip:100@kelowna.gloo.net:5060",realm="kelowna.gloo.net",uri="sip:kelowna.gloo.net",response="8485db84088e6be6c55717d2eb891eca",nonce="1039227719:9e17fc5e10c30f162e7a21c9f6a4d2a7",algorithm=MD5
 */
    {
-      char* alg = "MD5";
-      char* username = "sip:100@kelowna.gloo.net:5060";
-      char* password = "secret";
-      char* realm = "kelowna.gloo.net";
-      char* method = "REGISTER";
-      char* uri = "sip:kelowna.gloo.net";
-      char* nonce = "1039227719:9e17fc5e10c30f162e7a21c9f6a4d2a7";
-      char* cnonce = "";
-      char* cnonceCount = "";
-      char* qop = "";
+      const char* alg = "MD5";
+      const char* username = "sip:100@kelowna.gloo.net:5060";
+      const char* password = "secret";
+      const char* realm = "kelowna.gloo.net";
+      const char* method = "REGISTER";
+      const char* uri = "sip:kelowna.gloo.net";
+      const char* nonce = "1039227719:9e17fc5e10c30f162e7a21c9f6a4d2a7";
+      const char* cnonce = "";
+      const char* cnonceCount = "";
+      const char* qop = "";
 
       Data responseMD5 = Helper::makeResponseMD5(username,
                                                  password,
@@ -309,13 +309,13 @@ Message digest    == 575a9ecd3a6f1989a978748217b24a25
 Calculated digest == 575a9ecd3a6f1989a978748217b24a25
 */
    {
-      char* alg = "MD5";
-      char* username = "sip:100@kelowna.gloo.net:5060";
-      char* password = "secret";
-      char* realm = "kelowna.gloo.net";
-      char* method = "REGISTER";
-      char* uri = "sip:kelowna.gloo.net";
-      char* nonce = "1039063045";
+      const char* alg = "MD5";
+      const char* username = "sip:100@kelowna.gloo.net:5060";
+      const char* password = "secret";
+      const char* realm = "kelowna.gloo.net";
+      const char* method = "REGISTER";
+      const char* uri = "sip:kelowna.gloo.net";
+      const char* nonce = "1039063045";
 
       Data responseMD5 = Helper::makeResponseMD5(username,
                                                  password,
