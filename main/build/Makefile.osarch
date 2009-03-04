@@ -101,8 +101,6 @@ endif
 ifeq ($(OSTYPE),SunOS)
 
     USE_LIBGETOPT = 1
-    CFLAGS   += -DSUNXIL_WARNING_DISABLE
-    CXXFLAGS += -DSUNXIL_WARNING_DISABLE 
 
     INCDIRS += /opt/sfw/include /opt/csw/include 
     LIBDIRS += /opt/sfw/lib /opt/csw/lib
@@ -112,11 +110,6 @@ ifeq ($(OSTYPE),SunOS)
 
     ifeq ($(VOCAL_TOOLCHAIN_TYPE),gnu)
         LDLIBS_LAST   += -R/usr/local/lib
-    else
-        CXXFLAGS += -mt -library=stlport4
-        CFLAGS   += -mt
-        LDFLAGS  += -DTHREAD=MULTI -mt -library=stlport4
-        LDLIBS_LAST   += -liostream
     endif
 
     LDLIBS_LAST   += -lnsl -lsocket -lrt
