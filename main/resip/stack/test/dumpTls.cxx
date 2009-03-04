@@ -41,13 +41,13 @@ int
 main(int argc, char* argv[])
 {
 #ifdef USE_SSL
-   char *logType = "cerr";
-   char *logLevel = "DEBUG";
-   char *certPath = ".";
+   const char *logType = "cerr";
+   const char *logLevel = "DEBUG";
+   const char *certPath = ".";
    int  clientPort = 15001;
    int  serverPort = 5061;
-   char *clientDomain = "example.net";
-   char *serverDomain = "example.com";
+   const char *clientDomain = "example.net";
+   const char *serverDomain = "example.com";
 
 #if defined(HAVE_POPT_H)
    struct poptOption table[] = {

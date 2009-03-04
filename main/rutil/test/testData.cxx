@@ -190,7 +190,7 @@ class TestData
             {
                Data from("a");
                Data to("bb");
-               char* buffer = "abracadabra";
+               const char* buffer = "abracadabra";
                Data example(Data::Share, buffer, strlen(buffer));
 
                example.replace(from, to);
@@ -548,7 +548,7 @@ class TestData
 
          {
             Data d;
-            char *q = "\0";
+            const char *q = "\0";
             d += q;
            
             for(char *p = 
@@ -841,7 +841,7 @@ class TestData
          }
 
          {
-            char *txt = "here is some text";
+            const char *txt = "here is some text";
             Data notOwner(Data::Share, txt, strlen(txt));
             assert(notOwner.mMine == Data::Share);
             
@@ -851,7 +851,7 @@ class TestData
          }
 
          {
-            char *txt = "here is some text";
+            const char *txt = "here is some text";
             Data notOwner(Data::Share, txt, strlen(txt));
             assert(notOwner.mMine == Data::Share);
             
@@ -861,7 +861,7 @@ class TestData
          }
 
          {
-            char *txt = "here is some text";
+            const char *txt = "here is some text";
             Data notOwner(Data::Share, txt, strlen(txt));
             assert(notOwner.mMine == Data::Share);
             
