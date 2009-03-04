@@ -20,8 +20,8 @@ using namespace std;
 
 CommandLineParser::CommandLineParser(int argc, char** argv)
 {
-   char* logType = "cout";
-   char* logLevel = "INFO";
+   const char* logType = "cout";
+   const char* logLevel = "INFO";
    char* tlsDomain = 0;
    int forceRecordRoute = 0;
    char* recordRouteUri = 0;
@@ -50,13 +50,13 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int noIdentityHeaders = false;
    int certServer = false;
 
-   char* reqChainName = "default";
+   const char* reqChainName = "default";
    char* mySqlServer = 0;
    char* httpHostname = 0;
    int httpPort = 5080;
    int recursiveRedirect = 0;
    int doQValue=0;
-   char* forkBehavior="EQUAL_Q_PARALLEL";
+   const char* forkBehavior="EQUAL_Q_PARALLEL";
    bool cancelBetweenForkGroups=true;
    bool waitForTerminate=true;
    int msBetweenForkGroups=3000;//Moot by default
@@ -68,7 +68,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int showVersion = 0;
    int timerC=180;
    
-   char* adminPassword = "";
+   const char* adminPassword = "";
    int outboundDisabled=0;
    int outboundVersion=11;
    int rrTokenHackEnabled=0;

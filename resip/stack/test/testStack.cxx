@@ -32,9 +32,9 @@ int
 main(int argc, char* argv[])
 {
 
-   char* logType = "cout";
-   char* logLevel = "ALERT";
-   char* proto = "tcp";
+   const char* logType = "cout";
+   const char* logLevel = "ALERT";
+   const char* proto = "tcp";
    char* bindAddr = 0;
 
    int runs = 10000;

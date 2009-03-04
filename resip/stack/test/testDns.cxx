@@ -305,9 +305,9 @@ typedef struct
 int 
 main(int argc, const char** argv)
 {
-   char* logType = "cout";
-   char* logLevel = "STACK";
-   char* enumSuffix = "e164.arpa";
+   const char* logType = "cout";
+   const char* logLevel = "STACK";
+   const char* enumSuffix = "e164.arpa";
    
 #if defined(HAVE_POPT_H)
   struct poptOption table[] = {

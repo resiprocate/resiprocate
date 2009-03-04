@@ -632,7 +632,7 @@ main(int arc, char** argv)
    
    {
       TR _tr( "simple Token parse test");
-      char *org = "WuggaWuggaFoo";
+      const char *org = "WuggaWuggaFoo";
       
       HeaderFieldValue hfv(org, strlen(org));
       Token tok(&hfv, Headers::UNKNOWN);
@@ -641,7 +641,7 @@ main(int arc, char** argv)
 
    {
       TR _tr( "Token + parameters parse test");
-      char *org = "WuggaWuggaFoo;ttl=2";
+      const char *org = "WuggaWuggaFoo;ttl=2";
       
       HeaderFieldValue hfv(org, strlen(org));
       Token tok(&hfv, Headers::UNKNOWN);
@@ -659,7 +659,7 @@ main(int arc, char** argv)
 
    {
       TR _tr( "full on via parse");
-      char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
+      const char *viaString = /* Via: */ " SIP/2.0/UDP a.b.c.com:5000;ttl=3;maddr=1.2.3.4;received=foo.com";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
@@ -689,7 +689,7 @@ main(int arc, char** argv)
    {
       TR _tr("Test poorly formed DataParameter by construction");
 
-      char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;tag=";
+      const char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;tag=";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
       try
@@ -707,7 +707,7 @@ main(int arc, char** argv)
    {
       TR _tr("Test poorly formed UnknownParameter by construction");
 
-      char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;foobar=";
+      const char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;foobar=";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
       try
@@ -727,7 +727,7 @@ main(int arc, char** argv)
    {
       TR _tr("Test poorly formed UInt32Parameter by construction");
 
-      char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;duration=";
+      const char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;duration=";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
       try
@@ -745,7 +745,7 @@ main(int arc, char** argv)
    {
       TR _tr("Test poorly formed QuotedDataParameter by construction");
 
-      char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;domain=\"";
+      const char *viaString = /* Via: */ " SIP/2.0/UDP example.com:5000;;domain=\"";
       
       HeaderFieldValue hfv(viaString, strlen(viaString));
       try
@@ -1196,7 +1196,7 @@ main(int arc, char** argv)
    }
    {
       TR _tr("Auth Schemes");
-      char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
+      const char* authorizationString = "Digest realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
       Auth auth(&hfv, Headers::UNKNOWN);
@@ -1224,7 +1224,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("More Auth");
-      char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
+      const char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\"";
       HeaderFieldValue hfv(authorizationString, strlen(authorizationString));
       
       Auth auth(&hfv, Headers::UNKNOWN);
@@ -1252,8 +1252,8 @@ main(int arc, char** argv)
    
    {
       TR _tr("Testing qop stuff");
-      char* authenticationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, qop=\"auth,auth-int\"";
-      char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\", qop=auth";
+      const char* authenticationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, qop=\"auth,auth-int\"";
+      const char* authorizationString = "realm=\"66.100.107.120\", username=\"1234\", nonce=\"1011235448\"   , uri=\"sip:66.100.107.120\"   , algorithm=MD5, response=\"8a5165b024fda362ed9c1e29a7af0ef2\", qop=auth";
       HeaderFieldValue authenHfv(authenticationString, strlen(authenticationString));
       HeaderFieldValue authorHfv(authorizationString, strlen(authorizationString));
       
@@ -1404,7 +1404,7 @@ main(int arc, char** argv)
    {
       TR _tr("Generic URI stuff");
 
-      char* genericString = "<http://www.google.com>;purpose=icon;fake=true";
+      const char* genericString = "<http://www.google.com>;purpose=icon;fake=true";
       HeaderFieldValue hfv(genericString, strlen(genericString));
 
       GenericUri generic(&hfv, Headers::UNKNOWN);
@@ -1427,7 +1427,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Date testing 1");
-      char *dateString = "Mon, 04 Nov 2002 17:34:15 GMT";
+      const char *dateString = "Mon, 04 Nov 2002 17:34:15 GMT";
       HeaderFieldValue hfv(dateString, strlen(dateString));
       
       DateCategory date(&hfv, Headers::UNKNOWN);
@@ -1469,7 +1469,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Date testing 2");
-      char *dateString = "  Sun  , 14    Jan 2222 07:04:05   GMT    ";
+      const char *dateString = "  Sun  , 14    Jan 2222 07:04:05   GMT    ";
       HeaderFieldValue hfv(dateString, strlen(dateString));
       
       DateCategory date(&hfv, Headers::UNKNOWN);
@@ -1494,7 +1494,7 @@ main(int arc, char** argv)
    {
       TR _tr("Mime types 1");
 
-      char* mimeString = "application/sdp";
+      const char* mimeString = "application/sdp";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
       Mime mime(&hfv, Headers::UNKNOWN);
@@ -1513,7 +1513,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Mime types 2");
-      char* mimeString = "text/html ; charset=ISO-8859-4";
+      const char* mimeString = "text/html ; charset=ISO-8859-4";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
       Mime mime(&hfv, Headers::UNKNOWN);
@@ -1533,7 +1533,7 @@ main(int arc, char** argv)
    {
       TR _tr("Mime types 3");
 
-      char* mimeString = "    text   /     html        ;  charset=ISO-8859-4";
+      const char* mimeString = "    text   /     html        ;  charset=ISO-8859-4";
       HeaderFieldValue hfv(mimeString, strlen(mimeString));
       
       Mime mime(&hfv, Headers::UNKNOWN);
@@ -1563,7 +1563,7 @@ main(int arc, char** argv)
    {
       TR _tr("Via 2");
       
-      char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj";
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1600,7 +1600,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Via 3");
-      char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1611,7 +1611,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Via 4");
-      char* viaString = "SIP/2.0/UDP ;branch=oldassbranch";
+      const char* viaString = "SIP/2.0/UDP ;branch=oldassbranch";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1634,7 +1634,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Via 5 assignment with unknown parameter");
-      char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;stid=abcd.2";
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;stid=abcd.2";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1651,7 +1651,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Via 6 parse with known parameter");
-      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "ec1e.0-1--" RESIP_COOKIE ";ttl=4\r\n";
+      const char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "ec1e.0-1--" RESIP_COOKIE ";ttl=4\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1663,7 +1663,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Via 7 parse with unknown parameter");
-      char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "ec1e.0-1--" RESIP_COOKIE ";stid=489573115\r\n";
+      const char* viaString = "SIP/2.0/UDP whistler.gloo.net:5061;branch=z9hG4bK" RESIP_COOKIE "ec1e.0-1--" RESIP_COOKIE ";stid=489573115\r\n";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1891,7 +1891,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Branch testing 1");
-      char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1908,7 +1908,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Branch testing 2");
-      char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport";
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1921,7 +1921,7 @@ main(int arc, char** argv)
 
    {
       TR _tr("Branch testing 3");
-      char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport=100";
+      const char* viaString = "SIP/2.0/UDP ;branch=z9hG4bKwkl3lkjsdfjklsdjklfdsjlkdklj ;ttl=70;rport=100";
       HeaderFieldValue hfv(viaString, strlen(viaString));
       Via via(&hfv, Headers::UNKNOWN);
       
@@ -1999,7 +1999,7 @@ main(int arc, char** argv)
    //3329 tests
    {
       TR _tr( "Token + parameters parse test 3329 ");
-      char *org = "digest;d-alg=md5";
+      const char *org = "digest;d-alg=md5";
       
       HeaderFieldValue hfv(org, strlen(org));
       Token tok(&hfv, Headers::UNKNOWN);
@@ -2009,7 +2009,7 @@ main(int arc, char** argv)
 
    {
       TR _tr( "Token + parameters parse test");
-      char *org = "digest;d-qop=verify";
+      const char *org = "digest;d-qop=verify";
       
       HeaderFieldValue hfv(org, strlen(org));
       Token tok(&hfv, Headers::UNKNOWN);
@@ -2019,7 +2019,7 @@ main(int arc, char** argv)
 
    {
       TR _tr( "Token + parameters parse test");
-      char *org = "digest;d-ver=\"0000000000000000000000000000abcd\"";
+      const char *org = "digest;d-ver=\"0000000000000000000000000000abcd\"";
       
       HeaderFieldValue hfv(org, strlen(org));
       Token tok(&hfv, Headers::UNKNOWN);
