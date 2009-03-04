@@ -11,6 +11,11 @@ struct ares_channeldata;
 
 //struct fd_set;
 
+extern "C" {
+  void ::resip_AresDns_aresCallback(void *arg, int status, unsigned char* abuf, int alen);
+  void ::resip_AresDns_caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
+}
+
 namespace resip
 {
 class AresDns : public ExternalDns
@@ -41,19 +46,21 @@ class AresDns : public ExternalDns
 
       virtual bool hostFileLookup(const char* target, in_addr &addr);
 
+      friend void ::resip_AresDns_aresCallback(void *arg, int status, unsigned char* abuf, int alen);
+      friend void ::resip_AresDns_caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
+
    private:
 
       typedef std::pair<ExternalDnsHandler*, void*> Payload;
       static ExternalDnsRawResult makeRawResult(void *arg, int status, unsigned char *abuf, int alen);
       static ExternalDnsHandler* getHandler(void* arg);
-      static void aresCallback(void *arg, int status, unsigned char* abuf, int alen);
-      static void caresCallback(void *arg, int status, int timeouts, unsigned char* abuf, int alen);
 	  struct ares_channeldata* mChannel;
 	  std::vector<GenericIPAddress> mAdditionalNameservers;
 	  unsigned int mFeatures;
 };
    
 }
+
 
 #endif
 

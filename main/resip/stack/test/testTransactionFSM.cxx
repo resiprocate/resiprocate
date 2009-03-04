@@ -132,6 +132,8 @@ exitusage()
 	exit(1);
 }
 
+extern "C" { void processTimeouts(int arg); }
+
 void
 processTimeouts(int arg)
 {
