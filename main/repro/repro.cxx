@@ -56,7 +56,7 @@ using namespace std;
 
 static bool finished = false;
 
-static void
+extern "C" static void
 signalHandler(int signo)
 {
    std::cerr << "Shutting down" << endl;
