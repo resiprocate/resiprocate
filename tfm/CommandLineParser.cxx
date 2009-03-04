@@ -13,8 +13,8 @@ using namespace std;
 
 CommandLineParser::CommandLineParser(int argc, char** argv)
 {
-   char* logType = "cout";
-   char* logLevel = "INFO";
+   const char* logType = "cout";
+   const char* logLevel = "INFO";
    int encrypt=false;
    int sign=false;
    int genUserCert = false;
@@ -30,7 +30,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    int noV6 = false;
    
    char* inputAor = 0;
-   char* password = "";
+   const char* password = "";
    
    char* inputOutboundProxy = 0;
    char* inputContact = 0;
