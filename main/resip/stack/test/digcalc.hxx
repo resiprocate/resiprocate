@@ -11,7 +11,7 @@
 typedef char HASH[HASHLEN];
 #define HASHHEXLEN 32
 typedef char HASHHEX[HASHHEXLEN+1];
-#define IN
+#define IN const
 #define OUT
 
 
