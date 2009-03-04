@@ -433,15 +433,15 @@ AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* han
 {
    ares_query(mChannel, target, C_IN, type,
 #if defined(USE_ARES)
-              aresCallback,
+              resip_AresDns_aresCallback,
 #elif defined(USE_CARES)
-              caresCallback,
+              resip_AresDns_caresCallback,
 #endif
               new Payload(handler, userData));
 }
 
 void
-AresDns::aresCallback(void *arg, int status, unsigned char *abuf, int alen)
+::resip_AresDns_aresCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
 #if defined(USE_CARES)
    // If this is destruction, skip it.  We do this here for completeness.
@@ -451,17 +451,17 @@ AresDns::aresCallback(void *arg, int status, unsigned char *abuf, int alen)
    }
 #endif
    
-   getHandler(arg)->handleDnsRaw(makeRawResult(arg, status, abuf, alen));
-   Payload* p = reinterpret_cast<Payload*>(arg);
+   resip::AresDns::getHandler(arg)->handleDnsRaw(resip::AresDns::makeRawResult(arg, status, abuf, alen));
+   resip::AresDns::Payload* p = reinterpret_cast<resip::AresDns::Payload*>(arg);
    delete p;
 }
 
 void
-AresDns::caresCallback(void *arg, int status, int timeouts,
+::resip_AresDns_caresCallback(void *arg, int status, int timeouts,
                        unsigned char *abuf, int alen)
 {
    // Simply ignore the timeouts argument
-   return AresDns::aresCallback(arg, status, abuf, alen);
+   return ::resip_AresDns_aresCallback(arg, status, abuf, alen);
 }
 
 /* ====================================================================
