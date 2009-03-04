@@ -26,7 +26,7 @@ main(int argc, char** argv)
    {
      tassert_init(1); (void)tassert_stack_ptr;
      tassert_reset();
-     char * txt =(              
+     const char * txt =(              
        "SIP/2.0 489 Bad Event" CRLF
        "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
        "CSeq: 1 SUBSCRIBE" CRLF
@@ -44,7 +44,7 @@ main(int argc, char** argv)
      
      tassert(response->exists(h_AllowEvents));
 
-     char * txt2 =(              
+     const char * txt2 =(              
        "SIP/2.0 489 Bad Event" CRLF
        "Via: SIP/2.0/UDP RjS.localdomain:5070;branch=z9hG4bK-c87542-899769382-1--c87542-" CRLF
        "CSeq: 1 SUBSCRIBE" CRLF
