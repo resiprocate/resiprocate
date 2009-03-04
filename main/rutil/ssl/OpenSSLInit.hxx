@@ -18,6 +18,15 @@ struct CRYPTO_dynlock_value
       resip::Mutex* mutex;
 };
 
+extern "C"
+{
+  void ::resip_OpenSSLInit_lockingFunction(int mode, int n, const char* file, int line);
+  unsigned long ::resip_OpenSSLInit_threadIdFunction();
+  CRYPTO_dynlock_value* ::resip_OpenSSLInit_dynCreateFunction(char* file, int line);
+  void ::resip_OpenSSLInit_dynDestroyFunction(CRYPTO_dynlock_value*, const char* file, int line);
+  void ::resip_OpenSSLInit_dynLockFunction(int mode, struct CRYPTO_dynlock_value*, const char* file, int line);
+}
+
 namespace resip
 {
 
@@ -28,11 +37,12 @@ class OpenSSLInit
    private:
 	   OpenSSLInit();
 	   ~OpenSSLInit();
-      static void lockingFunction(int mode, int n, const char* file, int line);
-      static unsigned long threadIdFunction();
-      static CRYPTO_dynlock_value* dynCreateFunction(char* file, int line);
-      static void dynDestroyFunction(CRYPTO_dynlock_value*, const char* file, int line);
-      static void dynLockFunction(int mode, struct CRYPTO_dynlock_value*, const char* file, int line);
+      friend void ::resip_OpenSSLInit_lockingFunction(int mode, int n, const char* file, int line);
+      friend unsigned long ::resip_OpenSSLInit_threadIdFunction();
+      friend CRYPTO_dynlock_value* ::resip_OpenSSLInit_dynCreateFunction(char* file, int line);
+      friend void ::resip_OpenSSLInit_dynDestroyFunction(CRYPTO_dynlock_value*, const char* file, int line);
+      friend void ::resip_OpenSSLInit_dynLockFunction(int mode, struct CRYPTO_dynlock_value*, const char* file, int line);
+
       static Mutex* mMutexes;    
       static volatile bool mInitialized;
 };
