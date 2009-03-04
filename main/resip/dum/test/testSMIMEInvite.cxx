@@ -120,6 +120,7 @@ class TestSMIMEInviteHandler : public TestClientRegistrationHandler,
          connected++;
       }
 
+      using TestClientRegistrationHandler::onFailure;
       virtual void onFailure(ClientInviteSessionHandle,
                              const SipMessage& msg)
       {
@@ -127,6 +128,7 @@ class TestSMIMEInviteHandler : public TestClientRegistrationHandler,
          callFailed = true;
       }
 
+      using TestInviteSessionHandler::onNewSession;
       virtual void onNewSession(ServerInviteSessionHandle is,
                                 InviteSession::OfferAnswerType oat,
                                 const SipMessage& msg)
