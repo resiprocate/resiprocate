@@ -80,7 +80,7 @@ OpenSSLInit::~OpenSSLInit()
 }
 
 void
-::resip_OpenSSLInit_lockingFunction(int mode, int n, const char* file, int line)
+resip_OpenSSLInit_lockingFunction(int mode, int n, const char* file, int line)
 {
    if(!resip::OpenSSLInit::mInitialized) return;
    if (mode & CRYPTO_LOCK)
@@ -94,7 +94,7 @@ void
 }
 
 unsigned long 
-::resip_OpenSSLInit_threadIdFunction()
+resip_OpenSSLInit_threadIdFunction()
 {
 #if defined(WIN32)
    assert(0);
@@ -110,7 +110,7 @@ unsigned long
 }
 
 CRYPTO_dynlock_value* 
-::resip_OpenSSLInit_dynCreateFunction(char* file, int line)
+resip_OpenSSLInit_dynCreateFunction(char* file, int line)
 {
    CRYPTO_dynlock_value* dynLock = new CRYPTO_dynlock_value;
    dynLock->mutex = new Mutex;
@@ -118,14 +118,14 @@ CRYPTO_dynlock_value*
 }
 
 void
-::resip_OpenSSLInit_dynDestroyFunction(CRYPTO_dynlock_value* dynlock, const char* file, int line)
+resip_OpenSSLInit_dynDestroyFunction(CRYPTO_dynlock_value* dynlock, const char* file, int line)
 {
    delete dynlock->mutex;
    delete dynlock;
 }
 
 void 
-::resip_OpenSSLInit_dynLockFunction(int mode, struct CRYPTO_dynlock_value* dynlock, const char* file, int line)
+resip_OpenSSLInit_dynLockFunction(int mode, struct CRYPTO_dynlock_value* dynlock, const char* file, int line)
 {
    if (mode & CRYPTO_LOCK)
    {

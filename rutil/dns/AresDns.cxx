@@ -441,7 +441,7 @@ AresDns::lookup(const char* target, unsigned short type, ExternalDnsHandler* han
 }
 
 void
-::resip_AresDns_aresCallback(void *arg, int status, unsigned char *abuf, int alen)
+resip_AresDns_aresCallback(void *arg, int status, unsigned char *abuf, int alen)
 {
 #if defined(USE_CARES)
    // If this is destruction, skip it.  We do this here for completeness.
@@ -457,7 +457,7 @@ void
 }
 
 void
-::resip_AresDns_caresCallback(void *arg, int status, int timeouts,
+resip_AresDns_caresCallback(void *arg, int status, int timeouts,
                        unsigned char *abuf, int alen)
 {
    // Simply ignore the timeouts argument
