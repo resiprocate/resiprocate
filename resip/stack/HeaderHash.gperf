@@ -7,7 +7,7 @@ namespace resip
 {
 using namespace std;
 %}
-struct headers { char *name; Headers::Type type; };
+struct headers { const char *name; Headers::Type type; };
 %%
 i, Headers::CallID
 m, Headers::Contact

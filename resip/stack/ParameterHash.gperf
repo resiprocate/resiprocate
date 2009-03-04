@@ -5,7 +5,7 @@
 namespace resip {
 using namespace std;
 %}
-struct params { char *name; ParameterTypes::Type type; };
+struct params { const char *name; ParameterTypes::Type type; };
 %%
 data, ParameterTypes::data
 control, ParameterTypes::control
