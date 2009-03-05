@@ -26,6 +26,7 @@ class TestUser : public TestSipEndPoint
          public:
             explicit TestUserAction(TestUser* endPoint);
             virtual ~TestUserAction();
+            using TestEndPoint::Action::operator();
             virtual void operator()();
             virtual void operator()(TestUser& endPoint) = 0;
 
