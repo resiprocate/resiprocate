@@ -65,6 +65,7 @@ class TestEndPoint
          public:
             explicit EndPointAction(TestEndPoint* endPoint);
             virtual ~EndPointAction();
+            using TestEndPoint::Action::operator();
             virtual void operator()();
             virtual void operator()(TestEndPoint& endPoint) = 0;
 
@@ -76,6 +77,7 @@ class TestEndPoint
       {
          public:
             NoSeqAction();
+            using TestEndPoint::EndPointAction::operator();
             virtual void operator()(TestEndPoint& user);
             virtual resip::Data toString() const;
       };
@@ -83,6 +85,7 @@ class TestEndPoint
       class NoAction : public ExpectAction 
       {
          public:
+            using ExpectAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const { return "NoAction";}
       };
@@ -189,6 +192,7 @@ class TestEndPoint
       {
          public:
             Assert(TestEndPoint* from, PredicateFn fn, const resip::Data& label) ;
+            using ExpectAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
          private:
@@ -204,6 +208,7 @@ class TestEndPoint
       {
          public:
             Execute(TestEndPoint* from, ExecFn fn, const resip::Data& label) ;
+            using ExpectAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
          private:
