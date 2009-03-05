@@ -62,6 +62,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
          public:
             explicit SipEndPointAction(TestSipEndPoint* endPoint);
             virtual ~SipEndPointAction();
+            using TestEndPoint::Action::operator();
             virtual void operator()();
             virtual void operator()(TestSipEndPoint& endPoint) = 0;
          protected:
@@ -76,6 +77,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
                   const resip::Uri& to, 
                   bool replaces = false);
             
+            using TestSipEndPoint::SipEndPointAction::operator();
             virtual void operator()(TestSipEndPoint& endPoint);
             virtual resip::Data toString() const;
 
@@ -133,6 +135,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       {
          public:
             InviteReferReplaces(TestSipEndPoint* from, bool replaces);
+            using ExpectAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
          private:
@@ -284,6 +287,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage);
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, const resip::Mime& accept, boost::shared_ptr<resip::Contents> contents = boost::shared_ptr<resip::Contents>());
 
+            using TestSipEndPoint::MessageAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual resip::Data toString() const;
 
@@ -363,6 +367,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       {
          public:
             MessageExpectAction(TestSipEndPoint& from);
+            using ExpectAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
             virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage>) = 0;
             void setConditioner(MessageConditionerFn conditioner);

@@ -11,6 +11,7 @@ class CheckContacts : public ExpectAction
    public:
       CheckContacts(const std::set<resip::NameAddr>& contacts, int expiresHeader);
       bool compareContacts(const resip::NameAddr & s1, const resip::NameAddr & s2);
+      using ExpectAction::operator();
       virtual void operator()(boost::shared_ptr<Event> event);
 
    private:

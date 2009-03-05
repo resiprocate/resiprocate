@@ -11,6 +11,8 @@ class CheckFetchedContacts : public ExpectAction
    public:
       CheckFetchedContacts(std::set<resip::NameAddr> contacts);
       bool compareContacts(const resip::NameAddr & s1, const resip::NameAddr & s2);
+
+      using ExpectAction::operator();
       virtual void operator()(boost::shared_ptr<Event> event);
    private:
       std::set<resip::NameAddr> _contacts;

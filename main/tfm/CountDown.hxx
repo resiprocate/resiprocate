@@ -14,6 +14,7 @@ class CountDown : public TestEndPoint::ExpectPreCon
          public:
             CountDownDec(CountDown* countdown);
             virtual ~CountDownDec();
+            using ExpectAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
          private:
             CountDown* _countdown;

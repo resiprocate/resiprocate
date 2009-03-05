@@ -23,6 +23,7 @@ class CPPUNIT_API TextTestResult : public TestResult,
 public:
   TextTestResult();
 
+  using CppUnit::TestResult::addFailure;
   virtual void addFailure( const TestFailure &failure );
   virtual void startTest( Test *test );
   virtual void print( OStream &stream );
