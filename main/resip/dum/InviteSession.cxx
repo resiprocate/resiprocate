@@ -1255,7 +1255,6 @@ InviteSession::dispatchConnected(const SipMessage& msg)
       case OnInviteReliable:
          *mLastRemoteSessionModification = msg;
          transition(ReceivedReinviteNoOffer);
-         //handler->onDialogModified(getSessionHandle(), None, msg);
          handler->onOfferRequired(getSessionHandle(), msg);
          break;
 
@@ -1266,7 +1265,6 @@ InviteSession::dispatchConnected(const SipMessage& msg)
          mCurrentEncryptionLevel = getEncryptionLevel(msg);
          mProposedRemoteSdp = sdp; 
 
-         //handler->onDialogModified(getSessionHandle(), Offer, msg);
          handler->onOffer(getSessionHandle(), msg, *mProposedRemoteSdp);
          break;
 

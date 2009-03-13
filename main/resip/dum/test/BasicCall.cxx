@@ -212,11 +212,6 @@ class TestInviteSessionHandler : public InviteSessionHandler, public ClientRegis
          cout << name << ": InviteSession-onOfferRejected" << endl;
       }
 
-      virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)
-      {
-         cout << name << ": InviteSession-onDialogModified - " << msg.brief() << endl;
-      }
-
       virtual void onRefer(InviteSessionHandle, ServerSubscriptionHandle, const SipMessage& msg)
       {
          cout << name << ": InviteSession-onRefer - " << msg.brief() << endl;

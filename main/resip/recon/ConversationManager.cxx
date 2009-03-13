@@ -837,12 +837,6 @@ ConversationManager::onRemoteSdpChanged(InviteSessionHandle h, const SipMessage&
 }
 
 void
-ConversationManager::onDialogModified(InviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
-{
-   dynamic_cast<RemoteParticipant *>(h->getAppDialog().get())->onDialogModified(h, oat, msg);
-}
-
-void
 ConversationManager::onInfo(InviteSessionHandle h, const SipMessage& msg)
 {
    dynamic_cast<RemoteParticipant *>(h->getAppDialog().get())->onInfo(h, msg);
