@@ -2045,13 +2045,6 @@ RemoteParticipant::onRemoteSdpChanged(InviteSessionHandle h, const SipMessage& m
 }
 
 void
-RemoteParticipant::onDialogModified(InviteSessionHandle h, InviteSession::OfferAnswerType oat, const SipMessage& msg)
-{
-   InfoLog(<< "onDialogModified: handle=" << mHandle << ", " << msg.brief());
-   //assert(0);
-}
-
-void
 RemoteParticipant::onInfo(InviteSessionHandle, const SipMessage& msg)
 {
    InfoLog(<< "onInfo: handle=" << mHandle << ", " << msg.brief());

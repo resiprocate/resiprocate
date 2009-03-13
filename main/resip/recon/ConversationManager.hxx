@@ -456,7 +456,6 @@ protected:
    virtual void onOfferRejected(resip::InviteSessionHandle, const resip::SipMessage* msg);
    virtual void onOfferRequestRejected(resip::InviteSessionHandle, const resip::SipMessage& msg);
    virtual void onRemoteSdpChanged(resip::InviteSessionHandle, const resip::SipMessage& msg, const resip::SdpContents& sdp);
-   virtual void onDialogModified(resip::InviteSessionHandle, resip::InviteSession::OfferAnswerType oat, const resip::SipMessage& msg);
    virtual void onInfo(resip::InviteSessionHandle, const resip::SipMessage& msg);
    virtual void onInfoSuccess(resip::InviteSessionHandle, const resip::SipMessage& msg);
    virtual void onInfoFailure(resip::InviteSessionHandle, const resip::SipMessage& msg);
