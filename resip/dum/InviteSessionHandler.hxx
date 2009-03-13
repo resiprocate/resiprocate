@@ -104,10 +104,6 @@ class InviteSessionHandler
       /// useful. A SipMessage is provided if one is available
       virtual void onOfferRejected(InviteSessionHandle, const SipMessage* msg)=0;
       
-      /// called when some state in the Dialog changes - typically remoteURI, or
-      /// a re-invite. This is no longer necessary - use onOfferRequired and onOffer
-      //virtual void onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg)=0;
-
       /// called when INFO message is received 
       virtual void onInfo(InviteSessionHandle, const SipMessage& msg)=0;
 

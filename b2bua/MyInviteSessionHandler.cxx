@@ -120,9 +120,6 @@ void MyInviteSessionHandler::onOfferRejected(Handle<InviteSession>, const SipMes
   B2BUA_LOG_DEBUG("onOfferRejected: %d, %s", msg->header(h_StatusLine).statusCode(), msg->header(h_StatusLine).reason().c_str());
 }
 
-void MyInviteSessionHandler::onDialogModified(InviteSessionHandle, InviteSession::OfferAnswerType oat, const SipMessage& msg) {
-}
-
 void MyInviteSessionHandler::onInfo(InviteSessionHandle, const SipMessage& msg) {
 }
 
