@@ -35,7 +35,8 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
                            AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression) 
    : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression),
-     mSigcompStack(0)
+     mSigcompStack(0),
+     mExternalUnknownDatagramHandler(0)
 {
    InfoLog (<< "Creating UDP transport host=" << pinterface 
             << " port=" << portNum
@@ -349,6 +350,11 @@ UdpTransport::process(FdSet& fdset)
       {
          StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
          StackLog(<< Data(buffer, len));
+         if(mExternalUnknownDatagramHandler)
+         {
+            (*mExternalUnknownDatagramHandler)(this,Data(buffer,len));
+         }
+
          delete message; 
          message=0; 
          return;
@@ -474,6 +480,11 @@ UdpTransport::stunResult(Tuple& mappedAddress)
    return mStunSuccess;
 }
 
+void 
+UdpTransport::setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler)
+{
+   mExternalUnknownDatagramHandler = handler;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
