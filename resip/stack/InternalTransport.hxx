@@ -46,7 +46,8 @@ class InternalTransport : public Transport
       
       //used for epoll
       virtual int maxFileDescriptors() const { return 1; }
-      virtual unsigned int getFifoSize() const;      
+      virtual unsigned int getFifoSize() const;    
+
    protected:
       friend class SipStack;
       virtual void transmit(const Tuple& dest, const Data& pdata, const Data& tid, const Data& sigcompId);

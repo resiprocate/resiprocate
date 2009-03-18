@@ -10,43 +10,61 @@ namespace osc { class Stack; }
 
 namespace resip
 {
+class UdpTransport;
+
+/** Interface functor for external unrecognized datagram handling. 
+  * User can catch datagram messages recevied that are not recognized by 
+  * the stack.
+  */ 
+class ExternalUnknownDatagramHandler {
+   public:
+      /** .
+	    * @param transport contains a pointer to the specific UdpTransport object that 
+       *                  received the unknown packet.
+       * @param unknownDatagram contains the actual contents of unknown data received. */
+      virtual void operator()(UdpTransport* transport, Data& unknownDatagram) = 0; 
+};
 
 class UdpTransport : public InternalTransport
 {
-   public:
-      RESIP_HeapCount(UdpTransport);
-      // Specify which udp port to use for send and receive
-      // interface can be an ip address or dns name. If it is an ip address,
-      // only bind to that interface.
-      UdpTransport(Fifo<TransactionMessage>& fifo,
-                   int portNum,
-                   IpVersion version,
-                   StunSetting stun,
-                   const Data& interfaceObj,
-                   AfterSocketCreationFuncPtr socketFunc = 0,
-                   Compression &compression = Compression::Disabled);
-      virtual  ~UdpTransport();
+public:
+   RESIP_HeapCount(UdpTransport);
+   // Specify which udp port to use for send and receive
+   // interface can be an ip address or dns name. If it is an ip address,
+   // only bind to that interface.
+   UdpTransport(Fifo<TransactionMessage>& fifo,
+                int portNum,
+                IpVersion version,
+                StunSetting stun,
+                const Data& interfaceObj,
+                AfterSocketCreationFuncPtr socketFunc = 0,
+                Compression &compression = Compression::Disabled);
+   virtual  ~UdpTransport();
 
-      void process(FdSet& fdset);
-      bool isReliable() const { return false; }
-      bool isDatagram() const { return true; }
-      TransportType transport() const { return UDP; }
-      virtual void buildFdSet( FdSet& fdset);
+   void process(FdSet& fdset);
+   bool isReliable() const { return false; }
+   bool isDatagram() const { return true; }
+   TransportType transport() const { return UDP; }
+   virtual void buildFdSet( FdSet& fdset);
 
-      static const int MaxBufferSize = 8192;
+   static const int MaxBufferSize = 8192;
 
-	  // STUN client functionality
-	  bool stunSendTest(const Tuple& dest);
-	  bool stunResult(Tuple& mappedAddress); 
-   protected:
+   // STUN client functionality
+   bool stunSendTest(const Tuple& dest);
+   bool stunResult(Tuple& mappedAddress); 
 
-      osc::Stack *mSigcompStack;
+   /// Installs a handler for the unknown datagrams arriving on the udp transport.
+   void setExternalUnknownDatagramHandler(ExternalUnknownDatagramHandler *handler);
 
-   private:
-      MsgHeaderScanner mMsgHeaderScanner;
-	  mutable resip::Mutex  myMutex;
-	  Tuple mStunMappedAddress;
-	  bool mStunSuccess;
+protected:
+   osc::Stack *mSigcompStack;
+
+private:
+   MsgHeaderScanner mMsgHeaderScanner;
+   mutable resip::Mutex  myMutex;
+   Tuple mStunMappedAddress;
+   bool mStunSuccess;
+   ExternalUnknownDatagramHandler* mExternalUnknownDatagramHandler;
 };
 
 }
