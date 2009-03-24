@@ -24,7 +24,8 @@ ServerRegistration::getHandle()
 ServerRegistration::ServerRegistration(DialogUsageManager& dum,  DialogSet& dialogSet, const SipMessage& request)
    : NonDialogUsage(dum, dialogSet),
      mRequest(request),
-     mDidOutbound(false)
+      mDidOutbound(false),
+      mAsyncState(asyncStateNone)
 {}
 
 ServerRegistration::~ServerRegistration()
@@ -44,37 +45,77 @@ ServerRegistration::accept(SipMessage& ok)
 
    InfoLog( << "accepted a registration " << mAor );
 
-   // Add all registered contacts to the message.
-   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-   ContactList contacts;
-   ContactList::iterator i;
-   contacts = database->getContacts(mAor);
-   database->unlockRecord(mAor);
-
-   UInt64 now=Timer::getTimeSecs();
-
-   NameAddr contact;
-   for (i = contacts.begin(); i != contacts.end(); i++)
-   {
-      if (i->mRegExpires <= now)
-      {
-         database->removeContact(mAor,*i);
-         continue;
-      }
-      contact = i->mContact;
-      contact.param(p_expires) = UInt32(i->mRegExpires - now);
-      ok.header(h_Contacts).push_back(contact);
-   }
-
-   if(mDidOutbound)
+   if (mDidOutbound)
    {
       static Token outbound("outbound");
       ok.header(h_Supporteds).push_back(outbound);
    }
 
-   SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
-   mDum.send(msg);
-   delete(this);
+   if (!mDum.mServerRegistrationHandler->asyncProcessing())
+   {
+      // Add all registered contacts to the message.
+      RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+
+      ContactList contacts;
+
+      contacts = database->getContacts(mAor);
+      database->unlockRecord(mAor);
+
+      //removes expired entries from the ok msg as well as calls the database to remove expired contacts.
+      processFinalOkMsg(ok,contacts);
+
+      SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
+      mDum.send(msg);
+      delete(this);
+   }
+   else
+   {
+      if (mAsyncState == asyncStateQueryOnly)
+      {
+         if (!mAsyncLocalStore.get())
+         {
+            assert(0);
+         }
+         else
+         {
+            std::auto_ptr<ContactRecordTransactionLog> log;
+            std::auto_ptr<ContactPtrList> contacts;
+
+            mAsyncLocalStore->releaseLog(log,contacts);
+
+            if (contacts.get())
+            {
+               asyncProcessFinalOkMsg(ok,*contacts);
+            }
+         }
+
+         SharedPtr<SipMessage> msg(static_cast<SipMessage*>(ok.clone()));
+         mDum.send(msg);
+         delete(this);        
+      }
+      else
+      {
+         if (!mAsyncLocalStore.get())
+         {
+            assert(0);
+            return;
+         }
+         //This register was accepted, but still need to apply the changes made by this register and then
+         //receive a final contact list before sending the 200.
+         mAsyncState = asyncStateAcceptedWaitingForFinalContactList;
+
+         std::auto_ptr<ContactRecordTransactionLog> log;
+         std::auto_ptr<ContactPtrList> modifiedContacts;
+
+         mAsyncLocalStore->releaseLog(log,modifiedContacts);
+
+         mDum.mServerRegistrationHandler->asyncUpdateContacts(getHandle(),mAor,modifiedContacts,log);
+
+         mAsyncLocalStore->destroy(); //drop ownership of resources in the local store.
+
+         mAsyncOkMsg = SharedPtr<SipMessage>(static_cast<SipMessage*>(ok.clone()));
+      }
+   }
 }
 
 void
@@ -92,10 +133,18 @@ ServerRegistration::reject(int statusCode)
 
    // First, we roll back the contact database to
    // the state it was before the registration request.
-   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-   database->removeAor(mAor);
-   database->addAor(mAor, mOriginalContacts);
-   database->unlockRecord(mAor);
+
+   // Async processing hasn't actually updated the database yet, so no need to roll back.
+   if (mDum.mServerRegistrationHandler && !mDum.mServerRegistrationHandler->asyncProcessing())
+   {
+      RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+      database->removeAor(mAor);
+	  if (mOriginalContacts.get())
+	  {
+         database->addAor(mAor, *mOriginalContacts);
+	  }
+      database->unlockRecord(mAor);
+   }
 
    SharedPtr<SipMessage> failure(new SipMessage);
    mDum.makeResponse(*failure, mRequest, statusCode);
@@ -113,11 +162,10 @@ ServerRegistration::dispatch(const SipMessage& msg)
    ServerRegistrationHandler* handler = mDum.mServerRegistrationHandler;
    RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
 
-    enum {ADD, REMOVE, REFRESH} operation = REFRESH;
-
-    if (!handler || !database)
-    {
+   if (!handler || (!handler->asyncProcessing() && !database))
+   {
       // ?bwc? This is a server error; why are we sending a 4xx?
+      // ?jmatthewsr? Possibly because of the note in section 21.5.2 about recognizing the method, but not supporting it?
        DebugLog( << "No handler or DB - sending 405" );
        
        SharedPtr<SipMessage> failure(new SipMessage);
@@ -130,8 +178,8 @@ ServerRegistration::dispatch(const SipMessage& msg)
     mAor = msg.header(h_To).uri().getAorAsUri();
 
    // Checks to see whether this scheme is valid, and supported.
-   if( !( (mAor.scheme()=="sip" || mAor.scheme()=="sips") 
-            && mDum.getMasterProfile()->isSchemeSupported(mAor.scheme()) ) )
+   if (!((mAor.scheme()=="sip" || mAor.scheme()=="sips")
+         && mDum.getMasterProfile()->isSchemeSupported(mAor.scheme())))
    {
        DebugLog( << "Bad scheme in Aor" );
        
@@ -143,12 +191,29 @@ ServerRegistration::dispatch(const SipMessage& msg)
        return;
    }
    
+   if (handler->asyncProcessing())
+   {
+      handler->asyncGetContacts(getHandle(),mAor);
+      mAsyncState = asyncStateWaitingForInitialContactList;
+      return;
+   }
 
-    database->lockRecord(mAor);
+   processRegistration(msg);
+}
 
-   UInt32 globalExpires=3600;   
+void
+ServerRegistration::processRegistration(const SipMessage& msg)
+{
+   ServerRegistrationHandler* handler = mDum.mServerRegistrationHandler;
+   RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+
+   enum {ADD, REMOVE, REFRESH} operation = REFRESH;
+
+   UInt32 globalExpires=3600;
    UInt32 returnCode=0;
-   handler->getGlobalExpires(msg,mDum.getMasterProfile(),globalExpires,returnCode); 
+   handler->getGlobalExpires(msg,mDum.getMasterProfile(),globalExpires,returnCode);
+
+   bool async = handler->asyncProcessing();
 
    if (returnCode >= 400)
    {
@@ -160,34 +225,47 @@ ServerRegistration::dispatch(const SipMessage& msg)
          failure->header(h_MinExpires).value() = globalExpires;
       }
       mDum.send(failure);
-      database->unlockRecord(mAor);
       delete(this);
       return;
    }
 
-    mOriginalContacts = database->getContacts(mAor);
+   if (!async)
+   {
+      database->lockRecord(mAor);
+
+      mOriginalContacts = resip::SharedPtr<ContactList>(new ContactList);
+      *mOriginalContacts = database->getContacts(mAor);
+   }
 
     // If no conacts are present in the request, this is simply a query.
     if (!msg.exists(h_Contacts))
     {
+      if (async)
+      {
+         mAsyncState = asyncStateQueryOnly;
+      }
       handler->onQuery(getHandle(), msg);
       return;
     }
 
     ParserContainer<NameAddr> contactList(msg.header(h_Contacts));
-    ParserContainer<NameAddr>::iterator i;
-    UInt64 now=Timer::getTimeSecs();
-    ParserContainer<NameAddr>::iterator iEnd(contactList.end());
+   ParserContainer<NameAddr>::iterator i(contactList.begin());
+   ParserContainer<NameAddr>::iterator iEnd(contactList.end());
 
+   UInt64 now=Timer::getTimeSecs();
    UInt32 expires=0;
-   for (i = contactList.begin(); i != iEnd; ++i )
-    {
-      if(!i->isWellFormed())
+
+   for (; i != iEnd; ++i)
+   {
+      if (!i->isWellFormed())
       {
          SharedPtr<SipMessage> failure(new SipMessage);
          mDum.makeResponse(*failure, msg, 400, "Malformed Contact");
          mDum.send(failure);
-         database->unlockRecord(mAor);
+         if (!async)
+         {
+            database->unlockRecord(mAor);
+         }
          delete(this);
          return;
       }
@@ -203,12 +281,24 @@ ServerRegistration::dispatch(const SipMessage& msg)
            SharedPtr<SipMessage> failure(new SipMessage);
            mDum.makeResponse(*failure, msg, 400, "Invalid use of 'Contact: *'");
            mDum.send(failure);
-           database->unlockRecord(mAor);
+            if (!async)
+            {
+               database->unlockRecord(mAor);
+            }
            delete(this);
            return;
         }
 
-        database->removeAor(mAor);
+         if (!async)
+         {
+            database->removeAor(mAor);
+         }
+         else
+         {
+            mAsyncLocalStore->removeAllContacts();
+            mAsyncState = asyncStateWaitingForAcceptReject;
+         }
+
         handler->onRemoveAll(getHandle(), msg);
         return;
       }
@@ -229,6 +319,99 @@ ServerRegistration::dispatch(const SipMessage& msg)
 
       rec.mLastUpdated=now;
 
+      bool supportsOutbound = processOutbound(*i,rec,msg);
+
+      // Check to see if this is a removal.
+      if (expires == 0)
+      {
+         if (operation == REFRESH)
+         {
+            operation = REMOVE;
+         }
+
+         if (!async)
+         {
+            database->removeContact(mAor, rec);
+         }
+         else
+         {
+            mAsyncLocalStore->removeContact(rec);
+         }
+      }
+      else // Otherwise, it's an addition or refresh.
+      {
+         RegistrationPersistenceManager::update_status_t status;
+         InfoLog(<< "Adding " << mAor << " -> " << *i);
+         DebugLog(<< "Contact has tuple " << rec.mReceivedFrom);
+
+         if (!async)
+            status = database->updateContact(mAor, rec);
+         else
+            status =  mAsyncLocalStore->updateContact(rec);
+
+         if (status == RegistrationPersistenceManager::CONTACT_CREATED)
+         {
+            operation = ADD;
+         }
+      }
+
+      // !bwc! If we perform outbound processing for any Contact, we need to
+      // set this to true.
+      mDidOutbound |= supportsOutbound;
+   }
+
+   // The way this works is:
+   //
+   //  - If no additions or removals are performed, this is a refresh
+   //
+   //  - If at least one contact is removed and none are added, this
+   //    is a removal.
+   //
+   //  - If at least one contact is added, this is an addition, *even*
+   //    *if* a contact was also removed.
+
+   //for async processing, need to wait for accept()/reject().  If accepted, the modifications made here will be
+   //sent to the user via asyncUpdateContacts().  The user then returns a final contact list, which is then processed
+   //and sent back in the 200.
+   if (async)
+   {
+      mAsyncState = asyncStateWaitingForAcceptReject;
+   }
+
+   switch (operation)
+   {
+      case REFRESH:
+         handler->onRefresh(getHandle(), msg);
+         break;
+
+      case REMOVE:
+         handler->onRemove(getHandle(), msg);
+         break;
+
+      case ADD:
+         handler->onAdd(getHandle(), msg);
+         break;
+
+      default:
+         assert(0);
+   }
+}
+
+void
+ServerRegistration::dispatch(const DumTimeout& msg)
+{
+}
+
+EncodeStream&
+ServerRegistration::dump(EncodeStream& strm) const
+{
+   strm << "ServerRegistration " << mAor;
+   return strm;
+}
+
+bool
+ServerRegistration::processOutbound(resip::NameAddr &naddr, ContactInstanceRecord &rec, const resip::SipMessage &msg)
+{
       // .bwc. If, in the end, this is true, it means all necessary conditions
       // for outbound support have been met.
       bool supportsOutbound=InteropHelper::getOutboundSupported();
@@ -243,7 +426,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
       {
          try
          {
-            if(!i->exists(p_Instance) || !i->exists(p_regid))
+         if (!naddr.exists(p_Instance) || !naddr.exists(p_regid))
             {
                DebugLog(<<"instance or reg-id missing");
                supportsOutbound=false;
@@ -277,7 +460,7 @@ ServerRegistration::dispatch(const SipMessage& msg)
       // .bwc. The outbound processing
       if(supportsOutbound)
       {
-         rec.mRegId=i->param(p_regid);
+      rec.mRegId=naddr.param(p_regid);
          if(haveDirectFlow)
          {
             // .bwc. We NEVER record the source if outbound is not being used.
@@ -312,70 +495,238 @@ ServerRegistration::dispatch(const SipMessage& msg)
          DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
       }
       
-      // Check to see if this is a removal.
-      if (expires == 0)
-      {
-        if (operation == REFRESH)
-        {
-          operation = REMOVE;
-        }
-        database->removeContact(mAor, rec);
-      }
-      // Otherwise, it's an addition or refresh.
-      else
-      {
-        RegistrationPersistenceManager::update_status_t status;
-        InfoLog (<< "Adding " << mAor << " -> " << *i  );
-        DebugLog(<< "Contact has tuple " << rec.mReceivedFrom);
-         status = database->updateContact(mAor, rec);
-        if (status == RegistrationPersistenceManager::CONTACT_CREATED)
-        {
-          operation = ADD;
-        }
-      }
-   
-      // !bwc! If we perform outbound processing for any Contact, we need to
-      // set this to true.
-      mDidOutbound |= supportsOutbound;
-
-    }
-
-    // The way this works is:
-    //
-    //  - If no additions or removals are performed, this is a refresh
-    //
-    //  - If at least one contact is removed and none are added, this
-    //    is a removal.
-    //
-    //  - If at least one contact is added, this is an addition, *even*
-    //    *if* a contact was also removed.
-
-    switch (operation)
-    {
-      case REFRESH:
-        handler->onRefresh(getHandle(), msg);
-        break;
-
-      case REMOVE:
-        handler->onRemove(getHandle(), msg);
-        break;
-
-      case ADD:
-        handler->onAdd(getHandle(), msg);
-        break;
-    }
+   return supportsOutbound;
 }
 
 void
-ServerRegistration::dispatch(const DumTimeout& msg)
+ServerRegistration::asyncProcessFinalOkMsg(SipMessage &msg, ContactPtrList &contacts)
 {
+   if (contacts.size() > 0)
+   {
+      ContactPtrList::iterator it(contacts.begin());
+      ContactPtrList::iterator itEnd(contacts.end());
+
+      std::auto_ptr<ContactPtrList> expired;
+
+      UInt64 now=Timer::getTimeSecs();
+
+      for (;it != itEnd;++it)
+      {
+         resip::SharedPtr<ContactInstanceRecord> rec(*it);
+
+         if (!rec)
+         {
+            assert(0);
+            continue;
+         }
+
+         if (rec->mRegExpires <= now)
+         {
+            if (!expired.get())
+            {
+               expired = std::auto_ptr<ContactPtrList>(new ContactPtrList());
+            }
+            expired->push_back(rec);
+            continue;
+         }
+
+         rec->mContact.param(p_expires) = UInt32(rec->mRegExpires - now);
+         msg.header(h_Contacts).push_back(rec->mContact);
+      }
+
+      if (expired.get() && expired->size() > 0)
+      {
+         mDum.mServerRegistrationHandler->asyncRemoveExpired(getHandle(),mAor,expired);
+      }
+   }
 }
 
-EncodeStream& 
-ServerRegistration::dump(EncodeStream& strm) const
+void
+ServerRegistration::processFinalOkMsg(SipMessage &msg, ContactList &contacts)
 {
-   strm << "ServerRegistration " << mAor;
-   return strm;
+   //build the 200Ok and remove any expired entries.
+   //the non-asynchronous behavior is to call the database directly, the async behavior is to build a
+   //list of all expired entries and send it to the handler.
+   if (contacts.size() > 0)
+   {
+      ContactList::iterator it(contacts.begin());
+      ContactList::iterator itEnd(contacts.end());
+
+      RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
+      bool async = mDum.mServerRegistrationHandler->asyncProcessing();
+
+      UInt64 now=Timer::getTimeSecs();
+
+      for (;it != itEnd;++it)
+      {
+         if (it->mRegExpires <= now)
+         {
+            database->removeContact(mAor,*it);
+            continue;
+         }
+         it->mContact.param(p_expires) = UInt32(it->mRegExpires - now);
+         msg.header(h_Contacts).push_back(it->mContact);
+      }
+   }
+}
+
+bool
+ServerRegistration::asyncProvideContacts(std::auto_ptr<resip::ContactPtrList> contacts)
+{
+   switch (mAsyncState)
+   {
+      case asyncStateWaitingForInitialContactList:
+      {
+         assert(mAsyncLocalStore.get() == 0);
+         mAsyncLocalStore = resip::SharedPtr<AsyncLocalStore>(new AsyncLocalStore(contacts));
+         mAsyncState = asyncStateProcessingRegistration;
+         processRegistration(mRequest);
+         break;
+      }
+      case asyncStateWaitingForAcceptReject:
+      {
+         assert(0); //need to call accept() or reject(), wait for asyncUpdateContacts(), then call this function.
+         return false;
+      }
+      case asyncStateAcceptedWaitingForFinalContactList:
+      {
+         mAsyncState = asyncStateProvidedFinalContacts;
+         asyncProcessFinalContacts(contacts);
+         break;
+      }
+      default:
+      {
+         assert(0);
+         return false;
+      }
+   }
+
+   return true;
+}
+
+void
+ServerRegistration::asyncProcessFinalContacts(std::auto_ptr<resip::ContactPtrList> contacts)
+{
+   if (contacts.get())
+   {
+      if (!mAsyncOkMsg.get())
+      {
+         assert(0);
+      }
+      else
+      {
+         asyncProcessFinalOkMsg(*mAsyncOkMsg,*contacts);
+      }
+   }
+
+   mAsyncState = asyncStateNone;
+   mDum.send(mAsyncOkMsg);
+   mAsyncOkMsg.reset();
+   delete(this);
+}
+
+void
+ServerRegistration::AsyncLocalStore::create(std::auto_ptr<ContactPtrList> originalContacts)
+{
+   mModifiedContacts = originalContacts;
+   mLog = std::auto_ptr<ContactRecordTransactionLog>(new ContactRecordTransactionLog());
+   if (originalContacts.get())
+   {
+      mLog->resize(originalContacts->size());
+   }
+}
+
+void
+ServerRegistration::AsyncLocalStore::destroy(void)
+{
+   mModifiedContacts.reset();
+   mLog.reset();
+}
+
+RegistrationPersistenceManager::update_status_t
+ServerRegistration::AsyncLocalStore::updateContact(const ContactInstanceRecord &rec)
+{
+   if (!mModifiedContacts.get() || !mLog.get())
+   {
+      assert(0);
+      return RegistrationPersistenceManager::CONTACT_UPDATED;
+   }
+
+   ContactPtrList::iterator it(mModifiedContacts->begin());
+   ContactPtrList::iterator itEnd(mModifiedContacts->end());
+
+   resip::SharedPtr<ContactRecordTransaction> logEntry;
+
+   // See if the contact is already present. We use URI matching rules here.
+   for (; it != itEnd; ++it)
+   {
+      if ((*it) && **it == rec)
+      {
+         **it = rec;
+
+         logEntry = resip::SharedPtr<ContactRecordTransaction>(new ContactRecordTransaction(ContactRecordTransaction::update,*it));
+         mLog->push_back(logEntry);
+
+         return RegistrationPersistenceManager::CONTACT_UPDATED;
+      }
+   }
+
+   // This is a new contact, so we add it to the list.
+   resip::SharedPtr<ContactInstanceRecord> newRec(new ContactInstanceRecord(rec));
+
+   logEntry = resip::SharedPtr<ContactRecordTransaction>(new ContactRecordTransaction(ContactRecordTransaction::create,newRec));
+   mLog->push_back(logEntry);
+
+   mModifiedContacts->push_back(newRec);
+
+   return RegistrationPersistenceManager::CONTACT_CREATED;
+}
+
+void
+ServerRegistration::AsyncLocalStore::removeContact(const ContactInstanceRecord &rec)
+{
+   if (!mModifiedContacts.get() || !mLog.get())
+   {
+      assert(0);
+      return;
+   }
+
+   ContactPtrList::iterator it(mModifiedContacts->begin());
+   ContactPtrList::iterator itEnd(mModifiedContacts->end());
+
+   // See if the contact is present. We use URI matching rules here.
+   for (; it != itEnd; ++it)
+   {
+      if ((*it) && **it == rec)
+      {
+         resip::SharedPtr<ContactRecordTransaction>
+         logEntry(resip::SharedPtr<ContactRecordTransaction>
+                  (new ContactRecordTransaction(ContactRecordTransaction::remove,*it)));
+
+         mLog->push_back(logEntry);
+
+         mModifiedContacts->erase(it);
+         return;
+      }
+   }
+}
+
+void
+ServerRegistration::AsyncLocalStore::removeAllContacts(void)
+{
+   if (!mModifiedContacts.get() || !mLog.get())
+   {
+      return;
+   }
+
+   resip::SharedPtr<ContactInstanceRecord> recNull;
+
+   resip::SharedPtr<ContactRecordTransaction>
+   logEntry(resip::SharedPtr<ContactRecordTransaction>(new ContactRecordTransaction(ContactRecordTransaction::removeAll,recNull)));
+
+   mLog->push_back(logEntry);
+
+   mModifiedContacts->clear();
 }
 
 

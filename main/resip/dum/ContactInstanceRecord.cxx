@@ -7,7 +7,8 @@ using namespace resip;
 ContactInstanceRecord::ContactInstanceRecord() : 
    mRegExpires(0),
    mLastUpdated(Timer::getTimeSecs()),
-   mRegId(0)
+   mRegId(0),
+   mUserInfo(0)
 {
 }
 
