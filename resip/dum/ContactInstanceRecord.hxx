@@ -2,6 +2,7 @@
 #define resip_ContactInstanceRecord_hxx
 
 #include <vector>
+#include <list>
 #include <deque>
 
 #include "resip/stack/NameAddr.hxx"
@@ -31,7 +32,7 @@ class ContactInstanceRecord
       UInt32 mRegId;        // From regid parameter of Contact header
       Data mServerSessionId;// if there is no SIP Path header, the connection/session identifier 
       // Uri gruu;  (GRUU is currently derived)
-	  void      *mUserInfo;       //!< can be used to map user record information (database record id for faster updates?)
+      void      *mUserInfo;       //!< can be used to map user record information (database record id for faster updates?)
       
       bool operator==(const ContactInstanceRecord& rhs) const;
 };
