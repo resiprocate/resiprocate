@@ -3,6 +3,7 @@
 
 #include "resip/dum/Handles.hxx"
 #include "rutil/SharedPtr.hxx"
+#include "resip/dum/ContactInstanceRecord.hxx"
 
 namespace resip
 {
@@ -69,6 +70,34 @@ class ServerRegistrationHandler
       ///
       virtual void getContactExpires(const NameAddr &contact, SharedPtr<MasterProfile> masterProfile, 
          UInt32 &expires, UInt32 &returnCode);
+
+       /** If true, the registration processing will use the async* functions here and will not use the RegistrationPersistenceManager.
+        */
+      virtual bool asyncProcessing(void) const
+      {
+         return false;
+      } 
+
+      /** Called when a REGISTER is first received to retrieve the current list.  This list is then updated by the
+          registration logic in DUM.  When the list is ready, call asyncProvideContacts() on the specified ServerRegistration.
+          */
+      virtual void asyncGetContacts(ServerRegistrationHandle,const Uri& aor)
+      {}
+
+      /** Notifies the handler to update the current contact list for the AOR to the specified list that has been updated by
+          DUM's registration processing.  This is normally called after the REGISTER has been processed and accepted by the user
+          (ServerRegistration::accept())
+       */
+      virtual void asyncUpdateContacts(ServerRegistrationHandle,const Uri& aor,
+		  std::auto_ptr<ContactPtrList> modifiedContactList, std::auto_ptr<ContactRecordTransactionLog> transactionLog)
+      {}
+
+      /** Notifies the handler to remove the entries specified in the contacts parameter.
+          No further processing is required after receiving this message.
+      */
+	  virtual void asyncRemoveExpired(ServerRegistrationHandle,const resip::Uri& aor,
+										std::auto_ptr<resip::ContactPtrList> contacts)
+      {}
 };
 
 }
