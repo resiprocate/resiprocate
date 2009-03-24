@@ -8,6 +8,9 @@
 namespace resip
 {
 
+/** Abstract interface of a datastore of all registered endpoints processed by DUM. Derived classes implement the
+    actual storage of AOR's mapped to contact information.  resip::InMemoryRegistrationDatabase is an example of a local datastore.
+  */
 class RegistrationPersistenceManager
 {
   public:
@@ -29,8 +32,8 @@ class RegistrationPersistenceManager
     virtual void lockRecord(const Uri& aor) = 0;
     virtual void unlockRecord(const Uri& aor) = 0;
 
-     virtual UriList getAors() = 0;
-     virtual void getAors(UriList& container) = 0;
+    virtual UriList getAors() = 0;
+    virtual void getAors(UriList& container) = 0;
 
     virtual update_status_t updateContact(const Uri& aor,
                                           const ContactInstanceRecord& rec) = 0;
@@ -39,10 +42,8 @@ class RegistrationPersistenceManager
                                  const ContactInstanceRecord& rec) = 0;
 
     virtual ContactList getContacts(const Uri& aor) = 0;
-    virtual void getContacts(const Uri& aor,ContactList& container) = 0;
-  private:
+    virtual void getContacts(const Uri& aor,ContactList& container) = 0;   
 };
-
 }
 
 #endif
