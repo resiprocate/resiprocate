@@ -1414,8 +1414,6 @@ main (int argc, char** argv)
    session.connection() = SdpContents::Session::Connection(SdpContents::IP4, address);  // c=
    session.addTime(SdpContents::Session::Time(0, 0));
 
-   conversationProfile->sessionCaps().session() = session;
-
    // Build Codecs and media offering
    SdpContents::Session::Medium medium("audio", port, 1, "RTP/AVP");
    SdpContents::Session::Codec g711ucodec("PCMU", 8000);
@@ -1440,9 +1438,7 @@ main (int argc, char** argv)
    medium.addCodec(toneCodec);
    session.addMedium(medium);
 
-   SdpContents sessionCaps;   
-   sessionCaps.session() = session;
-   conversationProfile->sessionCaps() = sessionCaps;
+   conversationProfile->sessionCaps().session() = session;
 #endif
 
    // Setup NatTraversal Settings
