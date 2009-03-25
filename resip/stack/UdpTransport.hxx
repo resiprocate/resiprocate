@@ -17,12 +17,14 @@ class UdpTransport;
   * the stack.
   */ 
 class ExternalUnknownDatagramHandler {
-   public:
-      /** .
-	    * @param transport contains a pointer to the specific UdpTransport object that 
-       *                  received the unknown packet.
-       * @param unknownDatagram contains the actual contents of unknown data received. */
-      virtual void operator()(UdpTransport* transport, Data& unknownDatagram) = 0; 
+public:
+   virtual ~ExternalUnknownDatagramHandler(){};
+   
+   /** .
+    * @param transport contains a pointer to the specific UdpTransport object that 
+    *                  received the unknown packet.
+    * @param unknownDatagram contains the actual contents of unknown data received. */
+   virtual void operator()(UdpTransport* transport, std::auto_ptr<Data> unknownDatagram) = 0; 
 };
 
 class UdpTransport : public InternalTransport
