@@ -41,7 +41,7 @@ typedef std::list<ContactInstanceRecord> ContactList;
 
 /** Used to reduce copying ContactInstanceRecord objects when processing registration.
 */
-typedef std::list<resip::SharedPtr<ContactInstanceRecord>> ContactPtrList;
+typedef std::list<resip::SharedPtr<ContactInstanceRecord> > ContactPtrList;
 	
 /** Records a log of the database transacations that were performed when processing a local registration using the
     ServerRegistration::AsyncLocalStore.
@@ -75,7 +75,7 @@ class ContactRecordTransaction
 
 /** Contains a collection of database operations that were performed during REGISTER processing.
 */
-typedef std::deque<resip::SharedPtr<ContactRecordTransaction>> ContactRecordTransactionLog;
+typedef std::deque<resip::SharedPtr<ContactRecordTransaction> > ContactRecordTransactionLog;
 
 class RegistrationBinding 
 {
