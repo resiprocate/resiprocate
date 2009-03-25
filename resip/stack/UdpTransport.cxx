@@ -349,10 +349,11 @@ UdpTransport::process(FdSet& fdset)
           MsgHeaderScanner::scrEnd)
       {
          StackLog(<<"Scanner rejecting datagram as unparsable / fragmented from " << tuple);
-         StackLog(<< Data(buffer, len));
+         StackLog(<< Data(Data::Borrow, buffer, len));
          if(mExternalUnknownDatagramHandler)
          {
-            (*mExternalUnknownDatagramHandler)(this,Data(buffer,len));
+            auto_ptr<Data> datagram(new Data(buffer,len));
+            (*mExternalUnknownDatagramHandler)(this,datagram);
          }
 
          delete message; 
