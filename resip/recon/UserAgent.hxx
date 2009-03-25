@@ -73,6 +73,9 @@ public:
      Starts the SIP stack thread.
      
      @note This should be called before calling process() in a loop
+
+     @warning Ensure you have added at least one Conversation Profile 
+              with defaultOutgoing set to true before calling this. 
    */
    void startup(); 
 
