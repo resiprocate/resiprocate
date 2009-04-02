@@ -235,18 +235,15 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
    {
       case UAC_ReceivedUpdateEarly:
       {
-         //  Creates an PRACK request with application supplied status code.
-         //  !kh! hopefully 488....
-         SharedPtr<SipMessage> req(new SipMessage());
-         mDialog.makeRequest(*req, PRACK);
-         req->header(h_StatusLine).statusCode() = statusCode;
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, *mLastRemoteSessionModification, statusCode);
          if(warning)
          {
-            req->header(h_Warnings).push_back(*warning);
+            response->header(h_Warnings).push_back(*warning);
          }
 
          //  Send the req and do state transition.
-         send(req);
+         send(response);
          transition(UAC_EarlyWithAnswer);
          break;
       }
