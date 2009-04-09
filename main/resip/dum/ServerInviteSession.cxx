@@ -1219,6 +1219,13 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
             setSdp(*m1xx, mCurrentLocalSdp.get());
          }
          break;
+      case UAS_ProvidedOffer:
+      case UAS_EarlyProvidedOffer:
+         if (earlyFlag && mProposedLocalSdp.get()) 
+         {
+            setSdp(*m1xx, mProposedLocalSdp.get());
+         }
+         break;
 
       default:
          break;
