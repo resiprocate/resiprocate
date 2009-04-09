@@ -960,7 +960,7 @@ TransactionState::processClientInvite(TransactionMessage* msg)
       switch (timer->getType())
       {
          case Timer::TimerA:
-            if (mState == Calling)
+            if (mState == Calling && !mIsAbandoned)
             {
                unsigned long d = timer->getDuration()*2;
                // TimerA is supposed to double with each retransmit RFC3261 17.1.1          
