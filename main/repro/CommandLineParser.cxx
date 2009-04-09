@@ -116,7 +116,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"disable-web-auth",  0,   POPT_ARG_NONE,                              &noWebChallenge, 0, "disable HTTP challenges", 0},
       {"disable-reg",       0,   POPT_ARG_NONE,                              &noRegistrar,    0, "disable registrar", 0},
       {"disable-identity",  0,   POPT_ARG_NONE,                              &noIdentityHeaders, 0, "disable adding identity headers", 0},
-      {"interfaces",      'i',   POPT_ARG_STRING,                            &interfaces,     0, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls"},
+      {"interfaces",      'i',   POPT_ARG_STRING,                            &interfaces,     0, "specify interfaces to add transports to", "sip:10.1.1.1:5065;transport=tls;tls=tlsdomain.com"},
       {"domains",         'd',   POPT_ARG_STRING,                            &domains,        0, "specify domains that this proxy is authorative", "example.com,foo.com"},
       {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
       {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   0, "name of request chain (default: default)", 0},
