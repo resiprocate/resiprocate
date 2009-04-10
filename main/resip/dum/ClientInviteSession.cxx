@@ -365,6 +365,20 @@ ClientInviteSession::dispatch(const SipMessage& msg)
 {
   try
   {
+     if (msg.isRequest())
+     {
+        if (msg.header(h_RequestLine).method() == INFO)
+        {
+           InviteSession::dispatchInfo(msg);
+           return;
+        }
+        if (msg.header(h_RequestLine).method() == MESSAGE)
+        {
+           InviteSession::dispatchMessage(msg);
+           return;
+        }
+     }
+
      if (checkRseq(msg))
      {
         return;

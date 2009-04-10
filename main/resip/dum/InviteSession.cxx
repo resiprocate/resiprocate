@@ -760,7 +760,7 @@ InviteSession::refer(const NameAddr& referTo, std::auto_ptr<resip::Contents> con
          return;
       }
       mNITQueue.push(new QueuedNIT(refer,referSub));
-      DebugLog(<< "refer - queuing NIT:" << refer->brief()<<endl);
+      InfoLog(<< "refer - queuing NIT:" << refer->brief());
       return;
    }
    else
@@ -781,7 +781,7 @@ InviteSession::nitComplete()
       mNITQueue.pop();
       mNitState = NitProceeding;
       mReferSub = qn->referSubscription();
-      DebugLog(<< "checkNITQueue - sending queued NIT:" << qn->getNIT()->brief()<<endl);
+      InfoLog(<< "checkNITQueue - sending queued NIT:" << qn->getNIT()->brief());
       send(qn->getNIT());
       delete qn;
    }
@@ -859,7 +859,7 @@ InviteSession::refer(const NameAddr& referTo, InviteSessionHandle sessionToRepla
          return;
       }
       mNITQueue.push(new QueuedNIT(refer,referSub));
-      DebugLog(<< "refer/replace - queuing NIT:" << refer->brief()<<endl);
+      InfoLog(<< "refer/replace - queuing NIT:" << refer->brief());
       return;
    }
    else
@@ -921,7 +921,7 @@ InviteSession::info(const Contents& contents)
          return;
       }
       mNITQueue.push(new QueuedNIT(info));
-      DebugLog(<< "refer - queuing NIT:" << info->brief()<<endl);
+      InfoLog(<< "info - queuing NIT:" << info->brief());
       return;
    }
    else
@@ -979,7 +979,7 @@ InviteSession::message(const Contents& contents)
          return;
       }
       mNITQueue.push(new QueuedNIT(message));
-      DebugLog(<< "refer - queuing NIT:" << message->brief()<<endl);
+      InfoLog(<< "message - queuing NIT:" << message->brief());
       return;
    }
    else
