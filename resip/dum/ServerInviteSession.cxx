@@ -620,6 +620,11 @@ ServerInviteSession::dispatch(const SipMessage& msg)
          InviteSession::dispatchInfo(msg);
          return;
       }
+      if (msg.header(h_RequestLine).method() == MESSAGE)
+      {
+         InviteSession::dispatchMessage(msg);
+         return;
+      }
    }
 
    switch (mState)
