@@ -131,7 +131,22 @@ class Profile
       virtual const NameAddr& getOutboundProxy() const;
       virtual bool hasOutboundProxy() const;
       virtual void unsetOutboundProxy(); 
-      
+
+      ///If enabled, forces use of outbound proxy on all requests, including
+      ///mid-dialog requests.  WARNING:  Using this setting breaks 3261 mid-dialog
+      ///routing and disables any ability to react to target refreshes.  However
+      ///there are certain scenarios/endpoints for which this setting may make 
+      ///sense - for example: to communicate with an endpoint that never populates 
+      ///it's Contact header correctly.
+      virtual void setForceOutboundProxyOnAllRequestsEnabled(bool enabled) ;
+      virtual bool getForceOutboundProxyOnAllRequestsEnabled() const;
+      virtual void unsetForceOutboundProxyOnAllRequestsEnabled();
+
+      ///If enabled, add a route header for the outbound proxy
+      virtual void setExpressOutboundAsRouteSetEnabled(bool enabled) ;
+      virtual bool getExpressOutboundAsRouteSetEnabled() const;
+      virtual void unsetExpressOutboundAsRouteSetEnabled();
+
       ///enable/disable rport for requests. rport is enabled by default
       virtual void setRportEnabled(bool enabled);
       virtual bool getRportEnabled() const;      
@@ -191,13 +206,7 @@ class Profile
       ///If enabled then methods parameter is added to contacts.
       virtual void setMethodsParamEnabled(bool enabled) ;
       virtual bool getMethodsParamEnabled() const;
-      virtual void unsetMethodsParamEnabled();
-
-      ///If enabled, add a route header for the outbound proxy
-      virtual void setExpressOutboundAsRouteSetEnabled(bool enabled) ;
-      virtual bool getExpressOutboundAsRouteSetEnabled() const;
-      virtual void unsetExpressOutboundAsRouteSetEnabled();
-      
+      virtual void unsetMethodsParamEnabled();      
 
    private:
       bool mHasDefaultRegistrationExpires;
@@ -233,6 +242,12 @@ class Profile
       bool mHasOutboundProxy;
       NameAddr mOutboundProxy;
       
+      bool mHasForceOutboundProxyOnAllRequestsEnabled;
+      bool mForceOutboundProxyOnAllRequestsEnabled;
+
+      bool mHasExpressOutboundAsRouteSetEnabled;
+      bool mExpressOutboundAsRouteSetEnabled;
+
       bool mHasAdvertisedCapabilities;
       std::set<Headers::Type> mAdvertisedCapabilities;
       
@@ -268,9 +283,6 @@ class Profile
       
       bool mHasMethodsParamEnabled;
       bool mMethodsParamEnabled;
-
-      bool mHasExpressOutboundAsRouteSetEnabled;
-      bool mExpressOutboundAsRouteSetEnabled;
 
       SharedPtr<Profile> mBaseProfile;  // All non-set settings will fall through to this Profile (if set)
 };
