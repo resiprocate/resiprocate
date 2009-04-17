@@ -1,6 +1,7 @@
 #if !defined(RESIP_UDPTRANSPORT_HXX)
 #define RESIP_UDPTRANSPORT_HXX
 
+#include <memory>
 #include "resip/stack/InternalTransport.hxx"
 #include "resip/stack/MsgHeaderScanner.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
