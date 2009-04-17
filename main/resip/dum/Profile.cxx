@@ -41,6 +41,8 @@ Profile::reset()
    unsetOverrideHostAndPort(); 
    unsetAdvertisedCapabilities();
    unsetOutboundProxy(); 
+   unsetForceOutboundProxyOnAllRequestsEnabled();
+   unsetExpressOutboundAsRouteSetEnabled();
    unsetRportEnabled(); 
    unsetUserAgent(); 
    unsetProxyRequires(); 
@@ -51,7 +53,6 @@ Profile::reset()
    unsetRinstanceEnabled();
    unsetOutboundDecorator();
    unsetMethodsParamEnabled();
-   unsetExpressOutboundAsRouteSetEnabled();
 }
 
 void
@@ -507,6 +508,70 @@ Profile::unsetOutboundProxy()
 }
 
 void 
+Profile::setForceOutboundProxyOnAllRequestsEnabled(bool enabled)
+{
+   mForceOutboundProxyOnAllRequestsEnabled = enabled;
+   mHasForceOutboundProxyOnAllRequestsEnabled = true;
+}
+
+bool 
+Profile::getForceOutboundProxyOnAllRequestsEnabled() const
+{
+   // Fall through seting (if required)
+   if(!mHasForceOutboundProxyOnAllRequestsEnabled && mBaseProfile.get())
+   {
+       return mBaseProfile->getForceOutboundProxyOnAllRequestsEnabled();
+   }
+   return mForceOutboundProxyOnAllRequestsEnabled;
+}
+
+void
+Profile::unsetForceOutboundProxyOnAllRequestsEnabled()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasForceOutboundProxyOnAllRequestsEnabled = false;
+   }
+   else
+   {
+      mHasForceOutboundProxyOnAllRequestsEnabled = true;
+      mForceOutboundProxyOnAllRequestsEnabled = false;
+   }
+}
+
+void 
+Profile::setExpressOutboundAsRouteSetEnabled(bool enabled)
+{
+   mExpressOutboundAsRouteSetEnabled = enabled;
+   mHasExpressOutboundAsRouteSetEnabled = true;
+}
+
+bool 
+Profile::getExpressOutboundAsRouteSetEnabled() const
+{
+   // Fall through seting (if required)
+   if(!mHasExpressOutboundAsRouteSetEnabled && mBaseProfile.get())
+   {
+       return mBaseProfile->getExpressOutboundAsRouteSetEnabled();
+   }
+   return mExpressOutboundAsRouteSetEnabled;
+}
+
+void
+Profile::unsetExpressOutboundAsRouteSetEnabled()
+{
+   if(mBaseProfile.get()) 
+   {
+      mHasExpressOutboundAsRouteSetEnabled = false;
+   }
+   else
+   {
+      mHasExpressOutboundAsRouteSetEnabled = true;
+      mExpressOutboundAsRouteSetEnabled = false;
+   }
+}
+
+void 
 Profile::setRportEnabled(bool enabled)
 {
    mRportEnabled = enabled;
@@ -851,38 +916,8 @@ Profile::unsetMethodsParamEnabled()
       mMethodsParamEnabled = false;
    }
 }
-  
-void 
-Profile::setExpressOutboundAsRouteSetEnabled(bool enabled)
-{
-   mExpressOutboundAsRouteSetEnabled = enabled;
-   mHasExpressOutboundAsRouteSetEnabled = true;
-}
 
-bool 
-Profile::getExpressOutboundAsRouteSetEnabled() const
-{
-   // Fall through seting (if required)
-   if(!mHasExpressOutboundAsRouteSetEnabled && mBaseProfile.get())
-   {
-       return mBaseProfile->getExpressOutboundAsRouteSetEnabled();
-   }
-   return mExpressOutboundAsRouteSetEnabled;
-}
 
-void
-Profile::unsetExpressOutboundAsRouteSetEnabled()
-{
-   if(mBaseProfile.get()) 
-   {
-      mHasExpressOutboundAsRouteSetEnabled = false;
-   }
-   else
-   {
-      mHasExpressOutboundAsRouteSetEnabled = true;
-      mExpressOutboundAsRouteSetEnabled = false;
-   }
-}
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
