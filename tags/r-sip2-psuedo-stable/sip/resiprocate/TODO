@@ -1,8 +1,0 @@
-Change the names of all the parser "components" to "integerparser" or something like that
-
-Complete the pre parser stuff so that transport can do framented messages
-
-Change name of HeadersTy
-
-
-Should the Via set the default transport to UDP? 
