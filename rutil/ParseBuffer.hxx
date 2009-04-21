@@ -4,7 +4,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/ParseException.hxx"
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(RESIP_PB_TEST_DRIVER)
 #define RESIP_DEPRECATED __attribute__ ((deprecated))
 #else
 #define RESIP_DEPRECATED
