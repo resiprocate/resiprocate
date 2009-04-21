@@ -229,7 +229,7 @@ main(int argc, char** argv)
       try
       {
          auto_ptr<SipMessage> message1(TestSupport::makeMessage(txt1));
-         message1->header(h_StatusLine).statusCode() == 407;
+         if (message1->header(h_StatusLine).statusCode() == 407){;}
       }
       catch (BaseException& e)
       {
