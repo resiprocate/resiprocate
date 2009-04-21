@@ -1,3 +1,5 @@
+#define RESIP_PB_TEST_DRIVER 1
+
 #include "rutil/ParseBuffer.hxx"
 #include <string.h>
 #include <assert.h>

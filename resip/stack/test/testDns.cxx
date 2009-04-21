@@ -815,14 +815,14 @@ main(int argc, const char** argv)
    assert(queries.empty());
    assert(!stub->requiresProcess());
 
-   std::map<resip::Tuple,int> ipAddrToNum;
+   std::map<resip::Tuple,unsigned int> ipAddrToNum;
    ipAddrToNum[Tuple("127.0.0.1",5060,V4,TCP)]=0;
    ipAddrToNum[Tuple("127.0.0.2",5060,V4,TCP)]=1;
    ipAddrToNum[Tuple("127.0.0.3",5060,V4,TCP)]=2;
    ipAddrToNum[Tuple("127.0.0.4",5060,V4,TCP)]=3;
 
    // .bwc. Test load-leveling.
-   for(int numSRV=2;numSRV<5;++numSRV)
+   for(unsigned int numSRV=2;numSRV<5;++numSRV)
    {
       resip::Data hostname("loadlevel");
       hostname+=Data::from(numSRV)+".test.resiprocate.org";
@@ -861,9 +861,9 @@ main(int argc, const char** argv)
       int table[5][5];
 #endif
       
-      for(int i=0;i<numSRV;++i)
+      for(unsigned int i=0;i<numSRV;++i)
       {
-         for(int j=0;j<numSRV;++j)
+         for(unsigned int j=0;j<numSRV;++j)
          {
             table[i][j]=0;
          }
@@ -879,7 +879,7 @@ main(int argc, const char** argv)
                cerr << rf << "DNS results for " << (*it).uri << ub << endl;
                assert(it->handler->results.size()==numSRV);
                
-                for(int i=0;i<numSRV;++i)
+                for(unsigned int i=0;i<numSRV;++i)
                {
                   assert(ipAddrToNum[it->handler->results[i]] >=0);
                   assert(ipAddrToNum[it->handler->results[i]] <numSRV);
@@ -907,9 +907,9 @@ main(int argc, const char** argv)
       assert(!stub->requiresProcess());
       
       std::cout << "Tabulated results:" << std::endl;
-      for(int i=0;i<numSRV;++i)
+      for(unsigned int i=0;i<numSRV;++i)
       {
-         for(int j=0;j<numSRV;++j)
+         for(unsigned int j=0;j<numSRV;++j)
          {
             std::cout << table[i][j] << std::setw(6);
          }
