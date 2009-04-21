@@ -1,7 +1,0 @@
-enum { abel (0), baker(1), (255) } Dual;
-
-struct {    
-       Dual frob;
-} BooleanContainer;
-
-

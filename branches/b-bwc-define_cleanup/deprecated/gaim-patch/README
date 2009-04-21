@@ -1,7 +1,0 @@
--  Checkout a clean working copy of gaim from cvs.
--  In this directory, run ./copyto <gaimpath>
-   where <gaimpath> is where your clean working copy
-   of gaim landed.
--  At <gaimpath>, run patch -p0 < addsimple.patch
--  build gaim as normal (starting with autogen.sh or
-   its equivalent steps)

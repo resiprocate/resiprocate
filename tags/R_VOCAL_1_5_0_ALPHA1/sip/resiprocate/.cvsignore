@@ -1,6 +1,0 @@
-*.d
-a.out
-bin.*
-obj.*
-testSipStack1
-testUdp
