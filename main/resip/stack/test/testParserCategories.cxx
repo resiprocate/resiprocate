@@ -2044,7 +2044,7 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(cseqString.data(), cseqString.size());
       
       CSeqCategory str(&hfv, Headers::UNKNOWN);
-      assert(str.sequence() == 4294967295);
+      assert(str.sequence() == 4294967295U);
       assert(str.method() == INVITE);
       assert(Data::from(str) == cseqString);
    }
@@ -2067,8 +2067,8 @@ main(int arc, char** argv)
       HeaderFieldValue hfv(rackString.data(), rackString.size());
       
       RAckCategory str(&hfv, Headers::UNKNOWN);
-      assert(str.rSequence() == 4294967294);
-      assert(str.cSequence() == 4294967295);
+      assert(str.rSequence() == 4294967294U);
+      assert(str.cSequence() == 4294967295U);
       assert(str.method() == INVITE);
       assert(Data::from(str) == rackString);
    }

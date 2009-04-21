@@ -553,8 +553,6 @@ ServerRegistration::processFinalOkMsg(SipMessage &msg, ContactList &contacts)
       ContactList::iterator itEnd(contacts.end());
 
       RegistrationPersistenceManager *database = mDum.mRegistrationPersistenceManager;
-      bool async = mDum.mServerRegistrationHandler->asyncProcessing();
-
       UInt64 now=Timer::getTimeSecs();
 
       for (;it != itEnd;++it)

@@ -42,6 +42,9 @@ const int tassert_max_cases = 100;
 static int tassert_ncases = 0;
 std::list<int> tassert_location;
 
+static void * warning_suppressor[] = 
+  {&tassert_stack_ptr, &tassert_ncases, &warning_suppressor};
+
 struct _tassert {
       bool ran;
       bool result;
