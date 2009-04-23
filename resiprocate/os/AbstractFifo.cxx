@@ -49,11 +49,17 @@ AbstractFifo::getNext(int ms)
       do
       {
 	 // bail if total wait time exceeds limit
-	 bool signaled = mCondition.wait(&mMutex, (unsigned int)(end - Timer::getTimeMs()));
+	 bool signaled = mCondition.wait(&mMutex, (unsigned int)ms);
 	 if (!signaled)
 	 {
 	    return 0;
 	 }
+	 const UInt64 now(Timer::getTimeMs());
+	 if (now >= end)
+	 {
+	    return 0;
+	 }
+	 ms = end - now;
       } while (mFifo.empty());
    }
 
