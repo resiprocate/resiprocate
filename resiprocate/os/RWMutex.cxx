@@ -79,7 +79,7 @@ RWMutex::readlock()
     
    while ( mWriterHasLock || mPendingWriterCount > 0 )
    {
-      mReadCondition.wait(&mMutex);
+      mReadCondition.wait(mMutex);
    }
 
    mReaderCount++;
@@ -95,7 +95,7 @@ RWMutex::writelock()
     
    while ( mWriterHasLock || mReaderCount > 0 )
    {
-      mPendingWriteCondition.wait(&mMutex);
+      mPendingWriteCondition.wait(mMutex);
    }
 
    mPendingWriterCount--;
