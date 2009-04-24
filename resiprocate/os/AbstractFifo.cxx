@@ -24,7 +24,7 @@ AbstractFifo ::getNext()
    //
    while (mFifo.empty())
    {
-      mCondition.wait(&mMutex);
+      mCondition.wait(mMutex);
    }
 
    // Return the first message on the fifo.
@@ -49,7 +49,7 @@ AbstractFifo::getNext(int ms)
       do
       {
 	 // bail if total wait time exceeds limit
-	 bool signaled = mCondition.wait(&mMutex, (unsigned int)ms);
+	 bool signaled = mCondition.wait(mMutex, (unsigned int)ms);
 	 if (!signaled)
 	 {
 	    return 0;
