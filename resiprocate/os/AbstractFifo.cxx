@@ -44,17 +44,18 @@ AbstractFifo::getNext(int ms)
    // Wait until there are messages available
    if (mFifo.empty())
    {
-      const UInt64 end(Timer::getTimeMs() + ms);
+      UInt64 now(Timer::getTimeMs());
+      const UInt64 end(now + ms);
 
       do
       {
 	 // bail if total wait time exceeds limit
-	 bool signaled = mCondition.wait(mMutex, (unsigned int)ms);
+	 bool signaled = mCondition.wait(mMutex, now, (unsigned int)ms);
 	 if (!signaled)
 	 {
 	    return 0;
 	 }
-	 const UInt64 now(Timer::getTimeMs());
+	 now = Timer::getTimeMs();
 	 if (now >= end)
 	 {
 	    return 0;
