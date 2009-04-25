@@ -234,6 +234,7 @@ Condition::wait (Mutex& mutex)
    assert( ret == 0 );
 #endif
 }
+
 void
 Condition::wait (Mutex* mutex)
 {
@@ -411,6 +412,134 @@ Condition::wait(Mutex& mutex,
     }
 #endif
 }
+
+bool
+Condition::wait(Mutex& mutex, UInt64 start, unsigned int ms)
+{
+   if (ms == 0)
+   {
+      wait(mutex);
+      return true;
+   }
+
+#ifdef WIN32
+#   ifdef RESIP_CONDITION_WIN32_CONFORMANCE_TO_POSIX
+    this->enterWait();
+
+    mutex.unlock();
+
+    //  do timed wait
+    bool ret = false;
+    {
+        unsigned int res = 0;
+
+        for (;;)
+        {
+            res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), ms);
+            assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+            ret = (res == WAIT_OBJECT_0);
+            if (res == WAIT_TIMEOUT)
+            {
+                UInt64  now = Timer::getTimeMs();
+                unsigned int elapsed = (unsigned int)(now - start);
+                if (ms > elapsed)
+                {
+                    ms -= elapsed;
+                    continue;
+                }
+            }
+
+            break;
+        }
+
+        unsigned was_waiting=0;
+        unsigned was_gone=0;
+
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+        assert(res == WAIT_OBJECT_0);
+        was_waiting = m_waiting;
+        was_gone = m_gone;
+        if (was_waiting != 0)
+        {
+            if (!ret) // timeout
+            {
+                if (m_blocked != 0)
+                    --m_blocked;
+                else
+                    ++m_gone; // count spurious wakeups
+            }
+            if (--m_waiting == 0)
+            {
+                if (m_blocked != 0)
+                {
+                    res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1,
+                        0); // open m_gate
+                    assert(res);
+                    was_waiting = 0;
+                }
+                else if (m_gone != 0)
+                    m_gone = 0;
+            }
+        }
+        else if (++m_gone == (ULONG_MAX / 2))
+        {
+            // timeout occured, normalize the m_gone count
+            // this may occur if many calls to wait with a timeout are made and
+            // no call to notify_* is made
+            res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
+            assert(res == WAIT_OBJECT_0);
+            m_blocked -= m_gone;
+            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
+            assert(res);
+            m_gone = 0;
+        }
+        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+        assert(res);
+
+        if (was_waiting == 1)
+        {
+            for (/**/ ; was_gone; --was_gone)
+            {
+                // better now than spurious later
+                res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue),
+                    INFINITE);
+                assert(res ==  WAIT_OBJECT_0);
+            }
+            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
+            assert(res);
+        }
+
+    }
+
+    mutex.lock();
+    return ret;
+
+#   else
+    mutex.unlock();
+    DWORD ret = WaitForSingleObject(mId, ms);
+    mutex.lock();
+    assert(ret != WAIT_FAILED);
+    return (ret == WAIT_OBJECT_0);
+#   endif
+#else
+    UInt64 expires64 = start + ms;
+    timespec expiresTS;
+    expiresTS.tv_sec = expires64 / 1000;
+    expiresTS.tv_nsec = (expires64 % 1000) * 1000000L;
+
+    int ret = pthread_cond_timedwait(&mId, mutex.getId(), &expiresTS);
+    if (ret == EINTR || ret == ETIMEDOUT)
+    {
+       return false;
+    }
+    else
+    {
+       assert( ret == 0 );
+       return true;
+    }
+#endif
+}
+
 bool
 Condition::wait (Mutex* mutex, unsigned int ms)
 {

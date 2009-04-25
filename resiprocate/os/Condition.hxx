@@ -28,6 +28,7 @@ class Condition
        *  or interrupt.
        */
       bool wait (Mutex& mutex, unsigned int ms);
+      bool wait (Mutex& mutex, UInt64 start, unsigned int ms);
 
       // !kh!
       //  deprecate these?
