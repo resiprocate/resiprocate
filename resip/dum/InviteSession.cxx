@@ -522,7 +522,7 @@ public:
 
    virtual void executeCommand()
    {
-      mInviteSession.provideOffer(mAnswer);
+      mInviteSession.provideAnswer(mAnswer);
    }
 
    virtual EncodeStream& encodeBrief(EncodeStream& strm) const

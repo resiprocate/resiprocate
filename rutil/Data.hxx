@@ -712,7 +712,7 @@ class Data
       */
       void resize(size_type newSize, bool copy);
 
-      static bool isHex(char c);      
+      static bool isHex(unsigned char c);      
 
       /** Trade off between in-object and heap allocation
 	  Larger LocalAlloc makes for larger objects that have Data members but
@@ -743,9 +743,9 @@ class Data
 
 static bool invokeDataInit = Data::init(DataLocalSize<RESIP_DATA_LOCAL_SIZE>(0));
 
-inline bool Data::isHex(char c)
+inline bool Data::isHex(unsigned char c)
 {
-   return isCharHex[(size_t) c];
+   return isCharHex[c];
 }
 
 inline bool isEqualNoCase(const Data& left, const Data& right)
@@ -783,8 +783,8 @@ Data::escapeToStream(EncodeStream& str, Predicate shouldEscape) const
       return str;
    }
    
-   const char* p = mBuf;
-   const char* e = mBuf + mSize;
+   const unsigned char* p = (unsigned char*)mBuf;
+   const unsigned char* e = (unsigned char*)mBuf + mSize;
 
    while (p < e)
    {
@@ -795,7 +795,7 @@ Data::escapeToStream(EncodeStream& str, Predicate shouldEscape) const
           && isHex(*(p+1)) 
           && isHex(*(p+2)))
       {
-         str.write(p, 3);
+         str.write((char*)p, 3);
          p+=3;
       }
       else if (shouldEscape(*p))

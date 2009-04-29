@@ -330,7 +330,8 @@ next:
    }
 }
 
-bool oneOf(char c, const char* cs)
+bool 
+ParseBuffer::oneOf(char c, const char* cs)
 {
    while (*cs)
    {
@@ -342,7 +343,8 @@ bool oneOf(char c, const char* cs)
    return false;
 }
 
-bool oneOf(char c, const Data& cs)
+bool 
+ParseBuffer::oneOf(char c, const Data& cs)
 {
    for (Data::size_type i = 0; i < cs.size(); i++)
    {

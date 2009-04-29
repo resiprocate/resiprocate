@@ -77,7 +77,7 @@ class TransactionState : public DnsHandler
       bool isRequest(TransactionMessage* msg) const;
       bool isInvite(TransactionMessage* msg) const;
       bool isTimer(TransactionMessage* msg) const;
-      bool isResponse(TransactionMessage* msg, int lower=0, int upper=699) const;
+      bool isResponse(TransactionMessage* msg, int lower=100, int upper=699) const;
       bool isFromTU(TransactionMessage* msg) const;
       bool isFromWire(TransactionMessage* msg) const;
       bool isTransportError(TransactionMessage* msg) const;
