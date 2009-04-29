@@ -25,7 +25,13 @@ DataParameter::DataParameter(ParameterTypes::Type type,
    pb.skipWhitespace();
    pb.skipChar(Symbols::EQUALS[0]);
    pb.skipWhitespace();
-   pb.assertNotEof(); // handle cases such as ;tag=
+
+   if(ParseBuffer::oneOf(*pb.position(),terminators)) // handle cases such as ;tag=
+   {
+      throw ParseException("Empty value in string-type parameter.",
+                              "DataParameter",
+                              __FILE__,__LINE__);
+   }
 
    if (*pb.position() == Symbols::DOUBLE_QUOTE[0])
    {

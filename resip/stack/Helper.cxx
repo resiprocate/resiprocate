@@ -1667,37 +1667,25 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
    }
    else
    {
-      try
-      {
-         message.header(h_CSeq).checkParsed();
-      }
-      catch(ParseException&)
+      if(!message.header(h_CSeq).isWellFormed())
       {
          InfoLog(<<"Malformed CSeq header");
          if(reason) *reason="Malformed CSeq header";
          return false;
       }
       
-      try
+      if(!message.header(h_Vias).front().isWellFormed())
       {
-         message.header(h_Vias).front().checkParsed();
-      }
-      catch(ParseException& e)
-      {
-         InfoLog(<<"Malformed topmost Via header: " << e);
+         InfoLog(<<"Malformed topmost Via header");
          if(reason) *reason="Malformed topmost Via header";
          return false;
       }
       
       if (message.isRequest())
       {
-         try
+         if(!message.header(h_RequestLine).isWellFormed())
          {
-            message.header(h_RequestLine).checkParsed();            
-         }
-         catch(ParseException& e)
-         {
-            InfoLog(<< "Illegal request line " << e);
+            InfoLog(<< "Illegal request line");
             if(reason) *reason="Malformed Request Line";
             return false;            
          }
@@ -1711,13 +1699,9 @@ Helper::validateMessage(const SipMessage& message,resip::Data* reason)
       }
       else
       {
-         try
+         if(!message.header(h_StatusLine).isWellFormed())
          {
-            message.header(h_StatusLine).checkParsed();
-         }
-         catch(ParseException& e)
-         {
-            InfoLog(<< "Malformed status line " << e);
+            InfoLog(<< "Malformed status line");
             if(reason) *reason="Malformed status line";
             return false;            
          }
