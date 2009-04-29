@@ -2,10 +2,10 @@
 
 using namespace resip;
 
-ClientAuthExtension* ClientAuthExtension::mInstance = new ClientAuthExtension();
+std::auto_ptr<ClientAuthExtension> ClientAuthExtension::mInstance = std::auto_ptr<ClientAuthExtension>(new ClientAuthExtension());
 
 void 
-ClientAuthExtension::setInstance(ClientAuthExtension* ext)
+ClientAuthExtension::setInstance(std::auto_ptr<ClientAuthExtension> ext)
 {
    mInstance = ext;
 }

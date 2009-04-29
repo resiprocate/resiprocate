@@ -562,7 +562,9 @@ TransactionState::process(TransactionController& controller)
       }
       else // wasn't a request or a response
       {
-         //StackLog (<< "discarding unknown message: " << sip->brief());
+         ErrLog (<< "Got a SipMessage that was neither a request nor response!" 
+                  << sip->brief());
+         delete sip;
       }
    } 
    else // timer or other non-sip msg

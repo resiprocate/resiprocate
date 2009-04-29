@@ -439,9 +439,10 @@ SipMessage::compute2543TransactionHash() const
 const Data&
 SipMessage::getRFC2543TransactionId() const
 {
-   if(!empty(h_Vias) &&
-      header(h_Vias).front().exists(p_branch) &&
-      header(h_Vias).front().param(p_branch).hasMagicCookie() )
+   if(empty(h_Vias) ||
+      !header(h_Vias).front().exists(p_branch) ||
+      !header(h_Vias).front().param(p_branch).hasMagicCookie() ||
+      header(h_Vias).front().param(p_branch).getTransactionId().empty())
    {
       if (mRFC2543TransactionId.empty())
       {
@@ -824,28 +825,47 @@ SipMessage::setStartLine(const char* st, int len)
 {
    mStartLine = new HeaderFieldValueList;
    mStartLine-> push_back(new HeaderFieldValue(st, len));
-   ParseBuffer pb(st, len);
-   const char* start;
-   start = pb.skipWhitespace();
-   pb.skipNonWhitespace();
-   MethodTypes method = getMethodType(start, pb.position() - start);
-   if (method == UNKNOWN) //probably a status line
+
+   if(len >= 4 && !strncasecmp(st,"SIP/",4))
    {
-      start = pb.skipChar(Symbols::SPACE[0]);
-      pb.skipNonWhitespace();
-      if ((pb.position() - start) == 3)
-      {
-         mStartLine->setParserContainer(new ParserContainer<StatusLine>(mStartLine, Headers::NONE));
-         //!dcm! should invoke the statusline parser here once it does limited validation
-         mResponse = true;
-      }
+      // Response
+      mStartLine->setParserContainer(new ParserContainer<StatusLine>(mStartLine, Headers::NONE));      
+      //!dcm! should invoke the statusline parser here once it does limited validation
+      mResponse = true;
    }
-   if (!mResponse)
+   else
    {
+      // Request
       mStartLine->setParserContainer(new ParserContainer<RequestLine>(mStartLine, Headers::NONE));
       //!dcm! should invoke the responseline parser here once it does limited validation
       mRequest = true;
    }
+
+
+// .bwc. This stuff is so needlessly complicated. Much, much simpler, faster,
+// and more robust code above.
+//   ParseBuffer pb(st, len);
+//   const char* start;
+//   start = pb.skipWhitespace();
+//   pb.skipNonWhitespace();
+//   MethodTypes method = getMethodType(start, pb.position() - start);
+//   if (method == UNKNOWN) //probably a status line
+//   {
+//      start = pb.skipChar(Symbols::SPACE[0]);
+//      pb.skipNonWhitespace();
+//      if ((pb.position() - start) == 3)
+//      {
+//         mStartLine->setParserContainer(new ParserContainer<StatusLine>(mStartLine, Headers::NONE));
+//         //!dcm! should invoke the statusline parser here once it does limited validation
+//         mResponse = true;
+//      }
+//   }
+//   if (!mResponse)
+//   {
+//      mStartLine->setParserContainer(new ParserContainer<RequestLine>(mStartLine, Headers::NONE));
+//      //!dcm! should invoke the responseline parser here once it does limited validation
+//      mRequest = true;
+//   }
 }
 
 void 
