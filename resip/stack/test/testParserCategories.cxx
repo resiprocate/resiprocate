@@ -345,6 +345,19 @@ main(int arc, char** argv)
    }
 
    {
+      TR _tr("Test uri with empty transport param");
+      Data data("sip:kelowna.gloo.net;transport=;udp");
+      
+      try
+      {
+         Uri original(data);
+         assert(0);
+      }
+      catch(...)
+      {}
+   }
+
+   {
       TR _tr("Test assignment for NameAddr");
       NameAddr original(Data("\"Original\"<sip:orig@example.com>;tag=original"));
       (void)original.exists(p_tag);

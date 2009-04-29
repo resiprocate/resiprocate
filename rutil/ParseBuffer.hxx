@@ -129,6 +129,9 @@ class ParseBuffer
       float floatVal();
 #endif
       int qVal();
+
+      static bool oneOf(char c, const char* cs);
+      static bool oneOf(char c, const Data& cs);
       static const char* Whitespace;
       static const char* ParamTerm;
    private:
