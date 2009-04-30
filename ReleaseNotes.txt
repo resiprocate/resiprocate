@@ -1,0 +1,57 @@
+= Release Notes v 1.5 =
+
+==General==
+===New features===
+* Experimental support for linking against c-ares instead of the resip ares variant
+* updated a lot of svn:ignores
+
+===Bug fixes===
+* fixed a lot of license blocks that had been damaged by overly aggressive search/replace
+
+==Build system==
+===New features===
+* better detection of location of bdb headers
+* made clean target more thorough
+
+===Bug fixes===
+* fixing various build problems on cygwin
+* fixed shared library builds on OS X (.dylib instead of .so)
+* fixed build for NetXX tfm dependency under gcc >=4.3
+* fix for VS2005 compiler warnings
+* fixes for Solaris build with gnu toolchain
+
+==rutil==
+===New features===
+
+===Bug fixes===
+* various windows fixes to network-related code
+
+==stack==
+===New features===
+* added support for History-Info header
+* added support for Privacy headers
+* allow InterruptableStackThead to be subclassed for an application to get inserted into the process loop
+* support both "text" params (one from 3326, and the other from 3840)
+
+===Bug fixes===
+* fixed an invalid initialization of a Data in logging statements in TlsConnection and ConnectionBase
+* fixed a bug where an empty single-valued header would require an empty() check before access
+* fixed a heap-corruption bug that could be caused by a SIP message failing basicCheck inside ConnectionBase
+* fix assert bug caused by transaction id collision between an INVITE and a previous NIT
+
+==DUM==
+===New features===
+* moved InviteSession::myAddr, peerAddr and remoteTarget dialog property access fns to DialogUsage class so that they can be accessed by other usages
+* make ServerSubscription::getTimeLeft public so that apps can access
+
+===Bug fixes===
+* fixing a compile problem with gcc 4.2.3 in MergedRequestKey
+* better handling of glare when InviteSession is waiting for an ACK
+
+==repro==
+===Bug fixes===
+* stop forwarding NIT 408s
+* fix bug in command line parsing: use the --dtls, not the --tls, value to configure the DTLS transport
+
+
+
