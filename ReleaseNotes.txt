@@ -12,6 +12,7 @@
 ===New features===
 * better detection of location of bdb headers
 * made clean target more thorough
+* experimental SunPro toolchain support
 
 ===Bug fixes===
 * fixing various build problems on cygwin
@@ -22,6 +23,7 @@
 
 ==rutil==
 ===New features===
+* start using the tr1 hash implementation (with gcc >= 4.3)
 
 ===Bug fixes===
 * various windows fixes to network-related code
@@ -32,6 +34,8 @@
 * added support for Privacy headers
 * allow InterruptableStackThead to be subclassed for an application to get inserted into the process loop
 * support both "text" params (one from 3326, and the other from 3840)
+* added ability for an application to handle unknown datagrams received on UdpTransport
+* stop retransmitting INVITE if TU cancels the transaction prior to receiving a response
 
 ===Bug fixes===
 * fixed an invalid initialization of a Data in logging statements in TlsConnection and ConnectionBase
@@ -43,15 +47,22 @@
 ===New features===
 * moved InviteSession::myAddr, peerAddr and remoteTarget dialog property access fns to DialogUsage class so that they can be accessed by other usages
 * make ServerSubscription::getTimeLeft public so that apps can access
+* add support for asynchronous database queries during registration
+* add an option to force all requests to go through an outbound proxy
 
 ===Bug fixes===
 * fixing a compile problem with gcc 4.2.3 in MergedRequestKey
 * better handling of glare when InviteSession is waiting for an ACK
+* fixed an assert in ClientAuthManager that could be caused when registration retries occurred
+* fixed a bug where the Content-Type header could be set in a UPDATE Session Refresh to application/sdp, but the content length would be 0
+* fixed a bug in ClientInviteSession::reject() when it is called after receiving an UPDATE with an SDP offer in an "early" state
+* allow reception of INFO and MESSAGE requests before connected
+* fixed outbound decorator code for responses
 
 ==repro==
 ===Bug fixes===
 * stop forwarding NIT 408s
 * fix bug in command line parsing: use the --dtls, not the --tls, value to configure the DTLS transport
-
+* fix for removing expired contacts - could cause web admin to show expired contacts with very large expiry times
 
 
