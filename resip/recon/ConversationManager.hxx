@@ -36,6 +36,7 @@ class Conversation;
 class Participant;
 class UserAgent;
 class ConversationProfile;
+class RemoteParticipant;
 
 /**
   This class is one of two main classes of concern to an application
