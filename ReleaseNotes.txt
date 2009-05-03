@@ -60,9 +60,53 @@
 * fixed outbound decorator code for responses
 
 ==repro==
+===New features===
+* allow HTTP hostname (for cert server) used in Identity headers to be specified on command line, otherwise it is queried from OS, as before
+
 ===Bug fixes===
 * stop forwarding NIT 408s
 * fix bug in command line parsing: use the --dtls, not the --tls, value to configure the DTLS transport
 * fix for removing expired contacts - could cause web admin to show expired contacts with very large expiry times
+
+==reTurn==
+===New features===
+* updated to RFC5389
+* updated to behave-turn-12, including new CreatePermission method
+* update local asio copy to version 1.2.0
+* added stun test vectors from draft-ietf-behave-stun-test-vectors-04
+* allow command line option to configure independent port for STUN/TURN over TLS
+* allow starting server with no command line parameters
+* added ability for client API's to automatically handle channel binding refreshes.  Note:  This is done at an interval that will be frequent enough to also refresh permissions
+* added server certificate hostname validation support for clients
+
+===Bug fixes===
+* ensure if an attribute appears more than once, then the duplicates are ignored
+* ensure encoding/decoding of attribute padding is RFC5389 compliant
+* fixed some ipv6 parsing problems
+* corrected message integrity calculations to be RFC5389 compliant
+* fixed some bugs in unknown attribute parsing and encoding - modified to use RFC5389 padding
+* add Software header to client requests
+* changed TCP request timeout to 39500ms as per RFC5389
+* added checking for unknown comprehension-required attributes and sending 420 response
+* modified BindRequest handling on server to look for StunMagic cookie and add XOR mapped address vs Mapped Address appropriately
+* fixed insert and compare of StunMagicCooke
+* fixed finger print crc calc - final XOR should be 0xFFFFFFFF before STUN final XOR is applied - this is not obvious from text in RFC5389
+* fixed bug in long term authentication
+* fixed bug in server logic that caused it always send DataInd instead of Channel data messages
+* reTurn async client fix to ensure we do a framed receive on TCP and TLS client transports
+
+==recon==
+===New features===
+* rewrite of sdp containers into resip style, and bring directly into recon project to remove dependency on sipXsdpLib for SDP handling
+* added logging for all new MiNotification events
+* allow recon to be started with no local audio support
+* enable sipXtapi OsSysLog logging
+
+===Bug fixes===
+* fixed DTMF event routing, now that connectionId is properly passed from sipXtapi
+* fixed some bugs with forking logic - a crash and incorrect mixing bridge results
+* change to query speaker/mic location on BridgeMixer instead of hardcoding it
+* reduced priority of speex-5 (5kbs) in recon SDP, since its quality is poor
+* ensure codec path is set in Release builds (move setting outside of assert block)
 
 
