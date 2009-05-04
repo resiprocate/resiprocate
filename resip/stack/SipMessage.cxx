@@ -679,35 +679,11 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
 
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
-      if (i != Headers::ContentLength) // !dlb! hack...
+      if (i != Headers::ContentLength) // .bwc. Encode Content-Length last
       {
          if (mHeaders[i] != 0)
          {
             mHeaders[i]->encode(i, str);
-         }
-      }
-      else
-      {
-         if (mContents != 0)
-         {
-            size_t size;
-            {
-               CountStream cs(size);
-               
-               //DataStream cs(data);
-               mContents->encode(cs);
-               //cs.flush();
-               //size = data.size();
-            }
-            str << "Content-Length: " << size << "\r\n";
-         }
-         else if (mContentsHfv != 0)
-         {
-            str << "Content-Length: " << mContentsHfv->mFieldLength << "\r\n";
-         }
-         else if (!isSipFrag)
-         {
-            str << "Content-Length: 0\r\n";
          }
       }
    }
@@ -716,6 +692,28 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
         i != mUnknownHeaders.end(); i++)
    {
       i->second->encode(i->first, str);
+   }
+
+   if (mContents != 0)
+   {
+      size_t size;
+      {
+         CountStream cs(size);
+         
+         //DataStream cs(data);
+         mContents->encode(cs);
+         //cs.flush();
+         //size = data.size();
+      }
+      str << "Content-Length: " << size << "\r\n";
+   }
+   else if (mContentsHfv != 0)
+   {
+      str << "Content-Length: " << mContentsHfv->mFieldLength << "\r\n";
+   }
+   else if (!isSipFrag)
+   {
+      str << "Content-Length: 0\r\n";
    }
 
    str << Symbols::CRLF;
