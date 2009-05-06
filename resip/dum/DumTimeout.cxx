@@ -115,6 +115,9 @@ DumTimeout::encode(EncodeStream& strm) const
       case SubscriptionRetry:
          strm <<"SubscriptionRetry";
          break;
+      case WaitForNotify:
+         strm <<"WaitForNotify";
+         break;
       case StaleReInvite:
          strm <<"StaleReInvite";
          break;

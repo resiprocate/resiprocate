@@ -47,7 +47,7 @@ class RegEventClient  : public resip::ClientSubscriptionHandler,
                                  int retrySeconds, 
                                  const resip::SipMessage& notify);
       virtual void onTerminated(resip::ClientSubscriptionHandle, 
-                                const resip::SipMessage& msg);   
+                                const resip::SipMessage* msg);   
       virtual void onNewSubscription(resip::ClientSubscriptionHandle, 
                                      const resip::SipMessage& notify);
 
