@@ -404,7 +404,7 @@ UserAgent::onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify,
 }
 
 void
-UserAgent::onTerminated(ClientSubscriptionHandle h, const SipMessage& notify)
+UserAgent::onTerminated(ClientSubscriptionHandle h, const SipMessage* notify)
 {
 }
 
