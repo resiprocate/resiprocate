@@ -121,6 +121,13 @@ ClientSubscriptionHandler::onReadyToSend(ClientSubscriptionHandle h, SipMessage&
 }
 
 void 
+ClientSubscriptionHandler::onNotifyNotReceived()
+{
+   // no-op
+}
+
+
+void 
 ServerSubscriptionHandler::onReadyToSend(ServerSubscriptionHandle h, SipMessage& msg)
 {
    // default is to do nothing. this is for adornment   

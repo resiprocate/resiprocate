@@ -24,12 +24,13 @@ class ClientSubscriptionHandler
       virtual int onRequestRetry(ClientSubscriptionHandle, int retrySeconds, const SipMessage& notify)=0;
       
       //subscription can be ended through a notify or a failure response.
-      virtual void onTerminated(ClientSubscriptionHandle, const SipMessage& msg)=0;   
+      virtual void onTerminated(ClientSubscriptionHandle, const SipMessage* msg)=0;   
       //not sure if this has any value.
       virtual void onNewSubscription(ClientSubscriptionHandle, const SipMessage& notify)=0;
 
       /// called to allow app to adorn a message.
       virtual void onReadyToSend(ClientSubscriptionHandle, SipMessage& msg);
+      virtual void onNotifyNotReceived();
 };
 
 class ServerSubscriptionHandler
