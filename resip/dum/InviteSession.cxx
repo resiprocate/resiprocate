@@ -57,6 +57,7 @@ InviteSession::InviteSession(DialogUsageManager& dum, Dialog& dialog)
    : DialogUsage(dum, dialog),
      mState(Undefined),
      mNitState(NitComplete),
+     mServerNitState(NitComplete),
      mLastLocalSessionModification(new SipMessage),
      mLastRemoteSessionModification(new SipMessage),
      mInvite200(new SipMessage),
@@ -1719,19 +1720,40 @@ InviteSession::dispatchReinviteNoOfferGlare(const SipMessage& msg)
 void
 InviteSession::dispatchReceivedUpdateOrReinvite(const SipMessage& msg)
 {
-   MethodTypes method = msg.header(h_CSeq).method();
-   if (method == INVITE || method == UPDATE)
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
    {
-      // Means that the UAC has sent us a second reINVITE or UPDATE before we
-      // responded to the first one. Bastard!
-      SharedPtr<SipMessage> response(new SipMessage);
-      mDialog.makeResponse(*response, msg, 500);
-      response->header(h_RetryAfter).value() = Random::getRandom() % 10;
-      send(response);
-   }
-   else
-   {
-      dispatchOthers(msg);
+      case OnInvite:
+      case OnInviteReliable:
+      case OnInviteOffer:
+      case OnInviteReliableOffer:
+      case OnUpdate:
+      case OnUpdateOffer:
+      {
+         // Means that the UAC has sent us a second reINVITE or UPDATE before we
+         // responded to the first one. Bastard!
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 500);
+         response->header(h_RetryAfter).value() = Random::getRandom() % 10;
+         send(response);
+         break;
+      }
+      case OnBye:
+      {
+         // BYE received after a reINVITE, terminate the reINVITE transaction.
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, *mLastRemoteSessionModification, 487); // Request Terminated
+         handleSessionTimerRequest(*response, *mLastRemoteSessionModification);
+         send(response);
+
+         dispatchBye(msg);
+         break;
+      }
+      default:
+         dispatchOthers(msg);
+         break;
    }
 }
 
@@ -1983,6 +2005,16 @@ InviteSession::dispatchBye(const SipMessage& msg)
 
    if (msg.isRequest())
    {
+      // Check for any non-invite server transactions (e.g. INFO)
+      // that have not been responded yet and terminate them.
+      if (mServerNitState == NitProceeding)
+      {
+         mLastNitResponse->header(h_StatusLine).statusCode() = 487;  
+         mLastNitResponse->setContents(0);
+         Helper::getResponseCodeReason(487, mLastNitResponse->header(h_StatusLine).reason());
+         send(mLastNitResponse);
+         mServerNitState = NitComplete;
+      }
 
       SharedPtr<SipMessage> rsp(new SipMessage);
       InfoLog (<< "Received " << msg.brief());
@@ -2014,9 +2046,22 @@ InviteSession::dispatchInfo(const SipMessage& msg)
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    if (msg.isRequest())
    {
-      InfoLog (<< "Received " << msg.brief());
-      mDialog.makeResponse(*mLastNitResponse, msg, 200);
-      handler->onInfo(getSessionHandle(), msg);
+      if (mServerNitState == NitProceeding)
+      {
+         // Means that the UAC has sent us a second INFO before we
+         // responded to the first one.
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 500);
+         response->header(h_RetryAfter).value() = Random::getRandom() % 10;
+         send(response);
+      }
+      else
+      {
+         InfoLog (<< "Received " << msg.brief());
+         mServerNitState = NitProceeding;
+         mDialog.makeResponse(*mLastNitResponse, msg, 200);
+         handler->onInfo(getSessionHandle(), msg);
+      }
    }
    else
    {
@@ -2042,10 +2087,16 @@ InviteSession::acceptNIT(int statusCode, const Contents * contents)
       throw UsageUseException("Must accept with a 2xx", __FILE__, __LINE__);
    }
 
+   if (mServerNitState != NitProceeding )
+   {
+      throw UsageUseException("No transaction to accept", __FILE__, __LINE__);
+   }
+
    mLastNitResponse->header(h_StatusLine).statusCode() = statusCode;   
    mLastNitResponse->setContents(contents);
    Helper::getResponseCodeReason(statusCode, mLastNitResponse->header(h_StatusLine).reason());
    send(mLastNitResponse);   
+   mServerNitState = NitComplete;
 } 
 
 class InviteSessionAcceptNITCommand : public DumCommandAdapter
@@ -2087,10 +2138,17 @@ InviteSession::rejectNIT(int statusCode)
    {
       throw UsageUseException("Must reject with a >= 4xx", __FILE__, __LINE__);
    }
+
+   if (mServerNitState != NitProceeding )
+   {
+      throw UsageUseException("No transaction to reject", __FILE__, __LINE__);
+   }
+
    mLastNitResponse->header(h_StatusLine).statusCode() = statusCode;  
    mLastNitResponse->setContents(0);
    Helper::getResponseCodeReason(statusCode, mLastNitResponse->header(h_StatusLine).reason());
    send(mLastNitResponse);
+   mServerNitState = NitComplete;
 }
 
 class InviteSessionRejectNITCommand : public DumCommandAdapter
@@ -2128,10 +2186,23 @@ InviteSession::dispatchMessage(const SipMessage& msg)
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    if (msg.isRequest())
    {
-      InfoLog (<< "Received " << msg.brief());
-      mDialog.makeResponse(*mLastNitResponse, msg, 200);
-      mLastNitResponse->header(h_Contacts).clear();
-      handler->onMessage(getSessionHandle(), msg);
+      if (mServerNitState == NitProceeding)
+      {
+         // Means that the UAC has sent us a second NIT message before we
+         // responded to the first one.
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 500);
+         response->header(h_RetryAfter).value() = Random::getRandom() % 10;
+         send(response);
+      }
+      else
+      {
+         InfoLog (<< "Received " << msg.brief());
+         mServerNitState = NitProceeding;
+         mDialog.makeResponse(*mLastNitResponse, msg, 200);
+         mLastNitResponse->header(h_Contacts).clear();
+         handler->onMessage(getSessionHandle(), msg);
+      }
    }
    else
    {
