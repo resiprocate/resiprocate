@@ -136,6 +136,18 @@ ClientSubscription::processResponse(const SipMessage& msg)
             mLastRequest->header(h_Expires).value() = expires;
          }
       }
+
+      if(!mOnNewSubscriptionCalled)
+      {
+         // Timer for initial NOTIFY; since we don't know when the initial
+         // SUBSRIBE is sent, we have to set the timer when the 200 comes in, if
+         // it beat the NOTIFY.
+         mDum.addTimer(DumTimeout::WaitForNotify, 
+                 64*Timer::T1, 
+                 getBaseHandle(),
+                 ++mTimerSeq);
+      }
+
       sendQueuedRefreshRequest();
    }
    else if (!mEnded &&
@@ -181,7 +193,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
       {
          DebugLog(<< "Application requested failure on Retry-After");
          mEnded = true;
-         handler->onTerminated(getHandle(), msg);
+         handler->onTerminated(getHandle(), &msg);
          delete this;
          return;
       }
@@ -224,7 +236,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
       else
       {
          mEnded = true;
-         handler->onTerminated(getHandle(), msg);
+         handler->onTerminated(getHandle(), &msg);
          delete this;
          return;
       }
@@ -308,7 +320,7 @@ ClientSubscription::processNextNotify()
                {
                   acceptUpdate();
                   mEnded = true;                     
-                  handler->onTerminated(getHandle(), qn->notify());
+                  handler->onTerminated(getHandle(), &qn->notify());
                   delete this;
                }
             }
@@ -316,7 +328,7 @@ ClientSubscription::processNextNotify()
             {
                acceptUpdate();
                mEnded = true;
-               handler->onTerminated(getHandle(), qn->notify());
+               handler->onTerminated(getHandle(), &qn->notify());
                delete this;
             }
          }
@@ -324,7 +336,7 @@ ClientSubscription::processNextNotify()
          {
             acceptUpdate();
             mEnded = true;
-            handler->onTerminated(getHandle(), qn->notify());
+            handler->onTerminated(getHandle(), &qn->notify());
             delete this;
          }
       }
@@ -334,7 +346,7 @@ ClientSubscription::processNextNotify()
          mLastResponse->header(h_StatusLine).reason() = "Missing Subscription-State header";
          send(mLastResponse);
          mEnded = true;
-         handler->onTerminated(getHandle(), qn->notify());
+         handler->onTerminated(getHandle(), &qn->notify());
          delete this;
       }
       return;
@@ -364,7 +376,7 @@ ClientSubscription::processNextNotify()
    {
       acceptUpdate();
       mEnded = true;
-      handler->onTerminated(getHandle(), qn->notify());
+      handler->onTerminated(getHandle(), &qn->notify());
       DebugLog (<< "[ClientSubscription] " << mLastRequest->header(h_To) << "[ClientSubscription] Terminated");                   
       delete this;
       return;
@@ -380,7 +392,21 @@ ClientSubscription::dispatch(const DumTimeout& timer)
 {
    if (timer.seq() == mTimerSeq)
    {
-      if (timer.type() == DumTimeout::SubscriptionRetry)
+      if(timer.type() == DumTimeout::WaitForNotify)
+      {
+         ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
+         if(mOnNewSubscriptionCalled && mEnded)
+         {
+            // NOTIFY terminated didn't come in
+            handler->onTerminated(getHandle(),0);
+            delete this;
+            return;
+         }
+
+         // Initial NOTIFY never came in; let app decide what to do
+         handler->onNotifyNotReceived(getHandle());
+      }
+      else if (timer.type() == DumTimeout::SubscriptionRetry)
       {
          // this indicates that the ClientSubscription was created by a 408
          if (mOnNewSubscriptionCalled)
@@ -436,6 +462,11 @@ ClientSubscription::requestRefresh(UInt32 expires)
       InfoLog (<< "Refresh subscription: " << mLastRequest->header(h_Contacts).front());
       mRefreshing = true;
       send(mLastRequest);
+      // Timer for reSUB NOTIFY.
+      mDum.addTimer(DumTimeout::WaitForNotify, 
+              64*Timer::T1, 
+              getBaseHandle(),
+              ++mTimerSeq);
    }
 }
 
@@ -479,6 +510,11 @@ ClientSubscription::end()
       mLastRequest->header(h_Expires).value() = 0;
       mEnded = true;
       send(mLastRequest);
+      // Timer for NOTIFY terminated
+      mDum.addTimer(DumTimeout::WaitForNotify, 
+              64*Timer::T1, 
+              getBaseHandle(),
+              ++mTimerSeq);
    }
 }
 
@@ -611,7 +647,7 @@ ClientSubscription::rejectUpdate(int statusCode, const Data& reasonPhrase)
       case Helper::DialogTermination: //?dcm? -- throw or destroy this?
       case Helper::UsageTermination:
          mEnded = true;
-         handler->onTerminated(getHandle(), *mLastResponse);
+         handler->onTerminated(getHandle(), mLastResponse.get());
          delete this;
          break;
    }
@@ -653,7 +689,7 @@ void ClientSubscription::dialogDestroyed(const SipMessage& msg)
    ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
    assert(handler);   
    mEnded = true;
-   handler->onTerminated(getHandle(), msg);
+   handler->onTerminated(getHandle(), &msg);
    delete this;   
 }
 

@@ -185,9 +185,13 @@ RegEventClient::onRequestRetry(ClientSubscriptionHandle, int retrySeconds, const
 }
       
 void 
-RegEventClient::onTerminated(ClientSubscriptionHandle, const SipMessage& msg)
+RegEventClient::onTerminated(ClientSubscriptionHandle, const SipMessage* msg)
 {
-   WarningLog (<< "Subscription terminated " << msg.brief());
+   WarningLog (<< "Subscription terminated " << (msg ? "with message " : " with no message"));
+   if(msg)
+   {
+      WarningLog(<< msg->brief());
+   }
 }
 
 
