@@ -30,7 +30,7 @@ class ClientSubscriptionHandler
 
       /// called to allow app to adorn a message.
       virtual void onReadyToSend(ClientSubscriptionHandle, SipMessage& msg);
-      virtual void onNotifyNotReceived();
+      virtual void onNotifyNotReceived(ClientSubscriptionHandle);
 };
 
 class ServerSubscriptionHandler

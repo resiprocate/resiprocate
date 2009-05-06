@@ -395,7 +395,6 @@ ClientSubscription::dispatch(const DumTimeout& timer)
       if(timer.type() == DumTimeout::WaitForNotify)
       {
          ClientSubscriptionHandler* handler = mDum.getClientSubscriptionHandler(mEventType);
-         handler->onNotifyNotReceived();
          if(mOnNewSubscriptionCalled && mEnded)
          {
             // NOTIFY terminated didn't come in
@@ -403,13 +402,9 @@ ClientSubscription::dispatch(const DumTimeout& timer)
             delete this;
             return;
          }
-         else if(!mOnNewSubscriptionCalled)
-         {
-            // Initial NOTIFY didn't come in
-            mEnded=true;
-            delete this;
-            return;
-         }
+
+         // Initial NOTIFY never came in; let app decide what to do
+         handler->onNotifyNotReceived(getHandle());
       }
       else if (timer.type() == DumTimeout::SubscriptionRetry)
       {
