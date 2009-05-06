@@ -326,6 +326,7 @@ class InviteSession : public DialogUsage
       
       State mState;
       NitState mNitState;
+      NitState mServerNitState;
 
       std::auto_ptr<SdpContents> mCurrentLocalSdp;
       std::auto_ptr<Contents> mProposedLocalSdp;
