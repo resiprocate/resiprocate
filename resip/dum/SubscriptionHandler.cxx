@@ -1,5 +1,6 @@
 #include "resip/dum/SubscriptionHandler.hxx"
 #include "resip/dum/ServerSubscription.hxx"
+#include "resip/dum/ClientSubscription.hxx"
 #include "resip/stack/SecurityAttributes.hxx"
 
 using namespace resip;
@@ -119,6 +120,14 @@ ClientSubscriptionHandler::onReadyToSend(ClientSubscriptionHandle h, SipMessage&
 {
    // default is to do nothing. this is for adornment
 }
+
+void 
+ClientSubscriptionHandler::onNotifyNotReceived(ClientSubscriptionHandle h)
+{
+   // By default, tear down the sub.
+   h->end();
+}
+
 
 void 
 ServerSubscriptionHandler::onReadyToSend(ServerSubscriptionHandle h, SipMessage& msg)

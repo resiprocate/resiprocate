@@ -70,7 +70,7 @@ class UserAgent : public CommandLineParser,
       virtual void onUpdatePending(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder);
       virtual void onUpdateActive(ClientSubscriptionHandle h, const SipMessage& notify, bool outOfOrder);
       virtual void onUpdateExtension(ClientSubscriptionHandle, const SipMessage& notify, bool outOfOrder);
-      virtual void onTerminated(ClientSubscriptionHandle h, const SipMessage& notify);
+      virtual void onTerminated(ClientSubscriptionHandle h, const SipMessage* notify);
       virtual void onNewSubscription(ClientSubscriptionHandle h, const SipMessage& notify);
       virtual int onRequestRetry(ClientSubscriptionHandle h, int retryMinimum, const SipMessage& notify);
 

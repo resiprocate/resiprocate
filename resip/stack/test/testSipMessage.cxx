@@ -1240,9 +1240,9 @@ main(int argc, char** argv)
                    "Call-ID: 314159\r\n"
                    "CSeq: 14 INVITE\r\n"
                    "Content-Type: text/plain\r\n"
-                   "Content-Length: 31\r\n"
                    "bar: bar1\r\n"
                    "bar: bar2\r\n"
+                   "Content-Length: 31\r\n"
                    "\r\n"
                    "here is some plain ol' contents"));
    }
@@ -1294,10 +1294,10 @@ main(int argc, char** argv)
                    "Call-ID: 314159\r\n"
                    "CSeq: 14 INVITE\r\n"
                    "Content-Type: text/plain\r\n"
-                   "Content-Length: 31\r\n"
 //                   "foo: \r\n"
                    "bar: bar1\r\n"
                    "bar: bar2\r\n"
+                   "Content-Length: 31\r\n"
                    "\r\n"
                    "here is some plain ol' contents"));
    }
