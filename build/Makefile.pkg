@@ -309,7 +309,7 @@ SIPX_LDLIBS_LAST := $(SIPX_LIBDIR)/libsipXmediaProcessing.a
 SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXmedia.a
 SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXsdp.a
 SIPX_LDLIBS_LAST += $(SIPX_LIBDIR)/libsipXport.a
-SIPX_LDFLAGS := -lpcre -lresolv
+SIPX_LDFLAGS := -lpcre -lresolv -lrt
 SIPX_DEFINES := __pingtel_on_posix__ DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10
 
 else
@@ -322,7 +322,7 @@ SIPX_LDLIBS_LAST := $(SIPX_ROOT)/sipXmediaAdapterLib/sipXmediaMediaProcessing/sr
 SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXmediaLib/src/.libs/libsipXmedia.a
 SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXsdpLib/src/.libs/libsipXsdp.a
 SIPX_LDLIBS_LAST += $(SIPX_ROOT)/sipXportLib/src/.libs/libsipXport.a
-SIPX_LDFLAGS := -lpcre -lresolv
+SIPX_LDFLAGS := -lpcre -lresolv -lrt
 SIPX_DEFINES := __pingtel_on_posix__ DEFAULT_BRIDGE_MAX_IN_OUTPUTS=10
 
 endif

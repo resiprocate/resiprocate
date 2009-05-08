@@ -217,6 +217,15 @@ install-dum:
 install-repro:
 	$(MAKE) -C repro install
 
+install-recon: install install-reflow install-returnclient
+	$(MAKE) -C resip/recon install
+
+install-reflow:
+	$(MAKE) -C reflow install
+
+install-returnclient:
+	$(MAKE) -C reTurn/client install
+
 SVN-VERSION: 
 	@if test -d .svn ; \
 	then \
