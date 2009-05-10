@@ -37,7 +37,7 @@ class UserAgentClientSubscription : public resip::AppDialogSet
       virtual void onUpdatePending(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
       virtual void onUpdateActive(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify, bool outOfOrder);
       virtual void onUpdateExtension(resip::ClientSubscriptionHandle, const resip::SipMessage& notify, bool outOfOrder);
-      virtual void onTerminated(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
+      virtual void onTerminated(resip::ClientSubscriptionHandle h, const resip::SipMessage* notify);
       virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
       virtual int  onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
