@@ -108,20 +108,28 @@ UserAgentClientSubscription::onUpdateExtension(ClientSubscriptionHandle h, const
 }
 
 void
-UserAgentClientSubscription::onTerminated(ClientSubscriptionHandle h, const SipMessage& msg)
+UserAgentClientSubscription::onTerminated(ClientSubscriptionHandle h, const SipMessage* msg)
 {
-   InfoLog(<< "onTerminated(ClientSubscriptionHandle): handle=" << mSubscriptionHandle << ", " << msg.brief());
    unsigned int statusCode = 0;
-   if(msg.isResponse())
+   if(msg)
    {
-      statusCode = msg.header(h_StatusLine).responseCode();
+      InfoLog(<< "onTerminated(ClientSubscriptionHandle): handle=" << mSubscriptionHandle << ", " << msg->brief());
+      if(msg->isResponse())
+      {
+         statusCode = msg->header(h_StatusLine).responseCode();
+      }
+      else
+      {
+         if(msg->getContents())
+         {
+            notifyReceived(msg->getContents()->getBodyData());
+         }
+      }
    }
    else
    {
-      if(msg.getContents())
-      {
-         notifyReceived(msg.getContents()->getBodyData());
-      }
+      InfoLog(<< "onTerminated(ClientSubscriptionHandle): handle=" << mSubscriptionHandle);
+      statusCode = 408;  // timedout waiting for notify after subscribe
    }
    mUserAgent.onSubscriptionTerminated(mSubscriptionHandle, statusCode);
 }
