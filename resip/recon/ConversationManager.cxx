@@ -955,7 +955,7 @@ ConversationManager::onUpdateExtension(ClientSubscriptionHandle h, const SipMess
 }
 
 void
-ConversationManager::onTerminated(ClientSubscriptionHandle h, const SipMessage& msg)
+ConversationManager::onTerminated(ClientSubscriptionHandle h, const SipMessage* msg)
 {
    dynamic_cast<RemoteParticipant *>(h->getAppDialog().get())->onTerminated(h, msg);
 }
