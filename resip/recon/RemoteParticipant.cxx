@@ -2244,18 +2244,31 @@ RemoteParticipant::onUpdateExtension(ClientSubscriptionHandle h, const SipMessag
 }
 
 void
-RemoteParticipant::onTerminated(ClientSubscriptionHandle h, const SipMessage& notify)
+RemoteParticipant::onTerminated(ClientSubscriptionHandle h, const SipMessage* notify)
 {
-   InfoLog(<< "onTerminated(ClientSub): handle=" << mHandle << ", " << notify.brief());
-   if (notify.isRequest() && notify.exists(h_Event) && notify.header(h_Event).value() == "refer")
+   if(notify)
    {
-      // Note:  Final notify is sometimes only passed in the onTerminated callback
-      processReferNotify(notify);
+      InfoLog(<< "onTerminated(ClientSub): handle=" << mHandle << ", " << notify->brief());
+      if (notify->isRequest() && notify->exists(h_Event) && notify->header(h_Event).value() == "refer")
+      {
+         // Note:  Final notify is sometimes only passed in the onTerminated callback
+         processReferNotify(*notify);
+      }
+      else if(notify->isResponse() && mState == Redirecting)
+      {
+         if(mHandle) mConversationManager.onParticipantRedirectFailure(mHandle, notify->header(h_StatusLine).responseCode());
+         stateTransition(Connected);
+      }
    }
-   else if(notify.isResponse() && mState == Redirecting)
+   else
    {
-      if(mHandle) mConversationManager.onParticipantRedirectFailure(mHandle, notify.header(h_StatusLine).responseCode());
-      stateTransition(Connected);
+      // Timed out waiting for notify
+      InfoLog(<< "onTerminated(ClientSub): handle=" << mHandle);
+      if(mState == Redirecting)
+      {
+         if(mHandle) mConversationManager.onParticipantRedirectFailure(mHandle, 408);
+         stateTransition(Connected);
+      }
    }
 }
 

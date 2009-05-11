@@ -567,7 +567,7 @@ UserAgent::onUpdateExtension(ClientSubscriptionHandle h, const SipMessage& msg, 
 }
 
 void
-UserAgent::onTerminated(ClientSubscriptionHandle h, const SipMessage& msg)
+UserAgent::onTerminated(ClientSubscriptionHandle h, const SipMessage* msg)
 {
    dynamic_cast<UserAgentClientSubscription *>(h->getAppDialogSet().get())->onTerminated(h, msg);
 }
