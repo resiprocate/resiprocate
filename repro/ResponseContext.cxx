@@ -1261,7 +1261,8 @@ ResponseContext::forwardBestResponse()
       mBestResponse.method()!=INVITE)
    {
       // We don't forward back NIT 408; we just silently abandon the transaction
-      mRequestContext.getProxy().getStack().abandonServerTransaction(mRequestContext.mTid);
+      DebugLog(<< "Got NIT 408, abandoning: "<<mRequestContext.getTransactionId());
+      mRequestContext.getProxy().getStack().abandonServerTransaction(mRequestContext.getTransactionId());
    }
    else
    {

@@ -80,7 +80,6 @@ class RequestContext
       resip::NameAddr mTopRoute;
       ResponseContext mResponseContext;
       int mTCSerial;
-      resip::Data mTid;
       bool mFromTrustedNode;
 
       typedef std::vector<ProcessorChain::Chain::iterator>
