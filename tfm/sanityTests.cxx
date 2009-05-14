@@ -7384,7 +7384,9 @@ int main(int argc, char** argv)
 
       runner.addTest( MyTestCase::suite() );
       runner.run();
-      DebugLog(<< "Finished");
+      DebugLog(<< "Finished: waiting for all transactions to die.");
+      
+      sleepSeconds(32);
 
       Fixture::destroyStatic();
    }
