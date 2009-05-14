@@ -1178,17 +1178,12 @@ TransactionState::processServerNonInvite(TransactionMessage* msg)
       {
          mIsAbandoned = true;
 
-         // We need to schedule teardown, and 500 the next retransmission.
-         if(mMsgToRetransmit)
-         {
-            // hey, we had a 100 laying around! Turn it into a 500 and send.
-            assert(mMsgToRetransmit->isResponse());
-            assert(mMsgToRetransmit->header(h_StatusLine).statusCode()==100);
-            mMsgToRetransmit->header(h_StatusLine).statusCode()=500;
-            mMsgToRetransmit->header(h_StatusLine).reason()="Server Error";
-            sendToWire(mMsgToRetransmit);
-            mIsAbandoned=false; // Only leave this set if we haven't sent a 500
-         }
+         // !bwc! We could check to see if we have a 100 lying around, and 
+         // convert it into a 500 for immediate transmission, but it is not 
+         // clear that this is a good idea, especially if the TU has abandoned 
+         // this transaction after the remote endpoint has stopped 
+         // retransmitting. Maybe we could use a time-stamp to help here? Would
+         // it be worth the extra memory footprint?
 
          if (mIsReliable)
          {
