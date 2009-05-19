@@ -187,6 +187,7 @@ cleancontrib: clean-ares
 	-$(MAKE) -C contrib/srtp superclean
 	-$(MAKE) -C contrib/srtp/crypto superclean
 	-$(MAKE) -C contrib/srtp/doc superclean
+	-$(MAKE) -C contrib/openssl clean
 
 clean: cleanpkg
 	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir clean; done ; true
