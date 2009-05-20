@@ -74,6 +74,46 @@ main()
       }
    }
 
+   // Tests for XML comment handling
+   {
+      const Data test(
+         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
+         "<!--Comment1-->\r\n"
+         "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"\r\n"
+         "          xmlns:ep=\"urn:ietf:params:xml:ns:pidf:rpid:rpid-person\"\r\n"
+         "          xmlns:pp=\"urn:ietf:params:xml:ns:pidf:person\"\r\n"
+         "          entity=\"sip:chris@xxx.xx.xxx.xx\">\r\n"
+         "<!--Comment2-->\r\n"
+         "  <pp:person>\r\n"
+         "   <status>\r\n"
+         "   <!--Comment3-->\r\n"
+         "    <ep:activities>\r\n"
+         "     <ep:activity>away</ep:activity>\r\n"
+         "    </ep:activities>\r\n"
+         "   </status>\r\n"
+         "  </pp:person>\r\n"
+         "  <tuple id=\"9b6yhF2Gk37o4\" >\r\n"
+         "     <status><basic>open</basic></status>\r\n"
+         "<!--Comment4-->\r\n"
+         "  </tuple>\r\n"
+         "<!--Comment5-->\r\n"
+         "</presence>"
+         "<!--Comment6-->\r\n");
+
+      try
+      {
+         XMLCursor xmlc(ParseBuffer(test.data(), test.size()));
+
+         assert(xmlc.getTag() == "presence");
+         traverse(xmlc);
+      }
+      catch (ParseException& e)
+      {
+         cerr << e << endl;
+         assert(false);
+      }
+   }
+
    // test assume that whitespace is not significant
    //   may eventually be controlled by the document/element
    // see http://www.w3.org/TR/1998/REC-xml-19980210#sec-white-space
