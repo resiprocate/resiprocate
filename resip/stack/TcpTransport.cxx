@@ -18,10 +18,13 @@ using namespace resip;
 
 TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum, 
                            IpVersion version, const Data& pinterface, 
-                           Compression &compression )
-   : TcpBaseTransport(fifo, portNum, version, pinterface, compression )
+                           AfterSocketCreationFuncPtr socketFunc,
+                           Compression &compression)
+   : TcpBaseTransport(fifo, portNum, version, pinterface, socketFunc, compression)
 {
    mTuple.setType(transport());
+
+   init();
 
    InfoLog (<< "Creating TCP transport host=" << pinterface 
             << " port=" << portNum

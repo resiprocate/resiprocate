@@ -118,7 +118,8 @@ class DtlsTransport : public UdpTransport
                     const Data& interfaceObj,
                     Security& security,
                     const Data& sipDomain,
-                    Compression &compression);
+                    AfterSocketCreationFuncPtr socketFunc = 0,
+                    Compression &compression = Compression::Disabled);
       virtual  ~DtlsTransport();
 
       void process(FdSet& fdset);

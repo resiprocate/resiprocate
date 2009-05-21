@@ -20,12 +20,36 @@ const size_t TcpBaseTransport::MaxReadSize = 4096;
 TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
                                    int portNum, IpVersion version,
                                    const Data& pinterface,
+                                   AfterSocketCreationFuncPtr socketFunc,
                                    Compression &compression)
-   : InternalTransport(fifo, portNum, version, pinterface, 0, compression)
+   : InternalTransport(fifo, portNum, version, pinterface, socketFunc, compression)
 {
    mFd = InternalTransport::socket(TCP, version);
-   //DebugLog (<< "Opening TCP " << mFd << " : " << this);
+}
+
+
+TcpBaseTransport::~TcpBaseTransport()
+{
+   //DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
    
+   // !jf! this is not right. should drain the sends before 
+   while (mTxFifo.messageAvailable()) 
+   {
+      SendData* data = mTxFifo.getNext();
+      InfoLog (<< "Throwing away queued data for " << data->destination);
+      
+      fail(data->transactionId);
+      delete data;
+   }
+   DebugLog (<< "Shutting down " << mTuple);
+   //mSendRoundRobin.clear(); // clear before we delete the connections
+}
+
+void
+TcpBaseTransport::init()
+{
+   //DebugLog (<< "Opening TCP " << mFd << " : " << this);   
+
    int on = 1;
 #if !defined(WIN32)
    if ( ::setsockopt ( mFd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) )
@@ -55,24 +79,6 @@ TcpBaseTransport::TcpBaseTransport(Fifo<TransactionMessage>& fifo,
       // !cj! deal with errors
 	  throw Transport::Exception("Address already in use", __FILE__,__LINE__);
    }
-}
-
-
-TcpBaseTransport::~TcpBaseTransport()
-{
-   //DebugLog (<< "Shutting down TCP Transport " << this << " " << mFd << " " << mInterface << ":" << port()); 
-   
-   // !jf! this is not right. should drain the sends before 
-   while (mTxFifo.messageAvailable()) 
-   {
-      SendData* data = mTxFifo.getNext();
-      InfoLog (<< "Throwing away queued data for " << data->destination);
-      
-      fail(data->transactionId);
-      delete data;
-   }
-   DebugLog (<< "Shutting down " << mTuple);
-   //mSendRoundRobin.clear(); // clear before we delete the connections
 }
 
 void
@@ -105,9 +111,13 @@ TcpBaseTransport::processListen(FdSet& fdset)
          return;
       }
       makeSocketNonBlocking(sock);
-      
-      
+            
       DebugLog (<< "Received TCP connection from: " << tuple << " as fd=" << sock);
+
+      if (mSocketFunc)
+      {
+         mSocketFunc(sock, transport(), __FILE__, __LINE__);
+      }
 
       if(!mConnectionManager.findConnection(tuple))
       {
@@ -132,10 +142,7 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
       
       // this will check by connectionId first, then by address
       Connection* conn = mConnectionManager.findConnection(data->destination);
-      
-      
-      
-      
+            
       //DebugLog (<< "TcpBaseTransport::processAllWriteRequests() using " << conn);
       
       // There is no connection yet, so make a client connection
@@ -169,6 +176,10 @@ TcpBaseTransport::processAllWriteRequests( FdSet& fdset )
          
          DebugLog (<<"Opening new connection to " << data->destination);
          makeSocketNonBlocking(sock);         
+         if (mSocketFunc)
+         {
+            mSocketFunc(sock, transport(), __FILE__, __LINE__);
+         }
          int e = connect( sock, &servaddr, data->destination.length() );
 
          // See Chapter 15.3 of Stevens, Unix Network Programming Vol. 1 2nd Edition
