@@ -504,6 +504,35 @@ main(int argc, char* argv[])
       assert(sdp.session().media().front().codecs().back().parameters() == "0-16");
    }
 
+   {
+       Data txt("v=0\r\n"
+                "o=Dialogic_IPCCLib 147345984 147345984 IN IP4 58.185.204.251\r\n"
+                "s=Dialogic_SIP_CCLIB\r\n"
+                "i=session information\r\n"
+                "c=IN IP4 58.185.204.251\r\n"
+                "t=0 0\r\n"
+                "m=audio 49172 RTP/AVP 0 101\r\n"
+                "a=rtpmap:0 PCMU/8000\r\n"
+                "a=fmtp\r\n"
+                "a=rtpmap:101 telephone-event/8000\r\n"
+                "m=video 57364 RTP/AVP 34\r\n"
+                "b=AS:42\r\n"
+                "a=rtpmap:34 H263/90\r\n");
+       
+
+       HeaderFieldValue hfv(txt.data(), txt.size());
+       Mime type("application", "sdp");
+       SdpContents sdp(&hfv, type);
+
+       assert(sdp.session().media().size() == 2);
+       assert(sdp.session().media().front().getValues("fmtp").front() == "");
+       assert(sdp.session().media().front().codecs().size() == 2); // 0 and 101
+       assert(sdp.session().media().front().codecs().front().parameters().size() == 0);
+       assert(sdp.session().media().front().codecs().back().parameters().size() == 0);
+       
+       CritLog(<< "Received bad Dialogic fmtp line Ok");
+    }
+
    return 0;   
 }
 
