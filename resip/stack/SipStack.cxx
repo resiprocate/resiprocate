@@ -132,7 +132,7 @@ SipStack::addTransport( TransportType protocol,
             transport = new UdpTransport(stateMacFifo, port, version, stun, ipInterface, mSocketFunc, *mCompression);
             break;
          case TCP:
-            transport = new TcpTransport(stateMacFifo, port, version, ipInterface, *mCompression);
+            transport = new TcpTransport(stateMacFifo, port, version, ipInterface, mSocketFunc, *mCompression);
             break;
          case TLS:
 #if defined( USE_SSL )
@@ -143,6 +143,7 @@ SipStack::addTransport( TransportType protocol,
                                          *mSecurity,
                                          sipDomainname,
                                          sslType, 
+                                         mSocketFunc,
                                          *mCompression);
 #else
             CritLog (<< "TLS not supported in this stack. You don't have openssl");
@@ -157,6 +158,7 @@ SipStack::addTransport( TransportType protocol,
                                           ipInterface,
                                           *mSecurity,
                                           sipDomainname,
+                                          mSocketFunc,
                                           *mCompression);
 #else
             CritLog (<< "DTLS not supported in this stack.");
