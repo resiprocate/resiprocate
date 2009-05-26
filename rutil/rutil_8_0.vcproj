@@ -491,6 +491,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Time.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Timer.cxx"
 				>
 			</File>
@@ -758,6 +762,10 @@
 			</File>
 			<File
 				RelativePath=".\ThreadIf.hxx"
+				>
+			</File>
+			<File
+				RelativePath=".\Time.hxx"
 				>
 			</File>
 			<File

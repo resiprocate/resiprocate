@@ -39,6 +39,7 @@ SRC = \
 	SysLogBuf.cxx \
 	SysLogStream.cxx \
 	ThreadIf.cxx \
+	Time.cxx \
 	Timer.cxx \
 	TransportType.cxx \
 	vmd5.cxx \

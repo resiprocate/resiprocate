@@ -4,6 +4,7 @@
 #include "rutil/Data.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
 #include <iostream>
+#include "rutil/Time.hxx"
 
 namespace resip
 {
@@ -57,17 +58,57 @@ class Timer
       Id getId() const { return mId; }
       Type getType() const { return mType; }
       // return the message to queue, possibly null
-      Message* getMessage() const { return mMessage;}
+      Message* getMessage() const { return mMessage;} 
 
-      static void setupTimeOffsets(); // initialize
-      static UInt64 getTimeMicroSec(); // get a 64 bit time
-      static UInt64 getTimeMs(); // in ms
-      static UInt64 getTimeSecs(); // in secs
+      /** @deprecated.  Does not do anything at the moment.
+      */
+      static void setupTimeOffsets()
+      {}
 
-      /// returns an absolute time in ms that is between 50% and 90% of
-      /// passed in ms from now 
-      static UInt64 getRandomFutureTimeMs( UInt64 futureMs ); // in ms
-      static UInt64 getForever(); //infinit time in future
+      /** Returns the current clock time in microseconds.
+      */
+      static UInt64 getTimeMicroSec()
+      {
+         return ResipClock::getTimeMicroSec();
+      }
+      /** Returns the current clock time in milliseconds.
+      */
+      static UInt64 getTimeMs()
+      {
+         return ResipClock::getTimeMs();
+      }
+      /** Returns the current clock time in seconds.
+      */
+      static UInt64 getTimeSecs()
+      {
+         return ResipClock::getTimeSecs();
+      }
+      /** Returns an absolute time in ms that is between 50% and 90% of
+          passed in ms from now.
+      */
+      static UInt64 getRandomFutureTimeMs(UInt64 futureMs)
+      {
+         return ResipClock::getRandomFutureTimeMs(futureMs);
+      }
+      /** Infinit time in future.
+      */
+      static UInt64 getForever()
+      {
+         return ResipClock::getForever();
+      }
+
+      /** On windows, change getSystemTime() to not use the actual clock time
+          returned by ::GetSystemTime().  The replacement time function on some versions of windows (< Vista,
+          GetTickCount()) returns a 32-bit value, so it will rollover at some point.
+          Any code that waits on timers should not wait longer than this value.
+
+         @see resiprocate.org devlist discussion "Timers: why system time?";
+         @see resip::SipStack::getTimeTillNextProcessMS().
+      */
+      static unsigned getMaxSystemTimeWaitMs(void)
+      {
+         return ResipClock::getMaxSystemTimeWaitMs();
+      }
 
       // These values can be changed but it is not recommended to do so after a
       // stack is up and running since they are not mutexed
@@ -83,11 +124,10 @@ class Timer
       static unsigned long TH; // default 64*T1
       
       static unsigned long TD;
-      static unsigned long TS;
+      static unsigned long TS;       
       
    private:
       Timer(unsigned long ms); // for TimerQueue only - don't use
-      static UInt64 getSystemTime();
 
       UInt64 mWhen; // time when the timer "goes off" in MS 
       Id mId;
