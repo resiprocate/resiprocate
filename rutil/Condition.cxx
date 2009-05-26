@@ -61,7 +61,7 @@ Condition::Condition()
    assert(mId);
 #  endif
 #else
-#ifdef _RESIP_POSIX_MONOTONIC_CLOCK
+#ifdef _RESIP_MONOTONIC_CLOCK
    pthread_condattr_t attr;
    struct timespec dummy;
    int ret = pthread_condattr_init( &attr );

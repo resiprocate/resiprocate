@@ -23,9 +23,9 @@ ResipClock::~ResipClock(void)
 {
 }
 
-//#define _RESIP_WINDOWS_MONOTONIC_CLOCK
+//#define _RESIP_MONOTONIC_CLOCK
 
-#if defined(WIN32) && defined(_RESIP_WINDOWS_MONOTONIC_CLOCK)
+#if defined(WIN32) && defined(_RESIP_MONOTONIC_CLOCK)
 unsigned ResipClock::mMaxSystemTimeWaitMs = 60000; //set low initially, may get adjusted by actual timer chosen
 #else
 unsigned ResipClock::mMaxSystemTimeWaitMs = UINT_MAX;
@@ -180,7 +180,7 @@ ResipClock::getSystemTime()
    assert(sizeof(UInt64) == 64/8);
 
 #if defined(WIN32) || defined(UNDER_CE)
-#ifdef _RESIP_WINDOWS_MONOTONIC_CLOCK
+#ifdef _RESIP_MONOTONIC_CLOCK
    static ResipClock::WinMonoClock clockInit;
    return WinMonoClock::GetClock64() * 1000;
 #else
@@ -199,12 +199,12 @@ ResipClock::getSystemTime()
    li.HighPart = ft.dwHighDateTime;
    return li.QuadPart/10;
 
-#endif //_RESIP_WINDOWS_MONOTONIC_CLOCK
+#endif //_RESIP_MONOTONIC_CLOCK
 
 #else //#if defined(WIN32) || defined(UNDER_CE)
 
    UInt64 time=0;
-#ifdef _RESIP_POSIX_MONOTONIC_CLOCK
+#ifdef _RESIP_MONOTONIC_CLOCK
    struct timespec now_monotonic;
    if (clock_gettime( CLOCK_MONOTONIC, &now_monotonic ) == 0)
 //   if ( syscall( __NR_clock_gettime, CLOCK_MONOTONIC, &now_monotonic ) == 0 )

@@ -172,7 +172,7 @@ resip::operator>(const Timer& t1, const Timer& t2)
 std::ostream& 
 resip::operator<<(std::ostream& str, const Timer& t)
 {
-   UInt64 now = getTimeMs();
+   UInt64 now = Timer::getTimeMs();
 
    str << "Timer[id=" << t.mId << " when=" << t.mWhen << " rel=";
    if (t.mWhen < now)
