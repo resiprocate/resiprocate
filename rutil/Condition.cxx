@@ -5,6 +5,8 @@
 #  include <pthread.h>
 #  include <errno.h>
 #  include <sys/time.h>
+#  include <sys/syscall.h>
+#  include <unistd.h>
 #endif
 
 #include "rutil/compat.hxx"
@@ -59,6 +61,23 @@ Condition::Condition()
    assert(mId);
 #  endif
 #else
+#ifdef _RESIP_POSIX_MONOTONIC_CLOCK
+   pthread_condattr_t attr;
+   struct timespec dummy;
+   int ret = pthread_condattr_init( &attr );
+   assert( ret == 0 );
+
+//   if((syscall( __NR_clock_getres, CLOCK_MONOTONIC, &dummy ) == 0) &&
+     if((clock_getres( CLOCK_MONOTONIC, &dummy ) == 0) &&
+       (pthread_condattr_setclock( &attr, CLOCK_MONOTONIC ) == 0))
+   {
+      ret = pthread_cond_init( &mId, &attr );
+      assert( ret == 0 );
+      pthread_condattr_destroy( &attr );
+      return;
+   }
+   pthread_condattr_destroy( &attr );
+#endif
    int  rc =  pthread_cond_init(&mId,0);
    assert( rc == 0 );
 #endif

@@ -387,6 +387,10 @@
 				RelativePath=".\ThreadIf.cxx">
 			</File>
 			<File
+				RelativePath=".\Time.cxx"
+				>
+			</File>
+			<File
 				RelativePath=".\Timer.cxx">
 			</File>
 			<File
@@ -588,6 +592,10 @@
 			</File>
 			<File
 				RelativePath=".\ThreadIf.hxx">
+			</File>
+			<File
+				RelativePath=".\Time.hxx"
+				>
 			</File>
 			<File
 				RelativePath=".\TimeLimitFifo.hxx">

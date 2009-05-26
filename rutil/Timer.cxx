@@ -5,14 +5,15 @@
 #  include <winbase.h>
 #else
 #  include <sys/time.h>
+#  include <sys/syscall.h>
 #  include <unistd.h>
 #endif
 
 #include <cassert>
-
+#include "rutil/Time.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/Random.hxx"
+
 
 #define RESIPROCATE_SUBSYSTEM Subsystem::SIP
 
@@ -20,7 +21,6 @@ using namespace resip;
  
 unsigned long
 resip::Timer::mTimerCount = 1L;
-
 
 unsigned long
 resip::Timer::T1 = 500;
@@ -51,10 +51,6 @@ resip::Timer::TH = 64*T1;
 
 unsigned long
 resip::Timer::TS = 32000;
-
-
-#define RESIPROCATE_SUBSYSTEM Subsystem::SIP
-
 
 Data
 Timer::toData(Type timer)
@@ -159,95 +155,6 @@ Timer::operator=(const Timer& other)
 Timer::~Timer() 
 {}
 
-UInt64
-Timer::getSystemTime()
-{
-    assert( sizeof(UInt64) == 64/8 );
-    UInt64 time=0;
-#if defined(WIN32)  
-    FILETIME ft;
-#ifdef UNDER_CE
-    SYSTEMTIME st;
-    GetSystemTime( &st);
-    SystemTimeToFileTime(&st,&ft);
-#else
-    GetSystemTimeAsFileTime( &ft);
-#endif
-
-    ULARGE_INTEGER li;
-    li.LowPart = ft.dwLowDateTime;
-    li.HighPart = ft.dwHighDateTime;
-    time = li.QuadPart/10;
-#else
-    struct timeval now;
-    gettimeofday( &now , NULL );
-    //assert( now );
-    time = now.tv_sec;
-    time = time*1000000;
-    time += now.tv_usec;
-#endif
-    return time;
-}
-
-
-void 
-Timer::setupTimeOffsets()
-{
-}
-
-
-UInt64 
-Timer::getTimeMicroSec()
-{
-    return getSystemTime();
-}
-
-
-UInt64 
-Timer::getTimeMs()
-{
-    return getSystemTime()/1000LL;
-}
-
-UInt64 
-Timer::getTimeSecs()
-{
-    return getSystemTime()/1000000LL;
-}
-
-
-UInt64 
-Timer::getForever()
-{
-    assert( sizeof(UInt64) == 8 );
-#if defined(WIN32) && !defined(__GNUC__)
-    return 18446744073709551615ui64;
-#else
-    return 18446744073709551615ULL;
-#endif
-}
-
-
-UInt64 
-Timer::getRandomFutureTimeMs( UInt64 futureMs )
-{
-    UInt64 now = getTimeMs();
-   
-    // make r a random number between 5000 and 9000 
-    int r = Random::getRandom()%4000;
-    r += 5000;
-   
-    UInt64 ret = now;
-    ret += (futureMs*r)/10000;
-
-    assert( ret >= now );
-    assert( ret >= now+(futureMs/2) );
-    assert( ret <= now+futureMs );
-
-    return ret;
-}
-
-
 bool 
 resip::operator<(const Timer& t1, const Timer& t2)
 {
@@ -265,7 +172,7 @@ resip::operator>(const Timer& t1, const Timer& t2)
 std::ostream& 
 resip::operator<<(std::ostream& str, const Timer& t)
 {
-   UInt64 now = Timer::getTimeMs();
+   UInt64 now = getTimeMs();
 
    str << "Timer[id=" << t.mId << " when=" << t.mWhen << " rel=";
    if (t.mWhen < now)
