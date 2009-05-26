@@ -23,8 +23,6 @@ ResipClock::~ResipClock(void)
 {
 }
 
-//#define _RESIP_MONOTONIC_CLOCK
-
 #if defined(WIN32) && defined(_RESIP_MONOTONIC_CLOCK)
 unsigned ResipClock::mMaxSystemTimeWaitMs = 60000; //set low initially, may get adjusted by actual timer chosen
 #else
@@ -59,15 +57,13 @@ ResipClock::WinMonoClock::WinMonoClock()
       }
       else
       {
-         //uncomment for GTCInterlocked
-         /*
+#ifdef _RESIP_WINMONOCLOCK_GTCINTERLOCKED
          ResipClock::mMaxSystemTimeWaitMs  = GTCInterlocked::GetMaxWaitMs();
          mGTC64 = (PGTC64)&GTCInterlocked::GTC64;
-         */
-
-         //default to GTCLockDuringRange
+#else                
          ResipClock::mMaxSystemTimeWaitMs  = GTCLockDuringRange::GetMaxWaitMs();
          mGTC64 = (PGTC64)&GTCLockDuringRange::GTC64;
+#endif
       }
    }
 }
