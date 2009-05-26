@@ -8,8 +8,13 @@
 namespace resip
 {
 
-/** Monotonically increasing clock.  The time values returned by this class should be considered independent
-    of any other clock time, including the system time (ie OS time,epoch, etc).
+/** Clock used for timing in the Timer class and possibly other areas.  Depending on the OS and compile settings this clock
+    may not be monotonic.  Define _RESIP_MONOTONIC_CLOCK to enable monotonic timers.
+    The precision of this clock is available in microseconds, but the accuracy is intended to be no worse than 1 second.
+    The time values returned by this class should be considered independent of any other clock time, 
+    including the system time (ie OS date/time,uptime,epoch,etc).
+
+    @see resiprocate.org devlist discussion "Timers: why system time?";
  */
 class ResipClock
 {

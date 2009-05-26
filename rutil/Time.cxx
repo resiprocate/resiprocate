@@ -54,15 +54,18 @@ ResipClock::WinMonoClock::WinMonoClock()
       if (Gtc64)
       {
          mGTC64 = Gtc64;
+         DebugLog(<< "Found GetTickCount64(), using this clock as the monotonic clock for time functions.");
       }
       else
       {
 #ifdef _RESIP_WINMONOCLOCK_GTCINTERLOCKED
          ResipClock::mMaxSystemTimeWaitMs  = GTCInterlocked::GetMaxWaitMs();
          mGTC64 = (PGTC64)&GTCInterlocked::GTC64;
+         DebugLog(<< "Using GTCInterlocked::GTC64 as the monotonic clock for time functions.");
 #else                
          ResipClock::mMaxSystemTimeWaitMs  = GTCLockDuringRange::GetMaxWaitMs();
          mGTC64 = (PGTC64)&GTCLockDuringRange::GTC64;
+         DebugLog(<< "Using GTCLockDuringRange::GTC64 as the monotonic clock for time functions.");
 #endif
       }
    }
