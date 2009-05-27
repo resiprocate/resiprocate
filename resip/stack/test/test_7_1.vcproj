@@ -36,7 +36,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -93,7 +93,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -147,7 +147,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"

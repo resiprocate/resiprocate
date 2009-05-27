@@ -2,6 +2,7 @@
 #if defined(WIN32)
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 #include <windows.h>
+#include <mmsystem.h>
 #if (_MSC_VER >= 1400) //no atomic intrinsics on Visual Studio 2003 and below
 #include <intrin.h>
 #pragma intrinsic(_InterlockedCompareExchange64)
@@ -34,48 +35,48 @@ ResipClock::WinMonoClock::PGTC64 ResipClock::WinMonoClock::mGTC64 = &ResipClock:
 
 ResipClock::WinMonoClock::WinMonoClock()
 {
+   Initialize();
+}
+
+void 
+ResipClock::WinMonoClock::Initialize(void)
+{
    static Mutex mtxStart;
-   static volatile bool gtc64Test=false;
-   PGTC64 Gtc64 = 0;
+   static volatile bool isInitialized=false;    
 
    Lock lock(mtxStart);
 
-   if (!gtc64Test)
+   if (isInitialized)
    {
-      gtc64Test = true;
-
-      HMODULE hm = ::LoadLibrary("Kernel32");
-
-      if (hm != NULL)
-      {
-         Gtc64 = (PGTC64)::GetProcAddress(hm,"GetTickCount64");
-      }
-
-      if (Gtc64)
-      {
-         mGTC64 = Gtc64;
-         DebugLog(<< "Found GetTickCount64(), using this clock as the monotonic clock for time functions.");
-      }
-      else
-      {
-#ifdef _RESIP_WINMONOCLOCK_GTCINTERLOCKED
-         ResipClock::mMaxSystemTimeWaitMs  = GTCInterlocked::GetMaxWaitMs();
-         mGTC64 = (PGTC64)&GTCInterlocked::GTC64;
-         DebugLog(<< "Using GTCInterlocked::GTC64 as the monotonic clock for time functions.");
-#else                
-         ResipClock::mMaxSystemTimeWaitMs  = GTCLockDuringRange::GetMaxWaitMs();
-         mGTC64 = (PGTC64)&GTCLockDuringRange::GTC64;
-         DebugLog(<< "Using GTCLockDuringRange::GTC64 as the monotonic clock for time functions.");
-#endif
-      }
+      return;
    }
+ 
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
+   ResipClock::mMaxSystemTimeWaitMs  = GTCInterlocked::GetMaxWaitMs();
+   mGTC64 = (PGTC64)&GTCInterlocked::GTC64;
+   DebugLog(<< "Using GTCInterlocked::GTC64 as the monotonic clock for time functions.");
+#else                
+   ResipClock::mMaxSystemTimeWaitMs  = GTCLockDuringRange::GetMaxWaitMs();
+   mGTC64 = (PGTC64)&GTCLockDuringRange::GTC64;
+   DebugLog(<< "Using GTCLockDuringRange::GTC64 as the monotonic clock for time functions.");
+#endif 
+
+   unsigned min=0,max=0,actual=0;
+   bool isMono = false;
+
+   ResipClock::queryTimerInfo(min,max,actual,isMono);
+
+   InfoLog(<< "Timer resolution: (min/max/actual/isMonotonic) = " << min << '/' << max << '/' << actual <<
+      '/' << ((isMono)?("true"):("false")));
+
+   isInitialized = true;
 }
 
 #define IS_ALIGNED(_pointer, _alignment) ((((ULONG_PTR) (_pointer)) & ((_alignment) - 1)) == 0)
 
 UInt64 ResipClock::WinMonoClock::GTCInterlocked::GTC64(void)
 {
-#if (_MSC_VER >= 1400) //no atomic intrinsics on Visual Studio 2003 and below
+#if defined(_MSC_VER) && (_MSC_VER >= 1400) //no atomic intrinsics on Visual Studio 2003 and below
    ULARGE_INTEGER timeVal;
 
    assert(IS_ALIGNED(&mBaseTime,8)); //if the implementation ever changes to use 64-bit atomic read/write then 64-bit alignment will be required.
@@ -84,11 +85,11 @@ UInt64 ResipClock::WinMonoClock::GTCInterlocked::GTC64(void)
    //Not the most efficient wat to do a 64-bit atomic read (see fild instruction), but no intrinsic for 64-bit atomic read.
    timeVal.QuadPart = _InterlockedCompareExchange64((LONGLONG volatile *)&mBaseTime,0,0);
 
-   DWORD tickNow = ::GetTickCount();
+   DWORD tickNow = ::timeGetTime();
 
    if (tickNow != timeVal.LowPart)
    {
-      //the difference in the low 32-bits and the current 32-bit GetTickCount will be the time difference from
+      //the difference in the low 32-bits and the current 32-bit timeGetTime will be the time difference from
       //the base time till now.  Integer arithmentic will correctly handle cases where tickNow < timeVal.LowPart (rollover).
       //This diff cannot be greater than 0xFFFFFFFF, so this function must be called more frequently than once
       //every 49.7 days.
@@ -123,7 +124,7 @@ ResipClock::WinMonoClock::GTCLock::GTC64(void)
 {
    Lock lock(mMutex);
 
-   DWORD tickNow = ::GetTickCount();
+   DWORD tickNow = ::timeGetTime();
 
    if (tickNow != mBaseTime.LowPart)
    {
@@ -143,10 +144,8 @@ UInt64 ResipClock::WinMonoClock::GTCLockDuringRange::GTC64(void)
    // empiric constants
    const DWORD TIMER_BEGIN_SAFE_RANGE = 0xffff; // about one minute after
    const DWORD TIMER_END_SAFE_RANGE = 0xffff0000; // and before wrap around
-
-   // may be replaced with timeGetTime() for more accuracy
-   // but it will require timeBeginPeriod(),timeEndPeriod() and link with Winmm.lib
-   DWORD tick = ::GetTickCount();
+  
+   DWORD tick = ::timeGetTime();
 
    if ( ( tick > TIMER_BEGIN_SAFE_RANGE ) && ( tick < TIMER_END_SAFE_RANGE ) )
    {
@@ -270,6 +269,64 @@ ResipClock::getRandomFutureTimeMs( UInt64 futureMs )
    assert( ret <= now+futureMs );
 
    return ret;
+}
+
+void 
+ResipClock::queryTimerInfo(unsigned &min, unsigned &max, unsigned &actual, bool &isMonotonic)
+{  
+   min = max = actual = 0;
+   isMonotonic = false;
+
+#if defined(WIN32) 
+#if defined(_RESIP_MONOTONIC_CLOCK)
+#if !defined(NTSTATUS)
+#define NTSTATUS DWORD
+#endif
+   typedef NTSTATUS (WINAPI*PNTQTR)(PULONG,PULONG,PULONG);  
+	
+	HMODULE hm = ::LoadLibrary("ntdll");
+	
+   if (hm != NULL)
+   {
+      PNTQTR ntqtr = (PNTQTR)::GetProcAddress(hm,"NtQueryTimerResolution");
+
+      if (ntqtr)
+      {
+         ntqtr((PULONG)&min,(PULONG)&max,(PULONG)&actual);
+         min /= 10;
+         max /= 10;
+         actual /= 10;
+      }
+   
+      ::FreeLibrary(hm);
+      hm = NULL;
+   }   
+   isMonotonic = true;
+#else
+   DWORD timeAdjustment=0;
+	BOOL timeAdjustmentDisabled=0;
+   //on Vista it looks like GetSystemTime has 1ms resolution, but GetSystemTimeAdjustment still returns 15ms
+   //so just set the min resolution to whatever is reported, no actual resolution can be consistently found.
+   ::GetSystemTimeAdjustment(&timeAdjustment,(PDWORD)&min,&timeAdjustmentDisabled);
+   actual /= 10;
+   isMonotonic = false;   
+#endif
+#else //WIN32
+#ifdef __APPLE__
+   //@TODO 
+#else
+   clockid_t clock = CLOCK_REALTIME; //need to test/verify CLOCK_REALTIME returns the gettimeofday resolution.  
+#if defined(_RESIP_MONOTONIC_CLOCK)
+   clock = CLOCK_MONOTONIC;
+   isMonotonic = true;
+#endif
+   struct timespec res;
+   if (clock_getres(clock,&res) == 0)
+   {
+      actual = (res.tv_sec * 1000000) + (res.tv_nsec / 1000);
+   } 
+#endif
+#endif
 }
 
 /* ====================================================================

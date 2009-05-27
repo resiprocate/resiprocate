@@ -34,7 +34,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -99,7 +99,7 @@ endlocal
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib winmm.lib &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -168,7 +168,7 @@ endlocal
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib crypt32.lib &quot;$(ProjectDir)..\contrib\openssl\lib\vc\libeay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\openssl\lib\vc\ssleay32MDd.lib&quot; &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -302,7 +302,7 @@ endlocal
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib Iphlpapi.lib Dnsapi.lib &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib &quot;$(ProjectDir)..\contrib\popt\win32\lib\libpopt.lib&quot;"
 				OutputFile="$(OutDir)/repro.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
