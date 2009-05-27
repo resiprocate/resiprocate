@@ -308,7 +308,7 @@ ResipClock::queryTimerInfo(unsigned &min, unsigned &max, unsigned &actual, bool 
    //on Vista it looks like GetSystemTime has 1ms resolution, but GetSystemTimeAdjustment still returns 15ms
    //so just set the min resolution to whatever is reported, no actual resolution can be consistently found.
    ::GetSystemTimeAdjustment(&timeAdjustment,(PDWORD)&min,&timeAdjustmentDisabled);
-   actual /= 10;
+   min /= 10;
    isMonotonic = false;   
 #endif
 #else //WIN32
