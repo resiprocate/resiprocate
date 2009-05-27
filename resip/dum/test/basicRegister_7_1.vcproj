@@ -36,7 +36,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib"
 				OutputFile="$(OutDir)/basicRegister.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -93,7 +93,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -148,7 +148,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/basicRegister.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -205,7 +205,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib Iphlpapi.lib winmm.lib crypt32.lib &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\libeay32.lib&quot; &quot;$(ProjectDir)..\..\..\contrib\openssl\lib\vc\ssleay32.lib&quot;"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"

@@ -10,9 +10,40 @@ namespace resip
 
 /** Clock used for timing in the Timer class and possibly other areas.  Depending on the OS and compile settings this clock
     may not be monotonic.  Define _RESIP_MONOTONIC_CLOCK to enable monotonic timers.
-    The precision of this clock is available in microseconds, but the accuracy is intended to be no worse than 1 second.
+    The precision of this clock is available in microseconds, but the accuracy depends on other factors such as the OS and hardware.
     The time values returned by this class should be considered independent of any other clock time, 
     including the system time (ie OS date/time,uptime,epoch,etc).
+
+    OS Specific notes:
+
+    <b>Windows</b>
+    
+    When _RESIP_MONOTONIC_CLOCK is defined, timeGetTime() is currently used as the underyling time source.  
+    The default resolution/accuracy of this timer on windows is usually the same as the system time clock.  
+    To query resolution information use ResipClock::queryTimerInfo().  timeBeginPeriod() can be used to increase 
+    the resolution of the timer and allow for up to 1ms accuracy.  This will improve the accuracy of SIP related
+    timers governed by resip::Timer, but also has other OS wide implications, please refer to Microsoft's
+    documenation on timeBeginPeriod() for more information.
+
+    When _RESIP_MONOTONIC_CLOCK is not defined, ::GetSystemTime is used as the underlying time source.  This
+    value can jump forward or backward (not monotonic) if the OS system time is adjusted.  The default 
+    resolution of this timer is the current system clock interrupt time and cannot be set to a higher resolution.
+    The resolution has been observed at approx 15ms on XP and 1ms on Vista.
+   
+   <b>POSIX</b>
+
+    When _RESIP_MONOTONIC_CLOCK is defined, clock_gettime() is used with the CLOCK_MONOTONIC clock.
+
+    When _RESIP_MONOTONIC_CLOCK is not defined, gettimeofday() is used as the underyling clock.
+
+   <b>OS X</b>
+
+    A monotonic clock is currently not implemented for OS X.  There appear to be a couple of choices.
+      http://www.wand.net.nz/~smr26/wordpress/2009/01/19/monotonic-time-in-mac-os-x/
+      http://www.meandmark.com/timing.pdf
+      http://developer.apple.com/qa/qa2004/qa1398.html
+
+
 
     @see resiprocate.org devlist discussion "Timers: why system time?";
  */
@@ -46,7 +77,14 @@ class ResipClock
       static unsigned getMaxSystemTimeWaitMs(void)
       {
          return mMaxSystemTimeWaitMs;
-      }         
+      }     
+
+      /** Gets the current clock's minimum, maximum and current/actual timer resolution and returns if the
+          clock is known to be monotonic.
+          If min, max or actual return 0 then that information is not available.
+          min max and actual are in units of microseconds.
+        */
+      static void queryTimerInfo(unsigned &minRes, unsigned &maxRes, unsigned &actualRes, bool &isMonotonic);
 
    private:
       /** Returns the current clock time in microseconds.  Does not guarantee that this is related to the actual
@@ -59,32 +97,30 @@ class ResipClock
 #ifdef WIN32
    private:
       /** Responsible for returning a 64-bit monotonic clock value for timing.  Currently implemented using
-        * GetTickCount or GetTickCount64 (on Vista & Server 2008). Precision is milliseconds,
-        * accuracy is limited to ::GetTickCount/::GetTickCount64 which is ~15-50ms, but can vary
-        * with CPU load. GetTickCount values in the ballpark of 100ms have been seen under load.
-        * For more information on GetTickCount's monotonic behavior and implementation 
-          @see "GetTickCount – Truth and Fiction", https://blogs.msdn.com/sloh/archive/2005/04/05/405724.aspx
+        * timeGetTime. Precision of this class is milliseconds,
+        * accuracy is dependent on the windows timer resolution. Use timeBeginPeriod() to increase the resolution.
         */
       class WinMonoClock
       {
          public:
-            WinMonoClock();
+            WinMonoClock();        
 
             /** Returns a monotonic clock value in milliseconds.  Currently this is the system uptime as reported
-              * by GetTickCount/GetTickCount64
+              * by timeGetTime.
               */
             static UInt64 GetClock64(void)
             {
                return mGTC64();
-            }
+            }                     
 
          private:
 
+            static void Initialize(void);
             /** Definition of a function that has no parameters and returns a 64-bit unsigned integer.
             */
             typedef UInt64 (*PGTC64)(void);
 
-            /** Get Tick Count wrapper for 32-bit version of ::GetTickCount that is nearly lockless and handles 32-bit wraparound.
+            /** Get Tick Count wrapper for 32-bit version of ::timeGetTime that is nearly lockless and handles 32-bit wraparound.
               * _InterlockedExchange64 is used, which requires the CMPXCHG8B instruction.  This instruction is found
               * on pentium and later intel processors and K5 and later AMD processors.
             */
@@ -102,7 +138,7 @@ class ResipClock
                      //Since the base time isn't updated on every call, need to ensure that it's updated once every 49.7 days.
                      //The base time will lag behind the current tick count, which means the lag time must be used
                      //to determine the max wait.
-                     //Also need to add a cushion to this calculaton because ::GetTickCount is not accurate to 1ms.
+                     //Also need to add a cushion to this calculaton because ::timeGetTime may not be accurate to 1ms.
                      __int64 maxWait = (__int64)UINT_MAX - mBaseTimeUpdateInterval - mBaseTimeCushion;
                      if (maxWait <= 0)
                      {
@@ -126,7 +162,7 @@ class ResipClock
                   static const UInt32 mBaseTimeCushion = 120000; //!< large cushion to be cautious
             };
 
-            /** Get Tick Count wrapper for 32-bit version of ::GetTickCount that minimizes locking and handles 32-bit wraparound.
+            /** Get Tick Count wrapper for 32-bit version of ::timeGetTime that minimizes locking and handles 32-bit wraparound.
               * Issues a mutex lock only during a 2 minute window around the 49.7 day threshold.  The lock is issued for each call to
               * GTC64 during this window and durinng this window only.
               * Requires SipStack::getTimeTillNextProcessMS() to not return a value greater than 2 minutes.
@@ -143,7 +179,7 @@ class ResipClock
                   }
 
                private:
-                  /** GetTickCounter() and timeGetTime() return DWORD - ms since system start
+                  /** timeGetTime() returns DWORD - ms since system start
                     Therefore, the time will wrap around to zero if the system is run continuously for 49.7 days
                    if timer is called reasonable often we may manage wrap around by counter below
                    */
@@ -159,7 +195,7 @@ class ResipClock
 
             };
 
-            /** Get Tick Count wrapper for 32-bit version of ::GetTickCount that locks on a mutex on every call to GTC64()
+            /** Get Tick Count wrapper for 32-bit version of ::timeGetTime that locks on a mutex on every call to GTC64()
                 to safely handle 32-bit wraparound.
             */
             class GTCLock

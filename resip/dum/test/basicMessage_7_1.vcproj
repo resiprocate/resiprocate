@@ -37,7 +37,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib  iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib iphlpapi.lib winmm.lib"
 				OutputFile="$(OutDir)/basicMessage.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -94,7 +94,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FIXED:NO"
-				AdditionalDependencies="Ws2_32.lib Dnsapi.lib  iphlpapi.lib"
+				AdditionalDependencies="Ws2_32.lib Dnsapi.lib iphlpapi.lib winmm.lib"
 				OutputFile="$(OutDir)/test.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
