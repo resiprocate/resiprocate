@@ -1,3 +1,4 @@
+#include <winsock2.h>
 #include "ReTurnSubsystem.hxx"
 
 ReTurnSubsystem ReTurnSubsystem::RETURN("RETURN");
