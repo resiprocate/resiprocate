@@ -152,6 +152,9 @@ typedef unsigned int   UInt32;
 // doesn't support IPv6, we will undef USE_IPV6.
 #ifdef USE_IPV6
 #ifndef IPPROTO_IPV6
+#if(_WIN32_WINNT >= 0x0501)   // Some versions of the windows SDK define IPPROTO_IPV6 differently - always enable IP v6 if USE_IPV6 and _WIN32_WINNT >= 0x0501
+#define IPPROTO_IPV6 ::IPPROTO_IPV6  
+#else
 #ifdef _MSC_VER
 #define __STR2__(x) #x
 #define __STR1__(x) __STR2__(x)
@@ -161,6 +164,7 @@ typedef unsigned int   UInt32;
 #warning IPv6 support requested, but IPPROTO_IPV6 undefined; this platform does not appear to support IPv6
 #endif
 #undef USE_IPV6
+#endif
 #endif
 #endif
 
