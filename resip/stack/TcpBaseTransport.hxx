@@ -15,7 +15,12 @@ class TcpBaseTransport : public InternalTransport
    public:
       enum  {MaxFileDescriptors = 100000};
 
-      TcpBaseTransport(Fifo<TransactionMessage>& fifo, int portNum,  IpVersion version, const Data& interfaceName, Compression &compression);
+      TcpBaseTransport(Fifo<TransactionMessage>& fifo, 
+                       int portNum,  
+                       IpVersion version, 
+                       const Data& interfaceName, 
+                       AfterSocketCreationFuncPtr socketFunc, 
+                       Compression &compression);
       virtual  ~TcpBaseTransport();
       
       virtual void process(FdSet& fdset);
@@ -28,6 +33,11 @@ class TcpBaseTransport : public InternalTransport
       const ConnectionManager& getConnectionManager() const {return mConnectionManager;}
 
    protected:
+      /** Performs constructor activities that depend on virtual 
+       *  functions specified by derived classes.  Derived classes
+          should call this in their constructors.  */
+      virtual void init();
+
       virtual Connection* createConnection(Tuple& who, Socket fd, bool server=false)=0;
 
       /** Forms a connection if one doesn't exist, moves requests to the

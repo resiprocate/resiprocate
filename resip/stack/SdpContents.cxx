@@ -1789,14 +1789,21 @@ Codec::assignFormatParameters(const SdpContents::Session::Medium& medium)
       for (list<Data>::const_iterator i = medium.getValues(fmtp).begin();
            i != medium.getValues(fmtp).end(); ++i)
       {
-         ParseBuffer pb(i->data(), i->size());
-         int payload = pb.integer();
-         if (payload == mPayloadType)
+         try
          {
-            const char* anchor = pb.skipWhitespace();
-            pb.skipToEnd();
-            pb.data(mParameters, anchor);
-            break;
+            ParseBuffer pb(i->data(), i->size());
+            int payload = pb.integer();
+            if (payload == mPayloadType)
+            {
+               const char* anchor = pb.skipWhitespace();
+               pb.skipToEnd();
+               pb.data(mParameters, anchor);
+               break;
+            }
+         }
+         catch (ParseException &pe)
+         {
+            InfoLog(<<"Caught exception when parsing a=fmtp: "<< pe);
          }
       }
    }

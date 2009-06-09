@@ -68,7 +68,7 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
       lPb.reset(start);
       mData.reserve(lPb.end() - lPb.start());
 
-      const char* anchor = lPb.position();
+      const char* anchor = start;
       {
          DataStream str(mData);
          Data temp;
@@ -83,6 +83,8 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
             }
             else
             {
+               lPb.data(temp, anchor);
+               str << temp;
                break;
             }
          }
@@ -107,19 +109,19 @@ XMLCursor::XMLCursor(const ParseBuffer& pb)
    // check for # & and note -- make decode, decodeName do stuff if set
 
    //<top></top> // no children
-   lPb.reset(lPb.start());
-   lPb.skipToChar(Symbols::RA_QUOTE[0]);
-   lPb.skipChar();
+   ParseBuffer pbtemp(mRoot->mPb);
+   pbtemp.skipToChar(Symbols::RA_QUOTE[0]);
+   pbtemp.skipChar();
    if (!WhitespaceSignificant)
    {
-      lPb.skipWhitespace();
+      pbtemp.skipWhitespace();
    }
-   if (*lPb.position() == Symbols::LA_QUOTE[0] &&
-       *(lPb.position()+1) == Symbols::SLASH[0])
+   if (*pbtemp.position() == Symbols::LA_QUOTE[0] &&
+       *(pbtemp.position()+1) == Symbols::SLASH[0])
    {
-      lPb.skipChar();
-      lPb.skipChar();
-      if (strncmp(mRoot->mTag.data(), lPb.position(), mRoot->mTag.size()) == 0)
+      pbtemp.skipChar();
+      pbtemp.skipChar();
+      if (strncmp(mRoot->mTag.data(), pbtemp.position(), mRoot->mTag.size()) == 0)
       {
          // no children ever
          mRoot->mPb.reset(mRoot->mPb.end());
@@ -587,7 +589,12 @@ XMLCursor::Node::skipComments(ParseBuffer& pb)
           *(pb.position()+3) == HYPHEN[0])
    {
       pb.skipToChars(COMMENT_END);
-      pb.assertNotEof();
+      pb.skipChars(COMMENT_END);
+      pb.skipWhitespace();
+      if(pb.eof())
+      {
+         return pb.end();
+      }
    }
 
    return pb.position();

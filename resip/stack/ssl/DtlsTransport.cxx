@@ -76,9 +76,10 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
                              const Data& interfaceObj,
                              Security& security,
                              const Data& sipDomain,
+                             AfterSocketCreationFuncPtr socketFunc,
                              Compression& compression)
                              : UdpTransport( fifo, portNum, version, 
-                                 StunDisabled, interfaceObj, 0, compression ),
+                                 StunDisabled, interfaceObj, socketFunc, compression ),
                                mTimer( mHandshakePending ),
                                mSecurity( &security ),
                                mDomain(sipDomain)

@@ -27,13 +27,16 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
                            Security& security,
                            const Data& sipDomain, 
                            SecurityTypes::SSLType sslType,
+                           AfterSocketCreationFuncPtr socketFunc,
                            Compression &compression):
-   TcpBaseTransport(fifo, portNum, version, interfaceObj, compression ),
+   TcpBaseTransport(fifo, portNum, version, interfaceObj, socketFunc, compression ),
    mSecurity(&security),
    mSslType(sslType)
 {
    setTlsDomain(sipDomain);   
    mTuple.setType(transport());
+
+   init();
 
    InfoLog (<< "Creating TLS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 
