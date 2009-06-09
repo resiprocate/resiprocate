@@ -177,7 +177,7 @@ clean-ares:
 # Various clean targets
 CLEANDIRS := resip/stack resip/dum resip/dum/test resip/stack/test presSvr \
              repro rutil rutil/test tfm apps reTurn reTurn/client \
-             reTurn/client/test p2p p2p/s2c/s2c
+             reTurn/client/test p2p p2p/s2c/s2c reflow resip/recon
 
 
 cleancontrib: clean-ares
@@ -187,6 +187,7 @@ cleancontrib: clean-ares
 	-$(MAKE) -C contrib/srtp superclean
 	-$(MAKE) -C contrib/srtp/crypto superclean
 	-$(MAKE) -C contrib/srtp/doc superclean
+	-$(MAKE) -C contrib/openssl clean
 
 clean: cleanpkg
 	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir clean; done ; true
@@ -194,13 +195,15 @@ clean: cleanpkg
 cleanall: cleancontrib
 	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir cleanall; done ; true
 
-distclean: cleancontrib cleanpkg
+superclean: cleancontrib cleanpkg
 	for dir in $(CLEANDIRS); do $(MAKE) -C $$dir distclean; done ; true
 	find * -name '*.db' -exec rm -f '{}' \;
 	-rm -Rf .make_prefs
-	-rm -Rf build/Makefile.conf
 	-rm -f SVN-VERSION
 	-rm -Rf lib.*.*
+
+distclean: superclean
+	-rm -Rf build/Makefile.conf
 
 ###########################################################################
 install: install-ares install-rutil install-resip install-dum
@@ -292,7 +295,7 @@ $(BUILD)/Makefile.conf:
 	./configure -y
 
 .PHONY: resiprocate tests contrib ares srtp dtls-srtp-openssl
-.PHONY: install install-ares install-rutil install-resip install-repro install-dum
+.PHONY: install install-ares install-rutil install-resip install-repro install-dum install-reflow install-returnclient install-recon
 .PHONY: SVN-VERSION repro-rpm repro-dist cleanpkg rpmbuild-area
 .PHONY: repro dum tests tfm tfmcontrib contrib rutil check presSvr
 

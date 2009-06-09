@@ -24,8 +24,8 @@ class TlsTransport : public TcpBaseTransport
                    Security& security,
                    const Data& sipDomain, 
                    SecurityTypes::SSLType sslType,
-                   Compression &compression = Compression::Disabled
-                   );
+                   AfterSocketCreationFuncPtr socketFunc=0,
+                   Compression &compression = Compression::Disabled);
       virtual  ~TlsTransport();
 
       TransportType transport() const { return TLS; }

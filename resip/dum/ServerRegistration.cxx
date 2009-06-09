@@ -237,7 +237,7 @@ ServerRegistration::processRegistration(const SipMessage& msg)
       *mOriginalContacts = database->getContacts(mAor);
    }
 
-    // If no conacts are present in the request, this is simply a query.
+   // If no contacts are present in the request, this is simply a query.
     if (!msg.exists(h_Contacts))
     {
       if (async)
