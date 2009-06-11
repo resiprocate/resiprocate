@@ -8,7 +8,7 @@ Original Author: Scott Godin
 What is reTurn?
 ---------------
 reTurn is a Stun/Turn server and client library implementation of the latest 
-Stun/Turn drafts:  RFC5389, and draft-ietf-behave-turn-12
+Stun/Turn drafts:  RFC5389, and draft-ietf-behave-turn-15
 
 
 Current External Library Usage
