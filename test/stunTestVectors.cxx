@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
    StunTuple local(StunTuple::UDP, asio::ip::address::from_string("10.0.0.1"), 5000);
    StunTuple remote(StunTuple::UDP, asio::ip::address::from_string("10.0.0.2"), 5001);
 
-   resip::Log::initialize(resip::Log::Cout, resip::Log::Stack, argv[0]);
+   resip::Log::initialize(resip::Log::Cout, resip::Log::Info, "");
 
    const unsigned char req[] =
      "\x00\x01\x00\x58"
@@ -154,6 +154,7 @@ int main(int argc, char* argv[])
    reqltcMessage.calculateHmacKey(hmacKey, password);
    assert(reqltcMessage.checkMessageIntegrity(hmacKey));  
 
+   InfoLog(<< "All tests passed!");
    return 0;
 }
 
