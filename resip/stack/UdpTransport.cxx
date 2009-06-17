@@ -353,7 +353,7 @@ UdpTransport::process(FdSet& fdset)
          if(mExternalUnknownDatagramHandler)
          {
             auto_ptr<Data> datagram(new Data(buffer,len));
-            (*mExternalUnknownDatagramHandler)(this,datagram);
+            (*mExternalUnknownDatagramHandler)(this,tuple,datagram);
          }
 
          delete message; 
