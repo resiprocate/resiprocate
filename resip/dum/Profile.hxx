@@ -83,19 +83,19 @@ class Profile
       /// Only used if timer option tag is set in MasterProfile.
       /// Set to PreferLocalRefreshes if you prefer that the local UA performs the refreshes.  
       /// Set to PreferRemoteRefreshes if you prefer that the remote UA peforms the refreshes.
-      /// Set to PreferUACRefreshes if you prefer that the UAC (for the session - caller) performs the refreshes.
-      /// Set to PreferUASRefreshes if you prefer that the UAS (for the session - callee) performs the refreshes.
+      /// Set to PreferCallerRefreshes if you prefer that the Caller performs the refreshes.
+      /// Set to PreferCalleeRefreshes if you prefer that the Callee (called party) performs the refreshes.
       /// Note: determining the refresher is a negotiation, so despite this setting the remote 
       /// end may end up enforcing their preference.  Also if the remote end doesn't support 
       /// SessionTimers then the refresher will always be local.
       /// This implementation follows the RECOMMENDED practices from section 7.1 of the draft 
-      /// and does not specify a refresher parameter as in UAC requests.
+      /// and does not specify a refresher parameter in UAC requests.
       typedef enum
       {
          PreferLocalRefreshes,
          PreferRemoteRefreshes,
-         PreferUACRefreshes,
-         PreferUASRefreshes
+         PreferCallerRefreshes,
+         PreferCalleeRefreshes
       } SessionTimerMode;
       virtual void setDefaultSessionTimerMode(Profile::SessionTimerMode mode);
       virtual Profile::SessionTimerMode getDefaultSessionTimerMode() const;
