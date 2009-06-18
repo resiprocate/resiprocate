@@ -2336,11 +2336,11 @@ InviteSession::setSessionTimerPreferences()
    case Profile::PreferRemoteRefreshes:
       mSessionRefresher = false;  // Default refresher is Remote
       break;
-   case Profile::PreferUASRefreshes:  
-      mSessionRefresher = dynamic_cast<ServerInviteSession*>(this) != NULL; // Default refresher is UAS (for the session) - callee
+   case Profile::PreferCalleeRefreshes:  
+      mSessionRefresher = dynamic_cast<ServerInviteSession*>(this) != NULL; // Default refresher is callee
       break;
-   case Profile::PreferUACRefreshes:
-      mSessionRefresher = dynamic_cast<ClientInviteSession*>(this) != NULL; // Default refresher is UAC (for the session) - caller
+   case Profile::PreferCallerRefreshes:
+      mSessionRefresher = dynamic_cast<ClientInviteSession*>(this) != NULL; // Default refresher is caller
       break;
    }
 }
