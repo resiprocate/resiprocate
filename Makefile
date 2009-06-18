@@ -177,7 +177,7 @@ clean-ares:
 # Various clean targets
 CLEANDIRS := resip/stack resip/dum resip/dum/test resip/stack/test presSvr \
              repro rutil rutil/test tfm apps reTurn reTurn/client \
-             reTurn/client/test p2p p2p/s2c/s2c reflow resip/recon
+             reTurn/client/test p2p p2p/s2c/s2c reflow resip/recon resip/recon/test
 
 
 cleancontrib: clean-ares
