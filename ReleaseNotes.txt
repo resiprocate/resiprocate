@@ -41,6 +41,7 @@
 * stop retransmitting INVITE if TU cancels the transaction prior to receiving a response
 * AfterSocketCreationFunc now called for DTLS, TCP and TLS transports
 * ignore invalid 'a=fmtp' line in SDP
+* added passing of source Tuple to ExternalUnknownDatagramHandler
 
 ===Bug fixes===
 * fixed an invalid initialization of a Data in logging statements in TlsConnection and ConnectionBase
@@ -64,6 +65,7 @@
 * fixed a bug in ClientInviteSession::reject() when it is called after receiving an UPDATE with an SDP offer in an "early" state
 * allow reception of INFO and MESSAGE requests before connected
 * fixed outbound decorator code for responses
+* fixed an assert in cases where an application ends a call leg, then later cancel's the entire INVITE
 
 ==repro==
 ===New features===
@@ -84,6 +86,7 @@
 * allow starting server with no command line parameters
 * added ability for client API's to automatically handle channel binding refreshes.  Note:  This is done at an interval that will be frequent enough to also refresh permissions
 * added server certificate hostname validation support for clients
+* draft-ietf-behave-turn-15 support
 
 ===Bug fixes===
 * ensure if an attribute appears more than once, then the duplicates are ignored
@@ -114,5 +117,5 @@
 * change to query speaker/mic location on BridgeMixer instead of hardcoding it
 * reduced priority of speex-5 (5kbs) in recon SDP, since its quality is poor
 * ensure codec path is set in Release builds (move setting outside of assert block)
-
+* bug fix for refer failure recovery after receiving refer with no-Subsystem
 
