@@ -339,7 +339,7 @@ Profile::unsetDefaultSessionTimerMode()
    else // No Base profile - so return to default setting
    {
       mHasDefaultSessionTimerMode = true;
-      mDefaultSessionTimerMode = Profile::PreferUACRefreshes;
+      mDefaultSessionTimerMode = Profile::PreferCallerRefreshes;
    }
 }
 

@@ -17,7 +17,7 @@ ReTurnConfig::ReTurnConfig() :
    mAltStunAddress(asio::ip::address::from_string("0.0.0.0")),
    mAuthenticationMode(LongTermPassword),  // required for TURN
    mAuthenticationRealm("reTurn"),
-   mNonceLifetime(3600),            // 1 hour - ?slg? what do we want as a default here? 
+   mNonceLifetime(3600),            // 1 hour - at least 1 hours is recommended by the draft
    mAllocationPortRangeMin(49152),  // must be even - This default range is the Dynamic and/or Private Port range - recommended by RFC
    mAllocationPortRangeMax(65535),  // must be odd
    mDefaultAllocationLifetime(600), // 10 minutes

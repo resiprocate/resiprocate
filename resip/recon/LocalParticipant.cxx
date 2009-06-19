@@ -19,8 +19,8 @@ LocalParticipant::LocalParticipant(ConversationManager::ParticipantHandle partHa
                                    ConversationManager& conversationManager)
 : Participant(partHandle, conversationManager)
 {
-  ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(DEFAULT_AEC_RESOURCE_NAME,0,mLocalPortOnBridge);
-   InfoLog(<< "LocalParticipant created, handle=" << mHandle);
+   ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getResourceInputPortOnBridge(VIRTUAL_NAME_LOCAL_STREAM_OUTPUT,0,mLocalPortOnBridge);
+   InfoLog(<< "LocalParticipant created, handle=" << mHandle << ", localPortOnBridge=" << mLocalPortOnBridge);
 }
 
 LocalParticipant::~LocalParticipant()

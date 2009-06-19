@@ -2115,6 +2115,7 @@ RemoteParticipant::doReferNoSub(const SipMessage& msg)
    // Create new Participant - but use same participant handle
    RemoteParticipantDialogSet* participantDialogSet = new RemoteParticipantDialogSet(mConversationManager, mDialogSet.getForkSelectMode());
    RemoteParticipant *participant = participantDialogSet->createUACOriginalRemoteParticipant(mHandle); // This will replace old participant in ConversationManager map
+   participant->mReferringAppDialog = getHandle();
 
    // Create offer
    SdpContents offer;
