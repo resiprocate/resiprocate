@@ -283,7 +283,8 @@ ClientInviteSession::cancel()
          break;
 
       case UAC_Cancelled:
-         // !jf!
+      case Terminated:
+         // no-op already cancelled or ended
          break;
 
       default:
