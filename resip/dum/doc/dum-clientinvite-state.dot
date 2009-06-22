@@ -33,6 +33,9 @@ digraph UAC {
     Early -> Terminated                     [ label = "onRedirect/app::onRedirected" ];  // Handled by RedirectManager and DialogSet
     Early -> Assert                         [ label = "dum::provideAnswer/assert(0)" ];
     Early -> Assert                         [ label = "dum::provideOffer/assert(0)" ];
+    Early -> Early                          [ label = "onUpdate-offer/outstanding-offer,send::500" ];
+    Early -> ReceivedUpdateEarly            [ label = "onUpdate-offer/no-outstanding-offer,app::onOffer" ];
+    Early -> Early                          [ label = "onUpdate/send::200" ];  // callback?
     Early -> Terminated                     [ label = "dum::end/send::BYE,app::onTerminated" ];
 
 
@@ -44,12 +47,15 @@ digraph UAC {
     EarlyWithOffer -> Terminated            [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
     EarlyWithOffer -> Canceled              [ label = "dum::cancel/timer::cancel" ];
     EarlyWithOffer -> Assert                [ label = "dum::provideOffer/assert(0)" ];
+    EarlyWithOffer -> EarlyWithOffer        [ label = "onUpdate-offer/send::500" ];
+    EarlyWithOffer -> EarlyWithOffer        [ label = "onUpdate/send::200" ];  // callback?
     EarlyWithOffer -> Terminated            [ label = "dum::end/send::BYE,app::onTerminated" ];
 
     EarlyWithAnswer -> EarlyWithAnswer      [ label = "on1xx/timer::StaleCall,app::onProvisional,send::PRACK" ];
     EarlyWithAnswer -> Connected            [ label = "on2xx/send::ACK,app::onConnected" ];
     EarlyWithAnswer -> Terminated           [ label = "on2XX-sdp/send::ACK,send::BYE,app::onFailure,app::onTerminated" ];
-    EarlyWithAnswer -> ReceivedUpdateEarly  [ label = "onUPDATE/app::onOffer" ];
+    EarlyWithAnswer -> ReceivedUpdateEarly  [ label = "onUpdate-offer/app::onOffer" ];
+    EarlyWithAnswer -> EarlyWithAnswer      [ label = "onUpdate/send::200" ];  // callback?
     EarlyWithAnswer -> SentUpdateEarly      [ label = "dum::provideOffer/send::UPDATE" ];    // Can I send the UPDATE before I get 200/PRACK
     EarlyWithAnswer -> Terminated           [ label = "onRedirect/app::onRedirected" ];
     EarlyWithAnswer -> Terminated           [ label = "onInviteFailure|onGeneralFailure/app::onFailure,app::onTerminated,dum::destroy" ];
@@ -58,8 +64,9 @@ digraph UAC {
     EarlyWithAnswer -> Assert               [ label = "dum::provideAnswer/assert(0)" ];
 
     SentUpdateEarly -> EarlyWithAnswer      [ label = "on200U/app::onAnswer" ];
-    SentUpdateEarly -> SentUpdateEarly      [ label = "onUPDATE/send::491" ];
-    SentUpdateEarly -> SentUpdateEarlyGlare      [ label = "on491"/timer::491"  ];
+    SentUpdateEarly -> SentUpdateEarly      [ label = "onUpdate-offer/send::491" ];
+    SentUpdateEarly -> SentUpdateEarly      [ label = "onUpdate/send::200" ];  // callback?
+    SentUpdateEarly -> SentUpdateEarlyGlare [ label = "on491"/timer::491"  ];
     SentUpdateEarly -> SentUpdate           [ label = "on2xxI/send::ACK" ]; //from connected state machine
     SentUpdateEarly -> Canceled             [ label = "dum::cancel/timer::cancel" ];
     SentUpdateEarly -> Assert               [ label = "dum::provideAnswer/assert(0)" ];

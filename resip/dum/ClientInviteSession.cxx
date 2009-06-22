@@ -851,6 +851,35 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
          dispatchBye(msg);
          break;
 
+      case OnUpdateOffer:
+         if(mProposedLocalSdp.get())
+         {
+            WarningLog (<< "Invalid UPDATE with SDP offer received in early state with pending offer: " << msg.brief());
+            SharedPtr<SipMessage> response(new SipMessage);
+            mDialog.makeResponse(*response, msg, 500);  // RFC3311 - section 5.2
+            InfoLog (<< "Sending " << response->brief());
+            send(response);
+         }
+         else
+         {
+            *mLastRemoteSessionModification = msg;
+            transition(UAC_ReceivedUpdateEarly);
+            mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+            handler->onOffer(getSessionHandle(), msg, *sdp);
+         }
+         break;
+
+      case OnUpdate:
+      {
+         // ?slg? no sdp in update - just respond immediately - do we need a callback?
+         SharedPtr<SipMessage> response(new SipMessage);
+         *mLastRemoteSessionModification = msg;
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
+
       default:
          // !kh!
          // should not assert here for peer sent us garbage.
@@ -950,6 +979,26 @@ ClientInviteSession::dispatchEarlyWithOffer (const SipMessage& msg)
       case OnBye:
          dispatchBye(msg);
          break;
+
+      case OnUpdateOffer:
+      {
+         WarningLog (<< "Invalid UPDATE with SDP offer received in early state with pending offer: " << msg.brief());
+         SharedPtr<SipMessage> response(new SipMessage);
+         mDialog.makeResponse(*response, msg, 500);  // RFC3311 - section 5.2
+         InfoLog (<< "Sending " << response->brief());
+         send(response);
+         break;
+      }
+
+      case OnUpdate:
+      {
+         // ?slg? no sdp in update - just respond immediately - do we need a callback?
+         SharedPtr<SipMessage> response(new SipMessage);
+         *mLastRemoteSessionModification = msg;
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
 
       default:
          // !kh!
@@ -1142,6 +1191,16 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          handler->onOffer(getSessionHandle(), msg, *sdp);
          break;
 
+      case OnUpdate:
+      {
+         // ?slg? no sdp in update - just respond immediately - do we need a callback?
+         SharedPtr<SipMessage> response(new SipMessage);
+         *mLastRemoteSessionModification = msg;
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
+
       case OnRedirect: // Redirects are handled by the DialogSet - if a 3xx gets here then it's because the redirect was intentionaly not handled and should be treated as an INVITE failure
       case OnInviteFailure:
       case OnGeneralFailure:
@@ -1184,14 +1243,23 @@ ClientInviteSession::dispatchSentUpdateEarly (const SipMessage& msg)
          break;
          
       case OnUpdateOffer:
-         transition(UAC_SentUpdateEarly);
          {
             SharedPtr<SipMessage> response(new SipMessage);
             mDialog.makeResponse(*response, msg, 491);
             send(response);
          }
          break;
-         
+
+      case OnUpdate:
+      {
+         // ?slg? no sdp in update - just respond immediately - do we need a callback?
+         SharedPtr<SipMessage> response(new SipMessage);
+         *mLastRemoteSessionModification = msg;
+         mDialog.makeResponse(*response, msg, 200);
+         send(response);
+         break;
+      }
+
       case On491Update:
          transition(UAC_SentUpdateEarlyGlare);
          start491Timer();
