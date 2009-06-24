@@ -16,7 +16,6 @@
 #include "FakeSelectSocketDescriptor.hxx"
 #include "dtls_wrapper/DtlsSocket.hxx"
 
-
 using namespace reTurn;
 
 namespace flowmanager
@@ -31,6 +30,7 @@ namespace flowmanager
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
 class MediaStream;
+class FlowHandler;
 class Flow;
 
 class Flow : public TurnAsyncSocketHandler
@@ -54,6 +54,8 @@ public:
         const StunTuple& localBinding, 
         MediaStream& mediaStream);
    ~Flow();
+
+   void setHandler(FlowHandler* handler);
 
    void activateFlow(UInt8 allocationProps = StunMessage::PropsNone);
    void activateFlow(UInt64 reservationToken);
@@ -106,6 +108,7 @@ public:
 
 
 private:
+   FlowHandler* mHandler;
    asio::io_service& mIOService;
    asio::ssl::context& mSslContext;
    asio::deadline_timer mIcmpRetryTimer;
