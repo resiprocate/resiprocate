@@ -108,6 +108,8 @@ public:
 private:
    asio::io_service& mIOService;
    asio::ssl::context& mSslContext;
+   asio::deadline_timer mIcmpRetryTimer;
+   int mIcmpRetryCount;
 
    // Note: these member variables are set at creation time and never changed, thus
    //       they do not require mutex protection

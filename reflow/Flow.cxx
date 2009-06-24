@@ -18,6 +18,8 @@ using namespace std;
 
 #define MAX_RECEIVE_FIFO_DURATION 10 // seconds
 #define MAX_RECEIVE_FIFO_SIZE (100 * MAX_RECEIVE_FIFO_DURATION)  // 1000 = 1 message every 10 ms for 10 seconds - appropriate for RTP
+#define ICMP_RETRY_COUNT 5
+#define ICMP_RETRY_PERIOD_MS 200 // milliseconds
 
 #define RESIPROCATE_SUBSYSTEM FlowManagerSubsystem::FLOWMANAGER
 
@@ -112,6 +114,8 @@ Flow::Flow(asio::io_service& ioService,
            MediaStream& mediaStream) 
   : mIOService(ioService),
     mSslContext(sslContext),
+    mIcmpRetryTimer(ioService),
+    mIcmpRetryCount(0),
     mComponentId(componentId),
     mLocalBinding(localBinding), 
     mMediaStream(mediaStream),
@@ -710,6 +714,7 @@ void
 Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address, unsigned short port, boost::shared_ptr<reTurn::DataBuffer>& data)
 {
    DebugLog(<< "Flow::onReceiveSuccess: socketDesc=" << socketDesc << ", fromAddress=" << address.to_string() << ", fromPort=" << port << ", size=" << data->size() << ", componentId=" << mComponentId);
+   mIcmpRetryCount = 0;
 
    // Check if packet is a dtls packet - if so then process it
    // Note:  Stun messaging should be picked off by the reTurn library - so we only need to tell the difference between DTLS and SRTP here
@@ -747,6 +752,17 @@ void
 Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
 {
    WarningLog(<< "Flow::onReceiveFailure: socketDesc=" << socketDesc << " error=" << e.value() << "(" << e.message() << "), componentId=" << mComponentId);
+   
+   if ((e.value() == asio::error::connection_refused || e.value() == asio::error::connection_reset)
+       && mLocalBinding.getTransportType() == StunTuple::UDP)
+   {
+      if (mIcmpRetryCount < ICMP_RETRY_COUNT)
+      {
+         mIcmpRetryTimer.expires_from_now(boost::posix_time::milliseconds(ICMP_RETRY_PERIOD_MS));
+         mIcmpRetryTimer.async_wait(boost::bind(&TurnAsyncSocket::turnReceive, mTurnSocket));
+         mIcmpRetryCount++;
+      }
+   }
 }
 
 void 
