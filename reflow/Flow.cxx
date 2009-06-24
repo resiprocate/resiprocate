@@ -9,6 +9,7 @@
 #include "ErrorCode.hxx"
 #include "Flow.hxx"
 #include "MediaStream.hxx"
+#include "FlowHandler.hxx"
 #include "FlowDtlsSocketContext.hxx"
 
 using namespace flowmanager;
@@ -122,7 +123,8 @@ Flow::Flow(asio::io_service& ioService,
     mAllocationProps(StunMessage::PropsNone),
     mReservationToken(0),
     mFlowState(Unconnected),
-    mReceivedDataFifo(MAX_RECEIVE_FIFO_DURATION,MAX_RECEIVE_FIFO_SIZE)
+    mReceivedDataFifo(MAX_RECEIVE_FIFO_DURATION,MAX_RECEIVE_FIFO_SIZE),
+    mHandler(NULL)
 {
    InfoLog(<< "Flow: flow created for " << mLocalBinding << "  ComponentId=" << mComponentId);
 
@@ -176,6 +178,12 @@ Flow::~Flow()
       mTurnSocket->disableTurnAsyncHandler();
       mTurnSocket->close();  
    }
+}
+
+void 
+Flow::setHandler(FlowHandler* handler)
+{
+   mHandler = handler;
 }
 
 void 
@@ -738,13 +746,20 @@ Flow::onReceiveSuccess(unsigned int socketDesc, const asio::ip::address& address
       return;
    }
 
-   if(!mReceivedDataFifo.add(new ReceivedData(address, port, data), ReceivedDataFifo::EnforceTimeDepth))
+   if (mHandler)
    {
-      WarningLog(<< "Flow::onReceiveSuccess: TimeLimitFifo is full - discarding data!  componentId=" << mComponentId);
+      mHandler->onReceiveSuccess(this, socketDesc, address, port, data);
    }
    else
    {
-      mFakeSelectSocketDescriptor.send();
+      if(!mReceivedDataFifo.add(new ReceivedData(address, port, data), ReceivedDataFifo::EnforceTimeDepth))
+      {
+         WarningLog(<< "Flow::onReceiveSuccess: TimeLimitFifo is full - discarding data!  componentId=" << mComponentId);
+      }
+      else
+      {
+         mFakeSelectSocketDescriptor.send();
+      }
    }
 }
 
@@ -761,8 +776,14 @@ Flow::onReceiveFailure(unsigned int socketDesc, const asio::error_code& e)
          mIcmpRetryTimer.expires_from_now(boost::posix_time::milliseconds(ICMP_RETRY_PERIOD_MS));
          mIcmpRetryTimer.async_wait(boost::bind(&TurnAsyncSocket::turnReceive, mTurnSocket));
          mIcmpRetryCount++;
+         return;
       }
    }
+   
+   if (mHandler)
+   {
+      mHandler->onReceiveFailure(this, socketDesc, e);
+   }   
 }
 
 void 
@@ -837,7 +858,6 @@ Flow::createDtlsSocketServer(const StunTuple& endpoint)
 
    return dtlsSocket;
 }
-
 
 /* ====================================================================
 
