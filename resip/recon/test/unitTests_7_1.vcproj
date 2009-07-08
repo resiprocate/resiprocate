@@ -132,6 +132,9 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
+				RelativePath=".\sdpTests.cxx">
+			</File>
+			<File
 				RelativePath=".\unitTests.cxx">
 			</File>
 		</Filter>
