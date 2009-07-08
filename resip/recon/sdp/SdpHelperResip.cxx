@@ -39,7 +39,6 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
    bool rtcpEnabled = true;
    Sdp* sdp = new Sdp();
    const SdpContents::Session* resipSession = &resipSdp.session();
-
    
    sdp->setSdpVersion(resipSession->version()); // v=
    
@@ -145,6 +144,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
             sdpTime->addRepeat(*sdpTimeRepeat);
          }
          sdp->addTime(*sdpTime);
+         delete sdpTime;
       }
    }
 
@@ -381,6 +381,7 @@ Sdp* SdpHelperResip::createSdpFromResipSdp(const resip::SdpContents& resipSdp)
             SdpMediaLine* potentialSdpMediaLine = parseMediaLine(*potentialMedium, potentialSession, rtcpEnabled);
             potentialSdpMediaLine->setPotentialMediaViewString(acceptedConfigurationLine.c_str());
             mediaLine->addPotentialMediaView(*potentialSdpMediaLine);
+            delete potentialSdpMediaLine;
          }
       }
 
@@ -424,6 +425,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
                                         resipCodec.encodingParameters().empty() ? 1 : resipCodec.encodingParameters().convertInt() /* Num Channels */, 
                                         resipCodec.parameters().c_str());
          mediaLine->addCodec(*codec);
+         delete codec;
       }
    }
 
@@ -664,6 +666,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
          if(crypto)
          {
             mediaLine->addCryptoSettings(*crypto);
+            delete crypto;
          }
       }
    }
@@ -967,6 +970,7 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
                   }
                }
                mediaLine->addCandidate(*candidate);
+               delete candidate;
             }
          }
       }

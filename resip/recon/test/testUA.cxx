@@ -954,10 +954,11 @@ main (int argc, char** argv)
       cerr << "Couldn't install signal handler for SIGPIPE" << endl;
       exit(-1);
    }
-#else
-#ifdef _DEBUG
-   resip::FindMemoryLeaks fml;
 #endif
+
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
+   resip::FindMemoryLeaks fml;
+   {
 #endif
 
    if ( signal( SIGINT, signalHandler ) == SIG_ERR )
@@ -1495,6 +1496,10 @@ main (int argc, char** argv)
    InfoLog(<< "testUA is shutdown.");
    OsSysLog::shutdown();
    sleepSeconds(2);
+
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
+} // end FML scope
+#endif
 }
 
 
