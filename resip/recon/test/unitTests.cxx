@@ -5,6 +5,7 @@
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
+#include <rutil/WinLeakCheck.hxx>
 
 #ifdef WIN32
 extern int sdpTests(void);
@@ -707,6 +708,11 @@ main (int argc, char** argv)
    }
 #endif
 
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
+   resip::FindMemoryLeaks fml;
+   {
+#endif
+
    if ( signal( SIGINT, signalHandler ) == SIG_ERR )
    {
       cerr << "Couldn't install signal handler for SIGINT" << endl;
@@ -778,6 +784,11 @@ main (int argc, char** argv)
    }
    InfoLog(<< "unitTests is shutdown.");
    //sleepSeconds(10);
+
+#if defined(WIN32) && defined(_DEBUG) && defined(LEAK_CHECK) 
+   }  // End FML scope
+#endif
+
 }
 
 

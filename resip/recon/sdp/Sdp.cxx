@@ -69,7 +69,7 @@ Sdp::Sdp(const Sdp& rhs)
 // Destructor
 Sdp::~Sdp()
 {
-   mFoundationIds.clear();
+   clearMediaLines();
 }
 
 // Assignment operator
@@ -112,7 +112,8 @@ Sdp::operator=(const Sdp& rhs)
    MediaLineList::const_iterator it = rhs.mMediaLines.begin();
    for(;it != rhs.mMediaLines.end(); it++)
    {
-      addMediaLine(*it);
+      SdpMediaLine* mediaLineCopy = new SdpMediaLine(*(*it));
+      addMediaLine(mediaLineCopy);
    }
 
    return *this;
