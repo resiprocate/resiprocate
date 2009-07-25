@@ -21,7 +21,7 @@ using namespace resip;
 namespace reTurn {
 
 // !slg! TODO these need to be made into settings
-#define SOFTWARE_STRING "reTURNServer 0.4 - RFC5389/turn-12"
+#define SOFTWARE_STRING "reTURNServer 0.4 - RFC5389/turn-12  "  // Note padding size to a multiple of 4, to help compatibility with older clients
 #define DEFAULT_BANDWIDTH 100  // 100 kbit/s - enough for G711 RTP ?slg? what do we want this to be?
 
 RequestHandler::RequestHandler(TurnManager& turnManager,
@@ -369,6 +369,12 @@ RequestHandler::processStunBindingRequest(StunMessage& request, StunMessage& res
       // Add Mapped address to response
       response.mHasMappedAddress = true;
       StunMessage::setStunAtrAddressFromTuple(response.mMappedAddress, request.mRemoteTuple);
+
+      if(0) // TODO - setting to add XOR address even if older client
+      {
+         response.mHasXorMappedAddress = true;
+         StunMessage::setStunAtrAddressFromTuple(response.mXorMappedAddress, request.mRemoteTuple);
+      }
    }
 
    // the following code is for RFC3489 backward compatibility
