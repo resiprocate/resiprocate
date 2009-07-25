@@ -53,9 +53,9 @@ int main(int argc, char* argv[])
       {
          std::cerr << "Usage: reTurnServer <address> <turnPort> <tlsPort> <altAddress> \n";
          std::cerr << "                    <altPort>\n";
-         std::cerr << "  IPv4 Example (with RFC3478 support):\n";
+         std::cerr << "  IPv4 Example (with RFC3489 support):\n";
          std::cerr << "    reTurnServer 192.168.1.10 3478 5349 192.168.1.11 3479\n\n";
-         std::cerr << "  IPv6 Example (with RFC3478 support):\n";
+         std::cerr << "  IPv6 Example (with RFC3489 support):\n";
          std::cerr << "    reTurnServer 3ffe:0501:0008:0000:0260:97ff:fe40:efab 3478\n";
          std::cerr << "                 5349 3ffe:0501:0008:0000:0260:97ff:fe40:efac 3479\n\n";
          std::cerr << "  Note:  For RFC3489 legacy support define altPort as non-zero and\n";
