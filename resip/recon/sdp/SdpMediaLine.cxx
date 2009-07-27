@@ -329,6 +329,27 @@ SdpMediaLine::getMediaTypeFromString(const char * type)
    }
 }
 
+const char*
+SdpMediaLine::getMediaTypeString() const
+{
+   switch (mMediaType)
+   {
+   case MEDIA_TYPE_AUDIO:
+      return "audio";
+   case MEDIA_TYPE_VIDEO:
+      return "video";
+   case MEDIA_TYPE_TEXT:
+      return "text";
+   case MEDIA_TYPE_APPLICATION:
+      return "application";
+   case MEDIA_TYPE_MESSAGE:
+      return "message";
+   default:
+      return "none"; // ?
+   }
+}
+
+
 SdpMediaLine::SdpTransportProtocolType 
 SdpMediaLine::getTransportProtocolTypeFromString(const char * type)
 {

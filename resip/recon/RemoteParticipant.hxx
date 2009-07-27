@@ -50,7 +50,7 @@ public:
    virtual ~RemoteParticipant();
 
    virtual resip::InviteSessionHandle& getInviteSessionHandle() { return mInviteSessionHandle; }
-   virtual unsigned int getLocalRTPPort();
+   virtual unsigned int getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType );
    void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
    virtual bool isHolding() { return mLocalHold; }
 

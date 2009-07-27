@@ -17,6 +17,7 @@
 
 #include "sdp/SdpHelperResip.hxx"
 #include "sdp/Sdp.hxx"
+#include "sdp/SdpMediaLine.hxx"
 
 #include <rutil/Log.hxx>
 #include <rutil/Logger.hxx>
@@ -47,7 +48,6 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mConversationManager(conversationManager),
    mUACOriginalRemoteParticipant(0),
    mNumDialogs(0),
-   mLocalRTPPort(0),
    mForkSelectMode(forkSelectMode),
    mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty),
    mActiveRemoteParticipantHandle(0),
@@ -61,6 +61,12 @@ RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conv
    mMediaConnectionId(0),
    mConnectionPortOnBridge(-1)
 {
+   mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_NONE ]        = 0;
+   mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_AUDIO ]       = 0;
+   mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_VIDEO ]       = 0;
+   mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_TEXT ]        = 0;
+   mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_APPLICATION ] = 0;
+   mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_MESSAGE ]     = 0;
 
    InfoLog(<< "RemoteParticipantDialogSet created.");
 }
@@ -72,11 +78,38 @@ RemoteParticipantDialogSet::~RemoteParticipantDialogSet()
       //mConversationManager.getMediaInterface()->removeToneListener(mMediaConnectionId);
       mConversationManager.getMediaInterface()->deleteConnection(mMediaConnectionId);
    }
-   if(mLocalRTPPort)
+
+   // todo: Probably all this port freeing stuff can be done in a loop
+   if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_AUDIO ] != 0)
    {
-      mConversationManager.freeRTPPort(mLocalRTPPort);
-      mLocalRTPPort = 0;
+      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_AUDIO ]);
+      mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_AUDIO ] = 0;
    }
+
+   if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_VIDEO ] != 0)
+   {
+      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_VIDEO ]);
+      mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_VIDEO ] = 0;
+   }
+
+   if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_TEXT ] != 0)
+   {
+      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_TEXT ]);
+      mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_TEXT ] = 0;
+   }
+
+   if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_APPLICATION ] != 0)
+   {
+      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_APPLICATION ]);
+      mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_APPLICATION ] = 0;
+   }
+
+   if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_MESSAGE ] != 0)
+   {
+      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_MESSAGE ]);
+      mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_MESSAGE ] = 0;
+   }
+
    // If we have no dialogs and mUACOriginalRemoteParticipant is set, then we have not passed 
    // ownership of mUACOriginalRemoteParticipant to DUM - so we need to delete the participant
    if(mNumDialogs == 0 && mUACOriginalRemoteParticipant)
@@ -104,19 +137,19 @@ RemoteParticipantDialogSet::selectUASUserProfile(const SipMessage& msg)
 }
 
 unsigned int 
-RemoteParticipantDialogSet::getLocalRTPPort()
+RemoteParticipantDialogSet::getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType )
 {
-   if(mLocalRTPPort == 0)
+   if(mLocalRTPPortMap[ mediaType ] == 0)
    {
       bool isUAC = false;
-      mLocalRTPPort = mConversationManager.allocateRTPPort();
-      if(mLocalRTPPort == 0)
+      mLocalRTPPortMap[ mediaType ] = mConversationManager.allocateRTPPort();
+      if(mLocalRTPPortMap[ mediaType ] == 0)
       {
          WarningLog(<< "Could not allocate a free RTP port for RemoteParticipantDialogSet!");
       }
       else
       {
-         InfoLog(<< "Port allocated: " << mLocalRTPPort);
+         InfoLog(<< "Port allocated: " << mLocalRTPPortMap[ mediaType ]);
       }
 
       // UAS Dialogs should have a user profile at this point - for UAC to get default outgoing
@@ -129,7 +162,7 @@ RemoteParticipantDialogSet::getLocalRTPPort()
 
       OsStatus ret;
       // Create localBinding Tuple - note:  transport may be changed depending on NAT traversal mode
-      StunTuple localBinding(StunTuple::UDP, asio::ip::address::from_string(profile->sessionCaps().session().connection().getAddress().c_str()), mLocalRTPPort); 
+      StunTuple localBinding(StunTuple::UDP, asio::ip::address::from_string(profile->sessionCaps().session().connection().getAddress().c_str()), mLocalRTPPortMap[ mediaType ]); 
 
       switch(profile->natTraversalMode())
       {
@@ -259,10 +292,10 @@ RemoteParticipantDialogSet::getLocalRTPPort()
 
       //InfoLog(<< "About to get Connection Port on Bridge for MediaConnectionId: " << mMediaConnectionId);
       ret = ((CpTopologyGraphInterface*)mConversationManager.getMediaInterface())->getConnectionPortOnBridge(mMediaConnectionId, 0, mConnectionPortOnBridge);
-      InfoLog( << "RTP Port allocated=" << mLocalRTPPort << " (sipXmediaConnectionId=" << mMediaConnectionId << ", BridgePort=" << mConnectionPortOnBridge << ", ret=" << ret << ")");
+      InfoLog( << "RTP Port allocated=" << mLocalRTPPortMap[ mediaType ] << " (sipXmediaConnectionId=" << mMediaConnectionId << ", BridgePort=" << mConnectionPortOnBridge << ", ret=" << ret << ")");
    }
 
-   return mLocalRTPPort;
+   return mLocalRTPPortMap[ mediaType ];
 }
 
 void 
