@@ -4,6 +4,7 @@
 	Version="7.10"
 	Name="unitTests"
 	ProjectGUID="{16CD976A-5D3B-4329-88BA-A32560CDFCC9}"
+	RootNamespace="unitTests"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform

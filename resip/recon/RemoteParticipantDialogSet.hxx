@@ -15,10 +15,12 @@
 #include "ConversationManager.hxx"
 #include "ConversationProfile.hxx"
 #include "Participant.hxx"
+#include "sdp/SdpMediaLine.hxx"
 
 namespace sdpcontainer
 {
-class Sdp; 
+class Sdp;
+class SdpMediaLine;
 }
 
 namespace resip
@@ -51,7 +53,9 @@ public:
 
    virtual RemoteParticipant* createUACOriginalRemoteParticipant(ConversationManager::ParticipantHandle handle);
    virtual resip::AppDialog* createAppDialog(const resip::SipMessage& msg);
-   virtual unsigned int getLocalRTPPort();
+
+   // Returns the port in use for a specific media type.
+   virtual unsigned int getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType );
 
    virtual void setProposedSdp(ConversationManager::ParticipantHandle handle, const resip::SdpContents& sdp);
    virtual sdpcontainer::Sdp* getProposedSdp() { return mProposedSdp; }
@@ -98,11 +102,13 @@ private:
    RemoteParticipant* mUACOriginalRemoteParticipant;
    std::list<ConversationManager::ConversationHandle> mUACOriginalConversationHandles;
    unsigned int mNumDialogs;
-   unsigned int mLocalRTPPort;
    ConversationManager::ParticipantForkSelectMode mForkSelectMode;
    resip::DialogId mUACConnectedDialogId;
    ConversationManager::ParticipantHandle mActiveRemoteParticipantHandle;
    std::map<resip::DialogId, RemoteParticipant*> mDialogs;
+
+   // Local port map, port is accessed by way of the media type.
+   std::map<sdpcontainer::SdpMediaLine::SdpMediaType, unsigned int> mLocalRTPPortMap;
 
    // Media Stream stuff
    flowmanager::MediaStream::NatTraversalMode mNatTraversalMode;

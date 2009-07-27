@@ -388,12 +388,7 @@ ConversationManager::buildSdpOffer(ConversationProfile* profile, SdpContents& of
    // Set sessionid and version for this offer
    UInt64 currentTime = Timer::getTimeMicroSec();
    offer.session().origin().getSessionId() = currentTime;
-   offer.session().origin().getVersion() = currentTime;  
-
-   // Set local port in offer
-   // for now we only allow 1 audio media
-   assert(offer.session().media().size() == 1);
-   assert(offer.session().media().front().name() == "audio");
+   offer.session().origin().getVersion() = currentTime;
 }
 
 void
@@ -538,66 +533,104 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
    //InfoLog( << "Codec List: " << output.data());
 
    // Auto-Create Session Codec Capabilities
-   // Note:  port, and potentially payloadid will be replaced in actual offer/answer
+   // Note:  port, and potentially payload id will be replaced in actual
+   // offer/answer
 
    // Build Codecs and media offering
-   SdpContents::Session::Medium medium("audio", 0, 1, "RTP/AVP");
+   SdpContents::Session::Medium audioMedium("audio", 0, 1, "RTP/AVP");
 
    bool firstCodecAdded = false;
    for(unsigned int idIter = 0; idIter < numCodecIds; idIter++)
    {
       const SdpCodec* sdpcodec = codecList.getCodec((SdpCodec::SdpCodecTypes)codecIds[idIter]);
-      if(sdpcodec)
+      if(sdpcodec == NULL)
+         continue;
+
+      // Ensure this codec is an audio codec
+      UtlString mediaType;
+      sdpcodec->getMediaType(mediaType);
+      if(mediaType.compareTo("audio", UtlString::ignoreCase) != 0)
+         continue;
+
+      UtlString mimeSubType;
+      sdpcodec->getEncodingName(mimeSubType);
+      //mimeSubType.toUpper();
+      
+      SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getCodecPayloadFormat(), sdpcodec->getSampleRate());
+
+      // Check for telephone-event and add fmtp manually
+      if(mimeSubType.compareTo("telephone-event", UtlString::ignoreCase) == 0)
       {
-         UtlString mediaType;
-         sdpcodec->getMediaType(mediaType);
-         // Ensure this codec is an audio codec
-         if(mediaType.compareTo("audio", UtlString::ignoreCase) == 0)
+         codec.parameters() = Data("0-15");
+      }
+      else
+      {
+         UtlString fmtpField;
+         sdpcodec->getSdpFmtpField(fmtpField);
+         if(fmtpField.length() != 0)
          {
-            UtlString mimeSubType;
-            sdpcodec->getEncodingName(mimeSubType);
-            //mimeSubType.toUpper();
-            
-            SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getSampleRate());
-            codec.payloadType() = sdpcodec->getCodecPayloadFormat();
-
-            // Check for telephone-event and add fmtp manually
-            if(mimeSubType.compareTo("telephone-event", UtlString::ignoreCase) == 0)
-            {
-               codec.parameters() = Data("0-15");
-            }
-            else
-            {
-               UtlString fmtpField;
-               sdpcodec->getSdpFmtpField(fmtpField);
-               if(fmtpField.length() != 0)
-               {
-                  codec.parameters() = Data(fmtpField.data());
-               }
-            }
-
-            InfoLog(<< "Added codec to session capabilites: id=" << codecIds[idIter] 
-                    << " type=" << mimeSubType.data()
-                    << " rate=" << sdpcodec->getSampleRate()
-                    << " plen=" << sdpcodec->getPacketLength()
-                    << " payloadid=" << sdpcodec->getCodecPayloadFormat()
-                    << " fmtp=" << codec.parameters());
-
-            medium.addCodec(codec);
-            if(!firstCodecAdded)
-            {
-               firstCodecAdded = true;
-
-               // 20 ms of speech per frame (note G711 has 10ms samples, so this is 2 samples per frame)
-               // Note:  There are known problems with SDP and the ptime attribute.  For now we will choose an
-               // appropriate ptime from the first codec
-               medium.addAttribute("ptime", Data(sdpcodec->getPacketLength() / 1000));  
-            }
+            codec.parameters() = Data(fmtpField.data());
          }
       }
-   }
 
-   session.addMedium(medium);
+      InfoLog(<< "Added audio codec to session capabilites:"
+               << " id=" << codecIds[idIter] 
+               << " type=" << mimeSubType.data()
+               << " rate=" << sdpcodec->getSampleRate()
+               << " plen=" << sdpcodec->getPacketLength()
+               << " payloadid=" << sdpcodec->getCodecPayloadFormat()
+               << " fmtp=" << codec.parameters());
+
+      audioMedium.addCodec(codec);
+      if(!firstCodecAdded)
+      {
+         firstCodecAdded = true;
+
+         // 20 ms of speech per frame (note G711 has 10ms samples, so this is 2 samples per frame)
+         // Note:  There are known problems with SDP and the ptime attribute.  For now we will choose an
+         // appropriate ptime from the first codec
+         audioMedium.addAttribute("ptime", Data(sdpcodec->getPacketLength() / 1000));  
+      }
+   }
+   session.addMedium(audioMedium);
+
+   SdpContents::Session::Medium videoMedium("video", 0, 1, "RTP/AVP");
+   for(unsigned int idIter = 0; idIter < numCodecIds; idIter++)
+   {
+      const SdpCodec* sdpcodec = codecList.getCodec((SdpCodec::SdpCodecTypes)codecIds[idIter]);
+      if(sdpcodec == NULL)
+         continue;
+
+      // Ensure this codec is a video codec
+      UtlString mediaType;
+      sdpcodec->getMediaType(mediaType);
+      if(mediaType.compareTo("video", UtlString::ignoreCase) != 0)
+         continue;
+
+      UtlString mimeSubType;
+      sdpcodec->getEncodingName(mimeSubType);
+      //mimeSubType.toUpper();
+
+      SdpContents::Session::Codec codec(mimeSubType.data(), sdpcodec->getCodecPayloadFormat(), sdpcodec->getSampleRate());
+
+      // Add the fmtp line if available
+      UtlString fmtpField;
+      sdpcodec->getSdpFmtpField(fmtpField);
+      if(fmtpField.length() != 0)
+         codec.parameters() = Data(fmtpField.data());
+
+      InfoLog(<< "Added video codec to session capabilites:"
+            << " id=" << codecIds[idIter] 
+            << " type=" << mimeSubType.data()
+            << " rate=" << sdpcodec->getSampleRate()
+            << " plen=" << sdpcodec->getPacketLength()
+            << " payloadid=" << sdpcodec->getCodecPayloadFormat()
+            << " fmtp=" << codec.parameters());
+
+         videoMedium.addCodec(codec);
+   }
+   session.addMedium(videoMedium);
+
    sessionCaps.session() = session;
 }
 

@@ -541,6 +541,7 @@ public:
          
    const SdpMediaType getMediaType() const { return mMediaType; }
    static SdpMediaType getMediaTypeFromString(const char * type);
+   const char* getMediaTypeString() const;
    const SdpTransportProtocolType getTransportProtocolType() const { return mTransportProtocolType; }
    static SdpTransportProtocolType getTransportProtocolTypeFromString(const char * type);
    const CodecList& getCodecs() const { return mCodecs; }
