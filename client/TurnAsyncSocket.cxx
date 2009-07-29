@@ -643,8 +643,9 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
             break;
          }
 
-         // Remove request from map
-         mActiveRequestMap.erase(it);
+         // Remove request from map if we haven't already cleared the map above
+		 if (!mActiveRequestMap.empty())
+			mActiveRequestMap.erase(it);
       }
       break;
 
@@ -1192,7 +1193,10 @@ TurnAsyncSocket::requestTimeout(UInt128 tid)
       default:
          assert(false);
       }
-      mActiveRequestMap.erase(it);
+
+	  // Remove request from map if we haven't already cleared the map above
+	  if (!mActiveRequestMap.empty())
+	      mActiveRequestMap.erase(it);
    }
 }
 
