@@ -573,7 +573,7 @@ RequestHandler::processTurnAllocateRequest(AsyncSocketBase* turnSocket, StunMess
    {
       // Try to allocate reserved port - for now reservation token is reserved port number
       port = (unsigned short)request.mTurnReservationToken;
-      if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), (unsigned short)request.mTurnReservationToken), true /* allocate reserved */)
+      if(!mTurnManager.allocatePort(allocationTuple.getTransportType(), port, true /* allocate reserved */))
       {
          WarningLog(<< "Unable to allocate requested port - bad reservation token.  Sending 508.");
          buildErrorResponse(response, 508, "Insufficient Port Capacity");  
