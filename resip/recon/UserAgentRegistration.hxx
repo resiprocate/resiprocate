@@ -30,7 +30,7 @@ class UserAgentRegistration : public resip::AppDialogSet
       UserAgentRegistration(UserAgent& userAgent, resip::DialogUsageManager& dum, unsigned int handle);  
       virtual ~UserAgentRegistration();
 
-      UserAgent::ConversationProfileHandle getConversationProfileHandle();
+      ConversationProfileHandle getConversationProfileHandle();
       virtual void end();
 
       const resip::NameAddrs& getContactAddresses();
@@ -44,7 +44,7 @@ class UserAgentRegistration : public resip::AppDialogSet
    private:       
       UserAgent &mUserAgent;
       resip::DialogUsageManager &mDum;
-      UserAgent::ConversationProfileHandle mConversationProfileHandle;
+      ConversationProfileHandle mConversationProfileHandle;
       bool mEnded;
       resip::ClientRegistrationHandle mRegistrationHandle;  
 };

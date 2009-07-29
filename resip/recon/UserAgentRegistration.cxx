@@ -28,7 +28,7 @@ UserAgentRegistration::~UserAgentRegistration()
    mUserAgent.unregisterRegistration(this);
 }
 
-UserAgent::ConversationProfileHandle 
+ConversationProfileHandle 
 UserAgentRegistration::getConversationProfileHandle()
 {
    return mConversationProfileHandle;

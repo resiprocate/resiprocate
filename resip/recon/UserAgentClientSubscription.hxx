@@ -30,7 +30,7 @@ class UserAgentClientSubscription : public resip::AppDialogSet
       UserAgentClientSubscription(UserAgent& userAgent, resip::DialogUsageManager& dum, unsigned int handle);  
       virtual ~UserAgentClientSubscription();
 
-      UserAgent::SubscriptionHandle getSubscriptionHandle();
+      SubscriptionHandle getSubscriptionHandle();
       virtual void end();
 
       // ClientSubscriptionHandler ///////////////////////////////////////////////////
@@ -46,7 +46,7 @@ class UserAgentClientSubscription : public resip::AppDialogSet
 
       UserAgent &mUserAgent;
       resip::DialogUsageManager &mDum;
-      UserAgent::SubscriptionHandle mSubscriptionHandle;
+      SubscriptionHandle mSubscriptionHandle;
       size_t mLastNotifyHash;
       bool mEnded;
 };

@@ -21,7 +21,7 @@ class ConversationManager;
 class LocalParticipant : public Participant
 {
    public:  
-      LocalParticipant(ConversationManager::ParticipantHandle partHandle,
+      LocalParticipant(ParticipantHandle partHandle,
                        ConversationManager& conversationManager);  
       virtual ~LocalParticipant();
 

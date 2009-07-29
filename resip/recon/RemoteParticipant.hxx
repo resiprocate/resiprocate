@@ -38,7 +38,7 @@ class ConversationManager;
 class RemoteParticipant : public Participant, public resip::AppDialog
 {
 public:
-   RemoteParticipant(ConversationManager::ParticipantHandle partHandle,   // UAC
+   RemoteParticipant(ParticipantHandle partHandle,   // UAC
                      ConversationManager& conversationManager, 
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);  

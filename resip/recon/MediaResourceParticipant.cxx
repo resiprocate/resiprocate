@@ -54,7 +54,7 @@ namespace recon
 class MediaResourceParticipantDeleterCmd : public DumCommand
 {
    public:
-      MediaResourceParticipantDeleterCmd(ConversationManager& conversationManager, ConversationManager::ParticipantHandle participantHandle) :
+      MediaResourceParticipantDeleterCmd(ConversationManager& conversationManager, ParticipantHandle participantHandle) :
          mConversationManager(conversationManager), mParticipantHandle(participantHandle) {}
       ~MediaResourceParticipantDeleterCmd() {}
 
@@ -66,11 +66,11 @@ class MediaResourceParticipantDeleterCmd : public DumCommand
       
    private:
       ConversationManager& mConversationManager;
-      ConversationManager::ParticipantHandle mParticipantHandle;
+      ParticipantHandle mParticipantHandle;
 };
 }
 
-MediaResourceParticipant::MediaResourceParticipant(ConversationManager::ParticipantHandle partHandle,
+MediaResourceParticipant::MediaResourceParticipant(ParticipantHandle partHandle,
                                                    ConversationManager& conversationManager,
                                                    Uri& mediaUrl)
 : Participant(partHandle, conversationManager),

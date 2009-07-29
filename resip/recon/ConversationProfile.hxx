@@ -7,6 +7,8 @@
 namespace recon
 {
 
+typedef unsigned int ConversationProfileHandle;
+
 /**
   This class extends the resip UserProfile to include Conversation 
   Manager specific settings.
@@ -17,6 +19,7 @@ namespace recon
 class ConversationProfile : public resip::UserProfile
 {
 public:  
+
    ConversationProfile(); 
 
    enum NatTraversalMode

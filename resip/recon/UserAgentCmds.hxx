@@ -37,7 +37,7 @@ class AddConversationProfileCmd  : public resip::DumCommand
 {
    public:  
       AddConversationProfileCmd(UserAgent* userAgent,
-                                UserAgent::ConversationProfileHandle handle,
+                                ConversationProfileHandle handle,
                                 resip::SharedPtr<ConversationProfile> conversationProfile,
                                 bool defaultOutgoing)
          : mUserAgent(userAgent),
@@ -53,7 +53,7 @@ class AddConversationProfileCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
-      UserAgent::ConversationProfileHandle mHandle;
+      ConversationProfileHandle mHandle;
       resip::SharedPtr<ConversationProfile> mConversationProfile;
       bool mDefaultOutgoing;
 };
@@ -62,7 +62,7 @@ class SetDefaultOutgoingConversationProfileCmd  : public resip::DumCommand
 {
    public:  
       SetDefaultOutgoingConversationProfileCmd(UserAgent* userAgent,
-                                               UserAgent::ConversationProfileHandle handle)
+                                               ConversationProfileHandle handle)
          : mUserAgent(userAgent),
            mHandle(handle) {}
       virtual void executeCommand()
@@ -74,14 +74,14 @@ class SetDefaultOutgoingConversationProfileCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
-      UserAgent::ConversationProfileHandle mHandle;
+      ConversationProfileHandle mHandle;
 };
 
 class DestroyConversationProfileCmd  : public resip::DumCommand
 {
    public:  
       DestroyConversationProfileCmd(UserAgent* userAgent,
-                                    UserAgent::ConversationProfileHandle handle)
+                                    ConversationProfileHandle handle)
          : mUserAgent(userAgent),
            mHandle(handle) {}
       virtual void executeCommand()
@@ -93,7 +93,7 @@ class DestroyConversationProfileCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
-      UserAgent::ConversationProfileHandle mHandle;
+      ConversationProfileHandle mHandle;
 };
 
 class UserAgentTimeout : public resip::DumCommand
@@ -126,7 +126,7 @@ class CreateSubscriptionCmd  : public resip::DumCommand
 {
    public:  
       CreateSubscriptionCmd(UserAgent* userAgent,
-                            UserAgent::SubscriptionHandle handle,
+                            SubscriptionHandle handle,
                             const resip::Data& eventType, 
                             const resip::NameAddr& target, 
                             unsigned int subscriptionTime, 
@@ -146,7 +146,7 @@ class CreateSubscriptionCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
-      UserAgent::SubscriptionHandle mHandle;
+      SubscriptionHandle mHandle;
       resip::Data mEventType;
       resip::NameAddr mTarget;
       unsigned int mSubscriptionTime;
@@ -157,7 +157,7 @@ class DestroySubscriptionCmd  : public resip::DumCommand
 {
    public:  
       DestroySubscriptionCmd(UserAgent* userAgent,
-                             UserAgent::SubscriptionHandle handle)
+                             SubscriptionHandle handle)
          : mUserAgent(userAgent),
            mHandle(handle) {}
       virtual void executeCommand()
@@ -169,7 +169,7 @@ class DestroySubscriptionCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       UserAgent* mUserAgent;
-      UserAgent::SubscriptionHandle mHandle;
+      SubscriptionHandle mHandle;
 };
 
 }

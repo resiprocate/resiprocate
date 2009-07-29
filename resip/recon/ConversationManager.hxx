@@ -38,6 +38,9 @@ class UserAgent;
 class ConversationProfile;
 class RemoteParticipant;
 
+typedef unsigned int ConversationHandle;
+typedef unsigned int ParticipantHandle;
+
 /**
   This class is one of two main classes of concern to an application
   using the UserAgent library.  This class should be subclassed by 
@@ -69,9 +72,6 @@ class ConversationManager  : public resip::InviteSessionHandler,
 public:  
    ConversationManager(bool localAudioEnabled=true);
    virtual ~ConversationManager();
-
-   typedef unsigned int ConversationHandle;
-   typedef unsigned int ParticipantHandle;
 
    typedef enum 
    {

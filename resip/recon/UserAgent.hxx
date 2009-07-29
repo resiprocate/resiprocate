@@ -1,9 +1,9 @@
 #if !defined(UserAgent_hxx)
 #define UserAgent_hxx
 
+#include "ConversationProfile.hxx"
 #include "ConversationManager.hxx"
 #include "UserAgentMasterProfile.hxx"
-#include "ConversationProfile.hxx"
 
 #include <resip/stack/InterruptableStackThread.hxx>
 #include <resip/stack/SelectInterruptor.hxx>
@@ -31,6 +31,8 @@ class SetActiveConversationProfileCmd;
 class UserAgentClientSubscription;
 class UserAgentRegistration;
 
+typedef unsigned int SubscriptionHandle;
+
 /**
   This class is one of two main classes of concern to an application
   using the UserAgent library.  This class should be subclassed by 
@@ -56,8 +58,6 @@ class UserAgent : public resip::ClientRegistrationHandler,
                   public resip::DumShutdownHandler
 {
 public:
-   typedef unsigned int SubscriptionHandle;
-   typedef unsigned int ConversationProfileHandle;
 
    /**
      Constructor
