@@ -531,7 +531,7 @@ RemoteParticipantDialogSet::createSRTPSession(MediaStream::SrtpCryptoSuite crypt
 }
 
 RemoteParticipant* 
-RemoteParticipantDialogSet::createUACOriginalRemoteParticipant(ConversationManager::ParticipantHandle handle)
+RemoteParticipantDialogSet::createUACOriginalRemoteParticipant(ParticipantHandle handle)
 {
    assert(!mUACOriginalRemoteParticipant);
    RemoteParticipant *participant = new RemoteParticipant(handle, mConversationManager, mDum, *this);  
@@ -557,7 +557,7 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
                     " this is leg number " << mNumDialogs << " new handle=" << participant->getParticipantHandle());
 
          // Create Related Conversations for each conversation UACOriginalRemoteParticipant was in when first Dialog is created
-         std::list<ConversationManager::ConversationHandle>::iterator it;
+         std::list<ConversationHandle>::iterator it;
          for(it = mUACOriginalConversationHandles.begin(); it != mUACOriginalConversationHandles.end(); it++)
          {
             Conversation* conversation = mConversationManager.getConversation(*it);
@@ -594,7 +594,7 @@ RemoteParticipantDialogSet::createAppDialog(const SipMessage& msg)
 }
 
 void 
-RemoteParticipantDialogSet::setProposedSdp(ConversationManager::ParticipantHandle handle, const resip::SdpContents& sdp)
+RemoteParticipantDialogSet::setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp)
 {
    if(mProposedSdp) delete mProposedSdp;
    mProposedSdp = 0;
@@ -603,7 +603,7 @@ RemoteParticipantDialogSet::setProposedSdp(ConversationManager::ParticipantHandl
 }
 
 void 
-RemoteParticipantDialogSet::setUACConnected(const DialogId& dialogId, ConversationManager::ParticipantHandle partHandle)
+RemoteParticipantDialogSet::setUACConnected(const DialogId& dialogId, ParticipantHandle partHandle)
 {
    assert(mUACConnectedDialogId.getCallId().empty());
    mUACConnectedDialogId = dialogId;

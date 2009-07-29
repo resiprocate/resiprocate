@@ -15,7 +15,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-LocalParticipant::LocalParticipant(ConversationManager::ParticipantHandle partHandle,
+LocalParticipant::LocalParticipant(ParticipantHandle partHandle,
                                    ConversationManager& conversationManager)
 : Participant(partHandle, conversationManager)
 {

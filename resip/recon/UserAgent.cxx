@@ -91,7 +91,7 @@ UserAgent::startup()
    mStackThread.run(); 
 }
 
-UserAgent::SubscriptionHandle 
+SubscriptionHandle 
 UserAgent::getNewSubscriptionHandle()
 {
    Lock lock(mSubscriptionHandleMutex);
@@ -110,7 +110,7 @@ UserAgent::unregisterSubscription(UserAgentClientSubscription *subscription)
    mSubscriptions.erase(subscription->getSubscriptionHandle());
 }
 
-UserAgent::ConversationProfileHandle 
+ConversationProfileHandle 
 UserAgent::getNewConversationProfileHandle()
 {
    Lock lock(mConversationProfileHandleMutex);
@@ -220,7 +220,7 @@ UserAgent::setLogLevel(Log::Level level, LoggingSubsystem subsystem)
    }
 }
 
-UserAgent::ConversationProfileHandle 
+ConversationProfileHandle 
 UserAgent::addConversationProfile(SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
 {
    ConversationProfileHandle handle = getNewConversationProfileHandle();
@@ -243,7 +243,7 @@ UserAgent::destroyConversationProfile(ConversationProfileHandle handle)
    mDum.post(cmd);
 }
 
-UserAgent::SubscriptionHandle 
+SubscriptionHandle 
 UserAgent::createSubscription(const Data& eventType, const NameAddr& target, unsigned int subscriptionTime, const Mime& mimeType)
 {
    SubscriptionHandle handle = getNewSubscriptionHandle();

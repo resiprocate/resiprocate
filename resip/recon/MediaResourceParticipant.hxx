@@ -37,7 +37,7 @@ public:
       Https
    } ResourceType;
 
-   MediaResourceParticipant(ConversationManager::ParticipantHandle partHandle,
+   MediaResourceParticipant(ParticipantHandle partHandle,
       ConversationManager& conversationManager,
       resip::Uri& mediaUrl);  
    virtual ~MediaResourceParticipant();
