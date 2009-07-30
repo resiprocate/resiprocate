@@ -1,13 +1,12 @@
 #if !defined(UserAgent_hxx)
 #define UserAgent_hxx
 
+#include "ConversationProfile.hxx"
 #include "ConversationManager.hxx"
 #include "UserAgentMasterProfile.hxx"
-#include "ConversationProfile.hxx"
 
 #include <resip/stack/InterruptableStackThread.hxx>
 #include <resip/stack/SelectInterruptor.hxx>
-//#include <resip/dum/DumThread.hxx>
 #include <resip/dum/MasterProfile.hxx>
 #include <resip/dum/RegistrationHandler.hxx>
 #include <resip/dum/SubscriptionHandler.hxx>
@@ -30,6 +29,8 @@ class UserAgentShutdownCmd;
 class SetActiveConversationProfileCmd;
 class UserAgentClientSubscription;
 class UserAgentRegistration;
+
+typedef unsigned int SubscriptionHandle;
 
 /**
   This class is one of two main classes of concern to an application
@@ -56,8 +57,6 @@ class UserAgent : public resip::ClientRegistrationHandler,
                   public resip::DumShutdownHandler
 {
 public:
-   typedef unsigned int SubscriptionHandle;
-   typedef unsigned int ConversationProfileHandle;
 
    /**
      Constructor
@@ -172,6 +171,20 @@ public:
            profile, then the next profile in the list will become the default
    */
    void destroyConversationProfile(ConversationProfileHandle handle);
+
+   /**
+    * Retrieve a shared pointer to the actual conversation profile, using
+    * the handle as a key. This should normally not be used except for
+    * integration with resip (as it requires the direct profile in certain
+    * places).
+    *
+    * NB : the other xxxConversationProfile methods are asynchronous, but
+    *      this method is not.
+    *
+    * @param cpHandle the "handle" of the conversation profile in question.
+    * @return a shared pointer to the internal conversation profile object.
+    */
+   resip::SharedPtr<ConversationProfile> getConversationProfile( ConversationProfileHandle cpHandle );
 
    /**
      Used by an application to start a timer that is managed by the

@@ -51,21 +51,21 @@ public:
 
    virtual ~RemoteParticipantDialogSet();
 
-   virtual RemoteParticipant* createUACOriginalRemoteParticipant(ConversationManager::ParticipantHandle handle);
+   virtual RemoteParticipant* createUACOriginalRemoteParticipant(ParticipantHandle handle);
    virtual resip::AppDialog* createAppDialog(const resip::SipMessage& msg);
 
    // Returns the port in use for a specific media type.
    virtual unsigned int getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaType& mediaType );
 
-   virtual void setProposedSdp(ConversationManager::ParticipantHandle handle, const resip::SdpContents& sdp);
+   virtual void setProposedSdp(ParticipantHandle handle, const resip::SdpContents& sdp);
    virtual sdpcontainer::Sdp* getProposedSdp() { return mProposedSdp; }
-   virtual void setUACConnected(const resip::DialogId& dialogId, ConversationManager::ParticipantHandle partHandle);
+   virtual void setUACConnected(const resip::DialogId& dialogId, ParticipantHandle partHandle);
    virtual bool isUACConnected();
    virtual bool isStaleFork(const resip::DialogId& dialogId);
 
    virtual void removeDialog(const resip::DialogId& dialogId);
    virtual ConversationManager::ParticipantForkSelectMode getForkSelectMode();
-   virtual ConversationManager::ParticipantHandle getActiveRemoteParticipantHandle() { return mActiveRemoteParticipantHandle; }
+   virtual ParticipantHandle getActiveRemoteParticipantHandle() { return mActiveRemoteParticipantHandle; }
 
    // DialogSetHandler
    virtual void onTrying(resip::AppDialogSetHandle, const resip::SipMessage& msg);
@@ -100,11 +100,11 @@ protected:
 private:
    ConversationManager& mConversationManager;   
    RemoteParticipant* mUACOriginalRemoteParticipant;
-   std::list<ConversationManager::ConversationHandle> mUACOriginalConversationHandles;
+   std::list<ConversationHandle> mUACOriginalConversationHandles;
    unsigned int mNumDialogs;
    ConversationManager::ParticipantForkSelectMode mForkSelectMode;
    resip::DialogId mUACConnectedDialogId;
-   ConversationManager::ParticipantHandle mActiveRemoteParticipantHandle;
+   ParticipantHandle mActiveRemoteParticipantHandle;
    std::map<resip::DialogId, RemoteParticipant*> mDialogs;
 
    // Local port map, port is accessed by way of the media type.

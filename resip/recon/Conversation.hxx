@@ -30,7 +30,8 @@ class BridgeMixer;
 class Conversation 
 {
 public:  
-   Conversation(ConversationManager::ConversationHandle handle, 
+   Conversation(ConversationHandle handle, 
+                ConversationProfileHandle cpHandle,
                 ConversationManager& conversationManager,
                 RelatedConversationSet* relatedConversationSet=0);   // Pass NULL to create new RelatedConversationSet 
    ~Conversation();
@@ -44,12 +45,13 @@ public:
    bool shouldHold();
    void notifyRemoteParticipantsOfHoldChange();
 
-   void createRelatedConversation(RemoteParticipant* newForkedParticipant, ConversationManager::ParticipantHandle origParticipantHandle);
+   void createRelatedConversation(RemoteParticipant* newForkedParticipant, ParticipantHandle origParticipantHandle);
    void join(Conversation* conversation);  // move all non-duplicate participants from this conversation to passed in conversation and destroy this one
 
    void destroy();
 
-   ConversationManager::ConversationHandle getHandle() { return mHandle; }
+   ConversationHandle getHandle() { return mHandle; }
+   ConversationProfileHandle getProfileHandle() { return mcpHandle; }
 
 protected:
    friend class Participant;
@@ -60,16 +62,17 @@ protected:
    void unregisterParticipant(Participant *);
 
    friend class BridgeMixer;
-   typedef std::map<ConversationManager::ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
+   typedef std::map<ParticipantHandle, ConversationParticipantAssignment> ParticipantMap;
    ParticipantMap& getParticipants() { return mParticipants; }  
 
 private: 
-   ConversationManager::ConversationHandle mHandle;
+   ConversationHandle mHandle;
+   ConversationProfileHandle mcpHandle;
    ConversationManager& mConversationManager;
    RelatedConversationSet *mRelatedConversationSet;
 
    ParticipantMap mParticipants;
-   Participant* getParticipant(ConversationManager::ParticipantHandle partHandle);
+   Participant* getParticipant(ParticipantHandle partHandle);
    bool mDestroying;
    unsigned int mNumLocalParticipants;
    unsigned int mNumRemoteParticipants;

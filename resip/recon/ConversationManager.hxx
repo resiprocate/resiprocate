@@ -2,7 +2,7 @@
 #define ConversationManager_hxx
 
 #ifdef WIN32
-#define BOOST__STDC_CONSTANT_MACROS_DEFINED  // elminate duplicate define warnings under windows
+#define BOOST__STDC_CONSTANT_MACROS_DEFINED  // eliminate duplicate define warnings under windows
 #endif
 
 // sipX includes
@@ -24,6 +24,7 @@
 #include "MediaEvent.hxx"
 
 #include "FlowManager.hxx"
+#include "ConversationProfile.hxx"
 
 namespace resip
 {
@@ -34,9 +35,12 @@ namespace recon
 {
 class Conversation;
 class Participant;
-class UserAgent;
 class ConversationProfile;
 class RemoteParticipant;
+class UserAgent;
+
+typedef unsigned int ConversationHandle;
+typedef unsigned int ParticipantHandle;
 
 /**
   This class is one of two main classes of concern to an application
@@ -70,9 +74,6 @@ public:
    ConversationManager(bool localAudioEnabled=true);
    virtual ~ConversationManager();
 
-   typedef unsigned int ConversationHandle;
-   typedef unsigned int ParticipantHandle;
-
    typedef enum 
    {
       ForkSelectAutomatic, // create a conversation for each early fork. accept the first fork from which a 200 is received.  automatically kill other forks 
@@ -85,11 +86,22 @@ public:
 
    /**
      Create a new empty Conversation to which participants 
-     can be added.
+     can be added. This method uses the default outgoing conversation
+     profile. If you need a different profile, use the method below.
 
      @return A handle to the newly created conversation.
    */   
    virtual ConversationHandle createConversation();
+
+   /**
+     Create a new empty Conversation to which participants 
+     can be added.
+
+     @param cpHandle A handle to the conversation profile which should be used to
+            create this conversation.
+     @return A handle to the newly created conversation.
+   */   
+   virtual ConversationHandle createConversation(ConversationProfileHandle cpHandle);
 
    /**
      Destroys an existing Conversation, and ends all 

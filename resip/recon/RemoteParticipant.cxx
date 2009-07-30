@@ -34,7 +34,7 @@ using namespace std;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 // UAC
-RemoteParticipant::RemoteParticipant(ConversationManager::ParticipantHandle partHandle,
+RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
                                      ConversationManager& conversationManager, 
                                      DialogUsageManager& dum,
                                      RemoteParticipantDialogSet& remoteParticipantDialogSet)
@@ -101,14 +101,20 @@ RemoteParticipant::getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaTy
 //static const resip::ExtensionHeader h_AlertInfo("Alert-Info");
 
 void 
-RemoteParticipant::initiateRemoteCall(const NameAddr& destination)
+RemoteParticipant::initiateRemoteCall(ConversationProfileHandle cpHandle, const NameAddr& destination)
 {
    SdpContents offer;
-   SharedPtr<ConversationProfile> profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile();
    buildSdpOffer(mLocalHold, offer);
+
+   // Fetch the actual conversation profile from the user agent class. I'd
+   // like to keep using the handle but here's where the rubber meets the
+   // road.
+   UserAgent *ua = mConversationManager.getUserAgent();
+   assert(ua);
+
    SharedPtr<SipMessage> invitemsg = mDum.makeInviteSession(
       destination, 
-      profile,
+      ua->getConversationProfile( cpHandle ),
       &offer, 
       &mDialogSet);
 
@@ -775,7 +781,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
       // of handling codecs that it previously could not (common when
       // endpoint is a B2BUA).
 
-      SdpContents& sessionCaps = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get())->sessionCaps();
+      SdpContents& sessionCaps = profile->sessionCaps();
       int highPayloadId = 96;  // Note:  static payload id's are in range of 0-96
 
       // Iterate over the media lines in the offer. Compare these with

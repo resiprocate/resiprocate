@@ -91,7 +91,7 @@ UserAgent::startup()
    mStackThread.run(); 
 }
 
-UserAgent::SubscriptionHandle 
+SubscriptionHandle 
 UserAgent::getNewSubscriptionHandle()
 {
    Lock lock(mSubscriptionHandleMutex);
@@ -110,7 +110,7 @@ UserAgent::unregisterSubscription(UserAgentClientSubscription *subscription)
    mSubscriptions.erase(subscription->getSubscriptionHandle());
 }
 
-UserAgent::ConversationProfileHandle 
+ConversationProfileHandle 
 UserAgent::getNewConversationProfileHandle()
 {
    Lock lock(mConversationProfileHandleMutex);
@@ -220,7 +220,7 @@ UserAgent::setLogLevel(Log::Level level, LoggingSubsystem subsystem)
    }
 }
 
-UserAgent::ConversationProfileHandle 
+ConversationProfileHandle 
 UserAgent::addConversationProfile(SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
 {
    ConversationProfileHandle handle = getNewConversationProfileHandle();
@@ -243,7 +243,7 @@ UserAgent::destroyConversationProfile(ConversationProfileHandle handle)
    mDum.post(cmd);
 }
 
-UserAgent::SubscriptionHandle 
+SubscriptionHandle 
 UserAgent::createSubscription(const Data& eventType, const NameAddr& target, unsigned int subscriptionTime, const Mime& mimeType)
 {
    SubscriptionHandle handle = getNewSubscriptionHandle();
@@ -259,6 +259,11 @@ UserAgent::destroySubscription(SubscriptionHandle handle)
    mDum.post(cmd);
 }
 
+SharedPtr<ConversationProfile>
+UserAgent::getConversationProfile( ConversationProfileHandle cpHandle )
+{
+   return mConversationProfiles[ cpHandle ];
+}
 
 SharedPtr<ConversationProfile> 
 UserAgent::getDefaultOutgoingConversationProfile()
@@ -433,6 +438,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPt
 {
    // Store new profile
    mConversationProfiles[handle] = conversationProfile;
+   conversationProfile->setHandle( handle );
 
    // If this is the first profile ever set - then use the aor defined in it as the aor used in 
    // the DTLS certificate for the DtlsFactory - TODO - improve this sometime so that we can change the aor in 

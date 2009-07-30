@@ -20,17 +20,17 @@ class RelatedConversationSet
 public:  
    // Note:  This class is really not used for much right now
    RelatedConversationSet(ConversationManager& conversationManager, 
-                          ConversationManager::ConversationHandle initialConversationHandle, 
+                          ConversationHandle initialConversationHandle, 
                           Conversation* initialConversation);  
    ~RelatedConversationSet();
 
-   void addRelatedConversation(ConversationManager::ConversationHandle relatedConversationHandle, Conversation* relatedConversation);
-   void removeConversation(ConversationManager::ConversationHandle conversationHandle);
+   void addRelatedConversation(ConversationHandle relatedConversationHandle, Conversation* relatedConversation);
+   void removeConversation(ConversationHandle conversationHandle);
 
 private: 
    ConversationManager& mConversationManager;
-   ConversationManager::ConversationHandle mInitialConversationHandle;  // only for logging
-   typedef std::map<ConversationManager::ConversationHandle, Conversation *> RelatedConversationMap;
+   ConversationHandle mInitialConversationHandle;  // only for logging
+   typedef std::map<ConversationHandle, Conversation *> RelatedConversationMap;
    RelatedConversationMap mRelatedConversationMap;
 };
 
