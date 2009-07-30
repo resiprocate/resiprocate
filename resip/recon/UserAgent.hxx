@@ -173,20 +173,6 @@ public:
    void destroyConversationProfile(ConversationProfileHandle handle);
 
    /**
-    * Retrieve a shared pointer to the actual conversation profile, using
-    * the handle as a key. This should normally not be used except for
-    * integration with resip (as it requires the direct profile in certain
-    * places).
-    *
-    * NB : the other xxxConversationProfile methods are asynchronous, but
-    *      this method is not.
-    *
-    * @param cpHandle the "handle" of the conversation profile in question.
-    * @return a shared pointer to the internal conversation profile object.
-    */
-   resip::SharedPtr<ConversationProfile> getConversationProfile( ConversationProfileHandle cpHandle );
-
-   /**
      Used by an application to start a timer that is managed by the
      useragent.  When the timer expires the onApplicationTimer callback 
      will be called. 
@@ -287,12 +273,28 @@ protected:
    virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
    virtual int  onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
+   /**
+    * Retrieve a shared pointer to the actual conversation profile, using
+    * the handle as a key. This should normally not be used except for
+    * integration with resip (as it requires the direct profile in certain
+    * places).
+    *
+    * NB : the other xxxConversationProfile methods are asynchronous, but
+    *      this method is not.
+    *
+    * @param cpHandle the "handle" of the conversation profile in question.
+    * @return a shared pointer to the internal conversation profile object.
+    */
+   resip::SharedPtr<ConversationProfile> getConversationProfile( ConversationProfileHandle cpHandle );
+
+
 private:
    friend class ConversationManager;
    friend class UserAgentShutdownCmd;
    friend class AddConversationProfileCmd;
    friend class SetDefaultOutgoingConversationProfileCmd;
    friend class DestroyConversationProfileCmd;
+   friend class CreateConversationCmd;
    friend class CreateSubscriptionCmd;
    friend class DestroySubscriptionCmd;
    friend class MediaResourceParticipant;

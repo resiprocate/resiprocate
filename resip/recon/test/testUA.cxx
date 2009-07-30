@@ -1453,6 +1453,10 @@ main (int argc, char** argv)
    conversationProfile->secureMediaRequired() = secureMediaRequired;
    conversationProfile->secureMediaDefaultCryptoSuite() = ConversationProfile::SRTP_AES_CM_128_HMAC_SHA1_80;
 
+   // Uncomment to test anonymous calling code
+   // conversationProfile->isAnonymous() = true;
+   // conversationProfile->isPrivacyRewriteFrom() = true;
+
    //////////////////////////////////////////////////////////////////////////////
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
