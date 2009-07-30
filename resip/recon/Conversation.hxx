@@ -31,7 +31,7 @@ class Conversation
 {
 public:  
    Conversation(ConversationHandle handle, 
-                ConversationProfileHandle cpHandle,
+                resip::SharedPtr<ConversationProfile> profile,
                 ConversationManager& conversationManager,
                 RelatedConversationSet* relatedConversationSet=0);   // Pass NULL to create new RelatedConversationSet 
    ~Conversation();
@@ -51,7 +51,7 @@ public:
    void destroy();
 
    ConversationHandle getHandle() { return mHandle; }
-   ConversationProfileHandle getProfileHandle() { return mcpHandle; }
+   resip::SharedPtr<ConversationProfile> getProfile() { return mProfile; }
 
 protected:
    friend class Participant;
@@ -67,7 +67,7 @@ protected:
 
 private: 
    ConversationHandle mHandle;
-   ConversationProfileHandle mcpHandle;
+   resip::SharedPtr<ConversationProfile> mProfile;
    ConversationManager& mConversationManager;
    RelatedConversationSet *mRelatedConversationSet;
 

@@ -33,8 +33,18 @@ class CreateConversationCmd  : public resip::DumCommand
            mcpHandle(cpHandle) {}
       virtual void executeCommand()
       {
-            Conversation* conversation = new Conversation(mConvHandle, mcpHandle, *mConversationManager);
-            assert(conversation);
+         resip::SharedPtr<ConversationProfile> cProfile;
+
+         // If the handle is 0 (invalid), then just use the default
+         // outgoing profile. Otherwise, try to fetch the real profile
+         // from the user agent directly.
+         if ( mcpHandle == 0 )
+            cProfile = mConversationManager->getUserAgent()->getDefaultOutgoingConversationProfile();
+         else
+            cProfile = mConversationManager->getUserAgent()->getConversationProfile( mcpHandle );
+
+         Conversation* conversation = new Conversation(mConvHandle, cProfile, *mConversationManager);
+         assert(conversation);
       }
       resip::Message* clone() const { assert(0); return 0; }
       EncodeStream& encode(EncodeStream& strm) const { strm << " CreateConversationCmd: "; return strm; }
@@ -118,7 +128,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
             if(participant)
             {
                conversation->addParticipant(participant);
-               participant->initiateRemoteCall( conversation->getProfileHandle(), mDestination);
+               participant->initiateRemoteCall( conversation->getProfile(), mDestination);
             }
             else
             {

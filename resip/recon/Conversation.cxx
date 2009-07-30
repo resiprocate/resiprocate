@@ -17,11 +17,11 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 Conversation::Conversation(ConversationHandle handle,
-                           ConversationProfileHandle cpHandle,
+                           resip::SharedPtr<ConversationProfile> profile,
                            ConversationManager& conversationManager,
                            RelatedConversationSet* relatedConversationSet)
 : mHandle(handle),
-  mcpHandle(cpHandle),
+  mProfile(profile),
   mConversationManager(conversationManager),
   mDestroying(false),
   mNumLocalParticipants(0),
@@ -127,7 +127,7 @@ Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant,
 {
    // Create new Related Conversation
    ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
-   Conversation* conversation = new Conversation(relatedConvHandle, mcpHandle, mConversationManager, mRelatedConversationSet);
+   Conversation* conversation = new Conversation(relatedConvHandle, mProfile, mConversationManager, mRelatedConversationSet);
 
    // Copy all participants to new Conversation, except origParticipant
    ParticipantMap::iterator i;

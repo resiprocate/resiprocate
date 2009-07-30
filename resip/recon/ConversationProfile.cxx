@@ -24,7 +24,9 @@ ConversationProfile::ConversationProfile() :
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
    mNatTraversalServerPort(0),
-   mcpHandle(0)
+   mcpHandle(0),
+   mIsAnonymous(false),
+   mPrivacyRewriteFrom( false )
 {
 }
 
@@ -39,9 +41,41 @@ ConversationProfile::ConversationProfile(SharedPtr<Profile> baseProfile) :
    mDefaultSecureMediaCryptoSuite(SRTP_AES_CM_128_HMAC_SHA1_80),
    mNatTraversalMode(NoNatTraversal),
    mNatTraversalServerPort(0),
-   mcpHandle(0)
+   mcpHandle(0),
+   mIsAnonymous(false),
+   mPrivacyRewriteFrom( false )
 {
 }
+
+ConversationProfile::ConversationProfile( const ConversationProfile& thatProfile ) :
+   UserProfile( thatProfile ),
+   mSessionCaps( thatProfile.mSessionCaps ),
+   mAllowAutoAnswer( thatProfile.mAllowAutoAnswer ),
+   mAllowPriorityAutoAnswer( thatProfile.mAllowPriorityAutoAnswer ),
+   mChallengeAutoAnswerRequests( thatProfile.mChallengeAutoAnswerRequests ),
+   mChallengeOODReferRequests( thatProfile.mChallengeOODReferRequests ),
+   mSecureMediaMode( thatProfile.mSecureMediaMode ),
+   mSecureMediaRequired( thatProfile.mSecureMediaRequired ),
+   mDefaultSecureMediaCryptoSuite( thatProfile.mDefaultSecureMediaCryptoSuite ),
+   mNatTraversalMode( thatProfile.mNatTraversalMode ),
+   mNatTraversalServerHostname( thatProfile.mNatTraversalServerHostname ),
+   mNatTraversalServerPort( thatProfile.mNatTraversalServerPort ),
+   mStunUsername( thatProfile.mStunUsername ),
+   mStunPassword( thatProfile.mStunPassword ),
+   mIsAnonymous( thatProfile.mIsAnonymous ),
+   mcpHandle( thatProfile.mcpHandle ),
+   mPrivacyRewriteFrom( thatProfile.mPrivacyRewriteFrom ),
+   mAlternativePrivacyHeader( thatProfile.mAlternativePrivacyHeader )
+{
+   // Initializer does it all
+}
+
+
+UserProfile* ConversationProfile::clone() const
+{
+   return new ConversationProfile(*this);
+}
+
 
 SdpContents& 
 ConversationProfile::sessionCaps()

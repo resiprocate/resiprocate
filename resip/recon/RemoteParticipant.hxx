@@ -54,7 +54,7 @@ public:
    void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
    virtual bool isHolding() { return mLocalHold; }
 
-   virtual void initiateRemoteCall(ConversationProfileHandle cpHandle, const resip::NameAddr& destination);
+   virtual void initiateRemoteCall(resip::SharedPtr<ConversationProfile> profile, const resip::NameAddr& destination);
    virtual int getConnectionPortOnBridge();
    virtual int getMediaConnectionId();
    virtual void destroyParticipant();

@@ -101,22 +101,38 @@ RemoteParticipant::getLocalRTPPort( const sdpcontainer::SdpMediaLine::SdpMediaTy
 //static const resip::ExtensionHeader h_AlertInfo("Alert-Info");
 
 void 
-RemoteParticipant::initiateRemoteCall(ConversationProfileHandle cpHandle, const NameAddr& destination)
+RemoteParticipant::initiateRemoteCall(SharedPtr<ConversationProfile> profile, const NameAddr& destination)
 {
    SdpContents offer;
    buildSdpOffer(mLocalHold, offer);
 
-   // Fetch the actual conversation profile from the user agent class. I'd
-   // like to keep using the handle but here's where the rubber meets the
-   // road.
-   UserAgent *ua = mConversationManager.getUserAgent();
-   assert(ua);
+   // Get the anonymous user profile if need be
+   if ( profile->isAnonymous() && profile->rewriteFromHeaderIfAnonymous() )
+      profile = resip::dynamic_pointer_cast<ConversationProfile>(profile->getAnonymousUserProfile());
 
    SharedPtr<SipMessage> invitemsg = mDum.makeInviteSession(
-      destination, 
-      ua->getConversationProfile( cpHandle ),
-      &offer, 
+      destination,
+      profile,
+      &offer,
       &mDialogSet);
+
+   // Modify the INVITE SIP message according to the privacy rules
+   if ( profile->isAnonymous() &&
+       (!profile->alternativePrivacyHeader().empty() || !profile->rewriteFromHeaderIfAnonymous()))        
+   {
+      if (profile->alternativePrivacyHeader().empty())
+         profile->alternativePrivacyHeader() = "id";
+
+      if (invitemsg->exists(h_Privacies))
+         invitemsg->remove(h_Privacies);
+
+      resip::HeaderFieldValueList values;
+      values.push_back(new resip::HeaderFieldValue(profile->alternativePrivacyHeader().c_str(),
+         profile->alternativePrivacyHeader().size()));
+
+      invitemsg->setRawHeader(&values, resip::Headers::Privacy);
+   } 
+
 
    mDialogSet.sendInvite(invitemsg);
 

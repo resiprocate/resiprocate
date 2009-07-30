@@ -165,8 +165,11 @@ ConversationManager::shutdown()
 ConversationHandle 
 ConversationManager::createConversation()
 {
-   resip::SharedPtr<ConversationProfile> cProfile = getUserAgent()->getDefaultOutgoingConversationProfile();
-   return createConversation( cProfile->getHandle() );
+   ConversationHandle convHandle = getNewConversationHandle();
+
+   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, 0);
+   mUserAgent->getDialogUsageManager().post(cmd);
+   return convHandle;
 }
 
 ConversationHandle 

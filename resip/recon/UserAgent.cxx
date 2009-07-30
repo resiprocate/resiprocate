@@ -438,7 +438,7 @@ UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPt
 {
    // Store new profile
    mConversationProfiles[handle] = conversationProfile;
-   conversationProfile->setHandle( handle );
+   conversationProfile->handle() = handle;
 
    // If this is the first profile ever set - then use the aor defined in it as the aor used in 
    // the DTLS certificate for the DtlsFactory - TODO - improve this sometime so that we can change the aor in 
