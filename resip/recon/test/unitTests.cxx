@@ -337,7 +337,7 @@ public:
 
 private:
    std::list<ConversationHandle> mConvHandles;
-   ConversationManager::ParticipantHandle mLocalParticipant;
+   ParticipantHandle mLocalParticipant;
    Data mLogPrefix;
 };
 
@@ -577,7 +577,7 @@ public:
 
 private:
    std::list<ConversationHandle> mConvHandles;
-   ConversationManager::ParticipantHandle mLocalParticipant;
+   ParticipantHandle mLocalParticipant;
    Data mLogPrefix;
 };
 

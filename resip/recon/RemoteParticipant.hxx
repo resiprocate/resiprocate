@@ -38,7 +38,7 @@ class ConversationManager;
 class RemoteParticipant : public Participant, public resip::AppDialog
 {
 public:
-   RemoteParticipant(ConversationManager::ParticipantHandle partHandle,   // UAC
+   RemoteParticipant(ParticipantHandle partHandle,   // UAC
                      ConversationManager& conversationManager, 
                      resip::DialogUsageManager& dum,
                      RemoteParticipantDialogSet& remoteParticipantDialogSet);  
@@ -54,7 +54,7 @@ public:
    void buildSdpOffer(bool holdSdp, resip::SdpContents& offer);
    virtual bool isHolding() { return mLocalHold; }
 
-   virtual void initiateRemoteCall(const resip::NameAddr& destination);
+   virtual void initiateRemoteCall(ConversationProfileHandle cpHandle, const resip::NameAddr& destination);
    virtual int getConnectionPortOnBridge();
    virtual int getMediaConnectionId();
    virtual void destroyParticipant();

@@ -26,12 +26,14 @@ class CreateConversationCmd  : public resip::DumCommand
 {
    public:  
       CreateConversationCmd(ConversationManager* conversationManager, 
-                            ConversationManager::ConversationHandle convHandle) 
+                            ConversationHandle convHandle,
+                            ConversationProfileHandle cpHandle ) 
          : mConversationManager(conversationManager),
-           mConvHandle(convHandle) {}
+           mConvHandle(convHandle),
+           mcpHandle(cpHandle) {}
       virtual void executeCommand()
       {
-            Conversation* conversation = new Conversation(mConvHandle, *mConversationManager);
+            Conversation* conversation = new Conversation(mConvHandle, mcpHandle, *mConversationManager);
             assert(conversation);
       }
       resip::Message* clone() const { assert(0); return 0; }
@@ -39,14 +41,15 @@ class CreateConversationCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ConversationHandle mConvHandle;
+      ConversationHandle mConvHandle;
+      ConversationProfileHandle mcpHandle;
 };
 
 class DestroyConversationCmd  : public resip::DumCommand
 {
    public:  
       DestroyConversationCmd(ConversationManager* conversationManager, 
-                             ConversationManager::ConversationHandle convHandle) 
+                             ConversationHandle convHandle) 
          : mConversationManager(conversationManager),
            mConvHandle(convHandle) {}
       virtual void executeCommand()
@@ -62,15 +65,15 @@ class DestroyConversationCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ConversationHandle mConvHandle;
+      ConversationHandle mConvHandle;
 };
 
 class JoinConversationCmd  : public resip::DumCommand
 {
    public:  
       JoinConversationCmd(ConversationManager* conversationManager, 
-                          ConversationManager::ConversationHandle sourceConvHandle,
-                          ConversationManager::ConversationHandle destConvHandle) 
+                          ConversationHandle sourceConvHandle,
+                          ConversationHandle destConvHandle) 
          : mConversationManager(conversationManager),
            mSourceConvHandle(sourceConvHandle),
            mDestConvHandle(destConvHandle) {}
@@ -88,16 +91,16 @@ class JoinConversationCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ConversationHandle mSourceConvHandle;
-      ConversationManager::ConversationHandle mDestConvHandle;
+      ConversationHandle mSourceConvHandle;
+      ConversationHandle mDestConvHandle;
 };
 
 class CreateRemoteParticipantCmd  : public resip::DumCommand
 {
    public:  
       CreateRemoteParticipantCmd(ConversationManager* conversationManager, 
-                                 ConversationManager::ParticipantHandle partHandle,
-                                 ConversationManager::ConversationHandle convHandle,
+                                 ParticipantHandle partHandle,
+                                 ConversationHandle convHandle,
                                  resip::NameAddr& destination,
                                  ConversationManager::ParticipantForkSelectMode forkSelectMode) 
          : mConversationManager(conversationManager),
@@ -115,7 +118,7 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
             if(participant)
             {
                conversation->addParticipant(participant);
-               participant->initiateRemoteCall(mDestination);
+               participant->initiateRemoteCall( conversation->getProfileHandle(), mDestination);
             }
             else
             {
@@ -134,8 +137,8 @@ class CreateRemoteParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
-      ConversationManager::ConversationHandle mConvHandle;
+      ParticipantHandle mPartHandle;
+      ConversationHandle mConvHandle;
       resip::NameAddr mDestination;
       ConversationManager::ParticipantForkSelectMode mForkSelectMode;
 };
@@ -144,8 +147,8 @@ class CreateMediaResourceParticipantCmd  : public resip::DumCommand
 {
    public:  
       CreateMediaResourceParticipantCmd(ConversationManager* conversationManager, 
-                                        ConversationManager::ParticipantHandle partHandle,
-                                        ConversationManager::ConversationHandle convHandle,
+                                        ParticipantHandle partHandle,
+                                        ConversationHandle convHandle,
                                         resip::Uri& mediaUrl) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
@@ -179,8 +182,8 @@ class CreateMediaResourceParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
-      ConversationManager::ConversationHandle mConvHandle;
+      ParticipantHandle mPartHandle;
+      ConversationHandle mConvHandle;
       resip::Uri mMediaUrl;
 };
 
@@ -188,7 +191,7 @@ class CreateLocalParticipantCmd  : public resip::DumCommand
 {
    public:  
       CreateLocalParticipantCmd(ConversationManager* conversationManager, 
-                                ConversationManager::ParticipantHandle partHandle) 
+                                ParticipantHandle partHandle) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle) {}
       virtual void executeCommand()
@@ -200,14 +203,14 @@ class CreateLocalParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
+      ParticipantHandle mPartHandle;
 };
 
 class DestroyParticipantCmd  : public resip::DumCommand
 {
    public:  
       DestroyParticipantCmd(ConversationManager* conversationManager, 
-                            ConversationManager::ParticipantHandle partHandle) 
+                            ParticipantHandle partHandle) 
          : mConversationManager(conversationManager), mPartHandle(partHandle) {}
       DestroyParticipantCmd(const DestroyParticipantCmd& rhs) 
          : mConversationManager(rhs.mConversationManager), mPartHandle(rhs.mPartHandle) {}
@@ -224,15 +227,15 @@ class DestroyParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
+      ParticipantHandle mPartHandle;
 };
 
 class AddParticipantCmd  : public resip::DumCommand
 {
    public:  
       AddParticipantCmd(ConversationManager* conversationManager, 
-                        ConversationManager::ConversationHandle convHandle,
-                        ConversationManager::ParticipantHandle partHandle) 
+                        ConversationHandle convHandle,
+                        ParticipantHandle partHandle) 
          : mConversationManager(conversationManager),
            mConvHandle(convHandle),
            mPartHandle(partHandle) {}
@@ -250,16 +253,16 @@ class AddParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ConversationHandle mConvHandle;
-      ConversationManager::ParticipantHandle mPartHandle;
+      ConversationHandle mConvHandle;
+      ParticipantHandle mPartHandle;
 };
 
 class RemoveParticipantCmd  : public resip::DumCommand
 {
    public:  
       RemoveParticipantCmd(ConversationManager* conversationManager, 
-                           ConversationManager::ConversationHandle convHandle,
-                           ConversationManager::ParticipantHandle partHandle) 
+                           ConversationHandle convHandle,
+                           ParticipantHandle partHandle) 
          : mConversationManager(conversationManager),
            mConvHandle(convHandle),
            mPartHandle(partHandle) {}
@@ -277,17 +280,17 @@ class RemoveParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ConversationHandle mConvHandle;
-      ConversationManager::ParticipantHandle mPartHandle;
+      ConversationHandle mConvHandle;
+      ParticipantHandle mPartHandle;
 };
 
 class MoveParticipantCmd  : public resip::DumCommand
 {
    public:  
       MoveParticipantCmd(ConversationManager* conversationManager, 
-                         ConversationManager::ParticipantHandle partHandle,
-                         ConversationManager::ConversationHandle sourceConvHandle,
-                         ConversationManager::ConversationHandle destConvHandle) 
+                         ParticipantHandle partHandle,
+                         ConversationHandle sourceConvHandle,
+                         ConversationHandle destConvHandle) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mSourceConvHandle(sourceConvHandle),
@@ -309,17 +312,17 @@ class MoveParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
-      ConversationManager::ConversationHandle mSourceConvHandle;
-      ConversationManager::ConversationHandle mDestConvHandle;
+      ParticipantHandle mPartHandle;
+      ConversationHandle mSourceConvHandle;
+      ConversationHandle mDestConvHandle;
 };
 
 class ModifyParticipantContributionCmd  : public resip::DumCommand
 {
    public:  
       ModifyParticipantContributionCmd(ConversationManager* conversationManager, 
-                                       ConversationManager::ConversationHandle convHandle,
-                                       ConversationManager::ParticipantHandle partHandle,
+                                       ConversationHandle convHandle,
+                                       ParticipantHandle partHandle,
                                        unsigned int inputGain,
                                        unsigned int outputGain) 
          : mConversationManager(conversationManager),
@@ -341,8 +344,8 @@ class ModifyParticipantContributionCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ConversationHandle mConvHandle;
-      ConversationManager::ParticipantHandle mPartHandle;
+      ConversationHandle mConvHandle;
+      ParticipantHandle mPartHandle;
       unsigned int mInputGain;
       unsigned int mOutputGain;
 };
@@ -367,7 +370,7 @@ class AlertParticipantCmd  : public resip::DumCommand
 {
    public:  
       AlertParticipantCmd(ConversationManager* conversationManager, 
-                          ConversationManager::ParticipantHandle partHandle,
+                          ParticipantHandle partHandle,
                           bool earlyFlag) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
@@ -385,7 +388,7 @@ class AlertParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
+      ParticipantHandle mPartHandle;
       bool mEarlyFlag;
 };
 
@@ -393,7 +396,7 @@ class AnswerParticipantCmd  : public resip::DumCommand
 {
    public:  
       AnswerParticipantCmd(ConversationManager* conversationManager, 
-                          ConversationManager::ParticipantHandle partHandle) 
+                          ParticipantHandle partHandle) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle) {}
       virtual void executeCommand()
@@ -409,14 +412,14 @@ class AnswerParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
+      ParticipantHandle mPartHandle;
 };
 
 class RejectParticipantCmd  : public resip::DumCommand
 {
    public:  
       RejectParticipantCmd(ConversationManager* conversationManager, 
-                           ConversationManager::ParticipantHandle partHandle,
+                           ParticipantHandle partHandle,
                            unsigned int rejectCode) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
@@ -434,7 +437,7 @@ class RejectParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
+      ParticipantHandle mPartHandle;
       unsigned int mRejectCode;
 };
 
@@ -442,7 +445,7 @@ class RedirectParticipantCmd  : public resip::DumCommand
 {
    public:  
       RedirectParticipantCmd(ConversationManager* conversationManager, 
-                             ConversationManager::ParticipantHandle partHandle,
+                             ParticipantHandle partHandle,
                              resip::NameAddr& destination) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
@@ -460,7 +463,7 @@ class RedirectParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
+      ParticipantHandle mPartHandle;
       resip::NameAddr mDestination;
 };
 
@@ -468,8 +471,8 @@ class RedirectToParticipantCmd  : public resip::DumCommand
 {
    public:  
       RedirectToParticipantCmd(ConversationManager* conversationManager, 
-                               ConversationManager::ParticipantHandle partHandle,
-                               ConversationManager::ParticipantHandle destPartHandle) 
+                               ParticipantHandle partHandle,
+                               ParticipantHandle destPartHandle) 
          : mConversationManager(conversationManager),
            mPartHandle(partHandle),
            mDestPartHandle(destPartHandle) {}
@@ -487,8 +490,8 @@ class RedirectToParticipantCmd  : public resip::DumCommand
       EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
    private:
       ConversationManager* mConversationManager;
-      ConversationManager::ParticipantHandle mPartHandle;
-      ConversationManager::ParticipantHandle mDestPartHandle;
+      ParticipantHandle mPartHandle;
+      ParticipantHandle mDestPartHandle;
 };
 
 }

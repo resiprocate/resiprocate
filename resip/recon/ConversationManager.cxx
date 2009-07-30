@@ -162,18 +162,25 @@ ConversationManager::shutdown()
    }
 }
 
-ConversationManager::ConversationHandle 
+ConversationHandle 
 ConversationManager::createConversation()
+{
+   resip::SharedPtr<ConversationProfile> cProfile = getUserAgent()->getDefaultOutgoingConversationProfile();
+   return createConversation( cProfile->getHandle() );
+}
+
+ConversationHandle 
+ConversationManager::createConversation(ConversationProfileHandle cpHandle)
 {
    ConversationHandle convHandle = getNewConversationHandle();
 
-   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle);
+   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, cpHandle);
    mUserAgent->getDialogUsageManager().post(cmd);
    return convHandle;
 }
 
 void 
-ConversationManager::destroyConversation(ConversationManager::ConversationHandle convHandle)
+ConversationManager::destroyConversation(ConversationHandle convHandle)
 {
    DestroyConversationCmd* cmd = new DestroyConversationCmd(this, convHandle);
    mUserAgent->getDialogUsageManager().post(cmd);
@@ -186,7 +193,7 @@ ConversationManager::joinConversation(ConversationHandle sourceConvHandle, Conve
    mUserAgent->getDialogUsageManager().post(cmd);
 }
 
-ConversationManager::ParticipantHandle 
+ParticipantHandle 
 ConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
@@ -197,7 +204,7 @@ ConversationManager::createRemoteParticipant(ConversationHandle convHandle, Name
    return partHandle;
 }
 
-ConversationManager::ParticipantHandle 
+ParticipantHandle 
 ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, Uri& mediaUrl)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
@@ -208,7 +215,7 @@ ConversationManager::createMediaResourceParticipant(ConversationHandle convHandl
    return partHandle;
 }
 
-ConversationManager::ParticipantHandle 
+ParticipantHandle 
 ConversationManager::createLocalParticipant()
 {
    ParticipantHandle partHandle = 0;
@@ -304,7 +311,7 @@ ConversationManager::redirectToParticipant(ParticipantHandle partHandle, Partici
    mUserAgent->getDialogUsageManager().post(cmd);
 }
 
-ConversationManager::ConversationHandle 
+ConversationHandle 
 ConversationManager::getNewConversationHandle()
 {
    Lock lock(mConversationHandleMutex);
@@ -329,7 +336,7 @@ ConversationManager::getBridgeMixer()
    return mBridgeMixer;
 }
 
-ConversationManager::ParticipantHandle 
+ParticipantHandle 
 ConversationManager::getNewParticipantHandle()
 {
    Lock lock(mParticipantHandleMutex);

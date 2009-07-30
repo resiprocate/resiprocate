@@ -13,7 +13,7 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-Participant::Participant(ConversationManager::ParticipantHandle partHandle,
+Participant::Participant(ParticipantHandle partHandle,
                          ConversationManager& conversationManager)
 : mHandle(partHandle),
   mConversationManager(conversationManager)
@@ -40,7 +40,7 @@ Participant::~Participant()
 }
 
 void 
-Participant::setHandle(ConversationManager::ParticipantHandle partHandle)
+Participant::setHandle(ParticipantHandle partHandle)
 {
    if(mHandle == partHandle) return;  // already set
 

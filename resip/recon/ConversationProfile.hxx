@@ -7,6 +7,8 @@
 namespace recon
 {
 
+typedef unsigned int ConversationProfileHandle;
+
 /**
   This class extends the resip UserProfile to include Conversation 
   Manager specific settings.
@@ -17,6 +19,7 @@ namespace recon
 class ConversationProfile : public resip::UserProfile
 {
 public:  
+
    ConversationProfile(); 
 
    enum NatTraversalMode
@@ -216,6 +219,14 @@ public:
    virtual resip::Data& stunPassword() { return mStunPassword; }
    virtual const resip::Data stunPassword() const { return mStunPassword; }
 
+   /**
+    * Returns the "handle" to this object. Note that the handle may be in
+    * an uninitialized state if the profile has not yet been associated
+    * with a handle by way of the user agent class.
+    */
+   virtual ConversationProfileHandle getHandle() { return mcpHandle; }
+   virtual void setHandle( const ConversationProfileHandle& cpHandle ) { mcpHandle = cpHandle; }
+
 private:            
    resip::SdpContents mSessionCaps;    
    bool mAllowAutoAnswer;
@@ -230,6 +241,7 @@ private:
    unsigned short mNatTraversalServerPort;
    resip::Data mStunUsername;
    resip::Data mStunPassword;
+   ConversationProfileHandle mcpHandle;
 };
 
 }

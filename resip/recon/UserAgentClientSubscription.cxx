@@ -29,7 +29,7 @@ UserAgentClientSubscription::~UserAgentClientSubscription()
    mUserAgent.unregisterSubscription(this);
 }
 
-UserAgent::SubscriptionHandle 
+SubscriptionHandle 
 UserAgentClientSubscription::getSubscriptionHandle()
 {
    return mSubscriptionHandle;

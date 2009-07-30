@@ -15,7 +15,7 @@ using namespace resip;
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
 RelatedConversationSet::RelatedConversationSet(ConversationManager& conversationManager, 
-                                               ConversationManager::ConversationHandle initialConversationHandle, 
+                                               ConversationHandle initialConversationHandle, 
                                                Conversation* initialConversation)
 : mConversationManager(conversationManager),
   mInitialConversationHandle(initialConversationHandle)
@@ -31,13 +31,13 @@ RelatedConversationSet::~RelatedConversationSet()
 }
 
 void 
-RelatedConversationSet::addRelatedConversation(ConversationManager::ConversationHandle relatedConversationHandle, Conversation* relatedConversation)
+RelatedConversationSet::addRelatedConversation(ConversationHandle relatedConversationHandle, Conversation* relatedConversation)
 {
    mRelatedConversationMap[relatedConversationHandle] = relatedConversation;
 }
 
 void 
-RelatedConversationSet::removeConversation(ConversationManager::ConversationHandle conversationHandle)
+RelatedConversationSet::removeConversation(ConversationHandle conversationHandle)
 {
    mRelatedConversationMap.erase(conversationHandle);
    if(mRelatedConversationMap.size() == 0) 

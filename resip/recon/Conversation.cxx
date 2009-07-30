@@ -16,10 +16,12 @@ using namespace resip;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-Conversation::Conversation(ConversationManager::ConversationHandle handle,
+Conversation::Conversation(ConversationHandle handle,
+                           ConversationProfileHandle cpHandle,
                            ConversationManager& conversationManager,
                            RelatedConversationSet* relatedConversationSet)
 : mHandle(handle),
+  mcpHandle(cpHandle),
   mConversationManager(conversationManager),
   mDestroying(false),
   mNumLocalParticipants(0),
@@ -52,7 +54,7 @@ Conversation::~Conversation()
 }
 
 Participant* 
-Conversation::getParticipant(ConversationManager::ParticipantHandle partHandle)
+Conversation::getParticipant(ParticipantHandle partHandle)
 {
    ParticipantMap::iterator it = mParticipants.find(partHandle);
    if(it != mParticipants.end())
@@ -121,11 +123,11 @@ Conversation::notifyRemoteParticipantsOfHoldChange()
 }
 
 void 
-Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant, ConversationManager::ParticipantHandle origParticipantHandle)
+Conversation::createRelatedConversation(RemoteParticipant* newForkedParticipant, ParticipantHandle origParticipantHandle)
 {
    // Create new Related Conversation
-   ConversationManager::ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
-   Conversation* conversation = new Conversation(relatedConvHandle, mConversationManager, mRelatedConversationSet);
+   ConversationHandle relatedConvHandle = mConversationManager.getNewConversationHandle();
+   Conversation* conversation = new Conversation(relatedConvHandle, mcpHandle, mConversationManager, mRelatedConversationSet);
 
    // Copy all participants to new Conversation, except origParticipant
    ParticipantMap::iterator i;
