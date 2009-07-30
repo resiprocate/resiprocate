@@ -1262,11 +1262,10 @@ main (int argc, char** argv)
    // or calling connect without first binding to a specific port.  There is code in the
    // resip transport selector that uses a utility UDP socket in order to determine
    // which interface should be used to route to a particular destination.  This code calls
-   // connect with no bind.  By setting a fixed transport interface and port here that 
+   // connect with no bind.  By setting a fixed transport interface here that 
    // code will not be used.
    // The following line can be safely removed for other platforms
-   profile->setFixedTransportInterface(address);
-   //profile->setFixedTransportPort(SIP_PORT);
+   //profile->setFixedTransportInterface(address);
 
    // Settings
    profile->setDefaultRegistrationTime(3600);

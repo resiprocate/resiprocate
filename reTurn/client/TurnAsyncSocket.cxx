@@ -21,7 +21,7 @@ using namespace resip;
 //#define TURN_CHANNEL_BINDING_REFRESH_SECONDS 20   // TESTING only
 #define TURN_CHANNEL_BINDING_REFRESH_SECONDS 240   // 4 minuntes - this is one minute before the permission will expire, Note:  ChannelBinding refreshes also refresh permissions
 
-#define SOFTWARE_STRING "reTURN Async Client 0.3 - RFC5389/turn-12"
+#define SOFTWARE_STRING "reTURN Async Client 0.3 - RFC5389/turn-12   "  // Note padding size to a multiple of 4, to help compatibility with older clients
 
 namespace reTurn {
 
@@ -581,7 +581,7 @@ TurnAsyncSocket::handleStunMessage(StunMessage& stunMessage)
             return asio::error_code(reTurn::UnknownRequiredAttributes, asio::error::misc_category);
          }
 
-         // First check if this response if for an active request
+         // First check if this response is for an active request
          RequestMap::iterator it = mActiveRequestMap.find(stunMessage.mHeader.magicCookieAndTid);
          if(it == mActiveRequestMap.end())
          {
