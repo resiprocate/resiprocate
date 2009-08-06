@@ -550,6 +550,7 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
    SdpContents::Session::Medium audioMedium("audio", 0, 1, "RTP/AVP");
 
    bool firstCodecAdded = false;
+   bool anyCodecAdded = false;
    for(unsigned int idIter = 0; idIter < numCodecIds; idIter++)
    {
       const SdpCodec* sdpcodec = codecList.getCodec((SdpCodec::SdpCodecTypes)codecIds[idIter]);
@@ -592,6 +593,7 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
                << " fmtp=" << codec.parameters());
 
       audioMedium.addCodec(codec);
+      anyCodecAdded = true;
       if(!firstCodecAdded)
       {
          firstCodecAdded = true;
@@ -602,8 +604,12 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
          audioMedium.addAttribute("ptime", Data(sdpcodec->getPacketLength() / 1000));  
       }
    }
-   session.addMedium(audioMedium);
 
+   // Add the medium only if at least one codec was added
+   if ( anyCodecAdded )
+      session.addMedium(audioMedium);
+
+   anyCodecAdded = false;
    SdpContents::Session::Medium videoMedium("video", 0, 1, "RTP/AVP");
    for(unsigned int idIter = 0; idIter < numCodecIds; idIter++)
    {
@@ -637,9 +643,12 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
             << " payloadid=" << sdpcodec->getCodecPayloadFormat()
             << " fmtp=" << codec.parameters());
 
-         videoMedium.addCodec(codec);
+      videoMedium.addCodec(codec);
+      anyCodecAdded = true;
    }
-   session.addMedium(videoMedium);
+
+   if ( anyCodecAdded )
+      session.addMedium(videoMedium);
 
    sessionCaps.session() = session;
 }
