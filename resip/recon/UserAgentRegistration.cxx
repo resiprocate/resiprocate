@@ -13,19 +13,19 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgentRegistration::UserAgentRegistration(UserAgent& userAgent, DialogUsageManager& dum, unsigned int handle)
+UserAgentRegistration::UserAgentRegistration(resip::SharedPtr<RegistrationManager> regMgr, DialogUsageManager& dum, unsigned int handle)
 : AppDialogSet(dum),
-  mUserAgent(userAgent),
+  mRegManager(regMgr),
   mDum(dum),
   mConversationProfileHandle(handle),
   mEnded(false)
 {
-   mUserAgent.registerRegistration(this);
+   mRegManager->registerRegistration(this);
 }
 
 UserAgentRegistration::~UserAgentRegistration()
 {
-   mUserAgent.unregisterRegistration(this);
+   mRegManager->unregisterRegistration(this);
 }
 
 ConversationProfileHandle 

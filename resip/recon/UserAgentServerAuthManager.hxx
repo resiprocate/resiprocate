@@ -27,7 +27,7 @@ class UserAgent;
 class UserAgentServerAuthManager: public resip::ServerAuthManager
 {
    public:
-      UserAgentServerAuthManager(UserAgent& userAgent);
+      UserAgentServerAuthManager(ConversationManager& cmgr);
       ~UserAgentServerAuthManager();
       
    protected:
@@ -48,7 +48,7 @@ class UserAgentServerAuthManager: public resip::ServerAuthManager
       virtual AsyncBool requiresChallenge(const resip::SipMessage& msg);
 
    private:
-      UserAgent& mUserAgent;
+      ConversationManager& mConversationManager;
 };
 
 }

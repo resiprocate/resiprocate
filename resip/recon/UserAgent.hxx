@@ -2,8 +2,9 @@
 #define UserAgent_hxx
 
 #include "ConversationProfile.hxx"
-#include "ConversationManager.hxx"
 #include "UserAgentMasterProfile.hxx"
+#include "RegistrationManager.hxx"
+#include "ApplicationTimers.hxx"
 
 #include <resip/stack/InterruptableStackThread.hxx>
 #include <resip/stack/SelectInterruptor.hxx>
@@ -24,11 +25,11 @@
 
 namespace recon
 {
-
 class UserAgentShutdownCmd;
 class SetActiveConversationProfileCmd;
 class UserAgentClientSubscription;
 class UserAgentRegistration;
+class ConversationManager;
 
 typedef unsigned int SubscriptionHandle;
 
@@ -65,7 +66,7 @@ public:
                                 Manager
      @param masterProfile       Object containing useragent settings
    */
-   UserAgent(ConversationManager* conversationManager, resip::SharedPtr<UserAgentMasterProfile> masterProfile);
+   UserAgent(resip::SharedPtr<UserAgentMasterProfile> masterProfile);
    virtual ~UserAgent();
 
    /**
@@ -144,50 +145,11 @@ public:
    static void setLogLevel(resip::Log::Level level, LoggingSubsystem subsystem=SubsystemAll);
 
    /**
-     Adds a Conversation Profile to be managed, by the user agent.  SIP Registration 
-     is performed, if required.
-
-     @param conversationProfile Profile to add
-     @param defaultOutgoing Set to true to set this profile as the default 
-                            profile to use for outbound calls.
-   */
-   ConversationProfileHandle addConversationProfile(resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true); // thread safe
-
-   /**
-     Sets an existing Conversation Profile to the default profile to 
-     use for outbound calls.
-
-     @param handle ConversationProfile handle to use
-   */
-   void setDefaultOutgoingConversationProfile(ConversationProfileHandle handle); 
-
-   /**
-     Destroys an existing Conversation Profile.  SIP un-registration is 
-     performed, if required.
-
-     @param handle ConversationProfile handle to use
-
-     @note If this ConversationProfile is currently the default outbound 
-           profile, then the next profile in the list will become the default
-   */
-   void destroyConversationProfile(ConversationProfileHandle handle);
-
-   /**
-     Used by an application to start a timer that is managed by the
-     useragent.  When the timer expires the onApplicationTimer callback 
-     will be called. 
-
-     Applications should override this UserAgent class and callback in 
-     order to use application timers.
-
-     @param timerId Id representing the timers purpose
-     @param durationMs the duration of the timer in ms
-     @param seqNumber Can be used by the application to differentiate 
-                      "active" from "non-active" timers, since timers
-                      cannot be stopped
-   */
-   virtual void startApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber);
-
+    * Returns a shared pointer to the application timer service. Use this
+    * in order to provide callbacks from timer events into the application.
+    */
+   resip::SharedPtr<ApplicationTimers> getTimers();
+   
    /**
      Requests that the user agent create and manage an event subscription.  
      When an subscribed event is received the onSubscriptionNotify callback 
@@ -216,20 +178,6 @@ public:
    ////////////////////////////////////////////////////////////////////
    // UserAgent Handlers //////////////////////////////////////////////
    ////////////////////////////////////////////////////////////////////
-
-   /**
-     Callback used when an application timer expires.
-
-     @note An application should override this method if it uses
-           startApplicaitonTimer.
-
-     @param timerId Id representing the timers purpose
-     @param durationMs the duration of the timer in ms
-     @param seqNumber Can be used by the application to differentiate 
-                      "active" from "non-active" timers, since timers
-                      cannot be stopped
-   */
-   virtual void onApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber);
 
    /**
      Callback used when a subscription has received an event notification 
@@ -273,27 +221,9 @@ protected:
    virtual void onNewSubscription(resip::ClientSubscriptionHandle h, const resip::SipMessage& notify);
    virtual int  onRequestRetry(resip::ClientSubscriptionHandle h, int retryMinimum, const resip::SipMessage& notify);
 
-   /**
-    * Retrieve a shared pointer to the actual conversation profile, using
-    * the handle as a key. This should normally not be used except for
-    * integration with resip (as it requires the direct profile in certain
-    * places).
-    *
-    * NB : the other xxxConversationProfile methods are asynchronous, but
-    *      this method is not.
-    *
-    * @param cpHandle the "handle" of the conversation profile in question.
-    * @return a shared pointer to the internal conversation profile object.
-    */
-   resip::SharedPtr<ConversationProfile> getConversationProfile( ConversationProfileHandle cpHandle );
-
-
 private:
    friend class ConversationManager;
    friend class UserAgentShutdownCmd;
-   friend class AddConversationProfileCmd;
-   friend class SetDefaultOutgoingConversationProfileCmd;
-   friend class DestroyConversationProfileCmd;
    friend class CreateConversationCmd;
    friend class CreateSubscriptionCmd;
    friend class DestroySubscriptionCmd;
@@ -301,21 +231,13 @@ private:
 
    // Note:  In general the following fns are not thread safe and must be called from dum process 
    //        loop only
-   friend class UserAgentServerAuthManager;
    friend class RemoteParticipant;
    friend class DefaultDialogSet;
    friend class RemoteParticipantDialogSet;
-   resip::SharedPtr<ConversationProfile> getDefaultOutgoingConversationProfile();
-   resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
    resip::SharedPtr<UserAgentMasterProfile> getUserAgentMasterProfile();
-   resip::DialogUsageManager& getDialogUsageManager();
 
    void addTransports();
-   void post(resip::ApplicationMessage& message, unsigned int ms=0);
    void shutdownImpl(); 
-   void addConversationProfileImpl(ConversationProfileHandle handle, resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true);
-   void setDefaultOutgoingConversationProfileImpl(ConversationProfileHandle handle);
-   void destroyConversationProfileImpl(ConversationProfileHandle handle);
    void createSubscriptionImpl(SubscriptionHandle handle, const resip::Data& eventType, const resip::NameAddr& target, unsigned int subscriptionTime, const resip::Mime& mimeType);
    void destroySubscriptionImpl(SubscriptionHandle handle);
 
@@ -329,28 +251,17 @@ private:
    void registerSubscription(UserAgentClientSubscription *);
    void unregisterSubscription(UserAgentClientSubscription *);
 
-   // Conversation Profile Storage
-   typedef std::map<ConversationProfileHandle, resip::SharedPtr<ConversationProfile> > ConversationProfileMap;
-   ConversationProfileMap mConversationProfiles;
-   resip::Mutex mConversationProfileHandleMutex;
-   ConversationProfileHandle mCurrentConversationProfileHandle;
-   ConversationProfileHandle mDefaultOutgoingConversationProfileHandle;
-   ConversationProfileHandle getNewConversationProfileHandle();  // thread safe
-
-   friend class UserAgentRegistration;
-   typedef std::map<ConversationProfileHandle, UserAgentRegistration*> RegistrationMap;
-   RegistrationMap mRegistrations;
-   void registerRegistration(UserAgentRegistration *);
-   void unregisterRegistration(UserAgentRegistration *);
-
    ConversationManager* mConversationManager;
    resip::SharedPtr<UserAgentMasterProfile> mProfile;
    resip::Security* mSecurity;
    resip::SelectInterruptor mSelectInterruptor;
    resip::SipStack mStack;
-   resip::DialogUsageManager mDum;
+   resip::SharedPtr<resip::DialogUsageManager> mDum;
    resip::InterruptableStackThread mStackThread;
    volatile bool mDumShutdown;
+
+   resip::SharedPtr<RegistrationManager> mRegManager;
+   resip::SharedPtr<ApplicationTimers> mApplicationTimers;
 };
  
 }

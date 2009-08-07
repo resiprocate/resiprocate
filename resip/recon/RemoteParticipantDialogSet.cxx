@@ -44,7 +44,7 @@ using namespace std;
 
 RemoteParticipantDialogSet::RemoteParticipantDialogSet(ConversationManager& conversationManager,        
                                                        ConversationManager::ParticipantForkSelectMode forkSelectMode) :
-   AppDialogSet(conversationManager.getUserAgent()->getDialogUsageManager()),
+   AppDialogSet(*conversationManager.mDum),
    mConversationManager(conversationManager),
    mUACOriginalRemoteParticipant(0),
    mNumDialogs(0),
@@ -79,34 +79,36 @@ RemoteParticipantDialogSet::~RemoteParticipantDialogSet()
       mConversationManager.getMediaInterface()->deleteConnection(mMediaConnectionId);
    }
 
+   resip::SharedPtr<RTPPortAllocator> rtpAllocator = mConversationManager.mRTPAllocator;
+
    // todo: Probably all this port freeing stuff can be done in a loop
    if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_AUDIO ] != 0)
    {
-      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_AUDIO ]);
+      rtpAllocator->freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_AUDIO ]);
       mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_AUDIO ] = 0;
    }
 
    if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_VIDEO ] != 0)
    {
-      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_VIDEO ]);
+      rtpAllocator->freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_VIDEO ]);
       mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_VIDEO ] = 0;
    }
 
    if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_TEXT ] != 0)
    {
-      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_TEXT ]);
+      rtpAllocator->freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_TEXT ]);
       mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_TEXT ] = 0;
    }
 
    if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_APPLICATION ] != 0)
    {
-      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_APPLICATION ]);
+      rtpAllocator->freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_APPLICATION ]);
       mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_APPLICATION ] = 0;
    }
 
    if(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_MESSAGE ] != 0)
    {
-      mConversationManager.freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_MESSAGE ]);
+      rtpAllocator->freeRTPPort(mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_MESSAGE ]);
       mLocalRTPPortMap[ SdpMediaLine::MEDIA_TYPE_MESSAGE ] = 0;
    }
 
@@ -133,7 +135,7 @@ RemoteParticipantDialogSet::~RemoteParticipantDialogSet()
 SharedPtr<UserProfile> 
 RemoteParticipantDialogSet::selectUASUserProfile(const SipMessage& msg)
 {
-   return mConversationManager.getUserAgent()->getIncomingConversationProfile(msg);
+   return mConversationManager.getIncomingConversationProfile(msg);
 }
 
 unsigned int 
@@ -141,8 +143,10 @@ RemoteParticipantDialogSet::getLocalRTPPort( const sdpcontainer::SdpMediaLine::S
 {
    if(mLocalRTPPortMap[ mediaType ] == 0)
    {
+      resip::SharedPtr<RTPPortAllocator> rtpAllocator = mConversationManager.mRTPAllocator;
       bool isUAC = false;
-      mLocalRTPPortMap[ mediaType ] = mConversationManager.allocateRTPPort();
+
+      mLocalRTPPortMap[ mediaType ] = rtpAllocator->allocateRTPPort();
       if(mLocalRTPPortMap[ mediaType ] == 0)
       {
          WarningLog(<< "Could not allocate a free RTP port for RemoteParticipantDialogSet!");
@@ -156,7 +160,7 @@ RemoteParticipantDialogSet::getLocalRTPPort( const sdpcontainer::SdpMediaLine::S
       ConversationProfile* profile = dynamic_cast<ConversationProfile*>(getUserProfile().get());
       if(!profile)
       {
-         profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
+         profile = mConversationManager.getDefaultOutgoingConversationProfile().get();
          isUAC = true;
       }
 

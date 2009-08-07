@@ -18,18 +18,16 @@
 #include <resip/dum/SubscriptionHandler.hxx>
 #include <resip/dum/OutOfDialogHandler.hxx>
 #include <resip/dum/RedirectHandler.hxx>
+#include <resip/dum/DialogUsageManager.hxx>
 #include <rutil/Mutex.hxx>
 
+#include "UserAgentMasterProfile.hxx"
 #include "MediaResourceCache.hxx"
 #include "MediaEvent.hxx"
-
 #include "FlowManager.hxx"
 #include "ConversationProfile.hxx"
-
-namespace resip
-{
-class DialogUsageManager;
-}
+#include "RTPPortAllocator.hxx"
+#include "RegistrationManager.hxx"
 
 namespace recon
 {
@@ -70,8 +68,8 @@ class ConversationManager  : public resip::InviteSessionHandler,
                              public resip::RedirectHandler,
                              public OsMsgDispatcher
 {
-public:  
-   ConversationManager(bool localAudioEnabled=true);
+public:
+   ConversationManager(UserAgent& ua, bool localAudioEnabled=true);
    virtual ~ConversationManager();
 
    typedef enum 
@@ -79,6 +77,40 @@ public:
       ForkSelectAutomatic, // create a conversation for each early fork. accept the first fork from which a 200 is received.  automatically kill other forks 
       ForkSelectManual     // create a conversation for each early fork. let the application dispose of extra forks. ex: app may form conference. 
    } ParticipantForkSelectMode;
+
+   ///////////////////////////////////////////////////////////////////////
+   // Conversation Profile methods  //////////////////////////////////////
+   ///////////////////////////////////////////////////////////////////////
+
+   /**
+     Adds a Conversation Profile to be managed, by the user agent.  SIP Registration 
+     is performed, if required.
+
+     @param conversationProfile Profile to add
+     @param defaultOutgoing Set to true to set this profile as the default 
+                            profile to use for outbound calls.
+   */
+   ConversationProfileHandle addConversationProfile(resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true); // thread safe
+
+   /**
+     Sets an existing Conversation Profile to the default profile to 
+     use for outbound calls.
+
+     @param handle ConversationProfile handle to use
+   */
+   void setDefaultOutgoingConversationProfile(ConversationProfileHandle handle); 
+
+   /**
+     Destroys an existing Conversation Profile.  SIP un-registration is 
+     performed, if required.
+
+     @param handle ConversationProfile handle to use
+
+     @note If this ConversationProfile is currently the default outbound 
+           profile, then the next profile in the list will become the default
+   */
+   void destroyConversationProfile(ConversationProfileHandle handle);
+
 
    ///////////////////////////////////////////////////////////////////////
    // Conversation methods  //////////////////////////////////////////////
@@ -515,7 +547,21 @@ protected:
    virtual void onRedirectReceived(resip::AppDialogSetHandle, const resip::SipMessage& response);
    virtual bool onTryingNextTarget(resip::AppDialogSetHandle, const resip::SipMessage& request);
 
-   UserAgent* getUserAgent() { return mUserAgent; }
+   //UserAgent* getUserAgent() { return mUserAgent; }
+
+   /**
+    * Retrieve a shared pointer to the actual conversation profile, using
+    * the handle as a key. This should normally not be used except for
+    * integration with resip (as it requires the direct profile in certain
+    * places).
+    *
+    * NB : the other xxxConversationProfile methods are asynchronous, but
+    *      this method is not.
+    *
+    * @param cpHandle the "handle" of the conversation profile in question.
+    * @return a shared pointer to the internal conversation profile object.
+    */
+   resip::SharedPtr<ConversationProfile> getConversationProfile( ConversationProfileHandle cpHandle );
 
 private:
    friend class DefaultDialogSet;
@@ -532,13 +578,18 @@ private:
    void unregisterConversation(Conversation *);
    BridgeMixer& getBridgeMixer();
 
+   void addConversationProfileImpl(ConversationProfileHandle handle, resip::SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing=true);
+   void setDefaultOutgoingConversationProfileImpl(ConversationProfileHandle handle);
+   void destroyConversationProfileImpl(ConversationProfileHandle handle);
+   resip::SharedPtr<ConversationProfile> getDefaultOutgoingConversationProfile();
+   resip::SharedPtr<ConversationProfile> getIncomingConversationProfile(const resip::SipMessage& msg);  // returns the most appropriate conversation profile for the message
+
    friend class Participant;
    void registerParticipant(Participant *);
    void unregisterParticipant(Participant *);
 
    friend class RemoteParticipant;
    friend class UserAgent;
-   void setUserAgent(UserAgent *userAgent);
 
    friend class MediaEvent;
    void onMediaEvent(MediaEvent::MediaEventType eventType);
@@ -548,8 +599,6 @@ private:
    friend class LocalParticipant;
    friend class BridgeMixer;
    CpMediaInterface* getMediaInterface() { return mMediaInterface; }
-   unsigned int allocateRTPPort();
-   void freeRTPPort(unsigned int port);
 
    flowmanager::FlowManager& getFlowManager() { return mFlowManager; }
 
@@ -557,6 +606,9 @@ private:
    virtual void buildSdpOffer(ConversationProfile* profile, resip::SdpContents& offer);
 
    friend class MediaResourceParticipantDeleterCmd;
+   friend class AddConversationProfileCmd;
+   friend class SetDefaultOutgoingConversationProfileCmd;
+   friend class DestroyConversationProfileCmd;
    friend class CreateConversationCmd;
    friend class DestroyConversationCmd;
    friend class JoinConversationCmd;
@@ -573,16 +625,27 @@ private:
    friend class RejectParticipantCmd;
    friend class RedirectParticipantCmd;
    friend class RedirectToParticipantCmd;
+   friend class UserAgentServerAuthManager;
 
 private:  
-   UserAgent* mUserAgent;
-
+   resip::SharedPtr<resip::DialogUsageManager> mDum;
    typedef std::map<ConversationHandle, Conversation *> ConversationMap;
    ConversationMap mConversations;
    resip::Mutex mConversationHandleMutex;
    ConversationHandle mCurrentConversationHandle;
    ConversationHandle getNewConversationHandle();  // thread safe
    Conversation* getConversation(ConversationHandle convHandle);
+
+   // Conversation Profile Storage
+   typedef std::map<ConversationProfileHandle, resip::SharedPtr<ConversationProfile> > ConversationProfileMap;
+   ConversationProfileMap mConversationProfiles;
+   resip::Mutex mConversationProfileHandleMutex;
+   ConversationProfileHandle mCurrentConversationProfileHandle;
+   ConversationProfileHandle mDefaultOutgoingConversationProfileHandle;
+   ConversationProfileHandle getNewConversationProfileHandle();  // thread safe
+
+   // Allocator for local RTP ports
+   resip::SharedPtr<RTPPortAllocator> mRTPAllocator;
 
    typedef std::map<ParticipantHandle, Participant *> ParticipantMap;
    ParticipantMap mParticipants;
@@ -593,13 +656,13 @@ private:
    RemoteParticipant* getRemoteParticipantFromMediaConnectionId(int mediaConnectionId);
    bool mLocalAudioEnabled;
 
-   std::deque<unsigned int> mRTPPortFreeList;
-   void initRTPPortFreeList();
-
    MediaResourceCache mMediaResourceCache;
 
    // FlowManager Instance
    flowmanager::FlowManager mFlowManager;
+
+   // RegistrationManager Instance
+   resip::SharedPtr<RegistrationManager> mRegManager;
 
    // sipX Media related members
    virtual OsStatus post(const OsMsg& msg);

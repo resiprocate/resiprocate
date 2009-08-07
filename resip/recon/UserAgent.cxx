@@ -1,11 +1,10 @@
 #include "UserAgent.hxx"
-#include "UserAgentDialogSetFactory.hxx"
 #include "UserAgentCmds.hxx"
 #include "UserAgentServerAuthManager.hxx"
 #include "UserAgentClientSubscription.hxx"
 #include "UserAgentRegistration.hxx"
+#include "ConversationManager.hxx"
 #include "ReconSubsystem.hxx"
-
 #include "FlowManagerSubsystem.hxx"
 
 #include <ReTurnSubsystem.hxx>
@@ -26,11 +25,9 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) : 
+UserAgent::UserAgent(SharedPtr<UserAgentMasterProfile> profile) : 
    mCurrentSubscriptionHandle(1),
-   mCurrentConversationProfileHandle(1),
-   mDefaultOutgoingConversationProfileHandle(0),
-   mConversationManager(conversationManager),
+   mRegManager(new RegistrationManager()),
    mProfile(profile),
 #if defined(USE_SSL)
    mSecurity(new Security(profile->certPath())),
@@ -38,13 +35,10 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mSecurity(0),
 #endif
    mStack(mSecurity, profile->getAdditionalDnsServers(), &mSelectInterruptor),
-   mDum(mStack),
+   mDum(new DialogUsageManager(mStack)),
    mStackThread(mStack, mSelectInterruptor),
    mDumShutdown(false)
 {
-   assert(mConversationManager);
-   mConversationManager->setUserAgent(this);
-
    addTransports();
 
    // Set Enum Suffixes
@@ -54,30 +48,20 @@ UserAgent::UserAgent(ConversationManager* conversationManager, SharedPtr<UserAge
    mStack.statisticsManagerEnabled() = profile->statisticsManagerEnabled();
    
    // Install Handlers
-   mDum.setMasterProfile(mProfile);
-   mDum.setClientRegistrationHandler(this);
-   mDum.setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
-   mDum.setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
-   mDum.setRedirectHandler(mConversationManager);
-   mDum.setInviteSessionHandler(mConversationManager); 
-   mDum.setDialogSetHandler(mConversationManager);
-   mDum.addOutOfDialogHandler(OPTIONS, mConversationManager);
-   mDum.addOutOfDialogHandler(REFER, mConversationManager);
-   mDum.addClientSubscriptionHandler("refer", mConversationManager);
-   mDum.addServerSubscriptionHandler("refer", mConversationManager);
+   mDum->setMasterProfile(mProfile);
+   mDum->setClientRegistrationHandler(this);
+   mDum->setClientAuthManager(std::auto_ptr<ClientAuthManager>(new ClientAuthManager));
+   mDum->setKeepAliveManager(std::auto_ptr<KeepAliveManager>(new KeepAliveManager));
 
-   //mDum.addClientSubscriptionHandler(Symbols::Presence, this);
-   //mDum.addClientPublicationHandler(Symbols::Presence, this);
-   //mDum.addOutOfDialogHandler(NOTIFY, this);
-   //mDum.addServerSubscriptionHandler("message-summary", this);
+   // See Conversation Manager for remainder of (invite-related) dum initialization
 
-   // Set AppDialogSetFactory
-   auto_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*mConversationManager));
-	mDum.setAppDialogSetFactory(dsf);
+   //mDum->addClientSubscriptionHandler(Symbols::Presence, this);
+   //mDum->addClientPublicationHandler(Symbols::Presence, this);
+   //mDum->addOutOfDialogHandler(NOTIFY, this);
+   //mDum->addServerSubscriptionHandler("message-summary", this);
 
-   // Set UserAgentServerAuthManager
-   SharedPtr<ServerAuthManager> uasAuth( new UserAgentServerAuthManager(*this));
-   mDum.setServerAuthManager(uasAuth);
+   // Initialize the application timers object with the dum
+   mApplicationTimers = SharedPtr<ApplicationTimers>(new ApplicationTimers(mDum));
 }
 
 UserAgent::~UserAgent()
@@ -110,36 +94,17 @@ UserAgent::unregisterSubscription(UserAgentClientSubscription *subscription)
    mSubscriptions.erase(subscription->getSubscriptionHandle());
 }
 
-ConversationProfileHandle 
-UserAgent::getNewConversationProfileHandle()
-{
-   Lock lock(mConversationProfileHandleMutex);
-   return mCurrentConversationProfileHandle++; 
-}
-
-void 
-UserAgent::registerRegistration(UserAgentRegistration *registration)
-{
-   mRegistrations[registration->getConversationProfileHandle()] = registration;
-}
-
-void 
-UserAgent::unregisterRegistration(UserAgentRegistration *registration)
-{
-   mRegistrations.erase(registration->getConversationProfileHandle());
-}
-
 void 
 UserAgent::process(int timeoutMs)
 {
-   mDum.process(timeoutMs);
+   mDum->process(timeoutMs);
 }
 
 void
 UserAgent::shutdown()
 {
    UserAgentShutdownCmd* cmd = new UserAgentShutdownCmd(this);
-   mDum.post(cmd);
+   mDum->post(cmd);
 
    // Wait for Dum to shutdown
    while(!mDumShutdown) 
@@ -161,19 +126,6 @@ void
 UserAgent::clearDnsCache()
 {
    mStack.clearDnsCache();
-}
-
-void 
-UserAgent::post(ApplicationMessage& message, unsigned int ms)
-{
-   if(ms > 0)
-   {
-      mStack.postMS(message, ms, &mDum);
-   }
-   else
-   {
-      mDum.post(&message);
-   }
 }
 
 void 
@@ -220,27 +172,10 @@ UserAgent::setLogLevel(Log::Level level, LoggingSubsystem subsystem)
    }
 }
 
-ConversationProfileHandle 
-UserAgent::addConversationProfile(SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+SharedPtr<ApplicationTimers>
+UserAgent::getTimers()
 {
-   ConversationProfileHandle handle = getNewConversationProfileHandle();
-   AddConversationProfileCmd* cmd = new AddConversationProfileCmd(this, handle, conversationProfile, defaultOutgoing);
-   mDum.post(cmd);
-   return handle;
-}
-
-void
-UserAgent::setDefaultOutgoingConversationProfile(ConversationProfileHandle handle)
-{
-   SetDefaultOutgoingConversationProfileCmd* cmd = new SetDefaultOutgoingConversationProfileCmd(this, handle);
-   mDum.post(cmd);
-}
-
-void 
-UserAgent::destroyConversationProfile(ConversationProfileHandle handle)
-{
-   DestroyConversationProfileCmd* cmd = new DestroyConversationProfileCmd(this, handle);
-   mDum.post(cmd);
+   return mApplicationTimers;
 }
 
 SubscriptionHandle 
@@ -248,7 +183,7 @@ UserAgent::createSubscription(const Data& eventType, const NameAddr& target, uns
 {
    SubscriptionHandle handle = getNewSubscriptionHandle();
    CreateSubscriptionCmd* cmd = new CreateSubscriptionCmd(this, handle, eventType, target, subscriptionTime, mimeType);
-   mDum.post(cmd);
+   mDum->post(cmd);
    return handle;
 }
 
@@ -256,84 +191,13 @@ void
 UserAgent::destroySubscription(SubscriptionHandle handle)
 {
    DestroySubscriptionCmd* cmd = new DestroySubscriptionCmd(this, handle);
-   mDum.post(cmd);
-}
-
-SharedPtr<ConversationProfile>
-UserAgent::getConversationProfile( ConversationProfileHandle cpHandle )
-{
-   return mConversationProfiles[ cpHandle ];
-}
-
-SharedPtr<ConversationProfile> 
-UserAgent::getDefaultOutgoingConversationProfile()
-{
-   if(mDefaultOutgoingConversationProfileHandle != 0)
-   {
-      return mConversationProfiles[mDefaultOutgoingConversationProfileHandle];
-   }
-   else
-   {
-      assert(false);
-      return SharedPtr<ConversationProfile>((ConversationProfile*)0);
-   }
-}
-
-SharedPtr<ConversationProfile> 
-UserAgent::getIncomingConversationProfile(const SipMessage& msg)
-{
-   assert(msg.isRequest());
-
-   // Examine the sip message, and select the most appropriate conversation profile
-
-   // Check if request uri matches registration contact
-   const Uri& requestUri = msg.header(h_RequestLine).uri();
-   RegistrationMap::iterator regIt;
-   for(regIt = mRegistrations.begin(); regIt != mRegistrations.end(); regIt++)
-   {
-      const NameAddrs& contacts = regIt->second->getContactAddresses();
-      NameAddrs::const_iterator naIt;
-      for(naIt = contacts.begin(); naIt != contacts.end(); naIt++)
-      {
-         InfoLog( << "getIncomingConversationProfile: comparing requestUri=" << requestUri << " to contactUri=" << (*naIt).uri());
-         if((*naIt).uri() == requestUri)
-         {
-            ConversationProfileMap::iterator conIt = mConversationProfiles.find(regIt->first);
-            if(conIt != mConversationProfiles.end())
-            {
-               return conIt->second;
-            }
-         }
-      }
-   }
-
-   // Check if To header matches default from
-   Data toAor = msg.header(h_To).uri().getAor();
-   ConversationProfileMap::iterator conIt;
-   for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); conIt++)
-   {
-      InfoLog( << "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor());
-      if(isEqualNoCase(toAor, conIt->second->getDefaultFrom().uri().getAor()))
-      {
-         return conIt->second;
-      }
-   }
-
-   // If can't find any matches, then return the default outgoing profile
-   InfoLog( << "getIncomingConversationProfile: no matching profile found, falling back to default outgoing profile");
-   return getDefaultOutgoingConversationProfile();
+   mDum->post(cmd);
 }
 
 SharedPtr<UserAgentMasterProfile> 
 UserAgent::getUserAgentMasterProfile()
 {
    return mProfile;
-}
-
-DialogUsageManager& 
-UserAgent::getDialogUsageManager()
-{
-   return mDum;
 }
 
 ConversationManager*
@@ -364,12 +228,12 @@ UserAgent::addTransports()
 #ifdef USE_DTLS
          case DTLS:
 #endif
-            mDum.addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface, (*i).mSipDomainname, Data::Empty, (*i).mSslType);
+            mDum->addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface, (*i).mSipDomainname, Data::Empty, (*i).mSslType);
             break;
 #endif
          case UDP:
          case TCP:
-            mDum.addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface);
+            mDum->addTransport((*i).mProtocol, (*i).mPort, (*i).mIPVersion, (*i).mIPInterface);
             break;
          default:
             WarningLog (<< "Failed to add " << Tuple::toData((*i).mProtocol) << " transport - unsupported type");
@@ -381,19 +245,6 @@ UserAgent::addTransports()
          WarningLog (<< "Failed to add " << Tuple::toData((*i).mProtocol) << " transport on " << (*i).mPort);
       }
    }
-}
-
-void 
-UserAgent::startApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber)
-{
-   UserAgentTimeout t(*this, timerId, durationMs, seqNumber);
-   post(t, durationMs);
-}
-
-void 
-UserAgent::onApplicationTimer(unsigned int timerId, unsigned int durationMs, unsigned int seqNumber)
-{
-   // Default implementation is to do nothing - application should override this
 }
 
 void 
@@ -411,7 +262,7 @@ UserAgent::onSubscriptionNotify(SubscriptionHandle handle, const Data& notifyDat
 void 
 UserAgent::shutdownImpl()
 {
-   mDum.shutdown(this);
+   mDum->shutdown(this);
 
    // End all subscriptions
    // Destroy each Conversation
@@ -423,86 +274,18 @@ UserAgent::shutdownImpl()
    }
 
    // Unregister all registrations
-   RegistrationMap tempRegs = mRegistrations;  // Create copy for safety, since ending Subscriptions can immediately remove themselves from map
-   RegistrationMap::iterator j;
-   for(j = tempRegs.begin(); j != tempRegs.end(); j++)
-   {
-      j->second->end();
-   }
+   mRegManager->unregisterAll();
 
    mConversationManager->shutdown();
-}
-
-void 
-UserAgent::addConversationProfileImpl(ConversationProfileHandle handle, SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
-{
-   // Store new profile
-   mConversationProfiles[handle] = conversationProfile;
-   conversationProfile->handle() = handle;
-
-   // If this is the first profile ever set - then use the aor defined in it as the aor used in 
-   // the DTLS certificate for the DtlsFactory - TODO - improve this sometime so that we can change the aor in 
-   // the cert at runtime to equal the aor in the default conversation profile
-   if(!mDefaultOutgoingConversationProfileHandle)
-   {
-      mConversationManager->getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
-   }
-
-   // Set the default outgoing if requested to do so, or we don't have one yet
-   if(defaultOutgoing || mDefaultOutgoingConversationProfileHandle == 0)
-   {
-      setDefaultOutgoingConversationProfileImpl(handle);
-   }
-
-   // Register new profile
-   if(conversationProfile->getDefaultRegistrationTime() != 0)
-   {
-      UserAgentRegistration *registration = new UserAgentRegistration(*this, mDum, handle);
-      mDum.send(mDum.makeRegistration(conversationProfile->getDefaultFrom(), conversationProfile, registration));
-   }
-}
-
-void 
-UserAgent::setDefaultOutgoingConversationProfileImpl(ConversationProfileHandle handle)
-{
-   mDefaultOutgoingConversationProfileHandle = handle;
-}
-
-void 
-UserAgent::destroyConversationProfileImpl(ConversationProfileHandle handle)
-{
-   // Remove matching registration if found
-   RegistrationMap::iterator it = mRegistrations.find(handle);
-   if(it != mRegistrations.end())
-   {
-      it->second->end();
-   }
-
-   // Remove from ConversationProfile map
-   mConversationProfiles.erase(handle);
-
-   // If this Conversation Profile was the default - select the first item in the map as the new default
-   if(handle == mDefaultOutgoingConversationProfileHandle)
-   {
-      ConversationProfileMap::iterator it = mConversationProfiles.begin();
-      if(it != mConversationProfiles.end())
-      {
-         setDefaultOutgoingConversationProfileImpl(it->first);
-      }
-      else
-      {
-         setDefaultOutgoingConversationProfileImpl(0);
-      }
-   }
 }
 
 void 
 UserAgent::createSubscriptionImpl(SubscriptionHandle handle, const Data& eventType, const NameAddr& target, unsigned int subscriptionTime, const Mime& mimeType)
 {
    // Ensure we have a client subscription handler for this event type
-   if(!mDum.getClientSubscriptionHandler(eventType))
+   if(!mDum->getClientSubscriptionHandler(eventType))
    {
-      mDum.addClientSubscriptionHandler(eventType, this);
+      mDum->addClientSubscriptionHandler(eventType, this);
    }
    // Ensure that the request Mime type is supported in the dum profile
    if(!mProfile->isMimeTypeSupported(SUBSCRIBE, mimeType))
@@ -510,8 +293,8 @@ UserAgent::createSubscriptionImpl(SubscriptionHandle handle, const Data& eventTy
       mProfile->addSupportedMimeType(SUBSCRIBE, mimeType);  
    }
 
-   UserAgentClientSubscription *subscription = new UserAgentClientSubscription(*this, mDum, handle);
-   mDum.send(mDum.makeSubscription(target, getDefaultOutgoingConversationProfile(), eventType, subscriptionTime, subscription));
+   UserAgentClientSubscription *subscription = new UserAgentClientSubscription(*this, *mDum, handle);
+   mDum->send(mDum->makeSubscription(target, mConversationManager->getDefaultOutgoingConversationProfile(), eventType, subscriptionTime, subscription));
 }
 
 void 

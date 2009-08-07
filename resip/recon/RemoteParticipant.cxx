@@ -777,7 +777,7 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
    ConversationProfile *profile = dynamic_cast<ConversationProfile*>(mDialogSet.getUserProfile().get());
    if(!profile) // This can happen for UAC calls
    {
-      profile = mConversationManager.getUserAgent()->getDefaultOutgoingConversationProfile().get();
+      profile = mConversationManager.getDefaultOutgoingConversationProfile().get();
    }
 
    // If we already have a local sdp for this sesion, then use this to form
