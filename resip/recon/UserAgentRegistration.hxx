@@ -7,6 +7,7 @@
 #include <resip/dum/SubscriptionHandler.hxx>
 
 #include "UserAgent.hxx"
+#include "RegistrationManager.hxx"
 
 namespace resip
 {
@@ -27,7 +28,7 @@ class UserAgent;
 class UserAgentRegistration : public resip::AppDialogSet
 {
    public:  
-      UserAgentRegistration(UserAgent& userAgent, resip::DialogUsageManager& dum, unsigned int handle);  
+      UserAgentRegistration(resip::SharedPtr<RegistrationManager> regMgr, resip::DialogUsageManager& dum, unsigned int handle);  
       virtual ~UserAgentRegistration();
 
       ConversationProfileHandle getConversationProfileHandle();
@@ -41,8 +42,8 @@ class UserAgentRegistration : public resip::AppDialogSet
       virtual void onRemoved(resip::ClientRegistrationHandle h, const resip::SipMessage& response);
       virtual int onRequestRetry(resip::ClientRegistrationHandle h, int retryMinimum, const resip::SipMessage& msg);
 
-   private:       
-      UserAgent &mUserAgent;
+   private:
+      resip::SharedPtr<RegistrationManager> mRegManager;
       resip::DialogUsageManager &mDum;
       ConversationProfileHandle mConversationProfileHandle;
       bool mEnded;

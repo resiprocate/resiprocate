@@ -331,7 +331,7 @@ MediaResourceParticipant::startPlay()
       {
          // Start timer to destroy media resource participant automatically
          DestroyParticipantCmd destroyer(&mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->post(destroyer, mDurationMs);
+         mConversationManager.mDum->getSipStack().postMS( destroyer, mDurationMs, mConversationManager.mDum.get() );
       }
    }
    else
@@ -426,8 +426,7 @@ MediaResourceParticipant::playerRealized(MpPlayerEvent& event)
       if(status != OS_SUCCESS)
       {
          WarningLog(<< "MediaResourceParticipant::playerRealized error calling StreamPlayer::prefetch: " << status);
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
+         mConversationManager.mDum->post(new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle));
       }
    }
    else
@@ -436,8 +435,7 @@ MediaResourceParticipant::playerRealized(MpPlayerEvent& event)
       if(status != OS_SUCCESS)
       {
          WarningLog(<< "MediaResourceParticipant::playerRealized error calling StreamPlayer::play: " << status);
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
+         mConversationManager.mDum->post(new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle));
       }
    }
 }
@@ -450,8 +448,7 @@ MediaResourceParticipant::playerPrefetched(MpPlayerEvent& event)
    if(status != OS_SUCCESS)
    {
       WarningLog(<< "MediaResourceParticipant::playerPrefetched error calling StreamPlayer::play: " << status);
-       MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-       mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
+      mConversationManager.mDum->post(new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle));
    }
 }
 
@@ -478,14 +475,12 @@ MediaResourceParticipant::playerStopped(MpPlayerEvent& event)
       if(status != OS_SUCCESS)
       {
          WarningLog(<< "MediaResourceParticipant::playerStopped error calling StreamPlayer::rewind: " << status);
-         MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-         mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
+         mConversationManager.mDum->post(new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle));
       }
    }
    else
    {
-      MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-      mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
+      mConversationManager.mDum->post(new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle));
    }
 }
  
@@ -493,8 +488,7 @@ void
 MediaResourceParticipant::playerFailed(MpPlayerEvent& event)
 {
    InfoLog(<< "MediaResourceParticipant::playerFailed: handle=" << mHandle);
-   MediaResourceParticipantDeleterCmd* cmd = new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle);
-   mConversationManager.getUserAgent()->getDialogUsageManager().post(cmd);
+   mConversationManager.mDum->post(new MediaResourceParticipantDeleterCmd(mConversationManager, mHandle));
 }
 
 

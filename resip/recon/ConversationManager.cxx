@@ -21,12 +21,15 @@
 
 #include "ReconSubsystem.hxx"
 #include "UserAgent.hxx"
+#include "UserAgentDialogSetFactory.hxx" // !ds! should probably be moved in future
+#include "UserAgentServerAuthManager.hxx"
 #include "ConversationManager.hxx"
 #include "ConversationManagerCmds.hxx"
 #include "Conversation.hxx"
 #include "Participant.hxx"
 #include "BridgeMixer.hxx"
 #include "DtmfEvent.hxx"
+#include "UserAgentRegistration.hxx"
 #include <rutil/WinLeakCheck.hxx>
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -39,8 +42,9 @@ using namespace std;
 
 #define RESIPROCATE_SUBSYSTEM ReconSubsystem::RECON
 
-ConversationManager::ConversationManager(bool localAudioEnabled) 
-: mUserAgent(0),
+ConversationManager::ConversationManager(UserAgent& ua, bool localAudioEnabled) 
+: mDefaultOutgoingConversationProfileHandle(0),
+  mCurrentConversationProfileHandle(1),
   mCurrentConversationHandle(1),
   mCurrentParticipantHandle(1),
   mLocalAudioEnabled(localAudioEnabled),
@@ -48,6 +52,29 @@ ConversationManager::ConversationManager(bool localAudioEnabled)
   mMediaInterface(0),
   mBridgeMixer(*this)
 {
+   // Make sure the UserAgent class has a handle to us
+   ua.mConversationManager = this;
+
+   mDum = ua.mDum;
+   mDum->setRedirectHandler(this);
+   mDum->setInviteSessionHandler(this); 
+   mDum->setDialogSetHandler(this);
+   mDum->addOutOfDialogHandler(OPTIONS, this);
+   mDum->addOutOfDialogHandler(REFER, this);
+   mDum->addClientSubscriptionHandler("refer", this);
+   mDum->addServerSubscriptionHandler("refer", this);
+
+   // Set AppDialogSetFactory
+   auto_ptr<AppDialogSetFactory> dsf(new UserAgentDialogSetFactory(*this));
+	mDum->setAppDialogSetFactory(dsf);
+
+   // Set UserAgentServerAuthManager
+   SharedPtr<ServerAuthManager> uasAuth( new UserAgentServerAuthManager(*this));
+   mDum->setServerAuthManager(uasAuth);
+
+   mRegManager = ua.mRegManager;
+   mRTPAllocator = resip::SharedPtr<RTPPortAllocator>(new RTPPortAllocator( *ua.getUserAgentMasterProfile() ));
+
 #ifdef _DEBUG
    UtlString codecPaths[] = {".", "../../../../sipXtapi/sipXmediaLib/bin"};
 #else
@@ -127,25 +154,12 @@ ConversationManager::~ConversationManager()
 }
 
 void
-ConversationManager::setUserAgent(UserAgent* userAgent)
-{
-   mUserAgent = userAgent;
-
-   // Note: This is not really required, since we are managing the port allocation - but no harm done
-   // Really not needed now - since FlowManager integration
-   //mMediaFactory->getFactoryImplementation()->setRtpPortRange(mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin(), 
-   //                                                           mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
-
-   initRTPPortFreeList();
-}
-
-void
 ConversationManager::shutdown()
 {
    // Destroy each Conversation
    ConversationMap tempConvs = mConversations;  // Create copy for safety, since ending conversations can immediately remove themselves from map
    ConversationMap::iterator i;
-   for(i = tempConvs.begin(); i != tempConvs.end(); i++)
+   for(i = tempConvs.begin(); i != tempConvs.end(); ++i)
    {
       InfoLog(<< "Destroying conversation: " << i->second->getHandle());
       i->second->destroy();
@@ -155,20 +169,161 @@ ConversationManager::shutdown()
    ParticipantMap tempParts = mParticipants;  
    ParticipantMap::iterator j;
    int j2=0;
-   for(j = tempParts.begin(); j != tempParts.end(); j++, j2++)
+   for(j = tempParts.begin(); j != tempParts.end(); ++j, ++j2)
    {
       InfoLog(<< "Destroying participant: " << j->second->getParticipantHandle());
       j->second->destroyParticipant();
    }
 }
 
+ConversationProfileHandle 
+ConversationManager::getNewConversationProfileHandle()
+{
+   Lock lock(mConversationProfileHandleMutex);
+   return mCurrentConversationProfileHandle++; 
+}
+
+ConversationProfileHandle 
+ConversationManager::addConversationProfile(SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+{
+   ConversationProfileHandle handle = getNewConversationProfileHandle();
+   mDum->post(new AddConversationProfileCmd(this, handle, conversationProfile, defaultOutgoing));
+   return handle;
+}
+
+void
+ConversationManager::setDefaultOutgoingConversationProfile(ConversationProfileHandle handle)
+{
+   mDum->post(new SetDefaultOutgoingConversationProfileCmd(this, handle));
+}
+
+void 
+ConversationManager::destroyConversationProfile(ConversationProfileHandle handle)
+{
+   mDum->post(new DestroyConversationProfileCmd(this, handle));
+}
+
+void 
+ConversationManager::addConversationProfileImpl(ConversationProfileHandle handle, SharedPtr<ConversationProfile> conversationProfile, bool defaultOutgoing)
+{
+   // Store new profile
+   mConversationProfiles[handle] = conversationProfile;
+   conversationProfile->handle() = handle;
+
+   // If this is the first profile ever set - then use the aor defined in it as the aor used in 
+   // the DTLS certificate for the DtlsFactory - TODO - improve this sometime so that we can change the aor in 
+   // the cert at runtime to equal the aor in the default conversation profile
+   if(!mDefaultOutgoingConversationProfileHandle)
+   {
+      getFlowManager().initializeDtlsFactory(conversationProfile->getDefaultFrom().uri().getAor().c_str());
+   }
+
+   // Set the default outgoing if requested to do so, or we don't have one yet
+   if(defaultOutgoing || mDefaultOutgoingConversationProfileHandle == 0)
+   {
+      setDefaultOutgoingConversationProfileImpl(handle);
+   }
+
+   // Register new profile
+   if( mRegManager.get() && ( conversationProfile->getDefaultRegistrationTime() != 0 ))
+   {
+      UserAgentRegistration *registration = new UserAgentRegistration(mRegManager, *mDum, handle);
+      mDum->send(mDum->makeRegistration(conversationProfile->getDefaultFrom(), conversationProfile, registration));
+   }
+}
+
+void 
+ConversationManager::setDefaultOutgoingConversationProfileImpl(ConversationProfileHandle handle)
+{
+   mDefaultOutgoingConversationProfileHandle = handle;
+}
+
+void 
+ConversationManager::destroyConversationProfileImpl(ConversationProfileHandle handle)
+{
+   if ( mRegManager.get() )
+   {
+      // Remove matching registration if found
+      mRegManager->removeRegistration( handle );
+   }
+
+   // Remove from ConversationProfile map
+   mConversationProfiles.erase(handle);
+
+   // If this Conversation Profile was the default - select the first item
+   // in the map as the new default
+   if(handle == mDefaultOutgoingConversationProfileHandle)
+   {
+      ConversationProfileMap::iterator it = mConversationProfiles.begin();
+      if(it != mConversationProfiles.end())
+      {
+         setDefaultOutgoingConversationProfileImpl(it->first);
+      }
+      else
+      {
+         setDefaultOutgoingConversationProfileImpl(0);
+      }
+   }
+}
+
+SharedPtr<ConversationProfile>
+ConversationManager::getConversationProfile( ConversationProfileHandle cpHandle )
+{
+   return mConversationProfiles[ cpHandle ];
+}
+
+SharedPtr<ConversationProfile> 
+ConversationManager::getDefaultOutgoingConversationProfile()
+{
+   if(mDefaultOutgoingConversationProfileHandle != 0)
+   {
+      return mConversationProfiles[mDefaultOutgoingConversationProfileHandle];
+   }
+   else
+   {
+      assert(false);
+      return SharedPtr<ConversationProfile>((ConversationProfile*)0);
+   }
+}
+
+SharedPtr<ConversationProfile> 
+ConversationManager::getIncomingConversationProfile(const SipMessage& msg)
+{
+   assert(msg.isRequest());
+
+   // Examine the sip message, and select the most appropriate conversation profile
+   // Check if request uri matches registration contact
+   const Uri& requestUri = msg.header(h_RequestLine).uri();
+   ConversationProfileHandle cph = mRegManager->findRegistration( requestUri );
+   if ( cph != 0 )
+   {
+      ConversationProfileMap::iterator conIt = mConversationProfiles.find(cph);
+      if(conIt != mConversationProfiles.end())
+         return conIt->second;
+   }
+
+   // Check if To header matches default from
+   Data toAor = msg.header(h_To).uri().getAor();
+   ConversationProfileMap::iterator conIt;
+   for(conIt = mConversationProfiles.begin(); conIt != mConversationProfiles.end(); ++conIt)
+   {
+      InfoLog( << "getIncomingConversationProfile: comparing toAor=" << toAor << " to defaultFromAor=" << conIt->second->getDefaultFrom().uri().getAor());
+      if(isEqualNoCase(toAor, conIt->second->getDefaultFrom().uri().getAor()))
+      {
+         return conIt->second;
+      }
+   }
+
+   // If can't find any matches, then return the default outgoing profile
+   InfoLog( << "getIncomingConversationProfile: no matching profile found, falling back to default outgoing profile");
+   return getDefaultOutgoingConversationProfile();
+}
+
 ConversationHandle 
 ConversationManager::createConversation()
 {
    ConversationHandle convHandle = getNewConversationHandle();
-
-   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, 0);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new CreateConversationCmd(this, convHandle, 0));
    return convHandle;
 }
 
@@ -176,34 +331,27 @@ ConversationHandle
 ConversationManager::createConversation(ConversationProfileHandle cpHandle)
 {
    ConversationHandle convHandle = getNewConversationHandle();
-
-   CreateConversationCmd* cmd = new CreateConversationCmd(this, convHandle, cpHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new CreateConversationCmd(this, convHandle, cpHandle));
    return convHandle;
 }
 
 void 
 ConversationManager::destroyConversation(ConversationHandle convHandle)
 {
-   DestroyConversationCmd* cmd = new DestroyConversationCmd(this, convHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new DestroyConversationCmd(this, convHandle));
 }
 
 void 
 ConversationManager::joinConversation(ConversationHandle sourceConvHandle, ConversationHandle destConvHandle)
 {
-   JoinConversationCmd* cmd = new JoinConversationCmd(this, sourceConvHandle, destConvHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new JoinConversationCmd(this, sourceConvHandle, destConvHandle));
 }
 
 ParticipantHandle 
 ConversationManager::createRemoteParticipant(ConversationHandle convHandle, NameAddr& destination, ParticipantForkSelectMode forkSelectMode)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
-
-   CreateRemoteParticipantCmd* cmd = new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, forkSelectMode);
-   mUserAgent->getDialogUsageManager().post(cmd);
-
+   mDum->post(new CreateRemoteParticipantCmd(this, partHandle, convHandle, destination, forkSelectMode));
    return partHandle;
 }
 
@@ -211,10 +359,7 @@ ParticipantHandle
 ConversationManager::createMediaResourceParticipant(ConversationHandle convHandle, Uri& mediaUrl)
 {
    ParticipantHandle partHandle = getNewParticipantHandle();
-
-   CreateMediaResourceParticipantCmd* cmd = new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl);
-   mUserAgent->getDialogUsageManager().post(cmd);
-
+   mDum->post(new CreateMediaResourceParticipantCmd(this, partHandle, convHandle, mediaUrl));
    return partHandle;
 }
 
@@ -225,9 +370,7 @@ ConversationManager::createLocalParticipant()
    if(mLocalAudioEnabled)
    {
       partHandle = getNewParticipantHandle();
-
-      CreateLocalParticipantCmd* cmd = new CreateLocalParticipantCmd(this, partHandle);
-      mUserAgent->getDialogUsageManager().post(cmd);
+      mDum->post(new CreateLocalParticipantCmd(this, partHandle));
    }
    else
    {
@@ -240,78 +383,67 @@ ConversationManager::createLocalParticipant()
 void 
 ConversationManager::destroyParticipant(ParticipantHandle partHandle)
 {
-   DestroyParticipantCmd* cmd = new DestroyParticipantCmd(this, partHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new DestroyParticipantCmd(this, partHandle));
 }
 
 void 
 ConversationManager::addParticipant(ConversationHandle convHandle, ParticipantHandle partHandle)
 {
-   AddParticipantCmd* cmd = new AddParticipantCmd(this, convHandle, partHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new AddParticipantCmd(this, convHandle, partHandle));
 }
 
 void 
 ConversationManager::removeParticipant(ConversationHandle convHandle, ParticipantHandle partHandle)
 {
-   RemoveParticipantCmd* cmd = new RemoveParticipantCmd(this, convHandle, partHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new RemoveParticipantCmd(this, convHandle, partHandle));
 }
 
 void
 ConversationManager::moveParticipant(ParticipantHandle partHandle, ConversationHandle sourceConvHandle, ConversationHandle destConvHandle)
 {
-   MoveParticipantCmd* cmd = new MoveParticipantCmd(this, partHandle, sourceConvHandle, destConvHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new MoveParticipantCmd(this, partHandle, sourceConvHandle, destConvHandle));
 }
 
 void 
 ConversationManager::modifyParticipantContribution(ConversationHandle convHandle, ParticipantHandle partHandle, unsigned int inputGain, unsigned int outputGain)
 {
-   ModifyParticipantContributionCmd* cmd = new ModifyParticipantContributionCmd(this, convHandle, partHandle, inputGain, outputGain);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new ModifyParticipantContributionCmd(this, convHandle, partHandle, inputGain, outputGain));
 }
 
 void 
 ConversationManager::outputBridgeMatrix()
 {
-   OutputBridgeMixWeightsCmd* cmd = new OutputBridgeMixWeightsCmd(this);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new OutputBridgeMixWeightsCmd(this));
 }
 
 void 
 ConversationManager::alertParticipant(ParticipantHandle partHandle, bool earlyFlag)
 {
-   AlertParticipantCmd* cmd = new AlertParticipantCmd(this, partHandle, earlyFlag);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new AlertParticipantCmd(this, partHandle, earlyFlag));
 }
 
 void 
 ConversationManager::answerParticipant(ParticipantHandle partHandle)
 {
-   AnswerParticipantCmd* cmd = new AnswerParticipantCmd(this, partHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new AnswerParticipantCmd(this, partHandle));
 }
 
 void 
 ConversationManager::rejectParticipant(ParticipantHandle partHandle, unsigned int rejectCode)
 {
-   RejectParticipantCmd* cmd = new RejectParticipantCmd(this, partHandle, rejectCode);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new RejectParticipantCmd(this, partHandle, rejectCode));
 }
 
 void 
 ConversationManager::redirectParticipant(ParticipantHandle partHandle, NameAddr& destination)
 {
-   RedirectParticipantCmd* cmd = new RedirectParticipantCmd(this, partHandle, destination);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new RedirectParticipantCmd(this, partHandle, destination));
 }
 
 void 
 ConversationManager::redirectToParticipant(ParticipantHandle partHandle, ParticipantHandle destPartHandle)
 {
-   RedirectToParticipantCmd* cmd = new RedirectToParticipantCmd(this, partHandle, destPartHandle);
-   mUserAgent->getDialogUsageManager().post(cmd);
+   mDum->post(new RedirectToParticipantCmd(this, partHandle, destPartHandle));
 }
 
 ConversationHandle 
@@ -357,36 +489,6 @@ ConversationManager::unregisterParticipant(Participant *participant)
 {
    InfoLog(<< "participant unregistered, handle=" << participant->getParticipantHandle());
    mParticipants.erase(participant->getParticipantHandle());
-}
-
-void 
-ConversationManager::initRTPPortFreeList()
-{
-   mRTPPortFreeList.clear();
-   for(unsigned int i = mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin(); i <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax();)
-   {
-      mRTPPortFreeList.push_back(i);
-      i=i+2;  // only add even ports - note we are assuming rtpPortRangeMin is even
-   }
-}
- 
-unsigned int 
-ConversationManager::allocateRTPPort()
-{
-   unsigned int port = 0;
-   if(!mRTPPortFreeList.empty())
-   {
-      port = mRTPPortFreeList.front();
-      mRTPPortFreeList.pop_front();
-   }
-   return port;
-}
- 
-void
-ConversationManager::freeRTPPort(unsigned int port)
-{
-   assert(port >= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMin() && port <= mUserAgent->getUserAgentMasterProfile()->rtpPortRangeMax());
-   mRTPPortFreeList.push_back(port);
 }
 
 void 
@@ -584,7 +686,7 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
          }
       }
 
-      InfoLog(<< "Added audio codec to session capabilites:"
+      InfoLog(<< "Added audio codec to session capabilities:"
                << " id=" << codecIds[idIter] 
                << " type=" << mimeSubType.data()
                << " rate=" << sdpcodec->getSampleRate()
@@ -635,7 +737,7 @@ ConversationManager::buildSessionCapabilities(resip::Data& ipaddress, unsigned i
       if(fmtpField.length() != 0)
          codec.parameters() = Data(fmtpField.data());
 
-      InfoLog(<< "Added video codec to session capabilites:"
+      InfoLog(<< "Added video codec to session capabilities:"
             << " id=" << codecIds[idIter] 
             << " type=" << mimeSubType.data()
             << " rate=" << sdpcodec->getSampleRate()
@@ -704,8 +806,7 @@ ConversationManager::post(const OsMsg& msg)
          InfoLog( << "NotificationDispatcher: received MI_NOTF_PLAY_FINISHED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          {
             // Queue event to conversation manager thread
-            MediaEvent* mevent = new MediaEvent(*this, MediaEvent::PLAY_FINISHED);
-            mUserAgent->getDialogUsageManager().post(mevent);
+            mDum->post(new MediaEvent(*this, MediaEvent::PLAY_FINISHED));
          }
          break;
       case MiNotification::MI_NOTF_PROGRESS:
@@ -731,8 +832,7 @@ ConversationManager::post(const OsMsg& msg)
             if(remoteParticipant)
             {
                // Get event into dum queue, so that callback is on dum thread
-               DtmfEvent* devent = new DtmfEvent(*remoteParticipant, pDtmfNotfMsg->getKeyCode(), pDtmfNotfMsg->getDuration(), pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP);
-               mUserAgent->getDialogUsageManager().post(devent);
+               mDum->post(new DtmfEvent(*remoteParticipant, pDtmfNotfMsg->getKeyCode(), pDtmfNotfMsg->getDuration(), pDtmfNotfMsg->getKeyPressState()==MiDtmfNotf::KEY_UP));
             }
 
             InfoLog( << "NotificationDispatcher: received MI_NOTF_DTMF_RECEIVED, sourceId=" << pNotfMsg->getSourceId().data() << 
@@ -1047,7 +1147,7 @@ ConversationManager::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, con
          if(msg.exists(h_TargetDialog))
          {
             pair<InviteSessionHandle, int> presult;
-            presult = mUserAgent->getDialogUsageManager().findInviteSession(msg.header(h_TargetDialog));
+            presult = mDum->findInviteSession(msg.header(h_TargetDialog));
             if(!(presult.first == InviteSessionHandle::NotValid())) 
             {         
                RemoteParticipant* participantToRefer = (RemoteParticipant*)presult.first->getAppDialog().get();
@@ -1164,7 +1264,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
 
       // Attach an offer to the options request
       SdpContents sdp;
-      buildSdpOffer(mUserAgent->getIncomingConversationProfile(msg).get(), sdp);
+      buildSdpOffer(getIncomingConversationProfile(msg).get(), sdp);
       optionsAnswer->setContents(&sdp);
       ood->send(optionsAnswer);
       break;
@@ -1180,7 +1280,7 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
             if(msg.exists(h_TargetDialog))
             {
                pair<InviteSessionHandle, int> presult;
-               presult = mUserAgent->getDialogUsageManager().findInviteSession(msg.header(h_TargetDialog));
+               presult = mDum->findInviteSession(msg.header(h_TargetDialog));
                if(!(presult.first == InviteSessionHandle::NotValid())) 
                {         
                   RemoteParticipant* participantToRefer = (RemoteParticipant*)presult.first->getAppDialog().get();

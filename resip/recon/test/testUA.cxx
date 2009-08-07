@@ -33,6 +33,7 @@ int _kbhit() {
 #endif
 
 #include "../UserAgent.hxx"
+#include "../ConversationManager.hxx"
 #include "../ReconSubsystem.hxx"
 
 #include <os/OsSysLog.h>
@@ -46,6 +47,8 @@ int _kbhit() {
 #include <rutil/DnsUtil.hxx>
 #include <rutil/BaseException.hxx>
 #include <rutil/WinLeakCheck.hxx>
+
+#include <boost/shared_ptr.hpp>
 
 using namespace recon;
 using namespace resip;
@@ -74,11 +77,11 @@ signalHandler(int signo)
    finished = true;
 }
 
-class MyUserAgent : public UserAgent
+class MyUserAgent : public UserAgent, public ApplicationTimer
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(SharedPtr<UserAgentMasterProfile> profile) :
+      UserAgent(profile) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -100,8 +103,8 @@ class MyConversationManager : public ConversationManager
 {
 public:
 
-   MyConversationManager(bool localAudioEnabled)
-      : ConversationManager(localAudioEnabled),
+   MyConversationManager(UserAgent& ua, bool localAudioEnabled)
+      : ConversationManager(ua, localAudioEnabled),
         mLocalAudioEnabled(localAudioEnabled)
    { 
    };
@@ -308,7 +311,7 @@ public:
    bool mLocalAudioEnabled;
 };
 
-void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
+void processCommandLine(Data& commandline, MyConversationManager& myConversationManager, boost::shared_ptr<MyUserAgent>& myUserAgent)
 {
    Data command;
 #define MAX_ARGS 5
@@ -643,14 +646,14 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
          {
             NameAddr dest(arg[1]);
             Mime mime(arg[3], arg[4]);
-            myUserAgent.createSubscription(arg[0], dest, subTime, mime);
+            myUserAgent->createSubscription(arg[0], dest, subTime, mime);
          }
          catch(...)
          {
             NameAddr dest(uri);
             Mime mime(arg[3], arg[4]);
             dest.uri().user() = arg[1];
-            myUserAgent.createSubscription(arg[0], dest, subTime, mime);
+            myUserAgent->createSubscription(arg[0], dest, subTime, mime);
          }
       }
       else
@@ -665,7 +668,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 
       if(subHandle > 0)
       {
-         myUserAgent.destroySubscription(subHandle);
+         myUserAgent->destroySubscription(subHandle);
       }
       else
       {
@@ -827,7 +830,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 
       if(durationMs > 0)
       {
-         myUserAgent.startApplicationTimer(timerId, durationMs, seqNumber);
+         myUserAgent->getTimers()->invokeOnce(myUserAgent, timerId, durationMs, seqNumber);
          InfoLog( << "Application Timer started for " << durationMs << "ms");
       }
       else
@@ -844,12 +847,12 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
    if(isEqualNoCase(command, "dns") || isEqualNoCase(command, "ld"))
    {
       InfoLog( << "DNS cache (at WARNING log level):");
-      myUserAgent.logDnsCache();
+      myUserAgent->logDnsCache();
       return;
    }
    if(isEqualNoCase(command, "cleardns") || isEqualNoCase(command, "cd"))
    {
-      myUserAgent.clearDnsCache();
+      myUserAgent->clearDnsCache();
       InfoLog( << "DNS cache has been cleared.");
       return;
    }
@@ -900,7 +903,7 @@ void processCommandLine(Data& commandline, MyConversationManager& myConversation
 }
 
 #define KBD_BUFFER_SIZE 256
-void processKeyboard(char input, MyConversationManager& myConversationManager, MyUserAgent& myUserAgent)
+void processKeyboard(char input, MyConversationManager& myConversationManager, boost::shared_ptr<MyUserAgent>& myUserAgent)
 {
    static char buffer[KBD_BUFFER_SIZE];
    static int bufferpos = 0;
@@ -1461,40 +1464,40 @@ main (int argc, char** argv)
    // Create ConverationManager and UserAgent
    //////////////////////////////////////////////////////////////////////////////
    {
-      MyConversationManager myConversationManager(localAudioEnabled);
-      MyUserAgent ua(&myConversationManager, profile);
-      myConversationManager.buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
-      ua.addConversationProfile(conversationProfile);
+      boost::shared_ptr<MyUserAgent> ua(new MyUserAgent(profile));
+      boost::shared_ptr<MyConversationManager> myConversationManager(new MyConversationManager( *ua, localAudioEnabled ));
+      myConversationManager->buildSessionCapabilities(address, numCodecIds, codecIds, conversationProfile->sessionCaps());
+      myConversationManager->addConversationProfile(conversationProfile);
 
       //////////////////////////////////////////////////////////////////////////////
       // Startup and run...
       //////////////////////////////////////////////////////////////////////////////
 
-      ua.startup();
-      myConversationManager.startup();
+      ua->startup();
+      myConversationManager->startup();
 
       //ua.createSubscription("message-summary", uri, 120, Mime("application", "simple-message-summary")); // thread safe
 
       int input;
       while(true)
       {
-         ua.process(50);
+         ua->process(50);
          while(_kbhit() != 0)
          {
 #ifdef WIN32
             input = _getch();
-            processKeyboard(input, myConversationManager, ua);
+            processKeyboard(input, *myConversationManager, ua);
 #else
             input = fgetc(stdin);
             fflush(stdin);
             //cout << "input: " << input << endl;
-            processKeyboard(input, myConversationManager, ua);
+            processKeyboard(input, *myConversationManager, ua);
 #endif
          }
          if(finished) break;
       }
 
-      ua.shutdown();
+      ua->shutdown();
    }
    InfoLog(<< "testUA is shutdown.");
    OsSysLog::shutdown();

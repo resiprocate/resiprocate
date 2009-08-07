@@ -1,11 +1,16 @@
 #include "UserAgent.hxx"
+#include "ConversationManager.hxx"
 #include "ReconSubsystem.hxx"
+#include "ApplicationTimer.hxx"
 
 #include <signal.h>
 #include "rutil/Log.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
 #include <rutil/WinLeakCheck.hxx>
+
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #ifdef WIN32
 extern int sdpTests(void);
@@ -127,7 +132,8 @@ signalHandler(int signo)
 class AliceConversationManager : public ConversationManager
 {
 public:
-   AliceConversationManager() 
+   AliceConversationManager( UserAgent& ua )
+      : ConversationManager( ua )
    { 
       mLogPrefix = "Alice: ";
    };
@@ -344,10 +350,13 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 //  BOB
 ///////////////////////////////////////////////////////////////////////////////
-class BobConversationManager : public ConversationManager
+class BobConversationManager : public ConversationManager,
+                               public ApplicationTimer,
+                               public boost::enable_shared_from_this<BobConversationManager>
 {
 public:
-   BobConversationManager() 
+   BobConversationManager( UserAgent& ua )
+      : ConversationManager( ua ), mUA( ua )
    { 
       mLogPrefix = "Bob: ";
    };
@@ -458,7 +467,7 @@ public:
          MARKER;
 
          // Next Scenario
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         mUA.getTimers()->invokeOnce(shared_from_this(), 0, 500, 0);
          break;
       case 2:
          assert(CALLBACK_SEQUENCE++ == 3);
@@ -467,7 +476,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         mUA.getTimers()->invokeOnce(shared_from_this(), 0, 500, 0);
          break;
       case 3:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -476,7 +485,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         mUA.getTimers()->invokeOnce(shared_from_this(), 0, 500, 0);
          break;
       case 4:
          assert(CALLBACK_SEQUENCE++ == 5);
@@ -485,7 +494,7 @@ public:
          MARKER;
 
          // End Test
-         getUserAgent()->startApplicationTimer(0, 500, 0);
+         mUA.getTimers()->invokeOnce(shared_from_this(), 0, 500, 0);
          break;
       default:
          assert(false);
@@ -579,14 +588,15 @@ private:
    std::list<ConversationHandle> mConvHandles;
    ParticipantHandle mLocalParticipant;
    Data mLogPrefix;
+   UserAgent& mUA;
 };
 
 
 class MyUserAgent : public UserAgent
 {
 public:
-   MyUserAgent(ConversationManager* conversationManager, SharedPtr<UserAgentMasterProfile> profile) :
-      UserAgent(conversationManager, profile) {}
+   MyUserAgent(SharedPtr<UserAgentMasterProfile> profile) :
+      UserAgent(profile) {}
 
    virtual void onApplicationTimer(unsigned int id, unsigned int durationMs, unsigned int seq)
    {
@@ -754,23 +764,23 @@ main (int argc, char** argv)
    //////////////////////////////////////////////////////////////////////////////
 
    {
-      AliceConversationManager aliceConversationManager;
-      MyUserAgent aliceUa(&aliceConversationManager, profileAlice);
-      aliceUa.addConversationProfile(conversationProfileAlice);
+      MyUserAgent aliceUa(profileAlice);
+      boost::shared_ptr<AliceConversationManager> aliceConversationManager(new AliceConversationManager(aliceUa));
+      aliceConversationManager->addConversationProfile(conversationProfileAlice);
 
-      BobConversationManager   bobConversationManager;
-      MyUserAgent bobUa(&bobConversationManager, profileBob);
-      bobUa.addConversationProfile(conversationProfileBob);
+      MyUserAgent bobUa(profileBob);
+      boost::shared_ptr<BobConversationManager> bobConversationManager(new BobConversationManager(bobUa));
+      bobConversationManager->addConversationProfile(conversationProfileBob);
 
       //////////////////////////////////////////////////////////////////////////////
       // Startup and run...
       //////////////////////////////////////////////////////////////////////////////
 
       aliceUa.startup();
-      aliceConversationManager.startup();
+      aliceConversationManager->startup();
 
       bobUa.startup();
-      bobConversationManager.startup();
+      bobConversationManager->startup();
 
       while(true)
       {

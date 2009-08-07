@@ -22,6 +22,70 @@ namespace recon
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
+
+class AddConversationProfileCmd  : public resip::DumCommand
+{
+   public:  
+      AddConversationProfileCmd(ConversationManager *conversationManager,
+                                ConversationProfileHandle handle,
+                                resip::SharedPtr<ConversationProfile> conversationProfile,
+                                bool defaultOutgoing)
+         : mConversationManager(conversationManager),
+           mHandle(handle),
+           mConversationProfile(conversationProfile),
+           mDefaultOutgoing(defaultOutgoing) {}
+      virtual void executeCommand()
+      {
+         mConversationManager->addConversationProfileImpl(mHandle, mConversationProfile, mDefaultOutgoing);
+      }
+      resip::Message* clone() const { assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " AddConversationProfileCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      ConversationManager* mConversationManager;
+      ConversationProfileHandle mHandle;
+      resip::SharedPtr<ConversationProfile> mConversationProfile;
+      bool mDefaultOutgoing;
+};
+
+class SetDefaultOutgoingConversationProfileCmd  : public resip::DumCommand
+{
+   public:  
+      SetDefaultOutgoingConversationProfileCmd(ConversationManager *conversationManager,
+                                               ConversationProfileHandle handle)
+         : mConversationManager(conversationManager),
+           mHandle(handle) {}
+      virtual void executeCommand()
+      {
+         mConversationManager->setDefaultOutgoingConversationProfileImpl(mHandle);
+      }
+      resip::Message* clone() const { assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " SetDefaultOutgoingConversationProfileCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      ConversationManager* mConversationManager;
+      ConversationProfileHandle mHandle;
+};
+
+class DestroyConversationProfileCmd  : public resip::DumCommand
+{
+   public:  
+      DestroyConversationProfileCmd(ConversationManager *conversationManager,
+                                    ConversationProfileHandle handle)
+         : mConversationManager(conversationManager),
+           mHandle(handle) {}
+      virtual void executeCommand()
+      {
+         mConversationManager->destroyConversationProfileImpl(mHandle);
+      }
+      resip::Message* clone() const { assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " DestroyConversationProfileCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      ConversationManager* mConversationManager;
+      ConversationProfileHandle mHandle;
+};
+
 class CreateConversationCmd  : public resip::DumCommand
 {
    public:  
@@ -39,9 +103,9 @@ class CreateConversationCmd  : public resip::DumCommand
          // outgoing profile. Otherwise, try to fetch the real profile
          // from the user agent directly.
          if ( mcpHandle == 0 )
-            cProfile = mConversationManager->getUserAgent()->getDefaultOutgoingConversationProfile();
+            cProfile = mConversationManager->getDefaultOutgoingConversationProfile();
          else
-            cProfile = mConversationManager->getUserAgent()->getConversationProfile( mcpHandle );
+            cProfile = mConversationManager->getConversationProfile( mcpHandle );
 
          Conversation* conversation = new Conversation(mConvHandle, cProfile, *mConversationManager);
          assert(conversation);
