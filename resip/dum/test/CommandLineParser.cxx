@@ -1,4 +1,6 @@
+#if defined (HAVE_POPT_H)
 #include <popt.h>
+#endif
 
 #include "CommandLineParser.hxx"
 #include "rutil/Logger.hxx"
@@ -39,6 +41,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* certPath = 0;
    Data basePath(getenv("HOME"));
 
+#if defined(HAVE_POPT_H)
    struct poptOption table[] = {
       {"log-type",     'l', POPT_ARG_STRING, &logType,   0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",    'v', POPT_ARG_STRING, &logLevel,  0, "specify the default log level", "DEBUG|INFO|WARNING|ALERT"},
@@ -73,6 +76,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    
    poptContext context = poptGetContext(NULL, argc, const_cast<const char**>(argv), table, 0);
    poptGetNextOpt(context);
+#endif
 
    mLogType = logType;
    mLogLevel = logLevel;
@@ -108,7 +112,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    // pubList for publish targets
 
    // Free the option parsing context.
+#if defined(HAVE_POPT_H)
    poptFreeContext(context);
+#endif
 }
 
 resip::Uri 
