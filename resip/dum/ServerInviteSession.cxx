@@ -1162,7 +1162,7 @@ ServerInviteSession::dispatchCancel(const SipMessage& msg)
       mDum.mDialogEventStateManager->onTerminated(mDialog, msg, InviteSessionHandler::RemoteCancel);
    }
 
-   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteBye, &msg);
+   mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::RemoteCancel, &msg);
    mDum.destroy(this);
 }
 
