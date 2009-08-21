@@ -181,7 +181,7 @@ main(int argc, char* argv[])
       Mime type("application", "sdp");
       SdpContents sdp(&hfv, type);
 
-      assert(sdp.session().media().front().codecs().size() == 4);
+      assert(sdp.session().media().front().codecs().size() == 5);
     }
 
     {
@@ -528,7 +528,7 @@ main(int argc, char* argv[])
        assert(sdp.session().media().front().getValues("fmtp").front() == "");
        assert(sdp.session().media().front().codecs().size() == 2); // 0 and 101
        assert(sdp.session().media().front().codecs().front().parameters().size() == 0);
-       assert(sdp.session().media().front().codecs().back().parameters().size() == 0);
+       assert(sdp.session().media().front().codecs().back().parameters().size() == 0);       
        
        CritLog(<< "Received bad Dialogic fmtp line Ok");
     }
