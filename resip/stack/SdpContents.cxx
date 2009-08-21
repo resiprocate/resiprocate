@@ -1766,9 +1766,12 @@ Codec::parse(ParseBuffer& pb,
    const char* anchor = pb.skipWhitespace();
    pb.skipToChar(Symbols::SLASH[0]);
    pb.data(mName, anchor);
-   pb.skipChar(Symbols::SLASH[0]);
-   mRate = pb.integer();
-   pb.skipToChar(Symbols::SLASH[0]);
+   if(!pb.eof())
+   {
+      pb.skipChar(Symbols::SLASH[0]);
+      mRate = pb.integer();
+      pb.skipToChar(Symbols::SLASH[0]);
+   }
    if(!pb.eof() && *pb.position() == Symbols::SLASH[0])
    {
       anchor = pb.skipChar(Symbols::SLASH[0]);
