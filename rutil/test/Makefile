@@ -26,9 +26,6 @@ TESTPROGRAMS += \
 	testParseBuffer.cxx \
 	testRandomHex.cxx \
 	testThreadIf.cxx \
-	testCalcCheck.cxx \
-	testSignal.cxx \
-	testDialString.cxx \
 #	testDigestStream.cxx \
 
 #SRC = 	TestSupport.cxx
