@@ -5,7 +5,10 @@ CONTRIB = ../../../contrib
 
 include $(BUILD)/Makefile.pre
 
-PACKAGES += RUTIL ARES PTHREAD POPT RADIUSCLIENTNG
+PACKAGES += RUTIL ARES PTHREAD POPT RADIUSCLIENTNG OPENSSL
+
+CXXFLAGS += -I/Users/derek/tfm2008/ua/sdk/external/boost/
+CXXFLAGS += -I/Users/derek/tfm2008/ua/sdk/external/boost/
 
 SRC = \
 	TestSubsystemLogLevel.cxx
@@ -26,6 +29,10 @@ TESTPROGRAMS += \
 	testParseBuffer.cxx \
 	testRandomHex.cxx \
 	testThreadIf.cxx \
+	testCalcCheck.cxx \
+	testSignal.cxx \
+	testDialString.cxx \
+#	testDigestStream.cxx \
 
 #SRC = 	TestSupport.cxx
 
