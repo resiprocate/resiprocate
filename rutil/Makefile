@@ -61,6 +61,7 @@ SRC = \
 	\
 	stun/Stun.cxx \
 	stun/Udp.cxx
+#	DigestStream.cxx
 
 ifeq ($(USE_SSL),yes)
 SRC += \
