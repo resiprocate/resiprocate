@@ -51,8 +51,8 @@ USE_CURL := no
 USE_GOOGLE_MALLOC := no
 USE_GOOGLE_CPUPERF := no
 USE_IPV6 := no
-POPT_INCDIR_CONFIG := /usr/include
-POPT_LIBDIR_CONFIG := /usr/lib
+POPT_INCDIR_CONFIG :=
+POPT_LIBDIR_CONFIG :=
 RESIP_FIXED_POINT := no
 PEDANTIC_STACK := no
 # USE_SIGCOMP := no
@@ -1368,7 +1368,6 @@ sub findPoptInclude
 
   my (@candidates) = 
   (
-    '/usr/include',
     '/usr/local/include',
     '/include',
     '/opt/popt/include',
@@ -1401,7 +1400,6 @@ sub findPoptLib
 
   my (@candidates) = 
   (
-    '/usr/lib',
     '/usr/local/lib',
     '/lib',
     '/opt/popt/lib',
