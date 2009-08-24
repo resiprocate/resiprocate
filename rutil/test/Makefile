@@ -7,9 +7,6 @@ include $(BUILD)/Makefile.pre
 
 PACKAGES += RUTIL ARES PTHREAD POPT RADIUSCLIENTNG OPENSSL
 
-CXXFLAGS += -I/Users/derek/tfm2008/ua/sdk/external/boost/
-CXXFLAGS += -I/Users/derek/tfm2008/ua/sdk/external/boost/
-
 SRC = \
 	TestSubsystemLogLevel.cxx
 
