@@ -248,11 +248,19 @@ ClientInviteSession::reject (int statusCode, WarningCategory *warning)
          break;
       }
 
+      case UAC_Answered:
+         // We received an offer in a 2xx response, and we want to reject it
+         // ACK with no body, then send bye
+         sendAck();
+         sendBye();
+         transition(Terminated);
+         mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::LocalBye); 
+         break;
+
       case UAC_Start:
       case UAC_Early:
       case UAC_EarlyWithOffer:
       case UAC_EarlyWithAnswer:
-      case UAC_Answered:
       case UAC_SentUpdateEarly:
       case UAC_SentAnswer:
       case UAC_Cancelled:
