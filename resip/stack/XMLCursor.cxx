@@ -142,7 +142,14 @@ XMLCursor::skipProlog(ParseBuffer& pb)
    //'<?xml' VersionInfo '<xml?' EncodingDecl '?>'? '<?xml' SDDecl '?>'? S? '?>
 
    // !dlb! much more complicated than this.. can contain comments
+   const char* start = pb.position();
    pb.skipToChars(QUESTION_RA_QUOTE);
+   if(pb.eof()) 
+   {
+      // No Prolog
+      pb.reset(start);
+      return;
+   }
    pb.skipN(2);
    pb.skipWhitespace();
 }
