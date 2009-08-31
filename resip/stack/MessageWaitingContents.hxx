@@ -20,7 +20,7 @@ class MessageWaitingContents : public Contents
       MessageWaitingContents(HeaderFieldValue* hfv, const Mime& contentType);
       MessageWaitingContents(const Data& data, const Mime& contentType);
       MessageWaitingContents(const MessageWaitingContents& rhs);
-      ~MessageWaitingContents();
+      virtual ~MessageWaitingContents();
       MessageWaitingContents& operator=(const MessageWaitingContents& rhs);
 
       virtual Contents* clone() const;
