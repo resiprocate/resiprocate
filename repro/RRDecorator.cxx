@@ -29,7 +29,8 @@ RRDecorator::~RRDecorator()
 void 
 RRDecorator::decorateMessage(resip::SipMessage& request, 
                                const resip::Tuple &source,
-                               const resip::Tuple &destination) 
+                               const resip::Tuple &destination,
+                               const resip::Data& sigcompId) 
 {
    DebugLog(<<"Proxy::decorateMessage called.");
    resip::NameAddr rt;
@@ -57,6 +58,13 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
       resip::Helper::massageRoute(request,rt);
    }
    
+#ifdef USE_SIGCOMP
+   if(mRequestContext.mProxy.compressionEnabled() && !sigcompId.empty())
+   {
+      rt.uri().param(p_comp)="sigcomp";
+   }
+#endif
+
    // This pushes the Record-Route that represents the interface from
    // which the request is being sent
    //

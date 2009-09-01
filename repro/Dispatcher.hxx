@@ -72,9 +72,8 @@ class Dispatcher
             
          @returns true iff this message was successfully posted. (This may not
             be the case if this Dispatcher is in the process of shutting down)
-            
       */
-      virtual bool post(std::auto_ptr<resip::ApplicationMessage> work);
+      virtual bool post(std::auto_ptr<resip::ApplicationMessage>& work);
 
       /**
          @returns The number of messages in this Dispatcher's queue

@@ -52,6 +52,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       
       std::auto_ptr<resip::MessageDecorator> makeRRDecorator() const;
 
+      bool compressionEnabled() const;
    protected:
       virtual const resip::Data& name() const;
 
