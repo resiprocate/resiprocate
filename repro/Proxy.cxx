@@ -481,6 +481,11 @@ Proxy::makeRRDecorator() const
    return std::auto_ptr<resip::MessageDecorator>(new RRDecorator(*this));
 }
 
+bool 
+Proxy::compressionEnabled() const
+{
+   return mStack.getCompression().getAlgorithm() != resip::Compression::NONE;
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

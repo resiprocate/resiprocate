@@ -334,7 +334,9 @@ class SipMessage : public TransactionMessage
 
       void addOutboundDecorator(std::auto_ptr<MessageDecorator> md){mOutboundDecorators.push_back(md.release());}
       void clearOutboundDecorators();
-      void callOutboundDecorators(const Tuple &src, const Tuple &dest);
+      void callOutboundDecorators(const Tuple &src, 
+                                    const Tuple &dest,
+                                    const Data& sigcompId);
       void rollbackOutboundDecorators();
       bool mIsDecorated;
 

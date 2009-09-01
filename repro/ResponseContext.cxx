@@ -656,6 +656,16 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,Target* target)
       resip::NameAddr rt=mRequestContext.mProxy.getRecordRoute();
       Helper::massageRoute(outgoing,rt);
       rt.uri().user()=inboundFlowToken;
+
+#ifdef USE_SIGCOMP
+      if(mRequestContext.getProxy().compressionEnabled() &&
+         request.header(h_Vias).front().exists(p_comp) &&
+         request.header(h_Vias).front().param(p_comp)=="sigcomp")
+      {
+         rt.uri().param(p_comp)="sigcomp";
+      }
+#endif
+
       outgoing.header(h_RecordRoutes).push_front(rt);
       InfoLog (<< "Added Record-Route: " << rt);
    }
@@ -765,6 +775,12 @@ ResponseContext::sendRequest(const resip::SipMessage& request)
    {
       mRequestContext.getProxy().addClientTransaction(request.getTransactionId(), &mRequestContext);
       mRequestContext.mTransactionCount++;
+//      if(!mRequestContext.getDigestIdentity().empty())
+//      {
+//         requestPtr->header(h_Identity);
+//         // !bwc! Need to fill in the Identity-Info header telling where our 
+//         // cert can be found.
+//      }
    }
 
    if (request.method() == ACK)

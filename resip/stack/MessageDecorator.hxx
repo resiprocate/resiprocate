@@ -4,6 +4,7 @@
 
 namespace resip
 {
+class Data;
 class SipMessage;
 class Tuple;
 
@@ -13,7 +14,8 @@ class MessageDecorator
       virtual ~MessageDecorator() {;}
       virtual void decorateMessage(SipMessage &msg, 
                                   const Tuple &source,
-                                  const Tuple &destination) = 0;
+                                  const Tuple &destination,
+                                  const Data& sigcompId) = 0;
       virtual void rollbackMessage(SipMessage& msg) = 0;
       virtual MessageDecorator* clone() const = 0;
 };

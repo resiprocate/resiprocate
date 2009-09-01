@@ -1624,7 +1624,9 @@ SipMessage::setSecurityAttributes(auto_ptr<SecurityAttributes> sec) const
 }
 
 void
-SipMessage::callOutboundDecorators(const Tuple &src, const Tuple &dest)
+SipMessage::callOutboundDecorators(const Tuple &src, 
+                                    const Tuple &dest,
+                                    const Data& sigcompId)
 {
    if(mIsDecorated)
    {
@@ -1635,7 +1637,7 @@ SipMessage::callOutboundDecorators(const Tuple &src, const Tuple &dest)
   for (i = mOutboundDecorators.begin();
        i != mOutboundDecorators.end(); i++)
   {
-    (*i)->decorateMessage(*this, src, dest);
+    (*i)->decorateMessage(*this, src, dest, sigcompId);
   }
   mIsDecorated = true;
 }
