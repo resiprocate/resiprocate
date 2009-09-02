@@ -39,6 +39,27 @@ main(int argc, char* argv[])
 
     {
        Data txt("v=0\r\n"  
+                "o=VGW 1251901012 1251901012 IN IP4 10.1.83.143\r\n"
+                "s=VGW\r\n"
+                "c=IN IP4 10.1.83.143\r\n"
+                "t=0 0\r\n"
+                "a=sendrecv\r\n"
+                "a=x-ActiveSpeaker:on\r\n"
+                "m=audio 45894 RTP/AVP 103 \r\n"
+                "a=rtpmap:103 ISAC/16000/1\r\n"
+                "a=fmtp:103 mode=30, type=fixed, bitrate=32000\r\n"
+                "a=silenceSupp:off - - - -\r\n");
+       HeaderFieldValue hfv(txt.data(), txt.size());
+       Mime type("application", "sdp");
+       SdpContents sdp(&hfv, type);
+      
+       assert(sdp.session().media().size() == 1);
+	   assert(sdp.session().media().front().codecs().size() == 1);
+       CritLog(<< "space at end of m line test passed");
+    }
+
+    {
+       Data txt("v=0\r\n"  
 		"o=- 333525334858460 333525334858460 IN IP4 192.168.0.156\r\n"
 		"s=test123\r\n"
 		"c=IN IP4 192.168.0.156\r\n"

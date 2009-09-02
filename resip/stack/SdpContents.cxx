@@ -1310,9 +1310,12 @@ SdpContents::Session::Medium::parse(ParseBuffer& pb)
    {
       anchor = pb.skipChar(Symbols::SPACE[0]);
       pb.skipToOneOf(Symbols::SPACE, Symbols::CRLF);
-      Data format;
-      pb.data(format, anchor);
-      addFormat(format);
+	  if(pb.position() != anchor)
+	  {
+		Data format;
+		pb.data(format, anchor);
+		addFormat(format);
+	  }
    }
 
    skipEol(pb);
