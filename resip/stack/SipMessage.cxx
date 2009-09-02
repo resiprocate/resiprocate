@@ -674,8 +674,19 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
       mStartLine->encode(Data::Empty, str);
    }
 
-   //possibly encode contents to data once instead of CountStream?
-   //Data data;
+   Data contents;
+   if (mContents != 0)
+   {
+      oDataStream temp(contents);
+      mContents->encode(temp);
+   }
+   else if (mContentsHfv != 0)
+   {
+      // !bwc! This causes an additional copy; sure would be nice to have a way
+      // to get a data to take on a buffer with Data::Share _after_ construction
+      contents.append(mContentsHfv->mField, mContentsHfv->mFieldLength);
+   }
+
 
    for (int i = 0; i < Headers::MAX_HEADERS; i++)
    {
@@ -694,40 +705,15 @@ SipMessage::encode(EncodeStream& str, bool isSipFrag) const
       i->second->encode(i->first, str);
    }
 
-   if (mContents != 0)
+   // .bwc. Encode Content-Length unless we have a sipfrag with no body
+   if (!isSipFrag || !contents.empty())
    {
-      size_t size;
-      {
-         CountStream cs(size);
-         
-         //DataStream cs(data);
-         mContents->encode(cs);
-         //cs.flush();
-         //size = data.size();
-      }
-      str << "Content-Length: " << size << "\r\n";
-   }
-   else if (mContentsHfv != 0)
-   {
-      str << "Content-Length: " << mContentsHfv->mFieldLength << "\r\n";
-   }
-   else if (!isSipFrag)
-   {
-      str << "Content-Length: 0\r\n";
+      str << "Content-Length: " << contents.size() << "\r\n";
    }
 
    str << Symbols::CRLF;
    
-   if (mContents != 0)
-   {
-      mContents->encode(str);
-      //str << data;
-   }
-   else if (mContentsHfv != 0)
-   {
-      mContentsHfv->encode(str);
-   }
-   
+   str << contents;
    return str;
 }
 
