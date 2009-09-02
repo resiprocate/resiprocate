@@ -154,6 +154,10 @@ TestRepro::TestRepro(const resip::Data& name,
 #endif
    mProxy.addDomain(host);
    
+
+   mProxy.addSupportedOption("outbound");
+   mProxy.addSupportedOption("p-fakeoption");
+
    mProfile->clearSupportedMethods();
    mProfile->addSupportedMethod(resip::REGISTER);
    mProfile->addSupportedScheme(Symbols::Sips);
