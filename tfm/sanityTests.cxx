@@ -205,6 +205,21 @@ class TestHolder : public Fixture
          return msg;
       }
 
+      static boost::shared_ptr<SipMessage>
+      unknownProxyRequire(boost::shared_ptr<SipMessage> msg)
+      {
+         msg->header(h_ProxyRequires).push_back(Token("foobajooba"));
+         return msg;
+      }
+
+      static boost::shared_ptr<SipMessage>
+      supportedProxyRequire(boost::shared_ptr<SipMessage> msg)
+      {
+         // !bwc! TODO Once we have something we _do_ support, put that here.
+         msg->header(h_ProxyRequires).push_back(Token("p-fakeoption"));
+         return msg;
+      }
+
       static resip::Data
       doubleSend(const resip::Data& msg)
       {
@@ -1883,6 +1898,60 @@ class TestHolder : public Fixture
       );
       
       ExecuteSequences();
+   }
+
+   void testUnsupportedProxyRequire()
+   {
+      WarningLog(<<"*!testUnsupportedProxyRequire!*");
+
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+      
+      Seq
+      (
+         condition(unknownProxyRequire,jason->invite(*derek)),
+         optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+         jason->expect(INVITE/420, from(proxy), WaitForResponse,jason->ack()),
+         WaitForEndOfTest
+      );
+      ExecuteSequences();  
+   }
+
+   void testSupportedProxyRequire()
+   {
+      WarningLog(<<"*!testSupportedProxyRequire!*");
+
+      Seq(derek->registerUser(60, derek->getDefaultContacts()),
+          derek->expect(REGISTER/407, from(proxy), WaitForResponse, derek->digestRespond()),
+          derek->expect(REGISTER/200, from(proxy), WaitForResponse, derek->noAction()),
+          WaitForEndOfSeq);
+      ExecuteSequences();
+      
+      Seq
+      (
+         condition(supportedProxyRequire,jason->invite(*derek)),
+         optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction())),
+         jason->expect(INVITE/407, from(proxy), WaitForResponse,chain(jason->ack(), condition(supportedProxyRequire, jason->digestRespond()))),
+          And
+          (
+            Sub
+            (
+               optional(jason->expect(INVITE/100, from(proxy), WaitFor100, jason->noAction()))
+            ),
+            Sub
+            (
+               derek->expect(INVITE, contact(jason), WaitForCommand, chain(derek->ring(), derek->answer())),
+               jason->expect(INVITE/180, from(derek), WaitFor100, jason->noAction()),
+               jason->expect(INVITE/200, contact(derek), WaitForResponse, jason->ack()),
+               derek->expect(ACK, from(jason), WaitForResponse, jason->noAction())
+            )
+         ),
+         WaitForEndOfTest
+      );
+      ExecuteSequences();  
    }
 
 //*************Rainy Day***************//
@@ -7258,6 +7327,9 @@ class MyTestCase
 
 
          BUGTEST(testInviteRecursiveRedirect);
+         TEST(testSupportedProxyRequire);
+         TEST(testUnsupportedProxyRequire);
+
          TEST(testInvite407Dropped);
          //TEST(testInviteAck407Dropped); //tfm is bungling this one
          TEST(testInviteClientRetransmissionsWithRecovery);

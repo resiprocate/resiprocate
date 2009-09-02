@@ -387,6 +387,8 @@ main(int argc, char** argv)
                args.mTimerC );
    Data realm = addDomains(proxy, args, store);
    
+   proxy.addSupportedOption("outbound");
+
 #ifdef USE_SSL
    WebAdmin admin( store, regData, security, args.mNoWebChallenge, realm, args.mAdminPassword, args.mHttpPort  );
 #else
