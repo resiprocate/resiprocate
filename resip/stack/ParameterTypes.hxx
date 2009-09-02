@@ -115,9 +115,9 @@ defineParam(earlyOnly, "early-only", ExistsParameter, "RFC 3891");
 defineParam(refresher, "refresher", DataParameter, "RFC 4028");
 
 defineParam(profileType, "profile-type", DataParameter, "draft-ietf-sipping-config-framework");
-defineParam(vendor, "vendor", DataParameter, "draft-ietf-sipping-config-framework");
-defineParam(model, "model", DataParameter, "draft-ietf-sipping-config-framework");
-defineParam(version, "version", DataParameter, "draft-ietf-sipping-config-framework");
+defineParam(vendor, "vendor", QuotedDataParameter, "draft-ietf-sipping-config-framework");
+defineParam(model, "model", QuotedDataParameter, "draft-ietf-sipping-config-framework");
+defineParam(version, "version", QuotedDataParameter, "draft-ietf-sipping-config-framework");
 defineParam(effectiveBy, "effective-by", UInt32Parameter, "draft-ietf-sipping-config-framework");
 defineParam(document, "document", DataParameter, "draft-ietf-sipping-config-framework");
 defineParam(appId, "app-id", DataParameter, "draft-ietf-sipping-config-framework");
