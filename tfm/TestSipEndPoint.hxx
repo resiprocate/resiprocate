@@ -287,6 +287,7 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage);
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, const resip::Mime& accept, boost::shared_ptr<resip::Contents> contents = boost::shared_ptr<resip::Contents>());
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, std::string allow, std::string supported, int pExpires, std::string PAssertedIdentity);
+            Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, int pExpires);
 
             using TestSipEndPoint::MessageAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
@@ -308,6 +309,10 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       Subscribe* subscribe(const TestUser& endPoint, const resip::Token& eventPackage);
       Subscribe* subscribe(const resip::Uri& url, const resip::Token& eventPackage);
       Subscribe* subscribe(const resip::Uri& url, const resip::Token& eventPackage, const resip::Mime& accept, const boost::shared_ptr<resip::Contents>& contents);
+      Subscribe* subscribe(const resip::Uri& url, 
+                           const resip::Token& eventPackage,
+                           const int pExpires);
+
       Subscribe* subscribe(const resip::Uri& url, 
                            const resip::Token& eventPackage,
                            const std::string allow,
