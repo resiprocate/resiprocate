@@ -736,6 +736,12 @@ Uri::getAor() const
    return mAor;
 }
 
+Data 
+Uri::getAorNoReally() const
+{
+   return mScheme + ':' + getAorNoPort();
+}
+
 Uri 
 Uri::getAorAsUri() const
 {   

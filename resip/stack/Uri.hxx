@@ -39,6 +39,9 @@ class Uri : public ParserCategory
 
       const Data& getAor() const;
       const Data getAorNoPort() const;
+
+      // Actually returns the AOR; <scheme>:<user>@<host>
+      Data getAorNoReally() const;
       //strips all paramters
       Uri getAorAsUri() const;
       
