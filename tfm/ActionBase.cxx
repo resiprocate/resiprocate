@@ -145,6 +145,405 @@ chain(ActionBase* action1,
    action1->addNext(action8);
    return action1;
 }
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   action1->addNext(action12);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   action1->addNext(action12);
+   action1->addNext(action13);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   action1->addNext(action12);
+   action1->addNext(action13);
+   action1->addNext(action14);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   action1->addNext(action12);
+   action1->addNext(action13);
+   action1->addNext(action14);
+   action1->addNext(action15);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   action1->addNext(action12);
+   action1->addNext(action13);
+   action1->addNext(action14);
+   action1->addNext(action15);
+   action1->addNext(action16);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16,
+      ActionBase* action17)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   action1->addNext(action12);
+   action1->addNext(action13);
+   action1->addNext(action14);
+   action1->addNext(action15);
+   action1->addNext(action16);
+   action1->addNext(action17);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16,
+      ActionBase* action17,
+      ActionBase* action18)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   action1->addNext(action12);
+   action1->addNext(action13);
+   action1->addNext(action14);
+   action1->addNext(action15);
+   action1->addNext(action16);
+   action1->addNext(action17);
+   action1->addNext(action18);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16,
+      ActionBase* action17,
+      ActionBase* action18,
+      ActionBase* action19)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   action1->addNext(action12);
+   action1->addNext(action13);
+   action1->addNext(action14);
+   action1->addNext(action15);
+   action1->addNext(action16);
+   action1->addNext(action17);
+   action1->addNext(action18);
+   action1->addNext(action19);
+   return action1;
+}
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16,
+      ActionBase* action17,
+      ActionBase* action18,
+      ActionBase* action19,
+      ActionBase* action20)
+{
+   action1->addNext(action2);
+   action1->addNext(action3);
+   action1->addNext(action4);
+   action1->addNext(action5);
+   action1->addNext(action6);
+   action1->addNext(action7);
+   action1->addNext(action8);
+   action1->addNext(action9);
+   action1->addNext(action10);
+   action1->addNext(action11);
+   action1->addNext(action12);
+   action1->addNext(action13);
+   action1->addNext(action14);
+   action1->addNext(action15);
+   action1->addNext(action16);
+   action1->addNext(action17);
+   action1->addNext(action18);
+   action1->addNext(action19);
+   action1->addNext(action20);
+   return action1;
+}
+
+
+
 /*
   Copyright (c) 2005, PurpleComm, Inc. 
   All rights reserved.
