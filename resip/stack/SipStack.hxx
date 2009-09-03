@@ -572,7 +572,9 @@ class SipStack
           and checks can be made with isMyPort() */
       std::set<int> mPorts;
 
+      Uri mUri;
       bool mShuttingDown;
+      mutable Mutex mShutdownMutex;
       volatile bool mStatisticsManagerEnabled;
 
       /// Responsible for routing messages to the correct TU based on installed rules
