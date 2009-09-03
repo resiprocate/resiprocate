@@ -78,6 +78,203 @@ chain(ActionBase* action1,
       ActionBase* action7,
       ActionBase* action8);
 
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16,
+      ActionBase* action17);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16,
+      ActionBase* action17,
+      ActionBase* action18);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16,
+      ActionBase* action17,
+      ActionBase* action18,
+      ActionBase* action19);
+
+ActionBase*
+chain(ActionBase* action1,
+      ActionBase* action2,
+      ActionBase* action3,
+      ActionBase* action4,
+      ActionBase* action5,
+      ActionBase* action6,
+      ActionBase* action7,
+      ActionBase* action8,
+      ActionBase* action9,
+      ActionBase* action10,
+      ActionBase* action11,
+      ActionBase* action12,
+      ActionBase* action13,
+      ActionBase* action14,
+      ActionBase* action15,
+      ActionBase* action16,
+      ActionBase* action17,
+      ActionBase* action18,
+      ActionBase* action19,
+      ActionBase* action20);
 
 #endif
 /*
