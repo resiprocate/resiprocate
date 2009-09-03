@@ -44,11 +44,6 @@ class Pidf : public Contents
       bool getSimpleStatus(Data* note=NULL) const;
 // end of - only for Pidf (not for CpimContents)
       
-      /** @brief serialize the PIDF body
-          @return string containing the PIDF body  
-        **/
-      virtual Data getBodyData() const;
-
       Data& text() {checkParsed(); return mNote;}
 
       static bool init();   

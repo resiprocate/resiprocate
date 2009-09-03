@@ -100,14 +100,6 @@ Pkcs8Contents::parse(ParseBuffer& pb)
    pb.data(mText, anchor);
 }
 
-Data 
-Pkcs8Contents::getBodyData() const
-{
-   checkParsed();
-   return mText;
-}
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
