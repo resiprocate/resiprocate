@@ -1264,6 +1264,13 @@ TestSipEndPoint::rawSend(const Uri& target, const resip::Data& rawText)
    return new RawSend(this, target, rawText);
 }
 
+TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, const Uri& to, const Token& eventPackage, int pExpires)
+   : MessageAction(*from, to),
+     mEventPackage(eventPackage),
+     mExpires(pExpires)
+{
+}
+
 TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, const Uri& to, const Token& eventPackage)
    : MessageAction(*from, to),
      mEventPackage(eventPackage),
@@ -1407,6 +1414,14 @@ TestSipEndPoint::subscribe(const Uri& url, const Token& eventPackage, const Mime
 {
    return new Subscribe(this, url, eventPackage, accept, contents); 
 }
+
+TestSipEndPoint::Subscribe* 
+TestSipEndPoint::subscribe(const Uri& url, const Token& eventPackage, 
+                           const int    pExpires)
+{
+   return new Subscribe(this, url, eventPackage, pExpires);
+}
+
 
 TestSipEndPoint::Subscribe* 
 TestSipEndPoint::subscribe(const Uri& url, const Token& eventPackage, 
