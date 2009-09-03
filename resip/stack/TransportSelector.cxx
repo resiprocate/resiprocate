@@ -113,6 +113,10 @@ TransportSelector::~TransportSelector()
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
+
+    closeSocket( mSocket );
+    closeSocket( mSocket6 );
+
 }
 
 void
