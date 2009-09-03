@@ -286,6 +286,8 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
          public:
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage);
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, const resip::Mime& accept, boost::shared_ptr<resip::Contents> contents = boost::shared_ptr<resip::Contents>());
+            // Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, std::string p3accepts, std::string allow, std::string supported, int pExpires, std::string PAssertedIdentity);
+            Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, std::string allow, std::string supported, int pExpires, std::string PAssertedIdentity);
 
             using TestSipEndPoint::MessageAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
@@ -297,12 +299,28 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             resip::Token mEventPackage;
             resip::Mime mAccept;
             boost::shared_ptr<resip::Contents> mContents;
+            /*
+            std::string m3Accepts;
+            */
+            std::string mAllow;
+            std::string mSupported;
+            int mExpires;
+            std::string mPAssertedIdentity;
       };
       friend class Subscribe;
       Subscribe* subscribe(const TestSipEndPoint* endPoint, const resip::Token& eventPackage);
       Subscribe* subscribe(const TestUser& endPoint, const resip::Token& eventPackage);
       Subscribe* subscribe(const resip::Uri& url, const resip::Token& eventPackage);
       Subscribe* subscribe(const resip::Uri& url, const resip::Token& eventPackage, const resip::Mime& accept, const boost::shared_ptr<resip::Contents>& contents);
+      Subscribe* subscribe(const resip::Uri& url, 
+                           const resip::Token& eventPackage,
+                           /*
+                           const std::string p3accepts,
+                           */
+                           const std::string allow,
+                           const std::string supported,
+                           const int pExpires,
+                           const std::string PAssertedIdentity);
 
       class Request : public MessageAction
       {
