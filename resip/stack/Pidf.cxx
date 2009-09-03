@@ -397,14 +397,6 @@ resip::operator<<(EncodeStream& strm, const Pidf::Tuple& tuple)
    return strm;
 }
 
-Data
-Pidf::getBodyData() const
-{
-   checkParsed(); 
-   return mNote;
-}
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

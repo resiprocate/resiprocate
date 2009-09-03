@@ -517,8 +517,6 @@ class SdpContents : public Contents
 
       virtual Contents* clone() const;
 
-      virtual Data getBodyData() const;
-
       Session& session() {checkParsed(); return mSession;}
       const Session& session() const {checkParsed(); return mSession;}
 

@@ -25,8 +25,6 @@ class CpimContents : public Contents
       virtual std::ostream& encodeParsed(std::ostream& str) const;
       virtual void parse(ParseBuffer& pb);
 
-      virtual Data getBodyData() const;
-
       Data& text() {checkParsed(); return mText;}
 
       static bool init();

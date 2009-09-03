@@ -103,12 +103,6 @@ PlainContents::parse(ParseBuffer& pb)
 }
 
 
-Data
-PlainContents::getBodyData() const
-{
-   checkParsed(); 
-   return mText;
-}
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
