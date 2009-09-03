@@ -16,27 +16,44 @@ namespace resip
 class Pidf : public Contents
 {
    public:
-      RESIP_HeapCount(Pidf);
-      Pidf();
-      Pidf(const Mime& contentType);
-      Pidf(HeaderFieldValue* hfv, const Mime& contentType);
-      Pidf(const Pidf& rhs);
-      explicit Pidf(const Uri& entity);
-      virtual ~Pidf();
+      static const Pidf Empty;
 
+// only for Pidf (not for CpimContents)
+      RESIP_HeapCount(Pidf);
+      Pidf(const Mime& contentType);
+      explicit Pidf(const Uri& entity);
+// end of - only for Pidf (not for CpimContents)
+      Pidf();
+      Pidf(const Data& txt);
+      Pidf(HeaderFieldValue* hfv, const Mime& contentType);
+      Pidf(const Data& txt, const Mime& contentType);
+      Pidf(const Pidf& rhs);
+      virtual ~Pidf();
       Pidf& operator=(const Pidf& rhs);
       virtual Contents* clone() const;
       static const Mime& getStaticType() ;
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual void parse(ParseBuffer& pb);
 
+// only for Pidf (not for CpimContents)
       void setSimpleId(const Data& id);
       void setEntity(const Uri& entity);
       const Uri& getEntity() const;
       void setSimpleStatus(bool online, const Data& note = Data::Empty, 
                            const Data& contact = Data::Empty);
       bool getSimpleStatus(Data* note=NULL) const;
+// end of - only for Pidf (not for CpimContents)
       
+      /** @brief serialize the PIDF body
+          @return string containing the PIDF body  
+        **/
+      virtual Data getBodyData() const;
+
+      Data& text() {checkParsed(); return mNote;}
+
+      static bool init();   
+   
+      // only for Pidf (not for CpimContents)
       class Tuple
       {
          public:
@@ -55,17 +72,20 @@ class Pidf : public Contents
 
       // combine tuples
       void merge(const Pidf& other);
-
-      static bool init();   
+// end of - only for Pidf (not for CpimContents)
    
    private:
+      Data mNote; // equivalent to mText in Cpim
+// only for Pidf (not for CpimContents)
       Uri mEntity;
-      Data mNote;
       std::vector<Tuple> mTuples;
+// end of - only for Pidf (not for CpimContents)
 };
 
 EncodeStream& operator<<(EncodeStream& strm, const Pidf::Tuple& tuple);
+// only for Pidf (not for CpimContents)
 static bool invokePidfInit = Pidf::init();
+// end of - only for Pidf (not for CpimContents)
 
 }
 
