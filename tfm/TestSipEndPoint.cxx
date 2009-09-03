@@ -1286,32 +1286,23 @@ TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from,
 {
 }
 
-// NEW STUFF
 TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, 
                                       const Uri& to,
                                       const Token& eventPackage,
-                                      /*
-                                      const string p3accepts,
-                                      */
                                       const string allow,
                                       const string supported,
                                       const int mExpires,
                                       const string PAssertedIdentity
-                                      // const Uri& PAssertedIdentity
                                      )
                                       
    : MessageAction(*from, to),
      mEventPackage(eventPackage),
-     /*
-     m3Accepts(p3accepts),
-     */
      mAllow(allow),
      mSupported(supported),
      mExpires(mExpires),
      mPAssertedIdentity(PAssertedIdentity)
 {
 }
-// END OF NEW STUFF
 
 resip::Data
 TestSipEndPoint::Subscribe::toString() const
@@ -1368,14 +1359,6 @@ TestSipEndPoint::Subscribe::go()
    if( mContents.get() )
       subscribe->setContents(mContents.get());
 
-   /*
-   if (m3Accepts.length() != 0) // best way to do this...
-   {
-     resip::Data PAssertedId(mPAssertedIdentity);
-     NameAddr PAssertedId_NameAddr(PAssertedId);
-     subscribe->header(h_PAssertedIdentities).push_back(PAssertedId_NameAddr);
-   }
-   */
    if (mAllow.length() != 0)
    {
      resip::Data AllowData(mAllow);
@@ -1425,25 +1408,16 @@ TestSipEndPoint::subscribe(const Uri& url, const Token& eventPackage, const Mime
    return new Subscribe(this, url, eventPackage, accept, contents); 
 }
 
-// NEW STUFF
 TestSipEndPoint::Subscribe* 
 TestSipEndPoint::subscribe(const Uri& url, const Token& eventPackage, 
-                           /*
-                           const string p3accepts, 
-                           */
                            const string allow, 
                            const string supported, 
                            const int    pExpires, 
                            const string PAssertedIdentity)
-                           // const Uri& PAssertedIdentity)
 {
    return new Subscribe(this, url, eventPackage, 
-                        /*
-                        p3accepts, 
-                        */
                         allow, supported, pExpires, PAssertedIdentity);
 }
-// END OF NEW STUFF
 
 TestSipEndPoint::Request::Request(TestSipEndPoint* from, 
                                   const resip::Uri& to, 
