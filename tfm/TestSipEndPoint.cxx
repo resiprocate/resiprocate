@@ -5,6 +5,7 @@
 #include "resip/stack/PlainContents.hxx"
 #include "resip/stack/SdpContents.hxx"
 #include "resip/stack/CpimContents.hxx" // vk
+#include "resip/stack/Pidf.hxx" // vk
 #include "resip/stack/ExtensionParameter.hxx"
 #include "resip/stack/SipFrag.hxx"
 #include "resip/stack/SipMessage.hxx"
@@ -14,7 +15,7 @@
 
 #ifdef USE_SSL
 #include "resip/stack/ssl/TlsTransport.hxx"
-#endif
+#endif // USE_SSL
 
 #include "rutil/Inserter.hxx"
 #include "rutil/Inserter.hxx"
@@ -1264,20 +1265,16 @@ TestSipEndPoint::rawSend(const Uri& target, const resip::Data& rawText)
    return new RawSend(this, target, rawText);
 }
 
-TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, const Uri& to, const Token& eventPackage, int pExpires)
-   : MessageAction(*from, to),
-     mEventPackage(eventPackage),
-     mExpires(pExpires)
-{
-}
-
-TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, const Uri& to, const Token& eventPackage)
+TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, const Uri& to, const Token& eventPackage, int pExpires, const string PAssertedIdentity, bool pIgnoreExistingDialog)
    : MessageAction(*from, to),
      mEventPackage(eventPackage),
      mAccept(),
      mContents( boost::shared_ptr<resip::Contents>()),
-     mExpires(3600)
+     mExpires(pExpires),
+     mIgnoreExistingDialog(pIgnoreExistingDialog)
 {
+     if (PAssertedIdentity.size() != 0)
+      mPAssertedIdentity = PAssertedIdentity;
 }
 
 TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from, 
@@ -1289,7 +1286,8 @@ TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from,
      mEventPackage(eventPackage),
      mAccept(accept),
      mContents(contents),
-     mExpires(3600)
+     mExpires(3600),
+     mIgnoreExistingDialog(false)
 {
 }
 
@@ -1307,7 +1305,8 @@ TestSipEndPoint::Subscribe::Subscribe(TestSipEndPoint* from,
      mAllow(allow),
      mSupported(supported),
      mExpires(mExpires),
-     mPAssertedIdentity(PAssertedIdentity)
+     mPAssertedIdentity(PAssertedIdentity),
+     mIgnoreExistingDialog(false)
 {
 }
 
@@ -1345,7 +1344,7 @@ TestSipEndPoint::Subscribe::go()
    shared_ptr<SipMessage> subscribe;
 
    DeprecatedDialog* dialog = mEndPoint.getDialog();
-   if (dialog)
+   if (dialog && !mIgnoreExistingDialog)
    {
       subscribe = shared_ptr<SipMessage>(dialog->makeRequest(SUBSCRIBE));
    }
@@ -1404,12 +1403,6 @@ TestSipEndPoint::subscribe(const TestUser& endPoint, const resip::Token& eventPa
 }
 
 TestSipEndPoint::Subscribe* 
-TestSipEndPoint::subscribe(const resip::Uri& url, const resip::Token& eventPackage) 
-{
-   return new Subscribe(this, url, eventPackage); 
-}
-
-TestSipEndPoint::Subscribe* 
 TestSipEndPoint::subscribe(const Uri& url, const Token& eventPackage, const Mime& accept, const boost::shared_ptr<resip::Contents>& contents)
 {
    return new Subscribe(this, url, eventPackage, accept, contents); 
@@ -1417,11 +1410,13 @@ TestSipEndPoint::subscribe(const Uri& url, const Token& eventPackage, const Mime
 
 TestSipEndPoint::Subscribe* 
 TestSipEndPoint::subscribe(const Uri& url, const Token& eventPackage, 
-                           const int    pExpires)
+                           const int    pExpires, 
+                           const string PAssertedIdentity,
+                           bool pIgnoreExistingDialog)
 {
-   return new Subscribe(this, url, eventPackage, pExpires);
+   return new Subscribe(this, url, eventPackage, pExpires, PAssertedIdentity, 
+                        pIgnoreExistingDialog);
 }
-
 
 TestSipEndPoint::Subscribe* 
 TestSipEndPoint::subscribe(const Uri& url, const Token& eventPackage, 
@@ -1576,6 +1571,187 @@ TestSipEndPoint::options(const Uri& url)
 {
    return new Request(this, url, resip::OPTIONS);
 }
+
+TestSipEndPoint::Publish::Publish(TestSipEndPoint* from, const resip::Uri& to, 
+                    const resip::Token& eventPackage, 
+                    boost::shared_ptr<resip::Contents> contents,
+                    int pExpires, 
+                    const std::string PAssertedIdentity)
+   : MessageAction(*from, to),
+     mType(resip::PUBLISH),
+     mContents(contents),
+     mEventPackage(eventPackage),
+     mExpires(pExpires),
+     mPAssertedIdentity(PAssertedIdentity)
+{}
+
+TestSipEndPoint::Publish::Publish(TestSipEndPoint* from, 
+                                  const resip::Uri& to, 
+                                  resip::MethodTypes type,
+                                  boost::shared_ptr<resip::Contents> contents)
+   : MessageAction(*from, to),
+     mType(type),
+     mContents(contents)
+{}
+
+
+TestSipEndPoint::Publish*
+TestSipEndPoint::publish(const Uri& url, const Token& eventPackage, 
+                         const int pExpires, const string PAssertedIdentity, 
+                         const string publishBody)
+{
+   /* 
+   WHAT PREVIOUSLY WORKED BUT NOW CORES...
+   Data text(publishBody);
+   HeaderFieldValue hfv(text.data(), text.size());
+   Mime type("application", "pidf+xml");
+   Pidf pc(&hfv, type);
+   boost::shared_ptr<resip::Contents> body(&pc);
+   */
+
+   /*
+   WHAT NOW NEEDS TO BE DONE..
+   */
+   Data* text = new Data(publishBody);
+   HeaderFieldValue* hfv = new HeaderFieldValue(text->data(), text->size());
+   Mime type("application", "pidf+xml");
+   Pidf* pc = new Pidf(hfv, type);
+   boost::shared_ptr<resip::Pidf> body(pc);
+   /*
+   */
+
+   Publish* localPublish = new Publish(this, url, eventPackage, 
+                                       body, pExpires, PAssertedIdentity);
+
+   DebugLog(<< "1. START OF MESSAGE" );
+   DebugLog(<< localPublish->toString() );
+   DebugLog(<< endl << "1. END OF MESSAGE" );
+
+   return localPublish ; 
+}
+
+TestSipEndPoint::Publish*
+TestSipEndPoint::publish(const resip::NameAddr& target, const resip::Data& text)
+{
+   HeaderFieldValue hfv(text.data(), text.size());
+   Mime type("application", "pidf+xml");
+   Pidf pc(&hfv, type);
+
+
+   boost::shared_ptr<resip::Contents> body(&pc);
+   return new Publish(this, target.uri(), resip::PUBLISH, body);
+}
+
+resip::Data
+TestSipEndPoint::Publish::toString() const
+{
+   resip::Data buffer;
+   {
+      DataStream strm(buffer);
+      strm << mEndPoint.getName() << "." << getMethodName(mType) << "(" << mTo << ")";
+      strm.flush();
+   }
+   return buffer;
+}
+
+shared_ptr<SipMessage>
+TestSipEndPoint::Publish::go()
+{
+#if 0
+   PUBLISH SHOULD NEVER OCCUR INSIDE A DIALOG. PERIOD END OF STORY.
+
+   // !jf! this really should be passed in a dialog-id to identify which dialog
+   // to use
+   DeprecatedDialog* dialog = mEndPoint.getDialog();
+   if (dialog)
+   {
+      shared_ptr<SipMessage> request(dialog->makeRequest(mType));
+      if (mContents.get() != 0) request->setContents(mContents.get());
+      request->header(h_Expires).value() = 3600;
+
+/* 
+      TEMPORARILY INTRODUCED AS A PATCH JOB TO INVESTIGATE SOMETHING
+
+      request->header(h_Expires).value() = mExpires;
+      request->header(h_Event) = mEventPackage ;
+      request->header(h_From).uri() = request->header(h_To).uri();
+      request->header(h_Contacts).clear();
+
+      if (mPAssertedIdentity.size() != 0)
+      {
+        resip::Data PAssertedId(mPAssertedIdentity);
+        NameAddr PAssertedId_NameAddr(PAssertedId);
+        request->header(h_PAssertedIdentities).push_back(PAssertedId_NameAddr);
+      }
+      END OF  TEMP INTRODUCITON - DELETE THIS SECTION JUST AS SOON AS YOU CAN
+*/
+      return request;   
+   }
+   else
+   {
+#endif // 0
+      shared_ptr<SipMessage> request(Helper::makeRequest(NameAddr(mTo), 
+                                                         NameAddr(mEndPoint.getAddressOfRecord()), 
+                                                         mEndPoint.getContact(),
+                                                         mType));
+
+      request->header(h_Expires).value() = mExpires;
+      request->header(h_Event) = mEventPackage ;
+      request->header(h_From).uri() = request->header(h_To).uri();
+      request->header(h_Contacts).clear();
+
+      if (mPAssertedIdentity.size() != 0)
+      {
+        resip::Data PAssertedId(mPAssertedIdentity);
+        NameAddr PAssertedId_NameAddr(PAssertedId);
+        request->header(h_PAssertedIdentities).push_back(PAssertedId_NameAddr);
+      }
+
+      DebugLog(<< "2. START OF MESSAGE" );
+      DebugLog(<< *request );
+      DebugLog(<< "2. END OF MESSAGE" );
+      if (mContents != 0) request->setContents(mContents.get());
+      DebugLog(<< "3. START OF MESSAGE" );
+      DebugLog(<< *request );
+      DebugLog(<< "3. END OF MESSAGE" );
+      // request->header(h_Expires).value() = 3600;
+      return request;
+#if 0
+   }
+#endif // 0
+}
+
+/*
+TestSipEndPoint::Request*
+TestSipEndPoint::publish(const Uri& url, const Token& eventPackage, 
+                         const int pExpires, const string PAssertedIdentity, 
+                         const string publishBody)
+{
+   Data text(publishBody);
+   HeaderFieldValue hfv(text.data(), text.size());
+   Mime type("application", "pidf+xml");
+   Pidf pc(&hfv, type);
+   boost::shared_ptr<resip::Contents> body(&pc);
+
+   Request* localPublish = new Request(this, url, resip::PUBLISH, body);
+   // TODO: Get these in...
+   // localPublish->mMsg->header(h_Event) = eventPackage;
+   // localPublish->mMsg->header(h_Expires) = pExpires;
+   return localPublish ; 
+}
+
+TestSipEndPoint::Request*
+TestSipEndPoint::publish(const resip::NameAddr& target, const resip::Data& text)
+{
+   HeaderFieldValue hfv(text.data(), text.size());
+   Mime type("application", "pidf+xml");
+   Pidf pc(&hfv, type);
+
+
+   boost::shared_ptr<resip::Contents> body(&pc);
+   return new Request(this, target.uri(), resip::PUBLISH, body);
+}
+*/
 // end - vk
 
 TestSipEndPoint::Retransmit::Retransmit(TestSipEndPoint& endPoint, 

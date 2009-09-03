@@ -21,13 +21,11 @@ class CpimContents : public Contents
       CpimContents& operator=(const CpimContents& rhs);
 
       virtual Contents* clone() const;
+      static const Mime& getStaticType() ;
+      virtual std::ostream& encodeParsed(std::ostream& str) const;
+      virtual void parse(ParseBuffer& pb);
 
       virtual Data getBodyData() const;
-
-      static const Mime& getStaticType() ;
-
-      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
-      virtual void parse(ParseBuffer& pb);
 
       Data& text() {checkParsed(); return mText;}
 
