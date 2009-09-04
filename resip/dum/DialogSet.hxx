@@ -69,6 +69,7 @@ class DialogSet
          ReceivedProvisional,
          Established,
          Terminating,
+		 Cancelling,  // only used when cancelling and no dialogs exist
          Destroying
       } State;
 
