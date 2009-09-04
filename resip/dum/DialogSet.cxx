@@ -239,7 +239,10 @@ DialogSet::empty() const
 bool
 DialogSet::handledByAuthOrRedirect(const SipMessage& msg)
 {
-   if (msg.isResponse() && !(mState == Terminating || mState == WaitingToEnd || mState == Destroying))
+   if (msg.isResponse() && !(mState == Terminating || 
+	                         mState == WaitingToEnd || 
+							 mState == Destroying || 
+							 mState == Cancelling))
    {
       // !dcm! -- multiple usage grief...only one of each method type allowed
       if (getCreator() &&
@@ -436,6 +439,51 @@ DialogSet::dispatch(const SipMessage& msg)
             default:
                mState = Destroying;
                mDum.destroy(this);
+               break;
+         }
+      }
+      else
+      {
+         SharedPtr<SipMessage> response(new SipMessage);         
+         mDum.makeResponse(*response, msg, 481);
+         mDum.send(response);
+      }
+      return;
+   }
+   else if(mState == Cancelling)
+   {
+      assert(mDialogs.empty());
+      if (msg.isResponse())         
+      {
+         int code = msg.header(h_StatusLine).statusCode();
+         switch(mCreator->getLastRequest()->header(h_CSeq).method())
+         {
+            case INVITE:
+               if (code / 100 == 1)
+               {
+                  // do nothing - wait for final response
+               }
+               // 200/Inv crossing CANCEL case
+               else if (code / 100 == 2)
+               {
+                  Dialog dialog(mDum, msg, *this);
+
+                  SharedPtr<SipMessage> ack(new SipMessage);
+                  dialog.makeRequest(*ack, ACK);
+                  ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
+                  dialog.send(ack);
+                  
+                  SharedPtr<SipMessage> bye(new SipMessage);
+                  dialog.makeRequest(*bye, BYE);
+                  dialog.send(bye);                  
+
+                  // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
+               }
+               else
+               {
+                  mState = Destroying;
+                  mDum.destroy(this);
+               }
                break;
          }
       }
@@ -903,26 +951,17 @@ DialogSet::end()
          SharedPtr<SipMessage> cancel(Helper::makeCancel(*getCreator()->getLastRequest()));
          mDum.send(cancel);
 
+         if (mDum.mDialogEventStateManager)
+         {
+            mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
+         }
+
          if (mDialogs.empty())
          {
-            // !jf! if 200/INV crosses a CANCEL that was sent after receiving
-            // non-dialog creating provisional (e.g. 100), then we need to:
-            // Add a new state, if we receive a 200/INV in this state, ACK and
-            // then send a BYE and destroy the dialogset. 
-            if (mDum.mDialogEventStateManager)
-            {
-               mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
-            }
-            mState = Destroying;
-            mDum.destroy(this);
+            mState = Cancelling;
          }
          else
          {
-            if (mDum.mDialogEventStateManager)
-            {
-               mDum.mDialogEventStateManager->onTerminated(*this, *cancel, InviteSessionHandler::LocalCancel);
-            }
-
             //need to lag and do last element ouside of look as this DialogSet will be
             //deleted if all dialogs are destroyed
             for (DialogMap::iterator it = mDialogs.begin(); it != mDialogs.end(); it++)
@@ -956,6 +995,7 @@ DialogSet::end()
          break;
       }
       case Terminating:
+	  case Cancelling:
       case Destroying:
          DebugLog (<< "DialogSet::end() called on a DialogSet that is already Terminating");
          //assert(0);
