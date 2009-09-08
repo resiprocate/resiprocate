@@ -1670,11 +1670,14 @@ TransactionState::processNoDnsResults()
    WarningCategory warning;
    warning.hostname() = DnsUtil::getLocalHostName();
    warning.code() = 499;
+   warning.text() = "No other DNS entries to try";
    switch(mFailureReason)
    {
-      warning.text() = "No other DNS entries to try";
       case TransportFailure::None:
+         response->header(h_StatusLine).reason() = "No DNS results";
+         break;
       case TransportFailure::Failure:
+         response->header(h_StatusLine).reason() = "Transport failure: no transports left to try";
          break;
       case TransportFailure::NoTransport:
          response->header(h_StatusLine).reason() = "No matching transport found";
