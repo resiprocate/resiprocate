@@ -67,13 +67,15 @@ class ValueFifo : public resip::FifoStatsInterface
          return id;
       }
       
-      void cancel(TimerId id)
+      bool cancel(TimerId id)
       {
          resip::Lock lock(myMutex);
          if (myTimerQueue.cancel(id))
          {
             myTimerSize--;
+            return true;
          }
+         return false;
       }
       
       T getNext()

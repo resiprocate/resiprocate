@@ -67,7 +67,7 @@ SequenceSet::enqueue(shared_ptr<Event> event)
 SequenceSet::EventFifo::TimerId
 SequenceSet::enqueue(shared_ptr<Event> event, int delay)
 {
-   DebugLog(<< "SequenceClass::enqueue " << event->briefString() << " with delay " << delay);
+   InfoLog(<< "SequenceClass::enqueue " << event->briefString() << " with delay " << delay);
    return mEventFifo.addDelayMs(event, delay);
 }
 

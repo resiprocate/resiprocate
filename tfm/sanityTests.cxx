@@ -992,10 +992,28 @@ class TestHolder : public Fixture
           optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction())),
           derek->expect(INVITE/407, from(proxy), WaitForResponse, chain(derek->ack(), derek->digestRespond())),
 
-          And(Sub(optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))),
-              Sub(jason->expect(INVITE, contact(derek), WaitForCommand, chain(jason->send100(),jason->send486())),
-                  jason->expect(ACK, from(proxy), WaitForAck, jason->noAction()),
-                  derek->expect(INVITE/486, from(proxy), WaitForResponse, derek->ack()))),
+          And
+          (
+            Sub
+            (
+               optional(derek->expect(INVITE/100, from(proxy), WaitFor100, derek->noAction()))
+            ),
+            Sub
+            (
+               jason->expect(INVITE, contact(derek), WaitForCommand, chain(jason->send100(),jason->send486())),
+               And
+               (
+                  Sub
+                  (
+                     jason->expect(ACK, from(proxy), WaitForAck, jason->noAction())
+                  ),
+                  Sub
+                  (
+                     derek->expect(INVITE/486, from(proxy), WaitForResponse, derek->ack())
+                  )
+               )
+            )
+         ),
           WaitForEndOfTest);
       
       ExecuteSequences();  
@@ -1367,7 +1385,7 @@ class TestHolder : public Fixture
 
          derek->expect(INVITE,contact(jason),1200, derek->send100()),
          derek->expect(CANCEL,from(proxy),WaitForCommand,chain(derek->ok(),derek->noAction())),
-         jason->expect(INVITE/408,from(proxy),32000,jason->ack()),
+         jason->expect(INVITE/408,from(proxy),64100,jason->ack()),
          WaitForEndOfTest
       );
       
@@ -1411,7 +1429,7 @@ class TestHolder : public Fixture
          derek->expect(INVITE,contact(jason),4100, derek->noAction()),
          derek->expect(INVITE,contact(jason),8100, derek->noAction()),
          optional(derek->expect(INVITE,contact(jason),16100, derek->noAction())),
-         jason->expect(INVITE/408,from(proxy),32000,jason->ack()),
+         jason->expect(INVITE/408,from(proxy),32100,jason->ack()),
          WaitForEndOfTest
       );
       
@@ -2933,10 +2951,10 @@ class TestHolder : public Fixture
                   (
                      jason->expect(INVITE/180, from(derek), WaitFor100, derek->send486()),
                      jason->expect(INVITE/486, contact(derek), WaitForResponse, jason->ackNewTid()),
-                     jason->expect(INVITE/486, contact(derek), 1000, jason->ackNewTid()),
-                     jason->expect(INVITE/486, contact(derek), 2000, jason->ackNewTid()),
-                     jason->expect(INVITE/486, contact(derek), 4000, jason->ackNewTid()),
-                     jason->expect(INVITE/486, contact(derek), 4000, jason->ack())
+                     jason->expect(INVITE/486, contact(derek), 1100, jason->ackNewTid()),
+                     jason->expect(INVITE/486, contact(derek), 2100, jason->ackNewTid()),
+                     jason->expect(INVITE/486, contact(derek), 4100, jason->ackNewTid()),
+                     jason->expect(INVITE/486, contact(derek), 4100, jason->ack())
                   ),
                   Sub
                   (
@@ -5579,7 +5597,7 @@ class TestHolder : public Fixture
       (
          save(msg, jason->message(*derek,"Ping")),
          jason->expect(MESSAGE/407, from(proxy), WaitForResponse, chain(jason->pause(500),jason->retransmit(msg))),
-         jason->expect(MESSAGE/407, from(proxy), 1000, jason->digestRespond()),
+         jason->expect(MESSAGE/407, from(proxy), 1100, jason->digestRespond()),
          derek->expect(MESSAGE, from(proxy), WaitForCommand, derek->send486()),
          jason->expect(MESSAGE/486, from(proxy),WaitForResponse, jason->noAction()),
          WaitForEndOfTest
@@ -5603,7 +5621,7 @@ class TestHolder : public Fixture
          jason->message(*derek,"Ping"),
          jason->expect(MESSAGE/407, from(proxy), WaitForResponse, jason->digestRespond()),
          derek->expect(MESSAGE, from(proxy), WaitForCommand, derek->noAction()),
-         derek->expect(MESSAGE, from(proxy), 500, derek->send486()),
+         derek->expect(MESSAGE, from(proxy), 550, derek->send486()),
          jason->expect(MESSAGE/486, from(proxy),WaitForResponse, jason->noAction()),
          WaitForEndOfTest
       );
