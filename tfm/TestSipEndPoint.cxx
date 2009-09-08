@@ -1146,6 +1146,40 @@ TestSipEndPoint::invite(const resip::Data& url)
    return new Invite(this, resip::Uri(url)); 
 }
 
+TestSipEndPoint::SendSip::SendSip(TestSipEndPoint* from,
+                              const resip::Uri& to,
+                              boost::shared_ptr<resip::SipMessage>& msg) :
+   MessageAction(*from,to),
+   mMsgToTransmit(msg)
+{
+}
+
+Data
+TestSipEndPoint::SendSip::toString() const
+{
+   return Data("TestSipEndPoint::Send");
+}
+
+shared_ptr<SipMessage>
+TestSipEndPoint::SendSip::go()
+{
+   return mMsgToTransmit;
+}
+
+TestSipEndPoint::SendSip*
+TestSipEndPoint::sendSip(boost::shared_ptr<SipMessage>& msg,
+                           const Uri& to)
+{
+   return new SendSip(this,to,msg);
+}
+
+TestSipEndPoint::SendSip*
+TestSipEndPoint::sendSip(boost::shared_ptr<SipMessage>& msg,
+                           const TestUser& endPoint)
+{
+   return new SendSip(this,endPoint.getAddressOfRecord(),msg);
+}
+
 TestSipEndPoint::RawInvite::RawInvite(TestSipEndPoint* from, 
                                       const resip::Uri& to, 
                                       const resip::Data& rawText)
@@ -2991,6 +3025,47 @@ TestSipEndPoint::MessageExpectAction*
 TestSipEndPoint::ackOldTid(const boost::shared_ptr<resip::SdpContents>& sdp)
 {
    return new AckOldTid(*this, sdp);
+}
+
+TestSipEndPoint::Reflect::Reflect(TestSipEndPoint& endPoint, MethodTypes method, const Uri& to):
+   MessageExpectAction(endPoint),
+   mEndPoint(endPoint),
+   mMethod(method),
+   mReqUri(to)
+{}
+
+boost::shared_ptr<resip::SipMessage>
+TestSipEndPoint::Reflect::go(boost::shared_ptr<resip::SipMessage> msg)
+{
+   shared_ptr<SipMessage> reflect(static_cast<SipMessage*>(msg->clone()));
+   if(mMethod!=UNKNOWN)
+   {
+      if(reflect->isRequest())
+      {
+         reflect->header(h_RequestLine).method()=mMethod;
+      }
+
+      reflect->header(h_CSeq).method()=mMethod;
+   }
+
+   if(reflect->isRequest())
+   {
+      reflect->header(h_RequestLine).uri()=mReqUri;
+   }
+
+   return reflect;
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::reflect(const Uri& reqUri,MethodTypes method)
+{
+   return new Reflect(*this,method,reqUri);
+}
+
+TestSipEndPoint::MessageExpectAction*
+TestSipEndPoint::reflect(const TestUser& user,MethodTypes method)
+{
+   return new Reflect(*this,method,user.getAddressOfRecord());
 }
 
 #if 0

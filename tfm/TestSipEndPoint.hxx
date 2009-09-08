@@ -239,6 +239,24 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       Invite* invite(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp);
       Invite* invite(const resip::Data& url);
 
+      class SendSip : public MessageAction
+      {
+         public:
+            SendSip(TestSipEndPoint* from,
+                  const resip::Uri& to,
+                  boost::shared_ptr<resip::SipMessage>& msg);
+            virtual resip::Data toString() const;
+
+         private:
+            virtual boost::shared_ptr<resip::SipMessage> go();
+            boost::shared_ptr<resip::SipMessage> mMsgToTransmit;
+      };
+
+      SendSip* sendSip(boost::shared_ptr<resip::SipMessage>& msg,
+                        const resip::Uri& to);
+      SendSip* sendSip(boost::shared_ptr<resip::SipMessage>& msg,
+                        const TestUser& endPoint);
+
       class RawInvite : public MessageAction
       {
          public:
@@ -897,6 +915,19 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
       EXPECT_FUNCTOR(TestSipEndPoint, Notify200); 
       MessageExpectAction* notify200();
+
+      class Reflect : public MessageExpectAction
+      {
+         public:
+            explicit Reflect(TestSipEndPoint& endPoint, resip::MethodTypes method, const resip::Uri& reqUri);
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            resip::MethodTypes mMethod;
+            resip::Uri mReqUri;
+      };
+      MessageExpectAction* reflect(const resip::Uri& reqUri, resip::MethodTypes method=resip::UNKNOWN);
+      MessageExpectAction* reflect(const TestUser& user, resip::MethodTypes method=resip::UNKNOWN);
 
       class Matcher
       {
