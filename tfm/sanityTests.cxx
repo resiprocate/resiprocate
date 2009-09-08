@@ -605,6 +605,10 @@ class TestHolder : public Fixture
          set<NameAddr> contactsAfter;
          contactsAfter.insert(con);
          
+         con.remove(p_q);
+         set<NameAddr> withoutQ;
+         withoutQ.insert(con);
+         
          Seq(jason->registerUser(73, contactsBefore),
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contactsBefore, 73)),
@@ -615,6 +619,12 @@ class TestHolder : public Fixture
              jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
              jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(contactsAfter, 74)),
              500);
+         ExecuteSequences();
+
+         Seq(jason->registerUser(74, withoutQ),
+             jason->expect(REGISTER/407, from(proxy), 1000, jason->digestRespond()),
+             jason->expect(REGISTER/200, from(proxy), 5000, new CheckContacts(withoutQ, 74)),
+             WaitForEndOfTest);
          ExecuteSequences();
       }
                                
