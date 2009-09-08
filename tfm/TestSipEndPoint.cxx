@@ -529,7 +529,9 @@ TestSipEndPoint::getReceivedPublish(const CallId& callId)
 DeprecatedDialog*
 TestSipEndPoint::getDialog()
 {
-   assert(mDialogs.size() <= 1);
+   // An unfortunate "ONLY 1 dialog per endpoint" limitation
+   assert(mDialogs.size() <= 1); 
+
    if (mDialogs.size())
    {
       return *(mDialogs.begin());
@@ -3835,7 +3837,7 @@ TestSipEndPoint::handleEvent(boost::shared_ptr<Event> event)
                                                 msg->header(h_To).param(p_tag));
          if (dialog != 0)
          {
-            CerrLog(<< "refreshing with SUBSCRIBE/2xx");
+            DebugLog(<< "refreshing with SUBSCRIBE/2xx"); // not an error
             dialog->targetRefreshResponse(*msg);
          }
          else
