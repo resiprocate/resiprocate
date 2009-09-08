@@ -389,6 +389,10 @@ Proxy::thread()
                      }
                      mClientRequestContexts.erase(i);
                   }
+                  else
+                  {
+                     InfoLog (<< "No matching request context...ignoring " << *term);
+                  }
                }
                else 
                {
@@ -404,6 +408,10 @@ Proxy::thread()
                         ErrLog(<<"Uncaught exception in process: " << e);
                      }
                      mServerRequestContexts.erase(i);
+                  }
+                  else
+                  {
+                     InfoLog (<< "No matching request context...ignoring " << *term);
                   }
                }
                delete term;
