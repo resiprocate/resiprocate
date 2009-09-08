@@ -24,7 +24,8 @@ typedef enum
    Rejected,
    Timeout,
    Giveup,
-   NoResource
+   NoResource,
+   Invariant
 } TerminateReason;
 
 
