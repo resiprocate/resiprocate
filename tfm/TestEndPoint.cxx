@@ -43,7 +43,10 @@ TestEndPoint::~TestEndPoint()
 int
 TestEndPoint::DebugTimeMult() 
 {
-   return (Log::level() >= Log::Debug) ? 4 : 1;
+   // .bwc. Yeah, let's make tests that normally fail pass when logging is 
+   // turned up to debug. That'll be really useful...
+   // return (Log::level() >= Log::Debug) ? 4 : 1;
+   return 1;
 }
 
 boost::weak_ptr<SequenceSet> 
