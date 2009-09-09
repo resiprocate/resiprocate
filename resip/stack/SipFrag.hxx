@@ -21,7 +21,7 @@ class SipFrag : public Contents
       SipFrag(HeaderFieldValue* hfv, const Mime& contentsType);
       SipFrag(const Data& data, const Mime& contentsType);
       SipFrag(const SipFrag& rhs);
-      ~SipFrag();
+      virtual ~SipFrag();
       SipFrag& operator=(const SipFrag& rhs);
 
       virtual Contents* clone() const;

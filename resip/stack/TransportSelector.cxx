@@ -113,6 +113,10 @@ TransportSelector::~TransportSelector()
 #ifdef USE_SIGCOMP
    delete mSigcompStack;
 #endif
+
+    closeSocket( mSocket );
+    closeSocket( mSocket6 );
+
 }
 
 void
@@ -702,7 +706,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
                // but this is impossible to actually do if you're
                // not actually the registrar, and really hard even
                // if you are.
-               Uri& destination(*reinterpret_cast<Uri*>(0));
+               Uri destination;// (*reinterpret_cast<Uri*>(0)); // !bwc! What?
 
                if(msg->exists(h_Routes) && 
                   !msg->header(h_Routes).empty())
@@ -924,7 +928,7 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          }
 
          // Call back anyone who wants to perform outbound decoration
-         msg->callOutboundDecorators(source, target);
+         msg->callOutboundDecorators(source, target,remoteSigcompId);
 
          Data& encoded = msg->getEncoded();
          encoded.clear();
@@ -937,7 +941,8 @@ TransportSelector::transmit(SipMessage* msg, Tuple& target)
          DebugLog (<< "Transmitting to " << target
                    << " tlsDomain=" << msg->getTlsDomain()
                    << " via " << source
-				   << std::endl << std::endl << encoded.escaped());
+				   << std::endl << std::endl << encoded.escaped()
+				   << "sigcomp id=" << remoteSigcompId);
 
          target.transport->send(target, encoded, msg->getTransactionId(),
                                 remoteSigcompId);

@@ -52,6 +52,10 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       
       std::auto_ptr<resip::MessageDecorator> makeRRDecorator() const;
 
+      bool compressionEnabled() const;
+
+      void addSupportedOption(const resip::Data& option);
+      void removeSupportedOption(const resip::Data& option);
    protected:
       virtual const resip::Data& name() const;
 
@@ -74,6 +78,7 @@ class Proxy : public resip::TransactionUser, public resip::ThreadIf
       HashMap<resip::Data, RequestContext*> mServerRequestContexts;
       
       UserStore &mUserStore;
+      std::set<resip::Data> mSupportedOptions;
 };
 }
 #endif

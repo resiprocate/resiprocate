@@ -47,6 +47,13 @@ DialogSet::isMatch(boost::shared_ptr<SipMessage> msg) const
               msg->header(h_From).param(p_tag) == mMsg->header(h_From).param(p_tag) &&
               msg->header(h_CSeq) == mMsg->header(h_CSeq));
    }
+   else if (msg->isRequest() && // see no reason why this would be different
+            msg->header(h_CSeq).method() == SUBSCRIBE)
+   {
+      return (msg->header(h_CallId) == mMsg->header(h_CallId) &&
+              msg->header(h_From).param(p_tag) == mMsg->header(h_From).param(p_tag) &&
+              msg->header(h_CSeq) == mMsg->header(h_CSeq));
+   }
    else
    {
       CritLog(<< *msg);

@@ -101,12 +101,6 @@ OctetContents::parse(ParseBuffer& pb)
 }
 
 
-Data
-OctetContents::getBodyData() const
-{
-   checkParsed(); 
-   return mOctets;
-}
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

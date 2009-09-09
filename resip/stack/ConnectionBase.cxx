@@ -494,8 +494,11 @@ ConnectionBase::decompressNewBytes(int bytesRead,
         // TCP connection for identification purposes.
         if (via.exists(p_sigcompId))
         {
-          Data compId = via.param(p_sigcompId);
-          mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+                Data compId = via.param(p_sigcompId);
+            if(!compId.empty())
+            {
+                mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+            }
         }
         else
         {
@@ -512,7 +515,10 @@ ConnectionBase::decompressNewBytes(int bytesRead,
         // the ID out of the the Via header field, which is where we
         // squirreled it away when we sent this request in the first place.
         Data compId = via.param(p_branch).getSigcompCompartment();
-        mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+        if(!compId.empty())
+        {
+         mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+        }
       }
       fifo.add(mMessage);
       mMessage = 0;

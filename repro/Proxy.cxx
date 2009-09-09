@@ -167,8 +167,34 @@ Proxy::thread()
                      continue;
                   }
 
-                  // [TODO] !rwm! Need to check Proxy-Require header field values
-               
+                  if(!sip->empty(h_ProxyRequires))
+                  {
+                     std::auto_ptr<SipMessage> response(0);
+
+                     for(Tokens::iterator i=sip->header(h_ProxyRequires).begin();
+                           i!=sip->header(h_ProxyRequires).end();
+                           ++i)
+                     {
+                        if(!i->isWellFormed() || 
+                           !mSupportedOptions.count(i->value()) )
+                        {
+                           if(!response.get())
+                           {
+                              response.reset(Helper::makeResponse(*sip, 420, "Bad extension"));
+                           }
+                           response->header(h_Unsupporteds).push_back(*i);
+                        }
+                     }
+
+                     if(response.get())
+                     {
+                        mStack.send(*response, this);
+                        delete sip;
+                        continue;
+                     }
+                  }
+                  
+                  
                   if (sip->method() == CANCEL)
                   {
                      HashMap<Data,RequestContext*>::iterator i = mServerRequestContexts.find(sip->getTransactionId());
@@ -363,6 +389,10 @@ Proxy::thread()
                      }
                      mClientRequestContexts.erase(i);
                   }
+                  else
+                  {
+                     InfoLog (<< "No matching request context...ignoring " << *term);
+                  }
                }
                else 
                {
@@ -378,6 +408,10 @@ Proxy::thread()
                         ErrLog(<<"Uncaught exception in process: " << e);
                      }
                      mServerRequestContexts.erase(i);
+                  }
+                  else
+                  {
+                     InfoLog (<< "No matching request context...ignoring " << *term);
                   }
                }
                delete term;
@@ -480,6 +514,25 @@ Proxy::makeRRDecorator() const
 {
    return std::auto_ptr<resip::MessageDecorator>(new RRDecorator(*this));
 }
+
+bool 
+Proxy::compressionEnabled() const
+{
+   return mStack.getCompression().getAlgorithm() != resip::Compression::NONE;
+}
+
+void 
+Proxy::addSupportedOption(const resip::Data& option)
+{
+   mSupportedOptions.insert(option);
+}
+
+void 
+Proxy::removeSupportedOption(const resip::Data& option)
+{
+   mSupportedOptions.erase(option);
+}
+
 
 
 /* ====================================================================

@@ -22,8 +22,6 @@ class OctetContents : public Contents
 
       virtual Contents* clone() const;
 
-      virtual Data getBodyData() const;
-
       //virtual 
 		  static const Mime& getStaticType() ;
 

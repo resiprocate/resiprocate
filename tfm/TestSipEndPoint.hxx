@@ -239,6 +239,24 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       Invite* invite(const resip::Uri& url, const boost::shared_ptr<resip::SdpContents>& sdp);
       Invite* invite(const resip::Data& url);
 
+      class SendSip : public MessageAction
+      {
+         public:
+            SendSip(TestSipEndPoint* from,
+                  const resip::Uri& to,
+                  boost::shared_ptr<resip::SipMessage>& msg);
+            virtual resip::Data toString() const;
+
+         private:
+            virtual boost::shared_ptr<resip::SipMessage> go();
+            boost::shared_ptr<resip::SipMessage> mMsgToTransmit;
+      };
+
+      SendSip* sendSip(boost::shared_ptr<resip::SipMessage>& msg,
+                        const resip::Uri& to);
+      SendSip* sendSip(boost::shared_ptr<resip::SipMessage>& msg,
+                        const TestUser& endPoint);
+
       class RawInvite : public MessageAction
       {
          public:
@@ -284,8 +302,9 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
       class Subscribe : public MessageAction
       {
          public:
-            Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage);
+            Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, int pExpires=3600, const std::string PAssertedIdentity="", bool ignoreExistingDialog=false);
             Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, const resip::Mime& accept, boost::shared_ptr<resip::Contents> contents = boost::shared_ptr<resip::Contents>());
+            Subscribe(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, std::string allow, std::string supported, int pExpires, std::string PAssertedIdentity);
 
             using TestSipEndPoint::MessageAction::operator();
             virtual void operator()(boost::shared_ptr<Event> event);
@@ -297,12 +316,75 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
             resip::Token mEventPackage;
             resip::Mime mAccept;
             boost::shared_ptr<resip::Contents> mContents;
+            std::string mAllow;
+            std::string mSupported;
+            int mExpires;
+            std::string mPAssertedIdentity;
+            bool mIgnoreExistingDialog;
       };
       friend class Subscribe;
       Subscribe* subscribe(const TestSipEndPoint* endPoint, const resip::Token& eventPackage);
       Subscribe* subscribe(const TestUser& endPoint, const resip::Token& eventPackage);
-      Subscribe* subscribe(const resip::Uri& url, const resip::Token& eventPackage);
       Subscribe* subscribe(const resip::Uri& url, const resip::Token& eventPackage, const resip::Mime& accept, const boost::shared_ptr<resip::Contents>& contents);
+      Subscribe* subscribe(const resip::Uri& url, 
+                           const resip::Token& eventPackage,
+                           const int pExpires = 3600,
+                           const std::string PAssertedIdentity="",
+                           bool ignoreExistingDialog=false);
+
+      Subscribe* subscribe(const resip::Uri& url, 
+                           const resip::Token& eventPackage,
+                           const std::string allow,
+                           const std::string supported,
+                           const int pExpires,
+                           const std::string PAssertedIdentity);
+
+
+      class Publish : public MessageAction
+      {
+         public:
+            Publish(TestSipEndPoint* from, const resip::Uri& to, 
+                    resip::MethodTypes type,
+                    boost::shared_ptr<resip::Contents> contents = 
+                    boost::shared_ptr<resip::Contents>());
+
+            Publish(TestSipEndPoint* from, const resip::Uri& to, 
+                    const resip::Token& eventPackage, 
+                    boost::shared_ptr<resip::Contents> contents = 
+                    boost::shared_ptr<resip::Contents>(),
+                    int pExpires=3600, 
+                    const std::string PAssertedIdentity="");
+
+            virtual resip::Data toString() const;
+/*
+            Publish(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, const resip::Mime& accept, boost::shared_ptr<resip::Contents> contents = boost::shared_ptr<resip::Contents>());
+            Publish(TestSipEndPoint* from, const resip::Uri& to, const resip::Token& eventPackage, std::string allow, std::string supported, int pExpires, std::string PAssertedIdentity);
+
+            virtual void operator()(boost::shared_ptr<Event> event);
+*/
+
+         private:
+            virtual boost::shared_ptr<resip::SipMessage> go();
+            resip::MethodTypes mType;
+            boost::shared_ptr<resip::Contents> mContents;
+
+            /*
+            resip::Mime mAccept;
+            std::string mAllow;
+            std::string mSupported;
+            */
+            resip::Token mEventPackage;
+            int mExpires;
+            std::string mPAssertedIdentity;
+      };
+      friend class Publish;
+      Publish* publish(const resip::NameAddr& target, const resip::Data& text);
+
+      Publish* publish(const resip::Uri& url, const resip::Token& eventPackage, 
+                           const int pExpires, 
+                           const std::string PAssertedIdentity, 
+                           const std::string publishBody);
+                           // const resip::Data& text);
 
       class Request : public MessageAction
       {
@@ -833,6 +915,19 @@ class TestSipEndPoint : public TestEndPoint, public TransportDriver::Client
 
       EXPECT_FUNCTOR(TestSipEndPoint, Notify200); 
       MessageExpectAction* notify200();
+
+      class Reflect : public MessageExpectAction
+      {
+         public:
+            explicit Reflect(TestSipEndPoint& endPoint, resip::MethodTypes method, const resip::Uri& reqUri);
+            virtual boost::shared_ptr<resip::SipMessage> go(boost::shared_ptr<resip::SipMessage> msg);
+         private:
+            TestSipEndPoint& mEndPoint;
+            resip::MethodTypes mMethod;
+            resip::Uri mReqUri;
+      };
+      MessageExpectAction* reflect(const resip::Uri& reqUri, resip::MethodTypes method=resip::UNKNOWN);
+      MessageExpectAction* reflect(const TestUser& user, resip::MethodTypes method=resip::UNKNOWN);
 
       class Matcher
       {

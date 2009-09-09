@@ -158,14 +158,6 @@ Pkcs7Contents::parse(ParseBuffer& pb)
 }
 
 
-Data 
-Pkcs7Contents::getBodyData() const
-{
-   checkParsed();
-   return mText;
-}
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 
