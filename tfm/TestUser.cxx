@@ -132,10 +132,12 @@ TestUser::Prack::go(shared_ptr<SipMessage> response)
 
 TestUser::Register::Register(TestUser* endPoint,
                              int requestedExpireSecs,
-                             const std::set<resip::NameAddr>& contacts)
+                             const std::set<resip::NameAddr>& contacts,
+                             bool doOutbound)
    : TestSipEndPoint::MessageAction(*endPoint, endPoint->getAddressOfRecord()),
      mRequestedExpireSecs(requestedExpireSecs),
-     mContacts(contacts)
+     mContacts(contacts),
+     mOutbound(doOutbound)
 {
 }
 
@@ -154,10 +156,16 @@ TestUser::Register::go()
    reg->header(h_Expires).value() = mRequestedExpireSecs;
    reg->header(h_Contacts).clear();
 
+   int regid=1;
    for (set<NameAddr>::const_iterator i = mContacts.begin();
         i != mContacts.end(); i++)
    {
       reg->header(h_Contacts).push_back(*i);
+      if(mOutbound)
+      {
+         reg->header(h_Contacts).back().param(p_Instance)=Data::from(&mEndPoint);
+         reg->header(h_Contacts).back().param(p_regid)=regid++;
+      }
    }
 
    //Copy is made to prevent conditions from corrupting mRegistration
@@ -176,16 +184,30 @@ TestUser::Register*
 TestUser::registerUser(int requestedExpireSecs,
                        const std::set<resip::NameAddr>& contacts)
 {
-   return new Register(this, requestedExpireSecs, contacts);
+   return new Register(this, requestedExpireSecs, contacts, false);
 }
 
 TestUser::Register* 
 TestUser::registerUser(int requestedExpireSecs,
                        const resip::NameAddr& contact)
 {
-   std::set<resip::NameAddr> contacts;
+   std::set<resip::NameAddr> contacts; 
    contacts.insert(contact);
    return registerUser(requestedExpireSecs, contacts);
+}
+
+TestUser::Register* 
+TestUser::registerUserWithOutbound(int requestedExpireSecs, const std::set<resip::NameAddr>& contacts)
+{
+   return new Register(this, requestedExpireSecs, contacts, true);
+}
+
+TestUser::Register* 
+TestUser::registerUserWithOutbound(int requestedExpireSecs, const resip::NameAddr& contact)
+{
+   std::set<resip::NameAddr> contacts; 
+   contacts.insert(contact);
+   return registerUserWithOutbound(requestedExpireSecs, contacts);
 }
 
 TestSipEndPoint::MessageExpectAction* 
