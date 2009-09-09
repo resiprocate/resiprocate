@@ -2916,8 +2916,8 @@ class TestHolder : public Fixture
          david->invite(proxy->makeUrl("loop").uri()),
          optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
          david->expect(INVITE/407, from(proxy), WaitForResponse, chain(david->ack(),david->digestRespond())),
-         optional(david->expect(INVITE/100,from(proxy),WaitFor100,david->noAction())),
-         david->expect(INVITE/483,from(proxy),1000,david->ack()),
+         optional(david->expect(INVITE/100,from(proxy),3600,david->noAction())),
+         david->expect(INVITE/483,from(proxy),3000,david->ack()),
          WaitForEndOfTest
       );
       
