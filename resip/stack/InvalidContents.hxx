@@ -19,8 +19,6 @@ class InvalidContents : public Contents
 
       virtual Contents* clone() const;
 
-      virtual Data getBodyData() const;
-
       static const Mime& getStaticType();
 
       const Mime& getOriginalType() const;

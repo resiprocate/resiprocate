@@ -101,14 +101,6 @@ CpimContents::parse(ParseBuffer& pb)
 }
 
 
-Data
-CpimContents::getBodyData() const
-{
-   checkParsed(); 
-   return mText;
-}
-
-
 /* ====================================================================
  * The Vovida Software License, Version 1.0 
  * 

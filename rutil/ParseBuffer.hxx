@@ -100,6 +100,7 @@ class ParseBuffer
       const char* skipBackN(int count);
       const char* skipBackChar(char c);
       const char* skipBackToChar(char c);
+      const char* skipBackToOneOf(const char* cs);
 
       void assertEof() const;
       void assertNotEof() const;

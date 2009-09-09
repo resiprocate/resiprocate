@@ -169,8 +169,12 @@ ServerSubscription::shouldDestroyAfterSendingFailure(const SipMessage& msg)
                break;
             case Helper::OptionalRetryAfter:
             case Helper::ApplicationDependant: 
-               throw UsageUseException("Not a reasonable code to reject a SUBSCIRBE(refresh) inside a dialog.", 
-                                       __FILE__, __LINE__);
+               // .bwc. Uh, no. ApplicationDependent should imply that the 
+               // app-writer has decided what to do. We don't decide here. And 
+               // OptionalRetryAfter certainly doesn't mean we should tear the 
+               // Usage down.
+//               throw UsageUseException("Not a reasonable code to reject a SUBSCIRBE(refresh) inside a dialog.", 
+//                                       __FILE__, __LINE__);
                break;            
             case Helper::DialogTermination: //?dcm? -- throw or destroy this?
             case Helper::UsageTermination:

@@ -83,13 +83,6 @@ InvalidContents::parse(ParseBuffer& pb)
    pb.data(mText, anchor);
 }
 
-Data
-InvalidContents::getBodyData() const
-{
-   checkParsed(); 
-   return mText;
-}
-
 const Mime&
 InvalidContents::getOriginalType() const
 {

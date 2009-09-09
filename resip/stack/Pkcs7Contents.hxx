@@ -22,8 +22,6 @@ class Pkcs7Contents : public Contents
 
       virtual Contents* clone() const;
 
-      virtual Data getBodyData() const;
-
       static const Mime& getStaticType() ;
 
       virtual EncodeStream& encodeParsed(EncodeStream& str) const;

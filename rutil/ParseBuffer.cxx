@@ -562,6 +562,19 @@ ParseBuffer::skipBackToChar(char c)
    return mBuff;
 }
 
+const char* 
+ParseBuffer::skipBackToOneOf(const char* cs)
+{
+   while (!bof())
+   {
+      if (oneOf(*(--mPosition),cs))
+      {
+         return ++mPosition;
+      }
+   }
+   return mBuff;
+}
+
 void
 ParseBuffer::data(Data& data, const char* start) const
 {

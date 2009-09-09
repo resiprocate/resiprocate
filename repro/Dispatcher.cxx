@@ -51,7 +51,7 @@ Dispatcher::~Dispatcher()
 }
 
 bool
-Dispatcher::post(std::auto_ptr<resip::ApplicationMessage> work)
+Dispatcher::post(std::auto_ptr<resip::ApplicationMessage>& work)
 {
    resip::ReadLock r(mMutex);
    if(mAcceptingWork)
@@ -64,7 +64,8 @@ Dispatcher::post(std::auto_ptr<resip::ApplicationMessage> work)
    return false;
    
    //If we aren't accepting work, the auto ptr is not released. (We don't
-   // take ownership, the auto_ptr falls out of scope, and deletion occurs.)
+   // take ownership, and the caller gets to handle the contents of the 
+   // auto_ptr)
 }
 
 size_t

@@ -100,9 +100,8 @@ SipStack::shutdown()
 {
    InfoLog (<< "Shutting down sip stack " << this);
 
-   static Mutex shutDownMutex;
    {
-      Lock lock(shutDownMutex);
+      Lock lock(mShutdownMutex);
       assert(!mShuttingDown);
       mShuttingDown = true;
    }
@@ -208,6 +207,13 @@ SipStack::addAlias(const Data& domain, int port)
    DebugLog (<< "Adding domain alias: " << domain << ":" << portToUse);
    assert(!mShuttingDown);
    mDomains.insert(domain + ":" + Data(portToUse));
+
+
+   if(mUri.host().empty())
+   {
+      mUri.host()=*mDomains.begin();
+   }
+
 }
 
 Data 
@@ -281,15 +287,13 @@ SipStack::isMyPort(int port) const
 const Uri&
 SipStack::getUri() const
 {
-   if (mDomains.empty())
+   if(mUri.host().empty())
    {
       CritLog(<< "There are no associated transports");
       throw Exception("No associated transports", __FILE__, __LINE__);
    }
 
-   static Uri myUri("sip:" + *mDomains.begin());
-
-   return myUri;
+   return mUri;
 }
 
 void 
@@ -538,7 +542,7 @@ SipStack::getTimeTillNextProcessMS()
 {
    Lock lock(mAppTimerMutex);
 
-   unsigned int dnsNextProcess = (mDnsStub->requiresProcess() ? 200 : 0xffffffff);
+   unsigned int dnsNextProcess = (mDnsStub->requiresProcess() ? 0 : 0xffffffff);
    return resipMin(Timer::getMaxSystemTimeWaitMs(),resipMin(dnsNextProcess,
                    resipMin(mTransactionController.getTimeTillNextProcessMS(),
                             resipMin(mTuSelector.getTimeTillNextProcessMS(), mAppTimers.msTillNextTimer()))));

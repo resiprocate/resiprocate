@@ -18,7 +18,8 @@ class RRDecorator : public resip::MessageDecorator
 
       virtual void decorateMessage(resip::SipMessage &msg, 
                                     const resip::Tuple &source,
-                                    const resip::Tuple &destination) ;
+                                    const resip::Tuple &destination,
+                                    const resip::Data& sigcompId) ;
       virtual void rollbackMessage(resip::SipMessage& msg) ;
       virtual MessageDecorator* clone() const ;
 

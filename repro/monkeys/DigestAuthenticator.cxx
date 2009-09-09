@@ -346,7 +346,8 @@ DigestAuthenticator::requestUserAuthInfo(repro::RequestContext &rc, resip::Data 
       {
          async->domain()=realm;
       }
-      mAuthRequestDispatcher->post(std::auto_ptr<ApplicationMessage>(async));
+      std::auto_ptr<ApplicationMessage> app(async);
+      mAuthRequestDispatcher->post(app);
       return WaitingForEvent;
    }
    else

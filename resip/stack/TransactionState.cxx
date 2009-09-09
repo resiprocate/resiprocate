@@ -770,7 +770,17 @@ TransactionState::processClientNonInvite(TransactionMessage* msg)
          case Timer::TimerF:
             if (mState == Trying || mState == Proceeding)
             {
-               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               if(mWaitingForDnsResult)
+               {
+                  sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503, "DNS Timeout"));
+                  WarningLog(<< "Transaction timed out while waiting for DNS "
+                              "result uri=" << 
+                              mMsgToRetransmit->header(h_RequestLine).uri());
+               }
+               else
+               {
+                  sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               }
                terminateClientTransaction(mId);
                delete this;
             }
@@ -977,7 +987,17 @@ TransactionState::processClientInvite(TransactionMessage* msg)
          case Timer::TimerB:
             if (mState == Calling)
             {
-               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               if(mWaitingForDnsResult)
+               {
+                  sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503, "DNS Timeout"));
+                  WarningLog(<< "Transaction timed out while waiting for DNS "
+                              "result uri=" << 
+                              mMsgToRetransmit->header(h_RequestLine).uri());
+               }
+               else
+               {
+                  sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               }
                terminateClientTransaction(mId);
                delete this;
             }
@@ -997,7 +1017,17 @@ TransactionState::processClientInvite(TransactionMessage* msg)
             {
                assert(mMsgToRetransmit && mMsgToRetransmit->method() == INVITE);
                InfoLog(<<"Making 408 for canceled invite that received no response: "<< mMsgToRetransmit->brief());
-               sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               if(mWaitingForDnsResult)
+               {
+                  sendToTU(Helper::makeResponse(*mMsgToRetransmit, 503, "DNS Timeout"));
+                  WarningLog(<< "Transaction timed out while waiting for DNS "
+                              "result uri=" << 
+                              mMsgToRetransmit->header(h_RequestLine).uri());
+               }
+               else
+               {
+                  sendToTU(Helper::makeResponse(*mMsgToRetransmit, 408));
+               }
                terminateClientTransaction(msg->getTransactionId());
                delete this;
             }
@@ -1640,11 +1670,14 @@ TransactionState::processNoDnsResults()
    WarningCategory warning;
    warning.hostname() = DnsUtil::getLocalHostName();
    warning.code() = 499;
+   warning.text() = "No other DNS entries to try";
    switch(mFailureReason)
    {
-      warning.text() = "No other DNS entries to try";
       case TransportFailure::None:
+         response->header(h_StatusLine).reason() = "No DNS results";
+         break;
       case TransportFailure::Failure:
+         response->header(h_StatusLine).reason() = "Transport failure: no transports left to try";
          break;
       case TransportFailure::NoTransport:
          response->header(h_StatusLine).reason() = "No matching transport found";

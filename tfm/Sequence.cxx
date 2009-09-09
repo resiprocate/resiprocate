@@ -221,9 +221,9 @@ SequenceClass::isMatch(shared_ptr<Event> event) const
 void
 SequenceClass::handleEvent(shared_ptr<Event> event)
 {
-   TestEndPoint& user = *event->getEndPoint();
+   TestEndPoint* user = event->getEndPoint();
 
-   //DebugLog(<< "inner handleEvent: " << " to " << user.getName() << " " << *this << endl << event);
+   InfoLog(<< "inner handleEvent: " << " to " << user << " " << *this << endl << event);
   next:
    if (!mExpects.empty())
    {
@@ -235,6 +235,7 @@ SequenceClass::handleEvent(shared_ptr<Event> event)
       shared_ptr<OptionalTimeoutEvent> ot = shared_dynamic_cast<OptionalTimeoutEvent>(event);
       if (ot && ot->getExpect() == expect)
       {
+         mTimerId=-7;
          scheduleTimeout();
          return;
       }
@@ -262,7 +263,14 @@ SequenceClass::handleEvent(shared_ptr<Event> event)
       scheduleTimeout();
       try
       {
-         expect->onEvent(user, event);
+         if(user)
+         {
+            expect->onEvent(*user, event);
+         }
+         else
+         {
+            assert(0);
+         }
       }
       catch (BaseException& e)
       {
@@ -326,8 +334,14 @@ void SequenceClass::cancelTimeout()
 {
    if (mTimerId != -7)
    {
-      //DebugLog(<< "SequenceClass::cancelTimeout(" << mTimerId << ") " << this);
-      getSequenceSet()->mEventFifo.cancel(mTimerId);
+      InfoLog(<< "SequenceClass::cancelTimeout(" << mTimerId << ") " << this);
+      if(!getSequenceSet()->mEventFifo.cancel(mTimerId))
+      {
+         // Race condition; it is likely that the timer is sitting, unprocessed, 
+         // in our message queue, right as we satisfy the expect that the timer
+         // was waiting for. It would be nice to figure out a way to fix this.
+         assert(0);
+      }
       mTimerId = -7;
    }
 }
@@ -337,7 +351,7 @@ void SequenceClass::scheduleTimeout()
    if (mExpects.empty())
    {
       // schedule sequence done event
-      //InfoLog(<< "Queuing Sequence done: " << (*i) << "  hangAroundTime: " << (*i)->mHangAroundTimeMs);
+      InfoLog(<< "Queuing Sequence done: hangAroundTime: " <<mHangAroundTimeMs);
       mTimingOut = true;
       getSequenceSet()->enqueue(shared_ptr<Event>(new SequenceDoneEvent(this)), mHangAroundTimeMs);
    }
@@ -348,13 +362,13 @@ void SequenceClass::scheduleTimeout()
       {
          mTimerId = getSequenceSet()->enqueue(shared_ptr<Event>(new OptionalTimeoutEvent(*this, f)), 
                                               f->getTimeout());
-         DebugLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") optional");
+         InfoLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") optional");
       }
       else
       {
          mTimerId = getSequenceSet()->enqueue(shared_ptr<Event>(new TimeoutEvent(*this)), 
                                               f->getTimeout());
-         DebugLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") for " << f->getTimeout());
+         InfoLog(<< "SequenceClass::scheduleTimeout(" << mTimerId << ") for " << *f << " with timeout "<< f->getTimeout());
       }
    }
 }   

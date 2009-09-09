@@ -84,7 +84,7 @@ void
 RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 {
    bool original = false;
-   DebugLog (<< "process(SipMessage) " << *this);
+   InfoLog (<< "RequestContext::process(SipMessage) " << sipMessage->getTransactionId());
 
    if (mCurrentEvent != mOriginalRequest)
    {
@@ -402,7 +402,7 @@ RequestContext::process(std::auto_ptr<resip::SipMessage> sipMessage)
 void
 RequestContext::process(std::auto_ptr<ApplicationMessage> app)
 {
-   DebugLog (<< "process(ApplicationMessage) " << *app);
+   InfoLog (<< "RequestContext::process(ApplicationMessage) " << *app);
 
    if (mCurrentEvent != mOriginalRequest)
    {

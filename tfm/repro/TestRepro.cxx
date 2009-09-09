@@ -119,7 +119,16 @@ TestRepro::TestRepro(const resip::Data& name,
                      bool forceRecordRoute,
                      Security* security) : 
    TestProxy(name, host, port, nwInterface),
+#ifdef USE_SIGCOMP
+   mStack(security,
+            DnsStub::EmptyNameserverList,
+            0,
+            false,
+            0,
+            new Compression(Compression::DEFLATE)),
+#else
    mStack(security),
+#endif
    mStackThread(mStack),
    mRegistrar(),
    mProfile(new MasterProfile),
@@ -145,6 +154,10 @@ TestRepro::TestRepro(const resip::Data& name,
 #endif
    mProxy.addDomain(host);
    
+
+   mProxy.addSupportedOption("outbound");
+   mProxy.addSupportedOption("p-fakeoption");
+
    mProfile->clearSupportedMethods();
    mProfile->addSupportedMethod(resip::REGISTER);
    mProfile->addSupportedScheme(Symbols::Sips);

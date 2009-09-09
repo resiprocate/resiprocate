@@ -6,6 +6,8 @@
 #include "repro/monkeys/StrictRouteFixup.hxx"
 #include "repro/RequestContext.hxx"
 
+#include "resip/stack/Helper.hxx"
+
 #include "rutil/Logger.hxx"
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::REPRO
 
@@ -39,6 +41,15 @@ StrictRouteFixup::process(RequestContext& context)
    if (request.exists(h_Routes) &&
        !request.header(h_Routes).empty())
    {
+      if(!request.header(h_Routes).front().isWellFormed())
+      {
+         // Garbage topmost Route, reject
+         SipMessage resp;
+         resip::Helper::makeResponse(resp, request, 400, "Garbage Route Header.");
+         context.sendResponse(resp);
+         return SkipAllChains;
+      }
+
       //Will cancel any active transactions (ideally there should be none)
       //and terminate any pending transactions.
       context.getResponseContext().cancelAllClientTransactions();

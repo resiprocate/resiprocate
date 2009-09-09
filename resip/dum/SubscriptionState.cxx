@@ -21,7 +21,8 @@ Data TerminateReasons[] =
    "rejected",
    "timeout",
    "giveup",
-   "noResource",
+   "noresource",
+   "invariant",
    "unknown"
 };
 

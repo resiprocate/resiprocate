@@ -23,23 +23,55 @@ Pidf::init()
    return true;
 }
 
+const Pidf Pidf::Empty;
+
 Pidf::Pidf()
-   : Contents(getStaticType())
-{}
+   : Contents(getStaticType()),
+     mNote()
+{
+}
+
+Pidf::Pidf(const Data& txt)
+   : Contents(getStaticType()),
+     mNote(txt)
+{
+}
 
 Pidf::Pidf(const Mime& contentType)
-   : Contents(getStaticType())
-{}
+   : Contents(getStaticType()),
+     mNote()
+{
+}
 
 Pidf::Pidf(HeaderFieldValue* hfv, const Mime& contentsType)
-   : Contents(hfv, contentsType)
+   : Contents(hfv, contentsType),
+     mNote()
 {
+}
+
+Pidf::Pidf(const Data& txt, const Mime& contentType)
+   : Contents(contentType),
+     mNote(txt)
+{
+}
+
+Pidf&
+Pidf::operator=(const Pidf& rhs)
+{
+   if (this != &rhs)
+   {
+      Contents::operator=(rhs);
+      mNote = rhs.mNote;
+      mEntity = rhs.mEntity;
+      mTuples = rhs.mTuples;
+   }
+   return *this;
 }
  
 Pidf::Pidf(const Pidf& rhs)
    : Contents(rhs),
-     mEntity(rhs.mEntity),
      mNote(rhs.mNote),
+     mEntity(rhs.mEntity),
      mTuples(rhs.mTuples)
 {
 }
@@ -47,7 +79,8 @@ Pidf::Pidf(const Pidf& rhs)
 Pidf::Pidf(const Uri& entity)
    : Contents(getStaticType()),
      mEntity(entity)
-{}
+{
+}
 
 Pidf::~Pidf()
 {
@@ -88,19 +121,6 @@ Pidf::getNumTuples() const
    return mTuples.size();
 }
 
-Pidf&
-Pidf::operator=(const Pidf& rhs)
-{
-   if (this != &rhs)
-   {
-      Contents::operator=(rhs);
-      mNote = rhs.mNote;
-      mEntity = rhs.mEntity;
-      mTuples = rhs.mTuples;
-   }
-   return *this;
-}
-
 Contents* 
 Pidf::clone() const
 {
@@ -117,9 +137,6 @@ Pidf::getStaticType()
 EncodeStream& 
 Pidf::encodeParsed(EncodeStream& str) const
 {
-   //DebugLog(<< "Pidf::encodeParsed " << mText);
-   //str << mText;
-
    str << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << Symbols::CRLF;
    str << "<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" << Symbols::CRLF;
    str << "          entity=\"" << mEntity << "\">"  <<  Symbols::CRLF;
@@ -153,6 +170,10 @@ Pidf::encodeParsed(EncodeStream& str) const
 void
 Pidf::parse(ParseBuffer& pb)
 {
+/*
+   REVISIT WHY THE BELOW WAS REMOVED
+   REMOVING IT SCREWS UP WHAT GOES OUT IN THE PUBLISH
+*/
    DebugLog(<< "Pidf::parse(" << Data(pb.start(), int(pb.end()-pb.start())) << ") ");
 
 	std::string pidf_namespace;
@@ -277,6 +298,17 @@ Pidf::parse(ParseBuffer& pb)
    {
       DebugLog(<< "no presence tag!");
    }
+/*
+   REVISIT WHY THE ABOVE WAS REMOVED
+*/
+
+   // THIS HERE IS THE ESSENCE OF WHAT IS USED.
+   // const char* anchor = pb.position();
+   const char* anchor = pb.start();
+   pb.skipToEnd();
+   pb.data(mNote, anchor);
+   DebugLog(<< "mNote is : " << mNote );
+   // END OF - ESSENCE
 }
 
 void 
@@ -364,7 +396,6 @@ resip::operator<<(EncodeStream& strm, const Pidf::Tuple& tuple)
         << " attributes=" << Inserter(tuple.attributes);
    return strm;
 }
-
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

@@ -399,8 +399,13 @@ UdpTransport::process(FdSet& fdset)
           if (via.exists(p_sigcompId))
           {
             Data compId = via.param(p_sigcompId);
-            mSigcompStack->provideCompartmentId(
-                             sc, compId.data(), compId.size());
+            if(!compId.empty())
+            {
+               // .bwc. Crash was happening here. Why was there an empty sigcomp
+               // id?
+               mSigcompStack->provideCompartmentId(
+                                sc, compId.data(), compId.size());
+            }
           }
           else
           {
@@ -416,8 +421,12 @@ UdpTransport::process(FdSet& fdset)
           // severe layer violation. In practice, we're going to ferret
           // the ID out of the the Via header field, which is where we
           // squirreled it away when we sent this request in the first place.
+          // !bwc! This probably shouldn't be going out over the wire.
           Data compId = via.param(p_branch).getSigcompCompartment();
-          mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+          if(!compId.empty())
+          {
+            mSigcompStack->provideCompartmentId(sc, compId.data(), compId.size());
+          }
         }
   
       }

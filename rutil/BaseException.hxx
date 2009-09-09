@@ -18,6 +18,7 @@ class BaseException : public std::exception
       virtual const char* name() const = 0;
 
       const Data& getMessage() const {return message;}
+      virtual const char* what() const throw() {return message.data();}
       
    protected:
       BaseException(const Data& msg,
