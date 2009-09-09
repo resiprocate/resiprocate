@@ -1981,6 +1981,7 @@ Helper::determineFailureMessageEffect(const SipMessage& response)
       case 491: 
       case 493:
       case 494:
+      case 500:
       case 505:
       case 513:
       case 603:
