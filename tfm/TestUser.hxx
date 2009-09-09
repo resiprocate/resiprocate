@@ -39,7 +39,8 @@ class TestUser : public TestSipEndPoint
          public:
             Register(TestUser* endPoint,
                      int requestedExpireSecs,
-                     const std::set<resip::NameAddr>& contacts);
+                     const std::set<resip::NameAddr>& contacts,
+                     bool doOutbound);
 
             virtual boost::shared_ptr<resip::SipMessage> go();
             virtual resip::Data toString() const;
@@ -47,6 +48,7 @@ class TestUser : public TestSipEndPoint
          private:
             int mRequestedExpireSecs;
             std::set<resip::NameAddr> mContacts;
+            bool mOutbound;
       };
       friend class Register;
 
@@ -63,6 +65,9 @@ class TestUser : public TestSipEndPoint
       
       Register* registerUser(int requestedExpireSecs, const std::set<resip::NameAddr>& contacts);
       Register* registerUser(int requestedExpireSecs, const resip::NameAddr& contact);
+
+      Register* registerUserWithOutbound(int requestedExpireSecs, const std::set<resip::NameAddr>& contacts);
+      Register* registerUserWithOutbound(int requestedExpireSecs, const resip::NameAddr& contact);
 
       EXPECT_FUNCTOR(TestUser, DigestRespond);
       MessageExpectAction* digestRespond();

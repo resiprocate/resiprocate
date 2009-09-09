@@ -1895,7 +1895,7 @@ class TestHolder : public Fixture
       WarningLog(<<"*!testInviteUDPToTCPCallerHangsUp!*");
       Seq
       (
-         jasonTcp->registerUser(60, jasonTcp->getDefaultContacts()),
+         jasonTcp->registerUserWithOutbound(60, jasonTcp->getDefaultContacts()),
          jasonTcp->expect(REGISTER/407,from(proxy),1000,jasonTcp->digestRespond()),
          jasonTcp->expect(REGISTER/200,from(proxy),1000,new CheckContacts(jasonTcp->getDefaultContacts(),60)),
          WaitForEndOfSeq
@@ -1937,7 +1937,7 @@ class TestHolder : public Fixture
       WarningLog(<<"*!testInviteUDPToTCPCalleeHangsUp!*");
       Seq
       (
-         jasonTcp->registerUser(60, jasonTcp->getDefaultContacts()),
+         jasonTcp->registerUserWithOutbound(60, jasonTcp->getDefaultContacts()),
          jasonTcp->expect(REGISTER/407,from(proxy),1000,jasonTcp->digestRespond()),
          jasonTcp->expect(REGISTER/200,from(proxy),1000,new CheckContacts(jasonTcp->getDefaultContacts(),60)),
          WaitForEndOfSeq
@@ -1979,7 +1979,7 @@ class TestHolder : public Fixture
       WarningLog(<<"*!testInviteTCPToUDPCallerHangsUp!*");
       Seq
       (
-         derek->registerUser(60, derek->getDefaultContacts()),
+         derek->registerUserWithOutbound(60, derek->getDefaultContacts()),
          derek->expect(REGISTER/407,from(proxy),1000,derek->digestRespond()),
          derek->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derek->getDefaultContacts(),60)),
          WaitForEndOfSeq
@@ -2021,7 +2021,7 @@ class TestHolder : public Fixture
       WarningLog(<<"*!testInviteTCPToUDPCalleeHangsUp!*");
       Seq
       (
-         derek->registerUser(60, derek->getDefaultContacts()),
+         derek->registerUserWithOutbound(60, derek->getDefaultContacts()),
          derek->expect(REGISTER/407,from(proxy),1000,derek->digestRespond()),
          derek->expect(REGISTER/200,from(proxy),1000,new CheckContacts(derek->getDefaultContacts(),60)),
          WaitForEndOfSeq
@@ -3554,7 +3554,7 @@ class TestHolder : public Fixture
             ),
             Sub
             (
-               cullen->expect(INVITE,contact(david),WaitForCommand,chain(cullen->ring(),cullen->pause(1000),cullen->answer())),
+               cullen->expect(INVITE,contact(david),WaitForCommand,chain(cullen->ring(),cullen->pause(100),cullen->answer())),
                david->expect(INVITE/180,contact(cullen),WaitForResponse,david->noAction()),
                david->expect(INVITE/200,contact(cullen),WaitForResponse,david->ack()),
                cullen->expect(ACK,contact(david),WaitForCommand,cullen->noAction())
@@ -3725,9 +3725,9 @@ class TestHolder : public Fixture
             ),
             Sub
             (
-               enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->pause(1000),enlai->answer())),
+               enlai->expect(INVITE,contact(david),WaitForCommand,chain(enlai->ring(),enlai->pause(100),enlai->answer())),
                david->expect(INVITE/180,contact(enlai),WaitForResponse,david->noAction()),
-               david->expect(INVITE/200,contact(enlai),WaitForResponse,david->ack()),
+               david->expect(INVITE/200,contact(enlai),WaitForResponse+100,david->ack()),
                enlai->expect(ACK,contact(david),WaitForCommand,enlai->noAction())
             )
          ),
