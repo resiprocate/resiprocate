@@ -1513,12 +1513,10 @@ class TestHolder : public Fixture
             ),
             Sub
             (
-               derek->expect(INVITE,contact(jason),WaitForCommand,derek->noAction()),
-               derek->expect(INVITE,contact(jason),700, derek->noAction())
+               derek->expect(INVITE,contact(jason),WaitForCommand,chain(derek->pause(700),derek->send100()))
             )
          ),
 
-         derek->expect(INVITE,contact(jason),1200, derek->send100()),
          derek->expect(CANCEL,from(proxy),WaitForCommand,chain(derek->ok(),derek->send487())),
          And
          (
@@ -1564,12 +1562,10 @@ class TestHolder : public Fixture
             ),
             Sub
             (
-               derek->expect(INVITE,contact(jason),WaitForCommand,derek->noAction()),
-               derek->expect(INVITE,contact(jason),700, derek->noAction())
+               derek->expect(INVITE,contact(jason),WaitForCommand,chain(derek->pause(700), derek->send100()))
             )
          ),
 
-         derek->expect(INVITE,contact(jason),1200, derek->send100()),
          derek->expect(CANCEL,from(proxy),WaitForCommand,chain(derek->ok(),derek->noAction())),
          jason->expect(INVITE/408,from(proxy),64100,jason->ack()),
          WaitForEndOfTest
@@ -1605,16 +1601,10 @@ class TestHolder : public Fixture
             ),
             Sub
             (
-               derek->expect(INVITE,contact(jason),WaitForCommand,derek->noAction()),
-               derek->expect(INVITE,contact(jason),700, derek->noAction())
+               derek->expect(INVITE,contact(jason),WaitForCommand,derek->noAction())
             )
          ),
 
-         derek->expect(INVITE,contact(jason),1100, derek->noAction()),
-         derek->expect(INVITE,contact(jason),2100, derek->noAction()),
-         derek->expect(INVITE,contact(jason),4100, derek->noAction()),
-         derek->expect(INVITE,contact(jason),8100, derek->noAction()),
-         optional(derek->expect(INVITE,contact(jason),16100, derek->noAction())),
          jason->expect(INVITE/408,from(proxy),32100,jason->ack()),
          WaitForEndOfTest
       );
@@ -7711,7 +7701,7 @@ class TestHolder : public Fixture
                ),
                Sub
                (
-                  derek->expect(INFO/100, from(proxy), 500, derek->noAction())
+                  derek->expect(INFO/100, from(proxy), 1000, derek->noAction())
                )
             ),
              // note: 408 to NIT are not forwarded by repro
