@@ -7683,13 +7683,13 @@ class TestHolder : public Fixture
          (
             derek->info(jason),
             derek->expect(INFO/407, from(proxy), 1000, derek->digestRespond()),
-            jason->expect(INFO, from(derek), 1000, jason->noAction()),
-            jason->expect(INFO, from(derek), 4800, jason->noAction()),
+            jason->expect(INFO, from(derek), 100, jason->noAction()),
+            jason->expect(INFO, from(derek), 600, jason->noAction()),
+            jason->expect(INFO, from(derek), 1100, jason->noAction()),
             And
             (
                Sub
                (
-                  jason->expect(INFO, from(derek), 4800, jason->noAction()),
                   jason->expect(INFO, from(derek), 4800, jason->noAction()),
                   jason->expect(INFO, from(derek), 4800, jason->noAction()),
                   jason->expect(INFO, from(derek), 4800, jason->noAction()),
