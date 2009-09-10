@@ -217,7 +217,10 @@ void DnsStub::cacheTTL(const Data& key,
    if (nscount == 0) return;
    vector<RROverlay> soa;
    aptr = createOverlay(abuf, alen, aptr, soa);
-   assert (!soa.empty());
+   if(soa.empty())
+   {
+      return;
+   }
 
    RRCache::instance()->cacheTTL(key, rrType, status, soa[0]);
 }
