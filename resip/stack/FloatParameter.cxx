@@ -23,7 +23,7 @@ FloatParameter::FloatParameter(ParameterTypes::Type type,
    pb.skipWhitespace();
    if (!pb.eof() && *pb.position() != '=')
    {
-      throw ParseException("parameter constructor expected '='", __FILE__, __LINE__);
+      throw ParseException("parameter constructor expected '='", "FloatParameter", __FILE__, __LINE__);
    }
    pb.skipChar();
    pb.skipWhitespace();
@@ -43,7 +43,7 @@ FloatParameter::clone() const
    return new FloatParameter(*this);
 }
 
-ostream&
+EncodeStream&
 FloatParameter::encode(ostream& stream) const
 {
    return stream << getName() << Symbols::EQUALS << mValue;
