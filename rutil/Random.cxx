@@ -3,6 +3,7 @@
 #endif
 
 #include <cassert>
+#include <stdlib.h>
 
 #ifdef WIN32
 #include "rutil/Socket.hxx"
