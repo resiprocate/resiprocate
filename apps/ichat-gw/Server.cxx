@@ -45,7 +45,8 @@ public:
    virtual ~SdpMessageDecorator() {}
    virtual void decorateMessage(SipMessage &msg, 
                                 const Tuple &source,
-                                const Tuple &destination)
+                                const Tuple &destination,
+                                const Data& sigcompId)
    {
       SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
       if(sdp && sdp->session().media().size() > 0 &&
