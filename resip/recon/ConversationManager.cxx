@@ -723,10 +723,10 @@ ConversationManager::post(const OsMsg& msg)
          }
          break;
       case MiNotification::MI_NOTF_VOICE_STARTED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         //InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STARTED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
       case MiNotification::MI_NOTF_VOICE_STOPPED:
-         InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
+         //InfoLog( << "NotificationDispatcher: received MI_NOTF_VOICE_STOPPED, sourceId=" << pNotfMsg->getSourceId().data() << ", connectionId=" << pNotfMsg->getConnectionId());
          break;
 
       default:

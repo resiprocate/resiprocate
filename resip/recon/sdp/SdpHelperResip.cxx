@@ -398,8 +398,8 @@ SdpHelperResip::parseMediaLine(const SdpContents::Session::Medium& resipMedia, c
    bool rtcpEnabledForMedia = sessionRtcpEnabled;  // Default to Session setting
    SdpMediaLine* mediaLine = new SdpMediaLine();
   
-   mediaLine->setMediaType(SdpMediaLine::getMediaTypeFromString(resipMedia.name().c_str()));
-   mediaLine->setTransportProtocolType(SdpMediaLine::getTransportProtocolTypeFromString(resipMedia.protocol().c_str()));
+   mediaLine->setMediaType(resipMedia.name());
+   mediaLine->setTransportProtocolType(resipMedia.protocol());
 
    // Get PTime for media line to assign to codecs
    unsigned int ptime=20; // default  !slg! this default should be dependant on codec type - ie. G723 should be 30, etc.
