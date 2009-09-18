@@ -1166,8 +1166,8 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
          // We only process one media stream - so if we already have a valid - just reject the rest
          if(valid)
          {
-            SdpContents::Session::Medium rejmedium(SdpMediaLine::SdpMediaTypeString[(*itMediaLine)->getMediaType()], 0, 1,  // Reject medium by specifying port 0 (RFC3264)	
-                                                   SdpMediaLine::SdpTransportProtocolTypeString[(*itMediaLine)->getTransportProtocolType()]);
+            SdpContents::Session::Medium rejmedium((*itMediaLine)->getMediaTypeString(), 0, 1,  // Reject medium by specifying port 0 (RFC3264)	
+                                                   (*itMediaLine)->getTransportProtocolTypeString());
             answer.session().addMedium(rejmedium);
             continue;
          }
@@ -1192,8 +1192,8 @@ RemoteParticipant::buildSdpAnswer(const SdpContents& offer, SdpContents& answer)
             mediaLineValid = answerMediaLine(mediaSessionCaps, *(*itMediaLine), answer, false);
             if(!mediaLineValid)
             {
-               SdpContents::Session::Medium rejmedium(SdpMediaLine::SdpMediaTypeString[(*itMediaLine)->getMediaType()], 0, 1,  // Reject medium by specifying port 0 (RFC3264)	
-                                                      SdpMediaLine::SdpTransportProtocolTypeString[(*itMediaLine)->getTransportProtocolType()]);
+               SdpContents::Session::Medium rejmedium((*itMediaLine)->getMediaTypeString(), 0, 1,  // Reject medium by specifying port 0 (RFC3264)	
+                                                      (*itMediaLine)->getTransportProtocolTypeString());
                answer.session().addMedium(rejmedium);
             }
             else

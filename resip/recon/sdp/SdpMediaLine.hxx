@@ -17,6 +17,7 @@ public:
    typedef enum 
    {
       MEDIA_TYPE_NONE,
+      MEDIA_TYPE_UNKNOWN,
       MEDIA_TYPE_AUDIO,          // "audio" - RFC4566
       MEDIA_TYPE_VIDEO,          // "video" - RFC4566
       MEDIA_TYPE_TEXT,           // "text" - RFC4566
@@ -28,6 +29,7 @@ public:
    typedef enum 
    {
       PROTOCOL_TYPE_NONE,
+      PROTOCOL_TYPE_UNKNOWN,
       PROTOCOL_TYPE_UDP,         // "udp" - RFC4566
       PROTOCOL_TYPE_RTP_AVP,     // "RTP/AVP" - RFC4566
       PROTOCOL_TYPE_RTP_SAVP,    // "RTP/SAVP" - RFC4566
@@ -440,8 +442,10 @@ public:
 
    SdpMediaLine& operator=(const SdpMediaLine& rhs);
 
-   void setMediaType(SdpMediaType mediaType) { mMediaType = mediaType; }
-   void setTransportProtocolType(SdpTransportProtocolType transportProtocolType) { mTransportProtocolType = transportProtocolType; }
+   void setMediaType(SdpMediaType mediaType) { mMediaType = mediaType; mMediaTypeString = SdpMediaLine::SdpMediaTypeString[mediaType];}
+   void setMediaType(const resip::Data& mediaTypeString) { mMediaType = getMediaTypeFromString(mediaTypeString.c_str()); mMediaTypeString = mediaTypeString;} 
+   void setTransportProtocolType(SdpTransportProtocolType transportProtocolType) { mTransportProtocolType = transportProtocolType; mTransportProtocolTypeString = SdpMediaLine::SdpTransportProtocolTypeString[transportProtocolType]; }
+   void setTransportProtocolType(const resip::Data& transportProtocolTypeString) { mTransportProtocolType = getTransportProtocolTypeFromString(transportProtocolTypeString.c_str()); mTransportProtocolTypeString = transportProtocolTypeString; }
 
    void addCodec(const SdpCodec& codec) { mCodecs.push_back(codec); }
    void clearCodecs() { mCodecs.clear(); }
@@ -540,8 +544,10 @@ public:
    typedef std::list<SdpMediaLine> SdpMediaLineList;
          
    const SdpMediaType getMediaType() const { return mMediaType; }
+   const resip::Data& getMediaTypeString() const { return mMediaTypeString; }
    static SdpMediaType getMediaTypeFromString(const char * type);
    const SdpTransportProtocolType getTransportProtocolType() const { return mTransportProtocolType; }
+   const resip::Data& getTransportProtocolTypeString() const { return mTransportProtocolTypeString; }
    static SdpTransportProtocolType getTransportProtocolTypeFromString(const char * type);
    const CodecList& getCodecs() const { return mCodecs; }
    const resip::Data& getTitle() const  { return mTitle; }
@@ -602,7 +608,9 @@ public:
 private:
    // m=  Note:  port is stored in each connection
    SdpMediaType   mMediaType;
+   resip::Data    mMediaTypeString;
    SdpTransportProtocolType mTransportProtocolType;
+   resip::Data    mTransportProtocolTypeString;
    CodecList      mCodecs;
 
    // i=

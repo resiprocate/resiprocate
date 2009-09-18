@@ -5,6 +5,7 @@ using namespace sdpcontainer;
 const char* SdpMediaLine::SdpMediaTypeString[] =
 {
    "NONE",
+   "UNKNOWN",
    "AUDIO",
    "VIDEO",
    "TEXT",
@@ -15,6 +16,7 @@ const char* SdpMediaLine::SdpMediaTypeString[] =
 const char* SdpMediaLine::SdpTransportProtocolTypeString[] =
 {
    "NONE",
+   "UNKNOWN",
    "UDP",
    "RTP/AVP",
    "RTP/SAVP",
@@ -212,7 +214,9 @@ SdpMediaLine::operator=(const SdpMediaLine& rhs)
 
    // Assign values
    mMediaType = rhs.mMediaType;
+   mMediaTypeString = rhs.mMediaTypeString;
    mTransportProtocolType = rhs.mTransportProtocolType;
+   mTransportProtocolTypeString = rhs.mTransportProtocolTypeString;
    mCodecs = rhs.mCodecs;
    mTitle = rhs.mTitle;
    mConnections = rhs.mConnections;
@@ -325,7 +329,7 @@ SdpMediaLine::getMediaTypeFromString(const char * type)
    }
    else
    {
-      return MEDIA_TYPE_NONE;
+      return MEDIA_TYPE_UNKNOWN;
    }
 }
 
@@ -384,7 +388,7 @@ SdpMediaLine::getTransportProtocolTypeFromString(const char * type)
    }
    else
    {
-      return PROTOCOL_TYPE_NONE;
+      return PROTOCOL_TYPE_UNKNOWN;
    }
 }
 
@@ -664,8 +668,8 @@ EncodeStream&
 sdpcontainer::operator<<( EncodeStream& strm, const SdpMediaLine& sdpMediaLine)
 {
    strm << "MediaLine:" << std::endl
-        << "Type: " << SdpMediaLine::SdpMediaTypeString[sdpMediaLine.mMediaType] << std::endl
-        << "TransportProtocol: " << SdpMediaLine::SdpTransportProtocolTypeString[sdpMediaLine.mTransportProtocolType] << std::endl;
+        << "Type: " << sdpMediaLine.mMediaTypeString << std::endl
+        << "TransportProtocol: " << sdpMediaLine.mTransportProtocolTypeString << std::endl;
 
    SdpMediaLine::CodecList::const_iterator itCodec = sdpMediaLine.mCodecs.begin();
    for(;itCodec != sdpMediaLine.mCodecs.end(); itCodec++)
