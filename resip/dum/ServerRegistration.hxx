@@ -43,7 +43,11 @@ class ServerRegistration: public NonDialogUsage
       friend class DialogSet;
       ServerRegistration(DialogUsageManager& dum, DialogSet& dialogSet, const SipMessage& request);
 
-      bool processOutbound(resip::NameAddr &naddr, ContactInstanceRecord &rec, const resip::SipMessage &msg);
+      bool tryFlow(ContactInstanceRecord& rec,
+                     const resip::SipMessage& msg);
+      bool testFlowRequirements(ContactInstanceRecord &rec,
+                                 const resip::SipMessage& msg,
+                                 bool hasFlow) const;
 
       SipMessage mRequest;
       Uri mAor;

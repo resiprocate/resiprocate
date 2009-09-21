@@ -7,6 +7,7 @@
 #include "resip/dum/Dialog.hxx"
 #include "resip/dum/RegistrationHandler.hxx"
 #include "resip/dum/RegistrationPersistenceManager.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/WinLeakCheck.hxx"
@@ -48,7 +49,7 @@ ServerRegistration::accept(SipMessage& ok)
    if (mDidOutbound)
    {
       static Token outbound("outbound");
-      ok.header(h_Supporteds).push_back(outbound);
+      ok.header(h_Requires).push_back(outbound);
    }
 
    if (!mDum.mServerRegistrationHandler->asyncProcessing())
@@ -319,7 +320,18 @@ ServerRegistration::processRegistration(const SipMessage& msg)
 
       rec.mLastUpdated=now;
 
-      bool supportsOutbound = processOutbound(*i,rec,msg);
+      bool hasFlow = tryFlow(rec,msg);
+      
+      if(!testFlowRequirements(rec, msg, hasFlow))
+      {
+         // We have rejected the request. Bail.
+         if (!async)
+         {
+            database->unlockRecord(mAor);
+         }
+         delete(this);
+         return;
+      }
 
       // Check to see if this is a removal.
       if (expires == 0)
@@ -354,10 +366,6 @@ ServerRegistration::processRegistration(const SipMessage& msg)
             operation = ADD;
          }
       }
-
-      // !bwc! If we perform outbound processing for any Contact, we need to
-      // set this to true.
-      mDidOutbound |= supportsOutbound;
    }
 
    // The way this works is:
@@ -409,93 +417,146 @@ ServerRegistration::dump(EncodeStream& strm) const
    return strm;
 }
 
-bool
-ServerRegistration::processOutbound(resip::NameAddr &naddr, ContactInstanceRecord &rec, const resip::SipMessage &msg)
+bool 
+ServerRegistration::tryFlow(ContactInstanceRecord& rec,
+                              const resip::SipMessage& msg)
 {
-      // .bwc. If, in the end, this is true, it means all necessary conditions
-      // for outbound support have been met.
-      bool supportsOutbound=InteropHelper::getOutboundSupported();
-
-      // .bwc. We only store flow information if we have a direct flow to the
-      // endpoint. We do not create a flow if there is an edge-proxy, because if
-      // our connection to the edge proxy fails, the flow from the edge-proxy to
-      // the endpoint is still good, so we should not discard the registration.
-      bool haveDirectFlow=true;
-
-      if(supportsOutbound)
+   // .bwc. ie. Can we assure that the connection the client is using on the
+   // first hop can be re-used later?
+   try
+   {
+      // Outbound logic
+      if(InteropHelper::getOutboundSupported())
       {
-         try
+         resip::NameAddr& contact(rec.mContact);
+         if(contact.exists(p_Instance) && contact.exists(p_regid))
          {
-         if (!naddr.exists(p_Instance) || !naddr.exists(p_regid))
+            if(!msg.empty(h_Paths) && msg.header(h_Paths).back().exists(p_ob))
             {
-               DebugLog(<<"instance or reg-id missing");
-               supportsOutbound=false;
+               rec.mRegId=contact.param(p_regid);
+               // Not directly connected, so we don't care how we contact the 
+               // edge proxy.
+               rec.mReceivedFrom.onlyUseExistingConnection=false;
+               DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
+               // Edge-proxy is directly connected to the client, and ready to 
+               // send traffic down the "connection" (TCP connection, or NAT 
+               // pinhole, or what-have-you).
+               mDidOutbound=true;
+               return true;
             }
-
-            if(!msg.empty(h_Paths))
+            else if(msg.header(h_Vias).size() == 1)
             {
-               haveDirectFlow=false;
-               if(!msg.header(h_Paths).back().exists(p_ob))
-               {
-                  DebugLog(<<"last Path doesn't have ob");
-                  supportsOutbound=false;
-               }
-            }
-            else if(msg.header(h_Vias).size() > 1)
-            {
-               DebugLog(<<"more than one Via, and no Path");
-               supportsOutbound=false;
+               rec.mRegId=contact.param(p_regid);
+               // We are directly connected to the client.
+               // .bwc. In the outbound case, we should fail if the connection 
+               // is gone. No recovery should be attempted by the server.
+               rec.mReceivedFrom=msg.getSource();
+               rec.mReceivedFrom.onlyUseExistingConnection=true;
+               mDidOutbound=true;
+               return true;
             }
          }
-         catch(resip::ParseBuffer::Exception&)
+      }
+      // Record-Route flow token hack; use with caution
+      else if(InteropHelper::getRRTokenHackEnabled())
+      {
+         if(msg.header(h_Vias).size() == 1)
          {
-            supportsOutbound=false;
+            rec.mReceivedFrom=msg.getSource();
+            rec.mReceivedFrom.onlyUseExistingConnection=false;
+            return true;
+         }
+      }
+   }
+   catch(resip::ParseBuffer::Exception&)
+   {}
+   return false;
+}
+
+bool 
+ServerRegistration::testFlowRequirements(ContactInstanceRecord &rec,
+                                          const resip::SipMessage& msg,
+                                          bool hasFlow) const
+{
+   const resip::NameAddr& contact(rec.mContact);
+   if(DnsUtil::isIpAddress(contact.uri().host()))
+   {
+      // IP address in host-part.
+      if(contact.uri().scheme()=="sips")
+      {
+         // sips: and IP-address in contact. This will probably not work anyway.
+         if(!hasFlow)
+         {
+            SharedPtr<SipMessage> failure(new SipMessage);
+            mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
+            mDum.send(failure);
+            return false;
+         }
+      }
+      
+      if(contact.uri().exists(p_transport))
+      {
+         TransportType type = toTransportType(contact.uri().param(p_transport));
+         if(type==TLS || type == DTLS)
+         {
+            // secure transport and IP-address. Almost certainly won't work, but
+            // we'll try anyway.
+            if(!hasFlow)
+            {
+               SharedPtr<SipMessage> failure(new SipMessage);
+               mDum.makeResponse(*failure, msg, 400, "Trying to use TLS with an IP-address in your Contact header won't work if you don't have a flow. Consider implementing outbound, or putting an FQDN in your contact header.");
+               mDum.send(failure);
+               return false;
+            }
+         }
+      }
+   }
+
+   if(contact.exists(p_Instance) && contact.exists(p_regid))
+   {
+      // Client has explicitly requested Outbound processing, which requires us 
+      // to have a flow.
+      if(!hasFlow)
+      {
+         SharedPtr<SipMessage> failure(new SipMessage);
+         mDum.makeResponse(*failure, msg, 439);
+         mDum.send(failure);
+         return false;
+      }
+   }
+
+   if(contact.uri().exists(p_sigcompId))
+   {
+      if(contact.uri().exists(p_transport))
+      {
+         TransportType type = toTransportType(contact.uri().param(p_transport));
+         if(type == TLS || type == TCP)
+         {
+            // Client is using sigcomp on the first hop using a connection-
+            // oriented transport. For this to work, that connection has to be
+            // reused for all traffic.
+            if(!hasFlow)
+            {
+               SharedPtr<SipMessage> failure(new SipMessage);
+               mDum.makeResponse(*failure, msg, 400, "Trying to use sigcomp on a connection-oriented protocol won't work if you don't have a flow. Consider implementing outbound, or using UDP/DTLS for this case.");
+               mDum.send(failure);
+               return false;
+            }
          }
       }
       else
       {
-         DebugLog(<<"outbound support disabled");
+         // ?bwc? Client is using sigcomp, but we're not sure whether this is
+         // over a connection-oriented transport or not.
+         DebugLog(<< "Client is using sigcomp, but we're not sure whether this "
+                     "is over a connection-oriented transport or not, because "
+                     "the contact doesn't have a transport param in it. It is "
+                     "possible this will work though, so we'll let it proceed."
+                     );
       }
+   }
 
-      // .bwc. The outbound processing
-      if(supportsOutbound)
-      {
-      rec.mRegId=naddr.param(p_regid);
-         if(haveDirectFlow)
-         {
-            // .bwc. We NEVER record the source if outbound is not being used.
-            // There is nothing we can do with this info in the non-outbound
-            // case that doesn't flagrantly violate spec (yet).
-            // (Example: If we remember this info with the intent of sending
-            // incoming stuff to this source directly, we end up being forced
-            // to record-route with a flow token to give in-dialog stuff a
-            // chance of working. Once we have record-routed, we have set this
-            // decision in stone for the rest of the dialog, preventing target
-            // refresh requests from working. If record-route was mutable, 
-            // maybe it would be okay to do this, but until this is officially
-            // allowed, we shouldn't touch it.)
-            rec.mReceivedFrom=msg.getSource();
-            // .bwc. In the outbound case, we should fail if the connection is
-            // gone. No recovery should be attempted by the server.
-            rec.mReceivedFrom.onlyUseExistingConnection=true;
-            DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
-         }
-      }
-      else if(InteropHelper::getRRTokenHackEnabled())
-      {
-         // .bwc. If we are going to do the broken thing, and record-route with
-         // flow-tokens every time, we enable it here. Keep in mind, this will
-         // either break target-refreshes (if we have a direct connection to the
-         // endpoint), or we have a good chance of inadvertently including a 
-         // proxy that didn't record-route in the dialog.
-         // !bwc! TODO remove this once mid-dialog connection reuse is handled
-         // by most endpoints.
-         rec.mReceivedFrom=msg.getSource();
-         rec.mReceivedFrom.onlyUseExistingConnection=false;
-         DebugLog(<<"Set rec.mReceivedFrom: " << rec.mReceivedFrom);
-      }
-      
-   return supportsOutbound;
+   return true;
 }
 
 void

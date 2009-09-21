@@ -35,10 +35,26 @@ RRDecorator::decorateMessage(resip::SipMessage& request,
    DebugLog(<<"Proxy::decorateMessage called.");
    resip::NameAddr rt;
    
+   // .bwc. Any of these cases means that we are assuming that whoever is
+   // just downstream will remain in the call-path throughout the dialog.
    if(destination.onlyUseExistingConnection 
-      || resip::InteropHelper::getRRTokenHackEnabled())
+      || resip::InteropHelper::getRRTokenHackEnabled()
+      || !sigcompId.empty())
    {
-      rt=mProxy.getRecordRoute();
+      if(destination.getType()==resip::TLS || 
+         destination.getType()==resip::DTLS)
+      {
+         rt = mProxy.getRecordRoute();
+         rt.uri().scheme()="sips";
+      }
+      else
+      {
+         // .bwc. It is safe to put ip+port+proto here, since we have an 
+         // existing flow to the next hop.
+         rt.uri().host()=resip::Tuple::inet_ntop(source);
+         rt.uri().port()=source.getPort();
+         rt.uri().param(resip::p_transport)=resip::Tuple::toData(source.getType());
+      }
       // .bwc. If our target has an outbound flow to us, we need to put a flow
       // token in a Record-Route.
       resip::Helper::massageRoute(request,rt);
