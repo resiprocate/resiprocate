@@ -40,7 +40,7 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    char* routeSet = 0;
    char certPathBuf[256];
    char* certPath = certPathBuf;
-   char* dbPath = 0;
+   char* dbPath = "./";
    int noChallenge = false;
    int noAuthIntChallenge = false;
    int rejectBadNonces = false;
@@ -89,9 +89,9 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
    struct poptOption table[] = {
       {"log-type",         'l',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logType,        0, "where to send logging messages", "syslog|cerr|cout"},
       {"log-level",        'v',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &logLevel,       0, "specify the default log level", "STACK|DEBUG|INFO|WARNING|ALERT"},
-      {"db-path",           0,   POPT_ARG_STRING,                            &dbPath,       0, "path to databases", 0},
+      {"db-path",           0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,                            &dbPath,       0, "path to databases", 0},
       {"record-route",     'r',  POPT_ARG_STRING,                            &recordRouteUri,    0, "specify uri to use as Record-Route", "sip:example.com"},
-      {"force-record-route",     0,  POPT_ARG_NONE,                            &forceRecordRoute,    0, "force record-routing", 0},
+      {"force-record-route",     0,  POPT_ARG_NONE  | POPT_ARGFLAG_SHOW_DEFAULT,                            &forceRecordRoute,    0, "force record-routing", 0},
 #if defined(USE_MYSQL)
       {"mysqlServer",      'x',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &mySqlServer,    0, "enable MySQL and provide name of server", "localhost"},
 #endif
@@ -101,11 +101,11 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"tls-domain",       't',  POPT_ARG_STRING,                            &tlsDomain,      0, "act as a TLS server for specified domain", "example.com"},
       {"tls",                0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &tlsPort,        0, "add TLS transport on specified port", "5061"},
       {"dtls",               0,  POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &dtlsPort,       0, "add DTLS transport on specified port", "0"},
-      {"enable-cert-server", 0,  POPT_ARG_NONE,                              &certServer,     0, "run a cert server", 0},
+      {"enable-cert-server", 0,  POPT_ARG_NONE | POPT_ARGFLAG_SHOW_DEFAULT,                              &certServer,     0, "run a cert server", 0},
 #ifdef WIN32
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: c:\\sipCerts)", 0},
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates", 0},
 #else
-      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates (default: ~/.sipCerts)", 0},
+      {"cert-path",        'c',  POPT_ARG_STRING| POPT_ARGFLAG_SHOW_DEFAULT, &certPath,       0, "path to certificates", 0},
 #endif
 #endif
       {"enable-v6",         0,   POPT_ARG_NONE,                              &enableV6,       0, "enable IPV6", 0},
@@ -120,22 +120,22 @@ CommandLineParser::CommandLineParser(int argc, char** argv)
       {"domains",         'd',   POPT_ARG_STRING,                            &domains,        0, "specify domains that this proxy is authorative", "example.com,foo.com"},
       {"route",           'R',   POPT_ARG_STRING,                            &routeSet,       0, "specify where to route requests that are in this proxy's domain", "sip:p1.example.com,sip:p2.example.com"},
       {"reqChainName",      0,   POPT_ARG_STRING,                            &reqChainName,   0, "name of request chain (default: default)", 0},
-      {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", "5080"},
+      {"http",              0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &httpPort,       0, "run HTTP server on specified port", 0},
       {"http-hostname",     0,   POPT_ARG_STRING,                            &httpHostname,   0, "http hostname for this server (used in Identity headers)", 0},
       {"recursive-redirect",0,   POPT_ARG_NONE,                              &recursiveRedirect, 0, "Handle 3xx responses in the proxy", 0},
       {"q-value",           0,   POPT_ARG_NONE,                              &doQValue,       0, "Enable sequential q-value processing", 0},
-      {"q-value-behavior",  0,   POPT_ARG_STRING,                            &forkBehavior,   0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
+      {"q-value-behavior",  0,   POPT_ARG_STRING | POPT_ARGFLAG_SHOW_DEFAULT,                            &forkBehavior,   0, "Specify forking behavior for q-value targets: FULL_SEQUENTIAL, EQUAL_Q_PARALLEL, or FULL_PARALLEL", 0},
       {"q-value-cancel-btw-fork-groups",0,POPT_ARG_NONE,                     &cancelBetweenForkGroups, 0, "Whether to cancel groups of parallel forks after the period specified by the --q-value-ms-before-cancel parameter.", 0},
       {"q-value-wait-for-terminate-btw-fork-groups",0,POPT_ARG_NONE,         &waitForTerminate, 0, "Whether to wait for parallel fork groups to terminate before starting new fork-groups.", 0},
-      {"q-value-ms-between-fork-groups",0,POPT_ARG_INT,                      &msBetweenForkGroups, 0, "msec to wait before starting new groups of parallel forks", 0},
-      {"q-value-ms-before-cancel",0,   POPT_ARG_INT,                         &msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
+      {"q-value-ms-between-fork-groups",0,POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                      &msBetweenForkGroups, 0, "msec to wait before starting new groups of parallel forks", 0},
+      {"q-value-ms-before-cancel",0,   POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                         &msBeforeCancel, 0, "msec to wait before cancelling parallel fork groups", 0},
       {"enum-suffix",     'e',   POPT_ARG_STRING,                            &enumSuffix,     0, "specify enum suffix to search", "e164.arpa"},
       {"allow-bad-reg",   'b',   POPT_ARG_NONE,                              &allowBadReg,    0, "allow To tag in registrations", 0},
       {"parallel-fork-static-routes",'p',POPT_ARG_NONE,                      &parallelForkStaticRoutes, 0, "paralled fork to all matching static routes and (first batch) registrations", 0},
-      {"timer-C",         0,     POPT_ARG_INT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", "180"},
-      {"admin-password",  'a',   POPT_ARG_STRING,                            &adminPassword,  0, "set web administrator password", ""},
+      {"timer-C",         0,     POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,                               &timerC,         0, "specify length of timer C in sec (0 or negative will disable timer C)", 0},
+      {"admin-password",  'a',   POPT_ARG_STRING  | POPT_ARGFLAG_SHOW_DEFAULT,                            &adminPassword,  0, "set web administrator password", 0},
       {"disable-outbound",0,     POPT_ARG_NONE,                              &outboundDisabled,0, "disable outbound support (draft-ietf-sip-outbound)", 0},
-      {"outbound-version",0,     POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion, 0, "set the version of outbound to support", "11"},
+      {"outbound-version",0,     POPT_ARG_INT | POPT_ARGFLAG_SHOW_DEFAULT,   &outboundVersion, 0, "set the version of outbound to support", 0},
       {"enable-flow-tokens",0,   POPT_ARG_NONE,                              &rrTokenHackEnabled,0, "enable use of flow-tokens in non-outbound cases (This is a workaround, and it is broken. Only use it if you have to.)", 0},
       {"version",         'V',   POPT_ARG_NONE,                              &showVersion,     0, "show the version number and exit", 0},
       POPT_AUTOHELP 
