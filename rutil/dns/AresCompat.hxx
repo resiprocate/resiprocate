@@ -5,6 +5,13 @@
 #  include "ares_dns.h"
 #  include "ares_version.h"
 
+#ifdef ARES_VERSION_MAJOR
+// c-ares
+#if ARES_VERSION_MAJOR < 1 || ARES_VERSION_MINOR < 6
+#error Need c-ares >= 1.6
+#endif
+#endif
+
 #endif
 
 /* ====================================================================
