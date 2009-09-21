@@ -148,8 +148,7 @@ typedef unsigned int   UInt32;
 // .bwc. This is the only place we check for USE_IPV6 in a header file. This 
 // code has no effect if USE_IPV6 is not set, so this should only kick in when
 // we're building the resip libs. If someone sets USE_IPV6 while building
-// against the resip libs, no resip header file will care, but if the platform
-// doesn't support IPv6, we will undef USE_IPV6.
+// against the resip libs, no resip header file will care. 
 #ifdef USE_IPV6
 #ifndef IPPROTO_IPV6
 #if(_WIN32_WINNT >= 0x0501)   // Some versions of the windows SDK define IPPROTO_IPV6 differently - always enable IP v6 if USE_IPV6 and _WIN32_WINNT >= 0x0501
@@ -163,7 +162,8 @@ typedef unsigned int   UInt32;
 #else
 #warning IPv6 support requested, but IPPROTO_IPV6 undefined; this platform does not appear to support IPv6
 #endif
-#undef USE_IPV6
+// .bwc. Don't do this; someone might have defined it for their own code.
+// #undef USE_IPV6
 #endif
 #endif
 #endif
