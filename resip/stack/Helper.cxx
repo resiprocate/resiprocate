@@ -519,6 +519,8 @@ Helper::getResponseCodeReason(int responseCode, Data& reason)
       case 421: reason = "Extension Required"; break;
       case 422: reason = "Session Interval Too Small"; break;
       case 423: reason = "Interval Too Brief"; break;
+      case 430: reason = "Flow failed"; break;
+      case 439: reason = "First Hop Lacks Outbound Support"; break;
       case 480: reason = "Temporarily Unavailable"; break;
       case 481: reason = "Call/Transaction Does Not Exist"; break;
       case 482: reason = "Loop Detected"; break;
