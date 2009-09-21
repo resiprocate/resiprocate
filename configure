@@ -415,6 +415,7 @@ $uname = `uname`;
     description => "Which DNS resolution library do you want to use?",
     default     => 'resip-ares',
     validate    => [@resolvers],
+    recalc      => ['ARES_PREFIX','CARES_INCLUDEDIRS','CARES_LIBDIRS'],
     option      => 'with-resolver',
   },
   {
@@ -428,14 +429,16 @@ $uname = `uname`;
   {
     name        => "CARES_INCLUDEDIRS",
     description => "If using c-ares, the directory containing its headers.",
-    default     => "",
+    default     => "&findCaresIncludes",
+    evaldefault => 1,
     option      => "cares-headers",
     predicate   => "\$config{DNS_RESOLVER} eq 'c-ares'",
   },
   {
     name        => "CARES_LIBDIRS",
     description => "If using c-ares, the directory containing its libraries.",
-    default     => "",
+    default     => "&findCaresLibs",
+    evaldefault => 1,
     option      => "cares-libs",
     predicate   => "\$config{DNS_RESOLVER} eq 'c-ares'",
   },
@@ -1345,6 +1348,62 @@ sub findDb4
   foreach $candidate (@candidates)
   {
     if (-e "${candidate}/db_cxx.h")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
+}
+
+sub findCaresIncludes
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/include";
+  }
+
+  my (@candidates) = 
+  (
+    '/usr/include',
+    '/opt/local/include',
+    '/include',
+    '/usr/local/include',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/ares.h")
+    {
+      return $candidate;
+    }
+  }
+
+  $candidates[0];
+}
+
+sub findCaresLibs
+{
+  if ($config{VOCAL_TOOLCHAIN_TYPE} =~ /cross/)
+  {
+    my ($crossPath) = $config{VOCAL_CROSS_ROOT} =~ m|(.*)/bin|;
+    return "$crossPath/lib";
+  }
+
+  my (@candidates) = 
+  (
+    '/usr/lib',
+    '/opt/local/lib',
+    '/lib',
+    '/usr/local/lib',
+  );
+  my ($candidate);
+
+  foreach $candidate (@candidates)
+  {
+    if (-e "${candidate}/libcares.a")
     {
       return $candidate;
     }
