@@ -11,6 +11,7 @@
 
 #include "rutil/compat.hxx"
 #include "rutil/Data.hxx"
+#include "rutil/DnsUtil.hxx"
 #include "rutil/Fifo.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
@@ -189,6 +190,24 @@ SipStack::addTransport(std::auto_ptr<Transport> transport)
    {
       addAlias(transport->interfaceName(), transport->port());
    }
+   else
+   {
+      // Using INADDR_ANY, get all IP interfaces
+      std::list<std::pair<Data, Data> > ipIfs(DnsUtil::getInterfaces());
+      if(transport->ipVersion()==V4)
+      {
+         ipIfs.push_back(std::make_pair<Data,Data>("lo0","127.0.0.1"));
+      }
+      while(!ipIfs.empty())
+      {
+         if(DnsUtil::isIpV4Address(ipIfs.back().second)==
+                                             (transport->ipVersion()==V4))
+         {
+            addAlias(ipIfs.back().second, transport->port());
+         }
+         ipIfs.pop_back();
+      }
+   }
    mPorts.insert(transport->port());
    mTransactionController.transportSelector().addTransport(transport);
 }
@@ -269,7 +288,6 @@ SipStack::getHostAddress()
       
    return ret;
 }
-
 
 bool 
 SipStack::isMyDomain(const Data& domain, int port) const
