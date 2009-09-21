@@ -5556,7 +5556,7 @@ class TestHolder : public Fixture
       (
          derek->message(proxy->makeUrl("9spiral").uri(),"Ping"),
          derek->expect(MESSAGE/407,from(proxy),WaitForResponse,derek->digestRespond()),
-         david->expect(MESSAGE, from(proxy),WaitForCommand,david->ok()),
+         david->expect(MESSAGE, from(proxy),2*WaitForCommand,david->ok()),
          derek->expect(MESSAGE/200,from(proxy),WaitForResponse, derek->noAction()),
          WaitForEndOfTest
       );
