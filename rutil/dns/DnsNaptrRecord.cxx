@@ -95,7 +95,7 @@ DnsNaptrRecord::RegExp::apply(const Data& input) const
 DnsNaptrRecord::DnsNaptrRecord(const RROverlay& overlay)
 {
    char* name = 0;
-   ares_length_type len = 0;
+   long len = 0;
    if (ARES_SUCCESS != ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
    {
       throw NaptrException("Failed parse of NAPTR record", __FILE__, __LINE__);

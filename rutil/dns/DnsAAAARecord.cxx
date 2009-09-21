@@ -8,6 +8,9 @@
 #ifndef RRFIXEDSZ
 #define RRFIXEDSZ 10
 #endif
+#ifndef NS_RRFIXEDSZ
+#define NS_RRFIXEDSZ 10
+#endif
 #endif
 
 #include <stdlib.h>
@@ -26,7 +29,7 @@ DnsAAAARecord::DnsAAAARecord(const RROverlay& overlay)
 {
 #ifdef USE_IPV6
    char* name = 0;
-   ares_length_type len = 0;
+   long len = 0;
    ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len);
    mName = name;
    free(name);

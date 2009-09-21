@@ -232,7 +232,7 @@ DnsStub::skipDNSQuestion(const unsigned char *aptr,
 {
    char *name=0;
    int status=0;
-   ares_length_type len = 0;
+   long len = 0;
    
    // Parse the question name. 
    status = ares_expand_name(aptr, abuf, alen, &name, &len);
@@ -289,7 +289,7 @@ DnsStub::createOverlay(const unsigned char* abuf,
 {
    const unsigned char* rptr = aptr;
    char* name = 0;
-   ares_length_type len = 0;
+   long len = 0;
    
    int status = ares_expand_name(aptr, abuf, alen, &name, &len);
    if (ARES_SUCCESS != status)
@@ -597,7 +597,7 @@ DnsStub::Query::followCname(const unsigned char* aptr, const unsigned char*abuf,
    bDeleteThis = true;
 
    char* name = 0;
-   ares_length_type len = 0;
+   long len = 0;
 
    if (ARES_SUCCESS != ares_expand_name(aptr, abuf, alen, &name, &len))
    {

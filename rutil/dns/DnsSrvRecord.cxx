@@ -26,7 +26,7 @@ using namespace resip;
 DnsSrvRecord::DnsSrvRecord(const RROverlay& overlay)
 {
    char* name = 0;
-   ares_length_type len = 0;
+   long len = 0;
    if (ARES_SUCCESS != ares_expand_name(overlay.data()-overlay.nameLength()-RRFIXEDSZ, overlay.msg(), overlay.msgLength(), &name, &len))
    {
       throw SrvException("Failed parse of SRV record", __FILE__, __LINE__);

@@ -1,50 +1,9 @@
 #if !defined(RESIP_ARES_COMPAT_HXX)
 #define RESIP_ARES_COMPAT_HXX
 
-// This header hides some of the differences between contrib/ares and c-ares
-//
-// GOTCHA: This must only be included from .cxx files.  Ideally, it would only
-// be included from .cxx files inside this directory, but there is some
-// leakage at the moment :(
-
-#if defined(USE_ARES)
 #  include "ares.h"
 #  include "ares_dns.h"
-#  include "ares_private.h"
-#elif defined(USE_CARES)
-#  include "ares.h"
 #  include "ares_version.h"
-#else
-#  error Must have ARES or C-ARES
-#endif
-
-// These are not part of the c-ares API, but are used by this library
-#if !defined(DNS__16BIT)
-#  define DNS__16BIT(p)             (((p)[0] << 8) | (p)[1])   
-#  define DNS__32BIT(p)		    (((p)[0] << 24) | ((p)[1] << 16) | \
-				      ((p)[2] << 8) | (p)[3])
-#  define DNS_HEADER_QDCOUNT(h)     DNS__16BIT((h) + 4)
-#  define DNS_HEADER_ANCOUNT(h)     DNS__16BIT((h) + 6)
-#  define DNS_HEADER_NSCOUNT(h)     DNS__16BIT((h) + 8)
-#  define DNS_HEADER_ARCOUNT(h)     DNS__16BIT((h) + 10)
-#  define DNS_RR_TYPE(r)            DNS__16BIT(r)
-#  define DNS_RR_LEN(r)             DNS__16BIT((r) + 8)
-#  define DNS_RR_TTL(r)             DNS__32BIT((r) + 4)
-#endif
-
-namespace resip
-{
-  // To avoid #ifdefs on every call to ares_expand_name() and so on, we define
-  // the type that is used to return lengths from that function.  This can be
-  // int or long.
-#if defined(USE_ARES)
-  typedef int ares_length_type;
-#endif
-
-#if defined(USE_CARES)
-  typedef long ares_length_type;
-#endif
-}
 
 #endif
 

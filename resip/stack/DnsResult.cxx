@@ -666,7 +666,7 @@ DnsResult::skipDNSQuestion(const unsigned char *aptr,
 {
    char *name=0;
    int status=0;
-   ares_length_type len=0;
+   long len=0;
    
    // Parse the question name. 
    status = ares_expand_name(aptr, abuf, alen, &name, &len);

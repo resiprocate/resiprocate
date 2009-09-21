@@ -39,7 +39,7 @@ RROverlay::RROverlay(const unsigned char *aptr,
    mType(-1)
 {
    char *name;
-   ares_length_type len = 0;
+   long len = 0;
 
    // Parse the RR name. 
    int status = ares_expand_name(aptr, abuf, alen, &name, &len);
