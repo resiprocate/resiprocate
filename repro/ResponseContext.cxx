@@ -572,7 +572,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             request.method() == SUBSCRIBE ) &&
            !mRequestContext.mProxy.getRecordRoute().uri().host().empty())  // only add record route if configured to do so
       {
-         insertRecordRoute(request,target);
+         insertRecordRoute(request,
+                           orig.getReceivedTransport()->getTuple(),
+                           target);
       }
       else if(request.method()==REGISTER)
       {
@@ -582,7 +584,20 @@ ResponseContext::beginClientTransaction(repro::Target* target)
             && !request.empty(h_Contacts)
             && request.header(h_Contacts).front().exists(p_regid))
          {
-            resip::NameAddr rt(mRequestContext.mProxy.getRecordRoute());
+            resip::NameAddr rt;
+            if(orig.getReceivedTransport()->transport()==resip::TLS ||
+               orig.getReceivedTransport()->transport()==resip::DTLS )
+            {
+               // Use FQDN
+               rt = mRequestContext.mProxy.getRecordRoute();
+               rt.uri().scheme() = "sips";
+            }
+            else
+            {
+               rt.uri().host()=orig.getReceivedTransport()->interfaceName();
+               rt.uri().port()=orig.getReceivedTransport()->port();
+               rt.uri().param(resip::p_transport)=resip::Tuple::toData(orig.getReceivedTransport()->transport());
+            }
             resip::Helper::massageRoute(request,rt);
             resip::Data binaryFlowToken;
             Tuple::writeBinaryToken(orig.getSource(),binaryFlowToken);
@@ -642,7 +657,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
 }
 
 void
-ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,Target* target)
+ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,
+                                    const Tuple& receivedTransport,
+                                    Target* target)
 {
    resip::Data inboundFlowToken=getInboundFlowToken();
    bool needsOutboundFlowToken=outboundFlowTokenNeeded(target);
@@ -653,14 +670,35 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,Target* target)
       || needsOutboundFlowToken 
       || mRequestContext.mProxy.getRecordRouteEnabled() )
    {
-      resip::NameAddr rt=mRequestContext.mProxy.getRecordRoute();
+      resip::NameAddr rt;
+      if(inboundFlowToken.empty())
+      {
+         rt=mRequestContext.mProxy.getRecordRoute();
+      }
+      else
+      {
+         if(receivedTransport.getType()==TLS || 
+            receivedTransport.getType()==DTLS)
+         {
+            // .bwc. Debatable. Should we be willing to reuse a TLS connection
+            // at the behest of a Route header with no hostname in it?
+            rt=mRequestContext.mProxy.getRecordRoute();
+            rt.uri().scheme() = "sips";
+         }
+         else
+         {
+            rt.uri().host()=resip::Tuple::inet_ntop(receivedTransport);
+            rt.uri().port()=receivedTransport.getPort();
+            rt.uri().param(resip::p_transport)=resip::Tuple::toData(receivedTransport.getType());
+         }
+         rt.uri().user()=inboundFlowToken;
+      }
       Helper::massageRoute(outgoing,rt);
-      rt.uri().user()=inboundFlowToken;
 
 #ifdef USE_SIGCOMP
       if(mRequestContext.getProxy().compressionEnabled() &&
-         request.header(h_Vias).front().exists(p_comp) &&
-         request.header(h_Vias).front().param(p_comp)=="sigcomp")
+         target->uri().exists(p_comp) &&
+         target->uri().param(p_comp)=="sigcomp")
       {
          rt.uri().param(p_comp)="sigcomp";
       }
@@ -670,15 +708,12 @@ ResponseContext::insertRecordRoute(resip::SipMessage& outgoing,Target* target)
       InfoLog (<< "Added Record-Route: " << rt);
    }
 
-   // .bwc. We only double record-route if we are putting in a flow-token, and 
-   // we are not sending to ourself.
+   // .bwc. We only double record-route if we are putting in a flow-token.
    // (if we are configured to always record-route, we will have already record-
    // routed once above, no sense in putting a second, identical RR in.)
    // !bwc! TODO some logic or config to allow double record-routing in other
    // circumstances (on transport switch, for instance)
-   if(!sendingToSelf(target) 
-      && (  !inboundFlowToken.empty() 
-            || needsOutboundFlowToken) )
+   if(!inboundFlowToken.empty() || needsOutboundFlowToken)
    {
       outgoing.addOutboundDecorator(mRequestContext.mProxy.makeRRDecorator());
    }
@@ -726,22 +761,13 @@ ResponseContext::outboundFlowTokenNeeded(Target* target)
       // .bwc. We don't need to put flow-tokens pointed at ourselves.
       return false;
    }
-   
-   if(InteropHelper::getOutboundSupported() 
-      && target->rec().mRegId != 0)
+
+   if(target->rec().mReceivedFrom.onlyUseExistingConnection
+      || resip::InteropHelper::getRRTokenHackEnabled())
    {
       return true;
    }
-   else if(resip::InteropHelper::getRRTokenHackEnabled())
-   {
-      // !bwc! TODO remove this when flow-token hack is no longer needed.
-      // Poor-man's outbound. Shouldn't be our default behavior, because it
-      // breaks target-refreshes (once a flow-token is in the Route-Set, the 
-      // flow-token cannot be changed, and will override any update to the 
-      // Contact)
-      return true;
-   }
-   
+
    return false;
 }
 

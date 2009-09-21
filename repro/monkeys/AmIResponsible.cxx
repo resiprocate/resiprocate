@@ -33,6 +33,17 @@ AmIResponsible::process(RequestContext& context)
    assert (!request.exists(h_Routes) || 
            request.header(h_Routes).empty());
   
+   // Topmost route had a flow-token; this is our problem
+   if(!context.getTopRoute().uri().user().empty())
+   {
+      std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
+      // !bwc! Move to encrypted tokens with some salt
+      target->rec().mReceivedFrom = Tuple::makeTuple(context.getTopRoute().uri().user().base64decode());
+      target->rec().mReceivedFrom.onlyUseExistingConnection=true;
+      context.getResponseContext().addTarget(target);
+      return SkipThisChain;
+   }
+
    // this if is just to be safe
    if (!request.exists(h_Routes) || 
        request.header(h_Routes).empty())
@@ -105,10 +116,6 @@ AmIResponsible::process(RequestContext& context)
          }*/
          
          std::auto_ptr<Target> target(new Target(request.header(h_RequestLine).uri()));
-         if(!context.getTopRoute().uri().user().empty())
-         {
-            target->rec().mReceivedFrom = Tuple::makeTuple(context.getTopRoute().uri().user().base64decode());
-         }
          context.getResponseContext().addTarget(target);
 
          InfoLog (<< "Sending to requri: " << request.header(h_RequestLine).uri());

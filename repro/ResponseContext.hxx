@@ -255,7 +255,9 @@ class ResponseContext
       //There is no terminateClientTransaction(Target target) since terminating
       //a branch is very simple. The guts can be found in the API functions.
       
-      void insertRecordRoute(resip::SipMessage& outgoing,Target* target);
+      void insertRecordRoute(resip::SipMessage& outgoing,
+                              const resip::Tuple& receivedTransport,
+                              Target* target);
       resip::Data getInboundFlowToken();
       bool outboundFlowTokenNeeded(Target* target);
       bool selfAlreadyRecordRouted();
