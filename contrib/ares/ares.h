@@ -32,6 +32,19 @@
 #endif
 
 
+#if !defined(DNS__16BIT)
+#  define DNS__16BIT(p)             (((p)[0] << 8) | (p)[1])   
+#  define DNS__32BIT(p)		    (((p)[0] << 24) | ((p)[1] << 16) | \
+				      ((p)[2] << 8) | (p)[3])
+#  define DNS_HEADER_QDCOUNT(h)     DNS__16BIT((h) + 4)
+#  define DNS_HEADER_ANCOUNT(h)     DNS__16BIT((h) + 6)
+#  define DNS_HEADER_NSCOUNT(h)     DNS__16BIT((h) + 8)
+#  define DNS_HEADER_ARCOUNT(h)     DNS__16BIT((h) + 10)
+#  define DNS_RR_TYPE(r)            DNS__16BIT(r)
+#  define DNS_RR_LEN(r)             DNS__16BIT((r) + 8)
+#  define DNS_RR_TTL(r)             DNS__32BIT((r) + 4)
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -174,7 +187,7 @@ extern 	void ares_process(ares_channel channel, fd_set *read_fds, fd_set *write_
 extern 	int ares_mkquery(const char *name, int dnsclass, int type, unsigned short id,
 			int rd, unsigned char **buf, int *buflen);
 extern 	int ares_expand_name(const unsigned char *encoded, const unsigned char *abuf,
-				int alen, char **s, int *enclen);
+				int alen, char **s, long *enclen);
 extern 	int ares_parse_a_reply(const unsigned char *abuf, int alen,
 				struct hostent **host);
 extern 	int ares_parse_ptr_reply(const unsigned char *abuf, int alen, const void *addr,

@@ -210,7 +210,7 @@ int RRCache::getTTL(const RROverlay& overlay)
    // overlay is a soa answer.
    if (overlay.type() != T_SOA) return -1;
    char* name = 0;
-   ares_length_type len = 0;
+   long len = 0;
    ares_expand_name(overlay.data(), overlay.msg(), overlay.msgLength(), &name, &len);
    const unsigned char* pPos = overlay.data() + len;
    free(name);

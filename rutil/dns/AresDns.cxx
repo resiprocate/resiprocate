@@ -6,6 +6,9 @@
 #include "rutil/GenericIPAddress.hxx"
 
 #include "AresCompat.hxx"
+#if !defined(USE_CARES)
+#include "ares_private.h"
+#endif
 
 #include "rutil/Logger.hxx"
 #include "rutil/DnsUtil.hxx"
