@@ -18,7 +18,7 @@ libares_a_SOURCES = \
 
 libares_adir = ares
 libares_a_HEADERS =\
-	ares.h ares_compat.h ares_dns.h ares_local.h
+	ares.h ares_compat.h ares_dns.h ares_local.h ares_version.h
 
 noinst_HEADERS = ares_private.h
 man3_MANS = \
