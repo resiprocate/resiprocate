@@ -489,6 +489,16 @@ JabberComponent::getMostAvailableIChatUserFullJIDList(const gloox::JID& jid, std
 }
 
 void 
+JabberComponent::notifyIChatCallRequest(const std::string& to, const std::string& from)
+{
+   IPCMsg msg;
+   msg.addArg("notifyIChatCallRequest");
+   msg.addArg(to.c_str());
+   msg.addArg(from.c_str());
+   mIPCThread.sendIPCMsg(msg);
+}
+
+void 
 JabberComponent::notifyIChatCallProceeding(unsigned int handle, const std::string& to)
 {
    IPCMsg msg;
