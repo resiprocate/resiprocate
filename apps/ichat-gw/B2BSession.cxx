@@ -203,6 +203,17 @@ B2BSession::createNewPeer(const Uri& destinationUri, const NameAddr& from, const
    {
       mAnchorMedia = true;
       mPeer->mAnchorMedia = true;
+
+      // Check if sdp used to create new peer is locally generated - if so, don't allocate a new media relay, use the existing one
+      if(sdp && sdp->session().origin().user() == SDP_ICHATGW_ORIGIN_USER)
+      {
+         if(sdp->session().media().size() >= 1 && sdp->session().media().front().port() != 0)
+         {
+            mMediaRelayPort = sdp->session().media().front().port();
+            InfoLog(B2BLOG_PREFIX << "B2BSession::createNewPeer: Detected looped back session - sharing media relay (port=" << mMediaRelayPort << ") with originator.");
+         }
+      }
+
       // Replace passed in remote SDP with local SDP
       if(!buildLocalOffer(localOffer))
       {
@@ -247,7 +258,7 @@ B2BSession::notifyIChatCallProceeding(const std::string& to)
          ServerInviteSession* sis = dynamic_cast<ServerInviteSession*>(mPeer->mInviteSessionHandle.get());
          if(sis && !sis->isAccepted())
          {
-            sis->provisional(183);
+            sis->provisional(180);
          }
       }
    }
@@ -279,7 +290,7 @@ B2BSession::continueIChatCall(const std::string& remoteIPPortListBlob)
    IChatIPPortData remoteIPPortList(remoteIPPortListBlob);
 
    // Take first ipv4 or ipv6 entry - for ipv4 it appears to be a STUN mapped address
-   bool skipFirst = false;  // Note (for testing): skipping the first IPV4 NAT mapped address (on systems with one interface) causes the local address to be used
+   bool skipFirst = mServer.mSkipFirstIChatAddress;  // Note (for testing): skipping the first IPV4 NAT mapped address (on systems with one interface) causes the local address to be used
    bool findTilda = false;  // Note (for testing): Not too sure what the ~ addresses are - they could be media relay servers - you cannot just send RTP to them, so there must be some additional protocol to allocate a relay
    bool v4found = false;
    IChatIPPortData::IPPortDataList::const_iterator it = remoteIPPortList.getIPPortDataList().begin();
@@ -426,7 +437,7 @@ B2BSession::buildLocalOffer(SdpContents& offer)
 
    // Note:  The outbound decorator will take care of filling in the correct IP address before the message is sent 
    //        to the wire.
-   SdpContents::Session::Origin origin("iChat-gw", currentTime /* sessionId */, currentTime /* version */, SdpContents::IP4, "0.0.0.0");   // o=   
+   SdpContents::Session::Origin origin(SDP_ICHATGW_ORIGIN_USER, currentTime /* sessionId */, currentTime /* version */, SdpContents::IP4, "0.0.0.0");   // o=   
    SdpContents::Session session(0, origin, "-" /* s= */);
    session.connection() = SdpContents::Session::Connection(SdpContents::IP4, "0.0.0.0");  // c=
    session.addTime(SdpContents::Session::Time(0, 0));

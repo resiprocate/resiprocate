@@ -50,7 +50,7 @@ public:
    {
       SdpContents* sdp = dynamic_cast<SdpContents*>(msg.getContents());
       if(sdp && sdp->session().media().size() > 0 &&
-         sdp->session().origin().user() == "iChat-gw")
+         sdp->session().origin().user() == SDP_ICHATGW_ORIGIN_USER)
       {
          // Fill in IP and Port from source (if required)
          if(sdp->session().connection().getAddress() == Data("0.0.0.0"))

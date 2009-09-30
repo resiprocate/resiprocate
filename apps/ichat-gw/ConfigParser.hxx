@@ -17,11 +17,6 @@ public:
    ConfigParser(int argc, char** argv);
    virtual ~ConfigParser();
    
-   void parseCommandLine(int argc, char** argv);
-   void parseConfigFile(const resip::Data& filename);
-   bool processOption(const resip::Data& name, const resip::Data& value);
-   bool assignNameAddr(const resip::Data& settingName, const resip::Data& settingValue, resip::NameAddr& nameAddr);
-
    resip::Data mAddress;
    resip::DnsStub::NameserverList mDnsServers;
    resip::NameAddr mGatewayIdentity;
@@ -43,6 +38,7 @@ public:
    unsigned int mIChatProceedingTimeout;
    bool mAlwaysRelayIChatMedia;
    bool mPreferIPv6;
+   bool mSkipFirstIChatAddress; // (for testing): skipping the first IPV4 NAT mapped address (on systems with one interface) causes the local address to be used
    typedef std::set<unsigned short> CodecIdList;
    CodecIdList mCodecIdFilterList;
    unsigned short mMediaRelayPortRangeMin;
@@ -50,13 +46,20 @@ public:
    typedef std::list<std::pair<resip::Data,resip::Data> > TranslationList;
    TranslationList mAddressTranslations;
 
-   // Jabber specific settings - need to be moved to new executable
+   // Jabber specific settings
    resip::Data mJabberServer;
    resip::Data mJabberComponentName;
    resip::Data mJabberComponentPassword;
    unsigned short mJabberComponentPort;
    unsigned int mJabberServerPingDuration;
    resip::Data mJabberControlUsername;
+
+private:
+   void parseCommandLine(int argc, char** argv);
+   void parseConfigFile(const resip::Data& filename);
+   bool processOption(const resip::Data& name, const resip::Data& value);
+   bool assignNameAddr(const resip::Data& settingName, const resip::Data& settingValue, resip::NameAddr& nameAddr);
+   bool assignOnOffSetting(const resip::Data& value, bool& setting);
 };
  
 }

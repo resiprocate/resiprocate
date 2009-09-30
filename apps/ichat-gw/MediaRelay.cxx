@@ -289,7 +289,7 @@ MediaRelay::checkKeepalives(MediaRelayPort* relayPort)
       (now - relayPort->mFirstEndpoint.mRecvTimeMs) > STALEENDPOINTTIMEOUTMS)
    {
       relayPort->mFirstEndpoint.reset();
-      InfoLog(<< "MediaRelay::checkKeepalives - haven't recevied data from first endpoint in " << STALEENDPOINTTIMEOUTMS << "ms - reseting endpoint.");
+      InfoLog(<< "MediaRelay::checkKeepalives: port=" << relayPort->mLocalV4Tuple.getPort() << ", haven't recevied data from first endpoint in " << STALEENDPOINTTIMEOUTMS << "ms - reseting endpoint.");
    }
 
    // See if Second Endpoint is stale (ie. hasn't received data in STALEENDPOINTTIMEOUTMS ms)
@@ -297,7 +297,7 @@ MediaRelay::checkKeepalives(MediaRelayPort* relayPort)
       (now - relayPort->mSecondEndpoint.mRecvTimeMs) > STALEENDPOINTTIMEOUTMS)
    {
       relayPort->mSecondEndpoint.reset();
-      InfoLog(<< "MediaRelay::checkKeepalives - haven't recevied data from second endpoint in " << STALEENDPOINTTIMEOUTMS << "ms - reseting endpoint.");
+      InfoLog(<< "MediaRelay::checkKeepalives: port=" << relayPort->mLocalV4Tuple.getPort() << ", haven't recevied data from second endpoint in " << STALEENDPOINTTIMEOUTMS << "ms - reseting endpoint.");
    }
 
    //if(relayPort->mFirstEndpoint.mTuple.getPort() != 0)
@@ -321,12 +321,12 @@ MediaRelay::checkKeepalives(MediaRelayPort* relayPort)
 
       if(!relayPort->mFirstEndpoint.mKeepaliveMode)
       {
-         InfoLog(<< "MediaRelay::checkKeepalives - dispatching initial RTP keepalive to first sender!"); 
+         InfoLog(<< "MediaRelay::checkKeepalives: port=" << relayPort->mLocalV4Tuple.getPort() << ", dispatching initial RTP keepalive to first sender!"); 
          relayPort->mFirstEndpoint.mKeepaliveMode = true;
       }
       //else
       //{
-      //   InfoLog(<< "MediaRelay::checkKeepalives - dispatching subsequent RTP keepalive to first sender!"); 
+      //   InfoLog(<< "MediaRelay::checkKeepalives: port=" << relayPort->mLocalV4Tuple.getPort() << ", dispatching subsequent RTP keepalive to first sender!"); 
       //}
 
       // Add message to buffer
@@ -351,12 +351,12 @@ MediaRelay::checkKeepalives(MediaRelayPort* relayPort)
 
       if(!relayPort->mSecondEndpoint.mKeepaliveMode)
       {
-         InfoLog(<< "MediaRelay::checkKeepalives - dispatching initial RTP keepalive to second sender!"); 
+         InfoLog(<< "MediaRelay::checkKeepalives: port=" << relayPort->mLocalV4Tuple.getPort() << ", dispatching initial RTP keepalive to second sender!"); 
          relayPort->mSecondEndpoint.mKeepaliveMode = true;
       }
       //else
       //{
-      //   InfoLog(<< "MediaRelay::checkKeepalives - dispatching subsequent RTP keepalive to second sender!"); 
+      //   InfoLog(<< "MediaRelay::checkKeepalives: port=" << relayPort->mLocalV4Tuple.getPort() << ", dispatching subsequent RTP keepalive to second sender!"); 
       //}
 
       // Add message to buffer
@@ -426,7 +426,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
       if ( count == SOCKET_ERROR )
       {
          int e = getErrno();
-         InfoLog (<< "MediaRelay::processWrites - Failed (" << e << ") sending to " << tuple);
+         InfoLog (<< "MediaRelay::processWrites: port=" << relayPort->mLocalV4Tuple.getPort() << ", Failed (" << e << ") sending to " << tuple);
       }
       else
       {
@@ -470,7 +470,7 @@ MediaRelay::processWrites(FdSet& fdset, MediaRelayPort* relayPort)
       if ( count == SOCKET_ERROR )
       {
          int e = getErrno();
-         InfoLog (<< "MediaRelay::processWrites - Failed (" << e << ") sending to " << tuple);
+         InfoLog (<< "MediaRelay::processWrites: port=" << relayPort->mLocalV4Tuple.getPort() << ", Failed (" << e << ") sending to " << tuple);
       }
       else
       {
@@ -518,20 +518,20 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
          int err = getErrno();
          if ( err != EWOULDBLOCK  )
          {
-            ErrLog (<< "MediaRelay::processReads - Error calling recvfrom: " << err);
+            ErrLog (<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", Error calling recvfrom: " << err);
          }
          buffer.reset();
       }
 
       if (len == 0)
       {
-         ErrLog (<< "MediaRelay::processReads - No data calling recvfrom: len=" << len);
+         ErrLog (<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", No data calling recvfrom: len=" << len);
          buffer.reset();
       }
 
       if (len+1 >= UDP_BUFFER_SIZE)
       {
-         InfoLog(<<"MediaRelay::processReads - Datagram exceeded max length "<<UDP_BUFFER_SIZE);
+         InfoLog(<<"MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", Datagram exceeded max length "<<UDP_BUFFER_SIZE);
          buffer.reset();
       }
 
@@ -560,20 +560,20 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
             // See if we can store this new sender in First Endpoint
             if(relayPort->mFirstEndpoint.mTuple.getPort() == 0)
             {
-               InfoLog(<< "MediaRelay::processReads - First packet received from First Endpoint " << tuple);
+               InfoLog(<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", First packet received from First Endpoint " << tuple);
                pReceivingEndpoint = &relayPort->mFirstEndpoint;
                pSendingEndpoint = &relayPort->mSecondEndpoint;
             }
             else if(relayPort->mSecondEndpoint.mTuple.getPort() == 0)
             {
-               InfoLog(<< "MediaRelay::processReads - First packet received from Second Endpoint " << tuple);
+               InfoLog(<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", First packet received from Second Endpoint " << tuple);
                pReceivingEndpoint = &relayPort->mSecondEndpoint;
                pSendingEndpoint = &relayPort->mFirstEndpoint;
             }
             else  // We already have 2 endpoints - this would be a third
             {
                // We have a third sender - for now drop, if one of the other senders stops sending data for 2 seconds then we will start picking up this sender
-               WarningLog(<< "MediaRelay::processReads - MediaRelay on " << relayPort->mLocalV4Tuple.getPort() << " has seen a third sender " << tuple << " - not implemented yet - ignoring packet");
+               WarningLog(<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", MediaRelay on " << relayPort->mLocalV4Tuple.getPort() << " has seen a third sender " << tuple << " - not implemented yet - ignoring packet");
             }
             if(pReceivingEndpoint)
             {
@@ -599,7 +599,7 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
                   pSendingEndpoint->mRelayDatagramLen = len;
                   if(pSendingEndpoint->mKeepaliveMode)
                   {
-                     InfoLog(<< "MediaRelay::processReads - received packet to forward, turning off keepalive mode for " << pSendingEndpoint->mTuple);
+                     InfoLog(<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", received packet to forward, turning off keepalive mode for " << pSendingEndpoint->mTuple);
                      pSendingEndpoint->mKeepaliveMode = false;
                   }
 
@@ -607,7 +607,7 @@ MediaRelay::processReads(FdSet& fdset, MediaRelayPort* relayPort)
                }
                //else
                //{
-               //   InfoLog(<< "MediaRelay::processReads - discarding received packet with unknown RTP version from " << tuple);
+               //   InfoLog(<< "MediaRelay::processReads: port=" << relayPort->mLocalV4Tuple.getPort() << ", discarding received packet with unknown RTP version from " << tuple);
                //}
             }
          }

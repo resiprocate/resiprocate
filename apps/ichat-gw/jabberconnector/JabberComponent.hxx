@@ -73,15 +73,23 @@ public:
    void stop();
    void disconnect();
 
+   // UAC
    void initiateIChatCall(const std::string& to, const std::string& from, unsigned int handle, bool alertOneOnly=true);
    void cancelIChatCall(const std::string& to, const std::string& from);
+      
+   // UAS
+   void acceptIChatCall(const std::string& to, const std::string& from);  // TODO
+   void rejectIChatCall(const std::string& to, const std::string& from);  // TODO - figure out how to reject a call???
 
+private:
    void probePresence(const std::string& to);
    void sendPresenceForRequest(gloox::Stanza* stanza);
    void sendPresence(const std::string& to, const std::string& from, bool advertiseIChatSupport, bool available);
    void sendSubscriptionResponse(const std::string& to, const std::string& from, bool success);
 
    // Interfaces to send IPC messages
+   friend class IChatUser;
+   void notifyIChatCallRequest(const std::string& to, const std::string& from);  // TODO
    void notifyIChatCallProceeding(unsigned int handle, const std::string& to);
    void notifyIChatCallFailed(unsigned int handle, unsigned int statusCode);
    void continueIChatCall(unsigned int, const std::string& remoteIPPortListBlob);
@@ -104,7 +112,6 @@ public:
    virtual gloox::StringMap handleDiscoNodeIdentities(const std::string& node, std::string& name);
    virtual gloox::DiscoNodeItemList handleDiscoNodeItems(const std::string& node);
 
-private:
    virtual void thread();
    typedef std::map<std::string, IChatCallRequest> IChatCallRequestMap;
    friend class IChatCallRequest;

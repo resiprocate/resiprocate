@@ -34,6 +34,8 @@
    #define sleepMs(t) usleep(t*1000)
 #endif
 
+#define SDP_ICHATGW_ORIGIN_USER "iChat-gw"
+
 namespace gateway
 {
 

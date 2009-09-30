@@ -40,6 +40,7 @@ ConfigParser::ConfigParser(int argc, char** argv) :
    mIChatProceedingTimeout(5000),
    mAlwaysRelayIChatMedia(true),
    mPreferIPv6(false),
+   mSkipFirstIChatAddress(false),
    mMediaRelayPortRangeMin(8000),
    mMediaRelayPortRangeMax(9999),
    mJabberComponentPort(5275),
@@ -158,6 +159,22 @@ ConfigParser::parseConfigFile(const Data& filename)
 }
 
 bool 
+ConfigParser::assignOnOffSetting(const Data& value, bool& setting)
+{
+   if(value == "1" || value == "true" || value == "on" || value == "enable")
+   {
+      setting = true;
+      return true;
+   }
+   else if(value == "0" || value == "false" || value == "off" || value == "disable")
+   {
+      setting = false;
+      return true;
+   }
+   return false;
+}
+
+bool 
 ConfigParser::processOption(const Data& name, const Data& value)
 {   
    bool result = true;
@@ -211,14 +228,7 @@ ConfigParser::processOption(const Data& name, const Data& value)
    }
    else if(name == "keepalives")
    {
-      if(value == "1" || value == "true" || value == "on" || value == "enable")
-      {
-         mKeepAlives = true;
-      }
-      else if(value == "0" || value == "false" || value == "off" || value == "disable")
-      {
-         mKeepAlives = false;
-      }
+      assignOnOffSetting(value, mKeepAlives);
    }
    else if(name == "op" || name == "outboundproxy")
    {
@@ -258,14 +268,7 @@ ConfigParser::processOption(const Data& name, const Data& value)
    }
    else if(name == "httpauth")
    {
-      if(value == "1" || value == "true" || value == "on" || value == "enable")
-      {
-         mHttpAuth = true;
-      }
-      else if(value == "0" || value == "false" || value == "off" || value == "disable")
-      {
-         mHttpAuth = false;
-      }
+      assignOnOffSetting(value, mHttpAuth);
    }
    else if(name == "httpauthpwd")
    {
@@ -277,26 +280,16 @@ ConfigParser::processOption(const Data& name, const Data& value)
    }
    else if(name == "alwaysrelayichatmedia")
    {
-      if(value == "1" || value == "true" || value == "on" || value == "enable")
-      {
-         mAlwaysRelayIChatMedia = true;
-      }
-      else if(value == "0" || value == "false" || value == "off" || value == "disable")
-      {
-         mAlwaysRelayIChatMedia = false;
-      }
+      assignOnOffSetting(value, mAlwaysRelayIChatMedia);
    }
    else if(name == "preferipv6")
    {
-      if(value == "1" || value == "true" || value == "on" || value == "enable")
-      {
-         mPreferIPv6 = true;
-      }
-      else if(value == "0" || value == "false" || value == "off" || value == "disable")
-      {
-         mPreferIPv6 = false;
-      }
+      assignOnOffSetting(value, mPreferIPv6);
    }
+   else if(name == "skipfirstichataddress")
+   {
+      assignOnOffSetting(value, mSkipFirstIChatAddress);
+   }   
    else if(name == "codecidfilterlist")
    {
       ParseBuffer pb(value);
