@@ -18,6 +18,42 @@ namespace gateway
 
   Author: Scott Godin (sgodin AT SipSpectrum DOT com)
 */
+
+class NotifyIChatCallRequestCmd : public resip::DumCommand
+{
+   public:  
+      NotifyIChatCallRequestCmd(Server& server, const std::string& to, const std::string& from)                       
+         : mServer(server), mTo(to), mFrom(from) {}
+      virtual void executeCommand()
+      {
+         mServer.notifyIChatCallRequestImpl(mTo, mFrom);
+      }
+      resip::Message* clone() const { assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " NotifyIChatCallRequestCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      Server& mServer;
+      std::string mTo;
+      std::string mFrom;
+};
+
+class NotifyIChatCallCancelledCmd : public resip::DumCommand
+{
+   public:  
+      NotifyIChatCallCancelledCmd(Server& server, const B2BSessionHandle& handle)
+         : mServer(server), mHandle(handle) {}
+      virtual void executeCommand()
+      {
+         mServer.notifyIChatCallCancelledImpl(mHandle);
+      }
+      resip::Message* clone() const { assert(0); return 0; }
+      EncodeStream& encode(EncodeStream& strm) const { strm << " NotifyIChatCallCancelledCmd: "; return strm; }
+      EncodeStream& encodeBrief(EncodeStream& strm) const { return encode(strm); }
+   private:
+      Server& mServer;
+      B2BSessionHandle mHandle;
+};
+
 class NotifyIChatCallProceedingCmd : public resip::DumCommand
 {
    public:  

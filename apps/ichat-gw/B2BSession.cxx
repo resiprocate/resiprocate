@@ -32,9 +32,10 @@ using namespace std;
 namespace gateway 
 {
 
-B2BSession::B2BSession(Server& server) : 
+B2BSession::B2BSession(Server& server, bool hasDialogSet) : 
    AppDialogSet(server.getDialogUsageManager()), 
    mServer(server), 
+   mHasDialogSet(hasDialogSet),
    mDum(server.getDialogUsageManager()),
    mPeer(0),
    mUACConnectedDialogId(Data::Empty, Data::Empty, Data::Empty),
@@ -44,6 +45,7 @@ B2BSession::B2BSession(Server& server) :
    mAnchorMedia(false),
    mMediaRelayPort(0),
    mIChatEndpoint(false),
+   mIChatWaitingToAccept(false),
    mIChatWaitingToProceed(false),
    mIChatWaitingToContinue(false),
    mIChatSdp(0)
@@ -60,6 +62,24 @@ B2BSession::~B2BSession()
    }
    if(mIChatSdp) delete mIChatSdp;
    mServer.unregisterB2BSession(mHandle);
+}
+
+void 
+B2BSession::end()
+{
+   if(mIChatWaitingToAccept)
+   {
+      rejectIChatCall();
+   }
+
+   if (mHasDialogSet)
+   {
+      AppDialogSet::end();
+   }
+   else
+   {
+      delete this;
+   }
 }
 
 void 
@@ -119,6 +139,43 @@ class IChatCallTimeout : public resip::DumCommand
 };
 
 void 
+B2BSession::initiateIChatCallRequest(const std::string& to, const std::string& from)
+{
+   // Notify jabber connector we are proceeding and what our session handle is
+   mIChatCallToJID = to;
+   mIChatCallFromJID = from;
+   mIChatEndpoint = true;
+   mIChatWaitingToAccept = true;
+   proceedingIChatCall();
+
+   bool result=false;
+   try
+   {
+      Uri to(Data("xmpp:") + to.c_str());
+      try
+      {
+         NameAddr from(Data("sip:") + from.c_str());
+         from.displayName() = from.uri().user();
+         result = createNewPeer(to, from, 0);
+      }
+      catch(resip::BaseException& e)
+      {
+         ErrLog(B2BLOG_PREFIX << "Error creating NameAddr from Jabber from header=" << from << ", error=" << e);
+      }
+   }
+   catch(resip::BaseException& e)
+   {
+      ErrLog(B2BLOG_PREFIX << "Error extracting Uri from Jabber To header=" << to << ", error=" << e);
+   }
+
+   if(!result)
+   {
+      rejectIChatCall();
+      end();
+   }
+}
+
+void 
 B2BSession::startIChatCall(const Uri& destinationUri, const NameAddr& from, const SdpContents *sdp)
 {
    assert(destinationUri.scheme() == "xmpp");
@@ -168,6 +225,25 @@ B2BSession::startSIPCall(const Uri& destinationUri, const NameAddr& from, const 
 }
 
 bool 
+B2BSession::checkIChatCallMatch(const resip::SipMessage& msg)
+{
+   if(!mHasDialogSet && !mIChatWaitingToAccept) 
+   {
+      // Check if URI matches
+      // If we are an iChat endpoint then real To uri is actually in the display name of the To header 
+      InfoLog(B2BLOG_PREFIX << "B2BSession::checkIChatCallMatch: checking to: " << msg.header(h_To).displayName() << " = " << mIChatCallToJID);
+      InfoLog(B2BLOG_PREFIX << "B2BSession::checkIChatCallMatch: checking from: " << msg.header(h_From).displayName() << " = " << mIChatCallFromJID);
+      if(msg.header(h_To).displayName() == Data(mIChatCallToJID.c_str()) &&
+         msg.header(h_From).displayName() == Data(mIChatCallFromJID.c_str()))
+      {
+         mHasDialogSet = true; // If we match, we are going to get a dialog set associated with us
+         return true;
+      }
+   }
+   return false;
+}
+
+bool 
 B2BSession::createNewPeer(const Uri& destinationUri, const NameAddr& from, const SdpContents *sdp)
 {
    const SdpContents *pSdp = sdp;
@@ -199,7 +275,7 @@ B2BSession::createNewPeer(const Uri& destinationUri, const NameAddr& from, const
 
    // Check if media needs to be anchored 
    SdpContents localOffer;
-   if((mServer.mAlwaysRelayIChatMedia && mIChatEndpoint) || destination.scheme() == "xmpp")
+   if((mServer.mAlwaysRelayIChatMedia && mIChatEndpoint) || destination.scheme() == "xmpp" || !sdp)
    {
       mAnchorMedia = true;
       mPeer->mAnchorMedia = true;
@@ -242,6 +318,14 @@ B2BSession::createNewPeer(const Uri& destinationUri, const NameAddr& from, const
    }
 
    return true;
+}
+
+void 
+B2BSession::notifyIChatCallCancelled()
+{
+   InfoLog(B2BLOG_PREFIX << "notifyIChatCallCancelled");
+   mIChatWaitingToAccept = false;
+   end();
 }
 
 void 
@@ -335,7 +419,7 @@ B2BSession::continueIChatCall(const std::string& remoteIPPortListBlob)
    {
       // We didn't find an applicable address
       InfoLog(B2BLOG_PREFIX << "B2BSession::continueIChatCall: no appropriate address found in remoteIPPortList.");
-      notifyIChatCallFailed(404);
+      notifyIChatCallFailed(603);  // Decline
       return;
    }
 
@@ -378,6 +462,7 @@ B2BSession::continueIChatCall(const std::string& remoteIPPortListBlob)
    {
       ErrLog(B2BLOG_PREFIX << "continueIChatCall: Invalid NameAddr format=" << uriData << ": " << e);
       notifyIChatCallFailed(500);
+      return;
    }
 }
 
@@ -390,6 +475,7 @@ B2BSession::timeoutIChatCall()
       cancelIChatCall();
 
       notifyIChatCallFailed(408);
+      return;
    }
 }
 
@@ -412,6 +498,41 @@ B2BSession::cancelIChatCall()
    msg.addArg(mIChatCallToJID.c_str());
    msg.addArg(mIChatCallFromJID.c_str());
    mServer.mIPCThread->sendIPCMsg(msg);
+}
+
+void 
+B2BSession::proceedingIChatCall()
+{
+   IPCMsg msg;
+   msg.addArg("proceedingIChatCall");
+   msg.addArg(mIChatCallToJID.c_str());
+   msg.addArg(mIChatCallFromJID.c_str());
+   msg.addArg(mHandle);
+   mServer.mIPCThread->sendIPCMsg(msg);
+}
+
+void 
+B2BSession::acceptIChatCall()
+{
+   IPCMsg msg;
+   msg.addArg("acceptIChatCall");
+   msg.addArg(mIChatCallToJID.c_str());
+   msg.addArg(mIChatCallFromJID.c_str());
+   mServer.mIPCThread->sendIPCMsg(msg);
+
+   mIChatWaitingToAccept = false;
+}
+
+void 
+B2BSession::rejectIChatCall()
+{
+   IPCMsg msg;
+   msg.addArg("rejectIChatCall");
+   msg.addArg(mIChatCallToJID.c_str());
+   msg.addArg(mIChatCallFromJID.c_str());
+   mServer.mIPCThread->sendIPCMsg(msg);
+
+   mIChatWaitingToAccept = false;
 }
 
 bool 
@@ -982,6 +1103,14 @@ B2BSession::onAnswer(InviteSessionHandle h, const SipMessage& msg, const SdpCont
          if(sis && !sis->isAccepted())
          { 
             sis->accept();
+         }
+      }
+      else
+      {
+         if(!mPeer->mHasDialogSet && mPeer->mIChatWaitingToAccept)
+         {
+            // We are in a call setup phase for iChat -> SIP - peer is just an empty dialogset
+            mPeer->acceptIChatCall();
          }
       }
    }

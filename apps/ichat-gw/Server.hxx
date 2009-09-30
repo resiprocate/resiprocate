@@ -111,6 +111,21 @@ public:
    static void setLogLevel(resip::Log::Level level, LoggingSubsystem subsystem=SubsystemAll);
 
    /**
+     Called by Jabber side of gateway to notify SIP side of iChat call request.
+
+     @param to Bare JID of endpoint we are proceeding to ring
+     @param from Full JID of endpoint requesting the call
+   */
+   void notifyIChatCallRequest(const std::string& to, const std::string& from);
+
+   /**
+     Called by Jabber side of gateway to notify SIP side of cancelled iChat call request.
+
+     @param handle Handle of the B2BSession object for the call
+   */
+   void notifyIChatCallCancelled(const B2BSessionHandle& handle);
+
+   /**
      Called by Jabber side of gateway to notify B2BSession that iChat call is proceeding.
      This call will cause a timeout timer to be deactiviated.
 
@@ -164,6 +179,8 @@ public:
       @param from - JID of subscriber
    */
    void checkSubscription(const std::string& to, const std::string& from);
+
+   B2BSession* findMatchingIChatB2BSession(const resip::SipMessage& msg);
 
 protected:
    resip::SharedPtr<resip::MasterProfile>& getMasterProfile() { return mProfile; }
@@ -257,6 +274,10 @@ private:
    void post(resip::ApplicationMessage& message, unsigned int ms=0);
    void shutdownImpl(); 
 
+   friend class NotifyIChatCallRequestCmd;
+   void notifyIChatCallRequestImpl(const std::string& to, const std::string& from);
+   friend class NotifyIChatCallCancelledCmd;
+   void notifyIChatCallCancelledImpl(const B2BSessionHandle& handle);
    friend class NotifyIChatCallProceedingCmd;
    void notifyIChatCallProceedingImpl(const B2BSessionHandle& handle, const std::string& to);
    friend class NotifyIChatCallFailedCmd;
