@@ -202,8 +202,19 @@ B2BSession::processReferNotify(const SipMessage& notify)
       }
    }
 
+   // If subscription is terminated, due to timeout and we don't have a final response in the SipFrag - treat as error
+   if(notify.exists(h_SubscriptionState) && 
+      isEqualNoCase(notify.header(h_SubscriptionState).value(), Symbols::Terminated) &&
+      notify.header(h_SubscriptionState).exists(p_reason) &&
+      isEqualNoCase(notify.header(h_SubscriptionState).param(p_reason), getTerminateReasonString(Timeout)) &&
+      code < 200)
+   {
+      // failure
+      transitionClickToCallState(ReferToDestinationFailed, 408);
+      end();
+   }
    // Check if success or failure response code was in SipFrag
-   if(code >= 180 && code < 200)
+   else if(code >= 180 && code < 200)
    {
       // proceeding
       transitionClickToCallState(ReferToDestinationProceeding);
