@@ -538,12 +538,15 @@ Server::shutdownImpl()
    // End each B2BSession - keep track of last session handle to ended since ending a session may end up removing 1 or 2 items from the map
    B2BSessionHandle lastSessionHandleEnded=0;
    B2BSessionMap::iterator it = mB2BSessions.begin();
-   while(it != mB2BSessions.end())
+   bool sessionEnded = true;
+   while(it != mB2BSessions.end() && sessionEnded)
    {
+      sessionEnded=false;
       for(; it != mB2BSessions.end(); it++)
       {
          if(it->second->getB2BSessionHandle() > lastSessionHandleEnded)
          {
+            sessionEnded=true;
             InfoLog(<< "Destroying B2BSession: " << it->second->getB2BSessionHandle());
             lastSessionHandleEnded = it->second->getB2BSessionHandle();
             it->second->end();
