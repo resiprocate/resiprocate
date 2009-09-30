@@ -32,19 +32,24 @@ class IChatUser;
 class IChatCallRequest
 {
 public:
-   IChatCallRequest() : mJabberComponent(0), mB2BSessionHandle(0) {}
+   IChatCallRequest() : mJabberComponent(0), mB2BSessionHandle(0), mCancelled(false) {}
    IChatCallRequest(JabberComponent* jabberComponent, const std::string& to, const std::string& from, unsigned int handle) :
-      mJabberComponent(jabberComponent), mTo(to), mFrom(from), mB2BSessionHandle(handle) {}
+      mJabberComponent(jabberComponent), mTo(to), mFrom(from), mB2BSessionHandle(handle), mCancelled(false) {}
 
+   // Client Methods
    void sendIChatVCRequest(const std::string& fullTo);
    void sendIChatVCCancelToAll();
    void receivedIChatVCResponse(const std::string& from);
+
+   // Server Methods
+   void sendIChatVCResponse(bool accept);
 
    JabberComponent* mJabberComponent;
 
    std::string mTo;
    std::string mFrom;
    unsigned int mB2BSessionHandle;
+   bool mCancelled;
    std::set<std::string> mPendingVCRequestSet;
 };
 
@@ -73,13 +78,14 @@ public:
    void stop();
    void disconnect();
 
-   // UAC
+   // Client Methods
    void initiateIChatCall(const std::string& to, const std::string& from, unsigned int handle, bool alertOneOnly=true);
    void cancelIChatCall(const std::string& to, const std::string& from);
       
-   // UAS
-   void acceptIChatCall(const std::string& to, const std::string& from);  // TODO
-   void rejectIChatCall(const std::string& to, const std::string& from);  // TODO - figure out how to reject a call???
+   // Server Methods
+   void proceedingIChatCall(const std::string& to, const std::string& from, unsigned int handle);
+   void acceptIChatCall(const std::string& to, const std::string& from);  
+   void rejectIChatCall(const std::string& to, const std::string& from);  
 
 private:
    void probePresence(const std::string& to);
@@ -89,7 +95,8 @@ private:
 
    // Interfaces to send IPC messages
    friend class IChatUser;
-   void notifyIChatCallRequest(const std::string& to, const std::string& from);  // TODO
+   void notifyIChatCallRequest(const std::string& to, const std::string& from);  
+   void notifyIChatCallCancelled(unsigned int handle); 
    void notifyIChatCallProceeding(unsigned int handle, const std::string& to);
    void notifyIChatCallFailed(unsigned int handle, unsigned int statusCode);
    void continueIChatCall(unsigned int, const std::string& remoteIPPortListBlob);
@@ -113,11 +120,6 @@ private:
    virtual gloox::DiscoNodeItemList handleDiscoNodeItems(const std::string& node);
 
    virtual void thread();
-   typedef std::map<std::string, IChatCallRequest> IChatCallRequestMap;
-   friend class IChatCallRequest;
-
-   std::string makeVCRequestKey(const std::string& bareTo, const std::string& fullFrom);
-   IChatCallRequestMap::iterator findOutstandingIChatCallRequest(const std::string& bareTo, const std::string& fullFrom);
 
    gloox::Component* mComponent;
    bool mStopping;
@@ -125,8 +127,21 @@ private:
    std::string mControlJID;
    std::string mLocalIChatPortListBlob;
 
-   IChatCallRequestMap mOutstandingIChatCallRequests;
-   gloox::Mutex mOutstandingIChatCallRequestsMutex;
+   // Outstanding IChat call request maps
+   typedef std::map<std::string, IChatCallRequest> IChatCallRequestMap;
+   friend class IChatCallRequest;
+   std::string makeVCRequestKey(const std::string& bareTo, const std::string& bareFrom);
+
+   IChatCallRequestMap mOutstandingClientIChatCallRequests;
+   gloox::Mutex mOutstandingClientIChatCallRequestsMutex;
+   IChatCallRequestMap::iterator findOutstandingClientIChatCallRequest(const std::string& bareTo, const std::string& bareFrom);
+   void failOutstandingClientIChatCallRequest(const std::string& bareTo, const std::string& bareFrom, unsigned int code);
+   void failOutstandingClientIChatCallRequest(const std::string& bareTo, unsigned int code);
+
+   IChatCallRequestMap mOutstandingServerIChatCallRequests;
+   gloox::Mutex mOutstandingServerIChatCallRequestsMutex;
+   IChatCallRequestMap::iterator findOutstandingServerIChatCallRequest(const std::string& bareTo, const std::string& bareFrom);
+   void cancelOutstandingServerIChatCallRequest(const std::string& bareTo, const std::string& bareFrom);
 
    gloox::Mutex mIChatUserMutex;
    typedef std::map<std::string, IChatUser*> IChatUserMap;

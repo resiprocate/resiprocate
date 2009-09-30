@@ -19,8 +19,10 @@ typedef unsigned int B2BSessionHandle;
 class B2BSession : public resip::AppDialogSet
 {
 public:
-   B2BSession(Server& server);
+   B2BSession(Server& server, bool hasDialogSet=true);
    virtual ~B2BSession();
+
+   virtual void end();
 
    void setPeer(B2BSession* peer);
    B2BSession* getPeer();
@@ -28,11 +30,14 @@ public:
 
    B2BSessionHandle getB2BSessionHandle() const { return mHandle; }
 
+   void initiateIChatCallRequest(const std::string& to, const std::string& from);
    bool createNewPeer(const resip::Uri& destinationUri, const resip::NameAddr& from, const resip::SdpContents *sdp);
    void startIChatCall(const resip::Uri& destinationUri, const resip::NameAddr& from, const resip::SdpContents *sdp);
    void startSIPCall(const resip::Uri& destinationUri, const resip::NameAddr& from, const resip::SdpContents *sdp);
+   bool checkIChatCallMatch(const resip::SipMessage& msg);
 
    // iChat call notifications from Jabber Component
+   void notifyIChatCallCancelled();
    void notifyIChatCallProceeding(const std::string& to);
    void notifyIChatCallFailed(unsigned int statusCode);
    void continueIChatCall(const std::string& remoteIPPortListBlob);
@@ -41,6 +46,9 @@ public:
    // IPC messages for Jabber Component
    void initiateIChatCall();
    void cancelIChatCall();
+   void proceedingIChatCall();
+   void acceptIChatCall();
+   void rejectIChatCall();
 
 protected:
    friend class Server;
@@ -100,6 +108,7 @@ private:
    unsigned int mapRejectionCodeForIChat(unsigned int statusCode);
 
    Server& mServer;
+   bool mHasDialogSet;
    resip::DialogUsageManager& mDum;
    B2BSession* mPeer;
    resip::InviteSessionHandle mInviteSessionHandle;
@@ -116,6 +125,7 @@ private:
 
    // IChat specific endpoint info
    bool mIChatEndpoint;
+   bool mIChatWaitingToAccept;
    bool mIChatWaitingToProceed;
    bool mIChatWaitingToContinue;
    resip::Uri mIChatDestination;

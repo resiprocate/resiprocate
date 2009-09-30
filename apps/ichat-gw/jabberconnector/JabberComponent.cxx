@@ -78,6 +78,31 @@ IChatCallRequest::sendIChatVCCancelToAll()
    mPendingVCRequestSet.clear();
 }
 
+void 
+IChatCallRequest::sendIChatVCResponse(bool accept)
+{
+   Tag *iq = new Tag( "iq" );
+   iq->addAttribute( "type", "set" );
+   iq->addAttribute( "id", mJabberComponent->mComponent->getID() );
+   iq->addAttribute( "to", mFrom );
+   iq->addAttribute( "from", mTo );
+   Tag *query = new Tag( iq, "query" );
+   query->addAttribute( "xmlns", "apple:iq:vc:response");
+   if(accept)
+   {
+     new Tag( query, "response", "0" );
+     new Tag( query, "connectData", mJabberComponent->mLocalIChatPortListBlob);
+   }
+   else
+   {
+     new Tag( query, "response", "1" );
+     new Tag( query, "connectData", "");
+   }
+   //new Tag( query, "responseData", "1" );  // doesn't appear to be required
+   new Tag( query, "VCProtocolVersion", "1" );
+   mJabberComponent->mComponent->send(iq);
+}
+
 class IPCMutexGloox : public IPCMutex
 {
 public:
@@ -209,12 +234,11 @@ void
 JabberComponent::initiateIChatCall(const std::string& to, const std::string& from, unsigned int handle, bool alertOneOnly)
 {
    JID jid(to);
-
-   mOutstandingIChatCallRequestsMutex.lock();
+   mOutstandingClientIChatCallRequestsMutex.lock();
 
    // Add call request data to map
    std::string key = makeVCRequestKey(jid.bare(),from);
-   mOutstandingIChatCallRequests[key] = IChatCallRequest(this, to, from, handle);
+   IChatCallRequest* iChatCallRequest = &(mOutstandingClientIChatCallRequests[key] = IChatCallRequest(this, to, from, handle));
    handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::initiateiChatCall - key=" + key);
 
    // If there is no resource, then we need to query the bare JID and find iChat resources
@@ -228,7 +252,7 @@ JabberComponent::initiateIChatCall(const std::string& to, const std::string& fro
          if(getMostAvailableIChatUserFullJID(jid, fullJID))  
          {
             found = true;
-            mOutstandingIChatCallRequests[key].sendIChatVCRequest(fullJID);
+            iChatCallRequest->sendIChatVCRequest(fullJID);
          }
       }
       else
@@ -240,7 +264,7 @@ JabberComponent::initiateIChatCall(const std::string& to, const std::string& fro
             std::list<std::string>::iterator it = fullJIDList.begin();
             for(;it!=fullJIDList.end();it++)
             {
-               mOutstandingIChatCallRequests[key].sendIChatVCRequest(*it);
+               iChatCallRequest->sendIChatVCRequest(*it);
             }
          }
       }
@@ -257,35 +281,85 @@ JabberComponent::initiateIChatCall(const std::string& to, const std::string& fro
    }
    else // We have full JID - send the vc-request directly to the resource
    {
-      mOutstandingIChatCallRequests[key].sendIChatVCRequest(to);
+      iChatCallRequest->sendIChatVCRequest(to);
    }
-   mOutstandingIChatCallRequestsMutex.unlock();
+   mOutstandingClientIChatCallRequestsMutex.unlock();
 }
 
 void 
 JabberComponent::cancelIChatCall(const std::string& to, const std::string& from)
 {
    JID jid(to);
-   mOutstandingIChatCallRequestsMutex.lock();
+   mOutstandingClientIChatCallRequestsMutex.lock();
 
-   IChatCallRequestMap::iterator it = findOutstandingIChatCallRequest(jid.bare(), from);
-   if(it != mOutstandingIChatCallRequests.end())
+   IChatCallRequestMap::iterator it = findOutstandingClientIChatCallRequest(jid.bare(), from);
+   if(it != mOutstandingClientIChatCallRequests.end())
    {
       it->second.sendIChatVCCancelToAll();
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::cancelIChatCall - success");
-      mOutstandingIChatCallRequests.erase(it);
+      mOutstandingClientIChatCallRequests.erase(it);
    }
    else
    {
       handleLog(gloox::LogLevelWarning, gloox::LogAreaUser, "JabberComponent::cancelIChatCall - not found");
    }
-   mOutstandingIChatCallRequestsMutex.unlock();
+   mOutstandingClientIChatCallRequestsMutex.unlock();
+}
+
+void 
+JabberComponent::proceedingIChatCall(const std::string& to, const std::string& from, unsigned int handle)
+{
+   mOutstandingServerIChatCallRequestsMutex.lock();
+   IChatCallRequestMap::iterator it = findOutstandingServerIChatCallRequest(to, from);
+   if(it!=mOutstandingServerIChatCallRequests.end())
+   {
+      // Store session handle for notifications to SIP layer
+      assert(it->second.mB2BSessionHandle == 0);
+      std::ostringstream oss;
+      oss << "JabberComponent::proceedingIChatCall - set handle to " << handle;
+      handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, oss.str());
+      it->second.mB2BSessionHandle = handle;
+
+      // If already cancelled, then notify SIP layer now
+      if(it->second.mCancelled)
+      {
+         notifyIChatCallCancelled(it->second.mB2BSessionHandle); 
+         mOutstandingServerIChatCallRequests.erase(it);
+      }
+   }    
+   mOutstandingServerIChatCallRequestsMutex.unlock();
+}
+
+void 
+JabberComponent::acceptIChatCall(const std::string& to, const std::string& from)
+{
+   mOutstandingServerIChatCallRequestsMutex.lock();
+   IChatCallRequestMap::iterator it = findOutstandingServerIChatCallRequest(to, from);
+   if(it!=mOutstandingServerIChatCallRequests.end())
+   {
+      it->second.sendIChatVCResponse(true);
+      mOutstandingServerIChatCallRequests.erase(it);
+   }    
+   mOutstandingServerIChatCallRequestsMutex.unlock();
+}
+
+void 
+JabberComponent::rejectIChatCall(const std::string& to, const std::string& from)
+{
+   mOutstandingServerIChatCallRequestsMutex.lock();
+   IChatCallRequestMap::iterator it = findOutstandingServerIChatCallRequest(to, from);
+   if(it!=mOutstandingServerIChatCallRequests.end())
+   {
+      it->second.sendIChatVCResponse(false);
+      mOutstandingServerIChatCallRequests.erase(it);
+   }    
+   mOutstandingServerIChatCallRequestsMutex.unlock();
 }
 
 std::string 
-JabberComponent::makeVCRequestKey(const std::string& bareTo, const std::string& fullFrom)
+JabberComponent::makeVCRequestKey(const std::string& bareTo, const std::string& bareFrom)
 {
-   std::string key = bareTo + fullFrom;
+   std::string key = bareTo + "|" + bareFrom;
 #ifdef WIN32
    std::transform(key.begin(), key.end(), key.begin(), tolower);
 #else
@@ -295,11 +369,76 @@ JabberComponent::makeVCRequestKey(const std::string& bareTo, const std::string& 
 }
 
 JabberComponent::IChatCallRequestMap::iterator
-JabberComponent::findOutstandingIChatCallRequest(const std::string& bareTo, const std::string& fullFrom)
+JabberComponent::findOutstandingClientIChatCallRequest(const std::string& bareTo, const std::string& bareFrom)
 {
-   std::string key = makeVCRequestKey(bareTo, fullFrom);
-   handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::findOutstandingIChatCallRequest - key=" + key);
-   return mOutstandingIChatCallRequests.find(key);
+   std::string key = makeVCRequestKey(bareTo, bareFrom);
+   handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::findOutstandingClientIChatCallRequest - key=" + key);
+   return mOutstandingClientIChatCallRequests.find(key);
+}
+
+void
+JabberComponent::failOutstandingClientIChatCallRequest(const std::string& bareTo, const std::string& bareFrom, unsigned int code)
+{
+   mOutstandingClientIChatCallRequestsMutex.lock();
+   IChatCallRequestMap::iterator it = findOutstandingClientIChatCallRequest(bareTo, bareFrom);
+   if(it!=mOutstandingClientIChatCallRequests.end())
+   {
+      notifyIChatCallFailed(it->second.mB2BSessionHandle, code); 
+      mOutstandingClientIChatCallRequests.erase(it);
+   }    
+   mOutstandingClientIChatCallRequestsMutex.unlock();
+}
+
+void
+JabberComponent::failOutstandingClientIChatCallRequest(const std::string& bareTo, unsigned int code)
+{
+   mOutstandingClientIChatCallRequestsMutex.lock();
+   IChatCallRequestMap::iterator it = mOutstandingClientIChatCallRequests.begin();
+   while(it != mOutstandingClientIChatCallRequests.end())
+   {
+      if(it->second.mTo == bareTo)
+      {
+         notifyIChatCallFailed(it->second.mB2BSessionHandle, code);   
+         mOutstandingClientIChatCallRequests.erase(it++);
+      }
+      else
+      {
+         it++;
+      }
+   }
+   mOutstandingClientIChatCallRequestsMutex.unlock();
+}
+
+JabberComponent::IChatCallRequestMap::iterator
+JabberComponent::findOutstandingServerIChatCallRequest(const std::string& bareTo, const std::string& bareFrom)
+{
+   std::string key = makeVCRequestKey(bareTo, bareFrom);
+   handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::findOutstandingServerIChatCallRequest - key=" + key);
+   return mOutstandingServerIChatCallRequests.find(key);
+}
+
+void 
+JabberComponent::cancelOutstandingServerIChatCallRequest(const std::string& bareTo, const std::string& bareFrom)
+{
+   mOutstandingServerIChatCallRequestsMutex.lock();
+   IChatCallRequestMap::iterator it = findOutstandingServerIChatCallRequest(bareTo, bareFrom);
+   if(it!=mOutstandingServerIChatCallRequests.end())
+   {
+      if(it->second.mB2BSessionHandle != 0)
+      {
+         handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::cancelOutstandingServerIChatCallRequest - to=" + bareTo + " from=" + bareFrom);
+         notifyIChatCallCancelled(it->second.mB2BSessionHandle); 
+         mOutstandingServerIChatCallRequests.erase(it);
+      }
+      else
+      {
+         // We don't have a session handle yet, so flag request as cancelled, 
+         // when session handle arrives, call notifyIChatCallCancelled and remove entry
+         it->second.mCancelled = true;  
+         handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::cancelOutstandingServerIChatCallRequest - no session handle yet, pending - to=" + bareTo + " from=" + bareFrom);
+      }
+   }    
+   mOutstandingServerIChatCallRequestsMutex.unlock();
 }
 
 void 
@@ -499,6 +638,15 @@ JabberComponent::notifyIChatCallRequest(const std::string& to, const std::string
 }
 
 void 
+JabberComponent::notifyIChatCallCancelled(unsigned int handle)
+{
+   IPCMsg msg;
+   msg.addArg("notifyIChatCallCancelled");
+   msg.addArg(handle);
+   mIPCThread.sendIPCMsg(msg);
+}
+
+void 
 JabberComponent::notifyIChatCallProceeding(unsigned int handle, const std::string& to)
 {
    IPCMsg msg;
@@ -572,6 +720,24 @@ JabberComponent::onNewIPCMsg(const IPCMsg& msg)
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - cancelIChatCall");
       assert(args.size() == 3);
       cancelIChatCall(args.at(1).c_str(), args.at(2).c_str());
+   }
+   else if(args.at(0) == "proceedingIChatCall")
+   {
+      handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - proceedingIChatCall");
+      assert(args.size() == 4);
+      proceedingIChatCall(args.at(1).c_str(), args.at(2).c_str(), atoi(args.at(3).c_str()));
+   }
+   else if(args.at(0) == "acceptIChatCall")
+   {
+      handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - acceptIChatCall");
+      assert(args.size() == 3);
+      acceptIChatCall(args.at(1).c_str(), args.at(2).c_str());
+   }
+   else if(args.at(0) == "rejectIChatCall")
+   {
+      handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::onNewIPCMsg - rejectIChatCall");
+      assert(args.size() == 3);
+      rejectIChatCall(args.at(1).c_str(), args.at(2).c_str());
    }
    else if(args.at(0) == "sendSubscriptionResponse")
    {
@@ -741,10 +907,10 @@ JabberComponent::handlePresence(Stanza *stanza)
          // Check if we have an outstanding iChat Call request
          if(avAvail)
          {
-            mOutstandingIChatCallRequestsMutex.lock();
-            IChatCallRequestMap::iterator it = mOutstandingIChatCallRequests.begin();
+            mOutstandingClientIChatCallRequestsMutex.lock();
+            IChatCallRequestMap::iterator it = mOutstandingClientIChatCallRequests.begin();
             bool callRequestFound = false;
-            while(it != mOutstandingIChatCallRequests.end())
+            while(it != mOutstandingClientIChatCallRequests.end())
             {
                if(it->second.mTo == stanza->from().bare())
                {
@@ -755,7 +921,7 @@ JabberComponent::handlePresence(Stanza *stanza)
                }
                it++;
             }
-            mOutstandingIChatCallRequestsMutex.unlock();
+            mOutstandingClientIChatCallRequestsMutex.unlock();
          }
       }
       break;
@@ -767,53 +933,26 @@ JabberComponent::handlePresence(Stanza *stanza)
       // Ensure we are tracking client
       storeIChatPresence(stanza->from(), stanza->presence(), stanza->priority(), avAvail);
 
-      {
-         // Check if we have an outstanding iChat Call request
-         mOutstandingIChatCallRequestsMutex.lock();
-         IChatCallRequestMap::iterator it = mOutstandingIChatCallRequests.begin();
-         while(it != mOutstandingIChatCallRequests.end())
-         {
-            if(it->second.mTo == stanza->from().bare())
-            {
-               notifyIChatCallFailed(it->second.mB2BSessionHandle, 404);   
-               mOutstandingIChatCallRequests.erase(it++);
-            }
-            else
-            {
-               it++;
-            }
-         }
-         mOutstandingIChatCallRequestsMutex.unlock();
-      }
+      // Check if we have an outstanding iChat Call request to fail
+      failOutstandingClientIChatCallRequest(stanza->from().bare(), 404);
       break;
 
    case StanzaPresenceError:
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::handlePresence - Error for " + stanza->from().full());
-      // Check if we have an outstanding iChat Call request
+
       {
-         mOutstandingIChatCallRequestsMutex.lock();
-         IChatCallRequestMap::iterator it = mOutstandingIChatCallRequests.begin();
-         while(it != mOutstandingIChatCallRequests.end())
+         unsigned int code = 0;
+         Tag *error = stanza->findChild( "error" );
+         if(error)
          {
-            if(it->second.mTo == stanza->from().bare())
-            {
-               unsigned int code = 0;
-               Tag *error = stanza->findChild( "error" );
-               if(error)
-               {
-                  code = atoi(error->findAttribute("code").c_str());
-               }
-               notifyIChatCallFailed(it->second.mB2BSessionHandle, code); 
-               mOutstandingIChatCallRequests.erase(it++);
-            }
-            else
-            {
-               it++;
-            }
+            code = atoi(error->findAttribute("code").c_str());
          }
-         mOutstandingIChatCallRequestsMutex.unlock();
+
+         // Check if we have an outstanding iChat Call request to fail
+         failOutstandingClientIChatCallRequest(stanza->from().bare(), code);
       }
       break;
+
    default:
       break;
    }
@@ -846,40 +985,34 @@ JabberComponent::handleIq(Stanza *stanza)
          if(vcNewCallerIPPortDataTag)
          {               
             std::ostringstream oss;
-            oss << "Jabber::handleIq - VCNewCallerIPPortData=" << vcNewCallerIPPortDataTag->cdata() << " size=" << vcNewCallerIPPortDataTag->cdata().size();
+            oss << "Jabber::handleIq: vc:request, VCNewCallerIPPortData=" << vcNewCallerIPPortDataTag->cdata() << " size=" << vcNewCallerIPPortDataTag->cdata().size();
             handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, oss.str());
          }
          Tag* extSIPPort = query->findChild("extSIPPort");
          if(extSIPPort)
          {
-            handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - extSIPPort=" + extSIPPort->cdata());
+            handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - apple:iq:vc:request extSIPPort=" + extSIPPort->cdata());
          }
          Tag* extIPAddr = query->findChild("extIPAddr");
          if(extIPAddr)
          {
-            handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - extIPAddr=" + extIPAddr->cdata());
+            handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - apple:iq:vc:request extIPAddr=" + extIPAddr->cdata());
          }
          Tag* vcProtocolVersion = query->findChild("VCProtocolVersion");
          if(vcProtocolVersion)
          {
-            handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - VCProtocolVersion=" + vcProtocolVersion->cdata());
+            handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - apple:iq:vc:request VCProtocolVersion=" + vcProtocolVersion->cdata());
          }
       }
-      // Build response
-      {
-         Tag *iq = new Tag( "iq" );
-         iq->addAttribute( "type", "set" );
-         iq->addAttribute( "id", mComponent->getID() );
-         iq->addAttribute( "to", stanza->from().full() );
-         iq->addAttribute( "from", stanza->to().full() );
-         Tag *query = new Tag( iq, "query" );
-         query->addAttribute( "xmlns", "apple:iq:vc:response");
-         new Tag( query, "response", "0" );
-         new Tag( query, "connectData", mLocalIChatPortListBlob);
-         //new Tag( query, "responseData", "1" );  // doesn't appear to be required
-         new Tag( query, "VCProtocolVersion", "1" );
-         mComponent->send(iq);
-      }
+
+      // Create entry in outstanding server requests map
+      std::string key = makeVCRequestKey(stanza->to().bare(),stanza->from().bare());
+      mOutstandingServerIChatCallRequestsMutex.lock();
+      IChatCallRequest* iChatCallRequest = &(mOutstandingServerIChatCallRequests[key] = IChatCallRequest(this, stanza->to().bare(), stanza->from().full(), 0));
+      mOutstandingServerIChatCallRequestsMutex.unlock();
+
+      // Pass request to SIP side
+      notifyIChatCallRequest(stanza->to().bare(), stanza->from().bare());
    }
    else if(stanza->subtype() == StanzaIqSet && stanza->xmlns() == "apple:iq:vc:counterProposal")
    {
@@ -902,7 +1035,7 @@ JabberComponent::handleIq(Stanza *stanza)
    else if(stanza->subtype() == StanzaIqSet && stanza->xmlns() == "apple:iq:vc:cancel")
    {
       handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - apple:iq:vc:cancel from=" + stanza->from().full() + ", to=" + stanza->to().full());
-      // Note:  We should never get this, since we answer vc:requests immediately
+      cancelOutstandingServerIChatCallRequest(stanza->to().bare(), stanza->from().bare());
    }
    else if(stanza->subtype() == StanzaIqSet && stanza->xmlns() == "apple:iq:vc:response")
    {
@@ -915,42 +1048,35 @@ JabberComponent::handleIq(Stanza *stanza)
          vcNewCallerIPPortDataTag = query->findChild("connectData");
          if(vcNewCallerIPPortDataTag)
          {               
-            mOutstandingIChatCallRequestsMutex.lock();
+            mOutstandingClientIChatCallRequestsMutex.lock();
 
             std::ostringstream oss;
             oss << "Jabber::handleIq - connectData=" << vcNewCallerIPPortDataTag->cdata() << " size=" << vcNewCallerIPPortDataTag->cdata().size();
             handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, oss.str());
 
-            IChatCallRequestMap::iterator it = findOutstandingIChatCallRequest(stanza->from().bare(), stanza->to().full());
-            if(it!=mOutstandingIChatCallRequests.end())
+            IChatCallRequestMap::iterator it = findOutstandingClientIChatCallRequest(stanza->from().bare(), stanza->to().bare());
+            if(it!=mOutstandingClientIChatCallRequests.end())
             {
                handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - apple:iq:vc:response received - continuing SIP portion of call...");
                it->second.receivedIChatVCResponse(stanza->from().full());
                continueIChatCall(it->second.mB2BSessionHandle, vcNewCallerIPPortDataTag->cdata());    
-               mOutstandingIChatCallRequests.erase(it);
+               mOutstandingClientIChatCallRequests.erase(it);
             }
-            mOutstandingIChatCallRequestsMutex.unlock();
+            mOutstandingClientIChatCallRequestsMutex.unlock();
          }
       }
    }
    else if(stanza->subtype() == StanzaIqError && stanza->xmlns() == "apple:iq:vc:request")
    {
-      mOutstandingIChatCallRequestsMutex.lock();
-      // There was an error routing the vc:request - notify the B2BSession
-      IChatCallRequestMap::iterator it = findOutstandingIChatCallRequest(stanza->from().bare(), stanza->to().full());
-      if(it!=mOutstandingIChatCallRequests.end())
+      unsigned int code = 0;
+      Tag *error = stanza->findChild( "error" );
+      if(error)
       {
-         handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - apple:iq:vc:request error received - notifying SIP portion of call...");
-         unsigned int code = 0;
-         Tag *error = stanza->findChild( "error" );
-         if(error)
-         {
-            code = atoi(error->findAttribute("code").c_str());
-         }
-         notifyIChatCallFailed(it->second.mB2BSessionHandle, code); 
-         mOutstandingIChatCallRequests.erase(it);
-      }    
-      mOutstandingIChatCallRequestsMutex.unlock();
+        code = atoi(error->findAttribute("code").c_str());
+      }
+
+      failOutstandingClientIChatCallRequest(stanza->from().bare(), stanza->to().bare(), code);
+      handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "Jabber::handleIq - apple:iq:vc:request error received - notifying SIP portion of call...");
    }
    else
    {

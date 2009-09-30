@@ -94,6 +94,18 @@ public:
       switch(msg.method())
       {
       case INVITE:
+         if(msg.exists(h_UserAgent))
+         {
+            if(msg.header(h_UserAgent).value().prefix("Viceroy"))
+            {
+               B2BSession* session = mServer.findMatchingIChatB2BSession(msg);
+               if(session)
+               {
+                  InfoLog( << "GatewayDialogSetFactory found existing session for new IChat call, handle=" << session->getB2BSessionHandle());
+                  return session;
+               }
+            }
+         }
          return new B2BSession(mServer);
          break;
       default:
@@ -568,6 +580,38 @@ Server::setLogLevel(Log::Level level, LoggingSubsystem subsystem)
 }
 
 void 
+Server::notifyIChatCallRequest(const std::string& to, const std::string& from)
+{
+   NotifyIChatCallRequestCmd* cmd = new NotifyIChatCallRequestCmd(*this, to, from);
+   mDum.post(cmd);
+}
+
+void 
+Server::notifyIChatCallRequestImpl(const std::string& to, const std::string& from)
+{
+   InfoLog(<< "notifyIChatCallRequestImpl: call request from " << from << " to " << to);
+   B2BSession* session = new B2BSession(*this, false /* hasDialogSet */);   
+   session->initiateIChatCallRequest(to, from);
+}
+
+void 
+Server::notifyIChatCallCancelled(const B2BSessionHandle& handle)
+{
+   NotifyIChatCallCancelledCmd* cmd = new NotifyIChatCallCancelledCmd(*this, handle);
+   mDum.post(cmd);
+}
+
+void 
+Server::notifyIChatCallCancelledImpl(const B2BSessionHandle& handle)
+{
+   B2BSession* session = getB2BSession(handle);
+   if(session)
+   {
+      session->notifyIChatCallCancelled();
+   }
+}
+
+void 
 Server::notifyIChatCallProceeding(const B2BSessionHandle& handle, const std::string& to)
 {
    NotifyIChatCallProceedingCmd* cmd = new NotifyIChatCallProceedingCmd(*this, handle, to);
@@ -769,13 +813,16 @@ Server::shutdownImpl()
    // End each B2BSession - keep track of last session handle to ended since ending a session may end up removing 1 or 2 items from the map
    B2BSessionHandle lastSessionHandleEnded=0;
    B2BSessionMap::iterator it = mB2BSessions.begin();
-   while(it != mB2BSessions.end())
+   bool sessionEnded = true;
+   while(it != mB2BSessions.end() && sessionEnded)
    {
+      sessionEnded=false;
       for(; it != mB2BSessions.end(); it++)
       {
          if(it->second->getB2BSessionHandle() > lastSessionHandleEnded)
          {
             InfoLog(<< "Destroying B2BSession: " << it->second->getB2BSessionHandle());
+            sessionEnded = true;
             lastSessionHandleEnded = it->second->getB2BSessionHandle();
             it->second->end();
             it = mB2BSessions.begin();  // iterator can be invalidated after end() call, reset it here
@@ -793,12 +840,38 @@ Server::translateAddress(const Data& address, Data& translation, bool failIfNoRu
    return mAddressTranslator.translate(address, translation, failIfNoRule);
 }
 
+B2BSession* 
+Server::findMatchingIChatB2BSession(const resip::SipMessage& msg)
+{
+   B2BSessionMap::const_iterator i = mB2BSessions.begin();
+   for(; i != mB2BSessions.end(); i++)
+   {
+      if(i->second->checkIChatCallMatch(msg))
+      {
+         return i->second;
+      }
+   }
+   return 0;
+}
+
 void 
 Server::onNewIPCMsg(const IPCMsg& msg)
 {
    const std::vector<std::string>& args = msg.getArgs();
    assert(args.size() >= 1);
-   if(args.at(0) == "notifyIChatCallProceeding")
+   if(args.at(0) == "notifyIChatCallRequest")
+   {
+      InfoLog(<< "Server::onNewIPCMsg - notifyIChatCallRequest");
+      assert(args.size() == 3);
+      notifyIChatCallRequest(args.at(1).c_str(), args.at(2).c_str());
+   }
+   else if(args.at(0) == "notifyIChatCallCancelled")
+   {
+      InfoLog(<< "Server::onNewIPCMsg - notifyIChatCallCancelled");
+      assert(args.size() == 2);
+      notifyIChatCallCancelled(atoi(args.at(1).c_str()));
+   }
+   else if(args.at(0) == "notifyIChatCallProceeding")
    {
       InfoLog(<< "Server::onNewIPCMsg - notifyIChatCallProceeding");
       assert(args.size() == 3);
