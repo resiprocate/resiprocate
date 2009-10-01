@@ -151,12 +151,12 @@ B2BSession::initiateIChatCallRequest(const std::string& to, const std::string& f
    bool result=false;
    try
    {
-      Uri to(Data("xmpp:") + to.c_str());
+      Uri toUri(Data("xmpp:") + to.c_str());
       try
       {
-         NameAddr from(Data("sip:") + from.c_str());
-         from.displayName() = from.uri().user();
-         result = createNewPeer(to, from, 0);
+         NameAddr fromNameAddr(Data("sip:") + from.c_str());
+         fromNameAddr.displayName() = fromNameAddr.uri().user();
+         result = createNewPeer(toUri, fromNameAddr, 0);
       }
       catch(resip::BaseException& e)
       {
