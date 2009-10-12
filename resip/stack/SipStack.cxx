@@ -121,7 +121,6 @@ SipStack::addTransport( TransportType protocol,
                         SecurityTypes::SSLType sslType)
 {
    assert(!mShuttingDown);
-   assert( port >  0 );
    InternalTransport* transport=0;
    Fifo<TransactionMessage>& stateMacFifo = mTransactionController.transportSelector().stateMacFifo();   
    try
