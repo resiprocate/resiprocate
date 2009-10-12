@@ -40,7 +40,7 @@ TlsTransport::TlsTransport(Fifo<TransactionMessage>& fifo,
 
    InfoLog (<< "Creating TLS transport for domain " 
             << sipDomain << " interface=" << interfaceObj 
-            << " port=" << portNum);
+            << " port=" << mTuple.getPort());
 }
 
 

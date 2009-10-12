@@ -86,7 +86,7 @@ DtlsTransport::DtlsTransport(Fifo<TransactionMessage>& fifo,
 {
    setTlsDomain(sipDomain);   
    InfoLog ( << "Creating DTLS transport host=" << interfaceObj 
-             << " port=" << portNum
+             << " port=" << mTuple.getPort()
              << " ipv4=" << version ) ;
 
    mTuple.setType( transport() );

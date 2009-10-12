@@ -27,7 +27,7 @@ TcpTransport::TcpTransport(Fifo<TransactionMessage>& fifo, int portNum,
    init();
 
    InfoLog (<< "Creating TCP transport host=" << pinterface 
-            << " port=" << portNum
+            << " port=" << mTuple.getPort()
             << " ipv4=" << bool(version==V4) );
 }
 

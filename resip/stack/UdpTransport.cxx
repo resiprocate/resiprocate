@@ -38,14 +38,15 @@ UdpTransport::UdpTransport(Fifo<TransactionMessage>& fifo,
      mSigcompStack(0),
      mExternalUnknownDatagramHandler(0)
 {
-   InfoLog (<< "Creating UDP transport host=" << pinterface 
-            << " port=" << portNum
-            << " ipv4=" << bool(version==V4) );
-
    mTuple.setType(transport());
    mFd = InternalTransport::socket(transport(), version);
    mTuple.mFlowKey=mFd;
    bind();
+
+   InfoLog (<< "Creating UDP transport host=" << pinterface 
+            << " port=" << mTuple.getPort()
+            << " ipv4=" << bool(version==V4) );
+
 #ifdef USE_SIGCOMP
    if (mCompression.isEnabled())
    {
