@@ -34,12 +34,6 @@ class ResponseContext
             bool operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const;
       };      
       
-      class CompareQ  : public std::binary_function<const resip::NameAddr&, const resip::NameAddr&, bool>
-      {
-         public:
-            bool operator()(const resip::NameAddr& lhs, const resip::NameAddr& rhs) const;
-      };      
-
       ~ResponseContext();
 
       /**

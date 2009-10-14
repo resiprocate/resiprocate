@@ -33,7 +33,7 @@ class RedirectManager
       virtual ~RedirectManager() {}
       virtual bool handle(DialogSet& dSet, SipMessage& origRequest, const SipMessage& response);
       
-      //deafult is by q-value, no q-value last
+      //deafult is by q-value, no q-value treated as 1.0
       void setOrdering(const Ordering& order);      
       
       void removeDialogSet(DialogSetId id);
