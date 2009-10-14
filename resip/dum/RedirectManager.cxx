@@ -126,24 +126,21 @@ RedirectManager::TargetSet::makeNextRequest(SipMessage& request)
 
 bool RedirectManager::Ordering::operator()(const NameAddr& lhs, const NameAddr& rhs) const
 {
-   if (lhs.uri().exists(p_q))
+   if (lhs.exists(p_q))
    {
-      if (rhs.uri().exists(p_q))
+      if (rhs.exists(p_q))
       {
-         return lhs.uri().param(p_q) < rhs.uri().param(p_q);
+         return lhs.param(p_q) < rhs.param(p_q);
       }
       else
       {
-         return true;
+         return lhs.param(p_q) < 1000;  // 1.0
       }
-   }
-   else if (rhs.uri().exists(p_q))
-   {
-      return false;
    }
    else
    {
-      return true;
+      // Note: if lhs is not present and treated as 1.0, it will never to less than rhs
+      return false;
    }
 }
 

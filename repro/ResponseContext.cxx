@@ -1265,12 +1265,6 @@ ResponseContext::getPriority(const resip::SipMessage& msg)
 }
 
 bool 
-ResponseContext::CompareQ::operator()(const resip::NameAddr& lhs, const resip::NameAddr& rhs) const
-{
-   return lhs.param(p_q) < rhs.param(p_q);
-}
-
-bool 
 ResponseContext::CompareStatus::operator()(const resip::SipMessage& lhs, const resip::SipMessage& rhs) const
 {
    assert(lhs.isResponse());

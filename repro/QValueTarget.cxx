@@ -5,6 +5,7 @@
 namespace repro
 {
 
+static int DefaultPriorityMetric = 1000;  // If no q-value is present, when we treat the target as having a 1.0 priority
 
 QValueTarget::QValueTarget(const resip::ContactInstanceRecord& rec)
 {
@@ -17,8 +18,12 @@ QValueTarget::QValueTarget(const resip::ContactInstanceRecord& rec)
       }
       catch(resip::ParseBuffer::Exception& /*e*/)
       {
-         mPriorityMetric=0;
+         mPriorityMetric=DefaultPriorityMetric;
       }
+   }
+   else
+   {
+      mPriorityMetric=DefaultPriorityMetric;
    }
 }
    
