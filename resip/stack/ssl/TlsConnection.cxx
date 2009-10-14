@@ -228,14 +228,16 @@ TlsConnection::checkState()
          default:
             if(err == SSL_ERROR_SYSCALL)
             {
-               switch(getErrno())
+               int e = getErrno();
+               switch(e)
                {
                   case EINTR:
                   case EAGAIN:
                      StackLog( << "try later");
                      return mTlsState;
                }
-               ErrLog( << "socket error " << getErrno());
+               ErrLog( << "socket error " << e);
+               Transport::error(e);
             }
             else if (err == SSL_ERROR_SSL)
             {
