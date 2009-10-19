@@ -1241,7 +1241,7 @@ Transport*
 TransportSelector::findTlsTransport(const Data& domainname,resip::TransportType type,resip::IpVersion version)
 {
    assert(type==TLS || type==DTLS);
-   DebugLog (<< "Searching for" << ((type==TLS) ? "TLS" : "DTLS") << "transport for domain='" 
+   DebugLog (<< "Searching for " << ((type==TLS) ? "TLS" : "DTLS") << " transport for domain='" 
                   << domainname << "'" << " have " << mTlsTransports.size());
 
    if (domainname == Data::Empty)
