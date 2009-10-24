@@ -418,7 +418,7 @@ UserAgent::shutdownImpl()
    }
 
    // Unregister all registrations
-   RegistrationMap tempRegs = mRegistrations;  // Create copy for safety, since ending Subscriptions can immediately remove themselves from map
+   RegistrationMap tempRegs = mRegistrations;  // Create copy for safety, since ending can immediately remove themselves from map
    RegistrationMap::iterator j;
    for(j = tempRegs.begin(); j != tempRegs.end(); j++)
    {

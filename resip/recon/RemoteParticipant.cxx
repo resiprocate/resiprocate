@@ -46,6 +46,7 @@ RemoteParticipant::RemoteParticipant(ParticipantHandle partHandle,
   mState(Connecting),
   mOfferRequired(false),
   mLocalHold(true),
+  mRemoteHold(false),
   mLocalSdp(0),
   mRemoteSdp(0)
 {
@@ -920,13 +921,28 @@ RemoteParticipant::buildSdpOffer(bool holdSdp, SdpContents& offer)
    audioMedium->clearAttribute("sendonly");
    audioMedium->clearAttribute("recvonly");
    audioMedium->clearAttribute("inactive");
+
    if(holdSdp)
    {
-      audioMedium->addAttribute("sendonly");
+      if(mRemoteHold)
+      {
+         audioMedium->addAttribute("inactive");
+      }
+      else
+      {
+         audioMedium->addAttribute("sendonly");
+      }
    }
    else
    {
-      audioMedium->addAttribute("sendrecv");
+      if(mRemoteHold)
+      {
+         audioMedium->addAttribute("recvonly");
+      }
+      else
+      {
+         audioMedium->addAttribute("sendrecv");
+      }
    }
    setProposedSdp(offer);
 }
@@ -1551,6 +1567,15 @@ RemoteParticipant::adjustRTPStreams(bool sendingOffer)
          }
       }
 
+	  if(remoteMediaDirection == SdpMediaLine::DIRECTION_TYPE_INACTIVE ||
+	     remoteMediaDirection == SdpMediaLine::DIRECTION_TYPE_SENDONLY)
+	  {
+		  mRemoteHold = true;
+	  }
+	  else
+	  {
+		  mRemoteHold = false;
+	  }
       // Aggregate local and remote direction attributes to determine overall media direction
       if(mLocalHold ||
          localMediaDirection == SdpMediaLine::DIRECTION_TYPE_INACTIVE || 

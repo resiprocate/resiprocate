@@ -150,6 +150,7 @@ private:
    State mState;
    bool mOfferRequired;
    bool mLocalHold;
+   bool mRemoteHold;
    void stateTransition(State state);
 
    resip::AppDialogHandle mReferringAppDialog; 
