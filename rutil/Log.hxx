@@ -6,7 +6,6 @@
 #ifndef WIN32
 #include <syslog.h>
 #include <unistd.h>
-#include <pthread.h>
 #endif
 
 #include <set>
@@ -22,9 +21,9 @@
 #if !defined(WIN32) && !defined(TARGET_OS_MAC)
 #define LOG_ENABLE_THREAD_SETTING
 // defining hash function in mac os (non-sdk api) and cygwin because
-// pthread_t is a pointer,  (this assumes it's always the same pointer)
+// ThreadIf::Id is a pointer,  (this assumes it's always the same pointer)
 #if defined(__APPLE__) || defined(__CYGWIN__)
-HashValue(pthread_t);
+HashValue(ThreadIf::Id);
 #endif
 #endif
 
@@ -248,8 +247,8 @@ class Log
       static HashMap<int, Level> mServiceToLevel;
 
 #ifdef LOG_ENABLE_THREAD_SETTING
-      static HashMap<pthread_t, std::pair<ThreadSetting, bool> > mThreadToLevel;
-      static HashMap<int, std::set<pthread_t> > mServiceToThreads;
+      static HashMap<ThreadIf::Id, std::pair<ThreadSetting, bool> > mThreadToLevel;
+      static HashMap<int, std::set<ThreadIf::Id> > mServiceToThreads;
       static pthread_key_t* mLevelKey;
 #endif
 };

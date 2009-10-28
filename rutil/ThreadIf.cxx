@@ -96,7 +96,7 @@ ThreadIf::run()
          (threadWrapper), // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
          this, //LPVOID lpParameter,                        // argument for new thread
          0, //DWORD dwCreationFlags,                     // creation flags
-         &mId// LPDWORD lpThreadId                         // pointer to receive thread ID
+         (unsigned*)&mId// LPDWORD lpThreadId                         // pointer to receive thread ID
          );
    assert( mThread != 0 );
 #else
@@ -181,13 +181,57 @@ ThreadIf::detach()
    mId = 0;
 }
 
-#if !defined(WIN32)
 ThreadIf::Id
 ThreadIf::selfId()
 {
+#if defined(WIN32)
+   return GetCurrentThreadId();
+#else
    return pthread_self();
-}
 #endif
+}
+
+int
+ThreadIf::tlsKeyCreate(TlsKey &key, TlsDestructor *destructor)
+{
+#if defined(WIN32)
+   key = TlsAlloc();
+   return key==TLS_OUT_OF_INDEXES?GetLastError():0;
+#else
+   return pthread_key_create(&key, destructor);
+#endif
+}
+
+int
+ThreadIf::tlsKeyDelete(TlsKey key)
+{
+#if defined(WIN32)
+   return TlsFree(key)>0?0:GetLastError();
+#else
+   return pthread_key_delete(key);
+#endif
+}
+
+int
+ThreadIf::tlsSetValue(TlsKey key, const void *val)
+{
+#if defined(WIN32)
+   return TlsSetValue(key, (LPVOID)val)>0?0:GetLastError();
+#else
+   return pthread_setspecific(key, val);
+#endif
+}
+
+void *
+ThreadIf::tlsGetValue(TlsKey key)
+{
+#if defined(WIN32)
+   return TlsGetValue(key);
+#else
+   return pthread_getspecific(key);
+#endif
+}
+
 
 void
 ThreadIf::shutdown()
