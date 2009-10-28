@@ -219,8 +219,7 @@ Log::tags(Log::Level level,
         << subsystem << Log::delim 
         << pthread_self() << Log::delim
         << pfile << ":" << line;
-#else   
-#if defined( WIN32 )
+#elif defined( WIN32 )
    const char* file = pfile + strlen(pfile);
    while (file != pfile &&
           *file != '\\')
@@ -237,7 +236,7 @@ Log::tags(Log::Level level,
         << subsystem << Log::delim 
         << GetCurrentThreadId() << Log::delim
         << file << ":" << line;
-#else
+#else // #if defined( WIN32 ) || defined( __APPLE__ )
    strm << mDescriptions[level+1] << Log::delim
         << timestamp(ts) << Log::delim  
 //        << mHostname << Log::delim  
@@ -246,8 +245,7 @@ Log::tags(Log::Level level,
 //        << mPid << Log::delim
         << pthread_self() << Log::delim
         << pfile << ":" << line;
-#endif // #if defined( WIN32 ) 
-#endif // #if defined( __APPLE__ )
+#endif
    return strm;
 }
 
@@ -472,7 +470,7 @@ Log::Guard::~Guard()
    }
     
    resip::Lock lock(resip::Log::_mutex);
-   // !dlb! imlement VSDebugWindow as an external logger
+   // !dlb! implement VSDebugWindow as an external logger
    if (resip::Log::_type == resip::Log::VSDebugWindow)
    {
       mData += "\r\n";
