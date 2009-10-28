@@ -908,22 +908,22 @@ Server::onNewSubscriptionFromRefer(ServerSubscriptionHandle ss, const SipMessage
          }
 
          // We don't support this yet - reject request without a target dialog header
-         WarningLog (<< "Received ood refer w/out a Target-Dialog: " << msg.brief());
+         WarningLog (<< "onNewSubscriptionFromRefer(ServerSubscriptionHandle): Received ood refer w/out a Target-Dialog: " << msg.brief());
          ss->send(ss->reject(400));
       }
       else
       {
-         WarningLog (<< "Received refer w/out a Refer-To: " << msg.brief());
+         WarningLog (<< "onNewSubscriptionFromRefer(ServerSubscriptionHandle): Received refer w/out a Refer-To: " << msg.brief());
          ss->send(ss->reject(400));
       }
    }
    catch(BaseException &e)
    {
-      WarningLog(<< "onNewSubscriptionFromRefer exception: " << e);
+      WarningLog(<< "onNewSubscriptionFromRefer(ServerSubscriptionHandle): exception " << e);
    }
    catch(...)
    {
-      WarningLog(<< "onNewSubscriptionFromRefer unknown exception");
+      WarningLog(<< "onNewSubscriptionFromRefer(ServerSubscriptionHandle):  unknown exception");
    }
 }
 
@@ -1038,22 +1038,22 @@ Server::onReceivedRequest(ServerOutOfDialogReqHandle ood, const SipMessage& msg)
             }
 
             // We don't support this yet - reject request without a target dialog header
-            WarningLog (<< "Received ood refer (noSub) w/out a Target-Dialog: " << msg.brief());
+            WarningLog (<< "onReceivedRequest(ServerOutOfDialogReqHandle): Received ood refer (noSub) w/out a Target-Dialog: " << msg.brief());
             ood->send(ood->reject(400));
          }
          else
          {
-            WarningLog (<< "Received refer w/out a Refer-To: " << msg.brief());
+            WarningLog (<< "onReceivedRequest(ServerOutOfDialogReqHandle): Received refer w/out a Refer-To: " << msg.brief());
             ood->send(ood->reject(400));
          }
       }
       catch(BaseException &e)
       {
-         WarningLog(<< "onNewSubscriptionFromRefer exception: " << e);
+         WarningLog(<< "onReceivedRequest(ServerOutOfDialogReqHandle): exception " << e);
       }
       catch(...)
       {
-         WarningLog(<< "onNewSubscriptionFromRefer unknown exception");
+         WarningLog(<< "onReceivedRequest(ServerOutOfDialogReqHandle):  unknown exception");
       }
       break;
    }
