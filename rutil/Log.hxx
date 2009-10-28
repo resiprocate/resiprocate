@@ -12,13 +12,14 @@
 
 #include "rutil/Mutex.hxx"
 #include "rutil/HashMap.hxx"
+#include "rutil/ThreadIf.hxx"
 #include <iostream>
 
 // NOTE: disabling thread setting code for native mac os applications.
 // since some logging takes place during static initialization we can't
 // be sure all the pthread stuff is ready to go. this eventually causes
 // crashes in the Mac OS native API.
-#if !defined(WIN32) && !defined(TARGET_OS_MAC)
+#if !defined(TARGET_OS_MAC)
 #define LOG_ENABLE_THREAD_SETTING
 // defining hash function in mac os (non-sdk api) and cygwin because
 // ThreadIf::Id is a pointer,  (this assumes it's always the same pointer)
@@ -249,7 +250,7 @@ class Log
 #ifdef LOG_ENABLE_THREAD_SETTING
       static HashMap<ThreadIf::Id, std::pair<ThreadSetting, bool> > mThreadToLevel;
       static HashMap<int, std::set<ThreadIf::Id> > mServiceToThreads;
-      static pthread_key_t* mLevelKey;
+      static ThreadIf::TlsKey* mLevelKey;
 #endif
 };
 
