@@ -1153,17 +1153,17 @@ ConversationManager::onReceivedRequest(ServerOutOfDialogReqHandle ood, const Sip
          }
          else
          {
-            WarningLog (<< "Received refer w/out a Refer-To: " << msg.brief());
+            WarningLog (<< "onReceivedRequest(ServerOutOfDialogReqHandle): Received refer w/out a Refer-To: " << msg.brief());
             ood->send(ood->reject(400));
          }
       }
       catch(BaseException &e)
       {
-         WarningLog(<< "onNewSubscriptionFromRefer exception: " << e);
+         WarningLog(<< "onReceivedRequest(ServerOutOfDialogReqHandle): exception " << e);
       }
       catch(...)
       {
-         WarningLog(<< "onNewSubscriptionFromRefer unknown exception");
+         WarningLog(<< "onReceivedRequest(ServerOutOfDialogReqHandle): unknown exception");
       }
 
       break;
