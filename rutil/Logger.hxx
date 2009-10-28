@@ -51,7 +51,10 @@ GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Err, args_)
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Crit, args_)
 
 bool
-genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub);
+genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub)
+{
+   return resip::Log::isLogging(level, sub);
+}
 
 // do/while allows a {} block in an expression
 #define GenericLog(system_, level_, args_)                              \
@@ -74,20 +77,7 @@ genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub);
 
 namespace resip
 {
-
-class GenericLogImpl :  public Log 
-{
-   public:
-      static std::ostream& Instance();
-      static bool isLogging(Log::Level level, const Subsystem&);
-      static unsigned int MaxLineCount;
-      static void OutputToWin32DebugWindow(const Data& result);      
-      static void reset(); //removes mLogger
-   private:
-      static std::ostream* mLogger;
-      static unsigned int mLineCount;
-};
- 
+typedef Log GenericLogImpl;
 }
 
 #endif

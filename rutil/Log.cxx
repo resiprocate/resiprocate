@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include "rutil/Data.hxx"
 
@@ -16,15 +17,19 @@
 #include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
+#include "rutil/ThreadIf.hxx"
+#include "rutil/Subsystem.hxx"
+#include "rutil/SysLogStream.hxx"
 #include "rutil/WinLeakCheck.hxx"
 
 using namespace resip;
 using namespace std;
 
 const Data Log::delim(" | ");
-Log::ThreadSetting Log::mDefaultTreadSettings(-1, Log::Info, Cout, NULL, NULL);
+Log::ThreadData Log::mDefaultTreadSettings(Log::Info, Cout, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
+unsigned int Log::MaxLineCount = 0; // no limit by default
 
 #ifdef WIN32
 int Log::mPid=0;
@@ -99,7 +104,7 @@ Log::initialize(Type type, Level level, const Data& appName,
                 ExternalLogger* externalLogger)
 {
    Lock lock(_mutex);
-   GenericLogImpl::reset();   
+   reset();   
    
    mDefaultTreadSettings.mType = type;
    mDefaultTreadSettings.mLevel = level;
@@ -471,7 +476,7 @@ Log::Guard::~Guard()
    if (resip::Log::mDefaultTreadSettings.mType == resip::Log::VSDebugWindow)
    {
       mData += "\r\n";
-      resip::GenericLogImpl::OutputToWin32DebugWindow(mData);
+      OutputToWin32DebugWindow(mData);
    }
    else if(resip::Log::mDefaultTreadSettings.mType == resip::Log::OnlyExternal ||
 	   resip::Log::mDefaultTreadSettings.mType == resip::Log::OnlyExternalNoHeaders) 
@@ -481,8 +486,90 @@ Log::Guard::~Guard()
    else 
    {
       // endl is magic in syslog -- so put it here
-      resip::GenericLogImpl::Instance() << mData << std::endl;
+      Instance() << mData << std::endl;
    }
+}
+
+std::ostream&
+Log::Instance()
+{
+   switch (mDefaultTreadSettings.mType)
+   {
+      case Log::Syslog:
+         if (mDefaultTreadSettings.mLogger == 0)
+         {
+            std::cerr << "Creating a syslog stream" << std::endl;
+            mDefaultTreadSettings.mLogger = new SysLogStream;
+         }
+         return *mDefaultTreadSettings.mLogger;
+
+      case Log::Cerr:
+         return std::cerr;
+
+      case Log::Cout:
+         return std::cout;
+
+      case Log::File:
+         if (mDefaultTreadSettings.mLogger == 0 ||
+             (MaxLineCount && mDefaultTreadSettings.mLineCount > MaxLineCount))
+         {
+            std::cerr << "Creating a file logger" << std::endl;
+            if (mDefaultTreadSettings.mLogger)
+            {
+               delete mDefaultTreadSettings.mLogger;
+            }
+            if (mDefaultTreadSettings.mLogFileName != "")
+            {
+               mDefaultTreadSettings.mLogger = new std::ofstream(mDefaultTreadSettings.mLogFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
+               mDefaultTreadSettings.mLineCount = 0;
+            }
+            else
+            {
+               mDefaultTreadSettings.mLogger = new std::ofstream("resiprocate.log", std::ios_base::out | std::ios_base::trunc);
+               mDefaultTreadSettings.mLineCount = 0;
+            }
+         }
+         mDefaultTreadSettings.mLineCount++;
+         return *mDefaultTreadSettings.mLogger;
+      default:
+         assert(0);
+         return std::cout;
+   }
+}
+
+void 
+Log::reset()
+{
+   delete mDefaultTreadSettings.mLogger;
+   mDefaultTreadSettings.mLogger = 0;
+}
+
+bool
+Log::isLogging(Log::Level level, const resip::Subsystem& sub)
+{
+   if (sub.getLevel() != Log::None)
+   {
+      return level <= sub.getLevel();
+   }
+   else
+   {
+      return (level <= Log::mDefaultTreadSettings.mLevel);
+   }
+}
+
+void
+Log::OutputToWin32DebugWindow(const Data& result)
+{
+#ifdef WIN32
+   const char *text = result.c_str();
+#ifdef UNDER_CE
+   LPWSTR lpwstrText = resip::ToWString(text);
+	OutputDebugStringW(lpwstrText);
+	FreeWString(lpwstrText);
+#else
+	OutputDebugStringA(text);
+#endif
+#endif
 }
 
 /* ====================================================================
