@@ -48,10 +48,10 @@ class Log
          Syslog, 
          File, 
          Cerr,
-         VSDebugWindow,        // Use only for Visual Studio Debug Window logging - WIN32 must be defined
-         OnlyExternal,         // log messages are only written to external logger
-         OnlyExternalNoHeaders //!< same as OnlyExternal, only the messageWithHeaders param of the ExternalLogger
-                               //!< will be empty.  This paramater usually contains a pre-formatted log entry.
+         VSDebugWindow,        ///< Use only for Visual Studio Debug Window logging - WIN32 must be defined
+         OnlyExternal,         ///< log messages are only written to external logger
+         OnlyExternalNoHeaders ///< same as OnlyExternal, only the messageWithHeaders param of the ExternalLogger
+                               ///< will be empty.  This parameter usually contains a pre-formatted log entry.
       };
       
       enum Level
@@ -119,30 +119,17 @@ class Log
          public:
             ThreadSetting()
                : mService(-1),
-                 mLevel(Err),
-                 mType(Cout),
-                 mExternalLogger(NULL)
+                 mLevel(Err)
             {}
 
-            ThreadSetting(int serv, Level level, Type type=Cout,
-                          const char *logFileName=NULL,
-                          ExternalLogger *pExternalLogger=NULL)
+            ThreadSetting(int serv, Level level)
                : mService(serv),
-                 mLevel(level),
-                 mType(type),
-                 mExternalLogger(pExternalLogger)
+                 mLevel(level)
             {
-               if (logFileName)
-               {
-                  mLogFileName = logFileName;
-               }
             }
             
             int mService;
             Level mLevel;
-            Type mType;
-            Data mLogFileName;
-            ExternalLogger* mExternalLogger;
       };
 
       /// output the loglevel, hostname, appname, pid, tid, subsystem
@@ -202,8 +189,52 @@ class Log
       static void setThreadSetting(int serv);
       static volatile short touchCount;
       static const Data delim;
+
+   public:
+      static std::ostream& Instance();
+      static bool isLogging(Log::Level level, const Subsystem&);
+      static void OutputToWin32DebugWindow(const Data& result);      
+      static void reset(); //removes mLogger
+
+   public:
+      static unsigned int MaxLineCount; ///< Left for compatibility, should be moved to ThreadData
    protected:
-      static ThreadSetting mDefaultTreadSettings;
+
+      class ThreadData
+      {
+         public:
+            ThreadData()
+               : mLevel(Err),
+                 mType(Cout),
+                 mExternalLogger(NULL),
+                 mLogger(NULL),
+                 mLineCount(0)
+            {}
+
+            ThreadData(Level level, Type type=Cout,
+                       const char *logFileName=NULL,
+                       ExternalLogger *pExternalLogger=NULL)
+               : mLevel(level),
+                 mType(type),
+                 mExternalLogger(pExternalLogger),
+                 mLogger(NULL),
+                 mLineCount(0)
+            {
+               if (logFileName)
+               {
+                  mLogFileName = logFileName;
+               }
+            }
+            
+            Level mLevel;
+            Type mType;
+            Data mLogFileName;
+            ExternalLogger* mExternalLogger;
+            std::ostream* mLogger;
+            unsigned int mLineCount;
+      };
+
+      static ThreadData mDefaultTreadSettings;
       static Data mAppName;
       static Data mHostname;
 #ifndef WIN32
