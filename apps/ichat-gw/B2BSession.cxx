@@ -1481,8 +1481,7 @@ B2BSession::doReferNoSub(const SipMessage& msg)
    newPeer->mReferringAppDialogSet = getHandle();
 
    // Build the Invite
-   ServerSubscriptionHandle ss;  // empty
-   SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(msg, ss->getHandle(), pOffer, newPeer);
+   SharedPtr<SipMessage> invitemsg = mDum.makeInviteSessionFromRefer(msg, getUserProfile(), pOffer, newPeer);
    mDum.send(invitemsg);
    return true;
 }

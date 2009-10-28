@@ -1393,22 +1393,22 @@ Server::onReceivedRequest(ServerOutOfDialogReqHandle ood, const SipMessage& msg)
             }
 
             // We don't support this yet - reject request without a target dialog header
-            WarningLog (<< "Received ood refer (noSub) w/out a Target-Dialog: " << msg.brief());
+            WarningLog (<< "onReceivedRequest(ServerOutOfDialogReqHandle): Received ood refer (noSub) w/out a Target-Dialog: " << msg.brief());
             ood->send(ood->reject(400));
          }
          else
          {
-            WarningLog (<< "Received refer w/out a Refer-To: " << msg.brief());
+            WarningLog (<< "onReceivedRequest(ServerOutOfDialogReqHandle): Received refer w/out a Refer-To: " << msg.brief());
             ood->send(ood->reject(400));
          }
       }
       catch(BaseException &e)
       {
-         WarningLog(<< "onNewSubscriptionFromRefer exception: " << e);
+         WarningLog(<< "onReceivedRequest(ServerOutOfDialogReqHandle): exception " << e);
       }
       catch(...)
       {
-         WarningLog(<< "onNewSubscriptionFromRefer unknown exception");
+         WarningLog(<< "onReceivedRequest(ServerOutOfDialogReqHandle): unknown exception");
       }
       break;
    }

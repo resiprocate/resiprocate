@@ -549,14 +549,12 @@ JabberComponent::storeIChatSubscribedUser(const std::string& user, const std::st
 void 
 JabberComponent::storeIChatPresence(const gloox::JID& jid, const gloox::Presence& presence, int priority, bool avAvail)
 {
-   assert(!jid.resource().empty());
-
    mIChatUserMutex.lock();
 
    IChatUserMap::iterator it = mIChatUsers.find(jid.bare());
    if(it == mIChatUsers.end())
    {
-      if(presence != gloox::PresenceUnavailable)
+      if(presence != gloox::PresenceUnavailable && !jid.resource().empty())
       {
          // User is not yet present in map
          IChatUser* iChatUser = new IChatUser(*this, jid.bare());
@@ -901,6 +899,7 @@ JabberComponent::handlePresence(Stanza *stanza)
 
       if(iChatResource)
       {
+         handleLog(gloox::LogLevelDebug, gloox::LogAreaUser, "JabberComponent::handlePresence - PresenceAvailable from " + stanza->from().full());
          // Ensure we are tracking client
          storeIChatPresence(stanza->from(), stanza->presence(), stanza->priority(), avAvail);
 
