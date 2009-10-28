@@ -95,10 +95,7 @@ GenericLogImpl::OutputToWin32DebugWindow(const Data& result)
 bool
 genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub)
 {
-   //?dcm? should we just remove threadsetting? Does it still work?
-   const resip::Log::ThreadSetting* setting = resip::Log::getThreadSetting();
-   return ((setting && resip::GenericLogImpl::isLogging(setting->level, sub) ||
-            (!setting && resip::GenericLogImpl::isLogging(level, sub))));
+   return resip::GenericLogImpl::isLogging(level, sub);
 }
 
 /* ====================================================================
