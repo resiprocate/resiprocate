@@ -37,7 +37,7 @@ WINAPI
 __stdcall
 #endif
 #endif
-threadWrapper( void* threadParm )
+threadIfThreadWrapper( void* threadParm )
 {
    assert( threadParm );
    ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
@@ -45,6 +45,8 @@ threadWrapper( void* threadParm )
    assert( t );
    t->thread();
 #if defined(WIN32)
+   // Free data in TLS slots.
+   ThreadIf::tlsDestroyAll();
 #ifdef _WIN32_WCE
    ExitThread( 0 );
 #else
@@ -54,6 +56,24 @@ threadWrapper( void* threadParm )
    return 0;
 }
 }
+
+#ifdef WIN32
+namespace resip {
+/// Class to initialize TLS destructors array under Windows on program startup.
+class TlsDestructorInitializer {
+public:
+   TlsDestructorInitializer()
+   {
+      for (int i=0; i<ThreadIf::TLS_MAX_KEYS; i++)
+      {
+         ThreadIf::mTlsDestructors[i] = NULL;
+      }
+   }
+};
+TlsDestructorInitializer _staticTlsInit;
+}
+#endif
+
 
 ThreadIf::ThreadIf() : 
 #ifdef WIN32
@@ -93,7 +113,7 @@ ThreadIf::run()
          NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
          0, // DWORD dwStackSize,                         // initial thread stack size
          RESIP_THREAD_START_ROUTINE
-         (threadWrapper), // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
+         (threadIfThreadWrapper), // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
          this, //LPVOID lpParameter,                        // argument for new thread
          0, //DWORD dwCreationFlags,                     // creation flags
          (unsigned*)&mId// LPDWORD lpThreadId                         // pointer to receive thread ID
@@ -101,7 +121,7 @@ ThreadIf::run()
    assert( mThread != 0 );
 #else
    // spawn the thread
-   if ( int retval = pthread_create( &mId, 0, threadWrapper, this) )
+   if ( int retval = pthread_create( &mId, 0, threadIfThreadWrapper, this) )
    {
       std::cerr << "Failed to spawn thread: " << retval << std::endl;
       assert(0);
@@ -196,7 +216,15 @@ ThreadIf::tlsKeyCreate(TlsKey &key, TlsDestructor *destructor)
 {
 #if defined(WIN32)
    key = TlsAlloc();
-   return key==TLS_OUT_OF_INDEXES?GetLastError():0;
+   if (key!=TLS_OUT_OF_INDEXES)
+   {
+      mTlsDestructors[key] = destructor;
+      return 0;
+   }
+   else
+   {
+      return GetLastError();
+   }
 #else
    return pthread_key_create(&key, destructor);
 #endif
@@ -206,7 +234,15 @@ int
 ThreadIf::tlsKeyDelete(TlsKey key)
 {
 #if defined(WIN32)
-   return TlsFree(key)>0?0:GetLastError();
+   if (TlsFree(key)>0)
+   {
+      mTlsDestructors[key] = NULL;
+      return 0;
+   }
+   else
+   {
+      return GetLastError();
+   }
 #else
    return pthread_key_delete(key);
 #endif
@@ -263,6 +299,21 @@ ThreadIf::isShutdown() const
    return ( mShutdown );
 }
 
+void
+ThreadIf::tlsDestroyAll()
+{
+   for (int i=0; i<TLS_MAX_KEYS; i++)
+   {
+      if (mTlsDestructors[i])
+      {
+         void *val = TlsGetValue(i);
+         if (val)
+         {
+            (*mTlsDestructors[i])(val);
+         }
+      }
+   }
+}
 
 // End of File
 
