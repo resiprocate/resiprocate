@@ -421,6 +421,46 @@ Log::setServiceLevel(int service, Level l)
 //   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount << "**" << endl;
 }
 
+std::ostream&
+Log::Instance()
+{
+   return mDefaultTreadSettings.Instance();
+}
+
+void 
+Log::reset()
+{
+   mDefaultTreadSettings.reset();
+}
+
+bool
+Log::isLogging(Log::Level level, const resip::Subsystem& sub)
+{
+   if (sub.getLevel() != Log::None)
+   {
+      return level <= sub.getLevel();
+   }
+   else
+   {
+      return (level <= Log::mDefaultTreadSettings.mLevel);
+   }
+}
+
+void
+Log::OutputToWin32DebugWindow(const Data& result)
+{
+#ifdef WIN32
+   const char *text = result.c_str();
+#ifdef UNDER_CE
+   LPWSTR lpwstrText = resip::ToWString(text);
+   OutputDebugStringW(lpwstrText);
+   FreeWString(lpwstrText);
+#else
+   OutputDebugStringA(text);
+#endif
+#endif
+}
+
 ExternalLogger::~ExternalLogger()
 {}
 
@@ -491,17 +531,17 @@ Log::Guard::~Guard()
 }
 
 std::ostream&
-Log::Instance()
+Log::ThreadData::Instance()
 {
-   switch (mDefaultTreadSettings.mType)
+   switch (mType)
    {
       case Log::Syslog:
-         if (mDefaultTreadSettings.mLogger == 0)
+         if (mLogger == 0)
          {
             std::cerr << "Creating a syslog stream" << std::endl;
-            mDefaultTreadSettings.mLogger = new SysLogStream;
+            mLogger = new SysLogStream;
          }
-         return *mDefaultTreadSettings.mLogger;
+         return *mLogger;
 
       case Log::Cerr:
          return std::cerr;
@@ -510,27 +550,27 @@ Log::Instance()
          return std::cout;
 
       case Log::File:
-         if (mDefaultTreadSettings.mLogger == 0 ||
-             (MaxLineCount && mDefaultTreadSettings.mLineCount > MaxLineCount))
+         if (mLogger == 0 ||
+             (MaxLineCount && mLineCount > MaxLineCount))
          {
             std::cerr << "Creating a file logger" << std::endl;
-            if (mDefaultTreadSettings.mLogger)
+            if (mLogger)
             {
-               delete mDefaultTreadSettings.mLogger;
+               delete mLogger;
             }
-            if (mDefaultTreadSettings.mLogFileName != "")
+            if (mLogFileName != "")
             {
-               mDefaultTreadSettings.mLogger = new std::ofstream(mDefaultTreadSettings.mLogFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
-               mDefaultTreadSettings.mLineCount = 0;
+               mLogger = new std::ofstream(mLogFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
+               mLineCount = 0;
             }
             else
             {
-               mDefaultTreadSettings.mLogger = new std::ofstream("resiprocate.log", std::ios_base::out | std::ios_base::trunc);
-               mDefaultTreadSettings.mLineCount = 0;
+               mLogger = new std::ofstream("resiprocate.log", std::ios_base::out | std::ios_base::trunc);
+               mLineCount = 0;
             }
          }
-         mDefaultTreadSettings.mLineCount++;
-         return *mDefaultTreadSettings.mLogger;
+         mLineCount++;
+         return *mLogger;
       default:
          assert(0);
          return std::cout;
@@ -538,38 +578,10 @@ Log::Instance()
 }
 
 void 
-Log::reset()
+Log::ThreadData::reset()
 {
-   delete mDefaultTreadSettings.mLogger;
-   mDefaultTreadSettings.mLogger = 0;
-}
-
-bool
-Log::isLogging(Log::Level level, const resip::Subsystem& sub)
-{
-   if (sub.getLevel() != Log::None)
-   {
-      return level <= sub.getLevel();
-   }
-   else
-   {
-      return (level <= Log::mDefaultTreadSettings.mLevel);
-   }
-}
-
-void
-Log::OutputToWin32DebugWindow(const Data& result)
-{
-#ifdef WIN32
-   const char *text = result.c_str();
-#ifdef UNDER_CE
-   LPWSTR lpwstrText = resip::ToWString(text);
-	OutputDebugStringW(lpwstrText);
-	FreeWString(lpwstrText);
-#else
-	OutputDebugStringA(text);
-#endif
-#endif
+   delete mLogger;
+   mLogger = NULL;
 }
 
 /* ====================================================================

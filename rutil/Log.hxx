@@ -190,11 +190,10 @@ class Log
       static volatile short touchCount;
       static const Data delim;
 
-   public:
       static std::ostream& Instance();
       static bool isLogging(Log::Level level, const Subsystem&);
       static void OutputToWin32DebugWindow(const Data& result);      
-      static void reset(); //removes mLogger
+      static void reset(); ///< Frees logger stream
 
    public:
       static unsigned int MaxLineCount; ///< Left for compatibility, should be moved to ThreadData
@@ -225,6 +224,9 @@ class Log
                   mLogFileName = logFileName;
                }
             }
+
+            std::ostream& Instance(); ///< Return logger stream instance, creating it if needed.
+            void reset(); ///< Frees logger stream
             
             Level mLevel;
             Type mType;
