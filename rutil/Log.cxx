@@ -46,7 +46,7 @@ HashValueImp(ThreadIf::Id, (size_t)data);
 #endif
 HashMap<ThreadIf::Id, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
 HashMap<int, std::set<ThreadIf::Id> > Log::mServiceToThreads;
-pthread_key_t* Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new pthread_key_t);
+ThreadIf::TlsKey* Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new ThreadIf::TlsKey);
 #endif
 
 HashMap<int, Log::Level> Log::mServiceToLevel;
@@ -69,8 +69,8 @@ Log::init()
 #ifdef LOG_ENABLE_THREAD_SETTING
 	if (Log::mLevelKey == 0)
 	{
-		Log::mLevelKey = new pthread_key_t;
-		pthread_key_create(Log::mLevelKey, freeThreadSetting);
+		Log::mLevelKey = new ThreadIf::TlsKey;
+      ThreadIf::tlsKeyCreate(*Log::mLevelKey, freeThreadSetting);
 	}
 #endif
 	return true;
@@ -341,7 +341,7 @@ Log::getThreadSetting()
 #ifndef LOG_ENABLE_THREAD_SETTING
    return 0;
 #else
-   ThreadSetting* setting = static_cast<ThreadSetting*>(pthread_getspecific(*Log::mLevelKey));
+   ThreadSetting* setting = static_cast<ThreadSetting*>(ThreadIf::tlsGetValue(*Log::mLevelKey));
    if (setting == 0)
    {
       return 0;
@@ -386,7 +386,7 @@ Log::setThreadSetting(ThreadSetting info)
 #else
    //cerr << "Log::setThreadSetting: " << "service: " << info.service << " level " << toString(info.level) << " for " << pthread_self() << endl;
    ThreadIf::Id thread = ThreadIf::selfId();
-   pthread_setspecific(*mLevelKey, (void *) new ThreadSetting(info));
+   ThreadIf::tlsSetValue(*mLevelKey, (void *) new ThreadSetting(info));
    Lock lock(_mutex);
 
    if (Log::mThreadToLevel.find(thread) != Log::mThreadToLevel.end())
@@ -413,7 +413,7 @@ Log::setServiceLevel(int service, Level l)
    set<ThreadIf::Id>& threads = Log::mServiceToThreads[service];
    for (set<ThreadIf::Id>::iterator i = threads.begin(); i != threads.end(); i++)
    {
-      Log::mThreadToLevel[*i].first.level = l;
+      Log::mThreadToLevel[*i].first.mLevel = l;
       Log::mThreadToLevel[*i].second = true;
    }
    Log::touchCount += threads.size();
