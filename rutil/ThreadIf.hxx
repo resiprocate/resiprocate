@@ -98,7 +98,16 @@ class ThreadIf
    protected:
 #ifdef WIN32
       HANDLE mThread;
-      
+      /// 1088 is the maximum number of TLS slots under Windows.
+      /// Refer to http://msdn.microsoft.com/en-us/library/ms686749(VS.85).aspx
+      enum {TLS_MAX_KEYS=1088};
+   public:
+      /// Free data in TLS slots. For internal use only!
+      static void tlsDestroyAll();
+   protected:
+      /// Array of TLS destructors. We have to emulate TLS destructors under Windows.
+      static TlsDestructor *mTlsDestructors[TLS_MAX_KEYS];
+      friend class TlsDestructorInitializer;
 #endif
       Id mId;
 
