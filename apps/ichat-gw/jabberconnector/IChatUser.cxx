@@ -26,26 +26,46 @@ void
 IChatUser::updateResourceInfo(const std::string& resourceId, const gloox::Presence& presence, int priority, bool avAvail)
 {
    bool originalUnavailability = isUnavailable();
-   ResourceMap::iterator it = mResources.find(resourceId);
-   if(it != mResources.end())
+   if(resourceId.empty())
    {
       if(presence == gloox::PresenceUnavailable)
       {
-         delete it->second;
-         mResources.erase(it);
-      }
-      else
-      {
-         it->second->mPresence = presence;
-         it->second->mPriority = priority;
-         it->second->mAvAvail = avAvail;
-      }
+	     // All resources are unanavaiable
+         ResourceMap::iterator it = mResources.begin();
+         for(; it != mResources.end(); it++)
+         {
+            delete it->second;
+		 }
+		 mResources.clear();
+	  }
+	  else
+	  {
+		  // PresenceAvailable with no resource is meaningless
+	  }
    }
    else
    {
-      if(presence != gloox::PresenceUnavailable)
+      ResourceMap::iterator it = mResources.find(resourceId);
+      if(it != mResources.end())
       {
-         mResources[resourceId] = new ResourceInfo(presence, priority, avAvail);
+         if(presence == gloox::PresenceUnavailable)
+         {
+            delete it->second;
+            mResources.erase(it);
+         }
+         else
+         {
+            it->second->mPresence = presence;
+            it->second->mPriority = priority;
+            it->second->mAvAvail = avAvail;
+         }
+      }
+      else
+      {
+         if(presence != gloox::PresenceUnavailable)
+         {
+            mResources[resourceId] = new ResourceInfo(presence, priority, avAvail);
+		 }
       }
    }
    if(originalUnavailability && !isUnavailable())
