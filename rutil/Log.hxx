@@ -118,22 +118,31 @@ class Log
       {
          public:
             ThreadSetting()
-               : service(-1),
-                 level(Err)
+               : mService(-1),
+                 mLevel(Err),
+                 mType(Cout),
+                 mExternalLogger(NULL)
             {}
 
-            ThreadSetting(int serv, Level l)
-               : service(serv),
-                 level(l)
-            {}
-
-            ThreadSetting(const ThreadSetting& rhs)
-               : service(rhs.service),
-                 level(rhs.level)
-            {}
+            ThreadSetting(int serv, Level level, Type type=Cout,
+                          const char *logFileName=NULL,
+                          ExternalLogger *pExternalLogger=NULL)
+               : mService(serv),
+                 mLevel(level),
+                 mType(type),
+                 mExternalLogger(pExternalLogger)
+            {
+               if (logFileName)
+               {
+                  mLogFileName = logFileName;
+               }
+            }
             
-            int service;
-            Level level;
+            int mService;
+            Level mLevel;
+            Type mType;
+            Data mLogFileName;
+            ExternalLogger* mExternalLogger;
       };
 
       /// output the loglevel, hostname, appname, pid, tid, subsystem
@@ -147,7 +156,7 @@ class Log
       static Data timestamp();
       static ExternalLogger* getExternal()
       {
-         return mExternalLogger;
+         return mDefaultTreadSettings.mExternalLogger;
       }
       static Data getAppName()
       {
@@ -178,7 +187,7 @@ class Log
 
       static void setLevel(Level level);
       static void setLevel(Level level, Subsystem& s);
-      static Level level() { return mLevel; }
+      static Level level() { return mDefaultTreadSettings.mLevel; }
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
@@ -192,14 +201,11 @@ class Log
       static void setThreadSetting(int serv, Level l);
       static void setThreadSetting(int serv);
       static volatile short touchCount;
-      static Type _type;
       static const Data delim;
    protected:
-      static Level mLevel;
+      static ThreadSetting mDefaultTreadSettings;
       static Data mAppName;
       static Data mHostname;
-      static Data mLogFileName;
-      static ExternalLogger* mExternalLogger;
 #ifndef WIN32
       static pid_t mPid;
 #else   
