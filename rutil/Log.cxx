@@ -42,10 +42,10 @@ volatile short Log::touchCount = 0;
 
 #ifdef LOG_ENABLE_THREAD_SETTING
 #if defined(__APPLE__) || defined(__CYGWIN__)
-HashValueImp(pthread_t, (size_t)data);
+HashValueImp(ThreadIf::Id, (size_t)data);
 #endif
-HashMap<pthread_t, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
-HashMap<int, std::set<pthread_t> > Log::mServiceToThreads;
+HashMap<ThreadIf::Id, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
+HashMap<int, std::set<ThreadIf::Id> > Log::mServiceToThreads;
 pthread_key_t* Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new pthread_key_t);
 #endif
 
@@ -349,8 +349,8 @@ Log::getThreadSetting()
    if (Log::touchCount > 0)
    {
       Lock lock(_mutex);
-      pthread_t thread = pthread_self();
-      HashMap<pthread_t, pair<ThreadSetting, bool> >::iterator res = Log::mThreadToLevel.find(thread);
+      ThreadIf::Id thread = ThreadIf::selfId();
+      HashMap<ThreadIf::Id, pair<ThreadSetting, bool> >::iterator res = Log::mThreadToLevel.find(thread);
       assert(res != Log::mThreadToLevel.end());
       if (res->second.second)
       {
@@ -385,7 +385,7 @@ Log::setThreadSetting(ThreadSetting info)
    assert(0);
 #else
    //cerr << "Log::setThreadSetting: " << "service: " << info.service << " level " << toString(info.level) << " for " << pthread_self() << endl;
-   pthread_t thread = pthread_self();
+   ThreadIf::Id thread = ThreadIf::selfId();
    pthread_setspecific(*mLevelKey, (void *) new ThreadSetting(info));
    Lock lock(_mutex);
 
@@ -410,8 +410,8 @@ Log::setServiceLevel(int service, Level l)
 #ifndef LOG_ENABLE_THREAD_SETTING
    assert(0);
 #else
-   set<pthread_t>& threads = Log::mServiceToThreads[service];
-   for (set<pthread_t>::iterator i = threads.begin(); i != threads.end(); i++)
+   set<ThreadIf::Id>& threads = Log::mServiceToThreads[service];
+   for (set<ThreadIf::Id>::iterator i = threads.begin(); i != threads.end(); i++)
    {
       Log::mThreadToLevel[*i].first.level = l;
       Log::mThreadToLevel[*i].second = true;

@@ -67,15 +67,28 @@ class ThreadIf
       bool isShutdown() const;
 
 #ifdef WIN32
-#ifdef _WIN32_WCE
       typedef DWORD Id;
 #else
-      typedef unsigned int Id;
-#endif
-#else
       typedef pthread_t Id;
-      static Id selfId();
 #endif
+      static Id selfId();
+
+#ifdef WIN32
+      typedef DWORD TlsKey;
+#else
+      typedef pthread_key_t TlsKey;
+#endif
+      typedef void TlsDestructor(void*);
+
+      /** This function follows pthread_key_create() signature */
+      static int tlsKeyCreate(TlsKey &key, TlsDestructor *destructor);
+      /** This function follows pthread_key_delete() signature */
+      static int tlsKeyDelete(TlsKey key);
+      /** This function follows pthread_setspecific() signature */
+      static int tlsSetValue(TlsKey key, const void *val);
+      /** This function follows pthread_getspecific() signature */
+      static void *tlsGetValue(TlsKey key);
+
 
       /* thread is a virtual method.  Users should derive and define
         thread() such that it returns when isShutdown() is true.
@@ -85,6 +98,7 @@ class ThreadIf
    protected:
 #ifdef WIN32
       HANDLE mThread;
+      
 #endif
       Id mId;
 
