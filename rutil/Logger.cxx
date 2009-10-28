@@ -14,7 +14,7 @@ unsigned int GenericLogImpl::MaxLineCount = 0; // no limit by default
 std::ostream&
 GenericLogImpl::Instance()
 {
-   switch (Log::_type)
+   switch (Log::mDefaultTreadSettings.mType)
    {
       case Log::Syslog:
          if (mLogger == 0)
@@ -38,9 +38,9 @@ GenericLogImpl::Instance()
             {
                delete mLogger;
             }
-            if (Log::mLogFileName != "")
+            if (mDefaultTreadSettings.mLogFileName != "")
             {
-               mLogger = new std::ofstream(mLogFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
+               mLogger = new std::ofstream(mDefaultTreadSettings.mLogFileName.c_str(), std::ios_base::out | std::ios_base::trunc);
                mLineCount = 0;
             }
             else
@@ -73,7 +73,7 @@ GenericLogImpl::isLogging(Log::Level level, const resip::Subsystem& sub)
    }
    else
    {
-      return (level <= Log::mLevel);
+      return (level <= Log::mDefaultTreadSettings.mLevel);
    }
 }
 

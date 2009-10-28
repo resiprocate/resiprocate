@@ -22,12 +22,9 @@ using namespace resip;
 using namespace std;
 
 const Data Log::delim(" | ");
-Log::Level Log::mLevel = Log::Info;
-Log::Type Log::_type = Cout;
+Log::ThreadSetting Log::mDefaultTreadSettings(-1, Log::Info, Cout, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
-Data Log::mLogFileName;
-ExternalLogger* Log::mExternalLogger = 0;
 
 #ifdef WIN32
 int Log::mPid=0;
@@ -104,14 +101,14 @@ Log::initialize(Type type, Level level, const Data& appName,
    Lock lock(_mutex);
    GenericLogImpl::reset();   
    
-   _type = type;
-   mLevel = level;
+   mDefaultTreadSettings.mType = type;
+   mDefaultTreadSettings.mLevel = level;
 
    if (logFileName)
    {
-      mLogFileName = logFileName;
+      mDefaultTreadSettings.mLogFileName = logFileName;
    }
-   mExternalLogger = externalLogger;
+   mDefaultTreadSettings.mExternalLogger = externalLogger;
 
    ParseBuffer pb(appName);
    pb.skipToEnd();
@@ -145,7 +142,7 @@ void
 Log::setLevel(Level level)
 {
    Lock lock(_mutex);
-   mLevel = level; 
+   mDefaultTreadSettings.mLevel = level; 
 }
 
 void
@@ -352,7 +349,7 @@ Log::getThreadSetting()
       assert(res != Log::mThreadToLevel.end());
       if (res->second.second)
       {
-         setting->level = res->second.first.level;
+         setting->mLevel = res->second.first.mLevel;
          res->second.second = false;
          touchCount--;
 //         cerr << "**Log::getThreadSetting:touchCount: " << Log::touchCount << "**" << endl;
@@ -396,7 +393,7 @@ Log::setThreadSetting(ThreadSetting info)
    }
    Log::mThreadToLevel[thread].first = info;
    Log::mThreadToLevel[thread].second = false;
-   Log::mServiceToThreads[info.service].insert(thread);
+   Log::mServiceToThreads[info.mService].insert(thread);
 #endif
 }
    
@@ -434,7 +431,7 @@ Log::Guard::Guard(resip::Log::Level level,
    mStream(mData.clear())
 {
 	
-   if (resip::Log::_type != resip::Log::OnlyExternalNoHeaders)
+   if (resip::Log::mDefaultTreadSettings.mType != resip::Log::OnlyExternalNoHeaders)
    {
       Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
       mStream << resip::Log::delim;
@@ -471,13 +468,13 @@ Log::Guard::~Guard()
     
    resip::Lock lock(resip::Log::_mutex);
    // !dlb! implement VSDebugWindow as an external logger
-   if (resip::Log::_type == resip::Log::VSDebugWindow)
+   if (resip::Log::mDefaultTreadSettings.mType == resip::Log::VSDebugWindow)
    {
       mData += "\r\n";
       resip::GenericLogImpl::OutputToWin32DebugWindow(mData);
    }
-   else if(resip::Log::_type == resip::Log::OnlyExternal ||
-	   resip::Log::_type == resip::Log::OnlyExternalNoHeaders) 
+   else if(resip::Log::mDefaultTreadSettings.mType == resip::Log::OnlyExternal ||
+	   resip::Log::mDefaultTreadSettings.mType == resip::Log::OnlyExternalNoHeaders) 
    {
       return;
    }
