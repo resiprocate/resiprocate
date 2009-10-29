@@ -122,7 +122,7 @@ Log::initialize(Type type, Level level, const Data& appName,
                 ExternalLogger* externalLogger)
 {
    Lock lock(_mutex);
-   reset();   
+   mDefaultLoggerData.reset();   
    
    mDefaultLoggerData.set(type, level, logFileName, externalLogger);
 
@@ -158,7 +158,7 @@ void
 Log::setLevel(Level level)
 {
    Lock lock(_mutex);
-   mDefaultLoggerData.mLevel = level; 
+   getLoggerData().mLevel = level; 
 }
 
 void
@@ -462,13 +462,13 @@ int Log::setThreadLocalLogger(LocalLoggerId loggerId)
 std::ostream&
 Log::Instance()
 {
-   return mDefaultLoggerData.Instance();
+   return getLoggerData().Instance();
 }
 
 void 
 Log::reset()
 {
-   mDefaultLoggerData.reset();
+   getLoggerData().reset();
 }
 
 bool
@@ -480,7 +480,7 @@ Log::isLogging(Log::Level level, const resip::Subsystem& sub)
    }
    else
    {
-      return (level <= Log::mDefaultLoggerData.mLevel);
+      return (level <= Log::getLoggerData().mLevel);
    }
 }
 
@@ -565,7 +565,7 @@ Log::Guard::Guard(resip::Log::Level level,
    mStream(mData.clear())
 {
 	
-   if (resip::Log::mDefaultLoggerData.mType != resip::Log::OnlyExternalNoHeaders)
+   if (resip::Log::getLoggerData().mType != resip::Log::OnlyExternalNoHeaders)
    {
       Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
       mStream << resip::Log::delim;
@@ -602,13 +602,13 @@ Log::Guard::~Guard()
     
    resip::Lock lock(resip::Log::_mutex);
    // !dlb! implement VSDebugWindow as an external logger
-   if (resip::Log::mDefaultLoggerData.mType == resip::Log::VSDebugWindow)
+   if (resip::Log::getLoggerData().mType == resip::Log::VSDebugWindow)
    {
       mData += "\r\n";
       OutputToWin32DebugWindow(mData);
    }
-   else if(resip::Log::mDefaultLoggerData.mType == resip::Log::OnlyExternal ||
-	   resip::Log::mDefaultLoggerData.mType == resip::Log::OnlyExternalNoHeaders) 
+   else if(resip::Log::getLoggerData().mType == resip::Log::OnlyExternal ||
+	        resip::Log::getLoggerData().mType == resip::Log::OnlyExternalNoHeaders) 
    {
       return;
    }

@@ -150,7 +150,7 @@ class Log
       static Data timestamp();
       static ExternalLogger* getExternal()
       {
-         return mDefaultLoggerData.mExternalLogger;
+         return getLoggerData().mExternalLogger;
       }
       static Data getAppName()
       {
@@ -181,7 +181,7 @@ class Log
 
       static void setLevel(Level level);
       static void setLevel(Level level, Subsystem& s);
-      static Level level() { return mDefaultLoggerData.mLevel; }
+      static Level level() { return getLoggerData().mLevel; }
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
@@ -288,6 +288,12 @@ class Log
 #endif
       static const char mDescriptions[][32];
       static HashMap<int, Level> mServiceToLevel;
+
+      static ThreadData &getLoggerData()
+      {
+         ThreadData* pData = static_cast<ThreadData*>(ThreadIf::tlsGetValue(*Log::mLocalLoggerKey));
+         return pData?*pData:mDefaultLoggerData;
+      }
 
       /// Thread Local logger settings storage
       class LocalLoggerMap
