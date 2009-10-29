@@ -455,7 +455,7 @@ int Log::setThreadLocalLogger(LocalLoggerId loggerId)
       pData = mLocalLoggerMap.getData(loggerId);
    }
    ThreadIf::tlsSetValue(*mLocalLoggerKey, (void *) pData);
-   return 0;
+   return (loggerId == 0) || (pData != NULL);
 }
 
 
