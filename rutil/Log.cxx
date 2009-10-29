@@ -622,6 +622,7 @@ Log::Guard::~Guard()
 std::ostream&
 Log::ThreadData::Instance()
 {
+//   std::cerr << "Log::ThreadData::Instance() id=" << mId << " type=" << mType <<  std::endl;
    switch (mType)
    {
       case Log::Syslog:
@@ -642,7 +643,7 @@ Log::ThreadData::Instance()
          if (mLogger == 0 ||
              (MaxLineCount && mLineCount > MaxLineCount))
          {
-            std::cerr << "Creating a file logger" << std::endl;
+            std::cerr << "Creating a logger for file \"" << mLogFileName.c_str() << "\"" << std::endl;
             if (mLogger)
             {
                delete mLogger;
