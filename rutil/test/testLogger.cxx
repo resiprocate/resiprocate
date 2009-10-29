@@ -20,14 +20,18 @@ using namespace std;
 class LogThread : public ThreadIf
 {
     public:
-      LogThread(const Data& description, const Log::ThreadSetting& s)
+      LogThread(const Data& description, const Log::ThreadSetting& s,
+                Log::LocalLoggerId id = 0)
          : mDescription(description),
-           mSetting(s)
+           mSetting(s),
+           mId(id)
       {}
 
       void thread()
       {
          Log::setThreadSetting(mSetting);
+         int reval = Log::setThreadLocalLogger(mId);
+//         InfoLog(<< "setThreadLocalLogger(" << mId << ") returned " << reval);
          while(!waitForShutdown(1000))
          {
             StackLog(<< mDescription << "  STACK");
@@ -38,6 +42,7 @@ class LogThread : public ThreadIf
    private:
       Data mDescription;
       Log::ThreadSetting mSetting;
+      Log::LocalLoggerId mId;
 };
 
 int logsInCall()
@@ -69,12 +74,55 @@ class TestExternalLogger : public ExternalLogger
       }
 };
 
+void
+testThreadLocalLoggers(const char *appname)
+{
+   Log::initialize(Log::Cout, Log::Info, appname);
+
+   InfoLog(<<"Going to test thread local loggers.");
+   Noisy::outputLogMessages();
+
+   Log::LocalLoggerId id1 = Log::localLoggerCreate(Log::File, Log::Info, "testLogger-local1.txt");
+   Log::LocalLoggerId id2 = Log::localLoggerCreate(Log::File, Log::Info, "testLogger-local2.txt");
+
+   LogThread serviceErr("service with wrong local logger Id",
+                        Log::ThreadSetting(1, Log::Debug), id2+10);
+
+   LogThread service0("global", Log::ThreadSetting(1, Log::Debug));
+   LogThread service1a("local1----A", Log::ThreadSetting(1, Log::Debug), id1);
+   LogThread service1b("local1-------B", Log::ThreadSetting(1, Log::Debug), id1);
+   LogThread service2a("local2---------C", Log::ThreadSetting(1, Log::Debug), id2);
+   LogThread service2b("local2-----------D", Log::ThreadSetting(1, Log::Debug), id2);
+
+   service0.run();
+   service1a.run();
+   service1b.run();
+   service2a.run();
+   service2b.run();
+
+   sleep(3);
+
+   service0.shutdown();
+   service1a.shutdown();
+   service1b.shutdown();
+   service2a.shutdown();
+   service2b.shutdown();
+
+   service0.join();
+   service1a.join();
+   service1b.join();
+   service2a.join();
+   service2b.join();
+
+   Log::localLoggerRemove(id1);
+   Log::localLoggerRemove(id2);
+}
 
 int
 main(int argc, char* argv[])
 {
    CritLog(<< "logging before initializing is ok");
-   
+
    Log::initialize(Log::Cout, Log::Info, argv[0]);
 
    InfoLog(<<"Subsystem level for TEST subsystem, not level set, global is info.");
@@ -180,6 +228,10 @@ main(int argc, char* argv[])
    DebugLog(<< "Recursive non-debug OK: " << logsInCall());
 
    InfoLog(<< "Recursive non-debug OK!: " << logsInCall());
+
+   cout << endl;
+   testThreadLocalLoggers(argv[0]);
+
    return 0;
 }
 
