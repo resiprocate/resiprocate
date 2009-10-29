@@ -312,10 +312,6 @@ Log::Level
 Log::getServiceLevel(int service)
 {
    Lock lock(_mutex);
-#ifdef WIN32
-   assert(0);
-   return Bogus;
-#else
    HashMap<int, Level>::iterator res = Log::mServiceToLevel.find(service);
    if(res == Log::mServiceToLevel.end())
    {
@@ -325,7 +321,6 @@ Log::getServiceLevel(int service)
       return Err;
    }
    return res->second;
-#endif
 }
    
 const Log::ThreadSetting*
