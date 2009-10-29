@@ -30,6 +30,7 @@ HashValue(ThreadIf::Id);
 
 extern "C"
 {
+   // Forward declaration to make it friend of Log class.
    void freeLocalLogger(void* pThreadData);
 };
 

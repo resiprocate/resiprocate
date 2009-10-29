@@ -50,7 +50,7 @@ GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Err, args_)
 #define CritLog(args_) \
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Crit, args_)
 
-bool
+static inline bool
 genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub)
 {
    return resip::Log::isLogging(level, sub);
