@@ -26,7 +26,7 @@ using namespace resip;
 using namespace std;
 
 const Data Log::delim(" | ");
-Log::ThreadData Log::mDefaultTreadSettings(0, Log::Cout, Log::Info, NULL, NULL);
+Log::ThreadData Log::mDefaultLoggerData(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
 unsigned int Log::MaxLineCount = 0; // no limit by default
@@ -124,7 +124,7 @@ Log::initialize(Type type, Level level, const Data& appName,
    Lock lock(_mutex);
    reset();   
    
-   mDefaultTreadSettings.set(type, level, logFileName, externalLogger);
+   mDefaultLoggerData.set(type, level, logFileName, externalLogger);
 
    ParseBuffer pb(appName);
    pb.skipToEnd();
@@ -158,7 +158,7 @@ void
 Log::setLevel(Level level)
 {
    Lock lock(_mutex);
-   mDefaultTreadSettings.mLevel = level; 
+   mDefaultLoggerData.mLevel = level; 
 }
 
 void
@@ -462,13 +462,13 @@ int Log::setThreadLocalLogger(LocalLoggerId loggerId)
 std::ostream&
 Log::Instance()
 {
-   return mDefaultTreadSettings.Instance();
+   return mDefaultLoggerData.Instance();
 }
 
 void 
 Log::reset()
 {
-   mDefaultTreadSettings.reset();
+   mDefaultLoggerData.reset();
 }
 
 bool
@@ -480,7 +480,7 @@ Log::isLogging(Log::Level level, const resip::Subsystem& sub)
    }
    else
    {
-      return (level <= Log::mDefaultTreadSettings.mLevel);
+      return (level <= Log::mDefaultLoggerData.mLevel);
    }
 }
 
@@ -565,7 +565,7 @@ Log::Guard::Guard(resip::Log::Level level,
    mStream(mData.clear())
 {
 	
-   if (resip::Log::mDefaultTreadSettings.mType != resip::Log::OnlyExternalNoHeaders)
+   if (resip::Log::mDefaultLoggerData.mType != resip::Log::OnlyExternalNoHeaders)
    {
       Log::tags(mLevel, mSubsystem, mFile, mLine, mStream);
       mStream << resip::Log::delim;
@@ -602,13 +602,13 @@ Log::Guard::~Guard()
     
    resip::Lock lock(resip::Log::_mutex);
    // !dlb! implement VSDebugWindow as an external logger
-   if (resip::Log::mDefaultTreadSettings.mType == resip::Log::VSDebugWindow)
+   if (resip::Log::mDefaultLoggerData.mType == resip::Log::VSDebugWindow)
    {
       mData += "\r\n";
       OutputToWin32DebugWindow(mData);
    }
-   else if(resip::Log::mDefaultTreadSettings.mType == resip::Log::OnlyExternal ||
-	   resip::Log::mDefaultTreadSettings.mType == resip::Log::OnlyExternalNoHeaders) 
+   else if(resip::Log::mDefaultLoggerData.mType == resip::Log::OnlyExternal ||
+	   resip::Log::mDefaultLoggerData.mType == resip::Log::OnlyExternalNoHeaders) 
    {
       return;
    }
