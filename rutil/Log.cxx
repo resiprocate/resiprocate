@@ -26,7 +26,7 @@ using namespace resip;
 using namespace std;
 
 const Data Log::delim(" | ");
-Log::ThreadData Log::mDefaultTreadSettings(Log::Info, Cout, NULL, NULL);
+Log::ThreadData Log::mDefaultTreadSettings(Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
 unsigned int Log::MaxLineCount = 0; // no limit by default
@@ -106,14 +106,7 @@ Log::initialize(Type type, Level level, const Data& appName,
    Lock lock(_mutex);
    reset();   
    
-   mDefaultTreadSettings.mType = type;
-   mDefaultTreadSettings.mLevel = level;
-
-   if (logFileName)
-   {
-      mDefaultTreadSettings.mLogFileName = logFileName;
-   }
-   mDefaultTreadSettings.mExternalLogger = externalLogger;
+   mDefaultTreadSettings.set(type, level, logFileName, externalLogger);
 
    ParseBuffer pb(appName);
    pb.skipToEnd();

@@ -202,15 +202,7 @@ class Log
       class ThreadData
       {
          public:
-            ThreadData()
-               : mLevel(Err),
-                 mType(Cout),
-                 mExternalLogger(NULL),
-                 mLogger(NULL),
-                 mLineCount(0)
-            {}
-
-            ThreadData(Level level, Type type=Cout,
+            ThreadData(Type type=Cout, Level level=Info,
                        const char *logFileName=NULL,
                        ExternalLogger *pExternalLogger=NULL)
                : mLevel(level),
@@ -223,6 +215,20 @@ class Log
                {
                   mLogFileName = logFileName;
                }
+            }
+
+            void set(Type type=Cout, Level level=Info,
+                     const char *logFileName=NULL,
+                     ExternalLogger *pExternalLogger=NULL)
+            {
+               mType = type;
+               mLevel = level;
+
+               if (logFileName)
+               {
+                  mLogFileName = logFileName;
+               }
+               mExternalLogger = pExternalLogger;
             }
 
             std::ostream& Instance(); ///< Return logger stream instance, creating it if needed.
