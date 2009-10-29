@@ -150,7 +150,7 @@ class Log
       static Data timestamp();
       static ExternalLogger* getExternal()
       {
-         return mDefaultTreadSettings.mExternalLogger;
+         return mDefaultLoggerData.mExternalLogger;
       }
       static Data getAppName()
       {
@@ -181,7 +181,7 @@ class Log
 
       static void setLevel(Level level);
       static void setLevel(Level level, Subsystem& s);
-      static Level level() { return mDefaultTreadSettings.mLevel; }
+      static Level level() { return mDefaultLoggerData.mLevel; }
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
@@ -278,7 +278,7 @@ class Log
             std::ostream* mLogger;
       };
 
-      static ThreadData mDefaultTreadSettings; ///< Default logger settings.
+      static ThreadData mDefaultLoggerData; ///< Default logger settings.
       static Data mAppName;
       static Data mHostname;
 #ifndef WIN32
