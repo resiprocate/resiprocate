@@ -33,6 +33,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="winmm.lib"
 				OutputFile="$(OutDir)/rutil.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -73,6 +74,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="winmm.lib"
 				OutputFile="$(OutDir)/rutil.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -113,6 +115,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="winmm.lib"
 				OutputFile="$(OutDir)/rutil.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -156,6 +159,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="winmm.lib"
 				OutputFile="$(OutDir)/rutil.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -199,6 +203,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="winmm.lib"
 				OutputFile="$(OutDir)/rutil.lib"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -387,8 +392,7 @@
 				RelativePath=".\ThreadIf.cxx">
 			</File>
 			<File
-				RelativePath=".\Time.cxx"
-				>
+				RelativePath=".\Time.cxx">
 			</File>
 			<File
 				RelativePath=".\Timer.cxx">
@@ -594,8 +598,7 @@
 				RelativePath=".\ThreadIf.hxx">
 			</File>
 			<File
-				RelativePath=".\Time.hxx"
-				>
+				RelativePath=".\Time.hxx">
 			</File>
 			<File
 				RelativePath=".\TimeLimitFifo.hxx">
