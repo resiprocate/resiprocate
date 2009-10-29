@@ -26,7 +26,7 @@ using namespace resip;
 using namespace std;
 
 const Data Log::delim(" | ");
-Log::ThreadData Log::mDefaultTreadSettings(Log::Cout, Log::Info, NULL, NULL);
+Log::ThreadData Log::mDefaultTreadSettings(0, Log::Cout, Log::Info, NULL, NULL);
 Data Log::mAppName;
 Data Log::mHostname;
 unsigned int Log::MaxLineCount = 0; // no limit by default
@@ -51,6 +51,9 @@ ThreadIf::TlsKey* Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new Thread
 
 HashMap<int, Log::Level> Log::mServiceToLevel;
 
+Log::LocalLoggerMap Log::mLocalLoggerMap;
+ThreadIf::TlsKey* Log::mLocalLoggerKey = (Log::mLocalLoggerKey ? Log::mLocalLoggerKey : new ThreadIf::TlsKey);
+
 const char
 Log::mDescriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "STACK", "CERR", ""}; 
 
@@ -61,6 +64,16 @@ extern "C"
    void freeThreadSetting(void* setting)
    {
       delete static_cast<Log::ThreadSetting*>(setting);
+   }
+
+   void freeLocalLogger(void* pThreadData)
+   {
+      if (pThreadData)
+      {
+         // There was some local logger installed. Decrease its use count before we
+         // continue.
+         Log::mLocalLoggerMap.decreaseUseCount((static_cast<Log::ThreadData*>(pThreadData))->mId);
+      }
    }
 }
 bool
@@ -73,6 +86,11 @@ Log::init()
       ThreadIf::tlsKeyCreate(*Log::mLevelKey, freeThreadSetting);
 	}
 #endif
+   if (Log::mLocalLoggerKey == 0)
+   {
+      Log::mLocalLoggerKey = new ThreadIf::TlsKey;
+      ThreadIf::tlsKeyCreate(*Log::mLocalLoggerKey, freeLocalLogger);
+   }
 	return true;
 }
 
@@ -409,6 +427,38 @@ Log::setServiceLevel(int service, Level l)
 //   cerr << "**Log::setServiceLevel:touchCount: " << Log::touchCount << "**" << endl;
 }
 
+Log::LocalLoggerId Log::localLoggerCreate(Log::Type type,
+                                          Log::Level level,
+                                          const char * logFileName,
+                                          ExternalLogger* externalLogger)
+{
+   return mLocalLoggerMap.create(type, level, logFileName, externalLogger);
+}
+
+int Log::localLoggerRemove(LocalLoggerId loggerId)
+{
+   return mLocalLoggerMap.remove(loggerId);
+}
+
+int Log::setThreadLocalLogger(LocalLoggerId loggerId)
+{
+   ThreadData* pData = static_cast<ThreadData*>(ThreadIf::tlsGetValue(*Log::mLocalLoggerKey));
+   if (pData)
+   {
+      // There was some local logger installed. Decrease its use count before we
+      // continue.
+      mLocalLoggerMap.decreaseUseCount(pData->mId);
+      pData = NULL;
+   }
+   if (loggerId)
+   {
+      pData = mLocalLoggerMap.getData(loggerId);
+   }
+   ThreadIf::tlsSetValue(*mLocalLoggerKey, (void *) pData);
+   return 0;
+}
+
+
 std::ostream&
 Log::Instance()
 {
@@ -449,8 +499,59 @@ Log::OutputToWin32DebugWindow(const Data& result)
 #endif
 }
 
-ExternalLogger::~ExternalLogger()
-{}
+Log::LocalLoggerId Log::LocalLoggerMap::create(Log::Type type,
+                                                    Log::Level level,
+                                                    const char * logFileName,
+                                                    ExternalLogger* externalLogger)
+{
+   Lock lock(mLoggerInstancesMapMutex);
+   Log::LocalLoggerId id = ++mLastLocalLoggerId;
+   Log::ThreadData *pNewData = new Log::ThreadData(id, type, level, logFileName,
+                                                   externalLogger);
+   mLoggerInstancesMap[id].first = pNewData;
+   mLoggerInstancesMap[id].second = 0;
+   return id;
+}
+
+int Log::LocalLoggerMap::remove(Log::LocalLoggerId loggerId)
+{
+   Lock lock(mLoggerInstancesMapMutex);
+   if (mLoggerInstancesMap.find(loggerId) == mLoggerInstancesMap.end())
+   {
+      // No such logger ID
+      return 1;
+   }
+   if (mLoggerInstancesMap[loggerId].second > 0)
+   {
+      // Non-zero use-count.
+      return 2;
+   }
+   mLoggerInstancesMap.erase(loggerId);
+   return 0;
+}
+
+Log::ThreadData *Log::LocalLoggerMap::getData(Log::LocalLoggerId loggerId)
+{
+   Lock lock(mLoggerInstancesMapMutex);
+   if (mLoggerInstancesMap.find(loggerId) == mLoggerInstancesMap.end())
+   {
+      // No such logger ID
+      return NULL;
+   }
+   mLoggerInstancesMap[loggerId].second++;
+   return mLoggerInstancesMap[loggerId].first;
+}
+
+void Log::LocalLoggerMap::decreaseUseCount(Log::LocalLoggerId loggerId)
+{
+   Lock lock(mLoggerInstancesMapMutex);
+   if (mLoggerInstancesMap.find(loggerId) != mLoggerInstancesMap.end())
+   {
+      mLoggerInstancesMap[loggerId].second--;
+      assert(mLoggerInstancesMap[loggerId].second >= 0);
+   }
+}
+
 
 Log::Guard::Guard(resip::Log::Level level,
                   const resip::Subsystem& subsystem,
