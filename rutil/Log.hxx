@@ -238,8 +238,9 @@ class Log
             Type mType;
             Data mLogFileName;
             ExternalLogger* mExternalLogger;
-            std::ostream* mLogger;
             unsigned int mLineCount;
+      protected:
+            std::ostream* mLogger;
       };
 
       static ThreadData mDefaultTreadSettings;
