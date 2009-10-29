@@ -27,6 +27,8 @@ typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 
 using namespace resip;
 
+ThreadIf::TlsDestructor *ThreadIf::mTlsDestructors[ThreadIf::TLS_MAX_KEYS];
+
 extern "C"
 {
 static void*
