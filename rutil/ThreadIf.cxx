@@ -27,8 +27,10 @@ typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 
 using namespace resip;
 
+#ifdef WIN32
 ThreadIf::TlsDestructor **ThreadIf::mTlsDestructors;
 Mutex *ThreadIf::mTlsDestructorsMutex;
+#endif
 
 extern "C"
 {
