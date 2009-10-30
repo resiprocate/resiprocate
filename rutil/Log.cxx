@@ -14,7 +14,6 @@
 #include <time.h>
 
 #include "rutil/Log.hxx"
-#include "rutil/Lock.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/ParseBuffer.hxx"
 #include "rutil/ThreadIf.hxx"
@@ -72,7 +71,7 @@ extern "C"
       {
          // There was some local logger installed. Decrease its use count before we
          // continue.
-         Log::mLocalLoggerMap.decreaseUseCount((static_cast<Log::ThreadData*>(pThreadData))->mId);
+         Log::mLocalLoggerMap.decreaseUseCount((static_cast<Log::ThreadData*>(pThreadData))->id());
       }
    }
 }
@@ -177,6 +176,50 @@ Log::setLevel(Level level, Subsystem& s)
 {
    Lock lock(_mutex);
    s.setLevel(level); 
+}
+
+void
+Log::setLevel(Level level, Log::LocalLoggerId loggerId)
+{
+   if (loggerId)
+   {
+      ThreadData *pData = mLocalLoggerMap.getData(loggerId);
+      if (pData)
+      {
+         // Local logger found. Set logging level.
+         pData->mLevel = level;
+
+         // We don't need local logger instance anymore.
+         mLocalLoggerMap.decreaseUseCount(loggerId);
+         pData = NULL;
+      }
+   }
+   else
+   {
+      Lock lock(_mutex);
+      mDefaultLoggerData.mLevel = level;
+   }
+}
+
+Log::Level Log::level(Log::LocalLoggerId loggerId)
+{
+   Level level;
+   ThreadData *pData;
+   if (loggerId && (pData = mLocalLoggerMap.getData(loggerId)))
+   {
+      // Local logger found. Set logging level.
+      level = pData->mLevel;
+
+      // We don't need local logger instance anymore.
+      mLocalLoggerMap.decreaseUseCount(loggerId);
+      pData = NULL;
+   }
+   else
+   {
+      Lock lock(_mutex);
+      level = mDefaultLoggerData.mLevel;
+   }
+   return level;
 }
 
 const static Data log_("LOG_");
@@ -446,19 +489,19 @@ Log::LocalLoggerId Log::localLoggerCreate(Log::Type type,
    return mLocalLoggerMap.create(type, level, logFileName, externalLogger);
 }
 
-int Log::localLoggerRemove(LocalLoggerId loggerId)
+int Log::localLoggerRemove(Log::LocalLoggerId loggerId)
 {
    return mLocalLoggerMap.remove(loggerId);
 }
 
-int Log::setThreadLocalLogger(LocalLoggerId loggerId)
+int Log::setThreadLocalLogger(Log::LocalLoggerId loggerId)
 {
    ThreadData* pData = static_cast<ThreadData*>(ThreadIf::tlsGetValue(*Log::mLocalLoggerKey));
    if (pData)
    {
       // There was some local logger installed. Decrease its use count before we
       // continue.
-      mLocalLoggerMap.decreaseUseCount(pData->mId);
+      mLocalLoggerMap.decreaseUseCount(pData->id());
       pData = NULL;
    }
    if (loggerId)
@@ -468,7 +511,6 @@ int Log::setThreadLocalLogger(LocalLoggerId loggerId)
    ThreadIf::tlsSetValue(*mLocalLoggerKey, (void *) pData);
    return (loggerId == 0) || (pData != NULL)?0:1;
 }
-
 
 std::ostream&
 Log::Instance()

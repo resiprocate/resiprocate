@@ -11,6 +11,7 @@
 #include <set>
 
 #include "rutil/Mutex.hxx"
+#include "rutil/Lock.hxx"
 #include "rutil/HashMap.hxx"
 #include "rutil/ThreadIf.hxx"
 #include <iostream>
@@ -86,7 +87,9 @@ class Log
          StdErr = 9,
          Bogus = 666
       };
-      
+
+      /// Thread Local logger ID type.
+      typedef int LocalLoggerId;
 
       /**
          @brief Implementation for logging macros.
@@ -177,9 +180,20 @@ class Log
                              const Data& appName,
                              ExternalLogger& logger);
 
+      /** @brief Set logging level for current thread.
+      * If thread has no local logger attached, then set global logging level.
+      */
       static void setLevel(Level level);
+      /** @brief Set logging level for given subsystem. */
       static void setLevel(Level level, Subsystem& s);
-      static Level level() { return getLoggerData().mLevel; }
+      /** Set logging level for given local logger. Use 0 to set global logging level. */
+      static void setLevel(Level level, LocalLoggerId loggerId);
+      /** @brief Return logging level for current thread.
+      * If thread has no local logger attached, then return global logging level.
+      */
+      static Level level() { Lock lock(_mutex); return getLoggerData().mLevel; }
+      /** Return logging level for given local logger. Use 0 to set global logging level. */
+      static Level level(LocalLoggerId loggerId);
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
@@ -191,9 +205,6 @@ class Log
       static void setThreadSetting(ThreadSetting info);
       static void setThreadSetting(int serv, Level l);
       static void setThreadSetting(int serv);
-
-      /// Thread Local logger ID type.
-      typedef int LocalLoggerId;
 
       /// Create new logger instance and return its ID (zero on error)
       static LocalLoggerId localLoggerCreate(Type type,
@@ -264,17 +275,20 @@ class Log
                mExternalLogger = pExternalLogger;
             }
 
+            LocalLoggerId id() const {return mId;}
+
             std::ostream& Instance(); ///< Return logger stream instance, creating it if needed.
             void reset(); ///< Frees logger stream
 
-            LocalLoggerId mId;
-            Level mLevel;
+            volatile Level mLevel;
+            ExternalLogger* mExternalLogger;
+      protected:
+            const LocalLoggerId mId;
+            friend class Guard;
             Type mType;
             Data mLogFileName;
-            ExternalLogger* mExternalLogger;
-            unsigned int mLineCount;
-      protected:
             std::ostream* mLogger;
+            unsigned int mLineCount;
       };
 
       static ThreadData mDefaultLoggerData; ///< Default logger settings.
