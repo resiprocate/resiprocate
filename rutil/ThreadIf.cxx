@@ -47,7 +47,7 @@ threadIfThreadWrapper( void* threadParm )
 
    assert( t );
    t->thread();
-#if defined(WIN32)
+#ifdef WIN32
    // Free data in TLS slots.
    ThreadIf::tlsDestroyAll();
 #ifdef _WIN32_WCE
@@ -311,6 +311,7 @@ ThreadIf::isShutdown() const
    return ( mShutdown );
 }
 
+#ifdef WIN32
 void
 ThreadIf::tlsDestroyAll()
 {
@@ -327,6 +328,7 @@ ThreadIf::tlsDestroyAll()
       }
    }
 }
+#endif
 
 // End of File
 
