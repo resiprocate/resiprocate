@@ -114,8 +114,18 @@ testThreadLocalLoggers(const char *appname)
    service2a.join();
    service2b.join();
 
-   Log::localLoggerRemove(id1);
-   Log::localLoggerRemove(id2);
+   int retval = Log::localLoggerRemove(id1);
+   if (retval > 0)
+   {
+      std::cerr << "Local logger 1 hasn't been cleaned up correctly! "
+                   "Log::localLoggerRemove() return code is " << retval << std::endl;
+   }
+   retval = Log::localLoggerRemove(id2);
+   if (retval > 0)
+   {
+      std::cerr << "Local logger 2 hasn't been cleaned up correctly! "
+                   "Log::localLoggerRemove() return code is " << retval << std::endl;
+   }
 }
 
 int
