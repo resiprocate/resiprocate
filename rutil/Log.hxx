@@ -157,8 +157,6 @@ class Log
          return mAppName;
       }
 
-      static bool init();
-
       static void initialize(Type type,
                              Level level,
                              const Data& appName,
@@ -333,6 +331,7 @@ class Log
       };
 
       friend void ::freeLocalLogger(void* pThreadData);
+      friend class LogStaticInitializer;
       static LocalLoggerMap mLocalLoggerMap;
       static ThreadIf::TlsKey* mLocalLoggerKey;
 
@@ -344,23 +343,31 @@ class Log
 #endif
 };
 
-static bool invokeLogInit = Log::init();
-
 /** @brief Interface functor for external logging.
- */
+*/
 class ExternalLogger
 {
-   public:
-      virtual ~ExternalLogger() {};
-      /** return true to also do default logging, false to suppress default logging. */
-      virtual bool operator()(Log::Level level,
-                              const Subsystem& subsystem, 
-                              const Data& appName,
-                              const char* file,
-                              int line,
-                              const Data& message,
-                              const Data& messageWithHeaders) = 0;
+public:
+   virtual ~ExternalLogger() {};
+   /** return true to also do default logging, false to suppress default logging. */
+   virtual bool operator()(Log::Level level,
+      const Subsystem& subsystem, 
+      const Data& appName,
+      const char* file,
+      int line,
+      const Data& message,
+      const Data& messageWithHeaders) = 0;
 };
+
+/// Class to initialize Log class static variables.
+class LogStaticInitializer {
+public:
+   LogStaticInitializer();
+   ~LogStaticInitializer();
+protected:
+   static unsigned int mInstanceCounter;
+};
+static LogStaticInitializer _staticLogInit;
 
 }
 

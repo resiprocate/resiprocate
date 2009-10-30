@@ -46,13 +46,13 @@ HashValueImp(ThreadIf::Id, (size_t)data);
 #endif
 HashMap<ThreadIf::Id, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
 HashMap<int, std::set<ThreadIf::Id> > Log::mServiceToThreads;
-ThreadIf::TlsKey* Log::mLevelKey = (Log::mLevelKey ? Log::mLevelKey : new ThreadIf::TlsKey);
+ThreadIf::TlsKey* Log::mLevelKey;
 #endif
 
 HashMap<int, Log::Level> Log::mServiceToLevel;
 
 Log::LocalLoggerMap Log::mLocalLoggerMap;
-ThreadIf::TlsKey* Log::mLocalLoggerKey = (Log::mLocalLoggerKey ? Log::mLocalLoggerKey : new ThreadIf::TlsKey);
+ThreadIf::TlsKey* Log::mLocalLoggerKey;
 
 const char
 Log::mDescriptions[][32] = {"NONE", "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG", "STACK", "CERR", ""}; 
@@ -76,22 +76,33 @@ extern "C"
       }
    }
 }
-bool
-Log::init()
+
+unsigned int LogStaticInitializer::mInstanceCounter=0;
+LogStaticInitializer::LogStaticInitializer()
 {
-#ifdef LOG_ENABLE_THREAD_SETTING
-	if (Log::mLevelKey == 0)
-	{
-		Log::mLevelKey = new ThreadIf::TlsKey;
-      ThreadIf::tlsKeyCreate(*Log::mLevelKey, freeThreadSetting);
-	}
-#endif
-   if (Log::mLocalLoggerKey == 0)
+   if (mInstanceCounter++ == 0)
    {
-      Log::mLocalLoggerKey = new ThreadIf::TlsKey;
-      ThreadIf::tlsKeyCreate(*Log::mLocalLoggerKey, freeLocalLogger);
+#ifdef LOG_ENABLE_THREAD_SETTING
+         Log::mLevelKey = new ThreadIf::TlsKey;
+         ThreadIf::tlsKeyCreate(*Log::mLevelKey, freeThreadSetting);
+#endif
+
+         Log::mLocalLoggerKey = new ThreadIf::TlsKey;
+         ThreadIf::tlsKeyCreate(*Log::mLocalLoggerKey, freeLocalLogger);
    }
-	return true;
+}
+LogStaticInitializer::~LogStaticInitializer()
+{
+   if (--mInstanceCounter == 0)
+   {
+#ifdef LOG_ENABLE_THREAD_SETTING
+      ThreadIf::tlsKeyDelete(*Log::mLevelKey);
+      delete Log::mLevelKey;
+#endif
+
+      ThreadIf::tlsKeyDelete(*Log::mLocalLoggerKey);
+      delete Log::mLocalLoggerKey;
+   }
 }
 
 void
