@@ -183,7 +183,6 @@ class Log
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
-      static Mutex _mutex;
 
       static void setServiceLevel(int service, Level l);
       static Level getServiceLevel(int service);
@@ -192,8 +191,6 @@ class Log
       static void setThreadSetting(ThreadSetting info);
       static void setThreadSetting(int serv, Level l);
       static void setThreadSetting(int serv);
-      static volatile short touchCount;
-      static const Data delim;
 
       /// Thread Local logger ID type.
       typedef int LocalLoggerId;
@@ -228,7 +225,11 @@ class Log
 
    public:
       static unsigned int MaxLineCount; ///< Left for compatibility, should be moved to ThreadData
+
    protected:
+      static Mutex _mutex;
+      static volatile short touchCount;
+      static const Data delim;
 
       class ThreadData
       {
