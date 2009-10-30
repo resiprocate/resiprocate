@@ -519,11 +519,13 @@ int Log::LocalLoggerMap::remove(Log::LocalLoggerId loggerId)
    if (mLoggerInstancesMap.find(loggerId) == mLoggerInstancesMap.end())
    {
       // No such logger ID
+      std::cerr << "Log::LocalLoggerMap::remove(): Unknown local logger id=" << loggerId << std::endl;
       return 1;
    }
    if (mLoggerInstancesMap[loggerId].second > 0)
    {
       // Non-zero use-count.
+      std::cerr << "Log::LocalLoggerMap::remove(): Use count is non-zero (" << mLoggerInstancesMap[loggerId].second << ")!" << std::endl;
       return 2;
    }
    mLoggerInstancesMap.erase(loggerId);
