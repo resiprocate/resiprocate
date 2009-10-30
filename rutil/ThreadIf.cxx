@@ -27,7 +27,8 @@ typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 
 using namespace resip;
 
-ThreadIf::TlsDestructor *ThreadIf::mTlsDestructors[ThreadIf::TLS_MAX_KEYS];
+ThreadIf::TlsDestructor **ThreadIf::mTlsDestructors;
+Mutex *ThreadIf::mTlsDestructorsMutex;
 
 extern "C"
 {
@@ -60,19 +61,26 @@ threadIfThreadWrapper( void* threadParm )
 }
 
 #ifdef WIN32
-namespace resip {
-/// Class to initialize TLS destructors array under Windows on program startup.
-class TlsDestructorInitializer {
-public:
-   TlsDestructorInitializer()
+unsigned int TlsDestructorInitializer::mInstanceCounter=0;
+TlsDestructorInitializer::TlsDestructorInitializer()
+{
+   if (mInstanceCounter++ == 0)
    {
+      ThreadIf::mTlsDestructorsMutex = new Mutex();
+      ThreadIf::mTlsDestructors = new ThreadIf::TlsDestructor*[ThreadIf::TLS_MAX_KEYS];
       for (int i=0; i<ThreadIf::TLS_MAX_KEYS; i++)
       {
          ThreadIf::mTlsDestructors[i] = NULL;
       }
    }
-};
-TlsDestructorInitializer _staticTlsInit;
+}
+TlsDestructorInitializer::~TlsDestructorInitializer()
+{
+   if (--mInstanceCounter == 0)
+   {
+      delete ThreadIf::mTlsDestructorsMutex;
+      delete ThreadIf::mTlsDestructors;
+   }
 }
 #endif
 
@@ -220,6 +228,7 @@ ThreadIf::tlsKeyCreate(TlsKey &key, TlsDestructor *destructor)
    key = TlsAlloc();
    if (key!=TLS_OUT_OF_INDEXES)
    {
+      Lock lock(*mTlsDestructorsMutex);
       mTlsDestructors[key] = destructor;
       return 0;
    }
@@ -238,6 +247,7 @@ ThreadIf::tlsKeyDelete(TlsKey key)
 #if defined(WIN32)
    if (TlsFree(key)>0)
    {
+      Lock lock(*mTlsDestructorsMutex);
       mTlsDestructors[key] = NULL;
       return 0;
    }
@@ -304,12 +314,13 @@ ThreadIf::isShutdown() const
 void
 ThreadIf::tlsDestroyAll()
 {
+   Lock lock(*mTlsDestructorsMutex);
    for (int i=0; i<TLS_MAX_KEYS; i++)
    {
-      if (mTlsDestructors[i])
+      if (mTlsDestructors[i] != NULL)
       {
          void *val = TlsGetValue(i);
-         if (val)
+         if (val != NULL)
          {
             (*mTlsDestructors[i])(val);
          }

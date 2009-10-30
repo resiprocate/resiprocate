@@ -106,7 +106,9 @@ class ThreadIf
       static void tlsDestroyAll();
    protected:
       /// Array of TLS destructors. We have to emulate TLS destructors under Windows.
-      static TlsDestructor *mTlsDestructors[TLS_MAX_KEYS];
+      static TlsDestructor **mTlsDestructors;
+      /// Mutex to protect access to mTlsDestructors
+      static Mutex *mTlsDestructorsMutex;
       friend class TlsDestructorInitializer;
 #endif
       Id mId;
@@ -120,6 +122,18 @@ class ThreadIf
       ThreadIf(const ThreadIf &);
       const ThreadIf & operator=(const ThreadIf &);
 };
+
+#ifdef WIN32
+/// Class to initialize TLS destructors array under Windows on program startup.
+class TlsDestructorInitializer {
+public:
+   TlsDestructorInitializer();
+   ~TlsDestructorInitializer();
+protected:
+   static unsigned int mInstanceCounter;
+};
+static TlsDestructorInitializer _staticTlsInit;
+#endif
 
 }
 
