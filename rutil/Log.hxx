@@ -248,10 +248,10 @@ class Log
             ThreadData(LocalLoggerId id, Type type=Cout, Level level=Info,
                        const char *logFileName=NULL,
                        ExternalLogger *pExternalLogger=NULL)
-               : mId(id),
-                 mLevel(level),
-                 mType(type),
+               : mLevel(level),
                  mExternalLogger(pExternalLogger),
+                 mId(id),
+                 mType(type),
                  mLogger(NULL),
                  mLineCount(0)
             {
@@ -282,9 +282,10 @@ class Log
 
             volatile Level mLevel;
             ExternalLogger* mExternalLogger;
-      protected:
-            const LocalLoggerId mId;
+
+         protected:
             friend class Guard;
+            const LocalLoggerId mId;
             Type mType;
             Data mLogFileName;
             std::ostream* mLogger;
