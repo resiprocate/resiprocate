@@ -212,6 +212,16 @@ class Log
                                              const char * logFileName = NULL,
                                              ExternalLogger* externalLogger = NULL);
 
+      /** Reinitialize all new setting for a local logger instance
+      * @retval 0 on success
+      * @retval 1 if logger does not exist
+      */
+      static int localLoggerReinitialize(LocalLoggerId loggerId,
+                                         Type type,
+                                         Level level,
+                                         const char * logFileName = NULL,
+                                         ExternalLogger* externalLogger = NULL);						
+
       /** Destroy existing logger instance.
       * @retval 0 on success
       * @retval 1 if logger does not exist
@@ -322,6 +332,16 @@ class Log
                               const char * logFileName = NULL,
                               ExternalLogger* externalLogger = NULL);
 
+         /** Reinitialize all new setting for a local logger instance
+          * @retval 0 on success
+          * @retval 1 if logger does not exist
+          */
+         int reinitialize(LocalLoggerId loggerId,
+                          Type type,
+                          Level level,
+                          const char * logFileName = NULL,
+                          ExternalLogger* externalLogger = NULL);						
+
          /** Remove existing logger instance from map and destroy.
          * @retval 0 on success
          * @retval 1 if logger does not exist
@@ -339,7 +359,8 @@ class Log
 
       protected:
          /// Storage for Thread Local loggers and their use-counts.
-         HashMap<LocalLoggerId, std::pair<ThreadData*, int> > mLoggerInstancesMap;
+         typedef HashMap<LocalLoggerId, std::pair<ThreadData*, int> > LoggerInstanceMap;
+         LoggerInstanceMap mLoggerInstancesMap;
          /// Last used LocalLoggerId
          LocalLoggerId mLastLocalLoggerId;
          /// Mutex to synchronize access to Thread Local logger settings storage
