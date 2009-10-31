@@ -360,6 +360,10 @@ B2BSession::onConnected(ClientInviteSessionHandle h, const SipMessage& msg)
       // It is possible in forking scenarios to get multiple 200 responses, if this is 
       // our first 200 response, then this is the leg we accept, store the connected DialogId
       mUACConnectedDialogId = h->getDialogId();
+
+      // Note:  each forked leg will update mInviteSessionHandle (in onNewSession call) - need to set mInviteSessionHandle for final answering leg on 200
+      mInviteSessionHandle = h->getSessionHandle();  
+
       if(mClickToCallState == Setup || mClickToCallState == Proceeding)
       {
          transitionClickToCallState(Connected);
