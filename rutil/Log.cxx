@@ -489,6 +489,15 @@ Log::LocalLoggerId Log::localLoggerCreate(Log::Type type,
    return mLocalLoggerMap.create(type, level, logFileName, externalLogger);
 }
 
+int Log::localLoggerReinitialize(Log::LocalLoggerId loggerId,
+                                 Log::Type type,
+                                 Log::Level level,
+                                 const char * logFileName,
+                                 ExternalLogger* externalLogger)
+{
+   return mLocalLoggerMap.reinitialize(loggerId, type, level, logFileName, externalLogger);
+}
+
 int Log::localLoggerRemove(Log::LocalLoggerId loggerId)
 {
    return mLocalLoggerMap.remove(loggerId);
@@ -566,44 +575,66 @@ Log::LocalLoggerId Log::LocalLoggerMap::create(Log::Type type,
    return id;
 }
 
-int Log::LocalLoggerMap::remove(Log::LocalLoggerId loggerId)
+int Log::LocalLoggerMap::reinitialize(Log::LocalLoggerId loggerId,
+                                      Log::Type type,
+                                      Log::Level level,
+                                      const char * logFileName,
+                                      ExternalLogger* externalLogger)
 {
    Lock lock(mLoggerInstancesMapMutex);
-   if (mLoggerInstancesMap.find(loggerId) == mLoggerInstancesMap.end())
+   LoggerInstanceMap::iterator it = mLoggerInstancesMap.find(loggerId);
+   if (it == mLoggerInstancesMap.end())
    {
       // No such logger ID
       std::cerr << "Log::LocalLoggerMap::remove(): Unknown local logger id=" << loggerId << std::endl;
       return 1;
    }
-   if (mLoggerInstancesMap[loggerId].second > 0)
+   it->second.first->reset();
+   it->second.first->set(type, level, logFileName, externalLogger);
+   return 0;
+}
+
+int Log::LocalLoggerMap::remove(Log::LocalLoggerId loggerId)
+{
+   Lock lock(mLoggerInstancesMapMutex);
+   LoggerInstanceMap::iterator it = mLoggerInstancesMap.find(loggerId);
+   if (it == mLoggerInstancesMap.end())
+   {
+      // No such logger ID
+      std::cerr << "Log::LocalLoggerMap::remove(): Unknown local logger id=" << loggerId << std::endl;
+      return 1;
+   }
+   if (it->second.second > 0)
    {
       // Non-zero use-count.
-      std::cerr << "Log::LocalLoggerMap::remove(): Use count is non-zero (" << mLoggerInstancesMap[loggerId].second << ")!" << std::endl;
+      std::cerr << "Log::LocalLoggerMap::remove(): Use count is non-zero (" << it->second.second << ")!" << std::endl;
       return 2;
    }
-   mLoggerInstancesMap.erase(loggerId);
+   mLoggerInstancesMap.erase(it);
    return 0;
 }
 
 Log::ThreadData *Log::LocalLoggerMap::getData(Log::LocalLoggerId loggerId)
 {
    Lock lock(mLoggerInstancesMapMutex);
-   if (mLoggerInstancesMap.find(loggerId) == mLoggerInstancesMap.end())
+   LoggerInstanceMap::iterator it = mLoggerInstancesMap.find(loggerId);
+   if (it == mLoggerInstancesMap.end())
    {
       // No such logger ID
       return NULL;
    }
-   mLoggerInstancesMap[loggerId].second++;
-   return mLoggerInstancesMap[loggerId].first;
+   it->second.second++;
+   return it->second.first;
 }
 
 void Log::LocalLoggerMap::decreaseUseCount(Log::LocalLoggerId loggerId)
 {
    Lock lock(mLoggerInstancesMapMutex);
-   if (mLoggerInstancesMap.find(loggerId) != mLoggerInstancesMap.end())
+   LoggerInstanceMap::iterator it = mLoggerInstancesMap.find(loggerId);
+   if (it != mLoggerInstancesMap.end())
    {
-      mLoggerInstancesMap[loggerId].second--;
-      assert(mLoggerInstancesMap[loggerId].second >= 0);
+      it->second.second--;
+      assert(it->second.second >= 0);
    }
 }
 
@@ -655,17 +686,20 @@ Log::Guard::~Guard()
       }
    }
     
+   Type logType = resip::Log::getLoggerData().mType;
+
+   if(logType == resip::Log::OnlyExternal ||
+      logType == resip::Log::OnlyExternalNoHeaders) 
+   {
+      return;
+   }
+
    resip::Lock lock(resip::Log::_mutex);
    // !dlb! implement VSDebugWindow as an external logger
-   if (resip::Log::getLoggerData().mType == resip::Log::VSDebugWindow)
+   if (logType == resip::Log::VSDebugWindow)
    {
       mData += "\r\n";
       OutputToWin32DebugWindow(mData);
-   }
-   else if(resip::Log::getLoggerData().mType == resip::Log::OnlyExternal ||
-	        resip::Log::getLoggerData().mType == resip::Log::OnlyExternalNoHeaders) 
-   {
-      return;
    }
    else 
    {
