@@ -473,7 +473,7 @@ RemoteParticipant::redirectToParticipant(InviteSessionHandle& destParticipantInv
                }
                else if(mInviteSessionHandle->isConnected()) // redirect via attended transfer (with replaces)
                {
-                  mInviteSessionHandle->refer(destParticipantInviteSessionHandle->peerAddr(), destParticipantInviteSessionHandle /* session to replace)  */, true /* refersub */);
+                  mInviteSessionHandle->refer(NameAddr(destParticipantInviteSessionHandle->peerAddr().uri()) /* remove tags */, destParticipantInviteSessionHandle /* session to replace)  */, true /* refersub */);
                   stateTransition(Redirecting);
                }
                else
