@@ -718,6 +718,8 @@ ClientRegistration::dispatch(const DumTimeout& timer)
 
             // Resend last request
             mLastRequest->header(h_CSeq).sequence()++;
+            mLastRequest->remove(h_ProxyAuthorizations);
+            mLastRequest->remove(h_Authorizations); 
             send(mLastRequest);
          }
          break;
