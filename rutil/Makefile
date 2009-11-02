@@ -23,7 +23,6 @@ SRC = \
 	HeapInstanceCounter.cxx \
 	Lock.cxx \
 	Log.cxx \
-	Logger.cxx \
 	MD5Stream.cxx \
 	Mutex.cxx \
 	ParseBuffer.cxx \

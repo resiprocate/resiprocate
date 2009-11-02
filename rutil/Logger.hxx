@@ -14,11 +14,101 @@
 /**
    @file Defines a set of logging macros, one for each level of logging.
 
-   Example:
+   <h2>Simple usage</h2>
+
+   Each source file which uses logging facilities, must set RESIPROCATE_SUBSYSTEM
+   preprocessor define to one of resip subsystems. This define will be used by
+   logging macros to mark log entries, generated from this source file, with
+   appropriate subsystem tag. For the list of available resip subsystems refer
+   to static variables list in resip::Subsystem class. Note, that those standard
+   resip::Subsystem variables are just the most commonly used ones. Nothing
+   prevents you from creating your own resip::Subsystem instance and set
+   RESIPROCATE_SUBSYSTEM to point to it. That custom resip::Subsystem variable
+   can even be local to a file or private class member variable, you just must
+   ensure that it exist in all places you use logging this file. Creating own
+   resip::Subsystem will allow you to create own subsystem tag and set specific
+   logging level for it.
+
+   Once you have RESIPROCATE_SUBSYSTEM defined you can start logging with any
+   of StackLog(), DebugLog(), InfoLog(), WarningLog(), ErrLog(), CritLog(). These
+   preprocessor macros provide a convenient way to log your data. Look at this
+   piece of code as an example:
+
+<code>
 #include Logger.hxx
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SIP
    ...
    DebugLog(<< "hi there " << mix << 4 << types);  // note leading << and no endl
+</code>
+
+
+   <h2>Initialization</h2>
+
+   Logging may be used without (or prior to) initialization, in which case all
+   log data will be printed right to console (to std::cout). Likely, you will
+   want to use more advanced logging features like output to syslog or a file.
+   In this case you need to call Log::initialize() with appropriate parameters.
+   E.g., following example tells logger to write data to a file with the name
+   "resip.log". It will write only entries with logging priority Log::Info or
+   higher. Application name is taken from argv[0], and no external logger is
+   specified (last parameter is NULL).
+
+<code>
+   Log::initialize(Log::File, Log::Info, argv[0], "resip.log", NULL);
+</code>
+
+   Refer to Log::Type for a list of possible logging types and to Log::Level
+   for a list of available logging levels.
+
+
+   <h2>External loggers</h2>
+
+   Sometimes you may need to provide your own, application specific way of
+   logging. E.g. you may want to output log data to a GUI window. This may be
+   implemented using external loggers. To create an external logger you just
+   need to inherit from ExternalLogger class and pass an object of your external
+   logger to Log::initialize() as the last parameter.
+
+   
+   <h2Subsystem-specific logging level></h2>
+
+   You may set logging level to output for a specific subsystem inside resip.
+   The recommended way to do this is with <code>Log::setLevel(level, subsystem)</code>
+   static function. If you set a concrete logging level for the subsystem, it
+   will be used instead of all other logging level settings, like global logging
+   level setting and thread local logger level setting. To set subsystem-specific
+   logging level back to default logging level, call
+   <code>Log::setLevel(Log::None, subsystem)</code>
+
+
+   <h2>Thread local loggers</h2>
+
+   If your application uses several threads for resip, e.g. uses separate thread
+   for each resip instance, then you may want to split your log streams to be
+   separate too. E.g. you may use different log files for different instances.
+   In this case you need to use thread local loggers.
+
+   First, you need to create a thread local logger with Log::localLoggerCreate()
+   static function call with desired parameters (they're closely following
+   Log::initialize() meaning). You will receive LocalLoggerId in response which
+   you will use later to refer to created local logger. If you need to change
+   local logger's parameters later, you should use Log::localLoggerReinitialize()
+   static function. And when you're done with it, free it with Log::localLoggerRemove()
+   static function. To actually use a created local logger, you need to call
+   Log::setThreadLocalLogger() from the target thread context. If you need to
+   remove thread local logger from a thread, just call
+   <code>Log::setThreadLocalLogger(0)</code>
+
+   Note, that thread local logger may be safely used from multiple threads.
+   So if each of your resip instances have two threads, both of them can just
+   share the same local logger - just pass its LocalLoggerId to them both.
+
+
+   <h2>Still not sure?</h2>
+
+   If you still can't get something, just look how it is used in existing code.
+   One particular place to look into is rutil/test/testLogger.cxx which is
+   a unittest for logging facility.
 */
 
 
@@ -50,8 +140,11 @@ GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Err, args_)
 #define CritLog(args_) \
 GenericLog(RESIPROCATE_SUBSYSTEM, resip::Log::Crit, args_)
 
-bool
-genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub);
+static inline bool
+genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub)
+{
+   return resip::Log::isLogging(level, sub);
+}
 
 // do/while allows a {} block in an expression
 #define GenericLog(system_, level_, args_)                              \
@@ -74,20 +167,8 @@ genericLogCheckLevel(resip::Log::Level level, const resip::Subsystem& sub);
 
 namespace resip
 {
-
-class GenericLogImpl :  public Log 
-{
-   public:
-      static std::ostream& Instance();
-      static bool isLogging(Log::Level level, const Subsystem&);
-      static unsigned int MaxLineCount;
-      static void OutputToWin32DebugWindow(const Data& result);      
-      static void reset(); //removes mLogger
-   private:
-      static std::ostream* mLogger;
-      static unsigned int mLineCount;
-};
- 
+/// DEPRECATED! Left for backward compatibility.
+typedef Log GenericLogImpl;
 }
 
 #endif

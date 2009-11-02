@@ -27,6 +27,11 @@ typedef unsigned(__stdcall *RESIP_THREAD_START_ROUTINE)(void*);
 
 using namespace resip;
 
+#ifdef WIN32
+ThreadIf::TlsDestructor **ThreadIf::mTlsDestructors;
+Mutex *ThreadIf::mTlsDestructorsMutex;
+#endif
+
 extern "C"
 {
 static void*
@@ -37,14 +42,16 @@ WINAPI
 __stdcall
 #endif
 #endif
-threadWrapper( void* threadParm )
+threadIfThreadWrapper( void* threadParm )
 {
    assert( threadParm );
    ThreadIf* t = static_cast < ThreadIf* > ( threadParm );
 
    assert( t );
    t->thread();
-#if defined(WIN32)
+#ifdef WIN32
+   // Free data in TLS slots.
+   ThreadIf::tlsDestroyAll();
 #ifdef _WIN32_WCE
    ExitThread( 0 );
 #else
@@ -54,6 +61,31 @@ threadWrapper( void* threadParm )
    return 0;
 }
 }
+
+#ifdef WIN32
+unsigned int TlsDestructorInitializer::mInstanceCounter=0;
+TlsDestructorInitializer::TlsDestructorInitializer()
+{
+   if (mInstanceCounter++ == 0)
+   {
+      ThreadIf::mTlsDestructorsMutex = new Mutex();
+      ThreadIf::mTlsDestructors = new ThreadIf::TlsDestructor*[ThreadIf::TLS_MAX_KEYS];
+      for (int i=0; i<ThreadIf::TLS_MAX_KEYS; i++)
+      {
+         ThreadIf::mTlsDestructors[i] = NULL;
+      }
+   }
+}
+TlsDestructorInitializer::~TlsDestructorInitializer()
+{
+   if (--mInstanceCounter == 0)
+   {
+      delete ThreadIf::mTlsDestructorsMutex;
+      delete ThreadIf::mTlsDestructors;
+   }
+}
+#endif
+
 
 ThreadIf::ThreadIf() : 
 #ifdef WIN32
@@ -93,15 +125,15 @@ ThreadIf::run()
          NULL, // LPSECURITY_ATTRIBUTES lpThreadAttributes,  // pointer to security attributes
          0, // DWORD dwStackSize,                         // initial thread stack size
          RESIP_THREAD_START_ROUTINE
-         (threadWrapper), // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
+         (threadIfThreadWrapper), // LPTHREAD_START_ROUTINE lpStartAddress,     // pointer to thread function
          this, //LPVOID lpParameter,                        // argument for new thread
          0, //DWORD dwCreationFlags,                     // creation flags
-         &mId// LPDWORD lpThreadId                         // pointer to receive thread ID
+         (unsigned*)&mId// LPDWORD lpThreadId                         // pointer to receive thread ID
          );
    assert( mThread != 0 );
 #else
    // spawn the thread
-   if ( int retval = pthread_create( &mId, 0, threadWrapper, this) )
+   if ( int retval = pthread_create( &mId, 0, threadIfThreadWrapper, this) )
    {
       std::cerr << "Failed to spawn thread: " << retval << std::endl;
       assert(0);
@@ -181,13 +213,75 @@ ThreadIf::detach()
    mId = 0;
 }
 
-#if !defined(WIN32)
 ThreadIf::Id
 ThreadIf::selfId()
 {
+#if defined(WIN32)
+   return GetCurrentThreadId();
+#else
    return pthread_self();
-}
 #endif
+}
+
+int
+ThreadIf::tlsKeyCreate(TlsKey &key, TlsDestructor *destructor)
+{
+#if defined(WIN32)
+   key = TlsAlloc();
+   if (key!=TLS_OUT_OF_INDEXES)
+   {
+      Lock lock(*mTlsDestructorsMutex);
+      mTlsDestructors[key] = destructor;
+      return 0;
+   }
+   else
+   {
+      return GetLastError();
+   }
+#else
+   return pthread_key_create(&key, destructor);
+#endif
+}
+
+int
+ThreadIf::tlsKeyDelete(TlsKey key)
+{
+#if defined(WIN32)
+   if (TlsFree(key)>0)
+   {
+      Lock lock(*mTlsDestructorsMutex);
+      mTlsDestructors[key] = NULL;
+      return 0;
+   }
+   else
+   {
+      return GetLastError();
+   }
+#else
+   return pthread_key_delete(key);
+#endif
+}
+
+int
+ThreadIf::tlsSetValue(TlsKey key, const void *val)
+{
+#if defined(WIN32)
+   return TlsSetValue(key, (LPVOID)val)>0?0:GetLastError();
+#else
+   return pthread_setspecific(key, val);
+#endif
+}
+
+void *
+ThreadIf::tlsGetValue(TlsKey key)
+{
+#if defined(WIN32)
+   return TlsGetValue(key);
+#else
+   return pthread_getspecific(key);
+#endif
+}
+
 
 void
 ThreadIf::shutdown()
@@ -219,6 +313,24 @@ ThreadIf::isShutdown() const
    return ( mShutdown );
 }
 
+#ifdef WIN32
+void
+ThreadIf::tlsDestroyAll()
+{
+   Lock lock(*mTlsDestructorsMutex);
+   for (int i=0; i<TLS_MAX_KEYS; i++)
+   {
+      if (mTlsDestructors[i] != NULL)
+      {
+         void *val = TlsGetValue(i);
+         if (val != NULL)
+         {
+            (*mTlsDestructors[i])(val);
+         }
+      }
+   }
+}
+#endif
 
 // End of File
 

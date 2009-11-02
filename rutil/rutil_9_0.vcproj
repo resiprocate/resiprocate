@@ -368,10 +368,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Logger.cxx"
-				>
-			</File>
-			<File
 				RelativePath=".\MD5Stream.cxx"
 				>
 			</File>
