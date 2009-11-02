@@ -6,27 +6,38 @@
 #ifndef WIN32
 #include <syslog.h>
 #include <unistd.h>
-#include <pthread.h>
 #endif
 
 #include <set>
 
 #include "rutil/Mutex.hxx"
+#include "rutil/Lock.hxx"
 #include "rutil/HashMap.hxx"
+#include "rutil/ThreadIf.hxx"
 #include <iostream>
 
+// !ipse! I think that this remark is no more valid with recent changes,
+// but I don't have MacOs X to test with. Someone should take this duty.
+//
 // NOTE: disabling thread setting code for native mac os applications.
 // since some logging takes place during static initialization we can't
 // be sure all the pthread stuff is ready to go. this eventually causes
 // crashes in the Mac OS native API.
-#if !defined(WIN32) && !defined(TARGET_OS_MAC)
+#if !defined(TARGET_OS_MAC)
 #define LOG_ENABLE_THREAD_SETTING
 // defining hash function in mac os (non-sdk api) and cygwin because
-// pthread_t is a pointer,  (this assumes it's always the same pointer)
+// ThreadIf::Id is a pointer,  (this assumes it's always the same pointer)
 #if defined(__APPLE__) || defined(__CYGWIN__)
-HashValue(pthread_t);
+HashValue(ThreadIf::Id);
 #endif
 #endif
+
+extern "C"
+{
+   // Forward declaration to make it friend of Log class.
+   void freeLocalLogger(void* pThreadData);
+};
+
 
 namespace resip
 {
@@ -37,7 +48,7 @@ class Subsystem;
 /**
    @brief Singleton that handles logging calls.
 
-   @see Logger
+   @see Logger for usage details
 */
 class Log
 {
@@ -48,10 +59,10 @@ class Log
          Syslog, 
          File, 
          Cerr,
-         VSDebugWindow,        // Use only for Visual Studio Debug Window logging - WIN32 must be defined
-         OnlyExternal,         // log messages are only written to external logger
-         OnlyExternalNoHeaders //!< same as OnlyExternal, only the messageWithHeaders param of the ExternalLogger
-                               //!< will be empty.  This paramater usually contains a pre-formatted log entry.
+         VSDebugWindow,        ///< Use only for Visual Studio Debug Window logging - WIN32 must be defined
+         OnlyExternal,         ///< log messages are only written to external logger
+         OnlyExternalNoHeaders ///< same as OnlyExternal, only the messageWithHeaders param of the ExternalLogger
+                               ///< will be empty.  This parameter usually contains a pre-formatted log entry.
       };
       
       enum Level
@@ -79,7 +90,9 @@ class Log
          StdErr = 9,
          Bogus = 666
       };
-      
+
+      /// Thread Local logger ID type.
+      typedef int LocalLoggerId;
 
       /**
          @brief Implementation for logging macros.
@@ -118,22 +131,18 @@ class Log
       {
          public:
             ThreadSetting()
-               : service(-1),
-                 level(Err)
+               : mService(-1),
+                 mLevel(Err)
             {}
 
-            ThreadSetting(int serv, Level l)
-               : service(serv),
-                 level(l)
-            {}
-
-            ThreadSetting(const ThreadSetting& rhs)
-               : service(rhs.service),
-                 level(rhs.level)
-            {}
+            ThreadSetting(int serv, Level level)
+               : mService(serv),
+                 mLevel(level)
+            {
+            }
             
-            int service;
-            Level level;
+            int mService;
+            Level mLevel;
       };
 
       /// output the loglevel, hostname, appname, pid, tid, subsystem
@@ -147,14 +156,12 @@ class Log
       static Data timestamp();
       static ExternalLogger* getExternal()
       {
-         return mExternalLogger;
+         return getLoggerData().mExternalLogger;
       }
       static Data getAppName()
       {
          return mAppName;
       }
-
-      static bool init();
 
       static void initialize(Type type,
                              Level level,
@@ -176,62 +183,239 @@ class Log
                              const Data& appName,
                              ExternalLogger& logger);
 
+      /** @brief Set logging level for current thread.
+      * If thread has no local logger attached, then set global logging level.
+      */
       static void setLevel(Level level);
+      /** @brief Set logging level for given subsystem. */
       static void setLevel(Level level, Subsystem& s);
-      static Level level() { return mLevel; }
+      /** Set logging level for given local logger. Use 0 to set global logging level. */
+      static void setLevel(Level level, LocalLoggerId loggerId);
+      /** @brief Return logging level for current thread.
+      * If thread has no local logger attached, then return global logging level.
+      */
+      static Level level() { Lock lock(_mutex); return getLoggerData().mLevel; }
+      /** Return logging level for given local logger. Use 0 to set global logging level. */
+      static Level level(LocalLoggerId loggerId);
+      static void setMaxLineCount(unsigned int maxLineCount);
+      static void setMaxLineCount(unsigned int maxLineCount, LocalLoggerId loggerId);
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
-      static Mutex _mutex;
 
+      /// DEPRECATED! Left for backward compatibility - use localLoggers instead
       static void setServiceLevel(int service, Level l);
       static Level getServiceLevel(int service);
 
+      /// DEPRECATED! Left for backward compatibility - use localLoggers instead
       static const ThreadSetting* getThreadSetting();
       static void setThreadSetting(ThreadSetting info);
       static void setThreadSetting(int serv, Level l);
       static void setThreadSetting(int serv);
-      static volatile short touchCount;
-      static Type _type;
-      static const Data delim;
+
+      /// Create new logger instance and return its ID (zero on error)
+      static LocalLoggerId localLoggerCreate(Type type,
+                                             Level level,
+                                             const char * logFileName = NULL,
+                                             ExternalLogger* externalLogger = NULL);
+
+      /** Reinitialize all new setting for a local logger instance
+      * @retval 0 on success
+      * @retval 1 if logger does not exist
+      */
+      static int localLoggerReinitialize(LocalLoggerId loggerId,
+                                         Type type,
+                                         Level level,
+                                         const char * logFileName = NULL,
+                                         ExternalLogger* externalLogger = NULL);						
+
+      /** Destroy existing logger instance.
+      * @retval 0 on success
+      * @retval 1 if logger does not exist
+      * @retval 2 if logger is still in use
+      * @retval >2 on other failures
+      */
+      static int localLoggerRemove(LocalLoggerId loggerId);
+
+      /** Set logger instance with given ID as a thread local logger.
+      * Pass zero \p loggerId to remove thread local logger.
+      * @retval 0 on success
+      * @retval 1 if logger does not exist
+      * @retval >1 on other failures
+      */
+      static int setThreadLocalLogger(LocalLoggerId loggerId);
+
+
+      static std::ostream& Instance();
+      static bool isLogging(Log::Level level, const Subsystem&);
+      static void OutputToWin32DebugWindow(const Data& result);      
+      static void reset(); ///< Frees logger stream
+
+   public:
+      static unsigned int MaxLineCount; ///< Left for compatibility for global logger
+
    protected:
-      static Level mLevel;
+      static Mutex _mutex;
+      static volatile short touchCount;
+      static const Data delim;
+
+      class ThreadData
+      {
+         public:
+            ThreadData(LocalLoggerId id, Type type=Cout, Level level=Info,
+                       const char *logFileName=NULL,
+                       ExternalLogger *pExternalLogger=NULL)
+               : mLevel(level),
+                 mMaxLineCount(0),
+                 mExternalLogger(pExternalLogger),
+                 mId(id),
+                 mType(type),
+                 mLogger(NULL),
+                 mLineCount(0)
+            {
+               if (logFileName)
+               {
+                  mLogFileName = logFileName;
+               }
+            }
+
+            void set(Type type=Cout, Level level=Info,
+                     const char *logFileName=NULL,
+                     ExternalLogger *pExternalLogger=NULL)
+            {
+               mType = type;
+               mLevel = level;
+
+               if (logFileName)
+               {
+                  mLogFileName = logFileName;
+               }
+               mExternalLogger = pExternalLogger;
+            }
+
+            LocalLoggerId id() const {return mId;}
+            unsigned int maxLineCount() { return mMaxLineCount ? mMaxLineCount : MaxLineCount; }  // return local max, if not set use global max
+
+            std::ostream& Instance(); ///< Return logger stream instance, creating it if needed.
+            void reset(); ///< Frees logger stream
+
+            volatile Level mLevel;
+            volatile unsigned int mMaxLineCount;
+            ExternalLogger* mExternalLogger;
+
+         protected:
+            friend class Guard;
+            const LocalLoggerId mId;
+            Type mType;
+            Data mLogFileName;
+            std::ostream* mLogger;
+            unsigned int mLineCount;
+      };
+
+      static ThreadData mDefaultLoggerData; ///< Default logger settings.
       static Data mAppName;
       static Data mHostname;
-      static Data mLogFileName;
-      static ExternalLogger* mExternalLogger;
 #ifndef WIN32
       static pid_t mPid;
 #else   
       static int mPid;
 #endif
       static const char mDescriptions[][32];
-      static HashMap<int, Level> mServiceToLevel;
 
+      static ThreadData &getLoggerData()
+      {
+         ThreadData* pData = static_cast<ThreadData*>(ThreadIf::tlsGetValue(*Log::mLocalLoggerKey));
+         return pData?*pData:mDefaultLoggerData;
+      }
+
+      /// Thread Local logger settings storage
+      class LocalLoggerMap
+      {
+      public:
+         LocalLoggerMap()
+            : mLastLocalLoggerId(0) {};
+
+         /// Create new logger instance and return its ID (zero on error)
+         LocalLoggerId create(Type type,
+                              Level level,
+                              const char * logFileName = NULL,
+                              ExternalLogger* externalLogger = NULL);
+
+         /** Reinitialize all new setting for a local logger instance
+          * @retval 0 on success
+          * @retval 1 if logger does not exist
+          */
+         int reinitialize(LocalLoggerId loggerId,
+                          Type type,
+                          Level level,
+                          const char * logFileName = NULL,
+                          ExternalLogger* externalLogger = NULL);						
+
+         /** Remove existing logger instance from map and destroy.
+         * @retval 0 on success
+         * @retval 1 if logger does not exist
+         * @retval 2 if logger is still in use
+         * @retval >2 on other failures
+         */
+         int remove(LocalLoggerId loggerId);
+
+         /** Get pointer to ThreadData for given ID and increase use counter.
+         * @returns NULL if ID does not exist. */
+         ThreadData *getData(LocalLoggerId loggerId);
+
+         /// Decrease use counter for given loggerId.
+         void decreaseUseCount(LocalLoggerId loggerId);
+
+      protected:
+         /// Storage for Thread Local loggers and their use-counts.
+         typedef HashMap<LocalLoggerId, std::pair<ThreadData*, int> > LoggerInstanceMap;
+         LoggerInstanceMap mLoggerInstancesMap;
+         /// Last used LocalLoggerId
+         LocalLoggerId mLastLocalLoggerId;
+         /// Mutex to synchronize access to Thread Local logger settings storage
+         Mutex mLoggerInstancesMapMutex;
+      };
+
+      friend void ::freeLocalLogger(void* pThreadData);
+      friend class LogStaticInitializer;
+      static LocalLoggerMap mLocalLoggerMap;
+      static ThreadIf::TlsKey* mLocalLoggerKey;
+
+
+      /// DEPRECATED! Left for backward compatibility - use localLoggers instead
 #ifdef LOG_ENABLE_THREAD_SETTING
-      static HashMap<pthread_t, std::pair<ThreadSetting, bool> > mThreadToLevel;
-      static HashMap<int, std::set<pthread_t> > mServiceToThreads;
-      static pthread_key_t* mLevelKey;
+      static HashMap<ThreadIf::Id, std::pair<ThreadSetting, bool> > mThreadToLevel;
+      static HashMap<int, std::set<ThreadIf::Id> > mServiceToThreads;
+      static ThreadIf::TlsKey* mLevelKey;
 #endif
+      static HashMap<int, Level> mServiceToLevel;
 };
-
-static bool invokeLogInit = Log::init();
 
 /** @brief Interface functor for external logging.
- */
+*/
 class ExternalLogger
 {
-   public:
-      virtual ~ExternalLogger()=0;
-      /** return true to also do default logging, false to supress default logging. */
-      virtual bool operator()(Log::Level level,
-                              const Subsystem& subsystem, 
-                              const Data& appName,
-                              const char* file,
-                              int line,
-                              const Data& message,
-                              const Data& messageWithHeaders) = 0;
+public:
+   virtual ~ExternalLogger() {};
+   /** return true to also do default logging, false to suppress default logging. */
+   virtual bool operator()(Log::Level level,
+      const Subsystem& subsystem, 
+      const Data& appName,
+      const char* file,
+      int line,
+      const Data& message,
+      const Data& messageWithHeaders) = 0;
 };
+
+/// Class to initialize Log class static variables.
+class LogStaticInitializer {
+public:
+   LogStaticInitializer();
+   ~LogStaticInitializer();
+protected:
+   static unsigned int mInstanceCounter;
+};
+static LogStaticInitializer _staticLogInit;
 
 }
 
