@@ -16,7 +16,7 @@
 
    <h2>Simple usage</h2>
 
-   Each source file which use logging facilities, must set RESIPROCATE_SUBSYSTEM
+   Each source file which uses logging facilities, must set RESIPROCATE_SUBSYSTEM
    preprocessor define to one of resip subsystems. This define will be used by
    logging macros to mark log entries, generated from this source file, with
    appropriate subsystem tag. For the list of available resip subsystems refer
@@ -46,11 +46,11 @@
 
    Logging may be used without (or prior to) initialization, in which case all
    log data will be printed right to console (to std::cout). Likely, you will
-   want to use more advanced logging features like output to syslog of a file.
+   want to use more advanced logging features like output to syslog or a file.
    In this case you need to call Log::initialize() with appropriate parameters.
    E.g., following example tells logger to write data to a file with the name
    "resip.log". It will write only entries with logging priority Log::Info or
-   higher. Application name is taken from argv[0], and no externa; logger it
+   higher. Application name is taken from argv[0], and no external logger is
    specified (last parameter is NULL).
 
 <code>
@@ -94,20 +94,20 @@
    you will use later to refer to created local logger. If you need to change
    local logger's parameters later, you should use Log::localLoggerReinitialize()
    static function. And when you're done with it, free it with Log::localLoggerRemove()
-   statis function. To actually use created local logger, you need to call
+   static function. To actually use a created local logger, you need to call
    Log::setThreadLocalLogger() from the target thread context. If you need to
    remove thread local logger from a thread, just call
    <code>Log::setThreadLocalLogger(0)</code>
 
    Note, that thread local logger may be safely used from multiple threads.
-   So if eacho your resip instance have two threads, both of them can just
+   So if each of your resip instances have two threads, both of them can just
    share the same local logger - just pass its LocalLoggerId to them both.
 
 
    <h2>Still not sure?</h2>
 
    If you still can't get something, just look how it is used in existing code.
-   One particular place to look into is rutil/tets/testLogger.cxx which is
+   One particular place to look into is rutil/test/testLogger.cxx which is
    a unittest for logging facility.
 */
 
