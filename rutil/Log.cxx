@@ -39,6 +39,7 @@ pid_t Log::mPid=0;
 volatile short Log::touchCount = 0;
 
 
+/// DEPRECATED! Left for backward compatibility - use localLoggers instead
 #ifdef LOG_ENABLE_THREAD_SETTING
 #if defined(__APPLE__) || defined(__CYGWIN__)
 HashValueImp(ThreadIf::Id, (size_t)data);
@@ -47,7 +48,6 @@ HashMap<ThreadIf::Id, std::pair<Log::ThreadSetting, bool> > Log::mThreadToLevel;
 HashMap<int, std::set<ThreadIf::Id> > Log::mServiceToThreads;
 ThreadIf::TlsKey* Log::mLevelKey;
 #endif
-
 HashMap<int, Log::Level> Log::mServiceToLevel;
 
 Log::LocalLoggerMap Log::mLocalLoggerMap;
@@ -201,7 +201,8 @@ Log::setLevel(Level level, Log::LocalLoggerId loggerId)
    }
 }
 
-Log::Level Log::level(Log::LocalLoggerId loggerId)
+Log::Level 
+Log::level(Log::LocalLoggerId loggerId)
 {
    Level level;
    ThreadData *pData;
@@ -220,6 +221,36 @@ Log::Level Log::level(Log::LocalLoggerId loggerId)
       level = mDefaultLoggerData.mLevel;
    }
    return level;
+}
+
+void 
+Log::setMaxLineCount(unsigned int maxLineCount)
+{
+   Lock lock(_mutex);
+   getLoggerData().mMaxLineCount = maxLineCount; 
+}
+
+void 
+Log::setMaxLineCount(unsigned int maxLineCount, Log::LocalLoggerId loggerId)
+{
+   if (loggerId)
+   {
+      ThreadData *pData = mLocalLoggerMap.getData(loggerId);
+      if (pData)
+      {
+         // Local logger found. Set logging level.
+         pData->mMaxLineCount = maxLineCount;
+
+         // We don't need local logger instance anymore.
+         mLocalLoggerMap.decreaseUseCount(loggerId);
+         pData = NULL;
+      }
+   }
+   else
+   {
+      Lock lock(_mutex);
+      mDefaultLoggerData.mMaxLineCount = maxLineCount;
+   }
 }
 
 const static Data log_("LOG_");
@@ -730,7 +761,7 @@ Log::ThreadData::Instance()
 
       case Log::File:
          if (mLogger == 0 ||
-             (MaxLineCount && mLineCount > MaxLineCount))
+             (maxLineCount() && mLineCount > maxLineCount()))
          {
             std::cerr << "Creating a logger for file \"" << mLogFileName.c_str() << "\"" << std::endl;
             if (mLogger)
