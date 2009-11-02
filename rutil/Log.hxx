@@ -197,13 +197,17 @@ class Log
       static Level level() { Lock lock(_mutex); return getLoggerData().mLevel; }
       /** Return logging level for given local logger. Use 0 to set global logging level. */
       static Level level(LocalLoggerId loggerId);
+      static void setMaxLineCount(unsigned int maxLineCount);
+      static void setMaxLineCount(unsigned int maxLineCount, LocalLoggerId loggerId);
       static Level toLevel(const Data& l);
       static Type toType(const Data& t);
       static Data toString(Level l);
 
+      /// DEPRECATED! Left for backward compatibility - use localLoggers instead
       static void setServiceLevel(int service, Level l);
       static Level getServiceLevel(int service);
 
+      /// DEPRECATED! Left for backward compatibility - use localLoggers instead
       static const ThreadSetting* getThreadSetting();
       static void setThreadSetting(ThreadSetting info);
       static void setThreadSetting(int serv, Level l);
@@ -248,7 +252,7 @@ class Log
       static void reset(); ///< Frees logger stream
 
    public:
-      static unsigned int MaxLineCount; ///< Left for compatibility, should be moved to ThreadData
+      static unsigned int MaxLineCount; ///< Left for compatibility for global logger
 
    protected:
       static Mutex _mutex;
@@ -262,6 +266,7 @@ class Log
                        const char *logFileName=NULL,
                        ExternalLogger *pExternalLogger=NULL)
                : mLevel(level),
+                 mMaxLineCount(0),
                  mExternalLogger(pExternalLogger),
                  mId(id),
                  mType(type),
@@ -289,11 +294,13 @@ class Log
             }
 
             LocalLoggerId id() const {return mId;}
+            unsigned int maxLineCount() { return mMaxLineCount ? mMaxLineCount : MaxLineCount; }  // return local max, if not set use global max
 
             std::ostream& Instance(); ///< Return logger stream instance, creating it if needed.
             void reset(); ///< Frees logger stream
 
             volatile Level mLevel;
+            volatile unsigned int mMaxLineCount;
             ExternalLogger* mExternalLogger;
 
          protected:
@@ -314,7 +321,6 @@ class Log
       static int mPid;
 #endif
       static const char mDescriptions[][32];
-      static HashMap<int, Level> mServiceToLevel;
 
       static ThreadData &getLoggerData()
       {
@@ -376,11 +382,13 @@ class Log
       static ThreadIf::TlsKey* mLocalLoggerKey;
 
 
+      /// DEPRECATED! Left for backward compatibility - use localLoggers instead
 #ifdef LOG_ENABLE_THREAD_SETTING
       static HashMap<ThreadIf::Id, std::pair<ThreadSetting, bool> > mThreadToLevel;
       static HashMap<int, std::set<ThreadIf::Id> > mServiceToThreads;
       static ThreadIf::TlsKey* mLevelKey;
 #endif
+      static HashMap<int, Level> mServiceToLevel;
 };
 
 /** @brief Interface functor for external logging.
