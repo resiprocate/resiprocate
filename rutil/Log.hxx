@@ -16,6 +16,9 @@
 #include "rutil/ThreadIf.hxx"
 #include <iostream>
 
+// !ipse! I think that this remark is no more valid with recent changes,
+// but I don't have MacOs X to test with. Someone should take this duty.
+//
 // NOTE: disabling thread setting code for native mac os applications.
 // since some logging takes place during static initialization we can't
 // be sure all the pthread stuff is ready to go. this eventually causes
@@ -45,7 +48,7 @@ class Subsystem;
 /**
    @brief Singleton that handles logging calls.
 
-   @see Logger
+   @see Logger for usage details
 */
 class Log
 {
