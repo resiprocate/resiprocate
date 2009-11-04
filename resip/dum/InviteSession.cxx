@@ -345,7 +345,8 @@ InviteSession::provideOffer(const SdpContents& offer,
       case Connected:
       case WaitingToOffer:
       case UAS_WaitingToOffer:
-         if (updateMethodSupported())
+         // According to RFC331 is it recommended to no use UPDATE for comfirmed dialogs.
+         if (updateMethodSupported() && !isConnected())
          {
             transition(SentUpdate);
             mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
@@ -2572,12 +2573,18 @@ InviteSession::toData(State state)
          return "UAS_Start";
       case UAS_ReceivedOfferReliable:
          return "UAS_ReceivedOfferReliable";
+      case UAS_ReceivedOfferReliableProvidedAnswer:
+         return "UAS_ReceivedOfferReliableProvidedAnswer";
       case UAS_NoOfferReliable:
          return "UAS_NoOfferReliable";
       case UAS_FirstSentOfferReliable:
          return "UAS_FirstSentOfferReliable";
       case UAS_FirstSentAnswerReliable:
          return "UAS_FirstSentAnswerReliable";
+      case UAS_FirstNoAnswerReliable:
+         return "UAS_FirstNoAnswerReliable";
+      case UAS_NoAnswerReliable:
+         return "UAS_NoAnswerReliable";
       case UAS_NegotiatedReliable:
          return "UAS_NegotiatedReliable";
       case UAS_SentUpdate:

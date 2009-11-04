@@ -22,7 +22,8 @@ ServerInviteSession::ServerInviteSession(DialogUsageManager& dum, Dialog& dialog
    : InviteSession(dum, dialog),
      mFirstRequest(request),
      m1xx(new SipMessage),
-     mCurrentRetransmit1xx(0)
+     mCurrentRetransmit1xx(0),
+     mAnswerSentReliably(false)
 {
    assert(request.isRequest());
    mState = UAS_Start;
@@ -163,16 +164,39 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
 
       case UAS_NoOfferReliable:
       case UAS_NegotiatedReliable:
-         // TBD
-         assert(0);
+      case UAS_FirstSentAnswerReliable:
+      case UAS_FirstNoAnswerReliable: 
+      case UAS_NoAnswerReliable:
+      case UAS_FirstSentOfferReliable:
+         if(mUnacknowledgedProvisionals.size()>0)
+         {
+            queueReliableProvisional(code, earlyFlag);
+         }
+         else
+         {
+            sendProvisional(code, earlyFlag);
+         }
          break;
          
+      case UAS_ReceivedOfferReliable: 
+         if(code!=100)
+         {
+            transition(UAS_FirstNoAnswerReliable);
+         }
+         sendProvisional(code, earlyFlag);
+         break;
+
+      case UAS_ReceivedOfferReliableProvidedAnswer: 
+         if(code!=100)
+         {
+            transition(UAS_FirstSentAnswerReliable);
+         }
+         sendProvisional(code, earlyFlag);
+         break;
+
       case UAS_Accepted:
       case UAS_WaitingToOffer:
       case UAS_WaitingToRequestOffer:
-      case UAS_FirstSentAnswerReliable:
-      case UAS_FirstSentOfferReliable:
-      case UAS_ReceivedOfferReliable: 
       case UAS_ReceivedUpdate:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdate:
@@ -221,6 +245,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
                                   const SdpContents* alternative)
 {
    InfoLog (<< toData(mState) << ": provideOffer");
+   mAnswerSentReliably = false;
    switch (mState)
    {
       case UAS_NoOffer:
@@ -319,6 +344,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
 {
    InviteSessionHandler* handler = mDum.mInviteSessionHandler;
    InfoLog (<< toData(mState) << ": provideAnswer");
+   mAnswerSentReliably = false;
    switch (mState)
    {
       case UAS_Offer:
@@ -335,7 +361,14 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          
       case UAS_ReceivedOfferReliable: 
          // send1XX-answer, timer::1xx
-         transition(UAS_FirstSentAnswerReliable);
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         transition(UAS_ReceivedOfferReliableProvidedAnswer);
+         break;
+
+      case UAS_FirstNoAnswerReliable: 
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
          break;
 
       case UAS_ReceivedUpdate:
@@ -350,13 +383,31 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          handler->onConnected(getSessionHandle(), *mInvite200);
          break;
 
+      case UAS_NoAnswerReliable:
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         break;
+
+      case UAS_NegotiatedReliable:
+         mCurrentRemoteSdp = mProposedRemoteSdp;
+         mCurrentLocalSdp = InviteSession::makeSdp(answer);
+         if(mPrackWithOffer.get())
+         {
+            SharedPtr<SipMessage> p200(new SipMessage);
+            mDialog.makeResponse(*p200, *mPrackWithOffer, 200);
+            setSdp(*p200, mCurrentLocalSdp.get());
+            mAnswerSentReliably = true;
+            mPrackWithOffer.reset();
+            send(p200);
+         }
+         break;
+
       case UAS_Accepted:
       case UAS_WaitingToOffer:
       case UAS_WaitingToRequestOffer:
       case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedAnswer:
       case UAS_EarlyProvidedOffer:
-      case UAS_NegotiatedReliable:
       case UAS_FirstSentAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NoOffer:
@@ -466,6 +517,8 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
 
       case UAS_NegotiatedReliable:
       case UAS_FirstSentAnswerReliable:
+      case UAS_FirstNoAnswerReliable:
+      case UAS_NoAnswerReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_NoOfferReliable:
       case UAS_ReceivedOfferReliable: 
@@ -543,16 +596,27 @@ ServerInviteSession::accept(int code)
          break;
          
       case UAS_FirstSentAnswerReliable:
+      case UAS_FirstSentOfferReliable:
+      case UAS_FirstNoAnswerReliable:
          // queue 2xx
          // waiting for PRACK
+         InfoLog (<< "Waiting for PRACK. queued 200 OK" );
+         mQueuedProvisionals.push_back( std::make_pair(code,false) );
          transition(UAS_Accepted);
          mDialog.makeResponse(*mInvite200, mFirstRequest, code);
          handleSessionTimerRequest(*mInvite200, mFirstRequest);
          break;
          
       case UAS_NegotiatedReliable:
-         transition(Connected);
+      case UAS_ReceivedOfferReliableProvidedAnswer: 
+         transition(UAS_Accepted);
          sendAccept(code, 0);
+         handler->onConnected(getSessionHandle(), *mInvite200);
+         break;
+
+      case UAS_NoAnswerReliable:
+         transition(UAS_Accepted);
+         sendAccept(code, mCurrentLocalSdp.get());
          handler->onConnected(getSessionHandle(), *mInvite200);
          break;
 
@@ -567,8 +631,12 @@ ServerInviteSession::accept(int code)
          handleSessionTimerRequest(*mInvite200, mFirstRequest);
          break;
          
-      case UAS_FirstSentOfferReliable:
       case UAS_NoOfferReliable:
+         transition(UAS_Accepted);
+         sendAccept(code, mProposedLocalSdp.get());
+         handler->onConnected(getSessionHandle(), *mInvite200);
+         break;
+
       case UAS_ReceivedOfferReliable: 
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdateAccepted:
@@ -655,11 +723,15 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_AcceptedWaitingAnswer:
          dispatchAcceptedWaitingAnswer(msg);
          break;         
+      case UAS_NoAnswerReliable:
       case UAS_NegotiatedReliable:
          dispatchEarlyReliable(msg);
          break;
       case UAS_FirstSentAnswerReliable:
-         dispatchFirstEarlyReliable(msg);
+         dispatchFirstSentAnswerReliable(msg);
+         break;
+      case UAS_FirstNoAnswerReliable:
+         dispatchFirstNoAnswerReliable(msg);
          break;
       case UAS_FirstSentOfferReliable:
          dispatchFirstSentOfferReliable(msg);
@@ -703,6 +775,40 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
       {
          send(m1xx);
          startRetransmit1xxTimer();
+      }
+   }
+   else if (timeout.type() == DumTimeout::Retransmit1xxRel)
+   {
+      if (mUnacknowledgedProvisionals.size() 
+          && mUnacknowledgedProvisionals.front()->header(h_RSeq).value() == timeout.seq())
+      {
+         unsigned int duration = 2*timeout.secondarySeq();
+         if(duration>=64*Timer::T1)
+         {
+            InfoLog (<< "Reliable provisional timeout" );
+            SharedPtr<SipMessage> i504(new SipMessage);
+            mDialog.makeResponse(*i504, mFirstRequest, 504);
+            send(i504);
+ 
+            transition(Terminated);
+ 
+            if (mDum.mDialogEventStateManager)
+            {
+               SipMessage msg;  // should onTerminated require this msg?
+               mDum.mDialogEventStateManager->onTerminated(mDialog, msg, InviteSessionHandler::Timeout);
+            }
+ 
+            mDum.mInviteSessionHandler->onTerminated(getSessionHandle(), InviteSessionHandler::Timeout);
+            mDum.destroy(this);
+            return;
+          
+         }
+         else
+         {
+            InfoLog (<< "Reliable provisional retransmit" );
+            send(mUnacknowledgedProvisionals.front());
+            mDum.addTimerMs(DumTimeout::Retransmit1xxRel, duration, getBaseHandle(), timeout.seq(), duration);
+         }
       }
    }
    else
@@ -846,6 +952,43 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          break;
       }
         
+      case OnPrack:
+      {
+         if(!prackCheckProvisionals(msg))
+         {
+            return; // prack does not correspond to an unacknowedged provisional
+         }
+         
+         if(sdp.get())  // New offer
+         {
+            if(!mAnswerSentReliably)    // new offer before previous answer sent 
+            {
+               ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
+               return;
+               assert(0);
+            }
+            else
+            {
+               // dispatch offer here and respond with 200OK in provideAnswer
+               transition(UAS_NegotiatedReliable);
+               mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
+               mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+               mCurrentEncryptionLevel = getEncryptionLevel(msg);
+               if(!isTerminated())  
+               {
+                  handler->onOffer(getSessionHandle(), msg, *sdp);
+               }
+            }
+         }
+         else
+         {
+             SharedPtr<SipMessage> p200(new SipMessage);
+             mDialog.makeResponse(*p200, msg, 200);
+             send(p200);
+             prackCheckQueue();
+         }
+         break;
+      }
       
       default:
          if(msg.isRequest())
@@ -1078,11 +1221,255 @@ ServerInviteSession::dispatchOfferReliable(const SipMessage& msg)
 void
 ServerInviteSession::dispatchNoOfferReliable(const SipMessage& msg)
 {
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnCancel:
+      {
+         dispatchCancel(msg);
+         break;
+      }
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
 }
 
 void
 ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
 {
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnCancel:
+      {
+         dispatchCancel(msg);
+         break;
+      }
+
+      case OnPrack:
+      {
+         if(!prackCheckProvisionals(msg))
+         {
+            return; // prack does not correspond to an unacknowedged provisional
+         }
+         
+         if(sdp.get())  // Answer
+         {
+            SharedPtr<SipMessage> p200(new SipMessage);
+            mDialog.makeResponse(*p200, msg, 200);
+            send(p200);
+
+            setCurrentLocalSdp(msg);
+            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+            mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
+
+            if( mState != UAS_Accepted)    // queued 200 OK was sent in prackCheckProvisionals
+            {                              // and state was changed there
+               transition(UAS_NegotiatedReliable);
+            }
+           
+         }
+         else
+         {
+            mEndReason = IllegalNegotiation;
+            transition(Terminated);
+            handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg);
+            SharedPtr<SipMessage> p406(new SipMessage);
+            mDialog.makeResponse(*p406, msg, 406);
+            send(p406);
+         }
+         break;
+      }
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
+}
+
+bool
+ServerInviteSession::prackCheckProvisionals(const SipMessage& msg)
+{
+   std::deque< SharedPtr<SipMessage> >::iterator msgIt = mUnacknowledgedProvisionals.begin();
+
+   InfoLog (<< "prackCheckProvisionals: " << mUnacknowledgedProvisionals.size() );
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+
+   while(msgIt!=mUnacknowledgedProvisionals.end())
+   {
+      if((*msgIt)->header(h_RSeq).value() == msg.header(h_RAck).rSequence()
+         && (*msgIt)->header(h_CSeq).sequence() == msg.header(h_RAck).cSequence()
+         && (*msgIt)->header(h_CSeq).method() == msg.header(h_RAck).method())
+      {
+          mUnacknowledgedProvisionals.erase(msgIt);
+          handler->onPrack(getHandle(),msg);
+          InfoLog (<< "Found matching provisional. Outstanding: " << mUnacknowledgedProvisionals.size() );
+          return true;
+      }
+      msgIt++;
+   }
+
+   ErrLog (<< "spurious PRACK in state=" << toData(mState));
+   SharedPtr<SipMessage> p481(new SipMessage);
+   mDialog.makeResponse(*p481, msg, 481);
+   send(p481);
+   return false;
+
+}
+
+void
+ServerInviteSession::prackCheckQueue()
+{
+   InfoLog (<< "prackCheckQueue: " << mQueuedProvisionals.size() );
+   if(mQueuedProvisionals.size() > 0 && mQueuedProvisionals.front().first < 200)
+   {
+      InfoLog (<< "Sending queued provisional" );
+      sendProvisional(mQueuedProvisionals.front().first, mQueuedProvisionals.front().second);
+      mQueuedProvisionals.pop_front();
+   }
+   else if(mQueuedProvisionals.size() > 0 && mQueuedProvisionals.front().first < 300)
+   {
+      InfoLog (<< "Sending queued 200 OK" );
+      InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+      transition(UAS_Accepted);
+      Contents* sdp = 0;
+      if( !mAnswerSentReliably && mCurrentLocalSdp.get())
+      {
+         sdp = mCurrentLocalSdp.get();
+      }
+      sendAccept(mQueuedProvisionals.front().first, sdp);
+      handler->onConnected(getSessionHandle(), *mInvite200);
+      mQueuedProvisionals.pop_front();
+   }
+
+}
+
+void 
+ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+         
+      case OnCancel:
+      {
+         dispatchCancel(msg);
+         break;
+      }
+
+      case OnPrack:
+      {
+         if(!prackCheckProvisionals(msg))
+         {
+            return; // prack does not correspond to an unacknowedged provisional
+         }
+         
+         if(sdp.get())  // New offer
+         {
+            if(!mAnswerSentReliably)    // new offer before previous answer sent 
+            {
+               ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
+               return;
+               assert(0);
+            }
+            else
+            {
+               // dispatch offer here and respond with 200OK in provideAnswer
+               transition(UAS_NegotiatedReliable);
+               mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
+               mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+               mCurrentEncryptionLevel = getEncryptionLevel(msg);
+               if(!isTerminated())  
+               {
+                  handler->onOffer(getSessionHandle(), msg, *sdp);
+               }
+            }
+         }
+         else
+         {
+             SharedPtr<SipMessage> p200(new SipMessage);
+             mDialog.makeResponse(*p200, msg, 200);
+             send(p200);
+             if( mState != UAS_Accepted)    // queued 200 OK was sent in prackCheckProvisionals
+             {                              // and state was changed there
+                transition(UAS_NegotiatedReliable);
+             }
+             prackCheckQueue();
+         }
+         break;
+      }
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
+}
+
+void 
+ServerInviteSession::dispatchFirstNoAnswerReliable(const SipMessage& msg)
+{
+//   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+         
+      case OnCancel:
+      {
+         dispatchCancel(msg);
+         break;
+      }
+
+      case OnPrack:
+      {
+         if(!prackCheckProvisionals(msg))
+         {
+            return; // prack does not correspond to an unacknowedged provisional
+         }
+         
+         if(sdp.get())
+         {
+            ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
+            return;
+
+            assert(0);
+         }
+         else
+         {
+             SharedPtr<SipMessage> p200(new SipMessage);
+             mDialog.makeResponse(*p200, msg, 200);
+             send(p200);
+             transition(UAS_NoAnswerReliable);
+             prackCheckQueue();
+         }
+         break;
+      }
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
+
+
 }
 
 void
@@ -1093,6 +1480,66 @@ ServerInviteSession::dispatchFirstEarlyReliable(const SipMessage& msg)
 void
 ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
 {
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+         
+      case OnCancel:
+      {
+         dispatchCancel(msg);
+         break;
+      }
+      case OnPrack:
+      {
+         if(!prackCheckProvisionals(msg))
+         {
+            return; // prack does not correspond to an unacknowedged provisional
+         }
+
+         if(mAnswerSentReliably)
+         {
+            transition(UAS_NegotiatedReliable);
+         }
+
+         if(sdp.get())
+         {
+            if(!mAnswerSentReliably)    // new offer before previous answer sent 
+            {
+                ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
+                return;
+                assert(0);
+            }
+            else
+            {
+               // dispatch offer here and respond with 200OK in provideAnswer
+               mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
+               mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+               mCurrentEncryptionLevel = getEncryptionLevel(msg);
+               if(!isTerminated())  
+               {
+                  handler->onOffer(getSessionHandle(), msg, *sdp);
+               }
+            }
+         }
+         else
+         {
+             SharedPtr<SipMessage> p200(new SipMessage);
+             mDialog.makeResponse(*p200, msg, 200);
+             send(p200);
+             prackCheckQueue();
+         }
+         break;
+      }
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
 }
 
 void
@@ -1211,19 +1658,43 @@ ServerInviteSession::startRetransmit1xxTimer()
    }
 }
 
+void 
+ServerInviteSession::startRetransmit1xxRelTimer()
+{
+   unsigned int seq = m1xx->header(h_RSeq).value();
+   mDum.addTimerMs(DumTimeout::Retransmit1xxRel, Timer::T1, getBaseHandle(), seq, Timer::T1);
+}
+
 void
 ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 {
+   m1xx->releaseContents();
    mDialog.makeResponse(*m1xx, mFirstRequest, code);
    switch (mState)
    {
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyProvidedAnswer:
-         if (earlyFlag && mCurrentLocalSdp.get()) // early media
+      case UAS_FirstSentAnswerReliable:
+      case UAS_NoAnswerReliable:
+         if (earlyFlag && !mAnswerSentReliably && mCurrentLocalSdp.get()) // early media
          {
             setSdp(*m1xx, mCurrentLocalSdp.get());
+            if (provisionalWillBeSentReliable())
+            {
+                mAnswerSentReliably = true;
+            }
          }
          break;
+
+      case UAS_NoOfferReliable:
+         if (code>100 && earlyFlag && !mAnswerSentReliably && mProposedLocalSdp.get()) // early media
+         {
+            setSdp(*m1xx, mProposedLocalSdp.get());
+            mAnswerSentReliably = true;
+            transition(UAS_FirstSentOfferReliable);
+         }
+         break;
+
       case UAS_ProvidedOffer:
       case UAS_EarlyProvidedOffer:
          if (earlyFlag && mProposedLocalSdp.get()) 
@@ -1243,7 +1714,21 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
       mDum.mDialogEventStateManager->onEarly(mDialog, getSessionHandle());
    }
 
+   if(m1xx->exists(h_Requires) && m1xx->header(h_Requires).find(Token(Symbols::C100rel)))
+   {
+      mUnacknowledgedProvisionals.push_back(m1xx);
+      startRetransmit1xxRelTimer();
+   }
+
    send(m1xx);
+}
+
+void
+ServerInviteSession::queueReliableProvisional(int code, bool earlyFlag)
+{
+   InfoLog (<< "Reliable provisional queued" );
+   mQueuedProvisionals.push_back( std::make_pair(code,earlyFlag) );
+    
 }
 
 void
@@ -1251,9 +1736,10 @@ ServerInviteSession::sendAccept(int code, Contents* sdp)
 {
    mDialog.makeResponse(*mInvite200, mFirstRequest, code);
    handleSessionTimerRequest(*mInvite200, mFirstRequest);
-   if (sdp)
+   if (sdp && !mAnswerSentReliably )
    {
       setSdp(*mInvite200, sdp);
+      mAnswerSentReliably = true;
    }
    mCurrentRetransmit1xx = 0; // Stop the 1xx timer
    startRetransmit200Timer(); // 2xx timer
@@ -1281,6 +1767,12 @@ ServerInviteSession::sendUpdate(const SdpContents& sdp)
    {
       throw UsageUseException("Can't send UPDATE to peer", __FILE__, __LINE__);
    }
+}
+
+bool 
+ServerInviteSession::provisionalWillBeSentReliable()
+{
+   return isReliable(mFirstRequest);
 }
 
 /* ====================================================================
