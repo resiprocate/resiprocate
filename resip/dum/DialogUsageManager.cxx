@@ -56,7 +56,7 @@
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/Random.hxx"
-#include "rutil/RWMutex.hxx"
+#include "rutil/Lockable.hxx"
 #include "rutil/WinLeakCheck.hxx"
 #include "rutil/Timer.hxx"
 
@@ -1412,7 +1412,7 @@ DialogUsageManager::hasEvents() const
 
 // return true if there is more to do
 bool 
-DialogUsageManager::process(resip::RWMutex* mutex)
+DialogUsageManager::process(resip::Lockable* mutex)
 {
    if (mFifo.messageAvailable())
    {
@@ -1430,7 +1430,7 @@ DialogUsageManager::process(resip::RWMutex* mutex)
 }
 
 bool 
-DialogUsageManager::process(int timeoutMs, resip::RWMutex* mutex)
+DialogUsageManager::process(int timeoutMs, resip::Lockable* mutex)
 {
    std::auto_ptr<Message> message;
 
