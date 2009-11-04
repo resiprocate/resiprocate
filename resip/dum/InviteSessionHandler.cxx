@@ -73,6 +73,10 @@ InviteSessionHandler::onConnectedConfirmed(InviteSessionHandle handle, const Sip
 {
 }
 
+void 
+InviteSessionHandler::onPrack(ServerInviteSessionHandle, const SipMessage &msg)
+{
+}
 
 /* ====================================================================
  * The Vovida Software License, Version 1.0 

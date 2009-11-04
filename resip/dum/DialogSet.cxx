@@ -550,6 +550,7 @@ DialogSet::dispatch(const SipMessage& msg)
          case BYE:
          case INFO:
          case ACK:
+         case PRACK:
          case UPDATE:
             if(!dialog)
             {
@@ -807,7 +808,7 @@ DialogSet::dispatch(const SipMessage& msg)
          }
          else
          {
-            ErrLog(<< "Can’t create a dialog, on a UAS response.");
+            ErrLog(<< "Canï¿½t create a dialog, on a UAS response.");
             return;
          }
 

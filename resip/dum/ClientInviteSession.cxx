@@ -780,6 +780,10 @@ ClientInviteSession::dispatchEarly (const SipMessage& msg)
       case On1xx:
          transition(UAC_Early);
          handleProvisional(msg);
+         if(!isTerminated())  
+         {
+            sendPrackIfNeeded(msg);
+         }
          break;
 
       case On1xxEarly: // only unreliable

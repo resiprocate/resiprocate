@@ -62,6 +62,8 @@ class ServerInviteSession: public InviteSession
       //virtual void provideAnswerCommand(const SdpContents& answer);
       //virtual void rejectCommand(int statusCode, WarningCategory *warning = 0);
 
+      bool provisionalWillBeSentReliable();
+
    private:
       friend class Dialog;
 
@@ -77,6 +79,8 @@ class ServerInviteSession: public InviteSession
       void dispatchOfferReliable(const SipMessage& msg);
       void dispatchNoOfferReliable(const SipMessage& msg);
       void dispatchFirstSentOfferReliable(const SipMessage& msg);
+      void dispatchFirstSentAnswerReliable(const SipMessage& msg);
+      void dispatchFirstNoAnswerReliable(const SipMessage& msg);
       void dispatchFirstEarlyReliable(const SipMessage& msg);
       void dispatchEarlyReliable(const SipMessage& msg);
       void dispatchSentUpdate(const SipMessage& msg);
@@ -92,9 +96,13 @@ class ServerInviteSession: public InviteSession
 
       // utilities
       void startRetransmit1xxTimer();
+      void startRetransmit1xxRelTimer();
       void sendAccept(int code, Contents* sdp); // sends 2xxI
       void sendProvisional(int code, bool earlyFlag);
+      void queueReliableProvisional(int code, bool earlyFlag);
       void sendUpdate(const SdpContents& sdp);
+      bool prackCheckProvisionals(const SipMessage& msg); // verify that prack has corresponding 1xx
+      void prackCheckQueue();                             // send a queued message
 
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
@@ -107,8 +115,10 @@ class ServerInviteSession: public InviteSession
       SharedPtr<SipMessage> m1xx; // for 1xx retransmissions
       unsigned long mCurrentRetransmit1xx;
       
-      //std::deque<SipMessage> mUnacknowledgedProvisionals; // all of them
-      //SipMessage m200; // for retransmission
+      std::deque< SharedPtr<SipMessage> > mUnacknowledgedProvisionals; // all of them
+      std::deque< std::pair<int,bool> > mQueuedProvisionals;
+      bool mAnswerSentReliably;
+      SharedPtr<SipMessage> mPrackWithOffer; // for 1xx retransmissions
 };
 
 }
