@@ -64,7 +64,7 @@ class HttpGetMessage;
 
 class ConnectionTerminated;
 
-class RWMutex;
+class Lockable;
 
 class ExternalMessageBase;
 class ExternalMessageHandler;
@@ -252,8 +252,8 @@ class DialogUsageManager : public HandleManager, public TransactionUser
       // give dum an opportunity to handle its events. If process() returns true
       // there are more events to process.
       bool hasEvents() const;
-      bool process(RWMutex* mutex = NULL);  // non-blocking
-      bool process(int timeoutMs, RWMutex* mutex = NULL);   // Specify -1 for infinte timeout
+      bool process(Lockable* mutex = NULL);  // non-blocking
+      bool process(int timeoutMs, Lockable* mutex = NULL);   // Specify -1 for infinte timeout
 
       InviteSessionHandle findInviteSession(DialogId id);
       //if the handle is inValid, int represents the errorcode
