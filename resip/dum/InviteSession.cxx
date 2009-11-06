@@ -345,19 +345,11 @@ InviteSession::provideOffer(const SdpContents& offer,
       case Connected:
       case WaitingToOffer:
       case UAS_WaitingToOffer:
-         // According to RFC331 is it recommended to no use UPDATE for comfirmed dialogs.
-         if (updateMethodSupported() && !isConnected())
-         {
-            transition(SentUpdate);
-            mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
-         }
-         else
-         {
-            transition(SentReinvite);
-            mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
-            startStaleReInviteTimer();
-         }
-         setSessionTimerHeaders(*mLastLocalSessionModification);
+         transition(SentReinvite);
+         mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
+         startStaleReInviteTimer();
+
+		 setSessionTimerHeaders(*mLastLocalSessionModification);
 
          InfoLog (<< "Sending " << mLastLocalSessionModification->brief());
          InviteSession::setSdp(*mLastLocalSessionModification, offer, alternative);
