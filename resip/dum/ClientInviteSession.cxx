@@ -1039,8 +1039,20 @@ ClientInviteSession::dispatchSentAnswer (const SipMessage& msg)
          onConnectedAspect(getHandle(), msg);
          break;
 
-      case On2xxAnswer:
       case On2xxOffer:
+         {
+             if (*sdp == *mCurrentRemoteSdp)
+             {
+                 InfoLog (<< "Ignoring illegal offer identical with current remote sdp");
+                 transition(Connected);
+                 sendAck();
+                 handleFinalResponse(msg);
+                 onConnectedAspect(getHandle(), msg);
+                 break;
+             }
+         }
+         // fall through to next label
+      case On2xxAnswer:
       case On1xxAnswer:
       case On1xxOffer:
          sendAck();
@@ -1115,8 +1127,20 @@ ClientInviteSession::dispatchQueuedUpdate (const SipMessage& msg)
          onConnectedAspect(getHandle(), msg);
          break;
 
-      case On2xxAnswer:
       case On2xxOffer:
+         {
+             if (*sdp == *mCurrentRemoteSdp)
+             {
+                 InfoLog (<< "Ignoring illegal offer identical with current remote sdp");
+                 transition(Connected);
+                 sendAck();
+                 handleFinalResponse(msg);
+                 onConnectedAspect(getHandle(), msg);
+                 break;
+             }
+         }
+         // fall through to next label
+      case On2xxAnswer:
       case On1xxAnswer:
       case On1xxOffer:
          sendAck();
@@ -1185,8 +1209,20 @@ ClientInviteSession::dispatchEarlyWithAnswer (const SipMessage& msg)
          onConnectedAspect(getHandle(), msg);
          break;
 
-      case On2xxAnswer:
       case On2xxOffer:
+         {
+             if (*sdp == *mCurrentRemoteSdp)
+             {
+                 InfoLog (<< "Ignoring illegal offer identical with current remote sdp");
+                 transition(Connected);
+                 sendAck();
+                 handleFinalResponse(msg);
+                 onConnectedAspect(getHandle(), msg);
+                 break;
+             }
+         }
+         // fall through to next label
+      case On2xxAnswer:
          sendAck();
          sendBye();
          InfoLog (<< "Failure:  illegal offer/answer: " << msg.brief());
