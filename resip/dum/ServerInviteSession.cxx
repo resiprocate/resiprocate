@@ -608,16 +608,29 @@ ServerInviteSession::accept(int code)
          break;
          
       case UAS_NegotiatedReliable:
-      case UAS_ReceivedOfferReliableProvidedAnswer: 
          transition(UAS_Accepted);
          sendAccept(code, 0);
          handler->onConnected(getSessionHandle(), *mInvite200);
          break;
 
-      case UAS_NoAnswerReliable:
+      case UAS_ReceivedOfferReliableProvidedAnswer: 
          transition(UAS_Accepted);
          sendAccept(code, mCurrentLocalSdp.get());
          handler->onConnected(getSessionHandle(), *mInvite200);
+         break;
+
+      case UAS_NoAnswerReliable:
+         if (mAnswerSentReliably)
+         {
+            InfoLog (<< "Waiting for PRACK. queued 200 OK" );
+            mQueuedProvisionals.push_back( std::make_pair(code,false) );
+         }
+         else
+         {
+            transition(UAS_Accepted);
+            sendAccept(code, mCurrentLocalSdp.get());
+            handler->onConnected(getSessionHandle(), *mInvite200);
+         }
          break;
 
       case UAS_SentUpdate:
