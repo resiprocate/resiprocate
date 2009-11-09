@@ -9,6 +9,7 @@
 #include "resip/stack/Symbols.hxx"
 #include "rutil/Logger.hxx"
 #include "rutil/WinLeakCheck.hxx"
+#include "rutil/MD5Stream.hxx"
 
 #define RESIPROCATE_SUBSYSTEM resip::Subsystem::SDP
 
@@ -1864,6 +1865,22 @@ resip::operator==(const Codec& lhs, const Codec& rhs)
            (lhs.mEncodingParameters == rhs.mEncodingParameters ||
             (lhs.mEncodingParameters.empty() && rhs.mEncodingParameters == defaultEncodingParameters) ||
             (lhs.mEncodingParameters == defaultEncodingParameters && rhs.mEncodingParameters.empty())));
+}
+
+bool
+resip::operator==(const SdpContents& lhs, const SdpContents& rhs)
+{
+   MD5Stream lhsStream;
+   lhsStream<< lhs;
+   MD5Stream rhsStream;
+   rhsStream << rhs;
+   return lhsStream.getHex() == rhsStream.getHex();
+}
+
+bool
+resip::operator!=(const SdpContents& lhs, const SdpContents& rhs)
+{
+   return !operator==(lhs,rhs);
 }
 
 EncodeStream&
