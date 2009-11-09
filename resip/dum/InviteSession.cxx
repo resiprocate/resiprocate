@@ -18,7 +18,6 @@
 #include "resip/dum/DumHelper.hxx"
 #include "rutil/Inserter.hxx"
 #include "rutil/Logger.hxx"
-#include "rutil/MD5Stream.hxx"
 #include "rutil/Timer.hxx"
 #include "rutil/Random.hxx"
 #include "rutil/compat.hxx"
@@ -1435,14 +1434,7 @@ InviteSession::dispatchSentReinvite(const SipMessage& msg)
          if (mSessionRefreshReInvite)
          {
             mSessionRefreshReInvite = false;
-         
-            MD5Stream currentRemote;
-            currentRemote<< *mCurrentRemoteSdp;
-            MD5Stream newRemote;
-            newRemote << *sdp;
-            bool changed = currentRemote.getHex() != newRemote.getHex();
-
-            if (changed)
+            if (*sdp != *mCurrentRemoteSdp)
             {
                mCurrentRemoteSdp = sdp; 
                handler->onRemoteSdpChanged(getSessionHandle(), msg, *mCurrentRemoteSdp);
