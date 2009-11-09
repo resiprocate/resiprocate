@@ -538,6 +538,12 @@ typedef SdpContents::Session::Codec Codec;
 bool operator==(const SdpContents::Session::Codec& lhs,
                 const SdpContents::Session::Codec& rhs);
 
+bool operator==(const SdpContents& lhs,
+                const SdpContents& rhs);
+
+bool operator!=(const SdpContents& lhs,
+                const SdpContents& rhs);
+
 EncodeStream& operator<<(EncodeStream& str, const SdpContents::Session::Codec& codec);
 
 }
