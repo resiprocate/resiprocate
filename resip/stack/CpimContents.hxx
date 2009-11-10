@@ -22,7 +22,7 @@ class CpimContents : public Contents
 
       virtual Contents* clone() const;
       static const Mime& getStaticType() ;
-      virtual EncodeStream& encodeParsed(std::ostream& str) const;
+      virtual EncodeStream& encodeParsed(EncodeStream& str) const;
       virtual void parse(ParseBuffer& pb);
 
       Data& text() {checkParsed(); return mText;}
