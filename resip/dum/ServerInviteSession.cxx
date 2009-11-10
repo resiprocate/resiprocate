@@ -263,7 +263,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
       case UAS_NoOfferReliable:
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          mProposedEncryptionLevel = level;
-         // !jf! transition ? 
+         // !jf! transition ? TODO!!!!
          break;
 
       case UAS_NegotiatedReliable:
@@ -360,7 +360,6 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          break;
          
       case UAS_ReceivedOfferReliable: 
-         // send1XX-answer, timer::1xx
          mCurrentRemoteSdp = mProposedRemoteSdp;
          mCurrentLocalSdp = InviteSession::makeSdp(answer);
          transition(UAS_ReceivedOfferReliableProvidedAnswer);
