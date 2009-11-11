@@ -208,7 +208,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
          }
          else
          {
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
+            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType(), getAppDialogSet()->reuse());
             mDum.send(sub);
             delete this;
             return;
@@ -418,7 +418,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          {
             InfoLog(<< "ClientSubscription: application retry new request");
   
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType());
+            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType(), getAppDialogSet()->reuse());
             mDum.send(sub);            
             delete this;
          }
