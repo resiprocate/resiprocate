@@ -345,17 +345,10 @@ InviteSession::provideOffer(const SdpContents& offer,
       case Connected:
       case WaitingToOffer:
       case UAS_WaitingToOffer:
-         if (updateMethodSupported())
-         {
-            transition(SentUpdate);
-            mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
-         }
-         else
-         {
-            transition(SentReinvite);
-            mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
-            startStaleReInviteTimer();
-         }
+         transition(SentReinvite);
+         mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
+         startStaleReInviteTimer();
+
          setSessionTimerHeaders(*mLastLocalSessionModification);
 
          InfoLog (<< "Sending " << mLastLocalSessionModification->brief());
