@@ -157,7 +157,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
       InfoLog (<< "Received 481 to SUBSCRIBE, reSUBSCRIBEing (presence server probably restarted) "
                << mLastRequest->header(h_To));
 
-      SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType(), getAppDialogSet()->reuse());
+      SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getUserProfile(), getEventType(), getAppDialogSet()->reuse());
       mDum.send(sub);
 
       delete this;
@@ -208,7 +208,7 @@ ClientSubscription::processResponse(const SipMessage& msg)
          }
          else
          {
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType(), getAppDialogSet()->reuse());
+            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getUserProfile(), getEventType(), getAppDialogSet()->reuse());
             mDum.send(sub);
             delete this;
             return;
@@ -418,7 +418,7 @@ ClientSubscription::dispatch(const DumTimeout& timer)
          {
             InfoLog(<< "ClientSubscription: application retry new request");
   
-            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getEventType(), getAppDialogSet()->reuse());
+            SharedPtr<SipMessage> sub = mDum.makeSubscription(mLastRequest->header(h_To), getUserProfile(), getEventType(), getAppDialogSet()->reuse());
             mDum.send(sub);            
             delete this;
          }
