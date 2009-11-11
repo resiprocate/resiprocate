@@ -499,9 +499,9 @@ UserAgent::createSubscriptionImpl(SubscriptionHandle handle, const Data& eventTy
       mDum.addClientSubscriptionHandler(eventType, this);
    }
    // Ensure that the request Mime type is supported in the dum profile
-   if(!mProfile->isMimeTypeSupported(SUBSCRIBE, mimeType))
+   if(!mProfile->isMimeTypeSupported(NOTIFY, mimeType))
    {
-      mProfile->addSupportedMimeType(SUBSCRIBE, mimeType);  
+      mProfile->addSupportedMimeType(NOTIFY, mimeType);  
    }
 
    UserAgentClientSubscription *subscription = new UserAgentClientSubscription(*this, mDum, handle);

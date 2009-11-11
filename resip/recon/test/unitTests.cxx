@@ -634,7 +634,6 @@ SharedPtr<UserAgentMasterProfile> createUserAgentMasterProfile()
    profile->addSupportedMimeType(OPTIONS,Mime("application", "sdp"));
    profile->addSupportedMimeType(UPDATE, Mime("application", "sdp"));  
    profile->addSupportedMimeType(NOTIFY, Mime("message", "sipfrag"));  
-   //profileAlice->addSupportedMimeType(SUBSCRIBE, Mime("application", "simple-message-summary"));  
    profile->clearSupportedMethods();
    profile->addSupportedMethod(INVITE);
    profile->addSupportedMethod(ACK);
