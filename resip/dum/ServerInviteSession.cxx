@@ -371,14 +371,14 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          break;
 
       case UAS_ReceivedUpdate:
-         // send::200U-answer
+         // send::200U-answer - TODO
          transition(UAS_NegotiatedReliable);
          break;
          
       case UAS_ReceivedUpdateWaitingAnswer:
-         // send::2XXU-answer
-         // send::2XXI
-         transition(Connected);
+         // send::2XXU-answer - TODO
+         // send::2XXI - TODO
+         transition(Accepted);
          handler->onConnected(getSessionHandle(), *mInvite200);
          break;
 
@@ -604,6 +604,7 @@ ServerInviteSession::accept(int code)
          transition(UAS_Accepted);
          mDialog.makeResponse(*mInvite200, mFirstRequest, code);
          handleSessionTimerRequest(*mInvite200, mFirstRequest);
+         // this is stange - TODO review me
          break;
          
       case UAS_NegotiatedReliable:
@@ -644,11 +645,6 @@ ServerInviteSession::accept(int code)
          break;
          
       case UAS_NoOfferReliable:
-         transition(UAS_Accepted);
-         sendAccept(code, mProposedLocalSdp.get());
-         handler->onConnected(getSessionHandle(), *mInvite200);
-         break;
-
       case UAS_ReceivedOfferReliable: 
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdateAccepted:
