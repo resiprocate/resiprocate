@@ -31,28 +31,27 @@ digraph UAS {
   OfferProvidedAnswer -> Terminated                     [ label = "onBye/app::onTerminated,send::200B,send::487I" ]; 
 
   Accepted -> Connected                                 [ label = "onACK" ];
+  Accepted -> Connected                                 [ label = "onACK-answer" ];  // illegal - but accept anyway
   Accepted -> Accepted                                  [ label = "onCANCEL/send::200C" ]; 
   Accepted -> Accepted                                  [ label = "onTimer2xx/resend::2XXI" ];
-  Accepted -> Terminated                                [ label = "onACK-answer/send::BYE" ];
   Accepted -> Terminated                                [ label = "onTimerNoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
   Accepted -> Terminated                                [ label = "onBye/app::onTerminated,send::200B" ]; 
   Accepted -> WaitingToHangup                           [ label = "dum::end" ];
   Accepted -> WaitingToOffer                            [ label = "dum::provideOffer/saveOffer" ];
   Accepted -> WaitingToRequestOffer                     [ label = "dum::requestOffer/saveOffer" ];
 
-  WaitingToOffer -> SentUpdate                          [ label = "onACK/send::UPDATE-offer" ]; 
-  WaitingToOffer -> SentReinvite                        [ label = "onACK/send::INVITE-offer" ]; 
+  WaitingToOffer -> SentUpdate                          [ label = "onACK,onAck-answer/send::UPDATE-offer" ];  // on Ack-answer is illegal - but accept anyway for interop 
+  WaitingToOffer -> SentReinvite                        [ label = "onACK,onAck-answer/send::INVITE-offer" ];  // on Ack-answer is illegal - but accept anyway for interop 
   WaitingToOffer -> WaitingToOffer                      [ label = "onCANCEL/send::200C" ]; 
   WaitingToOffer -> WaitingToOffer                      [ label = "onTimer2xx/resend::2XXI" ];
-  WaitingToOffer -> Terminated                          [ label = "onACK-answer/send::BYE" ];
   WaitingToOffer -> Terminated                          [ label = "onTimerNoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
   WaitingToOffer -> Terminated                          [ label = "onBye/app::onTerminated,send::200B" ]; 
   WaitingToOffer -> WaitingToHangup                     [ label = "dum::end" ];
 
   WaitingToRequestOffer -> SentReinviteNoOffer          [ label = "onACK/send::INVITE" ]; 
+  WaitingToRequestOffer -> SentReinviteNoOffer          [ label = "onACK-answer/send::INVITE" ];
   WaitingToRequestOffer -> WaitingToRequestOffer        [ label = "onCANCEL/send::200C" ]; 
   WaitingToRequestOffer -> WaitingToRequestOffer        [ label = "onTimer2xx/resend::2XXI" ];
-  WaitingToRequestOffer -> Terminated                   [ label = "onACK-answer/send::BYE" ];
   WaitingToRequestOffer -> Terminated                   [ label = "onTimerNoACK/app::onAckNotReceived(),app::onTerminated(GeneralFailure),send::BYE" ];
   WaitingToRequestOffer -> Terminated                   [ label = "onBye/app::onTerminated,send::200B" ]; 
   WaitingToRequestOffer -> WaitingToHangup              [ label = "dum::end" ];
@@ -91,7 +90,7 @@ digraph UAS {
   NoOffer -> Terminated                                 [ label = "onBye/app::onTerminated,send::200B,send::487I,dum::destroy" ]; 
 
   ProvidedOffer -> EarlyProvidedOffer                   [ label = "dum::provisional/send::1xx-early,timer::1xx" ]; 
-  ProvidedOffer -> AcceptedWaitingAnswer                [ label = "dum::accept/send::2XXI-offer,timer::2xx,timer::NoAck" ];
+  ProvidedOffer -> AcceptedWaitingAnswer                [ label = "dum::accept/send::2XXI-offer,timer::2xx,timer::NoAck,app::onConnected" ];
   ProvidedOffer -> Terminated                           [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   ProvidedOffer -> Terminated                           [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
   ProvidedOffer -> Terminated                           [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
@@ -109,7 +108,7 @@ digraph UAS {
   EarlyNoOffer -> Terminated                            [ label = "onBye/app::onTerminated,send::200B,send::487I,dum::destroy" ];
 
   EarlyProvidedOffer -> EarlyProvidedOffer              [ label = "dum::provisional/send::1xx-early,timer::1xx" ]; 
-  EarlyProvidedOffer -> AcceptedWaitingAnswer           [ label = "dum::accept/send::2XXI-offer,timer::2xx,timer::NoAck" ];
+  EarlyProvidedOffer -> AcceptedWaitingAnswer           [ label = "dum::accept/send::2XXI-offer,timer::2xx,timer::NoAck,app::onConnected" ];
   EarlyProvidedOffer -> Terminated                      [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   EarlyProvidedOffer -> Terminated                      [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
   EarlyProvidedOffer -> Terminated                      [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
@@ -117,8 +116,9 @@ digraph UAS {
   EarlyProvidedOffer -> Terminated                      [ label = "app::onTerminated,onBye/send::200B,send::487I,dum::destroy" ]; 
 
   AcceptedWaitingAnswer -> Connected                    [ label = "onACK-answer/onAnswer" ];
+  AcceptedWaitingAnswer -> Terminated                   [ label = "onACK/onAnswer/send::BYE" ];
   AcceptedWaitingAnswer -> AcceptedWaitingAnswer        [ label = "onCANCEL/send::200C" ]; 
-  AcceptedWaitingAnswer -> AcceptedWaitingAnswer        [ label = "onPRACK/send::2XXP,send::2XXI-offer" ];
+  AcceptedWaitingAnswer -> AcceptedWaitingAnswer        [ label = "onPRACK/send::2XXP" ];
   AcceptedWaitingAnswer -> Terminated                   [ label = "onTimer2xx/resend::2XXI" ]; // !jf! destroy?
   AcceptedWaitingAnswer -> Terminated                   [ label = "onTimerNoACK/send::BYE" ];
   AcceptedWaitingAnswer -> WaitingToHangup              [ label = "dum::end" ];
@@ -137,7 +137,7 @@ digraph UAS {
   ReceivedOfferReliable -> Terminated                   [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
 
   ReceivedOfferReliableProvidedAnswer -> FirstSentAnswerReliable [ label = "dum::provisional/send::1xx-answer,timer::1xx" ];
-  ReceivedOfferReliableProvidedAnswer -> Accepted                [ label = "dum::accept/send::2xx,timer::2xx" ];
+  ReceivedOfferReliableProvidedAnswer -> Accepted                [ label = "dum::accept/send::2xx,timer::2xx,app::onConnected" ];
   ReceivedOfferReliableProvidedAnswer -> Terminated              [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   ReceivedOfferReliableProvidedAnswer -> Terminated              [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
   ReceivedOfferReliableProvidedAnswer -> Terminated              [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
@@ -149,7 +149,7 @@ digraph UAS {
   NoOfferReliable -> Terminated                         [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
 
   ProvidedOfferReliable -> FirstSentOfferReliable       [ label = "dum::provisional/send::1xx-offer,timer:1xx" ];
-  ProvidedOfferReliable -> AcceptedWaitingAnswer        [ label = "dum::accept/send::2xx-offer,timer:2xx,timer::NoAck" ];
+  ProvidedOfferReliable -> AcceptedWaitingAnswer        [ label = "dum::accept/send::2xx-offer,timer:2xx,timer::NoAck,app::onConnected" ];
   ProvidedOfferReliable -> Terminated                   [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];
   ProvidedOfferReliable -> Terminated                   [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
 
@@ -163,7 +163,6 @@ digraph UAS {
   FirstSentAnswerReliable -> FirstSentAnswerReliable    [ label = "onTimer/resend::1xx,timer::1xx" ];
   FirstSentAnswerReliable -> AcceptedAwaitingPrack      [ label = "dum::accept/queue::2xx" ];
   FirstSentAnswerReliable -> NegotiatedReliable         [ label = "onPRACK/200P" ];
-  FirstSentAnswerReliable -> WaitingToTerminate         [ label = "dum::end" ];
   FirstSentAnswerReliable -> Terminated                 [ label = "dum::end/send::4XXI,app::onTerminated,dum::destroy" ];  
   FirstSentAnswerReliable -> Terminated                 [ label = "dum::reject/send::4XXI,app::onTerminated,dum::destroy" ];
   FirstSentAnswerReliable -> Terminated                 [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ];
@@ -185,6 +184,7 @@ digraph UAS {
   NegotiatedReliable -> Terminated                      [ label = "dum::redirect/send::3XXI,app::onTerminated,dum::destroy" ]; 
 
   Accepted -> Connected                                 [ label = "onACK" ];
+  Accepted -> Connected                                 [ label = "onACK-answer" ];  // on Ack-answer is illegal - but accept anyway for interop
   Accepted -> Accepted                                  [ label = "onCANCEL/send::200C" ]; 
   Accepted -> Accepted                                  [ label = "onPRACK/send::2XXP,send::2XXI,timer::2xx" ];
   Accepted -> Accepted                                  [ label = "onTimer2xx/resend::2XXI" ];

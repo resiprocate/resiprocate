@@ -200,6 +200,7 @@ class InviteSession : public DialogUsage
          UAS_ReceivedOfferReliable,
          UAS_ReceivedOfferReliableProvidedAnswer,
          UAS_NoOfferReliable,
+         UAS_ProvidedOfferReliable,
          UAS_FirstSentOfferReliable,
          UAS_FirstSentAnswerReliable,
          UAS_FirstNoAnswerReliable,

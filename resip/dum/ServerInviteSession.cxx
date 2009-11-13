@@ -51,6 +51,7 @@ ServerInviteSession::redirect(const NameAddrs& contacts, int code)
       case UAS_FirstSentOfferReliable:
       case UAS_NoOffer:
       case UAS_NoOfferReliable:
+      case UAS_ProvidedOfferReliable:
       case UAS_Offer:
       case UAS_OfferProvidedAnswer:
       case UAS_ReceivedOfferReliable: 
@@ -186,6 +187,14 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
          sendProvisional(code, earlyFlag);
          break;
 
+      case UAS_ProvidedOfferReliable:
+         if(code!=100)
+         {
+            transition(UAS_FirstSentOfferReliable);
+         }
+         sendProvisional(code, earlyFlag);
+         break;
+
       case UAS_ReceivedOfferReliableProvidedAnswer: 
          if(code!=100)
          {
@@ -195,6 +204,7 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
          break;
 
       case UAS_Accepted:
+      case UAS_AcceptedWaitingAnswer:
       case UAS_WaitingToOffer:
       case UAS_WaitingToRequestOffer:
       case UAS_ReceivedUpdate:
@@ -261,9 +271,9 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
          break;
          
       case UAS_NoOfferReliable:
+         transition(UAS_ProvidedOfferReliable);
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          mProposedEncryptionLevel = level;
-         // !jf! transition ? TODO!!!!
          break;
 
       case UAS_NegotiatedReliable:
@@ -294,6 +304,7 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
       case UAS_ReceivedOfferReliable: 
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
+      case UAS_ProvidedOfferReliable:
       case UAS_ReceivedUpdate:
       case UAS_ReceivedUpdateWaitingAnswer:
       case UAS_SentUpdate:
@@ -413,6 +424,7 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
       case UAS_NoOfferReliable:
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
+      case UAS_ProvidedOfferReliable:
       case UAS_SentUpdate:
       case UAS_SentUpdateAccepted:
       case UAS_Start:
@@ -452,10 +464,12 @@ ServerInviteSession::end(EndReason reason)
       case UAS_Offer:
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
+      case UAS_ProvidedOfferReliable:
          reject(480);
          break;         
          
       case UAS_ReceivedOfferReliable: 
+      case UAS_ReceivedOfferReliableProvidedAnswer:
       case UAS_NegotiatedReliable:
       case UAS_FirstSentOfferReliable:
       case UAS_FirstSentAnswerReliable:
@@ -513,6 +527,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_Offer:
       case UAS_OfferProvidedAnswer:
       case UAS_ProvidedOffer:
+      case UAS_ProvidedOfferReliable:
 
       case UAS_NegotiatedReliable:
       case UAS_FirstSentAnswerReliable:
@@ -521,6 +536,7 @@ ServerInviteSession::reject(int code, WarningCategory *warning)
       case UAS_FirstSentOfferReliable:
       case UAS_NoOfferReliable:
       case UAS_ReceivedOfferReliable: 
+      case UAS_ReceivedOfferReliableProvidedAnswer:
       case UAS_ReceivedUpdate:
       case UAS_SentUpdate:
       {
@@ -583,6 +599,7 @@ ServerInviteSession::accept(int code)
          assert(0);
 
       case UAS_ProvidedOffer:
+      case UAS_ProvidedOfferReliable:
       case UAS_EarlyProvidedOffer:
          transition(UAS_AcceptedWaitingAnswer);
          sendAccept(code, mProposedLocalSdp.get());
@@ -714,6 +731,7 @@ ServerInviteSession::dispatch(const SipMessage& msg)
       case UAS_EarlyProvidedAnswer:
       case UAS_NoOffer:
       case UAS_ProvidedOffer:
+      case UAS_ProvidedOfferReliable:
       case UAS_EarlyNoOffer:
       case UAS_EarlyProvidedOffer:
       case UAS_OfferProvidedAnswer:
@@ -931,7 +949,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
       }
 
       case OnAck:
-      case OnAckAnswer:  // .bwc. unsolicited SDP in ACK; it would probably make sense to just ignore.
+      case OnAckAnswer:  // illegal but accept anyway for improved interop
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          transition(Connected);
@@ -971,6 +989,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
          {
             if(!mAnswerSentReliably)    // new offer before previous answer sent 
             {
+               // TODO - reject PRACK, teardown call?
                ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
                return;
                assert(0);
@@ -978,7 +997,7 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
             else
             {
                // dispatch offer here and respond with 200OK in provideAnswer
-               transition(UAS_NegotiatedReliable);
+               transition(UAS_NegotiatedReliable);  // TODO - this doesn't look right - needs review
                mPrackWithOffer = resip::SharedPtr<SipMessage>(new SipMessage(msg));
                mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
                mCurrentEncryptionLevel = getEncryptionLevel(msg);
@@ -1030,19 +1049,11 @@ ServerInviteSession::dispatchWaitingToOffer(const SipMessage& msg)
       }
 
       case OnAck:
+      case OnAckAnswer:   // illegal but accept anyway for improved interop
       {
          assert(mProposedLocalSdp.get());
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          provideProposedOffer(); 
-         break;
-      }
-
-      case OnAckAnswer:
-      {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         sendBye();
-         transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg); 
          break;
       }
       
@@ -1099,18 +1110,10 @@ ServerInviteSession::dispatchWaitingToRequestOffer(const SipMessage& msg)
       }
 
       case OnAck:
+      case OnAckAnswer:   // illegal but accept anyway for improved interop
       {
          mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
          requestOffer(); 
-         break;
-      }
-
-      case OnAckAnswer:
-      {
-         mCurrentRetransmit200 = 0; // stop the 200 retransmit timer
-         sendBye();
-         transition(Terminated);
-         handler->onTerminated(getSessionHandle(), InviteSessionHandler::Error, &msg); 
          break;
       }
       
@@ -1200,15 +1203,29 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
          break;
       }
 
-      case OnPrack: // broken
+      case OnPrack:
       {
-         // no transition
-
-         SharedPtr<SipMessage> p200(new SipMessage);
-         mDialog.makeResponse(*p200, msg, 200);
-         send(p200);
+         if(!prackCheckProvisionals(msg))
+         {
+            return; // prack does not correspond to an unacknowedged provisional
+         }
          
-         sendAccept(200, 0);         
+         if(sdp.get())
+         {
+            // TODO - reject PRACK, teardown call?
+            ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
+            return;
+
+            assert(0);
+         }
+         else
+         {
+             SharedPtr<SipMessage> p200(new SipMessage);
+             mDialog.makeResponse(*p200, msg, 200);
+             send(p200);
+             transition(UAS_NoAnswerReliable);
+             prackCheckQueue();
+         }
          break;
       }
 
@@ -1293,6 +1310,7 @@ ServerInviteSession::dispatchFirstSentOfferReliable(const SipMessage& msg)
             SharedPtr<SipMessage> p406(new SipMessage);
             mDialog.makeResponse(*p406, msg, 406);
             send(p406);
+            // TODO - something is missing here - we are transitioning to terminated, but we are not destroying ourself
          }
          break;
       }
@@ -1389,6 +1407,7 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
          {
             if(!mAnswerSentReliably)    // new offer before previous answer sent 
             {
+               // TODO - reject PRACK, teardown call?
                ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
                return;
                assert(0);
@@ -1453,6 +1472,7 @@ ServerInviteSession::dispatchFirstNoAnswerReliable(const SipMessage& msg)
          
          if(sdp.get())
          {
+            // TODO - reject PRACK, teardown call?
             ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
             return;
 
@@ -1515,6 +1535,7 @@ ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
          {
             if(!mAnswerSentReliably)    // new offer before previous answer sent 
             {
+                // TODO - reject PRACK, teardown call?
                 ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
                 return;
                 assert(0);
@@ -1553,11 +1574,16 @@ ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
 void
 ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
 {
+   // TODO
+   // on2xxU -> NegotiatedReliable
 }
 
 void
 ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
 {
+   // TODO
+   // on2xxU/app::onAnswer
+   // on2xxU/app::onOfferRejected
 }
 
 void
@@ -1704,6 +1730,7 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
          break;
 
       case UAS_ProvidedOffer:
+      case UAS_ProvidedOfferReliable:
       case UAS_EarlyProvidedOffer:
          if (earlyFlag && mProposedLocalSdp.get()) 
          {

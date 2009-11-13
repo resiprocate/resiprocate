@@ -256,10 +256,12 @@ InviteSession::isAccepted() const
 {
    switch (mState)
    {
+      // TODO - Verify that this list complete
       case UAS_Start:
       case UAS_Offer:
       case UAS_NoOffer:
       case UAS_NoOfferReliable:
+      case UAS_ProvidedOfferReliable:
       case UAS_ProvidedOffer:
       case UAS_OfferProvidedAnswer:
       case UAS_EarlyOffer:
@@ -348,7 +350,7 @@ InviteSession::provideOffer(const SdpContents& offer,
          mDialog.makeRequest(*mLastLocalSessionModification, INVITE);
          startStaleReInviteTimer();
 
-		 setSessionTimerHeaders(*mLastLocalSessionModification);
+         setSessionTimerHeaders(*mLastLocalSessionModification);
 
          InfoLog (<< "Sending " << mLastLocalSessionModification->brief());
          InviteSession::setSdp(*mLastLocalSessionModification, offer, alternative);
@@ -2561,6 +2563,8 @@ InviteSession::toData(State state)
          return "UAS_ReceivedOfferReliableProvidedAnswer";
       case UAS_NoOfferReliable:
          return "UAS_NoOfferReliable";
+      case UAS_ProvidedOfferReliable:
+         return "UAS_ProvidedOfferReliable";
       case UAS_FirstSentOfferReliable:
          return "UAS_FirstSentOfferReliable";
       case UAS_FirstSentAnswerReliable:
