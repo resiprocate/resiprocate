@@ -360,6 +360,14 @@ Data::Data(const Data& data)
    mBuf[mSize] = 0;
 }
 
+#ifdef RESIP_HAS_RVALUE_REFS
+Data::Data(Data &&data)
+   : mSize(0),mBuf(mPreBuffer),mCapacity(LocalAlloc),mMine(Borrow)
+{
+   *this = std::move(data);
+}
+#endif
+
 // -2147483646
 static const int IntMaxSize = 12;
 
@@ -770,6 +778,30 @@ Data::operator=(const Data& data)
    }
    return *this;
 }
+
+#ifdef RESIP_HAS_RVALUE_REFS
+Data& Data::operator=(Data &&data)
+{
+   if (&data != this)
+   {
+      if (data.mPreBuffer != data.mBuf)
+      {
+         //data is not using the local buffer, take ownership of data.
+         mBuf = data.mBuf;
+         mCapacity = data.mCapacity;
+         mMine = data.mMine;
+         mSize = data.mSize;
+         data.mMine = Borrow; //don't delete the transferred buffer in data's destructor.
+      }
+      else
+      {
+         *this = data; //lvalue assignment operator will be called for named rvalue.
+      }
+   }
+   
+   return *this;
+}
+#endif
 
 Data::size_type
 Data::truncate(size_type len)

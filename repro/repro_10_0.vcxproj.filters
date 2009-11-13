@@ -1,0 +1,292 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AbstractDb.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AclStore.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BerkeleyDb.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandLineParser.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigStore.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Dispatcher.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpBase.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpConnection.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\AmIResponsible.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\ConstantLocationMonkey.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\DigestAuthenticator.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\IsTrustedNode.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\LocationServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\OutboundTargetHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\QValueTargetHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\RecursiveRedirect.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\SimpleStaticRoute.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\SimpleTargetHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\StaticRoute.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="monkeys\StrictRouteFixup.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OutboundTarget.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Processor.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessorChain.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Proxy.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QValueTarget.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Registrar.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="repro.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReproServerAuthManager.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReproVersion.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RequestContext.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ResponseContext.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RouteStore.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RRDecorator.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stateAgents\CertPublicationHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stateAgents\CertServer.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stateAgents\CertSubscriptionHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stateAgents\PrivateKeyPublicationHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stateAgents\PrivateKeySubscriptionHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Store.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Target.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UserStore.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WebAdmin.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WebAdminThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkerThread.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AbstractDb.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Ack200DoneMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AclStore.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BerkeleyDb.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandLineParser.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigStore.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dispatcher.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpBase.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpConnection.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\AmIResponsible.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\ConstantLocationMonkey.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\DigestAuthenticator.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\IsTrustedNode.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\LocationServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\OutboundTargetHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\QValueTargetHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\RecursiveRedirect.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\SimpleStaticRoute.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\SimpleTargetHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\StaticRoute.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="monkeys\StrictRouteFixup.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OutboundTarget.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Processor.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessorChain.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Proxy.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QValueTarget.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Registrar.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReproServerAuthManager.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReproVersion.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RequestContext.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ResponseContext.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RouteStore.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RRDecorator.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stateAgents\CertPublicationHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stateAgents\CertServer.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stateAgents\CertSubscriptionHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stateAgents\PrivateKeyPublicationHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stateAgents\PrivateKeySubscriptionHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Store.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Target.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TimerCMessage.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UserStore.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WebAdmin.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WebAdminThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkerThread.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="webadmin\pageOutlinePost.ixx" />
+    <None Include="webadmin\pageOutlinePre.ixx" />
+  </ItemGroup>
+</Project>
