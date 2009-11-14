@@ -31,7 +31,7 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
      mLargestNotifyCSeq(0)
 {
    DebugLog (<< "ClientSubscription::ClientSubscription from " << request.brief());   
-   mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
+   *mLastRequest = request;
 }
 
 ClientSubscription::~ClientSubscription()
@@ -423,18 +423,15 @@ ClientSubscription::dispatch(const DumTimeout& timer)
             delete this;
          }
       }
-      else
+	  else if(timer.type() == DumTimeout::Subscription)
       {
          requestRefresh();
       }
    }
-   else
+   else if(timer.seq() == 0 && timer.type() == DumTimeout::SendNextNotify)
    {
-      if (timer.type() == DumTimeout::SendNextNotify)
-      {
-         DebugLog(<< "got DumTimeout::SendNextNotify");
-         processNextNotify();
-      }
+      DebugLog(<< "got DumTimeout::SendNextNotify");
+      processNextNotify();
    }
 }
 
