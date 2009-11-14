@@ -31,7 +31,16 @@ ClientSubscription::ClientSubscription(DialogUsageManager& dum, Dialog& dialog,
      mLargestNotifyCSeq(0)
 {
    DebugLog (<< "ClientSubscription::ClientSubscription from " << request.brief());   
-   *mLastRequest = request;
+   if(request.method() == SUBSCRIBE)
+   {
+      *mLastRequest = request;
+   }
+   else
+   {
+	   // If a NOTIFY request is use to make this ClientSubscription, then create the implied SUBSCRIBE 
+	   // request as the mLastRequest
+	   mDialog.makeRequest(*mLastRequest, SUBSCRIBE);
+   }
 }
 
 ClientSubscription::~ClientSubscription()
