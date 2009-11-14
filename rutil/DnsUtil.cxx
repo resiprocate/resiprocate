@@ -539,10 +539,10 @@ DnsUtil::inet_ntop(int af, const void * __restrict src, char * __restrict dst,
 }
 
 
+static const char fmt[] = "%u.%u.%u.%u";
 const char*
 inet_ntop4(const u_char *src, char *dst, size_t size)
 {
-   static const char fmt[] = "%u.%u.%u.%u";
 #ifdef WIN32
    if ( _snprintf(dst, size, fmt, src[0], src[1], src[2], src[3]) < 0)
 #else
@@ -696,10 +696,10 @@ DnsUtil::inet_pton(int af, const char* src, void* dst)
  * author:
  *	Paul Vixie, 1996.
  */
+static const char digits[] = "0123456789";
 static int
 inet_pton4(const char *src, u_char *dst)
 {
-   static const char digits[] = "0123456789";
    int saw_digit, octets, ch;
    u_char tmp[NS_INADDRSZ], *tp;
 
@@ -750,11 +750,11 @@ inet_pton4(const char *src, u_char *dst)
  * author:
  *	Paul Vixie, 1996.
  */
+static const char xdigits_l[] = "0123456789abcdef",
+                  xdigits_u[] = "0123456789ABCDEF";
 static int
 inet_pton6(const char *src, u_char *dst)
 {
-   static const char xdigits_l[] = "0123456789abcdef",
-      xdigits_u[] = "0123456789ABCDEF";
    u_char tmp[NS_IN6ADDRSZ], *tp, *endp, *colonp;
    const char *xdigits, *curtok;
    int ch, saw_xdigit;

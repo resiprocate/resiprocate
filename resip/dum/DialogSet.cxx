@@ -456,38 +456,36 @@ DialogSet::dispatch(const SipMessage& msg)
       if (msg.isResponse())         
       {
          int code = msg.header(h_StatusLine).statusCode();
-         switch(mCreator->getLastRequest()->header(h_CSeq).method())
+         if(mCreator->getLastRequest()->header(h_CSeq).method() == INVITE)
          {
-            case INVITE:
-               if (code / 100 == 1)
-               {
-                  // do nothing - wait for final response
-               }
-               // 200/Inv crossing CANCEL case
-               else if (code / 100 == 2)
-               {
-                  Dialog dialog(mDum, msg, *this);
+            if (code / 100 == 1)
+            {
+               // do nothing - wait for final response
+            }
+            // 200/Inv crossing CANCEL case
+            else if (code / 100 == 2)
+            {
+               Dialog dialog(mDum, msg, *this);
 
-                  SharedPtr<SipMessage> ack(new SipMessage);
-                  dialog.makeRequest(*ack, ACK);
-                  ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
-                  dialog.send(ack);
+               SharedPtr<SipMessage> ack(new SipMessage);
+               dialog.makeRequest(*ack, ACK);
+               ack->header(h_CSeq).sequence() = msg.header(h_CSeq).sequence();
+               dialog.send(ack);
                   
-                  SharedPtr<SipMessage> bye(new SipMessage);
-                  dialog.makeRequest(*bye, BYE);
-                  dialog.send(bye);                  
+               SharedPtr<SipMessage> bye(new SipMessage);
+               dialog.makeRequest(*bye, BYE);
+               dialog.send(bye);                  
 
-                  // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
-               }
-               else
-               {
-                  mState = Destroying;
-                  mDum.destroy(this);
-               }
-               break;
+               // Note:  Destruction of this dialog object will cause DialogSet::possiblyDie to be called thus invoking mDum.destroy
+            }
+            else
+            {
+               mState = Destroying;
+               mDum.destroy(this);
+            }
          }
       }
-      else
+      else // is a request
       {
          SharedPtr<SipMessage> response(new SipMessage);         
          mDum.makeResponse(*response, msg, 481);
