@@ -171,6 +171,7 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
       case UAS_FirstSentOfferReliable:
          if(mUnacknowledgedProvisionals.size()>0)
          {
+            InfoLog (<< "Waiting for PRACK. queued provisional" );
             queueReliableProvisional(code, earlyFlag);
          }
          else
@@ -637,10 +638,10 @@ ServerInviteSession::accept(int code)
          break;
 
       case UAS_NoAnswerReliable:
-         if (mAnswerSentReliably)
+         if(mUnacknowledgedProvisionals.size()>0)
          {
             InfoLog (<< "Waiting for PRACK. queued 200 OK" );
-            mQueuedProvisionals.push_back( std::make_pair(code,false) );
+            queueReliableProvisional(code, false);
          }
          else
          {
