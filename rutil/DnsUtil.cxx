@@ -113,6 +113,7 @@ Data
 DnsUtil::getLocalHostName()
 {
    char buffer[MAXHOSTNAMELEN];
+   initNetwork();
    buffer[0] = '\0';
    if (gethostname(buffer,sizeof(buffer)) == -1)
    {
