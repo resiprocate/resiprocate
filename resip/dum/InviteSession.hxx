@@ -343,6 +343,7 @@ class InviteSession : public DialogUsage
       SharedPtr<SipMessage> mInvite200;               // 200 OK for reINVITE for retransmissions
       SharedPtr<SipMessage> mLastNitResponse;         // 
                                                       //?dcm? -- ptr, delete when not needed?
+      SharedPtr<SipMessage> mSavedInviteAtUpdate;
 
       SipMessage  mLastReferNoSubRequest;
       

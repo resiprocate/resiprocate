@@ -66,6 +66,11 @@ ClientInviteSession::provideOffer(const SdpContents& offer, DialogUsageManager::
       case UAC_EarlyWithAnswer:
       {
          transition(UAC_SentUpdateEarly);
+         if (!mSavedInviteAtUpdate.get())
+         {
+             // save ongoing invite
+             mSavedInviteAtUpdate = SharedPtr<SipMessage>(new SipMessage(*mLastLocalSessionModification));
+         }
 
          //  Creates an UPDATE request with application supplied offer.
          mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);
@@ -516,7 +521,9 @@ ClientInviteSession::handleProvisional(const SipMessage& msg)
    // state machine can be affected(termination).
 
    // !dcm! should we really end the InviteSession or should be discard the 1xx instead?
-   if (msg.header(h_CSeq).sequence() != mLastLocalSessionModification->header(h_CSeq).sequence())
+   if ( (mSavedInviteAtUpdate.get() &&
+         msg.header(h_CSeq).sequence() != mSavedInviteAtUpdate->header(h_CSeq).sequence()) ||
+        (msg.header(h_CSeq).sequence() != mLastLocalSessionModification->header(h_CSeq).sequence()) )
    {
       InfoLog (<< "Failure:  CSeq doesn't match invite: " << msg.brief());
       onFailureAspect(getHandle(), msg);
