@@ -172,7 +172,7 @@ ServerInviteSession::provisional(int code, bool earlyFlag)
          if(mUnacknowledgedProvisionals.size()>0)
          {
             InfoLog (<< "Waiting for PRACK. queued provisional" );
-            queueReliableProvisional(code, earlyFlag);
+            queueResponse(code, earlyFlag);
          }
          else
          {
@@ -278,7 +278,6 @@ ServerInviteSession::provideOffer(const SdpContents& offer,
          break;
 
       case UAS_NegotiatedReliable:
-         // queue offer
          transition(UAS_SentUpdate);
          mProposedLocalSdp = InviteSession::makeSdp(offer, alternative);
          mProposedEncryptionLevel = level;
@@ -383,8 +382,17 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          break;
 
       case UAS_ReceivedUpdate:
-         // send::200U-answer - TODO
-         transition(UAS_NegotiatedReliable);
+         {
+            transition(UAS_NegotiatedReliable);
+            SharedPtr<SipMessage> response(new SipMessage);
+            mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
+            InviteSession::setSdp(*response, answer, 0);
+            mCurrentLocalSdp = InviteSession::makeSdp(answer);
+            mCurrentRemoteSdp = mProposedRemoteSdp;
+            InfoLog (<< "Sending " << response->brief());
+            DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
+            send(response);
+         }
          break;
          
       case UAS_ReceivedUpdateWaitingAnswer:
@@ -618,7 +626,7 @@ ServerInviteSession::accept(int code)
          // queue 2xx
          // waiting for PRACK
          InfoLog (<< "Waiting for PRACK. queued 200 OK" );
-         mQueuedProvisionals.push_back( std::make_pair(code,false) );
+         queueResponse(code, false);
          transition(UAS_Accepted);
          mDialog.makeResponse(*mInvite200, mFirstRequest, code);
          handleSessionTimerRequest(*mInvite200, mFirstRequest);
@@ -641,7 +649,7 @@ ServerInviteSession::accept(int code)
          if(mUnacknowledgedProvisionals.size()>0)
          {
             InfoLog (<< "Waiting for PRACK. queued 200 OK" );
-            queueReliableProvisional(code, false);
+            queueResponse(code, false);
          }
          else
          {
@@ -751,7 +759,6 @@ ServerInviteSession::dispatch(const SipMessage& msg)
          dispatchAcceptedWaitingAnswer(msg);
          break;         
       case UAS_NoAnswerReliable:
-      case UAS_NegotiatedReliable:
          dispatchEarlyReliable(msg);
          break;
       case UAS_FirstSentAnswerReliable:
@@ -786,6 +793,9 @@ ServerInviteSession::dispatch(const SipMessage& msg)
          break;
       case UAS_SentUpdateAccepted:
          dispatchSentUpdateAccepted(msg);
+         break;
+      case UAS_NegotiatedReliable:
+         dispatchNegotiatedReliable(msg);
          break;
       default:
          InviteSession::dispatch(msg);
@@ -1242,6 +1252,22 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
 void
 ServerInviteSession::dispatchOfferReliable(const SipMessage& msg)
 {
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnCancel:
+      {
+         dispatchCancel(msg);
+         break;
+      }
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
 }
 
 void
@@ -1358,14 +1384,14 @@ ServerInviteSession::prackCheckProvisionals(const SipMessage& msg)
 void
 ServerInviteSession::prackCheckQueue()
 {
-   InfoLog (<< "prackCheckQueue: " << mQueuedProvisionals.size() );
-   if(mQueuedProvisionals.size() > 0 && mQueuedProvisionals.front().first < 200)
+   InfoLog (<< "prackCheckQueue: " << mQueuedResponses.size() );
+   if(mQueuedResponses.size() > 0 && mQueuedResponses.front().first < 200)
    {
       InfoLog (<< "Sending queued provisional" );
-      sendProvisional(mQueuedProvisionals.front().first, mQueuedProvisionals.front().second);
-      mQueuedProvisionals.pop_front();
+      sendProvisional(mQueuedResponses.front().first, mQueuedResponses.front().second);
+      mQueuedResponses.pop_front();
    }
-   else if(mQueuedProvisionals.size() > 0 && mQueuedProvisionals.front().first < 300)
+   else if(mQueuedResponses.size() > 0 && mQueuedResponses.front().first < 300)
    {
       InfoLog (<< "Sending queued 200 OK" );
       InviteSessionHandler* handler = mDum.mInviteSessionHandler;
@@ -1375,9 +1401,9 @@ ServerInviteSession::prackCheckQueue()
       {
          sdp = mCurrentLocalSdp.get();
       }
-      sendAccept(mQueuedProvisionals.front().first, sdp);
+      sendAccept(mQueuedResponses.front().first, sdp);
       handler->onConnected(getSessionHandle(), *mInvite200);
-      mQueuedProvisionals.pop_front();
+      mQueuedResponses.pop_front();
    }
 
 }
@@ -1539,7 +1565,6 @@ ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
                 // TODO - reject PRACK, teardown call?
                 ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
                 return;
-                assert(0);
             }
             else
             {
@@ -1595,6 +1620,36 @@ ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
 void
 ServerInviteSession::dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg)
 {
+}
+
+void
+ServerInviteSession::dispatchNegotiatedReliable(const SipMessage& msg)
+{
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case OnUpdateOffer:
+         *mLastRemoteSessionModification = msg;
+         transition(UAS_ReceivedUpdate);
+         mProposedRemoteSdp = InviteSession::makeSdp(*sdp);
+         mCurrentEncryptionLevel = getEncryptionLevel(msg);
+         if(!isTerminated())  
+         {
+            handler->onOffer(getSessionHandle(), msg, *sdp);
+         }
+         break;
+         
+      case OnUpdate:
+         // TODO - reject UPDATE, teardown call?
+         ErrLog (<< "UPDATE with no offer when in state=" << toData(mState));
+         break;
+
+      default:
+         dispatchEarlyReliable(msg);
+         break;
+   }
 }
 
 void
@@ -1760,10 +1815,10 @@ ServerInviteSession::sendProvisional(int code, bool earlyFlag)
 }
 
 void
-ServerInviteSession::queueReliableProvisional(int code, bool earlyFlag)
+ServerInviteSession::queueResponse(int code, bool earlyFlag)
 {
    InfoLog (<< "Reliable provisional queued" );
-   mQueuedProvisionals.push_back( std::make_pair(code,earlyFlag) );
+   mQueuedResponses.push_back( std::make_pair(code,earlyFlag) );
     
 }
 
