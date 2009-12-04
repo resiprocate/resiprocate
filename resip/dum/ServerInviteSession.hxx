@@ -89,6 +89,7 @@ class ServerInviteSession: public InviteSession
       void dispatchReceivedUpdateWaitingAnswer(const SipMessage& msg);
       void dispatchWaitingToTerminate(const SipMessage& msg);
       void dispatchWaitingToHangup(const SipMessage& msg);
+      void dispatchNegotiatedReliable(const SipMessage& msg);
 
       void dispatchCancel(const SipMessage& msg);
       void dispatchBye(const SipMessage& msg);
@@ -99,7 +100,7 @@ class ServerInviteSession: public InviteSession
       void startRetransmit1xxRelTimer();
       void sendAccept(int code, Contents* sdp); // sends 2xxI
       void sendProvisional(int code, bool earlyFlag);
-      void queueReliableProvisional(int code, bool earlyFlag);
+      void queueResponse(int code, bool earlyFlag);
       void sendUpdate(const SdpContents& sdp);
       bool prackCheckProvisionals(const SipMessage& msg); // verify that prack has corresponding 1xx
       void prackCheckQueue();                             // send a queued message
@@ -116,7 +117,7 @@ class ServerInviteSession: public InviteSession
       unsigned long mCurrentRetransmit1xx;
       
       std::deque< SharedPtr<SipMessage> > mUnacknowledgedProvisionals; // all of them
-      std::deque< std::pair<int,bool> > mQueuedProvisionals;
+      std::deque< std::pair<int,bool> > mQueuedResponses;
       bool mAnswerSentReliably;
       SharedPtr<SipMessage> mPrackWithOffer; // for 1xx retransmissions
 };
