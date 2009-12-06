@@ -6,12 +6,13 @@
 
 namespace resip
 {
+class TransactionUser;
 class MessageFilterRule
 {
    public:
       typedef std::vector<Data> SchemeList;
       typedef std::vector<Data> HostpartList;
-      enum HostpartTypes { Any, HostIsMe, DomainIsMe, List };  // Note: HostIsMe and DomainIsMe are currently not implemented
+      enum HostpartTypes { Any, HostIsMe, DomainIsMe, List };  // Note: HostIsMe is currently not implemented
       typedef std::vector<Data> EventList;
       typedef std::vector<MethodTypes> MethodList;
 
@@ -25,9 +26,8 @@ class MessageFilterRule
                         MethodList    methodList     = MethodList(),
                         EventList     eventList      = EventList());
 
-
       bool matches(const SipMessage &) const;
-
+	  void setTransactionUser(TransactionUser* tu) { mTransactionUser = tu; }
 
    private:
       bool schemeIsInList(const Data &scheme) const;
@@ -40,6 +40,7 @@ class MessageFilterRule
       HostpartList mHostpartList;
       MethodList mMethodList;
       EventList mEventList;
+      TransactionUser* mTransactionUser;
 };
 
 typedef std::vector<MessageFilterRule> MessageFilterRuleList;
