@@ -82,12 +82,14 @@ TransactionUser::isForMe(const SipMessage& msg) const
 bool 
 TransactionUser::isMyDomain(const Data& domain) const
 {
-   return mDomainList.count(domain) > 0;
+   // Domain search should be case insensitive - search in lowercase only
+   return mDomainList.count(Data(domain).lowercase()) > 0;
 }
 
 void TransactionUser::addDomain(const Data& domain)
 {
-   mDomainList.insert(domain);
+   // Domain search should be case insensitive - store in lowercase only
+   mDomainList.insert(Data(domain).lowercase());  
 }
 
 EncodeStream& 
@@ -101,6 +103,11 @@ void
 TransactionUser::setMessageFilterRuleList(MessageFilterRuleList &rules)
 {
    mRuleList = rules;
+   MessageFilterRuleList::iterator it = mRuleList.begin();
+   for(;it!=mRuleList.end();it++)
+   {
+      it->setTransactionUser(this);
+   }
 }
 
 bool 

@@ -434,7 +434,7 @@ main(int argc, char** argv)
       resip::MessageFilterRule::MethodList methodList;
       methodList.push_back(resip::REGISTER);
       ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                                           resip::MessageFilterRule::Any,
+                                           resip::MessageFilterRule::DomainIsMe,
                                            methodList) );
    }
    
@@ -454,7 +454,7 @@ main(int argc, char** argv)
       eventList.push_back(resip::Symbols::Credential);
       eventList.push_back(resip::Symbols::Certificate);
       ruleList.push_back(MessageFilterRule(resip::MessageFilterRule::SchemeList(),
-                                           resip::MessageFilterRule::Any,
+                                           resip::MessageFilterRule::DomainIsMe,
                                            methodList,
                                            eventList));
 #endif
