@@ -103,7 +103,8 @@ class ServerInviteSession: public InviteSession
       void queueResponse(int code, bool earlyFlag);
       void sendUpdate(const SdpContents& sdp);
       bool prackCheckProvisionals(const SipMessage& msg); // verify that prack has corresponding 1xx
-      void prackCheckQueue();                             // send a queued message
+      void prackCheckQueue();                             // send a queued message after prack
+      void updateCheckQueue();                            // send a queued message after update
 
       ServerInviteSession(DialogUsageManager& dum, Dialog& dialog, const SipMessage& msg);
 
