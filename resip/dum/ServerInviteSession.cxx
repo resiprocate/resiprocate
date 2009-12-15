@@ -396,10 +396,16 @@ ServerInviteSession::provideAnswer(const SdpContents& answer)
          break;
          
       case UAS_ReceivedUpdateWaitingAnswer:
-         // send::2XXU-answer - TODO
-         // send::2XXI - TODO
-         transition(UAS_Accepted);
-         handler->onConnected(getSessionHandle(), *mInvite200);
+         {
+            SharedPtr<SipMessage> response(new SipMessage);
+            mDialog.makeResponse(*response, *mLastRemoteSessionModification, 200);
+            InviteSession::setSdp(*response, answer, 0);
+            mCurrentLocalSdp = InviteSession::makeSdp(answer);
+            mCurrentRemoteSdp = mProposedRemoteSdp;
+            InfoLog (<< "Sending " << response->brief());
+            DumHelper::setOutgoingEncryptionLevel(*response, mCurrentEncryptionLevel);
+            updateCheckQueue();
+         }
          break;
 
       case UAS_NoAnswerReliable:
@@ -627,16 +633,20 @@ ServerInviteSession::accept(int code)
          // waiting for PRACK
          InfoLog (<< "Waiting for PRACK. queued 200 OK" );
          queueResponse(code, false);
-         transition(UAS_Accepted);
-         mDialog.makeResponse(*mInvite200, mFirstRequest, code);
-         handleSessionTimerRequest(*mInvite200, mFirstRequest);
-         // this is stange - TODO review me
          break;
          
       case UAS_NegotiatedReliable:
-         transition(UAS_Accepted);
-         sendAccept(code, 0);
-         handler->onConnected(getSessionHandle(), *mInvite200);
+         if(mUnacknowledgedProvisionals.size()>0)
+         {
+            InfoLog (<< "Waiting for PRACK. queued provisional" );
+            queueResponse(code, false);
+         }
+         else
+         {
+            transition(UAS_Accepted);
+            sendAccept(code, 0);
+            handler->onConnected(getSessionHandle(), *mInvite200);
+         }
          break;
 
       case UAS_ReceivedOfferReliableProvidedAnswer: 
@@ -661,13 +671,12 @@ ServerInviteSession::accept(int code)
 
       case UAS_SentUpdate:
          transition(UAS_SentUpdateAccepted);
-         sendAccept(code, 0);
+         queueResponse(code, false);
          break;
 
       case UAS_ReceivedUpdate:
          transition(UAS_ReceivedUpdateWaitingAnswer);
-         mDialog.makeResponse(*mInvite200, mFirstRequest, code);// queue 2xx
-         handleSessionTimerRequest(*mInvite200, mFirstRequest);
+         queueResponse(code, false);
          break;
          
       case UAS_NoOfferReliable:
@@ -848,6 +857,16 @@ ServerInviteSession::dispatch(const DumTimeout& timeout)
          }
       }
    }
+   else if (timeout.type() == DumTimeout::Glare)
+   {
+      if (mState == UAS_SentUpdateGlare)
+      {
+         transition(UAS_SentUpdate);
+         InfoLog (<< "Retransmitting the UPDATE (glare condition timer)");
+         mDialog.makeRequest(*mLastLocalSessionModification, UPDATE);  // increments CSeq
+         send(mLastLocalSessionModification);
+      }
+   }
    else
    {
       InviteSession::dispatch(timeout);
@@ -1003,7 +1022,6 @@ ServerInviteSession::dispatchAccepted(const SipMessage& msg)
                // TODO - reject PRACK, teardown call?
                ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
                return;
-               assert(0);
             }
             else
             {
@@ -1226,8 +1244,6 @@ ServerInviteSession::dispatchAcceptedWaitingAnswer(const SipMessage& msg)
             // TODO - reject PRACK, teardown call?
             ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
             return;
-
-            assert(0);
          }
          else
          {
@@ -1408,6 +1424,24 @@ ServerInviteSession::prackCheckQueue()
 
 }
 
+void
+ServerInviteSession::updateCheckQueue()
+{
+   InfoLog (<< "updateCheckQueue: " << mQueuedResponses.size() );
+   if(mQueuedResponses.size() > 0  && 
+      mQueuedResponses.front().first >= 200 &&
+      mQueuedResponses.front().first < 300)
+   {
+      InfoLog (<< "Sending queued 200 OK" );
+      InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+      transition(UAS_Accepted);
+      sendAccept(mQueuedResponses.front().first, 0);
+      handler->onConnected(getSessionHandle(), *mInvite200);
+      mQueuedResponses.pop_front();
+   }
+
+}
+
 void 
 ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
 {
@@ -1437,7 +1471,6 @@ ServerInviteSession::dispatchFirstSentAnswerReliable(const SipMessage& msg)
                // TODO - reject PRACK, teardown call?
                ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
                return;
-               assert(0);
             }
             else
             {
@@ -1502,8 +1535,6 @@ ServerInviteSession::dispatchFirstNoAnswerReliable(const SipMessage& msg)
             // TODO - reject PRACK, teardown call?
             ErrLog (<< "PRACK with new offer when in state=" << toData(mState));
             return;
-
-            assert(0);
          }
          else
          {
@@ -1600,17 +1631,84 @@ ServerInviteSession::dispatchEarlyReliable(const SipMessage& msg)
 void
 ServerInviteSession::dispatchSentUpdate(const SipMessage& msg)
 {
-   // TODO
-   // on2xxU -> NegotiatedReliable
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case On200Update:
+         transition(UAS_NegotiatedReliable);
+         if (sdp.get())
+         {
+            setCurrentLocalSdp(msg);
+            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+            mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
+         }
+         break;
+
+     case OnUpdateRejected:
+         transition(UAS_NegotiatedReliable);
+         mProposedLocalSdp.reset();
+         handler->onOfferRejected(getSessionHandle(), &msg);
+         break;
+
+      case On491Update:
+         transition(UAS_SentUpdateGlare);
+         start491Timer();
+         break;
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
 }
 
 void
 ServerInviteSession::dispatchSentUpdateAccepted(const SipMessage& msg)
 {
-   // TODO
-   // on2xxU/app::onAnswer
-   // on2xxU/app::onOfferRejected
+   InviteSessionHandler* handler = mDum.mInviteSessionHandler;
+   std::auto_ptr<SdpContents> sdp = InviteSession::getSdp(msg);
+
+   switch (toEvent(msg, sdp.get()))
+   {
+      case On200Update:
+         transition(UAS_Accepted);
+         if (sdp.get())
+         {
+            setCurrentLocalSdp(msg);
+            mCurrentRemoteSdp = InviteSession::makeSdp(*sdp);
+            mCurrentEncryptionLevel = getEncryptionLevel(msg);
+            handler->onAnswer(getSessionHandle(), msg, *sdp);
+         }
+         updateCheckQueue();
+         break;
+
+      case OnUpdateRejected:
+         transition(UAS_Accepted);
+         mProposedLocalSdp.reset();
+         handler->onOfferRejected(getSessionHandle(), &msg);
+         updateCheckQueue();
+         break;
+
+      case On491Update:
+         updateCheckQueue();
+         transition(SentUpdateGlare);
+         start491Timer();
+         break;
+
+      default:
+         if(msg.isRequest())
+         {
+            dispatchUnknown(msg);
+         }
+         break;
+   }
 }
+
 
 void
 ServerInviteSession::dispatchReceivedUpdate(const SipMessage& msg)
