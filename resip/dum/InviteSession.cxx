@@ -2579,6 +2579,8 @@ InviteSession::toData(State state)
          return "UAS_SentUpdate";
       case UAS_SentUpdateAccepted:
          return "UAS_SentUpdateAccepted";
+      case UAS_SentUpdateGlare:
+         return "UAS_SentUpdateGlare";
       case UAS_ReceivedUpdate:
          return "UAS_ReceivedUpdate";
       case UAS_ReceivedUpdateWaitingAnswer:
