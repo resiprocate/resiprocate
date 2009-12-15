@@ -1091,7 +1091,11 @@ Dialog::makeResponse(SipMessage& response, const SipMessage& request, int code)
        && getInviteSession()->isReliable(request) )
    {
       DebugLog ( << "100rel supported" );
-      response.header(h_Requires).push_back(Token(Symbols::C100rel));
+      if (!response.exists(h_Requires) ||
+          !response.header(h_Requires).find(Token(Symbols::C100rel)))
+      {
+         response.header(h_Requires).push_back(Token(Symbols::C100rel));
+      }
       response.header(h_RSeq).value() = ++mLocalRSeq;
    }
 
