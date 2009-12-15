@@ -208,6 +208,7 @@ class InviteSession : public DialogUsage
          UAS_NoAnswerReliable,
          UAS_SentUpdate,
          UAS_SentUpdateAccepted,
+         UAS_SentUpdateGlare,
          UAS_ReceivedUpdate,
          UAS_ReceivedUpdateWaitingAnswer,
          UAS_WaitingToTerminate,
