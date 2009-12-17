@@ -293,9 +293,11 @@ SdpContents::Session::Origin::parse(ParseBuffer& pb)
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
    mSessionId = pb.uInt64();
+   pb.skipToChar(Symbols::SPACE[0]);
 
    anchor = pb.skipChar(Symbols::SPACE[0]);
    mVersion = pb.uInt64();
+   pb.skipToChar(Symbols::SPACE[0]);
 
    pb.skipChar(Symbols::SPACE[0]);
    pb.skipChar('I');
