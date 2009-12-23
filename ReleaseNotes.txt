@@ -1,0 +1,104 @@
+= Release Notes v 1.6 =
+
+==General==
+===New features===
+* new clicktocall project
+* new ichat to SIP gateway project
+* adding Tarasenko Volodymyr's autotools macro for use in external projects
+
+==Build system==
+===New features===
+* auto-detect c-ares headers/libs, both for in-place builds, and installed headers
+* added VS2010 project files
+
+===Bug fixes===
+* added missing LEAK_CHECK defines to windows DEBUG builds of dum, resiprocate and rutil
+* if popt is in a default location, don't include it with -I and -L
+* added missing AresCompat.hxx (in rutil VS 9.0 project file)
+
+==rutil==
+===New features===
+* added ParseBuffer::skipBackToOneOf()
+* added ability to createLocalLogger instances, and assign these instances to threads (Thanks to Alexander Chemeris)
+
+===Bug fixes===
+* remove spurious boost include
+* override std::exception::what() in BaseException, so we actually get a usable error if we don't catch one
+* stop asserting if we get an empty DNS response, and implemented handling code for this case
+
+==stack==
+===New features===
+* define Remote-Party-Id header as a multi header
+* change from Gregor Jasny to be tolerant of rtpmap lines missing the rate parameter
+* new generic DigestStream class for any openSSL digest
+* change to allow XMLCursor to parse an XML document with no prolog
+* change to SDP parser to be tolerant of whitespace following the codec id on the m line
+* added Uri::getAorNoReally() which actually returns the AoR as defined by RFC 3261
+* send 503 to TU instead of 408 if DNS times out
+* better reason phrases when timeouts occur
+* changes to resip stack to allow passing a port of 0 into addTransport interface to allow OS to choose an appropriate port number
+
+===Bug fixes===
+* some fixes to the sigcomp code
+* fixing a few params to be quoted-string instead of non-quoted data (vendor, model, and version)
+* don't call encode twice on bodies (major inefficiency, but didn't really result in bad behavior)
+* replace a couple of static objects with member objects, so we don't have problems with multiple SipStacks in the same process
+* close connected-UDP sockets (used by TransportSelector to query the routing table when we haven't explicitly specified what interface we want to use when sending) on teardown; allows a single process to create and destroy SipStacks repeatedly without leaking fds (mainly for unit-tests)
+* stop sitting around on our thumbs for 200ms when DNS processing needs to be done
+* removed incorrect Q value compare fn in Uri class - q-value is a contact/name-addr parameter, not a uri parameter
+* fix issue with logging errno after SSL_ERROR_SYSCALL in TlsConnection
+* moved various fn local static variables to file level static variables to avoid multi-threaded first call runtime race conditions with initializing local static variables
+
+==DUM==
+===New features===
+* patch from Chris Brody so that the tests will build if not using POPT
+* added "invariant" reason code from 3265bis00 (for subscriptions)
+* change optional RWMutex parameter to Lockable base type in dum::process to allow other types of Mutex's to be passed in
+
+===Bug fixes===
+* fix bug where wrong terminated reason is sent in callback when receiving a CANCEL
+* ClientInviteSession changes to react appropriately to reception of UPDATE messages before connected state
+* always allow reject to be called after onOffer - adding case where offer comes in 2xx response after invite with no sdp - ACK 200, then BYE session
+* fix to UAC handling to be able to handle sending ACK then BYE when a CANCEL request crosses a 200/Inv.  This fix handles the case when we don't have any formed dialogs at the time of cancel
+* fixed bug where DialogSet::ifMatch() would not work for resubscribes
+* don't tear down server subscriptions when the app sends an error response that implies either an optional retry-after, or implies application-dependent behavior
+* fixed RedirectManager Q-Value ordering function - it was looking for q-value as a uri parameter - also changed to treat no q-value as q=1.0
+* ensure auth headers are cleared out before retrying client registration
+* fixing a bug with Glare timers if we placed the call (UAC) - they were not being properly dispatched to InviteSession
+* use supported mimetype for subscriptions in NOTIFY messages instead of SUBSCRIBE messages
+* stop using UPDATE for confirmed dialogs, since it is recommended against in RFC 3311
+* fixed a bug in client subscription if AppDialogSet's are used, and a retry is attempted
+* fixed a ClientSubscription bug when retrying - not reusing profile used in original subscription setup
+* fixed a difficult to find, and long standing memory leak bug in ClientSubscriptions
+* added handling to ClientRegistration for strange border case where registrar returns an Expires header of 0 after attempting to register
+ 
+==repro==
+===New features===
+* some logging improvements
+* better description of defaults for command-line options
+* modification to repro so that contacts without a q-value are treated as having q=1.0
+* changes to repro to allow Registration, and Publish/Subscribe forwarding to other domains
+
+===Bug fixes===
+* actual Proxy-Require support (yeah, yeah, about time, I know)
+* reject requests with a garbage next-hop Route header immediately, instead of having the stack complain when we try to forward
+* various bugfixes related to outbound
+* ignore user-part of topmost Route header if it doesn't parse as a flow-token
+
+==reTurn==
+===New features===
+* pad the content of the SOFTWARE header so that we are on a 4 byte boundary for size (prevents STUN messages from reTurn showing up in Wireshark as malformed packets)
+
+===Bug fixes===
+* fix a couple of spots where we try to erase from mActiveRequestMap using an invalidated iterator
+* fixed a bug in processTurnAllocateRequest that led to reTurnServer giving "unauthorized" errors
+
+==recon==
+
+===Bug fixes===
+* recon memory leak fixes - thanks to Julio Cabezas
+* update to recon VS2008/2005/2003 solution files for sipXtapi rev 11413 with speex update
+* allow recon to properly reject media lines with unknown media types and protocols
+* fixup sdp direction attribute in our offers in scenarios where we are being held by the other party
+* fix UserProfile selection when receiving refer with no subscription
+* make sure our ReferTo header doesn't have tags in it
