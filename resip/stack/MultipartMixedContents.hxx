@@ -32,6 +32,8 @@ class MultipartMixedContents : public Contents
       Parts& parts() {checkParsed(); return mContents;}
       const Parts& parts() const {checkParsed(); return mContents;}
 
+      void setBoundary(const Data& boundary);
+
       class Exception : public BaseException
       {
         public:
