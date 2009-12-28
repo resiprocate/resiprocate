@@ -148,8 +148,10 @@ NameAddr::parse(ParseBuffer& pb)
    {
       pb.skipChar(Symbols::STAR[0]);
       pb.skipWhitespace();
-      if (pb.eof())
+      if (pb.eof() || *pb.position() == Symbols::SEMI_COLON[0])
+      {
          starContact = true;
+      }
    }
 
    if (starContact)
