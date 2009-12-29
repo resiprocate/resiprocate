@@ -42,9 +42,9 @@ AC_DEFUN([AX_RESIP],
 		AC_HELP_STRING([--with-resip=@<:@ARG@:>@],
 			[use Resiprocate library @<:@default=yes@:>@, optionally specify a path to includes and library]
 		),
-    		[
-    			if test "$withval" = "no"; then
- 				want_resip="no"
+		[
+			if test "$withval" = "no"; then
+				want_resip="no"
 			elif test "$withval" = "yes"; then
 				want_resip="yes"
 			else
@@ -52,7 +52,7 @@ AC_DEFUN([AX_RESIP],
 				resip_path="$withval"
 			fi
 		],
-        	[want_resip="yes"]
+		[want_resip="yes"]
 	)
 	dnl
 	dnl RESIP includes
@@ -103,49 +103,48 @@ AC_DEFUN([AX_RESIP],
 		AC_REQUIRE([AC_PROG_CPP])
 		AC_REQUIRE([AC_CANONICAL_BUILD])
 
-		if test -n "$resip_path"; then
-			RESIP_CPPFLAGS="-I$resip_path"
-			RESIP_LDFLAGS="-L$resip_path"
-		else
-                        for inc in $resip_inc_path; do
-                                if test -f "$inc/resip/stack/SipStack.hxx"; then
-                                        RESIP_CPPFLAGS="-I$inc"
-                                        break
-                                fi
-                        done
-
-			for inc in $resip_lib_path; do
-				if test -f "$inc/libresip.so" || test -f "$inc/libresip.a"
-				then
-					RESIP_LDFLAGS="-L$inc"
-					break
-				fi
-			done
-		fi		
-        	dnl
-	        dnl Simple add libresip and librutil, should be fixed in future
-                RESIP_LIBS="-ldum -lresip -lrutil -lares"
-
 		CPPFLAGS_SAVED="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS $RESIP_CPPFLAGS $CFLAGS"
-
 		LDFLAGS_SAVED="$LDFLAGS"
-		LDFLAGS="$LDFLAGS $RESIP_LDFLAGS"
-
 		LIBS_SAVED="$LIBS"
-                LIBS="$RESIP_LIBS $LIBS"
-		
+
+		if test -n "$resip_path"; then
+		    RESIP_CPPFLAGS="-I$resip_path"
+		    RESIP_LDFLAGS="-L$resip_path"
+		else
+		    for inc in $resip_inc_path; do
+			if test -f "$inc/resip/stack/SipStack.hxx"; then
+				RESIP_CPPFLAGS="-I$inc"
+				break
+			fi
+		    done
+
+		    for inc in $resip_lib_path; do
+			libextension=`ls $inc/libresip.{so,dylib,a} 2>/dev/null | sed 's,.*/,,' |sed -e 's;^lib\(resip\)\.so$;\1;' -e 's;^lib\(resip\)\.a$;\1;' -e 's;^lib\(resip\)\.dylib$;\1;'`
+			if test -n "$libextension"; then
+				RESIP_LDFLAGS="-L$inc"
+				break
+			fi
+		    done
+		fi
+
+		dnl
+		dnl Simple add libresip and librutil, should be fixed in future
+		dnl even library was not found try to link it, maybe it is somewhere in LD_LIBRARY_PATH...
+		RESIP_LIBS="-ldum -lresip -lrutil -lares"
+		CPPFLAGS="$CPPFLAGS $RESIP_CPPFLAGS $CFLAGS"
+		LDFLAGS="$LDFLAGS $RESIP_LDFLAGS"
+		LIBS="$RESIP_LIBS $LIBS"
+	
 		AC_LANG_PUSH(C++)
 
 		AC_LINK_IFELSE(AC_LANG_PROGRAM([[ @%:@include <resip/stack/SipStack.hxx>
-                                                                                        ]],
-                                  [[
-
-                                    resip::SipStack stack(0, resip::DnsStub::EmptyNameserverList,0,false,0); 
-                                    return 0;
-                                   ]]),
-				[resip_found="yes"],
-				[resip_found="no"])
+					]],
+					[[
+					resip::SipStack stack(0, resip::DnsStub::EmptyNameserverList,0,false,0); 
+					return 0;
+					]]),
+					[resip_found="yes"],
+					[resip_found="no"])
 
 		AC_LANG_POP([C++])
 
@@ -154,22 +153,19 @@ AC_DEFUN([AX_RESIP],
 		LIBS="$LIBS_SAVED"
 
 		if test "x$resip_found" = "xyes"; then
-			AC_DEFINE([HAVE_RESIPROCATE], [1],
-					[Define to 1 if RESIPROCATE library is available])
+		    AC_DEFINE([HAVE_RESIPROCATE], [1],
+				[Define to 1 if RESIPROCATE library is available])
 
-			AC_SUBST(RESIP_CPPFLAGS)
-
-			AC_SUBST(RESIP_LDFLAGS)
-
-                        AC_SUBST(RESIP_LIBS)
-
-			AC_MSG_RESULT([yes])
-		else
-			AC_MSG_ERROR([[Could not detect the Resiprocate libraries.]])
-			AC_MSG_RESULT([no])
-
+		    AC_SUBST(RESIP_CPPFLAGS)
+		    AC_SUBST(RESIP_LDFLAGS)
+		    AC_SUBST(RESIP_LIBS)
 		fi
+	fi
+	
+	if test "x$resip_found" = "xyes"; then
+	    AC_MSG_RESULT([yes])
 	else
-		AC_MSG_RESULT([no])
+	    AC_MSG_ERROR([[Could not detect the Resiprocate libraries.]])
+	    AC_MSG_RESULT([no])
 	fi
 ])
