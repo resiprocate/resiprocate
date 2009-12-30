@@ -196,7 +196,7 @@ ClientPagerMessage::dispatch(const SipMessage& msg)
            for(contents = mMsgQueue.begin(); contents != mMsgQueue.end(); ++contents)
            {
                Contents* p = contents->contents;
-               WarningLog ( << "Paging failed" << *p );
+               WarningLog ( << "Paging failed " << *p );
                Helper::makeResponse(errResponse, *mRequest, code);
                handler->onFailure(getHandle(), errResponse, std::auto_ptr<Contents>(p));
                contents->contents = 0;
